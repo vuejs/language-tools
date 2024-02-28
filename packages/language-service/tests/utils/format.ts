@@ -27,7 +27,7 @@ export function defineFormatTest(options: {
 				{ insertSpaces: false, tabSize: 4 },
 			);
 
-			expect(formatted).toBe((options.output ?? options.input));
+			expect(formatted.replace(/\r\n/g, '\n')).toBe((options.output ?? options.input).replace(/\r\n/g, '\n'));
 		});
 	});
 }

@@ -70,23 +70,22 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 						return codeAction;
 
 					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
-					const languageServiceHost = context.inject<Provide, 'typescript/languageServiceHost'>('typescript/languageServiceHost');
 					const sourceFile = languageService.getProgram()!.getSourceFile(vueCode.fileName)!;
-					const sourceFileKind = languageServiceHost.getScriptKind?.(vueCode.fileName);
 					const toExtract = collectExtractProps();
-					const initialIndentSetting = (await context.env.getConfiguration!('volar.format.initialIndent') ?? { html: true }) as Record<string, boolean>;
+					const templateInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
+					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.script.initialIndent') ?? false;
 					const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 
 					let newFileTags = [];
 
 					newFileTags.push(
-						constructTag('template', [], initialIndentSetting.html, sfc.template.content.substring(templateCodeRange[0], templateCodeRange[1]))
+						constructTag('template', [], templateInitialIndent, sfc.template.content.substring(templateCodeRange[0], templateCodeRange[1]))
 					);
 
 					if (toExtract.length) {
 						newFileTags.push(
-							constructTag('script', ['setup', 'lang="ts"'], isInitialIndentNeeded(ts, sourceFileKind!, initialIndentSetting), generateNewScriptContents())
+							constructTag('script', ['setup', 'lang="ts"'], scriptInitialIndent, generateNewScriptContents())
 						);
 					}
 					if (sfc.template.startTagEnd > script.startTagEnd) {
@@ -288,16 +287,6 @@ function constructTag(name: string, attributes: string[], initialIndent: boolean
 	if (initialIndent) content = content.split('\n').map(line => `\t${line}`).join('\n');
 	const attributesString = attributes.length ? ` ${attributes.join(' ')}` : '';
 	return `<${name}${attributesString}>\n${content}\n</${name}>\n`;
-}
-
-function isInitialIndentNeeded(ts: typeof import("typescript/lib/tsserverlibrary"), languageKind: ts.ScriptKind, initialIndentSetting: Record<string, boolean>) {
-	const languageKindIdMap = {
-		[ts.ScriptKind.JS]: 'javascript',
-		[ts.ScriptKind.TS]: 'typescript',
-		[ts.ScriptKind.JSX]: 'javascriptreact',
-		[ts.ScriptKind.TSX]: 'typescriptreact',
-	} as Record<ts.ScriptKind, string>;
-	return initialIndentSetting[languageKindIdMap[languageKind]] ?? false;
 }
 
 export function getLastImportNode(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile) {

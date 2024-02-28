@@ -18,11 +18,15 @@ export function create(): ServicePlugin {
 		name: 'vue-basic',
 		create(context): ServicePluginInstance<Provide> {
 
-			const htmlPlugin = createHtmlService({ languageId: 'vue', useCustomDataProviders: false }).create(context);
+			const htmlPlugin = createHtmlService({
+				documentSelector: ['vue'],
+				useCustomDataProviders: false,
+			}).create(context);
+			const htmlLanguageService: html.LanguageService = htmlPlugin.provide['html/languageService']();
 
 			sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
 
-			htmlPlugin.provide['html/languageService']().setDataProviders(false, [sfcDataProvider]);
+			htmlLanguageService.setDataProviders(false, [sfcDataProvider]);
 
 			return {
 
@@ -34,6 +38,31 @@ export function create(): ServicePlugin {
 							return vueFile;
 						});
 					},
+				},
+
+				async resolveEmbeddedCodeFormattingOptions(code, options) {
+
+					const sourceFile = context.language.files.getByVirtualCode(code);
+
+					if (sourceFile.generated?.code instanceof vue.VueGeneratedCode) {
+						if (code.id === 'scriptFormat' || code.id === 'scriptSetupFormat') {
+							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
+								options.initialIndentLevel++;
+							}
+						}
+						else if (code.id.startsWith('style_')) {
+							if (await context.env.getConfiguration?.('vue.format.style.initialIndent') ?? false) {
+								options.initialIndentLevel++;
+							}
+						}
+						else if (code.id === 'template') {
+							if (await context.env.getConfiguration?.('vue.format.template.initialIndent') ?? true) {
+								options.initialIndentLevel++;
+							}
+						}
+					}
+
+					return options;
 				},
 
 				provideSemanticDiagnostics(document) {
@@ -154,37 +183,26 @@ export function create(): ServicePlugin {
 					});
 				},
 
-				provideDocumentFormattingEdits(document) {
-					return worker(document, (vueSourceFile) => {
+				provideDocumentFormattingEdits(document, range, options) {
+					return worker(document, async vueCode => {
 
-						const blocks = [
-							vueSourceFile.sfc.script,
-							vueSourceFile.sfc.scriptSetup,
-							vueSourceFile.sfc.template,
-							...vueSourceFile.sfc.styles,
-							...vueSourceFile.sfc.customBlocks,
-						].filter((block): block is NonNullable<typeof block> => !!block)
-							.sort((a, b) => b.start - a.start);
+						const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
+						const blockTypes = ['template', 'script', 'style'];
 
-						const edits: vscode.TextEdit[] = [];
-
-						for (const block of blocks) {
-							const startPos = document.positionAt(block.start);
-							if (startPos.character !== 0) {
-								edits.push({
-									range: {
-										start: {
-											line: startPos.line,
-											character: 0,
-										},
-										end: startPos,
-									},
-									newText: '',
-								});
-							}
+						for (const customBlock of vueCode.sfc.customBlocks) {
+							blockTypes.push(customBlock.type);
 						}
 
-						return edits;
+						return htmlLanguageService.format(document, range, {
+							...options,
+							...formatSettings,
+							unformatted: '',
+							contentUnformatted: blockTypes.join(','),
+							extraLiners: blockTypes.join(','),
+							endWithNewline: options.insertFinalNewline ? true
+								: options.trimFinalNewlines ? false
+									: document.getText().endsWith('\n'),
+						});
 					});
 				},
 			};

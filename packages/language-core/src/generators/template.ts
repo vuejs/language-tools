@@ -480,8 +480,8 @@ export function* generate(
 				content,
 				start,
 				lines.length <= 1 ? formatBrackets.curly : [
-					formatBrackets.curly[0],
-					lines[lines.length - 1].trim() === '' ? '' : formatBrackets.curly[1],
+					lines[0].trim() === '' ? '(' : formatBrackets.curly[0],
+					lines[lines.length - 1].trim() === '' ? ')' : formatBrackets.curly[1],
 				],
 			);
 		}

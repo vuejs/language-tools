@@ -283,67 +283,6 @@
 			"type": "object",
 			"title": "Volar",
 			"properties": {
-				"volar.format.initialIndent": {
-					"type": "object",
-					"description": "Whether to have initial indent.",
-					"default": {
-						"html": true
-					},
-					"properties": {
-						"html": {
-							"type": "boolean",
-							"default": true
-						},
-						"typescript": {
-							"type": "boolean",
-							"default": false
-						},
-						"javascript": {
-							"type": "boolean",
-							"default": false
-						},
-						"typescriptreact": {
-							"type": "boolean",
-							"default": false
-						},
-						"javascriptreact": {
-							"type": "boolean",
-							"default": false
-						},
-						"css": {
-							"type": "boolean",
-							"default": false
-						},
-						"scss": {
-							"type": "boolean",
-							"default": false
-						},
-						"less": {
-							"type": "boolean",
-							"default": false
-						},
-						"sass": {
-							"type": "boolean",
-							"default": false
-						},
-						"jade": {
-							"type": "boolean",
-							"default": false
-						},
-						"json": {
-							"type": "boolean",
-							"default": false
-						},
-						"jsonc": {
-							"type": "boolean",
-							"default": false
-						},
-						"json5": {
-							"type": "boolean",
-							"default": false
-						}
-					}
-				},
 				"vue.trace.server": {
 					"scope": "window",
 					"type": "string",
@@ -406,11 +345,6 @@
 					"default": null,
 					"description": "Set --max-old-space-size option on server process. If you have problem on frequently \"Request textDocument/** failed.\" error, try setting higher memory(MB) on it."
 				},
-				"vue.server.reverseConfigFilePriority": {
-					"type": "boolean",
-					"default": false,
-					"description": "Reverse priority for tsconfig pickup."
-				},
 				"vue.server.additionalExtensions": {
 					"type": "array",
 					"items": {
@@ -418,11 +352,6 @@
 					},
 					"default": [ ],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
-				},
-				"vue.server.fullCompletionList": {
-					"type": "boolean",
-					"default": false,
-					"description": "Enable this option if you want to get complete CompletionList in language client. (Disable for better performance)"
 				},
 				"vue.doctor.status": {
 					"type": "boolean",
@@ -537,6 +466,18 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for component options wrapper for type support."
+				},
+				"vue.format.template.initialIndent": {
+					"type": "boolean",
+					"default": true
+				},
+				"vue.format.style.initialIndent": {
+					"type": "boolean",
+					"default": false
+				},
+				"vue.format.script.initialIndent": {
+					"type": "boolean",
+					"default": false
 				}
 			}
 		},
@@ -643,7 +584,7 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.0.2",
+		"@volar/vscode": "~2.1.0",
 		"@vue/language-core": "1.8.27",
 		"@vue/language-server": "1.8.27",
 		"esbuild": "latest",
