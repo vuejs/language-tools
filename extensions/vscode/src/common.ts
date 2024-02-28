@@ -79,7 +79,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		selectors.push({ language: 'markdown' });
 	}
 
-	activateAutoInsertion(selectors, client); // TODO: implement auto insert .value
+	activateAutoInsertion(selectors, client);
 	activateDocumentDropEdit(selectors, client);
 	activateWriteVirtualFiles('volar.action.writeVirtualFiles', client);
 

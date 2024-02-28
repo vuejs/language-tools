@@ -1,10 +1,13 @@
-import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
+import { createLanguageServicePlugin } from './createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
-import type * as _ from 'typescript';
+import { startNamedPipeServer } from './requests/server';
 
 const windowsPathReg = /\\/g;
 
 export = createLanguageServicePlugin((ts, info) => {
+
+	startNamedPipeServer();
+
 	const vueOptions = vue.resolveVueCompilerOptions(getVueCompilerOptions());
 	const languagePlugin = vue.createVueLanguagePlugin(
 		ts,
