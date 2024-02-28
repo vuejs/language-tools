@@ -198,9 +198,9 @@ type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.In
 type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX.Element>;
 // @ts-ignore
 type __VLS_GlobalComponents = ${[
-				`__VLS_PickNotAny<import('vue').__VLS_GlobalComponents, {}>`,
-				`__VLS_PickNotAny<import('@vue/runtime-core').__VLS_GlobalComponents, {}>`,
-				`__VLS_PickNotAny<import('@vue/runtime-dom').__VLS_GlobalComponents, {}>`,
+				`__VLS_PickNotAny<import('vue').GlobalComponents, {}>`,
+				`__VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>`,
+				`__VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>`,
 				`Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`
 			].join(' & ')};
 type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
