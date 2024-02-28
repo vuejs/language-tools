@@ -3,7 +3,7 @@ import { createLanguage } from '@volar/typescript';
 import * as path from 'path';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { createParsedCommandLine, resolveLanguages, resolveServices, resolveVueCompilerOptions } from '../../out';
+import { createParsedCommandLine, createVueLanguagePlugin, createVueServicePlugins, resolveVueCompilerOptions } from '../../out';
 import { createMockServiceEnv } from './mockEnv';
 
 export const rootUri = URI.file(path.resolve(__dirname, '../../../../test-workspace/language-service')).toString();
@@ -27,8 +27,8 @@ function createTester(rootUri: string) {
 		getLanguageId: resolveCommonLanguageId,
 	};
 	const resolvedVueOptions = resolveVueCompilerOptions(parsedCommandLine.vueOptions);
-	const languages = resolveLanguages({}, ts, serviceEnv.typescript!.uriToFileName, parsedCommandLine.options, resolvedVueOptions);
-	const services = resolveServices({}, ts, () => resolvedVueOptions);
+	const vueLanguagePlugin = createVueLanguagePlugin(ts, serviceEnv.typescript!.uriToFileName, parsedCommandLine.options, resolvedVueOptions);
+	const vueServicePlugins = createVueServicePlugins(ts, () => resolvedVueOptions);
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',
@@ -40,7 +40,7 @@ function createTester(rootUri: string) {
 	const language = createLanguage(
 		ts,
 		ts.sys,
-		Object.values(languages),
+		[vueLanguagePlugin],
 		realTsConfig,
 		projectHost,
 		{
@@ -48,7 +48,7 @@ function createTester(rootUri: string) {
 			fileNameToFileId: serviceEnv.typescript!.fileNameToUri,
 		},
 	);
-	const languageService = createLanguageService(language, Object.values(services), serviceEnv);
+	const languageService = createLanguageService(language, vueServicePlugins, serviceEnv);
 
 	return {
 		serviceEnv,

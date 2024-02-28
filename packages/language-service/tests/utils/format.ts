@@ -1,12 +1,12 @@
 import * as kit from '@volar/kit';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { resolveLanguages, resolveServices, resolveVueCompilerOptions } from '../../out';
+import { createVueLanguagePlugin, createVueServicePlugins, resolveVueCompilerOptions } from '../../out';
 
 const resolvedVueOptions = resolveVueCompilerOptions({});
-const languages = resolveLanguages({}, ts, fileId => formatter.env.typescript!.uriToFileName(fileId), {}, resolvedVueOptions);
-const services = resolveServices({}, ts, () => resolvedVueOptions);
-const formatter = kit.createFormatter(Object.values(languages), Object.values(services));
+const vueLanguagePlugin = createVueLanguagePlugin(ts, fileId => formatter.env.typescript!.uriToFileName(fileId), {}, resolvedVueOptions);
+const vueServicePLugins = createVueServicePlugins(ts, () => resolvedVueOptions);
+const formatter = kit.createFormatter([vueLanguagePlugin], vueServicePLugins);
 
 export function defineFormatTest(options: {
 	title: string;
