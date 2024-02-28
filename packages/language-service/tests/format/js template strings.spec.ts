@@ -32,6 +32,6 @@ txt
 </script>
 	`.trim(),
 	settings: {
-		'vue.format.initialIndent.script': true,
+		'vue.format.script.initialIndent': true,
 	},
 });

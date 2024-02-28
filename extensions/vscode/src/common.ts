@@ -143,25 +143,23 @@ export function getDocumentSelector(): lsp.DocumentFilter[] {
 
 async function getInitializationOptions(
 	context: vscode.ExtensionContext,
-	options: VueInitializationOptions = {},
-) {
-	// volar
-	options.diagnosticModel = config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push;
-	options.typescript = { tsdk: (await getTsdk(context)).tsdk };
-	options.reverseConfigFilePriority = config.server.reverseConfigFilePriority;
-	options.maxFileSize = config.server.maxFileSize;
-	options.semanticTokensLegend = {
-		tokenTypes: ['component'],
-		tokenModifiers: [],
+): Promise<VueInitializationOptions> {
+	return {
+		// volar
+		diagnosticModel: config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
+		typescript: { tsdk: (await getTsdk(context)).tsdk },
+		maxFileSize: config.server.maxFileSize,
+		semanticTokensLegend: {
+			tokenTypes: ['component'],
+			tokenModifiers: [],
+		},
+		vue: {
+			hybridMode: true,
+			additionalExtensions: [
+				...config.server.additionalExtensions,
+				...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
+				...!config.server.vitePress.supportMdFile ? [] : ['md'],
+			],
+		},
 	};
-	options.fullCompletionList = config.server.fullCompletionList;
-	options.vue = {
-		hybridMode: true,
-		additionalExtensions: [
-			...config.server.additionalExtensions,
-			...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
-			...!config.server.vitePress.supportMdFile ? [] : ['md'],
-		],
-	};
-	return options;
 }

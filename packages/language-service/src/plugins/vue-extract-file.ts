@@ -72,8 +72,8 @@ export function create(ts: typeof import('typescript/lib/tsserverlibrary')): Ser
 					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 					const sourceFile = languageService.getProgram()!.getSourceFile(vueCode.fileName)!;
 					const toExtract = collectExtractProps();
-					const templateInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.initialIndent.template') ?? true;
-					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.initialIndent.script') ?? true;
+					const templateInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
+					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.script.initialIndent') ?? false;
 					const newUri = document.uri.substring(0, document.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 

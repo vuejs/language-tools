@@ -79,6 +79,7 @@ export function computedFiles(
 				else {
 					const parent = findParentStructure(file.parentFileId, embeddedCodes);
 					if (parent) {
+						parent.embeddedCodes ??= [];
 						parent.embeddedCodes.push({
 							id: file.id,
 							languageId: resolveCommonLanguageId(`/dummy.${file.lang}`),
@@ -98,7 +99,7 @@ export function computedFiles(
 				if (child.id === id) {
 					return child;
 				}
-				let parent = findParentStructure(id, child.embeddedCodes);
+				let parent = findParentStructure(id, child.embeddedCodes ?? []);
 				if (parent) {
 					return parent;
 				}

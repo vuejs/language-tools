@@ -18,7 +18,10 @@ export function create(): ServicePlugin {
 		name: 'vue-basic',
 		create(context): ServicePluginInstance<Provide> {
 
-			const htmlPlugin = createHtmlService({ languageId: 'vue', useCustomDataProviders: false }).create(context);
+			const htmlPlugin = createHtmlService({
+				documentSelector: ['vue'],
+				useCustomDataProviders: false,
+			}).create(context);
 			const htmlLanguageService: html.LanguageService = htmlPlugin.provide['html/languageService']();
 
 			sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
@@ -43,17 +46,17 @@ export function create(): ServicePlugin {
 
 					if (sourceFile.generated?.code instanceof vue.VueGeneratedCode) {
 						if (code.id === 'scriptFormat' || code.id === 'scriptSetupFormat') {
-							if (await context.env.getConfiguration?.('vue.format.initialIndent.script') ?? false) {
+							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
 						else if (code.id.startsWith('style_')) {
-							if (await context.env.getConfiguration?.('vue.format.initialIndent.style') ?? false) {
+							if (await context.env.getConfiguration?.('vue.format.style.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
 						else if (code.id === 'template') {
-							if (await context.env.getConfiguration?.('vue.format.initialIndent.template') ?? true) {
+							if (await context.env.getConfiguration?.('vue.format.template.initialIndent') ?? true) {
 								options.initialIndentLevel++;
 							}
 						}

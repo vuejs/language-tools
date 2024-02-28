@@ -1,4 +1,4 @@
-import { ServiceEnvironment, ServicePlugin } from '@volar/language-service';
+import { ServiceEnvironment, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { LanguagePlugin, VueGeneratedCode, createLanguages, hyphenateTag, scriptRanges } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript/lib/tsserverlibrary';
@@ -90,7 +90,7 @@ export function resolveServices(
 
 							for (const map of context.documents.getMaps(virtualCode)) {
 
-								const sourceVirtualFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
+								const sourceVirtualFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
 
 								if (sourceVirtualFile instanceof VueGeneratedCode) {
 
@@ -235,39 +235,92 @@ export function resolveServices(
 			};
 		},
 	};
+
+	let customData: html.IHTMLDataProvider[] = [];
+	const onDidChangeCustomDataListeners = new Set<() => void>();
+
 	services.html ??= createVueTemplateLanguageService(
 		ts,
-		createHtmlService(),
+		createHtmlService({
+			getCustomData() {
+				return customData;
+			},
+			onDidChangeCustomData(listener) {
+				onDidChangeCustomDataListeners.add(listener);
+				return {
+					dispose() {
+						onDidChangeCustomDataListeners.delete(listener);
+					},
+				};
+			},
+		}),
 		getVueOptions,
 		{
 			getScanner: (htmlService, document): html.Scanner | undefined => {
 				return htmlService.provide['html/languageService']().createScanner(document.getText());
 			},
-			updateCustomData(htmlService, extraData) {
-				htmlService.provide['html/updateCustomData'](extraData);
+			updateCustomData(extraData) {
+				customData = extraData;
+				onDidChangeCustomDataListeners.forEach(l => l());
 			},
 			isSupportedDocument: (document) => document.languageId === 'html',
 		}
 	);
 	services.pug ??= createVueTemplateLanguageService(
 		ts,
-		createPugService(),
+		createPugService({
+			getCustomData() {
+				return customData;
+			},
+			onDidChangeCustomData(listener) {
+				onDidChangeCustomDataListeners.add(listener);
+				return {
+					dispose() {
+						onDidChangeCustomDataListeners.delete(listener);
+					},
+				};
+			},
+		}),
 		getVueOptions,
 		{
-			getScanner: (pugService, document): html.Scanner | undefined => {
+			getScanner(pugService, document): html.Scanner | undefined {
 				const pugDocument = pugService.provide['pug/pugDocument'](document);
 				if (pugDocument) {
 					return pugService.provide['pug/languageService']().createScanner(pugDocument);
 				}
 			},
-			updateCustomData(pugService, extraData) {
-				pugService.provide['pug/updateCustomData'](extraData);
+			updateCustomData(extraData) {
+				customData = extraData;
+				onDidChangeCustomDataListeners.forEach(l => l());
 			},
-			isSupportedDocument: (document) => document.languageId === 'jade',
+			isSupportedDocument(document) {
+				return document.languageId === 'jade';
+			},
 		}
 	);
 	services.vue ??= createVueService();
-	services.css ??= createCssService();
+
+	const baseCssService = createCssService({ scssDocumentSelector: ['scss', 'postcss'] });
+	const cssService: ServicePlugin = {
+		...baseCssService,
+		create(context): ServicePluginInstance {
+			const serviceInstance = baseCssService.create(context);
+			return {
+				...serviceInstance,
+				async provideDiagnostics(document, token) {
+					let diagnostics = await serviceInstance.provideDiagnostics?.(document, token) ?? [];
+					if (document.languageId === 'postcss') {
+						diagnostics = diagnostics.filter(diag => diag.code !== 'css-semicolonexpected');
+						diagnostics = diagnostics.filter(diag => diag.code !== 'css-ruleorselectorexpected');
+						diagnostics = diagnostics.filter(diag => diag.code !== 'unknownAtRules');
+					}
+					return diagnostics;
+				},
+			};
+		},
+	};
+
+	services.css ??= cssService;
 	services['pug-beautify'] ??= createPugFormatService();
 	services.json ??= createJsonService();
 	services['typescript/twoslash-queries'] ??= createTsTqService();

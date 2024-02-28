@@ -19,7 +19,7 @@ export function create(
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 	options: {
 		getScanner(service: ServicePluginInstance, document: TextDocument): html.Scanner | undefined,
-		updateCustomData(service: ServicePluginInstance, extraData: html.IHTMLDataProvider[]): void,
+		updateCustomData(extraData: html.IHTMLDataProvider[]): void,
 		isSupportedDocument: (document: TextDocument) => boolean,
 	}
 ): ServicePlugin {
@@ -80,7 +80,7 @@ export function create(
 
 					if (virtualCode) {
 						for (const map of context.documents.getMaps(virtualCode)) {
-							const sourceVirtualFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
+							const sourceVirtualFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
 							if (sourceVirtualFile instanceof VueGeneratedCode) {
 								await provideHtmlData(map, sourceVirtualFile);
 							}
@@ -93,7 +93,7 @@ export function create(
 
 					if (virtualCode) {
 						for (const map of context.documents.getMaps(virtualCode)) {
-							const sourceVirtualFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
+							const sourceVirtualFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
 							if (sourceVirtualFile instanceof VueGeneratedCode) {
 								afterHtmlCompletion(htmlComplete, map, sourceVirtualFile);
 							}
@@ -120,13 +120,13 @@ export function create(
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceVirtualFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
+						const sourceVirtualFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
 						const scanner = options.getScanner(baseServiceInstance, document);
 
 						if (sourceVirtualFile instanceof VueGeneratedCode && scanner) {
 
 							// visualize missing required props
-							const casing = await getNameCasing(ts, context, map.sourceFileDocument.uri, vueCompilerOptions);
+							const casing = await getNameCasing(ts, context, map.sourceDocument.uri, vueCompilerOptions);
 							const components = getComponentNames(ts, languageService, sourceVirtualFile, vueCompilerOptions);
 							const componentProps: Record<string, string[]> = {};
 							let token: html.TokenType;
@@ -226,7 +226,7 @@ export function create(
 						return;
 
 					if (context.documents.getVirtualCodeByUri(document.uri)[0])
-						options.updateCustomData(baseServiceInstance, []);
+						options.updateCustomData([]);
 
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
@@ -244,7 +244,7 @@ export function create(
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceVirtualFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
+						const sourceVirtualFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
 						if (!(sourceVirtualFile instanceof VueGeneratedCode))
 							continue;
 
@@ -306,7 +306,7 @@ export function create(
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceFile = context.language.files.get(map.sourceFileDocument.uri)?.generated?.code;
+						const sourceFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
 						if (!(sourceFile instanceof VueGeneratedCode))
 							continue;
 
@@ -359,7 +359,7 @@ export function create(
 			async function provideHtmlData(map: SourceMapWithDocuments<CodeInformation>, vueCode: VueGeneratedCode) {
 
 				const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
-				const casing = await getNameCasing(ts, context, map.sourceFileDocument.uri, vueCompilerOptions);
+				const casing = await getNameCasing(ts, context, map.sourceDocument.uri, vueCompilerOptions);
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
@@ -378,7 +378,7 @@ export function create(
 					}
 				}
 
-				options.updateCustomData(baseServiceInstance, [
+				options.updateCustomData([
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
 					{
 						getId: () => 'vue-template',
@@ -552,7 +552,7 @@ export function create(
 			function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<CodeInformation>, vueSourceFile: VueGeneratedCode) {
 
 				const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
-				const replacement = getReplacement(completionList, map.sourceFileDocument);
+				const replacement = getReplacement(completionList, map.sourceDocument);
 				const componentNames = new Set(
 					getComponentNames(
 						ts,
@@ -677,7 +677,7 @@ export function create(
 					}
 				}
 
-				options.updateCustomData(baseServiceInstance, []);
+				options.updateCustomData([]);
 			}
 		},
 	};

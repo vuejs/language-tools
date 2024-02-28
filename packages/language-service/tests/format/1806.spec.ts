@@ -40,8 +40,8 @@ export { }
 </style>
 	`.trim(),
 	settings: {
-		'vue.format.initialIndent.template': false,
-		'vue.format.initialIndent.script': true,
-		'vue.format.initialIndent.style': true,
+		'vue.format.template.initialIndent': false,
+		'vue.format.script.initialIndent': true,
+		'vue.format.style.initialIndent': true,
 	},
 });
