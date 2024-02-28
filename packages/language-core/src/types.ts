@@ -1,6 +1,6 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import type { VueEmbeddedFile } from './virtualFile/embeddedFile';
 import type { CodeInformation, Segment } from '@volar/language-core';
 
@@ -60,7 +60,7 @@ export interface VueCompilerOptions {
 
 export type VueLanguagePlugin = (ctx: {
 	modules: {
-		typescript: typeof import('typescript/lib/tsserverlibrary');
+		typescript: typeof import('typescript');
 		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
 	};
 	compilerOptions: ts.CompilerOptions;

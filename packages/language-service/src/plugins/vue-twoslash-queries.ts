@@ -5,7 +5,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 
 const twoslashReg = /<!--\s*\^\?\s*-->/g;
 
-export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
+export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
 		name: 'vue-twoslash-queries',
 		create(context): ServicePluginInstance {

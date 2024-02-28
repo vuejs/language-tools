@@ -1,5 +1,5 @@
 import type { SFCParseResult } from '@vue/compiler-sfc';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import { VueLanguagePlugin } from '../types';
 import { computed } from 'computeds';
 

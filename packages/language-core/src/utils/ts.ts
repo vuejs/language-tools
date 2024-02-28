@@ -1,4 +1,4 @@
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import * as path from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
@@ -7,7 +7,7 @@ export type ParsedCommandLine = ts.ParsedCommandLine & {
 };
 
 export function createParsedCommandLineByJson(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	parseConfigHost: ts.ParseConfigHost,
 	rootDir: string,
 	json: any,
@@ -54,7 +54,7 @@ export function createParsedCommandLineByJson(
 }
 
 export function createParsedCommandLine(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	parseConfigHost: ts.ParseConfigHost,
 	tsConfigPath: string,
 ): ParsedCommandLine {
@@ -131,7 +131,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 }
 
 function getPartialVueCompilerOptions(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	tsConfigSourceFile: ts.TsConfigSourceFile,
 ): Partial<VueCompilerOptions> {
 

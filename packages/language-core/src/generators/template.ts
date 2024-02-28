@@ -2,7 +2,7 @@ import { toString } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { minimatch } from 'minimatch';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import { Code, CodeAndStack, Sfc, VueCodeInformation, VueCompilerOptions } from '../types';
 import { hyphenateAttr, hyphenateTag } from '../utils/shared';
 import { collectVars, eachInterpolationSegment } from '../utils/transform';
@@ -66,7 +66,7 @@ const transformContext: CompilerDOM.TransformContext = {
 type _CodeAndStack = [codeType: 'ts' | 'tsFormat' | 'inlineCss', ...codeAndStack: CodeAndStack];
 
 export function* generate(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	template: NonNullable<Sfc['template']>,

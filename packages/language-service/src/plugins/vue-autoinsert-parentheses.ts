@@ -1,7 +1,7 @@
 import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 
-export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
+export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
 		name: 'vue-autoinsert-parentheses',
 		create(context): ServicePluginInstance {

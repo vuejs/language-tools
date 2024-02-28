@@ -6,7 +6,7 @@ import { getComponentNames, getPropsByTag, getTemplateTagsAndAttrs } from '../he
 import { AttrNameCasing, TagNameCasing } from '../types';
 
 export async function convertTagName(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	context: ServiceContext,
 	uri: string,
 	casing: TagNameCasing,
@@ -58,7 +58,7 @@ export async function convertTagName(
 }
 
 export async function convertAttrName(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	context: ServiceContext,
 	uri: string,
 	casing: AttrNameCasing,
@@ -111,7 +111,7 @@ export async function convertAttrName(
 }
 
 export async function getNameCasing(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	context: ServiceContext,
 	uri: string,
 	vueCompilerOptions: VueCompilerOptions,
@@ -132,7 +132,7 @@ export async function getNameCasing(
 }
 
 export function detect(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	context: ServiceContext,
 	uri: string,
 	vueCompilerOptions: VueCompilerOptions,

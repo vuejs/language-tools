@@ -2,7 +2,7 @@ import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
 import { getDefaultVueLanguagePlugins, createPluginContext } from './plugins';
 import { VueGeneratedCode } from './virtualFile/vueFile';
 import { VueCompilerOptions, VueLanguagePlugin } from './types';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import { resolveVueCompilerOptions } from './utils/ts';
 
 const fileRegistries: {
@@ -51,7 +51,7 @@ function getFileRegistryKey(
 }
 
 export function createVueLanguage(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	getFileName: (fileId: string) => string,
 	compilerOptions: ts.CompilerOptions = {},
 	_vueCompilerOptions: Partial<VueCompilerOptions> = {},
@@ -165,7 +165,7 @@ export function createVueLanguage(
  * @deprecated planed to remove in 2.0, please use createVueLanguage instead of
  */
 export function createLanguages(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	getFileName: (fileId: string) => string,
 	compilerOptions: ts.CompilerOptions = {},
 	vueCompilerOptions: Partial<VueCompilerOptions> = {},

@@ -5,7 +5,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
 import { ServicePlugin, ServicePluginInstance, TagNameCasing } from '../types';
 
-export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
+export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
 		name: 'vue-document-drop',
 		create(context): ServicePluginInstance {

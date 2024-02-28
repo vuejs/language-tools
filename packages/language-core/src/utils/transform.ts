@@ -1,10 +1,10 @@
 import { isGloballyWhitelisted } from '@vue/shared';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import { VueCompilerOptions } from '../types';
 import { getNodeText, getStartEnd } from '../parsers/scriptSetupRanges';
 
 export function* eachInterpolationSegment(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	code: string,
 	ast: ts.SourceFile,
 	localVars: Map<string, number>,
@@ -110,7 +110,7 @@ export function* eachInterpolationSegment(
 }
 
 function walkIdentifiers(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
@@ -204,7 +204,7 @@ function walkIdentifiers(
 }
 
 function walkIdentifiersInTypeReference(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	node: ts.Node,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 ) {
@@ -217,7 +217,7 @@ function walkIdentifiersInTypeReference(
 }
 
 export function collectVars(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
 	result: string[],

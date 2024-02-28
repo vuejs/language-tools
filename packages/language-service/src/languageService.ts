@@ -1,7 +1,7 @@
 import { ServiceEnvironment, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { LanguagePlugin, VueGeneratedCode, createLanguages, hyphenateTag, scriptRanges } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import type { Data } from 'volar-service-typescript/lib/features/completions/basic';
 import type * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -38,7 +38,7 @@ export interface Settings {
 
 export function resolveLanguages(
 	languages: Record<string, LanguagePlugin>,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	getFileName: (fileId: string) => string,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
@@ -58,7 +58,7 @@ export function resolveLanguages(
 
 export function resolveServices(
 	services: Record<string, ServicePlugin>,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 ) {
 

@@ -1,5 +1,5 @@
 import * as vue from '@vue/language-core';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import * as path from 'path-browserify';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
@@ -21,7 +21,7 @@ export * from './types';
 const windowsPathReg = /\\/g;
 
 export function createCheckerByJsonConfigBase(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	rootDir: string,
 	json: any,
 	checkerOptions: MetaCheckerOptions = {},
@@ -38,7 +38,7 @@ export function createCheckerByJsonConfigBase(
 }
 
 export function createCheckerBase(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	tsconfig: string,
 	checkerOptions: MetaCheckerOptions = {},
 ) {
@@ -54,7 +54,7 @@ export function createCheckerBase(
 }
 
 function createCheckerWorker(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	loadParsedCommandLine: () => vue.ParsedCommandLine,
 	checkerOptions: MetaCheckerOptions,
 	rootPath: string,
@@ -114,7 +114,7 @@ function createCheckerWorker(
 }
 
 export function baseCreate(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	configFileName: string | undefined,
 	host: vue.TypeScriptProjectHost,
 	vueCompilerOptions: vue.VueCompilerOptions,
@@ -453,7 +453,7 @@ function createSchemaResolvers(
 	typeChecker: ts.TypeChecker,
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	context: vue.LanguageContext,
 ) {
 	const visited = new Set<ts.Type>();
@@ -681,7 +681,7 @@ function createSchemaResolvers(
 function readVueComponentDefaultProps(
 	vueSourceFile: vue.VueGeneratedCode,
 	printer: ts.Printer | undefined,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	vueCompilerOptions: vue.VueCompilerOptions,
 ) {
 	let result: Record<string, { default?: string, required?: boolean; }> = {};
@@ -760,7 +760,7 @@ function readTsComponentDefaultProps(
 	tsFileText: string,
 	exportName: string,
 	printer: ts.Printer | undefined,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 ) {
 
 	const ast = ts.createSourceFile('/tmp.' + lang, tsFileText, ts.ScriptTarget.Latest);
@@ -839,7 +839,7 @@ function resolvePropsOption(
 	ast: ts.SourceFile,
 	props: ts.ObjectLiteralExpression,
 	printer: ts.Printer | undefined,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 ) {
 
 	const result: Record<string, { default?: string, required?: boolean; }> = {};
@@ -872,7 +872,7 @@ function resolvePropsOption(
 
 function resolveDefaultOptionExpression(
 	_default: ts.Expression,
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 ) {
 	if (ts.isArrowFunction(_default)) {
 		if (ts.isBlock(_default.body)) {

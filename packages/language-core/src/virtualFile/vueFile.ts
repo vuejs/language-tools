@@ -1,5 +1,5 @@
 import { Stack, VirtualCode } from '@volar/language-core';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import { VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { computedFiles } from './computedFiles';
 import { computedMappings } from './computedMappings';
@@ -41,7 +41,7 @@ export class VueGeneratedCode implements VirtualCode {
 		public initSnapshot: ts.IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		public plugins: ReturnType<VueLanguagePlugin>[],
-		public ts: typeof import('typescript/lib/tsserverlibrary'),
+		public ts: typeof import('typescript'),
 		public codegenStack: boolean,
 	) {
 		this._snapshot = signal(initSnapshot);

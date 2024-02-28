@@ -1,7 +1,7 @@
 import { CreateFile, ServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import { ExpressionNode, type TemplateChildNode } from '@vue/compiler-dom';
 import { Sfc, SourceFile, VueGeneratedCode, isSemanticTokensEnabled, scriptRanges } from '@vue/language-core';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import type { Provide } from 'volar-service-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 
@@ -13,7 +13,7 @@ interface ActionData {
 
 const unicodeReg = /\\u/g;
 
-export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
+export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
 		name: 'vue-extract-file',
 		create(context) {
@@ -289,7 +289,7 @@ function constructTag(name: string, attributes: string[], initialIndent: boolean
 	return `<${name}${attributesString}>\n${content}\n</${name}>\n`;
 }
 
-export function getLastImportNode(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile) {
+export function getLastImportNode(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 
 	let lastImportNode: ts.Node | undefined;
 
@@ -305,7 +305,7 @@ export function getLastImportNode(ts: typeof import('typescript/lib/tsserverlibr
 	return lastImportNode;
 }
 
-export function createAddComponentToOptionEdit(ts: typeof import('typescript/lib/tsserverlibrary'), ast: ts.SourceFile, componentName: string) {
+export function createAddComponentToOptionEdit(ts: typeof import('typescript'), ast: ts.SourceFile, componentName: string) {
 
 	const exportDefault = scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault;
 	if (!exportDefault)

@@ -1,6 +1,6 @@
 import { Mapping, Segment, replaceSourceRange } from '@volar/language-core';
 import { computed } from 'computeds';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import { enableAllFeatures } from '../generators/utils';
 import { Sfc, VueCodeInformation } from '../types';
 

@@ -1,13 +1,13 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import { Sfc, SfcBlock, VueLanguagePlugin } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 import { computed, pauseTracking, resetTracking, computedArray } from 'computeds';
 
 export function computedSfc(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	plugins: ReturnType<VueLanguagePlugin>[],
 	fileName: string,
 	snapshot: () => ts.IScriptSnapshot,

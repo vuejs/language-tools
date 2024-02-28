@@ -1,7 +1,7 @@
 import { TypeScriptProjectHost, createLanguageService, resolveCommonLanguageId } from '@volar/language-service';
 import { createLanguage } from '@volar/typescript';
 import * as path from 'path';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import { createParsedCommandLine, resolveLanguages, resolveServices, resolveVueCompilerOptions } from '../../out';
 import { createMockServiceEnv } from './mockEnv';
@@ -11,7 +11,7 @@ export const tester = createTester(rootUri);
 
 function createTester(rootUri: string) {
 
-	const ts = require('typescript') as typeof import('typescript/lib/tsserverlibrary');
+	const ts = require('typescript') as typeof import('typescript');
 	const serviceEnv = createMockServiceEnv(rootUri, () => currentVSCodeSettings ?? defaultVSCodeSettings);
 	const rootPath = serviceEnv.typescript!.uriToFileName(rootUri.toString());
 	const realTsConfig = path.join(rootPath, 'tsconfig.json').replace(/\\/g, '/');

@@ -2,7 +2,7 @@ import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { VueGeneratedCode, eachElementNode, type CompilerDOM } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
-export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
+export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
 		name: 'vue-toggle-v-bind-codeaction',
 		create(context): ServicePluginInstance {

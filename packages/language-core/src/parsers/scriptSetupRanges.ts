@@ -1,10 +1,10 @@
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import type { VueCompilerOptions, TextRange } from '../types';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
 export function parseScriptSetupRanges(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
 	vueCompilerOptions: VueCompilerOptions,
 ) {
@@ -245,7 +245,7 @@ export function parseScriptSetupRanges(
 	}
 }
 
-export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlibrary'), sourceFile: ts.SourceFile) {
+export function parseBindingRanges(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 	const bindings: TextRange[] = [];
 	ts.forEachChild(sourceFile, node => {
 		if (ts.isVariableStatement(node)) {
@@ -297,7 +297,7 @@ export function parseBindingRanges(ts: typeof import('typescript/lib/tsserverlib
 	}
 }
 
-export function findBindingVars(ts: typeof import('typescript/lib/tsserverlibrary'), left: ts.BindingName, sourceFile: ts.SourceFile) {
+export function findBindingVars(ts: typeof import('typescript'), left: ts.BindingName, sourceFile: ts.SourceFile) {
 	const vars: TextRange[] = [];
 	worker(left);
 	return vars;
@@ -331,7 +331,7 @@ export function findBindingVars(ts: typeof import('typescript/lib/tsserverlibrar
 }
 
 export function getStartEnd(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	node: ts.Node,
 	sourceFile: ts.SourceFile
 ) {
@@ -342,7 +342,7 @@ export function getStartEnd(
 }
 
 export function getNodeText(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	node: ts.Node,
 	sourceFile: ts.SourceFile
 ) {

@@ -14,7 +14,7 @@ let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
 
 export function create(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	baseServide: ServicePlugin,
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 	options: {

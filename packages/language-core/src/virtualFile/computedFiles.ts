@@ -1,6 +1,6 @@
 import { VirtualCode, buildMappings, buildStacks, resolveCommonLanguageId, toString, track } from '@volar/language-core';
 import { computed } from 'computeds';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, VueLanguagePlugin } from '../types';
 import { VueEmbeddedFile } from './embeddedFile';
 

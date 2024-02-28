@@ -1,6 +1,6 @@
 import { Mapping } from '@volar/language-core';
 import * as path from 'path-browserify';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import type { ScriptRanges } from '../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { Code, CodeAndStack, SfcBlock, VueCompilerOptions } from '../types';
@@ -17,7 +17,7 @@ interface HelperType {
 }
 
 export function* generate(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	fileName: string,
 	script: Sfc['script'],
 	scriptSetup: Sfc['scriptSetup'],

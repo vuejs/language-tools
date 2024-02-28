@@ -1,11 +1,11 @@
 import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 import { Provide } from 'volar-service-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 
-export function create(ts: typeof import('typescript/lib/tsserverlibrary')): ServicePlugin {
+export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
 		create(context): ServicePluginInstance {
@@ -108,7 +108,7 @@ export function isCharacterTyping(document: TextDocument, lastChange: { range: v
 	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);
 }
 
-export function isBlacklistNode(ts: typeof import('typescript/lib/tsserverlibrary'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
+export function isBlacklistNode(ts: typeof import('typescript'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
 	if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
 	}

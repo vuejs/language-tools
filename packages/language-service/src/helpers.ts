@@ -3,10 +3,10 @@ import type { CompilerDOM } from '@vue/language-core';
 import * as vue from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'computeds';
-import type * as ts from 'typescript/lib/tsserverlibrary';
+import type * as ts from 'typescript';
 
 export function getPropsByTag(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
 	vueFile: vue.VueGeneratedCode,
 	tag: string,
@@ -79,7 +79,7 @@ export function getPropsByTag(
 }
 
 export function getEventsOfTag(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
 	vueFile: vue.VueGeneratedCode,
 	tag: string,
@@ -145,7 +145,7 @@ export function getEventsOfTag(
 }
 
 export function getTemplateCtx(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
 	vueFile: vue.VueGeneratedCode,
 ) {
@@ -156,7 +156,7 @@ export function getTemplateCtx(
 }
 
 export function getComponentNames(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
 	vueFile: vue.VueGeneratedCode,
 	vueCompilerOptions: vue.VueCompilerOptions,
@@ -171,7 +171,7 @@ export function getComponentNames(
 }
 
 export function getElementAttrs(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
 	fileName: string,
 	tagName: string,
@@ -201,7 +201,7 @@ export function getElementAttrs(
 }
 
 function getVariableType(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
 	vueCode: vue.VueGeneratedCode,
 	name: string,
@@ -224,7 +224,7 @@ function getVariableType(
 }
 
 function searchVariableDeclarationNode(
-	ts: typeof import('typescript/lib/tsserverlibrary'),
+	ts: typeof import('typescript'),
 	sourceFile: ts.SourceFile,
 	name: string,
 ) {
