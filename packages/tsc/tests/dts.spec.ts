@@ -30,7 +30,7 @@ describe('vue-tsc-dts', () => {
 		const vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 			: {};
-		return vue.createLanguages(
+		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
 			options.options,
@@ -38,6 +38,7 @@ describe('vue-tsc-dts', () => {
 			false,
 			fakeGlobalTypesHolder?.replace(windowsPathReg, '/'),
 		);
+		return [vueLanguagePlugin];
 	});
 	const program = createProgram(options);
 

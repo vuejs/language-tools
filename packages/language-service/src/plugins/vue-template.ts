@@ -1,4 +1,4 @@
-import { CodeInformation, ServiceEnvironment, ServicePluginInstance, SourceMapWithDocuments } from '@volar/language-service';
+import { CodeInformation, ServiceEnvironment, ServicePluginInstance, SourceMapWithDocuments, Disposable } from '@volar/language-service';
 import { VueGeneratedCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { Provide } from 'volar-service-typescript';
@@ -9,29 +9,46 @@ import { getComponentNames, getElementAttrs, getEventsOfTag, getPropsByTag, getT
 import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, ServicePlugin, TagNameCasing, VueCompilerOptions } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
+import { create as createHtmlService } from 'volar-service-html';
+import { create as createPugService } from 'volar-service-pug';
 
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
 
 export function create(
+	mode: 'html' | 'pug',
 	ts: typeof import('typescript'),
-	baseServide: ServicePlugin,
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
-	options: {
-		getScanner(service: ServicePluginInstance, document: TextDocument): html.Scanner | undefined,
-		updateCustomData(extraData: html.IHTMLDataProvider[]): void,
-		isSupportedDocument: (document: TextDocument) => boolean,
-	}
 ): ServicePlugin {
+
+	let customData: html.IHTMLDataProvider[] = [];
+
+	const onDidChangeCustomDataListeners = new Set<() => void>();
+	const onDidChangeCustomData = (listener: () => void): Disposable => {
+		onDidChangeCustomDataListeners.add(listener);
+		return {
+			dispose() {
+				onDidChangeCustomDataListeners.delete(listener);
+			},
+		};
+	};
+	const baseServicePlugin = mode === 'pug' ? createPugService : createHtmlService;
+	const baseService = baseServicePlugin({
+		getCustomData() {
+			return customData;
+		},
+		onDidChangeCustomData,
+	});
+
 	return {
-		name: 'vue-template',
+		name: `vue-template (${mode})`,
 		triggerCharacters: [
-			...baseServide.triggerCharacters ?? [],
+			...baseService.triggerCharacters ?? [],
 			'@', // vue event shorthand
 		],
 		create(context): ServicePluginInstance {
 
-			const baseServiceInstance = baseServide.create(context);
+			const baseServiceInstance = baseService.create(context);
 			const vueCompilerOptions = getVueOptions(context.env);
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');
@@ -73,7 +90,7 @@ export function create(
 
 				async provideCompletionItems(document, position, completionContext, token) {
 
-					if (!options.isSupportedDocument(document))
+					if (!isSupportedDocument(document))
 						return;
 
 					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
@@ -105,7 +122,7 @@ export function create(
 
 				async provideInlayHints(document) {
 
-					if (!options.isSupportedDocument(document))
+					if (!isSupportedDocument(document))
 						return;
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.inlayHints.missingProps') ?? false;
@@ -121,7 +138,7 @@ export function create(
 					for (const map of context.documents.getMaps(virtualCode)) {
 
 						const sourceVirtualFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
-						const scanner = options.getScanner(baseServiceInstance, document);
+						const scanner = getScanner(baseServiceInstance, document);
 
 						if (sourceVirtualFile instanceof VueGeneratedCode && scanner) {
 
@@ -222,18 +239,18 @@ export function create(
 
 				provideHover(document, position, token) {
 
-					if (!options.isSupportedDocument(document))
+					if (!isSupportedDocument(document))
 						return;
 
 					if (context.documents.getVirtualCodeByUri(document.uri)[0])
-						options.updateCustomData([]);
+						updateCustomData([]);
 
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
 
 				async provideDiagnostics(document, token) {
 
-					if (!options.isSupportedDocument(document))
+					if (!isSupportedDocument(document))
 						return;
 
 					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
@@ -291,11 +308,11 @@ export function create(
 
 				async provideDocumentSemanticTokens(document, range, legend, token) {
 
-					if (!options.isSupportedDocument(document))
+					if (!isSupportedDocument(document))
 						return;
 
 					const result = await baseServiceInstance.provideDocumentSemanticTokens?.(document, range, legend, token) ?? [];
-					const scanner = options.getScanner(baseServiceInstance, document);
+					const scanner = getScanner(baseServiceInstance, document);
 					if (!scanner)
 						return;
 
@@ -378,7 +395,7 @@ export function create(
 					}
 				}
 
-				options.updateCustomData([
+				updateCustomData([
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
 					{
 						getId: () => 'vue-template',
@@ -677,10 +694,36 @@ export function create(
 					}
 				}
 
-				options.updateCustomData([]);
+				updateCustomData([]);
 			}
 		},
 	};
+
+	function getScanner(service: ServicePluginInstance, document: TextDocument) {
+		if (mode === 'html') {
+			return service.provide['html/languageService']().createScanner(document.getText());
+		}
+		else {
+			const pugDocument = service.provide['pug/pugDocument'](document);
+			if (pugDocument) {
+				return service.provide['pug/languageService']().createScanner(pugDocument);
+			}
+		}
+	}
+
+	function updateCustomData(extraData: html.IHTMLDataProvider[]) {
+		customData = extraData;
+		onDidChangeCustomDataListeners.forEach(l => l());
+	}
+
+	function isSupportedDocument(document: TextDocument) {
+		if (mode === 'pug') {
+			return document.languageId === 'jade';
+		}
+		else {
+			return document.languageId === 'html';
+		}
+	}
 };
 
 function createInternalItemId(type: 'componentEvent' | 'componentProp', args: string[]) {

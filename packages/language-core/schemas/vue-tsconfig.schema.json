@@ -106,10 +106,6 @@
 					},
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1969"
 				},
-				"experimentalAdditionalLanguageModules": {
-					"type": "array",
-					"markdownDescription": "https://github.com/vuejs/language-tools/pull/2267"
-				},
 				"experimentalDefinePropProposal": {
 					"enum": [
 						"kevinEdition",

@@ -1,78 +1,26 @@
 import { ServiceEnvironment, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
-import { LanguagePlugin, VueGeneratedCode, createLanguages, hyphenateTag, scriptRanges } from '@vue/language-core';
+import { VueCompilerOptions, VueGeneratedCode, hyphenateTag, scriptRanges } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
-import type * as ts from 'typescript';
+import { Provide as TSProvide, create as baseCreate } from 'volar-service-typescript';
 import type { Data } from 'volar-service-typescript/lib/features/completions/basic';
-import type * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
-import { getNameCasing } from './ideFeatures/nameCasing';
-import { TagNameCasing, VueCompilerOptions } from './types';
+import { getNameCasing } from '../ideFeatures/nameCasing';
+import { TagNameCasing } from '../types';
+import { createAddComponentToOptionEdit } from './vue-extract-file';
 
-// volar services
-import { create as createCssService } from 'volar-service-css';
-import { create as createEmmetService } from 'volar-service-emmet';
-import { create as createHtmlService } from 'volar-service-html';
-import { create as createJsonService } from 'volar-service-json';
-import { create as createPugService } from 'volar-service-pug';
-import { create as createPugFormatService } from 'volar-service-pug-beautify';
-import { create as createTsService, Provide as TSProvide } from 'volar-service-typescript';
-import { create as createTsTqService } from 'volar-service-typescript-twoslash-queries';
-
-// our services
-import { create as createVueService } from './plugins/vue';
-import { create as createDocumentDropService } from './plugins/vue-document-drop';
-import { create as createAutoDotValueService } from './plugins/vue-autoinsert-dotvalue';
-import { create as createAutoWrapParenthesesService } from './plugins/vue-autoinsert-parentheses';
-import { create as createAutoAddSpaceService } from './plugins/vue-autoinsert-space';
-import { create as createReferencesCodeLensService } from './plugins/vue-codelens-references';
-import { create as createDirectiveCommentsService } from './plugins/vue-directive-comments';
-import { create as createVueExtractFileService, createAddComponentToOptionEdit } from './plugins/vue-extract-file';
-import { create as createVueTemplateLanguageService } from './plugins/vue-template';
-import { create as createToggleVBindService } from './plugins/vue-toggle-v-bind-codeaction';
-import { create as createVueTqService } from './plugins/vue-twoslash-queries';
-import { create as createVisualizeHiddenCallbackParamService } from './plugins/vue-visualize-hidden-callback-param';
-
-export interface Settings {
-	json?: Parameters<typeof createJsonService>[0];
-}
-
-export function resolveLanguages(
-	languages: Record<string, LanguagePlugin>,
-	ts: typeof import('typescript'),
-	getFileName: (fileId: string) => string,
-	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions,
-	codegenStack: boolean = false,
-): Record<string, LanguagePlugin> {
-
-	const vueLanguageModules = createLanguages(ts, getFileName, compilerOptions, vueCompilerOptions, codegenStack);
-
-	return {
-		...languages,
-		...vueLanguageModules.reduce((obj, module, i) => {
-			obj['vue_' + i] = module;
-			return obj;
-		}, {} as Record<string, LanguagePlugin>),
-	};
-}
-
-export function resolveServices(
-	services: Record<string, ServicePlugin>,
+export function create(
 	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
-) {
-
-	const tsService: ServicePlugin = services?.typescript ?? createTsService(ts);
-
-	services ??= {};
-	services.typescript = {
-		...tsService,
-		create(context) {
-			const base = tsService.create(context);
+): ServicePlugin {
+	const base = baseCreate(ts);
+	return {
+		...base,
+		create(context): ServicePluginInstance {
+			const baseInstance = base.create(context);
 			return {
-				...base,
+				...baseInstance,
 				async provideCompletionItems(document, position, completeContext, item) {
-					const result = await base.provideCompletionItems?.(document, position, completeContext, item);
+					const result = await baseInstance.provideCompletionItems?.(document, position, completeContext, item);
 					if (result) {
 
 						// filter __VLS_
@@ -118,7 +66,7 @@ export function resolveServices(
 				},
 				async resolveCompletionItem(item, token) {
 
-					item = await base.resolveCompletionItem?.(item, token) ?? item;
+					item = await baseInstance.resolveCompletionItem?.(item, token) ?? item;
 
 					const itemData = item.data as { uri?: string; } | undefined;
 
@@ -192,12 +140,12 @@ export function resolveServices(
 					return item;
 				},
 				async provideCodeActions(document, range, context, token) {
-					const result = await base.provideCodeActions?.(document, range, context, token);
+					const result = await baseInstance.provideCodeActions?.(document, range, context, token);
 					return result?.filter(codeAction => codeAction.title.indexOf('__VLS_') === -1);
 				},
 				async resolveCodeAction(item, token) {
 
-					const result = await base.resolveCodeAction?.(item, token) ?? item;
+					const result = await baseInstance.resolveCodeAction?.(item, token) ?? item;
 
 					if (result?.edit?.changes) {
 						for (const uri in result.edit.changes) {
@@ -218,7 +166,7 @@ export function resolveServices(
 					return result;
 				},
 				async provideSemanticDiagnostics(document, token) {
-					const result = await base.provideSemanticDiagnostics?.(document, token);
+					const result = await baseInstance.provideSemanticDiagnostics?.(document, token);
 					return result?.map(diagnostic => {
 						if (
 							diagnostic.source === 'ts'
@@ -235,111 +183,6 @@ export function resolveServices(
 			};
 		},
 	};
-
-	let customData: html.IHTMLDataProvider[] = [];
-	const onDidChangeCustomDataListeners = new Set<() => void>();
-
-	services.html ??= createVueTemplateLanguageService(
-		ts,
-		createHtmlService({
-			getCustomData() {
-				return customData;
-			},
-			onDidChangeCustomData(listener) {
-				onDidChangeCustomDataListeners.add(listener);
-				return {
-					dispose() {
-						onDidChangeCustomDataListeners.delete(listener);
-					},
-				};
-			},
-		}),
-		getVueOptions,
-		{
-			getScanner: (htmlService, document): html.Scanner | undefined => {
-				return htmlService.provide['html/languageService']().createScanner(document.getText());
-			},
-			updateCustomData(extraData) {
-				customData = extraData;
-				onDidChangeCustomDataListeners.forEach(l => l());
-			},
-			isSupportedDocument: (document) => document.languageId === 'html',
-		}
-	);
-	services.pug ??= createVueTemplateLanguageService(
-		ts,
-		createPugService({
-			getCustomData() {
-				return customData;
-			},
-			onDidChangeCustomData(listener) {
-				onDidChangeCustomDataListeners.add(listener);
-				return {
-					dispose() {
-						onDidChangeCustomDataListeners.delete(listener);
-					},
-				};
-			},
-		}),
-		getVueOptions,
-		{
-			getScanner(pugService, document): html.Scanner | undefined {
-				const pugDocument = pugService.provide['pug/pugDocument'](document);
-				if (pugDocument) {
-					return pugService.provide['pug/languageService']().createScanner(pugDocument);
-				}
-			},
-			updateCustomData(extraData) {
-				customData = extraData;
-				onDidChangeCustomDataListeners.forEach(l => l());
-			},
-			isSupportedDocument(document) {
-				return document.languageId === 'jade';
-			},
-		}
-	);
-	services.vue ??= createVueService();
-
-	const baseCssService = createCssService({ scssDocumentSelector: ['scss', 'postcss'] });
-	const cssService: ServicePlugin = {
-		...baseCssService,
-		create(context): ServicePluginInstance {
-			const serviceInstance = baseCssService.create(context);
-			return {
-				...serviceInstance,
-				async provideDiagnostics(document, token) {
-					let diagnostics = await serviceInstance.provideDiagnostics?.(document, token) ?? [];
-					if (document.languageId === 'postcss') {
-						diagnostics = diagnostics.filter(diag => diag.code !== 'css-semicolonexpected');
-						diagnostics = diagnostics.filter(diag => diag.code !== 'css-ruleorselectorexpected');
-						diagnostics = diagnostics.filter(diag => diag.code !== 'unknownAtRules');
-					}
-					return diagnostics;
-				},
-			};
-		},
-	};
-
-	services.css ??= cssService;
-	services['pug-beautify'] ??= createPugFormatService();
-	services.json ??= createJsonService();
-	services['typescript/twoslash-queries'] ??= createTsTqService();
-	services['vue/referencesCodeLens'] ??= createReferencesCodeLensService();
-	services['vue/documentDrop'] ??= createDocumentDropService(ts);
-	services['vue/autoInsertDotValue'] ??= createAutoDotValueService(ts);
-	services['vue/twoslash-queries'] ??= createVueTqService(ts);
-	services['vue/autoInsertParentheses'] ??= createAutoWrapParenthesesService(ts);
-	services['vue/autoInsertSpaces'] ??= createAutoAddSpaceService();
-	services['vue/visualizeHiddenCallbackParam'] ??= createVisualizeHiddenCallbackParamService();
-	services['vue/directiveComments'] ??= createDirectiveCommentsService();
-	services['vue/extractComponent'] ??= createVueExtractFileService(ts);
-	services['vue/toggleVBind'] ??= createToggleVBindService(ts);
-	services.emmet ??= createEmmetService();
-
-	services.html.name += ' (html)';
-	services.pug.name += ' (pug)';
-
-	return services;
 }
 
 // fix https://github.com/vuejs/language-tools/issues/916

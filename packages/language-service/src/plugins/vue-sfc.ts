@@ -15,7 +15,7 @@ export interface Provide {
 
 export function create(): ServicePlugin {
 	return {
-		name: 'vue-basic',
+		name: 'vue-sfc',
 		create(context): ServicePluginInstance<Provide> {
 
 			const htmlPlugin = createHtmlService({

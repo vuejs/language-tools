@@ -55,7 +55,6 @@ export interface VueCompilerOptions {
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 	experimentalUseElementAccessInTemplate: boolean;
-	experimentalAdditionalLanguageModules: string[];
 }
 
 export type VueLanguagePlugin = (ctx: {

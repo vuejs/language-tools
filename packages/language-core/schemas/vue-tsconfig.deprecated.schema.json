@@ -51,6 +51,11 @@
 				"experimentalComponentOptionsWrapperEnable": {
 					"deprecated": true
 				},
+				"experimentalAdditionalLanguageModules": {
+					"deprecated": true,
+					"type": "array",
+					"markdownDescription": "https://github.com/vuejs/language-tools/pull/2267"
+				},
 				"bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents": {
 					"deprecated": true
 				},

@@ -50,7 +50,7 @@ function getFileRegistryKey(
 	return JSON.stringify(values);
 }
 
-export function createVueLanguage(
+export function createVueLanguagePlugin(
 	ts: typeof import('typescript'),
 	getFileName: (fileId: string) => string,
 	compilerOptions: ts.CompilerOptions = {},
@@ -159,21 +159,4 @@ export function createVueLanguage(
 			},
 		},
 	};
-}
-
-/**
- * @deprecated planed to remove in 2.0, please use createVueLanguage instead of
- */
-export function createLanguages(
-	ts: typeof import('typescript'),
-	getFileName: (fileId: string) => string,
-	compilerOptions: ts.CompilerOptions = {},
-	vueCompilerOptions: Partial<VueCompilerOptions> = {},
-	codegenStack: boolean = false,
-	globalTypesHolder?: string
-): LanguagePlugin[] {
-	return [
-		createVueLanguage(ts, getFileName, compilerOptions, vueCompilerOptions, codegenStack, globalTypesHolder),
-		...vueCompilerOptions.experimentalAdditionalLanguageModules?.map(module => require(module)) ?? [],
-	];
 }
