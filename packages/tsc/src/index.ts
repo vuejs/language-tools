@@ -21,7 +21,7 @@ export function run() {
 				runExtensions.length === extensions.length
 				&& runExtensions.every(ext => extensions.includes(ext))
 			) {
-				return vue.createLanguages(
+				const vueLanguagePlugin = vue.createVueLanguagePlugin(
 					ts,
 					id => id,
 					options.options,
@@ -29,6 +29,7 @@ export function run() {
 					false,
 					createFakeGlobalTypesHolder(options)?.replace(windowsPathReg, '/'),
 				);
+				return [vueLanguagePlugin];
 			}
 			else {
 				runExtensions = extensions;

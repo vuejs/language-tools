@@ -178,11 +178,6 @@ function getPartialVueCompilerOptions(
 
 		result.plugins = plugins;
 	}
-	if (rawOptions.experimentalAdditionalLanguageModules) {
-		result.experimentalAdditionalLanguageModules = rawOptions.experimentalAdditionalLanguageModules
-			.map(resolvePath)
-			.filter((module): module is NonNullable<typeof module> => !!module);
-	}
 
 	return result;
 
@@ -266,7 +261,6 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 
 		// experimental
 		experimentalDefinePropProposal: vueOptions.experimentalDefinePropProposal ?? false,
-		experimentalAdditionalLanguageModules: vueOptions.experimentalAdditionalLanguageModules ?? [],
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 		// https://vuejs.org/guide/essentials/forms.html#form-input-bindings

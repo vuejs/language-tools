@@ -149,7 +149,7 @@ export function baseCreate(
 		}
 	};
 
-	const vueLanguagePlugins = vue.createLanguages(
+	const vueLanguagePlugin = vue.createVueLanguagePlugin(
 		ts,
 		id => id,
 		host.getCompilationSettings(),
@@ -158,7 +158,7 @@ export function baseCreate(
 	const language = createLanguage(
 		ts,
 		ts.sys,
-		vueLanguagePlugins,
+		[vueLanguagePlugin],
 		configFileName,
 		host,
 		{

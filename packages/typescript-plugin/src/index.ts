@@ -6,7 +6,7 @@ const windowsPathReg = /\\/g;
 
 export = createLanguageServicePlugin((ts, info) => {
 	const vueOptions = vue.resolveVueCompilerOptions(getVueCompilerOptions());
-	const languagePlugins = vue.createLanguages(
+	const languagePlugin = vue.createVueLanguagePlugin(
 		ts,
 		id => id,
 		info.languageServiceHost.getCompilationSettings(),
@@ -22,7 +22,7 @@ export = createLanguageServicePlugin((ts, info) => {
 		return result;
 	};
 
-	return languagePlugins;
+	return [languagePlugin];
 
 	function getVueCompilerOptions() {
 		if (info.project.projectKind === ts.server.ProjectKind.Configured) {
