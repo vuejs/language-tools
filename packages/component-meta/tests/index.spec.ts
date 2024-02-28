@@ -654,7 +654,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/ts-component/component.ts');
 		const meta = checker.getComponentMeta(componentPath);
 
-		expect(meta.type).toEqual(TypeMeta.Function);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
 		const a = meta.props.find(prop =>
 			prop.name === 'foo'
@@ -677,8 +677,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const Foo = checker.getComponentMeta(componentPath, 'Foo');
 		const Bar = checker.getComponentMeta(componentPath, 'Bar');
 
-		expect(Foo.type).toEqual(TypeMeta.Function);
-		expect(Bar.type).toEqual(TypeMeta.Function);
+		expect(Foo.type).toEqual(TypeMeta.Class);
+		expect(Bar.type).toEqual(TypeMeta.Class);
 		expect(exportNames).toEqual(['Foo', 'Bar']);
 
 		const a = Foo.props.find(prop =>
@@ -762,7 +762,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/ts-component/component.tsx');
 		const meta = checker.getComponentMeta(componentPath);
 
-		expect(meta.type).toEqual(TypeMeta.Function);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
 		const a = meta.props.find(prop =>
 			prop.name === 'foo'

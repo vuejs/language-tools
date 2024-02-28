@@ -585,11 +585,15 @@ exports[`vue-tsc-dts > Input: ts-component/component.ts, Output: ts-component/co
 exports[`vue-tsc-dts > Input: ts-component/component.tsx, Output: ts-component/component.d.ts 1`] = `undefined`;
 
 exports[`vue-tsc-dts > Input: ts-named-export/component.ts, Output: ts-named-export/component.d.ts 1`] = `
-"export declare const Foo: (props: {
+"export declare const Foo: import("vue").DefineSetupFnComponent<{
     foo: string;
-} & {}) => any;
-export declare const Bar: (props: {
+}, {}, {}, {
+    foo: string;
+} & {}, import("vue").PublicProps>;
+export declare const Bar: import("vue").DefineSetupFnComponent<{
     bar?: number;
-} & {}) => any;
+}, {}, {}, {
+    bar?: number;
+} & {}, import("vue").PublicProps>;
 "
 `;
