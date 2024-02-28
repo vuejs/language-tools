@@ -53,8 +53,7 @@
 				},
 				"experimentalAdditionalLanguageModules": {
 					"deprecated": true,
-					"type": "array",
-					"markdownDescription": "https://github.com/vuejs/language-tools/pull/2267"
+					"description": "Deprecated since v2.0.0."
 				},
 				"bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents": {
 					"deprecated": true
