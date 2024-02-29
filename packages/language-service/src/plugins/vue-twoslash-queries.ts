@@ -1,7 +1,7 @@
 import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
-import { getQuickInfoAtPosition } from 'typescript-vue-plugin/out/namedPipe/client';
+import { getQuickInfoAtPosition } from '@vue/typescript-plugin/out/namedPipe/client';
 
 const twoslashReg = /<!--\s*\^\?\s*-->/g;
 

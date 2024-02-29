@@ -4,7 +4,7 @@ import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { getAst } from './typescript';
-import * as namedPipeClient from 'typescript-vue-plugin/out/namedPipe/client';
+import * as namedPipeClient from '@vue/typescript-plugin/out/namedPipe/client';
 
 export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
