@@ -7,7 +7,7 @@ export function getQuickInfoAtPosition(fileName: string, position: number) {
 		return;
 	}
 
-	const [info] = match;
+	const { info } = match;
 	const languageService = info.languageService;
 
 	return languageService.getQuickInfoAtPosition(fileName, position);

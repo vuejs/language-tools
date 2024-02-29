@@ -1,5 +1,6 @@
 import { VueGeneratedCode, isSemanticTokensEnabled } from '@vue/language-core';
 import { getProject } from '../utils';
+import type * as ts from 'typescript';
 
 export function collectExtractProps(fileName: string, templateCodeRange: [number, number], isTsPlugin: boolean = true) {
 
@@ -8,7 +9,7 @@ export function collectExtractProps(fileName: string, templateCodeRange: [number
 		return;
 	}
 
-	const [info, files, ts] = match;
+	const { info, files, ts } = match;
 	const volarFile = files.get(fileName);
 	if (!(volarFile?.generated?.code instanceof VueGeneratedCode)) {
 		return;
@@ -20,8 +21,13 @@ export function collectExtractProps(fileName: string, templateCodeRange: [number
 		model: boolean;
 	}>();
 	const languageService = info.languageService;
-	const sourceFile = languageService.getProgram()!.getSourceFile(fileName)!;
-	const checker = languageService.getProgram()!.getTypeChecker();
+	const program: ts.Program = (languageService as any).getCurrentProgram();
+	if (!program) {
+		return;
+	}
+
+	const sourceFile = program.getSourceFile(fileName)!;
+	const checker = program.getTypeChecker();
 	const script = volarFile.generated?.languagePlugin.typescript?.getScript(volarFile.generated.code);
 	const maps = script ? [...files.getMaps(script.code).values()] : [];
 	const sfc = volarFile.generated.code.sfc;

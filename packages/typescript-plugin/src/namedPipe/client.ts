@@ -2,27 +2,77 @@ import * as net from 'net';
 import type { Request } from './server';
 import { pipeFile } from './utils';
 
-export function collectExtractPropsRequest(fileName: string, templateCodeRange: [number, number]) {
+export function collectExtractProps(
+	...args: Parameters<typeof import('./requests/collectExtractProps.js')['collectExtractProps']>
+) {
 	return sendRequest<ReturnType<typeof import('./requests/collectExtractProps')['collectExtractProps']>>({
 		type: 'collectExtractProps',
-		fileName,
-		templateCodeRange,
+		args,
 	});
 }
 
-export function getPropertiesAtLocation(fileName: string, position: number) {
-	return sendRequest<ReturnType<typeof import('./requests/getPropertiesAtLocation')['getPropertiesAtLocation']>>({
+export async function getPropertiesAtLocation(
+	...args: Parameters<typeof import('./requests/getPropertiesAtLocation.js')['getPropertiesAtLocation']>
+) {
+	return await sendRequest<ReturnType<typeof import('./requests/getPropertiesAtLocation')['getPropertiesAtLocation']>>({
 		type: 'getPropertiesAtLocation',
-		fileName,
-		position,
+		args,
 	});
 }
 
-export function getQuickInfoAtPosition(fileName: string, position: number) {
+export function getQuickInfoAtPosition(
+	...args: Parameters<typeof import('./requests/getQuickInfoAtPosition.js')['getQuickInfoAtPosition']>
+) {
 	return sendRequest<ReturnType<typeof import('./requests/getQuickInfoAtPosition')['getQuickInfoAtPosition']>>({
 		type: 'getQuickInfoAtPosition',
-		fileName,
-		position,
+		args,
+	});
+}
+
+// Component Infos
+
+export function getComponentProps(
+	...args: Parameters<typeof import('./requests/componentInfos.js')['getComponentProps']>
+) {
+	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentProps']>>({
+		type: 'getComponentProps',
+		args,
+	});
+}
+
+export function getComponentEvents(
+	...args: Parameters<typeof import('./requests/componentInfos.js')['getComponentEvents']>
+) {
+	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentEvents']>>({
+		type: 'getComponentEvents',
+		args,
+	});
+}
+
+export function getTemplateContextProps(
+	...args: Parameters<typeof import('./requests/componentInfos.js')['getTemplateContextProps']>
+) {
+	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getTemplateContextProps']>>({
+		type: 'getTemplateContextProps',
+		args,
+	});
+}
+
+export function getComponentNames(
+	...args: Parameters<typeof import('./requests/componentInfos.js')['getComponentNames']>
+) {
+	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentNames']>>({
+		type: 'getComponentNames',
+		args,
+	});
+}
+
+export function getElementAttrs(
+	...args: Parameters<typeof import('./requests/componentInfos.js')['getElementAttrs']>
+) {
+	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getElementAttrs']>>({
+		type: 'getElementAttrs',
+		args,
 	});
 }
 
@@ -39,11 +89,11 @@ function sendRequest<T>(request: Request) {
 				client.end();
 			});
 			client.on('error', err => {
-				console.error(err);
+				console.error('[Vue Named Pipe Client]', err);
 				return resolve(undefined);
 			});
 		} catch (e) {
-			console.error(e);
+			console.error('[Vue Named Pipe Client]', e);
 			return resolve(undefined);
 		}
 	});

@@ -8,9 +8,9 @@ export function getPropertiesAtLocation(fileName: string, position: number, isTs
 		return;
 	}
 
-	const [info, files, ts] = match;
+	const { info, files, ts } = match;
 	const languageService = info.languageService;
-	const program = languageService.getProgram();
+	const program: ts.Program = (languageService as any).getCurrentProgram();
 	if (!program) {
 		return;
 	}

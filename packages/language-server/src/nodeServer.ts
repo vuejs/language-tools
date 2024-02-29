@@ -1,4 +1,4 @@
-import { ServerProject } from '@volar/language-server';
+import { Connection, ServerProject } from '@volar/language-server';
 import { createConnection, createServer, createSimpleProjectProviderFactory, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
 import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
 import { ServiceEnvironment, convertAttrName, convertTagName, createVueServicePlugins, detect } from '@vue/language-service';
@@ -6,8 +6,10 @@ import { ComponentMetaChecker, baseCreate } from 'vue-component-meta/out/base';
 import { DetectNameCasingRequest, GetComponentMeta, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './protocol';
 import { VueInitializationOptions } from './types';
 
-const connection = createConnection();
-const server = createServer(connection);
+export const connection: Connection = createConnection();
+
+export const server = createServer(connection);
+
 const checkers = new WeakMap<ServerProject, ComponentMetaChecker>();
 const envToVueOptions = new WeakMap<ServiceEnvironment, VueCompilerOptions>();
 
@@ -100,14 +102,14 @@ connection.onRequest(ParseSFCRequest.type, params => {
 connection.onRequest(DetectNameCasingRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return detect(tsdk.typescript, languageService.context, params.textDocument.uri, envToVueOptions.get(languageService.context.env)!);
+		return await detect(languageService.context, params.textDocument.uri);
 	}
 });
 
 connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return convertTagName(tsdk.typescript, languageService.context, params.textDocument.uri, params.casing, envToVueOptions.get(languageService.context.env)!);
+		return await convertTagName(languageService.context, params.textDocument.uri, params.casing);
 	}
 });
 
@@ -116,7 +118,7 @@ connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 	if (languageService) {
 		const vueOptions = envToVueOptions.get(languageService.context.env);
 		if (vueOptions) {
-			return convertAttrName(tsdk.typescript, languageService.context, params.textDocument.uri, params.casing, envToVueOptions.get(languageService.context.env)!);
+			return await convertAttrName(languageService.context, params.textDocument.uri, params.casing);
 		}
 	}
 });

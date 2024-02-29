@@ -273,6 +273,9 @@ importers:
       '@vue/language-core':
         specifier: 1.8.27
         version: link:../language-core
+      '@vue/shared':
+        specifier: ^3.4.0
+        version: 3.4.20
     devDependencies:
       '@types/node':
         specifier: latest

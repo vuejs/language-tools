@@ -65,7 +65,7 @@ export function create(
 										}
 
 										// fix #2458
-										casing ??= await getNameCasing(ts, context, sourceFile.id, getVueOptions(context.env));
+										casing ??= await getNameCasing(context, sourceFile.id);
 
 										if (casing.tag === TagNameCasing.Kebab) {
 											for (const item of result.items) {
@@ -114,7 +114,7 @@ export function create(
 							item.textEdit.newText = newName;
 							const [_, sourceFile] = context.documents.getVirtualCodeByUri(itemData.uri);
 							if (sourceFile) {
-								const casing = await getNameCasing(ts, context, sourceFile.id, getVueOptions(context.env));
+								const casing = await getNameCasing(context, sourceFile.id);
 								if (casing.tag === TagNameCasing.Kebab) {
 									item.textEdit.newText = hyphenateTag(item.textEdit.newText);
 								}
