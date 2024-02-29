@@ -4,6 +4,6 @@
 	"devDependencies": {
 		"vue": "^3.3.0",
 		"vue-component-type-helpers": "1.8.27",
-		"vue2": "npm:vue@2.7"
+		"vue2": "npm:vue@2.7.16"
 	}
 }
