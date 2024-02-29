@@ -38,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				if (!serverPathStatusItem) {
 					serverPathStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 					serverPathStatusItem.text = '[vue] configured server path';
-					serverPathStatusItem.command = 'volar.action.gotoServerFile';
+					serverPathStatusItem.command = 'vue.action.gotoServerFile';
 					serverPathStatusItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 					serverPathStatusItem.show();
 					vscode.commands.registerCommand(serverPathStatusItem.command, () => {

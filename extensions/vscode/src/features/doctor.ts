@@ -16,7 +16,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-	item.command = 'volar.action.doctor';
+	item.command = 'vue.action.doctor';
 
 	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
 
@@ -49,7 +49,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 		},
 	));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.doctor', () => {
+	context.subscriptions.push(vscode.commands.registerCommand('vue.action.doctor', () => {
 		const doc = vscode.window.activeTextEditor?.document;
 		if (
 			doc

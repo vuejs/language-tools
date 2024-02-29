@@ -48,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 
 async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
-	vscode.commands.executeCommand('setContext', 'volar.activated', true);
+	vscode.commands.executeCommand('setContext', 'vue.activated', true);
 
 	const outputChannel = vscode.window.createOutputChannel('Vue Language Server');
 
@@ -79,8 +79,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	activateAutoInsertion(selectors, client);
 	activateDocumentDropEdit(selectors, client);
-	activateWriteVirtualFiles('volar.action.writeVirtualFiles', client);
-
+	activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
 	activateServerSys(client);
 
 	async function requestReloadVscode() {
@@ -98,13 +97,13 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				requestReloadVscode();
 			}
 			if (e.affectsConfiguration('vue')) {
-				vscode.commands.executeCommand('volar.action.restartServer');
+				vscode.commands.executeCommand('vue.action.restartServer');
 			}
 		}));
 	}
 
 	async function activateRestartRequest() {
-		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
+		context.subscriptions.push(vscode.commands.registerCommand('vue.action.restartServer', async () => {
 
 			await client.stop();
 
