@@ -42,6 +42,7 @@ export function parseScriptSetupRanges(
 		type: TextRange | undefined;
 		defaultValue: TextRange | undefined;
 		required: boolean;
+		isModel?: boolean;
 	}[] = [];
 	const bindings = parseBindingRanges(ts, ast);
 	const text = ast.text;
@@ -133,6 +134,7 @@ export function parseScriptSetupRanges(
 					type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
 					defaultValue: undefined,
 					required,
+					isModel: true,
 				});
 			}
 			else if (callText === 'defineProp') {

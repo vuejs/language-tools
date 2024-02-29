@@ -238,6 +238,24 @@ export default _default;
 "
 `;
 
+exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
+"declare const _default: import("vue").DefineComponent<{
+    foo: import("vue").PropType<number>;
+    bar: import("vue").PropType<string[]>;
+}, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    "update:foo": (foo: number) => void;
+    "update:bar": (bar: string[]) => void;
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    foo: import("vue").PropType<number>;
+    bar: import("vue").PropType<string[]>;
+}>> & {
+    "onUpdate:foo"?: (foo: number) => any;
+    "onUpdate:bar"?: (bar: string[]) => any;
+}, {}, {}>;
+export default _default;
+"
+`;
+
 exports[`vue-tsc-dts > Input: reference-type-props/component.vue, Output: reference-type-props/component.vue.d.ts 1`] = `
 "import { MyProps } from './my-props';
 declare const _default: import("vue").DefineComponent<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps>, {

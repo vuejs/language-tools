@@ -422,6 +422,37 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			enableAllFeatures({}),
 		]);
 	}
+	function* generateModelEmits(): Generator<CodeAndStack> {
+		if (!scriptSetup || !scriptSetupRanges) {
+			return;
+		}
+
+		yield _(`let __VLS_modelEmitsType!: {}`);
+
+		if (scriptSetupRanges.defineProp.length) {
+			yield _(` & ReturnType<typeof import('${vueCompilerOptions.lib}').defineEmits<{\n`);
+			for (const defineProp of scriptSetupRanges.defineProp) {
+				if (!defineProp.isModel)
+					continue;
+
+				let propName = 'modelValue';
+				if (defineProp.name) {
+					propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+					propName = propName.replace(/['"]+/g, '')
+				}
+				yield _(`'update:${propName}': [${propName}:`);
+				if (defineProp.type) {
+					yield _(scriptSetup.content.substring(defineProp.type.start, defineProp.type.end));
+				}
+				else {
+					yield _(`any`);
+				}
+				yield _(`];\n`);
+			}
+			yield _(`}>>`);
+		}
+		yield _(`;\n`);
+	}
 	function* generateScriptSetupAndTemplate(): Generator<CodeAndStack> {
 		if (!scriptSetup || !scriptSetupRanges)
 			return;
@@ -515,6 +546,8 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			}
 			yield _(`;\n`);
 
+			yield* generateModelEmits()
+
 			yield _(`let __VLS_fnPropsDefineComponent!: InstanceType<typeof __VLS_fnComponent>['$props'];\n`);
 			yield _(`let __VLS_fnPropsSlots!: `);
 			if (scriptSetupRanges.slots.define && vueCompilerOptions.jsxSlots) {
@@ -536,7 +569,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 				+ `			expose(exposed: import('${vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,\n`
 				+ `			attrs: any,\n`
 				+ `			slots: ReturnType<typeof __VLS_template>,\n`
-				+ `			emit: typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'},\n`
+				+ `			emit: typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'} & typeof __VLS_modelEmitsType,\n`
 				+ `		};\n`);
 			yield _(`	})(),\n`); // __VLS_setup = (async () => {
 			yield _(`) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))`);
@@ -723,6 +756,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			yield _(`};\n`);
 		}
 
+		yield* generateModelEmits()
 		yield* generateTemplate(functional);
 
 		if (mode === 'return' || mode === 'export') {
@@ -823,11 +857,12 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 				}
 				yield _(`},\n`);
 			}
+			yield _(`emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`)
 			if (ranges.emits.define) {
-				yield _(`emits: ({} as __VLS_NormalizeEmits<typeof `);
+				yield _(` & typeof `)
 				yield _(ranges.emits.name ?? '__VLS_emit');
-				yield _(`>),\n`);
 			}
+			yield _(`>),\n`);
 		}
 		if (script && scriptRanges?.exportDefault?.args) {
 			yield _(generateSourceCode(script, scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1));

@@ -19,6 +19,24 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(meta.props.filter(prop => !prop.global)).toEqual([]);
 	});
 
+	test('reference-type-model', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-model/component.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		// expect(meta.type).toEqual(TypeMeta.Class);
+
+		const foo = meta.props.find(prop => prop.name === 'foo');
+		const onUpdateFoo = meta.events.find(event => event.name === 'update:foo')
+
+		const bar = meta.props.find(prop => prop.name === 'bar');
+		const onUpdateBar = meta.events.find(event => event.name === 'update:bar')
+
+		expect(foo).toBeDefined();
+		expect(bar).toBeDefined();
+		expect(onUpdateFoo).toBeDefined();
+		expect(onUpdateBar).toBeDefined();
+	})
+
 	test('reference-type-props', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-props/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
