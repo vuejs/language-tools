@@ -1,4 +1,4 @@
-import { getProject } from './utils';
+import { getProject } from '../utils';
 
 export function getQuickInfoAtPosition(fileName: string, position: number) {
 

@@ -1,6 +1,6 @@
 import { createLanguageServicePlugin } from './createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
-import { startNamedPipeServer } from './requests/server';
+import { startNamedPipeServer } from './namedPipe/server';
 
 const windowsPathReg = /\\/g;
 

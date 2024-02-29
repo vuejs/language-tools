@@ -2,7 +2,7 @@ import type * as ts from 'typescript';
 import { decorateLanguageService } from '@volar/typescript/lib/node/decorateLanguageService';
 import { decorateLanguageServiceHost, searchExternalFiles } from '@volar/typescript/lib/node/decorateLanguageServiceHost';
 import { createFileRegistry, LanguagePlugin, resolveCommonLanguageId } from '@vue/language-core';
-import { projects } from './requests/utils';
+import { projects } from './namedPipe/utils';
 
 const externalFiles = new WeakMap<ts.server.Project, string[]>();
 const projectExternalFileExtensions = new WeakMap<ts.server.Project, string[]>();

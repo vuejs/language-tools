@@ -1,5 +1,5 @@
 import { VueGeneratedCode, isSemanticTokensEnabled } from '@vue/language-core';
-import { getProject } from './utils';
+import { getProject } from '../utils';
 
 export function collectExtractProps(fileName: string, templateCodeRange: [number, number], isTsPlugin: boolean = true) {
 

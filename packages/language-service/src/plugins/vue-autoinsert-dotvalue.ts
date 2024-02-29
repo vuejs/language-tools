@@ -4,7 +4,7 @@ import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { getAst } from './typescript';
-import { sendGetPropertiesAtLocation } from 'typescript-vue-plugin/out/requests/client';
+import { getPropertiesAtLocation } from 'typescript-vue-plugin/out/namedPipe/client';
 
 export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
@@ -46,7 +46,7 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					if (isBlacklistNode(ts, ast, document.offsetAt(position), false))
 						return;
 
-					const props = await sendGetPropertiesAtLocation(fileName, document.offsetAt(position)) ?? [];
+					const props = await getPropertiesAtLocation(fileName, document.offsetAt(position)) ?? [];
 					if (props.some(prop => prop === 'value')) {
 						return '${1:.value}';
 					}

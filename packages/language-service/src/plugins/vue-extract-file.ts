@@ -2,7 +2,7 @@ import { CreateFile, ServicePlugin, TextDocumentEdit, TextEdit } from '@volar/la
 import { ExpressionNode, type TemplateChildNode } from '@vue/compiler-dom';
 import { Sfc, VueGeneratedCode, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { sendCollectExtractPropsRequest } from 'typescript-vue-plugin/out/requests/client';
+import { collectExtractPropsRequest } from 'typescript-vue-plugin/out/namedPipe/client';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 interface ActionData {
@@ -73,7 +73,7 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					if (!templateCodeRange)
 						return codeAction;
 
-					const toExtract = await sendCollectExtractPropsRequest(sourceFile.generated.code.fileName, templateCodeRange) ?? [];
+					const toExtract = await collectExtractPropsRequest(sourceFile.generated.code.fileName, templateCodeRange) ?? [];
 					if (!toExtract)
 						return codeAction;
 

@@ -1,9 +1,9 @@
-import * as net from 'net';
 import * as fs from 'fs';
-import { collectExtractProps } from './collectExtractProps';
+import * as net from 'net';
+import { collectExtractProps } from './requests/collectExtractProps';
+import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
+import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
 import { pipeFile } from './utils';
-import { getPropertiesAtLocation } from './getPropertiesAtLocation';
-import { getQuickInfoAtPosition } from './getQuickInfoAtPosition';
 
 export interface CollectExtractPropsRequest {
 	type: 'collectExtractProps';

@@ -1,7 +1,7 @@
 import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
-import { sendGetQuickInfoAtPosition } from 'typescript-vue-plugin/out/requests/client';
+import { getQuickInfoAtPosition } from 'typescript-vue-plugin/out/namedPipe/client';
 
 const twoslashReg = /<!--\s*\^\?\s*-->/g;
 
@@ -31,7 +31,7 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 						for (const [_1, [_2, map]] of context.language.files.getMaps(virtualCode)) {
 							for (const [sourceOffset] of map.getSourceOffsets(hoverOffset)) {
-								const quickInfo = await sendGetQuickInfoAtPosition(sourceFile.generated.code.fileName, sourceOffset);
+								const quickInfo = await getQuickInfoAtPosition(sourceFile.generated.code.fileName, sourceOffset);
 								if (quickInfo) {
 									inlayHints.push({
 										position: { line: pointerPosition.line, character: pointerPosition.character + 2 },

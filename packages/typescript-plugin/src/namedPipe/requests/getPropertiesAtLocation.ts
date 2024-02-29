@@ -1,4 +1,4 @@
-import { getProject } from './utils';
+import { getProject } from '../utils';
 import type * as ts from 'typescript';
 
 export function getPropertiesAtLocation(fileName: string, position: number, isTsPlugin: boolean = true) {

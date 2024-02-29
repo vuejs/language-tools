@@ -1,28 +1,25 @@
 import * as net from 'net';
-import type { collectExtractProps } from './collectExtractProps';
-import type { getPropertiesAtLocation } from './getPropertiesAtLocation';
-import { Request } from './server';
+import type { Request } from './server';
 import { pipeFile } from './utils';
-import { getQuickInfoAtPosition } from './getQuickInfoAtPosition';
 
-export function sendCollectExtractPropsRequest(fileName: string, templateCodeRange: [number, number]) {
-	return sendRequest<ReturnType<typeof collectExtractProps>>({
+export function collectExtractPropsRequest(fileName: string, templateCodeRange: [number, number]) {
+	return sendRequest<ReturnType<typeof import('./requests/collectExtractProps')['collectExtractProps']>>({
 		type: 'collectExtractProps',
 		fileName,
 		templateCodeRange,
 	});
 }
 
-export function sendGetPropertiesAtLocation(fileName: string, position: number) {
-	return sendRequest<ReturnType<typeof getPropertiesAtLocation>>({
+export function getPropertiesAtLocation(fileName: string, position: number) {
+	return sendRequest<ReturnType<typeof import('./requests/getPropertiesAtLocation')['getPropertiesAtLocation']>>({
 		type: 'getPropertiesAtLocation',
 		fileName,
 		position,
 	});
 }
 
-export function sendGetQuickInfoAtPosition(fileName: string, position: number) {
-	return sendRequest<ReturnType<typeof getQuickInfoAtPosition>>({
+export function getQuickInfoAtPosition(fileName: string, position: number) {
+	return sendRequest<ReturnType<typeof import('./requests/getQuickInfoAtPosition')['getQuickInfoAtPosition']>>({
 		type: 'getQuickInfoAtPosition',
 		fileName,
 		position,
