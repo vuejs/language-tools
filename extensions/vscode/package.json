@@ -32,15 +32,6 @@
 		"virtualWorkspaces": {
 			"supported": "limited",
 			"description": "Install https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-web to have IntelliSense for .vue files in Web IDE."
-		},
-		"untrustedWorkspaces": {
-			"supported": "limited",
-			"description": "%volar.workspaceTrust.description%",
-			"restrictedConfigurations": [
-				"typescript.tsdk",
-				"typescript.tsserver.pluginPaths",
-				"typescript.npm"
-			]
 		}
 	},
 	"contributes": {
