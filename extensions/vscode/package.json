@@ -493,11 +493,6 @@
 				"category": "Volar (Debug)"
 			},
 			{
-				"command": "volar.action.showComponentMeta",
-				"title": "Show Component Meta",
-				"category": "Volar"
-			},
-			{
 				"command": "volar.action.splitEditors",
 				"title": "Split <script>, <template>, <style> Editors",
 				"category": "Volar",

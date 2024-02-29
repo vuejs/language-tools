@@ -1,16 +1,14 @@
-import { Connection, ServerProject } from '@volar/language-server';
+import { Connection } from '@volar/language-server';
 import { createConnection, createServer, createSimpleProjectProviderFactory, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
 import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
 import { ServiceEnvironment, convertAttrName, convertTagName, createVueServicePlugins, detect } from '@vue/language-service';
-import { ComponentMetaChecker, baseCreate } from 'vue-component-meta/out/base';
-import { DetectNameCasingRequest, GetComponentMeta, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './protocol';
+import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './protocol';
 import { VueInitializationOptions } from './types';
 
 export const connection: Connection = createConnection();
 
 export const server = createServer(connection);
 
-const checkers = new WeakMap<ServerProject, ComponentMetaChecker>();
 const envToVueOptions = new WeakMap<ServiceEnvironment, VueCompilerOptions>();
 
 let tsdk: ReturnType<typeof loadTsdkByPath>;
@@ -116,31 +114,8 @@ connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		const vueOptions = envToVueOptions.get(languageService.context.env);
-		if (vueOptions) {
-			return await convertAttrName(languageService.context, params.textDocument.uri, params.casing);
-		}
+		return await convertAttrName(languageService.context, params.textDocument.uri, params.casing);
 	}
-});
-
-connection.onRequest(GetComponentMeta.type, async params => {
-
-	const project = await server.projects.getProject(params.uri);
-	const langaugeService = project.getLanguageService();
-
-	let checker = checkers.get(project);
-	if (!checker) {
-		checker = baseCreate(
-			tsdk.typescript,
-			langaugeService.context.language.typescript!.configFileName,
-			langaugeService.context.language.typescript!.projectHost,
-			envToVueOptions.get(langaugeService.context.env)!,
-			{},
-			langaugeService.context.language.typescript!.languageServiceHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
-		);
-		checkers.set(project, checker);
-	}
-	return checker?.getComponentMeta(langaugeService.context.env.typescript!.uriToFileName(params.uri));
 });
 
 async function getService(uri: string) {

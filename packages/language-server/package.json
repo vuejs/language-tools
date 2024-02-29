@@ -20,7 +20,6 @@
 		"@volar/language-server": "~2.1.0",
 		"@vue/language-core": "1.8.27",
 		"@vue/language-service": "1.8.27",
-		"vscode-languageserver-protocol": "^3.17.5",
-		"vue-component-meta": "1.8.27"
+		"vscode-languageserver-protocol": "^3.17.5"
 	}
 }
