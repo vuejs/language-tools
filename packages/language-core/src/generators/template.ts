@@ -1307,6 +1307,15 @@ export function* generate(
 					|| (prop.name === 'name' && node.tag === 'slot') // #2308
 				) continue;
 
+				if (
+					vueCompilerOptions.target < 3
+					&& (node.tag === 'transition' || node.tag === 'Transition')
+					&& prop.name === 'persisted'
+				) {
+					// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom always adds it (#3881)
+					continue;
+				}
+
 				const shouldCamelize = canCamelize
 					&& hyphenateAttr(prop.name) === prop.name
 					&& !vueCompilerOptions.htmlAttributes.some(pattern => minimatch(prop.name, pattern));

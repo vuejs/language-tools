@@ -287,7 +287,7 @@ importers:
         specifier: 1.8.27
         version: link:../packages/component-type-helpers
       vue2:
-        specifier: npm:vue@2.7
+        specifier: npm:vue@2.7.16
         version: /vue@2.7.16
 
 packages:
