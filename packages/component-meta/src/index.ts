@@ -4,7 +4,17 @@ import type { MetaCheckerOptions } from './types';
 
 export * from './types';
 
-export function createComponentMetaCheckerByJsonConfig(
+/**
+ * @deprecated Use `createCheckerByJson` instead.
+ */
+export const createComponentMetaCheckerByJsonConfig = createCheckerByJson;
+
+/**
+ * @deprecated Use `createCheckerByJson` instead.
+ */
+export const createComponentMetaChecker = createChecker;
+
+export function createCheckerByJson(
 	rootPath: string,
 	json: any,
 	checkerOptions: MetaCheckerOptions = {},
@@ -17,7 +27,7 @@ export function createComponentMetaCheckerByJsonConfig(
 	);
 }
 
-export function createComponentMetaChecker(
+export function createChecker(
 	tsconfig: string,
 	checkerOptions: MetaCheckerOptions = {},
 ) {
