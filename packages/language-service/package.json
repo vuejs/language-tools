@@ -25,6 +25,7 @@
 		"@vue/shared": "^3.4.0",
 		"computeds": "^0.0.1",
 		"path-browserify": "^1.0.1",
+		"typescript-vue-plugin": "1.8.27",
 		"volar-service-css": "0.0.31",
 		"volar-service-emmet": "0.0.31",
 		"volar-service-html": "0.0.31",

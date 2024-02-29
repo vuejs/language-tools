@@ -15,7 +15,7 @@
 	},
 	"icon": "images/icon.png",
 	"displayName": "Vue Language Features (Volar)",
-	"description": "Language support for Vue 3",
+	"description": "Language Support for Vue",
 	"author": "johnsoncodehk",
 	"publisher": "Vue",
 	"engines": {
@@ -32,15 +32,6 @@
 		"virtualWorkspaces": {
 			"supported": "limited",
 			"description": "Install https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-web to have IntelliSense for .vue files in Web IDE."
-		},
-		"untrustedWorkspaces": {
-			"supported": "limited",
-			"description": "%volar.workspaceTrust.description%",
-			"restrictedConfigurations": [
-				"typescript.tsdk",
-				"typescript.tsserver.pluginPaths",
-				"typescript.npm"
-			]
 		}
 	},
 	"contributes": {
@@ -281,7 +272,7 @@
 		],
 		"configuration": {
 			"type": "object",
-			"title": "Volar",
+			"title": "Vue",
 			"properties": {
 				"vue.trace.server": {
 					"scope": "window",
@@ -483,24 +474,19 @@
 		},
 		"commands": [
 			{
-				"command": "volar.action.doctor",
+				"command": "vue.action.doctor",
 				"title": "Doctor",
-				"category": "Volar"
+				"category": "Vue"
 			},
 			{
-				"command": "volar.action.writeVirtualFiles",
+				"command": "vue.action.writeVirtualFiles",
 				"title": "Write Virtual Files",
-				"category": "Volar (Debug)"
+				"category": "Vue (Debug)"
 			},
 			{
-				"command": "volar.action.showComponentMeta",
-				"title": "Show Component Meta",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.splitEditors",
+				"command": "vue.action.splitEditors",
 				"title": "Split <script>, <template>, <style> Editors",
-				"category": "Volar",
+				"category": "Vue",
 				"icon": "images/split-editors.png"
 			}
 		],
@@ -535,21 +521,21 @@
 					"when": "editorLangId == vue"
 				},
 				{
-					"command": "volar.action.doctor",
-					"when": "volar.activated"
+					"command": "vue.action.doctor",
+					"when": "vue.activated"
 				},
 				{
-					"command": "volar.action.writeVirtualFiles",
-					"when": "volar.activated"
+					"command": "vue.action.writeVirtualFiles",
+					"when": "vue.activated"
 				},
 				{
-					"command": "volar.action.splitEditors",
+					"command": "vue.action.splitEditors",
 					"when": "editorLangId == vue"
 				}
 			],
 			"editor/title": [
 				{
-					"command": "volar.action.splitEditors",
+					"command": "vue.action.splitEditors",
 					"when": "resourceLangId == vue && config.vue.splitEditors.icon",
 					"group": "navigation"
 				}

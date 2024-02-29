@@ -1,16 +1,15 @@
-import { CodeInformation, ServiceEnvironment, ServicePluginInstance, SourceMapWithDocuments, Disposable } from '@volar/language-service';
+import { Disposable, ServiceEnvironment, ServicePluginInstance } from '@volar/language-service';
 import { VueGeneratedCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import { Provide } from 'volar-service-typescript';
+import * as namedPipeClient from 'typescript-vue-plugin/out/namedPipe/client';
+import { create as createHtmlService } from 'volar-service-html';
+import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { getComponentNames, getElementAttrs, getEventsOfTag, getPropsByTag, getTemplateCtx } from '../helpers';
 import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, ServicePlugin, TagNameCasing, VueCompilerOptions } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
-import { create as createHtmlService } from 'volar-service-html';
-import { create as createPugService } from 'volar-service-pug';
 
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
@@ -93,28 +92,28 @@ export function create(
 					if (!isSupportedDocument(document))
 						return;
 
-					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
+					let sync: (() => Promise<number>) | undefined;
+					let currentVersion: number | undefined;
 
-					if (virtualCode) {
-						for (const map of context.documents.getMaps(virtualCode)) {
-							const sourceVirtualFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
-							if (sourceVirtualFile instanceof VueGeneratedCode) {
-								await provideHtmlData(map, sourceVirtualFile);
-							}
-						}
+					const [_, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
+					if (sourceFile?.generated?.code instanceof VueGeneratedCode) {
+						sync = (await provideHtmlData(sourceFile.id, sourceFile.generated.code)).sync;
+						currentVersion = await sync();
 					}
 
-					const htmlComplete = await baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
+					let htmlComplete = await baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
+					while (currentVersion !== (currentVersion = await sync?.())) {
+						htmlComplete = await baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
+					}
 					if (!htmlComplete)
 						return;
 
-					if (virtualCode) {
-						for (const map of context.documents.getMaps(virtualCode)) {
-							const sourceVirtualFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
-							if (sourceVirtualFile instanceof VueGeneratedCode) {
-								afterHtmlCompletion(htmlComplete, map, sourceVirtualFile);
-							}
-						}
+					if (sourceFile?.generated?.code instanceof VueGeneratedCode) {
+						await afterHtmlCompletion(
+							htmlComplete,
+							context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot),
+							sourceFile.generated.code,
+						);
 					}
 
 					return htmlComplete;
@@ -129,7 +128,6 @@ export function create(
 					if (!enabled)
 						return;
 
-					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 					const result: vscode.InlayHint[] = [];
 					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
 					if (!virtualCode)
@@ -137,14 +135,14 @@ export function create(
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceVirtualFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
+						const code = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
 						const scanner = getScanner(baseServiceInstance, document);
 
-						if (sourceVirtualFile instanceof VueGeneratedCode && scanner) {
+						if (code instanceof VueGeneratedCode && scanner) {
 
 							// visualize missing required props
-							const casing = await getNameCasing(ts, context, map.sourceDocument.uri, vueCompilerOptions);
-							const components = getComponentNames(ts, languageService, sourceVirtualFile, vueCompilerOptions);
+							const casing = await getNameCasing(context, map.sourceDocument.uri);
+							const components = await namedPipeClient.getComponentNames(code.fileName) ?? [];
 							const componentProps: Record<string, string[]> = {};
 							let token: html.TokenType;
 							let current: {
@@ -161,7 +159,7 @@ export function create(
 											: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 									const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 									if (checkTag) {
-										componentProps[checkTag] ??= getPropsByTag(ts, languageService, sourceVirtualFile, checkTag, vueCompilerOptions, true);
+										componentProps[checkTag] ??= await namedPipeClient.getComponentProps(code.fileName, checkTag, true) ?? [];
 										current = {
 											unburnedRequiredProps: [...componentProps[checkTag]],
 											labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -261,12 +259,12 @@ export function create(
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceVirtualFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
-						if (!(sourceVirtualFile instanceof VueGeneratedCode))
+						const code = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
+						if (!(code instanceof VueGeneratedCode))
 							continue;
 
 						const templateErrors: vscode.Diagnostic[] = [];
-						const { template } = sourceVirtualFile.sfc;
+						const { template } = code.sfc;
 
 						if (template) {
 
@@ -316,18 +314,17 @@ export function create(
 					if (!scanner)
 						return;
 
-					const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
 					if (!virtualCode)
 						return;
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const sourceFile = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
-						if (!(sourceFile instanceof VueGeneratedCode))
+						const code = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
+						if (!(code instanceof VueGeneratedCode))
 							continue;
 
-						const templateScriptData = getComponentNames(ts, languageService, sourceFile, vueCompilerOptions);
+						const templateScriptData = await namedPipeClient.getComponentNames(code.fileName) ?? [];
 						const components = new Set([
 							...templateScriptData,
 							...templateScriptData.map(hyphenateTag),
@@ -373,10 +370,9 @@ export function create(
 				},
 			};
 
-			async function provideHtmlData(map: SourceMapWithDocuments<CodeInformation>, vueCode: VueGeneratedCode) {
+			async function provideHtmlData(sourceDocumentUri: string, vueCode: VueGeneratedCode) {
 
-				const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
-				const casing = await getNameCasing(ts, context, map.sourceDocument.uri, vueCompilerOptions);
+				const casing = await getNameCasing(context, sourceDocumentUri);
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
@@ -395,21 +391,37 @@ export function create(
 					}
 				}
 
+				const promises: Promise<void>[] = [];
+				const tagInfos = new Map<string, {
+					attrs: string[];
+					props: string[];
+					events: string[];
+				}>();
+
+				let version = 0;
+				let components: string[] | undefined;
+				let templateContextProps: string[] | undefined;
+
 				updateCustomData([
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
 					{
 						getId: () => 'vue-template',
 						isApplicable: () => true,
 						provideTags: () => {
-
-							const components = getComponentNames(ts, languageService, vueCode, vueCompilerOptions)
-								.filter(name =>
-									name !== 'Transition'
-									&& name !== 'TransitionGroup'
-									&& name !== 'KeepAlive'
-									&& name !== 'Suspense'
-									&& name !== 'Teleport'
-								);
+							if (!components) {
+								promises.push((async () => {
+									components = (await namedPipeClient.getComponentNames(vueCode.fileName) ?? [])
+										.filter(name =>
+											name !== 'Transition'
+											&& name !== 'TransitionGroup'
+											&& name !== 'KeepAlive'
+											&& name !== 'Suspense'
+											&& name !== 'Teleport'
+										);
+									version++;
+								})());
+								return [];
+							}
 							const scriptSetupRanges = vueCode.sfc.scriptSetup ? parseScriptSetupRanges(ts, vueCode.sfc.scriptSetup.ast, vueCompilerOptions) : undefined;
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
@@ -444,17 +456,47 @@ export function create(
 						},
 						provideAttributes: (tag) => {
 
-							const attrs = getElementAttrs(ts, languageService, vueCode.fileName, tag);
-							const props = new Set(getPropsByTag(ts, languageService, vueCode, tag, vueCompilerOptions));
-							const events = getEventsOfTag(ts, languageService, vueCode, tag, vueCompilerOptions);
+							namedPipeClient.getTemplateContextProps;
+
+							let failed = false;
+
+							let tagInfo = tagInfos.get(tag);
+							if (!tagInfo) {
+								promises.push((async () => {
+									const attrs = await namedPipeClient.getElementAttrs(vueCode.fileName, tag) ?? [];
+									const props = await namedPipeClient.getComponentProps(vueCode.fileName, tag) ?? [];
+									const events = await namedPipeClient.getComponentEvents(vueCode.fileName, tag) ?? [];
+									tagInfos.set(tag, {
+										attrs,
+										props,
+										events,
+									});
+									version++;
+								})());
+								return [];
+							}
+
+
+							if (failed) {
+								return [];
+							}
+
+							const { attrs, props, events } = tagInfo;
 							const attributes: html.IAttributeData[] = [];
 							const _tsCodegen = tsCodegen.get(vueCode.sfc);
 
 							if (_tsCodegen) {
+								if (!templateContextProps) {
+									promises.push((async () => {
+										templateContextProps = await namedPipeClient.getTemplateContextProps(vueCode.fileName) ?? [];
+										version++;
+									})());
+									return [];
+								}
 								let ctxVars = [
 									..._tsCodegen.scriptRanges()?.bindings.map(binding => vueCode.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
 									..._tsCodegen.scriptSetupRanges()?.bindings.map(binding => vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
-									...getTemplateCtx(ts, languageService, vueCode) ?? [],
+									...templateContextProps,
 								];
 								ctxVars = [...new Set(ctxVars)];
 								const dirs = ctxVars.map(hyphenateAttr).filter(v => v.startsWith('v-'));
@@ -467,9 +509,11 @@ export function create(
 								}
 							}
 
+							const propsSet = new Set(props);
+
 							for (const prop of [...props, ...attrs]) {
 
-								const isGlobal = !props.has(prop);
+								const isGlobal = !propsSet.has(prop);
 								const name = casing.attr === AttrNameCasing.Camel ? prop : hyphenateAttr(prop);
 
 								if (hyphenateAttr(name).startsWith('on-')) {
@@ -531,7 +575,7 @@ export function create(
 
 							for (const prop of [...props, ...attrs]) {
 								if (prop.startsWith('onUpdate:')) {
-									const isGlobal = !props.has(prop);
+									const isGlobal = !propsSet.has(prop);
 									models.push([isGlobal, prop.substring('onUpdate:'.length)]);
 								}
 							}
@@ -564,19 +608,21 @@ export function create(
 						provideValues: () => [],
 					},
 				]);
+
+				return {
+					async sync() {
+						await Promise.all(promises);
+						return version;
+					}
+				};
 			}
 
-			function afterHtmlCompletion(completionList: vscode.CompletionList, map: SourceMapWithDocuments<CodeInformation>, vueSourceFile: VueGeneratedCode) {
+			async function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument, code: VueGeneratedCode) {
 
-				const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
-				const replacement = getReplacement(completionList, map.sourceDocument);
+				const replacement = getReplacement(completionList, sourceDocument);
 				const componentNames = new Set(
-					getComponentNames(
-						ts,
-						languageService,
-						vueSourceFile,
-						vueCompilerOptions
-					).map(hyphenateTag)
+					(await namedPipeClient.getComponentNames(code.fileName) ?? [])
+						.map(hyphenateTag)
 				);
 
 				if (replacement) {

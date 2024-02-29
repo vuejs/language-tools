@@ -1,7 +1,6 @@
 import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
-import type { Provide as TSProvide } from 'volar-service-typescript';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -63,36 +62,6 @@ export function create(): ServicePlugin {
 					}
 
 					return options;
-				},
-
-				provideSemanticDiagnostics(document) {
-					return worker(document, (vueCode) => {
-
-						const result: vscode.Diagnostic[] = [];
-						const sfc = vueCode.sfc;
-						const program = context.inject<TSProvide, 'typescript/languageService'>('typescript/languageService').getProgram();
-
-						if (program && !program.getSourceFile(vueCode.fileName)) {
-							for (const script of [sfc.script, sfc.scriptSetup]) {
-
-								if (!script || script.content === '')
-									continue;
-
-								const error: vscode.Diagnostic = {
-									range: {
-										start: document.positionAt(script.start),
-										end: document.positionAt(script.startTagEnd),
-									},
-									message: `Virtual script ${JSON.stringify(vueCode.fileName)} not found, may missing <script lang="ts"> / "allowJs": true / jsconfig.json.`,
-									severity: 3 satisfies typeof vscode.DiagnosticSeverity.Information,
-									source: 'vue',
-								};
-								result.push(error);
-							}
-						}
-
-						return result;
-					});
 				},
 
 				provideDocumentLinks: undefined,

@@ -1,13 +1,5 @@
 import * as vscode from 'vscode-languageserver-protocol';
 import { TagNameCasing, AttrNameCasing, SFCParseResult } from '@vue/language-service';
-import { ComponentMeta } from 'vue-component-meta';
-
-export namespace GetComponentMeta {
-	export type ParamsType = vscode.TextDocumentIdentifier;
-	export type ResponseType = ComponentMeta | null | undefined;
-	export type ErrorType = never;
-	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/componentMeta');
-}
 
 export namespace DetectNameCasingRequest {
 	export type ParamsType = {

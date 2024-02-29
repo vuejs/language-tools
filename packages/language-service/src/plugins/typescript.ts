@@ -1,18 +1,33 @@
 import { ServiceEnvironment, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { VueCompilerOptions, VueGeneratedCode, hyphenateTag, scriptRanges } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
-import { Provide as TSProvide, create as baseCreate } from 'volar-service-typescript';
+import * as ts from 'typescript';
+import { create as baseCreate } from 'volar-service-typescript';
 import type { Data } from 'volar-service-typescript/lib/features/completions/basic';
-import type * as vscode from 'vscode-languageserver-protocol';
 import { getNameCasing } from '../ideFeatures/nameCasing';
 import { TagNameCasing } from '../types';
 import { createAddComponentToOptionEdit } from './vue-extract-file';
+
+// TODO: migrate patchs to ts plugin
+
+const asts = new WeakMap<ts.IScriptSnapshot, ts.SourceFile>();
+
+export function getAst(fileName: string, snapshot: ts.IScriptSnapshot, scriptKind?: ts.ScriptKind) {
+	let ast = asts.get(snapshot);
+	if (!ast) {
+		ast = ts.createSourceFile(fileName, snapshot.getText(0, snapshot.getLength()), ts.ScriptTarget.Latest, undefined, scriptKind);
+		asts.set(snapshot, ast);
+	}
+	return ast;
+}
 
 export function create(
 	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 ): ServicePlugin {
+
 	const base = baseCreate(ts);
+
 	return {
 		...base,
 		create(context): ServicePluginInstance {
@@ -50,7 +65,7 @@ export function create(
 										}
 
 										// fix #2458
-										casing ??= await getNameCasing(ts, context, sourceFile.id, getVueOptions(context.env));
+										casing ??= await getNameCasing(context, sourceFile.id);
 
 										if (casing.tag === TagNameCasing.Kebab) {
 											for (const item of result.items) {
@@ -71,10 +86,6 @@ export function create(
 					const itemData = item.data as { uri?: string; } | undefined;
 
 					let newName: string | undefined;
-
-					if (itemData?.uri && item.additionalTextEdits) {
-						patchAdditionalTextEdits(itemData.uri, item.additionalTextEdits);
-					}
 
 					for (const ext of getVueOptions(context.env).extensions) {
 						const suffix = capitalize(ext.substring('.'.length)); // .vue -> Vue
@@ -103,7 +114,7 @@ export function create(
 							item.textEdit.newText = newName;
 							const [_, sourceFile] = context.documents.getVirtualCodeByUri(itemData.uri);
 							if (sourceFile) {
-								const casing = await getNameCasing(ts, context, sourceFile.id, getVueOptions(context.env));
+								const casing = await getNameCasing(context, sourceFile.id);
 								if (casing.tag === TagNameCasing.Kebab) {
 									item.textEdit.newText = hyphenateTag(item.textEdit.newText);
 								}
@@ -117,22 +128,26 @@ export function create(
 
 					const data: Data = item.data;
 					if (item.data?.__isComponentAutoImport && data && item.additionalTextEdits?.length && item.textEdit && itemData?.uri) {
-						const langaugeService = context.inject<TSProvide, 'typescript/languageService'>('typescript/languageService');
-						const [virtualCode] = context.documents.getVirtualCodeByUri(itemData.uri);
-						const ast = langaugeService.getProgram()?.getSourceFile(itemData.uri);
-						const exportDefault = ast ? scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault : undefined;
-						if (virtualCode && ast && exportDefault) {
-							const componentName = newName ?? item.textEdit.newText;
-							const optionEdit = createAddComponentToOptionEdit(ts, ast, componentName);
-							if (optionEdit) {
-								const textDoc = context.documents.get(context.documents.getVirtualCodeUri(context.language.files.getByVirtualCode(virtualCode).id, virtualCode.id), virtualCode.languageId, virtualCode.snapshot);
-								item.additionalTextEdits.push({
-									range: {
-										start: textDoc.positionAt(optionEdit.range.start),
-										end: textDoc.positionAt(optionEdit.range.end),
-									},
-									newText: optionEdit.newText,
-								});
+						const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(itemData.uri);
+						if (virtualCode && (sourceFile.generated?.code instanceof VueGeneratedCode)) {
+							const script = sourceFile.generated.languagePlugin.typescript?.getScript(sourceFile.generated.code);
+							if (script) {
+								const ast = getAst(sourceFile.generated.code.fileName, script.code.snapshot, script.scriptKind);
+								const exportDefault = scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault;
+								if (exportDefault) {
+									const componentName = newName ?? item.textEdit.newText;
+									const optionEdit = createAddComponentToOptionEdit(ts, ast, componentName);
+									if (optionEdit) {
+										const textDoc = context.documents.get(context.documents.getVirtualCodeUri(sourceFile.id, virtualCode.id), virtualCode.languageId, virtualCode.snapshot);
+										item.additionalTextEdits.push({
+											range: {
+												start: textDoc.positionAt(optionEdit.range.start),
+												end: textDoc.positionAt(optionEdit.range.end),
+											},
+											newText: optionEdit.newText,
+										});
+									}
+								}
 							}
 						}
 					}
@@ -142,28 +157,6 @@ export function create(
 				async provideCodeActions(document, range, context, token) {
 					const result = await baseInstance.provideCodeActions?.(document, range, context, token);
 					return result?.filter(codeAction => codeAction.title.indexOf('__VLS_') === -1);
-				},
-				async resolveCodeAction(item, token) {
-
-					const result = await baseInstance.resolveCodeAction?.(item, token) ?? item;
-
-					if (result?.edit?.changes) {
-						for (const uri in result.edit.changes) {
-							const edits = result.edit.changes[uri];
-							if (edits) {
-								patchAdditionalTextEdits(uri, edits);
-							}
-						}
-					}
-					if (result?.edit?.documentChanges) {
-						for (const documentChange of result.edit.documentChanges) {
-							if ('textDocument' in documentChange) {
-								patchAdditionalTextEdits(documentChange.textDocument.uri, documentChange.edits);
-							}
-						}
-					}
-
-					return result;
 				},
 				async provideSemanticDiagnostics(document, token) {
 					const result = await baseInstance.provideSemanticDiagnostics?.(document, token);
@@ -183,25 +176,4 @@ export function create(
 			};
 		},
 	};
-}
-
-// fix https://github.com/vuejs/language-tools/issues/916
-function patchAdditionalTextEdits(uri: string, edits: vscode.TextEdit[]) {
-	if (
-		uri.endsWith('.vue.js')
-		|| uri.endsWith('.vue.ts')
-		|| uri.endsWith('.vue.jsx')
-		|| uri.endsWith('.vue.tsx')
-	) {
-		for (const edit of edits) {
-			if (
-				edit.range.start.line === 0
-				&& edit.range.start.character === 0
-				&& edit.range.end.line === 0
-				&& edit.range.end.character === 0
-			) {
-				edit.newText = '\n' + edit.newText;
-			}
-		}
-	}
 }

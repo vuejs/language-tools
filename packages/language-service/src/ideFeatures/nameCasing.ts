@@ -1,17 +1,13 @@
 import { ServiceContext, VirtualCode } from '@volar/language-service';
-import { VueCompilerOptions, VueGeneratedCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
-import type { Provide } from 'volar-service-typescript';
+import type { CompilerDOM } from '@vue/language-core';
+import * as vue from '@vue/language-core';
+import { VueGeneratedCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
+import { computed } from 'computeds';
+import * as namedPipeClient from 'typescript-vue-plugin/out/namedPipe/client';
 import type * as vscode from 'vscode-languageserver-protocol';
-import { getComponentNames, getPropsByTag, getTemplateTagsAndAttrs } from '../helpers';
 import { AttrNameCasing, TagNameCasing } from '../types';
 
-export async function convertTagName(
-	ts: typeof import('typescript'),
-	context: ServiceContext,
-	uri: string,
-	casing: TagNameCasing,
-	vueCompilerOptions: VueCompilerOptions,
-) {
+export async function convertTagName(context: ServiceContext, uri: string, casing: TagNameCasing) {
 
 	const sourceFile = context.language.files.get(uri);
 	if (!sourceFile)
@@ -25,16 +21,10 @@ export async function convertTagName(
 	if (!desc.template)
 		return;
 
-	const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 	const template = desc.template;
 	const document = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = getComponentNames(
-		ts,
-		languageService,
-		rootCode,
-		vueCompilerOptions,
-	);
+	const components = await namedPipeClient.getComponentNames(rootCode.fileName) ?? [];
 	const tags = getTemplateTagsAndAttrs(rootCode);
 
 	for (const [tagName, { offsets }] of tags) {
@@ -57,13 +47,7 @@ export async function convertTagName(
 	return edits;
 }
 
-export async function convertAttrName(
-	ts: typeof import('typescript'),
-	context: ServiceContext,
-	uri: string,
-	casing: AttrNameCasing,
-	vueCompilerOptions: VueCompilerOptions,
-) {
+export async function convertAttrName(context: ServiceContext, uri: string, casing: AttrNameCasing) {
 
 	const sourceFile = context.language.files.get(uri);
 	if (!sourceFile)
@@ -77,17 +61,16 @@ export async function convertAttrName(
 	if (!desc.template)
 		return;
 
-	const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
 	const template = desc.template;
 	const document = context.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = getComponentNames(ts, languageService, rootCode, vueCompilerOptions);
+	const components = await namedPipeClient.getComponentNames(rootCode.fileName) ?? [];
 	const tags = getTemplateTagsAndAttrs(rootCode);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
 		if (componentName) {
-			const props = getPropsByTag(ts, languageService, rootCode, componentName, vueCompilerOptions);
+			const props = await namedPipeClient.getComponentProps(rootCode.fileName, componentName) ?? [];
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenateAttr(prop) === attrName);
 				if (propName) {
@@ -110,14 +93,9 @@ export async function convertAttrName(
 	return edits;
 }
 
-export async function getNameCasing(
-	ts: typeof import('typescript'),
-	context: ServiceContext,
-	uri: string,
-	vueCompilerOptions: VueCompilerOptions,
-) {
+export async function getNameCasing(context: ServiceContext, uri: string) {
 
-	const detected = detect(ts, context, uri, vueCompilerOptions);
+	const detected = await detect(context, uri);
 	const [attr, tag] = await Promise.all([
 		context.env.getConfiguration?.<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('vue.complete.casing.props', uri),
 		context.env.getConfiguration?.<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('vue.complete.casing.tags', uri),
@@ -131,28 +109,21 @@ export async function getNameCasing(
 	};
 }
 
-export function detect(
-	ts: typeof import('typescript'),
-	context: ServiceContext,
-	uri: string,
-	vueCompilerOptions: VueCompilerOptions,
-): {
+export async function detect(context: ServiceContext, uri: string): Promise<{
 	tag: TagNameCasing[],
 	attr: AttrNameCasing[],
-} {
+}> {
 
 	const rootFile = context.language.files.get(uri)?.generated?.code;
-	if (!(rootFile instanceof VueGeneratedCode) || !context.language.typescript) {
+	if (!(rootFile instanceof VueGeneratedCode)) {
 		return {
 			tag: [],
 			attr: [],
 		};
 	}
 
-	const languageService = context.inject<Provide, 'typescript/languageService'>('typescript/languageService');
-
 	return {
-		tag: getTagNameCase(rootFile),
+		tag: await getTagNameCase(rootFile),
 		attr: getAttrNameCase(rootFile),
 	};
 
@@ -180,9 +151,9 @@ export function detect(
 
 		return result;
 	}
-	function getTagNameCase(file: VueGeneratedCode): TagNameCasing[] {
+	async function getTagNameCase(file: VueGeneratedCode): Promise<TagNameCasing[]> {
 
-		const components = getComponentNames(ts, languageService, file, vueCompilerOptions);
+		const components = await namedPipeClient.getComponentNames(file.fileName) ?? [];
 		const tagNames = getTemplateTagsAndAttrs(file);
 		const result: TagNameCasing[] = [];
 
@@ -216,4 +187,74 @@ export function detect(
 
 		return result;
 	}
+}
+
+type Tags = Map<string, {
+	offsets: number[];
+	attrs: Map<string, {
+		offsets: number[];
+	}>,
+}>;
+
+const map = new WeakMap<VirtualCode, () => Tags | undefined>();
+
+function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
+
+	if (!map.has(sourceFile)) {
+		const getter = computed(() => {
+			if (!(sourceFile instanceof vue.VueGeneratedCode))
+				return;
+			const ast = sourceFile.sfc.template?.ast;
+			const tags: Tags = new Map();
+			if (ast) {
+				for (const node of vue.eachElementNode(ast)) {
+
+					if (!tags.has(node.tag)) {
+						tags.set(node.tag, { offsets: [], attrs: new Map() });
+					}
+
+					const tag = tags.get(node.tag)!;
+					const startTagHtmlOffset = node.loc.start.offset + node.loc.source.indexOf(node.tag);
+					const endTagHtmlOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
+
+					tag.offsets.push(startTagHtmlOffset);
+					if (!node.isSelfClosing) {
+						tag.offsets.push(endTagHtmlOffset);
+					}
+
+					for (const prop of node.props) {
+
+						let name: string | undefined;
+						let offset: number | undefined;
+
+						if (
+							prop.type === 7 satisfies CompilerDOM.NodeTypes.DIRECTIVE
+							&& prop.arg?.type === 4 satisfies CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+							&& prop.arg.isStatic
+						) {
+							name = prop.arg.content;
+							offset = prop.arg.loc.start.offset;
+						}
+						else if (
+							prop.type === 6 satisfies CompilerDOM.NodeTypes.ATTRIBUTE
+						) {
+							name = prop.name;
+							offset = prop.loc.start.offset;
+						}
+
+						if (name !== undefined && offset !== undefined) {
+							if (!tag.attrs.has(name)) {
+								tag.attrs.set(name, { offsets: [] });
+							}
+							tag.attrs.get(name)!.offsets.push(offset);
+						}
+					}
+				}
+			}
+			return tags;
+		});
+		map.set(sourceFile, getter);
+	}
+
+	return map.get(sourceFile)!() ?? new Map();
 }

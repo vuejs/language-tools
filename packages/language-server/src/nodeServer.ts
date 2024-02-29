@@ -1,14 +1,14 @@
-import { ServerProject } from '@volar/language-server';
-import { createConnection, createServer, createSimpleProjectProviderFactory, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
+import { Connection } from '@volar/language-server';
+import { createConnection, createServer, createSimpleProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
 import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
 import { ServiceEnvironment, convertAttrName, convertTagName, createVueServicePlugins, detect } from '@vue/language-service';
-import { ComponentMetaChecker, baseCreate } from 'vue-component-meta/out/base';
-import { DetectNameCasingRequest, GetComponentMeta, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './protocol';
+import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './protocol';
 import { VueInitializationOptions } from './types';
 
-const connection = createConnection();
-const server = createServer(connection);
-const checkers = new WeakMap<ServerProject, ComponentMetaChecker>();
+export const connection: Connection = createConnection();
+
+export const server = createServer(connection);
+
 const envToVueOptions = new WeakMap<ServiceEnvironment, VueCompilerOptions>();
 
 let tsdk: ReturnType<typeof loadTsdkByPath>;
@@ -31,9 +31,7 @@ connection.onInitialize(params => {
 
 	return server.initialize(
 		params,
-		options.vue?.hybridMode
-			? createSimpleProjectProviderFactory()
-			: createTypeScriptProjectProviderFactory(tsdk.typescript, tsdk.diagnosticMessages),
+		createSimpleProjectProviderFactory(),
 		{
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
 			getServicePlugins() {
@@ -100,45 +98,22 @@ connection.onRequest(ParseSFCRequest.type, params => {
 connection.onRequest(DetectNameCasingRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return detect(tsdk.typescript, languageService.context, params.textDocument.uri, envToVueOptions.get(languageService.context.env)!);
+		return await detect(languageService.context, params.textDocument.uri);
 	}
 });
 
 connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return convertTagName(tsdk.typescript, languageService.context, params.textDocument.uri, params.casing, envToVueOptions.get(languageService.context.env)!);
+		return await convertTagName(languageService.context, params.textDocument.uri, params.casing);
 	}
 });
 
 connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		const vueOptions = envToVueOptions.get(languageService.context.env);
-		if (vueOptions) {
-			return convertAttrName(tsdk.typescript, languageService.context, params.textDocument.uri, params.casing, envToVueOptions.get(languageService.context.env)!);
-		}
+		return await convertAttrName(languageService.context, params.textDocument.uri, params.casing);
 	}
-});
-
-connection.onRequest(GetComponentMeta.type, async params => {
-
-	const project = await server.projects.getProject(params.uri);
-	const langaugeService = project.getLanguageService();
-
-	let checker = checkers.get(project);
-	if (!checker) {
-		checker = baseCreate(
-			tsdk.typescript,
-			langaugeService.context.language.typescript!.configFileName,
-			langaugeService.context.language.typescript!.projectHost,
-			envToVueOptions.get(langaugeService.context.env)!,
-			{},
-			langaugeService.context.language.typescript!.languageServiceHost.getCurrentDirectory() + '/tsconfig.json.global.vue',
-		);
-		checkers.set(project, checker);
-	}
-	return checker?.getComponentMeta(langaugeService.context.env.typescript!.uriToFileName(params.uri));
 });
 
 async function getService(uri: string) {

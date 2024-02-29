@@ -7,5 +7,6 @@
 	"include": [ "src" ],
 	"references": [
 		{ "path": "../language-core/tsconfig.json" },
+		{ "path": "../typescript-plugin/tsconfig.json" },
 	],
 }

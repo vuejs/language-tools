@@ -166,9 +166,6 @@ importers:
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
-      vue-component-meta:
-        specifier: 1.8.27
-        version: link:../component-meta
 
   packages/language-service:
     dependencies:
@@ -196,6 +193,9 @@ importers:
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
+      typescript-vue-plugin:
+        specifier: 1.8.27
+        version: link:../typescript-plugin
       volar-service-css:
         specifier: 0.0.31
         version: 0.0.31(@volar/language-service@2.1.0)
@@ -270,6 +270,13 @@ importers:
       '@vue/language-core':
         specifier: 1.8.27
         version: link:../language-core
+      '@vue/shared':
+        specifier: ^3.4.0
+        version: 3.4.20
+    devDependencies:
+      '@types/node':
+        specifier: latest
+        version: 20.11.21
 
   test-workspace:
     devDependencies:

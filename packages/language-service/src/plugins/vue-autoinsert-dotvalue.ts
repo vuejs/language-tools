@@ -1,9 +1,10 @@
 import { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { Provide } from 'volar-service-typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { getAst } from './typescript';
+import * as namedPipeClient from 'typescript-vue-plugin/out/namedPipe/client';
 
 export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
@@ -22,53 +23,32 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					if (!enabled)
 						return;
 
-					const program = context.inject<Provide, 'typescript/languageService'>('typescript/languageService').getProgram();
-					if (!program)
-						return;
+					const [_, file] = context.documents.getVirtualCodeByUri(document.uri);
 
-					const sourceFile = program.getSourceFile(context.env.typescript!.uriToFileName(document.uri));
-					if (!sourceFile)
-						return;
+					let fileName: string | undefined;
+					let ast: ts.SourceFile | undefined;
 
-					if (isBlacklistNode(ts, sourceFile, document.offsetAt(position), false))
-						return;
-
-					const node = findPositionIdentifier(sourceFile, sourceFile, document.offsetAt(position));
-					if (!node)
-						return;
-
-					const token = context.inject<Provide, 'typescript/languageServiceHost'>('typescript/languageServiceHost').getCancellationToken?.();
-					if (token) {
-						context.inject<Provide, 'typescript/languageService'>('typescript/languageService').getQuickInfoAtPosition(context.env.typescript!.uriToFileName(document.uri), node.end);
-						if (token?.isCancellationRequested()) {
-							return; // check cancel here because type checker do not use cancel token
+					if (file?.generated) {
+						const script = file.generated.languagePlugin.typescript?.getScript(file.generated.code);
+						if (script) {
+							fileName = context.env.typescript!.uriToFileName(file.id);
+							ast = getAst(fileName, script.code.snapshot, script.scriptKind);
 						}
 					}
-
-					const checker = program.getTypeChecker();
-					const type = checker.getTypeAtLocation(node);
-					const props = type.getProperties();
-
-					if (props.some(prop => prop.name === 'value')) {
-						return '${1:.value}';
+					else if (file) {
+						fileName = context.env.typescript!.uriToFileName(file.id);
+						ast = getAst(fileName, file.snapshot);
 					}
 
-					function findPositionIdentifier(sourceFile: ts.SourceFile, node: ts.Node, offset: number) {
+					if (!ast || !fileName)
+						return;
 
-						let result: ts.Node | undefined;
+					if (isBlacklistNode(ts, ast, document.offsetAt(position), false))
+						return;
 
-						node.forEachChild(child => {
-							if (!result) {
-								if (child.end === offset && ts.isIdentifier(child)) {
-									result = child;
-								}
-								else if (child.end >= offset && child.getStart(sourceFile) < offset) {
-									result = findPositionIdentifier(sourceFile, child, offset);
-								}
-							}
-						});
-
-						return result;
+					const props = await namedPipeClient.getPropertiesAtLocation(fileName, document.offsetAt(position)) ?? [];
+					if (props.some(prop => prop === 'value')) {
+						return '${1:.value}';
 					}
 				},
 			};

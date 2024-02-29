@@ -9,7 +9,7 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 
 	const getDocDescriptor = useDocDescriptor();
 
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.splitEditors', onSplit));
+	context.subscriptions.push(vscode.commands.registerCommand('vue.action.splitEditors', onSplit));
 
 	async function onSplit() {
 
