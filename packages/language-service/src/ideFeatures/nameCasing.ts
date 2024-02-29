@@ -115,7 +115,7 @@ export async function detect(context: ServiceContext, uri: string): Promise<{
 }> {
 
 	const rootFile = context.language.files.get(uri)?.generated?.code;
-	if (!(rootFile instanceof VueGeneratedCode) || !context.language.typescript) {
+	if (!(rootFile instanceof VueGeneratedCode)) {
 		return {
 			tag: [],
 			attr: [],

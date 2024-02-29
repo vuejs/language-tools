@@ -9,9 +9,9 @@ import { DiagnosticModel, VueInitializationOptions } from '@vue/language-server'
 import * as vscode from 'vscode';
 import * as lsp from 'vscode-languageclient';
 import { config } from './config';
-// import * as componentMeta from './features/componentMeta';
-// import * as doctor from './features/doctor';
-// import * as nameCasing from './features/nameCasing';
+import * as componentMeta from './features/componentMeta';
+import * as doctor from './features/doctor';
+import * as nameCasing from './features/nameCasing';
 import * as splitEditors from './features/splitEditors';
 
 let client: lsp.BaseLanguageClient;
@@ -67,8 +67,8 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateClientRequests();
 
 	splitEditors.register(context, client);
-	// doctor.register(context, client);
-	// componentMeta.register(context, client);
+	doctor.register(context, client);
+	componentMeta.register(context, client);
 
 	const selectors: vscode.DocumentFilter[] = [{ language: 'vue' }];
 
@@ -121,7 +121,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 
 	function activateClientRequests() {
-		// nameCasing.activate(context, client);
+		nameCasing.activate(context, client);
 	}
 }
 
