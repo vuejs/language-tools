@@ -1,5 +1,5 @@
 import { Connection } from '@volar/language-server';
-import { createConnection, createServer, createSimpleProjectProviderFactory, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
+import { createConnection, createServer, createSimpleProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
 import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
 import { ServiceEnvironment, convertAttrName, convertTagName, createVueServicePlugins, detect } from '@vue/language-service';
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './protocol';
@@ -31,9 +31,7 @@ connection.onInitialize(params => {
 
 	return server.initialize(
 		params,
-		options.vue?.hybridMode
-			? createSimpleProjectProviderFactory()
-			: createTypeScriptProjectProviderFactory(tsdk.typescript, tsdk.diagnosticMessages),
+		createSimpleProjectProviderFactory(),
 		{
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
 			getServicePlugins() {
