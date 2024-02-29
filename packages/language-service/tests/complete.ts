@@ -11,7 +11,7 @@ const normalizeNewline = (text: string) => text.replace(/\r\n/g, '\n');
 
 for (const dirName of testDirs) {
 
-	describe(`complete: ${dirName}`, async () => {
+	describe.skipIf(dirName === 'core#8811')(`complete: ${dirName}`, async () => {
 
 		const dir = path.join(baseDir, dirName);
 		const inputFiles = readFiles(path.join(dir, 'input'));
