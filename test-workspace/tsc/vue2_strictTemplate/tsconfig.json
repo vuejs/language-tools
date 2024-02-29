@@ -4,7 +4,6 @@
 		"target": 2.7,
 	},
 	"include": [
-		"./**/*",
 		"../vue2/env.d.ts",
 		"../vue3_strictTemplate",
 	],
