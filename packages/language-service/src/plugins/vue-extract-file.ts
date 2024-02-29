@@ -2,7 +2,7 @@ import { CreateFile, ServicePlugin, TextDocumentEdit, TextEdit } from '@volar/la
 import { ExpressionNode, type TemplateChildNode } from '@vue/compiler-dom';
 import { Sfc, VueGeneratedCode, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { collectExtractProps } from 'typescript-vue-plugin/out/namedPipe/client';
+import { collectExtractProps } from '@vue/typescript-plugin/out/namedPipe/client';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 interface ActionData {

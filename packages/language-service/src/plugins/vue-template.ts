@@ -1,7 +1,7 @@
 import { Disposable, ServiceEnvironment, ServicePluginInstance } from '@volar/language-service';
 import { VueGeneratedCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import * as namedPipeClient from 'typescript-vue-plugin/out/namedPipe/client';
+import * as namedPipeClient from '@vue/typescript-plugin/out/namedPipe/client';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';

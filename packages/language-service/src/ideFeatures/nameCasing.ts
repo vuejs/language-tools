@@ -3,7 +3,7 @@ import type { CompilerDOM } from '@vue/language-core';
 import * as vue from '@vue/language-core';
 import { VueGeneratedCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import { computed } from 'computeds';
-import * as namedPipeClient from 'typescript-vue-plugin/out/namedPipe/client';
+import * as namedPipeClient from '@vue/typescript-plugin/out/namedPipe/client';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { AttrNameCasing, TagNameCasing } from '../types';
 
