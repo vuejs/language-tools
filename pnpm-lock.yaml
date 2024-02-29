@@ -44,6 +44,9 @@ importers:
       '@vue/language-server':
         specifier: 1.8.27
         version: link:../../packages/language-server
+      '@vue/typescript-plugin':
+        specifier: 1.8.27
+        version: link:../../packages/typescript-plugin
       esbuild:
         specifier: latest
         version: 0.20.1
@@ -56,9 +59,6 @@ importers:
       semver:
         specifier: ^7.5.4
         version: 7.6.0
-      typescript-vue-plugin:
-        specifier: 1.8.27
-        version: link:../../packages/typescript-plugin
       vsce:
         specifier: latest
         version: 2.15.0
@@ -187,15 +187,15 @@ importers:
       '@vue/shared':
         specifier: ^3.4.0
         version: 3.4.20
+      '@vue/typescript-plugin':
+        specifier: 1.8.27
+        version: link:../typescript-plugin
       computeds:
         specifier: ^0.0.1
         version: 0.0.1
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
-      typescript-vue-plugin:
-        specifier: 1.8.27
-        version: link:../typescript-plugin
       volar-service-css:
         specifier: 0.0.31
         version: 0.0.31(@volar/language-service@2.1.0)

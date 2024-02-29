@@ -1,5 +1,5 @@
 {
-	"name": "typescript-vue-plugin",
+	"name": "@vue/typescript-plugin",
 	"version": "1.8.27",
 	"main": "out/index.js",
 	"license": "MIT",
