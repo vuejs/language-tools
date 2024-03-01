@@ -4,8 +4,8 @@
 	"license": "MIT",
 	"files": [
 		"bin",
-		"out/**/*.js",
-		"out/**/*.d.ts"
+		"**/*.js",
+		"**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",

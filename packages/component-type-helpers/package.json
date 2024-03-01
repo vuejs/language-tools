@@ -3,8 +3,8 @@
 	"version": "2.0.0",
 	"license": "MIT",
 	"files": [
-		"*.js",
-		"*.d.ts"
+		"**/*.js",
+		"**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",
