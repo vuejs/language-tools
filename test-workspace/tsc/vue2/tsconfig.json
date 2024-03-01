@@ -19,6 +19,7 @@
 		"../vue3/#3672",
 		"../vue3/components",
 		"../vue3/defineEmits",
+		"../vue3/defineModel",
 		"../vue3/defineProp_B",
 		"../vue3/events",
 		"../vue3/no-script-block",

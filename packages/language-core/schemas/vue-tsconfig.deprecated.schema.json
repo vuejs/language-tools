@@ -51,6 +51,10 @@
 				"experimentalComponentOptionsWrapperEnable": {
 					"deprecated": true
 				},
+				"experimentalAdditionalLanguageModules": {
+					"deprecated": true,
+					"description": "Deprecated since v2.0.0."
+				},
 				"bypassDefineComponentToExposePropsAndEmitsForJsScriptSetupComponents": {
 					"deprecated": true
 				},

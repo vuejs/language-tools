@@ -32,8 +32,6 @@ txt
 </script>
 	`.trim(),
 	settings: {
-		'volar.format.initialIndent': {
-			javascript: true
-		}
+		'vue.format.script.initialIndent': true,
 	},
 });

@@ -38,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				if (!serverPathStatusItem) {
 					serverPathStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 					serverPathStatusItem.text = '[vue] configured server path';
-					serverPathStatusItem.command = 'volar.action.gotoServerFile';
+					serverPathStatusItem.command = 'vue.action.gotoServerFile';
 					serverPathStatusItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
 					serverPathStatusItem.show();
 					vscode.commands.registerCommand(serverPathStatusItem.command, () => {
@@ -106,7 +106,31 @@ export async function activate(context: vscode.ExtensionContext) {
 			serverOptions,
 			clientOptions,
 		);
-		client.start();
+		client.start().then(() => {
+			const legend = client.initializeResult?.capabilities.semanticTokensProvider?.legend;
+			if (!legend) {
+				console.error('Server does not support semantic tokens');
+				return;
+			}
+			// When tsserver has provided semantic tokens for the .vue file, VSCode will no longer request semantic tokens from the Vue language server, so it needs to be provided here again.
+			vscode.languages.registerDocumentSemanticTokensProvider(documentSelector, {
+				async provideDocumentSemanticTokens(document) {
+					const tokens = await client.sendRequest(lsp.SemanticTokensRequest.type, {
+						textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
+					} satisfies lsp.SemanticTokensParams);
+					return client.protocol2CodeConverter.asSemanticTokens(tokens);
+				},
+			}, legend);
+			vscode.languages.registerDocumentRangeSemanticTokensProvider(documentSelector, {
+				async provideDocumentRangeSemanticTokens(document, range) {
+					const tokens = await client.sendRequest(lsp.SemanticTokensRangeRequest.type, {
+						textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
+						range: client.code2ProtocolConverter.asRange(range),
+					} satisfies lsp.SemanticTokensRangeParams);
+					return client.protocol2CodeConverter.asSemanticTokens(tokens);
+				},
+			}, legend);
+		});
 
 		volarLabs.addLanguageClient(client);
 
@@ -191,7 +215,7 @@ try {
 			text = text.replace('t.$u=[t.$r,t.$s,t.$p,t.$q]', s => s + '.concat("vue")');
 
 			// patch isSupportedLanguageMode
-			text = text.replace('s.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")');
+			text = text.replace('.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")');
 
 			return text;
 		}
