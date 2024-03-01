@@ -2,7 +2,7 @@
 
 ## 2.0.0 (2023/3/2)
 
-## New Features
+### New Features
 
 - Hybrid Mode
 	- Takeover Mode has been deprecated. The extension now has the same performance as Takeover Mode by default.
@@ -25,7 +25,7 @@
 - **tsc:** supported `vueCompilerOptions.extensions` option (#3800)
 - **language-core:** achieved compatibility with Vue 3.4 type changes (#3860)
 
-## Fixes
+### Fixes
 
 - **vscode:** prevented reading undefined properties in non-VS Code editors (#3836)
 - **vscode:** prevented extension activation with TS files
@@ -35,7 +35,7 @@
 - **language-core:** excluded vue directive syntax injection in Angular bindings (#3891)
 - **component-type-helpers:** resolved inference issue for Vue 3.4.20 functional component
 
-## Refactors
+### Refactors
 
 - Renamed "Volar Language Features (Volar)" extension to "Vue - Official"
 - "TypeScript Vue Plugin" extension has been deprecated
