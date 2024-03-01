@@ -10,6 +10,7 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
 		create(context): ServicePluginInstance {
+			let currentReq = 0;
 			return {
 				async provideAutoInsertionEdit(document, position, lastChange) {
 
@@ -17,6 +18,12 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 						return;
 
 					if (!isCharacterTyping(document, lastChange))
+						return;
+
+					const req = ++currentReq;
+					// Wait for tsserver to sync
+					await sleep(250);
+					if (req !== currentReq)
 						return;
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.dotValue') ?? true;
@@ -54,6 +61,10 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 			};
 		},
 	};
+}
+
+function sleep(ms: number) {
+	return new Promise<void>(resolve => setTimeout(resolve, ms));
 }
 
 function isTsDocument(document: TextDocument) {
