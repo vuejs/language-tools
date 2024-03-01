@@ -1,5 +1,9 @@
 import * as fs from 'fs';
 import * as net from 'net';
+import { collectExtractProps } from './requests/collectExtractProps';
+import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from './requests/componentInfos';
+import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
+import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
 import { pipeFile } from './utils';
 
 export interface Request {
@@ -21,39 +25,39 @@ export function startNamedPipeServer() {
 	if (started) return;
 	started = true;
 	const server = net.createServer(connection => {
-		connection.on('data', async data => {
+		connection.on('data', data => {
 			const request: Request = JSON.parse(data.toString());
 			if (request.type === 'collectExtractProps') {
-				const result = (await import('./requests/collectExtractProps.js')).collectExtractProps.apply(null, request.args);
+				const result = collectExtractProps.apply(null, request.args);
 				connection.write(JSON.stringify(result ?? null));
 			}
 			else if (request.type === 'getPropertiesAtLocation') {
-				const result = (await import('./requests/getPropertiesAtLocation.js')).getPropertiesAtLocation.apply(null, request.args);
+				const result = getPropertiesAtLocation.apply(null, request.args);
 				connection.write(JSON.stringify(result ?? null));
 			}
 			else if (request.type === 'getQuickInfoAtPosition') {
-				const result = (await import('./requests/getQuickInfoAtPosition.js')).getQuickInfoAtPosition.apply(null, request.args);
+				const result = getQuickInfoAtPosition.apply(null, request.args);
 				connection.write(JSON.stringify(result ?? null));
 			}
 			// Component Infos
 			else if (request.type === 'getComponentProps') {
-				const result = (await import('./requests/componentInfos.js')).getComponentProps.apply(null, request.args);
+				const result = getComponentProps.apply(null, request.args);
 				connection.write(JSON.stringify(result ?? null));
 			}
 			else if (request.type === 'getComponentEvents') {
-				const result = (await import('./requests/componentInfos.js')).getComponentEvents.apply(null, request.args);
+				const result = getComponentEvents.apply(null, request.args);
 				connection.write(JSON.stringify(result ?? null));
 			}
 			else if (request.type === 'getTemplateContextProps') {
-				const result = (await import('./requests/componentInfos.js')).getTemplateContextProps.apply(null, request.args);
+				const result = getTemplateContextProps.apply(null, request.args);
 				connection.write(JSON.stringify(result ?? null));
 			}
 			else if (request.type === 'getComponentNames') {
-				const result = (await import('./requests/componentInfos.js')).getComponentNames.apply(null, request.args);
+				const result = getComponentNames.apply(null, request.args);
 				connection.write(JSON.stringify(result ?? null));
 			}
 			else if (request.type === 'getElementAttrs') {
-				const result = (await import('./requests/componentInfos.js')).getElementAttrs.apply(null, request.args);
+				const result = getElementAttrs.apply(null, request.args);
 				connection.write(JSON.stringify(result ?? null));
 			}
 			else {
