@@ -39,13 +39,13 @@ importers:
         specifier: ~2.1.0
         version: 2.1.0
       '@vue/language-core':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../../packages/language-core
       '@vue/language-server':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../../packages/typescript-plugin
       esbuild:
         specifier: latest
@@ -72,7 +72,7 @@ importers:
         specifier: ~2.1.0
         version: 2.1.0
       '@vue/language-core':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
@@ -81,7 +81,7 @@ importers:
         specifier: '*'
         version: 5.3.3
       vue-component-type-helpers:
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../component-type-helpers
     devDependencies:
       '@types/node':
@@ -146,7 +146,7 @@ importers:
         specifier: latest
         version: 20.11.21
       '@vue/language-core':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../language-core
 
   packages/language-server:
@@ -158,10 +158,10 @@ importers:
         specifier: ~2.1.0
         version: 2.1.0
       '@vue/language-core':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../language-core
       '@vue/language-service':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../language-service
       vscode-languageserver-protocol:
         specifier: ^3.17.5
@@ -182,13 +182,13 @@ importers:
         specifier: ^3.4.0
         version: 3.4.20
       '@vue/language-core':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.4.0
         version: 3.4.20
       '@vue/typescript-plugin':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../typescript-plugin
       computeds:
         specifier: ^0.0.1
@@ -249,7 +249,7 @@ importers:
         specifier: ~2.1.0
         version: 2.1.0
       '@vue/language-core':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../language-core
       semver:
         specifier: ^7.5.4
@@ -268,7 +268,7 @@ importers:
         specifier: ~2.1.0
         version: 2.1.0
       '@vue/language-core':
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.4.0
@@ -284,7 +284,7 @@ importers:
         specifier: ^3.4.0
         version: 3.4.20(typescript@5.3.3)
       vue-component-type-helpers:
-        specifier: 1.8.27
+        specifier: 2.0.0
         version: link:../packages/component-type-helpers
       vue2:
         specifier: npm:vue@2.7.16

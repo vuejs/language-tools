@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.8.27",
+	"version": "2.0.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -315,7 +315,7 @@
 					"items": {
 						"type": "string"
 					},
-					"default": [ ],
+					"default": [],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"vue.doctor.status": {
@@ -540,9 +540,9 @@
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
 		"@volar/vscode": "~2.1.0",
-		"@vue/language-core": "1.8.27",
-		"@vue/language-server": "1.8.27",
-		"@vue/typescript-plugin": "1.8.27",
+		"@vue/language-core": "2.0.0",
+		"@vue/language-server": "2.0.0",
+		"@vue/typescript-plugin": "2.0.0",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
