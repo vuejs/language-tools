@@ -1,8 +1,8 @@
-import * as vscode from 'vscode';
-import * as semver from 'semver';
-import { BaseLanguageClient } from 'vscode-languageclient';
-import { ParseSFCRequest } from '@vue/language-server';
 import { getTsdk } from '@volar/vscode';
+import { ParseSFCRequest } from '@vue/language-server';
+import * as semver from 'semver';
+import * as vscode from 'vscode';
+import type { BaseLanguageClient } from 'vscode-languageclient';
 import { config } from '../config';
 
 const scheme = 'vue-doctor';
@@ -16,7 +16,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-	item.command = 'volar.action.doctor';
+	item.command = 'vue.action.doctor';
 
 	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
 
@@ -49,7 +49,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 		},
 	));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.doctor', () => {
+	context.subscriptions.push(vscode.commands.registerCommand('vue.action.doctor', () => {
 		const doc = vscode.window.activeTextEditor?.document;
 		if (
 			doc

@@ -12,7 +12,8 @@
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode"
 			],
 			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
+				"${workspaceRoot}/*/*/*.js",
+				"${workspaceRoot}/*/*/lib/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -30,7 +31,8 @@
 				"--extensionDevelopmentKind=web"
 			],
 			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
+				"${workspaceRoot}/*/*/*.js",
+				"${workspaceRoot}/*/*/lib/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -44,7 +46,8 @@
 			"port": 6009,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
+				"${workspaceRoot}/*/*/*.js",
+				"${workspaceRoot}/*/*/lib/**/*.js"
 			]
 		}
 	],

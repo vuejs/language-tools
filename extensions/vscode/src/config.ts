@@ -20,10 +20,8 @@ export const config = {
 		runtime: 'node' | 'bun';
 		maxOldSpaceSize: number;
 		maxFileSize: number;
-		reverseConfigFilePriority: boolean;
 		diagnosticModel: 'push' | 'pull';
 		additionalExtensions: string[];
-		fullCompletionList: boolean;
 		vitePress: {
 			supportMdFile: boolean;
 		};

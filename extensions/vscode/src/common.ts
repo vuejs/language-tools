@@ -7,11 +7,10 @@ import {
 } from '@volar/vscode';
 import { DiagnosticModel, VueInitializationOptions } from '@vue/language-server';
 import * as vscode from 'vscode';
-import * as lsp from 'vscode-languageclient';
+import type * as lsp from 'vscode-languageclient';
 import { config } from './config';
-// import * as componentMeta from './features/componentMeta';
-// import * as doctor from './features/doctor';
-// import * as nameCasing from './features/nameCasing';
+import * as doctor from './features/doctor';
+import * as nameCasing from './features/nameCasing';
 import * as splitEditors from './features/splitEditors';
 
 let client: lsp.BaseLanguageClient;
@@ -49,7 +48,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 
 async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
-	vscode.commands.executeCommand('setContext', 'volar.activated', true);
+	vscode.commands.executeCommand('setContext', 'vue.activated', true);
 
 	const outputChannel = vscode.window.createOutputChannel('Vue Language Server');
 
@@ -67,8 +66,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateClientRequests();
 
 	splitEditors.register(context, client);
-	// doctor.register(context, client);
-	// componentMeta.register(context, client);
+	doctor.register(context, client);
 
 	const selectors: vscode.DocumentFilter[] = [{ language: 'vue' }];
 
@@ -79,10 +77,9 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		selectors.push({ language: 'markdown' });
 	}
 
-	activateAutoInsertion(selectors, client); // TODO: implement auto insert .value
+	activateAutoInsertion(selectors, client);
 	activateDocumentDropEdit(selectors, client);
-	activateWriteVirtualFiles('volar.action.writeVirtualFiles', client);
-
+	activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
 	activateServerSys(client);
 
 	async function requestReloadVscode() {
@@ -100,13 +97,13 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				requestReloadVscode();
 			}
 			if (e.affectsConfiguration('vue')) {
-				vscode.commands.executeCommand('volar.action.restartServer');
+				vscode.commands.executeCommand('vue.action.restartServer');
 			}
 		}));
 	}
 
 	async function activateRestartRequest() {
-		context.subscriptions.push(vscode.commands.registerCommand('volar.action.restartServer', async () => {
+		context.subscriptions.push(vscode.commands.registerCommand('vue.action.restartServer', async () => {
 
 			await client.stop();
 
@@ -121,7 +118,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 
 	function activateClientRequests() {
-		// nameCasing.activate(context, client);
+		nameCasing.activate(context, client);
 	}
 }
 
@@ -143,25 +140,22 @@ export function getDocumentSelector(): lsp.DocumentFilter[] {
 
 async function getInitializationOptions(
 	context: vscode.ExtensionContext,
-	options: VueInitializationOptions = {},
-) {
-	// volar
-	options.diagnosticModel = config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push;
-	options.typescript = { tsdk: (await getTsdk(context)).tsdk };
-	options.reverseConfigFilePriority = config.server.reverseConfigFilePriority;
-	options.maxFileSize = config.server.maxFileSize;
-	options.semanticTokensLegend = {
-		tokenTypes: ['component'],
-		tokenModifiers: [],
+): Promise<VueInitializationOptions> {
+	return {
+		// volar
+		diagnosticModel: config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
+		typescript: { tsdk: (await getTsdk(context)).tsdk },
+		maxFileSize: config.server.maxFileSize,
+		semanticTokensLegend: {
+			tokenTypes: ['component'],
+			tokenModifiers: [],
+		},
+		vue: {
+			additionalExtensions: [
+				...config.server.additionalExtensions,
+				...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
+				...!config.server.vitePress.supportMdFile ? [] : ['md'],
+			],
+		},
 	};
-	options.fullCompletionList = config.server.fullCompletionList;
-	options.vue = {
-		hybridMode: true,
-		additionalExtensions: [
-			...config.server.additionalExtensions,
-			...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
-			...!config.server.vitePress.supportMdFile ? [] : ['md'],
-		],
-	};
-	return options;
 }

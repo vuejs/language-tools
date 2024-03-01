@@ -13,7 +13,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 
 	const disposes: vscode.Disposable[] = [];
 	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	statusBar.command = 'volar.action.nameCasing';
+	statusBar.command = 'vue.action.nameCasing';
 
 	update(vscode.window.activeTextEditor?.document);
 
@@ -29,7 +29,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 		attrNameCasings.delete(doc.uri.toString());
 		tagNameCasings.delete(doc.uri.toString());
 	}));
-	disposes.push(vscode.commands.registerCommand('volar.action.nameCasing', async () => {
+	disposes.push(vscode.commands.registerCommand('vue.action.nameCasing', async () => {
 
 		if (!vscode.window.activeTextEditor?.document) return;
 
