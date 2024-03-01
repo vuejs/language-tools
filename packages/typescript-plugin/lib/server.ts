@@ -20,7 +20,7 @@ export interface Request {
 	| 'getComponentNames'
 	| 'getElementAttrs';
 	args: any;
-};
+}
 
 let started = false;
 
