@@ -1,7 +1,11 @@
-><div></div>
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`grammar > basic.vue 1`] = `
+"><div></div>
 #^ source.vue punctuation.definition.tag.begin.html.vue
 # ^^^ source.vue entity.name.tag.div.html.vue
 #    ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
 #     ^^ source.vue punctuation.definition.tag.begin.html.vue
 #       ^^^ source.vue entity.name.tag.div.html.vue
-#          ^ source.vue punctuation.definition.tag.end.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue"
+`;

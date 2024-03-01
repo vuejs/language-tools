@@ -13,17 +13,17 @@
 		"release:next": "npm run release:next-base && npm run release:next-vue",
 		"release:next-base": "npm run release:base -- --dist-tag next",
 		"release:next-vue": "cd ./extensions/vscode && npm run release:next",
-		"test": "vitest run && npm run test:grammar",
-		"test:grammar": "vscode-tmgrammar-snap --config extensions/vscode/package.json \"test-workspace/grammar/**/*.vue\"",
+		"test": "vitest run",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@lerna-lite/publish": "latest",
 		"@volar/language-service": "~2.1.0",
+		"fast-glob": "^3.3.2",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest",
-		"vscode-tmgrammar-test": "^0.1.2"
+		"vscode-tmlanguage-snapshot": "^0.1.3"
 	}
 }
