@@ -60,7 +60,7 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 
 					decorateLanguageService(files, info.languageService);
 					decorateLanguageServiceHost(files, info.languageServiceHost, ts);
-					startNamedPipeServer();
+					startNamedPipeServer(info.project.projectKind);
 
 					const getCompletionsAtPosition = info.languageService.getCompletionsAtPosition;
 					const getEncodedSemanticClassifications = info.languageService.getEncodedSemanticClassifications;
