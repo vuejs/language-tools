@@ -106,31 +106,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			serverOptions,
 			clientOptions,
 		);
-		client.start().then(() => {
-			const legend = client.initializeResult?.capabilities.semanticTokensProvider?.legend;
-			if (!legend) {
-				console.error('Server does not support semantic tokens');
-				return;
-			}
-			// When tsserver has provided semantic tokens for the .vue file, VSCode will no longer request semantic tokens from the Vue language server, so it needs to be provided here again.
-			vscode.languages.registerDocumentSemanticTokensProvider(documentSelector, {
-				async provideDocumentSemanticTokens(document) {
-					const tokens = await client.sendRequest(lsp.SemanticTokensRequest.type, {
-						textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
-					} satisfies lsp.SemanticTokensParams);
-					return client.protocol2CodeConverter.asSemanticTokens(tokens);
-				},
-			}, legend);
-			vscode.languages.registerDocumentRangeSemanticTokensProvider(documentSelector, {
-				async provideDocumentRangeSemanticTokens(document, range) {
-					const tokens = await client.sendRequest(lsp.SemanticTokensRangeRequest.type, {
-						textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
-						range: client.code2ProtocolConverter.asRange(range),
-					} satisfies lsp.SemanticTokensRangeParams);
-					return client.protocol2CodeConverter.asSemanticTokens(tokens);
-				},
-			}, legend);
-		});
+		client.start();
 
 		volarLabs.addLanguageClient(client);
 
@@ -192,9 +168,6 @@ function updateProviders(client: lsp.LanguageClient) {
 		if (!config.updateImportsOnFileMove.enabled && capabilities.workspace?.fileOperations?.willRename) {
 			capabilities.workspace.fileOperations.willRename = undefined;
 		}
-
-		// TODO: disalbe for now because this break ts plugin semantic tokens
-		capabilities.semanticTokensProvider = undefined;
 
 		return initializeFeatures.call(client, ...args);
 	};

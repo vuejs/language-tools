@@ -85,32 +85,6 @@
 				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
 			}
 		],
-		"semanticTokenScopes": [
-			{
-				"language": "vue",
-				"scopes": {
-					"component": [
-						"support.class.component.vue"
-					]
-				}
-			},
-			{
-				"language": "markdown",
-				"scopes": {
-					"component": [
-						"support.class.component.vue"
-					]
-				}
-			},
-			{
-				"language": "html",
-				"scopes": {
-					"component": [
-						"support.class.component.vue"
-					]
-				}
-			}
-		],
 		"languages": [
 			{
 				"id": "vue",

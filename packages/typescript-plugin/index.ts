@@ -5,6 +5,7 @@ import { createFileRegistry, resolveCommonLanguageId } from '@vue/language-core'
 import { projects } from './lib/utils';
 import * as vue from '@vue/language-core';
 import { startNamedPipeServer } from './lib/server';
+import { _getComponentNames } from './lib/requests/componentInfos';
 
 const windowsPathReg = /\\/g;
 const externalFiles = new WeakMap<ts.server.Project, string[]>();
@@ -62,11 +63,68 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					startNamedPipeServer();
 
 					const getCompletionsAtPosition = info.languageService.getCompletionsAtPosition;
+					const getEncodedSemanticClassifications = info.languageService.getEncodedSemanticClassifications;
 
 					info.languageService.getCompletionsAtPosition = (fileName, position, options) => {
 						const result = getCompletionsAtPosition(fileName, position, options);
 						if (result) {
 							result.entries = result.entries.filter(entry => entry.name.indexOf('__VLS_') === -1);
+						}
+						return result;
+					};
+					info.languageService.getEncodedSemanticClassifications = (fileName, span, format) => {
+						const result = getEncodedSemanticClassifications(fileName, span, format);
+						const file = files.get(fileName);
+						if (
+							file?.generated?.code instanceof vue.VueGeneratedCode
+							&& file.generated.code.sfc.template
+						) {
+							const validComponentNames = _getComponentNames(ts, info.languageService, file.generated.code, vueOptions);
+							const components = new Set([
+								...validComponentNames,
+								...validComponentNames.map(vue.hyphenateTag),
+							]);
+							const { template } = file.generated.code.sfc;
+							const spanTemplateRange = [
+								span.start - template.startTagEnd,
+								span.start + span.length - template.startTagEnd,
+							] as const;
+							template.ast?.children.forEach(function visit(node) {
+								if (node.loc.end.offset <= spanTemplateRange[0] || node.loc.start.offset >= spanTemplateRange[1]) {
+									return;
+								}
+								if (node.type === 1 satisfies vue.CompilerDOM.NodeTypes.ELEMENT) {
+									if (components.has(node.tag)) {
+										result.spans.push(
+											node.loc.start.offset + node.loc.source.indexOf(node.tag) + template.startTagEnd,
+											node.tag.length,
+											256, // class
+										);
+										if (template.lang === 'html' && !node.isSelfClosing) {
+											result.spans.push(
+												node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + template.startTagEnd,
+												node.tag.length,
+												256, // class
+											);
+										}
+									}
+									for (const child of node.children) {
+										visit(child);
+									}
+								}
+								else if (node.type === 9 satisfies vue.CompilerDOM.NodeTypes.IF) {
+									for (const branch of node.branches) {
+										for (const child of branch.children) {
+											visit(child);
+										}
+									}
+								}
+								else if (node.type === 11 satisfies vue.CompilerDOM.NodeTypes.FOR) {
+									for (const child of node.children) {
+										visit(child);
+									}
+								}
+							});
 						}
 						return result;
 					};
