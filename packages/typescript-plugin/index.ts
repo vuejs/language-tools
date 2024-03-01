@@ -85,9 +85,9 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 										if (item.source.endsWith(ext) && item.name.endsWith(suffix)) {
 											item.name = item.name.slice(0, -suffix.length);
 											if (item.insertText) {
-												item.insertText = item.name;
+												// #2286
+												item.insertText = item.insertText.replace(`${suffix}$1`, '$1');
 											}
-											// item.insertText = item.name.slice(0, -suffix.length);
 											if (item.data) {
 												// @ts-expect-error
 												item.data.__isComponentAutoImport = {
