@@ -9,9 +9,9 @@ import type { VueCompilerOptions } from './lib/types';
 import { create as createEmmetServicePlugin } from 'volar-service-emmet';
 import { create as createJsonServicePlugin } from 'volar-service-json';
 import { create as createPugFormatServicePlugin } from 'volar-service-pug-beautify';
+import { create as createTypeScriptServicePlugin } from 'volar-service-typescript';
 import { create as createTypeScriptTwoslashQueriesServicePlugin } from 'volar-service-typescript-twoslash-queries';
 import { create as createCssServicePlugin } from './lib/plugins/css';
-import { create as createTypeScriptServicePlugin } from './lib/plugins/typescript';
 import { create as createVueAutoDotValueServicePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoWrapParenthesesServicePlugin } from './lib/plugins/vue-autoinsert-parentheses';
 import { create as createVueAutoAddSpaceServicePlugin } from './lib/plugins/vue-autoinsert-space';
@@ -30,7 +30,7 @@ export function createVueServicePlugins(
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 ): ServicePlugin[] {
 	return [
-		createTypeScriptServicePlugin(ts, getVueOptions),
+		createTypeScriptServicePlugin(ts),
 		createTypeScriptTwoslashQueriesServicePlugin(),
 		createCssServicePlugin(),
 		createPugFormatServicePlugin(),

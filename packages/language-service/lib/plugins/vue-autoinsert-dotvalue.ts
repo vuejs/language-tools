@@ -4,7 +4,17 @@ import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { getAst } from './typescript';
+
+const asts = new WeakMap<ts.IScriptSnapshot, ts.SourceFile>();
+
+function getAst(ts: typeof import('typescript'), fileName: string, snapshot: ts.IScriptSnapshot, scriptKind?: ts.ScriptKind) {
+	let ast = asts.get(snapshot);
+	if (!ast) {
+		ast = ts.createSourceFile(fileName, snapshot.getText(0, snapshot.getLength()), ts.ScriptTarget.Latest, undefined, scriptKind);
+		asts.set(snapshot, ast);
+	}
+	return ast;
+}
 
 export function create(ts: typeof import('typescript')): ServicePlugin {
 	return {
@@ -44,7 +54,7 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 						if (script?.code !== code) {
 							return;
 						}
-						ast = getAst(fileName, script.code.snapshot, script.scriptKind);
+						ast = getAst(ts, fileName, script.code.snapshot, script.scriptKind);
 						let mapped = false;
 						for (const [_1, [_2, map]] of context.language.files.getMaps(code)) {
 							const sourceOffset = map.getSourceOffset(document.offsetAt(position));
@@ -59,7 +69,7 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 						}
 					}
 					else {
-						ast = getAst(fileName, file.snapshot);
+						ast = getAst(ts, fileName, file.snapshot);
 					}
 
 					if (isBlacklistNode(ts, ast, document.offsetAt(position), false))
