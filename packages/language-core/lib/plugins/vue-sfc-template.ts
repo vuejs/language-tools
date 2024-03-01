@@ -7,7 +7,7 @@ const plugin: VueLanguagePlugin = () => {
 
 		version: 2,
 
-		getEmbeddedFiles(_fileName, sfc) {
+		getEmbeddedCodes(_fileName, sfc) {
 			if (sfc.template) {
 				return [{
 					id: 'template',
@@ -17,7 +17,7 @@ const plugin: VueLanguagePlugin = () => {
 			return [];
 		},
 
-		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
 			if (embeddedFile.id === 'template' && sfc.template) {
 				embeddedFile.content.push([
 					sfc.template.content,

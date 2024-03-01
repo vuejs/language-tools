@@ -7,7 +7,7 @@ const plugin: VueLanguagePlugin = () => {
 
 		version: 2,
 
-		getEmbeddedFiles(_fileName, sfc) {
+		getEmbeddedCodes(_fileName, sfc) {
 			const names: {
 				id: string;
 				lang: string;
@@ -21,7 +21,7 @@ const plugin: VueLanguagePlugin = () => {
 			return names;
 		},
 
-		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
 			const script = embeddedFile.id === 'scriptFormat' ? sfc.script
 				: embeddedFile.id === 'scriptSetupFormat' ? sfc.scriptSetup
 					: undefined;

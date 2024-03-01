@@ -20,7 +20,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 			'exactOptionalPropertyTypes',
 		],
 
-		getEmbeddedFiles(fileName, sfc) {
+		getEmbeddedCodes(fileName, sfc) {
 
 			const tsx = useTsx(fileName, sfc);
 			const files: {
@@ -40,7 +40,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 			return files;
 		},
 
-		resolveEmbeddedFile(fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(fileName, sfc, embeddedFile) {
 
 			const _tsx = useTsx(fileName, sfc);
 
@@ -61,7 +61,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 			}
 			else if (embeddedFile.id === 'template_format') {
 
-				embeddedFile.parentFileId = 'template';
+				embeddedFile.parentCodeId = 'template';
 
 				const template = _tsx.generatedTemplate();
 				if (template) {
@@ -88,7 +88,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 			}
 			else if (embeddedFile.id === 'template_style') {
 
-				embeddedFile.parentFileId = 'template';
+				embeddedFile.parentCodeId = 'template';
 
 				const template = _tsx.generatedTemplate();
 				if (template) {
