@@ -1,6 +1,9 @@
 import * as net from 'net';
+import * as fs from 'fs';
+import type * as ts from 'typescript';
 import type { Request } from './server';
-import { pipeFile } from './utils';
+import type { PipeTable } from './utils';
+import { pipeTable } from './utils';
 
 export function collectExtractProps(
 	...args: Parameters<typeof import('./requests/collectExtractProps.js')['collectExtractProps']>
@@ -76,7 +79,41 @@ export function getElementAttrs(
 	});
 }
 
-function sendRequest<T>(request: Request) {
+async function sendRequest<T>(request: Request) {
+	const pipeFile = await getPipeFile(request.args[0]);
+	if (!pipeFile) {
+		console.error('[Vue Named Pipe Client] pipeFile not found');
+		return;
+	}
+	return await _sendRequest<T>(request, pipeFile);
+}
+
+async function getPipeFile(fileName: string) {
+	if (fs.existsSync(pipeTable)) {
+		const table: PipeTable = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
+		const all = Object.values(table);
+		const configuredServers = all
+			.filter(item => item.serverKind === 1 satisfies ts.server.ProjectKind.Configured)
+			.sort((a, b) => Math.abs(process.pid - a.pid) - Math.abs(process.pid - b.pid));
+		const inferredServers = all
+			.filter(item => item.serverKind === 0 satisfies ts.server.ProjectKind.Inferred)
+			.sort((a, b) => Math.abs(process.pid - a.pid) - Math.abs(process.pid - b.pid));
+		for (const server of configuredServers) {
+			const response = await _sendRequest<boolean>({ type: 'containsFile', args: [fileName] }, server.pipeFile);
+			if (response) {
+				return server.pipeFile;
+			}
+		}
+		for (const server of inferredServers) {
+			const response = await _sendRequest<boolean>({ type: 'containsFile', args: [fileName] }, server.pipeFile);
+			if (typeof response === 'boolean') {
+				return server.pipeFile;
+			}
+		}
+	}
+}
+
+function _sendRequest<T>(request: Request, pipeFile: string) {
 	return new Promise<T | undefined | null>(resolve => {
 		try {
 			const client = net.connect(pipeFile);
