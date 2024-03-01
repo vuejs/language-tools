@@ -30,30 +30,42 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					if (!enabled)
 						return;
 
-					const [_, file] = context.documents.getVirtualCodeByUri(document.uri);
+					const [code, file] = context.documents.getVirtualCodeByUri(document.uri);
+					if (!file)
+						return;
 
-					let fileName: string | undefined;
 					let ast: ts.SourceFile | undefined;
+					let sourceCodeOffset = document.offsetAt(position);
+
+					const fileName = context.env.typescript!.uriToFileName(file.id);
 
 					if (file?.generated) {
 						const script = file.generated.languagePlugin.typescript?.getScript(file.generated.code);
-						if (script) {
-							fileName = context.env.typescript!.uriToFileName(file.id);
-							ast = getAst(fileName, script.code.snapshot, script.scriptKind);
+						if (script?.code !== code) {
+							return;
+						}
+						ast = getAst(fileName, script.code.snapshot, script.scriptKind);
+						let mapped = false;
+						for (const [_1, [_2, map]] of context.language.files.getMaps(code)) {
+							const sourceOffset = map.getSourceOffset(document.offsetAt(position));
+							if (sourceOffset !== undefined) {
+								sourceCodeOffset = sourceOffset[0];
+								mapped = true;
+								break;
+							}
+						}
+						if (!mapped) {
+							return;
 						}
 					}
-					else if (file) {
-						fileName = context.env.typescript!.uriToFileName(file.id);
+					else {
 						ast = getAst(fileName, file.snapshot);
 					}
-
-					if (!ast || !fileName)
-						return;
 
 					if (isBlacklistNode(ts, ast, document.offsetAt(position), false))
 						return;
 
-					const props = await namedPipeClient.getPropertiesAtLocation(fileName, document.offsetAt(position)) ?? [];
+					const props = await namedPipeClient.getPropertiesAtLocation(fileName, sourceCodeOffset) ?? [];
 					if (props.some(prop => prop === 'value')) {
 						return '${1:.value}';
 					}
