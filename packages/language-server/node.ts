@@ -15,7 +15,7 @@ let tsdk: ReturnType<typeof loadTsdkByPath>;
 
 connection.listen();
 
-connection.onInitialize(params => {
+connection.onInitialize(async params => {
 
 	const options: VueInitializationOptions = params.initializationOptions;
 
@@ -29,7 +29,7 @@ connection.onInitialize(params => {
 		}
 	}
 
-	return server.initialize(
+	const result = await server.initialize(
 		params,
 		createSimpleProjectProviderFactory(),
 		{
@@ -81,6 +81,11 @@ connection.onInitialize(params => {
 			},
 		},
 	);
+
+	// handle by tsserver + @vue/typescript-plugin
+	result.capabilities.semanticTokensProvider = undefined;
+
+	return result;
 });
 
 connection.onInitialized(() => {
