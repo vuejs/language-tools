@@ -1,11 +1,11 @@
 import type { Mapping, StackNode } from '@volar/language-core';
 import type { Code } from '../types';
 
-export class VueEmbeddedFile {
+export class VueEmbeddedCode {
 
-	public parentFileId?: string;
+	public parentCodeId?: string;
 	public linkedCodeMappings: Mapping[] = [];
-	public embeddedFiles: VueEmbeddedFile[] = [];
+	public embeddedCodes: VueEmbeddedCode[] = [];
 
 	constructor(
 		public id: string,

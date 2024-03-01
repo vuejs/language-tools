@@ -7,14 +7,14 @@ const plugin: VueLanguagePlugin = () => {
 
 		version: 2,
 
-		getEmbeddedFiles(_fileName, sfc) {
+		getEmbeddedCodes(_fileName, sfc) {
 			return sfc.styles.map((style, i) => ({
 				id: 'style_' + i,
 				lang: style.lang,
 			}));
 		},
 
-		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
 			if (embeddedFile.id.startsWith('style_')) {
 				const index = parseInt(embeddedFile.id.slice('style_'.length));
 				const style = sfc.styles[index];
