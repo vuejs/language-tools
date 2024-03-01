@@ -1,5 +1,58 @@
 # Changelog
 
+## 2.0.0 (2023/3/2)
+
+## New Features
+
+- Hybrid Mode
+	- Takeover Mode has been deprecated. The extension now has the same performance as Takeover Mode by default.
+	- TypeScript language support has been moved from Vue language server to TypeScript plugin (#3788)
+	- Integrated all TypeScript editor features
+	- Warn when internal TypeScript extension is disabled or "TypeScript Vue Plugin" extension is installed
+	- Migrated to named pipe server using TypeScript LanguageService (#3908, #3916)
+	- `typescript.tsdk` duplicate registration errors are no longer reported
+	- **language-service:** reimplemented component tag semantic tokens in TypeScript plugin (#3915)
+	- **language-service:** reimplemented auto-import patching in TypeScript plugin (#3917)
+	- **language-service:** ensured tsserver readiness when requesting auto insert `.value` (#3914)
+- Upgraded to Volar 2.0 and 2.1 (#3736, #3906)
+	- **vscode:** extension now compatible with [Volar Labs](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volarjs-labs) v2
+	- **vscode:** removed `volar.format.initialIndent` option, replaced with 3 new options:
+		- `vue.format.template.initialIndent`
+		- `vue.format.script.initialIndent`
+		- `vue.format.style.initialIndent`
+	- **language-server:** `ignoreTriggerCharacters`, `reverseConfigFilePriority` and `fullCompletionList` options are no longer supported
+- Supported Component Drag and Drop Import (#3692)
+- **tsc:** supported `vueCompilerOptions.extensions` option (#3800)
+- **language-core:** achieved compatibility with Vue 3.4 type changes (#3860)
+
+## Fixes
+
+- **vscode:** prevented reading undefined properties in non-VS Code editors (#3836)
+- **vscode:** prevented extension activation with TS files
+- **vscode:** corrected trace server ID
+- **language-core:** implemented emit codegen for defineModel (#3895)
+- **language-core:** addressed transition type incompatibility with Vue 2.7.16 (#3882)
+- **language-core:** excluded vue directive syntax injection in Angular bindings (#3891)
+- **component-type-helpers:** resolved inference issue for Vue 3.4.20 functional component
+
+## Refactors
+
+- Renamed "Volar Language Features (Volar)" extension to "Vue - Official"
+- "TypeScript Vue Plugin" extension has been deprecated
+- Relocated source scripts from `src` to `lib` (#3913)
+- Replaced `typescript/lib/tsserverlibrary` imports with `typescript`
+- **language-core:** implemented codegen based on Generator (#3778)
+- **language-core:** generated global types in a single virtual file (#3803)
+- **language-core:** implemented plugin API v2 (#3918)
+- **language-core:** ignored nested codeblocks in markdown file (#3839)
+- **language-core:** removed `experimentalAdditionalLanguageModules` and deprecated APIs (#3907)
+- **language-service:** made service plugins independent of project context
+- **language-server:** `volar.config.js` is no longer supported
+- **component-meta:** renamed APIs
+- **typescript-plugin:** renamed package to `@vue/typescript-plugin` (#3910)
+- **tsc:** rewritten based on first-party TS API and no longer relies on TypeScript module (#3795)
+- **tsc:** deprecated hooks API (#3793)
+
 ## 1.8.27 (2023/12/26)
 
 - fix(language-core): remove misuse of `JSX.Element` for compatible with vue 3.4 (https://github.com/vuejs/core/issues/9923)
