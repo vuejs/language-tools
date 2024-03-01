@@ -1,12 +1,12 @@
 # Changelog
 
-## 2.0.1 (2023/3/2)
+## 2.0.1 (2024/3/2)
 
 ### Fixes
 
 - npm release does not include files (#3919)
 
-## 2.0.0 (2023/3/2)
+## 2.0.0 (2024/3/2)
 
 ### New Features
 
