@@ -1,7 +1,7 @@
 import * as kit from '@volar/kit';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { createVueLanguagePlugin, createVueServicePlugins, resolveVueCompilerOptions } from '../../out';
+import { createVueLanguagePlugin, createVueServicePlugins, resolveVueCompilerOptions } from '../..';
 
 const resolvedVueOptions = resolveVueCompilerOptions({});
 const vueLanguagePlugin = createVueLanguagePlugin(ts, fileId => formatter.env.typescript!.uriToFileName(fileId), {}, resolvedVueOptions);

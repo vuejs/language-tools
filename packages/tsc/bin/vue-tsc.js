@@ -1,2 +1,3 @@
 #!/usr/bin/env node
-require('../out/index').run();
+// @ts-check
+require('../index.js').run();

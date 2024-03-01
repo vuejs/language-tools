@@ -7,7 +7,7 @@ import {
 } from '@volar/vscode';
 import { DiagnosticModel, VueInitializationOptions } from '@vue/language-server';
 import * as vscode from 'vscode';
-import * as lsp from 'vscode-languageclient';
+import type * as lsp from 'vscode-languageclient';
 import { config } from './config';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';

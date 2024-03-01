@@ -3,7 +3,7 @@ import { createLanguage } from '@volar/typescript';
 import * as path from 'path';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { createParsedCommandLine, createVueLanguagePlugin, createVueServicePlugins, resolveVueCompilerOptions } from '../../out';
+import { createParsedCommandLine, createVueLanguagePlugin, createVueServicePlugins, resolveVueCompilerOptions } from '../..';
 import { createMockServiceEnv } from './mockEnv';
 
 export const rootUri = URI.file(path.resolve(__dirname, '../../../../test-workspace/language-service')).toString();

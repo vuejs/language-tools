@@ -4,7 +4,7 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { proxyCreateProgram } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import { createFakeGlobalTypesHolder } from '../out';
+import { createFakeGlobalTypesHolder } from '..';
 
 const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');

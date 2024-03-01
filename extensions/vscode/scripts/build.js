@@ -64,7 +64,7 @@ require('esbuild').context({
 })
 
 require('esbuild').context({
-	entryPoints: ['./node_modules/@vue/typescript-plugin/out/index.js'],
+	entryPoints: ['./node_modules/@vue/typescript-plugin/index.js'],
 	bundle: true,
 	outfile: './node_modules/typescript-vue-plugin-bundle/index.js',
 	external: ['vscode'],

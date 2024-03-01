@@ -1,7 +1,6 @@
 {
 	"name": "vue-component-meta",
 	"version": "1.8.27",
-	"main": "out/index.js",
 	"license": "MIT",
 	"files": [
 		"out/**/*.js",
