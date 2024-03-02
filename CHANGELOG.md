@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.2 (2024/3/2)
+
+### Fixes
+
+- **vscode:** fix random `Cannot access 'i' before initialization` errors
+- **typescript-plugin:** `vue-tsp-table.json` path is invalid in windows
+
 ## 2.0.1 (2024/3/2)
 
 ### Fixes
