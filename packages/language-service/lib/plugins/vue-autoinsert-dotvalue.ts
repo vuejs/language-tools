@@ -1,6 +1,5 @@
 import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
-import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -16,7 +15,10 @@ function getAst(ts: typeof import('typescript'), fileName: string, snapshot: ts.
 	return ast;
 }
 
-export function create(ts: typeof import('typescript')): ServicePlugin {
+export function create(
+	ts: typeof import('typescript'),
+	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
+): ServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
 		create(context): ServicePluginInstance {
@@ -75,7 +77,7 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					if (isBlacklistNode(ts, ast, document.offsetAt(position), false))
 						return;
 
-					const props = await namedPipeClient.getPropertiesAtLocation(fileName, sourceCodeOffset) ?? [];
+					const props = await tsPluginClient?.getPropertiesAtLocation(fileName, sourceCodeOffset) ?? [];
 					if (props.some(prop => prop === 'value')) {
 						return '${1:.value}';
 					}

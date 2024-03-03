@@ -2,12 +2,16 @@ import type { ServiceContext, VirtualCode } from '@volar/language-service';
 import type { CompilerDOM } from '@vue/language-core';
 import * as vue from '@vue/language-core';
 import { VueGeneratedCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
-import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
 import { computed } from 'computeds';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { AttrNameCasing, TagNameCasing } from '../types';
 
-export async function convertTagName(context: ServiceContext, uri: string, casing: TagNameCasing) {
+export async function convertTagName(
+	context: ServiceContext,
+	uri: string,
+	casing: TagNameCasing,
+	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client'),
+) {
 
 	const sourceFile = context.language.files.get(uri);
 	if (!sourceFile)
@@ -24,7 +28,7 @@ export async function convertTagName(context: ServiceContext, uri: string, casin
 	const template = desc.template;
 	const document = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await namedPipeClient.getComponentNames(rootCode.fileName) ?? [];
+	const components = await tsPluginClient.getComponentNames(rootCode.fileName) ?? [];
 	const tags = getTemplateTagsAndAttrs(rootCode);
 
 	for (const [tagName, { offsets }] of tags) {
@@ -47,7 +51,12 @@ export async function convertTagName(context: ServiceContext, uri: string, casin
 	return edits;
 }
 
-export async function convertAttrName(context: ServiceContext, uri: string, casing: AttrNameCasing) {
+export async function convertAttrName(
+	context: ServiceContext,
+	uri: string,
+	casing: AttrNameCasing,
+	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client'),
+) {
 
 	const sourceFile = context.language.files.get(uri);
 	if (!sourceFile)
@@ -64,13 +73,13 @@ export async function convertAttrName(context: ServiceContext, uri: string, casi
 	const template = desc.template;
 	const document = context.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await namedPipeClient.getComponentNames(rootCode.fileName) ?? [];
+	const components = await tsPluginClient.getComponentNames(rootCode.fileName) ?? [];
 	const tags = getTemplateTagsAndAttrs(rootCode);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
 		if (componentName) {
-			const props = await namedPipeClient.getComponentProps(rootCode.fileName, componentName) ?? [];
+			const props = await tsPluginClient.getComponentProps(rootCode.fileName, componentName) ?? [];
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenateAttr(prop) === attrName);
 				if (propName) {
@@ -93,9 +102,13 @@ export async function convertAttrName(context: ServiceContext, uri: string, casi
 	return edits;
 }
 
-export async function getNameCasing(context: ServiceContext, uri: string) {
+export async function getNameCasing(
+	context: ServiceContext,
+	uri: string,
+	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
+) {
 
-	const detected = await detect(context, uri);
+	const detected = await detect(context, uri, tsPluginClient);
 	const [attr, tag] = await Promise.all([
 		context.env.getConfiguration?.<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('vue.complete.casing.props', uri),
 		context.env.getConfiguration?.<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('vue.complete.casing.tags', uri),
@@ -109,7 +122,11 @@ export async function getNameCasing(context: ServiceContext, uri: string) {
 	};
 }
 
-export async function detect(context: ServiceContext, uri: string): Promise<{
+export async function detect(
+	context: ServiceContext,
+	uri: string,
+	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
+): Promise<{
 	tag: TagNameCasing[],
 	attr: AttrNameCasing[],
 }> {
@@ -153,7 +170,7 @@ export async function detect(context: ServiceContext, uri: string): Promise<{
 	}
 	async function getTagNameCase(file: VueGeneratedCode): Promise<TagNameCasing[]> {
 
-		const components = await namedPipeClient.getComponentNames(file.fileName) ?? [];
+		const components = await tsPluginClient?.getComponentNames(file.fileName) ?? [];
 		const tagNames = getTemplateTagsAndAttrs(file);
 		const result: TagNameCasing[] = [];
 

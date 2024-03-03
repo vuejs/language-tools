@@ -163,6 +163,9 @@ importers:
       '@vue/language-service':
         specifier: 2.0.2
         version: link:../language-service
+      '@vue/typescript-plugin':
+        specifier: 2.0.2
+        version: link:../typescript-plugin
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
@@ -187,9 +190,6 @@ importers:
       '@vue/shared':
         specifier: ^3.4.0
         version: 3.4.20
-      '@vue/typescript-plugin':
-        specifier: 2.0.2
-        version: link:../typescript-plugin
       computeds:
         specifier: ^0.0.1
         version: 0.0.1
@@ -236,6 +236,9 @@ importers:
       '@volar/kit':
         specifier: ~2.1.0
         version: 2.1.0(typescript@5.3.3)
+      '@vue/typescript-plugin':
+        specifier: 2.0.2
+        version: link:../typescript-plugin
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5

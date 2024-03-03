@@ -22,7 +22,6 @@
 		"@vue/compiler-dom": "^3.4.0",
 		"@vue/language-core": "2.0.2",
 		"@vue/shared": "^3.4.0",
-		"@vue/typescript-plugin": "2.0.2",
 		"computeds": "^0.0.1",
 		"path-browserify": "^1.0.1",
 		"volar-service-css": "0.0.31",
@@ -40,6 +39,7 @@
 		"@types/node": "latest",
 		"@types/path-browserify": "latest",
 		"@volar/kit": "~2.1.0",
+		"@vue/typescript-plugin": "2.0.2",
 		"vscode-languageserver-protocol": "^3.17.5",
 		"vscode-uri": "^3.0.8"
 	}

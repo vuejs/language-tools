@@ -1,7 +1,6 @@
 import type { Disposable, ServiceEnvironment, ServicePluginInstance } from '@volar/language-service';
 import { VueGeneratedCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
@@ -18,6 +17,7 @@ export function create(
 	mode: 'html' | 'pug',
 	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
+	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
 ): ServicePlugin {
 
 	let customData: html.IHTMLDataProvider[] = [];
@@ -141,8 +141,8 @@ export function create(
 						if (code instanceof VueGeneratedCode && scanner) {
 
 							// visualize missing required props
-							const casing = await getNameCasing(context, map.sourceDocument.uri);
-							const components = await namedPipeClient.getComponentNames(code.fileName) ?? [];
+							const casing = await getNameCasing(context, map.sourceDocument.uri, tsPluginClient);
+							const components = await tsPluginClient?.getComponentNames(code.fileName) ?? [];
 							const componentProps: Record<string, string[]> = {};
 							let token: html.TokenType;
 							let current: {
@@ -159,7 +159,7 @@ export function create(
 											: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 									const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
 									if (checkTag) {
-										componentProps[checkTag] ??= await namedPipeClient.getComponentProps(code.fileName, checkTag, true) ?? [];
+										componentProps[checkTag] ??= await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? [];
 										current = {
 											unburnedRequiredProps: [...componentProps[checkTag]],
 											labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -307,7 +307,7 @@ export function create(
 
 			async function provideHtmlData(sourceDocumentUri: string, vueCode: VueGeneratedCode) {
 
-				const casing = await getNameCasing(context, sourceDocumentUri);
+				const casing = await getNameCasing(context, sourceDocumentUri, tsPluginClient);
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
@@ -345,7 +345,7 @@ export function create(
 						provideTags: () => {
 							if (!components) {
 								promises.push((async () => {
-									components = (await namedPipeClient.getComponentNames(vueCode.fileName) ?? [])
+									components = (await tsPluginClient?.getComponentNames(vueCode.fileName) ?? [])
 										.filter(name =>
 											name !== 'Transition'
 											&& name !== 'TransitionGroup'
@@ -391,16 +391,16 @@ export function create(
 						},
 						provideAttributes: (tag) => {
 
-							namedPipeClient.getTemplateContextProps;
+							tsPluginClient?.getTemplateContextProps;
 
 							let failed = false;
 
 							let tagInfo = tagInfos.get(tag);
 							if (!tagInfo) {
 								promises.push((async () => {
-									const attrs = await namedPipeClient.getElementAttrs(vueCode.fileName, tag) ?? [];
-									const props = await namedPipeClient.getComponentProps(vueCode.fileName, tag) ?? [];
-									const events = await namedPipeClient.getComponentEvents(vueCode.fileName, tag) ?? [];
+									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
+									const props = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
+									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
 									tagInfos.set(tag, {
 										attrs,
 										props,
@@ -423,7 +423,7 @@ export function create(
 							if (_tsCodegen) {
 								if (!templateContextProps) {
 									promises.push((async () => {
-										templateContextProps = await namedPipeClient.getTemplateContextProps(vueCode.fileName) ?? [];
+										templateContextProps = await tsPluginClient?.getTemplateContextProps(vueCode.fileName) ?? [];
 										version++;
 									})());
 									return [];
@@ -556,7 +556,7 @@ export function create(
 
 				const replacement = getReplacement(completionList, sourceDocument);
 				const componentNames = new Set(
-					(await namedPipeClient.getComponentNames(code.fileName) ?? [])
+					(await tsPluginClient?.getComponentNames(code.fileName) ?? [])
 						.map(hyphenateTag)
 				);
 
