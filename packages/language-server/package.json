@@ -19,6 +19,7 @@
 		"@volar/language-server": "~2.1.0",
 		"@vue/language-core": "2.0.2",
 		"@vue/language-service": "2.0.2",
+		"@vue/typescript-plugin": "2.0.2",
 		"vscode-languageserver-protocol": "^3.17.5"
 	}
 }
