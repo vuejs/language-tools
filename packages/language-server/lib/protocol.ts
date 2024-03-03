@@ -39,3 +39,13 @@ export namespace ParseSFCRequest {
 	export type ErrorType = never;
 	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/parseSfc');
 }
+
+export namespace GetConnectedNamedPipeServerRequest {
+	export type ParamsType = string;
+	export type ResponseType = {
+		path: string,
+		serverKind: number,
+	} | undefined;
+	export type ErrorType = never;
+	export const type = new vscode.RequestType<ParamsType, ResponseType, ErrorType>('vue/namedPipeServer');
+}

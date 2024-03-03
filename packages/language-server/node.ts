@@ -5,6 +5,7 @@ import { ServiceEnvironment, convertAttrName, convertTagName, createVueServicePl
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './lib/protocol';
 import type { VueInitializationOptions } from './lib/types';
 import * as tsPluginClient from '@vue/typescript-plugin/lib/client';
+import { GetConnectedNamedPipeServerRequest } from './lib/protocol';
 
 export const connection: Connection = createConnection();
 
@@ -119,6 +120,13 @@ connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
 		return await convertAttrName(languageService.context, params.textDocument.uri, params.casing, tsPluginClient);
+	}
+});
+
+connection.onRequest(GetConnectedNamedPipeServerRequest.type, async fileName => {
+	const connected = await tsPluginClient.connectForFile(fileName);
+	if (connected) {
+		return connected[1];
 	}
 });
 

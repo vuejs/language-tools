@@ -81,7 +81,7 @@ export function startNamedPipeServer(serverKind: ts.server.ProjectKind, currentD
 		connection.on('error', err => console.error('[Vue Named Pipe Server]', err.message));
 	});
 
-	clearupPipeTable();
+	cleanupPipeTable();
 
 	if (!fs.existsSync(pipeTable)) {
 		fs.writeFileSync(pipeTable, JSON.stringify([] satisfies NamedPipeServer[]));
@@ -101,7 +101,7 @@ export function startNamedPipeServer(serverKind: ts.server.ProjectKind, currentD
 	server.listen(pipeFile);
 }
 
-function clearupPipeTable() {
+function cleanupPipeTable() {
 	if (!fs.existsSync(pipeTable)) {
 		return;
 	}

@@ -1,5 +1,5 @@
 import { getTsdk } from '@volar/vscode';
-import { ParseSFCRequest } from '@vue/language-server';
+import { GetConnectedNamedPipeServerRequest, ParseSFCRequest } from '@vue/language-server';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import type { BaseLanguageClient } from 'vscode-languageclient';
@@ -253,6 +253,20 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					'TS 4.9 has a bug that will cause auto import to fail. Please downgrade to TS 4.8 or upgrade to TS 5.0+.',
 					'',
 					'Issue: https://github.com/vuejs/language-tools/issues/2190',
+				].join('\n'),
+			});
+		}
+
+		// #3942
+		const namedPipe = await client.sendRequest(GetConnectedNamedPipeServerRequest.type, fileUri.fsPath.replace(/\\/g, '/'));
+		if (namedPipe?.serverKind === 0) {
+			problems.push({
+				title: 'Missing jsconfig/tsconfig',
+				message: [
+					'The current file does not have a matching tsconfig/jsconfig, and extension version 2.0 will not work properly for this at the moment.',
+					'To avoid this problem, you can create a jsconfig in the project root, or downgrade to 1.8.27.',
+					'',
+					'Issue: https://github.com/vuejs/language-tools/issues/3942',
 				].join('\n'),
 			});
 		}

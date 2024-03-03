@@ -81,17 +81,18 @@ export function getElementAttrs(
 }
 
 async function sendRequest<T>(request: Request) {
-	const client = await connectForFile(request.args[0]);
-	if (!client) {
+	const connected = await connectForFile(request.args[0]);
+	if (!connected) {
 		console.warn('[Vue Named Pipe Client] No server found for', request.args[0]);
 		return;
 	}
+	const [client] = connected;
 	const result = await sendRequestWorker<T>(request, client);
 	client.end();
 	return result;
 }
 
-async function connectForFile(fileName: string) {
+export async function connectForFile(fileName: string) {
 	if (!fs.existsSync(pipeTable)) {
 		return;
 	}
@@ -106,7 +107,7 @@ async function connectForFile(fileName: string) {
 		if (client) {
 			const response = await sendRequestWorker<boolean>({ type: 'containsFile', args: [fileName] }, client);
 			if (response) {
-				return client;
+				return [client, server] as const;
 			}
 		}
 	}
@@ -114,7 +115,7 @@ async function connectForFile(fileName: string) {
 		if (!path.relative(server.currentDirectory, fileName).startsWith('..')) {
 			const client = await connect(server.path);
 			if (client) {
-				return client;
+				return [client, server] as const;
 			}
 		}
 	}
