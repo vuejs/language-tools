@@ -130,7 +130,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			'Show Extension'
 		).then((selected) => {
 			if (selected) {
-				vscode.commands.executeCommand('workbench.extensions.search', '@builtin TypeScript and JavaScript Language Features');
+				vscode.commands.executeCommand('workbench.extensions.search', '@builtin typescript-language-features');
 			}
 		});
 	}
