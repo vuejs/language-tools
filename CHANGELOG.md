@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.3 (2024/3/3)
+
+### Features
+
+- **vscode:** identify #3942 in doctor
+
+### Fixes
+
+- **vscode:** compatible with VSCode 1.87.0
+- **vscode:** search "TypeScript and JavaScript Language Features" with id (#3932)
+- **typescript-plugin:** more reliable connection to named pipe server (#3941)
+
+### Refactors
+
+- **language-service:** dependency injection typescript plugin (#3994)
+
 ## 2.0.2 (2024/3/2)
 
 ### Fixes
@@ -15,7 +31,7 @@
 
 ## 2.0.0 (2024/3/2)
 
-### New Features
+### Features
 
 - Hybrid Mode
 	- Takeover Mode has been deprecated. The extension now has the same performance as Takeover Mode by default.
