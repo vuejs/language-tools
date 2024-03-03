@@ -61,7 +61,7 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 
 					decorateLanguageService(files, info.languageService);
 					decorateLanguageServiceHost(files, info.languageServiceHost, ts);
-					startNamedPipeServer(info.project.projectKind);
+					startNamedPipeServer(info.project.projectKind, info.project.getCurrentDirectory());
 
 					const getCompletionsAtPosition = info.languageService.getCompletionsAtPosition;
 					const getCompletionEntryDetails = info.languageService.getCompletionEntryDetails;

@@ -1,9 +1,10 @@
-import * as net from 'net';
 import * as fs from 'fs';
+import type * as net from 'net';
+import * as path from 'path';
 import type * as ts from 'typescript';
 import type { Request } from './server';
-import type { PipeTable } from './utils';
-import { pipeTable } from './utils';
+import type { NamedPipeServer } from './utils';
+import { connect, pipeTable } from './utils';
 
 export function collectExtractProps(
 	...args: Parameters<typeof import('./requests/collectExtractProps.js')['collectExtractProps']>
@@ -80,58 +81,51 @@ export function getElementAttrs(
 }
 
 async function sendRequest<T>(request: Request) {
-	const pipeFile = await getPipeFile(request.args[0]);
-	if (!pipeFile) {
-		console.error('[Vue Named Pipe Client] pipeFile not found');
+	const client = await connectForFile(request.args[0]);
+	if (!client) {
+		console.warn('[Vue Named Pipe Client] No server found for', request.args[0]);
 		return;
 	}
-	return await _sendRequest<T>(request, pipeFile);
+	const result = await sendRequestWorker<T>(request, client);
+	client.end();
+	return result;
 }
 
-async function getPipeFile(fileName: string) {
-	if (fs.existsSync(pipeTable)) {
-		const table: PipeTable = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
-		const all = Object.values(table);
-		const configuredServers = all
-			.filter(item => item.serverKind === 1 satisfies ts.server.ProjectKind.Configured)
-			.sort((a, b) => Math.abs(process.pid - a.pid) - Math.abs(process.pid - b.pid));
-		const inferredServers = all
-			.filter(item => item.serverKind === 0 satisfies ts.server.ProjectKind.Inferred)
-			.sort((a, b) => Math.abs(process.pid - a.pid) - Math.abs(process.pid - b.pid));
-		for (const server of configuredServers) {
-			const response = await _sendRequest<boolean>({ type: 'containsFile', args: [fileName] }, server.pipeFile);
+async function connectForFile(fileName: string) {
+	if (!fs.existsSync(pipeTable)) {
+		return;
+	}
+	const servers: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
+	const configuredServers = servers
+		.filter(item => item.serverKind === 1 satisfies ts.server.ProjectKind.Configured);
+	const inferredServers = servers
+		.filter(item => item.serverKind === 0 satisfies ts.server.ProjectKind.Inferred)
+		.sort((a, b) => b.currentDirectory.length - a.currentDirectory.length);
+	for (const server of configuredServers) {
+		const client = await connect(server.path);
+		if (client) {
+			const response = await sendRequestWorker<boolean>({ type: 'containsFile', args: [fileName] }, client);
 			if (response) {
-				return server.pipeFile;
+				return client;
 			}
 		}
-		for (const server of inferredServers) {
-			const response = await _sendRequest<boolean>({ type: 'containsFile', args: [fileName] }, server.pipeFile);
-			if (typeof response === 'boolean') {
-				return server.pipeFile;
+	}
+	for (const server of inferredServers) {
+		if (!path.relative(server.currentDirectory, fileName).startsWith('..')) {
+			const client = await connect(server.path);
+			if (client) {
+				return client;
 			}
 		}
 	}
 }
 
-function _sendRequest<T>(request: Request, pipeFile: string) {
+function sendRequestWorker<T>(request: Request, client: net.Socket) {
 	return new Promise<T | undefined | null>(resolve => {
-		try {
-			const client = net.connect(pipeFile);
-			client.on('connect', () => {
-				client.write(JSON.stringify(request));
-			});
-			client.on('data', data => {
-				const text = data.toString();
-				resolve(JSON.parse(text));
-				client.end();
-			});
-			client.on('error', err => {
-				console.error('[Vue Named Pipe Client]', err);
-				return resolve(undefined);
-			});
-		} catch (e) {
-			console.error('[Vue Named Pipe Client]', e);
-			return resolve(undefined);
-		}
+		client.once('data', data => {
+			const text = data.toString();
+			resolve(JSON.parse(text));
+		});
+		client.write(JSON.stringify(request));
 	});
 }
