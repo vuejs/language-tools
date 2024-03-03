@@ -185,11 +185,13 @@ try {
 			// @ts-expect-error
 			let text = readFileSync(...args) as string;
 
-			// patch jsTsLanguageModes
-			text = text.replace('t.$u=[t.$r,t.$s,t.$p,t.$q]', s => s + '.concat("vue")');
+			// VSCode < 1.87.0
+			text = text.replace('t.$u=[t.$r,t.$s,t.$p,t.$q]', s => s + '.concat("vue")'); // patch jsTsLanguageModes
+			text = text.replace('.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")'); // patch isSupportedLanguageMode
 
-			// patch isSupportedLanguageMode
-			text = text.replace('.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")');
+			// VSCode >= 1.87.0
+			text = text.replace('t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]', s => s + '.concat("vue")'); // patch jsTsLanguageModes
+			text = text.replace('.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]', s => s + '.concat("vue")'); // patch isSupportedLanguageMode
 
 			return text;
 		}
