@@ -6,7 +6,7 @@ import { getComponentEvents, getComponentNames, getComponentProps, getElementAtt
 import { containsFile } from './requests/containsFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
-import { PipeTable, pipeTable } from './utils';
+import { NamedPipeServer, connect, pipeTable } from './utils';
 
 export interface Request {
 	type: 'containsFile'
@@ -24,7 +24,7 @@ export interface Request {
 
 let started = false;
 
-export function startNamedPipeServer(serverKind: ts.server.ProjectKind) {
+export function startNamedPipeServer(serverKind: ts.server.ProjectKind, currentDirectory: string) {
 
 	if (started) return;
 	started = true;
@@ -84,14 +84,14 @@ export function startNamedPipeServer(serverKind: ts.server.ProjectKind) {
 	clearupPipeTable();
 
 	if (!fs.existsSync(pipeTable)) {
-		fs.writeFileSync(pipeTable, JSON.stringify({}));
+		fs.writeFileSync(pipeTable, JSON.stringify([] satisfies NamedPipeServer[]));
 	}
-	const table: PipeTable = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
-	table[process.pid] = {
-		pid: process.pid,
-		pipeFile,
+	const table: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
+	table.push({
+		path: pipeFile,
 		serverKind,
-	};
+		currentDirectory,
+	});
 	fs.writeFileSync(pipeTable, JSON.stringify(table, undefined, 2));
 
 	try {
@@ -102,21 +102,19 @@ export function startNamedPipeServer(serverKind: ts.server.ProjectKind) {
 }
 
 function clearupPipeTable() {
-	if (fs.existsSync(pipeTable)) {
-		const table: PipeTable = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
-		for (const pid in table) {
-			const { pipeFile } = table[pid];
-			try {
-				const client = net.connect(pipeFile);
-				client.on('connect', () => {
-					client.end();
-				});
-				client.on('error', () => {
-					const table = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
-					delete table[pid];
-					fs.writeFileSync(pipeTable, JSON.stringify(table, undefined, 2));
-				});
-			} catch { }
-		}
+	if (!fs.existsSync(pipeTable)) {
+		return;
+	}
+	for (const server of JSON.parse(fs.readFileSync(pipeTable, 'utf8'))) {
+		connect(server.path).then(client => {
+			if (client) {
+				client.end();
+			}
+			else {
+				let table: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
+				table = table.filter(item => item.path !== server.path);
+				fs.writeFileSync(pipeTable, JSON.stringify(table, undefined, 2));
+			}
+		});
 	}
 }
