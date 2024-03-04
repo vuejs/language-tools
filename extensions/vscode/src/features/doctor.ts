@@ -246,13 +246,12 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 		// check tsdk version should not be 4.9
 		const tsdk = await getTsdk(context);
-		if (tsdk?.version?.startsWith('4.9')) {
+		if (tsdk.version && semver.gte(tsdk.version, '5')) {
 			problems.push({
-				title: 'Bad TypeScript version',
+				title: 'Requires TSDK 5.0 or higher',
 				message: [
-					'TS 4.9 has a bug that will cause auto import to fail. Please downgrade to TS 4.8 or upgrade to TS 5.0+.',
-					'',
-					'Issue: https://github.com/vuejs/language-tools/issues/2190',
+					`Extension >= 2.0 requires TSDK 5.0+. You are currently using TSDK ${tsdk.version}, please upgrade to TSDK.`,
+					'If you need to use TSDK 4.x, please downgrade the extension to v1.',
 				].join('\n'),
 			});
 		}
