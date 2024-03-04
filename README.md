@@ -16,6 +16,10 @@
 *Component props, events, slots types information extract tool*
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
+- [`@vue/language-server`](/packages/language-server/) \
+*The language server itself*.
+- [`@vue/typescript-plugin`](/packages/typescript-plugin/) \
+*Typescript plugin for the language server*.
 
 ## Community Integration
 
