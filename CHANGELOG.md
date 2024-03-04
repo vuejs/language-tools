@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.4 (2024/3/4)
+
+### Features
+
+- **vscode:** report requires TSDK version in doctor
+
+### Fixes
+
+- **typescript-plugin:** JSON parsing error when server data length > 8192 (#3961)
+
 ## 2.0.3 (2024/3/3)
 
 ### Features
