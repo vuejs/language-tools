@@ -9,9 +9,9 @@ import type { VueCompilerOptions } from './lib/types';
 import { create as createEmmetServicePlugin } from 'volar-service-emmet';
 import { create as createJsonServicePlugin } from 'volar-service-json';
 import { create as createPugFormatServicePlugin } from 'volar-service-pug-beautify';
+import { create as createTypeScriptServicePlugin } from 'volar-service-typescript';
 import { create as createTypeScriptTwoslashQueriesServicePlugin } from 'volar-service-typescript-twoslash-queries';
 import { create as createCssServicePlugin } from './lib/plugins/css';
-import { create as createTypeScriptServicePlugin } from './lib/plugins/typescript';
 import { create as createVueAutoDotValueServicePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoWrapParenthesesServicePlugin } from './lib/plugins/vue-autoinsert-parentheses';
 import { create as createVueAutoAddSpaceServicePlugin } from './lib/plugins/vue-autoinsert-space';
@@ -28,25 +28,26 @@ import { create as createVueVisualizeHiddenCallbackParamServicePlugin } from './
 export function createVueServicePlugins(
 	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
+	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
 ): ServicePlugin[] {
 	return [
-		createTypeScriptServicePlugin(ts, getVueOptions),
+		createTypeScriptServicePlugin(ts),
 		createTypeScriptTwoslashQueriesServicePlugin(),
 		createCssServicePlugin(),
 		createPugFormatServicePlugin(),
 		createJsonServicePlugin(),
-		createVueTemplateServicePlugin('html', ts, getVueOptions),
-		createVueTemplateServicePlugin('pug', ts, getVueOptions),
+		createVueTemplateServicePlugin('html', ts, getVueOptions, tsPluginClient),
+		createVueTemplateServicePlugin('pug', ts, getVueOptions, tsPluginClient),
 		createVueSfcServicePlugin(),
-		createVueTwoslashQueriesServicePlugin(ts),
+		createVueTwoslashQueriesServicePlugin(ts, tsPluginClient),
 		createVueReferencesCodeLensServicePlugin(),
 		createVueDocumentDropServicePlugin(ts),
-		createVueAutoDotValueServicePlugin(ts),
+		createVueAutoDotValueServicePlugin(ts, tsPluginClient),
 		createVueAutoWrapParenthesesServicePlugin(ts),
 		createVueAutoAddSpaceServicePlugin(),
 		createVueVisualizeHiddenCallbackParamServicePlugin(),
 		createVueDirectiveCommentsServicePlugin(),
-		createVueExtractFileServicePlugin(ts),
+		createVueExtractFileServicePlugin(ts, tsPluginClient),
 		createVueToggleVBindServicePlugin(ts),
 		createEmmetServicePlugin(),
 	];

@@ -200,6 +200,21 @@ export function getComponentNames(fileName: string) {
 		?? [];
 }
 
+export function _getComponentNames(
+	ts: typeof import('typescript'),
+	tsLs: ts.LanguageService,
+	vueCode: vue.VueGeneratedCode,
+	vueOptions: vue.VueCompilerOptions,
+) {
+	return getVariableType(ts, tsLs, vueCode, '__VLS_components')
+		?.type
+		?.getProperties()
+		.map(c => c.name)
+		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
+		.filter(entry => !vueOptions.nativeTags.includes(entry))
+		?? [];
+}
+
 export function getElementAttrs(fileName: string, tagName: string) {
 	const match = getProject(fileName);
 	if (!match) {

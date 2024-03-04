@@ -1,7 +1,7 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript';
-import type { VueEmbeddedFile } from './virtualFile/embeddedFile';
+import type { VueEmbeddedCode } from './virtualFile/embeddedFile';
 import type { CodeInformation, Segment } from '@volar/language-core';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
@@ -57,6 +57,8 @@ export interface VueCompilerOptions {
 	experimentalUseElementAccessInTemplate: boolean;
 }
 
+export const pluginVersion = 2;
+
 export type VueLanguagePlugin = (ctx: {
 	modules: {
 		typescript: typeof import('typescript');
@@ -67,7 +69,7 @@ export type VueLanguagePlugin = (ctx: {
 	codegenStack: boolean;
 	globalTypesHolder: string | undefined;
 }) => {
-	version: 2;
+	version: typeof pluginVersion;
 	name?: string;
 	order?: number;
 	requiredCompilerOptions?: string[];
@@ -76,8 +78,8 @@ export type VueLanguagePlugin = (ctx: {
 	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
 	compileSFCTemplate?(lang: string, template: string, options: CompilerDOM.CompilerOptions): CompilerDOM.CodegenResult | undefined;
 	updateSFCTemplate?(oldResult: CompilerDOM.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDOM.CodegenResult | undefined;
-	getEmbeddedFiles?(fileName: string, sfc: Sfc): { id: string; lang: string; }[];
-	resolveEmbeddedFile?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedFile): void;
+	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string; }[];
+	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
 };
 
 export interface SfcBlock {

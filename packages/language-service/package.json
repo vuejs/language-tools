@@ -1,11 +1,11 @@
 {
 	"name": "@vue/language-service",
-	"version": "1.8.27",
+	"version": "2.0.4",
 	"license": "MIT",
 	"files": [
 		"data",
-		"out/**/*.js",
-		"out/**/*.d.ts"
+		"**/*.js",
+		"**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",
@@ -20,9 +20,8 @@
 		"@volar/language-service": "~2.1.0",
 		"@volar/typescript": "~2.1.0",
 		"@vue/compiler-dom": "^3.4.0",
-		"@vue/language-core": "1.8.27",
+		"@vue/language-core": "2.0.4",
 		"@vue/shared": "^3.4.0",
-		"@vue/typescript-plugin": "1.8.27",
 		"computeds": "^0.0.1",
 		"path-browserify": "^1.0.1",
 		"volar-service-css": "0.0.31",
@@ -40,6 +39,7 @@
 		"@types/node": "latest",
 		"@types/path-browserify": "latest",
 		"@volar/kit": "~2.1.0",
+		"@vue/typescript-plugin": "2.0.4",
 		"vscode-languageserver-protocol": "^3.17.5",
 		"vscode-uri": "^3.0.8"
 	}

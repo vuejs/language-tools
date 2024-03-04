@@ -4,6 +4,8 @@ import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createV
 import { ServiceEnvironment, convertAttrName, convertTagName, createVueServicePlugins, detect } from '@vue/language-service';
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './lib/protocol';
 import type { VueInitializationOptions } from './lib/types';
+import * as tsPluginClient from '@vue/typescript-plugin/lib/client';
+import { GetConnectedNamedPipeServerRequest } from './lib/protocol';
 
 export const connection: Connection = createConnection();
 
@@ -15,7 +17,7 @@ let tsdk: ReturnType<typeof loadTsdkByPath>;
 
 connection.listen();
 
-connection.onInitialize(params => {
+connection.onInitialize(async params => {
 
 	const options: VueInitializationOptions = params.initializationOptions;
 
@@ -29,13 +31,13 @@ connection.onInitialize(params => {
 		}
 	}
 
-	return server.initialize(
+	const result = await server.initialize(
 		params,
 		createSimpleProjectProviderFactory(),
 		{
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
 			getServicePlugins() {
-				return createVueServicePlugins(tsdk.typescript, env => envToVueOptions.get(env)!);
+				return createVueServicePlugins(tsdk.typescript, env => envToVueOptions.get(env)!, tsPluginClient);
 			},
 			async getLanguagePlugins(serviceEnv, projectContext) {
 				const [commandLine, vueOptions] = await parseCommandLine();
@@ -81,6 +83,11 @@ connection.onInitialize(params => {
 			},
 		},
 	);
+
+	// handle by tsserver + @vue/typescript-plugin
+	result.capabilities.semanticTokensProvider = undefined;
+
+	return result;
 });
 
 connection.onInitialized(() => {
@@ -98,21 +105,28 @@ connection.onRequest(ParseSFCRequest.type, params => {
 connection.onRequest(DetectNameCasingRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return await detect(languageService.context, params.textDocument.uri);
+		return await detect(languageService.context, params.textDocument.uri, tsPluginClient);
 	}
 });
 
 connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return await convertTagName(languageService.context, params.textDocument.uri, params.casing);
+		return await convertTagName(languageService.context, params.textDocument.uri, params.casing, tsPluginClient);
 	}
 });
 
 connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return await convertAttrName(languageService.context, params.textDocument.uri, params.casing);
+		return await convertAttrName(languageService.context, params.textDocument.uri, params.casing, tsPluginClient);
+	}
+});
+
+connection.onRequest(GetConnectedNamedPipeServerRequest.type, async fileName => {
+	const server = await tsPluginClient.searchNamedPipeServerForFile(fileName);
+	if (server) {
+		return server;
 	}
 });
 

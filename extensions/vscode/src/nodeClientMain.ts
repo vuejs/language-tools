@@ -11,6 +11,9 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	let serverPathStatusItem: vscode.StatusBarItem | undefined;
 
+	const volarLabs = createLabsInfo(serverLib);
+	volarLabs.extensionExports.volarLabs.codegenStackSupport = true;
+
 	await commonActivate(context, (
 		id,
 		name,
@@ -106,31 +109,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			serverOptions,
 			clientOptions,
 		);
-		client.start().then(() => {
-			const legend = client.initializeResult?.capabilities.semanticTokensProvider?.legend;
-			if (!legend) {
-				console.error('Server does not support semantic tokens');
-				return;
-			}
-			// When tsserver has provided semantic tokens for the .vue file, VSCode will no longer request semantic tokens from the Vue language server, so it needs to be provided here again.
-			vscode.languages.registerDocumentSemanticTokensProvider(documentSelector, {
-				async provideDocumentSemanticTokens(document) {
-					const tokens = await client.sendRequest(lsp.SemanticTokensRequest.type, {
-						textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
-					} satisfies lsp.SemanticTokensParams);
-					return client.protocol2CodeConverter.asSemanticTokens(tokens);
-				},
-			}, legend);
-			vscode.languages.registerDocumentRangeSemanticTokensProvider(documentSelector, {
-				async provideDocumentRangeSemanticTokens(document, range) {
-					const tokens = await client.sendRequest(lsp.SemanticTokensRangeRequest.type, {
-						textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(document),
-						range: client.code2ProtocolConverter.asRange(range),
-					} satisfies lsp.SemanticTokensRangeParams);
-					return client.protocol2CodeConverter.asSemanticTokens(tokens);
-				},
-			}, legend);
-		});
+		client.start();
 
 		volarLabs.addLanguageClient(client);
 
@@ -151,7 +130,7 @@ export async function activate(context: vscode.ExtensionContext) {
 			'Show Extension'
 		).then((selected) => {
 			if (selected) {
-				vscode.commands.executeCommand('workbench.extensions.search', '@builtin TypeScript and JavaScript Language Features');
+				vscode.commands.executeCommand('workbench.extensions.search', '@builtin typescript-language-features');
 			}
 		});
 	}
@@ -167,8 +146,6 @@ export async function activate(context: vscode.ExtensionContext) {
 		});
 	}
 
-	const volarLabs = createLabsInfo(serverLib);
-	volarLabs.extensionExports.volarLabs.codegenStackSupport = true;
 	return volarLabs.extensionExports;
 }
 
@@ -193,9 +170,6 @@ function updateProviders(client: lsp.LanguageClient) {
 			capabilities.workspace.fileOperations.willRename = undefined;
 		}
 
-		// TODO: disalbe for now because this break ts plugin semantic tokens
-		capabilities.semanticTokensProvider = undefined;
-
 		return initializeFeatures.call(client, ...args);
 	};
 }
@@ -211,11 +185,13 @@ try {
 			// @ts-expect-error
 			let text = readFileSync(...args) as string;
 
-			// patch jsTsLanguageModes
-			text = text.replace('t.$u=[t.$r,t.$s,t.$p,t.$q]', s => s + '.concat("vue")');
+			// VSCode < 1.87.0
+			text = text.replace('t.$u=[t.$r,t.$s,t.$p,t.$q]', s => s + '.concat("vue")'); // patch jsTsLanguageModes
+			text = text.replace('.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")'); // patch isSupportedLanguageMode
 
-			// patch isSupportedLanguageMode
-			text = text.replace('.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")');
+			// VSCode >= 1.87.0
+			text = text.replace('t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]', s => s + '.concat("vue")'); // patch jsTsLanguageModes
+			text = text.replace('.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]', s => s + '.concat("vue")'); // patch isSupportedLanguageMode
 
 			return text;
 		}

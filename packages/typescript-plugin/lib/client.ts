@@ -1,6 +1,10 @@
-import * as net from 'net';
+import * as fs from 'fs';
+import type * as net from 'net';
+import * as path from 'path';
+import type * as ts from 'typescript';
 import type { Request } from './server';
-import { pipeFile } from './utils';
+import type { NamedPipeServer } from './utils';
+import { connect, pipeTable } from './utils';
 
 export function collectExtractProps(
 	...args: Parameters<typeof import('./requests/collectExtractProps.js')['collectExtractProps']>
@@ -76,25 +80,60 @@ export function getElementAttrs(
 	});
 }
 
-function sendRequest<T>(request: Request) {
-	return new Promise<T | undefined | null>(resolve => {
-		try {
-			const client = net.connect(pipeFile);
-			client.on('connect', () => {
-				client.write(JSON.stringify(request));
-			});
-			client.on('data', data => {
-				const text = data.toString();
-				resolve(JSON.parse(text));
-				client.end();
-			});
-			client.on('error', err => {
-				console.error('[Vue Named Pipe Client]', err);
-				return resolve(undefined);
-			});
-		} catch (e) {
-			console.error('[Vue Named Pipe Client]', e);
-			return resolve(undefined);
+async function sendRequest<T>(request: Request) {
+	const server = await searchNamedPipeServerForFile(request.args[0]);
+	if (!server) {
+		console.warn('[Vue Named Pipe Client] No server found for', request.args[0]);
+		return;
+	}
+	const client = await connect(server.path);
+	if (!client) {
+		console.warn('[Vue Named Pipe Client] Failed to connect to', server.path);
+		return;
+	}
+	return await sendRequestWorker<T>(request, client);
+}
+
+export async function searchNamedPipeServerForFile(fileName: string) {
+	if (!fs.existsSync(pipeTable)) {
+		return;
+	}
+	const servers: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
+	const configuredServers = servers
+		.filter(item => item.serverKind === 1 satisfies ts.server.ProjectKind.Configured);
+	const inferredServers = servers
+		.filter(item => item.serverKind === 0 satisfies ts.server.ProjectKind.Inferred)
+		.sort((a, b) => b.currentDirectory.length - a.currentDirectory.length);
+	for (const server of configuredServers) {
+		const client = await connect(server.path);
+		if (client) {
+			const response = await sendRequestWorker<boolean>({ type: 'containsFile', args: [fileName] }, client);
+			if (response) {
+				return server;
+			}
 		}
+	}
+	for (const server of inferredServers) {
+		if (!path.relative(server.currentDirectory, fileName).startsWith('..')) {
+			const client = await connect(server.path);
+			if (client) {
+				return server;
+			}
+		}
+	}
+}
+
+function sendRequestWorker<T>(request: Request, client: net.Socket) {
+	return new Promise<T | undefined | null>(resolve => {
+		let dataChunks: Buffer[] = [];
+		client.on('data', chunk => {
+			dataChunks.push(chunk);
+		});
+		client.on('end', () => {
+			const data = Buffer.concat(dataChunks);
+			const text = data.toString();
+			resolve(JSON.parse(text));
+		});
+		client.write(JSON.stringify(request));
 	});
 }

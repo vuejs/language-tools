@@ -1,15 +1,28 @@
 import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
-import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { getAst } from './typescript';
 
-export function create(ts: typeof import('typescript')): ServicePlugin {
+const asts = new WeakMap<ts.IScriptSnapshot, ts.SourceFile>();
+
+function getAst(ts: typeof import('typescript'), fileName: string, snapshot: ts.IScriptSnapshot, scriptKind?: ts.ScriptKind) {
+	let ast = asts.get(snapshot);
+	if (!ast) {
+		ast = ts.createSourceFile(fileName, snapshot.getText(0, snapshot.getLength()), ts.ScriptTarget.Latest, undefined, scriptKind);
+		asts.set(snapshot, ast);
+	}
+	return ast;
+}
+
+export function create(
+	ts: typeof import('typescript'),
+	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
+): ServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
 		create(context): ServicePluginInstance {
+			let currentReq = 0;
 			return {
 				async provideAutoInsertionEdit(document, position, lastChange) {
 
@@ -19,34 +32,52 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					if (!isCharacterTyping(document, lastChange))
 						return;
 
+					const req = ++currentReq;
+					// Wait for tsserver to sync
+					await sleep(250);
+					if (req !== currentReq)
+						return;
+
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.dotValue') ?? true;
 					if (!enabled)
 						return;
 
-					const [_, file] = context.documents.getVirtualCodeByUri(document.uri);
+					const [code, file] = context.documents.getVirtualCodeByUri(document.uri);
+					if (!file)
+						return;
 
-					let fileName: string | undefined;
 					let ast: ts.SourceFile | undefined;
+					let sourceCodeOffset = document.offsetAt(position);
+
+					const fileName = context.env.typescript!.uriToFileName(file.id);
 
 					if (file?.generated) {
 						const script = file.generated.languagePlugin.typescript?.getScript(file.generated.code);
-						if (script) {
-							fileName = context.env.typescript!.uriToFileName(file.id);
-							ast = getAst(fileName, script.code.snapshot, script.scriptKind);
+						if (script?.code !== code) {
+							return;
+						}
+						ast = getAst(ts, fileName, script.code.snapshot, script.scriptKind);
+						let mapped = false;
+						for (const [_1, [_2, map]] of context.language.files.getMaps(code)) {
+							const sourceOffset = map.getSourceOffset(document.offsetAt(position));
+							if (sourceOffset !== undefined) {
+								sourceCodeOffset = sourceOffset[0];
+								mapped = true;
+								break;
+							}
+						}
+						if (!mapped) {
+							return;
 						}
 					}
-					else if (file) {
-						fileName = context.env.typescript!.uriToFileName(file.id);
-						ast = getAst(fileName, file.snapshot);
+					else {
+						ast = getAst(ts, fileName, file.snapshot);
 					}
-
-					if (!ast || !fileName)
-						return;
 
 					if (isBlacklistNode(ts, ast, document.offsetAt(position), false))
 						return;
 
-					const props = await namedPipeClient.getPropertiesAtLocation(fileName, document.offsetAt(position)) ?? [];
+					const props = await tsPluginClient?.getPropertiesAtLocation(fileName, sourceCodeOffset) ?? [];
 					if (props.some(prop => prop === 'value')) {
 						return '${1:.value}';
 					}
@@ -54,6 +85,10 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 			};
 		},
 	};
+}
+
+function sleep(ms: number) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function isTsDocument(document: TextDocument) {

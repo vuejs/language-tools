@@ -9,7 +9,7 @@ import useVueSfcStyles from './plugins/vue-sfc-styles';
 import useVueSfcTemplate from './plugins/vue-sfc-template';
 import useHtmlTemplatePlugin from './plugins/vue-template-html';
 import useVueTsx from './plugins/vue-tsx';
-import type { VueCompilerOptions, VueLanguagePlugin } from './types';
+import { pluginVersion, type VueCompilerOptions, type VueLanguagePlugin } from './types';
 import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 
 export function createPluginContext(
@@ -61,9 +61,9 @@ export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLangua
 		});
 
 	return pluginInstances.filter((plugin) => {
-		const valid = plugin.version >= 2 && plugin.version < 3;
+		const valid = plugin.version === pluginVersion;
 		if (!valid) {
-			console.warn(`Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected 2.x but got ${JSON.stringify(plugin.version)}`);
+			console.warn(`Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected ${JSON.stringify(pluginVersion)} but got ${JSON.stringify(plugin.version)}`);
 		}
 		return valid;
 	});
