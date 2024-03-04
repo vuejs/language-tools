@@ -124,9 +124,9 @@ connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 });
 
 connection.onRequest(GetConnectedNamedPipeServerRequest.type, async fileName => {
-	const connected = await tsPluginClient.connectForFile(fileName);
-	if (connected) {
-		return connected[1];
+	const server = await tsPluginClient.searchNamedPipeServerForFile(fileName);
+	if (server) {
+		return server;
 	}
 });
 
