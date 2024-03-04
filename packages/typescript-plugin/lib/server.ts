@@ -77,6 +77,7 @@ export function startNamedPipeServer(serverKind: ts.server.ProjectKind, currentD
 				console.warn('[Vue Named Pipe Server] Unknown request type:', request.type);
 				connection.write(JSON.stringify(null));
 			}
+			connection.end();
 		});
 		connection.on('error', err => console.error('[Vue Named Pipe Server]', err.message));
 	});

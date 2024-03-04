@@ -81,18 +81,20 @@ export function getElementAttrs(
 }
 
 async function sendRequest<T>(request: Request) {
-	const connected = await connectForFile(request.args[0]);
-	if (!connected) {
+	const server = await searchNamedPipeServerForFile(request.args[0]);
+	if (!server) {
 		console.warn('[Vue Named Pipe Client] No server found for', request.args[0]);
 		return;
 	}
-	const [client] = connected;
-	const result = await sendRequestWorker<T>(request, client);
-	client.end();
-	return result;
+	const client = await connect(server.path);
+	if (!client) {
+		console.warn('[Vue Named Pipe Client] Failed to connect to', server.path);
+		return;
+	}
+	return await sendRequestWorker<T>(request, client);
 }
 
-export async function connectForFile(fileName: string) {
+export async function searchNamedPipeServerForFile(fileName: string) {
 	if (!fs.existsSync(pipeTable)) {
 		return;
 	}
@@ -107,7 +109,7 @@ export async function connectForFile(fileName: string) {
 		if (client) {
 			const response = await sendRequestWorker<boolean>({ type: 'containsFile', args: [fileName] }, client);
 			if (response) {
-				return [client, server] as const;
+				return server;
 			}
 		}
 	}
@@ -115,7 +117,7 @@ export async function connectForFile(fileName: string) {
 		if (!path.relative(server.currentDirectory, fileName).startsWith('..')) {
 			const client = await connect(server.path);
 			if (client) {
-				return [client, server] as const;
+				return server;
 			}
 		}
 	}
@@ -123,7 +125,12 @@ export async function connectForFile(fileName: string) {
 
 function sendRequestWorker<T>(request: Request, client: net.Socket) {
 	return new Promise<T | undefined | null>(resolve => {
-		client.once('data', data => {
+		let dataChunks: Buffer[] = [];
+		client.on('data', chunk => {
+			dataChunks.push(chunk);
+		});
+		client.on('end', () => {
+			const data = Buffer.concat(dataChunks);
 			const text = data.toString();
 			resolve(JSON.parse(text));
 		});
