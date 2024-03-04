@@ -184,6 +184,13 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 						}
 						return result;
 					};
+
+					const timer = setInterval(() => {
+						if(info.project['program']) {
+							clearInterval(timer);
+							(info.project['program'] as any).__volar__ = { files };
+						}
+					}, 50);
 				}
 
 				return info.languageService;
