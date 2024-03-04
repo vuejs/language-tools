@@ -244,9 +244,9 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 		*/
 
-		// check tsdk version should not be 4.9
+		// check tsdk version should be higher than 5.0.0
 		const tsdk = await getTsdk(context);
-		if (tsdk.version && semver.gte(tsdk.version, '5')) {
+		if (tsdk.version && !semver.gte(tsdk.version, '5.0.0')) {
 			problems.push({
 				title: 'Requires TSDK 5.0 or higher',
 				message: [
