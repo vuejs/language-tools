@@ -27,7 +27,7 @@
 ### Refactors
 
 - **typescript-plugin** add README (#3974) - thanks @WhyNotHugo
-- **component-meta** update deom (#3994) - thanks @zzfn
+- **component-meta** update demo (#3994) - thanks @zzfn
 
 ## 2.0.4 (2024/3/4)
 
