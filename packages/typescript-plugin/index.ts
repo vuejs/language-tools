@@ -223,10 +223,6 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 				) {
 					const oldFiles = externalFiles.get(project);
 					const newFiles = new Set(searchExternalFiles(ts, project, projectExternalFileExtensions.get(project)!));
-					console.log('volar-search vue files');
-					for (const file of newFiles) {
-						console.log(file);
-					}
 					externalFiles.set(project, newFiles);
 					if (oldFiles && !twoSetsEqual(oldFiles, newFiles)) {
 						for (const oldFile of oldFiles) {
