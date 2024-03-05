@@ -130,9 +130,22 @@ function sendRequestWorker<T>(request: Request, client: net.Socket) {
 			dataChunks.push(chunk);
 		});
 		client.on('end', () => {
+			if (!dataChunks.length) {
+				console.warn('[Vue Named Pipe Client] No response from server for request:', request.type);
+				resolve(undefined);
+				return;
+			}
 			const data = Buffer.concat(dataChunks);
 			const text = data.toString();
-			resolve(JSON.parse(text));
+			let json = null;
+			try {
+				json = JSON.parse(text);
+			} catch (e) {
+				console.error('[Vue Named Pipe Client] Failed to parse response:', text);
+				resolve(undefined);
+				return;
+			}
+			resolve(json);
 		});
 		client.write(JSON.stringify(request));
 	});
