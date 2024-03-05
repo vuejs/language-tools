@@ -5,6 +5,7 @@ const foo = 1;
 const bar = '';
 //    ^reference: 1 
 const fooBar = 1;
+//    ^reference: 1 
 </script>
 
 <template>

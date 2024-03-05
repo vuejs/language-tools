@@ -1296,23 +1296,24 @@ export function* generate(
 								prop.exp.loc.start.offset,
 								caps_all,
 							);
-							yield _ts([
-								'',
-								'template',
-								prop.exp.loc.end.offset,
-								disableAllFeatures({
-									__hint: {
-										setting: 'vue.inlayHints.vbindShorthand',
-										label: `="${propVariableName}"`,
-										tooltip: [
-											`This is a shorthand for \`${prop.exp.loc.source}="${propVariableName}"\`.`,
-											'To hide this hint, set `vue.inlayHints.vbindShorthand` to `false` in IDE settings.',
-											'[More info](https://github.com/vuejs/core/pull/9451)',
-										].join('\n\n'),
-										paddingRight: true,
-									},
-								})
-							]);
+							if (mode === 'normal') {
+								yield _ts([
+									'',
+									'template',
+									prop.exp.loc.end.offset,
+									disableAllFeatures({
+										__hint: {
+											setting: 'vue.inlayHints.vbindShorthand',
+											label: `="${propVariableName}"`,
+											tooltip: [
+												`This is a shorthand for \`${prop.exp.loc.source}="${propVariableName}"\`.`,
+												'To hide this hint, set `vue.inlayHints.vbindShorthand` to `false` in IDE settings.',
+												'[More info](https://github.com/vuejs/core/pull/9451)',
+											].join('\n\n'),
+										},
+									})
+								]);
+							}
 							accessedGlobalVariables.add(propVariableName);
 						}
 					}
