@@ -20,8 +20,10 @@
 		"@lerna-lite/cli": "latest",
 		"@lerna-lite/publish": "latest",
 		"@volar/language-service": "~2.1.0",
+		"fast-glob": "^3.3.2",
 		"typescript": "latest",
 		"vite": "latest",
-		"vitest": "latest"
+		"vitest": "latest",
+		"vscode-tmlanguage-snapshot": "^0.1.3"
 	}
 }
