@@ -29,7 +29,7 @@ export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLangua
 			try {
 				return plugin(pluginContext);
 			} catch (err) {
-				console.warn(`Failed to load plugin`, err);
+				console.warn('[Vue] Failed to create plugin', err);
 			}
 		})
 		.filter((plugin): plugin is ReturnType<VueLanguagePlugin> => !!plugin)
@@ -42,7 +42,7 @@ export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLangua
 	return pluginInstances.filter((plugin) => {
 		const valid = plugin.version === pluginVersion;
 		if (!valid) {
-			console.warn(`Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected ${JSON.stringify(pluginVersion)} but got ${JSON.stringify(plugin.version)}`);
+			console.warn(`[Vue] Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected ${JSON.stringify(pluginVersion)} but got ${JSON.stringify(plugin.version)}`);
 		}
 		return valid;
 	});
