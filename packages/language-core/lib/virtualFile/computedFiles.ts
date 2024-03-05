@@ -195,7 +195,7 @@ function computedPluginFiles(
 					}
 					mapping.source = undefined;
 				}
-				if (mapping.data.__combineLastMappping) {
+				if (mapping.data.__combineLastMapping) {
 					lastValidMapping!.sourceOffsets.push(...mapping.sourceOffsets);
 					lastValidMapping!.generatedOffsets.push(...mapping.generatedOffsets);
 					lastValidMapping!.lengths.push(...mapping.lengths);
@@ -209,7 +209,7 @@ function computedPluginFiles(
 			return {
 				file,
 				snapshot,
-				mappings: mappings.filter(mapping => !mapping.data.__combineLastMappping),
+				mappings: mappings.filter(mapping => !mapping.data.__combineLastMapping),
 				codegenStacks: buildStacks(file.content, file.contentStacks),
 			};
 		});

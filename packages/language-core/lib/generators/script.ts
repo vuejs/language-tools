@@ -1098,7 +1098,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			classNameWithDot.substring(1),
 			'style_' + styleIndex,
 			offset + 1,
-			disableAllFeatures({ __combineLastMappping: true }),
+			disableAllFeatures({ __combineLastMapping: true }),
 		]);
 		yield _(`'`);
 		yield _([

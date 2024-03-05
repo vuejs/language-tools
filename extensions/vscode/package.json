@@ -427,6 +427,11 @@
 					"default": false,
 					"description": "Show inlay hints for component options wrapper for type support."
 				},
+				"vue.inlayHints.vbindShorthand": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for v-bind shorthand."
+				},
 				"vue.format.template.initialIndent": {
 					"type": "boolean",
 					"default": true
