@@ -437,7 +437,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 				let propName = 'modelValue';
 				if (defineProp.name) {
 					propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-					propName = propName.replace(/['"]+/g, '')
+					propName = propName.replace(/['"]+/g, '');
 				}
 				yield _(`'update:${propName}': [${propName}:`);
 				if (defineProp.type) {
@@ -545,7 +545,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			}
 			yield _(`;\n`);
 
-			yield* generateModelEmits()
+			yield* generateModelEmits();
 
 			yield _(`let __VLS_fnPropsDefineComponent!: InstanceType<typeof __VLS_fnComponent>['$props'];\n`);
 			yield _(`let __VLS_fnPropsSlots!: `);
@@ -755,7 +755,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			yield _(`};\n`);
 		}
 
-		yield* generateModelEmits()
+		yield* generateModelEmits();
 		yield* generateTemplate(functional);
 
 		if (mode === 'return' || mode === 'export') {
@@ -856,9 +856,9 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 				}
 				yield _(`},\n`);
 			}
-			yield _(`emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`)
+			yield _(`emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`);
 			if (ranges.emits.define) {
-				yield _(` & typeof `)
+				yield _(` & typeof `);
 				yield _(ranges.emits.name ?? '__VLS_emit');
 			}
 			yield _(`>),\n`);

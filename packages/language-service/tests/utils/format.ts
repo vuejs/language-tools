@@ -4,7 +4,13 @@ import { describe, expect, it } from 'vitest';
 import { createVueLanguagePlugin, createVueServicePlugins, resolveVueCompilerOptions } from '../..';
 
 const resolvedVueOptions = resolveVueCompilerOptions({});
-const vueLanguagePlugin = createVueLanguagePlugin(ts, fileId => formatter.env.typescript!.uriToFileName(fileId), {}, resolvedVueOptions);
+const vueLanguagePlugin = createVueLanguagePlugin(
+	ts,
+	fileId => formatter.env.typescript!.uriToFileName(fileId),
+	() => false,
+	{},
+	resolvedVueOptions,
+);
 const vueServicePLugins = createVueServicePlugins(ts, () => resolvedVueOptions);
 const formatter = kit.createFormatter([vueLanguagePlugin], vueServicePLugins);
 
