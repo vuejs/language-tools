@@ -57,7 +57,11 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 						fileName => {
 							const snapshot = getScriptSnapshot(fileName);
 							if (snapshot) {
-								files.set(fileName, resolveCommonLanguageId(fileName), snapshot);
+								let languageId = resolveCommonLanguageId(fileName);
+								if (extensions.some(ext => fileName.endsWith(ext))) {
+									languageId = 'vue';
+								}
+								files.set(fileName, languageId, snapshot);
 							}
 							else {
 								files.delete(fileName);
@@ -219,6 +223,10 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 				) {
 					const oldFiles = externalFiles.get(project);
 					const newFiles = new Set(searchExternalFiles(ts, project, projectExternalFileExtensions.get(project)!));
+					console.log('volar-search vue files');
+					for (const file of newFiles) {
+						console.log(file);
+					}
 					externalFiles.set(project, newFiles);
 					if (oldFiles && !twoSetsEqual(oldFiles, newFiles)) {
 						for (const oldFile of oldFiles) {
