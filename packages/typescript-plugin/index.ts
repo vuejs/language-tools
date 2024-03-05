@@ -220,11 +220,9 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					const oldFiles = externalFiles.get(project);
 					const newFiles = new Set(searchExternalFiles(ts, project, projectExternalFileExtensions.get(project)!));
 					externalFiles.set(project, newFiles);
-					console.log('volar-n', oldFiles?.size, newFiles.size);
 					if (oldFiles && !twoSetsEqual(oldFiles, newFiles)) {
 						for (const oldFile of oldFiles) {
 							if (!newFiles.has(oldFile)) {
-								console.log('volar-n delete', oldFile);
 								projects.get(project)?.files.delete(oldFile);
 							}
 						}
