@@ -18,7 +18,7 @@ export function run() {
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 				: {};
 			const resolvedVueOptions = vue.resolveVueCompilerOptions(vueOptions);
-			const extensions = vueOptions.extensions ?? ['.vue'];
+			const { extensions } = resolvedVueOptions;
 			const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options);
 			if (
 				runExtensions.length === extensions.length

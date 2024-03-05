@@ -44,7 +44,7 @@ describe('vue-tsc-dts', () => {
 
 	for (const intputFile of options.rootNames) {
 
-		if (intputFile === fakeGlobalTypesHolder)
+		if (intputFile.endsWith('__VLS_globalTypes.vue'))
 			continue;
 
 		const expectedOutputFile = intputFile.endsWith('.ts')
