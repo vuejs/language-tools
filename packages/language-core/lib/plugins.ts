@@ -25,7 +25,14 @@ export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLangua
 	];
 
 	const pluginInstances = plugins
-		.map(plugin => plugin(pluginContext))
+		.map(plugin => {
+			try {
+				return plugin(pluginContext);
+			} catch (err) {
+				console.warn(`Failed to load plugin`, err);
+			}
+		})
+		.filter((plugin): plugin is ReturnType<VueLanguagePlugin> => !!plugin)
 		.sort((a, b) => {
 			const aOrder = a.order ?? 0;
 			const bOrder = b.order ?? 0;
