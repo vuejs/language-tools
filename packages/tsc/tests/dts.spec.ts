@@ -33,10 +33,10 @@ describe('vue-tsc-dts', () => {
 		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
+			() => fakeGlobalTypesHolder,
 			options.options,
-			vueOptions,
+			vue.resolveVueCompilerOptions(vueOptions),
 			false,
-			fakeGlobalTypesHolder?.replace(windowsPathReg, '/'),
 		);
 		return [vueLanguagePlugin];
 	});

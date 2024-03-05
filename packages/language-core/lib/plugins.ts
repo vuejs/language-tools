@@ -17,7 +17,7 @@ export function createPluginContext(
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	codegenStack: boolean,
-	globalTypesHolder: string | undefined,
+	getGlobalTypesHolder: () => string | undefined,
 ) {
 	const pluginCtx: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
@@ -32,7 +32,9 @@ export function createPluginContext(
 		compilerOptions,
 		vueCompilerOptions,
 		codegenStack,
-		globalTypesHolder,
+		get globalTypesHolder() {
+			return getGlobalTypesHolder();
+		},
 	};
 	return pluginCtx;
 }

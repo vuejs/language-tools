@@ -67,7 +67,7 @@ export type VueLanguagePlugin = (ctx: {
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	codegenStack: boolean;
-	globalTypesHolder: string | undefined;
+	readonly globalTypesHolder: string | undefined;
 }) => {
 	version: typeof pluginVersion;
 	name?: string;

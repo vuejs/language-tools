@@ -42,7 +42,20 @@ connection.onInitialize(async params => {
 			async getLanguagePlugins(serviceEnv, projectContext) {
 				const [commandLine, vueOptions] = await parseCommandLine();
 				const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
-				const vueLanguagePlugin = createVueLanguagePlugin(tsdk.typescript, serviceEnv.typescript!.uriToFileName, commandLine?.options ?? {}, resolvedVueOptions, options.codegenStack);
+				const vueLanguagePlugin = createVueLanguagePlugin(
+					tsdk.typescript,
+					serviceEnv.typescript!.uriToFileName,
+					() => {
+						for (const fileName of projectContext.typescript?.host.getScriptFileNames() ?? []) {
+							if (resolvedVueOptions.extensions.some(ext => fileName.endsWith(ext))) {
+								return fileName;
+							}
+						}
+					},
+					commandLine?.options ?? {},
+					resolvedVueOptions,
+					options.codegenStack,
+				);
 
 				envToVueOptions.set(serviceEnv, resolvedVueOptions);
 

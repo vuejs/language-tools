@@ -27,7 +27,19 @@ function createTester(rootUri: string) {
 		getLanguageId: resolveCommonLanguageId,
 	};
 	const resolvedVueOptions = resolveVueCompilerOptions(parsedCommandLine.vueOptions);
-	const vueLanguagePlugin = createVueLanguagePlugin(ts, serviceEnv.typescript!.uriToFileName, parsedCommandLine.options, resolvedVueOptions);
+	const vueLanguagePlugin = createVueLanguagePlugin(
+		ts,
+		serviceEnv.typescript!.uriToFileName,
+		() => {
+			for (const fileName of projectHost.getScriptFileNames()) {
+				if (resolvedVueOptions.extensions.some(ext => fileName.endsWith(ext))) {
+					return fileName;
+				}
+			}
+		},
+		parsedCommandLine.options,
+		resolvedVueOptions,
+	);
 	const vueServicePlugins = createVueServicePlugins(ts, () => resolvedVueOptions);
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',

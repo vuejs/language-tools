@@ -152,6 +152,13 @@ export function baseCreate(
 	const vueLanguagePlugin = vue.createVueLanguagePlugin(
 		ts,
 		id => id,
+		() => {
+			for (const fileName of host.getScriptFileNames()) {
+				if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
+					return fileName;
+				}
+			}
+		},
 		host.getCompilationSettings(),
 		vueCompilerOptions,
 	);

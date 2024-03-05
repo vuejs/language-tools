@@ -32,6 +32,7 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					const languagePlugin = vue.createVueLanguagePlugin(
 						ts,
 						id => id,
+						() => externalFiles.get(info.project)?.[0],
 						info.languageServiceHost.getCompilationSettings(),
 						vueOptions,
 					);
