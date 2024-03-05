@@ -9,7 +9,7 @@ import { _getComponentNames } from './lib/requests/componentInfos';
 import { capitalize } from '@vue/shared';
 
 const windowsPathReg = /\\/g;
-const externalFiles = new WeakMap<ts.server.Project, string[]>();
+const externalFiles = new WeakMap<ts.server.Project, Set<string>>();
 const projectExternalFileExtensions = new WeakMap<ts.server.Project, string[]>();
 const decoratedLanguageServices = new WeakSet<ts.LanguageService>();
 const decoratedLanguageServiceHosts = new WeakSet<ts.LanguageServiceHost>();
@@ -32,6 +32,20 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					const languagePlugin = vue.createVueLanguagePlugin(
 						ts,
 						id => id,
+						fileName => {
+							if (info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false) {
+								return externalFiles.get(info.project)?.has(fileName) ?? false;
+							}
+							else {
+								const lowerFileName = fileName.toLowerCase();
+								for (const externalFile of externalFiles.get(info.project) ?? []) {
+									if (externalFile.toLowerCase() === lowerFileName) {
+										return true;
+									}
+								}
+								return false;
+							}
+						},
 						info.languageServiceHost.getCompilationSettings(),
 						vueOptions,
 					);
@@ -204,26 +218,30 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					|| !externalFiles.has(project)
 				) {
 					const oldFiles = externalFiles.get(project);
-					const newFiles = searchExternalFiles(ts, project, projectExternalFileExtensions.get(project)!);
+					const newFiles = new Set(searchExternalFiles(ts, project, projectExternalFileExtensions.get(project)!));
 					externalFiles.set(project, newFiles);
-					if (oldFiles && !arrayItemsEqual(oldFiles, newFiles)) {
+					if (oldFiles && !twoSetsEqual(oldFiles, newFiles)) {
+						for (const oldFile of oldFiles) {
+							if (!newFiles.has(oldFile)) {
+								projects.get(project)?.files.delete(oldFile);
+							}
+						}
 						project.refreshDiagnostics();
 					}
 				}
-				return externalFiles.get(project)!;
+				return [...externalFiles.get(project)!];
 			},
 		};
 		return pluginModule;
 	};
 }
 
-function arrayItemsEqual(a: string[], b: string[]) {
-	if (a.length !== b.length) {
+function twoSetsEqual(a: Set<string>, b: Set<string>) {
+	if (a.size !== b.size) {
 		return false;
 	}
-	const set = new Set(a);
-	for (const file of b) {
-		if (!set.has(file)) {
+	for (const file of a) {
+		if (!b.has(file)) {
 			return false;
 		}
 	}
