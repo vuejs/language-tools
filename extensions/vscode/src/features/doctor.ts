@@ -143,6 +143,19 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
+		// #3942, https://github.com/microsoft/TypeScript/issues/57633
+		const svelte = vscode.extensions.getExtension('svelte.svelte-vscode');
+		if (svelte) {
+			problems.push({
+				title: 'Recommended to disable Svelte extension in Vue workspace',
+				message: [
+					`Svelte's TypeScript Plugin and Vue's TypeScript Plugin are known to cause some conflicts. Until the problem is resolved, it is recommended that you temporarily disable the Svelte extension in the Vue workspace.`,
+					'',
+					'Issues: https://github.com/vuejs/language-tools/issues/3942, https://github.com/microsoft/TypeScript/issues/57633',
+				].join('\n'),
+			});
+		}
+
 		// check using pug but don't install @vue/language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
@@ -208,41 +221,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				message: 'With `"files.associations": { "*.vue": html }`, language server cannot to recognize Vue files. You can remove `files.associations["*.vue"]` from `.vscode/settings.json`.',
 			});
 		}
-
-		/*
-		// check outdated language services plugins
-		const knownPlugins = [
-			// '@volar-plugins/css',
-			// '@volar-plugins/emmet',
-			'@volar-plugins/eslint',
-			// '@volar-plugins/html',
-			// '@volar-plugins/json',
-			'@volar-plugins/prettier',
-			'@volar-plugins/prettyhtml',
-			'@volar-plugins/pug-beautify',
-			'@volar-plugins/sass-formatter',
-			'@volar-plugins/tslint',
-			// '@volar-plugins/typescript',
-			// '@volar-plugins/typescript-twoslash-queries',
-			'@volar-plugins/vetur',
-		];
-		for (const plugin of knownPlugins) {
-			const pluginMod = await getPackageJsonOfWorkspacePackage(fileUri.fsPath, plugin);
-			if (!pluginMod) continue;
-			if (!pluginMod.json.version.startsWith('2.')) {
-				problems.push({
-					title: `Outdated ${plugin}`,
-					message: [
-						`The ${plugin} plugin is outdated. Please update it to the latest version.`,
-						'',
-						'- plugin package.json: ' + pluginMod.path,
-						'- plugin version: ' + pluginMod.json.version,
-						'- expected version: >= 2.0.0',
-					].join('\n'),
-				});
-			}
-		}
-		*/
 
 		// check tsdk version should be higher than 5.0.0
 		const tsdk = await getTsdk(context);
