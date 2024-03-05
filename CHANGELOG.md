@@ -1,5 +1,34 @@
 # Changelog
 
+## 2.0.5 (2024/3/5)
+
+> [!IMPORTANT] 
+> If the TypeScript language server crashes in version 2.0, please try using VSCode Insiders, or temporarily downgrade to 1.8.27.\
+> Issue: https://github.com/vuejs/language-tools/issues/3962
+>
+> If false positive errors occurs, try creating an empty jsconfig in the workspace root directory.\
+> Issue: https://github.com/vuejs/language-tools/issues/3942
+
+### Features
+
+- **language-core:** support `v-bind` shorthand (#3990) - thanks @so1ve
+- **language-service:** support inlay hints for `v-bind` shorthand (#3990) - thanks @so1ve
+- **vscode:** prompt to disable Svelte extension in Vue workspace to avoid conflicts
+
+### Fixes
+
+- **typescript-plugin:** fault tolerance for named pipe server data
+- **language-core:** avoid `globalTypesHolder` being specified from a `node_modules` file (#3990)
+- **language-core:** fault tolerance for plugin creation
+- **language-plugin-pug:** failed to load due to an invalid require path (#3930)
+- **typescript-plugin:** custom extensions do not work (#3977)
+- **language-service:** html custom data not working (#3975)
+
+### Refactors
+
+- **typescript-plugin** add README (#3974) - thanks @WhyNotHugo
+- **component-meta** update deom (#3994) - thanks @zzfn
+
 ## 2.0.4 (2024/3/4)
 
 ### Features
