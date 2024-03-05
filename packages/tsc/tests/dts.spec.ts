@@ -33,7 +33,7 @@ describe('vue-tsc-dts', () => {
 		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
-			() => fakeGlobalTypesHolder,
+			fileName => fileName === fakeGlobalTypesHolder,
 			options.options,
 			vue.resolveVueCompilerOptions(vueOptions),
 			false,

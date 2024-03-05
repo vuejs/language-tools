@@ -45,11 +45,18 @@ connection.onInitialize(async params => {
 				const vueLanguagePlugin = createVueLanguagePlugin(
 					tsdk.typescript,
 					serviceEnv.typescript!.uriToFileName,
-					() => {
-						for (const fileName of projectContext.typescript?.host.getScriptFileNames() ?? []) {
-							if (resolvedVueOptions.extensions.some(ext => fileName.endsWith(ext))) {
-								return fileName;
+					fileName => {
+						if (projectContext.typescript?.sys.useCaseSensitiveFileNames ?? false) {
+							return projectContext.typescript?.host.getScriptFileNames().includes(fileName) ?? false;
+						}
+						else {
+							const lowerFileName = fileName.toLowerCase();
+							for (const rootFile of projectContext.typescript?.host.getScriptFileNames() ?? []) {
+								if (rootFile.toLowerCase() === lowerFileName) {
+									return true;
+								}
 							}
+							return false;
 						}
 					},
 					commandLine?.options ?? {},

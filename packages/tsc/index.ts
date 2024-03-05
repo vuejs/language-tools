@@ -27,7 +27,7 @@ export function run() {
 				const vueLanguagePlugin = vue.createVueLanguagePlugin(
 					ts,
 					id => id,
-					() => fakeGlobalTypesHolder,
+					fileName => fileName === fakeGlobalTypesHolder,
 					options.options,
 					resolvedVueOptions,
 					false,

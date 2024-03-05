@@ -152,11 +152,18 @@ export function baseCreate(
 	const vueLanguagePlugin = vue.createVueLanguagePlugin(
 		ts,
 		id => id,
-		() => {
-			for (const fileName of host.getScriptFileNames()) {
-				if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
-					return fileName;
+		fileName => {
+			if (ts.sys.useCaseSensitiveFileNames) {
+				return host.getScriptFileNames().includes(fileName) ?? false;
+			}
+			else {
+				const lowerFileName = fileName.toLowerCase();
+				for (const rootFile of host.getScriptFileNames()) {
+					if (rootFile.toLowerCase() === lowerFileName) {
+						return true;
+					}
 				}
+				return false;
 			}
 		},
 		host.getCompilationSettings(),
