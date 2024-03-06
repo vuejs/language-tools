@@ -237,7 +237,7 @@ export function* generate(
 				'',
 				'template',
 				expectedErrorNode.loc.end.offset,
-				disableAllFeatures({ __combineLastMappping: true }),
+				disableAllFeatures({ __combineLastMapping: true }),
 			]);
 			yield _ts('\n;\n');
 		}
@@ -279,7 +279,7 @@ export function* generate(
 			else {
 				yield _ts(['', 'template', slot.tagRange[0], mergeFeatureSettings(presetInfos.slotNameExport, disableAllFeatures({ __referencesCodeLens: true }))]);
 				yield _ts('default');
-				yield _ts(['', 'template', slot.tagRange[1], disableAllFeatures({ __combineLastMappping: true })]);
+				yield _ts(['', 'template', slot.tagRange[1], disableAllFeatures({ __combineLastMapping: true })]);
 			}
 			yield _ts(`?(_: typeof ${slot.varName}): any,\n`);
 		}
@@ -909,7 +909,7 @@ export function* generate(
 				yield _ts('.');
 				yield _ts(['', 'template', slotDir.loc.start.offset, { ...presetInfos.slotName, completion: false }] satisfies Code);
 				yield _ts('default');
-				yield _ts(['', 'template', slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0), disableAllFeatures({ __combineLastMappping: true })] satisfies Code);
+				yield _ts(['', 'template', slotDir.loc.start.offset + (slotDir.loc.source.startsWith('#') ? '#'.length : slotDir.loc.source.startsWith('v-slot:') ? 'v-slot:'.length : 0), disableAllFeatures({ __combineLastMapping: true })] satisfies Code);
 			}
 			yield _ts(['', 'template', (slotDir.arg ?? slotDir).loc.end.offset, presetInfos.diagnosticOnly]);
 			if (hasProps) {
@@ -966,7 +966,7 @@ export function* generate(
 				yield _ts(`(${componentCtxVar}.slots!).`);
 				yield _ts(['', 'template', node.children[0].loc.start.offset, disableAllFeatures({ navigation: true })]);
 				yield _ts('default');
-				yield _ts(['', 'template', node.children[node.children.length - 1].loc.end.offset, disableAllFeatures({ __combineLastMappping: true })]);
+				yield _ts(['', 'template', node.children[node.children.length - 1].loc.end.offset, disableAllFeatures({ __combineLastMapping: true })]);
 				yield _ts(';\n');
 			}
 		}
@@ -1026,22 +1026,22 @@ export function* generate(
 					yield* generateCamelized(
 						capitalize(prop.arg.loc.source),
 						prop.arg.loc.start.offset,
-						disableAllFeatures({ __combineLastMappping: true }),
+						disableAllFeatures({ __combineLastMapping: true }),
 					);
 				}
 				else {
 					yield _ts(`[`);
 					yield _ts(startCode);
 					yield _ts(`'`);
-					yield _ts(['', 'template', prop.arg.loc.start.offset, disableAllFeatures({ __combineLastMappping: true })]);
+					yield _ts(['', 'template', prop.arg.loc.start.offset, disableAllFeatures({ __combineLastMapping: true })]);
 					yield _ts('on');
 					yield* generateCamelized(
 						capitalize(prop.arg.loc.source),
 						prop.arg.loc.start.offset,
-						disableAllFeatures({ __combineLastMappping: true }),
+						disableAllFeatures({ __combineLastMapping: true }),
 					);
 					yield _ts(`'`);
-					yield _ts(['', 'template', prop.arg.loc.end.offset, disableAllFeatures({ __combineLastMappping: true })]);
+					yield _ts(['', 'template', prop.arg.loc.end.offset, disableAllFeatures({ __combineLastMapping: true })]);
 					yield _ts(`]`);
 				}
 				yield _ts(`) };\n`);
@@ -1267,23 +1267,55 @@ export function* generate(
 					shouldCamelize,
 				);
 				yield _ts(': (');
-				if (prop.exp && !(prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY)) { // style='z-index: 2' will compile to {'z-index':'2'}
+				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 					const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset; // vue 3.4+
-					yield* generateInterpolation(
-						prop.exp.loc.source,
-						prop.exp.loc,
-						prop.exp.loc.start.offset,
-						// disable completion for shorthand expression
-						isShorthand ? caps_attr : caps_all,
-						'(',
-						')',
-					);
-					if (!isShorthand && mode === 'normal') {
-						yield* generateTsFormat(
+					if (!isShorthand) {
+						yield* generateInterpolation(
 							prop.exp.loc.source,
+							prop.exp.loc,
 							prop.exp.loc.start.offset,
-							formatBrackets.normal,
+							caps_all,
+							'(',
+							')',
 						);
+
+						if (mode === 'normal') {
+							yield* generateTsFormat(
+								prop.exp.loc.source,
+								prop.exp.loc.start.offset,
+								formatBrackets.normal,
+							);
+						}
+					} else {
+						const propVariableName = camelize(prop.exp.loc.source);
+
+						if (validTsVarReg.test(propVariableName)) {
+							yield _ts('__VLS_ctx.');
+							yield* generateCamelized(
+								prop.exp.loc.source,
+								prop.exp.loc.start.offset,
+								caps_all,
+							);
+							if (mode === 'normal') {
+								yield _ts([
+									'',
+									'template',
+									prop.exp.loc.end.offset,
+									disableAllFeatures({
+										__hint: {
+											setting: 'vue.inlayHints.vbindShorthand',
+											label: `="${propVariableName}"`,
+											tooltip: [
+												`This is a shorthand for \`${prop.exp.loc.source}="${propVariableName}"\`.`,
+												'To hide this hint, set `vue.inlayHints.vbindShorthand` to `false` in IDE settings.',
+												'[More info](https://github.com/vuejs/core/pull/9451)',
+											].join('\n\n'),
+										},
+									})
+								]);
+							}
+							accessedGlobalVariables.add(propVariableName);
+						}
 					}
 				}
 				else {
@@ -1559,13 +1591,13 @@ export function* generate(
 			yield _ts('__VLS_normalizeSlot(');
 			yield _ts(['', 'template', node.loc.start.offset, presetInfos.diagnosticOnly]);
 			yield _ts(`${slotsAssignName ?? '__VLS_slots'}[`);
-			yield _ts(['', 'template', node.loc.start.offset, disableAllFeatures({ __combineLastMappping: true })]);
+			yield _ts(['', 'template', node.loc.start.offset, disableAllFeatures({ __combineLastMapping: true })]);
 			yield _ts(slotNameExpNode?.content ?? `('${getSlotName()?.[0] ?? 'default'}' as const)`);
-			yield _ts(['', 'template', node.loc.end.offset, disableAllFeatures({ __combineLastMappping: true })]);
+			yield _ts(['', 'template', node.loc.end.offset, disableAllFeatures({ __combineLastMapping: true })]);
 			yield _ts(']');
-			yield _ts(['', 'template', node.loc.end.offset, disableAllFeatures({ __combineLastMappping: true })]);
+			yield _ts(['', 'template', node.loc.end.offset, disableAllFeatures({ __combineLastMapping: true })]);
 			yield _ts(')?.(');
-			yield _ts(['', 'template', startTagOffset, disableAllFeatures({ __combineLastMappping: true })]);
+			yield _ts(['', 'template', startTagOffset, disableAllFeatures({ __combineLastMapping: true })]);
 			yield _ts('{\n');
 		}
 		else {
@@ -1750,7 +1782,7 @@ export function* generate(
 		if (needToUnicode(content)) {
 			yield _ts(['', 'template', start, info]);
 			yield _ts(toUnicode(content));
-			yield _ts(['', 'template', end, disableAllFeatures({ __combineLastMappping: true })]);
+			yield _ts(['', 'template', end, disableAllFeatures({ __combineLastMapping: true })]);
 		}
 		else {
 			yield _ts([content, 'template', start, info]);
@@ -1771,7 +1803,7 @@ export function* generate(
 					offset,
 					i === 0
 						? info
-						: disableAllFeatures({ __combineLastMappping: true }),
+						: disableAllFeatures({ __combineLastMapping: true }),
 				]);
 			}
 			offset += part.length + 1;
@@ -1807,9 +1839,9 @@ export function* generate(
 			else {
 				yield _ts(['', 'template', offset, info]);
 				yield _ts('"');
-				yield* generateCamelized(code, offset, disableAllFeatures({ __combineLastMappping: true }));
+				yield* generateCamelized(code, offset, disableAllFeatures({ __combineLastMapping: true }));
 				yield _ts('"');
-				yield _ts(['', 'template', offset + code.length, disableAllFeatures({ __combineLastMappping: true })]);
+				yield _ts(['', 'template', offset + code.length, disableAllFeatures({ __combineLastMapping: true })]);
 			}
 		}
 		else {
@@ -1912,9 +1944,9 @@ export function* generate(
 		else {
 			yield _ts(['', 'template', offset, info]);
 			yield _ts('"');
-			yield _ts([code, 'template', offset, disableAllFeatures({ __combineLastMappping: true })]);
+			yield _ts([code, 'template', offset, disableAllFeatures({ __combineLastMapping: true })]);
 			yield _ts('"');
-			yield _ts(['', 'template', offset + code.length, disableAllFeatures({ __combineLastMappping: true })]);
+			yield _ts(['', 'template', offset + code.length, disableAllFeatures({ __combineLastMapping: true })]);
 		}
 	}
 

@@ -33,10 +33,10 @@ describe('vue-tsc-dts', () => {
 		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
+			fileName => fileName === fakeGlobalTypesHolder,
 			options.options,
-			vueOptions,
+			vue.resolveVueCompilerOptions(vueOptions),
 			false,
-			fakeGlobalTypesHolder?.replace(windowsPathReg, '/'),
 		);
 		return [vueLanguagePlugin];
 	});
@@ -44,7 +44,7 @@ describe('vue-tsc-dts', () => {
 
 	for (const intputFile of options.rootNames) {
 
-		if (intputFile === fakeGlobalTypesHolder)
+		if (intputFile.endsWith('__VLS_globalTypes.vue'))
 			continue;
 
 		const expectedOutputFile = intputFile.endsWith('.ts')

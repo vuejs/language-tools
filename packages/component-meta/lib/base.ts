@@ -71,6 +71,7 @@ function createCheckerWorker(
 	let projectVersion = 0;
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
+	const resolvedVueOptions = vue.resolveVueCompilerOptions(parsedCommandLine.vueOptions);
 	const _host: vue.TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
@@ -86,11 +87,16 @@ function createCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getLanguageId: vue.resolveCommonLanguageId,
+		getLanguageId: fileName => {
+			if (resolvedVueOptions.extensions.some(ext => fileName.endsWith(ext))) {
+				return 'vue';
+			}
+			return vue.resolveCommonLanguageId(fileName);
+		},
 	};
 
 	return {
-		...baseCreate(ts, configFileName, _host, vue.resolveVueCompilerOptions(parsedCommandLine.vueOptions), checkerOptions, globalComponentName),
+		...baseCreate(ts, configFileName, _host, resolvedVueOptions, checkerOptions, globalComponentName),
 		updateFile(fileName: string, text: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
@@ -152,6 +158,20 @@ export function baseCreate(
 	const vueLanguagePlugin = vue.createVueLanguagePlugin(
 		ts,
 		id => id,
+		fileName => {
+			if (ts.sys.useCaseSensitiveFileNames) {
+				return host.getScriptFileNames().includes(fileName) ?? false;
+			}
+			else {
+				const lowerFileName = fileName.toLowerCase();
+				for (const rootFile of host.getScriptFileNames()) {
+					if (rootFile.toLowerCase() === lowerFileName) {
+						return true;
+					}
+				}
+				return false;
+			}
+		},
 		host.getCompilationSettings(),
 		vueCompilerOptions,
 	);

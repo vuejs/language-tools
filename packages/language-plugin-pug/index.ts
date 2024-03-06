@@ -6,7 +6,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 	return {
 
-		name: require('../package.json').name,
+		name: require('./package.json').name,
 
 		version: 2,
 

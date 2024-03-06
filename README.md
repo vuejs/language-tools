@@ -145,7 +145,7 @@ flowchart LR
 	click VOLAR_PUG_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/pug-language-service"
 	click VOLAR_TS_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/typescript-language-service"
 
-	%% Extrnal Packages
+	%% External Packages
 	HTML_SERVICE[vscode-html-languageservice]
 	CSS_SERVICE[vscode-css-languageservice]
 	JSON_SERVICE[vscode-json-languageservice]

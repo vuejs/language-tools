@@ -4,14 +4,14 @@
 
 ## Guide 📗
 
-First of all, you need to create a component meta checker using `createComponentMetaChecker`:
+First of all, you need to create a component meta checker using `createChecker`:
 
 ```ts
 import * as url from 'url'
 import path from 'path'
 
 import type { MetaCheckerOptions } from 'vue-component-meta'
-import { createComponentMetaChecker } from 'vue-component-meta'
+import { createChecker } from 'vue-component-meta'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
@@ -21,7 +21,7 @@ const checkerOptions: MetaCheckerOptions = {
   printer: { newLine: 1 },
 }
 
-const tsconfigChecker = createComponentMetaChecker(
+const tsconfigChecker = createChecker(
   // Write your tsconfig path
   path.join(__dirname, 'path-to-tsconfig'),
   checkerOptions,
@@ -40,7 +40,7 @@ const componentPath = path.join(__dirname, 'path-to-component');
 const meta = checker.getComponentMeta(componentPath);
 ```
 
-This meta contains really useful stuff like component props, slots, events and more. You can refer to its [type definition](https://github.com/vuejs/language-tools/blob/master/packages/component-meta/src/types.ts) for more details.
+This meta contains really useful stuff like component props, slots, events and more. You can refer to its [type definition](https://github.com/vuejs/language-tools/blob/master/packages/component-meta/lib/types.ts) for more details.
 
 ### Extracting prop meta
 

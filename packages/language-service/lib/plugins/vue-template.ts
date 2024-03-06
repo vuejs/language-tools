@@ -9,6 +9,7 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, ServicePlugin, TagNameCasing, VueCompilerOptions } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
+import { URI, Utils } from 'vscode-uri';
 
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
@@ -21,6 +22,7 @@ export function create(
 ): ServicePlugin {
 
 	let customData: html.IHTMLDataProvider[] = [];
+	let extraCustomData: html.IHTMLDataProvider[] = [];
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
@@ -34,7 +36,10 @@ export function create(
 	const baseServicePlugin = mode === 'pug' ? createPugService : createHtmlService;
 	const baseService = baseServicePlugin({
 		getCustomData() {
-			return customData;
+			return [
+				...customData,
+				...extraCustomData,
+			];
 		},
 		onDidChangeCustomData,
 	});
@@ -83,9 +88,18 @@ export function create(
 				}
 			}
 
+			const disposable = context.env.onDidChangeConfiguration?.(() => initializing = undefined);
+
+			let initializing: Promise<void> | undefined;
+
 			return {
 
 				...baseServiceInstance,
+
+				dispose() {
+					baseServiceInstance.dispose?.();
+					disposable?.dispose();
+				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
 
@@ -241,7 +255,7 @@ export function create(
 						return;
 
 					if (context.documents.getVirtualCodeByUri(document.uri)[0])
-						updateCustomData([]);
+						updateExtraCustomData([]);
 
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
@@ -307,6 +321,8 @@ export function create(
 
 			async function provideHtmlData(sourceDocumentUri: string, vueCode: VueGeneratedCode) {
 
+				await (initializing ??= initialize());
+
 				const casing = await getNameCasing(context, sourceDocumentUri, tsPluginClient);
 
 				if (builtInData.tags) {
@@ -337,7 +353,7 @@ export function create(
 				let components: string[] | undefined;
 				let templateContextProps: string[] | undefined;
 
-				updateCustomData([
+				updateExtraCustomData([
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
 					{
 						getId: () => 'vue-template',
@@ -675,7 +691,31 @@ export function create(
 					}
 				}
 
-				updateCustomData([]);
+				updateExtraCustomData([]);
+			}
+
+
+			async function initialize() {
+				customData = await getHtmlCustomData();
+			}
+
+			async function getHtmlCustomData() {
+				const customData: string[] = await context.env.getConfiguration?.('html.customData') ?? [];
+				const newData: html.IHTMLDataProvider[] = [];
+				for (const customDataPath of customData) {
+					const uri = Utils.resolvePath(URI.parse(context.env.workspaceFolder), customDataPath);
+					const json = await context.env.fs?.readFile?.(uri.toString());
+					if (json) {
+						try {
+							const data = JSON.parse(json);
+							newData.push(html.newHTMLDataProvider(customDataPath, data));
+						}
+						catch (error) {
+							console.error(error);
+						}
+					}
+				}
+				return newData;
 			}
 		},
 	};
@@ -692,8 +732,8 @@ export function create(
 		}
 	}
 
-	function updateCustomData(extraData: html.IHTMLDataProvider[]) {
-		customData = extraData;
+	function updateExtraCustomData(extraData: html.IHTMLDataProvider[]) {
+		extraCustomData = extraData;
 		onDidChangeCustomDataListeners.forEach(l => l());
 	}
 

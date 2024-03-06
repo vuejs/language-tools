@@ -21,7 +21,7 @@ export interface VueCodeInformation extends CodeInformation {
 		paddingRight?: boolean;
 		paddingLeft?: boolean;
 	};
-	__combineLastMappping?: boolean;
+	__combineLastMapping?: boolean;
 }
 
 export type CodeAndStack = [code: Code, stack: string];
