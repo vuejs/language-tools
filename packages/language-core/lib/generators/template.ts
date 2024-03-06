@@ -1291,6 +1291,7 @@ export function* generate(
 
 						if (validTsVarReg.test(propVariableName)) {
 							if (!localVars.has(propVariableName)) {
+								accessedGlobalVariables.add(propVariableName);
 								yield _ts('__VLS_ctx.');
 							}
 							yield* generateCamelized(
@@ -1316,7 +1317,6 @@ export function* generate(
 									})
 								]);
 							}
-							accessedGlobalVariables.add(propVariableName);
 						}
 					}
 				}
