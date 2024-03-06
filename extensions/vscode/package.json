@@ -427,7 +427,7 @@
 					"default": false,
 					"description": "Show inlay hints for component options wrapper for type support."
 				},
-				"vue.inlayHints.vbindShorthand": {
+				"vue.inlayHints.vBindShorthand": {
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for v-bind shorthand."

@@ -1306,11 +1306,11 @@ export function* generate(
 									prop.exp.loc.end.offset,
 									disableAllFeatures({
 										__hint: {
-											setting: 'vue.inlayHints.vbindShorthand',
+											setting: 'vue.inlayHints.vBindShorthand',
 											label: `="${propVariableName}"`,
 											tooltip: [
 												`This is a shorthand for \`${prop.exp.loc.source}="${propVariableName}"\`.`,
-												'To hide this hint, set `vue.inlayHints.vbindShorthand` to `false` in IDE settings.',
+												'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
 												'[More info](https://github.com/vuejs/core/pull/9451)',
 											].join('\n\n'),
 										},
