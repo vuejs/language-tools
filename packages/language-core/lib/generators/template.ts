@@ -1290,7 +1290,10 @@ export function* generate(
 						const propVariableName = camelize(prop.exp.loc.source);
 
 						if (validTsVarReg.test(propVariableName)) {
-							yield _ts('__VLS_ctx.');
+							if (!localVars.has(propVariableName)) {
+								accessedGlobalVariables.add(propVariableName);
+								yield _ts('__VLS_ctx.');
+							}
 							yield* generateCamelized(
 								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
@@ -1314,7 +1317,6 @@ export function* generate(
 									})
 								]);
 							}
-							accessedGlobalVariables.add(propVariableName);
 						}
 					}
 				}
