@@ -6,7 +6,7 @@
 > If the TypeScript language server crashes since 2.0, please try using VSCode Insiders and install [JavaScript and TypeScript Nightly](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-next), or temporarily downgrade to 1.8.27.\
 > Issue: https://github.com/vuejs/language-tools/issues/3962
 >
-> If false positive errors occurs, please try disabling unrelated extensions in the Vue workspace.
+> If false positive errors occur, please try disabling unrelated extensions in the Vue workspace.\
 > Issue: https://github.com/vuejs/language-tools/issues/3942
 
 ### Fixes
@@ -15,7 +15,7 @@
 - **language-core:** sfc folding end position failed to mapping (#4038) - thanks @so1ve
 - **language-service:** remove `extraLiners` option for formatting (#3943)
 - **language-service:** bump `volar-service-typescript` for fix jsx formatting (#3949)
-- **language-service:** bump `@volar/typescript` 2.0.5 completion performance regression (#4024)
+- **language-service:** bump `@volar/typescript` for fix 2.0.5 auto-complete performance regression (#4024)
 
 ### Refactors
 
