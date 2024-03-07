@@ -167,7 +167,6 @@ export function create(): ServicePlugin {
 							...formatSettings,
 							unformatted: '',
 							contentUnformatted: blockTypes.join(','),
-							extraLiners: blockTypes.join(','),
 							endWithNewline: options.insertFinalNewline ? true
 								: options.trimFinalNewlines ? false
 									: document.getText().endsWith('\n'),
