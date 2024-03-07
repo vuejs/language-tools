@@ -39,6 +39,30 @@ export function create(): ServicePlugin {
 					},
 				},
 
+				provideFoldingRanges(document) {
+					return worker(document, (vueCode) => {
+						const blocks = [
+							vueCode.sfc.script,
+							vueCode.sfc.scriptSetup,
+							vueCode.sfc.template,
+							...vueCode.sfc.styles,
+							...vueCode.sfc.customBlocks,
+						];
+						const result: vscode.FoldingRange[] = [];
+
+						for (const block of blocks) {
+							if (block) {
+								result.push({
+									startLine: document.positionAt(block.start).line,
+									endLine: document.positionAt(block.end).line,
+								});
+							}
+						}
+
+						return result;
+					});
+				},
+
 				async resolveEmbeddedCodeFormattingOptions(code, options) {
 
 					const sourceFile = context.language.files.getByVirtualCode(code);
