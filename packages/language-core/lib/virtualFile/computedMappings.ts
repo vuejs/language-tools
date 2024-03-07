@@ -1,7 +1,7 @@
-import { Mapping, Segment, replaceSourceRange } from '@volar/language-core';
+import { CodeMapping, Segment, replaceSourceRange } from '@volar/language-core';
 import { computed } from 'computeds';
 import type * as ts from 'typescript';
-import { enableAllFeatures } from '../generators/utils';
+import { disableAllFeatures, enableAllFeatures } from '../generators/utils';
 import type { Sfc, VueCodeInformation } from '../types';
 
 export function computedMappings(
@@ -21,9 +21,9 @@ export function computedMappings(
 				replaceSourceRange(str, undefined, block.startTagEnd, block.endTagStart, '\n\n');
 			}
 		}
-		return str
+		const mappings = str
 			.filter(s => typeof s !== 'string')
-			.map<Mapping<VueCodeInformation>>((m) => {
+			.map<CodeMapping>((m) => {
 				const text = m[0];
 				const start = m[2] as number;
 				return {
@@ -33,5 +33,37 @@ export function computedMappings(
 					data: m[3] as VueCodeInformation,
 				};
 			});
+
+		// fix folding range end position failed to mapping
+		for (const block of [
+			sfc.script,
+			sfc.scriptSetup,
+			sfc.template,
+			...sfc.styles,
+			...sfc.customBlocks,
+		]) {
+			const offsets: number[] = [];
+			if (block) {
+				let content = block.content;
+				if (content.endsWith('\r\n')) {
+					content = content.slice(0, -2);
+				}
+				else if (content.endsWith('\n')) {
+					content = content.slice(0, -1);
+				}
+				const offset = content.lastIndexOf('\n') + 1;
+				offsets.push(block.startTagEnd + offset);
+			}
+			if (offsets.length) {
+				mappings.push({
+					sourceOffsets: offsets,
+					generatedOffsets: offsets,
+					lengths: offsets.map(() => 0),
+					data: disableAllFeatures({ structure: true }),
+				});
+			}
+		}
+
+		return mappings;
 	});
 }
