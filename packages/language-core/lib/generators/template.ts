@@ -1290,7 +1290,10 @@ export function* generate(
 						const propVariableName = camelize(prop.exp.loc.source);
 
 						if (validTsVarReg.test(propVariableName)) {
-							yield _ts('__VLS_ctx.');
+							if (!localVars.has(propVariableName)) {
+								accessedGlobalVariables.add(propVariableName);
+								yield _ts('__VLS_ctx.');
+							}
 							yield* generateCamelized(
 								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
@@ -1303,18 +1306,17 @@ export function* generate(
 									prop.exp.loc.end.offset,
 									disableAllFeatures({
 										__hint: {
-											setting: 'vue.inlayHints.vbindShorthand',
+											setting: 'vue.inlayHints.vBindShorthand',
 											label: `="${propVariableName}"`,
 											tooltip: [
 												`This is a shorthand for \`${prop.exp.loc.source}="${propVariableName}"\`.`,
-												'To hide this hint, set `vue.inlayHints.vbindShorthand` to `false` in IDE settings.',
+												'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
 												'[More info](https://github.com/vuejs/core/pull/9451)',
 											].join('\n\n'),
 										},
 									})
 								]);
 							}
-							accessedGlobalVariables.add(propVariableName);
 						}
 					}
 				}
