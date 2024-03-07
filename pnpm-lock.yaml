@@ -215,8 +215,8 @@ importers:
         specifier: 0.0.31
         version: 0.0.31(@volar/language-service@2.1.1)
       volar-service-typescript:
-        specifier: 0.0.31
-        version: 0.0.31(@volar/language-service@2.1.1)(@volar/typescript@2.1.1)
+        specifier: 0.0.31-patch.1
+        version: 0.0.31-patch.1(@volar/language-service@2.1.1)(@volar/typescript@2.1.1)
       volar-service-typescript-twoslash-queries:
         specifier: 0.0.31
         version: 0.0.31(@volar/language-service@2.1.1)
@@ -5216,8 +5216,8 @@ packages:
       '@volar/language-service': 2.1.1
     dev: false
 
-  /volar-service-typescript@0.0.31(@volar/language-service@2.1.1)(@volar/typescript@2.1.1):
-    resolution: {integrity: sha512-gaSsX0NmWgENPx6KrHcj+Xru4iQWDpt1kLJcWYNJZ5XaMawYFlVXjWGX/lCO6P7AoLoc2NQnTYUpgTfTjbqdaQ==}
+  /volar-service-typescript@0.0.31-patch.1(@volar/language-service@2.1.1)(@volar/typescript@2.1.1):
+    resolution: {integrity: sha512-q9Dv9lg3fyLopMgXll4Xal862YLVHw4PShFcllHqIQXUMiPzQndZ7dA7B/3OldVFYeJLWP44w/M+90tjdxtl7w==}
     peerDependencies:
       '@volar/language-service': ~2.1.0
       '@volar/typescript': ~2.1.0
