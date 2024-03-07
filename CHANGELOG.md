@@ -1,13 +1,27 @@
 # Changelog
 
-## 2.0.5 (2024/3/5)
+## 2.0.6 (2024/3/7)
 
 > [!IMPORTANT] 
-> If the TypeScript language server crashes in version 2.0, please try using VSCode Insiders, or temporarily downgrade to 1.8.27.\
+> If the TypeScript language server crashes since 2.0, please try using VSCode Insiders and install [JavaScript and TypeScript Nightly](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-next), or temporarily downgrade to 1.8.27.\
 > Issue: https://github.com/vuejs/language-tools/issues/3962
 >
-> If false positive errors occurs, try creating an empty jsconfig in the workspace root directory.\
+> If false positive errors occurs, please try disabling unrelated extensions in the Vue workspace.
 > Issue: https://github.com/vuejs/language-tools/issues/3942
+
+### Fixes
+
+- **language-core:** use local variables in v-bind shorthand (#4017) - thanks @so1ve
+- **language-core:** sfc folding end position failed to mapping (#4038) - thanks @so1ve
+- **language-service:** remove `extraLiners` option for formatting (#3943)
+- **language-service:** bump `volar-service-typescript` for fix jsx formatting (#3949)
+- **language-service:** bump `@volar/typescript` 2.0.5 completion performance regression (#4024)
+
+### Refactors
+
+- **vscode:** rename `vue.inlayHints.vbindShorthand` setting to `vue.inlayHints.vBindShorthand` (#3995) - thanks @l4dybird
+
+## 2.0.5 (2024/3/5)
 
 ### Features
 
