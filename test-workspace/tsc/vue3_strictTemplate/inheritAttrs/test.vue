@@ -5,12 +5,15 @@
 
         <A id="hi" />
 
-        <!-- @vue-expect-error -->
         <B id="hi" />
+
+        <!-- @vue-expect-error -->
+        <C id="hi" />
     </div>
 </template>
 
 <script setup lang="ts">
 import A from "./a.vue";
-import B from "./b.vue"
+import B from "./b.vue";
+import C from "./c.vue";
 </script>
