@@ -165,6 +165,43 @@ export function* generate(
 	}
 
 	yield* generateExtraAutoImport();
+	if (template.ast && template.ast.children.length === 1) {
+		const child = template.ast.children[0];
+		if (child.type === CompilerDOM.NodeTypes.ELEMENT) {
+			const tag = child.tag;
+
+			const storeInto = `__VLS_${elementIndex++}`;
+
+			// todo: reuse code from elsewhere. this breaks on like. namespaced tags.
+			const isIntrinsicElement = nativeTags.has(tag);
+			if (isIntrinsicElement) {
+				yield _ts(`const ${storeInto} = __VLS_intrinsicElements[`);
+				yield* generateStringLiteralKey(
+					tag
+				);
+				yield _ts(']');
+			}
+			else {
+				yield _ts(`const ${storeInto} = ({} as `);
+				for (const componentName of getPossibleOriginalComponentNames(tag)) {
+					yield _ts(`'${componentName}' extends keyof typeof __VLS_ctx ? `);
+					yield _ts(`{ '${getCanonicalComponentName(tag)}': typeof __VLS_ctx`);
+					yield* generatePropertyAccess(componentName);
+					yield _ts(` }: `);
+				}
+				yield _ts(`typeof __VLS_resolvedLocalAndGlobalComponents)`);
+				yield* generatePropertyAccess(getCanonicalComponentName(tag));
+			}
+			yield _ts(";\n");
+			
+			// attrs get inherited (depends on options)
+			yield _ts(`let __VLS_innerAttrs!: typeof ${storeInto};\n`);
+		} else {
+			yield _ts("let __VLS_innerAttrs!: {};\n");
+		}
+	} else {
+		yield _ts("let __VLS_innerAttrs!: {};\n");
+	}
 
 	return {
 		tagOffsetsMap,
