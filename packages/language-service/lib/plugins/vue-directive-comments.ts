@@ -32,7 +32,6 @@ export function create(): ServicePlugin {
 						let match = true;
 						for (let i = 0; i < remainText.length; i++) {
 							if (remainText[i] !== cmd[i]) {
-								console.log(JSON.stringify(remainText[i]), JSON.stringify(cmd[i]));
 								match = false;
 								break;
 							}
