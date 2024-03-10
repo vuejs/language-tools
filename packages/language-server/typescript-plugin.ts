@@ -1,2 +1,1 @@
-import tsPlugin = require('@vue/typescript-plugin');
-export = tsPlugin;
+export = require('@vue/typescript-plugin');
