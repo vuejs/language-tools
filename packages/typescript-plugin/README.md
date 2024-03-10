@@ -16,7 +16,7 @@ configuration to the language server:
         {
           "name": "@vue/typescript-plugin",
           "location": "/usr/local/lib/node_modules/@vue/typescript-plugin",
-          "languages": ["javascript", "typescript", "vue"],
+          "languages": ["vue"],
         },
     ],
   },
