@@ -98,28 +98,32 @@ export async function searchNamedPipeServerForFile(fileName: string) {
 	if (!fs.existsSync(pipeTable)) {
 		return;
 	}
-	const servers: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
-	const configuredServers = servers
-		.filter(item => item.serverKind === 1 satisfies ts.server.ProjectKind.Configured);
-	const inferredServers = servers
-		.filter(item => item.serverKind === 0 satisfies ts.server.ProjectKind.Inferred)
-		.sort((a, b) => b.currentDirectory.length - a.currentDirectory.length);
-	for (const server of configuredServers) {
-		const client = await connect(server.path);
-		if (client) {
-			const response = await sendRequestWorker<boolean>({ type: 'containsFile', args: [fileName] }, client);
-			if (response) {
-				return server;
-			}
-		}
-	}
-	for (const server of inferredServers) {
-		if (!path.relative(server.currentDirectory, fileName).startsWith('..')) {
+	try {
+		const servers: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
+		const configuredServers = servers
+			.filter(item => item.serverKind === 1 satisfies ts.server.ProjectKind.Configured);
+		const inferredServers = servers
+			.filter(item => item.serverKind === 0 satisfies ts.server.ProjectKind.Inferred)
+			.sort((a, b) => b.currentDirectory.length - a.currentDirectory.length);
+		for (const server of configuredServers) {
 			const client = await connect(server.path);
 			if (client) {
-				return server;
+				const response = await sendRequestWorker<boolean>({ type: 'containsFile', args: [fileName] }, client);
+				if (response) {
+					return server;
+				}
 			}
 		}
+		for (const server of inferredServers) {
+			if (!path.relative(server.currentDirectory, fileName).startsWith('..')) {
+				const client = await connect(server.path);
+				if (client) {
+					return server;
+				}
+			}
+		}
+	} catch (error) {
+		console.error(error)
 	}
 }
 
