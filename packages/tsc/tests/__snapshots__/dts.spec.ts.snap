@@ -17,8 +17,17 @@ export default _default;
 `;
 
 exports[`vue-tsc-dts > Input: empty-component/component.vue, Output: empty-component/component.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
+"declare const _default: import("vue").DefineComponent<__VLS_TypePropsToOption<import("vue").PublicProps>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<import("vue").PublicProps>>>, {}, {}>;
 export default _default;
+type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
+type __VLS_TypePropsToOption<T> = {
+    [K in keyof T]-?: {} extends Pick<T, K> ? {
+        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
+    } : {
+        type: import('vue').PropType<T[K]>;
+        required: true;
+    };
+};
 "
 `;
 
@@ -185,7 +194,7 @@ export default _default;
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-events/component.vue, Output: reference-type-events/component.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+"declare const _default: import("vue").DefineComponent<__VLS_TypePropsToOption<import("vue").PublicProps>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     foo: (data?: {
         foo: string;
     }) => void;
@@ -194,7 +203,7 @@ exports[`vue-tsc-dts > Input: reference-type-events/component.vue, Output: refer
         arg2?: any;
     }) => void;
     baz: () => void;
-}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>> & {
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<import("vue").PublicProps>>> & {
     onBar?: (value: {
         arg1: number;
         arg2?: any;
@@ -205,6 +214,15 @@ exports[`vue-tsc-dts > Input: reference-type-events/component.vue, Output: refer
     onBaz?: () => any;
 }, {}, {}>;
 export default _default;
+type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
+type __VLS_TypePropsToOption<T> = {
+    [K in keyof T]-?: {} extends Pick<T, K> ? {
+        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
+    } : {
+        type: import('vue').PropType<T[K]>;
+        required: true;
+    };
+};
 "
 `;
 
@@ -228,55 +246,13 @@ export {};
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-exposed/component.vue, Output: reference-type-exposed/component.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{}, {
+"declare const _default: import("vue").DefineComponent<__VLS_TypePropsToOption<import("vue").PublicProps>, {
     /**
      * a counter string
      */
     counter: import("vue").Ref<string>;
-}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
+}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<import("vue").PublicProps>>>, {}, {}>;
 export default _default;
-"
-`;
-
-exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{
-    foo: import("vue").PropType<number>;
-    bar: import("vue").PropType<string[]>;
-}, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    "update:foo": (foo: number) => void;
-    "update:bar": (bar: string[]) => void;
-}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
-    foo: import("vue").PropType<number>;
-    bar: import("vue").PropType<string[]>;
-}>> & {
-    "onUpdate:foo"?: (foo: number) => any;
-    "onUpdate:bar"?: (bar: string[]) => any;
-}, {}, {}>;
-export default _default;
-"
-`;
-
-exports[`vue-tsc-dts > Input: reference-type-props/component.vue, Output: reference-type-props/component.vue.d.ts 1`] = `
-"import { MyProps } from './my-props';
-declare const _default: import("vue").DefineComponent<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps>, {
-    bar: number;
-    baz: () => string[];
-}>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps>, {
-    bar: number;
-    baz: () => string[];
-}>>>, {
-    bar: number;
-    baz: string[];
-}, {}>;
-export default _default;
-type __VLS_WithDefaults<P, D> = {
-    [K in keyof Pick<P, keyof P>]: K extends keyof D ? __VLS_Prettify<P[K] & {
-        default: D[K];
-    }> : P[K];
-};
-type __VLS_Prettify<T> = {
-    [K in keyof T]: T[K];
-} & {};
 type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
 type __VLS_TypePropsToOption<T> = {
     [K in keyof T]-?: {} extends Pick<T, K> ? {
@@ -288,6 +264,162 @@ type __VLS_TypePropsToOption<T> = {
 };
 "
 `;
+
+exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
+"declare const _default: import("vue").DefineComponent<{
+    foo: import("vue").PropType<number>;
+    bar: import("vue").PropType<string[]>;
+    key: {
+        type: import("vue").PropType<string | number | symbol>;
+    };
+    ref: {
+        type: import("vue").PropType<import("vue").VNodeRef>;
+    };
+    ref_for: {
+        type: import("vue").PropType<boolean>;
+    };
+    ref_key: {
+        type: import("vue").PropType<string>;
+    };
+    onVnodeBeforeMount: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeMounted: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeBeforeUpdate: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeUpdated: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeBeforeUnmount: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeUnmounted: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    class: {
+        type: import("vue").PropType<unknown>;
+    };
+    style: {
+        type: import("vue").PropType<unknown>;
+    };
+}, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    "update:foo": (foo: number) => void;
+    "update:bar": (bar: string[]) => void;
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
+    foo: import("vue").PropType<number>;
+    bar: import("vue").PropType<string[]>;
+    key: {
+        type: import("vue").PropType<string | number | symbol>;
+    };
+    ref: {
+        type: import("vue").PropType<import("vue").VNodeRef>;
+    };
+    ref_for: {
+        type: import("vue").PropType<boolean>;
+    };
+    ref_key: {
+        type: import("vue").PropType<string>;
+    };
+    onVnodeBeforeMount: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeMounted: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeBeforeUpdate: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeUpdated: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeBeforeUnmount: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeUnmounted: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    class: {
+        type: import("vue").PropType<unknown>;
+    };
+    style: {
+        type: import("vue").PropType<unknown>;
+    };
+}>> & {
+    "onUpdate:foo"?: (foo: number) => any;
+    "onUpdate:bar"?: (bar: string[]) => any;
+}, {}, {}>;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: reference-type-props/component.vue, Output: reference-type-props/component.vue.d.ts 1`] = `undefined`;
 
 exports[`vue-tsc-dts > Input: reference-type-props/component-js.vue, Output: reference-type-props/component-js.vue.d.ts 1`] = `
 "declare const _default: import("vue").DefineComponent<{
@@ -384,6 +516,74 @@ exports[`vue-tsc-dts > Input: reference-type-props/component-js-setup.vue, Outpu
         type: ArrayConstructor;
         default: () => number[];
     };
+    key: {
+        type: import("vue").PropType<string | number | symbol>;
+    };
+    ref: {
+        type: import("vue").PropType<import("vue").VNodeRef>;
+    };
+    ref_for: {
+        type: import("vue").PropType<boolean>;
+    };
+    ref_key: {
+        type: import("vue").PropType<string>;
+    };
+    onVnodeBeforeMount: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeMounted: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeBeforeUpdate: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeUpdated: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeBeforeUnmount: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeUnmounted: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    class: {
+        type: import("vue").PropType<unknown>;
+    };
+    style: {
+        type: import("vue").PropType<unknown>;
+    };
 }, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
     foo: {
         type: StringConstructor;
@@ -423,6 +623,74 @@ exports[`vue-tsc-dts > Input: reference-type-props/component-js-setup.vue, Outpu
     arrayProps: {
         type: ArrayConstructor;
         default: () => number[];
+    };
+    key: {
+        type: import("vue").PropType<string | number | symbol>;
+    };
+    ref: {
+        type: import("vue").PropType<import("vue").VNodeRef>;
+    };
+    ref_for: {
+        type: import("vue").PropType<boolean>;
+    };
+    ref_key: {
+        type: import("vue").PropType<string>;
+    };
+    onVnodeBeforeMount: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeMounted: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeBeforeUpdate: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeUpdated: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>, oldVNode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeBeforeUnmount: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    onVnodeUnmounted: {
+        type: import("vue").PropType<((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void) | ((vnode: import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+            [key: string]: any;
+        }>) => void)[]>;
+    };
+    class: {
+        type: import("vue").PropType<unknown>;
+    };
+    style: {
+        type: import("vue").PropType<unknown>;
     };
 }>>, {
     bar: string;
@@ -539,7 +807,7 @@ export {};
 `;
 
 exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slots/component.vue.d.ts 1`] = `
-"declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>, {
+"declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<__VLS_TypePropsToOption<import("vue").PublicProps>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<import("vue").PublicProps>>>, {}, {}>, {
     "no-bind"?(_: {}): any;
     default?(_: {
         num: number;
@@ -558,11 +826,20 @@ type __VLS_WithTemplateSlots<T, S> = T & {
         $slots: S;
     };
 };
+type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
+type __VLS_TypePropsToOption<T> = {
+    [K in keyof T]-?: {} extends Pick<T, K> ? {
+        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
+    } : {
+        type: import('vue').PropType<T[K]>;
+        required: true;
+    };
+};
 "
 `;
 
 exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: template-slots/component-no-script.vue.d.ts 1`] = `
-"declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>, {
+"declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<__VLS_TypePropsToOption<import("vue").PublicProps>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<import("vue").PublicProps>>>, {}, {}>, {
     "no-bind"?(_: {}): any;
     default?(_: {
         num: number;
@@ -579,6 +856,15 @@ export default _default;
 type __VLS_WithTemplateSlots<T, S> = T & {
     new (): {
         $slots: S;
+    };
+};
+type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
+type __VLS_TypePropsToOption<T> = {
+    [K in keyof T]-?: {} extends Pick<T, K> ? {
+        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
+    } : {
+        type: import('vue').PropType<T[K]>;
+        required: true;
     };
 };
 "

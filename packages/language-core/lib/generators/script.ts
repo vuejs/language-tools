@@ -797,18 +797,18 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		yield* generateComponentOptions(functional);
 		yield _(`})`);
 	}
-	function* generateComponentOptions(functional: boolean): Generator<CodeAndStack> {
+	function* generateComponentOptions(functional: boolean, innerComponent = false): Generator<CodeAndStack> {
 		if (scriptSetup && scriptSetupRanges && !bypassDefineComponent) {
 
 			const ranges = scriptSetupRanges;
 			const propsCodegens: (() => Generator<CodeAndStack>)[] = [];
 
 			// todo: condition this on whether inheritAttrs is true
-			if (true) {
+			if (!innerComponent) {
 				propsCodegens.push(function* () {
 					yield _("{} as ");
 					yield _(`${helperTypes.TypePropsToOption.name}<`);
-					yield _("ReturnType<typeof __VLS_template>[1]");
+					yield _("{} extends ReturnType<typeof __VLS_template>[1] ? import('vue').PublicProps : ReturnType<typeof __VLS_template>[1]");
 					yield _(`>`);
 				})
 			}
@@ -951,7 +951,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			}
 			yield _(`};\n`); // return {
 			yield _(`},\n`); // setup() {
-			yield* generateComponentOptions(functional);
+			yield* generateComponentOptions(functional, true);
 			yield _(`});\n`); // defineComponent {
 		}
 		else if (script) {
@@ -1068,6 +1068,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			if (!scriptSetupRanges?.slots.define) {
 				yield _(`const __VLS_slots = {};\n`);
 			}
+			yield _(`let __VLS_innerAttrs!: {};\n`);
 		}
 
 		yield _(`return [${scriptSetupRanges?.slots.name ?? '__VLS_slots'}, __VLS_innerAttrs] as const;\n`);
