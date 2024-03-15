@@ -322,20 +322,25 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		}
 	}
 	function* generateSrc(): Generator<CodeAndStack> {
-		if (!script?.src)
+		if (!script?.src) {
 			return;
+		}
 
 		let src = script.src;
 
-		if (src.endsWith('.d.ts'))
+		if (src.endsWith('.d.ts')) {
 			src = src.substring(0, src.length - '.d.ts'.length);
-		else if (src.endsWith('.ts'))
+		}
+		else if (src.endsWith('.ts')) {
 			src = src.substring(0, src.length - '.ts'.length);
-		else if (src.endsWith('.tsx'))
+		}
+		else if (src.endsWith('.tsx')) {
 			src = src.substring(0, src.length - '.tsx'.length) + '.jsx';
+		}
 
-		if (!src.endsWith('.js') && !src.endsWith('.jsx'))
+		if (!src.endsWith('.js') && !src.endsWith('.jsx')) {
 			src = src + '.js';
+		}
 
 		yield _(`export * from `);
 		yield _([
@@ -367,18 +372,22 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		yield _(`export { default } from '${src}';\n`);
 	}
 	function* generateScriptContentBeforeExportDefault(): Generator<CodeAndStack> {
-		if (!script)
+		if (!script) {
 			return;
+		}
 
-		if (!!scriptSetup && scriptRanges?.exportDefault)
+		if (!!scriptSetup && scriptRanges?.exportDefault) {
 			return yield _(generateSourceCode(script, 0, scriptRanges.exportDefault.expression.start));
+		}
 
 		let isExportRawObject = false;
-		if (scriptRanges?.exportDefault)
+		if (scriptRanges?.exportDefault) {
 			isExportRawObject = script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
+		}
 
-		if (!isExportRawObject || !vueCompilerOptions.optionsWrapper.length || !scriptRanges?.exportDefault)
+		if (!isExportRawObject || !vueCompilerOptions.optionsWrapper.length || !scriptRanges?.exportDefault) {
 			return yield _(generateSourceCode(script, 0, script.content.length));
+		}
 
 		yield _(generateSourceCode(script, 0, scriptRanges.exportDefault.expression.start));
 		yield _(vueCompilerOptions.optionsWrapper[0]);
@@ -404,15 +413,18 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		yield _(generateSourceCode(script, scriptRanges.exportDefault.expression.end, script.content.length));
 	}
 	function* generateScriptContentAfterExportDefault(): Generator<CodeAndStack> {
-		if (!script)
+		if (!script) {
 			return;
+		}
 
-		if (!!scriptSetup && scriptRanges?.exportDefault)
+		if (!!scriptSetup && scriptRanges?.exportDefault) {
 			yield _(generateSourceCode(script, scriptRanges.exportDefault.expression.end, script.content.length));
+		}
 	}
 	function* generateScriptSetupImports(): Generator<CodeAndStack> {
-		if (!scriptSetup || !scriptSetupRanges)
+		if (!scriptSetup || !scriptSetupRanges) {
 			return;
+		}
 
 		yield _([
 			scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + '\n',
@@ -431,8 +443,9 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		if (scriptSetupRanges.defineProp.length) {
 			yield _(` & ReturnType<typeof import('${vueCompilerOptions.lib}').defineEmits<{\n`);
 			for (const defineProp of scriptSetupRanges.defineProp) {
-				if (!defineProp.isModel)
+				if (!defineProp.isModel) {
 					continue;
+				}
 
 				let propName = 'modelValue';
 				if (defineProp.name) {
@@ -453,8 +466,9 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		yield _(`;\n`);
 	}
 	function* generateScriptSetupAndTemplate(): Generator<CodeAndStack> {
-		if (!scriptSetup || !scriptSetupRanges)
+		if (!scriptSetup || !scriptSetupRanges) {
 			return;
+		}
 
 		const definePropMirrors = new Map<string, number>();
 
@@ -605,8 +619,9 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		}
 	}
 	function* generateSetupFunction(functional: boolean, mode: 'return' | 'export' | 'none', definePropMirrors: Map<string, number>): Generator<CodeAndStack> {
-		if (!scriptSetupRanges || !scriptSetup)
+		if (!scriptSetupRanges || !scriptSetup) {
 			return;
+		}
 
 		const definePropProposalA = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
 		const definePropProposalB = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
@@ -774,8 +789,9 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		}
 	}
 	function* generateComponent(functional: boolean): Generator<CodeAndStack> {
-		if (!scriptSetupRanges)
+		if (!scriptSetupRanges) {
 			return;
+		}
 
 		if (script && scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.start !== scriptRanges.exportDefault.args.start) {
 			// use defineComponent() from user space code if it exist

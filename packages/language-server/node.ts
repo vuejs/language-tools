@@ -21,7 +21,7 @@ connection.onInitialize(async params => {
 
 	const options: VueInitializationOptions = params.initializationOptions;
 
-	tsdk = loadTsdkByPath(options.typescript.tsdk!, params.locale);
+	tsdk = loadTsdkByPath(options.typescript.tsdk, params.locale);
 
 	const vueFileExtensions: string[] = ['vue'];
 

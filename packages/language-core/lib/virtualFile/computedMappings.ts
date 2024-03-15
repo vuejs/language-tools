@@ -23,7 +23,7 @@ export function computedMappings(
 		}
 		const mappings = str
 			.filter(s => typeof s !== 'string')
-			.map<CodeMapping>((m) => {
+			.map<CodeMapping>(m => {
 				const text = m[0];
 				const start = m[2] as number;
 				return {

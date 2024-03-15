@@ -26,25 +26,30 @@ export function create(
 			return {
 				async provideAutoInsertionEdit(document, position, lastChange) {
 
-					if (!isTsDocument(document))
+					if (!isTsDocument(document)) {
 						return;
+					}
 
-					if (!isCharacterTyping(document, lastChange))
+					if (!isCharacterTyping(document, lastChange)) {
 						return;
+					}
 
 					const req = ++currentReq;
 					// Wait for tsserver to sync
 					await sleep(250);
-					if (req !== currentReq)
+					if (req !== currentReq) {
 						return;
+					}
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.dotValue') ?? true;
-					if (!enabled)
+					if (!enabled) {
 						return;
+					}
 
 					const [code, file] = context.documents.getVirtualCodeByUri(document.uri);
-					if (!file)
+					if (!file) {
 						return;
+					}
 
 					let ast: ts.SourceFile | undefined;
 					let sourceCodeOffset = document.offsetAt(position);
@@ -74,8 +79,9 @@ export function create(
 						ast = getAst(ts, fileName, file.snapshot);
 					}
 
-					if (isBlacklistNode(ts, ast, document.offsetAt(position), false))
+					if (isBlacklistNode(ts, ast, document.offsetAt(position), false)) {
 						return;
+					}
 
 					const props = await tsPluginClient?.getPropertiesAtLocation(fileName, sourceCodeOffset) ?? [];
 					if (props.some(prop => prop === 'value')) {
@@ -162,7 +168,9 @@ export function isBlacklistNode(ts: typeof import('typescript'), node: ts.Node, 
 	else {
 		let _isBlacklistNode = false;
 		node.forEachChild(node => {
-			if (_isBlacklistNode) return;
+			if (_isBlacklistNode) {
+				return;
+			}
 			if (pos >= node.getFullStart() && pos <= node.getEnd()) {
 				if (isBlacklistNode(ts, node, pos, allowAccessDotValue)) {
 					_isBlacklistNode = true;

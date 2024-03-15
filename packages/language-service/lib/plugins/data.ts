@@ -38,9 +38,15 @@ export function loadTemplateData(lang: string) {
 	const vSlot = data.globalAttributes?.find(d => d.name === 'v-slot');
 	const vBind = data.globalAttributes?.find(d => d.name === 'v-bind');
 
-	if (vOn) data.globalAttributes?.push({ ...vOn, name: '@' });
-	if (vSlot) data.globalAttributes?.push({ ...vSlot, name: '#' });
-	if (vBind) data.globalAttributes?.push({ ...vBind, name: ':' });
+	if (vOn) {
+		data.globalAttributes?.push({ ...vOn, name: '@' });
+	}
+	if (vSlot) {
+		data.globalAttributes?.push({ ...vSlot, name: '#' });
+	}
+	if (vBind) {
+		data.globalAttributes?.push({ ...vBind, name: ':' });
+	}
 
 	return data;
 }

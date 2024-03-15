@@ -16,13 +16,15 @@ export function create(): ServicePlugin {
 			return {
 				provideCompletionItems(document, position) {
 
-					if (document.languageId !== 'html')
+					if (document.languageId !== 'html') {
 						return;
+					}
 
 					const line = document.getText({ start: { line: position.line, character: 0 }, end: position });
 					const cmdStart = line.match(directiveCommentReg);
-					if (!cmdStart)
+					if (!cmdStart) {
 						return;
+					}
 
 					const startIndex = cmdStart.index! + cmdStart[0].length;
 					const remainText = line.substring(startIndex);

@@ -103,8 +103,9 @@ export function create(
 
 				async provideCompletionItems(document, position, completionContext, token) {
 
-					if (!isSupportedDocument(document))
+					if (!isSupportedDocument(document)) {
 						return;
+					}
 
 					let sync: (() => Promise<number>) | undefined;
 					let currentVersion: number | undefined;
@@ -119,8 +120,9 @@ export function create(
 					while (currentVersion !== (currentVersion = await sync?.())) {
 						htmlComplete = await baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
 					}
-					if (!htmlComplete)
+					if (!htmlComplete) {
 						return;
+					}
 
 					if (sourceFile?.generated?.code instanceof VueGeneratedCode) {
 						await afterHtmlCompletion(
@@ -135,17 +137,20 @@ export function create(
 
 				async provideInlayHints(document) {
 
-					if (!isSupportedDocument(document))
+					if (!isSupportedDocument(document)) {
 						return;
+					}
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.inlayHints.missingProps') ?? false;
-					if (!enabled)
+					if (!enabled) {
 						return;
+					}
 
 					const result: vscode.InlayHint[] = [];
 					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
-					if (!virtualCode)
+					if (!virtualCode) {
 						return;
+					}
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
@@ -251,31 +256,36 @@ export function create(
 
 				provideHover(document, position, token) {
 
-					if (!isSupportedDocument(document))
+					if (!isSupportedDocument(document)) {
 						return;
+					}
 
-					if (context.documents.getVirtualCodeByUri(document.uri)[0])
+					if (context.documents.getVirtualCodeByUri(document.uri)[0]) {
 						updateExtraCustomData([]);
+					}
 
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
 
 				async provideDiagnostics(document, token) {
 
-					if (!isSupportedDocument(document))
+					if (!isSupportedDocument(document)) {
 						return;
+					}
 
 					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
 					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
 
-					if (!virtualCode)
+					if (!virtualCode) {
 						return;
+					}
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
 						const code = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
-						if (!(code instanceof VueGeneratedCode))
+						if (!(code instanceof VueGeneratedCode)) {
 							continue;
+						}
 
 						const templateErrors: vscode.Diagnostic[] = [];
 						const { template } = code.sfc;
@@ -327,12 +337,15 @@ export function create(
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
-						if (tag.name === 'slot')
+						if (tag.name === 'slot') {
 							continue;
-						if (tag.name === 'component')
+						}
+						if (tag.name === 'component') {
 							continue;
-						if (tag.name === 'template')
+						}
+						if (tag.name === 'template') {
 							continue;
+						}
 						if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
 						}
@@ -405,9 +418,9 @@ export function create(
 
 							return tags;
 						},
-						provideAttributes: (tag) => {
+						provideAttributes: tag => {
 
-							tsPluginClient?.getTemplateContextProps;
+
 
 							let failed = false;
 
@@ -593,8 +606,9 @@ export function create(
 
 						for (const modifier in validModifiers) {
 
-							if (modifiers.includes(modifier))
+							if (modifiers.includes(modifier)) {
 								continue;
+							}
 
 							const modifierDes = validModifiers[modifier];
 							const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
@@ -619,8 +633,9 @@ export function create(
 
 						for (const modifier of modelData.globalAttributes ?? []) {
 
-							if (modifiers.includes(modifier.name))
+							if (modifiers.includes(modifier.name)) {
 								continue;
+							}
 
 							const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier.name;
 							const newItem: html.CompletionItem = {

@@ -9,15 +9,18 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 				async provideAutoInsertionEdit(document, position, lastChange) {
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.parentheses') ?? false;
-					if (!enabled)
+					if (!enabled) {
 						return;
+					}
 
-					if (!isCharacterTyping(document, lastChange))
+					if (!isCharacterTyping(document, lastChange)) {
 						return;
+					}
 
 					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
-					if (virtualCode?.id !== 'template_format')
+					if (virtualCode?.id !== 'template_format') {
 						return;
+					}
 
 					const offset = document.offsetAt(position);
 

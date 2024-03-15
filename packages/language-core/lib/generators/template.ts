@@ -309,12 +309,14 @@ export function* generate(
 
 		for (const [tagName] of tagOffsetsMap) {
 
-			if (nativeTags.has(tagName))
+			if (nativeTags.has(tagName)) {
 				continue;
+			}
 
 			const isNamespacedTag = tagName.indexOf('.') >= 0;
-			if (isNamespacedTag)
+			if (isNamespacedTag) {
 				continue;
+			}
 
 			yield _ts(`& __VLS_WithComponent<'${getCanonicalComponentName(tagName)}', typeof __VLS_localComponents, `);
 			// order is important: https://github.com/vuejs/language-tools/issues/2010
@@ -506,12 +508,15 @@ export function* generate(
 
 			const branch = node.branches[i];
 
-			if (i === 0)
+			if (i === 0) {
 				yield _ts('if');
-			else if (branch.condition)
+			}
+			else if (branch.condition) {
 				yield _ts('else if');
-			else
+			}
+			else {
 				yield _ts('else');
+			}
 
 			let addedBlockCondition = false;
 
@@ -573,8 +578,9 @@ export function* generate(
 			const collectAst = createTsAst(node.parseResult, `const [${leftExpressionText}]`);
 			collectVars(ts, collectAst, collectAst, forBlockVars);
 
-			for (const varName of forBlockVars)
+			for (const varName of forBlockVars) {
 				localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
+			}
 
 			yield _ts([leftExpressionText, 'template', leftExpressionRange.start, presetInfos.all]);
 			yield* generateTsFormat(leftExpressionText, leftExpressionRange.start, formatBrackets.normal);
@@ -610,8 +616,9 @@ export function* generate(
 			);
 		}
 
-		for (const varName of forBlockVars)
+		for (const varName of forBlockVars) {
 			localVars.set(varName, localVars.get(varName)! - 1);
+		}
 	}
 
 	function* generateElement(node: CompilerDOM.ElementNode, parentEl: CompilerDOM.ElementNode | undefined, componentCtxVar: string | undefined): Generator<_CodeAndStack> {
@@ -1339,7 +1346,9 @@ export function* generate(
 					|| (prop.name === 'style' && ++styleAttrNum >= 2)
 					|| (prop.name === 'class' && ++classAttrNum >= 2)
 					|| (prop.name === 'name' && node.tag === 'slot') // #2308
-				) continue;
+				) {
+					continue;
+				}
 
 				if (
 					vueCompilerOptions.target < 3
@@ -1747,8 +1756,9 @@ export function* generate(
 
 	function* generateExtraAutoImport(): Generator<_CodeAndStack> {
 
-		if (!tempVars.length)
+		if (!tempVars.length) {
 			return;
+		}
 
 		yield _ts('// @ts-ignore\n'); // #2304
 		yield _ts('[');
