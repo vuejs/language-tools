@@ -17,6 +17,12 @@ importers:
       '@volar/language-service':
         specifier: ~2.1.2
         version: 2.1.2
+      '@volar/tsl-config':
+        specifier: latest
+        version: 0.0.0-20240315(tsl@0.0.10)
+      tsl:
+        specifier: latest
+        version: 0.0.10(typescript@5.3.3)
       typescript:
         specifier: latest
         version: 5.3.3
@@ -226,6 +232,9 @@ importers:
       vscode-languageserver-textdocument:
         specifier: ^1.0.11
         version: 1.0.11
+      vscode-uri:
+        specifier: ^3.0.8
+        version: 3.0.8
     devDependencies:
       '@types/node':
         specifier: latest
@@ -242,9 +251,6 @@ importers:
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
-      vscode-uri:
-        specifier: ^3.0.8
-        version: 3.0.8
 
   packages/tsc:
     dependencies:
@@ -334,6 +340,23 @@ packages:
       '@babel/helper-string-parser': 7.23.4
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
+
+  /@clack/core@0.3.4:
+    resolution: {integrity: sha512-H4hxZDXgHtWTwV3RAVenqcC4VbJZNegbBjlPvzOzCouXtS2y3sDvlO3IsbrPNWuLWPPlYVYPghQdSF64683Ldw==}
+    dependencies:
+      picocolors: 1.0.0
+      sisteransi: 1.0.5
+    dev: true
+
+  /@clack/prompts@0.7.0:
+    resolution: {integrity: sha512-0MhX9/B4iL6Re04jPrttDm+BsP8y6mS7byuv0BvXgdXhbV5PdlsHt55dvNsuBCPZ7xq1oTAOOuotR9NFbQyMSA==}
+    dependencies:
+      '@clack/core': 0.3.4
+      picocolors: 1.0.0
+      sisteransi: 1.0.5
+    dev: true
+    bundledDependencies:
+      - is-unicode-supported
 
   /@emmetio/abbreviation@2.3.3:
     resolution: {integrity: sha512-mgv58UrU3rh4YgbE/TzgLQwJ3pFsHHhCLqY20aJq+9comytTXUDNGG/SMtSeMJdkpxgXSXunBGLD8Boka3JyVA==}
@@ -1456,6 +1479,32 @@ packages:
     engines: {node: '>=18'}
     dev: true
 
+  /@tsslint/cli@0.0.10(typescript@5.3.3):
+    resolution: {integrity: sha512-0F0LbGUbFbVinvNjA3qCyx6ynZA4ScBR2Tr1ZHOXog6BnR9wrvXMqPA/cud2GMftO7mRDMtsh1mBop9NsZeHtQ==}
+    hasBin: true
+    peerDependencies:
+      typescript: '*'
+    dependencies:
+      '@clack/prompts': 0.7.0
+      '@tsslint/config': 0.0.10
+      '@tsslint/core': 0.0.10
+      glob: 10.3.10
+      typescript: 5.3.3
+    dev: true
+
+  /@tsslint/config@0.0.10:
+    resolution: {integrity: sha512-WdLrCFBH1VT6VOIaFifsIZrMeiLO4Vss5HGwxx/G+rWl90BwJXXOtIBCr00nDPISv+YNokD4QYMSJWrjlvBVCQ==}
+    dependencies:
+      esbuild: 0.19.12
+    dev: true
+
+  /@tsslint/core@0.0.10:
+    resolution: {integrity: sha512-21RrlBbKeTwk2HPmwG9iNBws3F+S1MWsGT4gI0mchbJBQf9THMNcalK2c24knDObSjryfRdeWuIBFalldOaPOw==}
+    dependencies:
+      error-stack-parser: 2.1.4
+      source-map-support: 0.5.21
+    dev: true
+
   /@tufjs/canonical-json@2.0.0:
     resolution: {integrity: sha512-yVtV8zsdo8qFHe+/3kw81dSLyF7D576A5cCFCi4X7B39tWT7SekaEFUnvnWJHz+9qO7qJTah1JbrDjWKqFtdWA==}
     engines: {node: ^16.14.0 || >=18.0.0}
@@ -1589,6 +1638,14 @@ packages:
     resolution: {integrity: sha512-yFJqsuLm1OaWrsz9E3yd3bJcYIlHqdZ8MbmIoZLrAzMYQDcoF26/INIhgziEXSdyHc8xd7rd/tJdSnUyh0gH4Q==}
     dependencies:
       muggle-string: 0.4.1
+
+  /@volar/tsl-config@0.0.0-20240315(tsl@0.0.10):
+    resolution: {integrity: sha512-axWGYd2nEVW5U/ZLDltNwf/Y21mEoRUXMaHIWw+dwJN/RuKEyUZnl+YZpbvRD/CQQxw+r/fvq1AWcolsx5tqYQ==}
+    peerDependencies:
+      tsl: '*'
+    dependencies:
+      tsl: 0.0.10(typescript@5.3.3)
+    dev: true
 
   /@volar/typescript@2.1.2:
     resolution: {integrity: sha512-lhTancZqamvaLvoz0u/uth8dpudENNt2LFZOWCw9JZiX14xRFhdhfzmphiCRb7am9E6qAJSbdS/gMt1utXAoHQ==}
@@ -1894,6 +1951,10 @@ packages:
 
   /buffer-crc32@0.2.13:
     resolution: {integrity: sha512-VO9Ht/+p3SN7SKWqcrgEzjGbRSJYTx+Q1pTQC0wrWqHx0vpJraQ6GtHx8tvcg1rlK1byhU5gccxgOgj7B0TDkQ==}
+    dev: true
+
+  /buffer-from@1.1.2:
+    resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
     dev: true
 
   /buffer@5.7.1:
@@ -2501,6 +2562,12 @@ packages:
     resolution: {integrity: sha512-7dFHNmqeFSEt2ZBsCriorKnn3Z2pj+fd9kmI6QoWw4//DL+icEBfc0U7qJCisqrTsKTjw4fNFy2pW9OqStD84g==}
     dependencies:
       is-arrayish: 0.2.1
+    dev: true
+
+  /error-stack-parser@2.1.4:
+    resolution: {integrity: sha512-Sk5V6wVazPhq5MhpO+AUxJn5x7XSXGl1R93Vn7i+zS15KDVxQijejNCrz8340/2bgLBjR9GtEG8ZVKONDjcqGQ==}
+    dependencies:
+      stackframe: 1.3.4
     dev: true
 
   /es-define-property@1.0.0:
@@ -4590,6 +4657,10 @@ packages:
       simple-concat: 1.0.1
     dev: true
 
+  /sisteransi@1.0.5:
+    resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
+    dev: true
+
   /slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
@@ -4634,6 +4705,13 @@ packages:
   /source-map-js@1.0.2:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}
     engines: {node: '>=0.10.0'}
+
+  /source-map-support@0.5.21:
+    resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
+    dependencies:
+      buffer-from: 1.1.2
+      source-map: 0.6.1
+    dev: true
 
   /source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
@@ -4680,6 +4758,10 @@ packages:
 
   /stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
+    dev: true
+
+  /stackframe@1.3.4:
+    resolution: {integrity: sha512-oeVtt7eWQS+Na6F//S4kJ2K2VbRlS9D43mAlMyVpVWovy9o+jfgH8O9agzANzaiLjclA0oYzUXEM4PurhSUChw==}
     dev: true
 
   /std-env@3.7.0:
@@ -4856,6 +4938,17 @@ packages:
   /treeverse@3.0.0:
     resolution: {integrity: sha512-gcANaAnd2QDZFmHFEOF4k7uc1J/6a6z3DJMd/QwEyxLoKGiptJRwid582r7QIsFlFMIZ3SnxfS52S4hm2DHkuQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+    dev: true
+
+  /tsl@0.0.10(typescript@5.3.3):
+    resolution: {integrity: sha512-hy7OuMp55TkicjtDKgpg1q2xq1Dboi2YWM+JexNEP4MZr3n+Fr5KXv64ZXzJx1NbPhMHbOuM36bHcFFXE4Ofcg==}
+    hasBin: true
+    dependencies:
+      '@tsslint/cli': 0.0.10(typescript@5.3.3)
+      '@tsslint/config': 0.0.10
+      '@tsslint/core': 0.0.10
+    transitivePeerDependencies:
+      - typescript
     dev: true
 
   /tslib@2.6.2:
