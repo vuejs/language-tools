@@ -39,7 +39,7 @@ export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLangua
 			return aOrder - bOrder;
 		});
 
-	return pluginInstances.filter((plugin) => {
+	return pluginInstances.filter(plugin => {
 		const valid = plugin.version === pluginVersion;
 		if (!valid) {
 			console.warn(`[Vue] Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected ${JSON.stringify(pluginVersion)} but got ${JSON.stringify(plugin.version)}`);

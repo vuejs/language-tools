@@ -15,8 +15,9 @@ export function create(
 				async provideInlayHints(document, range) {
 
 					const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
-					if (!(sourceFile?.generated?.code instanceof vue.VueGeneratedCode) || virtualCode?.id !== 'template')
+					if (!(sourceFile?.generated?.code instanceof vue.VueGeneratedCode) || virtualCode?.id !== 'template') {
 						return;
+					}
 
 					const hoverOffsets: [vscode.Position, number][] = [];
 					const inlayHints: vscode.InlayHint[] = [];

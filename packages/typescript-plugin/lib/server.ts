@@ -26,7 +26,9 @@ let started = false;
 
 export function startNamedPipeServer(serverKind: ts.server.ProjectKind, currentDirectory: string) {
 
-	if (started) return;
+	if (started) {
+		return;
+	}
 	started = true;
 
 	const pipeFile = process.platform === 'win32'

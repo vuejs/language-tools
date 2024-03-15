@@ -196,9 +196,9 @@ function computedPluginFiles(
 					mapping.source = undefined;
 				}
 				if (mapping.data.__combineLastMapping) {
-					lastValidMapping!.sourceOffsets.push(...mapping.sourceOffsets);
-					lastValidMapping!.generatedOffsets.push(...mapping.generatedOffsets);
-					lastValidMapping!.lengths.push(...mapping.lengths);
+					lastValidMapping.sourceOffsets.push(...mapping.sourceOffsets);
+					lastValidMapping.generatedOffsets.push(...mapping.generatedOffsets);
+					lastValidMapping.lengths.push(...mapping.lengths);
 					continue;
 				}
 				else {

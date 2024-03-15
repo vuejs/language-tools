@@ -9,7 +9,7 @@ import type { Code, Sfc, VueLanguagePlugin } from '../types';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 
-const plugin: VueLanguagePlugin = (ctx) => {
+const plugin: VueLanguagePlugin = ctx => {
 
 	return {
 
@@ -106,7 +106,7 @@ const plugin: VueLanguagePlugin = (ctx) => {
 		if (!tsCodegen.has(sfc)) {
 			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx));
 		}
-		return tsCodegen.get(sfc)!;
+		return tsCodegen.get(sfc);
 	}
 };
 
@@ -162,8 +162,9 @@ function createTsx(
 	});
 	const generatedTemplate = computed(() => {
 
-		if (!_sfc.template)
+		if (!_sfc.template) {
 			return;
+		}
 
 		const tsCodes: Code[] = [];
 		const tsFormatCodes: Code[] = [];

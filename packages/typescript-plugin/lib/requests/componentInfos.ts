@@ -22,8 +22,9 @@ export function getComponentProps(fileName: string, tag: string, requiredOnly = 
 
 	const checker = program.getTypeChecker();
 	const components = getVariableType(ts, tsLs, vueCode, '__VLS_components');
-	if (!components)
+	if (!components) {
 		return [];
+	}
 
 	const name = tag.split('.');
 
@@ -34,8 +35,9 @@ export function getComponentProps(fileName: string, tag: string, requiredOnly = 
 			?? components.type.getProperty(capitalize(camelize(name[0])));
 	}
 
-	if (!componentSymbol)
+	if (!componentSymbol) {
 		return [];
+	}
 
 	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 
@@ -103,8 +105,9 @@ export function getComponentEvents(fileName: string, tag: string) {
 
 	const checker = program.getTypeChecker();
 	const components = getVariableType(ts, tsLs, vueCode, '__VLS_components');
-	if (!components)
+	if (!components) {
 		return [];
+	}
 
 	const name = tag.split('.');
 
@@ -115,8 +118,9 @@ export function getComponentEvents(fileName: string, tag: string) {
 			?? components.type.getProperty(capitalize(camelize(name[0])));
 	}
 
-	if (!componentSymbol)
+	if (!componentSymbol) {
 		return [];
+	}
 
 	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 

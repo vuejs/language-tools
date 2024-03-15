@@ -30,8 +30,9 @@ export function create(): ServicePlugin {
 
 								settings[hint.setting] ??= await context.env.getConfiguration?.<boolean>(hint.setting) ?? false;
 
-								if (!settings[hint.setting])
+								if (!settings[hint.setting]) {
 									continue;
+								}
 
 								result.push({
 									label: hint.label,

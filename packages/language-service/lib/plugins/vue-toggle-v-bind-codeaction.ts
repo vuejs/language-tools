@@ -19,9 +19,11 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 
 					const { template } = virtualCode.sfc;
 
-					if (!template?.ast) return;
+					if (!template?.ast) {
+						return;
+					}
 
-					const templateStartOffset = template!.startTagEnd;
+					const templateStartOffset = template.startTagEnd;
 					const result: vscode.CodeAction[] = [];
 
 					for (const node of eachElementNode(template.ast)) {

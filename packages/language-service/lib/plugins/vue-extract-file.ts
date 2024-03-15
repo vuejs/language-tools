@@ -29,18 +29,21 @@ export function create(
 					}
 
 					const [code, vueCode] = context.documents.getVirtualCodeByUri(document.uri);
-					if (!(vueCode?.generated?.code instanceof VueGeneratedCode) || code?.id !== 'template')
+					if (!(vueCode?.generated?.code instanceof VueGeneratedCode) || code?.id !== 'template') {
 						return;
+					}
 
 					const { sfc } = vueCode.generated.code;
 					const script = sfc.scriptSetup ?? sfc.script;
 
-					if (!sfc.template || !script)
+					if (!sfc.template || !script) {
 						return;
+					}
 
 					const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
-					if (!templateCodeRange)
+					if (!templateCodeRange) {
 						return;
+					}
 
 					return [
 						{
@@ -60,24 +63,28 @@ export function create(
 					const { uri, range, newName } = codeAction.data as ActionData;
 					const [startOffset, endOffset]: [number, number] = range;
 					const [code, sourceFile] = context.documents.getVirtualCodeByUri(uri);
-					if (!(sourceFile?.generated?.code instanceof VueGeneratedCode) || code?.id !== 'template')
+					if (!(sourceFile?.generated?.code instanceof VueGeneratedCode) || code?.id !== 'template') {
 						return codeAction;
+					}
 
-					const document = context.documents.get(uri, code.languageId, code.snapshot)!;
-					const sfcDocument = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot)!;
+					const document = context.documents.get(uri, code.languageId, code.snapshot);
+					const sfcDocument = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
 					const { sfc } = sourceFile.generated.code;
 					const script = sfc.scriptSetup ?? sfc.script;
 
-					if (!sfc.template || !script)
+					if (!sfc.template || !script) {
 						return codeAction;
+					}
 
 					const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
-					if (!templateCodeRange)
+					if (!templateCodeRange) {
 						return codeAction;
+					}
 
 					const toExtract = await tsPluginClient?.collectExtractProps(sourceFile.generated.code.fileName, templateCodeRange) ?? [];
-					if (!toExtract)
+					if (!toExtract) {
 						return codeAction;
+					}
 
 					const templateInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
 					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.script.initialIndent') ?? false;
@@ -246,7 +253,9 @@ function selectTemplateCode(startOffset: number, endOffset: number, templateBloc
 }
 
 function constructTag(name: string, attributes: string[], initialIndent: boolean, content: string) {
-	if (initialIndent) content = content.split('\n').map(line => `\t${line}`).join('\n');
+	if (initialIndent) {
+		content = content.split('\n').map(line => `\t${line}`).join('\n');
+	}
 	const attributesString = attributes.length ? ` ${attributes.join(' ')}` : '';
 	return `<${name}${attributesString}>\n${content}\n</${name}>\n`;
 }
@@ -270,8 +279,9 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 export function createAddComponentToOptionEdit(ts: typeof import('typescript'), ast: ts.SourceFile, componentName: string) {
 
 	const exportDefault = scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault;
-	if (!exportDefault)
+	if (!exportDefault) {
 		return;
+	}
 
 	// https://github.com/microsoft/TypeScript/issues/36174
 	const printer = ts.createPrinter();

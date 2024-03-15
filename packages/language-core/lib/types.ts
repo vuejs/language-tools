@@ -83,7 +83,7 @@ export type VueLanguagePlugin = (ctx: {
 };
 
 export interface SfcBlock {
-	name: string,
+	name: string;
 	start: number;
 	end: number;
 	startTagEnd: number;
