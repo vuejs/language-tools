@@ -134,6 +134,7 @@ export function* generate(
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
 	const hasSlotElements = new Set<CompilerDOM.ElementNode>();
+	const inheritAttrElements = new Set<CompilerDOM.ElementNode>();
 	const usedComponentCtxVars = new Set<string>();
 
 	let hasSlot = false;
@@ -430,6 +431,7 @@ export function* generate(
 		else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			const vForNode = getVForNode(node);
 			const vIfNode = getVIfNode(node);
+			const vbindAttrsNode = getVbindAttrsNode(node);
 			if (vForNode) {
 				yield* generateVFor(vForNode, parentEl, componentCtxVar);
 			}
@@ -437,6 +439,9 @@ export function* generate(
 				yield* generateVIf(vIfNode, parentEl, componentCtxVar);
 			}
 			else {
+				if (vbindAttrsNode) {
+					inheritAttrElements.add(node);
+				}
 				yield* generateElement(node, parentEl, componentCtxVar);
 			}
 		}
@@ -2135,4 +2140,14 @@ function getVIfNode(node: CompilerDOM.ElementNode) {
 			return ifNode;
 		}
 	}
+}
+
+function getVbindAttrsNode(node: CompilerDOM.ElementNode) {
+	const bindDirective = node.props.find(
+		(prop): prop is CompilerDOM.DirectiveNode =>
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'bind'
+			&& prop.arg?.loc.source === 'attrs'
+	);
+	return bindDirective;
 }
