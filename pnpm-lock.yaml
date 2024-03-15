@@ -19,7 +19,7 @@ importers:
         version: 2.1.2
       '@volar/tsl-config':
         specifier: latest
-        version: 0.0.0-20240315(tsl@0.0.10)
+        version: 0.0.0-20240315.2(tsl@0.0.10)
       tsl:
         specifier: latest
         version: 0.0.10(typescript@5.3.3)
@@ -1639,8 +1639,8 @@ packages:
     dependencies:
       muggle-string: 0.4.1
 
-  /@volar/tsl-config@0.0.0-20240315(tsl@0.0.10):
-    resolution: {integrity: sha512-axWGYd2nEVW5U/ZLDltNwf/Y21mEoRUXMaHIWw+dwJN/RuKEyUZnl+YZpbvRD/CQQxw+r/fvq1AWcolsx5tqYQ==}
+  /@volar/tsl-config@0.0.0-20240315.2(tsl@0.0.10):
+    resolution: {integrity: sha512-bv57xhmegLkfjW0/FZL/sberfmUch7yLAkXlRXj5KxHPYCjIU4T1ciPuLWrtVzCa+o0q7ykQ6aR+Q/z7MSMf6w==}
     peerDependencies:
       tsl: '*'
     dependencies:
