@@ -1,0 +1,36 @@
+name: auto-fix
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  auto-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: latest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install
+
+      # lint
+      - name: Auto-fix
+        run: npm run lint:fix
+
+      # commit
+      - name: Commit
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "ci(lint): auto-fix"
+          default_author: github_actions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
