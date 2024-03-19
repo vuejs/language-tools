@@ -10,7 +10,7 @@ const testDirs = fs.readdirSync(baseDir);
 
 for (const dirName of testDirs) {
 
-	describe.skipIf(dirName === 'missing-props')(`inlay hint: ${dirName}`, async () => {
+	describe(`inlay hint: ${dirName}`, async () => {
 
 		const dir = path.join(baseDir, dirName);
 		const inputFiles = readFiles(dir);

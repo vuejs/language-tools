@@ -151,6 +151,7 @@ async function getInitializationOptions(
 			tokenModifiers: [],
 		},
 		vue: {
+			hybridMode: config.server.hybridMode,
 			additionalExtensions: [
 				...config.server.additionalExtensions,
 				...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],

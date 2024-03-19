@@ -1,5 +1,5 @@
 import type { Connection } from '@volar/language-server';
-import { createConnection, createServer, createSimpleProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
+import { createConnection, createServer, createSimpleProjectProviderFactory, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
 import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
 import { ServiceEnvironment, convertAttrName, convertTagName, createVueServicePlugins, detect } from '@vue/language-service';
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './lib/protocol';
@@ -33,15 +33,22 @@ connection.onInitialize(async params => {
 
 	const result = await server.initialize(
 		params,
-		createSimpleProjectProviderFactory(),
+		options.vue.hybridMode
+			? createSimpleProjectProviderFactory()
+			: createTypeScriptProjectProviderFactory(tsdk.typescript, tsdk.diagnosticMessages),
 		{
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
 			getServicePlugins() {
-				return createVueServicePlugins(tsdk.typescript, env => envToVueOptions.get(env)!, tsPluginClient);
+				return createVueServicePlugins(tsdk.typescript, env => envToVueOptions.get(env)!, options.vue.hybridMode, tsPluginClient);
 			},
 			async getLanguagePlugins(serviceEnv, projectContext) {
-				const [commandLine, vueOptions] = await parseCommandLine();
-				const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
+				const commandLine = await parseCommandLine();
+				const vueOptions = commandLine?.vueOptions ?? resolveVueCompilerOptions({});
+				for (const ext of vueFileExtensions) {
+					if (vueOptions.extensions.includes(`.${ext}`)) {
+						vueOptions.extensions.push(`.${ext}`);
+					}
+				}
 				const vueLanguagePlugin = createVueLanguagePlugin(
 					tsdk.typescript,
 					serviceEnv.typescript!.uriToFileName,
@@ -60,18 +67,17 @@ connection.onInitialize(async params => {
 						}
 					},
 					commandLine?.options ?? {},
-					resolvedVueOptions,
+					vueOptions,
 					options.codegenStack,
 				);
 
-				envToVueOptions.set(serviceEnv, resolvedVueOptions);
+				envToVueOptions.set(serviceEnv, vueOptions);
 
 				return [vueLanguagePlugin];
 
 				async function parseCommandLine() {
 
 					let commandLine: ParsedCommandLine | undefined;
-					let vueOptions: Partial<VueCompilerOptions> = {};
 
 					if (projectContext.typescript) {
 
@@ -89,16 +95,7 @@ connection.onInitialize(async params => {
 						}
 					}
 
-					if (commandLine) {
-						vueOptions = commandLine.vueOptions;
-					}
-					vueOptions.extensions = [
-						...vueOptions.extensions ?? ['.vue'],
-						...vueFileExtensions.map(ext => '.' + ext),
-					];
-					vueOptions.extensions = [...new Set(vueOptions.extensions)];
-
-					return [commandLine, vueOptions] as const;
+					return commandLine;
 				}
 			},
 		},

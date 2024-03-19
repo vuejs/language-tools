@@ -6,11 +6,14 @@ export * from './lib/types';
 import type { ServiceEnvironment, ServicePlugin } from '@volar/language-service';
 import type { VueCompilerOptions } from './lib/types';
 
+import { decorateLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { create as createEmmetServicePlugin } from 'volar-service-emmet';
 import { create as createJsonServicePlugin } from 'volar-service-json';
 import { create as createPugFormatServicePlugin } from 'volar-service-pug-beautify';
 import { create as createTypeScriptServicePlugin } from 'volar-service-typescript';
 import { create as createTypeScriptTwoslashQueriesServicePlugin } from 'volar-service-typescript-twoslash-queries';
+import { create as createTypeScriptDocCommentTemplateServicePlugin } from 'volar-service-typescript/lib/plugins/docCommentTemplate';
+import { create as createTypeScriptSyntacticServicePlugin } from 'volar-service-typescript/lib/plugins/syntactic';
 import { create as createCssServicePlugin } from './lib/plugins/css';
 import { create as createVueAutoDotValueServicePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoWrapParenthesesServicePlugin } from './lib/plugins/vue-autoinsert-parentheses';
@@ -28,11 +31,11 @@ import { create as createVueVisualizeHiddenCallbackParamServicePlugin } from './
 export function createVueServicePlugins(
 	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
+	hybridMode = true,
 	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
 ): ServicePlugin[] {
-	return [
-		createTypeScriptServicePlugin(ts),
-		createTypeScriptTwoslashQueriesServicePlugin(),
+	const plugins: ServicePlugin[] = [
+		createTypeScriptTwoslashQueriesServicePlugin(ts),
 		createCssServicePlugin(),
 		createPugFormatServicePlugin(),
 		createJsonServicePlugin(),
@@ -51,4 +54,27 @@ export function createVueServicePlugins(
 		createVueToggleVBindServicePlugin(ts),
 		createEmmetServicePlugin(),
 	];
+	if (!hybridMode) {
+		plugins.push(...createTypeScriptServicePlugin(ts));
+		for (let i = 0; i < plugins.length; i++) {
+			const plugin = plugins[i];
+			if (plugin.name === 'typescript-semantic') {
+				plugins[i] = {
+					...plugin,
+					create(context) {
+						const created = plugin.create(context);
+						const languageService = (created.provide as import('volar-service-typescript').Provide)['typescript/languageService']();
+						const vueOptions = getVueOptions(context.env);
+						decorateLanguageServiceForVue(context.language.files, languageService, vueOptions, ts);
+						return created;
+					},
+				};
+			}
+		}
+	}
+	else {
+		plugins.push(createTypeScriptSyntacticServicePlugin(ts));
+		plugins.push(createTypeScriptDocCommentTemplateServicePlugin(ts));
+	}
+	return plugins;
 }

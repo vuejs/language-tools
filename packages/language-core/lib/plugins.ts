@@ -27,7 +27,9 @@ export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLangua
 	const pluginInstances = plugins
 		.map(plugin => {
 			try {
-				return plugin(pluginContext);
+				const instance = plugin(pluginContext);
+				instance.name ??= (plugin as any).__moduleName;
+				return instance;
 			} catch (err) {
 				console.warn('[Vue] Failed to create plugin', err);
 			}
@@ -42,7 +44,7 @@ export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLangua
 	return pluginInstances.filter(plugin => {
 		const valid = plugin.version === pluginVersion;
 		if (!valid) {
-			console.warn(`[Vue] Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected ${JSON.stringify(pluginVersion)} but got ${JSON.stringify(plugin.version)}`);
+			console.warn(`[Vue] Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected "${pluginVersion}" but got "${plugin.version}".`);
 		}
 		return valid;
 	});

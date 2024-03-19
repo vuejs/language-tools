@@ -259,6 +259,10 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
+				"vue.server.hybridMode": {
+					"type": "boolean",
+					"default": false
+				},
 				"vue.server.path": {
 					"type": [
 						"string",
