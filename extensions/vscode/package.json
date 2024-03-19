@@ -355,11 +355,6 @@
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
 				},
-				"vue.complete.casing.status": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show name casing in status bar."
-				},
 				"vue.autoInsert.parentheses": {
 					"type": "boolean",
 					"default": true,

@@ -3,6 +3,8 @@ import {
 	activateDocumentDropEdit,
 	activateServerSys,
 	activateWriteVirtualFiles,
+	activateTsConfigStatusItem,
+	activateTsVersionStatusItem,
 	getTsdk,
 } from '@volar/vscode';
 import { DiagnosticModel, VueInitializationOptions } from '@vue/language-server';
@@ -58,13 +60,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		outputChannel
 	);
 
-	activateConfigWatcher();
-	activateRestartRequest();
-	activateClientRequests();
-
-	splitEditors.register(context, client);
-	doctor.register(context, client);
-
 	const selectors: vscode.DocumentFilter[] = [{ language: 'vue' }];
 
 	if (config.server.petiteVue.supportHtmlFile) {
@@ -74,10 +69,33 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		selectors.push({ language: 'markdown' });
 	}
 
+	activateConfigWatcher();
+	activateRestartRequest();
+
+	nameCasing.activate(context, client, selectors);
+	splitEditors.register(context, client);
+	doctor.register(context, client);
+
 	activateAutoInsertion(selectors, client);
 	activateDocumentDropEdit(selectors, client);
 	activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
 	activateServerSys(client);
+
+	if (!config.server.hybridMode) {
+		activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);
+		activateTsVersionStatusItem(selectors, 'vue.tsversion', context, client, text => 'TS ' + text);
+	}
+
+	const hybridModeStatus = vscode.languages.createLanguageStatusItem('vue-hybrid-mode', selectors);
+	hybridModeStatus.text = config.server.hybridMode ? 'Hybrid Mode: Enabled' : 'Hybrid Mode: Disabled';
+	hybridModeStatus.command = {
+		title: 'Open Setting',
+		command: 'workbench.action.openSettings',
+		arguments: ['vue.server.hybridMode'],
+	};
+	if (!config.server.hybridMode) {
+		hybridModeStatus.severity = vscode.LanguageStatusSeverity.Warning;
+	}
 
 	async function requestReloadVscode(msg: string) {
 		const reload = await vscode.window.showInformationMessage(msg, 'Reload Window');
@@ -106,12 +124,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			outputChannel.clear();
 			client.clientOptions.initializationOptions = await getInitializationOptions(context);
 			await client.start();
-			activateClientRequests();
 		}));
-	}
-
-	function activateClientRequests() {
-		nameCasing.activate(context, client);
 	}
 }
 

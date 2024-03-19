@@ -47,7 +47,6 @@ export const config = {
 	},
 	get complete(): Readonly<{
 		casing: {
-			status: boolean;
 			props: 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
 			tags: 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
 		};
