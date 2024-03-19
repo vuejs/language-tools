@@ -24,22 +24,19 @@ type CreateLanguageClient = (
 	outputChannel: vscode.OutputChannel,
 ) => lsp.BaseLanguageClient;
 
+const beginHybridMode = config.server.hybridMode;
+
 export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
 	const stopCheck = vscode.window.onDidChangeActiveTextEditor(tryActivate);
 	tryActivate();
 
 	function tryActivate() {
-
-		if (!vscode.window.activeTextEditor) {
-			// onWebviewPanel:preview
-			doActivate(context, createLc);
-			stopCheck.dispose();
-			return;
-		}
-
-		const currentLangId = vscode.window.activeTextEditor.document.languageId;
-		if (currentLangId === 'vue' || (currentLangId === 'markdown' && config.server.vitePress.supportMdFile) || (currentLangId === 'html' && config.server.petiteVue.supportHtmlFile)) {
+		if (
+			vscode.window.visibleTextEditors.some(editor => editor.document.languageId === 'vue')
+			|| (config.server.vitePress.supportMdFile && vscode.window.visibleTextEditors.some(editor => editor.document.languageId === 'vue'))
+			|| (config.server.petiteVue.supportHtmlFile && vscode.window.visibleTextEditors.some(editor => editor.document.languageId === 'html'))
+		) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
@@ -61,7 +58,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		outputChannel
 	);
 
-	activateServerMaxOldSpaceSizeChange();
+	activateConfigWatcher();
 	activateRestartRequest();
 	activateClientRequests();
 
@@ -82,21 +79,22 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
 	activateServerSys(client);
 
-	async function requestReloadVscode() {
-		const reload = await vscode.window.showInformationMessage(
-			'Please reload VSCode to restart language servers.',
-			'Reload Window'
-		);
+	async function requestReloadVscode(msg: string) {
+		const reload = await vscode.window.showInformationMessage(msg, 'Reload Window');
 		if (reload === undefined) return; // cancel
 		vscode.commands.executeCommand('workbench.action.reloadWindow');
 	}
 
-	function activateServerMaxOldSpaceSizeChange() {
+	function activateConfigWatcher() {
 		context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => {
-			if (e.affectsConfiguration('vue.server.runtime') || e.affectsConfiguration('vue.server.path')) {
-				requestReloadVscode();
+			if (e.affectsConfiguration('vue.server.hybridMode') && config.server.hybridMode !== beginHybridMode) {
+				requestReloadVscode(
+					config.server.hybridMode
+						? 'Please reload VSCode to enable Hybrid Mode.'
+						: 'Please reload VSCode to disable Hybrid Mode.'
+				);
 			}
-			if (e.affectsConfiguration('vue')) {
+			else if (e.affectsConfiguration('vue')) {
 				vscode.commands.executeCommand('vue.action.restartServer');
 			}
 		}));
@@ -104,15 +102,10 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	async function activateRestartRequest() {
 		context.subscriptions.push(vscode.commands.registerCommand('vue.action.restartServer', async () => {
-
 			await client.stop();
-
 			outputChannel.clear();
-
 			client.clientOptions.initializationOptions = await getInitializationOptions(context);
-
 			await client.start();
-
 			activateClientRequests();
 		}));
 	}
@@ -151,7 +144,7 @@ async function getInitializationOptions(
 			tokenModifiers: [],
 		},
 		vue: {
-			hybridMode: config.server.hybridMode,
+			hybridMode: beginHybridMode,
 			additionalExtensions: [
 				...config.server.additionalExtensions,
 				...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],

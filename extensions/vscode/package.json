@@ -239,23 +239,6 @@
 					"type": "boolean",
 					"default": false
 				},
-				"vue.server.path": {
-					"type": [
-						"string",
-						"null"
-					],
-					"default": null,
-					"description": "Path to node_modules/vue-language-server/bin/vue-language-server.js."
-				},
-				"vue.server.runtime": {
-					"type": "string",
-					"enum": [
-						"node",
-						"bun"
-					],
-					"default": "node",
-					"description": "Vue Language Server runtime."
-				},
 				"vue.server.maxFileSize": {
 					"type": "number",
 					"default": 20971520,

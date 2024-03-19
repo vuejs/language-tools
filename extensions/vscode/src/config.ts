@@ -17,8 +17,6 @@ export const config = {
 	},
 	get server(): Readonly<{
 		hybridMode: boolean;
-		path: null | string;
-		runtime: 'node' | 'bun';
 		maxOldSpaceSize: number;
 		maxFileSize: number;
 		diagnosticModel: 'push' | 'pull';
