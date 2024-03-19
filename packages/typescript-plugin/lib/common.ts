@@ -8,12 +8,14 @@ export function decorateLanguageServiceForVue(
 	languageService: ts.LanguageService,
 	vueOptions: vue.VueCompilerOptions,
 	ts: typeof import('typescript'),
+	isTsPlugin: boolean,
 ) {
-
-	const getCompletionsAtPosition = languageService.getCompletionsAtPosition;
-	const getCompletionEntryDetails = languageService.getCompletionEntryDetails;
-	const getCodeFixesAtPosition = languageService.getCodeFixesAtPosition;
-	const getEncodedSemanticClassifications = languageService.getEncodedSemanticClassifications;
+	const {
+		getCompletionsAtPosition,
+		getCompletionEntryDetails,
+		getCodeFixesAtPosition,
+		getEncodedSemanticClassifications,
+	} = languageService;
 
 	languageService.getCompletionsAtPosition = (fileName, position, options) => {
 		const result = getCompletionsAtPosition(fileName, position, options);
@@ -75,60 +77,85 @@ export function decorateLanguageServiceForVue(
 		result = result.filter(entry => entry.description.indexOf('__VLS_') === -1);
 		return result;
 	};
-	languageService.getEncodedSemanticClassifications = (fileName, span, format) => {
-		const result = getEncodedSemanticClassifications(fileName, span, format);
-		const file = files.get(fileName);
-		if (
-			file?.generated?.code instanceof vue.VueGeneratedCode
-			&& file.generated.code.sfc.template
-		) {
-			const validComponentNames = _getComponentNames(ts, languageService, file.generated.code, vueOptions);
-			const components = new Set([
-				...validComponentNames,
-				...validComponentNames.map(vue.hyphenateTag),
-			]);
-			const { template } = file.generated.code.sfc;
-			const spanTemplateRange = [
-				span.start - template.startTagEnd,
-				span.start + span.length - template.startTagEnd,
-			] as const;
-			template.ast?.children.forEach(function visit(node) {
-				if (node.loc.end.offset <= spanTemplateRange[0] || node.loc.start.offset >= spanTemplateRange[1]) {
-					return;
-				}
-				if (node.type === 1 satisfies vue.CompilerDOM.NodeTypes.ELEMENT) {
-					if (components.has(node.tag)) {
+	if (isTsPlugin) {
+		languageService.getEncodedSemanticClassifications = (fileName, span, format) => {
+			const result = getEncodedSemanticClassifications(fileName, span, format);
+			const file = files.get(fileName);
+			if (file?.generated?.code instanceof vue.VueGeneratedCode) {
+				const { template } = file.generated.code.sfc;
+				if (template) {
+					for (const componentSpan of getComponentSpans.call(
+						{ typescript: ts, languageService, vueOptions },
+						file.generated.code,
+						template,
+						{
+							start: span.start - template.startTagEnd,
+							length: span.length,
+						},
+					)) {
 						result.spans.push(
-							node.loc.start.offset + node.loc.source.indexOf(node.tag) + template.startTagEnd,
-							node.tag.length,
+							componentSpan.start + template.startTagEnd,
+							componentSpan.length,
 							256, // class
 						);
-						if (template.lang === 'html' && !node.isSelfClosing) {
-							result.spans.push(
-								node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) + template.startTagEnd,
-								node.tag.length,
-								256, // class
-							);
-						}
-					}
-					for (const child of node.children) {
-						visit(child);
 					}
 				}
-				else if (node.type === 9 satisfies vue.CompilerDOM.NodeTypes.IF) {
-					for (const branch of node.branches) {
-						for (const child of branch.children) {
-							visit(child);
-						}
-					}
-				}
-				else if (node.type === 11 satisfies vue.CompilerDOM.NodeTypes.FOR) {
-					for (const child of node.children) {
-						visit(child);
-					}
-				}
-			});
+			}
+			return result;
+		};
+	}
+}
+
+export function getComponentSpans(
+	this: {
+		typescript: typeof import('typescript');
+		languageService: ts.LanguageService;
+		vueOptions: vue.VueCompilerOptions;
+	},
+	vueCode: vue.VueGeneratedCode,
+	template: NonNullable<vue.VueGeneratedCode['sfc']['template']>,
+	spanTemplateRange: ts.TextSpan,
+) {
+	const { typescript: ts, languageService, vueOptions } = this;
+	const result: ts.TextSpan[] = [];
+	const validComponentNames = _getComponentNames(ts, languageService, vueCode, vueOptions);
+	const components = new Set([
+		...validComponentNames,
+		...validComponentNames.map(vue.hyphenateTag),
+	]);
+	template.ast?.children.forEach(function visit(node) {
+		if (node.loc.end.offset <= spanTemplateRange.start || node.loc.start.offset >= (spanTemplateRange.start + spanTemplateRange.length)) {
+			return;
 		}
-		return result;
-	};
+		if (node.type === 1 satisfies vue.CompilerDOM.NodeTypes.ELEMENT) {
+			if (components.has(node.tag)) {
+				result.push({
+					start: node.loc.start.offset + node.loc.source.indexOf(node.tag),
+					length: node.tag.length,
+				});
+				if (template.lang === 'html' && !node.isSelfClosing) {
+					result.push({
+						start: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
+						length: node.tag.length,
+					});
+				}
+			}
+			for (const child of node.children) {
+				visit(child);
+			}
+		}
+		else if (node.type === 9 satisfies vue.CompilerDOM.NodeTypes.IF) {
+			for (const branch of node.branches) {
+				for (const child of branch.children) {
+					visit(child);
+				}
+			}
+		}
+		else if (node.type === 11 satisfies vue.CompilerDOM.NodeTypes.FOR) {
+			for (const child of node.children) {
+				visit(child);
+			}
+		}
+	});
+	return result;
 }

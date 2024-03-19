@@ -1,15 +1,18 @@
-import { VueGeneratedCode, isSemanticTokensEnabled } from '@vue/language-core';
-import { getProject } from '../utils';
+import { FileRegistry, VueGeneratedCode, isSemanticTokensEnabled } from '@vue/language-core';
 import type * as ts from 'typescript';
 
-export function collectExtractProps(fileName: string, templateCodeRange: [number, number], isTsPlugin: boolean = true) {
+export function collectExtractProps(
+	this: {
+		typescript: typeof import('typescript');
+		languageService: ts.LanguageService;
+		files: FileRegistry;
+		isTsPlugin: boolean,
+	},
+	fileName: string,
+	templateCodeRange: [number, number],
+) {
+	const { typescript: ts, languageService, files, isTsPlugin } = this;
 
-	const match = getProject(fileName);
-	if (!match) {
-		return;
-	}
-
-	const { info, files, ts } = match;
 	const volarFile = files.get(fileName);
 	if (!(volarFile?.generated?.code instanceof VueGeneratedCode)) {
 		return;
@@ -20,7 +23,6 @@ export function collectExtractProps(fileName: string, templateCodeRange: [number
 		type: string;
 		model: boolean;
 	}>();
-	const languageService = info.languageService;
 	const program: ts.Program = (languageService as any).getCurrentProgram();
 	if (!program) {
 		return;

@@ -5,6 +5,7 @@ import { ServiceEnvironment, convertAttrName, convertTagName, createVueServicePl
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './lib/protocol';
 import type { VueInitializationOptions } from './lib/types';
 import * as tsPluginClient from '@vue/typescript-plugin/lib/client';
+import { searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
 import { GetConnectedNamedPipeServerRequest } from './lib/protocol';
 
 export const connection: Connection = createConnection();
@@ -39,7 +40,11 @@ connection.onInitialize(async params => {
 		{
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
 			getServicePlugins() {
-				return createVueServicePlugins(tsdk.typescript, env => envToVueOptions.get(env)!, options.vue.hybridMode, tsPluginClient);
+				return createVueServicePlugins(
+					tsdk.typescript,
+					env => envToVueOptions.get(env)!,
+					options.vue.hybridMode ? () => tsPluginClient : undefined,
+				);
 			},
 			async getLanguagePlugins(serviceEnv, projectContext) {
 				const commandLine = await parseCommandLine();
@@ -101,8 +106,10 @@ connection.onInitialize(async params => {
 		},
 	);
 
-	// handle by tsserver + @vue/typescript-plugin
-	result.capabilities.semanticTokensProvider = undefined;
+	if (options.vue.hybridMode) {
+		// handle by tsserver + @vue/typescript-plugin
+		result.capabilities.semanticTokensProvider = undefined;
+	}
 
 	return result;
 });
@@ -141,7 +148,7 @@ connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 });
 
 connection.onRequest(GetConnectedNamedPipeServerRequest.type, async fileName => {
-	const server = await tsPluginClient.searchNamedPipeServerForFile(fileName);
+	const server = await searchNamedPipeServerForFile(fileName);
 	if (server) {
 		return server;
 	}

@@ -4,8 +4,7 @@ import * as vue from '@vue/language-core';
 import { createFileRegistry, resolveCommonLanguageId } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { decorateLanguageServiceForVue } from './lib/common';
-import { startNamedPipeServer } from './lib/server';
-import { projects } from './lib/utils';
+import { startNamedPipeServer, projects } from './lib/server';
 
 const windowsPathReg = /\\/g;
 const externalFiles = new WeakMap<ts.server.Project, Set<string>>();
@@ -69,12 +68,12 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					);
 
 					projectExternalFileExtensions.set(info.project, extensions);
-					projects.set(info.project, { info, files, ts, vueOptions });
+					projects.set(info.project, { info, files, vueOptions });
 
 					decorateLanguageService(files, info.languageService);
-					decorateLanguageServiceForVue(files, info.languageService, vueOptions, ts);
+					decorateLanguageServiceForVue(files, info.languageService, vueOptions, ts, true);
 					decorateLanguageServiceHost(files, info.languageServiceHost, ts);
-					startNamedPipeServer(info.project.projectKind, info.project.getCurrentDirectory());
+					startNamedPipeServer(ts, info.project.projectKind, info.project.getCurrentDirectory());
 				}
 
 				return info.languageService;

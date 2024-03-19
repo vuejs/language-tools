@@ -1,16 +1,17 @@
-import { isCompletionEnabled } from '@vue/language-core';
-import { getProject } from '../utils';
+import { FileRegistry, isCompletionEnabled } from '@vue/language-core';
 import type * as ts from 'typescript';
 
-export function getPropertiesAtLocation(fileName: string, position: number, isTsPlugin: boolean = true) {
-
-	const match = getProject(fileName);
-	if (!match) {
-		return;
-	}
-
-	const { info, files, ts } = match;
-	const languageService = info.languageService;
+export function getPropertiesAtLocation(
+	this: {
+		typescript: typeof import('typescript');
+		languageService: ts.LanguageService;
+		files: FileRegistry;
+		isTsPlugin: boolean,
+	},
+	fileName: string,
+	position: number,
+) {
+	const { languageService, files, typescript: ts, isTsPlugin } = this;
 
 	// mapping
 	const file = files.get(fileName);
