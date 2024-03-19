@@ -237,7 +237,8 @@
 				},
 				"vue.server.hybridMode": {
 					"type": "boolean",
-					"default": false
+					"default": false,
+					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
 				},
 				"vue.server.maxFileSize": {
 					"type": "number",
