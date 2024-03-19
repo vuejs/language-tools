@@ -4,8 +4,8 @@ export type VueInitializationOptions = InitializationOptions & {
 	typescript: {
 		tsdk: string;
 	};
-	vue: {
-		hybridMode: boolean;
+	vue?: {
+		hybridMode?: boolean;
 		/**
 		 * @example ['vue1', 'vue2']
 		 */

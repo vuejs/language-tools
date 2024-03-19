@@ -21,6 +21,7 @@ connection.listen();
 connection.onInitialize(async params => {
 
 	const options: VueInitializationOptions = params.initializationOptions;
+	const hybridMode = options.vue?.hybridMode ?? true;
 
 	tsdk = loadTsdkByPath(options.typescript.tsdk, params.locale);
 
@@ -34,7 +35,7 @@ connection.onInitialize(async params => {
 
 	const result = await server.initialize(
 		params,
-		options.vue.hybridMode
+		hybridMode
 			? createSimpleProjectProviderFactory()
 			: createTypeScriptProjectProviderFactory(tsdk.typescript, tsdk.diagnosticMessages),
 		{
@@ -43,7 +44,7 @@ connection.onInitialize(async params => {
 				return createVueServicePlugins(
 					tsdk.typescript,
 					env => envToVueOptions.get(env)!,
-					options.vue.hybridMode ? () => tsPluginClient : undefined,
+					hybridMode ? () => tsPluginClient : undefined,
 				);
 			},
 			async getLanguagePlugins(serviceEnv, projectContext) {
@@ -106,7 +107,7 @@ connection.onInitialize(async params => {
 		},
 	);
 
-	if (options.vue.hybridMode) {
+	if (hybridMode) {
 		// handle by tsserver + @vue/typescript-plugin
 		result.capabilities.semanticTokensProvider = undefined;
 	}
