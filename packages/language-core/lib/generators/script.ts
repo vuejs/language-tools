@@ -60,6 +60,7 @@ export function* generate(
 			emits: {},
 			expose: {},
 			slots: {},
+			options: {},
 			defineProp: [],
 			importSectionEndOffset: 0,
 			leadingCommentEndOffset: 0,

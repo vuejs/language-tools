@@ -33,6 +33,9 @@ export function parseScriptSetupRanges(
 		name?: string;
 		define?: ReturnType<typeof parseDefineFunction>;
 	} = {};
+	const options: {
+		inheritAttrs?: string;
+	} = {};
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -79,6 +82,7 @@ export function parseScriptSetupRanges(
 		slots,
 		emits,
 		expose,
+		options,
 		defineProp,
 	};
 
@@ -236,6 +240,19 @@ export function parseScriptSetupRanges(
 				}
 				if (ts.isVariableDeclaration(parent)) {
 					props.name = getNodeText(ts, parent.name, ast);
+				}
+			}
+			else if (vueCompilerOptions.macros.defineOptions.includes(callText)) {
+				if (node.arguments.length && ts.isObjectLiteralExpression(node.arguments[0])) {
+					const obj = node.arguments[0];
+					ts.forEachChild(obj, node => {
+						if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
+							const name = getNodeText(ts, node.name, ast);
+							if (name === 'inheritAttrs') {
+								options.inheritAttrs = getNodeText(ts, node.initializer, ast);
+							}
+						}
+					});
 				}
 			}
 		}

@@ -179,9 +179,8 @@ function createTsx(
 			_sfc.template,
 			shouldGenerateScopedClasses(),
 			stylesScopedClasses(),
-			hasScriptSetupSlots(),
-			slotsAssignName(),
-			propsAssignName(),
+			scriptRanges(),
+			scriptSetupRanges(),
 			ctx.codegenStack,
 		);
 
@@ -222,9 +221,6 @@ function createTsx(
 			cssCodeStacks: inlineCssCodegenStacks,
 		};
 	});
-	const hasScriptSetupSlots = computed(() => !!scriptSetupRanges()?.slots.define);
-	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
-	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
 	const generatedScript = computed(() => {
 		const codes: Code[] = [];
 		const codeStacks: StackNode[] = [];

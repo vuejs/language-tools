@@ -7,6 +7,8 @@ import type { Code, CodeAndStack, Sfc, VueCodeInformation, VueCompilerOptions } 
 import { hyphenateAttr, hyphenateTag } from '../utils/shared';
 import { collectVars, eachInterpolationSegment } from '../utils/transform';
 import { disableAllFeatures, enableAllFeatures, getStack, mergeFeatureSettings } from './utils';
+import type { ScriptRanges } from '../parsers/scriptRanges';
+import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 
 const presetInfos = {
 	disabledAll: disableAllFeatures({}),
@@ -72,9 +74,8 @@ export function* generate(
 	template: NonNullable<Sfc['template']>,
 	shouldGenerateScopedClasses: boolean,
 	stylesScopedClasses: Set<string>,
-	hasScriptSetupSlots: boolean,
-	slotsAssignName: string | undefined,
-	propsAssignName: string | undefined,
+	scriptRanges: ScriptRanges | undefined,
+	scriptSetupRanges: ScriptSetupRanges | undefined,
 	codegenStack: boolean,
 ) {
 
@@ -115,6 +116,9 @@ export function* generate(
 		? (code: Code): _CodeAndStack => ['inlineCss', code, getStack()]
 		: (code: Code): _CodeAndStack => ['inlineCss', code, ''];
 	const nativeTags = new Set(vueCompilerOptions.nativeTags);
+	const hasScriptSetupSlots = scriptSetupRanges?.slots.define;
+	const slotsAssignName = scriptSetupRanges?.slots.name;
+	const propsAssignName = scriptSetupRanges?.props.name;
 	const slots = new Map<string, {
 		name?: string;
 		loc?: number;
