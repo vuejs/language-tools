@@ -1,4 +1,4 @@
 <script setup lang="ts">
 import componentFor
-//                 ^complete: componentForAutoImportVue
+//                 ^complete: ComponentForAutoImport
 </script>

@@ -3,5 +3,5 @@
 
 <template>
     <ComponentForA />
-             <!-- ^complete: componentForAutoImportVue -->
+             <!-- ^complete: ComponentForAutoImport -->
 </template>

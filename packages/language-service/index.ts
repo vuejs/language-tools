@@ -71,6 +71,7 @@ export function createVueServicePlugins(
 				languageService: context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService'),
 				vueOptions: getVueOptions(context.env),
 				isTsPlugin: false,
+				getFileId: context.env.typescript!.fileNameToUri,
 			};
 			return {
 				async collectExtractProps(...args) {

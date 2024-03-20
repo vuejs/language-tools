@@ -7,14 +7,15 @@ export function getPropertiesAtLocation(
 		languageService: ts.LanguageService;
 		files: FileRegistry;
 		isTsPlugin: boolean,
+		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 	position: number,
 ) {
-	const { languageService, files, typescript: ts, isTsPlugin } = this;
+	const { languageService, files, typescript: ts, isTsPlugin, getFileId } = this;
 
 	// mapping
-	const file = files.get(fileName);
+	const file = files.get(getFileId(fileName));
 	if (file?.generated) {
 		const virtualScript = file.generated.languagePlugin.typescript?.getScript(file.generated.code);
 		if (!virtualScript) {

@@ -5,5 +5,5 @@ import ComponentForAutoImport from './component-for-auto-import.vue';
 
 <template>
     <ComponentForAutoImport />
-             <!-- ^complete: componentForAutoImportVue -->
+             <!-- ^complete: ComponentForAutoImport -->
 </template>

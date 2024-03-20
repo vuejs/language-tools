@@ -7,13 +7,14 @@ export function collectExtractProps(
 		languageService: ts.LanguageService;
 		files: FileRegistry;
 		isTsPlugin: boolean,
+		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 	templateCodeRange: [number, number],
 ) {
-	const { typescript: ts, languageService, files, isTsPlugin } = this;
+	const { typescript: ts, languageService, files, isTsPlugin, getFileId } = this;
 
-	const volarFile = files.get(fileName);
+	const volarFile = files.get(getFileId(fileName));
 	if (!(volarFile?.generated?.code instanceof VueGeneratedCode)) {
 		return;
 	}

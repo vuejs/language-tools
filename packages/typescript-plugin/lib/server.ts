@@ -50,6 +50,7 @@ export function startNamedPipeServer(
 					files: project.files,
 					vueOptions: project.vueOptions,
 					isTsPlugin: true,
+					getFileId: (fileName: string) => fileName,
 				};
 				if (request.type === 'containsFile') {
 					const result = !!getProject(fileName);

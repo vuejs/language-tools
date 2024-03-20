@@ -32,7 +32,7 @@ export function decorateLanguageServiceForVue(
 					for (const ext of vueOptions.extensions) {
 						const suffix = capitalize(ext.substring('.'.length)); // .vue -> Vue
 						if (item.source.endsWith(ext) && item.name.endsWith(suffix)) {
-							item.name = item.name.slice(0, -suffix.length);
+							item.name = capitalize(item.name.slice(0, -suffix.length));
 							if (item.insertText) {
 								// #2286
 								item.insertText = item.insertText.replace(`${suffix}$1`, '$1');
