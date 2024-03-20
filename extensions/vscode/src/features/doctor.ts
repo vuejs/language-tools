@@ -134,10 +134,12 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
+		const pugPluginPkg = await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/language-plugin-pug');
+
 		// check using pug but don't install @vue/language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
-			&& !await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/language-plugin-pug')
+			&& !pugPluginPkg
 		) {
 			problems.push({
 				title: '`@vue/language-plugin-pug` missing',
@@ -153,6 +155,22 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					'```jsonc',
 					JSON.stringify({ vueCompilerOptions: { plugins: ["@vue/language-plugin-pug"] } }, undefined, 2),
 					'```',
+				].join('\n'),
+			});
+		}
+
+		// check using pug but outdated @vue/language-plugin-pug
+		if (
+			sfc?.descriptor.template?.lang === 'pug'
+			&& pugPluginPkg
+			&& !semver.gte(pugPluginPkg.json.version, '2.0.5')
+		) {
+			problems.push({
+				title: 'Outdated `@vue/language-plugin-pug`',
+				message: [
+					'The version of `@vue/language-plugin-pug` is too low, it is required to upgrade to `2.0.5` or later.',
+					'',
+					'- @vue/language-plugin-pug: ' + pugPluginPkg.path,
 				].join('\n'),
 			});
 		}
