@@ -41,7 +41,6 @@
 		"@types/node": "latest",
 		"@types/path-browserify": "latest",
 		"@volar/kit": "~2.1.2",
-		"@vue/typescript-plugin": "2.0.6",
 		"vscode-languageserver-protocol": "^3.17.5"
 	}
 }
