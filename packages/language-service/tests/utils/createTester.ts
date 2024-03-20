@@ -1,9 +1,9 @@
 import { TypeScriptProjectHost, createLanguageService, resolveCommonLanguageId } from '@volar/language-service';
 import { createLanguage } from '@volar/typescript';
 import * as path from 'path';
-import type * as ts from 'typescript';
+import * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { createParsedCommandLine, createVueLanguagePlugin, createVueServicePlugins, resolveVueCompilerOptions } from '../..';
+import { createParsedCommandLine, createVueLanguagePlugin, createVueServicePlugins } from '../..';
 import { createMockServiceEnv } from './mockEnv';
 
 export const rootUri = URI.file(path.resolve(__dirname, '../../../../test-workspace/language-service')).toString();
@@ -11,7 +11,6 @@ export const tester = createTester(rootUri);
 
 function createTester(rootUri: string) {
 
-	const ts = require('typescript') as typeof import('typescript');
 	const serviceEnv = createMockServiceEnv(rootUri, () => currentVSCodeSettings ?? defaultVSCodeSettings);
 	const rootPath = serviceEnv.typescript!.uriToFileName(rootUri.toString());
 	const realTsConfig = path.join(rootPath, 'tsconfig.json').replace(/\\/g, '/');
@@ -26,9 +25,27 @@ function createTester(rootUri: string) {
 		getScriptSnapshot,
 		getLanguageId: resolveCommonLanguageId,
 	};
-	const resolvedVueOptions = resolveVueCompilerOptions(parsedCommandLine.vueOptions);
-	const vueLanguagePlugin = createVueLanguagePlugin(ts, serviceEnv.typescript!.uriToFileName, parsedCommandLine.options, resolvedVueOptions);
-	const vueServicePlugins = createVueServicePlugins(ts, () => resolvedVueOptions);
+	const vueLanguagePlugin = createVueLanguagePlugin(
+		ts,
+		serviceEnv.typescript!.uriToFileName,
+		fileName => {
+			if (ts.sys.useCaseSensitiveFileNames) {
+				return projectHost.getScriptFileNames().includes(fileName);
+			}
+			else {
+				const lowerFileName = fileName.toLowerCase();
+				for (const rootFile of projectHost.getScriptFileNames()) {
+					if (rootFile.toLowerCase() === lowerFileName) {
+						return true;
+					}
+				}
+				return false;
+			}
+		},
+		parsedCommandLine.options,
+		parsedCommandLine.vueOptions,
+	);
+	const vueServicePlugins = createVueServicePlugins(ts, () => parsedCommandLine.vueOptions);
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',

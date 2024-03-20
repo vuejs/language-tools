@@ -21,7 +21,7 @@ export interface VueCodeInformation extends CodeInformation {
 		paddingRight?: boolean;
 		paddingLeft?: boolean;
 	};
-	__combineLastMappping?: boolean;
+	__combineLastMapping?: boolean;
 }
 
 export type CodeAndStack = [code: Code, stack: string];
@@ -83,7 +83,7 @@ export type VueLanguagePlugin = (ctx: {
 };
 
 export interface SfcBlock {
-	name: string,
+	name: string;
 	start: number;
 	end: number;
 	startTagEnd: number;

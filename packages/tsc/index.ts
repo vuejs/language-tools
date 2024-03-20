@@ -2,11 +2,12 @@ import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as vue from '@vue/language-core';
 import type * as ts from 'typescript';
 
+const windowsPathReg = /\\/g;
+
 export function run() {
 
 	let runExtensions = ['.vue'];
 
-	const windowsPathReg = /\\/g;
 	const extensionsChangedException = new Error('extensions changed');
 	const main = () => runTsc(
 		require.resolve('typescript/lib/tsc'),
@@ -15,24 +16,24 @@ export function run() {
 			const { configFilePath } = options.options;
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-				: {};
-			const extensions = vueOptions.extensions ?? ['.vue'];
+				: vue.resolveVueCompilerOptions({});
+			const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options);
 			if (
-				runExtensions.length === extensions.length
-				&& runExtensions.every(ext => extensions.includes(ext))
+				runExtensions.length === vueOptions.extensions.length
+				&& runExtensions.every(ext => vueOptions.extensions.includes(ext))
 			) {
 				const vueLanguagePlugin = vue.createVueLanguagePlugin(
 					ts,
 					id => id,
+					fileName => fileName === fakeGlobalTypesHolder,
 					options.options,
 					vueOptions,
 					false,
-					createFakeGlobalTypesHolder(options)?.replace(windowsPathReg, '/'),
 				);
 				return [vueLanguagePlugin];
 			}
 			else {
-				runExtensions = extensions;
+				runExtensions = vueOptions.extensions;
 				throw extensionsChangedException;
 			}
 		},
@@ -77,6 +78,6 @@ export function createFakeGlobalTypesHolder(options: ts.CreateProgramOptions) {
 			return writeFile(fileName, ...args);
 		};
 
-		return fakeFileName;
+		return fakeFileName.replace(windowsPathReg, '/');
 	}
 }

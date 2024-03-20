@@ -9,8 +9,6 @@ import { middleware } from './middleware';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	let serverPathStatusItem: vscode.StatusBarItem | undefined;
-
 	const volarLabs = createLabsInfo(serverLib);
 	volarLabs.extensionExports.volarLabs.codegenStackSupport = true;
 
@@ -32,27 +30,6 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 
-		if (config.server.path) {
-			try {
-				const roots = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath);
-				const serverPath = require.resolve(config.server.path, { paths: roots });
-				serverModule = vscode.Uri.file(serverPath);
-
-				if (!serverPathStatusItem) {
-					serverPathStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-					serverPathStatusItem.text = '[vue] configured server path';
-					serverPathStatusItem.command = 'vue.action.gotoServerFile';
-					serverPathStatusItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-					serverPathStatusItem.show();
-					vscode.commands.registerCommand(serverPathStatusItem.command, () => {
-						vscode.window.showTextDocument(serverModule);
-					});
-				}
-			} catch (err) {
-				vscode.window.showWarningMessage(`Cannot find vue language server path: ${config.server.path}`);
-			}
-		}
-
 		const runOptions: lsp.ForkOptions = {};
 		if (config.server.maxOldSpaceSize) {
 			runOptions.execArgv ??= [];
@@ -71,28 +48,6 @@ export async function activate(context: vscode.ExtensionContext) {
 				options: debugOptions
 			},
 		};
-		if (config.server.runtime === 'bun') {
-			serverOptions = {
-				run: {
-					transport: {
-						kind: lsp.TransportKind.socket,
-						port,
-					},
-					options: runOptions,
-					command: 'bun',
-					args: ['--bun', 'run', serverModule.fsPath],
-				},
-				debug: {
-					transport: {
-						kind: lsp.TransportKind.socket,
-						port,
-					},
-					options: debugOptions,
-					command: 'bun',
-					args: ['--bun', 'run', serverModule.fsPath],
-				},
-			};
-		}
 		const clientOptions: lsp.LanguageClientOptions = {
 			middleware,
 			documentSelector: documentSelector,
@@ -126,7 +81,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 	else {
 		vscode.window.showWarningMessage(
-			'Takeover mode is no longer needed in version 2.0. Please enable the "TypeScript and JavaScript Language Features" extension.',
+			'Takeover mode is no longer needed since v2. Please enable the "TypeScript and JavaScript Language Features" extension.',
 			'Show Extension'
 		).then((selected) => {
 			if (selected) {
@@ -137,7 +92,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	if (vueTsPluginExtension) {
 		vscode.window.showWarningMessage(
-			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed in version 2.0. Please uninstall it.`,
+			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed since v2. Please uninstall it.`,
 			'Show Extension'
 		).then((selected) => {
 			if (selected) {
@@ -178,6 +133,7 @@ try {
 	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
 	const readFileSync = fs.readFileSync;
 	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
+	const { hybridMode } = config.server;
 
 	// @ts-expect-error
 	fs.readFileSync = (...args) => {
@@ -192,6 +148,18 @@ try {
 			// VSCode >= 1.87.0
 			text = text.replace('t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]', s => s + '.concat("vue")'); // patch jsTsLanguageModes
 			text = text.replace('.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]', s => s + '.concat("vue")'); // patch isSupportedLanguageMode
+
+			if (!hybridMode) {
+				// patch readPlugins
+				text = text.replace(
+					'languages:Array.isArray(e.languages)',
+					[
+						'languages:',
+						`e.name==='typescript-vue-plugin-bundle'?[]:`,
+						'Array.isArray(e.languages)',
+					].join(''),
+				);
+			}
 
 			return text;
 		}

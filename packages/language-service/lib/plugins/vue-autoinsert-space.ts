@@ -10,8 +10,9 @@ export function create(): ServicePlugin {
 					if (document.languageId === 'html' || document.languageId === 'jade') {
 
 						const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.bracketSpacing') ?? true;
-						if (!enabled)
+						if (!enabled) {
 							return;
+						}
 
 						if (
 							lastChange.text === '{}'

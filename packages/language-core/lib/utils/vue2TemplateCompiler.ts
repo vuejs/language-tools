@@ -11,7 +11,7 @@ export const compile: typeof CompilerDOM.compile = (template, options = {}) => {
 	const onError = options.onError;
 	const onWarn = options.onWarn;
 
-	options.onError = (error) => {
+	options.onError = error => {
 		if (
 			error.code === 33 satisfies CompilerDOM.ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT // :key binding allowed in v-for template child in vue 2
 			|| error.code === 29 satisfies CompilerDOM.ErrorCodes.X_V_IF_SAME_KEY // fix https://github.com/vuejs/language-tools/issues/1638
@@ -74,7 +74,7 @@ function baseCompile(
 	options: CompilerDOM.CompilerOptions = {}
 ): CompilerDOM.CodegenResult {
 
-	const onError = options.onError || ((error) => { throw error; });
+	const onError = options.onError || (error => { throw error; });
 	const isModuleMode = options.mode === 'module';
 
 	const prefixIdentifiers = options.prefixIdentifiers === true || isModuleMode;

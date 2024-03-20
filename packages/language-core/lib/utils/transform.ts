@@ -136,8 +136,9 @@ function walkIdentifiers(
 			localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
 		}
 
-		if (node.initializer)
+		if (node.initializer) {
 			walkIdentifiers(ts, node.initializer, ast, cb, localVars, blockVars, false);
+		}
 	}
 	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
 
@@ -150,13 +151,15 @@ function walkIdentifiers(
 			}
 		}
 
-		for (const varName of functionArgs)
+		for (const varName of functionArgs) {
 			localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
+		}
 
 		walkIdentifiers(ts, node.body, ast, cb, localVars, blockVars, false);
 
-		for (const varName of functionArgs)
+		for (const varName of functionArgs) {
 			localVars.set(varName, localVars.get(varName)! - 1);
+		}
 	}
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {

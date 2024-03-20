@@ -16,8 +16,9 @@ export function create(): ServicePlugin {
 						for (const map of context.documents.getMaps(virtualCode) ?? []) {
 							for (const mapping of map.map.mappings) {
 
-								if (!(mapping.data as VueCodeInformation).__referencesCodeLens)
+								if (!(mapping.data as VueCodeInformation).__referencesCodeLens) {
 									continue;
+								}
 
 								result.push({
 									start: document.positionAt(mapping.generatedOffsets[0]),
@@ -37,8 +38,9 @@ export function create(): ServicePlugin {
 			function worker<T>(uri: string, callback: (vueFile: VirtualCode, sourceFile: SourceFile) => T) {
 
 				const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(uri);
-				if (!(sourceFile?.generated?.code instanceof VueGeneratedCode) || !sourceFile)
+				if (!(sourceFile?.generated?.code instanceof VueGeneratedCode) || !sourceFile) {
 					return;
+				}
 
 				return callback(virtualCode, sourceFile);
 			}

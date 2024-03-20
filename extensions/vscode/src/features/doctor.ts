@@ -134,19 +134,12 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		// check should use @volar-plugins/vetur instead of vetur
-		const vetur = vscode.extensions.getExtension('octref.vetur');
-		if (vetur?.isActive) {
-			problems.push({
-				title: 'Use volar-service-vetur instead of Vetur',
-				message: 'Detected Vetur enabled. Consider disabling Vetur and use [volar-service-vetur](https://github.com/volarjs/services/tree/master/packages/vetur) instead.',
-			});
-		}
+		const pugPluginPkg = await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/language-plugin-pug');
 
 		// check using pug but don't install @vue/language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
-			&& !await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/language-plugin-pug')
+			&& !pugPluginPkg
 		) {
 			problems.push({
 				title: '`@vue/language-plugin-pug` missing',
@@ -162,6 +155,22 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					'```jsonc',
 					JSON.stringify({ vueCompilerOptions: { plugins: ["@vue/language-plugin-pug"] } }, undefined, 2),
 					'```',
+				].join('\n'),
+			});
+		}
+
+		// check using pug but outdated @vue/language-plugin-pug
+		if (
+			sfc?.descriptor.template?.lang === 'pug'
+			&& pugPluginPkg
+			&& !semver.gte(pugPluginPkg.json.version, '2.0.5')
+		) {
+			problems.push({
+				title: 'Outdated `@vue/language-plugin-pug`',
+				message: [
+					'The version of `@vue/language-plugin-pug` is too low, it is required to upgrade to `2.0.5` or later.',
+					'',
+					'- @vue/language-plugin-pug: ' + pugPluginPkg.path,
 				].join('\n'),
 			});
 		}
@@ -209,41 +218,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		/*
-		// check outdated language services plugins
-		const knownPlugins = [
-			// '@volar-plugins/css',
-			// '@volar-plugins/emmet',
-			'@volar-plugins/eslint',
-			// '@volar-plugins/html',
-			// '@volar-plugins/json',
-			'@volar-plugins/prettier',
-			'@volar-plugins/prettyhtml',
-			'@volar-plugins/pug-beautify',
-			'@volar-plugins/sass-formatter',
-			'@volar-plugins/tslint',
-			// '@volar-plugins/typescript',
-			// '@volar-plugins/typescript-twoslash-queries',
-			'@volar-plugins/vetur',
-		];
-		for (const plugin of knownPlugins) {
-			const pluginMod = await getPackageJsonOfWorkspacePackage(fileUri.fsPath, plugin);
-			if (!pluginMod) continue;
-			if (!pluginMod.json.version.startsWith('2.')) {
-				problems.push({
-					title: `Outdated ${plugin}`,
-					message: [
-						`The ${plugin} plugin is outdated. Please update it to the latest version.`,
-						'',
-						'- plugin package.json: ' + pluginMod.path,
-						'- plugin version: ' + pluginMod.json.version,
-						'- expected version: >= 2.0.0',
-					].join('\n'),
-				});
-			}
-		}
-		*/
-
 		// check tsdk version should be higher than 5.0.0
 		const tsdk = await getTsdk(context);
 		if (tsdk.version && !semver.gte(tsdk.version, '5.0.0')) {
@@ -256,18 +230,39 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		// #3942
-		const namedPipe = await client.sendRequest(GetConnectedNamedPipeServerRequest.type, fileUri.fsPath.replace(/\\/g, '/'));
-		if (namedPipe?.serverKind === 0) {
-			problems.push({
-				title: 'Missing jsconfig/tsconfig',
-				message: [
-					'The current file does not have a matching tsconfig/jsconfig, and extension version 2.0 will not work properly for this at the moment.',
-					'To avoid this problem, you can create a jsconfig in the project root, or downgrade to 1.8.27.',
-					'',
-					'Issue: https://github.com/vuejs/language-tools/issues/3942',
-				].join('\n'),
-			});
+		if (config.server.hybridMode) {
+			// #3942
+			const namedPipe = await client.sendRequest(GetConnectedNamedPipeServerRequest.type, fileUri.fsPath.replace(/\\/g, '/'));
+			if (namedPipe?.serverKind === 0) {
+				problems.push({
+					title: 'Missing jsconfig/tsconfig',
+					message: [
+						'The current file does not have a matching tsconfig/jsconfig, and extension version 2.0 will not work properly for this at the moment.',
+						'To avoid this problem, you can create a jsconfig in the project root, or downgrade to 1.8.27.',
+						'',
+						'Issue: https://github.com/vuejs/language-tools/issues/3942',
+					].join('\n'),
+				});
+			}
+
+			// #3942, https://github.com/microsoft/TypeScript/issues/57633
+			for (const extId of [
+				'svelte.svelte-vscode',
+				'styled-components.vscode-styled-components',
+				'Divlo.vscode-styled-jsx-languageserver',
+			]) {
+				const ext = vscode.extensions.getExtension(extId);
+				if (ext) {
+					problems.push({
+						title: `Recommended to disable "${ext.packageJSON.displayName || extId}" in Vue workspace`,
+						message: [
+							`This extension's TypeScript Plugin and Vue's TypeScript Plugin are known to cause some conflicts. Until the problem is resolved, it is recommended that you temporarily disable the this extension in the Vue workspace.`,
+							'',
+							'Issues: https://github.com/vuejs/language-tools/issues/3942, https://github.com/microsoft/TypeScript/issues/57633',
+						].join('\n'),
+					});
+				}
+			}
 		}
 
 		// check outdated vue language plugins

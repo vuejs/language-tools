@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "2.0.4",
+	"version": "2.0.6",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -59,30 +59,6 @@
 			{
 				"fileMatch": "jsconfig.*.json",
 				"url": "./dist/schemas/vue-tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig-*.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig.*.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			},
-			{
-				"fileMatch": "jsconfig.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			},
-			{
-				"fileMatch": "jsconfig-*.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			},
-			{
-				"fileMatch": "jsconfig.*.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
 			}
 		],
 		"languages": [
@@ -108,18 +84,6 @@
 			{
 				"id": "plaintext",
 				"configuration": "./languages/sfc-template-language-configuration.json"
-			},
-			{
-				"id": "vue-injection-markdown"
-			},
-			{
-				"id": "vue-directives"
-			},
-			{
-				"id": "vue-interpolations"
-			},
-			{
-				"id": "vue-sfc-style-variable-injection"
 			}
 		],
 		"typescriptServerPlugins": [
@@ -173,7 +137,6 @@
 				]
 			},
 			{
-				"language": "vue-injection-markdown",
 				"scopeName": "markdown.vue.codeblock",
 				"path": "./syntaxes/markdown-vue.json",
 				"injectTo": [
@@ -209,7 +172,6 @@
 				}
 			},
 			{
-				"language": "vue-directives",
 				"scopeName": "vue.directives",
 				"path": "./syntaxes/vue-directives.json",
 				"injectTo": [
@@ -220,7 +182,6 @@
 				]
 			},
 			{
-				"language": "vue-interpolations",
 				"scopeName": "vue.interpolations",
 				"path": "./syntaxes/vue-interpolations.json",
 				"injectTo": [
@@ -231,7 +192,6 @@
 				]
 			},
 			{
-				"language": "vue-sfc-style-variable-injection",
 				"scopeName": "vue.sfc.style.variable.injection",
 				"path": "./syntaxes/vue-sfc-style-variable-injection.json",
 				"injectTo": [
@@ -259,22 +219,10 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"vue.server.path": {
-					"type": [
-						"string",
-						"null"
-					],
-					"default": null,
-					"description": "Path to node_modules/vue-language-server/bin/vue-language-server.js."
-				},
-				"vue.server.runtime": {
-					"type": "string",
-					"enum": [
-						"node",
-						"bun"
-					],
-					"default": "node",
-					"description": "Vue Language Server runtime."
+				"vue.server.hybridMode": {
+					"type": "boolean",
+					"default": false,
+					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
 				},
 				"vue.server.maxFileSize": {
 					"type": "number",
@@ -392,11 +340,6 @@
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
 				},
-				"vue.complete.casing.status": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show name casing in status bar."
-				},
 				"vue.autoInsert.parentheses": {
 					"type": "boolean",
 					"default": true,
@@ -426,6 +369,11 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for component options wrapper for type support."
+				},
+				"vue.inlayHints.vBindShorthand": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for v-bind shorthand."
 				},
 				"vue.format.template.initialIndent": {
 					"type": "boolean",
@@ -539,10 +487,10 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.1.0",
-		"@vue/language-core": "2.0.4",
-		"@vue/language-server": "2.0.4",
-		"@vue/typescript-plugin": "2.0.4",
+		"@volar/vscode": "~2.1.3",
+		"@vue/language-core": "2.0.6",
+		"@vue/language-server": "2.0.6",
+		"@vue/typescript-plugin": "2.0.6",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",

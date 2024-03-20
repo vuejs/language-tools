@@ -1,4 +1,4 @@
-import type { Disposable, ServiceEnvironment, ServicePluginInstance } from '@volar/language-service';
+import type { Disposable, ServiceContext, ServiceEnvironment, ServicePluginInstance } from '@volar/language-service';
 import { VueGeneratedCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { create as createHtmlService } from 'volar-service-html';
@@ -9,6 +9,8 @@ import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, ServicePlugin, TagNameCasing, VueCompilerOptions } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
+import { URI, Utils } from 'vscode-uri';
+import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
 
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
@@ -17,10 +19,11 @@ export function create(
 	mode: 'html' | 'pug',
 	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
+	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ): ServicePlugin {
 
 	let customData: html.IHTMLDataProvider[] = [];
+	let extraCustomData: html.IHTMLDataProvider[] = [];
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
@@ -34,7 +37,10 @@ export function create(
 	const baseServicePlugin = mode === 'pug' ? createPugService : createHtmlService;
 	const baseService = baseServicePlugin({
 		getCustomData() {
-			return customData;
+			return [
+				...customData,
+				...extraCustomData,
+			];
 		},
 		onDidChangeCustomData,
 	});
@@ -46,7 +52,7 @@ export function create(
 			'@', // vue event shorthand
 		],
 		create(context): ServicePluginInstance {
-
+			const tsPluginClient = getTsPluginClient?.(context);
 			const baseServiceInstance = baseService.create(context);
 			const vueCompilerOptions = getVueOptions(context.env);
 
@@ -83,14 +89,24 @@ export function create(
 				}
 			}
 
+			const disposable = context.env.onDidChangeConfiguration?.(() => initializing = undefined);
+
+			let initializing: Promise<void> | undefined;
+
 			return {
 
 				...baseServiceInstance,
 
+				dispose() {
+					baseServiceInstance.dispose?.();
+					disposable?.dispose();
+				},
+
 				async provideCompletionItems(document, position, completionContext, token) {
 
-					if (!isSupportedDocument(document))
+					if (!isSupportedDocument(document)) {
 						return;
+					}
 
 					let sync: (() => Promise<number>) | undefined;
 					let currentVersion: number | undefined;
@@ -105,8 +121,9 @@ export function create(
 					while (currentVersion !== (currentVersion = await sync?.())) {
 						htmlComplete = await baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
 					}
-					if (!htmlComplete)
+					if (!htmlComplete) {
 						return;
+					}
 
 					if (sourceFile?.generated?.code instanceof VueGeneratedCode) {
 						await afterHtmlCompletion(
@@ -121,17 +138,20 @@ export function create(
 
 				async provideInlayHints(document) {
 
-					if (!isSupportedDocument(document))
+					if (!isSupportedDocument(document)) {
 						return;
+					}
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.inlayHints.missingProps') ?? false;
-					if (!enabled)
+					if (!enabled) {
 						return;
+					}
 
 					const result: vscode.InlayHint[] = [];
 					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
-					if (!virtualCode)
+					if (!virtualCode) {
 						return;
+					}
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
@@ -237,31 +257,36 @@ export function create(
 
 				provideHover(document, position, token) {
 
-					if (!isSupportedDocument(document))
+					if (!isSupportedDocument(document)) {
 						return;
+					}
 
-					if (context.documents.getVirtualCodeByUri(document.uri)[0])
-						updateCustomData([]);
+					if (context.documents.getVirtualCodeByUri(document.uri)[0]) {
+						updateExtraCustomData([]);
+					}
 
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
 
 				async provideDiagnostics(document, token) {
 
-					if (!isSupportedDocument(document))
+					if (!isSupportedDocument(document)) {
 						return;
+					}
 
 					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
 					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
 
-					if (!virtualCode)
+					if (!virtualCode) {
 						return;
+					}
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
 						const code = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
-						if (!(code instanceof VueGeneratedCode))
+						if (!(code instanceof VueGeneratedCode)) {
 							continue;
+						}
 
 						const templateErrors: vscode.Diagnostic[] = [];
 						const { template } = code.sfc;
@@ -303,20 +328,64 @@ export function create(
 						];
 					}
 				},
+
+				provideDocumentSemanticTokens(document, range, legend) {
+					if (!isSupportedDocument(document)) {
+						return;
+					}
+					const [_virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
+					if (
+						!sourceFile
+						|| !(sourceFile.generated?.code instanceof VueGeneratedCode)
+						|| !sourceFile.generated.code.sfc.template
+					) {
+						return [];
+					}
+					const { template } = sourceFile.generated.code.sfc;
+					const spans = getComponentSpans.call(
+						{
+							files: context.language.files,
+							languageService: context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService'),
+							typescript: ts,
+							vueOptions: getVueOptions(context.env),
+						},
+						sourceFile.generated.code,
+						template,
+						{
+							start: document.offsetAt(range.start),
+							length: document.offsetAt(range.end) - document.offsetAt(range.start),
+						});
+					const classTokenIndex = legend.tokenTypes.indexOf('class');
+					return spans.map(span => {
+						const start = document.positionAt(span.start);
+						return [
+							start.line,
+							start.character,
+							span.length,
+							classTokenIndex,
+							0,
+						];
+					});
+				},
 			};
 
 			async function provideHtmlData(sourceDocumentUri: string, vueCode: VueGeneratedCode) {
+
+				await (initializing ??= initialize());
 
 				const casing = await getNameCasing(context, sourceDocumentUri, tsPluginClient);
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
-						if (tag.name === 'slot')
+						if (tag.name === 'slot') {
 							continue;
-						if (tag.name === 'component')
+						}
+						if (tag.name === 'component') {
 							continue;
-						if (tag.name === 'template')
+						}
+						if (tag.name === 'template') {
 							continue;
+						}
 						if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
 						}
@@ -337,7 +406,7 @@ export function create(
 				let components: string[] | undefined;
 				let templateContextProps: string[] | undefined;
 
-				updateCustomData([
+				updateExtraCustomData([
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
 					{
 						getId: () => 'vue-template',
@@ -389,13 +458,9 @@ export function create(
 
 							return tags;
 						},
-						provideAttributes: (tag) => {
+						provideAttributes: tag => {
+							const tagInfo = tagInfos.get(tag);
 
-							tsPluginClient?.getTemplateContextProps;
-
-							let failed = false;
-
-							let tagInfo = tagInfos.get(tag);
 							if (!tagInfo) {
 								promises.push((async () => {
 									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
@@ -408,11 +473,6 @@ export function create(
 									});
 									version++;
 								})());
-								return [];
-							}
-
-
-							if (failed) {
 								return [];
 							}
 
@@ -577,8 +637,9 @@ export function create(
 
 						for (const modifier in validModifiers) {
 
-							if (modifiers.includes(modifier))
+							if (modifiers.includes(modifier)) {
 								continue;
+							}
 
 							const modifierDes = validModifiers[modifier];
 							const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
@@ -603,8 +664,9 @@ export function create(
 
 						for (const modifier of modelData.globalAttributes ?? []) {
 
-							if (modifiers.includes(modifier.name))
+							if (modifiers.includes(modifier.name)) {
 								continue;
+							}
 
 							const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier.name;
 							const newItem: html.CompletionItem = {
@@ -675,7 +737,31 @@ export function create(
 					}
 				}
 
-				updateCustomData([]);
+				updateExtraCustomData([]);
+			}
+
+
+			async function initialize() {
+				customData = await getHtmlCustomData();
+			}
+
+			async function getHtmlCustomData() {
+				const customData: string[] = await context.env.getConfiguration?.('html.customData') ?? [];
+				const newData: html.IHTMLDataProvider[] = [];
+				for (const customDataPath of customData) {
+					const uri = Utils.resolvePath(URI.parse(context.env.workspaceFolder), customDataPath);
+					const json = await context.env.fs?.readFile?.(uri.toString());
+					if (json) {
+						try {
+							const data = JSON.parse(json);
+							newData.push(html.newHTMLDataProvider(customDataPath, data));
+						}
+						catch (error) {
+							console.error(error);
+						}
+					}
+				}
+				return newData;
 			}
 		},
 	};
@@ -692,8 +778,8 @@ export function create(
 		}
 	}
 
-	function updateCustomData(extraData: html.IHTMLDataProvider[]) {
-		customData = extraData;
+	function updateExtraCustomData(extraData: html.IHTMLDataProvider[]) {
+		extraCustomData = extraData;
 		onDidChangeCustomDataListeners.forEach(l => l());
 	}
 

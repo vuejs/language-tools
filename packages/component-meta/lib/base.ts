@@ -77,7 +77,7 @@ function createCheckerWorker(
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptFileNames: () => fileNames,
 		getProjectReferences: () => parsedCommandLine.projectReferences,
-		getScriptSnapshot: (fileName) => {
+		getScriptSnapshot: fileName => {
 			if (!scriptSnapshots.has(fileName)) {
 				const fileText = ts.sys.readFile(fileName);
 				if (fileText !== undefined) {
@@ -86,11 +86,16 @@ function createCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getLanguageId: vue.resolveCommonLanguageId,
+		getLanguageId: fileName => {
+			if (parsedCommandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
+				return 'vue';
+			}
+			return vue.resolveCommonLanguageId(fileName);
+		},
 	};
 
 	return {
-		...baseCreate(ts, configFileName, _host, vue.resolveVueCompilerOptions(parsedCommandLine.vueOptions), checkerOptions, globalComponentName),
+		...baseCreate(ts, configFileName, _host, parsedCommandLine.vueOptions, checkerOptions, globalComponentName),
 		updateFile(fileName: string, text: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
@@ -134,7 +139,7 @@ export function baseCreate(
 			getMetaFileName(globalComponentName),
 		];
 	};
-	host.getScriptSnapshot = (fileName) => {
+	host.getScriptSnapshot = fileName => {
 		if (isMetaFileName(fileName)) {
 			if (!metaSnapshots[fileName]) {
 				metaSnapshots[fileName] = ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName));
@@ -152,6 +157,20 @@ export function baseCreate(
 	const vueLanguagePlugin = vue.createVueLanguagePlugin(
 		ts,
 		id => id,
+		fileName => {
+			if (ts.sys.useCaseSensitiveFileNames) {
+				return host.getScriptFileNames().includes(fileName) ?? false;
+			}
+			else {
+				const lowerFileName = fileName.toLowerCase();
+				for (const rootFile of host.getScriptFileNames()) {
+					if (rootFile.toLowerCase() === lowerFileName) {
+						return true;
+					}
+				}
+				return false;
+			}
+		},
 		host.getCompilationSettings(),
 		vueCompilerOptions,
 	);
@@ -171,7 +190,7 @@ export function baseCreate(
 
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
-		languageServiceHost.getScriptKind = (fileName) => {
+		languageServiceHost.getScriptKind = fileName => {
 			if (fileName.endsWith('.vue.js')) {
 				return ts.ScriptKind.TS;
 			}
@@ -229,13 +248,13 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 		const program = tsLs.getProgram()!;
 		const typeChecker = program.getTypeChecker();
 		const { symbolNode, exports } = _getExports(program, typeChecker, componentPath);
-		const _export = exports.find((property) => property.getName() === exportName);
+		const _export = exports.find(property => property.getName() === exportName);
 
 		if (!_export) {
 			throw `Could not find export ${exportName}`;
 		}
 
-		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode!);
+		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode);
 		const symbolProperties = componentType.getProperties() ?? [];
 
 		let _type: ReturnType<typeof getType> | undefined;
@@ -267,7 +286,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			const $type = symbolProperties.find(prop => prop.escapedName === 'type');
 
 			if ($type) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($type, symbolNode!);
+				const type = typeChecker.getTypeOfSymbolAtLocation($type, symbolNode);
 				return Number(typeChecker.typeToString(type));
 			}
 
@@ -281,18 +300,18 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			let result: PropertyMeta[] = [];
 
 			if ($props) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode!);
+				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode);
 				const properties = type.getProperties();
 
 				result = properties
-					.map((prop) => {
+					.map(prop => {
 						const {
 							resolveNestedProperties,
-						} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
+						} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
 
 						return resolveNestedProperties(prop);
 					})
-					.filter((prop) => !prop.name.match(propEventRegex));
+					.filter(prop => !prop.name.match(propEventRegex));
 			}
 
 			// fill global
@@ -345,14 +364,14 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			const $emit = symbolProperties.find(prop => prop.escapedName === 'emit');
 
 			if ($emit) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($emit, symbolNode!);
+				const type = typeChecker.getTypeOfSymbolAtLocation($emit, symbolNode);
 				const calls = type.getCallSignatures();
 
-				return calls.map((call) => {
+				return calls.map(call => {
 
 					const {
 						resolveEventSignature,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
+					} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
 
 					return resolveEventSignature(call);
 				}).filter(event => event.name);
@@ -366,13 +385,13 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			const $slots = symbolProperties.find(prop => prop.escapedName === 'slots');
 
 			if ($slots) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($slots, symbolNode!);
+				const type = typeChecker.getTypeOfSymbolAtLocation($slots, symbolNode);
 				const properties = type.getProperties();
 
-				return properties.map((prop) => {
+				return properties.map(prop => {
 					const {
 						resolveSlotProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
+					} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
 
 					return resolveSlotProperties(prop);
 				});
@@ -386,16 +405,16 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			const $exposed = symbolProperties.find(prop => prop.escapedName === 'exposed');
 
 			if ($exposed) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($exposed, symbolNode!);
+				const type = typeChecker.getTypeOfSymbolAtLocation($exposed, symbolNode);
 				const properties = type.getProperties().filter(prop =>
 					// only exposed props will not have a valueDeclaration
 					!(prop as any).valueDeclaration
 				);
 
-				return properties.map((prop) => {
+				return properties.map(prop => {
 					const {
 						resolveExposedProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode!, checkerOptions, ts, language);
+					} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
 
 					return resolveExposedProperties(prop);
 				});
@@ -472,8 +491,9 @@ function createSchemaResolvers(
 			for (const item of options.ignore ?? []) {
 				if (typeof item === 'function') {
 					const result = item(name, subtype, typeChecker);
-					if (typeof result === 'boolean')
+					if (typeof result === 'boolean') {
 						return result;
+					}
 				}
 				else if (name === item) {
 					return true;
@@ -490,7 +510,7 @@ function createSchemaResolvers(
 	}
 
 	function resolveNestedProperties(prop: ts.Symbol): PropertyMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!);
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode);
 		let schema: PropertyMetaSchema;
 		let declarations: Declaration[];
 
@@ -514,10 +534,10 @@ function createSchemaResolvers(
 		};
 	}
 	function resolveSlotProperties(prop: ts.Symbol): SlotMeta {
-		const propType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode!));
+		const propType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode));
 		const signatures = propType.getCallSignatures();
 		const paramType = signatures[0].parameters[0];
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode!);
+		const subtype = paramType ? typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode) : typeChecker.getAnyType();
 		let schema: PropertyMetaSchema;
 		let declarations: Declaration[];
 
@@ -535,7 +555,7 @@ function createSchemaResolvers(
 		};
 	}
 	function resolveExposedProperties(expose: ts.Symbol): ExposeMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode!);
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode);
 		let schema: PropertyMetaSchema;
 		let declarations: Declaration[];
 
@@ -553,12 +573,12 @@ function createSchemaResolvers(
 		};
 	}
 	function resolveEventSignature(call: ts.Signature): EventMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode!);
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode);
 		let schema: PropertyMetaSchema[];
 		let declarations: Declaration[];
 
 		return {
-			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode!) as ts.StringLiteralType).value,
+			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value,
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			signature: typeChecker.signatureToString(call),

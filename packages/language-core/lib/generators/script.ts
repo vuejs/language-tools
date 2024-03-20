@@ -211,19 +211,25 @@ const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 function __VLS_getVForSourceType(source: number): [number, number, number][];
 function __VLS_getVForSourceType(source: string): [string, number, number][];
 function __VLS_getVForSourceType<T extends any[]>(source: T): [
-	T[number], // item
-	number, // key
-	number, // index
+	item: T[number],
+	key: number,
+	index: number,
 ][];
 function __VLS_getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
-	T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never, // item 
-	number, // key
-	undefined, // index
+	item: T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never, 
+	key: number,
+	index: undefined,
+][];
+// #3845
+function __VLS_getVForSourceType<T extends number | { [Symbol.iterator](): Iterator<any> }>(source: T): [
+	item: number | (Exclude<T, number> extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never), 
+	key: number,
+	index: undefined,
 ][];
 function __VLS_getVForSourceType<T>(source: T): [
-	T[keyof T], // item
-	keyof T, // key
-	number, // index
+	item: T[keyof T],
+	key: keyof T,
+	index: number,
 ][];
 
 // @ts-ignore
@@ -322,20 +328,25 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		}
 	}
 	function* generateSrc(): Generator<CodeAndStack> {
-		if (!script?.src)
+		if (!script?.src) {
 			return;
+		}
 
 		let src = script.src;
 
-		if (src.endsWith('.d.ts'))
+		if (src.endsWith('.d.ts')) {
 			src = src.substring(0, src.length - '.d.ts'.length);
-		else if (src.endsWith('.ts'))
+		}
+		else if (src.endsWith('.ts')) {
 			src = src.substring(0, src.length - '.ts'.length);
-		else if (src.endsWith('.tsx'))
+		}
+		else if (src.endsWith('.tsx')) {
 			src = src.substring(0, src.length - '.tsx'.length) + '.jsx';
+		}
 
-		if (!src.endsWith('.js') && !src.endsWith('.jsx'))
+		if (!src.endsWith('.js') && !src.endsWith('.jsx')) {
 			src = src + '.js';
+		}
 
 		yield _(`export * from `);
 		yield _([
@@ -367,18 +378,22 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		yield _(`export { default } from '${src}';\n`);
 	}
 	function* generateScriptContentBeforeExportDefault(): Generator<CodeAndStack> {
-		if (!script)
+		if (!script) {
 			return;
+		}
 
-		if (!!scriptSetup && scriptRanges?.exportDefault)
+		if (!!scriptSetup && scriptRanges?.exportDefault) {
 			return yield _(generateSourceCode(script, 0, scriptRanges.exportDefault.expression.start));
+		}
 
 		let isExportRawObject = false;
-		if (scriptRanges?.exportDefault)
+		if (scriptRanges?.exportDefault) {
 			isExportRawObject = script.content.substring(scriptRanges.exportDefault.expression.start, scriptRanges.exportDefault.expression.end).startsWith('{');
+		}
 
-		if (!isExportRawObject || !vueCompilerOptions.optionsWrapper.length || !scriptRanges?.exportDefault)
+		if (!isExportRawObject || !vueCompilerOptions.optionsWrapper.length || !scriptRanges?.exportDefault) {
 			return yield _(generateSourceCode(script, 0, script.content.length));
+		}
 
 		yield _(generateSourceCode(script, 0, scriptRanges.exportDefault.expression.start));
 		yield _(vueCompilerOptions.optionsWrapper[0]);
@@ -404,15 +419,18 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		yield _(generateSourceCode(script, scriptRanges.exportDefault.expression.end, script.content.length));
 	}
 	function* generateScriptContentAfterExportDefault(): Generator<CodeAndStack> {
-		if (!script)
+		if (!script) {
 			return;
+		}
 
-		if (!!scriptSetup && scriptRanges?.exportDefault)
+		if (!!scriptSetup && scriptRanges?.exportDefault) {
 			yield _(generateSourceCode(script, scriptRanges.exportDefault.expression.end, script.content.length));
+		}
 	}
 	function* generateScriptSetupImports(): Generator<CodeAndStack> {
-		if (!scriptSetup || !scriptSetupRanges)
+		if (!scriptSetup || !scriptSetupRanges) {
 			return;
+		}
 
 		yield _([
 			scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + '\n',
@@ -431,13 +449,14 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		if (scriptSetupRanges.defineProp.length) {
 			yield _(` & ReturnType<typeof import('${vueCompilerOptions.lib}').defineEmits<{\n`);
 			for (const defineProp of scriptSetupRanges.defineProp) {
-				if (!defineProp.isModel)
+				if (!defineProp.isModel) {
 					continue;
+				}
 
 				let propName = 'modelValue';
 				if (defineProp.name) {
 					propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-					propName = propName.replace(/['"]+/g, '')
+					propName = propName.replace(/['"]+/g, '');
 				}
 				yield _(`'update:${propName}': [${propName}:`);
 				if (defineProp.type) {
@@ -453,8 +472,9 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		yield _(`;\n`);
 	}
 	function* generateScriptSetupAndTemplate(): Generator<CodeAndStack> {
-		if (!scriptSetup || !scriptSetupRanges)
+		if (!scriptSetup || !scriptSetupRanges) {
 			return;
+		}
 
 		const definePropMirrors = new Map<string, number>();
 
@@ -545,7 +565,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			}
 			yield _(`;\n`);
 
-			yield* generateModelEmits()
+			yield* generateModelEmits();
 
 			yield _(`let __VLS_fnPropsDefineComponent!: InstanceType<typeof __VLS_fnComponent>['$props'];\n`);
 			yield _(`let __VLS_fnPropsSlots!: `);
@@ -605,8 +625,9 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		}
 	}
 	function* generateSetupFunction(functional: boolean, mode: 'return' | 'export' | 'none', definePropMirrors: Map<string, number>): Generator<CodeAndStack> {
-		if (!scriptSetupRanges || !scriptSetup)
+		if (!scriptSetupRanges || !scriptSetup) {
 			return;
+		}
 
 		const definePropProposalA = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
 		const definePropProposalB = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
@@ -755,7 +776,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			yield _(`};\n`);
 		}
 
-		yield* generateModelEmits()
+		yield* generateModelEmits();
 		yield* generateTemplate(functional);
 
 		if (mode === 'return' || mode === 'export') {
@@ -774,8 +795,9 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		}
 	}
 	function* generateComponent(functional: boolean): Generator<CodeAndStack> {
-		if (!scriptSetupRanges)
+		if (!scriptSetupRanges) {
 			return;
+		}
 
 		if (script && scriptRanges?.exportDefault && scriptRanges.exportDefault.expression.start !== scriptRanges.exportDefault.args.start) {
 			// use defineComponent() from user space code if it exist
@@ -856,12 +878,14 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 				}
 				yield _(`},\n`);
 			}
-			yield _(`emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`)
-			if (ranges.emits.define) {
-				yield _(` & typeof `)
-				yield _(ranges.emits.name ?? '__VLS_emit');
+			if (ranges.defineProp.filter(p => p.isModel).length || ranges.emits.define) {
+				yield _(`emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`);
+				if (ranges.emits.define) {
+					yield _(` & typeof `);
+					yield _(ranges.emits.name ?? '__VLS_emit');
+				}
+				yield _(`>),\n`);
 			}
-			yield _(`>),\n`);
 		}
 		if (script && scriptRanges?.exportDefault?.args) {
 			yield _(generateSourceCode(script, scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1));
@@ -1098,7 +1122,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			classNameWithDot.substring(1),
 			'style_' + styleIndex,
 			offset + 1,
-			disableAllFeatures({ __combineLastMappping: true }),
+			disableAllFeatures({ __combineLastMapping: true }),
 		]);
 		yield _(`'`);
 		yield _([

@@ -594,6 +594,34 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(d).toBeDefined();
 	});
 
+	test('defineSlots', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/template-slots/component-define-slots.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
+
+		const a = meta.slots.find(slot =>
+			slot.name === 'default'
+			&& slot.type === '{ num: number; }'
+		);
+		const b = meta.slots.find(slot =>
+			slot.name === 'named-slot'
+			&& slot.type === '{ str: string; }'
+		);
+		const c = meta.slots.find(slot =>
+			slot.name === 'vbind'
+			&& slot.type === '{ num: number; str: string; }'
+		);
+		const d = meta.slots.find(slot =>
+			slot.name === 'no-bind'
+		);
+
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
+		expect(c).toBeDefined();
+		expect(d).toBeDefined();
+	});
+
 	test('template-slots for generic', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
 		const meta = checker.getComponentMeta(componentPath);

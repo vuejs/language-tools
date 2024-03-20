@@ -1,5 +1,48 @@
 # Changelog
 
+## 2.0.6 (2024/3/7)
+
+> [!IMPORTANT] 
+> If the TypeScript language server crashes since 2.0, please try using VSCode Insiders and install [JavaScript and TypeScript Nightly](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-next), or temporarily downgrade to 1.8.27.\
+> Issue: https://github.com/vuejs/language-tools/issues/3962
+>
+> If false positive errors occur, please try disabling unrelated extensions in the Vue workspace.\
+> Issue: https://github.com/vuejs/language-tools/issues/3942
+
+### Fixes
+
+- **language-core:** use local variables in v-bind shorthand (#4017) - thanks @so1ve
+- **language-core:** sfc folding end position failed to mapping (#4038) - thanks @so1ve
+- **language-service:** remove `extraLiners` option for formatting (#3943)
+- **language-service:** bump `volar-service-typescript` for fix jsx formatting (#3949)
+- **language-service:** bump `@volar/typescript` for fix 2.0.5 auto-complete performance regression (#4024)
+
+### Refactors
+
+- **vscode:** rename `vue.inlayHints.vbindShorthand` setting to `vue.inlayHints.vBindShorthand` (#3995) - thanks @l4dybird
+
+## 2.0.5 (2024/3/5)
+
+### Features
+
+- **language-core:** support `v-bind` shorthand (#3990) - thanks @so1ve
+- **language-service:** support inlay hints for `v-bind` shorthand (#3990) - thanks @so1ve
+- **vscode:** prompt to disable Svelte extension in Vue workspace to avoid conflicts
+
+### Fixes
+
+- **typescript-plugin:** fault tolerance for named pipe server data
+- **language-core:** avoid `globalTypesHolder` being specified from a `node_modules` file (#3990)
+- **language-core:** fault tolerance for plugin creation
+- **language-plugin-pug:** failed to load due to an invalid require path (#3930)
+- **typescript-plugin:** custom extensions do not work (#3977)
+- **language-service:** html custom data not working (#3975)
+
+### Refactors
+
+- **typescript-plugin** add README (#3974) - thanks @WhyNotHugo
+- **component-meta** update demo (#3994) - thanks @zzfn
+
 ## 2.0.4 (2024/3/4)
 
 ### Features

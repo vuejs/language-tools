@@ -15,13 +15,15 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
 
-					if (document.languageId !== 'html')
+					if (document.languageId !== 'html') {
 						return;
+					}
 
 					const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
 					const vueVirtualCode = sourceFile?.generated?.code;
-					if (!virtualCode || !(vueVirtualCode instanceof VueGeneratedCode))
+					if (!virtualCode || !(vueVirtualCode instanceof VueGeneratedCode)) {
 						return;
+					}
 
 					let importUri: string | undefined;
 					for (const [mimeType, item] of dataTransfer) {
@@ -29,8 +31,9 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 							importUri = item.value as string;
 						}
 					}
-					if (!importUri?.endsWith('.vue'))
+					if (!importUri?.endsWith('.vue')) {
 						return;
+					}
 
 					let baseName = importUri.substring(importUri.lastIndexOf('/') + 1);
 					baseName = baseName.substring(0, baseName.lastIndexOf('.'));
@@ -39,8 +42,9 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					const { sfc } = vueVirtualCode;
 					const script = sfc.scriptSetup ?? sfc.script;
 
-					if (!script)
+					if (!script) {
 						return;
+					}
 
 					const additionalEdit: vscode.WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptSetupFormat' : 'scriptFormat'))!;
