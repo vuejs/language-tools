@@ -81,7 +81,7 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 	else {
 		vscode.window.showWarningMessage(
-			'Takeover mode is no longer needed in version 2.0. Please enable the "TypeScript and JavaScript Language Features" extension.',
+			'Takeover mode is no longer needed since v2. Please enable the "TypeScript and JavaScript Language Features" extension.',
 			'Show Extension'
 		).then((selected) => {
 			if (selected) {
@@ -92,7 +92,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 	if (vueTsPluginExtension) {
 		vscode.window.showWarningMessage(
-			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed in version 2.0. Please uninstall it.`,
+			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed since v2. Please uninstall it.`,
 			'Show Extension'
 		).then((selected) => {
 			if (selected) {
