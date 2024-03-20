@@ -84,18 +84,6 @@
 			{
 				"id": "plaintext",
 				"configuration": "./languages/sfc-template-language-configuration.json"
-			},
-			{
-				"id": "vue-injection-markdown"
-			},
-			{
-				"id": "vue-directives"
-			},
-			{
-				"id": "vue-interpolations"
-			},
-			{
-				"id": "vue-sfc-style-variable-injection"
 			}
 		],
 		"typescriptServerPlugins": [
@@ -149,7 +137,6 @@
 				]
 			},
 			{
-				"language": "vue-injection-markdown",
 				"scopeName": "markdown.vue.codeblock",
 				"path": "./syntaxes/markdown-vue.json",
 				"injectTo": [
@@ -185,7 +172,6 @@
 				}
 			},
 			{
-				"language": "vue-directives",
 				"scopeName": "vue.directives",
 				"path": "./syntaxes/vue-directives.json",
 				"injectTo": [
@@ -196,7 +182,6 @@
 				]
 			},
 			{
-				"language": "vue-interpolations",
 				"scopeName": "vue.interpolations",
 				"path": "./syntaxes/vue-interpolations.json",
 				"injectTo": [
@@ -207,7 +192,6 @@
 				]
 			},
 			{
-				"language": "vue-sfc-style-variable-injection",
 				"scopeName": "vue.sfc.style.variable.injection",
 				"path": "./syntaxes/vue-sfc-style-variable-injection.json",
 				"injectTo": [
