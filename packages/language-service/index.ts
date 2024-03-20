@@ -36,10 +36,10 @@ import { getQuickInfoAtPosition } from '@vue/typescript-plugin/lib/requests/getQ
 export function createVueServicePlugins(
 	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
-	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
+	getTsPluginClient = createDefaultGetTsPluginClient(ts, getVueOptions),
+	hybridMode = false,
 ): ServicePlugin[] {
 	const plugins: ServicePlugin[] = [];
-	const hybridMode = !!getTsPluginClient;
 	if (!hybridMode) {
 		plugins.push(...createTypeScriptServicePlugins(ts));
 		for (let i = 0; i < plugins.length; i++) {
@@ -61,45 +61,6 @@ export function createVueServicePlugins(
 				break;
 			}
 		}
-		getTsPluginClient = context => {
-			if (!context.language.typescript) {
-				return;
-			}
-			const requestContext = {
-				typescript: ts,
-				files: context.language.files,
-				languageService: context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService'),
-				vueOptions: getVueOptions(context.env),
-				isTsPlugin: false,
-				getFileId: context.env.typescript!.fileNameToUri,
-			};
-			return {
-				async collectExtractProps(...args) {
-					return await collectExtractProps.apply(requestContext, args);
-				},
-				async getPropertiesAtLocation(...args) {
-					return await getPropertiesAtLocation.apply(requestContext, args);
-				},
-				async getComponentEvents(...args) {
-					return await getComponentEvents.apply(requestContext, args);
-				},
-				async getComponentNames(...args) {
-					return await getComponentNames.apply(requestContext, args);
-				},
-				async getComponentProps(...args) {
-					return await getComponentProps.apply(requestContext, args);
-				},
-				async getElementAttrs(...args) {
-					return await getElementAttrs.apply(requestContext, args);
-				},
-				async getTemplateContextProps(...args) {
-					return await getTemplateContextProps.apply(requestContext, args);
-				},
-				async getQuickInfoAtPosition(...args) {
-					return await getQuickInfoAtPosition.apply(requestContext, args);
-				},
-			};
-		};
 	}
 	else {
 		plugins.push(
@@ -128,4 +89,49 @@ export function createVueServicePlugins(
 		createEmmetServicePlugin(),
 	);
 	return plugins;
+}
+
+export function createDefaultGetTsPluginClient(
+	ts: typeof import('typescript'),
+	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
+): (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined {
+	return context => {
+		if (!context.language.typescript) {
+			return;
+		}
+		const requestContext = {
+			typescript: ts,
+			files: context.language.files,
+			languageService: context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService'),
+			vueOptions: getVueOptions(context.env),
+			isTsPlugin: false,
+			getFileId: context.env.typescript!.fileNameToUri,
+		};
+		return {
+			async collectExtractProps(...args) {
+				return await collectExtractProps.apply(requestContext, args);
+			},
+			async getPropertiesAtLocation(...args) {
+				return await getPropertiesAtLocation.apply(requestContext, args);
+			},
+			async getComponentEvents(...args) {
+				return await getComponentEvents.apply(requestContext, args);
+			},
+			async getComponentNames(...args) {
+				return await getComponentNames.apply(requestContext, args);
+			},
+			async getComponentProps(...args) {
+				return await getComponentProps.apply(requestContext, args);
+			},
+			async getElementAttrs(...args) {
+				return await getElementAttrs.apply(requestContext, args);
+			},
+			async getTemplateContextProps(...args) {
+				return await getTemplateContextProps.apply(requestContext, args);
+			},
+			async getQuickInfoAtPosition(...args) {
+				return await getQuickInfoAtPosition.apply(requestContext, args);
+			},
+		};
+	};;
 }

@@ -1,7 +1,7 @@
 import type { Connection } from '@volar/language-server';
 import { createConnection, createServer, createSimpleProjectProviderFactory, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
 import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
-import { ServiceEnvironment, convertAttrName, convertTagName, createVueServicePlugins, detect } from '@vue/language-service';
+import { ServiceEnvironment, convertAttrName, convertTagName, createDefaultGetTsPluginClient, createVueServicePlugins, detect } from '@vue/language-service';
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './lib/protocol';
 import type { VueInitializationOptions } from './lib/types';
 import * as tsPluginClient from '@vue/typescript-plugin/lib/client';
@@ -15,6 +15,7 @@ export const server = createServer(connection);
 const envToVueOptions = new WeakMap<ServiceEnvironment, VueCompilerOptions>();
 
 let tsdk: ReturnType<typeof loadTsdkByPath>;
+let getTsPluginClient: ReturnType<typeof createDefaultGetTsPluginClient>;
 
 connection.listen();
 
@@ -33,6 +34,13 @@ connection.onInitialize(async params => {
 		}
 	}
 
+	if (hybridMode) {
+		getTsPluginClient = () => tsPluginClient;
+	}
+	else {
+		getTsPluginClient = createDefaultGetTsPluginClient(tsdk.typescript, env => envToVueOptions.get(env)!);
+	}
+
 	const result = await server.initialize(
 		params,
 		hybridMode
@@ -44,7 +52,8 @@ connection.onInitialize(async params => {
 				return createVueServicePlugins(
 					tsdk.typescript,
 					env => envToVueOptions.get(env)!,
-					hybridMode ? () => tsPluginClient : undefined,
+					getTsPluginClient,
+					hybridMode,
 				);
 			},
 			async getLanguagePlugins(serviceEnv, projectContext) {
@@ -130,21 +139,21 @@ connection.onRequest(ParseSFCRequest.type, params => {
 connection.onRequest(DetectNameCasingRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return await detect(languageService.context, params.textDocument.uri, tsPluginClient);
+		return await detect(languageService.context, params.textDocument.uri, getTsPluginClient(languageService.context));
 	}
 });
 
 connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return await convertTagName(languageService.context, params.textDocument.uri, params.casing, tsPluginClient);
+		return await convertTagName(languageService.context, params.textDocument.uri, params.casing, getTsPluginClient(languageService.context));
 	}
 });
 
 connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return await convertAttrName(languageService.context, params.textDocument.uri, params.casing, tsPluginClient);
+		return await convertAttrName(languageService.context, params.textDocument.uri, params.casing, getTsPluginClient(languageService.context));
 	}
 });
 
