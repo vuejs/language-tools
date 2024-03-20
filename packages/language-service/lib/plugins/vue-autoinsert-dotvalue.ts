@@ -1,4 +1,4 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { ServiceContext, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -17,11 +17,12 @@ function getAst(ts: typeof import('typescript'), fileName: string, snapshot: ts.
 
 export function create(
 	ts: typeof import('typescript'),
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
+	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ): ServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
 		create(context): ServicePluginInstance {
+			const tsPluginClient = getTsPluginClient?.(context);
 			let currentReq = 0;
 			return {
 				async provideAutoInsertionEdit(document, position, lastChange) {

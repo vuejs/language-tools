@@ -235,22 +235,10 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"vue.server.path": {
-					"type": [
-						"string",
-						"null"
-					],
-					"default": null,
-					"description": "Path to node_modules/vue-language-server/bin/vue-language-server.js."
-				},
-				"vue.server.runtime": {
-					"type": "string",
-					"enum": [
-						"node",
-						"bun"
-					],
-					"default": "node",
-					"description": "Vue Language Server runtime."
+				"vue.server.hybridMode": {
+					"type": "boolean",
+					"default": false,
+					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
 				},
 				"vue.server.maxFileSize": {
 					"type": "number",
@@ -367,11 +355,6 @@
 					],
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
-				},
-				"vue.complete.casing.status": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show name casing in status bar."
 				},
 				"vue.autoInsert.parentheses": {
 					"type": "boolean",

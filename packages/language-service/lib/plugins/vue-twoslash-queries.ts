@@ -1,4 +1,4 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { ServiceContext, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
@@ -6,11 +6,12 @@ const twoslashReg = /<!--\s*\^\?\s*-->/g;
 
 export function create(
 	ts: typeof import('typescript'),
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
+	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ): ServicePlugin {
 	return {
 		name: 'vue-twoslash-queries',
 		create(context): ServicePluginInstance {
+			const tsPluginClient = getTsPluginClient?.(context);
 			return {
 				async provideInlayHints(document, range) {
 

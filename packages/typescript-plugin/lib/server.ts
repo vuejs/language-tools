@@ -3,10 +3,10 @@ import * as net from 'net';
 import type * as ts from 'typescript';
 import { collectExtractProps } from './requests/collectExtractProps';
 import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from './requests/componentInfos';
-import { containsFile } from './requests/containsFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
 import { NamedPipeServer, connect, pipeTable } from './utils';
+import type { FileRegistry, VueCompilerOptions } from '@vue/language-core';
 
 export interface Request {
 	type: 'containsFile'
@@ -19,13 +19,16 @@ export interface Request {
 	| 'getTemplateContextProps'
 	| 'getComponentNames'
 	| 'getElementAttrs';
-	args: any;
+	args: [fileName: string, ...rest: any];
 }
 
 let started = false;
 
-export function startNamedPipeServer(serverKind: ts.server.ProjectKind, currentDirectory: string) {
-
+export function startNamedPipeServer(
+	ts: typeof import('typescript'),
+	serverKind: ts.server.ProjectKind,
+	currentDirectory: string,
+) {
 	if (started) {
 		return;
 	}
@@ -38,45 +41,60 @@ export function startNamedPipeServer(serverKind: ts.server.ProjectKind, currentD
 		connection.on('data', data => {
 			const text = data.toString();
 			const request: Request = JSON.parse(text);
-			if (request.type === 'containsFile') {
-				const result = containsFile.apply(null, request.args);
-				connection.write(JSON.stringify(result ?? null));
-			}
-			else if (request.type === 'collectExtractProps') {
-				const result = collectExtractProps.apply(null, request.args);
-				connection.write(JSON.stringify(result ?? null));
-			}
-			else if (request.type === 'getPropertiesAtLocation') {
-				const result = getPropertiesAtLocation.apply(null, request.args);
-				connection.write(JSON.stringify(result ?? null));
-			}
-			else if (request.type === 'getQuickInfoAtPosition') {
-				const result = getQuickInfoAtPosition.apply(null, request.args);
-				connection.write(JSON.stringify(result ?? null));
-			}
-			// Component Infos
-			else if (request.type === 'getComponentProps') {
-				const result = getComponentProps.apply(null, request.args);
-				connection.write(JSON.stringify(result ?? null));
-			}
-			else if (request.type === 'getComponentEvents') {
-				const result = getComponentEvents.apply(null, request.args);
-				connection.write(JSON.stringify(result ?? null));
-			}
-			else if (request.type === 'getTemplateContextProps') {
-				const result = getTemplateContextProps.apply(null, request.args);
-				connection.write(JSON.stringify(result ?? null));
-			}
-			else if (request.type === 'getComponentNames') {
-				const result = getComponentNames.apply(null, request.args);
-				connection.write(JSON.stringify(result ?? null));
-			}
-			else if (request.type === 'getElementAttrs') {
-				const result = getElementAttrs.apply(null, request.args);
-				connection.write(JSON.stringify(result ?? null));
+			const fileName = request.args[0];
+			const project = getProject(fileName);
+			if (project) {
+				const requestContext = {
+					typescript: ts,
+					languageService: project.info.languageService,
+					files: project.files,
+					vueOptions: project.vueOptions,
+					isTsPlugin: true,
+					getFileId: (fileName: string) => fileName,
+				};
+				if (request.type === 'containsFile') {
+					const result = !!getProject(fileName);
+					connection.write(JSON.stringify(result ?? null));
+				}
+				else if (request.type === 'collectExtractProps') {
+					const result = collectExtractProps.apply(requestContext, request.args as any);
+					connection.write(JSON.stringify(result ?? null));
+				}
+				else if (request.type === 'getPropertiesAtLocation') {
+					const result = getPropertiesAtLocation.apply(requestContext, request.args as any);
+					connection.write(JSON.stringify(result ?? null));
+				}
+				else if (request.type === 'getQuickInfoAtPosition') {
+					const result = getQuickInfoAtPosition.apply(requestContext, request.args as any);
+					connection.write(JSON.stringify(result ?? null));
+				}
+				// Component Infos
+				else if (request.type === 'getComponentProps') {
+					const result = getComponentProps.apply(requestContext, request.args as any);
+					connection.write(JSON.stringify(result ?? null));
+				}
+				else if (request.type === 'getComponentEvents') {
+					const result = getComponentEvents.apply(requestContext, request.args as any);
+					connection.write(JSON.stringify(result ?? null));
+				}
+				else if (request.type === 'getTemplateContextProps') {
+					const result = getTemplateContextProps.apply(requestContext, request.args as any);
+					connection.write(JSON.stringify(result ?? null));
+				}
+				else if (request.type === 'getComponentNames') {
+					const result = getComponentNames.apply(requestContext, request.args as any);
+					connection.write(JSON.stringify(result ?? null));
+				}
+				else if (request.type === 'getElementAttrs') {
+					const result = getElementAttrs.apply(requestContext, request.args as any);
+					connection.write(JSON.stringify(result ?? null));
+				}
+				else {
+					console.warn('[Vue Named Pipe Server] Unknown request type:', request.type);
+				}
 			}
 			else {
-				console.warn('[Vue Named Pipe Server] Unknown request type:', request.type);
+				console.warn('[Vue Named Pipe Server] No project found for:', fileName);
 			}
 			connection.end();
 		});
@@ -118,5 +136,19 @@ function cleanupPipeTable() {
 				fs.writeFileSync(pipeTable, JSON.stringify(table, undefined, 2));
 			}
 		});
+	}
+}
+
+export const projects = new Map<ts.server.Project, {
+	info: ts.server.PluginCreateInfo;
+	files: FileRegistry;
+	vueOptions: VueCompilerOptions;
+}>();
+
+function getProject(fileName: string) {
+	for (const [project, data] of projects) {
+		if (project.containsFile(fileName as ts.server.NormalizedPath)) {
+			return data;
+		}
 	}
 }
