@@ -228,7 +228,11 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 
 			// #3942, https://github.com/microsoft/TypeScript/issues/57633
-			for (const extId of ['svelte.svelte-vscode', 'styled-components.vscode-styled-components']) {
+			for (const extId of [
+				'svelte.svelte-vscode',
+				'styled-components.vscode-styled-components',
+				'Divlo.vscode-styled-jsx-languageserver',
+			]) {
 				const ext = vscode.extensions.getExtension(extId);
 				if (ext) {
 					problems.push({
