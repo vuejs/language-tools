@@ -1,7 +1,7 @@
 import type { VueLanguagePlugin } from '../types';
 import { parse } from '../utils/parseSfc';
 
-const plugin: VueLanguagePlugin = (_ctx) => {
+const plugin: VueLanguagePlugin = _ctx => {
 
 	return {
 

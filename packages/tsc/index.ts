@@ -16,26 +16,24 @@ export function run() {
 			const { configFilePath } = options.options;
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-				: {};
-			const resolvedVueOptions = vue.resolveVueCompilerOptions(vueOptions);
-			const { extensions } = resolvedVueOptions;
+				: vue.resolveVueCompilerOptions({});
 			const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options);
 			if (
-				runExtensions.length === extensions.length
-				&& runExtensions.every(ext => extensions.includes(ext))
+				runExtensions.length === vueOptions.extensions.length
+				&& runExtensions.every(ext => vueOptions.extensions.includes(ext))
 			) {
 				const vueLanguagePlugin = vue.createVueLanguagePlugin(
 					ts,
 					id => id,
 					fileName => fileName === fakeGlobalTypesHolder,
 					options.options,
-					resolvedVueOptions,
+					vueOptions,
 					false,
 				);
 				return [vueLanguagePlugin];
 			}
 			else {
-				runExtensions = extensions;
+				runExtensions = vueOptions.extensions;
 				throw extensionsChangedException;
 			}
 		},

@@ -14,16 +14,19 @@ export async function convertTagName(
 ) {
 
 	const sourceFile = context.language.files.get(uri);
-	if (!sourceFile)
+	if (!sourceFile) {
 		return;
+	}
 
 	const rootCode = sourceFile?.generated?.code;
-	if (!(rootCode instanceof VueGeneratedCode))
+	if (!(rootCode instanceof VueGeneratedCode)) {
 		return;
+	}
 
 	const desc = rootCode.sfc;
-	if (!desc.template)
+	if (!desc.template) {
 		return;
+	}
 
 	const template = desc.template;
 	const document = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
@@ -59,16 +62,19 @@ export async function convertAttrName(
 ) {
 
 	const sourceFile = context.language.files.get(uri);
-	if (!sourceFile)
+	if (!sourceFile) {
 		return;
+	}
 
 	const rootCode = sourceFile?.generated?.code;
-	if (!(rootCode instanceof VueGeneratedCode))
+	if (!(rootCode instanceof VueGeneratedCode)) {
 		return;
+	}
 
 	const desc = rootCode.sfc;
-	if (!desc.template)
+	if (!desc.template) {
 		return;
+	}
 
 	const template = desc.template;
 	const document = context.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
@@ -219,8 +225,9 @@ function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 
 	if (!map.has(sourceFile)) {
 		const getter = computed(() => {
-			if (!(sourceFile instanceof vue.VueGeneratedCode))
+			if (!(sourceFile instanceof vue.VueGeneratedCode)) {
 				return;
+			}
 			const ast = sourceFile.sfc.template?.ast;
 			const tags: Tags = new Map();
 			if (ast) {

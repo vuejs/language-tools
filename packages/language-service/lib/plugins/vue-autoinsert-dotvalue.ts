@@ -1,4 +1,4 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { ServiceContext, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -17,34 +17,40 @@ function getAst(ts: typeof import('typescript'), fileName: string, snapshot: ts.
 
 export function create(
 	ts: typeof import('typescript'),
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
+	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ): ServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
 		create(context): ServicePluginInstance {
+			const tsPluginClient = getTsPluginClient?.(context);
 			let currentReq = 0;
 			return {
 				async provideAutoInsertionEdit(document, position, lastChange) {
 
-					if (!isTsDocument(document))
+					if (!isTsDocument(document)) {
 						return;
+					}
 
-					if (!isCharacterTyping(document, lastChange))
+					if (!isCharacterTyping(document, lastChange)) {
 						return;
+					}
 
 					const req = ++currentReq;
 					// Wait for tsserver to sync
 					await sleep(250);
-					if (req !== currentReq)
+					if (req !== currentReq) {
 						return;
+					}
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.dotValue') ?? true;
-					if (!enabled)
+					if (!enabled) {
 						return;
+					}
 
 					const [code, file] = context.documents.getVirtualCodeByUri(document.uri);
-					if (!file)
+					if (!file) {
 						return;
+					}
 
 					let ast: ts.SourceFile | undefined;
 					let sourceCodeOffset = document.offsetAt(position);
@@ -74,8 +80,9 @@ export function create(
 						ast = getAst(ts, fileName, file.snapshot);
 					}
 
-					if (isBlacklistNode(ts, ast, document.offsetAt(position), false))
+					if (isBlacklistNode(ts, ast, document.offsetAt(position), false)) {
 						return;
+					}
 
 					const props = await tsPluginClient?.getPropertiesAtLocation(fileName, sourceCodeOffset) ?? [];
 					if (props.some(prop => prop === 'value')) {
@@ -162,7 +169,9 @@ export function isBlacklistNode(ts: typeof import('typescript'), node: ts.Node, 
 	else {
 		let _isBlacklistNode = false;
 		node.forEachChild(node => {
-			if (_isBlacklistNode) return;
+			if (_isBlacklistNode) {
+				return;
+			}
 			if (pos >= node.getFullStart() && pos <= node.getEnd()) {
 				if (isBlacklistNode(ts, node, pos, allowAccessDotValue)) {
 					_isBlacklistNode = true;

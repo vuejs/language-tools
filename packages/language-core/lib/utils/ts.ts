@@ -3,7 +3,7 @@ import * as path from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
-	vueOptions: Partial<VueCompilerOptions>;
+	vueOptions: VueCompilerOptions;
 };
 
 export function createParsedCommandLineByJson(
@@ -28,6 +28,7 @@ export function createParsedCommandLineByJson(
 		} catch (err) { }
 	}
 
+	const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
 	const parsed = ts.parseJsonConfigFileContent(
 		json,
 		proxyHost.host,
@@ -35,7 +36,7 @@ export function createParsedCommandLineByJson(
 		{},
 		configFileName,
 		undefined,
-		(vueOptions.extensions ?? ['.vue']).map(extension => ({
+		resolvedVueOptions.extensions.map(extension => ({
 			extension: extension.slice(1),
 			isMixedContent: true,
 			scriptKind: ts.ScriptKind.Deferred,
@@ -49,7 +50,7 @@ export function createParsedCommandLineByJson(
 
 	return {
 		...parsed,
-		vueOptions,
+		vueOptions: resolvedVueOptions,
 	};
 }
 
@@ -74,6 +75,7 @@ export function createParsedCommandLine(
 			} catch (err) { }
 		}
 
+		const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
 		const parsed = ts.parseJsonSourceFileConfigFileContent(
 			config,
 			proxyHost.host,
@@ -81,7 +83,7 @@ export function createParsedCommandLine(
 			{},
 			tsConfigPath,
 			undefined,
-			(vueOptions.extensions ?? ['.vue']).map(extension => ({
+			resolvedVueOptions.extensions.map(extension => ({
 				extension: extension.slice(1),
 				isMixedContent: true,
 				scriptKind: ts.ScriptKind.Deferred,
@@ -95,7 +97,7 @@ export function createParsedCommandLine(
 
 		return {
 			...parsed,
-			vueOptions,
+			vueOptions: resolvedVueOptions,
 		};
 	}
 	catch (err) {
@@ -163,7 +165,9 @@ function getPartialVueCompilerOptions(
 				try {
 					const resolvedPath = resolvePath(pluginPath);
 					if (resolvedPath) {
-						return require(resolvedPath);
+						const plugin = require(resolvedPath);
+						plugin.__moduleName = pluginPath;
+						return plugin;
 					}
 					else {
 						console.warn('[Vue] Load plugin failed:', pluginPath);

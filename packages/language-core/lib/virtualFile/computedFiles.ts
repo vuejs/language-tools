@@ -182,7 +182,7 @@ function computedPluginFiles(
 
 			const { file, snapshot } = _file();
 			const mappings = buildMappings(file.content);
-			let lastValidMapping: typeof mappings[number];
+			let lastValidMapping: typeof mappings[number] | undefined;
 
 			for (const mapping of mappings) {
 				if (mapping.source !== undefined) {

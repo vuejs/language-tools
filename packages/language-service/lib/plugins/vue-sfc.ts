@@ -16,16 +16,15 @@ export function create(): ServicePlugin {
 	return {
 		name: 'vue-sfc',
 		create(context): ServicePluginInstance<Provide> {
-
 			const htmlPlugin = createHtmlService({
 				documentSelector: ['vue'],
-				useCustomDataProviders: false,
+				useDefaultDataProvider: false,
+				getCustomData(context) {
+					sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
+					return [sfcDataProvider];
+				},
 			}).create(context);
 			const htmlLanguageService: html.LanguageService = htmlPlugin.provide['html/languageService']();
-
-			sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
-
-			htmlLanguageService.setDataProviders(false, [sfcDataProvider]);
 
 			return {
 
@@ -33,7 +32,7 @@ export function create(): ServicePlugin {
 
 				provide: {
 					'vue/vueFile': document => {
-						return worker(document, (vueFile) => {
+						return worker(document, vueFile => {
 							return vueFile;
 						});
 					},
@@ -67,7 +66,7 @@ export function create(): ServicePlugin {
 				provideDocumentLinks: undefined,
 
 				provideDocumentSymbols(document) {
-					return worker(document, (vueSourceFile) => {
+					return worker(document, vueSourceFile => {
 
 						const result: vscode.DocumentSymbol[] = [];
 						const descriptor = vueSourceFile.sfc;
@@ -116,10 +115,12 @@ export function create(): ServicePlugin {
 						}
 						for (const style of descriptor.styles) {
 							let name = 'style';
-							if (style.scoped)
+							if (style.scoped) {
 								name += ' scoped';
-							if (style.module)
+							}
+							if (style.module) {
 								name += ' module';
+							}
 							result.push({
 								name,
 								kind: 2 satisfies typeof vscode.SymbolKind.Module,
