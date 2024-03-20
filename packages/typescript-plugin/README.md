@@ -11,7 +11,7 @@ The LSP client must be configured to explicitly enable this plug-in. This is don
     "plugins": [
         {
           "name": "@vue/typescript-plugin",
-          "location": "/usr/local/lib/node_modules/@vue/typescript-plugin", // or "/usr/local/lib/node_modules/@vue/language-server/typescript-plugin",
+          "location": "/usr/local/lib/node_modules/@vue/language-server",
           "languages": ["vue"],
         },
     ],

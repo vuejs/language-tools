@@ -561,6 +561,58 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 "
 `;
 
+exports[`vue-tsc-dts > Input: template-slots/component-define-slots.vue, Output: template-slots/component-define-slots.vue.d.ts 1`] = `
+"import { VNode } from 'vue';
+declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>, Readonly<{
+    default: (props: {
+        num: number;
+    }) => VNode<import("vue").RendererNode, import("vue").RendererElement, {
+        [key: string]: any;
+    }>[];
+    'named-slot': (props: {
+        str: string;
+    }) => VNode<import("vue").RendererNode, import("vue").RendererElement, {
+        [key: string]: any;
+    }>[];
+    vbind: (props: {
+        num: number;
+        str: string;
+    }) => VNode<import("vue").RendererNode, import("vue").RendererElement, {
+        [key: string]: any;
+    }>[];
+    'no-bind': () => VNode<import("vue").RendererNode, import("vue").RendererElement, {
+        [key: string]: any;
+    }>[];
+}> & {
+    default: (props: {
+        num: number;
+    }) => VNode<import("vue").RendererNode, import("vue").RendererElement, {
+        [key: string]: any;
+    }>[];
+    'named-slot': (props: {
+        str: string;
+    }) => VNode<import("vue").RendererNode, import("vue").RendererElement, {
+        [key: string]: any;
+    }>[];
+    vbind: (props: {
+        num: number;
+        str: string;
+    }) => VNode<import("vue").RendererNode, import("vue").RendererElement, {
+        [key: string]: any;
+    }>[];
+    'no-bind': () => VNode<import("vue").RendererNode, import("vue").RendererElement, {
+        [key: string]: any;
+    }>[];
+}>;
+export default _default;
+type __VLS_WithTemplateSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
+"
+`;
+
 exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: template-slots/component-no-script.vue.d.ts 1`] = `
 "declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>, {
     "no-bind"?(_: {}): any;

@@ -16,8 +16,7 @@ export const config = {
 		return _config().get('doctor')!;
 	},
 	get server(): Readonly<{
-		path: null | string;
-		runtime: 'node' | 'bun';
+		hybridMode: boolean;
 		maxOldSpaceSize: number;
 		maxFileSize: number;
 		diagnosticModel: 'push' | 'pull';
@@ -48,7 +47,6 @@ export const config = {
 	},
 	get complete(): Readonly<{
 		casing: {
-			status: boolean;
 			props: 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
 			tags: 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
 		};

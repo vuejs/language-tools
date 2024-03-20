@@ -10,7 +10,7 @@ export async function convertTagName(
 	context: ServiceContext,
 	uri: string,
 	casing: TagNameCasing,
-	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client'),
+	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ) {
 
 	const sourceFile = context.language.files.get(uri);
@@ -31,7 +31,7 @@ export async function convertTagName(
 	const template = desc.template;
 	const document = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient.getComponentNames(rootCode.fileName) ?? [];
+	const components = await tsPluginClient?.getComponentNames(rootCode.fileName) ?? [];
 	const tags = getTemplateTagsAndAttrs(rootCode);
 
 	for (const [tagName, { offsets }] of tags) {
@@ -58,7 +58,7 @@ export async function convertAttrName(
 	context: ServiceContext,
 	uri: string,
 	casing: AttrNameCasing,
-	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client'),
+	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
 ) {
 
 	const sourceFile = context.language.files.get(uri);
@@ -79,13 +79,13 @@ export async function convertAttrName(
 	const template = desc.template;
 	const document = context.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient.getComponentNames(rootCode.fileName) ?? [];
+	const components = await tsPluginClient?.getComponentNames(rootCode.fileName) ?? [];
 	const tags = getTemplateTagsAndAttrs(rootCode);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
 		if (componentName) {
-			const props = await tsPluginClient.getComponentProps(rootCode.fileName, componentName) ?? [];
+			const props = await tsPluginClient?.getComponentProps(rootCode.fileName, componentName) ?? [];
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenateAttr(prop) === attrName);
 				if (propName) {

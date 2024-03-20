@@ -1,10 +1,11 @@
 import type { Connection } from '@volar/language-server';
-import { createConnection, createServer, createSimpleProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
+import { createConnection, createServer, createSimpleProjectProviderFactory, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
 import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
-import { ServiceEnvironment, convertAttrName, convertTagName, createVueServicePlugins, detect } from '@vue/language-service';
+import { ServiceEnvironment, convertAttrName, convertTagName, createDefaultGetTsPluginClient, createVueServicePlugins, detect } from '@vue/language-service';
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './lib/protocol';
 import type { VueInitializationOptions } from './lib/types';
 import * as tsPluginClient from '@vue/typescript-plugin/lib/client';
+import { searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
 import { GetConnectedNamedPipeServerRequest } from './lib/protocol';
 
 export const connection: Connection = createConnection();
@@ -14,12 +15,14 @@ export const server = createServer(connection);
 const envToVueOptions = new WeakMap<ServiceEnvironment, VueCompilerOptions>();
 
 let tsdk: ReturnType<typeof loadTsdkByPath>;
+let getTsPluginClient: ReturnType<typeof createDefaultGetTsPluginClient>;
 
 connection.listen();
 
 connection.onInitialize(async params => {
 
 	const options: VueInitializationOptions = params.initializationOptions;
+	const hybridMode = options.vue?.hybridMode ?? true;
 
 	tsdk = loadTsdkByPath(options.typescript.tsdk, params.locale);
 
@@ -31,17 +34,36 @@ connection.onInitialize(async params => {
 		}
 	}
 
+	if (hybridMode) {
+		getTsPluginClient = () => tsPluginClient;
+	}
+	else {
+		getTsPluginClient = createDefaultGetTsPluginClient(tsdk.typescript, env => envToVueOptions.get(env)!);
+	}
+
 	const result = await server.initialize(
 		params,
-		createSimpleProjectProviderFactory(),
+		hybridMode
+			? createSimpleProjectProviderFactory()
+			: createTypeScriptProjectProviderFactory(tsdk.typescript, tsdk.diagnosticMessages),
 		{
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
 			getServicePlugins() {
-				return createVueServicePlugins(tsdk.typescript, env => envToVueOptions.get(env)!, tsPluginClient);
+				return createVueServicePlugins(
+					tsdk.typescript,
+					env => envToVueOptions.get(env)!,
+					getTsPluginClient,
+					hybridMode,
+				);
 			},
 			async getLanguagePlugins(serviceEnv, projectContext) {
-				const [commandLine, vueOptions] = await parseCommandLine();
-				const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
+				const commandLine = await parseCommandLine();
+				const vueOptions = commandLine?.vueOptions ?? resolveVueCompilerOptions({});
+				for (const ext of vueFileExtensions) {
+					if (vueOptions.extensions.includes(`.${ext}`)) {
+						vueOptions.extensions.push(`.${ext}`);
+					}
+				}
 				const vueLanguagePlugin = createVueLanguagePlugin(
 					tsdk.typescript,
 					serviceEnv.typescript!.uriToFileName,
@@ -60,18 +82,17 @@ connection.onInitialize(async params => {
 						}
 					},
 					commandLine?.options ?? {},
-					resolvedVueOptions,
+					vueOptions,
 					options.codegenStack,
 				);
 
-				envToVueOptions.set(serviceEnv, resolvedVueOptions);
+				envToVueOptions.set(serviceEnv, vueOptions);
 
 				return [vueLanguagePlugin];
 
 				async function parseCommandLine() {
 
 					let commandLine: ParsedCommandLine | undefined;
-					let vueOptions: Partial<VueCompilerOptions> = {};
 
 					if (projectContext.typescript) {
 
@@ -89,23 +110,16 @@ connection.onInitialize(async params => {
 						}
 					}
 
-					if (commandLine) {
-						vueOptions = commandLine.vueOptions;
-					}
-					vueOptions.extensions = [
-						...vueOptions.extensions ?? ['.vue'],
-						...vueFileExtensions.map(ext => '.' + ext),
-					];
-					vueOptions.extensions = [...new Set(vueOptions.extensions)];
-
-					return [commandLine, vueOptions] as const;
+					return commandLine;
 				}
 			},
 		},
 	);
 
-	// handle by tsserver + @vue/typescript-plugin
-	result.capabilities.semanticTokensProvider = undefined;
+	if (hybridMode) {
+		// handle by tsserver + @vue/typescript-plugin
+		result.capabilities.semanticTokensProvider = undefined;
+	}
 
 	return result;
 });
@@ -125,26 +139,26 @@ connection.onRequest(ParseSFCRequest.type, params => {
 connection.onRequest(DetectNameCasingRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return await detect(languageService.context, params.textDocument.uri, tsPluginClient);
+		return await detect(languageService.context, params.textDocument.uri, getTsPluginClient(languageService.context));
 	}
 });
 
 connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return await convertTagName(languageService.context, params.textDocument.uri, params.casing, tsPluginClient);
+		return await convertTagName(languageService.context, params.textDocument.uri, params.casing, getTsPluginClient(languageService.context));
 	}
 });
 
 connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return await convertAttrName(languageService.context, params.textDocument.uri, params.casing, tsPluginClient);
+		return await convertAttrName(languageService.context, params.textDocument.uri, params.casing, getTsPluginClient(languageService.context));
 	}
 });
 
 connection.onRequest(GetConnectedNamedPipeServerRequest.type, async fileName => {
-	const server = await tsPluginClient.searchNamedPipeServerForFile(fileName);
+	const server = await searchNamedPipeServerForFile(fileName);
 	if (server) {
 		return server;
 	}

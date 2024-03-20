@@ -1,14 +1,11 @@
-import { getProject } from '../utils';
-
-export function getQuickInfoAtPosition(fileName: string, position: number) {
-
-	const match = getProject(fileName);
-	if (!match) {
-		return;
-	}
-
-	const { info } = match;
-	const languageService = info.languageService;
-
+import type * as ts from 'typescript';
+export function getQuickInfoAtPosition(
+	this: {
+		languageService: ts.LanguageService;
+	},
+	fileName: string,
+	position: number,
+) {
+	const { languageService } = this;
 	return languageService.getQuickInfoAtPosition(fileName, position);
 }
