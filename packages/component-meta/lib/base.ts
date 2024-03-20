@@ -537,7 +537,7 @@ function createSchemaResolvers(
 		const propType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode));
 		const signatures = propType.getCallSignatures();
 		const paramType = signatures[0].parameters[0];
-		const subtype = paramType ?  typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode) : typeChecker.getAnyType();
+		const subtype = paramType ? typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode) : typeChecker.getAnyType();
 		let schema: PropertyMetaSchema;
 		let declarations: Declaration[];
 
