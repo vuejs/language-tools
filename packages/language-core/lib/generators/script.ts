@@ -211,19 +211,25 @@ const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 function __VLS_getVForSourceType(source: number): [number, number, number][];
 function __VLS_getVForSourceType(source: string): [string, number, number][];
 function __VLS_getVForSourceType<T extends any[]>(source: T): [
-	T[number], // item
-	number, // key
-	number, // index
+	item: T[number],
+	key: number,
+	index: number,
 ][];
 function __VLS_getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
-	T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never, // item 
-	number, // key
-	undefined, // index
+	item: T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never, 
+	key: number,
+	index: undefined,
+][];
+// #3845
+function __VLS_getVForSourceType<T extends number | { [Symbol.iterator](): Iterator<any> }>(source: T): [
+	item: number | (Exclude<T, number> extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never), 
+	key: number,
+	index: undefined,
 ][];
 function __VLS_getVForSourceType<T>(source: T): [
-	T[keyof T], // item
-	keyof T, // key
-	number, // index
+	item: T[keyof T],
+	key: keyof T,
+	index: number,
 ][];
 
 // @ts-ignore
