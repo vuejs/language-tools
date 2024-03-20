@@ -13,7 +13,29 @@ export interface NamedPipeServer {
 
 const { version } = require('../package.json');
 
-export const pipeTable = path.join(os.tmpdir(), `vue-tsp-table-${version}.json`);
+const pipeTableFile = path.join(os.tmpdir(), `vue-tsp-table-${version}.json`);
+
+export function readPipeTable() {
+	if (!fs.existsSync(pipeTableFile)) {
+		return [];
+	}
+	try {
+		const servers: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTableFile, 'utf8'));
+		return servers;
+	} catch {
+		fs.unlinkSync(pipeTableFile);
+		return [];
+	}
+}
+
+export function updatePipeTable(servers: NamedPipeServer[]) {
+	if (servers.length === 0) {
+		fs.unlinkSync(pipeTableFile);
+	}
+	else {
+		fs.writeFileSync(pipeTableFile, JSON.stringify(servers, undefined, 2));
+	}
+}
 
 export function connect(path: string) {
 	return new Promise<net.Socket | undefined>(resolve => {
@@ -28,10 +50,7 @@ export function connect(path: string) {
 }
 
 export async function searchNamedPipeServerForFile(fileName: string) {
-	if (!fs.existsSync(pipeTable)) {
-		return;
-	}
-	const servers: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
+	const servers = readPipeTable();
 	const configuredServers = servers
 		.filter(item => item.serverKind === 1 satisfies ts.server.ProjectKind.Configured);
 	const inferredServers = servers

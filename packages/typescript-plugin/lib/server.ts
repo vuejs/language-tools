@@ -5,7 +5,7 @@ import { collectExtractProps } from './requests/collectExtractProps';
 import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from './requests/componentInfos';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
-import { NamedPipeServer, connect, pipeTable } from './utils';
+import { NamedPipeServer, connect, readPipeTable, updatePipeTable } from './utils';
 import type { FileRegistry, VueCompilerOptions } from '@vue/language-core';
 
 export interface Request {
@@ -103,16 +103,13 @@ export function startNamedPipeServer(
 
 	cleanupPipeTable();
 
-	if (!fs.existsSync(pipeTable)) {
-		fs.writeFileSync(pipeTable, JSON.stringify([] satisfies NamedPipeServer[]));
-	}
-	const table: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
+	const table = readPipeTable();
 	table.push({
 		path: pipeFile,
 		serverKind,
 		currentDirectory,
 	});
-	fs.writeFileSync(pipeTable, JSON.stringify(table, undefined, 2));
+	updatePipeTable(table);
 
 	try {
 		fs.unlinkSync(pipeFile);
@@ -122,18 +119,15 @@ export function startNamedPipeServer(
 }
 
 function cleanupPipeTable() {
-	if (!fs.existsSync(pipeTable)) {
-		return;
-	}
-	for (const server of JSON.parse(fs.readFileSync(pipeTable, 'utf8'))) {
+	for (const server of readPipeTable()) {
 		connect(server.path).then(client => {
 			if (client) {
 				client.end();
 			}
 			else {
-				let table: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTable, 'utf8'));
+				let table: NamedPipeServer[] = readPipeTable();
 				table = table.filter(item => item.path !== server.path);
-				fs.writeFileSync(pipeTable, JSON.stringify(table, undefined, 2));
+				updatePipeTable(table);
 			}
 		});
 	}
