@@ -1,12 +1,11 @@
 {
 	"name": "vue-tsc",
-	"version": "1.8.27",
-	"main": "out/index.js",
+	"version": "2.0.6",
 	"license": "MIT",
 	"files": [
 		"bin",
-		"out/**/*.js",
-		"out/**/*.d.ts"
+		"**/*.js",
+		"**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",
@@ -17,8 +16,8 @@
 		"vue-tsc": "./bin/vue-tsc.js"
 	},
 	"dependencies": {
-		"@volar/typescript": "2.0.0-alpha.14",
-		"@vue/language-core": "1.8.27",
+		"@volar/typescript": "~2.1.2",
+		"@vue/language-core": "2.0.6",
 		"semver": "^7.5.4"
 	},
 	"peerDependencies": {

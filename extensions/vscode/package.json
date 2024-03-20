@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "1.8.27",
+	"version": "2.0.6",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -14,8 +14,8 @@
 		"url": "https://github.com/sponsors/johnsoncodehk"
 	},
 	"icon": "images/icon.png",
-	"displayName": "Vue Language Features (Volar)",
-	"description": "Language support for Vue 3",
+	"displayName": "Vue - Official",
+	"description": "Language Support for Vue",
 	"author": "johnsoncodehk",
 	"publisher": "Vue",
 	"engines": {
@@ -32,15 +32,6 @@
 		"virtualWorkspaces": {
 			"supported": "limited",
 			"description": "Install https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.vscode-typescript-web to have IntelliSense for .vue files in Web IDE."
-		},
-		"untrustedWorkspaces": {
-			"supported": "limited",
-			"description": "%volar.workspaceTrust.description%",
-			"restrictedConfigurations": [
-				"typescript.tsdk",
-				"typescript.tsserver.pluginPaths",
-				"typescript.npm"
-			]
 		}
 	},
 	"contributes": {
@@ -68,56 +59,6 @@
 			{
 				"fileMatch": "jsconfig.*.json",
 				"url": "./dist/schemas/vue-tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig-*.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig.*.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			},
-			{
-				"fileMatch": "jsconfig.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			},
-			{
-				"fileMatch": "jsconfig-*.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			},
-			{
-				"fileMatch": "jsconfig.*.json",
-				"url": "./dist/schemas/vue-tsconfig.deprecated.schema.json"
-			}
-		],
-		"semanticTokenScopes": [
-			{
-				"language": "vue",
-				"scopes": {
-					"component": [
-						"support.class.component.vue"
-					]
-				}
-			},
-			{
-				"language": "markdown",
-				"scopes": {
-					"component": [
-						"support.class.component.vue"
-					]
-				}
-			},
-			{
-				"language": "html",
-				"scopes": {
-					"component": [
-						"support.class.component.vue"
-					]
-				}
 			}
 		],
 		"languages": [
@@ -143,18 +84,6 @@
 			{
 				"id": "plaintext",
 				"configuration": "./languages/sfc-template-language-configuration.json"
-			},
-			{
-				"id": "vue-injection-markdown"
-			},
-			{
-				"id": "vue-directives"
-			},
-			{
-				"id": "vue-interpolations"
-			},
-			{
-				"id": "vue-sfc-style-variable-injection"
 			}
 		],
 		"typescriptServerPlugins": [
@@ -208,7 +137,6 @@
 				]
 			},
 			{
-				"language": "vue-injection-markdown",
 				"scopeName": "markdown.vue.codeblock",
 				"path": "./syntaxes/markdown-vue.json",
 				"injectTo": [
@@ -244,7 +172,6 @@
 				}
 			},
 			{
-				"language": "vue-directives",
 				"scopeName": "vue.directives",
 				"path": "./syntaxes/vue-directives.json",
 				"injectTo": [
@@ -255,7 +182,6 @@
 				]
 			},
 			{
-				"language": "vue-interpolations",
 				"scopeName": "vue.interpolations",
 				"path": "./syntaxes/vue-interpolations.json",
 				"injectTo": [
@@ -266,7 +192,6 @@
 				]
 			},
 			{
-				"language": "vue-sfc-style-variable-injection",
 				"scopeName": "vue.sfc.style.variable.injection",
 				"path": "./syntaxes/vue-sfc-style-variable-injection.json",
 				"injectTo": [
@@ -281,69 +206,8 @@
 		],
 		"configuration": {
 			"type": "object",
-			"title": "Volar",
+			"title": "Vue",
 			"properties": {
-				"volar.format.initialIndent": {
-					"type": "object",
-					"description": "Whether to have initial indent.",
-					"default": {
-						"html": true
-					},
-					"properties": {
-						"html": {
-							"type": "boolean",
-							"default": true
-						},
-						"typescript": {
-							"type": "boolean",
-							"default": false
-						},
-						"javascript": {
-							"type": "boolean",
-							"default": false
-						},
-						"typescriptreact": {
-							"type": "boolean",
-							"default": false
-						},
-						"javascriptreact": {
-							"type": "boolean",
-							"default": false
-						},
-						"css": {
-							"type": "boolean",
-							"default": false
-						},
-						"scss": {
-							"type": "boolean",
-							"default": false
-						},
-						"less": {
-							"type": "boolean",
-							"default": false
-						},
-						"sass": {
-							"type": "boolean",
-							"default": false
-						},
-						"jade": {
-							"type": "boolean",
-							"default": false
-						},
-						"json": {
-							"type": "boolean",
-							"default": false
-						},
-						"jsonc": {
-							"type": "boolean",
-							"default": false
-						},
-						"json5": {
-							"type": "boolean",
-							"default": false
-						}
-					}
-				},
 				"vue.trace.server": {
 					"scope": "window",
 					"type": "string",
@@ -355,22 +219,10 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"vue.server.path": {
-					"type": [
-						"string",
-						"null"
-					],
-					"default": null,
-					"description": "Path to node_modules/vue-language-server/bin/vue-language-server.js."
-				},
-				"vue.server.runtime": {
-					"type": "string",
-					"enum": [
-						"node",
-						"bun"
-					],
-					"default": "node",
-					"description": "Vue Language Server runtime."
+				"vue.server.hybridMode": {
+					"type": "boolean",
+					"default": false,
+					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
 				},
 				"vue.server.maxFileSize": {
 					"type": "number",
@@ -406,23 +258,13 @@
 					"default": null,
 					"description": "Set --max-old-space-size option on server process. If you have problem on frequently \"Request textDocument/** failed.\" error, try setting higher memory(MB) on it."
 				},
-				"vue.server.reverseConfigFilePriority": {
-					"type": "boolean",
-					"default": false,
-					"description": "Reverse priority for tsconfig pickup."
-				},
 				"vue.server.additionalExtensions": {
 					"type": "array",
 					"items": {
 						"type": "string"
 					},
-					"default": [ ],
+					"default": [],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
-				},
-				"vue.server.fullCompletionList": {
-					"type": "boolean",
-					"default": false,
-					"description": "Enable this option if you want to get complete CompletionList in language client. (Disable for better performance)"
 				},
 				"vue.doctor.status": {
 					"type": "boolean",
@@ -498,16 +340,6 @@
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
 				},
-				"vue.complete.casing.status": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show name casing in status bar."
-				},
-				"vue.complete.normalizeComponentImportName": {
-					"type": "boolean",
-					"default": true,
-					"description": "Normalize import name for auto import. (\"myCompVue\" -> \"MyComp\")"
-				},
 				"vue.autoInsert.parentheses": {
 					"type": "boolean",
 					"default": true,
@@ -537,29 +369,41 @@
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for component options wrapper for type support."
+				},
+				"vue.inlayHints.vBindShorthand": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for v-bind shorthand."
+				},
+				"vue.format.template.initialIndent": {
+					"type": "boolean",
+					"default": true
+				},
+				"vue.format.style.initialIndent": {
+					"type": "boolean",
+					"default": false
+				},
+				"vue.format.script.initialIndent": {
+					"type": "boolean",
+					"default": false
 				}
 			}
 		},
 		"commands": [
 			{
-				"command": "volar.action.doctor",
+				"command": "vue.action.doctor",
 				"title": "Doctor",
-				"category": "Volar"
+				"category": "Vue"
 			},
 			{
-				"command": "volar.action.writeVirtualFiles",
+				"command": "vue.action.writeVirtualFiles",
 				"title": "Write Virtual Files",
-				"category": "Volar (Debug)"
+				"category": "Vue (Debug)"
 			},
 			{
-				"command": "volar.action.showComponentMeta",
-				"title": "Show Component Meta",
-				"category": "Volar"
-			},
-			{
-				"command": "volar.action.splitEditors",
+				"command": "vue.action.splitEditors",
 				"title": "Split <script>, <template>, <style> Editors",
-				"category": "Volar",
+				"category": "Vue",
 				"icon": "images/split-editors.png"
 			}
 		],
@@ -594,21 +438,21 @@
 					"when": "editorLangId == vue"
 				},
 				{
-					"command": "volar.action.doctor",
-					"when": "volar.activated"
+					"command": "vue.action.doctor",
+					"when": "vue.activated"
 				},
 				{
-					"command": "volar.action.writeVirtualFiles",
-					"when": "volar.activated"
+					"command": "vue.action.writeVirtualFiles",
+					"when": "vue.activated"
 				},
 				{
-					"command": "volar.action.splitEditors",
+					"command": "vue.action.splitEditors",
 					"when": "editorLangId == vue"
 				}
 			],
 			"editor/title": [
 				{
-					"command": "volar.action.splitEditors",
+					"command": "vue.action.splitEditors",
 					"when": "resourceLangId == vue && config.vue.splitEditors.icon",
 					"group": "navigation"
 				}
@@ -643,14 +487,14 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "2.0.0-alpha.14",
-		"@vue/language-core": "1.8.27",
-		"@vue/language-server": "1.8.27",
+		"@volar/vscode": "~2.1.2",
+		"@vue/language-core": "2.0.6",
+		"@vue/language-server": "2.0.6",
+		"@vue/typescript-plugin": "2.0.6",
 		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"semver": "^7.5.4",
-		"typescript-vue-plugin": "1.8.27",
 		"vsce": "latest",
 		"vscode-languageclient": "^9.0.1"
 	}

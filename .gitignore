@@ -6,3 +6,10 @@ node_modules
 .vscode-test-web
 extensions/*/meta.json
 extensions/*/stats.html
+
+packages/*/*.d.ts
+packages/*/*.js
+packages/*/*.map
+packages/*/lib/**/*.d.ts
+packages/*/lib/**/*.js
+packages/*/lib/**/*.map

@@ -13,7 +13,7 @@ Vue Language Features is a language support extension built for Vue, Vitepress a
 - [create-vue](https://github.com/vuejs/create-vue)
 - [Vitesse](https://github.com/antfu/vitesse)
 - [petite](https://github.com/JessicaSachs/petite)
-- [vue3-eslint-stylelint-demo](https://github.com/sethidden/vue3-eslint-stylelint-demo) (Volar + ESLint + stylelint + husky)
+
 - [volar-starter](https://github.com/johnsoncodehk/volar-starter) (For bug report and experiment features testing)
 
 ## Usage
@@ -195,8 +195,10 @@ Finally you need to make VS Code recognize your new extension and automatically 
 
 <p align="center">
 	<span>
-		<a href="https://stackblitz.com/"><img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" /></a>
-		<h4 align="center">Just click, and start coding.</h4>
+		<a href="https://stackblitz.com/">
+			<img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" />
+			<h4 align="center">Boot a fresh environment in milliseconds.</h4>
+		</a>
 	</span>
 </p>
 <br />

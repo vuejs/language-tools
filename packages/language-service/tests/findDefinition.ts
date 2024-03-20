@@ -17,7 +17,7 @@ for (const dirName of testDirs) {
 		for (const file in inputFiles) {
 
 			const filePath = path.join(dir, file);
-			const uri = tester.serviceEnv.typescript.fileNameToUri(filePath);
+			const uri = tester.serviceEnv.typescript!.fileNameToUri(filePath);
 			const fileText = inputFiles[file];
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findActions(fileText);
@@ -41,7 +41,7 @@ for (const dirName of testDirs) {
 					expect(locations).toBeDefined();
 
 					const location = locations?.find(loc =>
-						loc.targetUri === tester.serviceEnv.typescript.fileNameToUri(targetFile)
+						loc.targetUri === tester.serviceEnv.typescript!.fileNameToUri(targetFile)
 						&& targetDocument.offsetAt(loc.targetSelectionRange.start) === action.targeRange.start
 						&& targetDocument.offsetAt(loc.targetSelectionRange.end) === action.targeRange.end
 					);

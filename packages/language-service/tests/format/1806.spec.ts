@@ -40,10 +40,8 @@ export { }
 </style>
 	`.trim(),
 	settings: {
-		'volar.format.initialIndent': {
-			html: false,
-			javascript: true,
-			css: true
-		}
+		'vue.format.template.initialIndent': false,
+		'vue.format.script.initialIndent': true,
+		'vue.format.style.initialIndent': true,
 	},
 });

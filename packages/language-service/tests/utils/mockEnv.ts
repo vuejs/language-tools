@@ -7,7 +7,7 @@ const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/')
 const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
 
 export function createMockServiceEnv(
-	rootUri: URI,
+	rootUri: string,
 	getSettings = () => ({} as any)
 ): ServiceEnvironment {
 	return {

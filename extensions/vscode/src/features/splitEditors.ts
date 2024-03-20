@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
-import { BaseLanguageClient } from 'vscode-languageclient';
 import { ParseSFCRequest } from '@vue/language-server';
+import * as vscode from 'vscode';
+import type { BaseLanguageClient } from 'vscode-languageclient';
 import { config } from '../config';
 
 type SFCBlock = ParseSFCRequest.ResponseType['descriptor']['customBlocks'][number];
@@ -9,7 +9,7 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 
 	const getDocDescriptor = useDocDescriptor();
 
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.splitEditors', onSplit));
+	context.subscriptions.push(vscode.commands.registerCommand('vue.action.splitEditors', onSplit));
 
 	async function onSplit() {
 

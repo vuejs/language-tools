@@ -1,63 +1,139 @@
 # Changelog
 
-<table>
-	<tbody>
-		<tr>
-			<td align="center" colspan="6">
-				<br><a href="https://stackblitz.com/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png"
-						height="80" /></a>
-				<br><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a>
-				<br>In 2021 <a href="https://blog.stackblitz.com/posts/introducing-webcontainers/">we announced
-					WebContainers</a>, a novel WebAssembly-based operating system which enables Node.js to run entirely
-				inside the browser. Over the last two years, millions of developers have used WebContainers each month
-				as it powers, among others, the StackBlitz editor.
-			</td>
-		</tr>
-		<tr>
-			<td align="center" colspan="6"><b>Sponsors</b></td>
-		</tr>
-		<tr>
-			<td align="center"><a href="https://www.prefect.io/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/prefect.svg"
-						height="40" /></a></td>
-			<td align="center" colspan="5">
-				<a href="https://nuxt.com/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/nuxt.svg"
-						height="60" /></a>
-				<br>The Intuitive Vue Framework
-			</td>
-		</tr>
-		<tr>
-			<td align="center" colspan="5">
-				<a href="https://vuejs.org/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/vue.png"
-						height="80" /></a>
-				<br>The Progressive JavaScript Framework
-			</td>
-			<td align="center"><a href="https://www.programmier.bar/"><img src="https://github.com/programmierbar.png"
-						height="60" /></a></td>
-		</tr>
-		<tr>
-			<td align="center"><a href="https://www.leniolabs.com/"><img src="https://github.com/leniolabs.png"
-						height="60" /></a></td>
-			<td align="center" colspan="5">
-				Support us via
-				<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
-				or
-				<a href="https://opencollective.com/volarjs">Open Collective</a>
-			</td>
-		</tr>
-		<tr>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-		</tr>
-	</tbody>
-</table>
+## 2.0.6 (2024/3/7)
+
+> [!IMPORTANT] 
+> If the TypeScript language server crashes since 2.0, please try using VSCode Insiders and install [JavaScript and TypeScript Nightly](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-next), or temporarily downgrade to 1.8.27.\
+> Issue: https://github.com/vuejs/language-tools/issues/3962
+>
+> If false positive errors occur, please try disabling unrelated extensions in the Vue workspace.\
+> Issue: https://github.com/vuejs/language-tools/issues/3942
+
+### Fixes
+
+- **language-core:** use local variables in v-bind shorthand (#4017) - thanks @so1ve
+- **language-core:** sfc folding end position failed to mapping (#4038) - thanks @so1ve
+- **language-service:** remove `extraLiners` option for formatting (#3943)
+- **language-service:** bump `volar-service-typescript` for fix jsx formatting (#3949)
+- **language-service:** bump `@volar/typescript` for fix 2.0.5 auto-complete performance regression (#4024)
+
+### Refactors
+
+- **vscode:** rename `vue.inlayHints.vbindShorthand` setting to `vue.inlayHints.vBindShorthand` (#3995) - thanks @l4dybird
+
+## 2.0.5 (2024/3/5)
+
+### Features
+
+- **language-core:** support `v-bind` shorthand (#3990) - thanks @so1ve
+- **language-service:** support inlay hints for `v-bind` shorthand (#3990) - thanks @so1ve
+- **vscode:** prompt to disable Svelte extension in Vue workspace to avoid conflicts
+
+### Fixes
+
+- **typescript-plugin:** fault tolerance for named pipe server data
+- **language-core:** avoid `globalTypesHolder` being specified from a `node_modules` file (#3990)
+- **language-core:** fault tolerance for plugin creation
+- **language-plugin-pug:** failed to load due to an invalid require path (#3930)
+- **typescript-plugin:** custom extensions do not work (#3977)
+- **language-service:** html custom data not working (#3975)
+
+### Refactors
+
+- **typescript-plugin** add README (#3974) - thanks @WhyNotHugo
+- **component-meta** update demo (#3994) - thanks @zzfn
+
+## 2.0.4 (2024/3/4)
+
+### Features
+
+- **vscode:** report requires TSDK version in doctor
+
+### Fixes
+
+- **typescript-plugin:** JSON parsing error when server data length > 8192 (#3961)
+
+## 2.0.3 (2024/3/3)
+
+### Features
+
+- **vscode:** identify #3942 in doctor
+
+### Fixes
+
+- **vscode:** compatible with VSCode 1.87.0
+- **vscode:** search "TypeScript and JavaScript Language Features" with id (#3932)
+- **typescript-plugin:** more reliable connection to named pipe server (#3941)
+
+### Refactors
+
+- **language-service:** dependency injection typescript plugin (#3994)
+
+## 2.0.2 (2024/3/2)
+
+### Fixes
+
+- **vscode:** fix random `Cannot access 'i' before initialization` errors
+- **typescript-plugin:** `vue-tsp-table.json` path is invalid in windows
+
+## 2.0.1 (2024/3/2)
+
+### Fixes
+
+- npm release does not include files (#3919)
+
+## 2.0.0 (2024/3/2)
+
+### Features
+
+- Hybrid Mode
+	- Takeover Mode has been deprecated. The extension now has the same performance as Takeover Mode by default.
+	- TypeScript language support has been moved from Vue language server to TypeScript plugin (#3788)
+	- Integrated all TypeScript editor features
+	- Warn when internal TypeScript extension is disabled or "TypeScript Vue Plugin" extension is installed
+	- Migrated to named pipe server using TypeScript LanguageService (#3908, #3916)
+	- `typescript.tsdk` duplicate registration errors are no longer reported
+	- **language-service:** reimplemented component tag semantic tokens in TypeScript plugin (#3915)
+	- **language-service:** reimplemented auto-import patching in TypeScript plugin (#3917)
+	- **language-service:** ensured tsserver readiness when requesting auto insert `.value` (#3914)
+- Upgraded to Volar 2.0 and 2.1 (#3736, #3906)
+	- **vscode:** extension now compatible with [Volar Labs](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volarjs-labs) v2
+	- **vscode:** removed `volar.format.initialIndent` option, replaced with 3 new options:
+		- `vue.format.template.initialIndent`
+		- `vue.format.script.initialIndent`
+		- `vue.format.style.initialIndent`
+	- **language-server:** `ignoreTriggerCharacters`, `reverseConfigFilePriority` and `fullCompletionList` options are no longer supported
+- Supported Component Drag and Drop Import (#3692)
+- **tsc:** supported `vueCompilerOptions.extensions` option (#3800)
+- **language-core:** achieved compatibility with Vue 3.4 type changes (#3860)
+
+### Fixes
+
+- **vscode:** prevented reading undefined properties in non-VS Code editors (#3836)
+- **vscode:** prevented extension activation with TS files
+- **vscode:** corrected trace server ID
+- **language-core:** implemented emit codegen for defineModel (#3895)
+- **language-core:** addressed transition type incompatibility with Vue 2.7.16 (#3882)
+- **language-core:** excluded vue directive syntax injection in Angular bindings (#3891)
+- **component-type-helpers:** resolved inference issue for Vue 3.4.20 functional component
+
+### Refactors
+
+- Renamed "Volar Language Features (Volar)" extension to "Vue - Official"
+- "TypeScript Vue Plugin" extension has been deprecated
+- Relocated source scripts from `src` to `lib` (#3913)
+- Replaced `typescript/lib/tsserverlibrary` imports with `typescript`
+- **language-core:** implemented codegen based on Generator (#3778)
+- **language-core:** generated global types in a single virtual file (#3803)
+- **language-core:** implemented plugin API v2 (#3918)
+- **language-core:** ignored nested codeblocks in markdown file (#3839)
+- **language-core:** removed `experimentalAdditionalLanguageModules` and deprecated APIs (#3907)
+- **language-service:** made service plugins independent of project context
+- **language-server:** `volar.config.js` is no longer supported
+- **component-meta:** renamed APIs
+- **typescript-plugin:** renamed package to `@vue/typescript-plugin` (#3910)
+- **tsc:** rewritten based on first-party TS API and no longer relies on TypeScript module (#3795)
+- **tsc:** deprecated hooks API (#3793)
 
 ## 1.8.27 (2023/12/26)
 

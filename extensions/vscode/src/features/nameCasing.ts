@@ -7,13 +7,16 @@ import { config } from '../config';
 export const attrNameCasings = new Map<string, AttrNameCasing>();
 export const tagNameCasings = new Map<string, TagNameCasing>();
 
-export async function activate(_context: vscode.ExtensionContext, client: BaseLanguageClient) {
+export async function activate(_context: vscode.ExtensionContext, client: BaseLanguageClient, selector: vscode.DocumentSelector) {
 
 	await client.start();
 
 	const disposes: vscode.Disposable[] = [];
-	const statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	statusBar.command = 'volar.action.nameCasing';
+	const statusBar = vscode.languages.createLanguageStatusItem('vue-name-casing', selector);
+	statusBar.command = {
+		title: 'Open Menu',
+		command: 'vue.action.nameCasing',
+	};
 
 	update(vscode.window.activeTextEditor?.document);
 
@@ -29,7 +32,7 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 		attrNameCasings.delete(doc.uri.toString());
 		tagNameCasings.delete(doc.uri.toString());
 	}));
-	disposes.push(vscode.commands.registerCommand('volar.action.nameCasing', async () => {
+	disposes.push(vscode.commands.registerCommand('vue.action.nameCasing', async () => {
 
 		if (!vscode.window.activeTextEditor?.document) return;
 
@@ -132,12 +135,9 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 
 	async function update(document: vscode.TextDocument | undefined) {
 		if (
-			config.complete.casing.status
-			&& (
-				document?.languageId === 'vue'
-				|| (config.server.vitePress.supportMdFile && document?.languageId === 'markdown')
-				|| (config.server.petiteVue.supportHtmlFile && document?.languageId === 'html')
-			)
+			document?.languageId === 'vue'
+			|| (config.server.vitePress.supportMdFile && document?.languageId === 'markdown')
+			|| (config.server.petiteVue.supportHtmlFile && document?.languageId === 'html')
 		) {
 			let detected: Awaited<ReturnType<typeof detect>> | undefined;
 			let attrNameCasing = attrNameCasings.get(document.uri.toString());
@@ -187,10 +187,6 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 			}
 
 			updateStatusBarText();
-			statusBar.show();
-		}
-		else {
-			statusBar.hide();
 		}
 	}
 

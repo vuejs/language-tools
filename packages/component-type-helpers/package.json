@@ -1,10 +1,10 @@
 {
 	"name": "vue-component-type-helpers",
-	"version": "1.8.27",
+	"version": "2.0.6",
 	"license": "MIT",
 	"files": [
-		"*.js",
-		"*.d.ts"
+		"**/*.js",
+		"**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",

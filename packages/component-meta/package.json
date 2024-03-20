@@ -1,11 +1,10 @@
 {
 	"name": "vue-component-meta",
-	"version": "1.8.27",
-	"main": "out/index.js",
+	"version": "2.0.6",
 	"license": "MIT",
 	"files": [
-		"out/**/*.js",
-		"out/**/*.d.ts"
+		"**/*.js",
+		"**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",
@@ -13,10 +12,10 @@
 		"directory": "packages/component-meta"
 	},
 	"dependencies": {
-		"@volar/typescript": "2.0.0-alpha.14",
-		"@vue/language-core": "1.8.27",
+		"@volar/typescript": "~2.1.2",
+		"@vue/language-core": "2.0.6",
 		"path-browserify": "^1.0.1",
-		"vue-component-type-helpers": "1.8.27"
+		"vue-component-type-helpers": "2.0.6"
 	},
 	"peerDependencies": {
 		"typescript": "*"

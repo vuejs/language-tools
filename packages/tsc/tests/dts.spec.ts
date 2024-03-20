@@ -4,7 +4,7 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { proxyCreateProgram } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import { createFakeGlobalTypesHolder } from '../out';
+import { createFakeGlobalTypesHolder } from '..';
 
 const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
@@ -29,21 +29,22 @@ describe('vue-tsc-dts', () => {
 		const { configFilePath } = options.options;
 		const vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-			: {};
-		return vue.createLanguages(
+			: vue.resolveVueCompilerOptions({});
+		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
+			fileName => fileName === fakeGlobalTypesHolder,
 			options.options,
 			vueOptions,
 			false,
-			fakeGlobalTypesHolder?.replace(windowsPathReg, '/'),
 		);
+		return [vueLanguagePlugin];
 	});
 	const program = createProgram(options);
 
 	for (const intputFile of options.rootNames) {
 
-		if (intputFile === fakeGlobalTypesHolder)
+		if (intputFile.endsWith('__VLS_globalTypes.vue'))
 			continue;
 
 		const expectedOutputFile = intputFile.endsWith('.ts')
