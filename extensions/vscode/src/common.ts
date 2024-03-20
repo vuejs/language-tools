@@ -97,6 +97,36 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		hybridModeStatus.severity = vscode.LanguageStatusSeverity.Warning;
 	}
 
+	if (!context.extension.packageJSON.version.includes('-insider')) {
+		let s = 10;
+		const upgradeStatus = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, -10000);
+		const interval = setInterval(() => {
+			s--;
+			upgradeStatus.text = `✨ Upgrade Vue - Official (${s})`;
+			if (s <= 0) {
+				upgradeStatus.dispose();
+				clearInterval(interval);
+
+				const upgradeStatus2 = vscode.languages.createLanguageStatusItem('vue-upgrade', 'vue');
+				upgradeStatus2.text = '✨ Upgrade Vue - Official';
+				upgradeStatus2.severity = vscode.LanguageStatusSeverity.Warning;
+				upgradeStatus2.command = {
+					title: 'Open Link',
+					command: 'vscode.open',
+					arguments: ['https://github.com/vuejs/language-tools/discussions/4127'],
+				};
+			}
+		}, 1000);
+		upgradeStatus.text = `✨ Upgrade Vue - Official (${s})`;
+		upgradeStatus.color = '#ebb549';
+		upgradeStatus.command = {
+			title: 'Open Link',
+			command: 'vscode.open',
+			arguments: ['https://github.com/vuejs/language-tools/discussions/4127'],
+		};
+		upgradeStatus.show();
+	}
+
 	async function requestReloadVscode(msg: string) {
 		const reload = await vscode.window.showInformationMessage(msg, 'Reload Window');
 		if (reload === undefined) return; // cancel
