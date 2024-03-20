@@ -872,12 +872,14 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 				}
 				yield _(`},\n`);
 			}
-			yield _(`emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`);
-			if (ranges.emits.define) {
-				yield _(` & typeof `);
-				yield _(ranges.emits.name ?? '__VLS_emit');
+			if (ranges.defineProp.filter(p => p.isModel).length || ranges.emits.define) {
+				yield _(`emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`);
+				if (ranges.emits.define) {
+					yield _(` & typeof `);
+					yield _(ranges.emits.name ?? '__VLS_emit');
+				}
+				yield _(`>),\n`);
 			}
-			yield _(`>),\n`);
 		}
 		if (script && scriptRanges?.exportDefault?.args) {
 			yield _(generateSourceCode(script, scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1));
