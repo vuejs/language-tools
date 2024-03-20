@@ -38,10 +38,11 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							get(target, prop) {
 								if (prop === 'offset') {
 									const htmlOffset = target.offset;
+									const nums: number[] = [];
 									for (const mapped of map.getSourceOffsets(htmlOffset)) {
-										return mapped[0];
+										nums.push(mapped[0]);
 									}
-									return -1;
+									return Math.max(-1, ...nums);
 								}
 								const value = target[prop];
 								if (typeof value === 'object') {
