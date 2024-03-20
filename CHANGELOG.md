@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.0.7 (2024/3/20)
+
+> [!NOTE] 
+> Hybrid Mode is now disabled by default, you need to enable `vue.server.hybridMode` in settings to enable it explicitly.
+
+### Features
+
+- **language-server:** reintroducing full TS support and disable Hybrid Mode by default (#4119)
+- **vscode:** check outdated `@vue/language-plugin-pug` in doctor
+- **vscode:** significantly reduces the status bar space occupied
+
+### Bug Fixes
+
+- **vscode:** vueCompilerOptions no longer prompts for deprecated options
+- **component-meta:** `defineSlots` allows empty params (#4093) - thanks @Evertvdw
+- **typescript-plugin:** fault tolerance for named pipe servers json file (#4075) - thanks @Simon-He95
+- **language-core:** generate `defineModel` emits type on-demand (#4052) - thanks @so1ve
+- **language-core:** special treatment for number elements inside `v-for` (#3859) - thanks @so1ve
+- **language-plugin-pug:** semantic tokens mapping failed (#4070)
+
+### Other Changes
+
+- **language-service** update neovim lsp set up info (#4085) - thanks @CofCat456
+- **lint:** add `tsl` linter and auto fix workflow (#4100)
+- **vscode:** remove embedded language IDs (#4081) - thanks @remcohaszing
+
 ## 2.0.6 (2024/3/7)
 
 > [!IMPORTANT] 
@@ -17,7 +43,7 @@
 - **language-service:** bump `volar-service-typescript` for fix jsx formatting (#3949)
 - **language-service:** bump `@volar/typescript` for fix 2.0.5 auto-complete performance regression (#4024)
 
-### Refactors
+### Other Changes
 
 - **vscode:** rename `vue.inlayHints.vbindShorthand` setting to `vue.inlayHints.vBindShorthand` (#3995) - thanks @l4dybird
 
@@ -38,7 +64,7 @@
 - **typescript-plugin:** custom extensions do not work (#3977)
 - **language-service:** html custom data not working (#3975)
 
-### Refactors
+### Other Changes
 
 - **typescript-plugin** add README (#3974) - thanks @WhyNotHugo
 - **component-meta** update demo (#3994) - thanks @zzfn
