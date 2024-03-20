@@ -98,33 +98,42 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 
 	if (!context.extension.packageJSON.version.includes('-insider')) {
-		let s = 10;
-		const upgradeStatus = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, -10000);
-		const interval = setInterval(() => {
-			s--;
-			upgradeStatus.text = `✨ Upgrade Vue - Official (${s})`;
-			if (s <= 0) {
-				upgradeStatus.dispose();
-				clearInterval(interval);
-
-				const upgradeStatus2 = vscode.languages.createLanguageStatusItem('vue-upgrade', 'vue');
-				upgradeStatus2.text = '✨ Upgrade Vue - Official';
-				upgradeStatus2.severity = vscode.LanguageStatusSeverity.Warning;
-				upgradeStatus2.command = {
-					title: 'Open Link',
-					command: 'vscode.open',
-					arguments: ['https://github.com/vuejs/language-tools/discussions/4127'],
-				};
-			}
-		}, 1000);
-		upgradeStatus.text = `✨ Upgrade Vue - Official (${s})`;
-		upgradeStatus.color = '#ebb549';
-		upgradeStatus.command = {
-			title: 'Open Link',
-			command: 'vscode.open',
-			arguments: ['https://github.com/vuejs/language-tools/discussions/4127'],
+		const createLanguageStatus = () => {
+			const item = vscode.languages.createLanguageStatusItem('vue-upgrade', 'vue');
+			item.text = '✨ Upgrade Vue - Official';
+			item.severity = vscode.LanguageStatusSeverity.Warning;
+			item.command = {
+				title: 'Open Link',
+				command: 'vscode.open',
+				arguments: ['https://github.com/vuejs/language-tools/discussions/4127'],
+			};
 		};
-		upgradeStatus.show();
+		const yyyymmdd = new Date().toISOString().split('T')[0].replace(/-/g, '');
+		if (context.globalState.get('vue-upgrade-promote-date') !== yyyymmdd) {
+			context.globalState.update('vue-upgrade-promote-date', yyyymmdd);
+			let s = 10;
+			const upgradeStatus = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 10000);
+			const interval = setInterval(() => {
+				s--;
+				upgradeStatus.text = `✨ Upgrade Vue - Official (${s})`;
+				if (s <= 0) {
+					upgradeStatus.dispose();
+					clearInterval(interval);
+					createLanguageStatus();
+				}
+			}, 1000);
+			upgradeStatus.text = `✨ Upgrade Vue - Official (${s})`;
+			upgradeStatus.color = '#ebb549';
+			upgradeStatus.command = {
+				title: 'Open Link',
+				command: 'vscode.open',
+				arguments: ['https://github.com/vuejs/language-tools/discussions/4127'],
+			};
+			upgradeStatus.show();
+		}
+		else {
+			createLanguageStatus();
+		}
 	}
 
 	async function requestReloadVscode(msg: string) {
