@@ -24,5 +24,6 @@
 		"../vue3/events",
 		"../vue3/no-script-block",
 		"../vue3/slots",
+		"../vue3/inherit-attrs"
 	]
 }

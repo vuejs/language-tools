@@ -126,6 +126,7 @@ export function* generate(
 		varName: string;
 		nodeLoc: any;
 	}>();
+	const inheritedAttrVars = new Set<string>();
 	const slotExps = new Map<string, { varName: string; }>();
 	const tagOffsetsMap = collectTagOffsets();
 	const localVars = new Map<string, number>();
@@ -138,7 +139,6 @@ export function* generate(
 	const scopedClasses: { className: string, offset: number; }[] = [];
 	const blockConditions: string[] = [];
 	const hasSlotElements = new Set<CompilerDOM.ElementNode>();
-	const inheritAttrElements = new Set<CompilerDOM.ElementNode>();
 	const usedComponentCtxVars = new Set<string>();
 
 	let hasSlot = false;
@@ -146,6 +146,7 @@ export function* generate(
 	let expectErrorToken: { errors: number; } | undefined;
 	let expectedErrorNode: CompilerDOM.CommentNode | undefined;
 	let elementIndex = 0;
+	let singleRootNode: CompilerDOM.ElementNode | undefined;
 
 	if (slotsAssignName) {
 		localVars.set(slotsAssignName, 1);
@@ -169,12 +170,17 @@ export function* generate(
 		yield _ts(';\n');
 	}
 
+	yield _ts('var __VLS_inheritedAttrs!: {}');
+	yield* generateInheritedAttrsType();
+	yield _ts(';\n');
+
 	yield* generateExtraAutoImport();
 
 	return {
 		tagOffsetsMap,
 		accessedGlobalVariables,
 		hasSlot,
+		inheritedAttrVars,
 	};
 
 	function collectTagOffsets() {
@@ -289,6 +295,12 @@ export function* generate(
 			yield _ts(`?(_: typeof ${slot.varName}): any,\n`);
 		}
 		yield _ts(`}`);
+	}
+
+	function* generateInheritedAttrsType(): Generator<_CodeAndStack> {
+		for (const varName of inheritedAttrVars) {
+			yield _ts(` & typeof ${varName}`);
+		}
 	}
 
 	function* generateStyleScopedClasses(): Generator<_CodeAndStack> {
@@ -424,8 +436,13 @@ export function* generate(
 			}
 		}
 
+		const shouldInheritRootNodeAttrs = (scriptSetupRanges?.options.inheritAttrs ?? scriptRanges?.exportDefault?.inheritAttrsOption) !== 'false';
+
 		if (node.type === CompilerDOM.NodeTypes.ROOT) {
 			let prev: CompilerDOM.TemplateChildNode | undefined;
+			if (shouldInheritRootNodeAttrs && node.children.length === 1 && node.children[0].type === CompilerDOM.NodeTypes.ELEMENT) {
+				singleRootNode = node.children[0];
+			}
 			for (const childNode of node.children) {
 				yield* generateAstNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
@@ -435,7 +452,6 @@ export function* generate(
 		else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			const vForNode = getVForNode(node);
 			const vIfNode = getVIfNode(node);
-			const vbindAttrsNode = getVbindAttrsNode(node);
 			if (vForNode) {
 				yield* generateVFor(vForNode, parentEl, componentCtxVar);
 			}
@@ -443,9 +459,6 @@ export function* generate(
 				yield* generateVIf(vIfNode, parentEl, componentCtxVar);
 			}
 			else {
-				if (vbindAttrsNode) {
-					inheritAttrElements.add(node);
-				}
 				yield* generateElement(node, parentEl, componentCtxVar);
 			}
 		}
@@ -767,7 +780,7 @@ export function* generate(
 			yield _ts(`, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}));\n`);
 		}
 		else {
-			// without strictTemplates, this only for instacne type
+			// without strictTemplates, this only for instance type
 			yield _ts(`const ${var_componentInstance} = ${var_functionalComponent}(`);
 			yield _ts('{ ');
 			yield* generateProps(node, props, 'extraReferences');
@@ -992,6 +1005,16 @@ export function* generate(
 		}
 		if (usedComponentEventsVar) {
 			yield _ts(`let ${componentEventsVar}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>;\n`);
+		}
+
+		const vBindAttrsNode = node.props.some(
+			(prop): prop is CompilerDOM.DirectiveNode =>
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'bind'
+				&& prop.arg?.loc.source === 'attrs'
+		);
+		if (vBindAttrsNode || node === singleRootNode) {
+			yield* generateInheritAttrs(var_functionalComponent);
 		}
 
 		yield _ts(`}\n`);
@@ -1763,6 +1786,13 @@ export function* generate(
 		}
 	}
 
+	function* generateInheritAttrs(functionalComponent: string): Generator<_CodeAndStack> {
+
+		const varAttrs = `__VLS_${elementIndex++}`;
+		inheritedAttrVars.add(varAttrs);
+		yield _ts(`var ${varAttrs}!: Parameters<typeof ${functionalComponent}>[0];\n`);
+	}
+
 	function* generateExtraAutoImport(): Generator<_CodeAndStack> {
 
 		if (!tempVars.length) {
@@ -2144,14 +2174,4 @@ function getVIfNode(node: CompilerDOM.ElementNode) {
 			return ifNode;
 		}
 	}
-}
-
-function getVbindAttrsNode(node: CompilerDOM.ElementNode) {
-	const bindDirective = node.props.find(
-		(prop): prop is CompilerDOM.DirectiveNode =>
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'bind'
-			&& prop.arg?.loc.source === 'attrs'
-	);
-	return bindDirective;
 }

@@ -242,6 +242,7 @@ function createTsx(
 				accessedGlobalVariables: _template.accessedGlobalVariables,
 				hasSlot: _template.hasSlot,
 				tagNames: new Set(_template.tagOffsetsMap.keys()),
+				inheritedAttrVars: _template.inheritedAttrVars,
 			} : undefined,
 			ctx.compilerOptions,
 			ctx.vueCompilerOptions,

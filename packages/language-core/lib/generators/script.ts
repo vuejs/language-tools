@@ -30,6 +30,7 @@ export function* generate(
 		tagNames: Set<string>;
 		accessedGlobalVariables: Set<string>;
 		hasSlot: boolean;
+		inheritedAttrVars: Set<string>;
 	} | undefined,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
@@ -162,6 +163,15 @@ export function* generate(
 							: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
 					};`;
 			},
+		} satisfies HelperType as HelperType,
+		OmitIndexSignature: {
+			get name() {
+				this.usage = true;
+				return `__VLS_OmitIndexSignature`;
+			},
+			get code() {
+				return `type __VLS_OmitIndexSignature<T> = { [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K]; };`;
+			}
 		} satisfies HelperType as HelperType,
 	};
 
@@ -582,7 +592,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 				+ `			props: ${helperTypes.Prettify.name}<${helperTypes.OmitKeepDiscriminatedUnion.name}<typeof __VLS_fnPropsDefineComponent & typeof __VLS_fnPropsTypeOnly, keyof typeof __VLS_defaultProps>> & typeof __VLS_fnPropsSlots & typeof __VLS_defaultProps,\n`
 				+ `			expose(exposed: import('${vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,\n`
 				+ `			attrs: any,\n`
-				+ `			slots: ReturnType<typeof __VLS_template>,\n`
+				+ `			slots: ReturnType<typeof __VLS_template>[0],\n`
 				+ `			emit: typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'} & typeof __VLS_modelEmitsType,\n`
 				+ `		};\n`);
 			yield _(`	})(),\n`); // __VLS_setup = (async () => {
@@ -780,7 +790,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 				yield* generateComponent(functional);
 				yield _(`;\n`);
 				yield _(mode === 'return' ? 'return ' : 'export default ');
-				yield _(`{} as ${helperTypes.WithTemplateSlots.name}<typeof __VLS_component, ReturnType<typeof __VLS_template>>;\n`);
+				yield _(`{} as ${helperTypes.WithTemplateSlots.name}<typeof __VLS_component, ReturnType<typeof __VLS_template>[0]>;\n`);
 			}
 			else {
 				yield _(mode === 'return' ? 'return ' : 'export default ');
@@ -811,10 +821,10 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 		}
 		yield _(`};\n`);
 		yield _(`},\n`);
-		yield* generateComponentOptions(functional);
+		yield* generateComponentOptions(functional, true);
 		yield _(`})`);
 	}
-	function* generateComponentOptions(functional: boolean): Generator<CodeAndStack> {
+	function* generateComponentOptions(functional: boolean, inheritAttrs: boolean): Generator<CodeAndStack> {
 		if (scriptSetup && scriptSetupRanges && !bypassDefineComponent) {
 
 			const ranges = scriptSetupRanges;
@@ -854,6 +864,11 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			if (!functional && ranges.defineProp.length) {
 				propsCodegens.push(function* () {
 					yield _(`__VLS_propsOption_defineProp`);
+				});
+			}
+			if (inheritAttrs && templateCodegen?.inheritedAttrVars.size) {
+				propsCodegens.push(function* () {
+					yield _(`{} as ${helperTypes.TypePropsToOption.name}<__VLS_PickNotAny<${helperTypes.OmitIndexSignature.name}<ReturnType<typeof __VLS_template>[1]>, {}>>`);
 				});
 			}
 
@@ -916,7 +931,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			const templateUsageVars = [...getTemplateUsageVars()];
 			yield _(`// @ts-ignore\n`);
 			yield _(`[${templateUsageVars.join(', ')}]\n`);
-			yield _(`return {};\n`);
+			yield _(`return [{}, {}] as const;\n`);
 			yield _(`}\n`);
 		}
 	}
@@ -959,7 +974,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			}
 			yield _(`};\n`); // return {
 			yield _(`},\n`); // setup() {
-			yield* generateComponentOptions(functional);
+			yield* generateComponentOptions(functional, false);
 			yield _(`});\n`); // defineComponent {
 		}
 		else if (script) {
@@ -1078,7 +1093,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 			}
 		}
 
-		yield _(`return ${scriptSetupRanges?.slots.name ?? '__VLS_slots'};\n`);
+		yield _(`return [${scriptSetupRanges?.slots.name ?? '__VLS_slots'}, __VLS_inheritedAttrs] as const;\n`);
 
 	}
 	function* generateCssClassProperty(
