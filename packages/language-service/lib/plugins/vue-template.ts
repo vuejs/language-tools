@@ -1,4 +1,4 @@
-import type { Disposable, ServiceEnvironment, ServicePluginInstance } from '@volar/language-service';
+import type { Disposable, ServiceContext, ServiceEnvironment, ServicePluginInstance } from '@volar/language-service';
 import { VueGeneratedCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { create as createHtmlService } from 'volar-service-html';
@@ -10,6 +10,7 @@ import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, ServicePlugin, TagNameCasing, VueCompilerOptions } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
 import { URI, Utils } from 'vscode-uri';
+import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
 
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
@@ -18,7 +19,7 @@ export function create(
 	mode: 'html' | 'pug',
 	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
+	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ): ServicePlugin {
 
 	let customData: html.IHTMLDataProvider[] = [];
@@ -51,7 +52,7 @@ export function create(
 			'@', // vue event shorthand
 		],
 		create(context): ServicePluginInstance {
-
+			const tsPluginClient = getTsPluginClient?.(context);
 			const baseServiceInstance = baseService.create(context);
 			const vueCompilerOptions = getVueOptions(context.env);
 
@@ -327,6 +328,45 @@ export function create(
 						];
 					}
 				},
+
+				provideDocumentSemanticTokens(document, range, legend) {
+					if (!isSupportedDocument(document)) {
+						return;
+					}
+					const [_virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
+					if (
+						!sourceFile
+						|| !(sourceFile.generated?.code instanceof VueGeneratedCode)
+						|| !sourceFile.generated.code.sfc.template
+					) {
+						return [];
+					}
+					const { template } = sourceFile.generated.code.sfc;
+					const spans = getComponentSpans.call(
+						{
+							files: context.language.files,
+							languageService: context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService'),
+							typescript: ts,
+							vueOptions: getVueOptions(context.env),
+						},
+						sourceFile.generated.code,
+						template,
+						{
+							start: document.offsetAt(range.start),
+							length: document.offsetAt(range.end) - document.offsetAt(range.start),
+						});
+					const classTokenIndex = legend.tokenTypes.indexOf('class');
+					return spans.map(span => {
+						const start = document.positionAt(span.start);
+						return [
+							start.line,
+							start.character,
+							span.length,
+							classTokenIndex,
+							0,
+						];
+					});
+				},
 			};
 
 			async function provideHtmlData(sourceDocumentUri: string, vueCode: VueGeneratedCode) {
@@ -419,12 +459,8 @@ export function create(
 							return tags;
 						},
 						provideAttributes: tag => {
+							const tagInfo = tagInfos.get(tag);
 
-
-
-							let failed = false;
-
-							let tagInfo = tagInfos.get(tag);
 							if (!tagInfo) {
 								promises.push((async () => {
 									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
@@ -437,11 +473,6 @@ export function create(
 									});
 									version++;
 								})());
-								return [];
-							}
-
-
-							if (failed) {
 								return [];
 							}
 

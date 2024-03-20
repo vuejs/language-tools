@@ -182,7 +182,7 @@ function computedPluginFiles(
 
 			const { file, snapshot } = _file();
 			const mappings = buildMappings(file.content);
-			let lastValidMapping: typeof mappings[number];
+			let lastValidMapping: typeof mappings[number] | undefined;
 
 			for (const mapping of mappings) {
 				if (mapping.source !== undefined) {
@@ -196,9 +196,9 @@ function computedPluginFiles(
 					mapping.source = undefined;
 				}
 				if (mapping.data.__combineLastMapping) {
-					lastValidMapping.sourceOffsets.push(...mapping.sourceOffsets);
-					lastValidMapping.generatedOffsets.push(...mapping.generatedOffsets);
-					lastValidMapping.lengths.push(...mapping.lengths);
+					lastValidMapping!.sourceOffsets.push(...mapping.sourceOffsets);
+					lastValidMapping!.generatedOffsets.push(...mapping.generatedOffsets);
+					lastValidMapping!.lengths.push(...mapping.lengths);
 					continue;
 				}
 				else {

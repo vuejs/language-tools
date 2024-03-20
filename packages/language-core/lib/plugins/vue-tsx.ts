@@ -106,7 +106,7 @@ const plugin: VueLanguagePlugin = ctx => {
 		if (!tsCodegen.has(sfc)) {
 			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx));
 		}
-		return tsCodegen.get(sfc);
+		return tsCodegen.get(sfc)!;
 	}
 };
 

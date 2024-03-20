@@ -2,6 +2,7 @@
 	"properties": {
 		"vueCompilerOptions": {
 			"type": "object",
+			"additionalProperties": false,
 			"properties": {
 				"target": {
 					"default": "auto",

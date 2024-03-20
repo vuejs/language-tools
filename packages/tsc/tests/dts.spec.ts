@@ -29,13 +29,13 @@ describe('vue-tsc-dts', () => {
 		const { configFilePath } = options.options;
 		const vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-			: {};
+			: vue.resolveVueCompilerOptions({});
 		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
 			fileName => fileName === fakeGlobalTypesHolder,
 			options.options,
-			vue.resolveVueCompilerOptions(vueOptions),
+			vueOptions,
 			false,
 		);
 		return [vueLanguagePlugin];

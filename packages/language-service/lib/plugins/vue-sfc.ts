@@ -16,16 +16,15 @@ export function create(): ServicePlugin {
 	return {
 		name: 'vue-sfc',
 		create(context): ServicePluginInstance<Provide> {
-
 			const htmlPlugin = createHtmlService({
 				documentSelector: ['vue'],
-				useCustomDataProviders: false,
+				useDefaultDataProvider: false,
+				getCustomData(context) {
+					sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
+					return [sfcDataProvider];
+				},
 			}).create(context);
 			const htmlLanguageService: html.LanguageService = htmlPlugin.provide['html/languageService']();
-
-			sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
-
-			htmlLanguageService.setDataProviders(false, [sfcDataProvider]);
 
 			return {
 

@@ -71,7 +71,6 @@ function createCheckerWorker(
 	let projectVersion = 0;
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const resolvedVueOptions = vue.resolveVueCompilerOptions(parsedCommandLine.vueOptions);
 	const _host: vue.TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
@@ -88,7 +87,7 @@ function createCheckerWorker(
 			return scriptSnapshots.get(fileName);
 		},
 		getLanguageId: fileName => {
-			if (resolvedVueOptions.extensions.some(ext => fileName.endsWith(ext))) {
+			if (parsedCommandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
 				return 'vue';
 			}
 			return vue.resolveCommonLanguageId(fileName);
@@ -96,7 +95,7 @@ function createCheckerWorker(
 	};
 
 	return {
-		...baseCreate(ts, configFileName, _host, resolvedVueOptions, checkerOptions, globalComponentName),
+		...baseCreate(ts, configFileName, _host, parsedCommandLine.vueOptions, checkerOptions, globalComponentName),
 		updateFile(fileName: string, text: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
