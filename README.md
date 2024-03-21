@@ -35,62 +35,48 @@
 Since version `2.0.0`, take over mode has been removed. You have to run `@vue/language-server` alongside a TypeScript server that is running `@vue/typescript-plugin`. Here is a minimal configuration for Neovim's LSP to make the language server work after upgrading to version `2.0.0`.
 
   ```lua
-local mason_registry = require('mason-registry')
-local ts_plugin_path = mason_registry.get_package('vue-language-server'):get_install_path() .. '/node_modules/@vue/language-server/node_modules/@vue/typescript-plugin'
+-- If you are using mason.nvim, you can get the ts_plugin_path like this
+-- local mason_registry = require('mason-registry')
+-- local ts_plugin_path = mason_registry.get_package('vue-language-server'):get_install_path() .. '/node_modules/@vue/language-server/node_modules/@vue/typescript-plugin'
 
-local servers = {
-  tsserver = {
-    init_options = {
-      plugins = {
-        {
-          name = '@vue/typescript-plugin',
-          location = ts_plugin_path,
-          -- If .vue file cannot be recognized in either js or ts file try to add `typescript` and `javascript` in languages table.
-          languages = { 'vue' },
-        },
+local ts_plugin_path = '/path/to/@vue/typescript-plugin'
+
+local lspconfig = require('lspconfig')
+
+lspconfig.tsserver.setup {
+  init_options = {
+    plugins = {
+      {
+	name = '@vue/typescript-plugin',
+	location = ts_plugin_path,
+	languages = { 'vue' },
       },
     },
-    filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
   },
-  volar = {},
+  filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
 }
 
-local mason_lspconfig = require('mason-lspconfig')
+lspconfig.volar.setup {}
 
 -- Auto cmd (LspAttach) to setup keybind, codelens, and formatting stuff
 -- I assume everyone should have this configured already but just for reference
 -- @see https://github.com/nvim-lua/kickstart.nvim/blob/65a5ac404b56c4718d79f65ac642e19e89346eda/init.lua#L451-L522
-Util.lsp.lsp_autocmd()
-
-local capabilities = vim.lsp.protocol.make_client_capabilities()
--- If you need cmp
-capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
-mason_lspconfig.setup({
-  ensure_installed = vim.tbl_keys(servers),
-  handlers = {
-    function(server_name)
-      local server = servers[server_name] or {}
-      server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-      require('lspconfig')[server_name].setup(server)
-    end,
-  },
-})
   ```
-
-However, after version `2.0.7`, you can explicitly disable hybrid mode therefore there's two more options to config vue-language-server.
+configuration for 2.0.7 or newer. (You can still use configuration above, `2.0.7` gives you more options)
 
 *Make sure you have typescript installed globally or pass the location to volar*
 
 ```lua
 -- If you would like to keep only vue-language-server for all vue, typescript and javascript files you can have the configuration simliar with take over mode
-local servers = {
-  -- tsserver = {},
-  volar = {
-    filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
-    init_options = {
-      vue = {
-        hybridMode = false,
-      },
+local lspconfig = require('lspconfig')
+
+-- lspconfig.tsserver.setup {}
+lspconfig.volar.setup {
+  filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+  init_options = {
+    vue = {
+      -- Turn the hybrid mode on so you do not need to run tsserver
+      hybridMode = true,
     },
   },
 }
@@ -98,26 +84,26 @@ local servers = {
 
 ```lua
 -- If you only want to use vue-language-server for vue files and tsserver for typescript and javascript files
-local servers = {
-  tsserver = {
-    init_options = {
-      plugins = {
-        {
-          name = '@vue/typescript-plugin',
-          location = ts_plugin_path,
-          languages = { 'vue' },
-        },
-      },
+local lspconfig = require('lspconfig')
+
+lspconfig.tsserver.setup {}
+init_options = {
+  plugins = {
+    {
+      name = '@vue/typescript-plugin',
+      location = '/path/to/@vue/typescript-plugin',
+      languages = { 'vue' },
     },
   },
-  volar = {
-    init_options = {
-      vue = {
-        hybridMode = false,
-      },
+},
+
+lspconfig.volar.setup {
+  init_options = {
+    vue = {
+      hybridMode = false,
     },
   },
-}
+},
 ```
 
 </details>
