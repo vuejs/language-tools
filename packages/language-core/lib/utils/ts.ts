@@ -279,5 +279,6 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			}
 		},
 		experimentalUseElementAccessInTemplate: vueOptions.experimentalUseElementAccessInTemplate ?? false,
+		experimentalInheritAttrs: vueOptions.experimentalInheritAttrs ?? false,
 	};
 }

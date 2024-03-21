@@ -297,8 +297,10 @@ export function* generate(
 
 	function* generateInheritedAttrs(): Generator<_CodeAndStack> {
 		yield _ts('var __VLS_inheritedAttrs!: {}');
-		for (const varName of inheritedAttrVars) {
-			yield _ts(` & typeof ${varName}`);
+		if (vueCompilerOptions.experimentalInheritAttrs) {
+			for (const varName of inheritedAttrVars) {
+				yield _ts(` & typeof ${varName}`);
+			}
 		}
 		yield _ts(';\n');
 	}
