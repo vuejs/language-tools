@@ -47,9 +47,9 @@ lspconfig.tsserver.setup {
   init_options = {
     plugins = {
       {
-	name = '@vue/typescript-plugin',
-	location = ts_plugin_path,
-	languages = { 'vue' },
+        name = '@vue/typescript-plugin',
+        location = ts_plugin_path,
+        languages = { 'vue' },
       },
     },
   },
