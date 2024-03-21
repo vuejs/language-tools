@@ -27,7 +27,8 @@
 *Vue language client for coc.nvim*
 
 [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
-*Vue language server configuration for Neovim* \
+*Vue language server configuration for Neovim*
+
 <details>
   <summary>How to configure vue language server with neovim and lsp?</summary>
 
@@ -78,7 +79,7 @@ mason_lspconfig.setup({
 
 However, after version `2.0.7`, you can explicitly disable hybrid mode therefore there's two more options to config vue-language-server.
 
-__Make sure you have typescript installed globally or pass the location to volar__
+*Make sure you have typescript installed globally or pass the location to volar*
 
 ```lua
 -- If you would like to keep only vue-language-server for all vue, typescript and javascript files you can have the configuration simliar with take over mode
