@@ -170,9 +170,7 @@ export function* generate(
 		yield _ts(';\n');
 	}
 
-	yield _ts('var __VLS_inheritedAttrs!: {}');
-	yield* generateInheritedAttrsType();
-	yield _ts(';\n');
+	yield* generateInheritedAttrs();
 
 	yield* generateExtraAutoImport();
 
@@ -297,10 +295,12 @@ export function* generate(
 		yield _ts(`}`);
 	}
 
-	function* generateInheritedAttrsType(): Generator<_CodeAndStack> {
+	function* generateInheritedAttrs(): Generator<_CodeAndStack> {
+		yield _ts('var __VLS_inheritedAttrs!: {}');
 		for (const varName of inheritedAttrVars) {
 			yield _ts(` & typeof ${varName}`);
 		}
+		yield _ts(';\n');
 	}
 
 	function* generateStyleScopedClasses(): Generator<_CodeAndStack> {
