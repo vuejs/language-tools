@@ -3,5 +3,5 @@ import child from './child.vue';
 </script>
 
 <template>
-	<child class="111"></child>
+	<child />
 </template>

@@ -11,5 +11,5 @@ import child from './child.vue';
 </script>
 
 <template>
-  <child class="111"></child>
+	<child v-bind="$attrs"></child>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineEmits<{
-	foo: [string]
+	foo: [string];
 }>();
 
 defineProps<{
