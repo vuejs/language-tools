@@ -1007,13 +1007,10 @@ export function* generate(
 			yield _ts(`let ${componentEventsVar}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>;\n`);
 		}
 
-		const vBindAttrsNode = node.props.some(
-			(prop): prop is CompilerDOM.DirectiveNode =>
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'bind'
-				&& prop.arg?.loc.source === 'attrs'
-		);
-		if (vBindAttrsNode || node === singleRootNode) {
+		if (
+			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
+			|| node === singleRootNode
+		) {
 			yield* generateInheritAttrs(var_functionalComponent);
 		}
 
