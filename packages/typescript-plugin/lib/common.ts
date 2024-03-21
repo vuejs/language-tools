@@ -139,7 +139,7 @@ export function getComponentSpans(
 				});
 				if (template.lang === 'html' && !node.isSelfClosing) {
 					result.push({
-						start: start + node.loc.source.lastIndexOf(node.tag),
+						start: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
 						length: node.tag.length,
 					});
 				}

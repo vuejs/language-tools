@@ -43,7 +43,10 @@ export function startNamedPipeServer(
 			const request: Request = JSON.parse(text);
 			const fileName = request.args[0];
 			const project = getProject(fileName);
-			if (project) {
+			if (request.type === 'containsFile') {
+				connection.write(JSON.stringify(!!project));
+			}
+			else if (project) {
 				const requestContext = {
 					typescript: ts,
 					languageService: project.info.languageService,
@@ -52,11 +55,7 @@ export function startNamedPipeServer(
 					isTsPlugin: true,
 					getFileId: (fileName: string) => fileName,
 				};
-				if (request.type === 'containsFile') {
-					const result = !!getProject(fileName);
-					connection.write(JSON.stringify(result ?? null));
-				}
-				else if (request.type === 'collectExtractProps') {
+				if (request.type === 'collectExtractProps') {
 					const result = collectExtractProps.apply(requestContext, request.args as any);
 					connection.write(JSON.stringify(result ?? null));
 				}
