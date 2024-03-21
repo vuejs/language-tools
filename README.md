@@ -32,7 +32,9 @@
 <details>
   <summary>How to configure vue language server with neovim and lsp?</summary>
 
-Since version `2.0.0`, take over mode has been removed. You have to run `@vue/language-server` alongside a TypeScript server that is running `@vue/typescript-plugin`. Here is a minimal configuration for Neovim's LSP to make the language server work after upgrading to version `2.0.0`.
+## Configuration for versions:  `^2.0.0`
+
+Note: take over mode has been removed. You have to run `@vue/language-server` alongside a TypeScript server that is running `@vue/typescript-plugin`. Here is a minimal configuration for Neovim's LSP to make the language server work after upgrading to version `2.0.0`.
 
   ```lua
 -- If you are using mason.nvim, you can get the ts_plugin_path like this
@@ -62,12 +64,12 @@ lspconfig.volar.setup {}
 -- I assume everyone should have this configured already but just for reference
 -- @see https://github.com/nvim-lua/kickstart.nvim/blob/65a5ac404b56c4718d79f65ac642e19e89346eda/init.lua#L451-L522
   ```
-configuration for 2.0.7 or newer. (You can still use configuration above, `2.0.7` gives you more options)
+### Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
 
 *Make sure you have typescript installed globally or pass the location to volar*
 
+Use `hybridMode` to enable full typescript functionality in all `.{vue,js,ts,tsx,jsx}` files. If `hybridMode` is set to `true` `Volar` will run embedded `tsserver` therefore there is no need to run it separately.
 ```lua
--- If you would like to keep only vue-language-server for all vue, typescript and javascript files you can have the configuration simliar with take over mode
 local lspconfig = require('lspconfig')
 
 -- lspconfig.tsserver.setup {}
@@ -75,27 +77,29 @@ lspconfig.volar.setup {
   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
   init_options = {
     vue = {
-      -- Turn the hybrid mode on so you do not need to run tsserver
+      -- `hybridMode` provides full typescript functionality.
+      -- If `hybridMode` is set to `true` `Volar` will run embedded `tsserver` therefore there is no need to run it separately.
+      --- @see https://github.com/vuejs/language-tools/pull/4119
       hybridMode = true,
     },
   },
 }
 ```
 
+Use only `volar` for `.vue` files and `tsserver` for `.ts` and `.js` files.
 ```lua
--- If you only want to use vue-language-server for vue files and tsserver for typescript and javascript files
 local lspconfig = require('lspconfig')
 
-lspconfig.tsserver.setup {}
-init_options = {
-  plugins = {
-    {
-      name = '@vue/typescript-plugin',
-      location = '/path/to/@vue/typescript-plugin',
-      languages = { 'vue' },
+lspconfig.tsserver.setup {
+  init_options = {
+    plugins = {
+      {
+        name = '@vue/typescript-plugin',
+        location = '/path/to/@vue/typescript-plugin',
+        languages = { 'vue' },
+      },
     },
   },
-},
 
 lspconfig.volar.setup {
   init_options = {
