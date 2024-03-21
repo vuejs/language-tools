@@ -28,7 +28,98 @@
 
 [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
 *Vue language server configuration for Neovim* \
-[[Volar 2.0 version set up tutorial](https://github.com/vuejs/language-tools/issues/3925)]
+<details>
+  <summary>How to configure vue language server with neovim and lsp?</summary>
+
+Since version `2.0.0`, take over mode has been removed. You have to run `@vue/language-server` alongside a TypeScript server that is running `@vue/typescript-plugin`. Here is a minimal configuration for Neovim's LSP to make the language server work after upgrading to version `2.0.0`.
+
+  ```lua
+local mason_registry = require('mason-registry')
+local ts_plugin_path = mason_registry.get_package('vue-language-server'):get_install_path() .. '/node_modules/@vue/language-server/node_modules/@vue/typescript-plugin'
+
+local servers = {
+  tsserver = {
+    init_options = {
+      plugins = {
+        {
+          name = '@vue/typescript-plugin',
+          location = ts_plugin_path,
+          -- If .vue file cannot be recognized in either js or ts file try to add `typescript` and `javascript` in languages table.
+          languages = { 'vue' },
+        },
+      },
+    },
+    filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+  },
+  volar = {},
+}
+
+local mason_lspconfig = require('mason-lspconfig')
+
+-- Auto cmd (LspAttach) to setup keybind, codelens, and formatting stuff
+-- I assume everyone should have this configured already but just for reference
+-- @see https://github.com/nvim-lua/kickstart.nvim/blob/65a5ac404b56c4718d79f65ac642e19e89346eda/init.lua#L451-L522
+Util.lsp.lsp_autocmd()
+
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+-- If you need cmp
+capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+mason_lspconfig.setup({
+  ensure_installed = vim.tbl_keys(servers),
+  handlers = {
+    function(server_name)
+      local server = servers[server_name] or {}
+      server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+      require('lspconfig')[server_name].setup(server)
+    end,
+  },
+})
+  ```
+
+However, after version `2.0.7`, you can explicitly disable hybrid mode therefore there's two more options to config vue-language-server.
+
+__Make sure you have typescript installed globally or pass the location to volar__
+
+```lua
+-- If you would like to keep only vue-language-server for all vue, typescript and javascript files you can have the configuration simliar with take over mode
+local servers = {
+  -- tsserver = {},
+  volar = {
+    filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+    init_options = {
+      vue = {
+        hybridMode = false,
+      },
+    },
+  },
+}
+```
+
+```lua
+-- If you only want to use vue-language-server for vue files and tsserver for typescript and javascript files
+local servers = {
+  tsserver = {
+    init_options = {
+      plugins = {
+        {
+          name = '@vue/typescript-plugin',
+          location = ts_plugin_path,
+          languages = { 'vue' },
+        },
+      },
+    },
+  },
+  volar = {
+    init_options = {
+      vue = {
+        hybridMode = false,
+      },
+    },
+  },
+}
+```
+
+</details>
 
 [mattn/vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
 *Vue language server auto configuration for vim-lsp*
