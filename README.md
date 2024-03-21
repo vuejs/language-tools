@@ -79,6 +79,7 @@ lspconfig.volar.setup {
     vue = {
       -- `hybridMode` provides full typescript functionality.
       -- If `hybridMode` is set to `true` `Volar` will run embedded `tsserver` therefore there is no need to run it separately.
+      -- `hybridMode` default to be `true` if not set.
       --- @see https://github.com/vuejs/language-tools/pull/4119
       hybridMode = true,
     },
