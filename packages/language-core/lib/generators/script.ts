@@ -30,7 +30,7 @@ export function* generate(
 		tagNames: Set<string>;
 		accessedGlobalVariables: Set<string>;
 		hasSlot: boolean;
-		inheritedAttrVars: Set<string>;
+		hasInheritedAttrs: boolean;
 	} | undefined,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
@@ -872,7 +872,7 @@ type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 					yield _(`__VLS_propsOption_defineProp`);
 				});
 			}
-			if (inheritAttrs && templateCodegen?.inheritedAttrVars.size) {
+			if (inheritAttrs && templateCodegen?.hasInheritedAttrs) {
 				propsCodegens.push(function* () {
 					yield _(`{} as ${helperTypes.TypePropsToOption.name}<__VLS_PickNotAny<${helperTypes.OmitIndexSignature.name}<ReturnType<typeof __VLS_template>[1]>, {}>>`);
 				});

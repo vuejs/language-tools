@@ -178,7 +178,7 @@ export function* generate(
 		tagOffsetsMap,
 		accessedGlobalVariables,
 		hasSlot,
-		inheritedAttrVars,
+		hasInheritedAttrs: inheritedAttrVars.size > 0,
 	};
 
 	function collectTagOffsets() {
