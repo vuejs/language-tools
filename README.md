@@ -27,8 +27,89 @@
 *Vue language client for coc.nvim*
 
 [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
-*Vue language server configuration for Neovim* \
-[[Volar 2.0 version set up tutorial](https://github.com/vuejs/language-tools/issues/3925)]
+*Vue language server configuration for Neovim*
+
+<details>
+  <summary>How to configure vue language server with neovim and lsp?</summary>
+
+### Hybrid mode configuration (Requires `@vue/language-server` version `^2.0.0`)
+
+Note: The "Take Over" mode has been discontinued. Instead, a new "Hybrid" mode has been introduced. In this mode, the Vue Language Server exclusively manages the CSS/HTML sections. As a result, you must run `@vue/language-server` in conjunction with a TypeScript server that employs `@vue/typescript-plugin`. Below is a streamlined configuration for Neovim's LSP, updated to accommodate the language server following the upgrade to version `2.0.0`.
+
+```lua
+-- If you are using mason.nvim, you can get the ts_plugin_path like this
+-- local mason_registry = require('mason-registry')
+-- local vue_language_server_path = mason_registry.get_package('vue-language-server'):get_install_path() .. '/node_modules/@vue/language-server'
+
+local vue_language_server_path = '/path/to/@vue/language-server'
+
+local lspconfig = require('lspconfig')
+
+lspconfig.tsserver.setup {
+  init_options = {
+    plugins = {
+      {
+        name = '@vue/typescript-plugin',
+        location = vue_language_server_path,
+        languages = { 'vue' },
+      },
+    },
+  },
+  filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+}
+
+-- No need to set `hybridMode` to `true` as it's the default value
+lspconfig.volar.setup {}
+```
+
+### None-Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
+
+Note: If `hybridMode` is set to `false` `Volar` will run embedded `tsserver` therefore there is no need to run it separately.
+
+For more information see [#4119](https://github.com/vuejs/language-tools/pull/4119)
+
+*Make sure you have typescript installed globally or pass the location to volar*
+
+Use volar for all `.{vue,js,ts,tsx,jsx}` files.
+```lua
+local lspconfig = require('lspconfig')
+
+-- lspconfig.tsserver.setup {} 
+lspconfig.volar.setup {
+  filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+  init_options = {
+    vue = {
+      hybridMode = false,
+    },
+  },
+}
+```
+
+Use `volar` for only `.vue` files and `tsserver` for `.ts` and `.js` files.
+```lua
+local lspconfig = require('lspconfig')
+
+lspconfig.tsserver.setup {
+  init_options = {
+    plugins = {
+      {
+        name = '@vue/typescript-plugin',
+        location = '/path/to/@vue/language-server',
+        languages = { 'vue' },
+      },
+    },
+  },
+
+lspconfig.volar.setup {
+  init_options = {
+    vue = {
+      hybridMode = false,
+    },
+  },
+},
+```
+
+</details>
 
 [mattn/vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
 *Vue language server auto configuration for vim-lsp*
