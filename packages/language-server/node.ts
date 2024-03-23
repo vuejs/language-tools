@@ -23,10 +23,9 @@ connection.onInitialize(async params => {
 
 	const options: VueInitializationOptions = params.initializationOptions;
 	const hybridMode = options.vue?.hybridMode ?? true;
+	const vueFileExtensions: string[] = ['vue'];
 
 	tsdk = loadTsdkByPath(options.typescript.tsdk, params.locale);
-
-	const vueFileExtensions: string[] = ['vue'];
 
 	if (options.vue?.additionalExtensions) {
 		for (const additionalExtension of options.vue.additionalExtensions) {
@@ -60,7 +59,7 @@ connection.onInitialize(async params => {
 				const commandLine = await parseCommandLine();
 				const vueOptions = commandLine?.vueOptions ?? resolveVueCompilerOptions({});
 				for (const ext of vueFileExtensions) {
-					if (vueOptions.extensions.includes(`.${ext}`)) {
+					if (!vueOptions.extensions.includes(`.${ext}`)) {
 						vueOptions.extensions.push(`.${ext}`);
 					}
 				}
