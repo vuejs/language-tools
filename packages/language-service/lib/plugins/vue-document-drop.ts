@@ -3,12 +3,12 @@ import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { ServicePlugin, ServicePluginInstance, TagNameCasing } from '../types';
+import { LanguageServicePlugin, LanguageServicePluginInstance, TagNameCasing } from '../types';
 
-export function create(ts: typeof import('typescript')): ServicePlugin {
+export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
-		create(context): ServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 
 			let casing: TagNameCasing = TagNameCasing.Pascal; // TODO
 
@@ -19,9 +19,11 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 						return;
 					}
 
-					const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
-					const vueVirtualCode = sourceFile?.generated?.code;
-					if (!virtualCode || !(vueVirtualCode instanceof VueGeneratedCode)) {
+					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+					const vueVirtualCode = sourceScript?.generated?.root;
+					if (!sourceScript || !virtualCode || !(vueVirtualCode instanceof VueGeneratedCode)) {
 						return;
 					}
 
@@ -58,8 +60,8 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					}
 
 					additionalEdit.changes ??= {};
-					additionalEdit.changes[context.documents.getVirtualCodeUri(sourceFile.id, code.id)] = [];
-					additionalEdit.changes[context.documents.getVirtualCodeUri(sourceFile.id, code.id)].push({
+					additionalEdit.changes[context.encodeEmbeddedDocumentUri(sourceScript.id, code.id)] = [];
+					additionalEdit.changes[context.encodeEmbeddedDocumentUri(sourceScript.id, code.id)].push({
 						range: lastImportNode ? {
 							start: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
 							end: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
@@ -74,7 +76,7 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					if (sfc.script) {
 						const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
 						if (edit) {
-							additionalEdit.changes[context.documents.getVirtualCodeUri(sourceFile.id, code.id)].push({
+							additionalEdit.changes[context.encodeEmbeddedDocumentUri(sourceScript.id, code.id)].push({
 								range: {
 									start: document.positionAt(edit.range.start),
 									end: document.positionAt(edit.range.end),

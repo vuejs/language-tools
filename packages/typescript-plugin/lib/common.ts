@@ -4,7 +4,7 @@ import { capitalize } from '@vue/shared';
 import { _getComponentNames } from './requests/componentInfos';
 
 export function decorateLanguageServiceForVue(
-	files: vue.FileRegistry,
+	language: vue.Language,
 	languageService: ts.LanguageService,
 	vueOptions: vue.VueCompilerOptions,
 	ts: typeof import('typescript'),
@@ -80,13 +80,13 @@ export function decorateLanguageServiceForVue(
 	if (isTsPlugin) {
 		languageService.getEncodedSemanticClassifications = (fileName, span, format) => {
 			const result = getEncodedSemanticClassifications(fileName, span, format);
-			const file = files.get(fileName);
-			if (file?.generated?.code instanceof vue.VueGeneratedCode) {
-				const { template } = file.generated.code.sfc;
+			const file = language.scripts.get(fileName);
+			if (file?.generated?.root instanceof vue.VueGeneratedCode) {
+				const { template } = file.generated.root.sfc;
 				if (template) {
 					for (const componentSpan of getComponentSpans.call(
 						{ typescript: ts, languageService, vueOptions },
-						file.generated.code,
+						file.generated.root,
 						template,
 						{
 							start: span.start - template.startTagEnd,

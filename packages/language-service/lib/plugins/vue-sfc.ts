@@ -1,4 +1,4 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
@@ -12,10 +12,10 @@ export interface Provide {
 	'vue/vueFile': (document: TextDocument) => vue.VueGeneratedCode | undefined;
 }
 
-export function create(): ServicePlugin {
+export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-sfc',
-		create(context): ServicePluginInstance<Provide> {
+		create(context): LanguageServicePluginInstance<Provide> {
 			const htmlPlugin = createHtmlService({
 				documentSelector: ['vue'],
 				useDefaultDataProvider: false,
@@ -38,28 +38,24 @@ export function create(): ServicePlugin {
 					},
 				},
 
-				async resolveEmbeddedCodeFormattingOptions(code, options) {
-
-					const sourceFile = context.language.files.getByVirtualCode(code);
-
-					if (sourceFile.generated?.code instanceof vue.VueGeneratedCode) {
-						if (code.id === 'scriptFormat' || code.id === 'scriptSetupFormat') {
+				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
+					if (sourceScript.generated?.root instanceof vue.VueGeneratedCode) {
+						if (virtualCode.id === 'scriptFormat' || virtualCode.id === 'scriptSetupFormat') {
 							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
-						else if (code.id.startsWith('style_')) {
+						else if (virtualCode.id.startsWith('style_')) {
 							if (await context.env.getConfiguration?.('vue.format.style.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
-						else if (code.id === 'template') {
+						else if (virtualCode.id === 'template') {
 							if (await context.env.getConfiguration?.('vue.format.template.initialIndent') ?? true) {
 								options.initialIndentLevel++;
 							}
 						}
 					}
-
 					return options;
 				},
 
@@ -177,9 +173,11 @@ export function create(): ServicePlugin {
 			};
 
 			function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueGeneratedCode) => T) {
-				const [vueFile] = context.documents.getVirtualCodeByUri(document.uri);
-				if (vueFile instanceof vue.VueGeneratedCode) {
-					return callback(vueFile);
+				const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+				const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+				const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+				if (virtualCode instanceof vue.VueGeneratedCode) {
+					return callback(virtualCode);
 				}
 			}
 		},

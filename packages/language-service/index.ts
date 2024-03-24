@@ -3,29 +3,29 @@ export * from '@vue/language-core';
 export * from './lib/ideFeatures/nameCasing';
 export * from './lib/types';
 
-import type { ServiceContext, ServiceEnvironment, ServicePlugin } from '@volar/language-service';
+import type { ServiceContext, ServiceEnvironment, LanguageServicePlugin } from '@volar/language-service';
 import type { VueCompilerOptions } from './lib/types';
 
-import { create as createEmmetServicePlugin } from 'volar-service-emmet';
-import { create as createJsonServicePlugin } from 'volar-service-json';
-import { create as createPugFormatServicePlugin } from 'volar-service-pug-beautify';
-import { create as createTypeScriptServicePlugins } from 'volar-service-typescript';
-import { create as createTypeScriptTwoslashQueriesServicePlugin } from 'volar-service-typescript-twoslash-queries';
-import { create as createTypeScriptDocCommentTemplateServicePlugin } from 'volar-service-typescript/lib/plugins/docCommentTemplate';
-import { create as createTypeScriptSyntacticServicePlugin } from 'volar-service-typescript/lib/plugins/syntactic';
-import { create as createCssServicePlugin } from './lib/plugins/css';
-import { create as createVueAutoDotValueServicePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
-import { create as createVueAutoWrapParenthesesServicePlugin } from './lib/plugins/vue-autoinsert-parentheses';
-import { create as createVueAutoAddSpaceServicePlugin } from './lib/plugins/vue-autoinsert-space';
-import { create as createVueReferencesCodeLensServicePlugin } from './lib/plugins/vue-codelens-references';
-import { create as createVueDirectiveCommentsServicePlugin } from './lib/plugins/vue-directive-comments';
-import { create as createVueDocumentDropServicePlugin } from './lib/plugins/vue-document-drop';
-import { create as createVueExtractFileServicePlugin } from './lib/plugins/vue-extract-file';
-import { create as createVueSfcServicePlugin } from './lib/plugins/vue-sfc';
-import { create as createVueTemplateServicePlugin } from './lib/plugins/vue-template';
-import { create as createVueToggleVBindServicePlugin } from './lib/plugins/vue-toggle-v-bind-codeaction';
-import { create as createVueTwoslashQueriesServicePlugin } from './lib/plugins/vue-twoslash-queries';
-import { create as createVueVisualizeHiddenCallbackParamServicePlugin } from './lib/plugins/vue-visualize-hidden-callback-param';
+import { create as createEmmetPlugin } from 'volar-service-emmet';
+import { create as createJsonPlugin } from 'volar-service-json';
+import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';
+import { create as createTypeScriptPlugins } from 'volar-service-typescript';
+import { create as createTypeScriptTwoslashQueriesPlugin } from 'volar-service-typescript-twoslash-queries';
+import { create as createTypeScriptDocCommentTemplatePlugin } from 'volar-service-typescript/lib/plugins/docCommentTemplate';
+import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescript/lib/plugins/syntactic';
+import { create as createCssPlugin } from './lib/plugins/css';
+import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
+import { create as createVueAutoWrapParenthesesPlugin } from './lib/plugins/vue-autoinsert-parentheses';
+import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoinsert-space';
+import { create as createVueReferencesCodeLensPlugin } from './lib/plugins/vue-codelens-references';
+import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
+import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
+import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
+import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
+import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
+import { create as createVueToggleVBindPlugin } from './lib/plugins/vue-toggle-v-bind-codeaction';
+import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
+import { create as createVueVisualizeHiddenCallbackParamPlugin } from './lib/plugins/vue-visualize-hidden-callback-param';
 
 import { decorateLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
@@ -38,10 +38,10 @@ export function createVueServicePlugins(
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 	getTsPluginClient = createDefaultGetTsPluginClient(ts, getVueOptions),
 	hybridMode = false,
-): ServicePlugin[] {
-	const plugins: ServicePlugin[] = [];
+): LanguageServicePlugin[] {
+	const plugins: LanguageServicePlugin[] = [];
 	if (!hybridMode) {
-		plugins.push(...createTypeScriptServicePlugins(ts));
+		plugins.push(...createTypeScriptPlugins(ts));
 		for (let i = 0; i < plugins.length; i++) {
 			const plugin = plugins[i];
 			if (plugin.name === 'typescript-semantic') {
@@ -54,7 +54,7 @@ export function createVueServicePlugins(
 						}
 						const languageService = (created.provide as import('volar-service-typescript').Provide)['typescript/languageService']();
 						const vueOptions = getVueOptions(context.env);
-						decorateLanguageServiceForVue(context.language.files, languageService, vueOptions, ts, false);
+						decorateLanguageServiceForVue(context.language, languageService, vueOptions, ts, false);
 						return created;
 					},
 				};
@@ -64,29 +64,29 @@ export function createVueServicePlugins(
 	}
 	else {
 		plugins.push(
-			createTypeScriptSyntacticServicePlugin(ts),
-			createTypeScriptDocCommentTemplateServicePlugin(ts),
+			createTypeScriptSyntacticPlugin(ts),
+			createTypeScriptDocCommentTemplatePlugin(ts),
 		);
 	}
 	plugins.push(
-		createTypeScriptTwoslashQueriesServicePlugin(ts),
-		createCssServicePlugin(),
-		createPugFormatServicePlugin(),
-		createJsonServicePlugin(),
-		createVueTemplateServicePlugin('html', ts, getVueOptions, getTsPluginClient),
-		createVueTemplateServicePlugin('pug', ts, getVueOptions, getTsPluginClient),
-		createVueSfcServicePlugin(),
-		createVueTwoslashQueriesServicePlugin(ts, getTsPluginClient),
-		createVueReferencesCodeLensServicePlugin(),
-		createVueDocumentDropServicePlugin(ts),
-		createVueAutoDotValueServicePlugin(ts, getTsPluginClient),
-		createVueAutoWrapParenthesesServicePlugin(ts),
-		createVueAutoAddSpaceServicePlugin(),
-		createVueVisualizeHiddenCallbackParamServicePlugin(),
-		createVueDirectiveCommentsServicePlugin(),
-		createVueExtractFileServicePlugin(ts, getTsPluginClient),
-		createVueToggleVBindServicePlugin(ts),
-		createEmmetServicePlugin(),
+		createTypeScriptTwoslashQueriesPlugin(ts),
+		createCssPlugin(),
+		createPugFormatPlugin(),
+		createJsonPlugin(),
+		createVueTemplatePlugin('html', ts, getVueOptions, getTsPluginClient),
+		createVueTemplatePlugin('pug', ts, getVueOptions, getTsPluginClient),
+		createVueSfcPlugin(),
+		createVueTwoslashQueriesPlugin(ts, getTsPluginClient),
+		createVueReferencesCodeLensPlugin(),
+		createVueDocumentDropPlugin(ts),
+		createVueAutoDotValuePlugin(ts, getTsPluginClient),
+		createVueAutoWrapParenthesesPlugin(ts),
+		createVueAutoAddSpacePlugin(),
+		createVueVisualizeHiddenCallbackParamPlugin(),
+		createVueDirectiveCommentsPlugin(),
+		createVueExtractFilePlugin(ts, getTsPluginClient),
+		createVueToggleVBindPlugin(ts),
+		createEmmetPlugin(),
 	);
 	return plugins;
 }
@@ -101,7 +101,7 @@ export function createDefaultGetTsPluginClient(
 		}
 		const requestContext = {
 			typescript: ts,
-			files: context.language.files,
+			language: context.language,
 			languageService: context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService'),
 			vueOptions: getVueOptions(context.env),
 			isTsPlugin: false,

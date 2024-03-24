@@ -6,7 +6,7 @@ export function getComponentProps(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: vue.FileRegistry;
+		language: vue.Language;
 		vueOptions: vue.VueCompilerOptions,
 		getFileId: (fileName: string) => string,
 	},
@@ -14,12 +14,12 @@ export function getComponentProps(
 	tag: string,
 	requiredOnly = false,
 ) {
-	const { typescript: ts, files, vueOptions, languageService, getFileId } = this;
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
+	const { typescript: ts, language, vueOptions, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueGeneratedCode)) {
 		return;
 	}
-	const vueCode = volarFile.generated.code;
+	const vueCode = volarFile.generated.root;
 	const program: ts.Program = (languageService as any).getCurrentProgram();
 	if (!program) {
 		return;
@@ -95,19 +95,19 @@ export function getComponentEvents(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: vue.FileRegistry;
+		language: vue.Language;
 		vueOptions: vue.VueCompilerOptions,
 		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 	tag: string,
 ) {
-	const { typescript: ts, files, vueOptions, languageService, getFileId } = this;
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
+	const { typescript: ts, language, vueOptions, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueGeneratedCode)) {
 		return;
 	}
-	const vueCode = volarFile.generated.code;
+	const vueCode = volarFile.generated.root;
 	const program: ts.Program = (languageService as any).getCurrentProgram();
 	if (!program) {
 		return;
@@ -177,17 +177,17 @@ export function getTemplateContextProps(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: vue.FileRegistry;
+		language: vue.Language;
 		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 ) {
-	const { typescript: ts, files, languageService, getFileId } = this;
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueGeneratedCode)) {
 		return;
 	}
-	const vueCode = volarFile.generated.code;
+	const vueCode = volarFile.generated.root;
 
 	return getVariableType(ts, languageService, vueCode, '__VLS_ctx')
 		?.type
@@ -199,18 +199,18 @@ export function getComponentNames(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: vue.FileRegistry;
+		language: vue.Language;
 		vueOptions: vue.VueCompilerOptions,
 		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 ) {
-	const { typescript: ts, files, vueOptions, languageService, getFileId } = this;
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
+	const { typescript: ts, language, vueOptions, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueGeneratedCode)) {
 		return;
 	}
-	const vueCode = volarFile.generated.code;
+	const vueCode = volarFile.generated.root;
 
 	return getVariableType(ts, languageService, vueCode, '__VLS_components')
 		?.type
@@ -240,15 +240,15 @@ export function getElementAttrs(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: vue.FileRegistry;
+		language: vue.Language;
 		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 	tagName: string,
 ) {
-	const { typescript: ts, files, languageService, getFileId } = this;
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueGeneratedCode)) {
 		return;
 	}
 	const program: ts.Program = (languageService as any).getCurrentProgram();

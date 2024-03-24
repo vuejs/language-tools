@@ -1,24 +1,24 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import { VueGeneratedCode, eachElementNode, type CompilerDOM } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
-export function create(ts: typeof import('typescript')): ServicePlugin {
+export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
 		name: 'vue-toggle-v-bind-codeaction',
-		create(context): ServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 			return {
 				provideCodeActions(document, range, _context) {
 
 					const startOffset = document.offsetAt(range.start);
 					const endOffset = document.offsetAt(range.end);
-					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
-
+					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!(virtualCode instanceof VueGeneratedCode)) {
 						return;
 					}
 
 					const { template } = virtualCode.sfc;
-
 					if (!template?.ast) {
 						return;
 					}

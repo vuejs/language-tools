@@ -1,4 +1,4 @@
-import type { ServiceContext, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { ServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
@@ -7,16 +7,18 @@ const twoslashReg = /<!--\s*\^\?\s*-->/g;
 export function create(
 	ts: typeof import('typescript'),
 	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
-): ServicePlugin {
+): LanguageServicePlugin {
 	return {
 		name: 'vue-twoslash-queries',
-		create(context): ServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 			const tsPluginClient = getTsPluginClient?.(context);
 			return {
 				async provideInlayHints(document, range) {
 
-					const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
-					if (!(sourceFile?.generated?.code instanceof vue.VueGeneratedCode) || virtualCode?.id !== 'template') {
+					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+					if (!(sourceScript?.generated?.root instanceof vue.VueGeneratedCode) || virtualCode?.id !== 'template') {
 						return;
 					}
 
@@ -33,9 +35,9 @@ export function create(
 					}
 
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
-						for (const [_1, [_2, map]] of context.language.files.getMaps(virtualCode)) {
+						for (const [_1, [_2, map]] of context.language.maps.forEach(virtualCode)) {
 							for (const [sourceOffset] of map.getSourceOffsets(hoverOffset)) {
-								const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(sourceFile.generated.code.fileName, sourceOffset);
+								const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(sourceScript.generated.root.fileName, sourceOffset);
 								if (quickInfo) {
 									inlayHints.push({
 										position: { line: pointerPosition.line, character: pointerPosition.character + 2 },

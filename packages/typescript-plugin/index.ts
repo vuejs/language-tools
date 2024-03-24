@@ -1,7 +1,7 @@
 import { decorateLanguageService } from '@volar/typescript/lib/node/decorateLanguageService';
 import { decorateLanguageServiceHost, searchExternalFiles } from '@volar/typescript/lib/node/decorateLanguageServiceHost';
 import * as vue from '@vue/language-core';
-import { createFileRegistry, resolveCommonLanguageId } from '@vue/language-core';
+import { createLanguage, resolveCommonLanguageId } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { decorateLanguageServiceForVue } from './lib/common';
 import { startNamedPipeServer, projects } from './lib/server';
@@ -49,7 +49,7 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					);
 					const extensions = languagePlugin.typescript?.extraFileExtensions.map(ext => '.' + ext.extension) ?? [];
 					const getScriptSnapshot = info.languageServiceHost.getScriptSnapshot.bind(info.languageServiceHost);
-					const files = createFileRegistry(
+					const language = createLanguage(
 						[languagePlugin],
 						ts.sys.useCaseSensitiveFileNames,
 						fileName => {
@@ -59,20 +59,20 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 								if (extensions.some(ext => fileName.endsWith(ext))) {
 									languageId = 'vue';
 								}
-								files.set(fileName, languageId, snapshot);
+								language.scripts.set(fileName, languageId, snapshot);
 							}
 							else {
-								files.delete(fileName);
+								language.scripts.delete(fileName);
 							}
 						}
 					);
 
 					projectExternalFileExtensions.set(info.project, extensions);
-					projects.set(info.project, { info, files, vueOptions });
+					projects.set(info.project, { info, language, vueOptions });
 
-					decorateLanguageService(files, info.languageService);
-					decorateLanguageServiceForVue(files, info.languageService, vueOptions, ts, true);
-					decorateLanguageServiceHost(files, info.languageServiceHost, ts);
+					decorateLanguageService(language, info.languageService);
+					decorateLanguageServiceForVue(language, info.languageService, vueOptions, ts, true);
+					decorateLanguageServiceHost(language, info.languageServiceHost, ts);
 					startNamedPipeServer(ts, info.project.projectKind, info.project.getCurrentDirectory());
 				}
 
@@ -99,7 +99,7 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					if (oldFiles && !twoSetsEqual(oldFiles, newFiles)) {
 						for (const oldFile of oldFiles) {
 							if (!newFiles.has(oldFile)) {
-								projects.get(project)?.files.delete(oldFile);
+								projects.get(project)?.language.scripts.delete(oldFile);
 							}
 						}
 						project.refreshDiagnostics();

@@ -1,4 +1,4 @@
-import type { CompletionItem, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { CompletionItem, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 
 const cmds = [
 	'vue-ignore',
@@ -8,11 +8,11 @@ const cmds = [
 
 const directiveCommentReg = /<!--\s*@/;
 
-export function create(): ServicePlugin {
+export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-directive-comments',
 		triggerCharacters: ['@'],
-		create(): ServicePluginInstance {
+		create(): LanguageServicePluginInstance {
 			return {
 				provideCompletionItems(document, position) {
 

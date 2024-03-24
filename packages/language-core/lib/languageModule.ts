@@ -113,37 +113,38 @@ export function createVueLanguagePlugin(
 			code.update(snapshot);
 			return code;
 		},
-		disposeVirtualCode(fileId, code, files) {
-			const isGlobalTypesHolder = code.fileName === pluginContext.globalTypesHolder;
-			const fileRegistry = getFileRegistry(isGlobalTypesHolder);
-			fileRegistry.delete(fileId);
-			if (isGlobalTypesHolder) {
-				pluginContext.globalTypesHolder = undefined;
-				const fileRegistry2 = getFileRegistry(false);
-				for (const [fileId, code] of fileRegistry2) {
-					if (isValidGlobalTypesHolder(code.fileName)) {
-						pluginContext.globalTypesHolder = code.fileName;
-						fileRegistry2.delete(fileId);
-						// force dirty
-						files?.delete(fileId);
-						files?.set(
-							fileId,
-							code.languageId,
-							code.snapshot,
-						);
-						break;
-					}
-				}
-			}
-		},
+		// TODO: when global types holder deleted, move global types to another file
+		// disposeVirtualCode(fileId, code) {
+		// 	const isGlobalTypesHolder = code.fileName === pluginContext.globalTypesHolder;
+		// 	const fileRegistry = getFileRegistry(isGlobalTypesHolder);
+		// 	fileRegistry.delete(fileId);
+		// 	if (isGlobalTypesHolder) {
+		// 		pluginContext.globalTypesHolder = undefined;
+		// 		const fileRegistry2 = getFileRegistry(false);
+		// 		for (const [fileId, code] of fileRegistry2) {
+		// 			if (isValidGlobalTypesHolder(code.fileName)) {
+		// 				pluginContext.globalTypesHolder = code.fileName;
+		// 				fileRegistry2.delete(fileId);
+		// 				// force dirty
+		// 				files?.delete(fileId);
+		// 				files?.set(
+		// 					fileId,
+		// 					code.languageId,
+		// 					code.snapshot,
+		// 				);
+		// 				break;
+		// 			}
+		// 		}
+		// 	}
+		// },
 		typescript: {
 			extraFileExtensions: vueCompilerOptions.extensions.map<ts.FileExtensionInfo>(ext => ({
 				extension: ext.slice(1),
 				isMixedContent: true,
 				scriptKind: 7 satisfies ts.ScriptKind.Deferred,
 			})),
-			getScript(rootVirtualCode) {
-				for (const code of forEachEmbeddedCode(rootVirtualCode)) {
+			getServiceScript(root) {
+				for (const code of forEachEmbeddedCode(root)) {
 					if (code.id.startsWith('script_')) {
 						const lang = code.id.substring('script_'.length);
 						return {

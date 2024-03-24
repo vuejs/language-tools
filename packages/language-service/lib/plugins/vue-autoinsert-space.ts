@@ -1,9 +1,9 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 
-export function create(): ServicePlugin {
+export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-space',
-		create(context): ServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 			return {
 				async provideAutoInsertionEdit(document, _, lastChange) {
 

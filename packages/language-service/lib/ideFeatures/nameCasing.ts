@@ -13,12 +13,12 @@ export async function convertTagName(
 	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ) {
 
-	const sourceFile = context.language.files.get(uri);
+	const sourceFile = context.language.scripts.get(uri);
 	if (!sourceFile) {
 		return;
 	}
 
-	const rootCode = sourceFile?.generated?.code;
+	const rootCode = sourceFile?.generated?.root;
 	if (!(rootCode instanceof VueGeneratedCode)) {
 		return;
 	}
@@ -61,12 +61,12 @@ export async function convertAttrName(
 	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
 ) {
 
-	const sourceFile = context.language.files.get(uri);
+	const sourceFile = context.language.scripts.get(uri);
 	if (!sourceFile) {
 		return;
 	}
 
-	const rootCode = sourceFile?.generated?.code;
+	const rootCode = sourceFile?.generated?.root;
 	if (!(rootCode instanceof VueGeneratedCode)) {
 		return;
 	}
@@ -137,7 +137,7 @@ export async function detect(
 	attr: AttrNameCasing[],
 }> {
 
-	const rootFile = context.language.files.get(uri)?.generated?.code;
+	const rootFile = context.language.scripts.get(uri)?.generated?.root;
 	if (!(rootFile instanceof VueGeneratedCode)) {
 		return {
 			tag: [],

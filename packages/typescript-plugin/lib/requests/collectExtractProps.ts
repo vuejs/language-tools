@@ -1,21 +1,21 @@
-import { FileRegistry, VueGeneratedCode, isSemanticTokensEnabled } from '@vue/language-core';
+import { Language, VueGeneratedCode, isSemanticTokensEnabled } from '@vue/language-core';
 import type * as ts from 'typescript';
 
 export function collectExtractProps(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: FileRegistry;
+		language: Language;
 		isTsPlugin: boolean,
 		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 	templateCodeRange: [number, number],
 ) {
-	const { typescript: ts, languageService, files, isTsPlugin, getFileId } = this;
+	const { typescript: ts, languageService, language, isTsPlugin, getFileId } = this;
 
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof VueGeneratedCode)) {
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof VueGeneratedCode)) {
 		return;
 	}
 
@@ -31,9 +31,9 @@ export function collectExtractProps(
 
 	const sourceFile = program.getSourceFile(fileName)!;
 	const checker = program.getTypeChecker();
-	const script = volarFile.generated?.languagePlugin.typescript?.getScript(volarFile.generated.code);
-	const maps = script ? [...files.getMaps(script.code).values()] : [];
-	const sfc = volarFile.generated.code.sfc;
+	const script = volarFile.generated?.languagePlugin.typescript?.getServiceScript(volarFile.generated.root);
+	const maps = script ? [...language.maps.forEach(script.code).values()] : [];
+	const sfc = volarFile.generated.root.sfc;
 
 	sourceFile.forEachChild(function visit(node) {
 		if (

@@ -1,11 +1,11 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
-import { SourceFile, VirtualCode, VueCodeInformation, VueGeneratedCode } from '@vue/language-core';
+import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import { SourceScript, VirtualCode, VueCodeInformation, VueGeneratedCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
-export function create(): ServicePlugin {
+export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-codelens-references',
-		create(context): ServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 			return {
 				provideReferencesCodeLensRanges(document) {
 
@@ -35,14 +35,16 @@ export function create(): ServicePlugin {
 				},
 			};
 
-			function worker<T>(uri: string, callback: (vueFile: VirtualCode, sourceFile: SourceFile) => T) {
+			function worker<T>(uri: string, callback: (vueFile: VirtualCode, sourceScript: SourceScript) => T) {
 
-				const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(uri);
-				if (!(sourceFile?.generated?.code instanceof VueGeneratedCode) || !sourceFile) {
+				const decoded = context.decodeEmbeddedDocumentUri(uri);
+				const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+				const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+				if (!virtualCode || !(sourceScript?.generated?.root instanceof VueGeneratedCode) || !sourceScript) {
 					return;
 				}
 
-				return callback(virtualCode, sourceFile);
+				return callback(virtualCode, sourceScript);
 			}
 		},
 	};

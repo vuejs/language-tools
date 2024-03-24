@@ -1,10 +1,10 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 
-export function create(ts: typeof import('typescript')): ServicePlugin {
+export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-parentheses',
-		create(context): ServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 			return {
 				async provideAutoInsertionEdit(document, position, lastChange) {
 
@@ -17,7 +17,9 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 						return;
 					}
 
-					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (virtualCode?.id !== 'template_format') {
 						return;
 					}

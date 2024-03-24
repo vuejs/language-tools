@@ -6,7 +6,7 @@ import { getComponentEvents, getComponentNames, getComponentProps, getElementAtt
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
 import { NamedPipeServer, connect, readPipeTable, updatePipeTable } from './utils';
-import type { FileRegistry, VueCompilerOptions } from '@vue/language-core';
+import type { Language, VueCompilerOptions } from '@vue/language-core';
 
 export interface Request {
 	type: 'containsFile'
@@ -50,7 +50,7 @@ export function startNamedPipeServer(
 				const requestContext = {
 					typescript: ts,
 					languageService: project.info.languageService,
-					files: project.files,
+					language: project.language,
 					vueOptions: project.vueOptions,
 					isTsPlugin: true,
 					getFileId: (fileName: string) => fileName,
@@ -134,7 +134,7 @@ function cleanupPipeTable() {
 
 export const projects = new Map<ts.server.Project, {
 	info: ts.server.PluginCreateInfo;
-	files: FileRegistry;
+	language: Language;
 	vueOptions: VueCompilerOptions;
 }>();
 
