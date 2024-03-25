@@ -97,8 +97,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		hybridModeStatus.severity = vscode.LanguageStatusSeverity.Warning;
 	}
 
-	createLanguageStatus();
-
 	async function requestReloadVscode(msg: string) {
 		const reload = await vscode.window.showInformationMessage(msg, 'Reload Window');
 		if (reload === undefined) return; // cancel
