@@ -5,7 +5,7 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\nデフォルトでは、 `v-model` は各 `input` イベントの後に、入力とデータを同期します ([上記](#vmodel-ime-tip) の IME による入力は例外とします)。 代わりに `change` イベント後に同期する `lazy` 修飾子を追加することができます。\n\n```html\n<!-- \"input\" の代わりに \"change\" イベント後に同期されます -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "\nデフォルトでは、 `v-model` は各 `input` イベントの後に、入力とデータを同期します（[上記](#vmodel-ime-tip) の IME による入力は例外とします）。 代わりに `change` イベント後に同期する `lazy` 修飾子を追加することができます。\n\n```html\n<!-- \"input\" の代わりに \"change\" イベント後に同期されます -->\n<input v-model.lazy=\"msg\" />\n```\n"
       },
       "references": [
         {
