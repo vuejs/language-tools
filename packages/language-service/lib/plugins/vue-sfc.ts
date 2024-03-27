@@ -23,8 +23,29 @@ export function create(): LanguageServicePlugin {
 					sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
 					return [sfcDataProvider];
 				},
+				async getFormattingOptions(document, options, context) {
+					return await worker(document, async vueCode => {
+
+						const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
+						const blockTypes = ['template', 'script', 'style'];
+
+						for (const customBlock of vueCode.sfc.customBlocks) {
+							blockTypes.push(customBlock.type);
+						}
+
+						return {
+							...options,
+							...formatSettings,
+							wrapAttributes: 'auto',
+							unformatted: '',
+							contentUnformatted: blockTypes.join(','),
+							endWithNewline: options.insertFinalNewline ? true
+								: options.trimFinalNewlines ? false
+									: document.getText().endsWith('\n'),
+						};
+					}) ?? {};
+				},
 			}).create(context);
-			const htmlLanguageService: html.LanguageService = htmlPlugin.provide['html/languageService']();
 
 			return {
 
@@ -146,28 +167,6 @@ export function create(): LanguageServicePlugin {
 						}
 
 						return result;
-					});
-				},
-
-				provideDocumentFormattingEdits(document, range, options) {
-					return worker(document, async vueCode => {
-
-						const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
-						const blockTypes = ['template', 'script', 'style'];
-
-						for (const customBlock of vueCode.sfc.customBlocks) {
-							blockTypes.push(customBlock.type);
-						}
-
-						return htmlLanguageService.format(document, range, {
-							...options,
-							...formatSettings,
-							unformatted: '',
-							contentUnformatted: blockTypes.join(','),
-							endWithNewline: options.insertFinalNewline ? true
-								: options.trimFinalNewlines ? false
-									: document.getText().endsWith('\n'),
-						});
 					});
 				},
 			};
