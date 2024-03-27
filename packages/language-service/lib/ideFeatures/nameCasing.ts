@@ -231,7 +231,7 @@ function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 			const ast = sourceFile.sfc.template?.ast;
 			const tags: Tags = new Map();
 			if (ast) {
-				for (const node of vue.eachElementNode(ast)) {
+				for (const node of vue.forEachElementNode(ast)) {
 
 					if (!tags.has(node.tag)) {
 						tags.set(node.tag, { offsets: [], attrs: new Map() });

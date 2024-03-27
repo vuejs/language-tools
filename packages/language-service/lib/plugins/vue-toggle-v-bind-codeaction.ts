@@ -1,5 +1,5 @@
 import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
-import { VueGeneratedCode, eachElementNode, type CompilerDOM } from '@vue/language-core';
+import { VueGeneratedCode, forEachElementNode, type CompilerDOM } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
@@ -26,7 +26,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					const templateStartOffset = template.startTagEnd;
 					const result: vscode.CodeAction[] = [];
 
-					for (const node of eachElementNode(template.ast)) {
+					for (const node of forEachElementNode(template.ast)) {
 						if (startOffset > templateStartOffset + node.loc.end.offset || endOffset < templateStartOffset + node.loc.start.offset) {
 							return;
 						}

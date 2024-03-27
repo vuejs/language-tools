@@ -63,7 +63,10 @@ const transformContext: CompilerDOM.TransformContext = {
 	expressionPlugins: ['typescript'],
 };
 
-type _CodeAndStack = [codeType: 'ts' | 'tsFormat' | 'inlineCss', ...codeAndStack: CodeAndStack];
+export type _CodeAndStack = [
+	codeType: 'ts' | 'tsFormat',
+	...codeAndStack: CodeAndStack,
+];
 
 export function* generate(
 	ts: typeof import('typescript'),
@@ -111,9 +114,6 @@ export function* generate(
 	const _tsFormat = codegenStack
 		? (code: Code): _CodeAndStack => ['tsFormat', code, getStack()]
 		: (code: Code): _CodeAndStack => ['tsFormat', code, ''];
-	const _inlineCss = codegenStack
-		? (code: Code): _CodeAndStack => ['inlineCss', code, getStack()]
-		: (code: Code): _CodeAndStack => ['inlineCss', code, ''];
 	const nativeTags = new Set(vueCompilerOptions.nativeTags);
 	const slots = new Map<string, {
 		name?: string;
@@ -180,7 +180,7 @@ export function* generate(
 			return tagOffsetsMap;
 		}
 
-		for (const node of eachElementNode(template.ast)) {
+		for (const node of forEachElementNode(template.ast)) {
 			if (node.tag === 'slot') {
 				// ignore
 			}
@@ -818,8 +818,6 @@ export function* generate(
 			}
 		}
 
-		yield* generateInlineCss(props);
-
 		const vScope = props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
 		let inScope = false;
 		let originalConditionsNum = blockConditions.length;
@@ -1422,36 +1420,6 @@ export function* generate(
 		}
 	}
 
-	function* generateInlineCss(props: CompilerDOM.ElementNode['props']): Generator<_CodeAndStack> {
-		for (const prop of props) {
-			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'bind'
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				&& prop.arg.content === 'style'
-				&& prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
-			) {
-				const endCrt = prop.arg.loc.source[prop.arg.loc.source.length - 1]; // " | '
-				const start = prop.arg.loc.source.indexOf(endCrt) + 1;
-				const end = prop.arg.loc.source.lastIndexOf(endCrt);
-				const content = prop.arg.loc.source.substring(start, end);
-
-				yield _inlineCss(`x { `);
-				yield _inlineCss([
-					content,
-					'template',
-					prop.arg.loc.start.offset + start,
-					enableAllFeatures({
-						format: false,
-						structure: false,
-					}),
-				]);
-				yield _inlineCss(` }\n`);
-			}
-		}
-	}
-
 	function* generateDirectives(node: CompilerDOM.ElementNode): Generator<_CodeAndStack> {
 		for (const prop of node.props) {
 			if (
@@ -1986,21 +1954,21 @@ function getPossibleOriginalComponentNames(tagText: string) {
 	])];
 }
 
-export function* eachElementNode(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode): Generator<CompilerDOM.ElementNode> {
+export function* forEachElementNode(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode): Generator<CompilerDOM.ElementNode> {
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		for (const child of node.children) {
-			yield* eachElementNode(child);
+			yield* forEachElementNode(child);
 		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 		const patchForNode = getVForNode(node);
 		if (patchForNode) {
-			yield* eachElementNode(patchForNode);
+			yield* forEachElementNode(patchForNode);
 		}
 		else {
 			yield node;
 			for (const child of node.children) {
-				yield* eachElementNode(child);
+				yield* forEachElementNode(child);
 			}
 		}
 	}
@@ -2009,14 +1977,14 @@ export function* eachElementNode(node: CompilerDOM.RootNode | CompilerDOM.Templa
 		for (let i = 0; i < node.branches.length; i++) {
 			const branch = node.branches[i];
 			for (const childNode of branch.children) {
-				yield* eachElementNode(childNode);
+				yield* forEachElementNode(childNode);
 			}
 		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.FOR) {
 		// v-for
 		for (const child of node.children) {
-			yield* eachElementNode(child);
+			yield* forEachElementNode(child);
 		}
 	}
 }

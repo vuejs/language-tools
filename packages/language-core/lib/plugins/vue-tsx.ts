@@ -1,4 +1,4 @@
-import { CodeInformation, Mapping, Segment, StackNode, track } from '@volar/language-core';
+import { Mapping, StackNode, track } from '@volar/language-core';
 import { computed, computedSet } from 'computeds';
 import { generate as generateScript } from '../generators/script';
 import { generate as generateTemplate } from '../generators/template';
@@ -34,7 +34,6 @@ const plugin: VueLanguagePlugin = ctx => {
 
 			if (sfc.template) {
 				files.push({ id: 'template_format', lang: 'ts' });
-				files.push({ id: 'template_style', lang: 'css' });
 			}
 
 			return files;
@@ -84,19 +83,6 @@ const plugin: VueLanguagePlugin = ctx => {
 						]);
 						embeddedFile.content.push(');\n');
 					}
-				}
-			}
-			else if (embeddedFile.id === 'template_style') {
-
-				embeddedFile.parentCodeId = 'template';
-
-				const template = _tsx.generatedTemplate();
-				if (template) {
-					const [content, contentStacks] = ctx.codegenStack
-						? track([...template.cssCodes], template.cssCodeStacks.map(stack => ({ stack, length: 1 })))
-						: [[...template.cssCodes], template.cssCodeStacks.map(stack => ({ stack, length: 1 }))];
-					embeddedFile.content = content as Segment<CodeInformation>[];
-					embeddedFile.contentStacks = contentStacks;
 				}
 			}
 		},
@@ -168,7 +154,6 @@ function createTsx(
 
 		const tsCodes: Code[] = [];
 		const tsFormatCodes: Code[] = [];
-		const inlineCssCodes: Code[] = [];
 		const tsCodegenStacks: string[] = [];
 		const tsFormatCodegenStacks: string[] = [];
 		const inlineCssCodegenStacks: string[] = [];
@@ -195,18 +180,12 @@ function createTsx(
 			else if (type === 'tsFormat') {
 				tsFormatCodes.push(code);
 			}
-			else if (type === 'inlineCss') {
-				inlineCssCodes.push(code);
-			}
 			if (ctx.codegenStack) {
 				if (type === 'ts') {
 					tsCodegenStacks.push(stack);
 				}
 				else if (type === 'tsFormat') {
 					tsFormatCodegenStacks.push(stack);
-				}
-				else if (type === 'inlineCss') {
-					inlineCssCodegenStacks.push(stack);
 				}
 			}
 			current = codegen.next();
@@ -218,7 +197,6 @@ function createTsx(
 			codeStacks: tsCodegenStacks,
 			formatCodes: tsFormatCodes,
 			formatCodeStacks: tsFormatCodegenStacks,
-			cssCodes: inlineCssCodes,
 			cssCodeStacks: inlineCssCodegenStacks,
 		};
 	});

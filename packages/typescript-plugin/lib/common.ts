@@ -123,11 +123,11 @@ export function getComponentSpans(
 		...validComponentNames,
 		...validComponentNames.map(vue.hyphenateTag),
 	]);
-	template.ast?.children.forEach(function visit(node) {
-		if (node.loc.end.offset <= spanTemplateRange.start || node.loc.start.offset >= (spanTemplateRange.start + spanTemplateRange.length)) {
-			return;
-		}
-		if (node.type === 1 satisfies vue.CompilerDOM.NodeTypes.ELEMENT) {
+	if (template.ast) {
+		for (const node of vue.forEachElementNode(template.ast)) {
+			if (node.loc.end.offset <= spanTemplateRange.start || node.loc.start.offset >= (spanTemplateRange.start + spanTemplateRange.length)) {
+				continue;
+			}
 			if (components.has(node.tag)) {
 				let start = node.loc.start.offset;
 				if (template.lang === 'html') {
@@ -144,22 +144,7 @@ export function getComponentSpans(
 					});
 				}
 			}
-			for (const child of node.children) {
-				visit(child);
-			}
 		}
-		else if (node.type === 9 satisfies vue.CompilerDOM.NodeTypes.IF) {
-			for (const branch of node.branches) {
-				for (const child of branch.children) {
-					visit(child);
-				}
-			}
-		}
-		else if (node.type === 11 satisfies vue.CompilerDOM.NodeTypes.FOR) {
-			for (const child of node.children) {
-				visit(child);
-			}
-		}
-	});
+	}
 	return result;
 }
