@@ -7,6 +7,7 @@ import useVueSfcStyles from './plugins/vue-sfc-styles';
 import useVueSfcTemplate from './plugins/vue-sfc-template';
 import useVueTemplateHtmlPlugin from './plugins/vue-template-html';
 import useVueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
+import useVueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
 import useVueTsx from './plugins/vue-tsx';
 import { pluginVersion, type VueLanguagePlugin } from './types';
 
@@ -18,6 +19,7 @@ export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLangua
 		useVueFilePlugin, // .vue and others for Vue
 		useVueTemplateHtmlPlugin,
 		useVueTemplateInlineCssPlugin,
+		useVueTemplateInlineTsPlugin,
 		useVueSfcStyles,
 		useVueSfcCustomBlocks,
 		useVueSfcScriptsFormat,

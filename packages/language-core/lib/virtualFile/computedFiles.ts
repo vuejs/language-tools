@@ -46,16 +46,7 @@ export function computedFiles(
 			}
 		}
 
-		for (const { file, snapshot, mappings, codegenStacks } of remain) {
-			embeddedCodes.push({
-				id: file.id,
-				languageId: resolveCommonLanguageId(`/dummy.${file.lang}`),
-				linkedCodeMappings: file.linkedCodeMappings,
-				snapshot,
-				mappings,
-				codegenStacks,
-				embeddedCodes: [],
-			});
+		for (const { file } of remain) {
 			console.error('Unable to resolve embedded: ' + file.parentCodeId + ' -> ' + file.id);
 		}
 

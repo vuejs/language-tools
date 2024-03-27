@@ -3,6 +3,11 @@ import { forEachElementNode } from './template';
 import { enableAllFeatures } from './utils';
 import type { Code } from '../types';
 
+const codeFeatures = enableAllFeatures({
+	format: false,
+	structure: false,
+});
+
 export function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Code> {
 	for (const node of forEachElementNode(templateAst)) {
 		for (const prop of node.props) {
@@ -24,10 +29,7 @@ export function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Gener
 					content,
 					'template',
 					prop.arg.loc.start.offset + start,
-					enableAllFeatures({
-						format: false,
-						structure: false,
-					}),
+					codeFeatures,
 				];
 				yield ` }\n`;
 			}
