@@ -293,7 +293,7 @@
 				},
 				"vue.updateImportsOnFileMove.enabled": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"description": "Enabled update imports on file move."
 				},
 				"vue.codeActions.enabled": {

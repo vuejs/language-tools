@@ -133,5 +133,5 @@ export function createDefaultGetTsPluginClient(
 				return await getQuickInfoAtPosition.apply(requestContext, args);
 			},
 		};
-	};;
+	};
 }
