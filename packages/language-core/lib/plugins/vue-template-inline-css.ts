@@ -8,19 +8,18 @@ const plugin: VueLanguagePlugin = () => {
 		version: 2,
 
 		getEmbeddedCodes(_fileName, sfc) {
-			if (sfc.template?.ast) {
-				return [{ id: 'template_inline_css', lang: 'css' }];
+			if (!sfc.template?.ast) {
+				return [];
 			}
-			return [];
+			return [{ id: 'template_inline_css', lang: 'css' }];
 		},
 
 		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
-			if (embeddedFile.id === 'template_inline_css') {
-				embeddedFile.parentCodeId = 'template';
-				if (sfc.template?.ast) {
-					embeddedFile.content.push(...generateInlineCss(sfc.template.ast));
-				}
+			if (embeddedFile.id !== 'template_inline_css' || !sfc.template?.ast) {
+				return;
 			}
+			embeddedFile.parentCodeId = 'template';
+			embeddedFile.content.push(...generateInlineCss(sfc.template.ast));
 		},
 	};
 };
