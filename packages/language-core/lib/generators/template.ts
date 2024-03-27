@@ -39,7 +39,7 @@ const presetInfos = {
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
 	// fix https://github.com/vuejs/language-tools/issues/3572
-	params: ['(', ') => {}'] as [string, string],
+	params: ['(', ') => {};'] as [string, string],
 	// fix https://github.com/vuejs/language-tools/issues/1210
 	// fix https://github.com/vuejs/language-tools/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
@@ -483,7 +483,7 @@ export function* generate(
 				start,
 				lines.length <= 1 ? formatBrackets.curly : [
 					lines[0].trim() === '' ? '(' : formatBrackets.curly[0],
-					lines[lines.length - 1].trim() === '' ? ')' : formatBrackets.curly[1],
+					lines[lines.length - 1].trim() === '' ? ');' : formatBrackets.curly[1],
 				],
 			);
 		}
