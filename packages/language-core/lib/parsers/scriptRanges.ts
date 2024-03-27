@@ -13,6 +13,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 		componentsOption: TextRange | undefined,
 		componentsOptionNode: ts.ObjectLiteralExpression | undefined,
 		nameOption: TextRange | undefined,
+		inheritAttrsOption: string | undefined,
 	}) | undefined;
 
 	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast) : [];
@@ -39,6 +40,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 			if (obj) {
 				let componentsOptionNode: ts.ObjectLiteralExpression | undefined;
 				let nameOptionNode: ts.Expression | undefined;
+				let inheritAttrsOption: string | undefined;
 				ts.forEachChild(obj, node => {
 					if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
 						const name = getNodeText(ts, node.name, ast);
@@ -47,6 +49,9 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 						}
 						if (name === 'name') {
 							nameOptionNode = node.initializer;
+						}
+						if (name === 'inheritAttrs') {
+							inheritAttrsOption = getNodeText(ts, node.initializer, ast);
 						}
 					}
 				});
@@ -58,6 +63,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 					componentsOption: componentsOptionNode ? _getStartEnd(componentsOptionNode) : undefined,
 					componentsOptionNode: withNode ? componentsOptionNode : undefined,
 					nameOption: nameOptionNode ? _getStartEnd(nameOptionNode) : undefined,
+					inheritAttrsOption,
 				};
 			}
 		}

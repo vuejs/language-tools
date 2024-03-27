@@ -113,6 +113,11 @@
 						"johnsonEdition",
 						false
 					]
+				},
+				"experimentalInheritAttrs": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "https://github.com/vuejs/language-tools/pull/4103"
 				}
 			}
 		}

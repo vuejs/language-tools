@@ -179,9 +179,8 @@ function createTsx(
 			_sfc.template,
 			shouldGenerateScopedClasses(),
 			stylesScopedClasses(),
-			hasScriptSetupSlots(),
-			slotsAssignName(),
-			propsAssignName(),
+			scriptRanges(),
+			scriptSetupRanges(),
 			ctx.codegenStack,
 		);
 
@@ -222,9 +221,6 @@ function createTsx(
 			cssCodeStacks: inlineCssCodegenStacks,
 		};
 	});
-	const hasScriptSetupSlots = computed(() => !!scriptSetupRanges()?.slots.define);
-	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
-	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
 	const generatedScript = computed(() => {
 		const codes: Code[] = [];
 		const codeStacks: StackNode[] = [];
@@ -246,6 +242,7 @@ function createTsx(
 				accessedGlobalVariables: _template.accessedGlobalVariables,
 				hasSlot: _template.hasSlot,
 				tagNames: new Set(_template.tagOffsetsMap.keys()),
+				hasInheritedAttrs: _template.hasInheritedAttrs,
 			} : undefined,
 			ctx.compilerOptions,
 			ctx.vueCompilerOptions,
