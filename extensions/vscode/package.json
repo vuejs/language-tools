@@ -263,7 +263,7 @@
 					"items": {
 						"type": "string"
 					},
-					"default": [],
+					"default": [ ],
 					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"vue.doctor.status": {
@@ -495,7 +495,6 @@
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"semver": "^7.5.4",
-		"vsce": "latest",
-		"vscode-languageclient": "^9.0.1"
+		"vsce": "latest"
 	}
 }

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { quickPick } from '@volar/vscode/lib/common';
-import { BaseLanguageClient, State } from 'vscode-languageclient';
+import { BaseLanguageClient, State } from '@volar/vscode';
 import { AttrNameCasing, TagNameCasing, DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest } from '@vue/language-server';
 import { config } from '../config';
 

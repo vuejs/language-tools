@@ -68,9 +68,6 @@ importers:
       vsce:
         specifier: latest
         version: 2.15.0
-      vscode-languageclient:
-        specifier: ^9.0.1
-        version: 9.0.1
 
   packages/component-meta:
     dependencies:

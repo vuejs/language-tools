@@ -1,8 +1,7 @@
-import { getTsdk } from '@volar/vscode';
+import { BaseLanguageClient, getTsdk } from '@volar/vscode';
 import { ParseSFCRequest } from '@vue/language-server';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
-import type { BaseLanguageClient } from 'vscode-languageclient';
 import { config } from '../config';
 
 const scheme = 'vue-doctor';

@@ -1,6 +1,6 @@
+import type { BaseLanguageClient } from '@volar/vscode';
 import { ParseSFCRequest } from '@vue/language-server';
 import * as vscode from 'vscode';
-import type { BaseLanguageClient } from 'vscode-languageclient';
 import { config } from '../config';
 
 type SFCBlock = ParseSFCRequest.ResponseType['descriptor']['customBlocks'][number];

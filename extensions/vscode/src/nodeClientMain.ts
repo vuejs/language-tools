@@ -2,7 +2,7 @@ import { createLabsInfo } from '@volar/vscode';
 import * as serverLib from '@vue/language-server';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import * as lsp from 'vscode-languageclient/node';
+import * as lsp from '@volar/vscode/node';
 import { activate as commonActivate, deactivate as commonDeactivate } from './common';
 import { config } from './config';
 import { middleware } from './middleware';

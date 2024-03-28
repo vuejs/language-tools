@@ -1,15 +1,6 @@
-import {
-	activateAutoInsertion,
-	activateDocumentDropEdit,
-	activateServerSys,
-	activateWriteVirtualFiles,
-	activateTsConfigStatusItem,
-	activateTsVersionStatusItem,
-	getTsdk,
-} from '@volar/vscode';
 import { DiagnosticModel, VueInitializationOptions } from '@vue/language-server';
 import * as vscode from 'vscode';
-import type * as lsp from 'vscode-languageclient';
+import * as lsp from '@volar/vscode';
 import { config } from './config';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
@@ -76,14 +67,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	splitEditors.register(context, client);
 	doctor.register(context, client);
 
-	activateAutoInsertion(selectors, client);
-	activateDocumentDropEdit(selectors, client);
-	activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
-	activateServerSys(client);
+	lsp.activateAutoInsertion(selectors, client);
+	lsp.activateDocumentDropEdit(selectors, client);
+	lsp.activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
+	lsp.activateServerSys(client);
 
 	if (!config.server.hybridMode) {
-		activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);
-		activateTsVersionStatusItem(selectors, 'vue.tsversion', context, client, text => 'TS ' + text);
+		lsp.activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);
+		lsp.activateTsVersionStatusItem(selectors, 'vue.tsversion', context, client, text => 'TS ' + text);
 	}
 
 	const hybridModeStatus = vscode.languages.createLanguageStatusItem('vue-hybrid-mode', selectors);
@@ -189,7 +180,7 @@ async function getInitializationOptions(
 	return {
 		// volar
 		diagnosticModel: config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
-		typescript: { tsdk: (await getTsdk(context)).tsdk },
+		typescript: { tsdk: (await lsp.getTsdk(context)).tsdk },
 		maxFileSize: config.server.maxFileSize,
 		semanticTokensLegend: {
 			tokenTypes: ['component'],
