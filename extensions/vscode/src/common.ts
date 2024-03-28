@@ -145,17 +145,21 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				);
 			}
 			else if (e.affectsConfiguration('vue')) {
-				vscode.commands.executeCommand('vue.action.restartServer');
+				vscode.commands.executeCommand('vue.action.restartServer', false);
 			}
 		}));
 	}
 
 	async function activateRestartRequest() {
-		context.subscriptions.push(vscode.commands.registerCommand('vue.action.restartServer', async () => {
+		context.subscriptions.push(vscode.commands.registerCommand('vue.action.restartServer', async (restartTsServer: boolean = true) => {
 			await client.stop();
 			outputChannel.clear();
 			client.clientOptions.initializationOptions = await getInitializationOptions(context);
 			await client.start();
+			nameCasing.activate(context, client, selectors);
+			if (restartTsServer) {
+				await vscode.commands.executeCommand('typescript.restartTsServer');
+			}
 		}));
 	}
 }
