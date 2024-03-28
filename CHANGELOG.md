@@ -1,5 +1,7 @@
 # Changelog
 
+[Insiders changelog](https://github.com/vuejs/language-tools/blob/master/INSIDERS_CHANGELOG.md)
+
 ## 2.0.7 (2024/3/20)
 
 > [!NOTE] 
