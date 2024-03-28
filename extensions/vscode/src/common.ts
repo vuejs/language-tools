@@ -97,43 +97,68 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		hybridModeStatus.severity = vscode.LanguageStatusSeverity.Warning;
 	}
 
+	const item = vscode.languages.createLanguageStatusItem('vue-insider', 'vue');
 	if (!context.extension.packageJSON.version.includes('-insider')) {
-		const createLanguageStatus = () => {
-			const item = vscode.languages.createLanguageStatusItem('vue-upgrade', 'vue');
-			item.text = '✨ Upgrade Vue - Official';
-			item.severity = vscode.LanguageStatusSeverity.Warning;
-			item.command = {
-				title: 'Open Link',
-				command: 'vscode.open',
-				arguments: ['https://github.com/vuejs/language-tools/discussions/4127'],
-			};
+		item.text = '✨ Get Vue - Official Insiders';
+		item.severity = vscode.LanguageStatusSeverity.Warning;
+		item.command = {
+			title: 'More Info',
+			command: 'vscode.open',
+			arguments: ['https://github.com/vuejs/language-tools/wiki/Get-Insiders'],
 		};
-		const yyyymmdd = new Date().toISOString().split('T')[0].replace(/-/g, '');
-		if (context.globalState.get('vue-upgrade-promote-date') !== yyyymmdd) {
-			context.globalState.update('vue-upgrade-promote-date', yyyymmdd);
-			let s = 10;
-			const upgradeStatus = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 10000);
-			const interval = setInterval(() => {
-				s--;
-				upgradeStatus.text = `✨ Upgrade Vue - Official (${s})`;
-				if (s <= 0) {
-					upgradeStatus.dispose();
-					clearInterval(interval);
-					createLanguageStatus();
+	}
+	else {
+		const versionsUrl = 'https://cdn.jsdelivr.net/gh/vuejs/language-tools/insiders.json';
+		item.text = '🚀 Vue - Official Insiders';
+		item.detail = 'Installed';
+		item.busy = true;
+		const currentVersion = context.extension.packageJSON.version;
+		fetch(versionsUrl)
+			.then(res => res.json())
+			.then(({ versions }: { versions: { version: string; date: string; }[]; }) => {
+				item.command = {
+					title: 'Select Version',
+					command: 'vue-insiders.selectVersion',
+					arguments: [{ versions }],
+				};
+				if (versions.length && versions[0].version !== currentVersion) {
+					item.command.title = 'Update';
+					item.detail = 'New version available';
+					item.severity = vscode.LanguageStatusSeverity.Warning;
 				}
-			}, 1000);
-			upgradeStatus.text = `✨ Upgrade Vue - Official (${s})`;
-			upgradeStatus.color = '#ebb549';
-			upgradeStatus.command = {
-				title: 'Open Link',
-				command: 'vscode.open',
-				arguments: ['https://github.com/vuejs/language-tools/discussions/4127'],
-			};
-			upgradeStatus.show();
-		}
-		else {
-			createLanguageStatus();
-		}
+			})
+			.catch(() => {
+				item.detail = 'Failed to fetch versions';
+			})
+			.finally(() => {
+				item.busy = false;
+			});
+		vscode.commands.registerCommand('vue-insiders.selectVersion', async ({ versions }: { versions: { version: string; date: string; }[]; }) => {
+			const items = versions.map<vscode.QuickPickItem>(version => ({
+				label: version.version,
+				description: version.date + (version.version === currentVersion ? ' (current)' : ''),
+			}));
+			if (!items.some(item => item.description?.endsWith('(current)'))) {
+				items.push({
+					label: '',
+					kind: vscode.QuickPickItemKind.Separator,
+				}, {
+					label: currentVersion,
+					description: '(current)',
+				});
+			}
+			const selected = await vscode.window.showQuickPick(
+				items,
+				{
+					canPickMany: false,
+					placeHolder: 'Select a version',
+				});
+			if (!selected || selected.label === currentVersion) {
+				return;
+			}
+			const updateUrl = `https://github.com/volarjs/insiders/releases/tag/v${selected.label}`;
+			vscode.env.openExternal(vscode.Uri.parse(updateUrl));
+		});
 	}
 
 	async function requestReloadVscode(msg: string) {
