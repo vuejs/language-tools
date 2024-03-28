@@ -28,13 +28,15 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 		tagNameCasings.clear();
 		update(vscode.window.activeTextEditor?.document);
 	}));
-	disposes.push(vscode.workspace.onDidCloseTextDocument((doc) => {
+	disposes.push(vscode.workspace.onDidCloseTextDocument(doc => {
 		attrNameCasings.delete(doc.uri.toString());
 		tagNameCasings.delete(doc.uri.toString());
 	}));
 	disposes.push(vscode.commands.registerCommand('vue.action.nameCasing', async () => {
 
-		if (!vscode.window.activeTextEditor?.document) return;
+		if (!vscode.window.activeTextEditor?.document) {
+			return;
+		}
 
 		const document = vscode.window.activeTextEditor.document;
 		const currentAttrNameCasing = attrNameCasings.get(document.uri.toString());
@@ -196,7 +198,9 @@ export async function activate(_context: vscode.ExtensionContext, client: BaseLa
 
 	function updateStatusBarText() {
 		const document = vscode.window.activeTextEditor?.document;
-		if (!document) return;
+		if (!document) {
+			return;
+		}
 		const attrNameCasing = attrNameCasings.get(document.uri.toString());
 		const tagNameCasing = tagNameCasings.get(document.uri.toString());
 		let text = `<`;

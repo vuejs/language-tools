@@ -184,7 +184,9 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				...sfc.descriptor.customBlocks,
 			];
 			for (const block of blocks) {
-				if (!block) continue;
+				if (!block) {
+					continue;
+				}
 				if (block.lang && block.lang in knownValidSyntaxHighlightExtensions) {
 					const validExts = knownValidSyntaxHighlightExtensions[block.lang as keyof typeof knownValidSyntaxHighlightExtensions];
 					const someInstalled = validExts.some(ext => !!vscode.extensions.getExtension(ext));

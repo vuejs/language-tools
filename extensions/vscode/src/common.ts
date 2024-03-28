@@ -129,12 +129,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	async function requestReloadVscode(msg: string) {
 		const reload = await vscode.window.showInformationMessage(msg, 'Reload Window');
-		if (reload === undefined) return; // cancel
+		if (reload === undefined) {
+			return; // cancel
+		}
 		vscode.commands.executeCommand('workbench.action.reloadWindow');
 	}
 
 	function activateConfigWatcher() {
-		context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((e) => {
+		context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration('vue.server.hybridMode') && config.server.hybridMode !== beginHybridMode) {
 				requestReloadVscode(
 					config.server.hybridMode

@@ -83,7 +83,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.window.showWarningMessage(
 			'Takeover mode is no longer needed since v2. Please enable the "TypeScript and JavaScript Language Features" extension.',
 			'Show Extension'
-		).then((selected) => {
+		).then(selected => {
 			if (selected) {
 				vscode.commands.executeCommand('workbench.extensions.search', '@builtin typescript-language-features');
 			}
@@ -94,7 +94,7 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.window.showWarningMessage(
 			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed since v2. Please uninstall it.`,
 			'Show Extension'
-		).then((selected) => {
+		).then(selected => {
 			if (selected) {
 				vscode.commands.executeCommand('workbench.extensions.search', vueTsPluginExtension.id);
 			}

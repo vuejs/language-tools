@@ -14,7 +14,9 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 	async function onSplit() {
 
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) return;
+		if (!editor) {
+			return;
+		}
 
 		const layout = config.splitEditors.layout;
 		const doc = editor.document;
@@ -73,7 +75,9 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 		async function foldingBlocks(blocks: SFCBlock[]) {
 
 			const editor = vscode.window.activeTextEditor;
-			if (!editor) return;
+			if (!editor) {
+				return;
+			}
 
 			editor.selections = blocks.length
 				? blocks.map(block => new vscode.Selection(doc.positionAt(block.loc.start.offset), doc.positionAt(block.loc.start.offset)))
