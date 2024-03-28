@@ -99,10 +99,14 @@ export function createDefaultGetTsPluginClient(
 		if (!context.language.typescript) {
 			return;
 		}
+		const languageService = context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService');
+		if (!languageService) {
+			return;
+		}
 		const requestContext = {
 			typescript: ts,
 			language: context.language,
-			languageService: context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService'),
+			languageService,
 			vueOptions: getVueOptions(context.env),
 			isTsPlugin: false,
 			getFileId: context.env.typescript!.fileNameToUri,

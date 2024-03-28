@@ -337,6 +337,10 @@ export function create(
 					if (!isSupportedDocument(document)) {
 						return;
 					}
+					const languageService = context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService');
+					if (!languageService) {
+						return;
+					}
 					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					if (
@@ -350,7 +354,7 @@ export function create(
 					const spans = getComponentSpans.call(
 						{
 							files: context.language.scripts,
-							languageService: context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService'),
+							languageService,
 							typescript: ts,
 							vueOptions: getVueOptions(context.env),
 						},
