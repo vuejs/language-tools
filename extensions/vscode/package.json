@@ -391,6 +391,11 @@
 		},
 		"commands": [
 			{
+				"command": "vue.action.restartServer",
+				"title": "Restart Vue and TS servers",
+				"category": "Vue"
+			},
+			{
 				"command": "vue.action.doctor",
 				"title": "Doctor",
 				"category": "Vue"
