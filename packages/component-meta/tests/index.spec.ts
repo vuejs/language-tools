@@ -19,7 +19,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(meta.props.filter(prop => !prop.global)).toEqual([]);
 	});
 
-	test.only('reference-type-model', () => {
+	test('reference-type-model', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-model/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
