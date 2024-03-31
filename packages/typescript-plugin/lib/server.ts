@@ -3,6 +3,7 @@ import * as net from 'net';
 import type * as ts from 'typescript';
 import { collectExtractProps } from './requests/collectExtractProps';
 import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from './requests/componentInfos';
+import { getImportPathForFile } from './requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
 import { NamedPipeServer, connect, readPipeTable, updatePipeTable } from './utils';
@@ -11,6 +12,7 @@ import type { Language, VueCompilerOptions } from '@vue/language-core';
 export interface Request {
 	type: 'containsFile'
 	| 'collectExtractProps'
+	| 'getImportPathForFile'
 	| 'getPropertiesAtLocation'
 	| 'getQuickInfoAtPosition'
 	// Component Infos
@@ -50,6 +52,7 @@ export function startNamedPipeServer(
 				const requestContext = {
 					typescript: ts,
 					languageService: project.info.languageService,
+					languageServiceHost: project.info.languageServiceHost,
 					language: project.language,
 					vueOptions: project.vueOptions,
 					isTsPlugin: true,
@@ -57,6 +60,10 @@ export function startNamedPipeServer(
 				};
 				if (request.type === 'collectExtractProps') {
 					const result = collectExtractProps.apply(requestContext, request.args as any);
+					connection.write(JSON.stringify(result ?? null));
+				}
+				else if (request.type === 'getImportPathForFile') {
+					const result = getImportPathForFile.apply(requestContext, request.args as any);
 					connection.write(JSON.stringify(result ?? null));
 				}
 				else if (request.type === 'getPropertiesAtLocation') {

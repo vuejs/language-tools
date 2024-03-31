@@ -10,6 +10,15 @@ export function collectExtractProps(
 	});
 }
 
+export async function getImportPathForFile(
+	...args: Parameters<typeof import('./requests/getImportPathForFile.js')['getImportPathForFile']>
+) {
+	return await sendRequest<ReturnType<typeof import('./requests/getImportPathForFile')['getImportPathForFile']>>({
+		type: 'getImportPathForFile',
+		args,
+	});
+}
+
 export async function getPropertiesAtLocation(
 	...args: Parameters<typeof import('./requests/getPropertiesAtLocation.js')['getPropertiesAtLocation']>
 ) {

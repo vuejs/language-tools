@@ -3,14 +3,20 @@ import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { LanguageServicePlugin, LanguageServicePluginInstance, TagNameCasing } from '../types';
+import { LanguageServicePlugin, LanguageServicePluginInstance, ServiceContext, TagNameCasing } from '../types';
+import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 
-export function create(ts: typeof import('typescript')): LanguageServicePlugin {
+export function create(
+	ts: typeof import('typescript'),
+	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
+): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
 		create(context): LanguageServicePluginInstance {
 
 			let casing: TagNameCasing = TagNameCasing.Pascal; // TODO
+
+			const tsPluginClient = getTsPluginClient?.(context);
 
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
@@ -51,12 +57,28 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					const additionalEdit: vscode.WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptSetupFormat' : 'scriptFormat'))!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
+					const incomingFileName = context.env.typescript!.uriToFileName(importUri);
 
-					let importPath = path.relative(path.dirname(document.uri), importUri)
-						|| importUri.substring(importUri.lastIndexOf('/') + 1);
+					let importPath: string | undefined;
 
-					if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
-						importPath = './' + importPath;
+					const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(vueVirtualCode);
+					if (tsPluginClient && serviceScript) {
+						const tsDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, serviceScript.code.id);
+						const tsDocument = context.documents.get(tsDocumentUri, serviceScript.code.languageId, serviceScript.code.snapshot);
+						const preferences = await getUserPreferences(context, tsDocument);
+						const importPathRequest = await tsPluginClient.getImportPathForFile(vueVirtualCode.fileName, incomingFileName, preferences);
+						if (importPathRequest) {
+							importPath = importPathRequest;
+						}
+					}
+
+					if (!importPath) {
+						importPath = path.relative(path.dirname(vueVirtualCode.fileName), incomingFileName)
+							|| importUri.substring(importUri.lastIndexOf('/') + 1);
+
+						if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
+							importPath = './' + importPath;
+						}
 					}
 
 					additionalEdit.changes ??= {};

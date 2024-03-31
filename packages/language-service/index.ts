@@ -30,6 +30,7 @@ import { create as createVueVisualizeHiddenCallbackParamPlugin } from './lib/plu
 import { decorateLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
 import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from '@vue/typescript-plugin/lib/requests/componentInfos';
+import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from '@vue/typescript-plugin/lib/requests/getQuickInfoAtPosition';
 
@@ -78,7 +79,7 @@ export function createVueServicePlugins(
 		createVueSfcPlugin(),
 		createVueTwoslashQueriesPlugin(ts, getTsPluginClient),
 		createVueReferencesCodeLensPlugin(),
-		createVueDocumentDropPlugin(ts),
+		createVueDocumentDropPlugin(ts, getTsPluginClient),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueAutoWrapParenthesesPlugin(ts),
 		createVueAutoAddSpacePlugin(),
@@ -107,6 +108,7 @@ export function createDefaultGetTsPluginClient(
 			typescript: ts,
 			language: context.language,
 			languageService,
+			languageServiceHost: context.language.typescript.languageServiceHost,
 			vueOptions: getVueOptions(context.env),
 			isTsPlugin: false,
 			getFileId: context.env.typescript!.fileNameToUri,
@@ -117,6 +119,9 @@ export function createDefaultGetTsPluginClient(
 			},
 			async getPropertiesAtLocation(...args) {
 				return await getPropertiesAtLocation.apply(requestContext, args);
+			},
+			async getImportPathForFile(...args) {
+				return await getImportPathForFile.apply(requestContext, args);
 			},
 			async getComponentEvents(...args) {
 				return await getComponentEvents.apply(requestContext, args);
