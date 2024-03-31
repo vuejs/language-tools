@@ -57,7 +57,7 @@ export function create(
 					const additionalEdit: vscode.WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptSetupFormat' : 'scriptFormat'))!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
-					const importFileName = context.env.typescript!.uriToFileName(importUri);
+					const incomingFileName = context.env.typescript!.uriToFileName(importUri);
 
 					let importPath: string | undefined;
 
@@ -66,14 +66,14 @@ export function create(
 						const tsDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, serviceScript.code.id);
 						const tsDocument = context.documents.get(tsDocumentUri, serviceScript.code.languageId, serviceScript.code.snapshot);
 						const preferences = await getUserPreferences(context, tsDocument);
-						const importPathRequest = await tsPluginClient.getImportPathForFile(vueVirtualCode.fileName, importFileName, preferences);
+						const importPathRequest = await tsPluginClient.getImportPathForFile(vueVirtualCode.fileName, incomingFileName, preferences);
 						if (importPathRequest) {
 							importPath = importPathRequest;
 						}
 					}
 
 					if (!importPath) {
-						importPath = path.relative(path.dirname(vueVirtualCode.fileName), importFileName)
+						importPath = path.relative(path.dirname(vueVirtualCode.fileName), incomingFileName)
 							|| importUri.substring(importUri.lastIndexOf('/') + 1);
 
 						if (!importPath.startsWith('./') && !importPath.startsWith('../')) {

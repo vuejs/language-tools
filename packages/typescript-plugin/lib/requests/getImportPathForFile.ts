@@ -11,6 +11,13 @@ export function getImportPathForFile(
 	preferences: ts.UserPreferences,
 ) {
 	const { typescript: ts, languageService, languageServiceHost } = this;
+	const program = languageService.getProgram();
+	const incomingFile = program?.getSourceFile(incomingFileName);
+	const sourceFile = program?.getSourceFile(fileName);
+	if (!program || !sourceFile || !incomingFile) {
+		return;
+	}
+
 	const getModuleSpecifiersWithCacheInfo: (
 		moduleSymbol: ts.Symbol,
 		checker: ts.TypeChecker,
@@ -23,12 +30,6 @@ export function getImportPathForFile(
 		moduleSpecifiers: readonly string[];
 		computedWithoutCache: boolean;
 	} = (ts as any).moduleSpecifiers.getModuleSpecifiersWithCacheInfo;
-	const program = languageService.getProgram()!;
-	const incomingFile = program?.getSourceFile(incomingFileName);
-	const sourceFile = program?.getSourceFile(fileName);
-	if (!program || !sourceFile || !incomingFile) {
-		return;
-	}
 	const resolutionHost = (ts as any).createModuleSpecifierResolutionHost(program, languageServiceHost);
 	const moduleSpecifiers = getModuleSpecifiersWithCacheInfo(
 		(incomingFile as any).symbol,
@@ -38,6 +39,7 @@ export function getImportPathForFile(
 		resolutionHost,
 		preferences,
 	);
+
 	for (const moduleSpecifier of moduleSpecifiers.moduleSpecifiers) {
 		return moduleSpecifier;
 	}
