@@ -299,12 +299,15 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			if ($props) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode);
 				const properties = type.getProperties();
-				const {
-					resolveNestedProperties,
-				} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
 
 				result = properties
-					.map(prop => resolveNestedProperties(prop))
+					.map(prop => {
+						const {
+							resolveNestedProperties,
+						} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
+
+						return resolveNestedProperties(prop);
+					})
 					.filter(prop => !prop.name.match(propEventRegex));
 			}
 
