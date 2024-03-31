@@ -49,7 +49,15 @@ connection.onInitialize(async params => {
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
 			getLanguageId(uri) {
 				if (vueFileExtensions.some(ext => uri.endsWith(`.${ext}`))) {
-					return 'vue';
+					if (uri.endsWith('.html')) {
+						return 'html';
+					}
+					else if (uri.endsWith('.md')) {
+						return 'markdown';
+					}
+					else {
+						return 'vue';
+					}
 				}
 				return resolveCommonLanguageId(uri);
 			},
