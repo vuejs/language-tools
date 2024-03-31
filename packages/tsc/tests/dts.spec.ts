@@ -31,7 +31,7 @@ describe('vue-tsc-dts', () => {
 		const { configFilePath } = options.options;
 		const vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-			: vue.resolveVueCompilerOptions({});
+			: vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
 		vueExts = vueOptions.extensions;
 		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
