@@ -1,8 +1,4 @@
-import type { Code, CodeAndStack, VueCodeInformation } from '../types';
-
-export function withStack(code: Code): CodeAndStack {
-	return [code, getStack()];
-}
+import type { VueCodeInformation } from '../types';
 
 // TODO: import from muggle-string
 export function getStack() {

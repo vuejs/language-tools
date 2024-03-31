@@ -6,7 +6,7 @@ import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { Code, CodeAndStack, Sfc, SfcBlock, VueCompilerOptions } from '../types';
 import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { eachInterpolationSegment } from '../utils/transform';
-import { disableAllFeatures, enableAllFeatures, withStack } from './utils';
+import { disableAllFeatures, enableAllFeatures, getStack } from './utils';
 import { generateGlobalTypes } from './globalTypes';
 
 interface HelperType {
@@ -73,7 +73,18 @@ export function* generate(
 		...scriptSetupRanges?.bindings.map(range => scriptSetup!.content.substring(range.start, range.end)) ?? [],
 	]);
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
-	const _ = codegenStack ? withStack : (code: Code): CodeAndStack => [code, ''];
+	const _ = (code: Code): CodeAndStack => {
+		if (typeof code !== 'string') {
+			code[3].structure = false;
+			code[3].format = false;
+		}
+		if (!codegenStack) {
+			return [code, ''];
+		}
+		else {
+			return [code, getStack()];
+		}
+	};
 	const helperTypes = {
 		OmitKeepDiscriminatedUnion: {
 			get name() {
@@ -645,6 +656,22 @@ export function* generate(
 				}
 				else {
 					yield _(`import('${vueCompilerOptions.lib}').PropType<${type}>,\n`);
+				}
+
+				if (defineProp.modifierType) {
+					let propModifierName = 'modelModifiers';
+
+					if (defineProp.name) {
+						propModifierName = `${scriptSetup.content.substring(defineProp.name.start + 1, defineProp.name.end - 1)}Modifiers`;
+					}
+
+					const modifierType = scriptSetup.content.substring(defineProp.modifierType.start, defineProp.modifierType.end);
+
+					const start = getGeneratedLength();
+					definePropMirrors.set(propModifierName, start);
+					yield _(propModifierName);
+					yield _(`: `);
+					yield _(`import('${vueCompilerOptions.lib}').PropType<Record<${modifierType}, true>>,\n`);
 				}
 			}
 			yield _(`};\n`);

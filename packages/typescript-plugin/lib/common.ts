@@ -17,8 +17,8 @@ export function decorateLanguageServiceForVue(
 		getEncodedSemanticClassifications,
 	} = languageService;
 
-	languageService.getCompletionsAtPosition = (fileName, position, options) => {
-		const result = getCompletionsAtPosition(fileName, position, options);
+	languageService.getCompletionsAtPosition = (fileName, position, options, formattingSettings) => {
+		const result = getCompletionsAtPosition(fileName, position, options, formattingSettings);
 		if (result) {
 			// filter __VLS_
 			result.entries = result.entries.filter(

@@ -39,12 +39,6 @@ const plugin: VueLanguagePlugin = ctx => {
 				const tsx = _tsx.generatedScript();
 				if (tsx) {
 					const [content, contentStacks] = ctx.codegenStack ? track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
-					content.forEach(code => {
-						if (typeof code !== 'string') {
-							code[3].structure = false;
-							code[3].format = false;
-						}
-					});
 					embeddedFile.content = content;
 					embeddedFile.contentStacks = contentStacks;
 					embeddedFile.linkedCodeMappings = [...tsx.linkedCodeMappings];

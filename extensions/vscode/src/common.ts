@@ -78,7 +78,8 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 
 	const hybridModeStatus = vscode.languages.createLanguageStatusItem('vue-hybrid-mode', selectors);
-	hybridModeStatus.text = config.server.hybridMode ? 'Hybrid Mode: Enabled' : 'Hybrid Mode: Disabled';
+	hybridModeStatus.text = 'Hybrid Mode';
+	hybridModeStatus.detail = config.server.hybridMode ? 'Enabled' : 'Disabled';
 	hybridModeStatus.command = {
 		title: 'Open Setting',
 		command: 'workbench.action.openSettings',
