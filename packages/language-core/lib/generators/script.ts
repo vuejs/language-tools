@@ -626,6 +626,7 @@ export function* generate(
 					const start = getGeneratedLength();
 					definePropMirrors.set(propName, start);
 					yield _(propName);
+
 				}
 				else {
 					yield _(propName);
@@ -645,6 +646,22 @@ export function* generate(
 				}
 				else {
 					yield _(`import('${vueCompilerOptions.lib}').PropType<${type}>,\n`);
+				}
+
+				if (defineProp.modifierType) {
+					let propModifierName = 'modelModifiers';
+
+					if (defineProp.name) {
+						propModifierName = `${scriptSetup.content.substring(defineProp.name.start + 1, defineProp.name.end - 1)}Modifiers`;
+					}
+
+					const modifierType = scriptSetup.content.substring(defineProp.modifierType.start, defineProp.modifierType.end);
+
+					const start = getGeneratedLength();
+					definePropMirrors.set(propModifierName, start);
+					yield _(propModifierName);
+					yield _(`: `);
+					yield _(`import('${vueCompilerOptions.lib}').PropType<Record<${modifierType}, true>>,\n`);
 				}
 			}
 			yield _(`};\n`);

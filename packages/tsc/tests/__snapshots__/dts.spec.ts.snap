@@ -317,15 +317,21 @@ exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: refere
 "declare const _default: import("vue").DefineComponent<{
     foo: import("vue").PropType<number>;
     bar: import("vue").PropType<string[]>;
+    qux: import("vue").PropType<string>;
+    quxModifiers: import("vue").PropType<Record<"trim" | "lazy", true>>;
 }, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     "update:foo": (foo: number) => void;
     "update:bar": (bar: string[]) => void;
+    "update:qux": (qux: string) => void;
 }, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
     foo: import("vue").PropType<number>;
     bar: import("vue").PropType<string[]>;
+    qux: import("vue").PropType<string>;
+    quxModifiers: import("vue").PropType<Record<"trim" | "lazy", true>>;
 }>> & {
     "onUpdate:foo"?: (foo: number) => any;
     "onUpdate:bar"?: (bar: string[]) => any;
+    "onUpdate:qux"?: (qux: string) => any;
 }, {}, {}>;
 export default _default;
 "
