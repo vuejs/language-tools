@@ -6,7 +6,7 @@ import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { Code, CodeAndStack, Sfc, SfcBlock, VueCompilerOptions } from '../types';
 import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { eachInterpolationSegment } from '../utils/transform';
-import { disableAllFeatures, enableAllFeatures, withStack } from './utils';
+import { disableAllFeatures, enableAllFeatures, getStack } from './utils';
 import { generateGlobalTypes } from './globalTypes';
 
 interface HelperType {
@@ -73,7 +73,18 @@ export function* generate(
 		...scriptSetupRanges?.bindings.map(range => scriptSetup!.content.substring(range.start, range.end)) ?? [],
 	]);
 	const bypassDefineComponent = lang === 'js' || lang === 'jsx';
-	const _ = codegenStack ? withStack : (code: Code): CodeAndStack => [code, ''];
+	const _ = (code: Code): CodeAndStack => {
+		if (typeof code !== 'string') {
+			code[3].structure = false;
+			code[3].format = false;
+		}
+		if (!codegenStack) {
+			return [code, ''];
+		}
+		else {
+			return [code, getStack()];
+		}
+	};
 	const helperTypes = {
 		OmitKeepDiscriminatedUnion: {
 			get name() {
@@ -626,7 +637,6 @@ export function* generate(
 					const start = getGeneratedLength();
 					definePropMirrors.set(propName, start);
 					yield _(propName);
-
 				}
 				else {
 					yield _(propName);

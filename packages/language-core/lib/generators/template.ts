@@ -68,29 +68,33 @@ export function* generate(
 ) {
 
 	const processDirectiveComment = (code: Code) => {
-		if (ignoreError && typeof code !== 'string') {
-			const data = code[3];
-			if (data.verification) {
-				code[3] = {
-					...data,
-					verification: false,
-				};
+		if (typeof code !== 'string') {
+			if (ignoreError) {
+				const data = code[3];
+				if (data.verification) {
+					code[3] = {
+						...data,
+						verification: false,
+					};
+				}
 			}
-		}
-		if (expectErrorToken && typeof code !== 'string') {
-			const token = expectErrorToken;
-			const data = code[3];
-			if (data.verification) {
-				code[3] = {
-					...data,
-					verification: {
-						shouldReport: () => {
-							token.errors++;
-							return false;
+			if (expectErrorToken) {
+				const token = expectErrorToken;
+				const data = code[3];
+				if (data.verification) {
+					code[3] = {
+						...data,
+						verification: {
+							shouldReport: () => {
+								token.errors++;
+								return false;
+							},
 						},
-					},
-				};
+					};
+				}
 			}
+			code[3].structure = false;
+			code[3].format = false;
 		}
 		return code;
 	};
