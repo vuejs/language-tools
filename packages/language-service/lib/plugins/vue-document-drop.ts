@@ -61,8 +61,11 @@ export function create(
 
 					let importPath: string | undefined;
 
-					if (tsPluginClient) {
-						const preferences = await getUserPreferences(context, document);
+					const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(vueVirtualCode);
+					if (tsPluginClient && serviceScript) {
+						const tsDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, serviceScript.code.id);
+						const tsDocument = context.documents.get(tsDocumentUri, serviceScript.code.languageId, serviceScript.code.snapshot);
+						const preferences = await getUserPreferences(context, tsDocument);
 						const importPathRequest = await tsPluginClient.getImportPathForFile(vueVirtualCode.fileName, importFileName, preferences);
 						if (importPathRequest) {
 							importPath = importPathRequest;
