@@ -1,6 +1,6 @@
 import type { Connection } from '@volar/language-server';
 import { createConnection, createServer, createSimpleProjectProviderFactory, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
-import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
+import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveCommonLanguageId, resolveVueCompilerOptions } from '@vue/language-core';
 import { ServiceEnvironment, convertAttrName, convertTagName, createDefaultGetTsPluginClient, createVueServicePlugins, detect } from '@vue/language-service';
 import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './lib/protocol';
 import type { VueInitializationOptions } from './lib/types';
@@ -47,6 +47,12 @@ connection.onInitialize(async params => {
 			: createTypeScriptProjectProviderFactory(tsdk.typescript, tsdk.diagnosticMessages),
 		{
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
+			getLanguageId(uri) {
+				if (vueFileExtensions.some(ext => uri.endsWith(`.${ext}`))) {
+					return 'vue';
+				}
+				return resolveCommonLanguageId(uri);
+			},
 			getServicePlugins() {
 				return createVueServicePlugins(
 					tsdk.typescript,
