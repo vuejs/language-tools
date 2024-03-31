@@ -52,6 +52,7 @@ export function startNamedPipeServer(
 				const requestContext = {
 					typescript: ts,
 					languageService: project.info.languageService,
+					languageServiceHost: project.info.languageServiceHost,
 					language: project.language,
 					vueOptions: project.vueOptions,
 					isTsPlugin: true,

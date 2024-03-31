@@ -4,6 +4,7 @@ import * as path from 'path-browserify';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
 import { LanguageServicePlugin, LanguageServicePluginInstance, ServiceContext, TagNameCasing } from '../types';
+import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -56,19 +57,20 @@ export function create(
 					const additionalEdit: vscode.WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptSetupFormat' : 'scriptFormat'))!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
+					const importFileName = context.env.typescript!.uriToFileName(importUri);
 
 					let importPath: string | undefined;
 
 					if (tsPluginClient) {
-						const importFileName = context.env.typescript!.uriToFileName(importUri);
-						const importPathRequest = await tsPluginClient.getImportPathForFile(vueVirtualCode.fileName, importFileName);
+						const preferences = await getUserPreferences(context, document);
+						const importPathRequest = await tsPluginClient.getImportPathForFile(vueVirtualCode.fileName, importFileName, preferences);
 						if (importPathRequest) {
 							importPath = importPathRequest;
 						}
 					}
 
 					if (!importPath) {
-						importPath = path.relative(path.dirname(document.uri), importUri)
+						importPath = path.relative(path.dirname(vueVirtualCode.fileName), importFileName)
 							|| importUri.substring(importUri.lastIndexOf('/') + 1);
 
 						if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
