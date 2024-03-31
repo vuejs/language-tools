@@ -25,7 +25,7 @@ describe('vue-tsc-dts', () => {
 		options: compilerOptions
 	};
 	const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options);
-	const createProgram = proxyCreateProgram(ts, ts.createProgram, ['.vue'], (ts, options) => {
+	const createProgram = proxyCreateProgram(ts, ts.createProgram, ['.vue', '.cext'], (ts, options) => {
 		const { configFilePath } = options.options;
 		const vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
