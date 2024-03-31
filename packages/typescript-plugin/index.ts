@@ -49,17 +49,19 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					);
 					const extensions = languagePlugin.typescript?.extraFileExtensions.map(ext => '.' + ext.extension) ?? [];
 					const getScriptSnapshot = info.languageServiceHost.getScriptSnapshot.bind(info.languageServiceHost);
+					const getLanguageId = (fileName: string) => {
+						if (extensions.some(ext => fileName.endsWith(ext))) {
+							return 'vue';
+						}
+						return resolveCommonLanguageId(fileName);
+					};
 					const language = createLanguage(
 						[languagePlugin],
 						ts.sys.useCaseSensitiveFileNames,
 						fileName => {
 							const snapshot = getScriptSnapshot(fileName);
 							if (snapshot) {
-								let languageId = resolveCommonLanguageId(fileName);
-								if (extensions.some(ext => fileName.endsWith(ext))) {
-									languageId = 'vue';
-								}
-								language.scripts.set(fileName, languageId, snapshot);
+								language.scripts.set(fileName, getLanguageId(fileName), snapshot);
 							}
 							else {
 								language.scripts.delete(fileName);
@@ -72,7 +74,7 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 
 					decorateLanguageService(language, info.languageService);
 					decorateLanguageServiceForVue(language, info.languageService, vueOptions, ts, true);
-					decorateLanguageServiceHost(language, info.languageServiceHost, ts);
+					decorateLanguageServiceHost(ts, language, info.languageServiceHost, getLanguageId);
 					startNamedPipeServer(ts, info.project.projectKind, info.project.getCurrentDirectory());
 				}
 

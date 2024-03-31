@@ -25,11 +25,14 @@ describe('vue-tsc-dts', () => {
 		options: compilerOptions
 	};
 	const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options);
-	const createProgram = proxyCreateProgram(ts, ts.createProgram, ['.vue'], (ts, options) => {
+
+	let vueExts: string[] = [];
+	const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
 		const { configFilePath } = options.options;
 		const vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 			: vue.resolveVueCompilerOptions({});
+		vueExts = vueOptions.extensions;
 		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
@@ -39,6 +42,11 @@ describe('vue-tsc-dts', () => {
 			false,
 		);
 		return [vueLanguagePlugin];
+	}, fileName => {
+		if (vueExts.some(ext => fileName.endsWith(ext))) {
+			return 'vue';
+		}
+		return vue.resolveCommonLanguageId(fileName);
 	});
 	const program = createProgram(options);
 
