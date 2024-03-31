@@ -133,7 +133,7 @@ export function parseScriptSetupRanges(
 					name,
 					nameIsString: true,
 					type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
-					modifierType: node.typeArguments?.length === 2 ? _getStartEnd(node.typeArguments[1]) : undefined,
+					modifierType: node.typeArguments?.length >= 2 ? _getStartEnd(node.typeArguments[1]) : undefined,
 					defaultValue: undefined,
 					required,
 					isModel: true,
