@@ -6,14 +6,18 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 		name: 'vue-autoinsert-parentheses',
 		create(context): LanguageServicePluginInstance {
 			return {
-				async provideAutoInsertionEdit(document, position, lastChange) {
+				async provideAutoInsertionEdit(document, selection, change) {
+					// selection must at end of change
+					if (document.offsetAt(selection) !== change.rangeOffset + change.text.length) {
+						return;
+					}
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.parentheses') ?? false;
 					if (!enabled) {
 						return;
 					}
 
-					if (!isCharacterTyping(document, lastChange)) {
+					if (!isCharacterTyping(document, change)) {
 						return;
 					}
 
@@ -24,7 +28,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						return;
 					}
 
-					const offset = document.offsetAt(position);
+					const offset = document.offsetAt(selection);
 
 					for (const mappedRange of virtualCode.mappings) {
 						const generatedCodeEnd = mappedRange.generatedOffsets[mappedRange.generatedOffsets.length - 1]

@@ -5,7 +5,7 @@ export function create(): LanguageServicePlugin {
 		name: 'vue-autoinsert-space',
 		create(context): LanguageServicePluginInstance {
 			return {
-				async provideAutoInsertionEdit(document, _, lastChange) {
+				async provideAutoInsertionEdit(document, selection, change) {
 
 					if (document.languageId === 'html' || document.languageId === 'jade') {
 
@@ -15,19 +15,11 @@ export function create(): LanguageServicePlugin {
 						}
 
 						if (
-							lastChange.text === '{}'
-							&& document.getText({
-								start: { line: lastChange.range.start.line, character: lastChange.range.start.character - 1 },
-								end: { line: lastChange.range.start.line, character: lastChange.range.start.character + 3 }
-							}) === '{{}}'
+							change.text === '{}'
+							&& document.getText().substring(change.rangeOffset - 1, change.rangeOffset + 3) === '{{}}'
+							&& document.offsetAt(selection) === change.rangeOffset + 1
 						) {
-							return {
-								newText: ` $0 `,
-								range: {
-									start: { line: lastChange.range.start.line, character: lastChange.range.start.character + 1 },
-									end: { line: lastChange.range.start.line, character: lastChange.range.start.character + 1 }
-								},
-							};
+							return ` $0 `;
 						}
 					}
 				},
