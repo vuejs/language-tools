@@ -4,11 +4,12 @@ import { getSlotsPropertyName } from '../utils/shared';
 export function generateGlobalTypes(vueCompilerOptions: VueCompilerOptions) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}`;
 	return `
-; declare global {
+; export const __VLS_globalTypesStart = {};
+declare global {
 // @ts-ignore
-type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<JSX.IntrinsicElements, Record<string, any>>>;
+type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<globalThis.JSX.IntrinsicElements, Record<string, any>>>;
 // @ts-ignore
-type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, JSX.Element>;
+type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, globalThis.JSX.Element>;
 // @ts-ignore
 type __VLS_GlobalComponents = ${[
 			`__VLS_PickNotAny<import('vue').GlobalComponents, {}>`,
@@ -125,5 +126,6 @@ type __VLS_NormalizeEmits<T> = __VLS_PrettifyGlobal<
 	>
 >;
 type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
-}`;
+}
+export const __VLS_globalTypesEnd = {};`;
 };
