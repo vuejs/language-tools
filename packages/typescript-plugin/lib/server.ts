@@ -8,6 +8,8 @@ import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
 import { NamedPipeServer, connect, readPipeTable, updatePipeTable } from './utils';
 import type { Language, VueCompilerOptions } from '@vue/language-core';
+import * as path from 'path';
+import * as os from 'os';
 
 export interface Request {
 	type: 'containsFile'
@@ -35,10 +37,8 @@ export function startNamedPipeServer(
 		return;
 	}
 	started = true;
+	const pipeFile = path.join(os.tmpdir(), `vue-tsp-${process.pid}`);
 
-	const pipeFile = process.platform === 'win32'
-		? `\\\\.\\pipe\\vue-tsp-${process.pid}`
-		: `/tmp/vue-tsp-${process.pid}`;
 	const server = net.createServer(connection => {
 		connection.on('data', data => {
 			const text = data.toString();
