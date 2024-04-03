@@ -4,7 +4,7 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { proxyCreateProgram } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import { createFakeGlobalTypesHolder } from '..';
+import { removeEmitGlobalTypes } from '..';
 
 const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
@@ -24,7 +24,6 @@ describe('vue-tsc-dts', () => {
 		rootNames: readFilesRecursive(workspace),
 		options: compilerOptions
 	};
-	const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options);
 
 	let vueExts: string[] = [];
 	const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
@@ -36,7 +35,21 @@ describe('vue-tsc-dts', () => {
 		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
-			fileName => fileName === fakeGlobalTypesHolder,
+			fileName => {
+				const rootFileNames = options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/'));
+				if (options.host?.useCaseSensitiveFileNames?.()) {
+					return rootFileNames.includes(fileName);
+				}
+				else {
+					const lowerFileName = fileName.toLowerCase();
+					for (const rootFileName of rootFileNames) {
+						if (rootFileName.toLowerCase() === lowerFileName) {
+							return true;
+						}
+					}
+					return false;
+				}
+			},
 			options.options,
 			vueOptions,
 			false,
@@ -52,9 +65,6 @@ describe('vue-tsc-dts', () => {
 
 	for (const intputFile of options.rootNames) {
 
-		if (intputFile.endsWith('__VLS_globalTypes.vue'))
-			continue;
-
 		const expectedOutputFile = intputFile.endsWith('.ts')
 			? intputFile.slice(0, -'.ts'.length) + '.d.ts'
 			: intputFile.endsWith('.tsx')
@@ -67,6 +77,7 @@ describe('vue-tsc-dts', () => {
 				sourceFile,
 				(outputFile, text) => {
 					expect(outputFile.replace(windowsPathReg, '/')).toBe(expectedOutputFile.replace(windowsPathReg, '/'));
+					text = removeEmitGlobalTypes(text);
 					outputText = text;
 				},
 				undefined,
