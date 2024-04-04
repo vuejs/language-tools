@@ -30,20 +30,9 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					const languagePlugin = vue.createVueLanguagePlugin(
 						ts,
 						id => id,
-						fileName => {
-							if (info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false) {
-								return externalFiles.get(info.project)?.has(fileName) ?? false;
-							}
-							else {
-								const lowerFileName = fileName.toLowerCase();
-								for (const externalFile of externalFiles.get(info.project) ?? []) {
-									if (externalFile.toLowerCase() === lowerFileName) {
-										return true;
-									}
-								}
-								return false;
-							}
-						},
+						info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false,
+						() => info.languageServiceHost.getProjectVersion?.() ?? '',
+						() => externalFiles.get(info.project) ?? [],
 						info.languageServiceHost.getCompilationSettings(),
 						vueOptions,
 					);

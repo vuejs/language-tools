@@ -7,7 +7,9 @@ const resolvedVueOptions = resolveVueCompilerOptions({});
 const vueLanguagePlugin = createVueLanguagePlugin(
 	ts,
 	fileId => formatter.env.typescript!.uriToFileName(fileId),
-	() => false,
+	false,
+	() => '',
+	() => [],
 	{},
 	resolvedVueOptions,
 );

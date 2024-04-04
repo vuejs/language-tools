@@ -16,37 +16,28 @@ export function run() {
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 				: vue.resolveVueCompilerOptions({});
-			const writeFile = options.host!.writeFile.bind(options.host);
-			const getCanonicalFileName = options.host?.useCaseSensitiveFileNames?.()
-				? (fileName: string) => fileName
-				: (fileName: string) => fileName.toLowerCase();
-			const canonicalRootFileNames = new Set(
-				options.rootNames
-					.map(rootName => rootName.replace(windowsPathReg, '/'))
-					.map(getCanonicalFileName)
-			);
-			const canonicalGlobalTypesHolderFileNames = new Set<string>();
-			options.host!.writeFile = (fileName, contents, ...args) => {
-				if (
-					fileName.endsWith('.d.ts')
-					&& canonicalGlobalTypesHolderFileNames.has(getCanonicalFileName(fileName.replace(windowsPathReg, '/')).slice(0, -5))
-				) {
-					contents = removeEmitGlobalTypes(contents);
-				}
-				return writeFile(fileName, contents, ...args);
-			};
 			if (
 				runExtensions.length === vueOptions.extensions.length
 				&& runExtensions.every(ext => vueOptions.extensions.includes(ext))
 			) {
+				const writeFile = options.host!.writeFile.bind(options.host);
+				options.host!.writeFile = (fileName, contents, ...args) => {
+					if (
+						fileName.endsWith('.d.ts')
+						&& vueLanguagePlugin
+							.getCanonicalFileName(fileName.replace(windowsPathReg, '/'))
+							.slice(0, -5) === vueLanguagePlugin.pluginContext.globalTypesHolder
+					) {
+						contents = removeEmitGlobalTypes(contents);
+					}
+					return writeFile(fileName, contents, ...args);
+				};
 				const vueLanguagePlugin = vue.createVueLanguagePlugin(
 					ts,
 					id => id,
-					fileName => {
-						const canonicalFileName = getCanonicalFileName(fileName);
-						canonicalGlobalTypesHolderFileNames.add(canonicalFileName);
-						return canonicalRootFileNames.has(canonicalFileName);
-					},
+					options.host?.useCaseSensitiveFileNames?.() ?? false,
+					() => '',
+					() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
 					options.options,
 					vueOptions,
 					false,

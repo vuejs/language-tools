@@ -35,21 +35,9 @@ describe('vue-tsc-dts', () => {
 		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
-			fileName => {
-				const rootFileNames = options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/'));
-				if (options.host?.useCaseSensitiveFileNames?.()) {
-					return rootFileNames.includes(fileName);
-				}
-				else {
-					const lowerFileName = fileName.toLowerCase();
-					for (const rootFileName of rootFileNames) {
-						if (rootFileName.toLowerCase() === lowerFileName) {
-							return true;
-						}
-					}
-					return false;
-				}
-			},
+			options.host?.useCaseSensitiveFileNames?.() ?? false,
+			() => '',
+			() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
 			options.options,
 			vueOptions,
 			false,

@@ -48,14 +48,21 @@ function getFileRegistryKey(
 	return JSON.stringify(values);
 }
 
+interface _Plugin extends LanguagePlugin<VueGeneratedCode> {
+	getCanonicalFileName: (fileName: string) => string;
+	pluginContext: Parameters<VueLanguagePlugin>[0];
+}
+
 export function createVueLanguagePlugin(
 	ts: typeof import('typescript'),
 	getFileName: (fileId: string) => string,
-	isValidGlobalTypesHolder: (fileName: string) => boolean,
+	useCaseSensitiveFileNames: boolean,
+	getProjectVersion: () => string,
+	getScriptFileNames: () => string[] | Set<string>,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
 	codegenStack: boolean = false,
-): LanguagePlugin<VueGeneratedCode> {
+): _Plugin {
 	const allowLanguageIds = new Set(['vue']);
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
@@ -81,11 +88,24 @@ export function createVueLanguagePlugin(
 		allowLanguageIds.add('html');
 	}
 
+	const getCanonicalFileName = useCaseSensitiveFileNames
+		? (fileName: string) => fileName
+		: (fileName: string) => fileName.toLowerCase();
+	let canonicalRootFileNames = new Set<string>();
+	let canonicalRootFileNamesVersion: string | undefined;
+
 	return {
+		getCanonicalFileName,
+		pluginContext,
 		createVirtualCode(fileId, languageId, snapshot) {
 			if (allowLanguageIds.has(languageId)) {
 				const fileName = getFileName(fileId);
-				if (!pluginContext.globalTypesHolder && isValidGlobalTypesHolder(fileName)) {
+				const projectVersion = getProjectVersion();
+				if (projectVersion !== canonicalRootFileNamesVersion) {
+					canonicalRootFileNames = new Set([...getScriptFileNames()].map(getCanonicalFileName));
+					canonicalRootFileNamesVersion = projectVersion;
+				}
+				if (!pluginContext.globalTypesHolder && canonicalRootFileNames.has(getCanonicalFileName(fileName))) {
 					pluginContext.globalTypesHolder = fileName;
 				}
 				const fileRegistry = getFileRegistry(pluginContext.globalTypesHolder === fileName);

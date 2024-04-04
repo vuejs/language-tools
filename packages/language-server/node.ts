@@ -80,20 +80,9 @@ connection.onInitialize(async params => {
 				const vueLanguagePlugin = createVueLanguagePlugin(
 					tsdk.typescript,
 					serviceEnv.typescript!.uriToFileName,
-					fileName => {
-						if (projectContext.typescript?.sys.useCaseSensitiveFileNames ?? false) {
-							return projectContext.typescript?.host.getScriptFileNames().includes(fileName) ?? false;
-						}
-						else {
-							const lowerFileName = fileName.toLowerCase();
-							for (const rootFile of projectContext.typescript?.host.getScriptFileNames() ?? []) {
-								if (rootFile.toLowerCase() === lowerFileName) {
-									return true;
-								}
-							}
-							return false;
-						}
-					},
+					projectContext.typescript?.sys.useCaseSensitiveFileNames ?? false,
+					() => projectContext.typescript?.host.getProjectVersion?.() ?? '',
+					() => projectContext.typescript?.host.getScriptFileNames() ?? [],
 					commandLine?.options ?? {},
 					vueOptions,
 					options.codegenStack,

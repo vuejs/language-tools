@@ -32,20 +32,9 @@ function createTester(rootUri: string) {
 	const vueLanguagePlugin = createVueLanguagePlugin(
 		ts,
 		serviceEnv.typescript!.uriToFileName,
-		fileName => {
-			if (ts.sys.useCaseSensitiveFileNames) {
-				return projectHost.getScriptFileNames().includes(fileName);
-			}
-			else {
-				const lowerFileName = fileName.toLowerCase();
-				for (const rootFile of projectHost.getScriptFileNames()) {
-					if (rootFile.toLowerCase() === lowerFileName) {
-						return true;
-					}
-				}
-				return false;
-			}
-		},
+		ts.sys.useCaseSensitiveFileNames,
+		() => projectHost.getProjectVersion?.() ?? '',
+		() => projectHost.getScriptFileNames(),
 		parsedCommandLine.options,
 		parsedCommandLine.vueOptions,
 	);
