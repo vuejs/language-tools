@@ -38,6 +38,7 @@ export const currentHybridModeStatus = getCurrentHybridModeStatus();
 
 function getCurrentHybridModeStatus(report = false) {
 	if (config.server.hybridMode === 'auto') {
+		const unknownExtensions: string[] = [];
 		for (const extension of vscode.extensions.all) {
 			const hasTsPlugin = !!extension.packageJSON?.contributes?.typescriptServerPlugins;
 			if (hasTsPlugin) {
@@ -45,23 +46,28 @@ function getCurrentHybridModeStatus(report = false) {
 					extension.id === 'Vue.volar'
 					|| extension.id === 'unifiedjs.vscode-mdx'
 					|| extension.id === 'astro-build.astro-vscode'
+					|| extension.id === 'ije.esm-vscode'
+					|| extension.id === 'johnsoncodehk.vscode-tsslint'
 				) {
 					continue;
 				}
 				else {
-					if (report) {
-						vscode.window.showInformationMessage(
-							`Hybrid Mode is disabled automatically because there is a potentially incompatible "${extension.id}" TypeScript plugin installed.`,
-							'Report a false positive',
-						).then(value => {
-							if (value) {
-								vscode.env.openExternal(vscode.Uri.parse(''));
-							}
-						});
-					}
-					return false;
+					unknownExtensions.push(extension.id);
 				}
 			}
+		}
+		if (unknownExtensions.length) {
+			if (report) {
+				vscode.window.showInformationMessage(
+					`Hybrid Mode is disabled automatically because there is a potentially incompatible ${unknownExtensions.join(', ')} TypeScript plugin installed.`,
+					'Report a false positive',
+				).then(value => {
+					if (value) {
+						vscode.env.openExternal(vscode.Uri.parse('https://github.com/vuejs/language-tools/pull/4206'));
+					}
+				});
+			}
+			return false;
 		}
 		return true;
 	}

@@ -231,27 +231,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		if (config.server.hybridMode) {
-			// #3942, https://github.com/microsoft/TypeScript/issues/57633
-			for (const extId of [
-				'svelte.svelte-vscode',
-				'styled-components.vscode-styled-components',
-				'Divlo.vscode-styled-jsx-languageserver',
-			]) {
-				const ext = vscode.extensions.getExtension(extId);
-				if (ext) {
-					problems.push({
-						title: `Recommended to disable "${ext.packageJSON.displayName || extId}" in Vue workspace`,
-						message: [
-							`This extension's TypeScript Plugin and Vue's TypeScript Plugin are known to cause some conflicts. Until the problem is resolved, it is recommended that you temporarily disable the this extension in the Vue workspace.`,
-							'',
-							'Issues: https://github.com/vuejs/language-tools/issues/3942, https://github.com/microsoft/TypeScript/issues/57633',
-						].join('\n'),
-					});
-				}
-			}
-		}
-
 		// check outdated vue language plugins
 		// check node_modules has more than one vue versions
 		// check ESLint, Prettier...
