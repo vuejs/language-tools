@@ -497,7 +497,7 @@ export function* generate(
 				blockConditions.push(
 					toString(
 						[...generateInterpolation(branch.condition.content, branch.condition.loc, undefined, undefined, '(', ')')]
-							.map(code => code[1])
+							.map(([code]) => code)
 					)
 				);
 				addedBlockCondition = true;
