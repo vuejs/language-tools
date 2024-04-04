@@ -3,7 +3,7 @@ import * as serverLib from '@vue/language-server';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as lsp from '@volar/vscode/node';
-import { activate as commonActivate, deactivate as commonDeactivate } from './common';
+import { activate as commonActivate, deactivate as commonDeactivate, currentHybridModeStatus } from './common';
 import { config } from './config';
 import { middleware } from './middleware';
 
@@ -133,7 +133,6 @@ try {
 	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
 	const readFileSync = fs.readFileSync;
 	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
-	const { hybridMode } = config.server;
 
 	// @ts-expect-error
 	fs.readFileSync = (...args) => {
@@ -141,7 +140,7 @@ try {
 			// @ts-expect-error
 			let text = readFileSync(...args) as string;
 
-			if (!hybridMode) {
+			if (!currentHybridModeStatus) {
 				// patch readPlugins
 				text = text.replace(
 					'languages:Array.isArray(e.languages)',

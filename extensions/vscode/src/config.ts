@@ -16,7 +16,7 @@ export const config = {
 		return _config().get('doctor')!;
 	},
 	get server(): Readonly<{
-		hybridMode: boolean;
+		hybridMode: 'auto' | boolean;
 		maxOldSpaceSize: number;
 		maxFileSize: number;
 		diagnosticModel: 'push' | 'pull';
