@@ -1,12 +1,48 @@
 # Changelog
 
+## 2.0.10 (2024/4/4)
+
+### Features
+
+- **vscode:** enable `vue.updateImportsOnFileMove.enabled` by default (#3646)
+- **vscode:** re-add restart server command (#4174)
+- **vscode:** automatically enable Hybrid Mode if possible (#4206)
+- **component-meta:** add typing resolution for defineModel modifiers (#4175) - Thanks @stafyniaksacha
+- **language-service:** drag and drop import respects tsconfig path aliases (#4184)
+- **language-service:** supports auto insertion of multiple cursors (#4140)
+
+### Bug Fixes
+
+- **language-server:** `additionalExtensions` option not working for inferred project
+- **language-core:** avoid interpolation indentation affecting each other
+- **language-core:** generate each interpolation into separate virtual code (#4165)
+- **language-service:** ignore html `wrapAttributes` format settings for vue document (#3987)
+- **vscode:** remove duplicate ts version status (#4167)
+- **language-server:** `.html`, `.md` file language id incorrect
+- **typescript-plugin:** formatting settings not working for ts completion
+- **tsc:** remove fake global types holder for composite projects compatibility (#4196) - Thanks @blake-newman
+
+### Performance
+
+- **language-core:** cache canonical root file names with string Set
+
+### Other Changes
+
+- Upgrade Volar from `v2.1.3` to `v2.2.0-alpha.5` for a few bug fixes and performance improves, please refer to [CHANGELOG.md](https://github.com/volarjs/volar.js/blob/master/CHANGELOG.md) for details.
+- **vscode:** update required VSCode version to `^1.88.0`
+- **docs:** update readme with neovim lspconfig setup (#4134) - Thanks @RayGuo-ergou
+- **language-core:** split inline css codegen into separate plugin
+- **language-core:** move global types codegen into separate script
+- **language-core:** resolve virtual code features before push code
+- **test:** added simple tests for vue-tsc and custom SFC extensions. (#4181) - Thanks @cabal95
+
 ## 2.1.0-insiders.1
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.1), [爱发电电圈](https://afdian.net/p/ba0901a2edce11ee8f2e52540025c377)
 
-### New Features
+### Features
 
 #### Reactions visualization (PR: https://github.com/volarjs/insiders/pull/5)
 
