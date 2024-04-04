@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.1.0-insiders.2 (2024/4/4)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.2), [爱发电电圈](https://afdian.net/p/d59d0dd8f29611ee88945254001e7c00)
+
+### Features
+
+- **language-server:** improve reactions analyze ([volarjs/insiders#8](https://github.com/volarjs/insiders/pull/8))
+
+### Other Changes
+
+- Merged [v2.0.10](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2010-202444).
+
 ## 2.0.10 (2024/4/4)
 
 ### Features
