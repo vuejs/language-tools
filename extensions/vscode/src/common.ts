@@ -5,6 +5,9 @@ import { config } from './config';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
 import * as splitEditors from './features/splitEditors';
+import * as semver from 'semver';
+import * as fs from 'fs';
+import * as path from 'path';
 
 let client: lsp.BaseLanguageClient;
 
@@ -34,7 +37,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 	}
 }
 
-export const currentHybridModeStatus = getCurrentHybridModeStatus();
+export let currentHybridModeStatus = getCurrentHybridModeStatus();
 
 function getCurrentHybridModeStatus(report = false) {
 	if (config.server.hybridMode === 'auto') {
@@ -61,10 +64,34 @@ function getCurrentHybridModeStatus(report = false) {
 			if (report) {
 				vscode.window.showInformationMessage(
 					`Hybrid Mode is disabled automatically because there is a potentially incompatible ${unknownExtensions.join(', ')} TypeScript plugin installed.`,
+					'Open Settings',
 					'Report a false positive',
 				).then(value => {
-					if (value) {
+					if (value === 'Open Settings') {
+						vscode.commands.executeCommand('workbench.action.openSettings', 'vue.server.hybridMode');
+					}
+					else if (value == 'Report a false positive') {
 						vscode.env.openExternal(vscode.Uri.parse('https://github.com/vuejs/language-tools/pull/4206'));
+					}
+				});
+			}
+			return false;
+		}
+		const vscodeTsdkVersion = getVScodeTsdkVersion();
+		const workspaceTsdkVersion = getWorkspaceTsdkVersion();
+		if (
+			(vscodeTsdkVersion && !semver.gte(vscodeTsdkVersion, '5.3.0'))
+			|| (workspaceTsdkVersion && !semver.gte(workspaceTsdkVersion, '5.3.0'))
+		) {
+			if (report) {
+				let msg = `Hybrid Mode is disabled automatically because TSDK >= 5.3.0 is required (VSCode TSDK: ${vscodeTsdkVersion}`;
+				if (workspaceTsdkVersion) {
+					msg += `, Workspace TSDK: ${workspaceTsdkVersion}`;
+				}
+				msg += `).`;
+				vscode.window.showInformationMessage(msg, 'Open Settings').then(value => {
+					if (value === 'Open Settings') {
+						vscode.commands.executeCommand('workbench.action.openSettings', 'vue.server.hybridMode');
 					}
 				});
 			}
@@ -74,6 +101,57 @@ function getCurrentHybridModeStatus(report = false) {
 	}
 	else {
 		return config.server.hybridMode;
+	}
+
+	function getVScodeTsdkVersion() {
+		const nightly = vscode.extensions.getExtension('ms-vscode.vscode-typescript-next');
+		if (nightly) {
+			const libPath = path.join(
+				nightly.extensionPath.replace(/\\/g, '/'),
+				'node_modules/typescript/lib',
+			);
+			return getTsVersion(libPath);
+		}
+
+		if (vscode.env.appRoot) {
+			const libPath = path.join(
+				vscode.env.appRoot.replace(/\\/g, '/'),
+				'extensions/node_modules/typescript/lib',
+			);
+			return getTsVersion(libPath);
+		}
+	}
+
+	function getWorkspaceTsdkVersion() {
+		const libPath = vscode.workspace.getConfiguration('typescript').get<string>('tsdk')?.replace(/\\/g, '/');
+		if (libPath) {
+			return getTsVersion(libPath);
+		}
+	}
+
+	function getTsVersion(libPath: string): string | undefined {
+
+		const p = libPath.toString().split('/');
+		const p2 = p.slice(0, -1);
+		const modulePath = p2.join('/');
+		const filePath = modulePath + '/package.json';
+		const contents = fs.readFileSync(filePath, 'utf-8');
+
+		if (contents === undefined) {
+			return;
+		}
+
+		let desc: any = null;
+		try {
+			desc = JSON.parse(contents);
+		} catch (err) {
+			return;
+		}
+		if (!desc || !desc.version) {
+			return;
+		}
+
+		return desc.version;
 	}
 }
 
