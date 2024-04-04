@@ -37,7 +37,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 	}
 }
 
-export let currentHybridModeStatus = getCurrentHybridModeStatus();
+export const currentHybridModeStatus = getCurrentHybridModeStatus();
 
 function getCurrentHybridModeStatus(report = false) {
 	if (config.server.hybridMode === 'auto') {
