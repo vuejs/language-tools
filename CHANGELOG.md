@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.1.0-insiders.1
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.1), [爱发电电圈](https://afdian.net/p/ba0901a2edce11ee8f2e52540025c377)
+
+### New Features
+
+#### Reactions visualization (PR: https://github.com/volarjs/insiders/pull/5)
+
+![](https://github.com/vuejs/language-tools/assets/16279759/b90d3d05-f98c-42a0-b011-448af00a0c06)
+
+#### Template interpolation decorators (PR: https://github.com/volarjs/insiders/pull/4)
+
+> To disable this feature, uncheck `vue.editor.templateInterpolationDecorators` in VSCode settings.
+
+![](https://github.com/vuejs/language-tools/assets/16279759/fc591552-834e-4fbb-ab47-1740f6f8a151)
+
+### Other Changes
+
+- Merged https://github.com/vuejs/language-tools/commit/1b9946c02ee3f5bb8c2de17c430985756115e51c
+
 ## 2.0.7 (2024/3/20)
 
 > [!NOTE] 
