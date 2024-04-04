@@ -48,6 +48,7 @@ function getCurrentHybridModeStatus(report = false) {
 					|| extension.id === 'astro-build.astro-vscode'
 					|| extension.id === 'ije.esm-vscode'
 					|| extension.id === 'johnsoncodehk.vscode-tsslint'
+					|| extension.id === 'VisualStudioExptTeam.vscodeintellicode'
 				) {
 					continue;
 				}
@@ -127,7 +128,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		command: 'workbench.action.openSettings',
 		arguments: ['vue.server.hybridMode'],
 	};
-	if (currentHybridModeStatus) {
+	if (!currentHybridModeStatus) {
 		hybridModeStatus.severity = vscode.LanguageStatusSeverity.Warning;
 	}
 
