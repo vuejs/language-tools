@@ -19,7 +19,7 @@
 	"author": "johnsoncodehk",
 	"publisher": "Vue",
 	"engines": {
-		"vscode": "^1.82.0"
+		"vscode": "^1.88.0"
 	},
 	"activationEvents": [
 		"onLanguage:vue",
