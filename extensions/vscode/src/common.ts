@@ -17,8 +17,6 @@ type CreateLanguageClient = (
 	outputChannel: vscode.OutputChannel,
 ) => lsp.BaseLanguageClient;
 
-const beginHybridMode = config.server.hybridMode;
-
 export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
 	const stopCheck = vscode.window.onDidChangeActiveTextEditor(tryActivate);
@@ -36,17 +34,55 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 	}
 }
 
+export const currentHybridModeStatus = getCurrentHybridModeStatus();
+
+function getCurrentHybridModeStatus(report = false) {
+	if (config.server.hybridMode === 'auto') {
+		for (const extension of vscode.extensions.all) {
+			const hasTsPlugin = !!extension.packageJSON?.contributes?.typescriptServerPlugins;
+			if (hasTsPlugin) {
+				if (
+					extension.id === 'Vue.volar'
+					|| extension.id === 'unifiedjs.vscode-mdx'
+					|| extension.id === 'astro-build.astro-vscode'
+				) {
+					continue;
+				}
+				else {
+					if (report) {
+						vscode.window.showInformationMessage(
+							`Hybrid Mode is disabled automatically because there is a potentially incompatible "${extension.id}" TypeScript plugin installed.`,
+							'Report a false positive',
+						).then(value => {
+							if (value) {
+								vscode.env.openExternal(vscode.Uri.parse(''));
+							}
+						});
+					}
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	else {
+		return config.server.hybridMode;
+	}
+}
+
 async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
-	vscode.commands.executeCommand('setContext', 'vue.activated', true);
+	getCurrentHybridModeStatus(true);
 
 	const outputChannel = vscode.window.createOutputChannel('Vue Language Server');
+
+	vscode.commands.executeCommand('setContext', 'vue.activated', true);
 
 	client = createLc(
 		'vue',
 		'Vue',
 		getDocumentSelector(),
-		await getInitializationOptions(context),
+		await getInitializationOptions(context, currentHybridModeStatus),
 		6009,
 		outputChannel
 	);
@@ -72,20 +108,20 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	lsp.activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
 	lsp.activateServerSys(client);
 
-	if (!config.server.hybridMode) {
+	if (!currentHybridModeStatus) {
 		lsp.activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);
 		lsp.activateTsVersionStatusItem(selectors, 'vue.tsversion', context, client, text => 'TS ' + text);
 	}
 
 	const hybridModeStatus = vscode.languages.createLanguageStatusItem('vue-hybrid-mode', selectors);
 	hybridModeStatus.text = 'Hybrid Mode';
-	hybridModeStatus.detail = config.server.hybridMode ? 'Enabled' : 'Disabled';
+	hybridModeStatus.detail = (currentHybridModeStatus ? 'Enabled' : 'Disabled') + (config.server.hybridMode === 'auto' ? ' (Auto)' : '');
 	hybridModeStatus.command = {
 		title: 'Open Setting',
 		command: 'workbench.action.openSettings',
 		arguments: ['vue.server.hybridMode'],
 	};
-	if (!config.server.hybridMode) {
+	if (currentHybridModeStatus) {
 		hybridModeStatus.severity = vscode.LanguageStatusSeverity.Warning;
 	}
 
@@ -122,12 +158,15 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	function activateConfigWatcher() {
 		context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration('vue.server.hybridMode') && config.server.hybridMode !== beginHybridMode) {
-				requestReloadVscode(
-					config.server.hybridMode
-						? 'Please reload VSCode to enable Hybrid Mode.'
-						: 'Please reload VSCode to disable Hybrid Mode.'
-				);
+			if (e.affectsConfiguration('vue.server.hybridMode')) {
+				const newStatus = getCurrentHybridModeStatus();
+				if (newStatus !== currentHybridModeStatus) {
+					requestReloadVscode(
+						newStatus
+							? 'Please reload VSCode to enable Hybrid Mode.'
+							: 'Please reload VSCode to disable Hybrid Mode.'
+					);
+				}
 			}
 			else if (e.affectsConfiguration('vue')) {
 				vscode.commands.executeCommand('vue.action.restartServer', false);
@@ -139,7 +178,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		context.subscriptions.push(vscode.commands.registerCommand('vue.action.restartServer', async (restartTsServer: boolean = true) => {
 			await client.stop();
 			outputChannel.clear();
-			client.clientOptions.initializationOptions = await getInitializationOptions(context);
+			client.clientOptions.initializationOptions = await getInitializationOptions(context, currentHybridModeStatus);
 			await client.start();
 			nameCasing.activate(context, client, selectors);
 			if (restartTsServer) {
@@ -167,6 +206,7 @@ export function getDocumentSelector(): lsp.DocumentFilter[] {
 
 async function getInitializationOptions(
 	context: vscode.ExtensionContext,
+	hybridMode: boolean,
 ): Promise<VueInitializationOptions> {
 	return {
 		// volar
@@ -178,7 +218,7 @@ async function getInitializationOptions(
 			tokenModifiers: [],
 		},
 		vue: {
-			hybridMode: beginHybridMode,
+			hybridMode,
 			additionalExtensions: [
 				...config.server.additionalExtensions,
 				...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
