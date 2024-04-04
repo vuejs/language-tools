@@ -130,28 +130,29 @@ function getCurrentHybridModeStatus(report = false) {
 	}
 
 	function getTsVersion(libPath: string): string | undefined {
-
-		const p = libPath.toString().split('/');
-		const p2 = p.slice(0, -1);
-		const modulePath = p2.join('/');
-		const filePath = modulePath + '/package.json';
-		const contents = fs.readFileSync(filePath, 'utf-8');
-
-		if (contents === undefined) {
-			return;
-		}
-
-		let desc: any = null;
 		try {
-			desc = JSON.parse(contents);
-		} catch (err) {
-			return;
-		}
-		if (!desc || !desc.version) {
-			return;
-		}
+			const p = libPath.toString().split('/');
+			const p2 = p.slice(0, -1);
+			const modulePath = p2.join('/');
+			const filePath = modulePath + '/package.json';
+			const contents = fs.readFileSync(filePath, 'utf-8');
 
-		return desc.version;
+			if (contents === undefined) {
+				return;
+			}
+
+			let desc: any = null;
+			try {
+				desc = JSON.parse(contents);
+			} catch (err) {
+				return;
+			}
+			if (!desc || !desc.version) {
+				return;
+			}
+
+			return desc.version;
+		} catch { }
 	}
 }
 
