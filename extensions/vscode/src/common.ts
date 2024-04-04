@@ -299,7 +299,7 @@ async function getInitializationOptions(
 		typescript: { tsdk: (await lsp.getTsdk(context)).tsdk },
 		maxFileSize: config.server.maxFileSize,
 		semanticTokensLegend: {
-			tokenTypes: ['component'],
+			tokenTypes: [],
 			tokenModifiers: [],
 		},
 		vue: {
