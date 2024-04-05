@@ -1,12 +1,12 @@
 import type { Connection } from '@volar/language-server';
-import { createConnection, createServer, createSimpleProjectProviderFactory, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
+import { createConnection, createServer, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
 import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveCommonLanguageId, resolveVueCompilerOptions } from '@vue/language-core';
 import { ServiceEnvironment, convertAttrName, convertTagName, createDefaultGetTsPluginClient, createVueServicePlugins, detect } from '@vue/language-service';
-import { DetectNameCasingRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './lib/protocol';
-import type { VueInitializationOptions } from './lib/types';
 import * as tsPluginClient from '@vue/typescript-plugin/lib/client';
 import { searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
-import { GetConnectedNamedPipeServerRequest } from './lib/protocol';
+import { createHybridModeProjectProviderFactory } from './lib/hybridModeProject';
+import { DetectNameCasingRequest, GetConnectedNamedPipeServerRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './lib/protocol';
+import type { VueInitializationOptions } from './lib/types';
 
 export const connection: Connection = createConnection();
 
@@ -43,7 +43,7 @@ connection.onInitialize(async params => {
 	const result = await server.initialize(
 		params,
 		hybridMode
-			? createSimpleProjectProviderFactory()
+			? createHybridModeProjectProviderFactory(tsdk.typescript.sys)
 			: createTypeScriptProjectProviderFactory(tsdk.typescript, tsdk.diagnosticMessages),
 		{
 			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
@@ -160,7 +160,7 @@ connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 });
 
 connection.onRequest(GetConnectedNamedPipeServerRequest.type, async fileName => {
-	const server = await searchNamedPipeServerForFile(fileName);
+	const server = (await searchNamedPipeServerForFile(fileName))?.server;
 	if (server) {
 		return server;
 	}

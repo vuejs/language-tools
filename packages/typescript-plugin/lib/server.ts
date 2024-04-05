@@ -10,7 +10,7 @@ import { NamedPipeServer, connect, readPipeTable, updatePipeTable } from './util
 import type { Language, VueCompilerOptions } from '@vue/language-core';
 
 export interface Request {
-	type: 'containsFile'
+	type: 'projectInfoForFile'
 	| 'collectExtractProps'
 	| 'getImportPathForFile'
 	| 'getPropertiesAtLocation'
@@ -45,8 +45,14 @@ export function startNamedPipeServer(
 			const request: Request = JSON.parse(text);
 			const fileName = request.args[0];
 			const project = getProject(fileName);
-			if (request.type === 'containsFile') {
-				connection.write(JSON.stringify(!!project));
+			if (request.type === 'projectInfoForFile') {
+				connection.write(JSON.stringify(project
+					? {
+						name: project.info.project.getProjectName(),
+						kind: project.info.project.projectKind,
+					}
+					: undefined
+				));
 			}
 			else if (project) {
 				const requestContext = {

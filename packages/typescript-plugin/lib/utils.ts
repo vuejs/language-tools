@@ -59,9 +59,12 @@ export async function searchNamedPipeServerForFile(fileName: string) {
 	for (const server of configuredServers) {
 		const client = await connect(server.path);
 		if (client) {
-			const response = await sendRequestWorker<boolean>({ type: 'containsFile', args: [fileName] }, client);
-			if (response) {
-				return server;
+			const projectInfo = await sendRequestWorker<{ name: string; kind: ts.server.ProjectKind; }>({ type: 'projectInfoForFile', args: [fileName] }, client);
+			if (projectInfo) {
+				return {
+					server,
+					projectInfo,
+				};
 			}
 		}
 	}
@@ -69,7 +72,10 @@ export async function searchNamedPipeServerForFile(fileName: string) {
 		if (!path.relative(server.currentDirectory, fileName).startsWith('..')) {
 			const client = await connect(server.path);
 			if (client) {
-				return server;
+				return {
+					server,
+					projectInfo: undefined,
+				};
 			}
 		}
 	}
