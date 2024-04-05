@@ -85,7 +85,7 @@ export function getElementAttrs(
 }
 
 async function sendRequest<T>(request: Request) {
-	const server = await searchNamedPipeServerForFile(request.args[0]);
+	const server = (await searchNamedPipeServerForFile(request.args[0]))?.server;
 	if (!server) {
 		console.warn('[Vue Named Pipe Client] No server found for', request.args[0]);
 		return;
