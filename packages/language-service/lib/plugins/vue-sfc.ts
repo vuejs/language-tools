@@ -36,7 +36,7 @@ export function create(): LanguageServicePlugin {
 						return {
 							...options,
 							...formatSettings,
-							wrapAttributes: 'auto',
+							wrapAttributes: await context.env.getConfiguration?.<string>('vue.format.wrapAttributes') ?? 'auto',
 							unformatted: '',
 							contentUnformatted: blockTypes.join(','),
 							endWithNewline: options.insertFinalNewline ? true

@@ -398,6 +398,19 @@
 				"vue.format.script.initialIndent": {
 					"type": "boolean",
 					"default": false
+				},
+				"vue.format.wrapAttributes": {
+					"type": "string",
+					"default": "auto",
+					"enum": [
+						"auto",
+						"force",
+						"force-aligned",
+						"force-expand-multiline",
+						"aligned-multiple",
+						"preserve",
+						"preserve-aligned"
+					]
 				}
 			}
 		},
