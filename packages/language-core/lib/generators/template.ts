@@ -125,8 +125,10 @@ export function* generate(
 
 	let hasSlot = false;
 	let ignoreError = false;
-	let expectErrorToken: { errors: number; } | undefined;
-	let expectedErrorNode: CompilerDOM.CommentNode | undefined;
+	let expectErrorToken: {
+		errors: number;
+		node: CompilerDOM.CommentNode;
+	} | undefined;
 	let elementIndex = 0;
 
 	if (slotsAssignName) {
@@ -206,13 +208,12 @@ export function* generate(
 	}
 
 	function* generateExpectErrorComment(): Generator<CodeAndStack> {
-
-		if (expectErrorToken && expectedErrorNode) {
+		if (expectErrorToken) {
 			const token = expectErrorToken;
 			yield _ts([
 				'',
 				'template',
-				expectedErrorNode.loc.start.offset,
+				expectErrorToken.node.loc.start.offset,
 				disableAllFeatures({
 					verification: {
 						shouldReport: () => token.errors === 0,
@@ -223,15 +224,13 @@ export function* generate(
 			yield _ts([
 				'',
 				'template',
-				expectedErrorNode.loc.end.offset,
+				expectErrorToken.node.loc.end.offset,
 				disableAllFeatures({ __combineLastMapping: true }),
 			]);
 			yield _ts('\n;\n');
 		}
-
 		ignoreError = false;
 		expectErrorToken = undefined;
-		expectedErrorNode = undefined;
 	}
 
 	function* generateCanonicalComponentName(tagText: string, offset: number, info: VueCodeInformation): Generator<CodeAndStack> {
@@ -401,8 +400,10 @@ export function* generate(
 				ignoreError = true;
 			}
 			else if (commentText.match(/^@vue-expect-error\b[\s\S]*/)) {
-				expectErrorToken = { errors: 0 };
-				expectedErrorNode = prevNode;
+				expectErrorToken = {
+					errors: 0,
+					node: prevNode,
+				};
 			}
 		}
 
@@ -429,13 +430,13 @@ export function* generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 			// {{ var }}
-			yield* generateAstNode(node.content, parentEl, undefined, componentCtxVar);
+			yield* generateAstNode(node.content, parentEl, prevNode, componentCtxVar);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					yield* generateAstNode(childNode, parentEl, undefined, componentCtxVar);
+					yield* generateAstNode(childNode, parentEl, prevNode, componentCtxVar);
 				}
 			}
 		}
