@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.0.11 (2024/4/7)
+
+### Features
+
+- **vscode:** support for enabling/disabling typescript plugin (#4226)
+  - Added `typeScriptPluginOnly` option for `vue.server.hybridMode` setting.
+  - When Hybrid Mode is disabled, the Vue TypeScript Plugin will be disabled by default.
+- **vscode:** support for `vue.format.wrapAttributes` setting (#4212)
+- **vscode:** add `vue.codeActions.askNewComponentName` setting (#4217)
+
+### Bug Fixes
+
+- **vscode:** `Find File References` not working when hybrid mode is disabled (#4221)
+- **language-core:** type narrowing not working for inline event handlers (#4209)
+- **language-core:** `@vue-ignore`, `@vue-expect-error` not working for interpolations
+- **language-core:** improve reliability for `@vue-ignore`, `@vue-expect-error` (#4203)
+- **language-core:** duplicated items in suggestion list for prop values (#3922)
+- **language-server:** `vueCompilerOptions` not working with hybrid mode (#4211) (#3959)
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.5` to `v2.2.0-alpha.6` for a `vue-tsc` bug fixes
+  - [volarjs/volar.js#162](https://github.com/volarjs/volar.js/pull/162) - Thanks @wangshunnn
+- **test:** add test for #4203 (#4207) - Thanks @tinco
+
 ## 2.1.0-insiders.2 (2024/4/4)
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.

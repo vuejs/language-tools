@@ -177,7 +177,7 @@ Finally you need to make VS Code recognize your new extension and automatically 
 
 ## Sponsors
 
-<table>
+<!-- <table>
   <tbody>
     <tr>
       <td align="center" valign="middle" colspan="2">
@@ -236,7 +236,7 @@ Finally you need to make VS Code recognize your new extension and automatically 
       </td>
     </tr>
   </tbody>
-</table>
+</table> -->
 
 <p align="center">
 	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
