@@ -26,7 +26,7 @@ function collectTests(dir: string, depth = 2, isRoot: boolean = true): [filePath
 	for (const file of files) {
 		const filePath = path.join(dir, file);
 		const stat = fs.statSync(filePath);
-		if (stat.isDirectory()) {
+		if (stat.isDirectory() && file !== 'should-error') {
 			const tsconfigPath = path.join(filePath, 'tsconfig.json');
 			if (fs.existsSync(tsconfigPath)) {
 				tests.push([
@@ -77,4 +77,13 @@ describe(`vue-tsc`, () => {
 	for (const [path, isRoot] of tests) {
 		it(`vue-tsc no errors (${prettyPath(path, isRoot)})`, () => runVueTsc(path), 400_000);
 	}
+
+	it(`should throw an error when no vue-expect-error is used but the there is no error`, async () => {
+		try {
+			await runVueTsc(path.resolve(workspace, 'should-error'));
+		} catch (e) {
+			return;
+		}
+		throw new Error('Expected an error but got none');
+	});
 });
