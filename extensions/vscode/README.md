@@ -1,19 +1,79 @@
-# Vue Language Features
+# Vue - Official
 
-> ⚡ Fast Vue Language Support Extension
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle" colspan="2">
+        <b>Special Sponsor</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" colspan="2">
+        <a href="https://stackblitz.com/">
+          <img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/StackBlitz.svg" height="80" />
+        </a>
+        <p>Stay in the flow with instant dev experiences.<br>No more hours stashing/pulling/installing locally</p>
+        <p><b> — just click, and start coding.</b></p>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" colspan="2">
+        <b>Platinum Sponsors</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" width="50%">
+        <a href="https://vuejs.org/">
+          <img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/Vue.svg" height="80" />
+        </a>
+        <p>An approachable, performant and versatile framework for building web user interfaces.</p>
+      </td>
+      <td align="center" valign="middle" width="50%">
+        <a href="https://astro.build/">
+          <img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/Astro.svg" height="80" />
+        </a>
+        <p>Astro powers the world's fastest websites, client-side web apps, dynamic API endpoints, and everything in-between.</p>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.jetbrains.com/">
+          <img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/JetBrains.svg" height="80" />
+        </a>
+        <p>Essential tools for software developers and teams.</p>
+      </td>
+      <td align="center" valign="middle">
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" colspan="2">
+        <b>Silver Sponsors</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle">
+        <a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/Prefect.svg" height="50" /></a>
+      </td>
+      <td align="center" valign="middle">
+        <a href="https://www.techjobasia.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/TechJobAsia.svg" height="50" /></a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-[Plugin's page on Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=Vue.volar)
+<p align="center">
+	<a href="https://github.com/sponsors/johnsoncodehk">Become a sponsor</a>
+</p>
 
-Vue Language Features is a language support extension built for Vue, Vitepress and petite-vue. this is based on [`@vue/reactivity`](https://www.npmjs.com/package/@vue/reactivity) to calculate everything on-demand, to implement native TypeScript language service level performance.
+## Insiders Program 🚀
 
-[[Tips](https://github.com/vuejs/language-tools/issues/53)]
+This project is community-driven. If you would like to support this project, consider joining the [Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) to improve the sustainability of this project and unlock more features.
 
 ## Quick Start
 
 - [create-vue](https://github.com/vuejs/create-vue)
 - [Vitesse](https://github.com/antfu/vitesse)
 - [petite](https://github.com/JessicaSachs/petite)
-
 - [volar-starter](https://github.com/johnsoncodehk/volar-starter) (For bug report and experiment features testing)
 
 ## Usage
@@ -176,6 +236,14 @@ In your tsconfig.json file you will need to make sure your custom extension is i
 
 Finally you need to make VS Code recognize your new extension and automatically associate it with the Vue language format. To do this you need to configure your File Associations setting to map `*.ext` to the language value `vue`. This can be done under Text Editor &gt; Files, or with the key `files.associations`.
 
+## Sponsors
+
+<p align="center">
+	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
+		<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.png"/>
+	</a>
+</p>
+
 ## Credits
 
 - [vscode-extension-samples](https://github.com/microsoft/vscode-extension-samples) shows all the knowledge required to develop the extension.
@@ -187,24 +255,3 @@ Finally you need to make VS Code recognize your new extension and automatically 
   - [vscode-css-languageservice](https://github.com/microsoft/vscode-css-languageservice): css, less, scss, postcss
   - [pug-beautify](https://github.com/vingorius/pug-beautify): pug
   - [typescript](https://github.com/microsoft/TypeScript): js, ts, jsx, tsx
-
----
-
-<h3 align="center">Full-time Support by</h3>
-<br />
-
-<p align="center">
-	<span>
-		<a href="https://stackblitz.com/">
-			<img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" />
-			<h4 align="center">Boot a fresh environment in milliseconds.</h4>
-		</a>
-	</span>
-</p>
-<br />
-
-<p align="center">
-	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
-		<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.png"/>
-	</a>
-</p>
