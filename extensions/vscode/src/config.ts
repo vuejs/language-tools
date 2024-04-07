@@ -37,6 +37,7 @@ export const config = {
 	},
 	get codeActions(): Readonly<{
 		enabled: boolean;
+		askNewComponentName: boolean;
 	}> {
 		return _config().get('codeActions')!;
 	},

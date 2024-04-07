@@ -313,6 +313,11 @@
 					"default": true,
 					"description": "Enabled code actions."
 				},
+				"vue.codeActions.askNewComponentName": {
+					"type": "boolean",
+					"default": true,
+					"description": "Ask for new component name when extract component."
+				},
 				"vue.codeLens.enabled": {
 					"type": "boolean",
 					"default": true,
