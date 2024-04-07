@@ -12,7 +12,7 @@
 		"directory": "packages/typescript-plugin"
 	},
 	"dependencies": {
-		"@volar/typescript": "~2.2.0-alpha.5",
+		"@volar/typescript": "~2.2.0-alpha.6",
 		"@vue/language-core": "2.0.10",
 		"@vue/shared": "^3.4.0"
 	},

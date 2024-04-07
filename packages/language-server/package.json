@@ -15,8 +15,8 @@
 		"directory": "packages/language-server"
 	},
 	"dependencies": {
-		"@volar/language-core": "~2.2.0-alpha.5",
-		"@volar/language-server": "~2.2.0-alpha.5",
+		"@volar/language-core": "~2.2.0-alpha.6",
+		"@volar/language-server": "~2.2.0-alpha.6",
 		"@vue/language-core": "2.0.10",
 		"@vue/language-service": "2.0.10",
 		"@vue/typescript-plugin": "2.0.10",
