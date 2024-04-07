@@ -415,37 +415,47 @@
 				"title": "Split <script>, <template>, <style> Editors",
 				"category": "Vue",
 				"icon": "images/split-editors.png"
+			},
+			{
+				"command": "vue.findAllFileReferences",
+				"title": "Find File References via Vue Langauge Server",
+				"category": "Vue"
 			}
 		],
 		"menus": {
 			"editor/context": [
 				{
 					"command": "typescript.goToSourceDefinition",
-					"when": "tsSupportsSourceDefinition && resourceLangId == vue",
+					"when": "vueHybridMode && tsSupportsSourceDefinition && resourceLangId == vue",
 					"group": "navigation@9"
 				}
 			],
 			"explorer/context": [
 				{
 					"command": "typescript.findAllFileReferences",
-					"when": "tsSupportsFileReferences && resourceLangId == vue",
+					"when": "vueHybridMode && tsSupportsFileReferences && resourceLangId == vue",
+					"group": "4_search"
+				},
+				{
+					"command": "vue.findAllFileReferences",
+					"when": "!vueHybridMode && resourceLangId == vue",
 					"group": "4_search"
 				}
 			],
 			"editor/title/context": [
 				{
 					"command": "typescript.findAllFileReferences",
-					"when": "tsSupportsFileReferences && resourceLangId == vue"
+					"when": "vueHybridMode && tsSupportsFileReferences && resourceLangId == vue"
 				}
 			],
 			"commandPalette": [
 				{
 					"command": "typescript.reloadProjects",
-					"when": "editorLangId == vue && typescript.isManagedFile"
+					"when": "vueHybridMode && editorLangId == vue && typescript.isManagedFile"
 				},
 				{
 					"command": "typescript.goToProjectConfig",
-					"when": "editorLangId == vue"
+					"when": "vueHybridMode && editorLangId == vue"
 				},
 				{
 					"command": "vue.action.doctor",

@@ -39,6 +39,8 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 
 export const currentHybridModeStatus = getCurrentHybridModeStatus();
 
+vscode.commands.executeCommand('setContext', 'vueHybridMode', currentHybridModeStatus);
+
 function getCurrentHybridModeStatus(report = false) {
 	if (config.server.hybridMode === 'auto') {
 		const unknownExtensions: string[] = [];
@@ -197,6 +199,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	if (!currentHybridModeStatus) {
 		lsp.activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);
 		lsp.activateTsVersionStatusItem(selectors, 'vue.tsversion', context, client, text => 'TS ' + text);
+		lsp.activateFindFileReferences('vue.findAllFileReferences', client);
 	}
 
 	const hybridModeStatus = vscode.languages.createLanguageStatusItem('vue-hybrid-mode', selectors);
