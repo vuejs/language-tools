@@ -3,7 +3,7 @@ import * as serverLib from '@vue/language-server';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as lsp from '@volar/vscode/node';
-import { activate as commonActivate, deactivate as commonDeactivate, currentHybridModeStatus } from './common';
+import { activate as commonActivate, deactivate as commonDeactivate, enabledHybridMode, enabledTypeScriptPlugin } from './common';
 import { config } from './config';
 import { middleware } from './middleware';
 
@@ -140,7 +140,13 @@ try {
 			// @ts-expect-error
 			let text = readFileSync(...args) as string;
 
-			if (!currentHybridModeStatus) {
+			if (!enabledTypeScriptPlugin) {
+				text = text.replace(
+					'for(const e of n.contributes.typescriptServerPlugins',
+					s => s + `.filter(p=>p.name!=='typescript-vue-plugin-bundle')`
+				);
+			}
+			else if (!enabledHybridMode) {
 				// patch readPlugins
 				text = text.replace(
 					'languages:Array.isArray(e.languages)',

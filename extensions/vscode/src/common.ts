@@ -37,12 +37,21 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 	}
 }
 
-export const currentHybridModeStatus = getCurrentHybridModeStatus();
+export const enabledHybridMode = getCurrentHybridModeStatus();
 
-vscode.commands.executeCommand('setContext', 'vueHybridMode', currentHybridModeStatus);
+export const enabledTypeScriptPlugin = getCurrentTypeScriptPluginStatus(enabledHybridMode);
+
+vscode.commands.executeCommand('setContext', 'vueHybridMode', enabledHybridMode);
+
+function getCurrentTypeScriptPluginStatus(enabledHybridMode: boolean) {
+	return enabledHybridMode || config.server.hybridMode === 'typeScriptPluginOnly';
+}
 
 function getCurrentHybridModeStatus(report = false) {
-	if (config.server.hybridMode === 'auto') {
+	if (config.server.hybridMode === 'typeScriptPluginOnly') {
+		return false;
+	}
+	else if (config.server.hybridMode === 'auto') {
 		const unknownExtensions: string[] = [];
 		for (const extension of vscode.extensions.all) {
 			const hasTsPlugin = !!extension.packageJSON?.contributes?.typescriptServerPlugins;
@@ -170,7 +179,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		'vue',
 		'Vue',
 		getDocumentSelector(),
-		await getInitializationOptions(context, currentHybridModeStatus),
+		await getInitializationOptions(context, enabledHybridMode),
 		6009,
 		outputChannel
 	);
@@ -196,7 +205,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	lsp.activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
 	lsp.activateServerSys(client);
 
-	if (!currentHybridModeStatus) {
+	if (!enabledHybridMode) {
 		lsp.activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);
 		lsp.activateTsVersionStatusItem(selectors, 'vue.tsversion', context, client, text => 'TS ' + text);
 		lsp.activateFindFileReferences('vue.findAllFileReferences', client);
@@ -204,13 +213,13 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	const hybridModeStatus = vscode.languages.createLanguageStatusItem('vue-hybrid-mode', selectors);
 	hybridModeStatus.text = 'Hybrid Mode';
-	hybridModeStatus.detail = (currentHybridModeStatus ? 'Enabled' : 'Disabled') + (config.server.hybridMode === 'auto' ? ' (Auto)' : '');
+	hybridModeStatus.detail = (enabledHybridMode ? 'Enabled' : 'Disabled') + (config.server.hybridMode === 'auto' ? ' (Auto)' : '');
 	hybridModeStatus.command = {
 		title: 'Open Setting',
 		command: 'workbench.action.openSettings',
 		arguments: ['vue.server.hybridMode'],
 	};
-	if (!currentHybridModeStatus) {
+	if (!enabledHybridMode) {
 		hybridModeStatus.severity = vscode.LanguageStatusSeverity.Warning;
 	}
 
@@ -248,12 +257,20 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	function activateConfigWatcher() {
 		context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
 			if (e.affectsConfiguration('vue.server.hybridMode')) {
-				const newStatus = getCurrentHybridModeStatus();
-				if (newStatus !== currentHybridModeStatus) {
+				const newHybridModeStatus = getCurrentHybridModeStatus();
+				const newTypeScriptPluginStatus = getCurrentTypeScriptPluginStatus(newHybridModeStatus);
+				if (newHybridModeStatus !== enabledHybridMode) {
 					requestReloadVscode(
-						newStatus
+						newHybridModeStatus
 							? 'Please reload VSCode to enable Hybrid Mode.'
 							: 'Please reload VSCode to disable Hybrid Mode.'
+					);
+				}
+				else if (newTypeScriptPluginStatus !== enabledTypeScriptPlugin) {
+					requestReloadVscode(
+						newTypeScriptPluginStatus
+							? 'Please reload VSCode to enable Vue TypeScript Plugin.'
+							: 'Please reload VSCode to disable Vue TypeScript Plugin.'
 					);
 				}
 			}
@@ -267,7 +284,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 		context.subscriptions.push(vscode.commands.registerCommand('vue.action.restartServer', async (restartTsServer: boolean = true) => {
 			await client.stop();
 			outputChannel.clear();
-			client.clientOptions.initializationOptions = await getInitializationOptions(context, currentHybridModeStatus);
+			client.clientOptions.initializationOptions = await getInitializationOptions(context, enabledHybridMode);
 			await client.start();
 			nameCasing.activate(context, client, selectors);
 			if (restartTsServer) {

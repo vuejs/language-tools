@@ -224,8 +224,15 @@
 					"default": "auto",
 					"enum": [
 						"auto",
+						"typeScriptPluginOnly",
 						true,
 						false
+					],
+					"enumDescriptions": [
+						"Automatically detect and enable TypeScript Plugin/Hybrid Mode in a safe environment.",
+						"Only enable Vue TypeScript Plugin but disable Hybrid Mode.",
+						"Enable TypeScript Plugin/Hybrid Mode.",
+						"Disable TypeScript Plugin/Hybrid Mode."
 					],
 					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
 				},
