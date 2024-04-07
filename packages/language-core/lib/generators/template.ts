@@ -1612,8 +1612,13 @@ export function* generate(
 
 		yield _ts('// @ts-ignore\n'); // #2304
 		yield _ts('[');
+		const visited = new Set<number>();
 		for (const _vars of tempVars) {
 			for (const v of _vars) {
+				if (visited.has(v.offset)) {
+					continue;
+				}
+				visited.add(v.offset);
 				yield _ts([
 					v.text,
 					'template',
