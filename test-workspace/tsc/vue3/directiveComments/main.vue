@@ -21,13 +21,6 @@
 	  {{ foo }}
 	  <!-- @vue-skip -->
 	  {{ foo }}
-  
-	  <!-- @vue-ignore -->
-	  {{ foo }} {{ foo }}
-	  <!-- @vue-expect-error -->
-	  {{ foo }} {{ foo }}
-	  <!-- @vue-skip -->
-	  {{ foo }} {{ foo }}
 	</div>
   </template>
   

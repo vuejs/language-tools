@@ -81,7 +81,7 @@ export function* generate(
 			if (expectErrorToken) {
 				const token = expectErrorToken;
 				const data = code[3];
-				if (data.verification) {
+				if (data.verification && (typeof data.verification !== 'object' || !data.verification.shouldReport)) {
 					code[3] = {
 						...data,
 						verification: {
@@ -207,7 +207,7 @@ export function* generate(
 		return tagOffsetsMap;
 	}
 
-	function* generateExpectErrorComment(): Generator<CodeAndStack> {
+	function* resetDirectiveComments(endStr: string): Generator<CodeAndStack> {
 		if (expectErrorToken) {
 			const token = expectErrorToken;
 			yield _ts([
@@ -228,9 +228,13 @@ export function* generate(
 				disableAllFeatures({ __combineLastMapping: true }),
 			]);
 			yield _ts('\n;\n');
+			expectErrorToken = undefined;
+			yield _ts(`// @vue-expect-error ${endStr}\n`);
 		}
-		ignoreError = false;
-		expectErrorToken = undefined;
+		if (ignoreError) {
+			ignoreError = false;
+			yield _ts(`// @vue-ignore ${endStr}\n`);
+		}
 	}
 
 	function* generateCanonicalComponentName(tagText: string, offset: number, info: VueCodeInformation): Generator<CodeAndStack> {
@@ -388,22 +392,22 @@ export function* generate(
 		prevNode: CompilerDOM.TemplateChildNode | undefined,
 		componentCtxVar: string | undefined,
 	): Generator<CodeAndStack> {
-
-		yield* generateExpectErrorComment();
-
 		if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
 			const commentText = prevNode.content.trim().split(' ')[0];
 			if (commentText.match(/^@vue-skip\b[\s\S]*/)) {
+				yield _ts('// @vue-skip\n');
 				return;
 			}
-			else if (commentText.match(/^@vue-ignore\b[\s\S]*/)) {
+			else if (commentText.match(/^@vue-ignore\b[\s\S]*/) && !ignoreError) {
 				ignoreError = true;
+				yield _ts('// @vue-ignore start\n');
 			}
-			else if (commentText.match(/^@vue-expect-error\b[\s\S]*/)) {
+			else if (commentText.match(/^@vue-expect-error\b[\s\S]*/) && !expectErrorToken) {
 				expectErrorToken = {
 					errors: 0,
 					node: prevNode,
 				};
+				yield _ts('// @vue-expect-error start\n');
 			}
 		}
 
@@ -413,7 +417,7 @@ export function* generate(
 				yield* generateAstNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
 			}
-			yield* generateExpectErrorComment();
+			yield* resetDirectiveComments('end of root');
 		}
 		else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 			const vForNode = getVForNode(node);
@@ -430,13 +434,13 @@ export function* generate(
 		}
 		else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 			// {{ var }}
-			yield* generateAstNode(node.content, parentEl, prevNode, componentCtxVar);
+			yield* generateAstNode(node.content, parentEl, undefined, componentCtxVar);
 		}
 		else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 			// {{ ... }} {{ ... }}
 			for (const childNode of node.children) {
 				if (typeof childNode === 'object') {
-					yield* generateAstNode(childNode, parentEl, prevNode, componentCtxVar);
+					yield* generateAstNode(childNode, parentEl, undefined, componentCtxVar);
 				}
 			}
 		}
@@ -451,6 +455,7 @@ export function* generate(
 				'(',
 				');\n',
 			);
+			yield* resetDirectiveComments('end of INTERPOLATION');
 		}
 		else if (node.type === CompilerDOM.NodeTypes.IF) {
 			// v-if / v-else-if / v-else
@@ -505,14 +510,12 @@ export function* generate(
 			}
 
 			yield _ts(` {\n`);
-
+			yield* resetDirectiveComments('end of v-if start');
 			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of branch.children) {
 				yield* generateAstNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
 			}
-			yield* generateExpectErrorComment();
-
 			yield* generateExtraAutoImport();
 			yield _ts('}\n');
 
@@ -554,14 +557,12 @@ export function* generate(
 			);
 			yield _ts('!)'); // #3102
 			yield _ts(') {\n');
-
+			yield* resetDirectiveComments('end of v-for start');
 			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of node.children) {
 				yield* generateAstNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
 			}
-			yield* generateExpectErrorComment();
-
 			yield* generateExtraAutoImport();
 			yield _ts('}\n');
 		}
@@ -809,6 +810,7 @@ export function* generate(
 			}
 			const slotBlockVars: string[] = [];
 			yield _ts(`{\n`);
+			yield* resetDirectiveComments('end of element slot start');
 			let hasProps = false;
 			if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 
@@ -867,8 +869,6 @@ export function* generate(
 				yield* generateAstNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
 			}
-			yield* generateExpectErrorComment();
-			yield* generateExtraAutoImport();
 
 			slotBlockVars.forEach(varName => {
 				localVars.set(varName, localVars.get(varName)! - 1);
@@ -892,15 +892,17 @@ export function* generate(
 				]);
 				yield _ts(`'/* empty slot name completion */]\n`);
 			}
+
+			yield* generateExtraAutoImport();
 			yield _ts(`}\n`);
 		}
 		else {
+			yield* resetDirectiveComments('end of element children start');
 			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of node.children) {
 				yield* generateAstNode(childNode, parentEl, prev, componentCtxVar);
 				prev = childNode;
 			}
-			yield* generateExpectErrorComment();
 
 			// fix https://github.com/vuejs/language-tools/issues/932
 			if (!hasSlotElements.has(node) && node.children.length) {
