@@ -22,14 +22,7 @@ export function run() {
 			) {
 				const writeFile = options.host!.writeFile.bind(options.host);
 				options.host!.writeFile = (fileName, contents, ...args) => {
-					if (
-						fileName.endsWith('.d.ts')
-						&& vueLanguagePlugin
-							.getCanonicalFileName(fileName.replace(windowsPathReg, '/'))
-							.slice(0, -5) === vueLanguagePlugin.pluginContext.globalTypesHolder
-					) {
-						contents = removeEmitGlobalTypes(contents);
-					}
+					contents = removeEmitGlobalTypes(contents);
 					return writeFile(fileName, contents, ...args);
 				};
 				const vueLanguagePlugin = vue.createVueLanguagePlugin(
@@ -66,6 +59,8 @@ export function run() {
 	}
 }
 
+const removeEmitGlobalTypesRegexp = /[^\n]*__VLS_globalTypesStart[\w\W]*__VLS_globalTypesEnd[^\n]*\n/g;
+
 export function removeEmitGlobalTypes(dts: string) {
-	return dts.replace(/[^\n]*__VLS_globalTypesStart[\w\W]*__VLS_globalTypesEnd[^\n]*\n/, '');
+	return dts.replace(removeEmitGlobalTypesRegexp, '');
 }
