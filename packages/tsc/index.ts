@@ -1,5 +1,6 @@
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as vue from '@vue/language-core';
+import * as path from 'path';
 
 const windowsPathReg = /\\/g;
 
@@ -22,8 +23,13 @@ export function run() {
 			) {
 				const writeFile = options.host!.writeFile.bind(options.host);
 				options.host!.writeFile = (fileName, contents, ...args) => {
-					contents = removeEmitGlobalTypes(contents);
-					return writeFile(fileName, contents, ...args);
+					if (!vueLanguagePlugin.pluginContext.globalTypesHolder) {
+						return writeFile(fileName, contents, ...args);
+					}
+
+					const writeFileName = path.basename(vueLanguagePlugin.getCanonicalFileName(fileName));
+					const globalTypesFileName = path.basename(vueLanguagePlugin.getCanonicalFileName(vueLanguagePlugin.pluginContext.globalTypesHolder));
+					return writeFile(fileName, writeFileName.startsWith(globalTypesFileName) ? removeEmitGlobalTypes(contents) : contents, ...args);
 				};
 				const vueLanguagePlugin = vue.createVueLanguagePlugin(
 					ts,
