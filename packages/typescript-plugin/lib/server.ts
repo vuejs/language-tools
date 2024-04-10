@@ -46,13 +46,16 @@ export function startNamedPipeServer(
 			const fileName = request.args[0];
 			const project = getProject(fileName);
 			if (request.type === 'projectInfoForFile') {
-				connection.write(JSON.stringify(project
-					? {
-						name: project.info.project.getProjectName(),
-						kind: project.info.project.projectKind,
-					}
-					: undefined
-				));
+				connection.write(
+					JSON.stringify(
+						project
+							? {
+								name: project.info.project.getProjectName(),
+								kind: project.info.project.projectKind,
+							}
+							: null
+					)
+				);
 			}
 			else if (project) {
 				const requestContext = {
