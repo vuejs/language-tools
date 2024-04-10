@@ -282,14 +282,14 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	async function activateRestartRequest() {
 		context.subscriptions.push(vscode.commands.registerCommand('vue.action.restartServer', async (restartTsServer: boolean = true) => {
+			if (restartTsServer) {
+				await vscode.commands.executeCommand('typescript.restartTsServer');
+			}
 			await client.stop();
 			outputChannel.clear();
 			client.clientOptions.initializationOptions = await getInitializationOptions(context, enabledHybridMode);
 			await client.start();
 			nameCasing.activate(context, client, selectors);
-			if (restartTsServer) {
-				await vscode.commands.executeCommand('typescript.restartTsServer');
-			}
 		}));
 	}
 }
