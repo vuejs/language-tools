@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.0.13 (2024/4/12)
+
+### Performance
+
+- **tsc:** re-introduce global types removal check (#4245)
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.7` to `v2.2.0-alpha.8` for a vue-tsc performance issue fixes (#4238)
+
 ## 2.1.0-insiders.4 (2024/4/10)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.4), [爱发电电圈](https://afdian.net/p/46a5f4a8f72011ee97fe52540025c377)
