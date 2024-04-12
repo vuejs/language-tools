@@ -63,6 +63,7 @@ function getCurrentHybridModeStatus(report = false) {
 					|| extension.id === 'ije.esm-vscode'
 					|| extension.id === 'johnsoncodehk.vscode-tsslint'
 					|| extension.id === 'VisualStudioExptTeam.vscodeintellicode'
+					|| extension.id === 'bierner.lit-html'
 				) {
 					continue;
 				}
