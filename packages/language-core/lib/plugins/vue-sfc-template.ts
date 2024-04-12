@@ -23,7 +23,7 @@ const plugin: VueLanguagePlugin = () => {
 					sfc.template.content,
 					sfc.template.name,
 					0,
-					enableAllFeatures({}),
+					enableAllFeatures(),
 				]);
 			}
 		},

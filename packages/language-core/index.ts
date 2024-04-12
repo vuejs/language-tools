@@ -1,4 +1,5 @@
 export * from './lib/generators/template';
+export * from './lib/generators/utils';
 export * from './lib/languageModule';
 export * from './lib/parsers/scriptSetupRanges';
 export * from './lib/plugins';

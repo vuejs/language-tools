@@ -43,7 +43,7 @@ const plugin: VueLanguagePlugin = () => {
 								cssVar.text,
 								style.name,
 								cssVar.offset,
-								enableAllFeatures({}),
+								enableAllFeatures(),
 							],
 							');\n',
 						);
@@ -54,7 +54,7 @@ const plugin: VueLanguagePlugin = () => {
 						style.content,
 						style.name,
 						0,
-						enableAllFeatures({}),
+						enableAllFeatures(),
 					]);
 				}
 			}

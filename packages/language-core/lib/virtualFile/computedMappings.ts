@@ -9,7 +9,7 @@ export function computedMappings(
 	sfc: Sfc
 ) {
 	return computed(() => {
-		const str: Segment<VueCodeInformation>[] = [[snapshot().getText(0, snapshot().getLength()), undefined, 0, enableAllFeatures({})]];
+		const str: Segment<VueCodeInformation>[] = [[snapshot().getText(0, snapshot().getLength()), undefined, 0, enableAllFeatures()]];
 		for (const block of [
 			sfc.script,
 			sfc.scriptSetup,

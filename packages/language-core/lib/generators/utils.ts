@@ -1,19 +1,6 @@
 import type { VueCodeInformation } from '../types';
 
-// TODO: import from muggle-string
-export function getStack() {
-	const stack = new Error().stack!;
-	let source = stack.split('\n')[3].trim();
-	if (source.endsWith(')')) {
-		source = source.slice(source.lastIndexOf('(') + 1, -1);
-	}
-	else {
-		source = source.slice(source.lastIndexOf(' ') + 1);
-	}
-	return source;
-}
-
-export function disableAllFeatures(override: Partial<VueCodeInformation>): VueCodeInformation {
+export function disableAllFeatures(override?: Partial<VueCodeInformation>): VueCodeInformation {
 	return {
 		verification: false,
 		completion: false,
@@ -25,7 +12,7 @@ export function disableAllFeatures(override: Partial<VueCodeInformation>): VueCo
 	};
 }
 
-export function enableAllFeatures(override: Partial<VueCodeInformation>): VueCodeInformation {
+export function enableAllFeatures(override?: Partial<VueCodeInformation>): VueCodeInformation {
 	return {
 		verification: true,
 		completion: true,

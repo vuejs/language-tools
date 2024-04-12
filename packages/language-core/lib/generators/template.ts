@@ -1,4 +1,4 @@
-import { toString } from '@volar/language-core';
+import { toString, getStack } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { minimatch } from 'minimatch';
@@ -6,11 +6,11 @@ import type * as ts from 'typescript';
 import type { Code, CodeAndStack, Sfc, VueCodeInformation, VueCompilerOptions } from '../types';
 import { hyphenateAttr, hyphenateTag } from '../utils/shared';
 import { collectVars, eachInterpolationSegment } from '../utils/transform';
-import { disableAllFeatures, enableAllFeatures, getStack, mergeFeatureSettings } from './utils';
+import { disableAllFeatures, enableAllFeatures, mergeFeatureSettings } from './utils';
 
 const presetInfos = {
-	disabledAll: disableAllFeatures({}),
-	all: enableAllFeatures({}),
+	disabledAll: disableAllFeatures(),
+	all: enableAllFeatures(),
 	allWithHiddenParam: enableAllFeatures({
 		__hint: {
 			setting: 'vue.inlayHints.inlineHandlerLeading',

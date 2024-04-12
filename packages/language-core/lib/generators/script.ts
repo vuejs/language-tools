@@ -1,4 +1,4 @@
-import type { Mapping } from '@volar/language-core';
+import { getStack, type Mapping } from '@volar/language-core';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { ScriptRanges } from '../parsers/scriptRanges';
@@ -6,7 +6,7 @@ import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { Code, CodeAndStack, Sfc, SfcBlock, VueCompilerOptions } from '../types';
 import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { eachInterpolationSegment } from '../utils/transform';
-import { disableAllFeatures, enableAllFeatures, getStack } from './utils';
+import { disableAllFeatures, enableAllFeatures } from './utils';
 import { generateGlobalTypes } from './globalTypes';
 
 interface HelperType {
@@ -321,7 +321,7 @@ export function* generate(
 			scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + '\n',
 			'scriptSetup',
 			0,
-			enableAllFeatures({}),
+			enableAllFeatures(),
 		]);
 	}
 	function* generateModelEmits(): Generator<CodeAndStack> {
@@ -372,7 +372,7 @@ export function* generate(
 				scriptSetup.generic,
 				scriptSetup.name,
 				scriptSetup.genericOffset,
-				enableAllFeatures({}),
+				enableAllFeatures(),
 			]);
 			if (!scriptSetup.generic.endsWith(`,`)) {
 				yield _(`,`);
@@ -1030,7 +1030,7 @@ export function* generate(
 			'',
 			'style_' + styleIndex,
 			offset + classNameWithDot.length,
-			disableAllFeatures({}),
+			disableAllFeatures(),
 		]);
 		yield _(`${optional ? '?' : ''}: ${propertyType}`);
 		yield _(` }`);
@@ -1059,7 +1059,7 @@ export function* generate(
 							cssBind.offset + offset,
 							onlyError
 								? disableAllFeatures({ verification: true })
-								: enableAllFeatures({}),
+								: enableAllFeatures(),
 						]);
 					}
 				}
@@ -1095,7 +1095,7 @@ export function* generate(
 			block.content.substring(start, end),
 			block.name,
 			start,
-			enableAllFeatures({}), // diagnostic also working for setup() returns unused in template checking
+			enableAllFeatures(), // diagnostic also working for setup() returns unused in template checking
 		];
 	}
 	function generateSourceCodeForExtraReference(block: SfcBlock, start: number, end: number): Code {

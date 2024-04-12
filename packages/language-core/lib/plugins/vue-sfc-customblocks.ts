@@ -23,7 +23,7 @@ const plugin: VueLanguagePlugin = () => {
 					customBlock.content,
 					customBlock.name,
 					0,
-					enableAllFeatures({}),
+					enableAllFeatures(),
 				]);
 			}
 		},
