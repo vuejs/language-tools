@@ -510,7 +510,9 @@ export function* generate(
 			}
 
 			yield _ts(` {\n`);
-			yield* resetDirectiveComments('end of v-if start');
+			if (isFragment(node)) {
+				yield* resetDirectiveComments('end of v-if start');
+			}
 			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of branch.children) {
 				yield* generateAstNode(childNode, parentEl, prev, componentCtxVar);
@@ -557,7 +559,9 @@ export function* generate(
 			);
 			yield _ts('!)'); // #3102
 			yield _ts(') {\n');
-			yield* resetDirectiveComments('end of v-for start');
+			if (isFragment(node)) {
+				yield* resetDirectiveComments('end of v-for start');
+			}
 			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of node.children) {
 				yield* generateAstNode(childNode, parentEl, prev, componentCtxVar);
@@ -1798,6 +1802,10 @@ export function* generate(
 			yield _ts(['', 'template', offset + code.length, disableAllFeatures({ __combineLastMapping: true })]);
 		}
 	}
+}
+
+function isFragment(node: CompilerDOM.IfNode | CompilerDOM.ForNode) {
+	return node.codegenNode && 'consequent' in node.codegenNode && 'tag' in node.codegenNode.consequent && node.codegenNode.consequent.tag === CompilerDOM.FRAGMENT;
 }
 
 export function createTsAst(ts: typeof import('typescript'), astHolder: any, text: string) {

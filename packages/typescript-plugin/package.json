@@ -1,6 +1,6 @@
 {
 	"name": "@vue/typescript-plugin",
-	"version": "2.0.11",
+	"version": "2.0.12",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -12,8 +12,8 @@
 		"directory": "packages/typescript-plugin"
 	},
 	"dependencies": {
-		"@volar/typescript": "2.2.0-alpha.7",
-		"@vue/language-core": "2.0.11",
+		"@volar/typescript": "2.2.0-alpha.8",
+		"@vue/language-core": "2.0.12",
 		"@vue/shared": "^3.4.0"
 	},
 	"devDependencies": {
