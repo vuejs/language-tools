@@ -814,7 +814,6 @@ export function* generate(
 			}
 			const slotBlockVars: string[] = [];
 			yield _ts(`{\n`);
-			yield* resetDirectiveComments('end of element slot start');
 			let hasProps = false;
 			if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 
@@ -867,6 +866,8 @@ export function* generate(
 			slotBlockVars.forEach(varName => {
 				localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
 			});
+
+			yield* resetDirectiveComments('end of slot children start');
 
 			let prev: CompilerDOM.TemplateChildNode | undefined;
 			for (const childNode of node.children) {
