@@ -1,8 +1,10 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type * as ts from 'typescript';
-import type { VueEmbeddedCode } from './virtualFile/embeddedFile';
+import { VueEmbeddedCode } from './virtualFile/embeddedFile';
 import type { CodeInformation, Segment } from '@volar/language-core';
+
+export { VueEmbeddedCode };
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
