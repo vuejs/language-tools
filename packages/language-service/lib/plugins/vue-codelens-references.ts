@@ -1,5 +1,5 @@
 import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
-import { SourceScript, VirtualCode, VueCodeInformation, VueGeneratedCode } from '@vue/language-core';
+import { SourceScript, VirtualCode, VueCodeInformation, VueVirtualCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export function create(): LanguageServicePlugin {
@@ -40,7 +40,7 @@ export function create(): LanguageServicePlugin {
 				const decoded = context.decodeEmbeddedDocumentUri(uri);
 				const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 				const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-				if (!virtualCode || !(sourceScript?.generated?.root instanceof VueGeneratedCode) || !sourceScript) {
+				if (!virtualCode || !(sourceScript?.generated?.root instanceof VueVirtualCode) || !sourceScript) {
 					return;
 				}
 

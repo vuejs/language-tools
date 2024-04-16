@@ -1,7 +1,7 @@
 import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 
-export function generateGlobalTypes(vueCompilerOptions: VueCompilerOptions) {
+export function createGlobalTypes(vueCompilerOptions: VueCompilerOptions) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}`;
 	return `
 ; export const __VLS_globalTypesStart = {};

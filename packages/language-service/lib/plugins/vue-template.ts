@@ -1,5 +1,5 @@
 import type { Disposable, ServiceContext, ServiceEnvironment, LanguageServicePluginInstance } from '@volar/language-service';
-import { VueGeneratedCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
+import { VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
@@ -113,7 +113,7 @@ export function create(
 
 					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					if (sourceScript?.generated?.root instanceof VueGeneratedCode) {
+					if (sourceScript?.generated?.root instanceof VueVirtualCode) {
 						sync = (await provideHtmlData(sourceScript.id, sourceScript.generated.root)).sync;
 						currentVersion = await sync();
 					}
@@ -126,7 +126,7 @@ export function create(
 						return;
 					}
 
-					if (sourceScript?.generated?.root instanceof VueGeneratedCode) {
+					if (sourceScript?.generated?.root instanceof VueVirtualCode) {
 						await afterHtmlCompletion(
 							htmlComplete,
 							context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot),
@@ -161,7 +161,7 @@ export function create(
 						const code = context.language.scripts.get(map.sourceDocument.uri)?.generated?.root;
 						const scanner = getScanner(baseServiceInstance, document);
 
-						if (code instanceof VueGeneratedCode && scanner) {
+						if (code instanceof VueVirtualCode && scanner) {
 
 							// visualize missing required props
 							const casing = await getNameCasing(context, map.sourceDocument.uri, tsPluginClient);
@@ -288,7 +288,7 @@ export function create(
 					for (const map of context.documents.getMaps(virtualCode)) {
 
 						const code = context.language.scripts.get(map.sourceDocument.uri)?.generated?.root;
-						if (!(code instanceof VueGeneratedCode)) {
+						if (!(code instanceof VueVirtualCode)) {
 							continue;
 						}
 
@@ -345,7 +345,7 @@ export function create(
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					if (
 						!sourceScript
-						|| !(sourceScript.generated?.root instanceof VueGeneratedCode)
+						|| !(sourceScript.generated?.root instanceof VueVirtualCode)
 						|| !sourceScript.generated.root.sfc.template
 					) {
 						return [];
@@ -378,7 +378,7 @@ export function create(
 				},
 			};
 
-			async function provideHtmlData(sourceDocumentUri: string, vueCode: VueGeneratedCode) {
+			async function provideHtmlData(sourceDocumentUri: string, vueCode: VueVirtualCode) {
 
 				await (initializing ??= initialize());
 
@@ -621,7 +621,7 @@ export function create(
 				};
 			}
 
-			async function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument, code: VueGeneratedCode) {
+			async function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument, code: VueVirtualCode) {
 
 				const replacement = getReplacement(completionList, sourceDocument);
 				const componentNames = new Set(

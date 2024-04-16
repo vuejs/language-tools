@@ -9,7 +9,7 @@ import { loadLanguageBlocks } from './data';
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
 export interface Provide {
-	'vue/vueFile': (document: TextDocument) => vue.VueGeneratedCode | undefined;
+	'vue/vueFile': (document: TextDocument) => vue.VueVirtualCode | undefined;
 }
 
 export function create(): LanguageServicePlugin {
@@ -60,7 +60,7 @@ export function create(): LanguageServicePlugin {
 				},
 
 				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
-					if (sourceScript.generated?.root instanceof vue.VueGeneratedCode) {
+					if (sourceScript.generated?.root instanceof vue.VueVirtualCode) {
 						if (virtualCode.id === 'scriptFormat' || virtualCode.id === 'scriptSetupFormat') {
 							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
@@ -171,11 +171,11 @@ export function create(): LanguageServicePlugin {
 				},
 			};
 
-			function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueGeneratedCode) => T) {
+			function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueVirtualCode) => T) {
 				const decoded = context.decodeEmbeddedDocumentUri(document.uri);
 				const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 				const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-				if (virtualCode instanceof vue.VueGeneratedCode) {
+				if (virtualCode instanceof vue.VueVirtualCode) {
 					return callback(virtualCode);
 				}
 			}

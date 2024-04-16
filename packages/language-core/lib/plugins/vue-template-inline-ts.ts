@@ -1,4 +1,7 @@
-import { createTsAst, isCompoundExpression, parseVForNode, parseInterpolationNode } from '../generators/template';
+import { createTsAst } from '../codegen/common';
+import { isCompoundExpression } from '../codegen/template/elementEvents';
+import { parseInterpolationNode } from '../codegen/template/templateNode';
+import { parseVForNode } from '../codegen/template/vFor';
 import { disableAllFeatures } from '../generators/utils';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
 import * as CompilerDOM from '@vue/compiler-dom';

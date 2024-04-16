@@ -22,9 +22,8 @@ export interface VueCodeInformation extends CodeInformation {
 		paddingLeft?: boolean;
 	};
 	__combineLastMapping?: boolean;
+	__combineOffsetMapping?: number;
 }
-
-export type CodeAndStack = [code: Code, stack: string];
 
 export type Code = Segment<VueCodeInformation>;
 
@@ -35,7 +34,6 @@ export interface VueCompilerOptions {
 	jsxSlots: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
-	nativeTags: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
@@ -66,7 +64,6 @@ export type VueLanguagePlugin = (ctx: {
 	};
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
-	codegenStack: boolean;
 	globalTypesHolder: string | undefined;
 }) => {
 	version: typeof pluginVersion;

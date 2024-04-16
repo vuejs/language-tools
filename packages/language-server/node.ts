@@ -85,7 +85,6 @@ connection.onInitialize(async params => {
 					() => projectContext.typescript?.host.getScriptFileNames() ?? [],
 					commandLine?.options ?? {},
 					vueOptions,
-					options.codegenStack,
 				);
 
 				envToVueOptions.set(serviceEnv, vueOptions);
