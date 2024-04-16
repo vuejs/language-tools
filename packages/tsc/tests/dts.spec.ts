@@ -40,7 +40,6 @@ describe('vue-tsc-dts', () => {
 			() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
 			options.options,
 			vueOptions,
-			false,
 		);
 		return [vueLanguagePlugin];
 	}, fileName => {
