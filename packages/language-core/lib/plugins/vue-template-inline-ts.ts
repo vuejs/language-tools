@@ -1,15 +1,15 @@
+import type { CodeInformation } from '@volar/language-core';
 import { createTsAst } from '../codegen/common';
 import { isCompoundExpression } from '../codegen/template/elementEvents';
 import { parseInterpolationNode } from '../codegen/template/templateNode';
 import { parseVForNode } from '../codegen/template/vFor';
-import { disableAllFeatures } from '../generators/utils';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
 import * as CompilerDOM from '@vue/compiler-dom';
 
-const codeFeatures = disableAllFeatures({
+const codeFeatures: CodeInformation = {
 	format: true,
 	// autoInserts: true, // TODO: support vue-autoinsert-parentheses
-});
+};
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
 	if: ['if (', ') { }'] as [string, string],

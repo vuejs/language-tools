@@ -1,7 +1,7 @@
 import type { Mapping } from '@volar/language-core';
 import { computed, computedSet } from 'computeds';
 import { generate as generateScript } from '../generators/script';
-import { generate as generateTemplate } from '../generators/template';
+import { generate as generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';

@@ -6,7 +6,7 @@ import type { ScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { Code, Sfc, SfcBlock, VueCodeInformation, VueCompilerOptions } from '../types';
 import { getSlotsPropertyName, hyphenateTag } from '../utils/shared';
 import { forEachInterpolationSegment } from '../codegen/template/interpolation';
-import { combineLastMapping, endOfLine, newLine } from './common';
+import { combineLastMapping, endOfLine, newLine } from '../codegen/common';
 import { createGlobalTypes } from './globalTypes';
 import { TemplateCodegenContext, createTemplateCodegenContext } from '../codegen/template';
 

@@ -1,12 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { forEachElementNode } from './template';
-import { enableAllFeatures } from './utils';
+import { forEachElementNode } from '../codegen/template';
+import { allCodeFeatures } from '../plugins/shared';
 import type { Code } from '../types';
 
-const codeFeatures = enableAllFeatures({
+const codeFeatures = {
+	...allCodeFeatures,
 	format: false,
 	structure: false,
-});
+};
 
 export function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Code> {
 	for (const node of forEachElementNode(templateAst)) {
