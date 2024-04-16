@@ -186,9 +186,8 @@ function computedPluginFiles(
 				}
 				if (mapping.data.__combineOffsetMapping !== undefined) {
 					const offsetMapping = mappings[i - mapping.data.__combineOffsetMapping];
-					if (typeof offsetMapping === 'string') {
-						console.error('Invalid offset mapping');
-						continue;
+					if (typeof offsetMapping === 'string' || !offsetMapping) {
+						throw new Error('Invalid offset mapping, mappings: ' + mappings.length + ', i: ' + i + ', offset: ' + mapping.data.__combineOffsetMapping);
 					}
 					offsetMapping.sourceOffsets.push(...mapping.sourceOffsets);
 					offsetMapping.generatedOffsets.push(...mapping.generatedOffsets);

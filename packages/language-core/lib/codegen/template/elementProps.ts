@@ -3,7 +3,7 @@ import { camelize } from '@vue/shared';
 import { minimatch } from 'minimatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
-import { variableNameRegex, wrapWith } from '../common';
+import { conditionWrapWith, variableNameRegex, wrapWith } from '../common';
 import { generateCamelized } from './camelized';
 import type { TemplateCodegenContext, TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -89,95 +89,42 @@ export function* generateElementProps(
 				&& hyphenateAttr(propName) === propName
 				&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(propName!, pattern));
 
-			if (mode === 'normal') {
-				yield [
-					'',
-					'template',
-					prop.loc.start.offset,
-					ctx.codeFeatures.verification,
-				];
-			}
-			yield* generateObjectProperty(
-				options,
-				ctx,
-				propName,
-				prop.arg
-					? prop.arg.loc.start.offset
-					: prop.loc.start.offset,
-				prop.arg
-					? {
-						...attrCodeFeatures,
-						navigation: attrCodeFeatures.navigation
-							? {
-								resolveRenameNewName: camelize,
-								resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
-							}
-							: false,
-					}
-					: attrCodeFeatures,
-				(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
-				shouldCamelize,
+			yield* wrapWith(
+				prop.loc.start.offset,
+				prop.loc.end.offset,
+				ctx.codeFeatures.verification,
+				...generateObjectProperty(
+					options,
+					ctx,
+					propName,
+					prop.arg
+						? prop.arg.loc.start.offset
+						: prop.loc.start.offset,
+					prop.arg
+						? {
+							...attrCodeFeatures,
+							navigation: attrCodeFeatures.navigation
+								? {
+									resolveRenameNewName: camelize,
+									resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
+								}
+								: false,
+						}
+						: attrCodeFeatures,
+					(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
+					shouldCamelize,
+				),
+				`: (`,
+				...genereatePropExp(
+					options,
+					ctx,
+					prop.exp,
+					attrCodeFeatures,
+					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
+					mode === 'normal',
+				),
+				`)`,
 			);
-			yield `: (`;
-			if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
-				const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset; // vue 3.4+
-				if (!isShorthand) {
-					yield* generateInterpolation(
-						options,
-						ctx,
-						prop.exp.loc.source,
-						prop.exp.loc,
-						prop.exp.loc.start.offset,
-						defaultCodeFeatures,
-						'(',
-						')',
-					);
-				} else {
-					const propVariableName = camelize(prop.exp.loc.source);
-
-					if (variableNameRegex.test(propVariableName)) {
-						if (!ctx.hasLocalVariable(propVariableName)) {
-							ctx.accessGlobalVariable(propVariableName, prop.exp.loc.start.offset);
-							yield `__VLS_ctx.`;
-						}
-						yield* generateCamelized(
-							prop.exp.loc.source,
-							prop.exp.loc.start.offset,
-							defaultCodeFeatures,
-						);
-						if (mode === 'normal') {
-							yield [
-								'',
-								'template',
-								prop.exp.loc.end.offset,
-								{
-									__hint: {
-										setting: 'vue.inlayHints.vBindShorthand',
-										label: `="${propVariableName}"`,
-										tooltip: [
-											`This is a shorthand for \`${prop.exp.loc.source}="${propVariableName}"\`.`,
-											'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
-											'[More info](https://github.com/vuejs/core/pull/9451)',
-										].join('\n\n'),
-									},
-								} as VueCodeInformation,
-							];
-						}
-					}
-				}
-			}
-			else {
-				yield `{}`;
-			}
-			yield `)`;
-			if (mode === 'normal') {
-				yield [
-					'',
-					'template',
-					prop.loc.end.offset,
-					ctx.codeFeatures.verification,
-				];
-			}
 			yield `, `;
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
@@ -203,49 +150,38 @@ export function* generateElementProps(
 				&& hyphenateAttr(prop.name) === prop.name
 				&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(prop.name, pattern));
 
-			if (mode === 'normal') {
-				yield [
-					'',
-					'template',
-					prop.loc.start.offset,
-					ctx.codeFeatures.verification,
-				];
-			}
-			yield* generateObjectProperty(
-				options,
-				ctx,
-				prop.name,
+			yield* conditionWrapWith(
+				mode === 'normal',
 				prop.loc.start.offset,
-				shouldCamelize
-					? {
-						...attrCodeFeatures,
-						navigation: attrCodeFeatures.navigation
-							? {
-								resolveRenameNewName: camelize,
-								resolveRenameEditText: hyphenateAttr,
-							}
-							: false,
-					}
-					: attrCodeFeatures,
-				(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
-				shouldCamelize,
+				prop.loc.end.offset,
+				ctx.codeFeatures.verification,
+				...generateObjectProperty(
+					options,
+					ctx,
+					prop.name,
+					prop.loc.start.offset,
+					shouldCamelize
+						? {
+							...attrCodeFeatures,
+							navigation: attrCodeFeatures.navigation
+								? {
+									resolveRenameNewName: camelize,
+									resolveRenameEditText: hyphenateAttr,
+								}
+								: false,
+						}
+						: attrCodeFeatures,
+					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
+					shouldCamelize,
+				),
+				`: (`,
+				...(
+					prop.value
+						? generateAttrValue(prop.value, defaultCodeFeatures)
+						: [`true`]
+				),
+				`)`,
 			);
-			yield `: (`;
-			if (prop.value) {
-				yield* generateAttrValue(prop.value, defaultCodeFeatures);
-			}
-			else {
-				yield `true`;
-			}
-			yield `)`;
-			if (mode === 'normal') {
-				yield [
-					'',
-					'template',
-					prop.loc.end.offset,
-					ctx.codeFeatures.verification,
-				];
-			}
 			yield `, `;
 		}
 		else if (
@@ -254,35 +190,88 @@ export function* generateElementProps(
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
-			yield [
-				'',
-				'template',
+			yield* conditionWrapWith(
+				mode === 'normal',
 				prop.exp.loc.start.offset,
-				ctx.codeFeatures.verification,
-			];
-			yield `...`;
-			yield* generateInterpolation(
-				options,
-				ctx,
-				prop.exp.content,
-				prop.exp.loc,
-				prop.exp.loc.start.offset,
-				defaultCodeFeatures,
-				'(',
-				')',
-			);
-			yield [
-				'',
-				'template',
 				prop.exp.loc.end.offset,
 				ctx.codeFeatures.verification,
-			];
+				`...`,
+				...generateInterpolation(
+					options,
+					ctx,
+					prop.exp.content,
+					prop.exp.loc,
+					prop.exp.loc.start.offset,
+					defaultCodeFeatures,
+					'(',
+					')',
+				),
+			);
 			yield `, `;
 		}
 		else {
 			// comment this line to avoid affecting comments in prop expressions
 			// tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */ ");
 		}
+	}
+}
+
+function* genereatePropExp(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	exp: CompilerDOM.SimpleExpressionNode | undefined,
+	features: VueCodeInformation,
+	isShorthand: boolean,
+	inlayHints: boolean,
+): Generator<Code> {
+	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
+		if (!isShorthand) { // vue 3.4+
+			yield* generateInterpolation(
+				options,
+				ctx,
+				exp.loc.source,
+				exp.loc,
+				exp.loc.start.offset,
+				features,
+				'(',
+				')',
+			);
+		} else {
+			const propVariableName = camelize(exp.loc.source);
+
+			if (variableNameRegex.test(propVariableName)) {
+				if (!ctx.hasLocalVariable(propVariableName)) {
+					ctx.accessGlobalVariable(propVariableName, exp.loc.start.offset);
+					yield `__VLS_ctx.`;
+				}
+				yield* generateCamelized(
+					exp.loc.source,
+					exp.loc.start.offset,
+					features,
+				);
+				if (inlayHints) {
+					yield [
+						'',
+						'template',
+						exp.loc.end.offset,
+						{
+							__hint: {
+								setting: 'vue.inlayHints.vBindShorthand',
+								label: `="${propVariableName}"`,
+								tooltip: [
+									`This is a shorthand for \`${exp.loc.source}="${propVariableName}"\`.`,
+									'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
+									'[More info](https://github.com/vuejs/core/pull/9451)',
+								].join('\n\n'),
+							},
+						} as VueCodeInformation,
+					];
+				}
+			}
+		}
+	}
+	else {
+		yield `{}`;
 	}
 }
 

@@ -7,11 +7,35 @@ export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineLastMapping: true };
 export const variableNameRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
-export function* wrapWith(startOffset: number, endOffset: number, features: VueCodeInformation, ...wrapCodes: Code[]): Generator<Code> {
+export function* conditionWrapWith(
+	condition: boolean,
+	startOffset: number,
+	endOffset: number,
+	features: VueCodeInformation,
+	...wrapCodes: Code[]
+): Generator<Code> {
+	if (condition) {
+		yield* wrapWith(startOffset, endOffset, features, ...wrapCodes);
+	}
+	else {
+		for (const wrapCode of wrapCodes) {
+			yield wrapCode;
+		}
+	}
+}
+
+export function* wrapWith(
+	startOffset: number,
+	endOffset: number,
+	features: VueCodeInformation,
+	...wrapCodes: Code[]
+): Generator<Code> {
 	yield ['', 'template', startOffset, features];
-	let offset = 0;
+	let offset = 1;
 	for (const wrapCode of wrapCodes) {
-		offset++;
+		if (typeof wrapCode !== 'string') {
+			offset++;
+		}
 		yield wrapCode;
 	}
 	yield ['', 'template', endOffset, { __combineOffsetMapping: offset }];

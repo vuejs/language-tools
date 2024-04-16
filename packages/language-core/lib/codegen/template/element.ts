@@ -315,44 +315,38 @@ function* generateComponentSlot(
 			yield ` = __VLS_getSlotParam(`;
 		}
 	}
-	yield [
-		'',
-		'template',
+	yield* wrapWith(
 		(slotDir.arg ?? slotDir).loc.start.offset,
-		ctx.codeFeatures.verification,
-	];
-	yield `(${componentCtxVar}.slots!)`;
-	if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
-		yield* generatePropertyAccess(
-			options,
-			ctx,
-			slotDir.arg.loc.source,
-			slotDir.arg.loc.start.offset,
-			slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
-			slotDir.arg.loc
-		);
-	}
-	else {
-		yield `.`;
-		yield* wrapWith(
-			slotDir.loc.start.offset,
-			slotDir.loc.start.offset + (
-				slotDir.loc.source.startsWith('#')
-					? '#'.length
-					: slotDir.loc.source.startsWith('v-slot:')
-						? 'v-slot:'.length
-						: 0
-			),
-			ctx.codeFeatures.withoutHighlightAndCompletion,
-			`default`,
-		);
-	}
-	yield [
-		'',
-		'template',
 		(slotDir.arg ?? slotDir).loc.end.offset,
 		ctx.codeFeatures.verification,
-	];
+		`(${componentCtxVar}.slots!)`,
+		...(
+			slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content
+				? generatePropertyAccess(
+					options,
+					ctx,
+					slotDir.arg.loc.source,
+					slotDir.arg.loc.start.offset,
+					slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
+					slotDir.arg.loc
+				)
+				: [
+					`.`,
+					...wrapWith(
+						slotDir.loc.start.offset,
+						slotDir.loc.start.offset + (
+							slotDir.loc.source.startsWith('#')
+								? '#'.length
+								: slotDir.loc.source.startsWith('v-slot:')
+									? 'v-slot:'.length
+									: 0
+						),
+						ctx.codeFeatures.withoutHighlightAndCompletion,
+						`default`,
+					)
+				]
+		)
+	);
 	if (hasProps) {
 		yield `)`;
 	}
