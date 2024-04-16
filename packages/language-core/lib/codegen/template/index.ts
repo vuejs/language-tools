@@ -381,12 +381,14 @@ export function createTemplateCodegenContext() {
 		blockConditions,
 		usedComponentCtxVars,
 		scopedClasses,
-		accessGlobalVariable(name: string, offset: number) {
+		accessGlobalVariable(name: string, offset?: number) {
 			let arr = accessGlobalVariables.get(name);
 			if (!arr) {
 				accessGlobalVariables.set(name, arr = new Set());
 			}
-			arr.add(offset);
+			if (offset !== undefined) {
+				arr.add(offset);
+			}
 		},
 		hasLocalVariable: (name: string) => {
 			return !!localVars.get(name);

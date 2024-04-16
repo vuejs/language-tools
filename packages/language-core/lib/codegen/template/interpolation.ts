@@ -103,6 +103,9 @@ export function* forEachInterpolationSegment(
 			if (offset !== undefined) {
 				ctx.accessGlobalVariable(text, offset + getStartEnd(ts, id, ast).start);
 			}
+			else {
+				ctx.accessGlobalVariable(text);
+			}
 		}
 	};
 	ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, ctx));
