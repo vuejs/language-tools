@@ -1,4 +1,4 @@
-import { defineComponent } from "vue";
+import { defineComponent } from 'vue';
 
 export const Foo = defineComponent((_: { foo: string; }) => ()=> { });
 

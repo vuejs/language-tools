@@ -3,13 +3,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref } from 'vue';
 withDefaults(
 	defineProps<{
-		type?: "checkbox" | "radio";
+		type?: 'checkbox' | 'radio';
 	}>(),
 	{
-		type: "checkbox",
+		type: 'checkbox',
 	}
 );
 const defaultSelection: string[] = [];

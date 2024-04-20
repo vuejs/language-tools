@@ -1,6 +1,7 @@
 import type { Code, VueCodeInformation } from '../../types';
 import { variableNameRegex } from '../common';
-import type { TemplateCodegenContext, TemplateCodegenOptions } from './index';
+import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateStringLiteralKey } from './stringLiteralKey';
 

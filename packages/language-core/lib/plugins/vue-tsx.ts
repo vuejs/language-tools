@@ -1,7 +1,8 @@
 import type { Mapping } from '@volar/language-core';
 import { computed, computedSet } from 'computeds';
-import { generate as generateScript } from '../generators/script';
-import { generate as generateTemplate } from '../codegen/template';
+import * as path from 'path-browserify';
+import { generateScript } from '../codegen/script';
+import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
@@ -144,24 +145,24 @@ function createTsx(
 		const linkedCodeMappings: Mapping[] = [];
 		const _template = generatedTemplate();
 		let generatedLength = 0;
-		for (const code of generateScript(
+		for (const code of generateScript({
 			ts,
-			fileName,
-			_sfc,
-			lang(),
-			scriptRanges(),
-			scriptSetupRanges(),
-			_template ? {
+			fileBaseName: path.basename(fileName),
+			globalTypes: ctx.globalTypesHolder === fileName,
+			sfc: _sfc,
+			lang: lang(),
+			scriptRanges: scriptRanges(),
+			scriptSetupRanges: scriptSetupRanges(),
+			templateCodegen: _template ? {
 				tsCodes: _template.codes,
 				ctx: _template.ctx,
 				hasSlot: _template.hasSlot,
 			} : undefined,
-			ctx.compilerOptions,
-			ctx.vueCompilerOptions,
-			ctx.globalTypesHolder,
-			() => generatedLength,
+			compilerOptions: ctx.compilerOptions,
+			vueCompilerOptions: ctx.vueCompilerOptions,
+			getGeneratedLength: () => generatedLength,
 			linkedCodeMappings,
-		)) {
+		})) {
 			codes.push(code);
 			generatedLength += typeof code === 'string'
 				? code.length

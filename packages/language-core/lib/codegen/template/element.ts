@@ -3,15 +3,16 @@ import { camelize, capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
 import { collectVars, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../common';
 import { generateCamelized } from './camelized';
+import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
+import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
 import { generateElementProps } from './elementProps';
-import type { TemplateCodegenContext, TemplateCodegenOptions } from './index';
+import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateStringLiteralKey } from './stringLiteralKey';
-import { generateTemplateNode } from './templateNode';
-import { generateElementDirectives } from './elementDirectives';
+import { generateTemplateChild } from './templateChild';
 
 const colonReg = /:/g;
 
@@ -19,7 +20,7 @@ export function* generateElement(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	parentComponent: CompilerDOM.ElementNode | undefined,
+	currentElement: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
@@ -164,7 +165,7 @@ export function* generateElement(
 	if (node.tagType !== CompilerDOM.ElementTypes.TEMPLATE) {
 		defineComponentCtxVar = ctx.getInternalVariable();
 		componentCtxVar = defineComponentCtxVar;
-		parentComponent = node;
+		currentElement = node;
 	}
 
 	const componentEventsVar = ctx.getInternalVariable();
@@ -227,10 +228,10 @@ export function* generateElement(
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir && componentCtxVar) {
-		yield* generateComponentSlot(options, ctx, node, slotDir, parentComponent, componentCtxVar);
+		yield* generateComponentSlot(options, ctx, node, slotDir, currentElement, componentCtxVar);
 	}
 	else {
-		yield* generateElementChildren(options, ctx, node, parentComponent, componentCtxVar);
+		yield* generateElementChildren(options, ctx, node, currentElement, componentCtxVar);
 	}
 
 	if (defineComponentCtxVar && ctx.usedComponentCtxVars.has(defineComponentCtxVar)) {
@@ -279,13 +280,13 @@ function* generateComponentSlot(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	slotDir: CompilerDOM.DirectiveNode,
-	parentComponent: CompilerDOM.ElementNode | undefined,
+	currentElement: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string,
 ): Generator<Code> {
 	yield `{${newLine}`;
 	ctx.usedComponentCtxVars.add(componentCtxVar);
-	if (parentComponent) {
-		ctx.hasSlotElements.add(parentComponent);
+	if (currentElement) {
+		ctx.hasSlotElements.add(currentElement);
 	}
 	const slotBlockVars: string[] = [];
 	let hasProps = false;
@@ -360,7 +361,7 @@ function* generateComponentSlot(
 
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateNode(options, ctx, childNode, parentComponent, prev, componentCtxVar);
+		yield* generateTemplateChild(options, ctx, childNode, currentElement, prev, componentCtxVar);
 		prev = childNode;
 	}
 

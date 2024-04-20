@@ -1,16 +1,17 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { endOfLine, newLine, wrapWith } from '../common';
+import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import { generateElementProps } from './elementProps';
-import type { TemplateCodegenContext, TemplateCodegenOptions } from './index';
+import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 
 export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.SlotOutletNode,
-	parentComponent: CompilerDOM.ElementNode | undefined,
+	currentElement: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
@@ -108,5 +109,5 @@ export function* generateSlotOutlet(
 		});
 	}
 	yield* ctx.generateAutoImportCompletion();
-	yield* generateElementChildren(options, ctx, node, parentComponent, componentCtxVar);
+	yield* generateElementChildren(options, ctx, node, currentElement, componentCtxVar);
 }

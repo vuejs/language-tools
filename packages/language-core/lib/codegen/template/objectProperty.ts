@@ -1,11 +1,11 @@
 import { camelize } from '@vue/shared';
-import type { TemplateCodegenContext } from ".";
-import type { Code, VueCodeInformation } from "../../types";
-import { combineLastMapping, variableNameRegex, wrapWith } from "../common";
-import { generateCamelized } from "./camelized";
-import type { TemplateCodegenOptions } from "./index";
-import { generateInterpolation } from "./interpolation";
-import { generateStringLiteralKey } from "./stringLiteralKey";
+import type { Code, VueCodeInformation } from '../../types';
+import { combineLastMapping, variableNameRegex, wrapWith } from '../common';
+import { generateCamelized } from './camelized';
+import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
+import { generateInterpolation } from './interpolation';
+import { generateStringLiteralKey } from './stringLiteralKey';
 
 export function* generateObjectProperty(
 	options: TemplateCodegenOptions,

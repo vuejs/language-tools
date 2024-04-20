@@ -1,7 +1,7 @@
 import type { CodeInformation } from '@volar/language-core';
 import { createTsAst } from '../codegen/common';
 import { isCompoundExpression } from '../codegen/template/elementEvents';
-import { parseInterpolationNode } from '../codegen/template/templateNode';
+import { parseInterpolationNode } from '../codegen/template/templateChild';
 import { parseVForNode } from '../codegen/template/vFor';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
 import * as CompilerDOM from '@vue/compiler-dom';

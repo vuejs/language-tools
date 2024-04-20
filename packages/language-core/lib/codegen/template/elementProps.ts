@@ -5,7 +5,8 @@ import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
 import { conditionWrapWith, variableNameRegex, wrapWith } from '../common';
 import { generateCamelized } from './camelized';
-import type { TemplateCodegenContext, TemplateCodegenOptions } from './index';
+import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
@@ -139,8 +140,8 @@ export function* generateElementProps(
 
 			if (
 				options.vueCompilerOptions.target < 3
-				&& (node.tag === 'transition' || node.tag === 'Transition')
 				&& prop.name === 'persisted'
+				&& node.tag.toLowerCase() === 'transition'
 			) {
 				// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom always adds it (#3881)
 				continue;

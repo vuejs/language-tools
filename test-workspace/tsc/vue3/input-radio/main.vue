@@ -4,7 +4,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref } from 'vue'
 
 const picked = ref([])
 const checked = ref([])

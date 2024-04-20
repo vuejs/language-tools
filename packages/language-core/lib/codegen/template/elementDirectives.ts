@@ -4,7 +4,8 @@ import type { Code } from '../../types';
 import { hyphenateAttr } from '../../utils/shared';
 import { endOfLine, wrapWith } from '../common';
 import { generateCamelized } from './camelized';
-import type { TemplateCodegenContext, TemplateCodegenOptions } from './index';
+import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 
 export function* generateElementDirectives(

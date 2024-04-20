@@ -1,20 +1,21 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { endOfLine, wrapWith } from '../common';
-import type { TemplateCodegenContext, TemplateCodegenOptions } from './index';
-import { generateTemplateNode } from './templateNode';
+import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateElementChildren(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	parentComponent: CompilerDOM.ElementNode | undefined,
+	currentElement: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 	yield* ctx.resetDirectiveComments('end of element children start');
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateNode(options, ctx, childNode, parentComponent, prev, componentCtxVar);
+		yield* generateTemplateChild(options, ctx, childNode, currentElement, prev, componentCtxVar);
 		prev = childNode;
 	}
 

@@ -1,16 +1,17 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import type { Code } from "../../types";
-import { collectVars, createTsAst, newLine } from "../common";
+import type { Code } from '../../types';
+import { collectVars, createTsAst, newLine } from '../common';
+import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
-import { isFragment, type TemplateCodegenContext } from './index';
+import { isFragment } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateTemplateNode } from './templateNode';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateVFor(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ForNode,
-	parentComponent: CompilerDOM.ElementNode | undefined,
+	currentElement: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 	const { source } = node.parseResult;
@@ -19,14 +20,8 @@ export function* generateVFor(
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
-
 		const collectAst = createTsAst(options.ts, node.parseResult, `const [${leftExpressionText}]`);
 		collectVars(options.ts, collectAst, collectAst, forBlockVars);
-
-		for (const varName of forBlockVars) {
-			ctx.addLocalVariable(varName);
-		}
-
 		yield [
 			leftExpressionText,
 			'template',
@@ -34,9 +29,9 @@ export function* generateVFor(
 			ctx.codeFeatures.all,
 		];
 	}
-	yield `] of __VLS_getVForSourceType`;
+	yield `] of `;
 	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `(`;
+		yield `__VLS_getVForSourceType(`;
 		yield* generateInterpolation(
 			options,
 			ctx,
@@ -48,22 +43,27 @@ export function* generateVFor(
 			')',
 		);
 		yield `!)`; // #3102
-		yield `) {${newLine}`;
-		if (isFragment(node)) {
-			yield* ctx.resetDirectiveComments('end of v-for start');
-		}
-		let prev: CompilerDOM.TemplateChildNode | undefined;
-		for (const childNode of node.children) {
-			yield* generateTemplateNode(options, ctx, childNode, parentComponent, prev, componentCtxVar);
-			prev = childNode;
-		}
-		yield* ctx.generateAutoImportCompletion();
-		yield `}${newLine}`;
 	}
-
+	else {
+		yield `{} as any`;
+	}
+	yield `) {${newLine}`;
+	if (isFragment(node)) {
+		yield* ctx.resetDirectiveComments('end of v-for start');
+	}
+	for (const varName of forBlockVars) {
+		ctx.addLocalVariable(varName);
+	}
+	let prev: CompilerDOM.TemplateChildNode | undefined;
+	for (const childNode of node.children) {
+		yield* generateTemplateChild(options, ctx, childNode, currentElement, prev, componentCtxVar);
+		prev = childNode;
+	}
 	for (const varName of forBlockVars) {
 		ctx.removeLocalVariable(varName);
 	}
+	yield* ctx.generateAutoImportCompletion();
+	yield `}${newLine}`;
 }
 
 export function parseVForNode(node: CompilerDOM.ForNode) {

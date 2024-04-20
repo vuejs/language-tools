@@ -1,17 +1,18 @@
-import { toString } from "@volar/language-core";
+import { toString } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
-import { isFragment, type TemplateCodegenContext } from ".";
-import type { Code } from "../../types";
-import { newLine } from "../common";
-import type { TemplateCodegenOptions } from "./index";
-import { generateInterpolation } from "./interpolation";
-import { generateTemplateNode } from "./templateNode";
+import type { Code } from '../../types';
+import { newLine } from '../common';
+import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
+import { isFragment } from './index';
+import { generateInterpolation } from './interpolation';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateVIf(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.IfNode,
-	parentComponent: CompilerDOM.ElementNode | undefined,
+	currentElement: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 
@@ -60,7 +61,7 @@ export function* generateVIf(
 		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of branch.children) {
-			yield* generateTemplateNode(options, ctx, childNode, parentComponent, prev, componentCtxVar);
+			yield* generateTemplateChild(options, ctx, childNode, currentElement, prev, componentCtxVar);
 			prev = childNode;
 		}
 		yield* ctx.generateAutoImportCompletion();

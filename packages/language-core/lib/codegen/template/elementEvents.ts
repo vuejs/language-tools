@@ -1,13 +1,14 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
+import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { hyphenateAttr } from '../../utils/shared';
 import { combineLastMapping, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../common';
 import { generateCamelized } from './camelized';
-import type { TemplateCodegenContext, TemplateCodegenOptions } from './index';
+import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
-import type * as ts from 'typescript';
 
 export function* generateElementEvents(
 	options: TemplateCodegenOptions,

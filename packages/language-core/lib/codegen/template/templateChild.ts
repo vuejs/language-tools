@@ -1,8 +1,9 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { endOfLine, newLine } from '../common';
+import type { TemplateCodegenContext } from './context';
 import { generateElement } from './element';
-import type { TemplateCodegenContext, TemplateCodegenOptions } from './index';
+import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
 import { generateVFor } from './vFor';
@@ -24,11 +25,11 @@ const transformContext: CompilerDOM.TransformContext = {
 	expressionPlugins: ['typescript'],
 };
 
-export function* generateTemplateNode(
+export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.InterpolationNode | CompilerDOM.CompoundExpressionNode | CompilerDOM.TextNode | CompilerDOM.SimpleExpressionNode,
-	parentComponent: CompilerDOM.ElementNode | undefined,
+	currentElement: CompilerDOM.ElementNode | undefined,
 	prevNode: CompilerDOM.TemplateChildNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
@@ -49,7 +50,7 @@ export function* generateTemplateNode(
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of node.children) {
-			yield* generateTemplateNode(options, ctx, childNode, parentComponent, prev, componentCtxVar);
+			yield* generateTemplateChild(options, ctx, childNode, currentElement, prev, componentCtxVar);
 			prev = childNode;
 		}
 		yield* ctx.resetDirectiveComments('end of root');
@@ -58,29 +59,29 @@ export function* generateTemplateNode(
 		const vForNode = getVForNode(node);
 		const vIfNode = getVIfNode(node);
 		if (vForNode) {
-			yield* generateVFor(options, ctx, vForNode, parentComponent, componentCtxVar);
+			yield* generateVFor(options, ctx, vForNode, currentElement, componentCtxVar);
 		}
 		else if (vIfNode) {
-			yield* generateVIf(options, ctx, vIfNode, parentComponent, componentCtxVar);
+			yield* generateVIf(options, ctx, vIfNode, currentElement, componentCtxVar);
 		}
 		else {
 			if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
-				yield* generateSlotOutlet(options, ctx, node, parentComponent, componentCtxVar);
+				yield* generateSlotOutlet(options, ctx, node, currentElement, componentCtxVar);
 			}
 			else {
-				yield* generateElement(options, ctx, node, parentComponent, componentCtxVar);
+				yield* generateElement(options, ctx, node, currentElement, componentCtxVar);
 			}
 		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 		// {{ var }}
-		yield* generateTemplateNode(options, ctx, node.content, parentComponent, undefined, componentCtxVar);
+		yield* generateTemplateChild(options, ctx, node.content, currentElement, undefined, componentCtxVar);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		// {{ ... }} {{ ... }}
 		for (const childNode of node.children) {
 			if (typeof childNode === 'object') {
-				yield* generateTemplateNode(options, ctx, childNode, parentComponent, undefined, componentCtxVar);
+				yield* generateTemplateChild(options, ctx, childNode, currentElement, undefined, componentCtxVar);
 			}
 		}
 	}
@@ -101,11 +102,11 @@ export function* generateTemplateNode(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.IF) {
 		// v-if / v-else-if / v-else
-		yield* generateVIf(options, ctx, node, parentComponent, componentCtxVar);
+		yield* generateVIf(options, ctx, node, currentElement, componentCtxVar);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.FOR) {
 		// v-for
-		yield* generateVFor(options, ctx, node, parentComponent, componentCtxVar);
+		yield* generateVFor(options, ctx, node, currentElement, componentCtxVar);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 		// not needed progress
