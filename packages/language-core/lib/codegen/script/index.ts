@@ -2,8 +2,8 @@ import type { Mapping } from '@volar/language-core';
 import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, Sfc, SfcBlock, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { endOfLine, newLine } from '../common';
+import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
+import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import type { TemplateCodegenContext } from '../template/context';
 import { createScriptCodegenContext } from './context';
 import { generateGlobalTypes } from './globalTypes';
@@ -70,17 +70,17 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 			yield generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 			if (exportDefault) {
-				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start);
+				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
-				yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.end, options.sfc.script.content.length);
+				yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.end, options.sfc.script.content.length, codeFeatures.all);
 			}
 			else {
-				yield generateSfcBlockSection(options.sfc.script, 0);
+				yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 			}
 		}
 		else if (exportDefault && isExportRawObject && options.vueCompilerOptions.optionsWrapper.length) {
-			yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start);
+			yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 			yield options.vueCompilerOptions.optionsWrapper[0];
 			yield [
 				'',
@@ -99,7 +99,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 					}
 				},
 			];
-			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.start, exportDefault.expression.end);
+			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.start, exportDefault.expression.end, codeFeatures.all);
 			yield [
 				'',
 				'script',
@@ -115,10 +115,10 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 				},
 			];
 			yield options.vueCompilerOptions.optionsWrapper[1];
-			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.end, options.sfc.script.content.length);
+			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.end, options.sfc.script.content.length, codeFeatures.all);
 		}
 		else {
-			yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length);
+			yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
 		}
 	}
 	else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
@@ -143,24 +143,6 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 			codeFeatures.verification,
 		];
 	}
-}
-
-export function generateSfcBlockSection(block: SfcBlock, start: number, end?: number): Code {
-	return [
-		block.content.substring(start, end),
-		block.name,
-		start,
-		codeFeatures.all, // diagnostic also working for setup() returns unused in template checking
-	];
-}
-
-export function generateSfcBlockSectionForExtraReference(block: SfcBlock, start: number, end?: number): Code {
-	return [
-		block.content.substring(start, end),
-		block.name,
-		start,
-		codeFeatures.navigation,
-	];
 }
 
 function normalizeCssRename(newName: string) {

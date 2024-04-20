@@ -1,6 +1,6 @@
-import { getNodeText } from '../parsers/scriptSetupRanges';
-import type { Code, VueCodeInformation } from '../types';
 import type * as ts from 'typescript';
+import { getNodeText } from '../parsers/scriptSetupRanges';
+import type { Code, SfcBlock, VueCodeInformation } from '../types';
 
 export const newLine = '\n';
 export const endOfLine = `;${newLine}`;
@@ -72,4 +72,13 @@ export function createTsAst(ts: typeof import('typescript'), astHolder: any, tex
 		astHolder.__volar_ast = ts.createSourceFile('/a.ts', text, 99 satisfies ts.ScriptTarget.ESNext);
 	}
 	return astHolder.__volar_ast as ts.SourceFile;
+}
+
+export function generateSfcBlockSection(block: SfcBlock, start: number, end: number, features: VueCodeInformation): Code {
+	return [
+		block.content.substring(start, end),
+		block.name,
+		start,
+		features,
+	];
 }

@@ -1,16 +1,16 @@
-import { generateSfcBlockSection, generateSfcBlockSectionForExtraReference } from './index';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
-import { newLine } from '../common';
+import { generateSfcBlockSection, newLine } from '../common';
 import type { ScriptCodegenContext } from './context';
+import { codeFeatures } from './index';
 
 export function* generateComponentOptionsByScript(
 	script: NonNullable<Sfc['script']>,
 	scriptRanges: ScriptRanges,
 ): Generator<Code> {
 	if (scriptRanges.exportDefault?.args) {
-		yield generateSfcBlockSection(script, scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1);
+		yield generateSfcBlockSection(script, scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1, codeFeatures.all);
 	}
 }
 
@@ -25,7 +25,7 @@ export function* generateComponentOptionsByScriptSetup(
 	if (scriptSetupRanges.props.define?.arg) {
 		const { arg } = scriptSetupRanges.props.define;
 		propsCodegens.push(function* () {
-			yield generateSfcBlockSectionForExtraReference(scriptSetup, arg.start, arg.end);
+			yield generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation);
 		});
 	}
 	if (scriptSetupRanges.props.define?.typeArg) {
@@ -37,10 +37,10 @@ export function* generateComponentOptionsByScriptSetup(
 			}
 			yield `${ctx.helperTypes.TypePropsToOption.name}<`;
 			if (functional) {
-				yield `typeof __VLS_fnPropsTypeOnly`;
+				yield `typeof __VLS_fnProps`;
 			}
 			else {
-				yield generateSfcBlockSectionForExtraReference(scriptSetup, typeArg.start, typeArg.end);
+				yield generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.navigation);
 			}
 			yield `>`;
 			if (scriptSetupRanges.props.withDefaults?.arg) {

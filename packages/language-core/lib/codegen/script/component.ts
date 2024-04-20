@@ -1,10 +1,10 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
-import { endOfLine, newLine } from '../common';
+import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponentOptionsByScript, generateComponentOptionsByScriptSetup } from './componentOptions';
-import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, generateSfcBlockSection } from './index';
 import { generateComponentSetupReturns } from './componentSetupReturns';
+import type { ScriptCodegenContext } from './context';
+import { ScriptCodegenOptions, codeFeatures } from './index';
 
 export function* generateComponent(
 	options: ScriptCodegenOptions,
@@ -15,7 +15,7 @@ export function* generateComponent(
 ): Generator<Code> {
 	if (options.sfc.script && options.scriptRanges?.exportDefault && options.scriptRanges.exportDefault.expression.start !== options.scriptRanges.exportDefault.args.start) {
 		// use defineComponent() from user space code if it exist
-		yield generateSfcBlockSection(options.sfc.script, options.scriptRanges.exportDefault.expression.start, options.scriptRanges.exportDefault.args.start);
+		yield generateSfcBlockSection(options.sfc.script, options.scriptRanges.exportDefault.expression.start, options.scriptRanges.exportDefault.args.start, codeFeatures.all);
 		yield `{${newLine}`;
 	}
 	else {
