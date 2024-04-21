@@ -28,7 +28,7 @@ const transformContext: CompilerDOM.TransformContext = {
 export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.InterpolationNode | CompilerDOM.CompoundExpressionNode | CompilerDOM.TextNode | CompilerDOM.SimpleExpressionNode,
+	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
 	currentElement: CompilerDOM.ElementNode | undefined,
 	prevNode: CompilerDOM.TemplateChildNode | undefined,
 	componentCtxVar: string | undefined,
