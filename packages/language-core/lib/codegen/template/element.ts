@@ -28,6 +28,7 @@ export function* generateElement(
 	const var_originalComponent = ctx.getInternalVariable();
 	const var_functionalComponent = ctx.getInternalVariable();
 	const var_componentInstance = ctx.getInternalVariable();
+	const var_componentEvents = ctx.getInternalVariable();
 	const isIntrinsicElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT
 		|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
 	const isComponentTag = node.tag.toLowerCase() === 'component';
@@ -43,6 +44,8 @@ export function* generateElement(
 		offset: number;
 		astHolder: any;
 	} | undefined;
+	let defineComponentCtxVar: string | undefined;
+	let usedComponentEventsVar = false;
 
 	if (isComponentTag) {
 		for (const prop of node.props) {
@@ -138,11 +141,14 @@ export function* generateElement(
 	if (options.vueCompilerOptions.strictTemplates) {
 		// with strictTemplates, generate once for props type-checking + instance type
 		yield `const ${var_componentInstance} = ${var_functionalComponent}(`;
-		yield ['', 'template', startTagOffset, ctx.codeFeatures.verification];
-		yield `{`;
-		yield* generateElementProps(options, ctx, node, props, 'normal', propsFailedExps);
-		yield `}`;
-		yield ['', 'template', startTagOffset + tag.length, ctx.codeFeatures.verification];
+		yield* wrapWith(
+			startTagOffset,
+			startTagOffset + tag.length,
+			ctx.codeFeatures.verification,
+			`{`,
+			...generateElementProps(options, ctx, node, props, 'normal', propsFailedExps),
+			`}`,
+		);
 		yield `, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
 	}
 	else {
@@ -152,15 +158,16 @@ export function* generateElement(
 		yield `}, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
 		// and this for props type-checking
 		yield `({} as (props: __VLS_FunctionalComponentProps<typeof ${var_originalComponent}, typeof ${var_componentInstance}> & Record<string, unknown>) => void)(`;
-		yield ['', 'template', startTagOffset, ctx.codeFeatures.verification];
-		yield `{`;
-		yield* generateElementProps(options, ctx, node, props, 'normal', propsFailedExps);
-		yield `}`;
-		yield ['', 'template', startTagOffset + tag.length, ctx.codeFeatures.verification];
+		yield* wrapWith(
+			startTagOffset,
+			startTagOffset + tag.length,
+			ctx.codeFeatures.verification,
+			`{`,
+			...generateElementProps(options, ctx, node, props, 'normal', propsFailedExps),
+			`}`,
+		);
 		yield `)${endOfLine}`;
 	}
-
-	let defineComponentCtxVar: string | undefined;
 
 	if (node.tagType !== CompilerDOM.ElementTypes.TEMPLATE) {
 		defineComponentCtxVar = ctx.getInternalVariable();
@@ -168,12 +175,7 @@ export function* generateElement(
 		currentElement = node;
 	}
 
-	const componentEventsVar = ctx.getInternalVariable();
-
-	let usedComponentEventsVar = false;
-
-	//#region
-	// fix https://github.com/vuejs/language-tools/issues/1775
+	//#region fix #1775
 	for (const failedExp of propsFailedExps) {
 		yield* generateInterpolation(
 			options,
@@ -217,7 +219,7 @@ export function* generateElement(
 	}
 	if (componentCtxVar) {
 		ctx.usedComponentCtxVars.add(componentCtxVar);
-		yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, componentEventsVar, () => usedComponentEventsVar = true);
+		yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEvents, () => usedComponentEventsVar = true);
 	}
 
 	if (inScope) {
@@ -238,7 +240,7 @@ export function* generateElement(
 		yield `const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!${endOfLine}`;
 	}
 	if (usedComponentEventsVar) {
-		yield `let ${componentEventsVar}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>${endOfLine}`;
+		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>${endOfLine}`;
 	}
 }
 

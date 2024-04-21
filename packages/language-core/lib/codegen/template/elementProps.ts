@@ -291,7 +291,6 @@ function* generateAttrValue(attrNode: CompilerDOM.TextNode, features: VueCodeInf
 		content = content.slice(1, -1);
 	}
 	if (needToUnicode(content)) {
-		yield ['', 'template', start, features];
 		yield* wrapWith(
 			start,
 			end,
