@@ -2,14 +2,14 @@ import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
 import type * as ts from 'typescript';
 import { getDefaultVueLanguagePlugins } from './plugins';
 import type { VueCompilerOptions, VueLanguagePlugin } from './types';
-import { VueGeneratedCode } from './virtualFile/vueFile';
+import { VueVirtualCode } from './virtualFile/vueFile';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 
 const normalFileRegistries: {
 	key: string;
 	plugins: VueLanguagePlugin[];
-	files: Map<string, VueGeneratedCode>;
+	files: Map<string, VueVirtualCode>;
 }[] = [];
 const holderFileRegistries: typeof normalFileRegistries = [];
 
@@ -48,7 +48,7 @@ function getFileRegistryKey(
 	return JSON.stringify(values);
 }
 
-interface _Plugin extends LanguagePlugin<VueGeneratedCode> {
+interface _Plugin extends LanguagePlugin<VueVirtualCode> {
 	getCanonicalFileName: (fileName: string) => string;
 	pluginContext: Parameters<VueLanguagePlugin>[0];
 }
@@ -61,7 +61,6 @@ export function createVueLanguagePlugin(
 	getScriptFileNames: () => string[] | Set<string>,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	codegenStack: boolean = false,
 ): _Plugin {
 	const allowLanguageIds = new Set(['vue']);
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
@@ -76,7 +75,6 @@ export function createVueLanguagePlugin(
 		},
 		compilerOptions,
 		vueCompilerOptions,
-		codegenStack,
 		globalTypesHolder: undefined,
 	};
 	const plugins = getDefaultVueLanguagePlugins(pluginContext);
@@ -115,14 +113,13 @@ export function createVueLanguagePlugin(
 					return code;
 				}
 				else {
-					const code = new VueGeneratedCode(
+					const code = new VueVirtualCode(
 						fileName,
 						languageId,
 						snapshot,
 						vueCompilerOptions,
 						plugins,
 						ts,
-						codegenStack,
 					);
 					fileRegistry.set(fileId, code);
 					return code;

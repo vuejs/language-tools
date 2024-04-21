@@ -51,7 +51,7 @@ export function computedSfc(
 			});
 		},
 	);
-	const scriptSetup = computedNullableSfcBlock(
+	const scriptSetupOriginal = computedNullableSfcBlock(
 		'scriptSetup',
 		'js',
 		computed(() => parsed()?.descriptor.scriptSetup ?? undefined),
@@ -72,6 +72,27 @@ export function computedSfc(
 			});
 		},
 	);
+	const hasScript = computed(() => !!parsed()?.descriptor.script);
+	const hasScriptSetup = computed(() => !!parsed()?.descriptor.scriptSetup);
+	const scriptSetup = computed(() => {
+		if (!hasScript() && !hasScriptSetup()) {
+			//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
+			return {
+				content: '',
+				lang: 'ts',
+				name: '',
+				start: 0,
+				end: 0,
+				startTagEnd: 0,
+				endTagStart: 0,
+				generic: undefined,
+				genericOffset: 0,
+				attrs: {},
+				ast: ts.createSourceFile('', '', 99 satisfies ts.ScriptTarget.Latest, false, ts.ScriptKind.TS),
+			};
+		}
+		return scriptSetupOriginal();
+	});
 	const styles = computedArray(
 		computed(() => parsed()?.descriptor.styles ?? []),
 		(block, i) => {

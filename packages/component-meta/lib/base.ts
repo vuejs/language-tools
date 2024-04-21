@@ -314,7 +314,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 
 			const vueFile = language.scripts.get(componentPath)?.generated?.root;
 			const vueDefaults = vueFile && exportName === 'default'
-				? (vueFile instanceof vue.VueGeneratedCode ? readVueComponentDefaultProps(vueFile, printer, ts, vueCompilerOptions) : {})
+				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts, vueCompilerOptions) : {})
 				: {};
 			const tsDefaults = !vueFile ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
@@ -684,7 +684,7 @@ function createSchemaResolvers(
 }
 
 function readVueComponentDefaultProps(
-	vueSourceFile: vue.VueGeneratedCode,
+	vueSourceFile: vue.VueVirtualCode,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript'),
 	vueCompilerOptions: vue.VueCompilerOptions,

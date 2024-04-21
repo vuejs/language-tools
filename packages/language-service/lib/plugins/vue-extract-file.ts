@@ -1,6 +1,6 @@
 import type { CreateFile, ServiceContext, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import { Sfc, VueGeneratedCode, scriptRanges } from '@vue/language-core';
+import { Sfc, VueVirtualCode, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 
@@ -32,7 +32,7 @@ export function create(
 					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(sourceScript?.generated?.root instanceof VueGeneratedCode) || virtualCode?.id !== 'template') {
+					if (!(sourceScript?.generated?.root instanceof VueVirtualCode) || virtualCode?.id !== 'template') {
 						return;
 					}
 
@@ -68,7 +68,7 @@ export function create(
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(sourceScript?.generated?.root instanceof VueGeneratedCode) || virtualCode?.id !== 'template') {
+					if (!(sourceScript?.generated?.root instanceof VueVirtualCode) || virtualCode?.id !== 'template') {
 						return codeAction;
 					}
 

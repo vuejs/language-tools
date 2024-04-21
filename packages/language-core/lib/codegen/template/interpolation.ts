@@ -1,26 +1,93 @@
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript';
-import { getNodeText, getStartEnd } from '../parsers/scriptSetupRanges';
-import type { VueCompilerOptions } from '../types';
+import { getNodeText, getStartEnd } from '../../parsers/scriptSetupRanges';
+import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
+import { collectVars, createTsAst } from '../common';
+import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
 
-export function* eachInterpolationSegment(
-	ts: typeof import('typescript'),
-	code: string,
-	ast: ts.SourceFile,
-	localVars: Map<string, number>,
-	identifiers: Set<string>,
-	vueOptions: VueCompilerOptions,
-	ctxVars: {
+export function* generateInterpolation(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	_code: string,
+	astHolder: any,
+	start: number | undefined,
+	data: VueCodeInformation | (() => VueCodeInformation) | undefined,
+	prefix: string,
+	suffix: string,
+): Generator<Code> {
+	const code = prefix + _code + suffix;
+	const ast = createTsAst(options.ts, astHolder, code);
+	const vars: {
 		text: string,
 		isShorthand: boolean,
 		offset: number,
-	}[] = []
+	}[] = [];
+	for (let [section, offset, onlyError] of forEachInterpolationSegment(
+		options.ts,
+		options.vueCompilerOptions,
+		ctx,
+		code,
+		start !== undefined ? start - prefix.length : undefined,
+		ast,
+	)) {
+		if (offset === undefined) {
+			yield section;
+		}
+		else {
+			offset -= prefix.length;
+			let addSuffix = '';
+			const overLength = offset + section.length - _code.length;
+			if (overLength > 0) {
+				addSuffix = section.substring(section.length - overLength);
+				section = section.substring(0, section.length - overLength);
+			}
+			if (offset < 0) {
+				yield section.substring(0, -offset);
+				section = section.substring(-offset);
+				offset = 0;
+			}
+			if (start !== undefined && data !== undefined) {
+				yield [
+					section,
+					'template',
+					start + offset,
+					onlyError
+						? ctx.codeFeatures.verification
+						: typeof data === 'function' ? data() : data,
+				];
+			}
+			else {
+				yield section;
+			}
+			yield addSuffix;
+		}
+	}
+	if (start !== undefined) {
+		for (const v of vars) {
+			v.offset = start + v.offset - prefix.length;
+		}
+	}
+}
+
+export function* forEachInterpolationSegment(
+	ts: typeof import('typescript'),
+	vueOptions: VueCompilerOptions,
+	ctx: TemplateCodegenContext,
+	code: string,
+	offset: number | undefined,
+	ast: ts.SourceFile,
 ): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
+	let ctxVars: {
+		text: string,
+		isShorthand: boolean,
+		offset: number,
+	}[] = [];
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		const text = getNodeText(ts, id, ast);
 		if (
-			localVars.get(text) ||
+			ctx.hasLocalVariable(text) ||
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 			isGloballyWhitelisted(text) ||
 			text === 'require' ||
@@ -34,10 +101,15 @@ export function* eachInterpolationSegment(
 				isShorthand: isShorthand,
 				offset: getStartEnd(ts, id, ast).start,
 			});
-			identifiers.add(text);
+			if (offset !== undefined) {
+				ctx.accessGlobalVariable(text, offset + getStartEnd(ts, id, ast).start);
+			}
+			else {
+				ctx.accessGlobalVariable(text);
+			}
 		}
 	};
-	ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, localVars));
+	ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, ctx));
 
 	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
 
@@ -114,7 +186,7 @@ function walkIdentifiers(
 	node: ts.Node,
 	ast: ts.SourceFile,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
-	localVars: Map<string, number>,
+	ctx: TemplateCodegenContext,
 	blockVars: string[] = [],
 	isRoot: boolean = true,
 ) {
@@ -126,18 +198,18 @@ function walkIdentifiers(
 		cb(node.name, true);
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		walkIdentifiers(ts, node.expression, ast, cb, localVars, blockVars, false);
+		walkIdentifiers(ts, node.expression, ast, cb, ctx, blockVars, false);
 	}
 	else if (ts.isVariableDeclaration(node)) {
 
 		collectVars(ts, node.name, ast, blockVars);
 
 		for (const varName of blockVars) {
-			localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
+			ctx.addLocalVariable(varName);
 		}
 
 		if (node.initializer) {
-			walkIdentifiers(ts, node.initializer, ast, cb, localVars, blockVars, false);
+			walkIdentifiers(ts, node.initializer, ast, cb, ctx, blockVars, false);
 		}
 	}
 	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
@@ -147,18 +219,18 @@ function walkIdentifiers(
 		for (const param of node.parameters) {
 			collectVars(ts, param.name, ast, functionArgs);
 			if (param.type) {
-				walkIdentifiers(ts, param.type, ast, cb, localVars, blockVars, false);
+				walkIdentifiers(ts, param.type, ast, cb, ctx, blockVars, false);
 			}
 		}
 
 		for (const varName of functionArgs) {
-			localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
+			ctx.addLocalVariable(varName);
 		}
 
-		walkIdentifiers(ts, node.body, ast, cb, localVars, blockVars, false);
+		walkIdentifiers(ts, node.body, ast, cb, ctx, blockVars, false);
 
 		for (const varName of functionArgs) {
-			localVars.set(varName, localVars.get(varName)! - 1);
+			ctx.removeLocalVariable(varName);
 		}
 	}
 	else if (ts.isObjectLiteralExpression(node)) {
@@ -166,18 +238,18 @@ function walkIdentifiers(
 			if (ts.isPropertyAssignment(prop)) {
 				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
-					walkIdentifiers(ts, prop.name.expression, ast, cb, localVars, blockVars, false);
+					walkIdentifiers(ts, prop.name.expression, ast, cb, ctx, blockVars, false);
 				}
-				walkIdentifiers(ts, prop.initializer, ast, cb, localVars, blockVars, false);
+				walkIdentifiers(ts, prop.initializer, ast, cb, ctx, blockVars, false);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				walkIdentifiers(ts, prop, ast, cb, localVars, blockVars, false);
+				walkIdentifiers(ts, prop, ast, cb, ctx, blockVars, false);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
-				walkIdentifiers(ts, prop.expression, ast, cb, localVars, blockVars, false);
+				walkIdentifiers(ts, prop.expression, ast, cb, ctx, blockVars, false);
 			}
 		}
 	}
@@ -190,10 +262,10 @@ function walkIdentifiers(
 		if (ts.isBlock(node)) {
 			blockVars = [];
 		}
-		ts.forEachChild(node, node => walkIdentifiers(ts, node, ast, cb, localVars, blockVars, false));
+		ts.forEachChild(node, node => walkIdentifiers(ts, node, ast, cb, ctx, blockVars, false));
 		if (ts.isBlock(node)) {
 			for (const varName of blockVars) {
-				localVars.set(varName, localVars.get(varName)! - 1);
+				ctx.removeLocalVariable(varName);
 			}
 		}
 		blockVars = _blockVars;
@@ -201,7 +273,7 @@ function walkIdentifiers(
 
 	if (isRoot) {
 		for (const varName of blockVars) {
-			localVars.set(varName, localVars.get(varName)! - 1);
+			ctx.removeLocalVariable(varName);
 		}
 	}
 }
@@ -216,31 +288,5 @@ function walkIdentifiersInTypeReference(
 	}
 	else {
 		ts.forEachChild(node, node => walkIdentifiersInTypeReference(ts, node, cb));
-	}
-}
-
-export function collectVars(
-	ts: typeof import('typescript'),
-	node: ts.Node,
-	ast: ts.SourceFile,
-	result: string[],
-) {
-	if (ts.isIdentifier(node)) {
-		result.push(getNodeText(ts, node, ast));
-	}
-	else if (ts.isObjectBindingPattern(node)) {
-		for (const el of node.elements) {
-			collectVars(ts, el.name, ast, result);
-		}
-	}
-	else if (ts.isArrayBindingPattern(node)) {
-		for (const el of node.elements) {
-			if (ts.isBindingElement(el)) {
-				collectVars(ts, el.name, ast, result);
-			}
-		}
-	}
-	else {
-		ts.forEachChild(node, node => collectVars(ts, node, ast, result));
 	}
 }

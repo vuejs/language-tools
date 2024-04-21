@@ -39,7 +39,6 @@ export function run() {
 					() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
 					options.options,
 					vueOptions,
-					false,
 				);
 				return [vueLanguagePlugin];
 			}

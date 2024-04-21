@@ -1,7 +1,7 @@
 import type { ServiceContext, VirtualCode } from '@volar/language-service';
 import type { CompilerDOM } from '@vue/language-core';
 import * as vue from '@vue/language-core';
-import { VueGeneratedCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
+import { VueVirtualCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import { computed } from 'computeds';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { AttrNameCasing, TagNameCasing } from '../types';
@@ -19,7 +19,7 @@ export async function convertTagName(
 	}
 
 	const rootCode = sourceFile?.generated?.root;
-	if (!(rootCode instanceof VueGeneratedCode)) {
+	if (!(rootCode instanceof VueVirtualCode)) {
 		return;
 	}
 
@@ -67,7 +67,7 @@ export async function convertAttrName(
 	}
 
 	const rootCode = sourceFile?.generated?.root;
-	if (!(rootCode instanceof VueGeneratedCode)) {
+	if (!(rootCode instanceof VueVirtualCode)) {
 		return;
 	}
 
@@ -138,7 +138,7 @@ export async function detect(
 }> {
 
 	const rootFile = context.language.scripts.get(uri)?.generated?.root;
-	if (!(rootFile instanceof VueGeneratedCode)) {
+	if (!(rootFile instanceof VueVirtualCode)) {
 		return {
 			tag: [],
 			attr: [],
@@ -174,7 +174,7 @@ export async function detect(
 
 		return result;
 	}
-	async function getTagNameCase(file: VueGeneratedCode): Promise<TagNameCasing[]> {
+	async function getTagNameCase(file: VueVirtualCode): Promise<TagNameCasing[]> {
 
 		const components = await tsPluginClient?.getComponentNames(file.fileName) ?? [];
 		const tagNames = getTemplateTagsAndAttrs(file);
@@ -225,7 +225,7 @@ function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 
 	if (!map.has(sourceFile)) {
 		const getter = computed(() => {
-			if (!(sourceFile instanceof vue.VueGeneratedCode)) {
+			if (!(sourceFile instanceof vue.VueVirtualCode)) {
 				return;
 			}
 			const ast = sourceFile.sfc.template?.ast;

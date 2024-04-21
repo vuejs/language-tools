@@ -10,7 +10,6 @@ import { middleware } from './middleware';
 export async function activate(context: vscode.ExtensionContext) {
 
 	const volarLabs = createLabsInfo(serverLib);
-	volarLabs.extensionExports.volarLabs.codegenStackSupport = true;
 
 	await commonActivate(context, (
 		id,

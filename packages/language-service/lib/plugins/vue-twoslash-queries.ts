@@ -18,7 +18,7 @@ export function create(
 					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(sourceScript?.generated?.root instanceof vue.VueGeneratedCode) || virtualCode?.id !== 'template') {
+					if (!(sourceScript?.generated?.root instanceof vue.VueVirtualCode) || virtualCode?.id !== 'template') {
 						return;
 					}
 

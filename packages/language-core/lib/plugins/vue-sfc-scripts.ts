@@ -1,4 +1,3 @@
-import { disableAllFeatures } from '../generators/utils';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
@@ -30,10 +29,10 @@ const plugin: VueLanguagePlugin = () => {
 					script.content,
 					script.name,
 					0,
-					disableAllFeatures({
+					{
 						structure: true,
 						format: true,
-					}),
+					},
 				]);
 			}
 		},
