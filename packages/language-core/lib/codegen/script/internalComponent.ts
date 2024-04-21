@@ -1,10 +1,9 @@
 import type { Code } from '../../types';
 import { endOfLine, newLine } from '../common';
 import type { TemplateCodegenContext } from '../template/context';
-import { generateComponentOptionsByScript, generateComponentOptionsByScriptSetup } from './componentOptions';
+import { generateComponentSetupReturns, generateScriptOptions, generateScriptSetupOptions } from './component';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
-import { generateComponentSetupReturns } from './componentSetupReturns';
 import { getTemplateUsageVars } from './template';
 
 export function* generateInternalComponent(
@@ -49,15 +48,15 @@ export function* generateInternalComponent(
 		yield `}${endOfLine}`; // return {
 		yield `},${newLine}`; // setup() {
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
-			yield* generateComponentOptionsByScriptSetup(ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
+			yield* generateScriptSetupOptions(ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 		}
 		if (options.sfc.script && options.scriptRanges) {
-			yield* generateComponentOptionsByScript(options.sfc.script, options.scriptRanges);
+			yield* generateScriptOptions(options.sfc.script, options.scriptRanges);
 		}
 		yield `})${endOfLine}`; // defineComponent {
 	}
 	else if (options.sfc.script) {
-		yield `let __VLS_internalComponent!: typeof import('./${options.fileBaseName}')['default']${endOfLine}`;
+		yield `const __VLS_internalComponent = (await import('./${options.fileBaseName}')).default${endOfLine}`;
 	}
 	else {
 		yield `const __VLS_internalComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
