@@ -132,7 +132,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 	yield `\ntype __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
 
 	if (!ctx.generatedTemplate) {
-		yield* generateTemplate(options, ctx, false);
+		yield* generateTemplate(options, ctx);
 	}
 
 	if (options.sfc.scriptSetup) {

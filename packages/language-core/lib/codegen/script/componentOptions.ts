@@ -18,39 +18,27 @@ export function* generateComponentOptionsByScriptSetup(
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
-	functional: boolean,
 ): Generator<Code> {
 	const propsCodegens: (() => Generator<Code>)[] = [];
 
-	if (scriptSetupRanges.props.define?.arg) {
-		const { arg } = scriptSetupRanges.props.define;
-		propsCodegens.push(function* () {
-			yield generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation);
-		});
-	}
-	if (scriptSetupRanges.props.define?.typeArg) {
-		const { typeArg } = scriptSetupRanges.props.define;
+	if (ctx.generatedPropsType) {
 		propsCodegens.push(function* () {
 			yield `{} as `;
 			if (scriptSetupRanges.props.withDefaults?.arg) {
 				yield `${ctx.helperTypes.WithDefaults.name}<`;
 			}
 			yield `${ctx.helperTypes.TypePropsToOption.name}<`;
-			if (functional) {
-				yield `typeof __VLS_fnProps`;
-			}
-			else {
-				yield generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.navigation);
-			}
+			yield `typeof __VLS_componentProps`;
 			yield `>`;
 			if (scriptSetupRanges.props.withDefaults?.arg) {
 				yield `, typeof __VLS_withDefaultsArg>`;
 			}
 		});
 	}
-	if (!functional && scriptSetupRanges.defineProp.length) {
+	if (scriptSetupRanges.props.define?.arg) {
+		const { arg } = scriptSetupRanges.props.define;
 		propsCodegens.push(function* () {
-			yield `__VLS_propsOption_defineProp`;
+			yield generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation);
 		});
 	}
 

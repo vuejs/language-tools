@@ -10,7 +10,6 @@ import { getTemplateUsageVars } from './template';
 export function* generateInternalComponent(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	functional: boolean,
 	templateCodegenCtx: TemplateCodegenContext,
 ): Generator<Code> {
 	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
@@ -50,7 +49,7 @@ export function* generateInternalComponent(
 		yield `}${endOfLine}`; // return {
 		yield `},${newLine}`; // setup() {
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
-			yield* generateComponentOptionsByScriptSetup(ctx, options.sfc.scriptSetup, options.scriptSetupRanges, functional);
+			yield* generateComponentOptionsByScriptSetup(ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 		}
 		if (options.sfc.script && options.scriptRanges) {
 			yield* generateComponentOptionsByScript(options.sfc.script, options.scriptRanges);

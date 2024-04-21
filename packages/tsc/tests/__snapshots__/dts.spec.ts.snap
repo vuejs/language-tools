@@ -90,7 +90,6 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
     };
 };
 export default _default;
-type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any ? Pick<T, Exclude<keyof T, K>> : never;
 type __VLS_Prettify<T> = {
     [K in keyof T]: T[K];
 } & {};
@@ -159,7 +158,6 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
     };
 };
 export default _default;
-type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any ? Pick<T, Exclude<keyof T, K>> : never;
 type __VLS_Prettify<T> = {
     [K in keyof T]: T[K];
 } & {};
@@ -314,26 +312,35 @@ export default _default;
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{
-    foo: import("vue").PropType<number>;
-    bar: import("vue").PropType<string[]>;
-    qux: import("vue").PropType<string>;
-    quxModifiers: import("vue").PropType<Record<"trim" | "lazy", true>>;
-}, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+"declare const _default: import("vue").DefineComponent<__VLS_TypePropsToOption<{
+    foo?: number;
+    bar?: string[];
+    qux?: string;
+    quxModifiers?: Record<"trim" | "lazy", true>;
+}>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     "update:foo": (foo: number) => void;
     "update:bar": (bar: string[]) => void;
     "update:qux": (qux: string) => void;
-}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
-    foo: import("vue").PropType<number>;
-    bar: import("vue").PropType<string[]>;
-    qux: import("vue").PropType<string>;
-    quxModifiers: import("vue").PropType<Record<"trim" | "lazy", true>>;
-}>> & {
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<{
+    foo?: number;
+    bar?: string[];
+    qux?: string;
+    quxModifiers?: Record<"trim" | "lazy", true>;
+}>>> & {
     "onUpdate:foo"?: (foo: number) => any;
     "onUpdate:bar"?: (bar: string[]) => any;
     "onUpdate:qux"?: (qux: string) => any;
 }, {}, {}>;
 export default _default;
+type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
+type __VLS_TypePropsToOption<T> = {
+    [K in keyof T]-?: {} extends Pick<T, K> ? {
+        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
+    } : {
+        type: import('vue').PropType<T[K]>;
+        required: true;
+    };
+};
 "
 `;
 

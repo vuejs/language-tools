@@ -11,7 +11,6 @@ export function* generateComponent(
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
-	functional: boolean,
 ): Generator<Code> {
 	if (options.sfc.script && options.scriptRanges?.exportDefault && options.scriptRanges.exportDefault.expression.start !== options.scriptRanges.exportDefault.args.start) {
 		// use defineComponent() from user space code if it exist
@@ -33,7 +32,7 @@ export function* generateComponent(
 	yield `}${endOfLine}`;
 	yield `},${newLine}`;
 	if (!ctx.bypassDefineComponent) {
-		yield* generateComponentOptionsByScriptSetup(ctx, scriptSetup, scriptSetupRanges, functional);
+		yield* generateComponentOptionsByScriptSetup(ctx, scriptSetup, scriptSetupRanges);
 	}
 	if (options.sfc.script && options.scriptRanges) {
 		yield* generateComponentOptionsByScript(options.sfc.script, options.scriptRanges);

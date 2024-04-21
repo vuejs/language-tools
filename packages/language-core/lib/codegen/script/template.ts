@@ -12,7 +12,6 @@ import { combineLastMapping } from '../common';
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	functional: boolean,
 ): Generator<Code> {
 
 	ctx.generatedTemplate = true;
@@ -24,7 +23,7 @@ export function* generateTemplate(
 		const templateCodegenCtx = createTemplateCodegenContext();
 		yield* generateTemplateContext(options, ctx, templateCodegenCtx);
 		yield `}${newLine}`;
-		yield* generateInternalComponent(options, ctx, functional, templateCodegenCtx);
+		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
 	}
 	else {
 		yield `function __VLS_template() {${newLine}`;
