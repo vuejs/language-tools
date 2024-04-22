@@ -54,7 +54,7 @@ export function* generateSlotOutlet(
 			startTagOffset + node.tag.length,
 			ctx.codeFeatures.verification,
 			`{${newLine}`,
-			...generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), 'normal'),
+			...generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), true),
 			`}`,
 		);
 		yield `)${endOfLine}`;
@@ -62,7 +62,7 @@ export function* generateSlotOutlet(
 	}
 	else {
 		yield `var ${varSlot} = {${newLine}`;
-		yield* generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), 'normal');
+		yield* generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), true);
 		yield `}${endOfLine}`;
 	}
 

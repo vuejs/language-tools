@@ -118,7 +118,7 @@ export function* generateElement(
 	}
 	else {
 		yield `const ${var_functionalComponent} = __VLS_asFunctionalComponent(${var_originalComponent}, new ${var_originalComponent}({`;
-		yield* generateElementProps(options, ctx, node, props, 'navigationOnly');
+		yield* generateElementProps(options, ctx, node, props, false);
 		yield `}))${endOfLine}`;
 	}
 
@@ -146,7 +146,7 @@ export function* generateElement(
 			startTagOffset + tag.length,
 			ctx.codeFeatures.verification,
 			`{`,
-			...generateElementProps(options, ctx, node, props, 'normal', propsFailedExps),
+			...generateElementProps(options, ctx, node, props, true, propsFailedExps),
 			`}`,
 		);
 		yield `, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
@@ -154,7 +154,7 @@ export function* generateElement(
 	else {
 		// without strictTemplates, this only for instacne type
 		yield `const ${var_componentInstance} = ${var_functionalComponent}({`;
-		yield* generateElementProps(options, ctx, node, props, 'navigationOnly');
+		yield* generateElementProps(options, ctx, node, props, false);
 		yield `}, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
 		// and this for props type-checking
 		yield `({} as (props: __VLS_FunctionalComponentProps<typeof ${var_originalComponent}, typeof ${var_componentInstance}> & Record<string, unknown>) => void)(`;
@@ -163,7 +163,7 @@ export function* generateElement(
 			startTagOffset + tag.length,
 			ctx.codeFeatures.verification,
 			`{`,
-			...generateElementProps(options, ctx, node, props, 'normal', propsFailedExps),
+			...generateElementProps(options, ctx, node, props, true, propsFailedExps),
 			`}`,
 		);
 		yield `)${endOfLine}`;
