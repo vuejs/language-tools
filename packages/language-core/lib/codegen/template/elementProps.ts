@@ -9,20 +9,19 @@ import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
+import { toString } from '@volar/language-core';
 
 export function* generateElementProps(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
-	mode: 'normal' | 'navigationOnly',
+	enableCodeFeatures: boolean,
 	propsFailedExps?: CompilerDOM.SimpleExpressionNode[],
 ): Generator<Code> {
 
 	let styleAttrNum = 0;
 	let classAttrNum = 0;
-	let defaultCodeFeatures: VueCodeInformation = ctx.codeFeatures.all;
-	let attrCodeFeatures: VueCodeInformation = ctx.codeFeatures.withoutHighlightAndCompletion;
 
 	const canCamelize = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -35,11 +34,6 @@ export function* generateElementProps(
 		// fix https://github.com/vuejs/language-tools/issues/2166
 		styleAttrNum++;
 		classAttrNum++;
-	}
-
-	if (mode === 'navigationOnly') {
-		defaultCodeFeatures = ctx.codeFeatures.navigation;
-		attrCodeFeatures = ctx.codeFeatures.navigation;
 	}
 
 	yield `...{ `;
@@ -90,7 +84,7 @@ export function* generateElementProps(
 				&& hyphenateAttr(propName) === propName
 				&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(propName!, pattern));
 
-			yield* wrapWith(
+			const codes = wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
@@ -103,15 +97,15 @@ export function* generateElementProps(
 						: prop.loc.start.offset,
 					prop.arg
 						? {
-							...attrCodeFeatures,
-							navigation: attrCodeFeatures.navigation
+							...ctx.codeFeatures.withoutHighlightAndCompletion,
+							navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
 								? {
 									resolveRenameNewName: camelize,
 									resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
 								}
 								: false,
 						}
-						: attrCodeFeatures,
+						: ctx.codeFeatures.withoutHighlightAndCompletion,
 					(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 					shouldCamelize,
 				),
@@ -120,12 +114,18 @@ export function* generateElementProps(
 					options,
 					ctx,
 					prop.exp,
-					attrCodeFeatures,
+					ctx.codeFeatures.withoutHighlightAndCompletion,
 					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
-					mode === 'normal',
+					enableCodeFeatures,
 				),
 				`)`,
 			);
+			if (!enableCodeFeatures) {
+				yield toString([...codes]);
+			}
+			else {
+				yield* codes;
+			}
 			yield `, `;
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
@@ -151,8 +151,8 @@ export function* generateElementProps(
 				&& hyphenateAttr(prop.name) === prop.name
 				&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(prop.name, pattern));
 
-			yield* conditionWrapWith(
-				mode === 'normal',
+			const codes = conditionWrapWith(
+				enableCodeFeatures,
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
@@ -163,26 +163,32 @@ export function* generateElementProps(
 					prop.loc.start.offset,
 					shouldCamelize
 						? {
-							...attrCodeFeatures,
-							navigation: attrCodeFeatures.navigation
+							...ctx.codeFeatures.withoutHighlightAndCompletion,
+							navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
 								? {
 									resolveRenameNewName: camelize,
 									resolveRenameEditText: hyphenateAttr,
 								}
 								: false,
 						}
-						: attrCodeFeatures,
+						: ctx.codeFeatures.withoutHighlightAndCompletion,
 					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					shouldCamelize,
 				),
 				`: (`,
 				...(
 					prop.value
-						? generateAttrValue(prop.value, defaultCodeFeatures)
+						? generateAttrValue(prop.value, ctx.codeFeatures.all)
 						: [`true`]
 				),
 				`)`,
 			);
+			if (!enableCodeFeatures) {
+				yield toString([...codes]);
+			}
+			else {
+				yield* codes;
+			}
 			yield `, `;
 		}
 		else if (
@@ -191,8 +197,8 @@ export function* generateElementProps(
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
-			yield* conditionWrapWith(
-				mode === 'normal',
+			const codes = conditionWrapWith(
+				enableCodeFeatures,
 				prop.exp.loc.start.offset,
 				prop.exp.loc.end.offset,
 				ctx.codeFeatures.verification,
@@ -203,11 +209,17 @@ export function* generateElementProps(
 					prop.exp.content,
 					prop.exp.loc,
 					prop.exp.loc.start.offset,
-					defaultCodeFeatures,
+					ctx.codeFeatures.all,
 					'(',
 					')',
 				),
 			);
+			if (!enableCodeFeatures) {
+				yield toString([...codes]);
+			}
+			else {
+				yield* codes;
+			}
 			yield `, `;
 		}
 		else {
