@@ -16,7 +16,7 @@
 		"vue-tsc": "./bin/vue-tsc.js"
 	},
 	"dependencies": {
-		"@volar/typescript": "2.2.0-alpha.9",
+		"@volar/typescript": "2.2.0-alpha.10",
 		"@vue/language-core": "2.0.13",
 		"semver": "^7.5.4"
 	},
