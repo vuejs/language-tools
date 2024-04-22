@@ -64,6 +64,7 @@ function getCurrentHybridModeStatus(report = false) {
 					|| extension.id === 'johnsoncodehk.vscode-tsslint'
 					|| extension.id === 'VisualStudioExptTeam.vscodeintellicode'
 					|| extension.id === 'bierner.lit-html'
+					|| (extension.id === 'denoland.vscode-deno' && !vscode.workspace.getConfiguration('deno').get<boolean>('enable'))
 				) {
 					continue;
 				}
