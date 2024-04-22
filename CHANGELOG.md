@@ -1,5 +1,34 @@
 # Changelog
 
+## 2.0.14 (2024/4/22)
+
+### Features
+
+- **language-core:** added search html tag (#4280) - Thanks @audunhov
+- **language-service:** added Russian, Czech localization support
+
+### Bug Fixes
+
+- **language-core:** `@ts-ignore` not working for slots (#4263)
+- **language-core:** reduce unnecessary props mapping (#4284)
+- **tsc:** improve regexp performance for global type removal (#4260) - Thanks @blake-newman
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.8` to `v2.2.0-alpha.10` to fix some issues:
+  - Parameter Hints not working in Hybrid Mode (#3948)
+  - TS server to crash repeatedly when include large js file (#4278)
+  - Randomly causing errors when renaming / find definitions in Hybrid Mode (#4257, #4281, #4282)
+  - Unable to resolve Nuxt UI component type
+  - Incomplete results for find refernces in Hybrid Mode
+- The following extensions have been added to Hybrid Mode’s compatibility whitelist:
+  - `bierner.lit-html`
+  - `denoland.vscode-deno` (When `deno.enable` is `false`)
+  - `jenkey2011.string-highlight`
+- **language-core:** improve maintainability of codegen (#4276)
+  - Deprecated `vueCompilerOptions.nativeTags`, now respects the `nodeType` property of template AST node.
+  - Dynamic component types without v-bind:is are no longer supported.
+
 ## 2.0.13 (2024/4/12)
 
 ### Performance
