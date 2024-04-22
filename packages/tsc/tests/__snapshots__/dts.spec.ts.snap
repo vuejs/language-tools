@@ -33,8 +33,6 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
     onBar?: (data: number) => any;
     foo: number;
 } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, __VLS_ctx?: {
-    attrs: any;
-    emit: (e: 'bar', data: number) => void;
     slots: Readonly<{
         default?(data: {
             foo: number;
@@ -44,6 +42,8 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
             foo: number;
         }): any;
     };
+    attrs: any;
+    emit: (e: 'bar', data: number) => void;
 }, __VLS_expose?: (exposed: import("vue").ShallowUnwrapRef<{
     baz: number;
 }>) => void, __VLS_setup?: Promise<{
@@ -101,8 +101,6 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
     onBar?: (data: number) => any;
     foo: number;
 } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, __VLS_ctx?: {
-    attrs: any;
-    emit: (e: 'bar', data: number) => void;
     slots: Readonly<{
         default?(data: {
             foo: number;
@@ -112,6 +110,8 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
             foo: number;
         }): any;
     };
+    attrs: any;
+    emit: (e: 'bar', data: number) => void;
 }, __VLS_expose?: (exposed: import("vue").ShallowUnwrapRef<{
     baz: number;
 }>) => void, __VLS_setup?: Promise<{
