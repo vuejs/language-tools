@@ -14,7 +14,7 @@ export function create(
 		name: 'vue-document-drop',
 		create(context): LanguageServicePluginInstance {
 
-			let casing: TagNameCasing = TagNameCasing.Pascal; // TODO
+			let casing = TagNameCasing.Pascal as TagNameCasing; // TODO
 
 			const tsPluginClient = getTsPluginClient?.(context);
 

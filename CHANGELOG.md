@@ -27,7 +27,7 @@
   - `jenkey2011.string-highlight`
 - **language-core:** improve maintainability of codegen (#4276)
   - Deprecated `vueCompilerOptions.nativeTags`, now respects the `nodeType` property of template AST node.
-  - Dynamic component types without v-bind:is are no longer supported.
+  - Dynamic component types without `v-bind:is` are no longer supported.
 
 ## 2.0.13 (2024/4/12)
 
