@@ -68,7 +68,7 @@ export function* generateElementProps(
 
 			if (
 				propName === undefined
-				|| options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(propName!, pattern))
+				|| options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(propName, pattern))
 				|| (propName === 'style' && ++styleAttrNum >= 2)
 				|| (propName === 'class' && ++classAttrNum >= 2)
 				|| (propName === 'name' && node.tagType === CompilerDOM.ElementTypes.SLOT) // #2308
@@ -82,7 +82,7 @@ export function* generateElementProps(
 			const shouldCamelize = canCamelize
 				&& (!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
 				&& hyphenateAttr(propName) === propName
-				&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(propName!, pattern));
+				&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(propName, pattern));
 
 			const codes = wrapWith(
 				prop.loc.start.offset,

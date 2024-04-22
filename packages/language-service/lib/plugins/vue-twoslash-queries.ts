@@ -26,7 +26,7 @@ export function create(
 					const inlayHints: vscode.InlayHint[] = [];
 
 					for (const pointer of document.getText(range).matchAll(twoslashReg)) {
-						const offset = pointer.index! + pointer[0].indexOf('^?') + document.offsetAt(range.start);
+						const offset = pointer.index + pointer[0].indexOf('^?') + document.offsetAt(range.start);
 						const position = document.positionAt(offset);
 						hoverOffsets.push([position, document.offsetAt({
 							line: position.line - 1,

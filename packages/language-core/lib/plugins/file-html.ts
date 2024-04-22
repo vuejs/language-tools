@@ -39,7 +39,7 @@ const plugin: VueLanguagePlugin = () => {
 					const attrs = match[2];
 					const lang = attrs.match(langReg)?.[2];
 					const content = match[3];
-					const contentStart = match.index! + matchText.indexOf(content);
+					const contentStart = match.index + matchText.indexOf(content);
 
 					if (tag === 'style') {
 						sfc.descriptor.styles.push({
@@ -70,7 +70,7 @@ const plugin: VueLanguagePlugin = () => {
 						};
 					}
 
-					templateContent = templateContent.substring(0, match.index) + ' '.repeat(matchText.length) + templateContent.substring(match.index! + matchText.length);
+					templateContent = templateContent.substring(0, match.index) + ' '.repeat(matchText.length) + templateContent.substring(match.index + matchText.length);
 				}
 
 				sfc.descriptor.template = {
