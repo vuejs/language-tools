@@ -22,7 +22,7 @@ export function run() {
 			) {
 				const writeFile = options.host!.writeFile.bind(options.host);
 				options.host!.writeFile = (fileName, contents, ...args) => {
-				   return writeFile(fileName, removeEmitGlobalTypes(contents), ...args);
+					return writeFile(fileName, removeEmitGlobalTypes(contents), ...args);
 				};
 				const vueLanguagePlugin = vue.createVueLanguagePlugin(
 					ts,
