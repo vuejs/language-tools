@@ -24,6 +24,12 @@ export function loadTemplateData(lang: string) {
 	else if (lang === 'it') {
 		data = require('../../data/template/it.json');
 	}
+	else if (lang === 'cs') {
+		data = require('../../data/template/cs.json');
+	}
+	else if (lang === 'ru') {
+		data = require('../../data/template/ru.json');
+	}
 	else {
 		data = require('../../data/template/en.json');
 	}
@@ -73,6 +79,12 @@ export function loadLanguageBlocks(lang: string): html.HTMLDataV1 {
 	else if (lang === 'it') {
 		return require('../../data/language-blocks/it.json');
 	}
+	else if (lang === 'cs') {
+		return require('../../data/language-blocks/cs.json');
+	}
+	else if (lang === 'ru') {
+		return require('../../data/language-blocks/ru.json');
+	}
 
 	return require('../../data/language-blocks/en.json');
 }
@@ -98,6 +110,12 @@ export function loadModelModifiersData(lang: string): html.HTMLDataV1 {
 	}
 	else if (lang === 'it') {
 		return require('../../data/model-modifiers/it.json');
+	}
+	else if (lang === 'cs') {
+		return require('../../data/model-modifiers/cs.json');
+	}
+	else if (lang === 'ru') {
+		return require('../../data/model-modifiers/ru.json');
 	}
 
 	return require('../../data/model-modifiers/en.json');

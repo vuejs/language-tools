@@ -5,7 +5,7 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\nPar défaut, `v-model` synchronise l'entrée avec les données après chaque événement `input` (à l'exception de la composition IME comme [indiqué ci-dessus](#vmodel-ime-tip)). Vous pouvez ajouter le modificateur `lazy` pour enclencher la synchronisation après les événements `change` :\n\n```html\n<!-- synchronisé après \"change\" au lieu de \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "\nПо умолчанию `v-model` синхронизирует поле ввода с данными по событию `input` (кроме [вышеупомянутых исключений](#vmodel-ime-tip) для композиции IME). Можно воспользоваться модификатором `lazy`, чтобы синхронизация происходила по событию `change`:\n\n```html\n<!-- синхронизация после события \"change\" вместо \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
       },
       "references": [
         {
@@ -62,7 +62,7 @@
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "\nSi vous voulez que l'entrée de l'utilisateur soit automatiquement typée comme un nombre, vous pouvez ajouter le modificateur `number` à vos entrées gérées par `v-model` :\n\n```html\n<input v-model.number=\"age\" />\n```\n\nSi la valeur ne peut pas être analysée avec `parseFloat()`, alors la valeur originale est utilisée à la place.\n\nLe modificateur `number` est appliqué automatiquement si l'entrée possède `type=\"number\"`.\n"
+        "value": "\nДля автоматического приведения введённого пользователем к числу можно добавить модификатор `number`:\n\n```html\n<input v-model.number=\"age\" />\n```\n\nЕсли значение не получится привести к числу с помощью `parseFloat()`, то будет возвращено исходное значение.\n\nМодификатор `number` автоматически применяется к полям `type=\"number\"`.\n"
       },
       "references": [
         {
@@ -119,7 +119,7 @@
       "name": "trim",
       "description": {
         "kind": "markdown",
-        "value": "\nSi vous voulez que les espaces blancs des entrées utilisateur soient automatiquement supprimés, vous pouvez ajouter le modificateur `trim` à vos entrées gérées par `v-model` :\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+        "value": "\nЕсли необходимо автоматически удалять пробельные символы в начале и в конце строки, можно добавить модификатор `trim`:\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
       },
       "references": [
         {

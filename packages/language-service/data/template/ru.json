@@ -1,0 +1,1498 @@
+{
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "Transition",
+      "description": {
+        "kind": "markdown",
+        "value": "\nОбеспечивает эффекты анимированного перехода **одного** элемента или компонента.\n\n- **Входные параметры**\n\n  ```ts\n  interface TransitionProps {\n    /**\n     * Используется для автоматической генерации CSS-классов перехода.\n     * Например, `name: 'fade'` автоматически раскроется в `.fade-enter`,\n     * `.fade-enter-active` и т.д.\n     */\n    name?: string\n    /**\n     * Применять ли СSS-классы переходов.\n     * По умолчанию: true\n     */\n    css?: boolean\n    /**\n     * Указывает тип событий перехода, которые необходимо ждать \n     * для определения момента окончания перехода.\n     * По умолчанию автоматически выбирается тип с большей длительностью.\n     */\n    type?: 'transition' | 'animation'\n    /**\n     * Определяет длительность перехода.\n     * По умолчанию Vue ждёт первого события `transitionend`\n     * или `animationend` на корневом элементе.\n     */\n    duration?: number | { enter: number; leave: number }\n    /**\n     * Управляет последовательностью переходов исчезновения/появления.\n     * По умолчанию — одновременно.\n     */\n    mode?: 'in-out' | 'out-in' | 'default'\n    /**\n     * Применять ли переход при первоначальном рендере.\n     * По умолчанию: false\n     */\n    appear?: boolean\n\n    /**\n     * Параметры для настройки классов перехода.\n     * Используйте kebab-case в шаблонах, например enter-from-class=\"xxx\"\n     */\n    enterFromClass?: string\n    enterActiveClass?: string\n    enterToClass?: string\n    appearFromClass?: string\n    appearActiveClass?: string\n    appearToClass?: string\n    leaveFromClass?: string\n    leaveActiveClass?: string\n    leaveToClass?: string\n  }\n  ```\n\n- **События**\n\n  - `@before-enter`\n  - `@before-leave`\n  - `@enter`\n  - `@leave`\n  - `@appear`\n  - `@after-enter`\n  - `@after-leave`\n  - `@after-appear`\n  - `@enter-cancelled`\n  - `@leave-cancelled` (только для `v-show`)\n  - `@appear-cancelled`\n\n- **Пример**\n\n  Простой элемент:\n\n  ```html\n  <Transition>\n    <div v-if=\"ok\">переключаемое содержимое</div>\n  </Transition>\n  ```\n\n  Принудительный эффект перехода путем изменения атрибута `key`:\n\n  ```html\n  <Transition>\n    <div :key=\"text\">{{ text }}</div>\n  </Transition>\n  ```\n\n  Динамический компонент, используются параметры mode и appear:\n\n  ```html\n  <Transition name=\"fade\" mode=\"out-in\" appear>\n    <component :is=\"view\"></component>\n  </Transition>\n  ```\n\n  Прослушивание событий перехода:\n\n  ```html\n  <Transition @after-enter=\"onTransitionComplete\">\n    <div v-show=\"ok\">переключаемое содержимое</div>\n  </Transition>\n  ```\n\n- **См. также** [Руководство — Transition](https://ru.vuejs.org/guide/built-ins/transition.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#transition"
+        }
+      ]
+    },
+    {
+      "name": "TransitionGroup",
+      "description": {
+        "kind": "markdown",
+        "value": "\nОбеспечивает эффекты перехода для **нескольких** элементов или компонентов в списке.\n\n- **Входные параметры**\n\n  `<TransitionGroup>` принимает те же параметры, что и `<Transition>`, за исключением `mode`, плюс два дополнительных параметра:\n\n  ```ts\n  interface TransitionGroupProps extends Omit<TransitionProps, 'mode'> {\n    /*\n     * Если не определен, то рендерится как fragment.\n     */\n    tag?: string\n    /**\n     * Для переопределения CSS-класса, применяемого во время анимаций перемещения.\n     * Используйте kebab-case в шаблонах, например move-class=\"xxx\"\n     */\n    moveClass?: string\n  }\n  ```\n\n- **События**\n\n  `<TransitionGroup>` генерирует те же события, что и `<Transition>`.\n\n- **Подробности**\n\n  По умолчанию `<TransitionGroup>` не создаёт DOM-элемент, но его можно задать с помощью параметра `tag`.\n\n  Обратите внимание, что у каждого потомка `<transition-group>` должен быть [**уникальный ключ**](https://ru.vuejs.org/guide/essentials/list.html#maintaining-state-with-key) для правильной работы анимаций.\n\n  `<TransitionGroup>` поддерживает анимации перемещения с помощью CSS трансформаций. Если положение потомка на экране изменится после обновления, ему будет добавлен CSS-класс (автоматически сгенерированный из атрибута `name` или заданный параметром `move-class`). Если после применения этого класса CSS-свойство `transform` возможно анимировать, элемент будет плавно перемещён в новое положение с помощью [техники FLIP](https://aerotwist.com/blog/flip-your-animations/).\n\n- **Пример**\n\n  ```html\n  <TransitionGroup tag=\"ul\" name=\"slide\">\n    <li v-for=\"item in items\" :key=\"item.id\">\n      {{ item.text }}\n    </li>\n  </TransitionGroup>\n  ```\n\n- **См. также** [Руководство — TransitionGroup](https://ru.vuejs.org/guide/built-ins/transition-group.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#transitiongroup"
+        }
+      ]
+    },
+    {
+      "name": "KeepAlive",
+      "description": {
+        "kind": "markdown",
+        "value": "\nКэширует содержащиеся внутри динамически переключаемые компоненты.\n\n- **Входные параметры**\n\n  ```ts\n  interface KeepAliveProps {\n    /**\n     * Если определено, то только компоненты с подходящими под\n     * `include` именами будут кэшированы.\n     */\n    include?: MatchPattern\n    /**\n     * Любой компонент с именем подходящим под `exclude`\n     * не будет кэшироваться.\n     */\n    exclude?: MatchPattern\n    /**\n     * Максимальное количество кэшируемых экземпляров компонентов.\n     */\n    max?: number | string\n  }\n\n  type MatchPattern = string | RegExp | (string | RegExp)[]\n  ```\n\n- **Подробности**\n\n  При оборачивании вокруг динамического компонента, `<KeepAlive>` кэширует неактивные экземпляры компонентов, не уничтожая их.\n\n  В любой момент времени в качестве прямого потомка `<KeepAlive>` может быть только один активный экземпляр компонента.\n\n  При переключении компонента внутри `<KeepAlive>` будут вызываться его хуки жизненного цикла `activated` и `deactivated` соответственно, предоставляя альтернативу хукам `mounted` и `unmounted`, которые не вызываются. Это относится как к непосредственному потомку `<KeepAlive>`, так и ко всем прочим его потомкам.\n\n- **Пример**\n\n  Базовое использование:\n\n  ```html\n  <KeepAlive>\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n  Когда используется с `v-if` / `v-else` ветвями, одновременно должен рендериться только один компонент:\n\n  ```html\n  <KeepAlive>\n    <comp-a v-if=\"a > 1\"></comp-a>\n    <comp-b v-else></comp-b>\n  </KeepAlive>\n  ```\n\n  Использование вместе с `<Transition>`:\n\n  ```html\n  <Transition>\n    <KeepAlive>\n      <component :is=\"view\"></component>\n    </KeepAlive>\n  </Transition>\n  ```\n\n  Использование `include` / `exclude`:\n\n  ```html\n  <!-- строка, с перечислением через запятую -->\n  <KeepAlive include=\"a,b\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n\n  <!-- регулярное выражение (используется `v-bind`) -->\n  <KeepAlive :include=\"/a|b/\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n\n  <!-- массив (используется `v-bind`) -->\n  <KeepAlive :include=\"['a', 'b']\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n  Использование с `max`:\n\n  ```html\n  <KeepAlive :max=\"10\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n- **См. также** [Руководство — KeepAlive](https://ru.vuejs.org/guide/built-ins/keep-alive.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#keepalive"
+        }
+      ]
+    },
+    {
+      "name": "Teleport",
+      "description": {
+        "kind": "markdown",
+        "value": "\nПеремещает содержимое своего слота в другую часть DOM.\n\n- **Входные параметры**\n\n  ```ts\n  interface TeleportProps {\n    /**\n     * Обязательный. Задаёт целевой контейнер.\n     * Может быть селектором или непосредственно элементом.\n     */\n    to: string | HTMLElement\n    /**\n     * Если `true`, содержимое останется на своем первоначальном\n     * месте, вместо перемещения в целевой контейнер.\n     * Может изменяться динамически.\n     */\n    disabled?: boolean\n  }\n  ```\n\n- **Пример**\n\n  Указание целевого контейнера:\n\n  ```html\n  <Teleport to=\"#some-id\" />\n  <Teleport to=\".some-class\" />\n  <Teleport to=\"[data-teleport]\" />\n  ```\n\n  Перемещение по условию:\n\n  ```html\n  <Teleport to=\"#popup\" :disabled=\"displayVideoInline\">\n    <video src=\"./my-movie.mp4\">\n  </Teleport>\n  ```\n\n- **См. также** [Руководство — Teleport](https://ru.vuejs.org/guide/built-ins/teleport.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#teleport"
+        }
+      ]
+    },
+    {
+      "name": "Suspense",
+      "description": {
+        "kind": "markdown",
+        "value": "\nИспользуется для оркестровки вложенных асинхронных зависимостей в дереве компонентов.\n\n- **Входные параметры**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n  }\n  ```\n\n- **События**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **Подробности**\n\n  `<Suspense>` принимает два слота: `#default` и `#fallback`. Он будет отображать содержимое `#fallback` слота во время рендеринга `#default` слота в памяти.\n\n  Если он встречает асинхронные зависимости ([Асинхронные компоненты](https://ru.vuejs.org/guide/components/async.html) и компоненты с [`async setup()`](https://ru.vuejs.org/guide/built-ins/suspense.html#async-setup)) во время рендеринга `#default` слота, он будет ждать, пока все они не будут разрешены, прежде чем отобразить `#default` слот.\n\n- **См. также** [Руководство — Suspense](https://ru.vuejs.org/guide/built-ins/suspense.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#suspense"
+        }
+      ]
+    },
+    {
+      "name": "component",
+      "description": {
+        "kind": "markdown",
+        "value": "\n«Мета-компонент» для отрисовки динамических компонентов.\n\n- **Входные параметры**\n\n  ```ts\n  interface DynamicComponentProps {\n    is: string | Component\n  }\n  ```\n\n- **Подробности**\n\n  - Фактический компонент, который будет отображаться, определяется параметром `is`.\n\n  - Когда `is` является строкой, это может быть либо имя HTML-тега, либо зарегистрированное имя компонента.\n\n  - Кроме того, `is` может быть непосредственно связано с определением компонента.\n\n- **Пример**\n\n  Рендеринг компонентов по зарегистрированному имени (Options API):\n\n  ```vue\n  <script>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n\n  export default {\n    components: { Foo, Bar },\n    data() {\n      return {\n        view: 'Foo'\n      }\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"view\" />\n  </template>\n  ```\n\n  Рендеринг компонентов по определению (Composition API с `<script setup>`):\n\n  ```vue\n  <script setup>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n  </script>\n\n  <template>\n    <component :is=\"Math.random() > 0.5 ? Foo : Bar\" />\n  </template>\n  ```\n\n  Рендеринг HTML-элементов:\n\n  ```html\n  <component :is=\"href ? 'a' : 'span'\"></component>\n  ```\n\n  Все [встроенные компоненты](./built-in-components) могут быть переданы в `is`, но их необходимо зарегистрировать, если хотите передать их по имени. Например:\n\n  ```vue\n  <script>\n  import { Transition, TransitionGroup } from 'vue'\n\n  export default {\n    components: {\n      Transition,\n      TransitionGroup\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"isGroup ? 'TransitionGroup' : 'Transition'\">\n      ...\n    </component>\n  </template>\n  ```\n\n  Регистрация не требуется, если передаете сам компонент в `is`, а не его имя, например, в `<script setup>`.\n\n  Если `v-model` используется в теге `<component>`, компилятор шаблона расширит его до входного параметра `modelValue` и прослушивателя событий `update:modelValue`, как и для любого другого компонента. Однако это не будет совместимо с собственными HTML-элементами, такими как `<input>` или `<select>`. В результате использование `v-model` с динамически созданным собственным элементом не будет работать:\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n\n  const tag = ref('input')\n  const username = ref('')\n  </script>\n\n  <template>\n    <!-- ЭТО НЕ СРАБОТАЕТ, так как 'input' является собственным элементом HTML -->\n    <component :is=\"tag\" v-model=\"username\" />\n  </template>\n  ```\n\n  На практике этот крайний случай встречается нечасто, поскольку в реальных приложениях нативные поля форм обычно оборачиваются в компоненты. Если необходимо использовать нативный элемент напрямую, то можно разделить `v-model` на атрибут и событие вручную.\n\n- **См. также** [Динамические компоненты](https://ru.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#component"
+        }
+      ]
+    },
+    {
+      "name": "slot",
+      "description": {
+        "kind": "markdown",
+        "value": "\nОбозначает выходы содержимого слотов в шаблонах.\n\n- **Входные параметры**\n\n  ```ts\n  interface SlotProps {\n    /**\n     * Любые входные параметры, переданные в <slot>, передаются в качестве аргументов\n     * для слотов с ограниченным пространством\n     */\n    [key: string]: any\n    /**\n     * Зарезервировано для указания имени слота.\n     */\n    name?: string\n  }\n  ```\n\n- **Подробности**\n\n  Элемент `<slot>` может использовать атрибут `name` для указания имени слота. Если `name` не указано, он отобразит слот по умолчанию. Дополнительные атрибуты, переданные элементу slot, будут переданы в качестве входного параметра слота в слот с ограниченной областью действия, определенный в родительском элементе.\n\n  Сам элемент будет заменен соответствующим содержимым слота.\n\n  Элементы `<slot>` в шаблонах Vue скомпилированы в JavaScript, поэтому их не следует путать с [собственными элементами `<slot>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot).\n\n- **См. также** [Компонент - Слоты](https://ru.vuejs.org/guide/components/slots.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#slot"
+        }
+      ]
+    },
+    {
+      "name": "template",
+      "description": {
+        "kind": "markdown",
+        "value": "\nТег `<template>` используется как \"псевдоэлемент\", когда мы хотим использовать встроенную директиву без отрисовки элемента в DOM.\n\n- **Подробности**\n\n  Специальная обработка для `<template>` срабатывает только в том случае, если он используется с одной из этих директив:\n\n  - `v-if`, `v-else-if` или `v-else`\n  - `v-for`\n  - `v-slot`\n\n  Если не присутствует ни одна из этих директив, то вместо этого он будет отображаться как [нативный элемент `<template>`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).\n\n  Элемент`<template>` в связке с `v-for` также может иметь [атрибут `key`](https://ru.vuejs.org/api/built-in-special-attributes.html#key). Все остальные атрибуты и директивы будут проигнорированы, так как они не имеют смысла без соответствующего элемента.\n\n  Однофайловые компоненты используют [тег верхнего уровня `<template>`](https://ru.vuejs.org/api/sfc-spec.html#language-blocks) для оборачивания всего шаблона. Это использование отличается от описанного выше использования `<template>`. Этот тег верхнего уровня не является частью самого шаблона и не поддерживает синтаксис шаблона, например директивы.\n\n- **См. также**\n  - [Руководство - `v-if` и `<template>`](https://ru.vuejs.org/guide/essentials/conditional.html#v-if-on-template)\n  - [Руководство - `v-for` и `<template>`](https://ru.vuejs.org/guide/essentials/list.html#v-for-on-template)\n  - [Руководство - Именованные слоты](https://ru.vuejs.org/guide/components/slots.html#named-slots)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#template"
+        }
+      ]
+    }
+  ],
+  "globalAttributes": [
+    {
+      "name": "v-text",
+      "description": {
+        "kind": "markdown",
+        "value": "\nОбновление текстового содержимого элемента.\n\n- **Ожидает:** `string`\n\n- **Подробности**\n\n  `v-text` работает путём установки свойства [textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) элемента, поэтому он будет перезаписывать всё существующее содержимое внутри элемента. Если необходимо обновить часть `textContent`, то вместо этого следует использовать [текстовые интерполяции](https://ru.vuejs.org/guide/essentials/template-syntax.html#text-interpolation).\n\n- **Пример**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- тоже самое -->\n  <span>{{msg}}</span>\n  ```\n\n- **См. также** [Синтаксис шаблонов - Текстовые интерполяции](https://ru.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-text"
+        }
+      ]
+    },
+    {
+      "name": "v-html",
+      "description": {
+        "kind": "markdown",
+        "value": "\nОбновление свойства [innerHTML](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML) элемента.\n\n- **Ожидает:** `string`\n\n- **Подробности**\n\n  Содержимое `v-html` вставляется как обычный HTML - синтаксис шаблонов Vue не обрабатывается. Если вы пытаетесь составить шаблоны с помощью `v-html`, попробуйте переосмыслить решение, используя вместо этого компоненты.\n\n  :::warning Примечание о безопасности\n  Динамический рендеринг произвольного HTML на вашем сайте может быть очень опасен, поскольку легко может привести к [XSS-атакам](https://en.wikipedia.org/wiki/Cross-site_scripting). Используйте `v-html` только для доверенного содержимого и **никогда** для содержимого, предоставляемого пользователем.\n  :::\n\n  В [однофайловых компонентах](https://ru.vuejs.org/guide/scaling-up/sfc.html) стили `scoped` не будут применяться к содержимому внутри `v-html`, поскольку этот HTML не обрабатывается компилятором шаблонов Vue. Если вы хотите использовать на содержимом `v-html` скопированный CSS, то вместо этого можно использовать [CSS модули](./sfc-css-features.html#css-modules) или дополнительный глобальный элемент `<style>` с ручной стратегией области применения, например BEM.\n\n\n- **Пример**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **См. также** [Синтаксис шаблонов - Сырой HTML](https://ru.vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-html"
+        }
+      ]
+    },
+    {
+      "name": "v-show",
+      "description": {
+        "kind": "markdown",
+        "value": "\nПереключение видимости элемента в зависимости от истинности значения выражения.\n\n- **Ожидает:** `any`\n\n- **Подробности**\n\n  `v-show` работает, устанавливая CSS-свойство `display` с помощью встроенных стилей, и будет стараться соблюдать начальное значение `display`, когда элемент становится видимым. Также он запускает переходы анимации при изменении состояния.\n\n- **См. также** [Условная отрисовка - v-show](https://ru.vuejs.org/guide/essentials/conditional.html#v-show)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-show"
+        }
+      ]
+    },
+    {
+      "name": "v-if",
+      "description": {
+        "kind": "markdown",
+        "value": "\nУсловное отображение элемента или фрагмента шаблона на основе истинности значения выражения.\n\n- **Ожидает:** `any`\n\n- **Подробности**\n\n  При переключении директивы компонента `v-if`, элемент и содержащиеся в нём директивы/компоненты уничтожаются и создаются заново. Если начальное условие false, то внутреннее содержимое вообще не будет выведено.\n\n  Может использоваться на `<template>` для обозначения условного блока, содержащего только текст или несколько элементов.\n\n  Эта директива запускает переходы анимации при изменении своего состояния.\n\n  При совместном использовании `v-if` имеет более высокий приоритет, чем `v-for`. Мы не рекомендуем использовать эти две директивы вместе на одном элементе — подробнее об этом см. в руководстве [по отрисовке списков](https://ru.vuejs.org/guide/essentials/list.html#v-for-with-v-if).\n\n- **См. также** [Условная отрисовка - v-if](https://ru.vuejs.org/guide/essentials/conditional.html#v-if)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-if"
+        }
+      ]
+    },
+    {
+      "name": "v-else",
+      "valueSet": "v",
+      "description": {
+        "kind": "markdown",
+        "value": "\nОбозначает \"блок else\" для `v-if` или цепочку `v-if` / `v-else-if`.\n\n- **Не ожидает выражения**\n\n- **Подробности**\n\n  - Ограничение: предыдущий соседний элемент должен иметь `v-if` или `v-else-if`.\n\n  - Может использоваться на `<template>` для обозначения условного блока, содержащего только текст или несколько элементов.\n\n- **Пример**\n\n  ```html\n  <div v-if=\"Math.random() > 0.5\">\n    Сейчас ты видишь меня\n  </div>\n  <div v-else>\n    А сейчас нет\n  </div>\n  ```\n\n- **См. также** [Условная отрисовка - v-else](https://ru.vuejs.org/guide/essentials/conditional.html#v-else)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-else"
+        }
+      ]
+    },
+    {
+      "name": "v-else-if",
+      "description": {
+        "kind": "markdown",
+        "value": "\nОбозначает \"блок else if\" для `v-if`. Можно использовать для создания цепочек условий.\n\n- **Ожидает:** `any`\n\n- **Подробности**\n\n  - Ограничение: предыдущий соседний элемент должен иметь `v-if` или `v-else-if`.\n\n  - Может использоваться на `<template>` для обозначения условного блока, содержащего только текст или несколько элементов.\n\n- **Пример**\n\n  ```html\n  <div v-if=\"type === 'A'\">\n    A\n  </div>\n  <div v-else-if=\"type === 'B'\">\n    B\n  </div>\n  <div v-else-if=\"type === 'C'\">\n    C\n  </div>\n  <div v-else>\n    Не A/B/C\n  </div>\n  ```\n\n- **См. также** [Условная отрисовка - v-else-if](https://ru.vuejs.org/guide/essentials/conditional.html#v-else-if)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-else-if"
+        }
+      ]
+    },
+    {
+      "name": "v-for",
+      "description": {
+        "kind": "markdown",
+        "value": "\nМногократная отрисовка элемента или блока шаблона на основе исходных данных.\n\n- **Ожидает:** `Array | Object | number | string | Iterable`\n\n- **Подробности**\n\n  Значение директивы должно использовать специальный синтаксис `alias in expression` для указания псевдонима текущего итерируемого элемента:\n\n  ```html\n  <div v-for=\"item in items\">\n    {{ item.text }}\n  </div>\n  ```\n\n  Кроме того, можно указать псевдоним для индекса (или ключа, если он используется для объекта):\n\n  ```html\n  <div v-for=\"(item, index) in items\"></div>\n  <div v-for=\"(value, key) in object\"></div>\n  <div v-for=\"(value, name, index) in object\"></div>\n  ```\n\n  По умолчанию `v-for` будет обновлять элементы «на месте», не перемещая их. Если необходимо переупорядочивать элементы при изменениях, то потребуется указывать специальный атрибут `key`:\n\n  ```html\n  <div v-for=\"item in items\" :key=\"item.id\">\n    {{ item.text }}\n  </div>\n  ```\n\n  `v-for` может также работать со значениями, реализующими [протокол Iterable](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol), включая нативные `Map` и `Set`.\n\n- **См. также**\n  - [Отрисовка списков](https://ru.vuejs.org/guide/essentials/list.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-for"
+        }
+      ]
+    },
+    {
+      "name": "v-on",
+      "description": {
+        "kind": "markdown",
+        "value": "\nПрикрепление к элементу обработчика событий.\n\n- **Сокращённая запись:** `@`\n\n- **Ожидает:** `Function | Inline Statement | Object (без аргументов)`\n\n- **Аргумент:** `event` (необязательно, если используется синтаксис Object)\n\n- **Модификаторы**\n\n  - `.stop` - вызывает `event.stopPropagation()`.\n  - `.prevent` - вызывает `event.preventDefault()`.\n  - `.capture` - добавить обработчик событий в capture режиме.\n  - `.self` - запускать обработчик только в том случае, если событие было отправлено именно от этого элемента.\n  - `.{keyAlias}` - запускать обработчик только по определенным клавишам.\n  - `.once` - обработчик сработает только один раз.\n  - `.left` - обработчик срабатывания только для событий левой кнопки мыши.\n  - `.right` - обработчик срабатывания только для событий правой кнопки мыши.\n  - `.middle` - обработчик срабатывания только для событий средней кнопки мыши.\n  - `.passive` - добавляет обработчик DOM события с параметром `{ passive: true }`.\n\n- **Подробности**\n\n  Тип события обозначается аргументом. Выражение может быть именем метода, строковым оператором или опущено, если присутствуют модификаторы.\n\n  При использовании на обычном элементе он прослушивает только [**нативные DOM события**](https://developer.mozilla.org/en-US/docs/Web/Events). При использовании на компоненте он прослушивает **пользовательские события**, генерируемые в дочернем компоненте.\n\n  При прослушивании нативных DOM событий метод получает нативное событие в качестве единственного аргумента. При использовании inline-выражения, выражение имеет доступ к специальному свойству `$event`: `v-on:click=\"handle('ok', $event)\"`.\n\n  `v-on` также поддерживает привязку к объекту пар событие/слушатель без аргумента. Обратите внимание, что при использовании синтаксиса объекта он не поддерживает никаких модификаторов.\n\n- **Пример**\n\n  ```html\n  <!-- метод в качестве обработчика  -->\n  <button v-on:click=\"doThis\"></button>\n\n  <!-- динамическое событие -->\n  <button v-on:[event]=\"doThis\"></button>\n\n  <!-- inline-выражение -->\n  <button v-on:click=\"doThat('hello', $event)\"></button>\n\n  <!-- сокращённая запись -->\n  <button @click=\"doThis\"></button>\n\n  <!-- окращённая запись динамического события -->\n  <button @[event]=\"doThis\"></button>\n\n  <!-- stop propagation -->\n  <button @click.stop=\"doThis\"></button>\n\n  <!-- prevent default -->\n  <button @click.prevent=\"doThis\"></button>\n\n  <!-- prevent default без выражения -->\n  <form @submit.prevent></form>\n\n  <!-- цепочка из модификаторов -->\n  <button @click.stop.prevent=\"doThis\"></button>\n\n  <!-- модификатор клавиши с использованием keyAlias -->\n  <input @keyup.enter=\"onEnter\" />\n\n  <!-- обработчик события будет вызван не больше одного раза -->\n  <button v-on:click.once=\"doThis\"></button>\n\n  <!-- объектный синтаксис -->\n  <button v-on=\"{ mousedown: doThis, mouseup: doThat }\"></button>\n  ```\n\n  Отслеживание пользовательских событий на дочернем компоненте (обработчик вызывается, когда в дочернем компоненте будет сгенерировано событие \"my-event\"):\n\n  ```html\n  <MyComponent @my-event=\"handleThis\" />\n\n  <!-- inline statement -->\n  <MyComponent @my-event=\"handleThis(123, $event)\" />\n  ```\n\n- **См. также**\n  - [Обработка событий](https://ru.vuejs.org/guide/essentials/event-handling.html)\n  - [Компоненты - Прослушивание событий](https://ru.vuejs.org/guide/essentials/component-basics.html#listening-to-events)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-on"
+        }
+      ]
+    },
+    {
+      "name": "v-bind",
+      "description": {
+        "kind": "markdown",
+        "value": "\nДинамически привязывает один или несколько атрибутов или входных параметров компонента к выражению.\n\n- **Сокращённая запись**\n  - `:` или `.` (при использовании модификатора `.prop`)\n  - Пропуск значения (когда атрибут и связанное значение имеют одинаковое имя) <sup class=\"vt-badge\">3.4+</sup>\n\n- **Ожидает:** `any (если указан аргумент) | Object (без аргумента)`\n\n- **Аргумент:** `attrOrProp (опционально)`\n\n- **Модификаторы**\n\n  - `.camel` - преобразование имён атрибутов из kebab-case в camelCase.\n  - `.prop` - принудительная установить привязку в качестве свойства DOM. <sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - принудительно установить привязку в качестве атрибута DOM. <sup class=\"vt-badge\">3.2+</sup>\n\n- **Применение**\n\n  При использовании для привязки атрибутов `class` или `style`, `v-bind` поддерживает дополнительные типы значений, такие как Array или Objects. Более подробная информация приведена в разделе руководства по ссылкам ниже.\n\n  Устанавливая привязку к элементу, Vue по умолчанию проверяет, имеет ли элемент ключ, определенный как свойство, используя проверку оператора `in`. Если свойство определено, то Vue установит значение как свойство DOM, а не как атрибут. В большинстве случаев это должно работать, но вы можете переопределить это поведение, явно используя модификаторы `.prop` или `.attr`. Иногда это необходимо, особенно при [работе с пользовательскими элементами](https://ru.vuejs.org/guide/extras/web-components.html#passing-dom-properties).\n\n  При привязке входных параметров к дочернему компоненту необходимо также объявлять их внутри него.\n\n  При использовании без аргумента можно привязать объект из пар имя-значение.\n\n- **Пример**\n\n  ```html\n  <!-- привязка атрибута -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- динамическое название атрибута -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- сокращённая запись -->\n  <img :src=\"imageSrc\" />\n\n  <!-- сокращение при одинаковом названии (3.4+), расширяется до :src=\"src\" -->\n  <img :src />\n\n  <!-- сокращённая запись при динамическом названии атрибута -->\n  <button :[key]=\"value\"></button>\n\n  <!-- инлайн-выражение с конкатенацией строк -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- привязка классов -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- привязка стилей -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- привязка объекта с атрибутами -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- привязка входного параметра. \"prop\" должен быть объявлен в my-component. -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- передача всех входных параметров родительского компонента в дочерний -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  Модификатор `.prop` также имеет сокращённую запись `.`:\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- эквивалент -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  Модификатор `.camel` позволяет приводить имя атрибута `v-bind` в camelCase при использовании DOM-шаблонов, например для атрибута SVG `viewBox`:\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  Модификатор `.camel` не нужен, если вы используете строковые шаблоны или предварительно компилируете шаблон на этапе сборки.\n\n- **См. также**\n  - [Работа с классами и стилями](https://ru.vuejs.org/guide/essentials/class-and-style.html)\n  - [Компоненты - Детали передачи входных параметров](https://ru.vuejs.org/guide/components/props.html#prop-passing-details)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-bind"
+        }
+      ]
+    },
+    {
+      "name": "v-model",
+      "description": {
+        "kind": "markdown",
+        "value": "\nСоздает двустороннее связывание с элементом ввода формы или с компонентом.\n\n- **Ожидает:** варьируется в зависимости от элемента формы или работы компонента\n\n- **Использование ограничено**\n\n  - `<input>`\n  - `<select>`\n  - `<textarea>`\n  - компоненты\n\n- **Модификаторы**\n\n  - [`.lazy`](https://ru.vuejs.org/guide/essentials/forms.html#lazy) - отслеживание события `change` вместо `input`\n  - [`.number`](https://ru.vuejs.org/guide/essentials/forms.html#number) - приведение корректной строки со значением к числу\n  - [`.trim`](https://ru.vuejs.org/guide/essentials/forms.html#trim) - удаление пробелов в начале и в конце строки\n\n- **См. также**\n\n  - [Работа с формами](https://ru.vuejs.org/guide/essentials/forms.html)\n  - [События компонентов - Использование вместе с `v-model`](https://ru.vuejs.org/guide/components/events.html#usage-with-v-model)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-model"
+        }
+      ]
+    },
+    {
+      "name": "v-slot",
+      "description": {
+        "kind": "markdown",
+        "value": "\nОбозначение именованного слота или слота, который получает входные параметры.\n\n- **Сокращённая запись:** `#`\n\n- **Ожидает:** JavaScript-выражение, допустимое в позиции аргумента функции, включая поддержку деструктуризации. Необязательный - нужен только в том случае, если ожидается передача входного параметра в слот.\n\n- **Аргумент:** название слота (опционально, по умолчанию `default`)\n\n- **Использование ограничено:**\n\n  - `<template>`\n  - [компонентами](https://ru.vuejs.org/guide/components/slots.html#scoped-slots) (для единственного слота по умолчанию с входными параметрами)\n\n\n- **Пример**\n\n  ```html\n  <!-- Именованный слот -->\n  <BaseLayout>\n    <template v-slot:header>\n     Содержимое для заголовка\n    </template>\n\n    <template v-slot:default>\n      Содержимое для слота по умолчанию\n    </template>\n\n    <template v-slot:footer>\n      Содержимое для подвала\n    </template>\n  </BaseLayout>\n\n  <!-- Именованный слот с входными параметрами -->\n  <InfiniteScroll>\n    <template v-slot:item=\"slotProps\">\n      <div class=\"item\">\n        {{ slotProps.item.text }}\n      </div>\n    </template>\n  </InfiniteScroll>\n\n  <!-- Слот по умолчанию с входными параметрами и деструктуризацией -->\n  <Mouse v-slot=\"{ x, y }\">\n    Mouse position: {{ x }}, {{ y }}\n  </Mouse>\n  ```\n\n- **См. также**\n  - [Компоненты - Слоты](https://ru.vuejs.org/guide/components/slots.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-slot"
+        }
+      ]
+    },
+    {
+      "name": "v-pre",
+      "description": {
+        "kind": "markdown",
+        "value": "\nПропускает компиляцию для элемента и всех его потомков.\n\n- **Не ожидает выражения**\n\n- **Подробности**\n\n  Внутри элемента с `v-pre` весь синтаксис шаблона Vue будет сохранен и отображён как есть. Наиболее распространённый вариант использования этого элемента - отображение тегов фигурных скобок.\n\n- **Пример**\n\n  ```html\n  <span v-pre>{{ это не будет скомпилировано  }}</span>\n  ```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-pre"
+        }
+      ]
+    },
+    {
+      "name": "v-once",
+      "description": {
+        "kind": "markdown",
+        "value": "\nОтрисовка элемента и компонента выполняется только один раз, а последующие обновления пропускаются.\n\n- **Не ожидает выражения**\n\n- **Подробности**\n\n  При последующих повторных отрисовках этот элемент/компонент и все его дочерние элементы будут рассматриваться как статическое содержимое и пропускаться. Это может быть использовано для оптимизации производительности при обновлении.\n\n  ```html\n  <!-- элемент -->\n  <span v-once>Это значение никогда не изменится: {{msg}}</span>\n  <!-- элемент с потомками -->\n  <div v-once>\n    <h1>Комментарий</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- компонент -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- директива `v-for` -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Начиная с версии 3.2, можно использовать мемоизацию части шаблона, с возможностью указания условий для инвалидации, с помощью директивы [`v-memo`](#v-memo).\n\n- **См. также**\n  - [Синтаксис шаблонов - Текстовые интерполяции](https://ru.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-once"
+        }
+      ]
+    },
+    {
+      "name": "v-memo",
+      "description": {
+        "kind": "markdown",
+        "value": "\n- **Ожидает:** `any[]`\n\n- **Подробности**\n\n  Мемоизация части поддерева шаблона. Может использоваться как для элементов, так и для компонентов. Директива ожидает массив фиксированной длины зависимых значений, которые станут использоваться для сравнения при мемоизации. Если каждое значение массива осталось таким же, как при последней отрисовке, то обновление всего поддерева будет пропущено. Например:\n\n  ```html\n  <div v-memo=\"[valueA, valueB]\">\n    ...\n  </div>\n  ```\n\n  При повторном рендеринге компонента, если `valueA` и `valueB` остались прежними, все обновления для этого `<div>` и его дочерних элементов будут пропущены. Фактически, будет пропущено даже создание VNode виртуального DOM, поскольку мемоизированная копия поддерева может быть использована повторно.\n\n  Важно правильно указать массив мемоизации, иначе мы можем пропустить обновления, которые действительно должны быть применены. `v-memo` с пустым массивом зависимостей (`v-memo=\"[]\"`) будет функционально эквивалентен `v-once`.\n\n  **Использование вместе с `v-for`**\n\n  `v-memo` предоставляется исключительно для микрооптимизации в критичных к производительности сценариях и может понадобиться крайне редко. Наиболее распространённым случаем, когда это может оказаться полезным, является отрисовка больших списков `v-for` (когда `length > 1000`):\n\n  ```html\n  <div v-for=\"item in list\" :key=\"item.id\" v-memo=\"[item.id === selected]\">\n    <p>ID: {{ item.id }} - выбран: {{ item.id === selected }}</p>\n    <p>...больше дочерних элементов</p>\n  </div>\n  ```\n\n  При изменении состояния компонента `selected` будет создано большое количество VNodes, даже если большинство элементов остались прежними. Использование `v-memo` здесь, по сути, говорит: \"обновляйте этот элемент только в том случае, если он перешел из состояния `не выбран` в состояние `выбран`, или наоборот\". Это позволяет каждому незатронутому элементу повторно использовать свой предыдущий VNode и полностью пропустить операцию сравнения. Обратите внимание, что нам не нужно включать `item.id` в массив зависимостей memo, поскольку Vue автоматически определяет его из `:key` элемента.\n\n  :::warning Предупреждение\n  При использовании `v-memo` с `v-for` убедитесь, что они используются на одном и том же элементе. **`v-memo` не работает внутри `v-for`.**.\n  :::\n\n  `v-memo` также может быть использовано для компонентов, чтобы вручную предотвратить нежелательные обновления в некоторых крайних случаях, когда проверка обновлений дочерних компонентов была де-оптимизирована. Но, повторимся, ответственность за корректное указание массивов зависимостей во избежание пропуска необходимых обновлений лежит на разработчике.\n\n- **См. также**\n  - [v-once](#v-once)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-memo"
+        }
+      ]
+    },
+    {
+      "name": "v-cloak",
+      "description": {
+        "kind": "markdown",
+        "value": "\nИспользуется для скрытия еще нескомпилированного шаблона до тех пор, пока он не будет готов.\n\n- **Не ожидает выражения**\n\n- **Подробности**\n\n  **Данная директива нужна только для окружения без этапа сборки.**\n\n  При использовании DOM шаблонов может возникнуть \"вспышка некомпилированных шаблонов\": пользователь может видеть необработанные теги фигурных скобок, пока монтируемый компонент не заменит их отрисованным содержимым.\n\n  `v-cloak` будет оставаться на элементе до тех пор, пока не будет смонтирован связанный с ним экземпляр компонента. В сочетании с правилами CSS, такими как `[v-cloak] { display: none }`, это может быть использовано для скрытия необработанных шаблонов до тех пор, пока компонент не будет готов.\n\n- **Пример**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  До завершения компиляции `<div>` не будет виден.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-cloak"
+        }
+      ]
+    },
+    {
+      "name": "key",
+      "description": {
+        "kind": "markdown",
+        "value": "\n Специальный атрибут `key` (ключ) в первую очередь используется как подсказка для алгоритма виртуального DOM Vue для идентификации VNodes (виртуальных узлов) при вычислении разницы между обновленным списком узлов и старым.\n\n- **Ожидает** `number | string | symbol`\n\n- **Подробности**\n\n  Без ключей Vue использует алгоритм, который минимизирует перемещение элементов и пытается изменять/переиспользовать элементы одного типа как можно больше. При использовании ключей Vue переупорядочивает элементы на основании изменения ключей, а элементы с ключами, которые уже отсутствуют, будут всегда удаляться/уничтожаться. \n\n  Потомки одного и того же общего родителя должны иметь **уникальные ключи**. Дубликаты ключей будут приводить к ошибкам рендера.\n\n  Чаще всего используется в сочетании с `v-for`:\n\n  ```html\n  <ul>\n    <li v-for=\"item in items\" :key=\"item.id\">...</li>\n  </ul>\n  ```\n\n  Также может использоваться для принудительной замены элемент/компонента вместо его переиспользования. Это может пригодиться, если вы хотите:\n\n  - Корректно вызвать хуки жизненного цикла компонента\n  - Запускать анимации перехода\n\n  Например:\n\n  ```html\n  <transition>\n    <span :key=\"text\">{{ text }}</span>\n  </transition>\n  ```\n\n  При изменении значения `text`, элемент `<span>` будет всегда заменяться, вместо обновления его содержимого, поэтому будет запускаться анимация перехода.\n\n- **См. также** [Руководство — Рендер списка - Сохранение состояния с помощью `key`](https://ru.vuejs.org/guide/essentials/list.html#maintaining-state-with-key)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#key"
+        }
+      ]
+    },
+    {
+      "name": "ref",
+      "description": {
+        "kind": "markdown",
+        "value": "\nОзначает [ссылку на элементы шаблона](https://ru.vuejs.org/guide/essentials/template-refs.html).\n\n- **Ожидает** `string | Function`\n\n- **Подробности**\n\n  Атрибут `ref` используется для регистрации ссылки на элемент или дочерний компонент.\n\n  В Options API, ссылка будет зарегистрирована в объекте компонента `this.$refs`:\n\n  ```html\n  <!-- Хранится в this.$refs.p -->\n  <p ref=\"p\">hello</p>\n  ```\n\n  В Composition API, ссылка будет храниться в ref с соответствующим именем:\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n\n  const p = ref()\n  </script>\n\n  <template>\n    <p ref=\"p\">Привет</p>\n  </template>\n  ```\n\n  При использовании на обычном DOM-элементе ссылка будет указывать на этот элемент; при использовании на дочернем компоненте ссылка будет указывать на экземпляр дочернего компонента.\n\n  В качестве альтернативы `ref` может принимать функцию, что даёт полный контроль над тем, где хранить ссылку:\n\n  ```html\n  <ChildComponent :ref=\"(el) => child = el\" />\n  ```\n\n  Важное замечание о времени регистрации ref-ссылок: поскольку эти ссылки создаются render-функцией, нужно подождать, пока компонент будет смонтирован, прежде чем обращаться к ним.\n\n  Так же свойство `this.$refs` не реактивно, поэтому не следует использовать его в шаблонах для привязки данных.\n\n- **См. также**\n  - [Руководство — Ссылки на элементы шаблона](https://ru.vuejs.org/guide/essentials/template-refs.html)\n  - [Guide - Typing Template Refs](https://ru.vuejs.org/guide/typescript/composition-api.html#typing-template-refs) <sup class=\"vt-badge ts\" />\n  - [Guide - Typing Component Template Refs](https://ru.vuejs.org/guide/typescript/composition-api.html#typing-component-template-refs) <sup class=\"vt-badge ts\" />\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#ref"
+        }
+      ]
+    },
+    {
+      "name": "is",
+      "description": {
+        "kind": "markdown",
+        "value": "\nИспользуется для [динамических компонентов](https://ru.vuejs.org/guide/essentials/component-basics.html#dynamic-components).\n\n- **Ожидает** `string | Component`\n\n- **Использование на нативных элементах** <sup class=\"vt-badge\">3.1+</sup>\n\n  Когда атрибут `is` используется на нативном HTML-элементе, то он интерпретируется как [пользовательский встроенный элемент](https://html.spec.whatwg.org/multipage/custom-elements#custom-elements-customized-builtin-example). Это нативная возможность веб-платформы.\n\n  Однако есть случай использования, когда может понадобиться, чтобы Vue заменил нативный элемент на компонент Vue, как это разъясняется в [Особенности парсинга DOM-шаблона](https://ru.vuejs.org/guide/essentials/component-basics.html#dom-template-parsing-caveats). В таком случае можно добавить значению атрибута `is` префикс `vue:`, чтобы Vue вместо элемента отрисовал компонент Vue:\n\n  ```html\n  <table>\n    <tr is=\"vue:my-row-component\"></tr>\n  </table>\n  ```\n\n- **См. также**\n\n  - [Специальные встроенные элементы - `<component>`](https://ru.vuejs.org/api/built-in-special-elements.html#component)\n  - [Динамические компоненты](https://ru.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#is"
+        }
+      ]
+    }
+  ]
+}

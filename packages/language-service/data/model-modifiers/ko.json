@@ -43,6 +43,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/guide/essentials/forms.html#lazy"
         }
       ]
     },
@@ -88,6 +100,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/guide/essentials/forms.html#number"
         }
       ]
     },
@@ -133,6 +157,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/guide/essentials/forms.html#trim"
         }
       ]
     }
