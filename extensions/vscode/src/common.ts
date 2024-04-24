@@ -29,7 +29,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 	function tryActivate() {
 		if (
 			vscode.window.visibleTextEditors.some(editor => editor.document.languageId === 'vue')
-			|| (config.server.vitePress.supportMdFile && vscode.window.visibleTextEditors.some(editor => editor.document.languageId === 'vue'))
+			|| (config.server.vitePress.supportMdFile && vscode.window.visibleTextEditors.some(editor => editor.document.languageId === 'markdown'))
 			|| (config.server.petiteVue.supportHtmlFile && vscode.window.visibleTextEditors.some(editor => editor.document.languageId === 'html'))
 		) {
 			doActivate(context, createLc);
