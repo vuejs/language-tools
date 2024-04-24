@@ -1,0 +1,45 @@
+{
+	"latest": "2.1.0-insiders.5",
+	"versions": [
+		{
+			"version": "2.1.0-insiders.5",
+			"date": "2024-4-22",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.5",
+				"AFDIAN": "https://afdian.net/p/25aca47c004e11ef8b445254001e7c00"
+			}
+		},
+		{
+			"version": "2.1.0-insiders.4",
+			"date": "2024-4-10",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.4",
+				"AFDIAN": "https://afdian.net/p/46a5f4a8f72011ee97fe52540025c377"
+			}
+		},
+		{
+			"version": "2.1.0-insiders.3",
+			"date": "2024-4-7",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.3",
+				"AFDIAN": "https://afdian.net/p/5bf99cfaf4ec11ee9e1f5254001e7c00"
+			}
+		},
+		{
+			"version": "2.1.0-insiders.2",
+			"date": "2024-4-4",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.3",
+				"AFDIAN": "https://afdian.net/p/d59d0dd8f29611ee88945254001e7c00"
+			}
+		},
+		{
+			"version": "2.1.0-insiders.1",
+			"date": "2024-3-28",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.1",
+				"AFDIAN": "https://afdian.net/p/ba0901a2edce11ee8f2e52540025c377"
+			}
+		}
+	]
+}

@@ -8,6 +8,7 @@ import * as splitEditors from './features/splitEditors';
 import * as semver from 'semver';
 import * as fs from 'fs';
 import * as path from 'path';
+import { quickPick } from '@volar/vscode/lib/common';
 
 let client: lsp.BaseLanguageClient;
 
@@ -228,26 +229,118 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	const item = vscode.languages.createLanguageStatusItem('vue-insider', 'vue');
 	if (!context.extension.packageJSON.version.includes('-insider')) {
-		item.text = '✨ Get Vue - Official Insiders';
+		item.text = '✨ Get Insiders Edition';
 		item.severity = vscode.LanguageStatusSeverity.Warning;
-		item.command = {
-			title: 'More Info',
-			command: 'vscode.open',
-			arguments: ['https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition'],
-		};
 	}
 	else {
-		item.text = '🚀 Vue - Official Insiders';
-		item.detail = 'Installed';
-		item.command = {
-			title: 'Changelog',
-			command: 'vue-insiders.checkUpdate',
-		};
-		vscode.commands.registerCommand('vue-insiders.checkUpdate', () => {
-			const updateUrl = 'https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md';
-			vscode.env.openExternal(vscode.Uri.parse(updateUrl));
-		});
+		item.text = '🚀 Insiders Edition';
 	}
+	item.detail = 'Checking for Updates...';
+	item.busy = true;
+	fetch('https://raw.githubusercontent.com/vuejs/language-tools/HEAD/insiders.json')
+		.then(res => res.json())
+		.then((json: {
+			latest: string;
+			versions: {
+				version: string;
+				date: string;
+				downloads: {
+					GitHub: string;
+					AFDIAN: string;
+				};
+			}[];
+		}) => {
+			item.detail = undefined;
+			item.command = {
+				title: 'Select Version',
+				command: 'vue-insiders.update',
+			};
+			if (json.versions.some(version => version.version === context.extension.packageJSON.version)) {
+				item.detail = 'New Version Available!';
+				item.severity = vscode.LanguageStatusSeverity.Warning;
+			}
+			vscode.commands.registerCommand('vue-insiders.update', async () => {
+				const quickPickItems: { [version: string]: vscode.QuickPickItem; } = {};
+				for (const { version, date } of json.versions) {
+					let description = date;
+					if (context.extension.packageJSON.version === version) {
+						description += ' (current)';
+					}
+					quickPickItems[version] = {
+						label: version,
+						description,
+					};
+				}
+				const version = await quickPick([quickPickItems, {
+					learnMore: {
+						label: 'Learn more about Insiders Edition',
+					},
+					joinViaGitHub: {
+						label: 'Join via GitHub Sponsors',
+					},
+					joinViaAFDIAN: {
+						label: 'Join via AFDIAN (爱发电)',
+					},
+				}]);
+				if (version === 'learnMore') {
+					vscode.env.openExternal(vscode.Uri.parse('https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition'));
+				}
+				else if (version === 'joinViaGitHub') {
+					vscode.env.openExternal(vscode.Uri.parse('https://github.com/sponsors/johnsoncodehk'));
+				}
+				else if (version === 'joinViaAFDIAN') {
+					vscode.env.openExternal(vscode.Uri.parse('https://afdian.net/a/johnsoncodehk'));
+				}
+				else {
+					const downloads = json.versions.find(v => v.version === version)?.downloads;
+					if (downloads) {
+						const quickPickItems: { [key: string]: vscode.QuickPickItem; } = {
+							GitHub: {
+								label: `${version} - GitHub Releases`,
+								description: 'Access via GitHub Sponsors',
+								detail: downloads.GitHub,
+							},
+							AFDIAN: {
+								label: `${version} - Insiders 电圈`,
+								description: 'Access via AFDIAN (爱发电)',
+								detail: downloads.AFDIAN,
+							},
+						};
+						const otherItems: { [key: string]: vscode.QuickPickItem; } = {
+							learnMore: {
+								label: 'Learn more about Insiders Edition',
+							},
+							joinViaGitHub: {
+								label: 'Join via GitHub Sponsors',
+							},
+							joinViaAFDIAN: {
+								label: 'Join via AFDIAN (爱发电)',
+							},
+						};
+						const option = await quickPick([quickPickItems, otherItems]);
+						if (option === 'learnMore') {
+							vscode.env.openExternal(vscode.Uri.parse('https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition'));
+						}
+						else if (option === 'joinViaGitHub') {
+							vscode.env.openExternal(vscode.Uri.parse('https://github.com/sponsors/johnsoncodehk'));
+						}
+						else if (option === 'joinViaAFDIAN') {
+							vscode.env.openExternal(vscode.Uri.parse('https://afdian.net/a/johnsoncodehk'));
+						}
+						else if (option) {
+							vscode.env.openExternal(vscode.Uri.parse(downloads[option as keyof typeof downloads]));
+						}
+					}
+				}
+			});
+		})
+		.catch(() => {
+			item.detail = 'Failed to Fetch Versions';
+			item.severity = vscode.LanguageStatusSeverity.Warning;
+		})
+		.finally(() => {
+			item.busy = false;
+		});
 
 	async function requestReloadVscode(msg: string) {
 		const reload = await vscode.window.showInformationMessage(msg, 'Reload Window');
@@ -335,4 +428,4 @@ async function getInitializationOptions(
 			],
 		},
 	};
-}
+};
