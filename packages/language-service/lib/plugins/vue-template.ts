@@ -24,6 +24,7 @@ export function create(
 
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
+	let lastCompletionComponentNames = new Set<string>();
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
@@ -114,6 +115,10 @@ export function create(
 					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					if (sourceScript?.generated?.root instanceof VueVirtualCode) {
+
+						// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
+						baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
+
 						sync = (await provideHtmlData(sourceScript.id, sourceScript.generated.root)).sync;
 						currentVersion = await sync();
 					}
@@ -130,7 +135,6 @@ export function create(
 						await afterHtmlCompletion(
 							htmlComplete,
 							context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot),
-							sourceScript.generated.root,
 						);
 					}
 
@@ -164,7 +168,7 @@ export function create(
 						if (code instanceof VueVirtualCode && scanner) {
 
 							// visualize missing required props
-							const casing = await getNameCasing(context, map.sourceDocument.uri, tsPluginClient);
+							const casing = await getNameCasing(context, map.sourceDocument.uri);
 							const components = await tsPluginClient?.getComponentNames(code.fileName) ?? [];
 							const componentProps: Record<string, string[]> = {};
 							let token: html.TokenType;
@@ -176,11 +180,9 @@ export function create(
 							while ((token = scanner.scan()) !== html.TokenType.EOS) {
 								if (token === html.TokenType.StartTag) {
 									const tagName = scanner.getTokenText();
-									const component =
-										tagName.indexOf('.') >= 0
-											? components.find(component => component === tagName.split('.')[0])
-											: components.find(component => component === tagName || hyphenateTag(component) === tagName);
-									const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
+									const checkTag = tagName.indexOf('.') >= 0
+										? tagName
+										: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 									if (checkTag) {
 										componentProps[checkTag] ??= await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? [];
 										current = {
@@ -382,7 +384,7 @@ export function create(
 
 				await (initializing ??= initialize());
 
-				const casing = await getNameCasing(context, sourceDocumentUri, tsPluginClient);
+				const casing = await getNameCasing(context, sourceDocumentUri);
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
@@ -431,6 +433,7 @@ export function create(
 											&& name !== 'Suspense'
 											&& name !== 'Teleport'
 										);
+									lastCompletionComponentNames = new Set(components);
 									version++;
 								})());
 								return [];
@@ -621,13 +624,9 @@ export function create(
 				};
 			}
 
-			async function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument, code: VueVirtualCode) {
+			async function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument) {
 
 				const replacement = getReplacement(completionList, sourceDocument);
-				const componentNames = new Set(
-					(await tsPluginClient?.getComponentNames(code.fileName) ?? [])
-						.map(hyphenateTag)
-				);
 
 				if (replacement) {
 
@@ -707,7 +706,7 @@ export function create(
 						item.documentation = undefined;
 					}
 
-					if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && componentNames.has(hyphenateTag(item.label))) {
+					if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && lastCompletionComponentNames.has(hyphenateTag(item.label))) {
 						item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
 						item.sortText = '\u0000' + (item.sortText ?? item.label);
 					}
@@ -748,7 +747,6 @@ export function create(
 
 				updateExtraCustomData([]);
 			}
-
 
 			async function initialize() {
 				customData = await getHtmlCustomData();

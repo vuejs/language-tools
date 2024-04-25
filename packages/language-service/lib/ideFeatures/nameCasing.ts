@@ -108,13 +108,9 @@ export async function convertAttrName(
 	return edits;
 }
 
-export async function getNameCasing(
-	context: ServiceContext,
-	uri: string,
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
-) {
+export async function getNameCasing(context: ServiceContext, uri: string) {
 
-	const detected = await detect(context, uri, tsPluginClient);
+	const detected = await detect(context, uri);
 	const [attr, tag] = await Promise.all([
 		context.env.getConfiguration?.<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('vue.complete.casing.props', uri),
 		context.env.getConfiguration?.<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('vue.complete.casing.tags', uri),
@@ -131,7 +127,6 @@ export async function getNameCasing(
 export async function detect(
 	context: ServiceContext,
 	uri: string,
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
 ): Promise<{
 	tag: TagNameCasing[],
 	attr: AttrNameCasing[],
@@ -176,39 +171,25 @@ export async function detect(
 	}
 	async function getTagNameCase(file: VueVirtualCode): Promise<TagNameCasing[]> {
 
-		const components = await tsPluginClient?.getComponentNames(file.fileName) ?? [];
-		const tagNames = getTemplateTagsAndAttrs(file);
-		const result: TagNameCasing[] = [];
+		const result = new Set<TagNameCasing>();
 
-		let anyComponentUsed = false;
-
-		for (const component of components) {
-			if (tagNames.has(component) || tagNames.has(hyphenateTag(component))) {
-				anyComponentUsed = true;
-				break;
-			}
-		}
-		if (!anyComponentUsed) {
-			return []; // not sure component style, because do not have any component using in <template> for check
-		}
-
-		for (const [tagName] of tagNames) {
-			// TagName
-			if (tagName !== hyphenateTag(tagName)) {
-				result.push(TagNameCasing.Pascal);
-				break;
-			}
-		}
-		for (const component of components) {
-			// Tagname -> tagname
-			// TagName -> tag-name
-			if (component !== hyphenateTag(component) && tagNames.has(hyphenateTag(component))) {
-				result.push(TagNameCasing.Kebab);
-				break;
+		if (file.sfc.template?.ast) {
+			for (const element of vue.forEachElementNode(file.sfc.template.ast)) {
+				if (element.tagType === 1 satisfies CompilerDOM.ElementTypes) {
+					if (element.tag !== hyphenateTag(element.tag)) {
+						// TagName
+						result.add(TagNameCasing.Pascal);
+					}
+					else {
+						// Tagname -> tagname
+						// TagName -> tag-name
+						result.add(TagNameCasing.Kebab);
+					}
+				}
 			}
 		}
 
-		return result;
+		return [...result];
 	}
 }
 

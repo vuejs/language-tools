@@ -140,7 +140,7 @@ connection.onRequest(ParseSFCRequest.type, params => {
 connection.onRequest(DetectNameCasingRequest.type, async params => {
 	const languageService = await getService(params.textDocument.uri);
 	if (languageService) {
-		return await detect(languageService.context, params.textDocument.uri, getTsPluginClient(languageService.context));
+		return await detect(languageService.context, params.textDocument.uri);
 	}
 });
 
