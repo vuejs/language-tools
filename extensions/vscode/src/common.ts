@@ -255,7 +255,10 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 				title: 'Select Version',
 				command: 'vue-insiders.update',
 			};
-			if (json.versions.some(version => version.version === context.extension.packageJSON.version)) {
+			if (
+				json.versions.some(version => version.version === context.extension.packageJSON.version)
+				&& context.extension.packageJSON.version !== json.latest
+			) {
 				item.detail = 'New Version Available!';
 				item.severity = vscode.LanguageStatusSeverity.Warning;
 			}
