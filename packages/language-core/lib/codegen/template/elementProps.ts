@@ -114,7 +114,7 @@ export function* generateElementProps(
 					options,
 					ctx,
 					prop.exp,
-					ctx.codeFeatures.withoutHighlightAndCompletion,
+					ctx.codeFeatures.all,
 					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
 					enableCodeFeatures,
 				),
