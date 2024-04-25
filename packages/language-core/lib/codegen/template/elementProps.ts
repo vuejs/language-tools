@@ -10,6 +10,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 import { toString } from '@volar/language-core';
+import { generateVBindShorthandInlayHint } from './vBindShorthandInlayHint';
 
 export function* generateElementProps(
 	options: TemplateCodegenOptions,
@@ -263,22 +264,7 @@ function* genereatePropExp(
 					features,
 				);
 				if (inlayHints) {
-					yield [
-						'',
-						'template',
-						exp.loc.end.offset,
-						{
-							__hint: {
-								setting: 'vue.inlayHints.vBindShorthand',
-								label: `="${propVariableName}"`,
-								tooltip: [
-									`This is a shorthand for \`${exp.loc.source}="${propVariableName}"\`.`,
-									'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
-									'[More info](https://github.com/vuejs/core/pull/9451)',
-								].join('\n\n'),
-							},
-						} as VueCodeInformation,
-					];
+					yield generateVBindShorthandInlayHint(exp.loc, propVariableName);
 				}
 			}
 		}

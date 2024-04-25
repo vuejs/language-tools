@@ -13,6 +13,7 @@ import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateStringLiteralKey } from './stringLiteralKey';
 import { generateTemplateChild } from './templateChild';
+import { generateVBindShorthandInlayHint } from './vBindShorthandInlayHint';
 
 const colonReg = /:/g;
 
@@ -50,6 +51,10 @@ export function* generateElement(
 	if (isComponentTag) {
 		for (const prop of node.props) {
 			if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.arg?.loc.source === 'is' && prop.exp) {
+				if (prop.arg.loc.start.offset === prop.exp.loc.start.offset) {
+					yield generateVBindShorthandInlayHint(prop.exp.loc, 'is');
+				}
+
 				dynamicTagInfo = {
 					exp: prop.exp.loc.source,
 					offset: prop.exp.loc.start.offset,
