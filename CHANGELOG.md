@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.1.0-insiders.6 (2024/4/25)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.6), [爱发电电圈](https://afdian.net/p/f73a772602ab11efa33652540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Features
+
+- Check for Insiders version updates on startup
+- Support reactions visualization for TS document
+
+### Bug Fixes
+
+- Fixed some incorrect situations in reactions analysis
+
+### Other Changes
+
+- Merged [v2.0.14...a69909e81](https://github.com/vuejs/language-tools/compare/v2.0.14...a69909e81).
+
 ## 2.1.0-insiders.5 (2024/4/22)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.5), [爱发电电圈](https://afdian.net/p/25aca47c004e11ef8b445254001e7c00)
