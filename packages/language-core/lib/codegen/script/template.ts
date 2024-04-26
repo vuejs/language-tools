@@ -128,10 +128,7 @@ function* generateTemplateContext(
 	}
 	yield endOfLine;
 	yield `let __VLS_styleScopedClasses!: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[]${endOfLine}`;
-
-	yield `/* CSS variable injection */${newLine}`;
 	yield* generateCssVars(options, templateCodegenCtx);
-	yield `/* CSS variable injection end */${newLine}`;
 
 	if (options.templateCodegen) {
 		for (const code of options.templateCodegen.tsCodes) {
@@ -190,6 +187,10 @@ function* generateCssClassProperty(
 }
 
 function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
+	if (!options.sfc.styles.length) {
+		return;
+	}
+	yield `// CSS variable injection ${newLine}`;
 	for (const style of options.sfc.styles) {
 		for (const cssBind of style.cssVars) {
 			for (const [segment, offset, onlyError] of forEachInterpolationSegment(
@@ -217,6 +218,7 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 			yield endOfLine;
 		}
 	}
+	yield `// CSS variable injection end ${newLine}`;
 }
 
 export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptCodegenContext) {

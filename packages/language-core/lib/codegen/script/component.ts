@@ -75,8 +75,7 @@ export function* generateScriptSetupOptions(
 				yield `${ctx.helperTypes.WithDefaults.name}<`;
 			}
 			yield `${ctx.helperTypes.TypePropsToOption.name}<`;
-			yield `typeof __VLS_componentProps`;
-			yield `>`;
+			yield `typeof __VLS_componentProps>`;
 			if (scriptSetupRanges.props.withDefaults?.arg) {
 				yield `, typeof __VLS_withDefaultsArg>`;
 			}
