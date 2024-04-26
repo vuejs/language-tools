@@ -67,6 +67,7 @@ function getCurrentHybridModeStatus(report = false) {
 					|| extension.id === 'bierner.lit-html'
 					|| (extension.id === 'denoland.vscode-deno' && !vscode.workspace.getConfiguration('deno').get<boolean>('enable'))
 					|| extension.id === 'jenkey2011.string-highlight'
+					|| (extension.id === 'svelte.svelte-vscode' && semver.gte(extension.packageJSON.version, '108.4.0'))
 				) {
 					continue;
 				}
