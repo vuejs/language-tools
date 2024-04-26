@@ -45,6 +45,7 @@ function createTester(rootUri: string) {
 		'vue.inlayHints.missingProps': true,
 		'vue.inlayHints.optionsWrapper': true,
 		'vue.inlayHints.inlineHandlerLeading': true,
+		'vue.inlayHints.vBindShorthand': true,
 	};
 	let currentVSCodeSettings: any;
 	const language = createTypeScriptLanguage(

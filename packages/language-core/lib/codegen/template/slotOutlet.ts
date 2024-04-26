@@ -6,6 +6,8 @@ import { generateElementChildren } from './elementChildren';
 import { generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generateVBindShorthandInlayHint } from './vBindShorthandInlayHint';
+import { camelize } from '@vue/shared';
 
 export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,
@@ -44,7 +46,7 @@ export function* generateSlotOutlet(
 					? `'${nameProp.value.content}'`
 					: nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE && nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 						? nameProp.exp.content
-						: `('default' as const)`
+						: `('default' as const)`,
 			),
 			`]`,
 		);

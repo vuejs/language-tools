@@ -62,14 +62,14 @@ function readFiles(dir: string) {
 	return filesText;
 }
 
-const inlayHintReg = /(\^*)inlayHint:\s*"(.+)"/g;
+const inlayHintReg = /(\^*)inlayHint:\s*(['"])(.+)\2/g;
 
 function findActions(text: string) {
 
 	return [...text.matchAll(inlayHintReg)].map(flag => {
 
 		const offset = flag.index!;
-		const label = flag[2];
+		const label = flag[3];
 
 		return {
 			offset,
