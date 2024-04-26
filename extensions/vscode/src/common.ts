@@ -48,38 +48,60 @@ function getCurrentTypeScriptPluginStatus(enabledHybridMode: boolean) {
 	return enabledHybridMode || config.server.hybridMode === 'typeScriptPluginOnly';
 }
 
+function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
+	if (
+		extension.id === 'Vue.volar'
+		|| extension.id === 'unifiedjs.vscode-mdx'
+		|| extension.id === 'astro-build.astro-vscode'
+		|| extension.id === 'ije.esm-vscode'
+		|| extension.id === 'johnsoncodehk.vscode-tsslint'
+		|| extension.id === 'VisualStudioExptTeam.vscodeintellicode'
+		|| extension.id === 'bierner.lit-html'
+		|| extension.id === 'jenkey2011.string-highlight'
+	) {
+		return true;
+	}
+	if (
+		extension.id === 'styled-components.vscode-styled-components'
+		|| extension.id === 'Divlo.vscode-styled-jsx-languageserver'
+		|| extension.id === 'nrwl.angular-console'
+	) {
+		return false;
+	}
+	if (extension.id === 'denoland.vscode-deno') {
+		return !vscode.workspace.getConfiguration('deno').get<boolean>('enable');
+	}
+	if (extension.id === 'svelte.svelte-vscode') {
+		return semver.gte(extension.packageJSON.version, '108.4.0');
+	}
+}
+
 function getCurrentHybridModeStatus(report = false) {
+
+	const incompatibleExtensions: string[] = [];
+	const unknownExtensions: string[] = [];
+
+	for (const extension of vscode.extensions.all) {
+		const compatible = isExtensionCompatibleWithHybridMode(extension);
+		if (compatible === false) {
+			incompatibleExtensions.push(extension.id);
+		}
+		else if (compatible === undefined) {
+			const hasTsPlugin = !!extension.packageJSON?.contributes?.typescriptServerPlugins;
+			if (hasTsPlugin) {
+				unknownExtensions.push(extension.id);
+			}
+		}
+	}
+
 	if (config.server.hybridMode === 'typeScriptPluginOnly') {
 		return false;
 	}
 	else if (config.server.hybridMode === 'auto') {
-		const unknownExtensions: string[] = [];
-		for (const extension of vscode.extensions.all) {
-			const hasTsPlugin = !!extension.packageJSON?.contributes?.typescriptServerPlugins;
-			if (hasTsPlugin) {
-				if (
-					extension.id === 'Vue.volar'
-					|| extension.id === 'unifiedjs.vscode-mdx'
-					|| extension.id === 'astro-build.astro-vscode'
-					|| extension.id === 'ije.esm-vscode'
-					|| extension.id === 'johnsoncodehk.vscode-tsslint'
-					|| extension.id === 'VisualStudioExptTeam.vscodeintellicode'
-					|| extension.id === 'bierner.lit-html'
-					|| (extension.id === 'denoland.vscode-deno' && !vscode.workspace.getConfiguration('deno').get<boolean>('enable'))
-					|| extension.id === 'jenkey2011.string-highlight'
-					|| (extension.id === 'svelte.svelte-vscode' && semver.gte(extension.packageJSON.version, '108.4.0'))
-				) {
-					continue;
-				}
-				else {
-					unknownExtensions.push(extension.id);
-				}
-			}
-		}
-		if (unknownExtensions.length) {
+		if (incompatibleExtensions.length || unknownExtensions.length) {
 			if (report) {
 				vscode.window.showInformationMessage(
-					`Hybrid Mode is disabled automatically because there is a potentially incompatible ${unknownExtensions.join(', ')} TypeScript plugin installed.`,
+					`Hybrid Mode is disabled automatically because there is a potentially incompatible ${[...incompatibleExtensions, ...unknownExtensions].join(', ')} TypeScript plugin installed.`,
 					'Open Settings',
 					'Report a false positive',
 				).then(value => {
@@ -116,6 +138,20 @@ function getCurrentHybridModeStatus(report = false) {
 		return true;
 	}
 	else {
+		if (config.server.hybridMode && incompatibleExtensions.length && report) {
+			vscode.window.showWarningMessage(
+				`You have explicitly enabled Hybrid Mode, but you have installed known incompatible extensions: ${incompatibleExtensions.join(', ')}. You may want to change vue.server.hybridMode to "auto" to avoid compatibility issues.`,
+				'Open Settings',
+				'Report a false positive',
+			).then(value => {
+				if (value === 'Open Settings') {
+					vscode.commands.executeCommand('workbench.action.openSettings', 'vue.server.hybridMode');
+				}
+				else if (value == 'Report a false positive') {
+					vscode.env.openExternal(vscode.Uri.parse('https://github.com/vuejs/language-tools/pull/4206'));
+				}
+			});
+		}
 		return config.server.hybridMode;
 	}
 
