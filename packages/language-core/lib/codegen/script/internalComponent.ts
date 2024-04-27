@@ -48,7 +48,7 @@ export function* generateInternalComponent(
 		yield `}${endOfLine}`; // return {
 		yield `},${newLine}`; // setup() {
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
-			yield* generateScriptSetupOptions(ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
+			yield* generateScriptSetupOptions(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 		}
 		if (options.sfc.script && options.scriptRanges) {
 			yield* generateScriptOptions(options.sfc.script, options.scriptRanges);

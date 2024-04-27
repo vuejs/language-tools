@@ -11,7 +11,8 @@
 						2,
 						2.7,
 						3,
-						3.3
+						3.3,
+						3.5
 					],
 					"markdownDescription": "Target version of Vue."
 				},

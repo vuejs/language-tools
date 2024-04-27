@@ -31,7 +31,7 @@ export function* generateComponent(
 	yield `}${endOfLine}`;
 	yield `},${newLine}`;
 	if (!ctx.bypassDefineComponent) {
-		yield* generateScriptSetupOptions(ctx, scriptSetup, scriptSetupRanges);
+		yield* generateScriptSetupOptions(options, ctx, scriptSetup, scriptSetupRanges);
 	}
 	if (options.sfc.script && options.scriptRanges) {
 		yield* generateScriptOptions(options.sfc.script, options.scriptRanges);
@@ -62,6 +62,7 @@ export function* generateScriptOptions(
 }
 
 export function* generateScriptSetupOptions(
+	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
@@ -113,11 +114,13 @@ export function* generateScriptSetupOptions(
 		yield `>),${newLine}`;
 	}
 
-	// https://github.com/vuejs/core/pull/10801
-	if (scriptSetupRanges.props.define?.typeArg) {
-		yield `__typeProps: typeof __VLS_typeProps,${newLine}`;
-	}
-	if (scriptSetupRanges.emits.define) {
-		yield `__typeEmits: typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'},${newLine}`;
+	if (options.vueCompilerOptions.target >= 3.5) {
+		// https://github.com/vuejs/core/pull/10801
+		if (scriptSetupRanges.props.define?.typeArg) {
+			yield `__typeProps: typeof __VLS_typeProps,${newLine}`;
+		}
+		if (scriptSetupRanges.emits.define?.typeArg) {
+			yield `__typeEmits: typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'},${newLine}`;
+		}
 	}
 }
