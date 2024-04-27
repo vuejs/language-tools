@@ -112,4 +112,9 @@ export function* generateScriptSetupOptions(
 		}
 		yield `>),${newLine}`;
 	}
+
+	// https://github.com/vuejs/core/pull/10801
+	if (scriptSetupRanges.props.define?.typeArg) {
+		yield `__typeProps: typeof __VLS_typeProps,${newLine}`;
+	}
 }

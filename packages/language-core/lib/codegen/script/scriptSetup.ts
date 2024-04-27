@@ -122,20 +122,44 @@ function* generateSetupFunction(
 	ctx.scriptSetupGeneratedOffset = options.getGeneratedLength() - scriptSetupRanges.importSectionEndOffset;
 
 	let setupCodeModifies: [Code[], number, number][] = [];
-	if (scriptSetupRanges.props.define && !scriptSetupRanges.props.name) {
-		const range = scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define;
+	const propsRange = scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define;
+	if (propsRange && scriptSetupRanges.props.define) {
 		const statement = scriptSetupRanges.props.define.statement;
-		if (statement.start === range.start && statement.end === range.end) {
-			setupCodeModifies.push([[`const __VLS_props = `], range.start, range.start]);
-		}
-		else {
+		if (scriptSetupRanges.props.define.typeArg) {
 			setupCodeModifies.push([[
-				`const __VLS_props = `,
-				generateSfcBlockSection(scriptSetup, range.start, range.end, codeFeatures.all),
-				`${endOfLine}`,
-				generateSfcBlockSection(scriptSetup, statement.start, range.start, codeFeatures.all),
-				`__VLS_props`,
-			], statement.start, range.end]);
+				`let __VLS_typeProps!: `,
+				generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.typeArg.start, scriptSetupRanges.props.define.typeArg.end, codeFeatures.all),
+				endOfLine,
+			], statement.start, statement.start]);
+			setupCodeModifies.push([[`typeof __VLS_typeProps`], scriptSetupRanges.props.define.typeArg.start, scriptSetupRanges.props.define.typeArg.end]);
+		}
+		if (!scriptSetupRanges.props.name) {
+			if (statement.start === propsRange.start && statement.end === propsRange.end) {
+				setupCodeModifies.push([[`const __VLS_props = `], propsRange.start, propsRange.start]);
+			}
+			else {
+				if (scriptSetupRanges.props.define.typeArg) {
+					setupCodeModifies.push([[
+						`const __VLS_props = `,
+						generateSfcBlockSection(scriptSetup, propsRange.start, scriptSetupRanges.props.define.typeArg.start, codeFeatures.all),
+					], statement.start, scriptSetupRanges.props.define.typeArg.start]);
+					setupCodeModifies.push([[
+						generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.typeArg.end, propsRange.end, codeFeatures.all),
+						`${endOfLine}`,
+						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
+						`__VLS_props`,
+					], scriptSetupRanges.props.define.typeArg.end, propsRange.end]);
+				}
+				else {
+					setupCodeModifies.push([[
+						`const __VLS_props = `,
+						generateSfcBlockSection(scriptSetup, propsRange.start, propsRange.end, codeFeatures.all),
+						`${endOfLine}`,
+						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
+						`__VLS_props`,
+					], statement.start, propsRange.end]);
+				}
+			}
 		}
 	}
 	if (scriptSetupRanges.slots.define && !scriptSetupRanges.slots.name) {
@@ -338,7 +362,7 @@ function* generateComponentProps(
 			yield ` & `;
 		}
 		ctx.generatedPropsType = true;
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.typeArg.start, scriptSetupRanges.props.define.typeArg.end, codeFeatures.all);
+		yield `typeof __VLS_typeProps`;
 	}
 	if (!ctx.generatedPropsType) {
 		yield `{}`;
