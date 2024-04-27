@@ -185,7 +185,9 @@ export function parseScriptSetupRanges(
 			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
 				slots.define = parseDefineFunction(node);
 				if (ts.isVariableDeclaration(parent)) {
-					slots.name = getNodeText(ts, parent.name, ast);
+					slots.name = ts.isObjectBindingPattern(parent.name)
+						? '__VLS_slots'
+						: getNodeText(ts, parent.name, ast);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
