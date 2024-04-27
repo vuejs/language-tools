@@ -565,6 +565,7 @@ function createSchemaResolvers(
 
 		return {
 			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value,
+			description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			signature: typeChecker.signatureToString(call),

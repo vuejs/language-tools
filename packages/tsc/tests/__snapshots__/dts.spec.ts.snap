@@ -28,6 +28,51 @@ export default _default;
 "
 `;
 
+exports[`vue-tsc-dts > Input: events/component-class.vue, Output: events/component-class.vue.d.ts 1`] = `
+"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    foo: (value: string) => void;
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>> & {
+    onFoo?: (value: string) => any;
+}, {}, {}>;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/component-generic.vue.d.ts 1`] = `
+"declare const _default: <T>(__VLS_props: {
+    onFoo?: (value: string) => any;
+} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, __VLS_ctx?: {
+    slots: {};
+    attrs: any;
+    emit: (evt: "foo", value: string) => void;
+}, __VLS_expose?: (exposed: import('vue').ShallowUnwrapRef<{}>) => void, __VLS_setup?: Promise<{
+    props: {
+        onFoo?: (value: string) => any;
+    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
+    expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
+    attrs: any;
+    slots: {};
+    emit: (evt: "foo", value: string) => void;
+}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+    [key: string]: any;
+}> & {
+    __ctx?: {
+        props: {
+            onFoo?: (value: string) => any;
+        } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
+        expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
+        attrs: any;
+        slots: {};
+        emit: (evt: "foo", value: string) => void;
+    };
+};
+export default _default;
+type __VLS_Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+"
+`;
+
 exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
 "declare const _default: <T>(__VLS_props: {
     onBar?: (data: number) => any;
@@ -268,12 +313,12 @@ exports[`vue-tsc-dts > Input: reference-type-events/component.vue, Output: refer
     }) => void;
     baz: () => void;
 }, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>> & {
+    onFoo?: (data?: {
+        foo: string;
+    }) => any;
     onBar?: (value: {
         arg1: number;
         arg2?: any;
-    }) => any;
-    onFoo?: (data?: {
-        foo: string;
     }) => any;
     onBaz?: () => any;
 }, {}, {}>;

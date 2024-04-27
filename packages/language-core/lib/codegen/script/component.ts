@@ -117,4 +117,7 @@ export function* generateScriptSetupOptions(
 	if (scriptSetupRanges.props.define?.typeArg) {
 		yield `__typeProps: typeof __VLS_typeProps,${newLine}`;
 	}
+	if (scriptSetupRanges.emits.define) {
+		yield `__typeEmits: typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'},${newLine}`;
+	}
 }
