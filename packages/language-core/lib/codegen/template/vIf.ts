@@ -12,7 +12,7 @@ export function* generateVIf(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.IfNode,
-	currentElement: CompilerDOM.ElementNode | undefined,
+	currentComponent: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 
@@ -61,7 +61,7 @@ export function* generateVIf(
 		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of branch.children) {
-			yield* generateTemplateChild(options, ctx, childNode, currentElement, prev, componentCtxVar);
+			yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
 			prev = childNode;
 		}
 		yield* ctx.generateAutoImportCompletion();

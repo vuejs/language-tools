@@ -1,14 +1,10 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { hyphenateTag } from '../../utils/shared';
-import { endOfLine, newLine, variableNameRegex, wrapWith } from '../common';
-import { generateCamelized } from './camelized';
+import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import { endOfLine, newLine, wrapWith } from '../common';
 import { createTemplateCodegenContext } from './context';
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
-import { generatePropertyAccess } from './propertyAccess';
 import { generateStringLiteralKey } from './stringLiteralKey';
 import { generateTemplateChild, getVForNode } from './templateChild';
 
@@ -26,7 +22,6 @@ export interface TemplateCodegenOptions {
 
 export function* generateTemplate(options: TemplateCodegenOptions) {
 	const ctx = createTemplateCodegenContext();
-	const { componentTagNameOffsets, elementTagNameOffsets } = collectTagOffsets();
 
 	let hasSlot = false;
 
@@ -57,52 +52,6 @@ export function* generateTemplate(options: TemplateCodegenOptions) {
 		ctx,
 		hasSlot,
 	};
-
-	function collectTagOffsets() {
-
-		const componentTagNameOffsets = new Map<string, number[]>();
-		const elementTagNameOffsets = new Map<string, number[]>();
-
-		if (!options.template.ast) {
-			return {
-				componentTagNameOffsets,
-				elementTagNameOffsets,
-			};
-		}
-
-		for (const node of forEachElementNode(options.template.ast)) {
-			if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
-				// ignore
-				continue;
-			}
-			if (node.tag === 'component' || node.tag === 'Component') {
-				// ignore
-				continue;
-			}
-			const map = node.tagType === CompilerDOM.ElementTypes.COMPONENT
-				? componentTagNameOffsets
-				: elementTagNameOffsets;
-			let offsets = map.get(node.tag);
-			if (!offsets) {
-				map.set(node.tag, offsets = []);
-			}
-			const source = options.template.content.substring(node.loc.start.offset);
-			const startTagOffset = node.loc.start.offset + source.indexOf(node.tag);
-
-			offsets.push(startTagOffset); // start tag
-			if (!node.isSelfClosing && options.template.lang === 'html') {
-				const endTagOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
-				if (endTagOffset !== startTagOffset) {
-					offsets.push(endTagOffset); // end tag
-				}
-			}
-		}
-
-		return {
-			componentTagNameOffsets,
-			elementTagNameOffsets,
-		};
-	}
 
 	function* generateSlotsType(): Generator<Code> {
 		for (const { expVar, varName } of ctx.dynamicSlots) {
@@ -159,79 +108,23 @@ export function* generateTemplate(options: TemplateCodegenOptions) {
 	}
 
 	function* generatePreResolveComponents(): Generator<Code> {
-
 		yield `let __VLS_resolvedLocalAndGlobalComponents!: {}`;
-
-		for (const [tagName] of componentTagNameOffsets) {
-
-			const isNamespacedTag = tagName.includes('.');
-			if (isNamespacedTag) {
-				continue;
-			}
-
-			yield ` & __VLS_WithComponent<'${getCanonicalComponentName(tagName)}', typeof __VLS_localComponents, `;
-			yield getPossibleOriginalComponentNames(tagName, false)
-				.map(name => `"${name}"`)
-				.join(', ');
-			yield `>`;
-		}
-
-		yield endOfLine;
-
-		for (const [tagName, offsets] of elementTagNameOffsets) {
-			for (const tagOffset of offsets) {
-				yield `__VLS_intrinsicElements`;
-				yield* generatePropertyAccess(
-					options,
-					ctx,
-					tagName,
-					tagOffset,
-					ctx.codeFeatures.withoutHighlightAndCompletion,
-				);
-				yield `;`;
-			}
-			yield `${newLine}`;
-		}
-
-		for (const [tagName, offsets] of componentTagNameOffsets) {
-			if (!variableNameRegex.test(camelize(tagName))) {
-				continue;
-			}
-			for (const tagOffset of offsets) {
-				for (const shouldCapitalize of (tagName[0] === tagName[0].toUpperCase() ? [false] : [true, false])) {
-					const expectName = shouldCapitalize ? capitalize(camelize(tagName)) : camelize(tagName);
-					yield `__VLS_components.`;
-					yield* generateCamelized(
-						shouldCapitalize ? capitalize(tagName) : tagName,
-						tagOffset,
-						{
-							navigation: {
-								resolveRenameNewName: tagName !== expectName ? camelizeComponentName : undefined,
-								resolveRenameEditText: getTagRenameApply(tagName),
-							},
-						} as VueCodeInformation,
-					);
-					yield `;`;
+		if (options.template.ast) {
+			for (const node of forEachElementNode(options.template.ast)) {
+				if (
+					node.tagType === CompilerDOM.ElementTypes.COMPONENT
+					&& node.tag.toLowerCase() !== 'component'
+					&& !node.tag.includes('.') // namespace tag 
+				) {
+					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+					yield getPossibleOriginalComponentNames(node.tag, false)
+						.map(name => `"${name}"`)
+						.join(', ');
+					yield `>`;
 				}
 			}
-			yield `${newLine}`;
-			yield `// @ts-ignore${newLine}`; // #2304
-			yield `[`;
-			for (const tagOffset of offsets) {
-				yield* generateCamelized(
-					capitalize(tagName),
-					tagOffset,
-					{
-						completion: {
-							isAdditional: true,
-							onlyImport: true,
-						},
-					} as VueCodeInformation,
-				);
-				yield `,`;
-			}
-			yield `]${endOfLine}`;
 		}
+		yield endOfLine;
 	}
 }
 
@@ -268,14 +161,6 @@ export function* forEachElementNode(node: CompilerDOM.RootNode | CompilerDOM.Tem
 			yield* forEachElementNode(child);
 		}
 	}
-}
-
-function camelizeComponentName(newName: string) {
-	return camelize('-' + newName);
-}
-
-function getTagRenameApply(oldName: string) {
-	return oldName === hyphenateTag(oldName) ? hyphenateTag : undefined;
 }
 
 export function isFragment(node: CompilerDOM.IfNode | CompilerDOM.ForNode) {

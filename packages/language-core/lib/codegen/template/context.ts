@@ -167,7 +167,6 @@ export function createTemplateCodegenContext() {
 		generateAutoImportCompletion: function* (): Generator<Code> {
 			const all = [...accessGlobalVariables.entries()];
 			if (!all.some(([_, offsets]) => offsets.size)) {
-				yield `// no auto imports${endOfLine}`;
 				return;
 			}
 			yield `// @ts-ignore${newLine}`; // #2304

@@ -30,50 +30,7 @@ export function* generateElementEvents(
 			yield `let ${eventVar} = { '${prop.arg.loc.source}': __VLS_pickEvent(`;
 			yield `${eventsVar}['${prop.arg.loc.source}'], `;
 			yield `({} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>)`;
-			const startMappingFeatures: VueCodeInformation = {
-				navigation: {
-					// @click-outside -> onClickOutside
-					resolveRenameNewName(newName) {
-						return camelize('on-' + newName);
-					},
-					// onClickOutside -> @click-outside
-					resolveRenameEditText(newName) {
-						const hName = hyphenateAttr(newName);
-						if (hyphenateAttr(newName).startsWith('on-')) {
-							return camelize(hName.slice('on-'.length));
-						}
-						return newName;
-					},
-				},
-			};
-			if (variableNameRegex.test(camelize(prop.arg.loc.source))) {
-				yield `.`;
-				yield ['', 'template', prop.arg.loc.start.offset, startMappingFeatures];
-				yield `on`;
-				yield* generateCamelized(
-					capitalize(prop.arg.loc.source),
-					prop.arg.loc.start.offset,
-					combineLastMapping,
-				);
-			}
-			else {
-				yield `[`;
-				yield* wrapWith(
-					prop.arg.loc.start.offset,
-					prop.arg.loc.end.offset,
-					startMappingFeatures,
-					`'`,
-					['', 'template', prop.arg.loc.start.offset, combineLastMapping],
-					'on',
-					...generateCamelized(
-						capitalize(prop.arg.loc.source),
-						prop.arg.loc.start.offset,
-						combineLastMapping,
-					),
-					`'`,
-				);
-				yield `]`;
-			}
+			yield* generateEventArg(options, ctx, prop.arg, true);
 			yield `) }${endOfLine}`;
 			yield `${eventVar} = { `;
 			if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
@@ -101,7 +58,7 @@ export function* generateElementEvents(
 				);
 			}
 			yield `: `;
-			yield* appendExpressionNode(options, ctx, prop);
+			yield* generateEventExpression(options, ctx, prop);
 			yield ` }${endOfLine}`;
 		}
 		else if (
@@ -126,7 +83,80 @@ export function* generateElementEvents(
 	}
 }
 
-function* appendExpressionNode(
+const eventArgFeatures: VueCodeInformation = {
+	navigation: {
+		// @click-outside -> onClickOutside
+		resolveRenameNewName(newName) {
+			return camelize('on-' + newName);
+		},
+		// onClickOutside -> @click-outside
+		resolveRenameEditText(newName) {
+			const hName = hyphenateAttr(newName);
+			if (hyphenateAttr(newName).startsWith('on-')) {
+				return camelize(hName.slice('on-'.length));
+			}
+			return newName;
+		},
+	},
+};
+
+export function* generateEventArg(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	arg: CompilerDOM.SimpleExpressionNode,
+	access: boolean,
+): Generator<Code> {
+	if (arg.loc.source.startsWith('[') && arg.loc.source.endsWith(']')) {
+		yield `[`;
+		yield* generateInterpolation(
+			options,
+			ctx,
+			arg.loc.source.slice(1, -1),
+			arg.loc,
+			arg.loc.start.offset + 1,
+			ctx.codeFeatures.all,
+			'',
+			'',
+		);
+		yield `]`;
+	}
+	else if (variableNameRegex.test(camelize(arg.loc.source))) {
+		if (access) {
+			yield `.`;
+		}
+		yield ['', 'template', arg.loc.start.offset, eventArgFeatures];
+		yield `on`;
+		yield* generateCamelized(
+			capitalize(arg.loc.source),
+			arg.loc.start.offset,
+			combineLastMapping,
+		);
+	}
+	else {
+		if (access) {
+			yield `[`;
+		}
+		yield* wrapWith(
+			arg.loc.start.offset,
+			arg.loc.end.offset,
+			eventArgFeatures,
+			`'`,
+			['', 'template', arg.loc.start.offset, combineLastMapping],
+			'on',
+			...generateCamelized(
+				capitalize(arg.loc.source),
+				arg.loc.start.offset,
+				combineLastMapping,
+			),
+			`'`,
+		);
+		if (access) {
+			yield `]`;
+		}
+	}
+}
+
+export function* generateEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
@@ -184,7 +214,7 @@ function* appendExpressionNode(
 
 			yield endOfLine;
 			yield* ctx.generateAutoImportCompletion();
-			yield `}${newLine}`;
+			yield `}`;
 		}
 	}
 	else {

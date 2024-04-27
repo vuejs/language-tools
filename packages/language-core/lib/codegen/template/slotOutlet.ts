@@ -11,7 +11,7 @@ export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.SlotOutletNode,
-	currentElement: CompilerDOM.ElementNode | undefined,
+	currentComponent: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
@@ -109,5 +109,5 @@ export function* generateSlotOutlet(
 		});
 	}
 	yield* ctx.generateAutoImportCompletion();
-	yield* generateElementChildren(options, ctx, node, currentElement, componentCtxVar);
+	yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
 }

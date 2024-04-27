@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
+import { hyphenateTag } from '../../utils/shared';
 import { collectVars, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../common';
 import { generateCamelized } from './camelized';
 import type { TemplateCodegenContext } from './context';
@@ -11,16 +12,15 @@ import { generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
-import { generateStringLiteralKey } from './stringLiteralKey';
 import { generateTemplateChild } from './templateChild';
 
 const colonReg = /:/g;
 
-export function* generateElement(
+export function* generateComponent(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	currentElement: CompilerDOM.ElementNode | undefined,
+	currentComponent: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
@@ -29,8 +29,6 @@ export function* generateElement(
 	const var_functionalComponent = ctx.getInternalVariable();
 	const var_componentInstance = ctx.getInternalVariable();
 	const var_componentEvents = ctx.getInternalVariable();
-	const isIntrinsicElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT
-		|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
 	const isComponentTag = node.tag.toLowerCase() === 'component';
 
 	let endTagOffset = !node.isSelfClosing && options.template.lang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
@@ -69,16 +67,7 @@ export function* generateElement(
 		};
 	}
 
-	if (isIntrinsicElement) {
-		yield `const ${var_originalComponent} = __VLS_intrinsicElements[`;
-		yield* generateStringLiteralKey(
-			tag,
-			startTagOffset,
-			ctx.codeFeatures.verification,
-		);
-		yield `]${endOfLine}`;
-	}
-	else if (dynamicTagInfo) {
+	if (dynamicTagInfo) {
 		yield `const ${var_originalComponent} = `;
 		yield* generateInterpolation(
 			options,
@@ -113,20 +102,15 @@ export function* generateElement(
 		yield `const ${var_originalComponent} = {} as any${endOfLine}`;
 	}
 
-	if (isIntrinsicElement) {
-		yield `const ${var_functionalComponent} = __VLS_elementAsFunctionalComponent(${var_originalComponent})${endOfLine}`;
-	}
-	else {
-		yield `const ${var_functionalComponent} = __VLS_asFunctionalComponent(${var_originalComponent}, new ${var_originalComponent}({`;
-		yield* generateElementProps(options, ctx, node, props, false);
-		yield `}))${endOfLine}`;
-	}
+	yield `const ${var_functionalComponent} = __VLS_asFunctionalComponent(${var_originalComponent}, new ${var_originalComponent}({`;
+	yield* generateElementProps(options, ctx, node, props, false);
+	yield `}))${endOfLine}`;
 
 	if (
 		!dynamicTagInfo
-		&& !isIntrinsicElement
 		&& !isComponentTag
 	) {
+		// hover support
 		for (const offset of tagOffsets) {
 			yield `({} as { ${getCanonicalComponentName(tag)}: typeof ${var_originalComponent} }).`;
 			yield* generateCanonicalComponentName(
@@ -135,6 +119,45 @@ export function* generateElement(
 				ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
 			);
 			yield endOfLine;
+		}
+		const camelizedTag = camelize(node.tag);
+		if (variableNameRegex.test(camelizedTag)) {
+			// renaming / find references support
+			for (const tagOffset of tagOffsets) {
+				for (const shouldCapitalize of (node.tag[0] === node.tag[0].toUpperCase() ? [false] : [true, false])) {
+					const expectName = shouldCapitalize ? capitalize(camelizedTag) : camelizedTag;
+					yield `__VLS_components.`;
+					yield* generateCamelized(
+						shouldCapitalize ? capitalize(node.tag) : node.tag,
+						tagOffset,
+						{
+							navigation: {
+								resolveRenameNewName: node.tag !== expectName ? camelizeComponentName : undefined,
+								resolveRenameEditText: getTagRenameApply(node.tag),
+							},
+						} as VueCodeInformation,
+					);
+					yield `;`;
+				}
+			}
+			yield `${newLine}`;
+			// auto import support
+			yield `// @ts-ignore${newLine}`; // #2304
+			yield `[`;
+			for (const tagOffset of tagOffsets) {
+				yield* generateCamelized(
+					capitalize(node.tag),
+					tagOffset,
+					{
+						completion: {
+							isAdditional: true,
+							onlyImport: true,
+						},
+					} as VueCodeInformation,
+				);
+				yield `,`;
+			}
+			yield `]${endOfLine}`;
 		}
 	}
 
@@ -169,13 +192,10 @@ export function* generateElement(
 		yield `)${endOfLine}`;
 	}
 
-	if (node.tagType !== CompilerDOM.ElementTypes.TEMPLATE) {
-		defineComponentCtxVar = ctx.getInternalVariable();
-		componentCtxVar = defineComponentCtxVar;
-		currentElement = node;
-	}
+	defineComponentCtxVar = ctx.getInternalVariable();
+	componentCtxVar = defineComponentCtxVar;
+	currentComponent = node;
 
-	//#region fix #1775
 	for (const failedExp of propsFailedExps) {
 		yield* generateInterpolation(
 			options,
@@ -190,6 +210,102 @@ export function* generateElement(
 		yield endOfLine;
 	}
 
+	yield* generateVScope(options, ctx, node, props);
+
+	if (componentCtxVar) {
+		ctx.usedComponentCtxVars.add(componentCtxVar);
+		yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEvents, () => usedComponentEventsVar = true);
+	}
+
+	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
+	if (slotDir && componentCtxVar) {
+		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
+	}
+	else {
+		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
+	}
+
+	if (defineComponentCtxVar && ctx.usedComponentCtxVars.has(defineComponentCtxVar)) {
+		yield `const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!${endOfLine}`;
+	}
+	if (usedComponentEventsVar) {
+		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>${endOfLine}`;
+	}
+}
+
+export function* generateElement(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode,
+	currentComponent: CompilerDOM.ElementNode | undefined,
+	componentCtxVar: string | undefined,
+): Generator<Code> {
+	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
+	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
+		? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)
+		: undefined;
+	const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
+
+	yield `__VLS_elementAsFunction(__VLS_intrinsicElements`;
+	yield* generatePropertyAccess(
+		options,
+		ctx,
+		node.tag,
+		startTagOffset,
+		ctx.codeFeatures.withoutHighlightAndCompletion,
+	);
+	if (endTagOffset !== undefined) {
+		yield `, __VLS_intrinsicElements`;
+		yield* generatePropertyAccess(
+			options,
+			ctx,
+			node.tag,
+			endTagOffset,
+			ctx.codeFeatures.withoutHighlightAndCompletion,
+		);
+	}
+	yield `)(`;
+	yield* wrapWith(
+		startTagOffset,
+		startTagOffset + node.tag.length,
+		ctx.codeFeatures.verification,
+		`{`,
+		...generateElementProps(options, ctx, node, node.props, true, propsFailedExps),
+		`}`,
+	);
+	yield `)${endOfLine}`;
+
+	for (const failedExp of propsFailedExps) {
+		yield* generateInterpolation(
+			options,
+			ctx,
+			failedExp.loc.source,
+			failedExp.loc,
+			failedExp.loc.start.offset,
+			ctx.codeFeatures.all,
+			'(',
+			')',
+		);
+		yield endOfLine;
+	}
+
+	yield* generateVScope(options, ctx, node, node.props);
+
+	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
+	if (slotDir && componentCtxVar) {
+		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
+	}
+	else {
+		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
+	}
+}
+
+function* generateVScope(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode,
+	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[],
+): Generator<Code> {
 	const vScope = props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
 	let inScope = false;
 	let originalConditionsNum = ctx.blockConditions.length;
@@ -217,30 +333,10 @@ export function* generateElement(
 	if (options.shouldGenerateScopedClasses) {
 		yield* generateReferencesForScopedCssClasses(ctx, node);
 	}
-	if (componentCtxVar) {
-		ctx.usedComponentCtxVars.add(componentCtxVar);
-		yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEvents, () => usedComponentEventsVar = true);
-	}
 
 	if (inScope) {
 		yield `}${newLine}`;
 		ctx.blockConditions.length = originalConditionsNum;
-	}
-	//#endregion
-
-	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
-	if (slotDir && componentCtxVar) {
-		yield* generateComponentSlot(options, ctx, node, slotDir, currentElement, componentCtxVar);
-	}
-	else {
-		yield* generateElementChildren(options, ctx, node, currentElement, componentCtxVar);
-	}
-
-	if (defineComponentCtxVar && ctx.usedComponentCtxVars.has(defineComponentCtxVar)) {
-		yield `const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!${endOfLine}`;
-	}
-	if (usedComponentEventsVar) {
-		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>${endOfLine}`;
 	}
 }
 
@@ -282,13 +378,13 @@ function* generateComponentSlot(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	slotDir: CompilerDOM.DirectiveNode,
-	currentElement: CompilerDOM.ElementNode | undefined,
+	currentComponent: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string,
 ): Generator<Code> {
 	yield `{${newLine}`;
 	ctx.usedComponentCtxVars.add(componentCtxVar);
-	if (currentElement) {
-		ctx.hasSlotElements.add(currentElement);
+	if (currentComponent) {
+		ctx.hasSlotElements.add(currentComponent);
 	}
 	const slotBlockVars: string[] = [];
 	let hasProps = false;
@@ -363,7 +459,7 @@ function* generateComponentSlot(
 
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, currentElement, prev, componentCtxVar);
+		yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
 		prev = childNode;
 	}
 
@@ -463,4 +559,12 @@ function* generateReferencesForScopedCssClasses(
 			yield `)${endOfLine}`;
 		}
 	}
+}
+
+function camelizeComponentName(newName: string) {
+	return camelize('-' + newName);
+}
+
+function getTagRenameApply(oldName: string) {
+	return oldName === hyphenateTag(oldName) ? hyphenateTag : undefined;
 }

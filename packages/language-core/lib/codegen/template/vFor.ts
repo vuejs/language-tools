@@ -11,7 +11,7 @@ export function* generateVFor(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ForNode,
-	currentElement: CompilerDOM.ElementNode | undefined,
+	currentComponent: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 	const { source } = node.parseResult;
@@ -56,7 +56,7 @@ export function* generateVFor(
 	}
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, currentElement, prev, componentCtxVar);
+		yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
 		prev = childNode;
 	}
 	for (const varName of forBlockVars) {

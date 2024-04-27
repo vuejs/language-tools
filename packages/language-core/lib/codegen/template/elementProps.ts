@@ -3,13 +3,14 @@ import { camelize } from '@vue/shared';
 import { minimatch } from 'minimatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
-import { conditionWrapWith, variableNameRegex, wrapWith } from '../common';
+import { conditionWrapWith, newLine, variableNameRegex, wrapWith } from '../common';
 import { generateCamelized } from './camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 import { toString } from '@volar/language-core';
+import { generateEventArg, generateEventExpression } from './elementEvents';
 
 export function* generateElementProps(
 	options: TemplateCodegenOptions,
@@ -19,10 +20,10 @@ export function* generateElementProps(
 	enableCodeFeatures: boolean,
 	propsFailedExps?: CompilerDOM.SimpleExpressionNode[],
 ): Generator<Code> {
-
 	let styleAttrNum = 0;
 	let classAttrNum = 0;
 
+	const isIntrinsicElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT || node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
 	const canCamelize = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
 	if (props.some(prop =>
@@ -36,17 +37,42 @@ export function* generateElementProps(
 		classAttrNum++;
 	}
 
-	yield `...{ `;
-	for (const prop of props) {
-		if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'on'
-			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-		) {
-			yield `'${camelize('on-' + prop.arg.loc.source)}': {} as any, `;
+	if (!isIntrinsicElement) {
+		let generatedEvent = false;
+		for (const prop of props) {
+			if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'on'
+				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
+					continue;
+				}
+				if (!generatedEvent) {
+					yield `...{ `;
+					generatedEvent = true;
+				}
+				yield `'${camelize('on-' + prop.arg.loc.source)}': {} as any, `;
+			}
+		}
+		if (generatedEvent) {
+			yield `}, `;
 		}
 	}
-	yield `}, `;
+	else {
+		for (const prop of props) {
+			if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'on'
+				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				yield* generateEventArg(options, ctx, prop.arg, false);
+				yield `: `;
+				yield* generateEventExpression(options, ctx, prop);
+				yield `,${newLine}`;
+			}
+		}
+	}
 
 	for (const prop of props) {
 		if (

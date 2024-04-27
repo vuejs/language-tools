@@ -1,4 +1,4 @@
-import type * as CompilerDOM from '@vue/compiler-dom';
+import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { endOfLine, wrapWith } from '../common';
 import type { TemplateCodegenContext } from './context';
@@ -9,18 +9,24 @@ export function* generateElementChildren(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	currentElement: CompilerDOM.ElementNode | undefined,
+	currentComponent: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 	yield* ctx.resetDirectiveComments('end of element children start');
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, currentElement, prev, componentCtxVar);
+		yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
 		prev = childNode;
 	}
+	yield* ctx.generateAutoImportCompletion();
 
 	// fix https://github.com/vuejs/language-tools/issues/932
-	if (!ctx.hasSlotElements.has(node) && node.children.length) {
+	if (
+		!ctx.hasSlotElements.has(node)
+		&& node.children.length
+		&& node.tagType !== CompilerDOM.ElementTypes.ELEMENT
+		&& node.tagType !== CompilerDOM.ElementTypes.TEMPLATE
+	) {
 		yield `(${componentCtxVar}.slots!).`;
 		yield* wrapWith(
 			node.children[0].loc.start.offset,

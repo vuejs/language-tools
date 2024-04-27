@@ -312,21 +312,17 @@ export default _default;
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<__VLS_TypePropsToOption<{
-    foo?: number;
-    bar?: string[];
-    qux?: string;
-    quxModifiers?: Record<"trim" | "lazy", true>;
-}>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+"type __VLS_PublicProps = {
+    "foo"?: number;
+    "bar"?: string[];
+    "qux"?: string;
+    quxModifiers?: Record<'lazy' | 'trim', true>;
+};
+declare const _default: import("vue").DefineComponent<__VLS_TypePropsToOption<__VLS_PublicProps>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     "update:foo": (foo: number) => void;
     "update:bar": (bar: string[]) => void;
     "update:qux": (qux: string) => void;
-}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<{
-    foo?: number;
-    bar?: string[];
-    qux?: string;
-    quxModifiers?: Record<"trim" | "lazy", true>;
-}>>> & {
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<__VLS_PublicProps>>> & {
     "onUpdate:foo"?: (foo: number) => any;
     "onUpdate:bar"?: (bar: string[]) => any;
     "onUpdate:qux"?: (qux: string) => any;

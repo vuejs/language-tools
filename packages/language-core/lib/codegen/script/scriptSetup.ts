@@ -47,7 +47,7 @@ export function* generateScriptSetup(
 			+ `	__VLS_setup = (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined, definePropMirrors);
 		yield `		return {} as {${newLine}`
-			+ `			props: ${ctx.helperTypes.Prettify.name}<typeof __VLS_functionalComponentProps & typeof __VLS_componentProps> & typeof __VLS_publicProps,${newLine}`
+			+ `			props: ${ctx.helperTypes.Prettify.name}<typeof __VLS_functionalComponentProps & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
 			+ `			expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
 			+ `			attrs: any,${newLine}`
 			+ `			slots: ReturnType<typeof __VLS_template>,${newLine}`
@@ -246,14 +246,14 @@ function* generateComponentProps(
 		}
 		yield `})${endOfLine}`;
 		yield `let __VLS_functionalComponentProps!: `;
-		yield `${ctx.helperTypes.OmitKeepDiscriminatedUnion.name}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof typeof __VLS_publicProps>`;
+		yield `${ctx.helperTypes.OmitKeepDiscriminatedUnion.name}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
 		yield endOfLine;
 	}
 	else {
 		yield `let __VLS_functionalComponentProps!: {}${endOfLine}`;
 	}
 
-	yield `let __VLS_publicProps!:${newLine}`
+	yield `type __VLS_BuiltInPublicProps =${newLine}`
 		+ `	import('${options.vueCompilerOptions.lib}').VNodeProps${newLine}`
 		+ `	& import('${options.vueCompilerOptions.lib}').AllowedComponentProps${newLine}`
 		+ `	& import('${options.vueCompilerOptions.lib}').ComponentCustomProps${endOfLine}`;
@@ -276,7 +276,7 @@ function* generateComponentProps(
 		yield `}${endOfLine}`;
 	}
 
-	yield `let __VLS_componentProps!: `;
+	yield `type __VLS_PublicProps = `;
 	if (scriptSetupRanges.slots.define && options.vueCompilerOptions.jsxSlots) {
 		if (ctx.generatedPropsType) {
 			yield ` & `;
