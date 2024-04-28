@@ -36,7 +36,11 @@ export function createParsedCommandLineByJson(
 		{},
 		configFileName,
 		undefined,
-		resolvedVueOptions.extensions.map(extension => ({
+		[
+			...resolvedVueOptions.extensions,
+			...resolvedVueOptions.vitePressExtensions,
+			...resolvedVueOptions.petiteVueExtensions,
+		].map(extension => ({
 			extension: extension.slice(1),
 			isMixedContent: true,
 			scriptKind: ts.ScriptKind.Deferred,
@@ -83,7 +87,11 @@ export function createParsedCommandLine(
 			{},
 			tsConfigPath,
 			undefined,
-			resolvedVueOptions.extensions.map(extension => ({
+			[
+				...resolvedVueOptions.extensions,
+				...resolvedVueOptions.vitePressExtensions,
+				...resolvedVueOptions.petiteVueExtensions,
+			].map(extension => ({
 				extension: extension.slice(1),
 				isMixedContent: true,
 				scriptKind: ts.ScriptKind.Deferred,

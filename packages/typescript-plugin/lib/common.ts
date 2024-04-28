@@ -29,9 +29,9 @@ export function decorateLanguageServiceForVue(
 			for (const item of result.entries) {
 				if (item.source) {
 					const originalName = item.name;
-					for (const ext of vueOptions.extensions) {
-						const suffix = capitalize(ext.substring('.'.length)); // .vue -> Vue
-						if (item.source.endsWith(ext) && item.name.endsWith(suffix)) {
+					for (const vueExt of vueOptions.extensions) {
+						const suffix = capitalize(vueExt.slice(1)); // .vue -> Vue
+						if (item.source.endsWith(vueExt) && item.name.endsWith(suffix)) {
 							item.name = capitalize(item.name.slice(0, -suffix.length));
 							if (item.insertText) {
 								// #2286
@@ -40,7 +40,7 @@ export function decorateLanguageServiceForVue(
 							if (item.data) {
 								// @ts-expect-error
 								item.data.__isComponentAutoImport = {
-									ext,
+									ext: vueExt,
 									suffix,
 									originalName,
 									newName: item.insertText,
