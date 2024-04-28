@@ -15,7 +15,7 @@ let client: lsp.BaseLanguageClient;
 type CreateLanguageClient = (
 	id: string,
 	name: string,
-	langs: lsp.DocumentFilter[],
+	langs: lsp.DocumentSelector,
 	initOptions: VueInitializationOptions,
 	port: number,
 	outputChannel: vscode.OutputChannel,
@@ -27,11 +27,7 @@ export async function activate(context: vscode.ExtensionContext, createLc: Creat
 	tryActivate();
 
 	function tryActivate() {
-		if (
-			vscode.window.visibleTextEditors.some(editor => editor.document.languageId === 'vue')
-			|| (config.server.vitePress.supportMdFile && vscode.window.visibleTextEditors.some(editor => editor.document.languageId === 'markdown'))
-			|| (config.server.petiteVue.supportHtmlFile && vscode.window.visibleTextEditors.some(editor => editor.document.languageId === 'html'))
-		) {
+		if (vscode.window.visibleTextEditors.some(editor => config.server.includeLanguages.includes(editor.document.languageId))) {
 			doActivate(context, createLc);
 			stopCheck.dispose();
 		}
@@ -210,29 +206,21 @@ function getCurrentHybridModeStatus(report = false) {
 
 async function doActivate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
+	vscode.commands.executeCommand('setContext', 'vue.activated', true);
+
 	getCurrentHybridModeStatus(true);
 
 	const outputChannel = vscode.window.createOutputChannel('Vue Language Server');
-
-	vscode.commands.executeCommand('setContext', 'vue.activated', true);
+	const selectors = config.server.includeLanguages;
 
 	client = createLc(
 		'vue',
 		'Vue',
-		getDocumentSelector(),
+		selectors,
 		await getInitializationOptions(context, enabledHybridMode),
 		6009,
 		outputChannel
 	);
-
-	const selectors: vscode.DocumentFilter[] = [{ language: 'vue' }];
-
-	if (config.server.petiteVue.supportHtmlFile) {
-		selectors.push({ language: 'html' });
-	}
-	if (config.server.vitePress.supportMdFile) {
-		selectors.push({ language: 'markdown' });
-	}
 
 	activateConfigWatcher();
 	activateRestartRequest();
@@ -410,6 +398,16 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 					);
 				}
 			}
+			else if (e.affectsConfiguration('vue.server')) {
+				if (enabledHybridMode) {
+					if (e.affectsConfiguration('vue.server.includeLanguages')) {
+						requestReloadVscode('Please reload VSCode to apply the new language settings.');
+					}
+				}
+				else {
+					vscode.commands.executeCommand('vue.action.restartServer', false);
+				}
+			}
 			else if (e.affectsConfiguration('vue')) {
 				vscode.commands.executeCommand('vue.action.restartServer', false);
 			}
@@ -434,25 +432,12 @@ export function deactivate(): Thenable<any> | undefined {
 	return client?.stop();
 }
 
-export function getDocumentSelector(): lsp.DocumentFilter[] {
-	const selectors: lsp.DocumentFilter[] = [];
-	selectors.push({ language: 'vue' });
-	if (config.server.petiteVue.supportHtmlFile) {
-		selectors.push({ language: 'html' });
-	}
-	if (config.server.vitePress.supportMdFile) {
-		selectors.push({ language: 'markdown' });
-	}
-	return selectors;
-}
-
 async function getInitializationOptions(
 	context: vscode.ExtensionContext,
 	hybridMode: boolean,
 ): Promise<VueInitializationOptions> {
 	return {
-		// volar
-		diagnosticModel: config.server.diagnosticModel === 'pull' ? DiagnosticModel.Pull : DiagnosticModel.Push,
+		diagnosticModel: enabledHybridMode ? DiagnosticModel.Pull : DiagnosticModel.Push,
 		typescript: { tsdk: (await lsp.getTsdk(context)).tsdk },
 		maxFileSize: config.server.maxFileSize,
 		semanticTokensLegend: {
@@ -461,11 +446,6 @@ async function getInitializationOptions(
 		},
 		vue: {
 			hybridMode,
-			additionalExtensions: [
-				...config.server.additionalExtensions,
-				...!config.server.petiteVue.supportHtmlFile ? [] : ['html'],
-				...!config.server.vitePress.supportMdFile ? [] : ['md'],
-			],
 		},
 	};
 };

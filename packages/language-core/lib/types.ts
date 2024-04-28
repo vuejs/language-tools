@@ -31,6 +31,8 @@ export interface VueCompilerOptions {
 	target: number;
 	lib: string;
 	extensions: string[];
+	vitePressExtensions: string[];
+	petiteVueExtensions: string[];
 	jsxSlots: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;

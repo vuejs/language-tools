@@ -90,10 +90,7 @@
 			{
 				"name": "typescript-vue-plugin-bundle",
 				"enableForWorkspaceTypeScriptVersions": true,
-				"configNamespace": "typescript",
-				"languages": [
-					"vue"
-				]
+				"configNamespace": "typescript"
 			}
 		],
 		"grammars": [
@@ -236,31 +233,19 @@
 					],
 					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
 				},
+				"vue.server.includeLanguages": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [
+						"vue"
+					]
+				},
 				"vue.server.maxFileSize": {
 					"type": "number",
 					"default": 20971520,
 					"description": "Maximum file size for Vue Language Server to load. (default: 20MB)"
-				},
-				"vue.server.petiteVue.supportHtmlFile": {
-					"type": "boolean",
-					"default": false
-				},
-				"vue.server.vitePress.supportMdFile": {
-					"type": "boolean",
-					"default": false
-				},
-				"vue.server.diagnosticModel": {
-					"type": "string",
-					"default": "push",
-					"enum": [
-						"push",
-						"pull"
-					],
-					"enumDescriptions": [
-						"Diagnostic push by language server.",
-						"Diagnostic pull by language client."
-					],
-					"description": "Diagnostic update model."
 				},
 				"vue.server.maxOldSpaceSize": {
 					"type": [
@@ -269,14 +254,6 @@
 					],
 					"default": null,
 					"description": "Set --max-old-space-size option on server process. If you have problem on frequently \"Request textDocument/** failed.\" error, try setting higher memory(MB) on it."
-				},
-				"vue.server.additionalExtensions": {
-					"type": "array",
-					"items": {
-						"type": "string"
-					},
-					"default": [],
-					"description": "List any additional file extensions that should be processed as Vue files (requires restart)."
 				},
 				"vue.doctor.status": {
 					"type": "boolean",
@@ -290,6 +267,9 @@
 				},
 				"vue.splitEditors.layout.left": {
 					"type": "array",
+					"items": {
+						"type": "string"
+					},
 					"default": [
 						"script",
 						"scriptSetup",
@@ -298,6 +278,9 @@
 				},
 				"vue.splitEditors.layout.right": {
 					"type": "array",
+					"items": {
+						"type": "string"
+					},
 					"default": [
 						"template",
 						"customBlocks"

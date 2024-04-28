@@ -23,15 +23,8 @@ connection.onInitialize(async params => {
 
 	const options: VueInitializationOptions = params.initializationOptions;
 	const hybridMode = options.vue?.hybridMode ?? true;
-	const vueFileExtensions: string[] = ['vue'];
 
 	tsdk = loadTsdkByPath(options.typescript.tsdk, params.locale);
-
-	if (options.vue?.additionalExtensions) {
-		for (const additionalExtension of options.vue.additionalExtensions) {
-			vueFileExtensions.push(additionalExtension);
-		}
-	}
 
 	if (hybridMode) {
 		getTsPluginClient = () => tsPluginClient;
@@ -46,21 +39,12 @@ connection.onInitialize(async params => {
 			? createHybridModeProjectProviderFactory(tsdk.typescript.sys)
 			: createTypeScriptProjectProviderFactory(tsdk.typescript, tsdk.diagnosticMessages),
 		{
-			watchFileExtensions: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', ...vueFileExtensions],
-			getLanguageId(uri) {
-				if (vueFileExtensions.some(ext => uri.endsWith(`.${ext}`))) {
-					if (uri.endsWith('.html')) {
-						return 'html';
-					}
-					else if (uri.endsWith('.md')) {
-						return 'markdown';
-					}
-					else {
-						return 'vue';
-					}
-				}
-				return resolveCommonLanguageId(uri);
-			},
+			// TODO: Dynamically register file watcher for vue, vitepress, petitevue extensions
+			watchFileExtensions: hybridMode
+				? undefined
+				: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', 'vue'],
+			// TODO: remove it
+			getLanguageId: resolveCommonLanguageId,
 			getServicePlugins() {
 				return createVueServicePlugins(
 					tsdk.typescript,
@@ -72,11 +56,6 @@ connection.onInitialize(async params => {
 			async getLanguagePlugins(serviceEnv, projectContext) {
 				const commandLine = await parseCommandLine();
 				const vueOptions = commandLine?.vueOptions ?? resolveVueCompilerOptions({});
-				for (const ext of vueFileExtensions) {
-					if (!vueOptions.extensions.includes(`.${ext}`)) {
-						vueOptions.extensions.push(`.${ext}`);
-					}
-				}
 				const vueLanguagePlugin = createVueLanguagePlugin(
 					tsdk.typescript,
 					serviceEnv.typescript!.uriToFileName,

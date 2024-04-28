@@ -207,6 +207,8 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		...vueOptions,
 		target,
 		extensions: vueOptions.extensions ?? ['.vue'],
+		vitePressExtensions: vueOptions.vitePressExtensions ?? [],
+		petiteVueExtensions: vueOptions.petiteVueExtensions ?? [],
 		lib,
 		jsxSlots: vueOptions.jsxSlots ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
