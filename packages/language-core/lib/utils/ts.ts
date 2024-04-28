@@ -174,7 +174,14 @@ function getPartialVueCompilerOptions(
 					const resolvedPath = resolvePath(pluginPath);
 					if (resolvedPath) {
 						const plugin = require(resolvedPath);
-						plugin.__moduleName = pluginPath;
+						if (Array.isArray(plugin)) {
+							for (let i = 0; i < plugin.length; i++) {
+								plugin[i].__moduleName = `${pluginPath} (${i})`;
+							}
+						}
+						else {
+							plugin.__moduleName = pluginPath;
+						}
 						return plugin;
 					}
 					else {
