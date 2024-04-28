@@ -36,7 +36,11 @@ export function run() {
 				return [vueLanguagePlugin];
 			}
 			else {
-				runExtensions = vueOptions.extensions;
+				runExtensions = [
+					...vueOptions.extensions,
+					...vueOptions.vitePressExtensions,
+					...vueOptions.petiteVueExtensions,
+				];
 				throw extensionsChangedException;
 			}
 		},
