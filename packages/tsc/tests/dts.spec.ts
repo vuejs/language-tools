@@ -25,13 +25,12 @@ describe('vue-tsc-dts', () => {
 		options: compilerOptions
 	};
 
-	let vueExts: string[] = [];
+	let vueOptions: vue.VueCompilerOptions;
 	const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
 		const { configFilePath } = options.options;
-		const vueOptions = typeof configFilePath === 'string'
+		vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 			: vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
-		vueExts = vueOptions.extensions;
 		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
@@ -43,8 +42,14 @@ describe('vue-tsc-dts', () => {
 		);
 		return [vueLanguagePlugin];
 	}, fileName => {
-		if (vueExts.some(ext => fileName.endsWith(ext))) {
+		if (vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
 			return 'vue';
+		}
+		if (vueOptions.vitePressExtensions.some(ext => fileName.endsWith(ext))) {
+			return 'markdown';
+		}
+		if (vueOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
+			return 'html';
 		}
 		return vue.resolveCommonLanguageId(fileName);
 	});

@@ -16,9 +16,14 @@ export function run() {
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 				: vue.resolveVueCompilerOptions({});
+			const allExtensions = [
+				...vueOptions.extensions,
+				...vueOptions.vitePressExtensions,
+				...vueOptions.petiteVueExtensions,
+			];
 			if (
-				runExtensions.length === vueOptions.extensions.length
-				&& runExtensions.every(ext => vueOptions.extensions.includes(ext))
+				runExtensions.length === allExtensions.length
+				&& runExtensions.every(ext => allExtensions.includes(ext))
 			) {
 				const writeFile = options.host!.writeFile.bind(options.host);
 				options.host!.writeFile = (fileName, contents, ...args) => {
@@ -36,7 +41,7 @@ export function run() {
 				return [vueLanguagePlugin];
 			}
 			else {
-				runExtensions = vueOptions.extensions;
+				runExtensions = allExtensions;
 				throw extensionsChangedException;
 			}
 		},

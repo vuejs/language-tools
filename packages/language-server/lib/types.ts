@@ -6,9 +6,5 @@ export type VueInitializationOptions = InitializationOptions & {
 	};
 	vue?: {
 		hybridMode?: boolean;
-		/**
-		 * @example ['vue1', 'vue2']
-		 */
-		additionalExtensions?: string[];
 	};
 };
