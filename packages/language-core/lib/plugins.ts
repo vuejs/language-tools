@@ -1,6 +1,3 @@
-import useHtmlFilePlugin from './plugins/file-html';
-import useMdFilePlugin from './plugins/file-md';
-import useVueFilePlugin from './plugins/file-vue';
 import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
 import useVueSfcStyles from './plugins/vue-sfc-styles';
@@ -13,12 +10,9 @@ import { pluginVersion, type VueLanguagePlugin } from './types';
 
 export * from './plugins/shared'
 
-export function getDefaultVueLanguagePlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
+export function getBasePlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 
 	const plugins: VueLanguagePlugin[] = [
-		useMdFilePlugin, // .md for VitePress
-		useHtmlFilePlugin, // .html for PetiteVue
-		useVueFilePlugin, // .vue and others for Vue
 		useVueTemplateHtmlPlugin,
 		useVueTemplateInlineCssPlugin,
 		useVueTemplateInlineTsPlugin,

@@ -92,6 +92,12 @@ function createCheckerWorker(
 			if (parsedCommandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
 				return 'vue';
 			}
+			if (parsedCommandLine.vueOptions.vitePressExtensions.some(ext => fileName.endsWith(ext))) {
+				return 'markdown';
+			}
+			if (parsedCommandLine.vueOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
+				return 'html';
+			}
 			return vue.resolveCommonLanguageId(fileName);
 		},
 		scriptIdToFileName: id => id,

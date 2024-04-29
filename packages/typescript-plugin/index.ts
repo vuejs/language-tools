@@ -1,7 +1,7 @@
 import { decorateLanguageService } from '@volar/typescript/lib/node/decorateLanguageService';
 import { decorateLanguageServiceHost, searchExternalFiles } from '@volar/typescript/lib/node/decorateLanguageServiceHost';
 import * as vue from '@vue/language-core';
-import { createLanguage, resolveCommonLanguageId } from '@vue/language-core';
+import { createLanguage } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { decorateLanguageServiceForVue } from './lib/common';
 import { startNamedPipeServer, projects } from './lib/server';
@@ -38,19 +38,14 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					);
 					const extensions = languagePlugin.typescript?.extraFileExtensions.map(ext => '.' + ext.extension) ?? [];
 					const getScriptSnapshot = info.languageServiceHost.getScriptSnapshot.bind(info.languageServiceHost);
-					const getLanguageId = (fileName: string) => {
-						if (extensions.some(ext => fileName.endsWith(ext))) {
-							return 'vue';
-						}
-						return resolveCommonLanguageId(fileName);
-					};
 					const language = createLanguage(
 						[languagePlugin],
 						ts.sys.useCaseSensitiveFileNames,
 						fileName => {
 							const snapshot = getScriptSnapshot(fileName);
 							if (snapshot) {
-								language.scripts.set(fileName, getLanguageId(fileName), snapshot);
+								// @ts-expect-error
+								language.scripts.set(fileName, undefined, snapshot);
 							}
 							else {
 								language.scripts.delete(fileName);
