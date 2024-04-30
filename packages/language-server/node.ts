@@ -31,20 +31,20 @@ export const getLanguagePlugins: GetLanguagePlugin = async (serviceEnv, configFi
 		commandLine?.options ?? {},
 		vueOptions,
 	);
-	const extensions = [
-		...vueOptions.extensions.map(ext => ext.slice(1)),
-		...vueOptions.vitePressExtensions.map(ext => ext.slice(1)),
-		...vueOptions.petiteVueExtensions.map(ext => ext.slice(1)),
-	];
 	if (!hybridMode) {
-		extensions.push('js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json');
-	}
-	const newExtensions = extensions.filter(ext => !watchedExtensions.has(ext));
-	if (newExtensions.length) {
-		for (const ext of newExtensions) {
-			watchedExtensions.add(ext);
+		const extensions = [
+			'js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json',
+			...vueOptions.extensions.map(ext => ext.slice(1)),
+			...vueOptions.vitePressExtensions.map(ext => ext.slice(1)),
+			...vueOptions.petiteVueExtensions.map(ext => ext.slice(1)),
+		];
+		const newExtensions = extensions.filter(ext => !watchedExtensions.has(ext));
+		if (newExtensions.length) {
+			for (const ext of newExtensions) {
+				watchedExtensions.add(ext);
+			}
+			server.watchFiles(['**/*.{' + newExtensions.join(',') + '}']);
 		}
-		server.watchFiles(['**/*.{' + newExtensions.join(',') + '}']);
 	}
 
 	envToVueOptions.set(serviceEnv, vueOptions);
