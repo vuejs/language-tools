@@ -23,6 +23,7 @@ export function parseScriptSetupRanges(
 	} = {};
 	const slots: {
 		name?: string;
+		isObjectBindingPattern?: boolean;
 		define?: ReturnType<typeof parseDefineFunction>;
 	} = {};
 	const emits: {
@@ -40,6 +41,7 @@ export function parseScriptSetupRanges(
 		name: TextRange | undefined;
 		nameIsString: boolean;
 		type: TextRange | undefined;
+		modifierType?: TextRange | undefined;
 		defaultValue: TextRange | undefined;
 		required: boolean;
 		isModel?: boolean;
@@ -132,6 +134,7 @@ export function parseScriptSetupRanges(
 					name,
 					nameIsString: true,
 					type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
+					modifierType: node.typeArguments && node.typeArguments?.length >= 2 ? _getStartEnd(node.typeArguments[1]) : undefined,
 					defaultValue: undefined,
 					required,
 					isModel: true,
@@ -183,7 +186,12 @@ export function parseScriptSetupRanges(
 			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
 				slots.define = parseDefineFunction(node);
 				if (ts.isVariableDeclaration(parent)) {
-					slots.name = getNodeText(ts, parent.name, ast);
+					if (ts.isIdentifier(parent.name)) {
+						slots.name = getNodeText(ts, parent.name, ast);
+					}
+					else {
+						slots.isObjectBindingPattern = ts.isObjectBindingPattern(parent.name);
+					}
 				}
 			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {

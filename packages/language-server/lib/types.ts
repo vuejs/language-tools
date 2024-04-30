@@ -1,4 +1,4 @@
-import type { InitializationOptions } from "@volar/language-server";
+import type { InitializationOptions } from '@volar/language-server';
 
 export type VueInitializationOptions = InitializationOptions & {
 	typescript: {
@@ -6,9 +6,5 @@ export type VueInitializationOptions = InitializationOptions & {
 	};
 	vue?: {
 		hybridMode?: boolean;
-		/**
-		 * @example ['vue1', 'vue2']
-		 */
-		additionalExtensions?: string[];
 	};
 };

@@ -1,28 +1,34 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import { isCharacterTyping } from './vue-autoinsert-dotvalue';
 
-export function create(ts: typeof import('typescript')): ServicePlugin {
+export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-parentheses',
-		create(context): ServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 			return {
-				async provideAutoInsertionEdit(document, position, lastChange) {
+				async provideAutoInsertionEdit(document, selection, change) {
+					// selection must at end of change
+					if (document.offsetAt(selection) !== change.rangeOffset + change.text.length) {
+						return;
+					}
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.parentheses') ?? false;
 					if (!enabled) {
 						return;
 					}
 
-					if (!isCharacterTyping(document, lastChange)) {
+					if (!isCharacterTyping(document, change)) {
 						return;
 					}
 
-					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
-					if (virtualCode?.id !== 'template_format') {
+					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+					if (!virtualCode?.id.startsWith('template_inline_ts_')) {
 						return;
 					}
 
-					const offset = document.offsetAt(position);
+					const offset = document.offsetAt(selection);
 
 					for (const mappedRange of virtualCode.mappings) {
 						const generatedCodeEnd = mappedRange.generatedOffsets[mappedRange.generatedOffsets.length - 1]

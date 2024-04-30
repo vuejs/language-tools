@@ -3,14 +3,16 @@ import * as net from 'net';
 import type * as ts from 'typescript';
 import { collectExtractProps } from './requests/collectExtractProps';
 import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from './requests/componentInfos';
+import { getImportPathForFile } from './requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
 import { NamedPipeServer, connect, readPipeTable, updatePipeTable } from './utils';
-import type { FileRegistry, VueCompilerOptions } from '@vue/language-core';
+import type { Language, VueCompilerOptions } from '@vue/language-core';
 
 export interface Request {
-	type: 'containsFile'
+	type: 'projectInfoForFile'
 	| 'collectExtractProps'
+	| 'getImportPathForFile'
 	| 'getPropertiesAtLocation'
 	| 'getQuickInfoAtPosition'
 	// Component Infos
@@ -42,22 +44,35 @@ export function startNamedPipeServer(
 			const text = data.toString();
 			const request: Request = JSON.parse(text);
 			const fileName = request.args[0];
-			const project = getProject(fileName);
-			if (project) {
+			const project = getProject(ts.server.toNormalizedPath(fileName));
+			if (request.type === 'projectInfoForFile') {
+				connection.write(
+					JSON.stringify(
+						project
+							? {
+								name: project.info.project.getProjectName(),
+								kind: project.info.project.projectKind,
+							}
+							: null
+					)
+				);
+			}
+			else if (project) {
 				const requestContext = {
 					typescript: ts,
 					languageService: project.info.languageService,
-					files: project.files,
+					languageServiceHost: project.info.languageServiceHost,
+					language: project.language,
 					vueOptions: project.vueOptions,
 					isTsPlugin: true,
 					getFileId: (fileName: string) => fileName,
 				};
-				if (request.type === 'containsFile') {
-					const result = !!getProject(fileName);
+				if (request.type === 'collectExtractProps') {
+					const result = collectExtractProps.apply(requestContext, request.args as any);
 					connection.write(JSON.stringify(result ?? null));
 				}
-				else if (request.type === 'collectExtractProps') {
-					const result = collectExtractProps.apply(requestContext, request.args as any);
+				else if (request.type === 'getImportPathForFile') {
+					const result = getImportPathForFile.apply(requestContext, request.args as any);
 					connection.write(JSON.stringify(result ?? null));
 				}
 				else if (request.type === 'getPropertiesAtLocation') {
@@ -135,13 +150,13 @@ function cleanupPipeTable() {
 
 export const projects = new Map<ts.server.Project, {
 	info: ts.server.PluginCreateInfo;
-	files: FileRegistry;
+	language: Language;
 	vueOptions: VueCompilerOptions;
 }>();
 
-function getProject(fileName: string) {
+function getProject(filename: ts.server.NormalizedPath) {
 	for (const [project, data] of projects) {
-		if (project.containsFile(fileName as ts.server.NormalizedPath)) {
+		if (project.containsFile(filename)) {
 			return data;
 		}
 	}

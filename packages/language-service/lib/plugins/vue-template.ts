@@ -1,5 +1,5 @@
-import type { Disposable, ServiceContext, ServiceEnvironment, ServicePluginInstance } from '@volar/language-service';
-import { VueGeneratedCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
+import type { Disposable, ServiceContext, ServiceEnvironment, LanguageServicePluginInstance } from '@volar/language-service';
+import { VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
@@ -7,7 +7,7 @@ import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { getNameCasing } from '../ideFeatures/nameCasing';
-import { AttrNameCasing, ServicePlugin, TagNameCasing, VueCompilerOptions } from '../types';
+import { AttrNameCasing, LanguageServicePlugin, TagNameCasing, VueCompilerOptions } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
 import { URI, Utils } from 'vscode-uri';
 import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
@@ -20,10 +20,11 @@ export function create(
 	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
-): ServicePlugin {
+): LanguageServicePlugin {
 
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
+	let lastCompletionComponentNames = new Set<string>();
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
@@ -51,7 +52,7 @@ export function create(
 			...baseService.triggerCharacters ?? [],
 			'@', // vue event shorthand
 		],
-		create(context): ServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 			const tsPluginClient = getTsPluginClient?.(context);
 			const baseServiceInstance = baseService.create(context);
 			const vueCompilerOptions = getVueOptions(context.env);
@@ -111,9 +112,14 @@ export function create(
 					let sync: (() => Promise<number>) | undefined;
 					let currentVersion: number | undefined;
 
-					const [_, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
-					if (sourceFile?.generated?.code instanceof VueGeneratedCode) {
-						sync = (await provideHtmlData(sourceFile.id, sourceFile.generated.code)).sync;
+					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					if (sourceScript?.generated?.root instanceof VueVirtualCode) {
+
+						// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
+						baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
+
+						sync = (await provideHtmlData(sourceScript.id, sourceScript.generated.root)).sync;
 						currentVersion = await sync();
 					}
 
@@ -125,11 +131,10 @@ export function create(
 						return;
 					}
 
-					if (sourceFile?.generated?.code instanceof VueGeneratedCode) {
+					if (sourceScript?.generated?.root instanceof VueVirtualCode) {
 						await afterHtmlCompletion(
 							htmlComplete,
-							context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot),
-							sourceFile.generated.code,
+							context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot),
 						);
 					}
 
@@ -148,20 +153,22 @@ export function create(
 					}
 
 					const result: vscode.InlayHint[] = [];
-					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!virtualCode) {
 						return;
 					}
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const code = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
+						const code = context.language.scripts.get(map.sourceDocument.uri)?.generated?.root;
 						const scanner = getScanner(baseServiceInstance, document);
 
-						if (code instanceof VueGeneratedCode && scanner) {
+						if (code instanceof VueVirtualCode && scanner) {
 
 							// visualize missing required props
-							const casing = await getNameCasing(context, map.sourceDocument.uri, tsPluginClient);
+							const casing = await getNameCasing(context, map.sourceDocument.uri);
 							const components = await tsPluginClient?.getComponentNames(code.fileName) ?? [];
 							const componentProps: Record<string, string[]> = {};
 							let token: html.TokenType;
@@ -173,11 +180,9 @@ export function create(
 							while ((token = scanner.scan()) !== html.TokenType.EOS) {
 								if (token === html.TokenType.StartTag) {
 									const tagName = scanner.getTokenText();
-									const component =
-										tagName.indexOf('.') >= 0
-											? components.find(component => component === tagName.split('.')[0])
-											: components.find(component => component === tagName || hyphenateTag(component) === tagName);
-									const checkTag = tagName.indexOf('.') >= 0 ? tagName : component;
+									const checkTag = tagName.indexOf('.') >= 0
+										? tagName
+										: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 									if (checkTag) {
 										componentProps[checkTag] ??= await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? [];
 										current = {
@@ -261,7 +266,7 @@ export function create(
 						return;
 					}
 
-					if (context.documents.getVirtualCodeByUri(document.uri)[0]) {
+					if (context.decodeEmbeddedDocumentUri(document.uri)) {
 						updateExtraCustomData([]);
 					}
 
@@ -275,16 +280,17 @@ export function create(
 					}
 
 					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
-					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
-
+					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!virtualCode) {
 						return;
 					}
 
 					for (const map of context.documents.getMaps(virtualCode)) {
 
-						const code = context.language.files.get(map.sourceDocument.uri)?.generated?.code;
-						if (!(code instanceof VueGeneratedCode)) {
+						const code = context.language.scripts.get(map.sourceDocument.uri)?.generated?.root;
+						if (!(code instanceof VueVirtualCode)) {
 							continue;
 						}
 
@@ -333,23 +339,28 @@ export function create(
 					if (!isSupportedDocument(document)) {
 						return;
 					}
-					const [_virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
+					const languageService = context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService');
+					if (!languageService) {
+						return;
+					}
+					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					if (
-						!sourceFile
-						|| !(sourceFile.generated?.code instanceof VueGeneratedCode)
-						|| !sourceFile.generated.code.sfc.template
+						!sourceScript
+						|| !(sourceScript.generated?.root instanceof VueVirtualCode)
+						|| !sourceScript.generated.root.sfc.template
 					) {
 						return [];
 					}
-					const { template } = sourceFile.generated.code.sfc;
+					const { template } = sourceScript.generated.root.sfc;
 					const spans = getComponentSpans.call(
 						{
-							files: context.language.files,
-							languageService: context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService'),
+							files: context.language.scripts,
+							languageService,
 							typescript: ts,
 							vueOptions: getVueOptions(context.env),
 						},
-						sourceFile.generated.code,
+						sourceScript.generated.root,
 						template,
 						{
 							start: document.offsetAt(range.start),
@@ -369,11 +380,11 @@ export function create(
 				},
 			};
 
-			async function provideHtmlData(sourceDocumentUri: string, vueCode: VueGeneratedCode) {
+			async function provideHtmlData(sourceDocumentUri: string, vueCode: VueVirtualCode) {
 
 				await (initializing ??= initialize());
 
-				const casing = await getNameCasing(context, sourceDocumentUri, tsPluginClient);
+				const casing = await getNameCasing(context, sourceDocumentUri);
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
@@ -422,6 +433,7 @@ export function create(
 											&& name !== 'Suspense'
 											&& name !== 'Teleport'
 										);
+									lastCompletionComponentNames = new Set(components);
 									version++;
 								})());
 								return [];
@@ -612,13 +624,9 @@ export function create(
 				};
 			}
 
-			async function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument, code: VueGeneratedCode) {
+			async function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument) {
 
 				const replacement = getReplacement(completionList, sourceDocument);
-				const componentNames = new Set(
-					(await tsPluginClient?.getComponentNames(code.fileName) ?? [])
-						.map(hyphenateTag)
-				);
 
 				if (replacement) {
 
@@ -698,7 +706,7 @@ export function create(
 						item.documentation = undefined;
 					}
 
-					if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && componentNames.has(hyphenateTag(item.label))) {
+					if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && lastCompletionComponentNames.has(hyphenateTag(item.label))) {
 						item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
 						item.sortText = '\u0000' + (item.sortText ?? item.label);
 					}
@@ -740,7 +748,6 @@ export function create(
 				updateExtraCustomData([]);
 			}
 
-
 			async function initialize() {
 				customData = await getHtmlCustomData();
 			}
@@ -766,7 +773,7 @@ export function create(
 		},
 	};
 
-	function getScanner(service: ServicePluginInstance, document: TextDocument) {
+	function getScanner(service: LanguageServicePluginInstance, document: TextDocument) {
 		if (mode === 'html') {
 			return service.provide['html/languageService']().createScanner(document.getText());
 		}

@@ -16,17 +16,10 @@ export const config = {
 		return _config().get('doctor')!;
 	},
 	get server(): Readonly<{
-		hybridMode: boolean;
+		includeLanguages: string[];
+		hybridMode: 'auto' | 'typeScriptPluginOnly' | boolean;
 		maxOldSpaceSize: number;
 		maxFileSize: number;
-		diagnosticModel: 'push' | 'pull';
-		additionalExtensions: string[];
-		vitePress: {
-			supportMdFile: boolean;
-		};
-		petiteVue: {
-			supportHtmlFile: boolean;
-		};
 	}> {
 		return _config().get('server')!;
 	},
@@ -37,6 +30,7 @@ export const config = {
 	},
 	get codeActions(): Readonly<{
 		enabled: boolean;
+		askNewComponentName: boolean;
 	}> {
 		return _config().get('codeActions')!;
 	},

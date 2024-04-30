@@ -1,20 +1,20 @@
-import { middleware as baseMiddleware } from '@volar/vscode';
 import { AttrNameCasing, TagNameCasing } from '@vue/language-server';
 import * as vscode from 'vscode';
-import type * as lsp from 'vscode-languageclient';
+import * as lsp from '@volar/vscode';
 import { attrNameCasings, tagNameCasings } from './features/nameCasing';
+import { config } from './config';
 
 export const middleware: lsp.Middleware = {
-	...baseMiddleware,
+	...lsp.middleware,
 	async resolveCodeAction(item, token, next) {
-		if (item.kind?.value === 'refactor.move.newFile.dumb') {
+		if (item.kind?.value === 'refactor.move.newFile.dumb' && config.codeActions.askNewComponentName) {
 			const inputName = await vscode.window.showInputBox({ value: (item as any).data.original.data.newName });
 			if (!inputName) {
 				return item; // cancel
 			}
 			(item as any).data.original.data.newName = inputName;
 		}
-		return await (baseMiddleware.resolveCodeAction?.(item, token, next) ?? next(item, token));
+		return await (lsp.middleware.resolveCodeAction?.(item, token, next) ?? next(item, token));
 	},
 	workspace: {
 		configuration(params, token, next) {

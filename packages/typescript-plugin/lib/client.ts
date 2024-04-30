@@ -10,6 +10,15 @@ export function collectExtractProps(
 	});
 }
 
+export async function getImportPathForFile(
+	...args: Parameters<typeof import('./requests/getImportPathForFile.js')['getImportPathForFile']>
+) {
+	return await sendRequest<ReturnType<typeof import('./requests/getImportPathForFile')['getImportPathForFile']>>({
+		type: 'getImportPathForFile',
+		args,
+	});
+}
+
 export async function getPropertiesAtLocation(
 	...args: Parameters<typeof import('./requests/getPropertiesAtLocation.js')['getPropertiesAtLocation']>
 ) {
@@ -76,7 +85,7 @@ export function getElementAttrs(
 }
 
 async function sendRequest<T>(request: Request) {
-	const server = await searchNamedPipeServerForFile(request.args[0]);
+	const server = (await searchNamedPipeServerForFile(request.args[0]))?.server;
 	if (!server) {
 		console.warn('[Vue Named Pipe Client] No server found for', request.args[0]);
 		return;

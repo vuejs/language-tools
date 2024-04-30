@@ -1,5 +1,5 @@
-import { defineComponent } from "vue";
-import { MyProps } from "./PropDefinitions";
+import { defineComponent } from 'vue';
+import { MyProps } from './PropDefinitions';
 
 export default defineComponent((props: MyProps) => {
 	return () => <pre>

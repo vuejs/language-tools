@@ -1,4 +1,4 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
@@ -9,13 +9,13 @@ import { loadLanguageBlocks } from './data';
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
 export interface Provide {
-	'vue/vueFile': (document: TextDocument) => vue.VueGeneratedCode | undefined;
+	'vue/vueFile': (document: TextDocument) => vue.VueVirtualCode | undefined;
 }
 
-export function create(): ServicePlugin {
+export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-sfc',
-		create(context): ServicePluginInstance<Provide> {
+		create(context): LanguageServicePluginInstance<Provide> {
 			const htmlPlugin = createHtmlService({
 				documentSelector: ['vue'],
 				useDefaultDataProvider: false,
@@ -23,8 +23,29 @@ export function create(): ServicePlugin {
 					sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
 					return [sfcDataProvider];
 				},
+				async getFormattingOptions(document, options, context) {
+					return await worker(document, async vueCode => {
+
+						const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
+						const blockTypes = ['template', 'script', 'style'];
+
+						for (const customBlock of vueCode.sfc.customBlocks) {
+							blockTypes.push(customBlock.type);
+						}
+
+						return {
+							...options,
+							...formatSettings,
+							wrapAttributes: await context.env.getConfiguration?.<string>('vue.format.wrapAttributes') ?? 'auto',
+							unformatted: '',
+							contentUnformatted: blockTypes.join(','),
+							endWithNewline: options.insertFinalNewline ? true
+								: options.trimFinalNewlines ? false
+									: document.getText().endsWith('\n'),
+						};
+					}) ?? {};
+				},
 			}).create(context);
-			const htmlLanguageService: html.LanguageService = htmlPlugin.provide['html/languageService']();
 
 			return {
 
@@ -38,28 +59,24 @@ export function create(): ServicePlugin {
 					},
 				},
 
-				async resolveEmbeddedCodeFormattingOptions(code, options) {
-
-					const sourceFile = context.language.files.getByVirtualCode(code);
-
-					if (sourceFile.generated?.code instanceof vue.VueGeneratedCode) {
-						if (code.id === 'scriptFormat' || code.id === 'scriptSetupFormat') {
+				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
+					if (sourceScript.generated?.root instanceof vue.VueVirtualCode) {
+						if (virtualCode.id === 'scriptFormat' || virtualCode.id === 'scriptSetupFormat') {
 							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
-						else if (code.id.startsWith('style_')) {
+						else if (virtualCode.id.startsWith('style_')) {
 							if (await context.env.getConfiguration?.('vue.format.style.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
-						else if (code.id === 'template') {
+						else if (virtualCode.id === 'template') {
 							if (await context.env.getConfiguration?.('vue.format.template.initialIndent') ?? true) {
 								options.initialIndentLevel++;
 							}
 						}
 					}
-
 					return options;
 				},
 
@@ -152,34 +169,14 @@ export function create(): ServicePlugin {
 						return result;
 					});
 				},
-
-				provideDocumentFormattingEdits(document, range, options) {
-					return worker(document, async vueCode => {
-
-						const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
-						const blockTypes = ['template', 'script', 'style'];
-
-						for (const customBlock of vueCode.sfc.customBlocks) {
-							blockTypes.push(customBlock.type);
-						}
-
-						return htmlLanguageService.format(document, range, {
-							...options,
-							...formatSettings,
-							unformatted: '',
-							contentUnformatted: blockTypes.join(','),
-							endWithNewline: options.insertFinalNewline ? true
-								: options.trimFinalNewlines ? false
-									: document.getText().endsWith('\n'),
-						});
-					});
-				},
 			};
 
-			function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueGeneratedCode) => T) {
-				const [vueFile] = context.documents.getVirtualCodeByUri(document.uri);
-				if (vueFile instanceof vue.VueGeneratedCode) {
-					return callback(vueFile);
+			function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueVirtualCode) => T) {
+				const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+				const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+				const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+				if (virtualCode instanceof vue.VueVirtualCode) {
+					return callback(virtualCode);
 				}
 			}
 		},

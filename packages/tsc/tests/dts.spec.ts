@@ -4,7 +4,7 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { proxyCreateProgram } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import { createFakeGlobalTypesHolder } from '..';
+import { removeEmitGlobalTypes } from '..';
 
 const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
@@ -24,28 +24,27 @@ describe('vue-tsc-dts', () => {
 		rootNames: readFilesRecursive(workspace),
 		options: compilerOptions
 	};
-	const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options);
-	const createProgram = proxyCreateProgram(ts, ts.createProgram, ['.vue'], (ts, options) => {
+
+	let vueOptions: vue.VueCompilerOptions;
+	const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
 		const { configFilePath } = options.options;
-		const vueOptions = typeof configFilePath === 'string'
+		vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-			: vue.resolveVueCompilerOptions({});
+			: vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
 		const vueLanguagePlugin = vue.createVueLanguagePlugin(
 			ts,
 			id => id,
-			fileName => fileName === fakeGlobalTypesHolder,
+			options.host?.useCaseSensitiveFileNames?.() ?? false,
+			() => '',
+			() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
 			options.options,
 			vueOptions,
-			false,
 		);
 		return [vueLanguagePlugin];
 	});
 	const program = createProgram(options);
 
 	for (const intputFile of options.rootNames) {
-
-		if (intputFile.endsWith('__VLS_globalTypes.vue'))
-			continue;
 
 		const expectedOutputFile = intputFile.endsWith('.ts')
 			? intputFile.slice(0, -'.ts'.length) + '.d.ts'
@@ -59,6 +58,7 @@ describe('vue-tsc-dts', () => {
 				sourceFile,
 				(outputFile, text) => {
 					expect(outputFile.replace(windowsPathReg, '/')).toBe(expectedOutputFile.replace(windowsPathReg, '/'));
+					text = removeEmitGlobalTypes(text);
 					outputText = text;
 				},
 				undefined,

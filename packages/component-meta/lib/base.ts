@@ -3,7 +3,7 @@ import type * as ts from 'typescript';
 import * as path from 'path-browserify';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
-import { createLanguage } from '@volar/typescript';
+import { createTypeScriptLanguage } from '@volar/typescript';
 
 import type {
 	MetaCheckerOptions,
@@ -71,7 +71,9 @@ function createCheckerWorker(
 	let projectVersion = 0;
 
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const _host: vue.TypeScriptProjectHost = {
+	const projectHost: vue.TypeScriptProjectHost = {
+		...ts.sys,
+		configFileName,
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
 		getCompilationSettings: () => parsedCommandLine.options,
@@ -86,16 +88,12 @@ function createCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getLanguageId: fileName => {
-			if (parsedCommandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				return 'vue';
-			}
-			return vue.resolveCommonLanguageId(fileName);
-		},
+		scriptIdToFileName: id => id,
+		fileNameToScriptId: id => id,
 	};
 
 	return {
-		...baseCreate(ts, configFileName, _host, parsedCommandLine.vueOptions, checkerOptions, globalComponentName),
+		...baseCreate(ts, projectHost, parsedCommandLine.vueOptions, checkerOptions, globalComponentName),
 		updateFile(fileName: string, text: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
@@ -120,7 +118,6 @@ function createCheckerWorker(
 
 export function baseCreate(
 	ts: typeof import('typescript'),
-	configFileName: string | undefined,
 	host: vue.TypeScriptProjectHost,
 	vueCompilerOptions: vue.VueCompilerOptions,
 	checkerOptions: MetaCheckerOptions,
@@ -157,33 +154,16 @@ export function baseCreate(
 	const vueLanguagePlugin = vue.createVueLanguagePlugin(
 		ts,
 		id => id,
-		fileName => {
-			if (ts.sys.useCaseSensitiveFileNames) {
-				return host.getScriptFileNames().includes(fileName) ?? false;
-			}
-			else {
-				const lowerFileName = fileName.toLowerCase();
-				for (const rootFile of host.getScriptFileNames()) {
-					if (rootFile.toLowerCase() === lowerFileName) {
-						return true;
-					}
-				}
-				return false;
-			}
-		},
+		ts.sys.useCaseSensitiveFileNames,
+		() => host.getProjectVersion?.() ?? '',
+		() => host.getScriptFileNames(),
 		host.getCompilationSettings(),
 		vueCompilerOptions,
 	);
-	const language = createLanguage(
+	const language = createTypeScriptLanguage(
 		ts,
-		ts.sys,
 		[vueLanguagePlugin],
-		configFileName,
 		host,
-		{
-			fileIdToFileName: id => id,
-			fileNameToFileId: id => id,
-		},
 	);
 	const { languageServiceHost } = language.typescript!;
 	const tsLs = ts.createLanguageService(languageServiceHost);
@@ -326,9 +306,9 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			const printer = ts.createPrinter(checkerOptions.printer);
 			const snapshot = host.getScriptSnapshot(componentPath)!;
 
-			const vueFile = language.files.get(componentPath)?.generated?.code;
+			const vueFile = language.scripts.get(componentPath)?.generated?.root;
 			const vueDefaults = vueFile && exportName === 'default'
-				? (vueFile instanceof vue.VueGeneratedCode ? readVueComponentDefaultProps(vueFile, printer, ts, vueCompilerOptions) : {})
+				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts, vueCompilerOptions) : {})
 				: {};
 			const tsDefaults = !vueFile ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
@@ -473,7 +453,7 @@ function createSchemaResolvers(
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
 	ts: typeof import('typescript'),
-	context: vue.LanguageContext,
+	language: vue.Language,
 ) {
 	const visited = new Set<ts.Type>();
 
@@ -579,6 +559,7 @@ function createSchemaResolvers(
 
 		return {
 			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value,
+			description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			signature: typeChecker.signatureToString(call),
@@ -665,12 +646,11 @@ function createSchemaResolvers(
 	}
 	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
 		const fileName = declaration.getSourceFile().fileName;
-		const sourceFile = context.files.get(fileName);
+		const sourceFile = language.scripts.get(fileName);
 		if (sourceFile?.generated) {
-			const script = sourceFile.generated.languagePlugin.typescript?.getScript(sourceFile.generated.code);
+			const script = sourceFile.generated.languagePlugin.typescript?.getServiceScript(sourceFile.generated.root);
 			if (script) {
-				const maps = context.files.getMaps(script.code);
-				for (const [source, [_, map]] of maps) {
+				for (const [source, [_, map]] of language.maps.forEach(script.code)) {
 					const start = map.getSourceOffset(declaration.getStart());
 					const end = map.getSourceOffset(declaration.getEnd());
 					if (start && end) {
@@ -699,7 +679,7 @@ function createSchemaResolvers(
 }
 
 function readVueComponentDefaultProps(
-	vueSourceFile: vue.VueGeneratedCode,
+	vueSourceFile: vue.VueVirtualCode,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript'),
 	vueCompilerOptions: vue.VueCompilerOptions,

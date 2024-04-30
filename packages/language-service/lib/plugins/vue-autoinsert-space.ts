@@ -1,11 +1,11 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 
-export function create(): ServicePlugin {
+export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-space',
-		create(context): ServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 			return {
-				async provideAutoInsertionEdit(document, _, lastChange) {
+				async provideAutoInsertionEdit(document, selection, change) {
 
 					if (document.languageId === 'html' || document.languageId === 'jade') {
 
@@ -15,19 +15,11 @@ export function create(): ServicePlugin {
 						}
 
 						if (
-							lastChange.text === '{}'
-							&& document.getText({
-								start: { line: lastChange.range.start.line, character: lastChange.range.start.character - 1 },
-								end: { line: lastChange.range.start.line, character: lastChange.range.start.character + 3 }
-							}) === '{{}}'
+							change.text === '{}'
+							&& document.getText().substring(change.rangeOffset - 1, change.rangeOffset + 3) === '{{}}'
+							&& document.offsetAt(selection) === change.rangeOffset + 1
 						) {
-							return {
-								newText: ` $0 `,
-								range: {
-									start: { line: lastChange.range.start.line, character: lastChange.range.start.character + 1 },
-									end: { line: lastChange.range.start.line, character: lastChange.range.start.character + 1 }
-								},
-							};
+							return ` $0 `;
 						}
 					}
 				},

@@ -6,20 +6,19 @@ export function getComponentProps(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: vue.FileRegistry;
-		vueOptions: vue.VueCompilerOptions,
+		language: vue.Language;
 		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 	tag: string,
 	requiredOnly = false,
 ) {
-	const { typescript: ts, files, vueOptions, languageService, getFileId } = this;
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
-	const vueCode = volarFile.generated.code;
+	const vueCode = volarFile.generated.root;
 	const program: ts.Program = (languageService as any).getCurrentProgram();
 	if (!program) {
 		return;
@@ -35,7 +34,7 @@ export function getComponentProps(
 
 	let componentSymbol = components.type.getProperty(name[0]);
 
-	if (!componentSymbol && !vueOptions.nativeTags.includes(name[0])) {
+	if (!componentSymbol) {
 		componentSymbol = components.type.getProperty(camelize(name[0]))
 			?? components.type.getProperty(capitalize(camelize(name[0])));
 	}
@@ -95,19 +94,18 @@ export function getComponentEvents(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: vue.FileRegistry;
-		vueOptions: vue.VueCompilerOptions,
+		language: vue.Language;
 		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 	tag: string,
 ) {
-	const { typescript: ts, files, vueOptions, languageService, getFileId } = this;
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
-	const vueCode = volarFile.generated.code;
+	const vueCode = volarFile.generated.root;
 	const program: ts.Program = (languageService as any).getCurrentProgram();
 	if (!program) {
 		return;
@@ -123,7 +121,7 @@ export function getComponentEvents(
 
 	let componentSymbol = components.type.getProperty(name[0]);
 
-	if (!componentSymbol && !vueOptions.nativeTags.includes(name[0])) {
+	if (!componentSymbol) {
 		componentSymbol = components.type.getProperty(camelize(name[0]))
 			?? components.type.getProperty(capitalize(camelize(name[0])));
 	}
@@ -177,17 +175,17 @@ export function getTemplateContextProps(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: vue.FileRegistry;
+		language: vue.Language;
 		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 ) {
-	const { typescript: ts, files, languageService, getFileId } = this;
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
-	const vueCode = volarFile.generated.code;
+	const vueCode = volarFile.generated.root;
 
 	return getVariableType(ts, languageService, vueCode, '__VLS_ctx')
 		?.type
@@ -199,40 +197,36 @@ export function getComponentNames(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: vue.FileRegistry;
-		vueOptions: vue.VueCompilerOptions,
+		language: vue.Language;
 		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 ) {
-	const { typescript: ts, files, vueOptions, languageService, getFileId } = this;
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
-	const vueCode = volarFile.generated.code;
+	const vueCode = volarFile.generated.root;
 
 	return getVariableType(ts, languageService, vueCode, '__VLS_components')
 		?.type
 		?.getProperties()
 		.map(c => c.name)
 		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
-		.filter(entry => !vueOptions.nativeTags.includes(entry))
 		?? [];
 }
 
 export function _getComponentNames(
 	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
-	vueCode: vue.VueGeneratedCode,
-	vueOptions: vue.VueCompilerOptions,
+	vueCode: vue.VueVirtualCode,
 ) {
 	return getVariableType(ts, tsLs, vueCode, '__VLS_components')
 		?.type
 		?.getProperties()
 		.map(c => c.name)
 		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
-		.filter(entry => !vueOptions.nativeTags.includes(entry))
 		?? [];
 }
 
@@ -240,15 +234,15 @@ export function getElementAttrs(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		files: vue.FileRegistry;
+		language: vue.Language;
 		getFileId: (fileName: string) => string,
 	},
 	fileName: string,
 	tagName: string,
 ) {
-	const { typescript: ts, files, languageService, getFileId } = this;
-	const volarFile = files.get(getFileId(fileName));
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
 	const program: ts.Program = (languageService as any).getCurrentProgram();
@@ -282,7 +276,7 @@ export function getElementAttrs(
 function getVariableType(
 	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
-	vueCode: vue.VueGeneratedCode,
+	vueCode: vue.VueVirtualCode,
 	name: string,
 ) {
 	const program: ts.Program = (tsLs as any).getCurrentProgram();

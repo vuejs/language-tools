@@ -1,15 +1,18 @@
 import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
 import type * as ts from 'typescript';
-import { getDefaultVueLanguagePlugins } from './plugins';
+import { getBasePlugins } from './plugins';
 import type { VueCompilerOptions, VueLanguagePlugin } from './types';
-import { VueGeneratedCode } from './virtualFile/vueFile';
+import { VueVirtualCode } from './virtualFile/vueFile';
 import * as CompilerDOM from '@vue/compiler-dom';
 import * as CompilerVue2 from './utils/vue2TemplateCompiler';
+import useHtmlFilePlugin from './plugins/file-html';
+import useMdFilePlugin from './plugins/file-md';
+import useVueFilePlugin from './plugins/file-vue';
 
 const normalFileRegistries: {
 	key: string;
 	plugins: VueLanguagePlugin[];
-	files: Map<string, VueGeneratedCode>;
+	files: Map<string, VueVirtualCode>;
 }[] = [];
 const holderFileRegistries: typeof normalFileRegistries = [];
 
@@ -48,15 +51,20 @@ function getFileRegistryKey(
 	return JSON.stringify(values);
 }
 
+export interface _Plugin extends LanguagePlugin<VueVirtualCode> {
+	getCanonicalFileName: (fileName: string) => string;
+	pluginContext: Parameters<VueLanguagePlugin>[0];
+}
+
 export function createVueLanguagePlugin(
 	ts: typeof import('typescript'),
 	getFileName: (fileId: string) => string,
-	isValidGlobalTypesHolder: (fileName: string) => boolean,
+	useCaseSensitiveFileNames: boolean,
+	getProjectVersion: () => string,
+	getScriptFileNames: () => string[] | Set<string>,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	codegenStack: boolean = false,
-): LanguagePlugin<VueGeneratedCode> {
-	const allowLanguageIds = new Set(['vue']);
+): _Plugin {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
 			'@vue/compiler-dom': vueCompilerOptions.target < 3
@@ -69,23 +77,42 @@ export function createVueLanguagePlugin(
 		},
 		compilerOptions,
 		vueCompilerOptions,
-		codegenStack,
 		globalTypesHolder: undefined,
 	};
-	const plugins = getDefaultVueLanguagePlugins(pluginContext);
+	const basePlugins = getBasePlugins(pluginContext);
+	const vueSfcPlugin = useVueFilePlugin(pluginContext);
+	const vitePressSfcPlugin = useMdFilePlugin(pluginContext);
+	const petiteVueSfcPlugin = useHtmlFilePlugin(pluginContext);
+	const getCanonicalFileName = useCaseSensitiveFileNames
+		? (fileName: string) => fileName
+		: (fileName: string) => fileName.toLowerCase();
 
-	if (vueCompilerOptions.extensions.includes('.md')) {
-		allowLanguageIds.add('markdown');
-	}
-	if (vueCompilerOptions.extensions.includes('.html')) {
-		allowLanguageIds.add('html');
-	}
+	let canonicalRootFileNames = new Set<string>();
+	let canonicalRootFileNamesVersion: string | undefined;
 
 	return {
+		getCanonicalFileName,
+		pluginContext,
+		getLanguageId(scriptId) {
+			if (vueCompilerOptions.extensions.some(ext => scriptId.endsWith(ext))) {
+				return 'vue';
+			}
+			if (vueCompilerOptions.vitePressExtensions.some(ext => scriptId.endsWith(ext))) {
+				return 'markdown';
+			}
+			if (vueCompilerOptions.petiteVueExtensions.some(ext => scriptId.endsWith(ext))) {
+				return 'html';
+			}
+		},
 		createVirtualCode(fileId, languageId, snapshot) {
-			if (allowLanguageIds.has(languageId)) {
+			if (languageId === 'vue' || languageId === 'markdown' || languageId === 'html') {
 				const fileName = getFileName(fileId);
-				if (!pluginContext.globalTypesHolder && isValidGlobalTypesHolder(fileName)) {
+				const projectVersion = getProjectVersion();
+				if (projectVersion !== canonicalRootFileNamesVersion) {
+					canonicalRootFileNames = new Set([...getScriptFileNames()].map(getCanonicalFileName));
+					canonicalRootFileNamesVersion = projectVersion;
+				}
+				if (!pluginContext.globalTypesHolder && canonicalRootFileNames.has(getCanonicalFileName(fileName))) {
 					pluginContext.globalTypesHolder = fileName;
 				}
 				const fileRegistry = getFileRegistry(pluginContext.globalTypesHolder === fileName);
@@ -95,14 +122,17 @@ export function createVueLanguagePlugin(
 					return code;
 				}
 				else {
-					const code = new VueGeneratedCode(
+					const code = new VueVirtualCode(
 						fileName,
 						languageId,
 						snapshot,
 						vueCompilerOptions,
-						plugins,
+						languageId === 'html'
+							? [petiteVueSfcPlugin, ...basePlugins]
+							: languageId === 'markdown'
+								? [vitePressSfcPlugin, ...basePlugins]
+								: [vueSfcPlugin, ...basePlugins],
 						ts,
-						codegenStack,
 					);
 					fileRegistry.set(fileId, code);
 					return code;
@@ -113,37 +143,42 @@ export function createVueLanguagePlugin(
 			code.update(snapshot);
 			return code;
 		},
-		disposeVirtualCode(fileId, code, files) {
-			const isGlobalTypesHolder = code.fileName === pluginContext.globalTypesHolder;
-			const fileRegistry = getFileRegistry(isGlobalTypesHolder);
-			fileRegistry.delete(fileId);
-			if (isGlobalTypesHolder) {
-				pluginContext.globalTypesHolder = undefined;
-				const fileRegistry2 = getFileRegistry(false);
-				for (const [fileId, code] of fileRegistry2) {
-					if (isValidGlobalTypesHolder(code.fileName)) {
-						pluginContext.globalTypesHolder = code.fileName;
-						fileRegistry2.delete(fileId);
-						// force dirty
-						files?.delete(fileId);
-						files?.set(
-							fileId,
-							code.languageId,
-							code.snapshot,
-						);
-						break;
-					}
-				}
-			}
-		},
+		// TODO: when global types holder deleted, move global types to another file
+		// disposeVirtualCode(fileId, code) {
+		// 	const isGlobalTypesHolder = code.fileName === pluginContext.globalTypesHolder;
+		// 	const fileRegistry = getFileRegistry(isGlobalTypesHolder);
+		// 	fileRegistry.delete(fileId);
+		// 	if (isGlobalTypesHolder) {
+		// 		pluginContext.globalTypesHolder = undefined;
+		// 		const fileRegistry2 = getFileRegistry(false);
+		// 		for (const [fileId, code] of fileRegistry2) {
+		// 			if (isValidGlobalTypesHolder(code.fileName)) {
+		// 				pluginContext.globalTypesHolder = code.fileName;
+		// 				fileRegistry2.delete(fileId);
+		// 				// force dirty
+		// 				files?.delete(fileId);
+		// 				files?.set(
+		// 					fileId,
+		// 					code.languageId,
+		// 					code.snapshot,
+		// 				);
+		// 				break;
+		// 			}
+		// 		}
+		// 	}
+		// },
 		typescript: {
-			extraFileExtensions: vueCompilerOptions.extensions.map<ts.FileExtensionInfo>(ext => ({
+			extraFileExtensions: [
+				...vueCompilerOptions.extensions,
+				...vueCompilerOptions.vitePressExtensions,
+				...vueCompilerOptions.petiteVueExtensions,
+			].map<ts.FileExtensionInfo>(ext => ({
 				extension: ext.slice(1),
 				isMixedContent: true,
 				scriptKind: 7 satisfies ts.ScriptKind.Deferred,
 			})),
-			getScript(rootVirtualCode) {
-				for (const code of forEachEmbeddedCode(rootVirtualCode)) {
+			getServiceScript(root) {
+				for (const code of forEachEmbeddedCode(root)) {
 					if (code.id.startsWith('script_')) {
 						const lang = code.id.substring('script_'.length);
 						return {
@@ -163,7 +198,7 @@ export function createVueLanguagePlugin(
 	function getFileRegistry(isGlobalTypesHolder: boolean) {
 		return getVueFileRegistry(
 			isGlobalTypesHolder,
-			getFileRegistryKey(compilerOptions, vueCompilerOptions, plugins),
+			getFileRegistryKey(compilerOptions, vueCompilerOptions, basePlugins),
 			vueCompilerOptions.plugins,
 		);
 	}

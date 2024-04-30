@@ -1,24 +1,24 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
-import { VueGeneratedCode, eachElementNode, type CompilerDOM } from '@vue/language-core';
+import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import { VueVirtualCode, forEachElementNode, type CompilerDOM } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
-export function create(ts: typeof import('typescript')): ServicePlugin {
+export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
 		name: 'vue-toggle-v-bind-codeaction',
-		create(context): ServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 			return {
 				provideCodeActions(document, range, _context) {
 
 					const startOffset = document.offsetAt(range.start);
 					const endOffset = document.offsetAt(range.end);
-					const [virtualCode] = context.documents.getVirtualCodeByUri(document.uri);
-
-					if (!(virtualCode instanceof VueGeneratedCode)) {
+					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+					if (!(virtualCode instanceof VueVirtualCode)) {
 						return;
 					}
 
 					const { template } = virtualCode.sfc;
-
 					if (!template?.ast) {
 						return;
 					}
@@ -26,7 +26,7 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 					const templateStartOffset = template.startTagEnd;
 					const result: vscode.CodeAction[] = [];
 
-					for (const node of eachElementNode(template.ast)) {
+					for (const node of forEachElementNode(template.ast)) {
 						if (startOffset > templateStartOffset + node.loc.end.offset || endOffset < templateStartOffset + node.loc.start.offset) {
 							return;
 						}

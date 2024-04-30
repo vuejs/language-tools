@@ -1,15 +1,15 @@
 import { CodeMapping, Segment, replaceSourceRange } from '@volar/language-core';
 import { computed } from 'computeds';
 import type * as ts from 'typescript';
-import { disableAllFeatures, enableAllFeatures } from '../generators/utils';
 import type { Sfc, VueCodeInformation } from '../types';
+import { allCodeFeatures } from '../plugins/shared';
 
 export function computedMappings(
 	snapshot: () => ts.IScriptSnapshot,
 	sfc: Sfc
 ) {
 	return computed(() => {
-		const str: Segment<VueCodeInformation>[] = [[snapshot().getText(0, snapshot().getLength()), undefined, 0, enableAllFeatures({})]];
+		const str: Segment<VueCodeInformation>[] = [[snapshot().getText(0, snapshot().getLength()), undefined, 0, allCodeFeatures]];
 		for (const block of [
 			sfc.script,
 			sfc.scriptSetup,
@@ -59,7 +59,7 @@ export function computedMappings(
 					sourceOffsets: offsets,
 					generatedOffsets: offsets,
 					lengths: offsets.map(() => 0),
-					data: disableAllFeatures({ structure: true }),
+					data: { structure: true },
 				});
 			}
 		}

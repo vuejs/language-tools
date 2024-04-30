@@ -1,6 +1,5 @@
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as vue from '@vue/language-core';
-import type * as ts from 'typescript';
 
 const windowsPathReg = /\\/g;
 
@@ -17,23 +16,32 @@ export function run() {
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 				: vue.resolveVueCompilerOptions({});
-			const fakeGlobalTypesHolder = createFakeGlobalTypesHolder(options);
+			const allExtensions = [
+				...vueOptions.extensions,
+				...vueOptions.vitePressExtensions,
+				...vueOptions.petiteVueExtensions,
+			];
 			if (
-				runExtensions.length === vueOptions.extensions.length
-				&& runExtensions.every(ext => vueOptions.extensions.includes(ext))
+				runExtensions.length === allExtensions.length
+				&& runExtensions.every(ext => allExtensions.includes(ext))
 			) {
+				const writeFile = options.host!.writeFile.bind(options.host);
+				options.host!.writeFile = (fileName, contents, ...args) => {
+					return writeFile(fileName, removeEmitGlobalTypes(contents), ...args);
+				};
 				const vueLanguagePlugin = vue.createVueLanguagePlugin(
 					ts,
 					id => id,
-					fileName => fileName === fakeGlobalTypesHolder,
+					options.host?.useCaseSensitiveFileNames?.() ?? false,
+					() => '',
+					() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
 					options.options,
 					vueOptions,
-					false,
 				);
 				return [vueLanguagePlugin];
 			}
 			else {
-				runExtensions = vueOptions.extensions;
+				runExtensions = allExtensions;
 				throw extensionsChangedException;
 			}
 		},
@@ -48,36 +56,8 @@ export function run() {
 	}
 }
 
-export function createFakeGlobalTypesHolder(options: ts.CreateProgramOptions) {
-	const firstVueFile = options.rootNames.find(fileName => fileName.endsWith('.vue'));
-	if (firstVueFile) {
-		const fakeFileName = firstVueFile + '__VLS_globalTypes.vue';
+const removeEmitGlobalTypesRegexp = /^[^\n]*__VLS_globalTypesStart[\w\W]*__VLS_globalTypesEnd[^\n]*\n?$/mg;
 
-		(options.rootNames as string[]).push(fakeFileName);
-
-		const fileExists = options.host!.fileExists.bind(options.host);
-		const readFile = options.host!.readFile.bind(options.host);
-		const writeFile = options.host!.writeFile.bind(options.host);
-
-		options.host!.fileExists = fileName => {
-			if (fileName.endsWith('__VLS_globalTypes.vue')) {
-				return true;
-			}
-			return fileExists(fileName);
-		};
-		options.host!.readFile = fileName => {
-			if (fileName.endsWith('__VLS_globalTypes.vue')) {
-				return '<script setup lang="ts"></script>';
-			}
-			return readFile(fileName);
-		};
-		options.host!.writeFile = (fileName, ...args) => {
-			if (fileName.endsWith('__VLS_globalTypes.vue.d.ts')) {
-				return;
-			}
-			return writeFile(fileName, ...args);
-		};
-
-		return fakeFileName.replace(windowsPathReg, '/');
-	}
+export function removeEmitGlobalTypes(dts: string) {
+	return dts.replace(removeEmitGlobalTypesRegexp, '');
 }
