@@ -206,8 +206,8 @@ importers:
         specifier: 0.0.41
         version: 0.0.41(@volar/language-service@2.2.0-alpha.12)
       volar-service-emmet:
-        specifier: 0.0.41
-        version: 0.0.41(@volar/language-service@2.2.0-alpha.12)
+        specifier: 0.0.41-patch.1
+        version: 0.0.41-patch.1(@volar/language-service@2.2.0-alpha.12)
       volar-service-html:
         specifier: 0.0.41
         version: 0.0.41(@volar/language-service@2.2.0-alpha.12)
@@ -2990,8 +2990,8 @@ packages:
       '@volar/language-service':
         optional: true
 
-  volar-service-emmet@0.0.41:
-    resolution: {integrity: sha512-7XshSoKDKEgPGSvgXP7yy3vR2Ppnx9muAjUBWS2tmU0KoDrEN3oEmZhct0qMcFYF0Nf0xRqrKRUzPqn9t/+Yrw==}
+  volar-service-emmet@0.0.41-patch.1:
+    resolution: {integrity: sha512-Y7qoV8WJpDqXZzDpo6bP9fnpMfEZA8z+xgihIwIzDQvugTX5A55rNZgCCB1Ch/EST0rGyy+OO9IW5q99gJ1hGg==}
     peerDependencies:
       '@volar/language-service': ~2.2.0-alpha.4
     peerDependenciesMeta:
@@ -6047,7 +6047,7 @@ snapshots:
     optionalDependencies:
       '@volar/language-service': 2.2.0-alpha.12
 
-  volar-service-emmet@0.0.41(@volar/language-service@2.2.0-alpha.12):
+  volar-service-emmet@0.0.41-patch.1(@volar/language-service@2.2.0-alpha.12):
     dependencies:
       '@vscode/emmet-helper': 2.9.3
       vscode-html-languageservice: '@johnsoncodehk/vscode-html-languageservice@5.2.0-34a5462'

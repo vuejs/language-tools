@@ -26,7 +26,7 @@
 		"computeds": "^0.0.1",
 		"path-browserify": "^1.0.1",
 		"volar-service-css": "0.0.41",
-		"volar-service-emmet": "0.0.41",
+		"volar-service-emmet": "0.0.41-patch.1",
 		"volar-service-html": "0.0.41",
 		"volar-service-json": "0.0.41",
 		"volar-service-pug": "0.0.41",

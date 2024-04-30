@@ -87,7 +87,12 @@ export function getVueLanguageServicePlugins(
 		createVueDirectiveCommentsPlugin(),
 		createVueExtractFilePlugin(ts, getTsPluginClient),
 		createVueToggleVBindPlugin(ts),
-		createEmmetPlugin(),
+		createEmmetPlugin({
+			mappedModes: {
+				'vue': 'html',
+				'postcss': 'scss',
+			},
+		}),
 	);
 	return plugins;
 }
