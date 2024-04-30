@@ -22,7 +22,8 @@ export function* generateElementChildren(
 
 	// fix https://github.com/vuejs/language-tools/issues/932
 	if (
-		!ctx.hasSlotElements.has(node)
+		componentCtxVar
+		&& !ctx.hasSlotElements.has(node)
 		&& node.children.length
 		&& node.tagType !== CompilerDOM.ElementTypes.ELEMENT
 		&& node.tagType !== CompilerDOM.ElementTypes.TEMPLATE

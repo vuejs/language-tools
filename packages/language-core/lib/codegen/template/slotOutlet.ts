@@ -58,55 +58,54 @@ export function* generateSlotOutlet(
 			`}`,
 		);
 		yield `)${endOfLine}`;
-		return;
 	}
 	else {
 		yield `var ${varSlot} = {${newLine}`;
 		yield* generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), true);
 		yield `}${endOfLine}`;
-	}
 
-	if (
-		nameProp?.type === CompilerDOM.NodeTypes.ATTRIBUTE
-		&& nameProp.value
-	) {
-		ctx.slots.push({
-			name: nameProp.value.content,
-			loc: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
-			tagRange: [startTagOffset, startTagOffset + node.tag.length],
-			varName: varSlot,
-			nodeLoc: node.loc,
-		});
-	}
-	else if (
-		nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
-		&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-	) {
-		const slotExpVar = ctx.getInternalVariable();
-		yield `var ${slotExpVar} = `;
-		yield* generateInterpolation(
-			options,
-			ctx,
-			nameProp.exp.content,
-			nameProp.exp,
-			nameProp.exp.loc.start.offset,
-			ctx.codeFeatures.all,
-			'(',
-			')',
-		);
-		yield ` as const${endOfLine}`;
-		ctx.dynamicSlots.push({
-			expVar: slotExpVar,
-			varName: varSlot,
-		});
-	}
-	else {
-		ctx.slots.push({
-			name: 'default',
-			tagRange: [startTagOffset, startTagOffset + node.tag.length],
-			varName: varSlot,
-			nodeLoc: node.loc,
-		});
+		if (
+			nameProp?.type === CompilerDOM.NodeTypes.ATTRIBUTE
+			&& nameProp.value
+		) {
+			ctx.slots.push({
+				name: nameProp.value.content,
+				loc: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
+				tagRange: [startTagOffset, startTagOffset + node.tag.length],
+				varName: varSlot,
+				nodeLoc: node.loc,
+			});
+		}
+		else if (
+			nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+		) {
+			const slotExpVar = ctx.getInternalVariable();
+			yield `var ${slotExpVar} = `;
+			yield* generateInterpolation(
+				options,
+				ctx,
+				nameProp.exp.content,
+				nameProp.exp,
+				nameProp.exp.loc.start.offset,
+				ctx.codeFeatures.all,
+				'(',
+				')',
+			);
+			yield ` as const${endOfLine}`;
+			ctx.dynamicSlots.push({
+				expVar: slotExpVar,
+				varName: varSlot,
+			});
+		}
+		else {
+			ctx.slots.push({
+				name: 'default',
+				tagRange: [startTagOffset, startTagOffset + node.tag.length],
+				varName: varSlot,
+				nodeLoc: node.loc,
+			});
+		}
 	}
 	yield* ctx.generateAutoImportCompletion();
 	yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
