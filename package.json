@@ -27,5 +27,14 @@
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
+	},
+	"pnpm": {
+		"overrides": {
+			"@vue/runtime-dom": "alpha",
+			"@vue/shared": "alpha",
+			"@vue/compiler-dom": "alpha",
+			"@vue/compiler-sfc": "alpha",
+			"vue": "alpha"
+		}
 	}
 }
