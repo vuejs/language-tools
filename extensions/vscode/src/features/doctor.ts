@@ -231,9 +231,20 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		// check outdated vue language plugins
-		// check node_modules has more than one vue versions
-		// check ESLint, Prettier...
+		if (
+			vscode.workspace.getConfiguration('vue').has('server.additionalExtensions')
+			|| vscode.workspace.getConfiguration('vue').has('server.petiteVue.supportHtmlFile')
+			|| vscode.workspace.getConfiguration('vue').has('server.vitePress.supportMdFile')
+		) {
+			problems.push({
+				title: 'Deprecated configuration',
+				message: [
+					'`vue.server.additionalExtensions`, `vue.server.petiteVue.supportHtmlFile`, and `vue.server.vitePress.supportMdFile` are deprecated. Please remove them from your settings.',
+					'',
+					'- PR: https://github.com/vuejs/language-tools/pull/4321',
+				].join('\n'),
+			});
+		}
 
 		return problems;
 	}

@@ -44,15 +44,18 @@ export function startNamedPipeServer(
 			const text = data.toString();
 			const request: Request = JSON.parse(text);
 			const fileName = request.args[0];
-			const project = getProject(fileName);
+			const project = getProject(ts.server.toNormalizedPath(fileName));
 			if (request.type === 'projectInfoForFile') {
-				connection.write(JSON.stringify(project
-					? {
-						name: project.info.project.getProjectName(),
-						kind: project.info.project.projectKind,
-					}
-					: undefined
-				));
+				connection.write(
+					JSON.stringify(
+						project
+							? {
+								name: project.info.project.getProjectName(),
+								kind: project.info.project.projectKind,
+							}
+							: null
+					)
+				);
 			}
 			else if (project) {
 				const requestContext = {
@@ -151,9 +154,9 @@ export const projects = new Map<ts.server.Project, {
 	vueOptions: VueCompilerOptions;
 }>();
 
-function getProject(fileName: string) {
+function getProject(filename: ts.server.NormalizedPath) {
 	for (const [project, data] of projects) {
-		if (project.containsFile(fileName as ts.server.NormalizedPath)) {
+		if (project.containsFile(filename)) {
 			return data;
 		}
 	}

@@ -18,7 +18,7 @@ defineProp<Qux>('qux')
 defineProp<boolean>('quux', { default: true })
 
 // infer prop name from variable name
-const quuz = defineProp();
+const quuz = defineProp<{}>();
 console.log(quuz);
 </script>
 

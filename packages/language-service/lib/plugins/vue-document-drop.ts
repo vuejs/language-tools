@@ -1,4 +1,4 @@
-import { VueGeneratedCode, forEachEmbeddedCode } from '@vue/language-core';
+import { VueVirtualCode, forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -14,7 +14,7 @@ export function create(
 		name: 'vue-document-drop',
 		create(context): LanguageServicePluginInstance {
 
-			let casing: TagNameCasing = TagNameCasing.Pascal; // TODO
+			let casing = TagNameCasing.Pascal as TagNameCasing; // TODO
 
 			const tsPluginClient = getTsPluginClient?.(context);
 
@@ -29,7 +29,7 @@ export function create(
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					const vueVirtualCode = sourceScript?.generated?.root;
-					if (!sourceScript || !virtualCode || !(vueVirtualCode instanceof VueGeneratedCode)) {
+					if (!sourceScript || !virtualCode || !(vueVirtualCode instanceof VueVirtualCode)) {
 						return;
 					}
 

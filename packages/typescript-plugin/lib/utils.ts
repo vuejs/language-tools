@@ -40,10 +40,14 @@ export function updatePipeTable(servers: NamedPipeServer[]) {
 export function connect(path: string) {
 	return new Promise<net.Socket | undefined>(resolve => {
 		const client = net.connect(path);
+		client.setTimeout(1000);
 		client.on('connect', () => {
 			resolve(client);
 		});
 		client.on('error', () => {
+			return resolve(undefined);
+		});
+		client.on('timeout', () => {
 			return resolve(undefined);
 		});
 	});
@@ -56,7 +60,7 @@ export async function searchNamedPipeServerForFile(fileName: string) {
 	const inferredServers = servers
 		.filter(item => item.serverKind === 0 satisfies ts.server.ProjectKind.Inferred)
 		.sort((a, b) => b.currentDirectory.length - a.currentDirectory.length);
-	for (const server of configuredServers) {
+	for (const server of configuredServers.sort((a, b) => sortTSConfigs(fileName, a.currentDirectory, b.currentDirectory))) {
 		const client = await connect(server.path);
 		if (client) {
 			const projectInfo = await sendRequestWorker<{ name: string; kind: ts.server.ProjectKind; }>({ type: 'projectInfoForFile', args: [fileName] }, client);
@@ -81,9 +85,32 @@ export async function searchNamedPipeServerForFile(fileName: string) {
 	}
 }
 
+function sortTSConfigs(file: string, a: string, b: string) {
+
+	const inA = isFileInDir(file, path.dirname(a));
+	const inB = isFileInDir(file, path.dirname(b));
+
+	if (inA !== inB) {
+		const aWeight = inA ? 1 : 0;
+		const bWeight = inB ? 1 : 0;
+		return bWeight - aWeight;
+	}
+
+	const aLength = a.split('/').length;
+	const bLength = b.split('/').length;
+
+	return bLength - aLength;
+}
+
+function isFileInDir(fileName: string, dir: string) {
+	const relative = path.relative(dir, fileName);
+	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+}
+
 export function sendRequestWorker<T>(request: Request, client: net.Socket) {
 	return new Promise<T | undefined | null>(resolve => {
 		let dataChunks: Buffer[] = [];
+		client.setTimeout(5000);
 		client.on('data', chunk => {
 			dataChunks.push(chunk);
 		});
@@ -104,6 +131,14 @@ export function sendRequestWorker<T>(request: Request, client: net.Socket) {
 				return;
 			}
 			resolve(json);
+		});
+		client.on('error', err => {
+			console.error('[Vue Named Pipe Client] Error:', err.message);
+			resolve(undefined);
+		});
+		client.on('timeout', () => {
+			console.error('[Vue Named Pipe Client] Timeout');
+			resolve(undefined);
 		});
 		client.write(JSON.stringify(request));
 	});

@@ -1,5 +1,5 @@
 import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
-import { VueGeneratedCode, forEachElementNode, type CompilerDOM } from '@vue/language-core';
+import { VueVirtualCode, forEachElementNode, type CompilerDOM } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
@@ -14,7 +14,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(virtualCode instanceof VueGeneratedCode)) {
+					if (!(virtualCode instanceof VueVirtualCode)) {
 						return;
 					}
 

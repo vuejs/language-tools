@@ -88,12 +88,6 @@ function createCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getLanguageId: fileName => {
-			if (parsedCommandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				return 'vue';
-			}
-			return vue.resolveCommonLanguageId(fileName);
-		},
 		scriptIdToFileName: id => id,
 		fileNameToScriptId: id => id,
 	};
@@ -314,7 +308,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 
 			const vueFile = language.scripts.get(componentPath)?.generated?.root;
 			const vueDefaults = vueFile && exportName === 'default'
-				? (vueFile instanceof vue.VueGeneratedCode ? readVueComponentDefaultProps(vueFile, printer, ts, vueCompilerOptions) : {})
+				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts, vueCompilerOptions) : {})
 				: {};
 			const tsDefaults = !vueFile ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
@@ -565,6 +559,7 @@ function createSchemaResolvers(
 
 		return {
 			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value,
+			description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
 			type: typeChecker.typeToString(subtype),
 			rawType: rawType ? subtype : undefined,
 			signature: typeChecker.signatureToString(call),
@@ -684,7 +679,7 @@ function createSchemaResolvers(
 }
 
 function readVueComponentDefaultProps(
-	vueSourceFile: vue.VueGeneratedCode,
+	vueSourceFile: vue.VueVirtualCode,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript'),
 	vueCompilerOptions: vue.VueCompilerOptions,

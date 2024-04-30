@@ -1,9 +1,9 @@
-import { TypeScriptProjectHost, createLanguageService, resolveCommonLanguageId } from '@volar/language-service';
+import { TypeScriptProjectHost, createLanguageService } from '@volar/language-service';
 import { createTypeScriptLanguage } from '@volar/typescript';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { createParsedCommandLine, createVueLanguagePlugin, createVueServicePlugins } from '../..';
+import { createParsedCommandLine, createVueLanguagePlugin, getVueLanguageServicePlugins } from '../..';
 import { createMockServiceEnv } from './mockEnv';
 
 export const rootUri = URI.file(path.resolve(__dirname, '../../../../test-workspace/language-service')).toString();
@@ -25,7 +25,6 @@ function createTester(rootUri: string) {
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptSnapshot,
-		getLanguageId: resolveCommonLanguageId,
 		scriptIdToFileName: serviceEnv.typescript!.uriToFileName,
 		fileNameToScriptId: serviceEnv.typescript!.fileNameToUri,
 	};
@@ -38,7 +37,7 @@ function createTester(rootUri: string) {
 		parsedCommandLine.options,
 		parsedCommandLine.vueOptions,
 	);
-	const vueServicePlugins = createVueServicePlugins(ts, () => parsedCommandLine.vueOptions);
+	const vueServicePlugins = getVueLanguageServicePlugins(ts, () => parsedCommandLine.vueOptions);
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',

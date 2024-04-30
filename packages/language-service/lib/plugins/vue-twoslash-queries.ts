@@ -18,7 +18,7 @@ export function create(
 					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(sourceScript?.generated?.root instanceof vue.VueGeneratedCode) || virtualCode?.id !== 'template') {
+					if (!(sourceScript?.generated?.root instanceof vue.VueVirtualCode) || virtualCode?.id !== 'template') {
 						return;
 					}
 
@@ -26,7 +26,7 @@ export function create(
 					const inlayHints: vscode.InlayHint[] = [];
 
 					for (const pointer of document.getText(range).matchAll(twoslashReg)) {
-						const offset = pointer.index! + pointer[0].indexOf('^?') + document.offsetAt(range.start);
+						const offset = pointer.index + pointer[0].indexOf('^?') + document.offsetAt(range.start);
 						const position = document.positionAt(offset);
 						hoverOffsets.push([position, document.offsetAt({
 							line: position.line - 1,

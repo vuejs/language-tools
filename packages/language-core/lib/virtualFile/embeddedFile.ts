@@ -1,4 +1,4 @@
-import type { Mapping, StackNode } from '@volar/language-core';
+import type { Mapping } from '@volar/language-core';
 import type { Code } from '../types';
 
 export class VueEmbeddedCode {
@@ -11,6 +11,5 @@ export class VueEmbeddedCode {
 		public id: string,
 		public lang: string,
 		public content: Code[],
-		public contentStacks: StackNode[],
 	) { }
 }

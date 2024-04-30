@@ -6,6 +6,8 @@ import type { CodeInformation, Segment } from '@volar/language-core';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
+export { VueEmbeddedCode };
+
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
 	target?: 'auto' | 2 | 2.7 | 3 | 3.3;
 	plugins?: string[];
@@ -22,9 +24,8 @@ export interface VueCodeInformation extends CodeInformation {
 		paddingLeft?: boolean;
 	};
 	__combineLastMapping?: boolean;
+	__combineOffsetMapping?: number;
 }
-
-export type CodeAndStack = [code: Code, stack: string];
 
 export type Code = Segment<VueCodeInformation>;
 
@@ -32,10 +33,11 @@ export interface VueCompilerOptions {
 	target: number;
 	lib: string;
 	extensions: string[];
+	vitePressExtensions: string[];
+	petiteVueExtensions: string[];
 	jsxSlots: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
-	nativeTags: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
@@ -66,7 +68,6 @@ export type VueLanguagePlugin = (ctx: {
 	};
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
-	codegenStack: boolean;
 	globalTypesHolder: string | undefined;
 }) => {
 	version: typeof pluginVersion;

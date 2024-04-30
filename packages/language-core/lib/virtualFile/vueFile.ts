@@ -1,4 +1,4 @@
-import type { Stack, VirtualCode } from '@volar/language-core';
+import type { VirtualCode } from '@volar/language-core';
 import { Signal, signal } from 'computeds';
 import type * as ts from 'typescript';
 import type { VueCompilerOptions, VueLanguagePlugin } from '../types';
@@ -7,7 +7,7 @@ import { computedMappings } from './computedMappings';
 import { computedSfc } from './computedSfc';
 import { computedVueSfc } from './computedVueSfc';
 
-export class VueGeneratedCode implements VirtualCode {
+export class VueVirtualCode implements VirtualCode {
 
 	// sources
 
@@ -20,11 +20,10 @@ export class VueGeneratedCode implements VirtualCode {
 	getVueSfc = computedVueSfc(this.plugins, this.fileName, () => this._snapshot());
 	sfc = computedSfc(this.ts, this.plugins, this.fileName, () => this._snapshot(), this.getVueSfc);
 	getMappings = computedMappings(() => this._snapshot(), this.sfc);
-	getEmbeddedCodes = computedFiles(this.plugins, this.fileName, this.sfc, this.codegenStack);
+	getEmbeddedCodes = computedFiles(this.plugins, this.fileName, this.sfc);
 
 	// others
 
-	codegenStacks: Stack[] = [];
 	get embeddedCodes() {
 		return this.getEmbeddedCodes();
 	}
@@ -42,7 +41,6 @@ export class VueGeneratedCode implements VirtualCode {
 		public vueCompilerOptions: VueCompilerOptions,
 		public plugins: ReturnType<VueLanguagePlugin>[],
 		public ts: typeof import('typescript'),
-		public codegenStack: boolean,
 	) {
 		this._snapshot = signal(initSnapshot);
 	}

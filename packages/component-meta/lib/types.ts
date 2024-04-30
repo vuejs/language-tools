@@ -36,6 +36,7 @@ export interface PropertyMeta {
 
 export interface EventMeta {
 	name: string;
+	description: string;
 	type: string;
 	rawType?: ts.Type;
 	signature: string;

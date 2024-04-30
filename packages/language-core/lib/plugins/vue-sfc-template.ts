@@ -1,5 +1,5 @@
-import { enableAllFeatures } from '../generators/utils';
 import type { VueLanguagePlugin } from '../types';
+import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
 
@@ -23,7 +23,7 @@ const plugin: VueLanguagePlugin = () => {
 					sfc.template.content,
 					sfc.template.name,
 					0,
-					enableAllFeatures({}),
+					allCodeFeatures,
 				]);
 			}
 		},

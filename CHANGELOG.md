@@ -1,5 +1,136 @@
 # Changelog
 
+## 2.1.0-insiders.7 (2024/4/30)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.7), [爱发电电圈](https://afdian.net/p/84db515c069b11ef9eaf52540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.15](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2015-2024430).
+
+## 2.0.15 (2024/4/30)
+
+### Features
+
+- Redesign additional extensions, VitePress, PetiteVue support (#4321)
+  - Fix custom file extensions not working in Hybrid Mode (#4251)
+- **vscode:** prompt when Hybrid Mode is explicitly enabled but known incompatible extensions are installed
+- **language-core:** use internal options for directly exposing user props/emits types ([vuejs/core#10801](https://github.com/vuejs/core/pull/10801))
+- **language-core:** support defineSlots destructuring (#4312) - Thanks @zhiyuanzmj
+
+### Bug Fixes
+
+- **vscode:** when enabled VitePress support, extension not activated when opening markdown files
+- **language-core:** auto-complete not working in v-bind
+
+### Performance
+
+- **language-service:** emmet completion should not be blocked by TS type evaluation (#4298)
+- **language-core:** simplify virtual code for intrinsic elements
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.10` to `v2.2.0-alpha.12`:
+  - Avoid extension crash when workspace TSDK does not exist
+  - Fix template variables cannot be renamed at the first character in Hybrid Mode (#4297)
+  - Fix template virtual code mapping is misaligned in Windows in Hybrid Mode (#4297)
+- Add `svelte.svelte-vscode` (>=108.4.0) to Hybrid Mode compatibility whitelist ([sveltejs/language-tools#2317](https://github.com/sveltejs/language-tools/pull/2317))
+- **component-meta:** convert source code to TS
+- **language-core:** export `allCodeFeatures` (#4320) - Thanks @zhiyuanzmj
+
+## 2.1.0-insiders.6 (2024/4/25)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.6), [爱发电电圈](https://afdian.net/p/f73a772602ab11efa33652540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Features
+
+- Check for Insiders version updates on startup
+- Support reactions visualization for TS document
+
+### Bug Fixes
+
+- Fixed some incorrect situations in reactions analysis
+
+### Other Changes
+
+- Merged [v2.0.14...a69909e81](https://github.com/vuejs/language-tools/compare/v2.0.14...a69909e81).
+
+## 2.1.0-insiders.5 (2024/4/22)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.5), [爱发电电圈](https://afdian.net/p/25aca47c004e11ef8b445254001e7c00)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.14](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2014-2024422).
+
+## 2.0.14 (2024/4/22)
+
+### Features
+
+- **language-core:** added search html tag (#4280) - Thanks @audunhov
+- **language-service:** added Russian, Czech localization support
+
+### Bug Fixes
+
+- **language-core:** `@ts-ignore` not working for slots (#4263)
+- **language-core:** reduce unnecessary props mapping (#4284)
+- **tsc:** improve regexp performance for global type removal (#4260) - Thanks @blake-newman
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.8` to `v2.2.0-alpha.10` to fix some issues:
+  - Parameter Hints not working in Hybrid Mode (#3948)
+  - TS server to crash repeatedly when include large js file (#4278)
+  - Randomly causing errors when renaming / find definitions in Hybrid Mode (#4257, #4281, #4282)
+  - Unable to resolve Nuxt UI component type
+  - Incomplete results for find refernces in Hybrid Mode
+- The following extensions have been added to Hybrid Mode’s compatibility whitelist:
+  - `bierner.lit-html`
+  - `denoland.vscode-deno` (When `deno.enable` is `false`)
+  - `jenkey2011.string-highlight`
+- **language-core:** improve maintainability of codegen (#4276)
+  - Deprecated `vueCompilerOptions.nativeTags`, now respects the `nodeType` property of template AST node.
+  - Dynamic component types without `v-bind:is` are no longer supported.
+
+## 2.0.13 (2024/4/12)
+
+### Performance
+
+- **tsc:** re-introduce global types removal check (#4245)
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.7` to `v2.2.0-alpha.8` for a vue-tsc performance issue fixes (#4238)
+
+## 2.1.0-insiders.4 (2024/4/10)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.4), [爱发电电圈](https://afdian.net/p/46a5f4a8f72011ee97fe52540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.12](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2012-2024410).
+
+## 2.0.12 (2024/4/10)
+
+### Bug Fixes
+
+- **vscode:** restart tsserver before restart vue language server (#4242)
+- **tsc:** remove exit early condition
+- **typescript-plugin:** handle named pipe server timeout
+- **language-core:** `@vue-ignore` not working for fragment v-if/v-for nodes (#4232)
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.6` to `v2.2.0-alpha.7` for a typescript plugin bug fixes
+
 ## 2.1.0-insiders.3 (2024/4/7)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.3), [爱发电电圈](https://afdian.net/p/5bf99cfaf4ec11ee9e1f5254001e7c00)

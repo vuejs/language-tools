@@ -1,4 +1,4 @@
-import { Language, VueGeneratedCode, isSemanticTokensEnabled } from '@vue/language-core';
+import { Language, VueVirtualCode, isSemanticTokensEnabled } from '@vue/language-core';
 import type * as ts from 'typescript';
 
 export function collectExtractProps(
@@ -15,7 +15,7 @@ export function collectExtractProps(
 	const { typescript: ts, languageService, language, isTsPlugin, getFileId } = this;
 
 	const volarFile = language.scripts.get(getFileId(fileName));
-	if (!(volarFile?.generated?.root instanceof VueGeneratedCode)) {
+	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
 		return;
 	}
 

@@ -1,7 +1,8 @@
-import { Mapping, StackNode, track } from '@volar/language-core';
+import type { Mapping } from '@volar/language-core';
 import { computed, computedSet } from 'computeds';
-import { generate as generateScript } from '../generators/script';
-import { generate as generateTemplate } from '../generators/template';
+import * as path from 'path-browserify';
+import { generateScript } from '../codegen/script';
+import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
@@ -38,9 +39,8 @@ const plugin: VueLanguagePlugin = ctx => {
 			if (embeddedFile.id.startsWith('script_')) {
 				const tsx = _tsx.generatedScript();
 				if (tsx) {
-					const [content, contentStacks] = ctx.codegenStack ? track([...tsx.codes], [...tsx.codeStacks]) : [[...tsx.codes], [...tsx.codeStacks]];
+					const content: Code[] = [...tsx.codes];
 					embeddedFile.content = content;
-					embeddedFile.contentStacks = contentStacks;
 					embeddedFile.linkedCodeMappings = [...tsx.linkedCodeMappings];
 				}
 			}
@@ -111,81 +111,65 @@ function createTsx(
 			return;
 		}
 
-		const tsCodes: Code[] = [];
-		const tsCodegenStacks: string[] = [];
-		const codegen = generateTemplate(
+		const codes: Code[] = [];
+		const codegen = generateTemplate({
 			ts,
-			ctx.compilerOptions,
-			ctx.vueCompilerOptions,
-			_sfc.template,
-			shouldGenerateScopedClasses(),
-			stylesScopedClasses(),
-			hasScriptSetupSlots(),
-			slotsAssignName(),
-			propsAssignName(),
-			ctx.codegenStack,
-		);
+			compilerOptions: ctx.compilerOptions,
+			vueCompilerOptions: ctx.vueCompilerOptions,
+			template: _sfc.template,
+			shouldGenerateScopedClasses: shouldGenerateScopedClasses(),
+			stylesScopedClasses: stylesScopedClasses(),
+			hasDefineSlots: hasDefineSlots(),
+			slotsAssignName: slotsAssignName(),
+			propsAssignName: propsAssignName(),
+		});
 
 		let current = codegen.next();
 
 		while (!current.done) {
-			const [code, stack] = current.value;
-			tsCodes.push(code);
-			if (ctx.codegenStack) {
-				tsCodegenStacks.push(stack);
-			}
+			const code = current.value;
+			codes.push(code);
 			current = codegen.next();
 		}
 
 		return {
 			...current.value,
-			codes: tsCodes,
-			codeStacks: tsCodegenStacks,
+			codes: codes,
 		};
 	});
-	const hasScriptSetupSlots = computed(() => !!scriptSetupRanges()?.slots.define);
+	const hasDefineSlots = computed(() => !!scriptSetupRanges()?.slots.define);
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
 	const generatedScript = computed(() => {
 		const codes: Code[] = [];
-		const codeStacks: StackNode[] = [];
 		const linkedCodeMappings: Mapping[] = [];
 		const _template = generatedTemplate();
 		let generatedLength = 0;
-		for (const [code, stack] of generateScript(
+		for (const code of generateScript({
 			ts,
-			fileName,
-			_sfc.script,
-			_sfc.scriptSetup,
-			_sfc.styles,
-			lang(),
-			scriptRanges(),
-			scriptSetupRanges(),
-			_template ? {
+			fileBaseName: path.basename(fileName),
+			globalTypes: ctx.globalTypesHolder === fileName,
+			sfc: _sfc,
+			lang: lang(),
+			scriptRanges: scriptRanges(),
+			scriptSetupRanges: scriptSetupRanges(),
+			templateCodegen: _template ? {
 				tsCodes: _template.codes,
-				tsCodegenStacks: _template.codeStacks,
-				accessedGlobalVariables: _template.accessedGlobalVariables,
+				ctx: _template.ctx,
 				hasSlot: _template.hasSlot,
-				tagNames: new Set(_template.tagOffsetsMap.keys()),
 			} : undefined,
-			ctx.compilerOptions,
-			ctx.vueCompilerOptions,
-			ctx.globalTypesHolder,
-			() => generatedLength,
+			compilerOptions: ctx.compilerOptions,
+			vueCompilerOptions: ctx.vueCompilerOptions,
+			getGeneratedLength: () => generatedLength,
 			linkedCodeMappings,
-			ctx.codegenStack,
-		)) {
+		})) {
 			codes.push(code);
-			if (ctx.codegenStack) {
-				codeStacks.push({ stack, length: 1 });
-			}
 			generatedLength += typeof code === 'string'
 				? code.length
 				: code[0].length;
 		};
 		return {
 			codes,
-			codeStacks,
 			linkedCodeMappings,
 		};
 	});

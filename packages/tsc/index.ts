@@ -16,21 +16,18 @@ export function run() {
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 				: vue.resolveVueCompilerOptions({});
+			const allExtensions = [
+				...vueOptions.extensions,
+				...vueOptions.vitePressExtensions,
+				...vueOptions.petiteVueExtensions,
+			];
 			if (
-				runExtensions.length === vueOptions.extensions.length
-				&& runExtensions.every(ext => vueOptions.extensions.includes(ext))
+				runExtensions.length === allExtensions.length
+				&& runExtensions.every(ext => allExtensions.includes(ext))
 			) {
 				const writeFile = options.host!.writeFile.bind(options.host);
 				options.host!.writeFile = (fileName, contents, ...args) => {
-					if (
-						fileName.endsWith('.d.ts')
-						&& vueLanguagePlugin
-							.getCanonicalFileName(fileName.replace(windowsPathReg, '/'))
-							.slice(0, -5) === vueLanguagePlugin.pluginContext.globalTypesHolder
-					) {
-						contents = removeEmitGlobalTypes(contents);
-					}
-					return writeFile(fileName, contents, ...args);
+					return writeFile(fileName, removeEmitGlobalTypes(contents), ...args);
 				};
 				const vueLanguagePlugin = vue.createVueLanguagePlugin(
 					ts,
@@ -40,20 +37,13 @@ export function run() {
 					() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
 					options.options,
 					vueOptions,
-					false,
 				);
 				return [vueLanguagePlugin];
 			}
 			else {
-				runExtensions = vueOptions.extensions;
+				runExtensions = allExtensions;
 				throw extensionsChangedException;
 			}
-		},
-		fileName => {
-			if (runExtensions.some(ext => fileName.endsWith(ext))) {
-				return 'vue';
-			}
-			return vue.resolveCommonLanguageId(fileName);
 		},
 	);
 
@@ -66,6 +56,8 @@ export function run() {
 	}
 }
 
+const removeEmitGlobalTypesRegexp = /^[^\n]*__VLS_globalTypesStart[\w\W]*__VLS_globalTypesEnd[^\n]*\n?$/mg;
+
 export function removeEmitGlobalTypes(dts: string) {
-	return dts.replace(/[^\n]*__VLS_globalTypesStart[\w\W]*__VLS_globalTypesEnd[^\n]*\n/, '');
+	return dts.replace(removeEmitGlobalTypesRegexp, '');
 }

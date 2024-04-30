@@ -29,9 +29,9 @@ export function decorateLanguageServiceForVue(
 			for (const item of result.entries) {
 				if (item.source) {
 					const originalName = item.name;
-					for (const ext of vueOptions.extensions) {
-						const suffix = capitalize(ext.substring('.'.length)); // .vue -> Vue
-						if (item.source.endsWith(ext) && item.name.endsWith(suffix)) {
+					for (const vueExt of vueOptions.extensions) {
+						const suffix = capitalize(vueExt.slice(1)); // .vue -> Vue
+						if (item.source.endsWith(vueExt) && item.name.endsWith(suffix)) {
 							item.name = capitalize(item.name.slice(0, -suffix.length));
 							if (item.insertText) {
 								// #2286
@@ -40,7 +40,7 @@ export function decorateLanguageServiceForVue(
 							if (item.data) {
 								// @ts-expect-error
 								item.data.__isComponentAutoImport = {
-									ext,
+									ext: vueExt,
 									suffix,
 									originalName,
 									newName: item.insertText,
@@ -81,7 +81,7 @@ export function decorateLanguageServiceForVue(
 		languageService.getEncodedSemanticClassifications = (fileName, span, format) => {
 			const result = getEncodedSemanticClassifications(fileName, span, format);
 			const file = language.scripts.get(fileName);
-			if (file?.generated?.root instanceof vue.VueGeneratedCode) {
+			if (file?.generated?.root instanceof vue.VueVirtualCode) {
 				const { template } = file.generated.root.sfc;
 				if (template) {
 					for (const componentSpan of getComponentSpans.call(
@@ -110,15 +110,14 @@ export function getComponentSpans(
 	this: {
 		typescript: typeof import('typescript');
 		languageService: ts.LanguageService;
-		vueOptions: vue.VueCompilerOptions;
 	},
-	vueCode: vue.VueGeneratedCode,
-	template: NonNullable<vue.VueGeneratedCode['sfc']['template']>,
+	vueCode: vue.VueVirtualCode,
+	template: NonNullable<vue.VueVirtualCode['sfc']['template']>,
 	spanTemplateRange: ts.TextSpan,
 ) {
-	const { typescript: ts, languageService, vueOptions } = this;
+	const { typescript: ts, languageService } = this;
 	const result: ts.TextSpan[] = [];
-	const validComponentNames = _getComponentNames(ts, languageService, vueCode, vueOptions);
+	const validComponentNames = _getComponentNames(ts, languageService, vueCode);
 	const components = new Set([
 		...validComponentNames,
 		...validComponentNames.map(vue.hyphenateTag),

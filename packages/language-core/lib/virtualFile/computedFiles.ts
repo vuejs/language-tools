@@ -1,14 +1,13 @@
-import { VirtualCode, buildMappings, buildStacks, resolveCommonLanguageId, toString, track } from '@volar/language-core';
+import { VirtualCode, buildMappings, toString } from '@volar/language-core';
 import { computed } from 'computeds';
 import type * as ts from 'typescript';
-import type { Sfc, SfcBlock, VueLanguagePlugin } from '../types';
+import type { Code, Sfc, SfcBlock, VueLanguagePlugin } from '../types';
 import { VueEmbeddedCode } from './embeddedFile';
 
 export function computedFiles(
 	plugins: ReturnType<VueLanguagePlugin>[],
 	fileName: string,
 	sfc: Sfc,
-	codegenStack: boolean
 ) {
 
 	const nameToBlock = computed(() => {
@@ -30,7 +29,7 @@ export function computedFiles(
 		}
 		return blocks;
 	});
-	const pluginsResult = plugins.map(plugin => computedPluginFiles(plugins, plugin, fileName, sfc, nameToBlock, codegenStack));
+	const pluginsResult = plugins.map(plugin => computedPluginEmbeddedCodes(plugins, plugin, fileName, sfc, nameToBlock));
 	const flatResult = computed(() => pluginsResult.map(r => r()).flat());
 	const structuredResult = computed(() => {
 
@@ -46,38 +45,36 @@ export function computedFiles(
 			}
 		}
 
-		for (const { file } of remain) {
-			console.error('Unable to resolve embedded: ' + file.parentCodeId + ' -> ' + file.id);
+		for (const { code } of remain) {
+			console.error('Unable to resolve embedded: ' + code.parentCodeId + ' -> ' + code.id);
 		}
 
 		return embeddedCodes;
 
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
-				const { file, snapshot, mappings, codegenStacks } = remain[i];
-				if (!file.parentCodeId) {
+				const { code, snapshot, mappings } = remain[i];
+				if (!code.parentCodeId) {
 					embeddedCodes.push({
-						id: file.id,
-						languageId: resolveCommonLanguageId(`/dummy.${file.lang}`),
-						linkedCodeMappings: file.linkedCodeMappings,
+						id: code.id,
+						languageId: resolveCommonLanguageId(code.lang),
+						linkedCodeMappings: code.linkedCodeMappings,
 						snapshot,
 						mappings,
-						codegenStacks,
 						embeddedCodes: [],
 					});
 					remain.splice(i, 1);
 				}
 				else {
-					const parent = findParentStructure(file.parentCodeId, embeddedCodes);
+					const parent = findParentStructure(code.parentCodeId, embeddedCodes);
 					if (parent) {
 						parent.embeddedCodes ??= [];
 						parent.embeddedCodes.push({
-							id: file.id,
-							languageId: resolveCommonLanguageId(`/dummy.${file.lang}`),
-							linkedCodeMappings: file.linkedCodeMappings,
+							id: code.id,
+							languageId: resolveCommonLanguageId(code.lang),
+							linkedCodeMappings: code.linkedCodeMappings,
 							snapshot,
 							mappings,
-							codegenStacks,
 							embeddedCodes: [],
 						});
 						remain.splice(i, 1);
@@ -101,43 +98,46 @@ export function computedFiles(
 	return structuredResult;
 }
 
-function computedPluginFiles(
+function computedPluginEmbeddedCodes(
 	plugins: ReturnType<VueLanguagePlugin>[],
 	plugin: ReturnType<VueLanguagePlugin>,
 	fileName: string,
 	sfc: Sfc,
 	nameToBlock: () => Record<string, SfcBlock>,
-	codegenStack: boolean
 ) {
-	const embeddedFiles: Record<string, () => { file: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }> = {};
-	const files = computed(() => {
+	const computeds = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>();
+	const getComputedKey = (code: {
+		id: string;
+		lang: string;
+	}) => code.id + '__' + code.lang;
+	const codes = computed(() => {
 		try {
 			if (!plugin.getEmbeddedCodes) {
-				return Object.values(embeddedFiles);
+				return [...computeds.values()];
 			}
-			const fileInfos = plugin.getEmbeddedCodes(fileName, sfc);
-			for (const oldId of Object.keys(embeddedFiles)) {
-				if (!fileInfos.some(file => file.id === oldId)) {
-					delete embeddedFiles[oldId];
+			const embeddedCodeInfos = plugin.getEmbeddedCodes(fileName, sfc);
+			for (const oldId of computeds.keys()) {
+				if (!embeddedCodeInfos.some(code => getComputedKey(code) === oldId)) {
+					computeds.delete(oldId);
 				}
 			}
-			for (const fileInfo of fileInfos) {
-				if (!embeddedFiles[fileInfo.id]) {
-					embeddedFiles[fileInfo.id] = computed(() => {
-						const [content, stacks] = codegenStack ? track([]) : [[], []];
-						const file = new VueEmbeddedCode(fileInfo.id, fileInfo.lang, content, stacks);
+			for (const codeInfo of embeddedCodeInfos) {
+				if (!computeds.has(getComputedKey(codeInfo))) {
+					computeds.set(getComputedKey(codeInfo), computed(() => {
+						const content: Code[] = [];
+						const code = new VueEmbeddedCode(codeInfo.id, codeInfo.lang, content);
 						for (const plugin of plugins) {
 							if (!plugin.resolveEmbeddedCode) {
 								continue;
 							}
 							try {
-								plugin.resolveEmbeddedCode(fileName, sfc, file);
+								plugin.resolveEmbeddedCode(fileName, sfc, code);
 							}
 							catch (e) {
 								console.error(e);
 							}
 						}
-						const newText = toString(file.content);
+						const newText = toString(code.content);
 						const changeRanges = new Map<ts.IScriptSnapshot, ts.TextChangeRange | undefined>();
 						const snapshot: ts.IScriptSnapshot = {
 							getText: (start, end) => newText.slice(start, end),
@@ -155,27 +155,29 @@ function computedPluginFiles(
 							},
 						};
 						return {
-							file,
+							code,
 							snapshot,
 						};
-					});
+					}));
 				}
 			}
 		}
 		catch (e) {
 			console.error(e);
 		}
-		return Object.values(embeddedFiles);
+		return [...computeds.values()];
 	});
 
 	return computed(() => {
-		return files().map(_file => {
+		return codes().map(_file => {
 
-			const { file, snapshot } = _file();
-			const mappings = buildMappings(file.content);
+			const { code, snapshot } = _file();
+			const mappings = buildMappings(code.content);
+			const newMappings: typeof mappings = [];
 			let lastValidMapping: typeof mappings[number] | undefined;
 
-			for (const mapping of mappings) {
+			for (let i = 0; i < mappings.length; i++) {
+				const mapping = mappings[i];
 				if (mapping.source !== undefined) {
 					const block = nameToBlock()[mapping.source];
 					if (block) {
@@ -186,7 +188,17 @@ function computedPluginFiles(
 					}
 					mapping.source = undefined;
 				}
-				if (mapping.data.__combineLastMapping) {
+				if (mapping.data.__combineOffsetMapping !== undefined) {
+					const offsetMapping = mappings[i - mapping.data.__combineOffsetMapping];
+					if (typeof offsetMapping === 'string' || !offsetMapping) {
+						throw new Error('Invalid offset mapping, mappings: ' + mappings.length + ', i: ' + i + ', offset: ' + mapping.data.__combineOffsetMapping);
+					}
+					offsetMapping.sourceOffsets.push(...mapping.sourceOffsets);
+					offsetMapping.generatedOffsets.push(...mapping.generatedOffsets);
+					offsetMapping.lengths.push(...mapping.lengths);
+					continue;
+				}
+				else if (mapping.data.__combineLastMapping) {
 					lastValidMapping!.sourceOffsets.push(...mapping.sourceOffsets);
 					lastValidMapping!.generatedOffsets.push(...mapping.generatedOffsets);
 					lastValidMapping!.lengths.push(...mapping.lengths);
@@ -195,13 +207,13 @@ function computedPluginFiles(
 				else {
 					lastValidMapping = mapping;
 				}
+				newMappings.push(mapping);
 			}
 
 			return {
-				file,
+				code,
 				snapshot,
-				mappings: mappings.filter(mapping => !mapping.data.__combineLastMapping),
-				codegenStacks: buildStacks(file.content, file.contentStacks),
+				mappings: newMappings,
 			};
 		});
 	});
@@ -229,4 +241,20 @@ function fullDiffTextChangeRange(oldText: string, newText: string): ts.TextChang
 			};
 		}
 	}
+}
+
+export function resolveCommonLanguageId(lang: string) {
+	switch (lang) {
+		case 'js': return 'javascript';
+		case 'cjs': return 'javascript';
+		case 'mjs': return 'javascript';
+		case 'ts': return 'typescript';
+		case 'cts': return 'typescript';
+		case 'mts': return 'typescript';
+		case 'jsx': return 'javascriptreact';
+		case 'tsx': return 'typescriptreact';
+		case 'pug': return 'jade';
+		case 'md': return 'markdown';
+	}
+	return lang;
 }
