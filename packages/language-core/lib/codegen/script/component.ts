@@ -117,10 +117,10 @@ export function* generateScriptSetupOptions(
 	if (options.vueCompilerOptions.target >= 3.5) {
 		// https://github.com/vuejs/core/pull/10801
 		if (scriptSetupRanges.props.define?.typeArg) {
-			yield `__typeProps: typeof __VLS_typeProps,${newLine}`;
+			yield `__typeProps: __VLS_typeProps,${newLine}`;
 		}
 		if (scriptSetupRanges.emits.define?.typeArg) {
-			yield `__typeEmits: typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'},${newLine}`;
+			yield `__typeEmits: ${scriptSetupRanges.emits.name ?? '__VLS_emit'},${newLine}`;
 		}
 	}
 }
