@@ -162,15 +162,17 @@ function* generateSetupFunction(
 			}
 		}
 	}
-	if (scriptSetupRanges.slots.define && [undefined, '__VLS_slots'].includes(scriptSetupRanges.slots.name)) {
-		setupCodeModifies.push([
-			[
-				scriptSetupRanges.slots.name === '__VLS_slots' ? '__VLS_slots;\n' : '',
-				`const __VLS_slots = `,
-			],
-			scriptSetupRanges.slots.define.start,
-			scriptSetupRanges.slots.define.start
-		]);
+	if (scriptSetupRanges.slots.define) {
+		if (!scriptSetupRanges.slots.name) {
+			setupCodeModifies.push([[`const __VLS_slots = `], scriptSetupRanges.slots.define.start, scriptSetupRanges.slots.define.start]);
+		}
+		else if (scriptSetupRanges.slots.isObjectBindingPattern) {
+			setupCodeModifies.push([
+				[`__VLS_slots;\nconst __VLS_slots = `],
+				scriptSetupRanges.slots.define.start,
+				scriptSetupRanges.slots.define.start,
+			]);
+		}
 	}
 	if (scriptSetupRanges.emits.define && !scriptSetupRanges.emits.name) {
 		setupCodeModifies.push([[`const __VLS_emit = `], scriptSetupRanges.emits.define.start, scriptSetupRanges.emits.define.start]);
