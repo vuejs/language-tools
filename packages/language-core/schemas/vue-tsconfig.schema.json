@@ -21,6 +21,16 @@
 					"default": [ ".vue" ],
 					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/vuejs/language-tools/tree/master/extensions/vscode/README.md#custom-file-extensions."
 				},
+				"vitePressExtensions": {
+					"type": "array",
+					"default": [ ".md" ],
+					"markdownDescription": "Valid file extensions that should be considered as regular VitePress SFC."
+				},
+				"petiteVueExtensions": {
+					"type": "array",
+					"default": [ ".html" ],
+					"markdownDescription": "Valid file extensions that should be considered as regular PetiteVue SFC."
+				},
 				"lib": {
 					"default": "",
 					"markdownDescription": "Specify module name for import regular types. (If empty, will use `@vue/runtime-dom` for target < 2.7, `vue` for target >= 2.7)"
@@ -38,15 +48,6 @@
 				"skipTemplateCodegen": {
 					"type": "boolean",
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/577"
-				},
-				"nativeTags": {
-					"type": "array",
-					"default": [
-						"div",
-						"img",
-						"..."
-					],
-					"markdownDescription": "List of valid intrinsic elements."
 				},
 				"dataAttributes": {
 					"type": "array",

@@ -88,12 +88,6 @@ function createCheckerWorker(
 			}
 			return scriptSnapshots.get(fileName);
 		},
-		getLanguageId: fileName => {
-			if (parsedCommandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				return 'vue';
-			}
-			return vue.resolveCommonLanguageId(fileName);
-		},
 		scriptIdToFileName: id => id,
 		fileNameToScriptId: id => id,
 	};

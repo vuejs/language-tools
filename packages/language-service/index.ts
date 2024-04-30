@@ -34,7 +34,7 @@ import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImp
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from '@vue/typescript-plugin/lib/requests/getQuickInfoAtPosition';
 
-export function createVueServicePlugins(
+export function getVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
 	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 	getTsPluginClient = createDefaultGetTsPluginClient(ts, getVueOptions),

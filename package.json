@@ -21,7 +21,7 @@
 	"devDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@lerna-lite/publish": "latest",
-		"@volar/language-service": "2.2.0-alpha.10",
+		"@volar/language-service": "2.2.0-alpha.12",
 		"@volar/tsl-config": "latest",
 		"tsl": "latest",
 		"typescript": "latest",
