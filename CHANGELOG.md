@@ -1,5 +1,35 @@
 # Changelog
 
+## 2.0.15 (2024/4/30)
+
+### Features
+
+- Redesign additional extensions, VitePress, PetiteVue support (#4321)
+  - Fix custom file extensions not working in Hybrid Mode (#4251)
+- **vscode:** prompt when Hybrid Mode is explicitly enabled but known incompatible extensions are installed
+- **language-core:** use internal options for directly exposing user props/emits types ([vuejs/core#10801](https://github.com/vuejs/core/pull/10801))
+- **language-core:** support defineSlots destructuring (#4312) - Thanks @zhiyuanzmj
+
+### Bug Fixes
+
+- **vscode:** when enabled VitePress support, extension not activated when opening markdown files
+- **language-core:** auto-complete not working in v-bind
+
+### Performance
+
+- **language-service:** emmet completion should not be blocked by TS type evaluation (#4298)
+- **language-core:** simplify virtual code for intrinsic elements
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.10` to `v2.2.0-alpha.12`:
+  - Avoid extension crash when workspace TSDK does not exist
+  - Fix template variables cannot be renamed at the first character in Hybrid Mode (#4297)
+  - Fix template virtual code mapping is misaligned in Windows in Hybrid Mode (#4297)
+- Add `svelte.svelte-vscode` (>=108.4.0) to Hybrid Mode compatibility whitelist ([sveltejs/language-tools#2317](https://github.com/sveltejs/language-tools/pull/2317))
+- **component-meta:** convert source code to TS
+- **language-core:** export `allCodeFeatures` (#4320) - Thanks @zhiyuanzmj
+
 ## 2.1.0-insiders.6 (2024/4/25)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.6), [爱发电电圈](https://afdian.net/p/f73a772602ab11efa33652540025c377)
