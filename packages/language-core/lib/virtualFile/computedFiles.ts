@@ -29,7 +29,7 @@ export function computedFiles(
 		}
 		return blocks;
 	});
-	const pluginsResult = plugins.map(plugin => computedPluginFiles(plugins, plugin, fileName, sfc, nameToBlock));
+	const pluginsResult = plugins.map(plugin => computedPluginEmbeddedCodes(plugins, plugin, fileName, sfc, nameToBlock));
 	const flatResult = computed(() => pluginsResult.map(r => r()).flat());
 	const structuredResult = computed(() => {
 
@@ -45,20 +45,20 @@ export function computedFiles(
 			}
 		}
 
-		for (const { file } of remain) {
-			console.error('Unable to resolve embedded: ' + file.parentCodeId + ' -> ' + file.id);
+		for (const { code } of remain) {
+			console.error('Unable to resolve embedded: ' + code.parentCodeId + ' -> ' + code.id);
 		}
 
 		return embeddedCodes;
 
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
-				const { file, snapshot, mappings } = remain[i];
-				if (!file.parentCodeId) {
+				const { code, snapshot, mappings } = remain[i];
+				if (!code.parentCodeId) {
 					embeddedCodes.push({
-						id: file.id,
-						languageId: resolveCommonLanguageId(file.lang),
-						linkedCodeMappings: file.linkedCodeMappings,
+						id: code.id,
+						languageId: resolveCommonLanguageId(code.lang),
+						linkedCodeMappings: code.linkedCodeMappings,
 						snapshot,
 						mappings,
 						embeddedCodes: [],
@@ -66,13 +66,13 @@ export function computedFiles(
 					remain.splice(i, 1);
 				}
 				else {
-					const parent = findParentStructure(file.parentCodeId, embeddedCodes);
+					const parent = findParentStructure(code.parentCodeId, embeddedCodes);
 					if (parent) {
 						parent.embeddedCodes ??= [];
 						parent.embeddedCodes.push({
-							id: file.id,
-							languageId: resolveCommonLanguageId(file.lang),
-							linkedCodeMappings: file.linkedCodeMappings,
+							id: code.id,
+							languageId: resolveCommonLanguageId(code.lang),
+							linkedCodeMappings: code.linkedCodeMappings,
 							snapshot,
 							mappings,
 							embeddedCodes: [],
@@ -98,42 +98,46 @@ export function computedFiles(
 	return structuredResult;
 }
 
-function computedPluginFiles(
+function computedPluginEmbeddedCodes(
 	plugins: ReturnType<VueLanguagePlugin>[],
 	plugin: ReturnType<VueLanguagePlugin>,
 	fileName: string,
 	sfc: Sfc,
 	nameToBlock: () => Record<string, SfcBlock>,
 ) {
-	const embeddedFiles: Record<string, () => { file: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }> = {};
-	const files = computed(() => {
+	const computeds = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>();
+	const getComputedKey = (code: {
+		id: string;
+		lang: string;
+	}) => code.id + '__' + code.lang;
+	const codes = computed(() => {
 		try {
 			if (!plugin.getEmbeddedCodes) {
-				return Object.values(embeddedFiles);
+				return [...computeds.values()];
 			}
-			const fileInfos = plugin.getEmbeddedCodes(fileName, sfc);
-			for (const oldId of Object.keys(embeddedFiles)) {
-				if (!fileInfos.some(file => file.id === oldId)) {
-					delete embeddedFiles[oldId];
+			const embeddedCodeInfos = plugin.getEmbeddedCodes(fileName, sfc);
+			for (const oldId of computeds.keys()) {
+				if (!embeddedCodeInfos.some(code => getComputedKey(code) === oldId)) {
+					computeds.delete(oldId);
 				}
 			}
-			for (const fileInfo of fileInfos) {
-				if (!embeddedFiles[fileInfo.id]) {
-					embeddedFiles[fileInfo.id] = computed(() => {
+			for (const codeInfo of embeddedCodeInfos) {
+				if (!computeds.has(getComputedKey(codeInfo))) {
+					computeds.set(getComputedKey(codeInfo), computed(() => {
 						const content: Code[] = [];
-						const file = new VueEmbeddedCode(fileInfo.id, fileInfo.lang, content);
+						const code = new VueEmbeddedCode(codeInfo.id, codeInfo.lang, content);
 						for (const plugin of plugins) {
 							if (!plugin.resolveEmbeddedCode) {
 								continue;
 							}
 							try {
-								plugin.resolveEmbeddedCode(fileName, sfc, file);
+								plugin.resolveEmbeddedCode(fileName, sfc, code);
 							}
 							catch (e) {
 								console.error(e);
 							}
 						}
-						const newText = toString(file.content);
+						const newText = toString(code.content);
 						const changeRanges = new Map<ts.IScriptSnapshot, ts.TextChangeRange | undefined>();
 						const snapshot: ts.IScriptSnapshot = {
 							getText: (start, end) => newText.slice(start, end),
@@ -151,24 +155,24 @@ function computedPluginFiles(
 							},
 						};
 						return {
-							file,
+							code,
 							snapshot,
 						};
-					});
+					}));
 				}
 			}
 		}
 		catch (e) {
 			console.error(e);
 		}
-		return Object.values(embeddedFiles);
+		return [...computeds.values()];
 	});
 
 	return computed(() => {
-		return files().map(_file => {
+		return codes().map(_file => {
 
-			const { file, snapshot } = _file();
-			const mappings = buildMappings(file.content);
+			const { code, snapshot } = _file();
+			const mappings = buildMappings(code.content);
 			const newMappings: typeof mappings = [];
 			let lastValidMapping: typeof mappings[number] | undefined;
 
@@ -207,7 +211,7 @@ function computedPluginFiles(
 			}
 
 			return {
-				file,
+				code,
 				snapshot,
 				mappings: newMappings,
 			};
