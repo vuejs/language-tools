@@ -71,7 +71,7 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					const timer = setInterval(() => {
 						if (info.project['program']) {
 							clearInterval(timer);
-							(info.project['program'] as any).__volar__ = { files };
+							(info.project['program'] as any).__volar__ = { language };
 						}
 					}, 50);
 				}
