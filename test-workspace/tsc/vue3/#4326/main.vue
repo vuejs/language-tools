@@ -2,10 +2,10 @@
 import { exactType } from 'tsc/shared';
 
 const { bottom } = defineSlots<{
-	bottom: (props: { num: number }) => any[],
-}>()
+	bottom: (props: { num: number; }) => any[],
+}>();
 
 exactType(bottom, {} as (props: {
-    num: number;
-}) => any[])
+	num: number;
+}) => any[]);
 </script>
