@@ -67,6 +67,14 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					decorateLanguageServiceForVue(language, info.languageService, vueOptions, ts, true);
 					decorateLanguageServiceHost(ts, language, info.languageServiceHost);
 					startNamedPipeServer(ts, info.project.projectKind, info.project.getCurrentDirectory());
+
+					// #3963
+					const timer = setInterval(() => {
+						if (info.project['program']) {
+							clearInterval(timer);
+							(info.project['program'] as any).__vue__ = { language };
+						}
+					}, 50);
 				}
 
 				return info.languageService;
