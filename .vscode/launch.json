@@ -12,7 +12,7 @@
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode"
 			],
 			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
+				"${workspaceRoot}/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -30,7 +30,7 @@
 				"--extensionDevelopmentKind=web"
 			],
 			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
+				"${workspaceRoot}/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -38,23 +38,13 @@
 			}
 		},
 		{
-			"name": "Attach to Language Features Server",
+			"name": "Attach to Language Server",
 			"type": "node",
 			"request": "attach",
 			"port": 6009,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
-			]
-		},
-		{
-			"name": "Attach to Document Features Server",
-			"type": "node",
-			"request": "attach",
-			"port": 6011,
-			"restart": true,
-			"outFiles": [
-				"${workspaceRoot}/*/*/out/**/*.js"
+				"${workspaceRoot}/**/*.js"
 			]
 		}
 	],

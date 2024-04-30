@@ -44,6 +44,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#transition"
         }
       ]
     },
@@ -90,6 +102,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#transitiongroup"
         }
       ]
     },
@@ -136,6 +160,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#keepalive"
         }
       ]
     },
@@ -182,6 +218,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#teleport"
         }
       ]
     },
@@ -189,7 +237,7 @@
       "name": "Suspense",
       "description": {
         "kind": "markdown",
-        "value": "\nUsed for orchestrating nested async dependencies in a component tree.\n\n- **Props**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n  }\n  ```\n\n- **Events**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **Details**\n\n  `<Suspense>` accepts two slots: the `#default` slot and the `#fallback` slot. It will display the content of the fallback slot while rendering the default slot in memory.\n\n  If it encounters async dependencies ([Async Components](https://vuejs.org/guide/components/async.html) and components with [`async setup()`](https://vuejs.org/guide/built-ins/suspense.html#async-setup)) while rendering the default slot, it will wait until all of them are resolved before displaying the default slot.\n\n- **See also** [Guide - Suspense](https://vuejs.org/guide/built-ins/suspense.html)\n"
+        "value": "\nUsed for orchestrating nested async dependencies in a component tree.\n\n- **Props**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n    suspensible?: boolean\n  }\n  ```\n\n- **Events**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **Details**\n\n  `<Suspense>` accepts two slots: the `#default` slot and the `#fallback` slot. It will display the content of the fallback slot while rendering the default slot in memory.\n\n  If it encounters async dependencies ([Async Components](https://vuejs.org/guide/components/async.html) and components with [`async setup()`](https://vuejs.org/guide/built-ins/suspense.html#async-setup)) while rendering the default slot, it will wait until all of them are resolved before displaying the default slot.\n\n  By setting the Suspense as `suspensible`, all the async dependency handling will be handled by the parent Suspense. See [implementation details](https://github.com/vuejs/core/pull/6736)\n\n- **See also** [Guide - Suspense](https://vuejs.org/guide/built-ins/suspense.html)\n"
       },
       "attributes": [],
       "references": [
@@ -228,6 +276,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#suspense"
         }
       ]
     },
@@ -274,6 +334,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#component"
         }
       ]
     },
@@ -320,6 +392,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#slot"
         }
       ]
     },
@@ -366,6 +450,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#template"
         }
       ]
     }
@@ -413,6 +509,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-text"
         }
       ]
     },
@@ -458,6 +566,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-html"
         }
       ]
     },
@@ -503,6 +623,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-show"
         }
       ]
     },
@@ -548,6 +680,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-if"
         }
       ]
     },
@@ -594,6 +738,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-else"
         }
       ]
     },
@@ -639,6 +795,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-else-if"
         }
       ]
     },
@@ -684,6 +852,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-for"
         }
       ]
     },
@@ -729,6 +909,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-on"
         }
       ]
     },
@@ -736,7 +928,7 @@
       "name": "v-bind",
       "description": {
         "kind": "markdown",
-        "value": "\nDynamically bind one or more attributes, or a component prop to an expression.\n\n- **Shorthand:** `:` or `.` (when using `.prop` modifier)\n\n- **Expects:** `any (with argument) | Object (without argument)`\n\n- **Argument:** `attrOrProp (optional)`\n\n- **Modifiers**\n\n  - `.camel` - transform the kebab-case attribute name into camelCase.\n  - `.prop` - force a binding to be set as a DOM property. <sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - force a binding to be set as a DOM attribute. <sup class=\"vt-badge\">3.2+</sup>\n\n- **Usage**\n\n  When used to bind the `class` or `style` attribute, `v-bind` supports additional value types such as Array or Objects. See linked guide section below for more details.\n\n  When setting a binding on an element, Vue by default checks whether the element has the key defined as a property using an `in` operator check. If the property is defined, Vue will set the value as a DOM property instead of an attribute. This should work in most cases, but you can override this behavior by explicitly using `.prop` or `.attr` modifiers. This is sometimes necessary, especially when [working with custom elements](https://vuejs.org/guide/extras/web-components.html#passing-dom-properties).\n\n  When used for component prop binding, the prop must be properly declared in the child component.\n\n  When used without an argument, can be used to bind an object containing attribute name-value pairs.\n\n- **Example**\n\n  ```html\n  <!-- bind an attribute -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- dynamic attribute name -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- shorthand -->\n  <img :src=\"imageSrc\" />\n\n  <!-- shorthand dynamic attribute name -->\n  <button :[key]=\"value\"></button>\n\n  <!-- with inline string concatenation -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- class binding -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- style binding -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- binding an object of attributes -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- prop binding. \"prop\" must be declared in the child component. -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- pass down parent props in common with a child component -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  The `.prop` modifier also has a dedicated shorthand, `.`:\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- equivalent to -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  The `.camel` modifier allows camelizing a `v-bind` attribute name when using in-DOM templates, e.g. the SVG `viewBox` attribute:\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  `.camel` is not needed if you are using string templates, or pre-compiling the template with a build step.\n\n- **See also**\n  - [Class and Style Bindings](https://vuejs.org/guide/essentials/class-and-style.html)\n  - [Components - Prop Passing Details](https://vuejs.org/guide/components/props.html#prop-passing-details)\n"
+        "value": "\nDynamically bind one or more attributes, or a component prop to an expression.\n\n- **Shorthand:**\n  - `:` or `.` (when using `.prop` modifier)\n  - Omitting value (when attribute and bound value has the same name) <sup class=\"vt-badge\">3.4+</sup>\n\n- **Expects:** `any (with argument) | Object (without argument)`\n\n- **Argument:** `attrOrProp (optional)`\n\n- **Modifiers**\n\n  - `.camel` - transform the kebab-case attribute name into camelCase.\n  - `.prop` - force a binding to be set as a DOM property. <sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - force a binding to be set as a DOM attribute. <sup class=\"vt-badge\">3.2+</sup>\n\n- **Usage**\n\n  When used to bind the `class` or `style` attribute, `v-bind` supports additional value types such as Array or Objects. See linked guide section below for more details.\n\n  When setting a binding on an element, Vue by default checks whether the element has the key defined as a property using an `in` operator check. If the property is defined, Vue will set the value as a DOM property instead of an attribute. This should work in most cases, but you can override this behavior by explicitly using `.prop` or `.attr` modifiers. This is sometimes necessary, especially when [working with custom elements](https://vuejs.org/guide/extras/web-components.html#passing-dom-properties).\n\n  When used for component prop binding, the prop must be properly declared in the child component.\n\n  When used without an argument, can be used to bind an object containing attribute name-value pairs.\n\n- **Example**\n\n  ```html\n  <!-- bind an attribute -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- dynamic attribute name -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- shorthand -->\n  <img :src=\"imageSrc\" />\n\n  <!-- same-name shorthand (3.4+), expands to :src=\"src\" -->\n  <img :src />\n\n  <!-- shorthand dynamic attribute name -->\n  <button :[key]=\"value\"></button>\n\n  <!-- with inline string concatenation -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- class binding -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- style binding -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- binding an object of attributes -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- prop binding. \"prop\" must be declared in the child component. -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- pass down parent props in common with a child component -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  The `.prop` modifier also has a dedicated shorthand, `.`:\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- equivalent to -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  The `.camel` modifier allows camelizing a `v-bind` attribute name when using in-DOM templates, e.g. the SVG `viewBox` attribute:\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  `.camel` is not needed if you are using string templates, or pre-compiling the template with a build step.\n\n- **See also**\n  - [Class and Style Bindings](https://vuejs.org/guide/essentials/class-and-style.html)\n  - [Components - Prop Passing Details](https://vuejs.org/guide/components/props.html#prop-passing-details)\n"
       },
       "references": [
         {
@@ -774,6 +966,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-bind"
         }
       ]
     },
@@ -819,6 +1023,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-model"
         }
       ]
     },
@@ -864,6 +1080,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-slot"
         }
       ]
     },
@@ -909,6 +1137,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-pre"
         }
       ]
     },
@@ -954,6 +1194,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-once"
         }
       ]
     },
@@ -999,6 +1251,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-memo"
         }
       ]
     },
@@ -1044,6 +1308,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-cloak"
         }
       ]
     },
@@ -1089,6 +1365,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#key"
         }
       ]
     },
@@ -1134,6 +1422,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#ref"
         }
       ]
     },
@@ -1179,6 +1479,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#is"
         }
       ]
     }

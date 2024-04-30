@@ -1,8 +1,7 @@
-import * as vscode from 'vscode';
-import * as semver from 'semver';
-import { BaseLanguageClient } from 'vscode-languageclient';
+import { BaseLanguageClient, getTsdk } from '@volar/vscode';
 import { ParseSFCRequest } from '@vue/language-server';
-import { getTsdk } from '@volar/vscode';
+import * as semver from 'semver';
+import * as vscode from 'vscode';
 import { config } from '../config';
 
 const scheme = 'vue-doctor';
@@ -16,7 +15,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
 	item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-	item.command = 'volar.action.doctor';
+	item.command = 'vue.action.doctor';
 
 	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
 
@@ -49,7 +48,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 		},
 	));
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.doctor', () => {
+	context.subscriptions.push(vscode.commands.registerCommand('vue.action.doctor', () => {
 		const doc = vscode.window.activeTextEditor?.document;
 		if (
 			doc
@@ -134,19 +133,12 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		// check should use @volar-plugins/vetur instead of vetur
-		const vetur = vscode.extensions.getExtension('octref.vetur');
-		if (vetur?.isActive) {
-			problems.push({
-				title: 'Use volar-service-vetur instead of Vetur',
-				message: 'Detected Vetur enabled. Consider disabling Vetur and use [volar-service-vetur](https://github.com/volarjs/services/tree/master/packages/vetur) instead.',
-			});
-		}
+		const pugPluginPkg = await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/language-plugin-pug');
 
 		// check using pug but don't install @vue/language-plugin-pug
 		if (
 			sfc?.descriptor.template?.lang === 'pug'
-			&& !await getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/language-plugin-pug')
+			&& !pugPluginPkg
 		) {
 			problems.push({
 				title: '`@vue/language-plugin-pug` missing',
@@ -166,6 +158,22 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
+		// check using pug but outdated @vue/language-plugin-pug
+		if (
+			sfc?.descriptor.template?.lang === 'pug'
+			&& pugPluginPkg
+			&& !semver.gte(pugPluginPkg.json.version, '2.0.5')
+		) {
+			problems.push({
+				title: 'Outdated `@vue/language-plugin-pug`',
+				message: [
+					'The version of `@vue/language-plugin-pug` is too low, it is required to upgrade to `2.0.5` or later.',
+					'',
+					'- @vue/language-plugin-pug: ' + pugPluginPkg.path,
+				].join('\n'),
+			});
+		}
+
 		// check syntax highlight extension installed
 		if (sfc) {
 			const blocks = [
@@ -176,7 +184,9 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 				...sfc.descriptor.customBlocks,
 			];
 			for (const block of blocks) {
-				if (!block) continue;
+				if (!block) {
+					continue;
+				}
 				if (block.lang && block.lang in knownValidSyntaxHighlightExtensions) {
 					const validExts = knownValidSyntaxHighlightExtensions[block.lang as keyof typeof knownValidSyntaxHighlightExtensions];
 					const someInstalled = validExts.some(ext => !!vscode.extensions.getExtension(ext));
@@ -209,57 +219,32 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			});
 		}
 
-		/*
-		// check outdated language services plugins
-		const knownPlugins = [
-			// '@volar-plugins/css',
-			// '@volar-plugins/emmet',
-			'@volar-plugins/eslint',
-			// '@volar-plugins/html',
-			// '@volar-plugins/json',
-			'@volar-plugins/prettier',
-			'@volar-plugins/prettyhtml',
-			'@volar-plugins/pug-beautify',
-			'@volar-plugins/sass-formatter',
-			'@volar-plugins/tslint',
-			// '@volar-plugins/typescript',
-			// '@volar-plugins/typescript-twoslash-queries',
-			'@volar-plugins/vetur',
-		];
-		for (const plugin of knownPlugins) {
-			const pluginMod = await getPackageJsonOfWorkspacePackage(fileUri.fsPath, plugin);
-			if (!pluginMod) continue;
-			if (!pluginMod.json.version.startsWith('2.')) {
-				problems.push({
-					title: `Outdated ${plugin}`,
-					message: [
-						`The ${plugin} plugin is outdated. Please update it to the latest version.`,
-						'',
-						'- plugin package.json: ' + pluginMod.path,
-						'- plugin version: ' + pluginMod.json.version,
-						'- expected version: >= 2.0.0',
-					].join('\n'),
-				});
-			}
-		}
-		*/
-
-		// check tsdk version should not be 4.9
+		// check tsdk version should be higher than 5.0.0
 		const tsdk = await getTsdk(context);
-		if (tsdk?.version?.startsWith('4.9')) {
+		if (tsdk.version && !semver.gte(tsdk.version, '5.0.0')) {
 			problems.push({
-				title: 'Bad TypeScript version',
+				title: 'Requires TSDK 5.0 or higher',
 				message: [
-					'TS 4.9 has a bug that will cause auto import to fail. Please downgrade to TS 4.8 or upgrade to TS 5.0+.',
-					'',
-					'Issue: https://github.com/vuejs/language-tools/issues/2190',
+					`Extension >= 2.0 requires TSDK 5.0+. You are currently using TSDK ${tsdk.version}, please upgrade to TSDK.`,
+					'If you need to use TSDK 4.x, please downgrade the extension to v1.',
 				].join('\n'),
 			});
 		}
 
-		// check outdated vue language plugins
-		// check node_modules has more than one vue versions
-		// check ESLint, Prettier...
+		if (
+			vscode.workspace.getConfiguration('vue').has('server.additionalExtensions')
+			|| vscode.workspace.getConfiguration('vue').has('server.petiteVue.supportHtmlFile')
+			|| vscode.workspace.getConfiguration('vue').has('server.vitePress.supportMdFile')
+		) {
+			problems.push({
+				title: 'Deprecated configuration',
+				message: [
+					'`vue.server.additionalExtensions`, `vue.server.petiteVue.supportHtmlFile`, and `vue.server.vitePress.supportMdFile` are deprecated. Please remove them from your settings.',
+					'',
+					'- PR: https://github.com/vuejs/language-tools/pull/4321',
+				].join('\n'),
+			});
+		}
 
 		return problems;
 	}

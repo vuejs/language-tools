@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
-import { createComponentMetaChecker, createComponentMetaCheckerByJsonConfig, MetaCheckerOptions, ComponentMetaChecker, TypeMeta } from '../out';
+import { createComponentMetaChecker, createComponentMetaCheckerByJsonConfig, MetaCheckerOptions, ComponentMetaChecker, TypeMeta } from '..';
 
 const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
@@ -17,6 +17,31 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 			'style',
 		]);
 		expect(meta.props.filter(prop => !prop.global)).toEqual([]);
+	});
+
+	test('reference-type-model', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-model/component.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		// expect(meta.type).toEqual(TypeMeta.Class);
+
+		const foo = meta.props.find(prop => prop.name === 'foo');
+		const onUpdateFoo = meta.events.find(event => event.name === 'update:foo');
+
+		const bar = meta.props.find(prop => prop.name === 'bar');
+		const onUpdateBar = meta.events.find(event => event.name === 'update:bar');
+
+		const qux = meta.props.find(prop => prop.name === 'qux');
+		const quxModifiers = meta.props.find(prop => prop.name === 'quxModifiers');
+		const onUpdateQux = meta.events.find(event => event.name === 'update:qux');
+
+		expect(foo).toBeDefined();
+		expect(bar).toBeDefined();
+		expect(qux).toBeDefined();
+		expect(quxModifiers).toBeDefined();
+		expect(onUpdateFoo).toBeDefined();
+		expect(onUpdateBar).toBeDefined();
+		expect(onUpdateQux).toBeDefined();
 	});
 
 	test('reference-type-props', () => {
@@ -576,6 +601,34 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(d).toBeDefined();
 	});
 
+	test('defineSlots', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/template-slots/component-define-slots.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
+
+		const a = meta.slots.find(slot =>
+			slot.name === 'default'
+			&& slot.type === '{ num: number; }'
+		);
+		const b = meta.slots.find(slot =>
+			slot.name === 'named-slot'
+			&& slot.type === '{ str: string; }'
+		);
+		const c = meta.slots.find(slot =>
+			slot.name === 'vbind'
+			&& slot.type === '{ num: number; str: string; }'
+		);
+		const d = meta.slots.find(slot =>
+			slot.name === 'no-bind'
+		);
+
+		expect(a).toBeDefined();
+		expect(b).toBeDefined();
+		expect(c).toBeDefined();
+		expect(d).toBeDefined();
+	});
+
 	test('template-slots for generic', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/generic/component.vue');
 		const meta = checker.getComponentMeta(componentPath);
@@ -654,7 +707,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/ts-component/component.ts');
 		const meta = checker.getComponentMeta(componentPath);
 
-		expect(meta.type).toEqual(TypeMeta.Function);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
 		const a = meta.props.find(prop =>
 			prop.name === 'foo'
@@ -671,14 +724,31 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(b).toBeDefined();
 	});
 
+	test('emits-generic', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/events/component-generic.vue');
+		const meta = checker.getComponentMeta(componentPath);
+		const foo = meta.events.find(event =>event.name === 'foo');
+
+		expect(foo?.description).toBe('Emitted when foo...');
+	});
+
+	// Wait for https://github.com/vuejs/core/pull/10801
+	test.skip('emits-class', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/events/component-class.vue');
+		const meta = checker.getComponentMeta(componentPath);
+		const foo = meta.events.find(event =>event.name === 'foo');
+
+		expect(foo?.description).toBe('Emitted when foo...');
+	});
+
 	test('ts-named-exports', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/ts-named-export/component.ts');
 		const exportNames = checker.getExportNames(componentPath);
 		const Foo = checker.getComponentMeta(componentPath, 'Foo');
 		const Bar = checker.getComponentMeta(componentPath, 'Bar');
 
-		expect(Foo.type).toEqual(TypeMeta.Function);
-		expect(Bar.type).toEqual(TypeMeta.Function);
+		expect(Foo.type).toEqual(TypeMeta.Class);
+		expect(Bar.type).toEqual(TypeMeta.Class);
 		expect(exportNames).toEqual(['Foo', 'Bar']);
 
 		const a = Foo.props.find(prop =>
@@ -762,7 +832,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/ts-component/component.tsx');
 		const meta = checker.getComponentMeta(componentPath);
 
-		expect(meta.type).toEqual(TypeMeta.Function);
+		expect(meta.type).toEqual(TypeMeta.Class);
 
 		const a = meta.props.find(prop =>
 			prop.name === 'foo'

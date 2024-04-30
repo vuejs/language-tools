@@ -16,20 +16,10 @@ export const config = {
 		return _config().get('doctor')!;
 	},
 	get server(): Readonly<{
-		path: null | string;
-		runtime: 'node' | 'bun';
+		includeLanguages: string[];
+		hybridMode: 'auto' | 'typeScriptPluginOnly' | boolean;
 		maxOldSpaceSize: number;
 		maxFileSize: number;
-		reverseConfigFilePriority: boolean;
-		diagnosticModel: 'push' | 'pull';
-		additionalExtensions: string[];
-		fullCompletionList: boolean;
-		vitePress: {
-			supportMdFile: boolean;
-		};
-		petiteVue: {
-			supportHtmlFile: boolean;
-		};
 	}> {
 		return _config().get('server')!;
 	},
@@ -40,6 +30,7 @@ export const config = {
 	},
 	get codeActions(): Readonly<{
 		enabled: boolean;
+		askNewComponentName: boolean;
 	}> {
 		return _config().get('codeActions')!;
 	},
@@ -50,7 +41,6 @@ export const config = {
 	},
 	get complete(): Readonly<{
 		casing: {
-			status: boolean;
 			props: 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
 			tags: 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
 		};

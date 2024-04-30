@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
-import { BaseLanguageClient } from 'vscode-languageclient';
+import type { BaseLanguageClient } from '@volar/vscode';
 import { ParseSFCRequest } from '@vue/language-server';
+import * as vscode from 'vscode';
 import { config } from '../config';
 
 type SFCBlock = ParseSFCRequest.ResponseType['descriptor']['customBlocks'][number];
@@ -9,12 +9,14 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 
 	const getDocDescriptor = useDocDescriptor();
 
-	context.subscriptions.push(vscode.commands.registerCommand('volar.action.splitEditors', onSplit));
+	context.subscriptions.push(vscode.commands.registerCommand('vue.action.splitEditors', onSplit));
 
 	async function onSplit() {
 
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) return;
+		if (!editor) {
+			return;
+		}
 
 		const layout = config.splitEditors.layout;
 		const doc = editor.document;
@@ -73,7 +75,9 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 		async function foldingBlocks(blocks: SFCBlock[]) {
 
 			const editor = vscode.window.activeTextEditor;
-			if (!editor) return;
+			if (!editor) {
+				return;
+			}
 
 			editor.selections = blocks.length
 				? blocks.map(block => new vscode.Selection(doc.positionAt(block.loc.start.offset), doc.positionAt(block.loc.start.offset)))

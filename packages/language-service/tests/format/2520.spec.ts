@@ -21,4 +21,7 @@ defineFormatTest({
 	</pre>
 </template>
 	`.trim(),
+	settings: {
+		'html.format.contentUnformatted': 'pre',
+	},
 });

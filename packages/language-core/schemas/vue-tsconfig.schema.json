@@ -2,6 +2,7 @@
 	"properties": {
 		"vueCompilerOptions": {
 			"type": "object",
+			"additionalProperties": false,
 			"properties": {
 				"target": {
 					"default": "auto",
@@ -10,7 +11,8 @@
 						2,
 						2.7,
 						3,
-						3.3
+						3.3,
+						3.5
 					],
 					"markdownDescription": "Target version of Vue."
 				},
@@ -18,6 +20,16 @@
 					"type": "array",
 					"default": [ ".vue" ],
 					"markdownDescription": "Valid file extensions that should be considered as regular Vue SFC, please note that you should not use this option separately for additional file extensions IDE support, see https://github.com/vuejs/language-tools/tree/master/extensions/vscode/README.md#custom-file-extensions."
+				},
+				"vitePressExtensions": {
+					"type": "array",
+					"default": [ ".md" ],
+					"markdownDescription": "Valid file extensions that should be considered as regular VitePress SFC."
+				},
+				"petiteVueExtensions": {
+					"type": "array",
+					"default": [ ".html" ],
+					"markdownDescription": "Valid file extensions that should be considered as regular PetiteVue SFC."
 				},
 				"lib": {
 					"default": "",
@@ -36,15 +48,6 @@
 				"skipTemplateCodegen": {
 					"type": "boolean",
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/577"
-				},
-				"nativeTags": {
-					"type": "array",
-					"default": [
-						"div",
-						"img",
-						"..."
-					],
-					"markdownDescription": "List of valid intrinsic elements."
 				},
 				"dataAttributes": {
 					"type": "array",
@@ -105,10 +108,6 @@
 						}
 					},
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1969"
-				},
-				"experimentalAdditionalLanguageModules": {
-					"type": "array",
-					"markdownDescription": "https://github.com/vuejs/language-tools/pull/2267"
 				},
 				"experimentalDefinePropProposal": {
 					"enum": [

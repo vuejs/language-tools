@@ -1,4 +1,6 @@
 <script lang="tsx">
+/// <reference types="vue/jsx" />
+
 import { exactType } from '../shared';
 import Child from './child.vue';
 import Generic from './generic.vue';

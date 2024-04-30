@@ -1,11 +1,9 @@
 {
 	"extends": "../../tsconfig.base.json",
-	"compilerOptions": {
-		"outDir": "out",
-		"rootDir": "src",
-	},
-	"include": [ "src" ],
+	"include": [ "*", "lib/**/*" ],
+	"exclude": [ "tests" ],
 	"references": [
+		{ "path": "../component-type-helpers/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" },
 	],
 }

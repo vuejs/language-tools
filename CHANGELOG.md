@@ -1,63 +1,407 @@
 # Changelog
 
-<table>
-	<tbody>
-		<tr>
-			<td align="center" colspan="6">
-				<br><a href="https://stackblitz.com/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png"
-						height="80" /></a>
-				<br><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a>
-				<br>In 2021 <a href="https://blog.stackblitz.com/posts/introducing-webcontainers/">we announced
-					WebContainers</a>, a novel WebAssembly-based operating system which enables Node.js to run entirely
-				inside the browser. Over the last two years, millions of developers have used WebContainers each month
-				as it powers, among others, the StackBlitz editor.
-			</td>
-		</tr>
-		<tr>
-			<td align="center" colspan="6"><b>Sponsors</b></td>
-		</tr>
-		<tr>
-			<td align="center"><a href="https://www.prefect.io/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/prefect.svg"
-						height="40" /></a></td>
-			<td align="center" colspan="5">
-				<a href="https://nuxt.com/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/nuxt.svg"
-						height="60" /></a>
-				<br>The Intuitive Vue Framework
-			</td>
-		</tr>
-		<tr>
-			<td align="center" colspan="5">
-				<a href="https://vuejs.org/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/vue.png"
-						height="80" /></a>
-				<br>The Progressive JavaScript Framework
-			</td>
-			<td align="center"><a href="https://www.programmier.bar/"><img src="https://github.com/programmierbar.png"
-						height="60" /></a></td>
-		</tr>
-		<tr>
-			<td align="center"><a href="https://www.leniolabs.com/"><img src="https://github.com/leniolabs.png"
-						height="60" /></a></td>
-			<td align="center" colspan="5">
-				Support us via
-				<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
-				or
-				<a href="https://opencollective.com/volarjs">Open Collective</a>
-			</td>
-		</tr>
-		<tr>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-		</tr>
-	</tbody>
-</table>
+## 2.1.0-insiders.7 (2024/4/30)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.7), [爱发电电圈](https://afdian.net/p/84db515c069b11ef9eaf52540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.15](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2015-2024430).
+
+## 2.0.15 (2024/4/30)
+
+### Features
+
+- Redesign additional extensions, VitePress, PetiteVue support (#4321)
+  - Fix custom file extensions not working in Hybrid Mode (#4251)
+- **vscode:** prompt when Hybrid Mode is explicitly enabled but known incompatible extensions are installed
+- **language-core:** use internal options for directly exposing user props/emits types ([vuejs/core#10801](https://github.com/vuejs/core/pull/10801))
+- **language-core:** support defineSlots destructuring (#4312) - Thanks @zhiyuanzmj
+
+### Bug Fixes
+
+- **vscode:** when enabled VitePress support, extension not activated when opening markdown files
+- **language-core:** auto-complete not working in v-bind
+
+### Performance
+
+- **language-service:** emmet completion should not be blocked by TS type evaluation (#4298)
+- **language-core:** simplify virtual code for intrinsic elements
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.10` to `v2.2.0-alpha.12`:
+  - Avoid extension crash when workspace TSDK does not exist
+  - Fix template variables cannot be renamed at the first character in Hybrid Mode (#4297)
+  - Fix template virtual code mapping is misaligned in Windows in Hybrid Mode (#4297)
+- Add `svelte.svelte-vscode` (>=108.4.0) to Hybrid Mode compatibility whitelist ([sveltejs/language-tools#2317](https://github.com/sveltejs/language-tools/pull/2317))
+- **component-meta:** convert source code to TS
+- **language-core:** export `allCodeFeatures` (#4320) - Thanks @zhiyuanzmj
+
+## 2.1.0-insiders.6 (2024/4/25)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.6), [爱发电电圈](https://afdian.net/p/f73a772602ab11efa33652540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Features
+
+- Check for Insiders version updates on startup
+- Support reactions visualization for TS document
+
+### Bug Fixes
+
+- Fixed some incorrect situations in reactions analysis
+
+### Other Changes
+
+- Merged [v2.0.14...a69909e81](https://github.com/vuejs/language-tools/compare/v2.0.14...a69909e81).
+
+## 2.1.0-insiders.5 (2024/4/22)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.5), [爱发电电圈](https://afdian.net/p/25aca47c004e11ef8b445254001e7c00)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.14](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2014-2024422).
+
+## 2.0.14 (2024/4/22)
+
+### Features
+
+- **language-core:** added search html tag (#4280) - Thanks @audunhov
+- **language-service:** added Russian, Czech localization support
+
+### Bug Fixes
+
+- **language-core:** `@ts-ignore` not working for slots (#4263)
+- **language-core:** reduce unnecessary props mapping (#4284)
+- **tsc:** improve regexp performance for global type removal (#4260) - Thanks @blake-newman
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.8` to `v2.2.0-alpha.10` to fix some issues:
+  - Parameter Hints not working in Hybrid Mode (#3948)
+  - TS server to crash repeatedly when include large js file (#4278)
+  - Randomly causing errors when renaming / find definitions in Hybrid Mode (#4257, #4281, #4282)
+  - Unable to resolve Nuxt UI component type
+  - Incomplete results for find refernces in Hybrid Mode
+- The following extensions have been added to Hybrid Mode’s compatibility whitelist:
+  - `bierner.lit-html`
+  - `denoland.vscode-deno` (When `deno.enable` is `false`)
+  - `jenkey2011.string-highlight`
+- **language-core:** improve maintainability of codegen (#4276)
+  - Deprecated `vueCompilerOptions.nativeTags`, now respects the `nodeType` property of template AST node.
+  - Dynamic component types without `v-bind:is` are no longer supported.
+
+## 2.0.13 (2024/4/12)
+
+### Performance
+
+- **tsc:** re-introduce global types removal check (#4245)
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.7` to `v2.2.0-alpha.8` for a vue-tsc performance issue fixes (#4238)
+
+## 2.1.0-insiders.4 (2024/4/10)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.4), [爱发电电圈](https://afdian.net/p/46a5f4a8f72011ee97fe52540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.12](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2012-2024410).
+
+## 2.0.12 (2024/4/10)
+
+### Bug Fixes
+
+- **vscode:** restart tsserver before restart vue language server (#4242)
+- **tsc:** remove exit early condition
+- **typescript-plugin:** handle named pipe server timeout
+- **language-core:** `@vue-ignore` not working for fragment v-if/v-for nodes (#4232)
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.6` to `v2.2.0-alpha.7` for a typescript plugin bug fixes
+
+## 2.1.0-insiders.3 (2024/4/7)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.3), [爱发电电圈](https://afdian.net/p/5bf99cfaf4ec11ee9e1f5254001e7c00)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Features
+
+- **vscode:** add `vue.editor.reactionsVisualization` setting ([#8](https://github.com/volarjs/insiders/pull/8))
+
+### Other Changes
+
+- Merged [v2.0.11](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2011-202447).
+
+## 2.0.11 (2024/4/7)
+
+### Features
+
+- **vscode:** support for enabling/disabling typescript plugin (#4226)
+  - Added `typeScriptPluginOnly` option for `vue.server.hybridMode` setting.
+  - When Hybrid Mode is disabled, the Vue TypeScript Plugin will be disabled by default.
+- **vscode:** support for `vue.format.wrapAttributes` setting (#4212)
+- **vscode:** add `vue.codeActions.askNewComponentName` setting (#4217)
+
+### Bug Fixes
+
+- **vscode:** `Find File References` not working when hybrid mode is disabled (#4221)
+- **language-core:** type narrowing not working for inline event handlers (#4209)
+- **language-core:** `@vue-ignore`, `@vue-expect-error` not working for interpolations
+- **language-core:** improve reliability for `@vue-ignore`, `@vue-expect-error` (#4203)
+- **language-core:** duplicated items in suggestion list for prop values (#3922)
+- **language-server:** `vueCompilerOptions` not working with hybrid mode (#4211) (#3959)
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.5` to `v2.2.0-alpha.6` for a `vue-tsc` bug fixes
+  - [volarjs/volar.js#162](https://github.com/volarjs/volar.js/pull/162) - Thanks @wangshunnn
+- **test:** add test for #4203 (#4207) - Thanks @tinco
+
+## 2.1.0-insiders.2 (2024/4/4)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.2), [爱发电电圈](https://afdian.net/p/d59d0dd8f29611ee88945254001e7c00)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Features
+
+- **language-server:** improve reactions analyze ([volarjs/insiders#8](https://github.com/volarjs/insiders/pull/8))
+
+### Other Changes
+
+- Merged [v2.0.10](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2010-202444).
+
+## 2.0.10 (2024/4/4)
+
+### Features
+
+- **vscode:** enable `vue.updateImportsOnFileMove.enabled` by default (#3646)
+- **vscode:** re-add restart server command (#4174)
+- **vscode:** automatically enable Hybrid Mode if possible (#4206)
+- **component-meta:** add typing resolution for defineModel modifiers (#4175) - Thanks @stafyniaksacha
+- **language-service:** drag and drop import respects tsconfig path aliases (#4184)
+- **language-service:** supports auto insertion of multiple cursors (#4140)
+
+### Bug Fixes
+
+- **language-server:** `additionalExtensions` option not working for inferred project
+- **language-core:** avoid interpolation indentation affecting each other
+- **language-core:** generate each interpolation into separate virtual code (#4165)
+- **language-service:** ignore html `wrapAttributes` format settings for vue document (#3987)
+- **vscode:** remove duplicate ts version status (#4167)
+- **language-server:** `.html`, `.md` file language id incorrect
+- **typescript-plugin:** formatting settings not working for ts completion
+- **tsc:** remove fake global types holder for composite projects compatibility (#4196) - Thanks @blake-newman
+
+### Performance
+
+- **language-core:** cache canonical root file names with string Set
+
+### Other Changes
+
+- Upgrade Volar from `v2.1.3` to `v2.2.0-alpha.5` for a few bug fixes and performance improves, please refer to [CHANGELOG.md](https://github.com/volarjs/volar.js/blob/master/CHANGELOG.md) for details.
+- **vscode:** update required VSCode version to `^1.88.0`
+- **docs:** update readme with neovim lspconfig setup (#4134) - Thanks @RayGuo-ergou
+- **language-core:** split inline css codegen into separate plugin
+- **language-core:** move global types codegen into separate script
+- **language-core:** resolve virtual code features before push code
+- **test:** added simple tests for vue-tsc and custom SFC extensions. (#4181) - Thanks @cabal95
+
+## 2.1.0-insiders.1
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.1), [爱发电电圈](https://afdian.net/p/ba0901a2edce11ee8f2e52540025c377)
+
+### Features
+
+#### Reactions visualization (PR: https://github.com/volarjs/insiders/pull/5)
+
+![](https://github.com/vuejs/language-tools/assets/16279759/b90d3d05-f98c-42a0-b011-448af00a0c06)
+
+#### Template interpolation decorators (PR: https://github.com/volarjs/insiders/pull/4)
+
+> To disable this feature, uncheck `vue.editor.templateInterpolationDecorators` in VSCode settings.
+
+![](https://github.com/vuejs/language-tools/assets/16279759/fc591552-834e-4fbb-ab47-1740f6f8a151)
+
+### Other Changes
+
+- Merged https://github.com/vuejs/language-tools/commit/1b9946c02ee3f5bb8c2de17c430985756115e51c
+
+## 2.0.7 (2024/3/20)
+
+> [!NOTE] 
+> Hybrid Mode is now disabled by default, you need to enable `vue.server.hybridMode` in settings to enable it explicitly.
+
+### Features
+
+- **language-server:** reintroducing full TS support and disable Hybrid Mode by default (#4119)
+- **vscode:** check outdated `@vue/language-plugin-pug` in doctor
+- **vscode:** significantly reduces the status bar space occupied
+
+### Bug Fixes
+
+- **vscode:** vueCompilerOptions no longer prompts for deprecated options
+- **component-meta:** `defineSlots` allows empty params (#4093) - thanks @Evertvdw
+- **typescript-plugin:** fault tolerance for named pipe servers json file (#4075) - thanks @Simon-He95
+- **language-core:** generate `defineModel` emits type on-demand (#4052) - thanks @so1ve
+- **language-core:** special treatment for number elements inside `v-for` (#3859) - thanks @so1ve
+- **language-plugin-pug:** semantic tokens mapping failed (#4070)
+
+### Other Changes
+
+- **language-service** update neovim lsp set up info (#4085) - thanks @CofCat456
+- **lint:** add `tsl` linter and auto fix workflow (#4100)
+- **vscode:** remove embedded language IDs (#4081) - thanks @remcohaszing
+
+## 2.0.6 (2024/3/7)
+
+> [!IMPORTANT] 
+> If the TypeScript language server crashes since 2.0, please try using VSCode Insiders and install [JavaScript and TypeScript Nightly](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-next), or temporarily downgrade to 1.8.27.\
+> Issue: https://github.com/vuejs/language-tools/issues/3962
+>
+> If false positive errors occur, please try disabling unrelated extensions in the Vue workspace.\
+> Issue: https://github.com/vuejs/language-tools/issues/3942
+
+### Fixes
+
+- **language-core:** use local variables in v-bind shorthand (#4017) - thanks @so1ve
+- **language-core:** sfc folding end position failed to mapping (#4038) - thanks @so1ve
+- **language-service:** remove `extraLiners` option for formatting (#3943)
+- **language-service:** bump `volar-service-typescript` for fix jsx formatting (#3949)
+- **language-service:** bump `@volar/typescript` for fix 2.0.5 auto-complete performance regression (#4024)
+
+### Other Changes
+
+- **vscode:** rename `vue.inlayHints.vbindShorthand` setting to `vue.inlayHints.vBindShorthand` (#3995) - thanks @l4dybird
+
+## 2.0.5 (2024/3/5)
+
+### Features
+
+- **language-core:** support `v-bind` shorthand (#3990) - thanks @so1ve
+- **language-service:** support inlay hints for `v-bind` shorthand (#3990) - thanks @so1ve
+- **vscode:** prompt to disable Svelte extension in Vue workspace to avoid conflicts
+
+### Fixes
+
+- **typescript-plugin:** fault tolerance for named pipe server data
+- **language-core:** avoid `globalTypesHolder` being specified from a `node_modules` file (#3990)
+- **language-core:** fault tolerance for plugin creation
+- **language-plugin-pug:** failed to load due to an invalid require path (#3930)
+- **typescript-plugin:** custom extensions do not work (#3977)
+- **language-service:** html custom data not working (#3975)
+
+### Other Changes
+
+- **typescript-plugin** add README (#3974) - thanks @WhyNotHugo
+- **component-meta** update demo (#3994) - thanks @zzfn
+
+## 2.0.4 (2024/3/4)
+
+### Features
+
+- **vscode:** report requires TSDK version in doctor
+
+### Fixes
+
+- **typescript-plugin:** JSON parsing error when server data length > 8192 (#3961)
+
+## 2.0.3 (2024/3/3)
+
+### Features
+
+- **vscode:** identify #3942 in doctor
+
+### Fixes
+
+- **vscode:** compatible with VSCode 1.87.0
+- **vscode:** search "TypeScript and JavaScript Language Features" with id (#3932)
+- **typescript-plugin:** more reliable connection to named pipe server (#3941)
+
+### Refactors
+
+- **language-service:** dependency injection typescript plugin (#3994)
+
+## 2.0.2 (2024/3/2)
+
+### Fixes
+
+- **vscode:** fix random `Cannot access 'i' before initialization` errors
+- **typescript-plugin:** `vue-tsp-table.json` path is invalid in windows
+
+## 2.0.1 (2024/3/2)
+
+### Fixes
+
+- npm release does not include files (#3919)
+
+## 2.0.0 (2024/3/2)
+
+### Features
+
+- Hybrid Mode
+	- Takeover Mode has been deprecated. The extension now has the same performance as Takeover Mode by default.
+	- TypeScript language support has been moved from Vue language server to TypeScript plugin (#3788)
+	- Integrated all TypeScript editor features
+	- Warn when internal TypeScript extension is disabled or "TypeScript Vue Plugin" extension is installed
+	- Migrated to named pipe server using TypeScript LanguageService (#3908, #3916)
+	- `typescript.tsdk` duplicate registration errors are no longer reported
+	- **language-service:** reimplemented component tag semantic tokens in TypeScript plugin (#3915)
+	- **language-service:** reimplemented auto-import patching in TypeScript plugin (#3917)
+	- **language-service:** ensured tsserver readiness when requesting auto insert `.value` (#3914)
+- Upgraded to Volar 2.0 and 2.1 (#3736, #3906)
+	- **vscode:** extension now compatible with [Volar Labs](https://marketplace.visualstudio.com/items?itemName=johnsoncodehk.volarjs-labs) v2
+	- **vscode:** removed `volar.format.initialIndent` option, replaced with 3 new options:
+		- `vue.format.template.initialIndent`
+		- `vue.format.script.initialIndent`
+		- `vue.format.style.initialIndent`
+	- **language-server:** `ignoreTriggerCharacters`, `reverseConfigFilePriority` and `fullCompletionList` options are no longer supported
+- Supported Component Drag and Drop Import (#3692)
+- **tsc:** supported `vueCompilerOptions.extensions` option (#3800)
+- **language-core:** achieved compatibility with Vue 3.4 type changes (#3860)
+
+### Fixes
+
+- **vscode:** prevented reading undefined properties in non-VS Code editors (#3836)
+- **vscode:** prevented extension activation with TS files
+- **vscode:** corrected trace server ID
+- **language-core:** implemented emit codegen for defineModel (#3895)
+- **language-core:** addressed transition type incompatibility with Vue 2.7.16 (#3882)
+- **language-core:** excluded vue directive syntax injection in Angular bindings (#3891)
+- **component-type-helpers:** resolved inference issue for Vue 3.4.20 functional component
+
+### Refactors
+
+- Renamed "Volar Language Features (Volar)" extension to "Vue - Official"
+- "TypeScript Vue Plugin" extension has been deprecated
+- Relocated source scripts from `src` to `lib` (#3913)
+- Replaced `typescript/lib/tsserverlibrary` imports with `typescript`
+- **language-core:** implemented codegen based on Generator (#3778)
+- **language-core:** generated global types in a single virtual file (#3803)
+- **language-core:** implemented plugin API v2 (#3918)
+- **language-core:** ignored nested codeblocks in markdown file (#3839)
+- **language-core:** removed `experimentalAdditionalLanguageModules` and deprecated APIs (#3907)
+- **language-service:** made service plugins independent of project context
+- **language-server:** `volar.config.js` is no longer supported
+- **component-meta:** renamed APIs
+- **typescript-plugin:** renamed package to `@vue/typescript-plugin` (#3910)
+- **tsc:** rewritten based on first-party TS API and no longer relies on TypeScript module (#3795)
+- **tsc:** deprecated hooks API (#3793)
 
 ## 1.8.27 (2023/12/26)
 

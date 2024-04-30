@@ -46,6 +46,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -99,6 +111,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         }
@@ -143,6 +167,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#template"
         }
       ]
     },
@@ -191,6 +227,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -250,6 +298,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -299,6 +359,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
             }
           ]
         }
@@ -343,6 +415,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script"
         }
       ]
     },
@@ -389,6 +473,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
         }
       ]
     },
@@ -437,6 +533,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -502,6 +610,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -548,6 +668,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#scoped-css"
             }
           ]
         },
@@ -556,7 +688,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\nA `<style module>` tag is compiled as [CSS Modules](https://github.com/css-modules/css-modules) and exposes the resulting CSS classes to the component as an object under the key of `$style`:\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\nThe resulting classes are hashed to avoid collision, achieving the same effect of scoping the CSS to the current component only.\n\nRefer to the [CSS Modules spec](https://github.com/css-modules/css-modules) for more details such as [global exceptions](https://github.com/css-modules/css-modules#exceptions) and [composition](https://github.com/css-modules/css-modules#composition).\n\n### Custom Inject Name \n\nYou can customize the property key of the injected classes object by giving the `module` attribute a value:\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Usage with Composition API \n\nThe injected classes can be accessed in `setup()` and `<script setup>` via the `useCssModule` API. For `<style module>` blocks with custom injection names, `useCssModule` accepts the matching `module` attribute value as the first argument:\n\n```js\nimport { useCssModule } from 'vue'\n\n// inside setup() scope...\n// default, returns classes for <style module>\nuseCssModule()\n\n// named, returns classes for <style module=\"classes\">\nuseCssModule('classes')\n```\n"
+            "value": "\nA `<style module>` tag is compiled as [CSS Modules](https://github.com/css-modules/css-modules) and exposes the resulting CSS classes to the component as an object under the key of `$style`:\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\nThe resulting classes are hashed to avoid collision, achieving the same effect of scoping the CSS to the current component only.\n\nRefer to the [CSS Modules spec](https://github.com/css-modules/css-modules) for more details such as [global exceptions](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#exceptions) and [composition](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#composition).\n\n### Custom Inject Name \n\nYou can customize the property key of the injected classes object by giving the `module` attribute a value:\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Usage with Composition API \n\nThe injected classes can be accessed in `setup()` and `<script setup>` via the `useCssModule` API. For `<style module>` blocks with custom injection names, `useCssModule` accepts the matching `module` attribute value as the first argument:\n\n```js\nimport { useCssModule } from 'vue'\n\n// inside setup() scope...\n// default, returns classes for <style module>\nuseCssModule()\n\n// named, returns classes for <style module=\"classes\">\nuseCssModule('classes')\n```\n"
           },
           "references": [
             {
@@ -594,6 +726,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#css-modules"
             }
           ]
         }
@@ -638,6 +782,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#style"
         }
       ]
     },
@@ -686,6 +842,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         }
@@ -730,6 +898,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#custom-blocks"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#custom-blocks"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#custom-blocks"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#custom-blocks"
         }
       ]
     }
@@ -778,6 +958,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
         }
       ]
     },
@@ -823,6 +1015,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
         }
       ]
     }

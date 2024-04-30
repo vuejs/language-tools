@@ -2,14 +2,14 @@ import { createLabsInfo } from '@volar/vscode';
 import * as serverLib from '@vue/language-server';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
-import * as lsp from 'vscode-languageclient/node';
-import { activate as commonActivate, deactivate as commonDeactivate } from './common';
+import * as lsp from '@volar/vscode/node';
+import { activate as commonActivate, deactivate as commonDeactivate, enabledHybridMode, enabledTypeScriptPlugin } from './common';
 import { config } from './config';
 import { middleware } from './middleware';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	let serverPathStatusItem: vscode.StatusBarItem | undefined;
+	const volarLabs = createLabsInfo(serverLib);
 
 	await commonActivate(context, (
 		id,
@@ -29,34 +29,13 @@ export async function activate(context: vscode.ExtensionContext) {
 
 		let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 
-		if (config.server.path) {
-			try {
-				const roots = (vscode.workspace.workspaceFolders ?? []).map(folder => folder.uri.fsPath);
-				const serverPath = require.resolve(config.server.path, { paths: roots });
-				serverModule = vscode.Uri.file(serverPath);
-
-				if (!serverPathStatusItem) {
-					serverPathStatusItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-					serverPathStatusItem.text = '[vue] configured server path';
-					serverPathStatusItem.command = 'volar.action.gotoServerFile';
-					serverPathStatusItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-					serverPathStatusItem.show();
-					vscode.commands.registerCommand(serverPathStatusItem.command, () => {
-						vscode.window.showTextDocument(serverModule);
-					});
-				}
-			} catch (err) {
-				vscode.window.showWarningMessage(`Cannot find vue language server path: ${config.server.path}`);
-			}
-		}
-
 		const runOptions: lsp.ForkOptions = {};
 		if (config.server.maxOldSpaceSize) {
 			runOptions.execArgv ??= [];
 			runOptions.execArgv.push("--max-old-space-size=" + config.server.maxOldSpaceSize);
 		}
 		const debugOptions: lsp.ForkOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
-		let serverOptions: lsp.ServerOptions = {
+		const serverOptions: lsp.ServerOptions = {
 			run: {
 				module: serverModule.fsPath,
 				transport: lsp.TransportKind.ipc,
@@ -68,28 +47,6 @@ export async function activate(context: vscode.ExtensionContext) {
 				options: debugOptions
 			},
 		};
-		if (config.server.runtime === 'bun') {
-			serverOptions = {
-				run: {
-					transport: {
-						kind: lsp.TransportKind.socket,
-						port,
-					},
-					options: runOptions,
-					command: 'bun',
-					args: ['--bun', 'run', serverModule.fsPath],
-				},
-				debug: {
-					transport: {
-						kind: lsp.TransportKind.socket,
-						port,
-					},
-					options: debugOptions,
-					command: 'bun',
-					args: ['--bun', 'run', serverModule.fsPath],
-				},
-			};
-		}
 		const clientOptions: lsp.LanguageClientOptions = {
 			middleware,
 			documentSelector: documentSelector,
@@ -98,7 +55,7 @@ export async function activate(context: vscode.ExtensionContext) {
 				isTrusted: true,
 				supportHtml: true,
 			},
-			outputChannel
+			outputChannel,
 		};
 		const client = new _LanguageClient(
 			id,
@@ -123,28 +80,26 @@ export async function activate(context: vscode.ExtensionContext) {
 	}
 	else {
 		vscode.window.showWarningMessage(
-			'Takeover mode is no longer needed in version 2.0. Please enable the "TypeScript and JavaScript Language Features" extension.',
+			'Takeover mode is no longer needed since v2. Please enable the "TypeScript and JavaScript Language Features" extension.',
 			'Show Extension'
-		).then((selected) => {
+		).then(selected => {
 			if (selected) {
-				vscode.commands.executeCommand('workbench.extensions.search', '@builtin TypeScript and JavaScript Language Features');
+				vscode.commands.executeCommand('workbench.extensions.search', '@builtin typescript-language-features');
 			}
 		});
 	}
 
 	if (vueTsPluginExtension) {
 		vscode.window.showWarningMessage(
-			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed in version 2.0. Please uninstall it.`,
+			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed since v2. Please uninstall it.`,
 			'Show Extension'
-		).then((selected) => {
+		).then(selected => {
 			if (selected) {
 				vscode.commands.executeCommand('workbench.extensions.search', vueTsPluginExtension.id);
 			}
 		});
 	}
 
-	const volarLabs = createLabsInfo(serverLib);
-	volarLabs.extensionExports.volarLabs.codegenStackSupport = true;
 	return volarLabs.extensionExports;
 }
 
@@ -169,9 +124,6 @@ function updateProviders(client: lsp.LanguageClient) {
 			capabilities.workspace.fileOperations.willRename = undefined;
 		}
 
-		// TODO: disalbe for now because this break ts plugin semantic tokens
-		capabilities.semanticTokensProvider = undefined;
-
 		return initializeFeatures.call(client, ...args);
 	};
 }
@@ -187,11 +139,31 @@ try {
 			// @ts-expect-error
 			let text = readFileSync(...args) as string;
 
-			// patch jsTsLanguageModes
-			text = text.replace('t.$u=[t.$r,t.$s,t.$p,t.$q]', s => s + '.concat("vue")');
+			if (!enabledTypeScriptPlugin) {
+				text = text.replace(
+					'for(const e of n.contributes.typescriptServerPlugins',
+					s => s + `.filter(p=>p.name!=='typescript-vue-plugin-bundle')`
+				);
+			}
+			else if (enabledHybridMode) {
+				// patch readPlugins
+				text = text.replace(
+					'languages:Array.isArray(e.languages)',
+					[
+						'languages:',
+						`e.name==='typescript-vue-plugin-bundle'?[${config.server.includeLanguages.map(lang => `"${lang}"`).join(',')}]`,
+						':Array.isArray(e.languages)',
+					].join(''),
+				);
 
-			// patch isSupportedLanguageMode
-			text = text.replace('s.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")');
+				// VSCode < 1.87.0
+				text = text.replace('t.$u=[t.$r,t.$s,t.$p,t.$q]', s => s + '.concat("vue")'); // patch jsTsLanguageModes
+				text = text.replace('.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")'); // patch isSupportedLanguageMode
+
+				// VSCode >= 1.87.0
+				text = text.replace('t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]', s => s + '.concat("vue")'); // patch jsTsLanguageModes
+				text = text.replace('.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]', s => s + '.concat("vue")'); // patch isSupportedLanguageMode
+			}
 
 			return text;
 		}

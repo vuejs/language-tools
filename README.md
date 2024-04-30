@@ -2,72 +2,13 @@
 
 > ⚡ High-performance Vue language tooling based-on [Volar.js](https://volarjs.dev/)
 
-Discord: https://discord.gg/5bnSSSSBbK
-
-<table>
-	<tbody>
-		<tr>
-			<td align="center" colspan="6">
-				<br><a href="https://stackblitz.com/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png"
-						height="80" /></a>
-				<br><a href="https://blog.stackblitz.com/posts/webcontainer-api-is-here/">WebContainer API is here.</a>
-				<br>In 2021 <a href="https://blog.stackblitz.com/posts/introducing-webcontainers/">we announced
-					WebContainers</a>, a novel WebAssembly-based operating system which enables Node.js to run entirely
-				inside the browser. Over the last two years, millions of developers have used WebContainers each month
-				as it powers, among others, the StackBlitz editor.
-			</td>
-		</tr>
-		<tr>
-			<td align="center" colspan="6"><b>Sponsors</b></td>
-		</tr>
-		<tr>
-			<td align="center"><a href="https://www.prefect.io/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/prefect.svg"
-						height="40" /></a></td>
-			<td align="center" colspan="5">
-				<a href="https://nuxt.com/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/nuxt.svg"
-						height="60" /></a>
-				<br>The Intuitive Vue Framework
-			</td>
-		</tr>
-		<tr>
-			<td align="center" colspan="5">
-				<a href="https://vuejs.org/"><img
-						src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/vue.png"
-						height="80" /></a>
-				<br>The Progressive JavaScript Framework
-			</td>
-			<td align="center"><a href="https://www.programmier.bar/"><img src="https://github.com/programmierbar.png"
-						height="60" /></a></td>
-		</tr>
-		<tr>
-			<td align="center"><a href="https://www.leniolabs.com/"><img src="https://github.com/leniolabs.png"
-						height="60" /></a></td>
-			<td align="center" colspan="5">
-				Support us via
-				<a href="https://github.com/sponsors/johnsoncodehk">GitHub Sponsors</a>
-				or
-				<a href="https://opencollective.com/volarjs">Open Collective</a>
-			</td>
-		</tr>
-		<tr>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-			<td></td>
-		</tr>
-	</tbody>
-</table>
+💬 **#language-tools** on our [Discord Server](https://discord.gg/vue)  
 
 ## Packages
 
 - [Vue Language Features](https://github.com/vuejs/language-tools/tree/master/extensions/vscode) \
 *Vue, Vitepress, petite-vue language support extension for VSCode*
-- [TypeScript Vue Plugin](https://github.com/vuejs/language-tools/tree/master/extensions/vscode-typescript-plugin) \
+- [TypeScript Vue Plugin](https://github.com/vuejs/language-tools/tree/master/packages/typescript-plugin) \
 *VSCode extension to support Vue in TS server*
 - [vue-tsc](https://github.com/vuejs/language-tools/tree/master/packages/tsc) \
 *Type-check and dts build command line tool*
@@ -75,6 +16,10 @@ Discord: https://discord.gg/5bnSSSSBbK
 *Component props, events, slots types information extract tool*
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
 *Vite plugin for support Vue component preview view with `Vue Language Features`*
+- [`@vue/language-server`](/packages/language-server/) \
+*The language server itself*.
+- [`@vue/typescript-plugin`](/packages/typescript-plugin/) \
+*Typescript plugin for the language server*.
 
 ## Community Integration
 
@@ -82,8 +27,89 @@ Discord: https://discord.gg/5bnSSSSBbK
 *Vue language client for coc.nvim*
 
 [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
-*Vue language server configuration for Neovim* \
-[[Multiple servers set up tutorial](https://github.com/vuejs/language-tools/discussions/606)]
+*Vue language server configuration for Neovim*
+
+<details>
+  <summary>How to configure vue language server with neovim and lsp?</summary>
+
+### Hybrid mode configuration (Requires `@vue/language-server` version `^2.0.0`)
+
+Note: The "Take Over" mode has been discontinued. Instead, a new "Hybrid" mode has been introduced. In this mode, the Vue Language Server exclusively manages the CSS/HTML sections. As a result, you must run `@vue/language-server` in conjunction with a TypeScript server that employs `@vue/typescript-plugin`. Below is a streamlined configuration for Neovim's LSP, updated to accommodate the language server following the upgrade to version `2.0.0`.
+
+```lua
+-- If you are using mason.nvim, you can get the ts_plugin_path like this
+-- local mason_registry = require('mason-registry')
+-- local vue_language_server_path = mason_registry.get_package('vue-language-server'):get_install_path() .. '/node_modules/@vue/language-server'
+
+local vue_language_server_path = '/path/to/@vue/language-server'
+
+local lspconfig = require('lspconfig')
+
+lspconfig.tsserver.setup {
+  init_options = {
+    plugins = {
+      {
+        name = '@vue/typescript-plugin',
+        location = vue_language_server_path,
+        languages = { 'vue' },
+      },
+    },
+  },
+  filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+}
+
+-- No need to set `hybridMode` to `true` as it's the default value
+lspconfig.volar.setup {}
+```
+
+### None-Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
+
+Note: If `hybridMode` is set to `false` `Volar` will run embedded `tsserver` therefore there is no need to run it separately.
+
+For more information see [#4119](https://github.com/vuejs/language-tools/pull/4119)
+
+*Make sure you have typescript installed globally or pass the location to volar*
+
+Use volar for all `.{vue,js,ts,tsx,jsx}` files.
+```lua
+local lspconfig = require('lspconfig')
+
+-- lspconfig.tsserver.setup {} 
+lspconfig.volar.setup {
+  filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+  init_options = {
+    vue = {
+      hybridMode = false,
+    },
+  },
+}
+```
+
+Use `volar` for only `.vue` files and `tsserver` for `.ts` and `.js` files.
+```lua
+local lspconfig = require('lspconfig')
+
+lspconfig.tsserver.setup {
+  init_options = {
+    plugins = {
+      {
+        name = '@vue/typescript-plugin',
+        location = '/path/to/@vue/language-server',
+        languages = { 'vue' },
+      },
+    },
+  },
+
+lspconfig.volar.setup {
+  init_options = {
+    vue = {
+      hybridMode = false,
+    },
+  },
+},
+```
+
+</details>
 
 [mattn/vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
 *Vue language server auto configuration for vim-lsp*
@@ -200,7 +226,7 @@ flowchart LR
 	click VOLAR_PUG_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/pug-language-service"
 	click VOLAR_TS_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/typescript-language-service"
 
-	%% Extrnal Packages
+	%% External Packages
 	HTML_SERVICE[vscode-html-languageservice]
 	CSS_SERVICE[vscode-css-languageservice]
 	JSON_SERVICE[vscode-json-languageservice]
@@ -286,6 +312,19 @@ flowchart LR
 ```
 
 ---
+
+<h3 align="center">Full-time Support by</h3>
+<br />
+
+<p align="center">
+	<span>
+		<a href="https://stackblitz.com/">
+			<img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" />
+			<h4 align="center">Boot a fresh environment in milliseconds.</h4>
+		</a>
+	</span>
+</p>
+<br />
 
 <p align="center">
 	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
