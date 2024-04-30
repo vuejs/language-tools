@@ -1,29 +1,79 @@
 import type { Connection } from '@volar/language-server';
-import { createConnection, createServer, createTypeScriptProjectProviderFactory, loadTsdkByPath } from '@volar/language-server/node';
-import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveCommonLanguageId, resolveVueCompilerOptions } from '@vue/language-core';
-import { ServiceEnvironment, convertAttrName, convertTagName, createDefaultGetTsPluginClient, createVueServicePlugins, detect } from '@vue/language-service';
+import { createConnection, createServer, createTypeScriptProjectProvider, loadTsdkByPath } from '@volar/language-server/node';
+import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
+import { ServiceEnvironment, convertAttrName, convertTagName, createDefaultGetTsPluginClient, detect, getVueLanguageServicePlugins } from '@vue/language-service';
 import * as tsPluginClient from '@vue/typescript-plugin/lib/client';
 import { searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
-import { createHybridModeProjectProviderFactory } from './lib/hybridModeProject';
+import { GetLanguagePlugin, createHybridModeProjectProviderFactory } from './lib/hybridModeProject';
 import { DetectNameCasingRequest, GetConnectedNamedPipeServerRequest, GetConvertAttrCasingEditsRequest, GetConvertTagCasingEditsRequest, ParseSFCRequest } from './lib/protocol';
 import type { VueInitializationOptions } from './lib/types';
+
+let tsdk: ReturnType<typeof loadTsdkByPath>;
+let hybridMode: boolean;
+let getTsPluginClient: ReturnType<typeof createDefaultGetTsPluginClient>;
+
+const envToVueOptions = new WeakMap<ServiceEnvironment, VueCompilerOptions>();
+const watchedExtensions = new Set<string>();
 
 export const connection: Connection = createConnection();
 
 export const server = createServer(connection);
 
-const envToVueOptions = new WeakMap<ServiceEnvironment, VueCompilerOptions>();
+export const getLanguagePlugins: GetLanguagePlugin = async (serviceEnv, configFileName, host, sys) => {
+	const commandLine = await parseCommandLine();
+	const vueOptions = commandLine?.vueOptions ?? resolveVueCompilerOptions({});
+	const vueLanguagePlugin = createVueLanguagePlugin(
+		tsdk.typescript,
+		serviceEnv.typescript!.uriToFileName,
+		sys?.useCaseSensitiveFileNames ?? false,
+		() => host?.getProjectVersion?.() ?? '',
+		() => host?.getScriptFileNames() ?? [],
+		commandLine?.options ?? {},
+		vueOptions,
+	);
+	const extensions = [
+		...vueOptions.extensions.map(ext => ext.slice(1)),
+		...vueOptions.vitePressExtensions.map(ext => ext.slice(1)),
+		...vueOptions.petiteVueExtensions.map(ext => ext.slice(1)),
+	];
+	if (!hybridMode) {
+		extensions.push('js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json');
+	}
+	const newExtensions = extensions.filter(ext => !watchedExtensions.has(ext));
+	if (newExtensions.length) {
+		for (const ext of newExtensions) {
+			watchedExtensions.add(ext);
+		}
+		server.watchFiles(['**/*.{' + newExtensions.join(',') + '}']);
+	}
 
-let tsdk: ReturnType<typeof loadTsdkByPath>;
-let getTsPluginClient: ReturnType<typeof createDefaultGetTsPluginClient>;
+	envToVueOptions.set(serviceEnv, vueOptions);
+
+	return [vueLanguagePlugin];
+
+	async function parseCommandLine() {
+		let commandLine: ParsedCommandLine | undefined;
+		let sysVersion: number | undefined;
+		if (sys) {
+			let newSysVersion = await sys.sync();
+			while (sysVersion !== newSysVersion) {
+				sysVersion = newSysVersion;
+				if (configFileName) {
+					commandLine = createParsedCommandLine(tsdk.typescript, sys, configFileName);
+				}
+				newSysVersion = await sys.sync();
+			}
+		}
+		return commandLine;
+	}
+};
 
 connection.listen();
 
-connection.onInitialize(async params => {
-
+connection.onInitialize(params => {
 	const options: VueInitializationOptions = params.initializationOptions;
-	const hybridMode = options.vue?.hybridMode ?? true;
 
+	hybridMode = options.vue?.hybridMode ?? true;
 	tsdk = loadTsdkByPath(options.typescript.tsdk, params.locale);
 
 	if (hybridMode) {
@@ -33,74 +83,25 @@ connection.onInitialize(async params => {
 		getTsPluginClient = createDefaultGetTsPluginClient(tsdk.typescript, env => envToVueOptions.get(env)!);
 	}
 
-	const result = await server.initialize(
+	const result = server.initialize(
 		params,
+		getVueLanguageServicePlugins(
+			tsdk.typescript,
+			env => envToVueOptions.get(env)!,
+			getTsPluginClient,
+			hybridMode,
+		),
 		hybridMode
-			? createHybridModeProjectProviderFactory(tsdk.typescript.sys)
-			: createTypeScriptProjectProviderFactory(tsdk.typescript, tsdk.diagnosticMessages),
+			? createHybridModeProjectProviderFactory(tsdk.typescript.sys, getLanguagePlugins)
+			: createTypeScriptProjectProvider(tsdk.typescript, tsdk.diagnosticMessages, (env, ctx) => getLanguagePlugins(env, ctx.configFileName, ctx.host, ctx.sys)),
 		{
-			// TODO: Dynamically register file watcher for vue, vitepress, petitevue extensions
-			watchFileExtensions: hybridMode
-				? undefined
-				: ['js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json', 'vue'],
-			// TODO: remove it
-			getLanguageId: resolveCommonLanguageId,
-			getServicePlugins() {
-				return createVueServicePlugins(
-					tsdk.typescript,
-					env => envToVueOptions.get(env)!,
-					getTsPluginClient,
-					hybridMode,
-				);
-			},
-			async getLanguagePlugins(serviceEnv, projectContext) {
-				const commandLine = await parseCommandLine();
-				const vueOptions = commandLine?.vueOptions ?? resolveVueCompilerOptions({});
-				const vueLanguagePlugin = createVueLanguagePlugin(
-					tsdk.typescript,
-					serviceEnv.typescript!.uriToFileName,
-					projectContext.typescript?.sys.useCaseSensitiveFileNames ?? false,
-					() => projectContext.typescript?.host.getProjectVersion?.() ?? '',
-					() => projectContext.typescript?.host.getScriptFileNames() ?? [],
-					commandLine?.options ?? {},
-					vueOptions,
-				);
-
-				envToVueOptions.set(serviceEnv, vueOptions);
-
-				return [vueLanguagePlugin];
-
-				async function parseCommandLine() {
-
-					let commandLine: ParsedCommandLine | undefined;
-
-					if (projectContext.typescript) {
-
-						const { sys } = projectContext.typescript;
-
-						let sysVersion: number | undefined;
-						let newSysVersion = await sys.sync();
-
-						while (sysVersion !== newSysVersion) {
-							sysVersion = newSysVersion;
-							if (projectContext.typescript.configFileName) {
-								commandLine = createParsedCommandLine(tsdk.typescript, sys, projectContext.typescript.configFileName);
-							}
-							newSysVersion = await sys.sync();
-						}
-					}
-
-					return commandLine;
-				}
-			},
+			pullModelDiagnostics: hybridMode,
 		},
 	);
-
 	if (hybridMode) {
-		// handle by tsserver + @vue/typescript-plugin
+		// provided by tsserver + @vue/typescript-plugin
 		result.capabilities.semanticTokensProvider = undefined;
 	}
-
 	return result;
 });
 
@@ -145,5 +146,5 @@ connection.onRequest(GetConnectedNamedPipeServerRequest.type, async fileName => 
 });
 
 async function getService(uri: string) {
-	return (await server.projects.getProject(uri)).getLanguageService();
+	return (await server.projects.get.call(server, uri)).getLanguageService();
 }

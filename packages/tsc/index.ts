@@ -45,12 +45,6 @@ export function run() {
 				throw extensionsChangedException;
 			}
 		},
-		fileName => {
-			if (runExtensions.some(ext => fileName.endsWith(ext))) {
-				return 'vue';
-			}
-			return vue.resolveCommonLanguageId(fileName);
-		},
 	);
 
 	try {

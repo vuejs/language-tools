@@ -38,14 +38,21 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					);
 					const extensions = languagePlugin.typescript?.extraFileExtensions.map(ext => '.' + ext.extension) ?? [];
 					const getScriptSnapshot = info.languageServiceHost.getScriptSnapshot.bind(info.languageServiceHost);
+					const getScriptVersion = info.languageServiceHost.getScriptVersion.bind(info.languageServiceHost);
+					const syncedScriptVersions = new vue.FileMap<string>(ts.sys.useCaseSensitiveFileNames);
 					const language = createLanguage(
 						[languagePlugin],
 						ts.sys.useCaseSensitiveFileNames,
 						fileName => {
+							const version = getScriptVersion(fileName);
+							if (syncedScriptVersions.get(fileName) === version) {
+								return;
+							}
+							syncedScriptVersions.set(fileName, version);
+
 							const snapshot = getScriptSnapshot(fileName);
 							if (snapshot) {
-								// @ts-expect-error
-								language.scripts.set(fileName, undefined, snapshot);
+								language.scripts.set(fileName, snapshot);
 							}
 							else {
 								language.scripts.delete(fileName);

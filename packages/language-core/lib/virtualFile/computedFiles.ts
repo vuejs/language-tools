@@ -1,4 +1,4 @@
-import { VirtualCode, buildMappings, resolveCommonLanguageId, toString } from '@volar/language-core';
+import { VirtualCode, buildMappings, toString } from '@volar/language-core';
 import { computed } from 'computeds';
 import type * as ts from 'typescript';
 import type { Code, Sfc, SfcBlock, VueLanguagePlugin } from '../types';
@@ -57,7 +57,7 @@ export function computedFiles(
 				if (!file.parentCodeId) {
 					embeddedCodes.push({
 						id: file.id,
-						languageId: resolveCommonLanguageId(`/dummy.${file.lang}`),
+						languageId: resolveCommonLanguageId(file.lang),
 						linkedCodeMappings: file.linkedCodeMappings,
 						snapshot,
 						mappings,
@@ -71,7 +71,7 @@ export function computedFiles(
 						parent.embeddedCodes ??= [];
 						parent.embeddedCodes.push({
 							id: file.id,
-							languageId: resolveCommonLanguageId(`/dummy.${file.lang}`),
+							languageId: resolveCommonLanguageId(file.lang),
 							linkedCodeMappings: file.linkedCodeMappings,
 							snapshot,
 							mappings,
@@ -237,4 +237,20 @@ function fullDiffTextChangeRange(oldText: string, newText: string): ts.TextChang
 			};
 		}
 	}
+}
+
+export function resolveCommonLanguageId(lang: string) {
+	switch (lang) {
+		case 'js': return 'javascript';
+		case 'cjs': return 'javascript';
+		case 'mjs': return 'javascript';
+		case 'ts': return 'typescript';
+		case 'cts': return 'typescript';
+		case 'mts': return 'typescript';
+		case 'jsx': return 'javascriptreact';
+		case 'tsx': return 'typescriptreact';
+		case 'pug': return 'jade';
+		case 'md': return 'markdown';
+	}
+	return lang;
 }

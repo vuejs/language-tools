@@ -1,14 +1,14 @@
-import { DiagnosticModel, VueInitializationOptions } from '@vue/language-server';
-import * as vscode from 'vscode';
 import * as lsp from '@volar/vscode';
+import { quickPick } from '@volar/vscode/lib/common';
+import type { VueInitializationOptions } from '@vue/language-server';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as semver from 'semver';
+import * as vscode from 'vscode';
 import { config } from './config';
 import * as doctor from './features/doctor';
 import * as nameCasing from './features/nameCasing';
 import * as splitEditors from './features/splitEditors';
-import * as semver from 'semver';
-import * as fs from 'fs';
-import * as path from 'path';
-import { quickPick } from '@volar/vscode/lib/common';
 
 let client: lsp.BaseLanguageClient;
 
@@ -437,13 +437,8 @@ async function getInitializationOptions(
 	hybridMode: boolean,
 ): Promise<VueInitializationOptions> {
 	return {
-		diagnosticModel: enabledHybridMode ? DiagnosticModel.Pull : DiagnosticModel.Push,
 		typescript: { tsdk: (await lsp.getTsdk(context)).tsdk },
 		maxFileSize: config.server.maxFileSize,
-		semanticTokensLegend: {
-			tokenTypes: [],
-			tokenModifiers: [],
-		},
 		vue: {
 			hybridMode,
 		},
