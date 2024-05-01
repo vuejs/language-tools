@@ -31,7 +31,7 @@ importers:
         version: 5.2.10(@types/node@20.12.7)
       vitest:
         specifier: latest
-        version: 1.5.2(@types/node@20.12.7)
+        version: 1.5.3(@types/node@20.12.7)
 
   extensions/vscode:
     devDependencies:
@@ -45,13 +45,13 @@ importers:
         specifier: ~2.2.0
         version: 2.2.0
       '@vue/language-core':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../../packages/language-core
       '@vue/language-server':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../../packages/typescript-plugin
       esbuild:
         specifier: latest
@@ -75,7 +75,7 @@ importers:
         specifier: ~2.2.0
         version: 2.2.0
       '@vue/language-core':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
@@ -84,7 +84,7 @@ importers:
         specifier: '*'
         version: 5.4.5
       vue-component-type-helpers:
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../component-type-helpers
     devDependencies:
       '@types/node':
@@ -149,7 +149,7 @@ importers:
         specifier: latest
         version: 20.12.7
       '@vue/language-core':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../language-core
 
   packages/language-server:
@@ -161,13 +161,13 @@ importers:
         specifier: ~2.2.0
         version: 2.2.0
       '@vue/language-core':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../language-core
       '@vue/language-service':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../language-service
       '@vue/typescript-plugin':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../typescript-plugin
       vscode-languageserver-protocol:
         specifier: ^3.17.5
@@ -188,13 +188,13 @@ importers:
         specifier: ^3.4.0
         version: 3.4.26
       '@vue/language-core':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.4.0
         version: 3.4.26
       '@vue/typescript-plugin':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../typescript-plugin
       computeds:
         specifier: ^0.0.1
@@ -255,7 +255,7 @@ importers:
         specifier: ~2.2.0
         version: 2.2.0
       '@vue/language-core':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../language-core
       semver:
         specifier: ^7.5.4
@@ -274,7 +274,7 @@ importers:
         specifier: ~2.2.0
         version: 2.2.0
       '@vue/language-core':
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.4.0
@@ -290,7 +290,7 @@ importers:
         specifier: ^3.4.0
         version: 3.4.26(typescript@5.4.5)
       vue-component-type-helpers:
-        specifier: 2.0.15
+        specifier: 2.0.16
         version: link:../packages/component-type-helpers
       vue2:
         specifier: npm:vue@2.7.16
@@ -955,20 +955,20 @@ packages:
   '@types/vscode@1.88.0':
     resolution: {integrity: sha512-rWY+Bs6j/f1lvr8jqZTyp5arRMfovdxolcqGi+//+cPDOh8SBvzXH90e7BiSXct5HJ9HGW6jATchbRTpTJpEkw==}
 
-  '@vitest/expect@1.5.2':
-    resolution: {integrity: sha512-rf7MTD1WCoDlN3FfYJ9Llfp0PbdtOMZ3FIF0AVkDnKbp3oiMW1c8AmvRZBcqbAhDUAvF52e9zx4WQM1r3oraVA==}
+  '@vitest/expect@1.5.3':
+    resolution: {integrity: sha512-y+waPz31pOFr3rD7vWTbwiLe5+MgsMm40jTZbQE8p8/qXyBX3CQsIXRx9XK12IbY7q/t5a5aM/ckt33b4PxK2g==}
 
-  '@vitest/runner@1.5.2':
-    resolution: {integrity: sha512-7IJ7sJhMZrqx7HIEpv3WrMYcq8ZNz9L6alo81Y6f8hV5mIE6yVZsFoivLZmr0D777klm1ReqonE9LyChdcmw6g==}
+  '@vitest/runner@1.5.3':
+    resolution: {integrity: sha512-7PlfuReN8692IKQIdCxwir1AOaP5THfNkp0Uc4BKr2na+9lALNit7ub9l3/R7MP8aV61+mHKRGiqEKRIwu6iiQ==}
 
-  '@vitest/snapshot@1.5.2':
-    resolution: {integrity: sha512-CTEp/lTYos8fuCc9+Z55Ga5NVPKUgExritjF5VY7heRFUfheoAqBneUlvXSUJHUZPjnPmyZA96yLRJDP1QATFQ==}
+  '@vitest/snapshot@1.5.3':
+    resolution: {integrity: sha512-K3mvIsjyKYBhNIDujMD2gfQEzddLe51nNOAf45yKRt/QFJcUIeTQd2trRvv6M6oCBHNVnZwFWbQ4yj96ibiDsA==}
 
-  '@vitest/spy@1.5.2':
-    resolution: {integrity: sha512-xCcPvI8JpCtgikT9nLpHPL1/81AYqZy1GCy4+MCHBE7xi8jgsYkULpW5hrx5PGLgOQjUpb6fd15lqcriJ40tfQ==}
+  '@vitest/spy@1.5.3':
+    resolution: {integrity: sha512-Llj7Jgs6lbnL55WoshJUUacdJfjU2honvGcAJBxhra5TPEzTJH8ZuhI3p/JwqqfnTr4PmP7nDmOXP53MS7GJlg==}
 
-  '@vitest/utils@1.5.2':
-    resolution: {integrity: sha512-sWOmyofuXLJ85VvXNsroZur7mOJGiQeM0JN3/0D1uU8U9bGFM69X1iqHaRXl6R8BwaLY6yPCogP257zxTzkUdA==}
+  '@vitest/utils@1.5.3':
+    resolution: {integrity: sha512-rE9DTN1BRhzkzqNQO+kw8ZgfeEBCLXiHJwetk668shmNBpSagQxneT5eSqEBLP+cqSiAeecvQmbpFfdMyLcIQA==}
 
   '@volar/kit@2.2.0':
     resolution: {integrity: sha512-ZI6caoD7f7WSJC9lLOFGgp+idR8gzlK9+GzDV2urWAj4gTx0MzyB21uKZlo3hfZp72LpUmOvQBJ3n303gDE8FQ==}
@@ -2924,8 +2924,8 @@ packages:
     resolution: {integrity: sha512-YuKoXDAhBYxY7SfOKxHBDoSyENFeW5VvIIQp2TGQuit8gpK6MnWaQelBKxso72DoxTZfZdcP3W90LqpSkgPzLQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
-  vite-node@1.5.2:
-    resolution: {integrity: sha512-Y8p91kz9zU+bWtF7HGt6DVw2JbhyuB2RlZix3FPYAYmUyZ3n7iTp8eSyLyY6sxtPegvxQtmlTMhfPhUfCUF93A==}
+  vite-node@1.5.3:
+    resolution: {integrity: sha512-axFo00qiCpU/JLd8N1gu9iEYL3xTbMbMrbe5nDp9GL0nb6gurIdZLkkFogZXWnE8Oyy5kfSLwNVIcVsnhE7lgQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
@@ -2957,15 +2957,15 @@ packages:
       terser:
         optional: true
 
-  vitest@1.5.2:
-    resolution: {integrity: sha512-l9gwIkq16ug3xY7BxHwcBQovLZG75zZL0PlsiYQbf76Rz6QGs54416UWMtC0jXeihvHvcHrf2ROEjkQRVpoZYw==}
+  vitest@1.5.3:
+    resolution: {integrity: sha512-2oM7nLXylw3mQlW6GXnRriw+7YvZFk/YNV8AxIC3Z3MfFbuziLGWP9GPxxu/7nRlXhqyxBikpamr+lEEj1sUEw==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@types/node': ^18.0.0 || >=20.0.0
-      '@vitest/browser': 1.5.2
-      '@vitest/ui': 1.5.2
+      '@vitest/browser': 1.5.3
+      '@vitest/ui': 1.5.3
       happy-dom: '*'
       jsdom: '*'
     peerDependenciesMeta:
@@ -3828,29 +3828,29 @@ snapshots:
 
   '@types/vscode@1.88.0': {}
 
-  '@vitest/expect@1.5.2':
+  '@vitest/expect@1.5.3':
     dependencies:
-      '@vitest/spy': 1.5.2
-      '@vitest/utils': 1.5.2
+      '@vitest/spy': 1.5.3
+      '@vitest/utils': 1.5.3
       chai: 4.4.1
 
-  '@vitest/runner@1.5.2':
+  '@vitest/runner@1.5.3':
     dependencies:
-      '@vitest/utils': 1.5.2
+      '@vitest/utils': 1.5.3
       p-limit: 5.0.0
       pathe: 1.1.2
 
-  '@vitest/snapshot@1.5.2':
+  '@vitest/snapshot@1.5.3':
     dependencies:
       magic-string: 0.30.10
       pathe: 1.1.2
       pretty-format: 29.7.0
 
-  '@vitest/spy@1.5.2':
+  '@vitest/spy@1.5.3':
     dependencies:
       tinyspy: 2.2.1
 
-  '@vitest/utils@1.5.2':
+  '@vitest/utils@1.5.3':
     dependencies:
       diff-sequences: 29.6.3
       estree-walker: 3.0.3
@@ -5980,7 +5980,7 @@ snapshots:
     dependencies:
       builtins: 5.1.0
 
-  vite-node@1.5.2(@types/node@20.12.7):
+  vite-node@1.5.3(@types/node@20.12.7):
     dependencies:
       cac: 6.7.14
       debug: 4.3.4
@@ -6006,13 +6006,13 @@ snapshots:
       '@types/node': 20.12.7
       fsevents: 2.3.3
 
-  vitest@1.5.2(@types/node@20.12.7):
+  vitest@1.5.3(@types/node@20.12.7):
     dependencies:
-      '@vitest/expect': 1.5.2
-      '@vitest/runner': 1.5.2
-      '@vitest/snapshot': 1.5.2
-      '@vitest/spy': 1.5.2
-      '@vitest/utils': 1.5.2
+      '@vitest/expect': 1.5.3
+      '@vitest/runner': 1.5.3
+      '@vitest/snapshot': 1.5.3
+      '@vitest/spy': 1.5.3
+      '@vitest/utils': 1.5.3
       acorn-walk: 8.3.2
       chai: 4.4.1
       debug: 4.3.4
@@ -6026,7 +6026,7 @@ snapshots:
       tinybench: 2.8.0
       tinypool: 0.8.4
       vite: 5.2.10(@types/node@20.12.7)
-      vite-node: 1.5.2(@types/node@20.12.7)
+      vite-node: 1.5.3(@types/node@20.12.7)
       why-is-node-running: 2.2.2
     optionalDependencies:
       '@types/node': 20.12.7
