@@ -515,7 +515,7 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "2.2.0-alpha.12",
+		"@volar/vscode": "~2.2.0",
 		"@vue/language-core": "2.0.15",
 		"@vue/language-server": "2.0.15",
 		"@vue/typescript-plugin": "2.0.15",
