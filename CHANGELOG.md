@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.16 (2024/5/1)
+
+### Bug Fixes
+
+- **language-core:** virtual document language ID is not updated when changing SFC style block lang
+- **language-core:** correct logic for `defineSlots` destructuring (#4326) - Thanks @zhiyuanzmj
+- **language-core:** ObjectDirective does not work with `defineSlots` (#4327)
+- **language-service:** emmet not working in postcss style block (https://github.com/volarjs/volar.js/issues/169)
+
+### Other Changes
+
+- Upgrade to [Volar 2.2](https://github.com/volarjs/volar.js/releases/tag/v2.2.0)
+- **language-core:** export `VueEmbeddedCode` (#4265) - Thanks @zhiyuanzmj
+- **typescript-plugin:** expose `FileRegistry` to `project.program` (#3963) - Thanks @zcf0508
+- **vscode:** remove outdated formatters section (#4243) - Thanks @BBboy01
+
 ## 2.1.0-insiders.7 (2024/4/30)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.7), [爱发电电圈](https://afdian.net/p/84db515c069b11ef9eaf52540025c377)
