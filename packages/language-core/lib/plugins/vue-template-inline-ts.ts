@@ -92,7 +92,7 @@ const plugin: VueLanguagePlugin = ctx => {
 						prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 						&& prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY // style='z-index: 2' will compile to {'z-index':'2'}
 					) {
-						if (prop.name === 'on') {
+						if (prop.name === 'on' && prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 							const ast = createTsAst(ctx.modules.typescript, prop.exp, prop.exp.content);
 							addFormatCodes(
 								prop.exp.content,
