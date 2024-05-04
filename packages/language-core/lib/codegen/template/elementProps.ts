@@ -42,12 +42,16 @@ export function* generateElementProps(
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name === 'on'
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				yield* generateEventArg(options, ctx, prop.arg, false, true);
-				yield `: `;
-				yield* generateEventExpression(options, ctx, prop);
-				yield `,${newLine}`;
+				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					yield* generateEventArg(options, ctx, prop.arg, false, true);
+					yield `: `;
+					yield* generateEventExpression(options, ctx, prop);
+					yield `,${newLine}`;
+				}
+				else if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					propsFailedExps?.push(prop.exp);
+				}
 			}
 		}
 	}
