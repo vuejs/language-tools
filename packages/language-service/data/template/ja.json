@@ -1156,7 +1156,7 @@
       "name": "v-once",
       "description": {
         "kind": "markdown",
-        "value": "\n要素やコンポーネントを一度だけレンダリングし、その後の更新はスキップします。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  その後の再レンダリングでは、要素/コンポーネントとそのすべての子要素は静的コンテンツとして扱われ、スキップされます。これは、更新のパフォーマンスを最適化するために使用できます。\n\n  ```html\n  <!-- 単一要素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 子要素を持つ要素 -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- コンポーネント -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- `v-for` ディレクティブ -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  3.2 以降では、[`v-memo`](#v-memo) を使って、テンプレートの一部を無効化する条件付きでメモ化できます。\n\n- **参照**\n  - [データバインディング構文 - 展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
+        "value": "\n要素やコンポーネントを一度だけレンダリングし、その後の更新はスキップします。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  その後の再レンダリングでは、要素/コンポーネントとそのすべての子要素は静的コンテンツとして扱われ、スキップされます。これは、更新のパフォーマンスを最適化するために使用できます。\n\n  ```html\n  <!-- 単一要素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 子要素を持つ要素 -->\n  <div v-once>\n    <h1>Comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- コンポーネント -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- `v-for` ディレクティブ -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  3.2 以降では、[`v-memo`](#v-memo) を使って、テンプレートの一部を無効化する条件付きでメモ化できます。\n\n- **参照**\n  - [データバインディング構文 - 展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
       },
       "references": [
         {
