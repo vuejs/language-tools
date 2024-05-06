@@ -501,7 +501,7 @@ export function create(
 									return [];
 								}
 								let ctxVars = [
-									..._tsCodegen.scriptRanges()?.bindings.bindingRange.map(binding => vueCode.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
+									..._tsCodegen.scriptRanges()?.bindings.bindingRanges.map(binding => vueCode.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
 									..._tsCodegen.scriptSetupRanges()?.bindings.bindingRanges.map(binding => vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
 									...templateContextProps,
 								];
