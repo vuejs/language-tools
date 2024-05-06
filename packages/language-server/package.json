@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-server",
-	"version": "2.0.14",
+	"version": "2.0.16",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -15,11 +15,11 @@
 		"directory": "packages/language-server"
 	},
 	"dependencies": {
-		"@volar/language-core": "2.2.0-alpha.10",
-		"@volar/language-server": "2.2.0-alpha.10",
-		"@vue/language-core": "2.0.14",
-		"@vue/language-service": "2.0.14",
-		"@vue/typescript-plugin": "2.0.14",
+		"@volar/language-core": "~2.2.0",
+		"@volar/language-server": "~2.2.0",
+		"@vue/language-core": "2.0.16",
+		"@vue/language-service": "2.0.16",
+		"@vue/typescript-plugin": "2.0.16",
 		"vscode-languageserver-protocol": "^3.17.5"
 	}
 }

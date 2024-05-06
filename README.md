@@ -319,7 +319,7 @@ flowchart LR
 <p align="center">
 	<span>
 		<a href="https://stackblitz.com/">
-			<img src="https://raw.githubusercontent.com/vuejs/language-tools/HEAD/.github/sponsors/StackBlitz.png" height="80" />
+			<img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/StackBlitz.svg" height="80" />
 			<h4 align="center">Boot a fresh environment in milliseconds.</h4>
 		</a>
 	</span>

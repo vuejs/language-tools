@@ -51,7 +51,7 @@ function getFileRegistryKey(
 	return JSON.stringify(values);
 }
 
-interface _Plugin extends LanguagePlugin<VueVirtualCode> {
+export interface _Plugin extends LanguagePlugin<VueVirtualCode> {
 	getCanonicalFileName: (fileName: string) => string;
 	pluginContext: Parameters<VueLanguagePlugin>[0];
 }
@@ -93,14 +93,19 @@ export function createVueLanguagePlugin(
 	return {
 		getCanonicalFileName,
 		pluginContext,
+		getLanguageId(scriptId) {
+			if (vueCompilerOptions.extensions.some(ext => scriptId.endsWith(ext))) {
+				return 'vue';
+			}
+			if (vueCompilerOptions.vitePressExtensions.some(ext => scriptId.endsWith(ext))) {
+				return 'markdown';
+			}
+			if (vueCompilerOptions.petiteVueExtensions.some(ext => scriptId.endsWith(ext))) {
+				return 'html';
+			}
+		},
 		createVirtualCode(fileId, languageId, snapshot) {
-			const isVueFile = vueCompilerOptions.extensions.some(ext => fileId.endsWith(ext))
-				|| (vueCompilerOptions.extensions.length && languageId === 'vue');
-			const isVitePressFile = vueCompilerOptions.vitePressExtensions.some(ext => fileId.endsWith(ext))
-				|| (vueCompilerOptions.vitePressExtensions.length && languageId === 'markdown');
-			const isPetiteVueFile = vueCompilerOptions.petiteVueExtensions.some(ext => fileId.endsWith(ext))
-				|| (vueCompilerOptions.petiteVueExtensions.length && languageId === 'html');
-			if (isVueFile || isVitePressFile || isPetiteVueFile) {
+			if (languageId === 'vue' || languageId === 'markdown' || languageId === 'html') {
 				const fileName = getFileName(fileId);
 				const projectVersion = getProjectVersion();
 				if (projectVersion !== canonicalRootFileNamesVersion) {
@@ -122,9 +127,9 @@ export function createVueLanguagePlugin(
 						languageId,
 						snapshot,
 						vueCompilerOptions,
-						isPetiteVueFile
+						languageId === 'html'
 							? [petiteVueSfcPlugin, ...basePlugins]
-							: isVitePressFile
+							: languageId === 'markdown'
 								? [vitePressSfcPlugin, ...basePlugins]
 								: [vueSfcPlugin, ...basePlugins],
 						ts,

@@ -37,7 +37,25 @@ export function* generateElementProps(
 		classAttrNum++;
 	}
 
-	if (!isIntrinsicElement) {
+	if (isIntrinsicElement) {
+		for (const prop of props) {
+			if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'on'
+			) {
+				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					yield* generateEventArg(options, ctx, prop.arg, false, true);
+					yield `: `;
+					yield* generateEventExpression(options, ctx, prop);
+					yield `,${newLine}`;
+				}
+				else if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					propsFailedExps?.push(prop.exp);
+				}
+			}
+		}
+	}
+	else {
 		let generatedEvent = false;
 		for (const prop of props) {
 			if (
@@ -57,20 +75,6 @@ export function* generateElementProps(
 		}
 		if (generatedEvent) {
 			yield `}, `;
-		}
-	}
-	else {
-		for (const prop of props) {
-			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'on'
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			) {
-				yield* generateEventArg(options, ctx, prop.arg, false);
-				yield `: `;
-				yield* generateEventExpression(options, ctx, prop);
-				yield `,${newLine}`;
-			}
 		}
 	}
 

@@ -1,5 +1,71 @@
 # Changelog
 
+## 2.1.0-insiders.8 (2024/5/1)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.8), [爱发电电圈](https://afdian.net/p/f45436ca076d11ef9b7352540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.16](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2016-202451).
+
+## 2.0.16 (2024/5/1)
+
+### Bug Fixes
+
+- **language-core:** virtual document language ID is not updated when changing SFC style block lang
+- **language-core:** correct logic for `defineSlots` destructuring (#4326) - Thanks @zhiyuanzmj
+- **language-core:** ObjectDirective does not work with `defineSlots` (#4327)
+- **language-service:** emmet not working in postcss style block (https://github.com/volarjs/volar.js/issues/169)
+
+### Other Changes
+
+- Upgrade to [Volar 2.2](https://github.com/volarjs/volar.js/releases/tag/v2.2.0)
+- **language-core:** export `VueEmbeddedCode` (#4265) - Thanks @zhiyuanzmj
+- **typescript-plugin:** expose `FileRegistry` to `project.program` (#3963) - Thanks @zcf0508
+- **vscode:** remove outdated formatters section (#4243) - Thanks @BBboy01
+
+## 2.1.0-insiders.7 (2024/4/30)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.7), [爱发电电圈](https://afdian.net/p/84db515c069b11ef9eaf52540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.15](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2015-2024430).
+
+## 2.0.15 (2024/4/30)
+
+### Features
+
+- Redesign additional extensions, VitePress, PetiteVue support (#4321)
+  - Fix custom file extensions not working in Hybrid Mode (#4251)
+- **vscode:** prompt when Hybrid Mode is explicitly enabled but known incompatible extensions are installed
+- **language-core:** use internal options for directly exposing user props/emits types ([vuejs/core#10801](https://github.com/vuejs/core/pull/10801))
+- **language-core:** support defineSlots destructuring (#4312) - Thanks @zhiyuanzmj
+
+### Bug Fixes
+
+- **vscode:** when enabled VitePress support, extension not activated when opening markdown files
+- **language-core:** auto-complete not working in v-bind
+
+### Performance
+
+- **language-service:** emmet completion should not be blocked by TS type evaluation (#4298)
+- **language-core:** simplify virtual code for intrinsic elements
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0-alpha.10` to `v2.2.0-alpha.12`:
+  - Avoid extension crash when workspace TSDK does not exist
+  - Fix template variables cannot be renamed at the first character in Hybrid Mode (#4297)
+  - Fix template virtual code mapping is misaligned in Windows in Hybrid Mode (#4297)
+- Add `svelte.svelte-vscode` (>=108.4.0) to Hybrid Mode compatibility whitelist ([sveltejs/language-tools#2317](https://github.com/sveltejs/language-tools/pull/2317))
+- **component-meta:** convert source code to TS
+- **language-core:** export `allCodeFeatures` (#4320) - Thanks @zhiyuanzmj
+
 ## 2.1.0-insiders.6 (2024/4/25)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.6), [爱发电电圈](https://afdian.net/p/f73a772602ab11efa33652540025c377)

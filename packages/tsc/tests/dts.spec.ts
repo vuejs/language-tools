@@ -41,17 +41,6 @@ describe('vue-tsc-dts', () => {
 			vueOptions,
 		);
 		return [vueLanguagePlugin];
-	}, fileName => {
-		if (vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
-			return 'vue';
-		}
-		if (vueOptions.vitePressExtensions.some(ext => fileName.endsWith(ext))) {
-			return 'markdown';
-		}
-		if (vueOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
-			return 'html';
-		}
-		return vue.resolveCommonLanguageId(fileName);
 	});
 	const program = createProgram(options);
 

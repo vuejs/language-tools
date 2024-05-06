@@ -30,7 +30,7 @@ export function* generateElementEvents(
 			yield `let ${eventVar} = { '${prop.arg.loc.source}': __VLS_pickEvent(`;
 			yield `${eventsVar}['${prop.arg.loc.source}'], `;
 			yield `({} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>)`;
-			yield* generateEventArg(options, ctx, prop.arg, true);
+			yield* generateEventArg(options, ctx, prop.arg, true, false);
 			yield `) }${endOfLine}`;
 			yield `${eventVar} = { `;
 			if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
@@ -105,7 +105,14 @@ export function* generateEventArg(
 	ctx: TemplateCodegenContext,
 	arg: CompilerDOM.SimpleExpressionNode,
 	access: boolean,
+	enableHover: boolean,
 ): Generator<Code> {
+	const features = enableHover
+		? {
+			...ctx.codeFeatures.withoutHighlightAndCompletion,
+			...eventArgFeatures,
+		}
+		: eventArgFeatures;
 	if (arg.loc.source.startsWith('[') && arg.loc.source.endsWith(']')) {
 		yield `[`;
 		yield* generateInterpolation(
@@ -124,7 +131,7 @@ export function* generateEventArg(
 		if (access) {
 			yield `.`;
 		}
-		yield ['', 'template', arg.loc.start.offset, eventArgFeatures];
+		yield ['', 'template', arg.loc.start.offset, features];
 		yield `on`;
 		yield* generateCamelized(
 			capitalize(arg.loc.source),
@@ -139,7 +146,7 @@ export function* generateEventArg(
 		yield* wrapWith(
 			arg.loc.start.offset,
 			arg.loc.end.offset,
-			eventArgFeatures,
+			features,
 			`'`,
 			['', 'template', arg.loc.start.offset, combineLastMapping],
 			'on',

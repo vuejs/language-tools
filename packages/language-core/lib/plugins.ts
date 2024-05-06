@@ -8,6 +8,8 @@ import useVueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
 import useVueTsx from './plugins/vue-tsx';
 import { pluginVersion, type VueLanguagePlugin } from './types';
 
+export * from './plugins/shared'
+
 export function getBasePlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 
 	const plugins: VueLanguagePlugin[] = [
