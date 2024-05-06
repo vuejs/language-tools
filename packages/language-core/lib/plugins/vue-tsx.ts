@@ -122,6 +122,7 @@ function createTsx(
 			hasDefineSlots: hasDefineSlots(),
 			slotsAssignName: slotsAssignName(),
 			propsAssignName: propsAssignName(),
+			bindingTypes: bindingTypes(),
 		});
 
 		let current = codegen.next();
@@ -140,6 +141,7 @@ function createTsx(
 	const hasDefineSlots = computed(() => !!scriptSetupRanges()?.slots.define);
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
+	const bindingTypes = computed(() => scriptSetupRanges()?.bindings.bindingTypes ?? scriptRanges()?.bindings.bindingTypes);
 	const generatedScript = computed(() => {
 		const codes: Code[] = [];
 		const linkedCodeMappings: Mapping[] = [];

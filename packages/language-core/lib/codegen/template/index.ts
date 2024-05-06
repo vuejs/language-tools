@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import type { BindingTypes } from '../../utils/parseBindings';
 import { endOfLine, newLine, wrapWith } from '../common';
 import { createTemplateCodegenContext } from './context';
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
@@ -18,10 +19,14 @@ export interface TemplateCodegenOptions {
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;
+	bindingTypes?: Map<string, BindingTypes>;
 }
 
 export function* generateTemplate(options: TemplateCodegenOptions) {
 	const ctx = createTemplateCodegenContext();
+	if (options.bindingTypes) {
+		ctx.setBindingTypes(options.bindingTypes);
+	};
 
 	let hasSlot = false;
 

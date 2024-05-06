@@ -61,7 +61,18 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 								}
 							}
 							else {
-								bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+								// const a = 1;
+								if (decl.initializer) {
+									const innerExpression = getInnerExpression(decl.initializer);
+									_getNodeText(innerExpression).includes('record') && console.log(_getNodeText(innerExpression));
+									if (isLiteral(innerExpression)) {
+										bindingTypes.set(nodeText, BindingTypes.NoUnref);
+									}
+								}
+								// const a = bar;
+								else {
+									bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+								}
 							}
 						}
 					}
@@ -149,8 +160,30 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 	function _getNodeText(node: ts.Node) {
 		return getNodeText(ts, node, sourceFile);
 	}
+	function getInnerExpression(node: ts.Node) {
+		if (isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isParenthesizedExpression(node)) {
+			return getInnerExpression(node.expression);
+		}
+		else if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.CommaToken) {
+			return getInnerExpression(node.right);
+		}
+		return node;
+	}
+	function isLiteral(node: ts.Node) {
+		return ts.isLiteralExpression(node)
+			|| ts.isArrayLiteralExpression(node)
+			|| ts.isObjectLiteralExpression(node)
+			|| ts.isClassExpression(node)
+			|| ts.isVoidExpression(node)
+			|| ts.isArrowFunction(node)
+			|| ts.isFunctionExpression(node)
+			|| ts.isNewExpression(node);
+	}
+	// isAsExpression is missing in tsc
+	function isAsExpression(node: ts.Node): node is ts.AsExpression {
+		return node.kind === ts.SyntaxKind.AsExpression;
+	}
 }
-
 
 export function getStartEnd(
 	ts: typeof import('typescript'),

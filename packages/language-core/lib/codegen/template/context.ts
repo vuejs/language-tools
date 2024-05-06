@@ -1,5 +1,6 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
+import type { BindingTypes } from '../../utils/parseBindings';
 import { endOfLine, newLine, wrapWith } from '../common';
 
 const _codeFeatures = {
@@ -96,6 +97,7 @@ export function createTemplateCodegenContext() {
 	const blockConditions: string[] = [];
 	const usedComponentCtxVars = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
+	let bindingTypes: Map<string, BindingTypes> | undefined;
 
 	return {
 		slots,
@@ -106,6 +108,9 @@ export function createTemplateCodegenContext() {
 		blockConditions,
 		usedComponentCtxVars,
 		scopedClasses,
+		get bindingTypes() {
+			return bindingTypes;
+		},
 		accessGlobalVariable(name: string, offset?: number) {
 			let arr = accessGlobalVariables.get(name);
 			if (!arr) {
@@ -126,6 +131,9 @@ export function createTemplateCodegenContext() {
 		},
 		getInternalVariable: () => {
 			return `__VLS_${variableId++}`;
+		},
+		setBindingTypes: (types: Map<string, BindingTypes>) => {
+			bindingTypes = types;
 		},
 		ignoreError: function* (): Generator<Code> {
 			if (!ignoredError) {
