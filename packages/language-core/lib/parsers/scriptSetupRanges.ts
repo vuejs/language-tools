@@ -1,5 +1,6 @@
 import type * as ts from 'typescript';
 import type { VueCompilerOptions, TextRange } from '../types';
+import { getNodeText, getStartEnd, parseBindings } from '../utils/parseBindings';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
@@ -45,7 +46,7 @@ export function parseScriptSetupRanges(
 		required: boolean;
 		isModel?: boolean;
 	}[] = [];
-	const bindings = parseBindingRanges(ts, ast);
+	const bindings = parseBindings(ts, ast);
 	const text = ast.text;
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
 
@@ -247,109 +248,4 @@ export function parseScriptSetupRanges(
 			parents.pop();
 		});
 	}
-}
-
-export function parseBindingRanges(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
-	const bindings: TextRange[] = [];
-	ts.forEachChild(sourceFile, node => {
-		if (ts.isVariableStatement(node)) {
-			for (const node_2 of node.declarationList.declarations) {
-				const vars = _findBindingVars(node_2.name);
-				for (const _var of vars) {
-					bindings.push(_var);
-				}
-			}
-		}
-		else if (ts.isFunctionDeclaration(node)) {
-			if (node.name && ts.isIdentifier(node.name)) {
-				bindings.push(_getStartEnd(node.name));
-			}
-		}
-		else if (ts.isClassDeclaration(node)) {
-			if (node.name) {
-				bindings.push(_getStartEnd(node.name));
-			}
-		}
-		else if (ts.isEnumDeclaration(node)) {
-			bindings.push(_getStartEnd(node.name));
-		}
-
-		if (ts.isImportDeclaration(node)) {
-			if (node.importClause && !node.importClause.isTypeOnly) {
-				if (node.importClause.name) {
-					bindings.push(_getStartEnd(node.importClause.name));
-				}
-				if (node.importClause.namedBindings) {
-					if (ts.isNamedImports(node.importClause.namedBindings)) {
-						for (const element of node.importClause.namedBindings.elements) {
-							bindings.push(_getStartEnd(element.name));
-						}
-					}
-					else if (ts.isNamespaceImport(node.importClause.namedBindings)) {
-						bindings.push(_getStartEnd(node.importClause.namedBindings.name));
-					}
-				}
-			}
-		}
-	});
-	return bindings;
-	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(ts, node, sourceFile);
-	}
-	function _findBindingVars(left: ts.BindingName) {
-		return findBindingVars(ts, left, sourceFile);
-	}
-}
-
-export function findBindingVars(ts: typeof import('typescript'), left: ts.BindingName, sourceFile: ts.SourceFile) {
-	const vars: TextRange[] = [];
-	worker(left);
-	return vars;
-	function worker(_node: ts.Node) {
-		if (ts.isIdentifier(_node)) {
-			vars.push(getStartEnd(ts, _node, sourceFile));
-		}
-		// { ? } = ...
-		// [ ? ] = ...
-		else if (ts.isObjectBindingPattern(_node) || ts.isArrayBindingPattern(_node)) {
-			for (const property of _node.elements) {
-				if (ts.isBindingElement(property)) {
-					worker(property.name);
-				}
-			}
-		}
-		// { foo: ? } = ...
-		else if (ts.isPropertyAssignment(_node)) {
-			worker(_node.initializer);
-		}
-		// { foo } = ...
-		else if (ts.isShorthandPropertyAssignment(_node)) {
-			vars.push(getStartEnd(ts, _node.name, sourceFile));
-		}
-		// { ...? } = ...
-		// [ ...? ] = ...
-		else if (ts.isSpreadAssignment(_node) || ts.isSpreadElement(_node)) {
-			worker(_node.expression);
-		}
-	}
-}
-
-export function getStartEnd(
-	ts: typeof import('typescript'),
-	node: ts.Node,
-	sourceFile: ts.SourceFile
-) {
-	return {
-		start: (ts as any).getTokenPosOfNode(node, sourceFile) as number,
-		end: node.end,
-	};
-}
-
-export function getNodeText(
-	ts: typeof import('typescript'),
-	node: ts.Node,
-	sourceFile: ts.SourceFile
-) {
-	const { start, end } = getStartEnd(ts, node, sourceFile);
-	return sourceFile.text.substring(start, end);
 }

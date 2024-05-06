@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import { getNodeText } from '../parsers/scriptSetupRanges';
+import { getNodeText } from '../utils/parseBindings';
 import type { Code, SfcBlock, VueCodeInformation } from '../types';
 
 export const newLine = '\n';

@@ -451,7 +451,7 @@ export function create(
 								}
 							}
 
-							for (const binding of scriptSetupRanges?.bindings ?? []) {
+							for (const binding of scriptSetupRanges?.bindings.bindingRanges ?? []) {
 								const name = vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
@@ -501,8 +501,8 @@ export function create(
 									return [];
 								}
 								let ctxVars = [
-									..._tsCodegen.scriptRanges()?.bindings.map(binding => vueCode.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
-									..._tsCodegen.scriptSetupRanges()?.bindings.map(binding => vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
+									...[..._tsCodegen.scriptRanges()?.bindings.bindingRanges.values() ?? []].map(binding => vueCode.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
+									...[..._tsCodegen.scriptSetupRanges()?.bindings.bindingRanges.values() ?? []].map(binding => vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
 									...templateContextProps,
 								];
 								ctxVars = [...new Set(ctxVars)];

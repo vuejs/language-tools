@@ -1,6 +1,6 @@
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript';
-import { getNodeText, getStartEnd } from '../../parsers/scriptSetupRanges';
+import { getNodeText, getStartEnd } from '../../utils/parseBindings';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { collectVars, createTsAst } from '../common';
 import type { TemplateCodegenContext } from './context';

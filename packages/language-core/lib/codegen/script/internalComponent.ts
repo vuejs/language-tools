@@ -21,9 +21,9 @@ export function* generateInternalComponent(
 		// bindings
 		const templateUsageVars = getTemplateUsageVars(options, ctx);
 		for (const [content, bindings] of [
-			[options.sfc.scriptSetup.content, options.scriptSetupRanges.bindings] as const,
+			[options.sfc.scriptSetup.content, options.scriptSetupRanges.bindings.bindingRanges] as const,
 			options.sfc.script && options.scriptRanges
-				? [options.sfc.script.content, options.scriptRanges.bindings] as const
+				? [options.sfc.script.content, options.scriptRanges.bindings.bindingRanges] as const
 				: ['', []] as const,
 		]) {
 			for (const expose of bindings) {

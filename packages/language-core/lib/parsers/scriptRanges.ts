@@ -1,6 +1,6 @@
 import type { TextRange } from '../types';
 import type * as ts from 'typescript';
-import { getNodeText, getStartEnd, parseBindingRanges } from './scriptSetupRanges';
+import { BindingTypes, getNodeText, getStartEnd, parseBindings } from '../utils/parseBindings';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }
 
@@ -15,7 +15,9 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 		nameOption: TextRange | undefined,
 	}) | undefined;
 
-	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast) : [];
+	const bindings = hasScriptSetup
+		? parseBindings(ts, ast)
+		: { bindingRanges: [], bindingTypes: new Map<string, BindingTypes>() };
 
 	ts.forEachChild(ast, raw => {
 

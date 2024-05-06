@@ -108,9 +108,10 @@ export function createScriptCodegenContext(options: ScriptCodegenOptions) {
 		generatedPropsType: false,
 		scriptSetupGeneratedOffset: undefined as number | undefined,
 		bypassDefineComponent: options.lang === 'js' || options.lang === 'jsx',
+		// TODO: maybe not using substring to get names?
 		bindingNames: new Set([
-			...options.scriptRanges?.bindings.map(range => options.sfc.script!.content.substring(range.start, range.end)) ?? [],
-			...options.scriptSetupRanges?.bindings.map(range => options.sfc.scriptSetup!.content.substring(range.start, range.end)) ?? [],
+			...options.scriptRanges?.bindings.bindingRanges.map(range => options.sfc.script!.content.substring(range.start, range.end)) ?? [],
+			...options.scriptSetupRanges?.bindings.bindingRanges.map(range => options.sfc.scriptSetup!.content.substring(range.start, range.end)) ?? [],
 		]),
 		helperTypes,
 		generateHelperTypes,
