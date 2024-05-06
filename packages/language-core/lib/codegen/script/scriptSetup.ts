@@ -272,8 +272,8 @@ function* generateComponentProps(
 			yield `,${newLine}`;
 		}
 		if (scriptSetupRanges.emits.define) {
-			yield `	emits: ({} as __VLS_NormalizeEmits<typeof `;
-			yield scriptSetupRanges.emits.name ?? '__VLS_emit';
+			yield `	emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`;
+			yield scriptSetupRanges.emits.name ?? ' & typeof __VLS_emit';
 			yield `>),${newLine}`;
 		}
 		yield `})${endOfLine}`;
