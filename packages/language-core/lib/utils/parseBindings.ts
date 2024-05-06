@@ -36,7 +36,7 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 										if (ts.isTypeLiteralNode(typeNode)) {
 											for (const prop of typeNode.members) {
 												if (ts.isPropertySignature(prop)) {
-													bindingTypes.set(prop.name.getText(), BindingTypes.NoUnref);
+													bindingTypes.set(_getNodeText(prop.name), BindingTypes.NoUnref);
 												}
 											}
 										}
@@ -46,7 +46,7 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 										if (ts.isObjectLiteralExpression(arg)) {
 											for (const prop of arg.properties) {
 												if (ts.isPropertyAssignment(prop)) {
-													bindingTypes.set(prop.name.getText(), BindingTypes.NoUnref);
+													bindingTypes.set(_getNodeText(prop.name), BindingTypes.NoUnref);
 												}
 											}
 										}
@@ -117,7 +117,12 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 				if (node.importClause.name) {
 					const nodeText = _getNodeText(node.importClause.name);
 					bindingRanges.push(_getStartEnd(node.importClause.name));
-					bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+					if (ts.isStringLiteral(node.moduleSpecifier) && _getNodeText(node.moduleSpecifier).endsWith('.vue')) {
+						bindingTypes.set(nodeText, BindingTypes.NoUnref);
+					}
+					else {
+						bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+					}
 				}
 				if (node.importClause.namedBindings) {
 					if (ts.isNamedImports(node.importClause.namedBindings)) {
@@ -189,7 +194,7 @@ export function getNodeText(
 // 								if (ts.isTypeLiteralNode(typeNode)) {
 // 									for (const prop of typeNode.members) {
 // 										if (ts.isPropertySignature(prop)) {
-// 											bindings.set(prop.name.getText(), BindingTypes.NoUnref);
+// 											bindings.set(_getNodeText(prop.name), BindingTypes.NoUnref);
 // 										}
 // 									}
 // 								}
@@ -199,7 +204,7 @@ export function getNodeText(
 // 								if (ts.isObjectLiteralExpression(arg)) {
 // 									for (const prop of arg.properties) {
 // 										if (ts.isPropertyAssignment(prop)) {
-// 											bindings.set(prop.name.getText(), BindingTypes.NoUnref);
+// 											bindings.set(_getNodeText(prop.name), BindingTypes.NoUnref);
 // 										}
 // 									}
 // 								}
