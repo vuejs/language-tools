@@ -39,16 +39,12 @@ export default _default;
 `;
 
 exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/component-generic.vue.d.ts 1`] = `
-"declare const _default: <T>(__VLS_props: {
-    onFoo?: (value: string) => any;
-} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, __VLS_ctx?: {
+"declare const _default: <T>(__VLS_props: {} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, __VLS_ctx?: {
     slots: {};
     attrs: any;
     emit: (evt: "foo", value: string) => void;
 }, __VLS_expose?: (exposed: import('vue').ShallowUnwrapRef<{}>) => void, __VLS_setup?: Promise<{
-    props: {
-        onFoo?: (value: string) => any;
-    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
+    props: {} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
     expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {};
@@ -57,9 +53,7 @@ exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/compo
     [key: string]: any;
 }> & {
     __ctx?: {
-        props: {
-            onFoo?: (value: string) => any;
-        } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
+        props: {} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
         expose(exposed: import('vue').ShallowUnwrapRef<{}>): void;
         attrs: any;
         slots: {};
@@ -75,7 +69,9 @@ type __VLS_Prettify<T> = {
 
 exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
 "declare const _default: <T>(__VLS_props: {
+    "onUpdate:title"?: (title: string) => any;
     onBar?: (data: number) => any;
+    title?: string;
     foo: number;
 } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, __VLS_ctx?: {
     slots: Readonly<{
@@ -88,12 +84,14 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         }): any;
     };
     attrs: any;
-    emit: (e: 'bar', data: number) => void;
+    emit: ((e: 'bar', data: number) => void) & ((evt: "update:title", title: string) => void);
 }, __VLS_expose?: (exposed: import("vue").ShallowUnwrapRef<{
     baz: number;
 }>) => void, __VLS_setup?: Promise<{
     props: {
+        "onUpdate:title"?: (title: string) => any;
         onBar?: (data: number) => any;
+        title?: string;
         foo: number;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
@@ -109,13 +107,15 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
             foo: number;
         }): any;
     };
-    emit: (e: 'bar', data: number) => void;
+    emit: ((e: 'bar', data: number) => void) & ((evt: "update:title", title: string) => void);
 }>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
     [key: string]: any;
 }> & {
     __ctx?: {
         props: {
+            "onUpdate:title"?: (title: string) => any;
             onBar?: (data: number) => any;
+            title?: string;
             foo: number;
         } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
         expose(exposed: import("vue").ShallowUnwrapRef<{
@@ -131,7 +131,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
                 foo: number;
             }): any;
         };
-        emit: (e: 'bar', data: number) => void;
+        emit: ((e: 'bar', data: number) => void) & ((evt: "update:title", title: string) => void);
     };
 };
 export default _default;
@@ -206,6 +206,12 @@ export default _default;
 type __VLS_Prettify<T> = {
     [K in keyof T]: T[K];
 } & {};
+"
+`;
+
+exports[`vue-tsc-dts > Input: generic/main.vue, Output: generic/main.vue.d.ts 1`] = `
+"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
+export default _default;
 "
 `;
 
