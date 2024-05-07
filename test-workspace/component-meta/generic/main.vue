@@ -6,5 +6,5 @@ const title = ref('')
 </script>
 
 <template>
-	<Comp :foo="1" v-model:="title" />
+	<Comp :foo="1" v-model:title="title" />
 </template>
