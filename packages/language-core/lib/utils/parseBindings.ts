@@ -19,11 +19,10 @@ export function parseBindings(
 	const bindingTypes = new Map<string, BindingTypes>();
 	const vueImportAliases: Record<string, string> = {
 		ref: 'ref',
-		reactive: 'reactive',
 		computed: 'computed',
 		shallowRef: 'shallowRef',
 		customRef: 'customRef',
-		toRefs: 'toRef',
+		toRef: 'toRef',
 	};
 
 	ts.forEachChild(sourceFile, node => {
@@ -46,18 +45,24 @@ export function parseBindings(
 				worker(decl.name, true);
 				function worker(_node: ts.Node, root = false) {
 					if (ts.isIdentifier(_node)) {
-						const nodeText = _getNodeText(_node);
+						const name = _getNodeText(_node);
 						bindingRanges.push(_getStartEnd(_node));
 						if (root) {
 							if (declList.flags & ts.NodeFlags.Const) {
 								if (decl.initializer) {
 									if (ts.isCallExpression(decl.initializer)) {
-										const callText = _getNodeText(decl.initializer.expression);
-										if (callText === vueImportAliases.ref) {
-											bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+										const callee = _getNodeText(decl.initializer.expression);
+										if (
+											callee === vueImportAliases.ref
+											|| callee === vueImportAliases.computed
+											|| callee === vueImportAliases.shallowRef
+											|| callee === vueImportAliases.customRef
+											|| callee === vueImportAliases.toRef
+										) {
+											bindingTypes.set(name, BindingTypes.NeedUnref);
 										}
-										else if (vueCompilerOptions?.macros.defineProps.includes(callText)) {
-											bindingTypes.set(nodeText, BindingTypes.DirectAccess);
+										else if (vueCompilerOptions?.macros.defineProps.includes(callee)) {
+											bindingTypes.set(name, BindingTypes.DirectAccess);
 											if (decl.initializer.typeArguments?.length === 1) {
 												const typeNode = decl.initializer.typeArguments[0];
 												if (ts.isTypeLiteralNode(typeNode)) {
@@ -80,7 +85,7 @@ export function parseBindings(
 												else if (ts.isArrayLiteralExpression(arg)) {
 													for (const prop of arg.elements) {
 														if (ts.isStringLiteral(prop)) {
-															bindingTypes.set(prop.text, BindingTypes.NoUnref);
+															bindingTypes.set(_getNodeText(prop), BindingTypes.NoUnref);
 														}
 													}
 												}
@@ -89,18 +94,18 @@ export function parseBindings(
 									}
 									else {
 										bindingTypes.set(
-											nodeText,
+											name,
 											canNeverBeRef(decl.initializer, vueImportAliases.reactive) ? BindingTypes.NoUnref : BindingTypes.NeedUnref
 										);
 									}
 								}
 								else {
-									bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+									bindingTypes.set(name, BindingTypes.NeedUnref);
 								}
 							}
 							// let a = 1;
 							else {
-								bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+								bindingTypes.set(name, BindingTypes.NeedUnref);
 							}
 						}
 					}
@@ -141,13 +146,13 @@ export function parseBindings(
 		else if (ts.isImportDeclaration(node)) {
 			if (node.importClause && !node.importClause.isTypeOnly) {
 				if (node.importClause.name) {
-					const nodeText = _getNodeText(node.importClause.name);
+					const name = _getNodeText(node.importClause.name);
 					bindingRanges.push(_getStartEnd(node.importClause.name));
 					if (ts.isStringLiteral(node.moduleSpecifier) && _getNodeText(node.moduleSpecifier).endsWith('.vue')) {
-						bindingTypes.set(nodeText, BindingTypes.NoUnref);
+						bindingTypes.set(name, BindingTypes.NoUnref);
 					}
 					else {
-						bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+						bindingTypes.set(name, BindingTypes.NeedUnref);
 					}
 				}
 				if (node.importClause.namedBindings) {
