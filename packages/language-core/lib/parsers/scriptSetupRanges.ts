@@ -47,7 +47,7 @@ export function parseScriptSetupRanges(
 		required: boolean;
 		isModel?: boolean;
 	}[] = [];
-	const bindings = parseBindings(ts, ast);
+	const bindings = parseBindings(ts, ast, vueCompilerOptions);
 	const text = ast.text;
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
 

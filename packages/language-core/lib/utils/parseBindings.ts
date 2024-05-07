@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import type { TextRange } from '../types';
+import type { TextRange, VueCompilerOptions } from '../types';
 
 export enum BindingTypes {
 	NoUnref,
@@ -7,10 +7,35 @@ export enum BindingTypes {
 	DirectAccess,
 }
 
-export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
+
+export function parseBindings(
+	ts: typeof import('typescript'),
+	sourceFile: ts.SourceFile,
+	vueCompilerOptions?: VueCompilerOptions,
+) {
 	const bindingRanges: TextRange[] = [];
 	// `bindingTypes` may include some bindings that are not in `bindingRanges`, such as `foo` in `defineProps({ foo: Number })`
 	const bindingTypes = new Map<string, BindingTypes>();
+	const vueImportAliases: Record<string, string> = {
+		ref: 'ref',
+		reactive: 'reactive',
+		computed: 'computed',
+		shallowRef: 'shallowRef',
+		customRef: 'customRef',
+		toRefs: 'toRef',
+	};
+
+	ts.forEachChild(sourceFile, node => {
+		// TODO: User may use package name alias then the import specifier may not be `vue`
+		if (ts.isImportDeclaration(node) && _getNodeText(node.moduleSpecifier) === 'vue') {
+			const namedBindings = node.importClause?.namedBindings;
+			if (namedBindings && ts.isNamedImports(namedBindings)) {
+				for (const element of namedBindings.elements) {
+					vueImportAliases[_getNodeText(element.name)] = element.propertyName ? _getNodeText(element.propertyName) : _getNodeText(element.name);
+				}
+			}
+		}
+	});
 
 	ts.forEachChild(sourceFile, node => {
 		if (ts.isVariableStatement(node)) {
@@ -27,11 +52,10 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 								if (decl.initializer) {
 									if (ts.isCallExpression(decl.initializer)) {
 										const callText = _getNodeText(decl.initializer.expression);
-										if (callText === 'ref') {
+										if (callText === vueImportAliases.ref) {
 											bindingTypes.set(nodeText, BindingTypes.NeedUnref);
 										}
-										// TODO: use vue compiler options
-										else if (callText === 'defineProps') {
+										else if (vueCompilerOptions?.macros.defineProps.includes(callText)) {
 											bindingTypes.set(nodeText, BindingTypes.DirectAccess);
 											if (decl.initializer.typeArguments?.length === 1) {
 												const typeNode = decl.initializer.typeArguments[0];
@@ -63,9 +87,8 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 										}
 									}
 									else {
-										const innerExpression = getInnerExpression(decl.initializer);
 										// const a = 1;
-										if (isLiteral(innerExpression)) {
+										if (canNeverBeRefOrIsStatic(decl.initializer, vueImportAliases.reactive)) {
 											bindingTypes.set(nodeText, BindingTypes.NoUnref);
 										}
 										// const a = bar;
@@ -155,17 +178,69 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 		bindingRanges.push(_getStartEnd(node));
 		bindingTypes.set(_getNodeText(node), bindingType);
 	}
-	function getInnerExpression(node: ts.Node) {
-		if (isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isParenthesizedExpression(node)) {
-			return getInnerExpression(node.expression);
-		}
-		else if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.CommaToken) {
-			return getInnerExpression(node.right);
+	function unwrapTsNode(node: ts.Node) {
+		if (
+			isAsExpression(node)
+			|| ts.isSatisfiesExpression(node)
+			|| ts.isTypeAssertionExpression(node)
+			|| ts.isParenthesizedExpression(node)
+			|| ts.isNonNullExpression(node)
+			|| ts.isExpressionWithTypeArguments(node)
+		) {
+			return unwrapTsNode(node.expression);
 		}
 		return node;
 	}
-	function isLiteral(node: ts.Node) {
-		return !(ts.isIdentifier(node) || ts.isPropertyAccessExpression(node) || ts.isCallExpression(node));
+	function canNeverBeRefOrIsStatic(node: ts.Node, userReactiveImport?: string): boolean {
+		node = unwrapTsNode(node);
+
+		if (isCallOf(node, userReactiveImport)) {
+			return true;
+		}
+		else if (ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) {
+			return canNeverBeRefOrIsStatic(node.operand, userReactiveImport);
+		}
+		else if (ts.isBinaryExpression(node)) {
+			return canNeverBeRefOrIsStatic(node.left, userReactiveImport) && canNeverBeRefOrIsStatic(node.right, userReactiveImport);
+		}
+		else if (ts.isConditionalExpression(node)) {
+			return (
+				canNeverBeRefOrIsStatic(node.condition, userReactiveImport) &&
+				canNeverBeRefOrIsStatic(node.whenTrue, userReactiveImport) &&
+				canNeverBeRefOrIsStatic(node.whenFalse, userReactiveImport)
+			);
+		}
+		else if (ts.isCommaListExpression(node)) {
+			return node.elements.every(expr => canNeverBeRefOrIsStatic(expr, userReactiveImport));
+		}
+		else if (ts.isTemplateExpression(node)) {
+			return node.templateSpans.every(span => canNeverBeRefOrIsStatic(span.expression, userReactiveImport));
+		}
+		else if (ts.isParenthesizedExpression(node)) {
+			return canNeverBeRefOrIsStatic(node.expression, userReactiveImport);
+		}
+		else if (
+			ts.isStringLiteral(node) ||
+			ts.isNumericLiteral(node) ||
+			node.kind === ts.SyntaxKind.TrueKeyword ||
+			node.kind === ts.SyntaxKind.FalseKeyword ||
+			node.kind === ts.SyntaxKind.NullKeyword ||
+			ts.isBigIntLiteral(node)
+		) {
+			return true;
+		}
+		else if (ts.isLiteralExpression(node)) {
+			return true;
+		}
+		return false;
+	}
+	function isCallOf(node: ts.Node, userReactiveImport?: string): boolean {
+		if (ts.isCallExpression(node)) {
+			if (ts.isIdentifier(node.expression) && _getNodeText(node.expression) === userReactiveImport) {
+				return true;
+			}
+		}
+		return false;
 	}
 	// isAsExpression is missing in tsc
 	function isAsExpression(node: ts.Node): node is ts.AsExpression {
