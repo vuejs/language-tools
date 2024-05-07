@@ -426,7 +426,7 @@
 			},
 			{
 				"command": "vue.findAllFileReferences",
-				"title": "Find File References via Vue Langauge Server",
+				"title": "Find File References via Vue Language Server",
 				"category": "Vue"
 			}
 		],
