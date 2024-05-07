@@ -111,27 +111,18 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 				}
 			}
 		}
-		else if (ts.isFunctionDeclaration(node)) {
-			if (node.name && ts.isIdentifier(node.name)) {
-				const nodeText = _getNodeText(node.name);
-				bindingRanges.push(_getStartEnd(node.name));
-				bindingTypes.set(nodeText, BindingTypes.NoUnref);
-			}
-		}
-		else if (ts.isClassDeclaration(node)) {
+		else if (
+			ts.isFunctionDeclaration(node)
+			|| ts.isClassDeclaration(node)
+			|| ts.isEnumDeclaration(node)
+		) {
 			if (node.name) {
 				const nodeText = _getNodeText(node.name);
 				bindingRanges.push(_getStartEnd(node.name));
 				bindingTypes.set(nodeText, BindingTypes.NoUnref);
 			}
 		}
-		else if (ts.isEnumDeclaration(node)) {
-			const nodeText = _getNodeText(node.name);
-			bindingRanges.push(_getStartEnd(node.name));
-			bindingTypes.set(nodeText, BindingTypes.NoUnref);
-		}
-
-		if (ts.isImportDeclaration(node)) {
+		else if (ts.isImportDeclaration(node)) {
 			if (node.importClause && !node.importClause.isTypeOnly) {
 				if (node.importClause.name) {
 					const nodeText = _getNodeText(node.importClause.name);
