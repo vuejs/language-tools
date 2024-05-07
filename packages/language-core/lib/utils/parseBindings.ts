@@ -99,9 +99,7 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 					}
 					// { foo } = ...
 					else if (ts.isShorthandPropertyAssignment(_node)) {
-						const nodeText = _getNodeText(_node.name);
-						bindingRanges.push(_getStartEnd(_node.name));
-						bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+						addBinding(_node.name, BindingTypes.NeedUnref);
 					}
 					// { ...? } = ...
 					// [ ...? ] = ...
@@ -117,9 +115,7 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 			|| ts.isEnumDeclaration(node)
 		) {
 			if (node.name) {
-				const nodeText = _getNodeText(node.name);
-				bindingRanges.push(_getStartEnd(node.name));
-				bindingTypes.set(nodeText, BindingTypes.NoUnref);
+				addBinding(node.name, BindingTypes.NoUnref);
 			}
 		}
 		else if (ts.isImportDeclaration(node)) {
@@ -137,15 +133,11 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 				if (node.importClause.namedBindings) {
 					if (ts.isNamedImports(node.importClause.namedBindings)) {
 						for (const element of node.importClause.namedBindings.elements) {
-							const nodeText = _getNodeText(element.name);
-							bindingRanges.push(_getStartEnd(element.name));
-							bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+							addBinding(element.name, BindingTypes.NeedUnref);
 						}
 					}
 					else if (ts.isNamespaceImport(node.importClause.namedBindings)) {
-						const nodeText = _getNodeText(node.importClause.namedBindings.name);
-						bindingRanges.push(_getStartEnd(node.importClause.namedBindings.name));
-						bindingTypes.set(nodeText, BindingTypes.NoUnref);
+						addBinding(node.importClause.namedBindings.name, BindingTypes.NoUnref);
 					}
 				}
 			}
@@ -158,6 +150,10 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 	}
 	function _getNodeText(node: ts.Node) {
 		return getNodeText(ts, node, sourceFile);
+	}
+	function addBinding(node: ts.Node, bindingType: BindingTypes) {
+		bindingRanges.push(_getStartEnd(node));
+		bindingTypes.set(_getNodeText(node), bindingType);
 	}
 	function getInnerExpression(node: ts.Node) {
 		if (isAsExpression(node) || ts.isSatisfiesExpression(node) || ts.isParenthesizedExpression(node)) {
