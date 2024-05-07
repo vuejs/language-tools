@@ -1,5 +1,6 @@
 import type * as ts from 'typescript';
 import type { TextRange, VueCompilerOptions } from '../types';
+import { createTscApiShim } from './tscApiShim';
 
 export enum BindingTypes {
 	NoUnref,
@@ -7,12 +8,12 @@ export enum BindingTypes {
 	DirectAccess,
 }
 
-
 export function parseBindings(
 	ts: typeof import('typescript'),
 	sourceFile: ts.SourceFile,
 	vueCompilerOptions?: VueCompilerOptions,
 ) {
+	const tscApiShim = createTscApiShim(ts);
 	const bindingRanges: TextRange[] = [];
 	// `bindingTypes` may include some bindings that are not in `bindingRanges`, such as `foo` in `defineProps({ foo: Number })`
 	const bindingTypes = new Map<string, BindingTypes>();
@@ -87,14 +88,10 @@ export function parseBindings(
 										}
 									}
 									else {
-										// const a = 1;
-										if (canNeverBeRefOrIsStatic(decl.initializer, vueImportAliases.reactive)) {
-											bindingTypes.set(nodeText, BindingTypes.NoUnref);
-										}
-										// const a = bar;
-										else {
-											bindingTypes.set(nodeText, BindingTypes.NeedUnref);
-										}
+										bindingTypes.set(
+											nodeText,
+											canNeverBeRef(decl.initializer, vueImportAliases.reactive) ? BindingTypes.NoUnref : BindingTypes.NeedUnref
+										);
 									}
 								}
 								else {
@@ -178,59 +175,49 @@ export function parseBindings(
 		bindingRanges.push(_getStartEnd(node));
 		bindingTypes.set(_getNodeText(node), bindingType);
 	}
-	function unwrapTsNode(node: ts.Node) {
+	function getValueNode(node: ts.Node) {
 		if (
-			isAsExpression(node)
+			tscApiShim.isAsExpression(node)
 			|| ts.isSatisfiesExpression(node)
-			|| ts.isTypeAssertionExpression(node)
+			|| tscApiShim.isTypeAssertionExpression(node)
 			|| ts.isParenthesizedExpression(node)
 			|| ts.isNonNullExpression(node)
 			|| ts.isExpressionWithTypeArguments(node)
 		) {
-			return unwrapTsNode(node.expression);
+			return getValueNode(node.expression);
+		}
+		else if (ts.isCommaListExpression(node)) {
+			return getValueNode(node.elements[node.elements.length - 1]);
 		}
 		return node;
 	}
-	function canNeverBeRefOrIsStatic(node: ts.Node, userReactiveImport?: string): boolean {
-		node = unwrapTsNode(node);
-
+	function canNeverBeRef(node: ts.Node, userReactiveImport?: string): boolean {
+		node = getValueNode(node);
 		if (isCallOf(node, userReactiveImport)) {
 			return true;
 		}
-		else if (ts.isPrefixUnaryExpression(node) || ts.isPostfixUnaryExpression(node)) {
-			return canNeverBeRefOrIsStatic(node.operand, userReactiveImport);
-		}
-		else if (ts.isBinaryExpression(node)) {
-			return canNeverBeRefOrIsStatic(node.left, userReactiveImport) && canNeverBeRefOrIsStatic(node.right, userReactiveImport);
-		}
-		else if (ts.isConditionalExpression(node)) {
-			return (
-				canNeverBeRefOrIsStatic(node.condition, userReactiveImport) &&
-				canNeverBeRefOrIsStatic(node.whenTrue, userReactiveImport) &&
-				canNeverBeRefOrIsStatic(node.whenFalse, userReactiveImport)
-			);
-		}
-		else if (ts.isCommaListExpression(node)) {
-			return node.elements.every(expr => canNeverBeRefOrIsStatic(expr, userReactiveImport));
-		}
-		else if (ts.isTemplateExpression(node)) {
-			return node.templateSpans.every(span => canNeverBeRefOrIsStatic(span.expression, userReactiveImport));
-		}
-		else if (ts.isParenthesizedExpression(node)) {
-			return canNeverBeRefOrIsStatic(node.expression, userReactiveImport);
-		}
 		else if (
-			ts.isStringLiteral(node) ||
-			ts.isNumericLiteral(node) ||
-			node.kind === ts.SyntaxKind.TrueKeyword ||
-			node.kind === ts.SyntaxKind.FalseKeyword ||
-			node.kind === ts.SyntaxKind.NullKeyword ||
-			ts.isBigIntLiteral(node)
+			ts.isPrefixUnaryExpression(node)
+			|| ts.isPostfixUnaryExpression(node)
+			|| ts.isArrayLiteralExpression(node)
+			|| ts.isObjectLiteralExpression(node)
+			|| ts.isFunctionExpression(node)
+			|| ts.isArrowFunction(node)
+			|| ts.isClassExpression(node)
+			|| ts.isTaggedTemplateExpression(node)
+			|| ts.isNoSubstitutionTemplateLiteral(node)
+			|| ts.isLiteralExpression(node)
+			|| node.kind === ts.SyntaxKind.TrueKeyword
+			|| node.kind === ts.SyntaxKind.FalseKeyword
+			|| node.kind === ts.SyntaxKind.NullKeyword
 		) {
 			return true;
 		}
-		else if (ts.isLiteralExpression(node)) {
-			return true;
+		else if (ts.isBinaryExpression(node)) {
+			return canNeverBeRef(node.left, userReactiveImport) && canNeverBeRef(node.right, userReactiveImport);
+		}
+		else if (ts.isConditionalExpression(node)) {
+			return canNeverBeRef(node.whenTrue, userReactiveImport) && canNeverBeRef(node.whenFalse, userReactiveImport);
 		}
 		return false;
 	}
@@ -241,10 +228,6 @@ export function parseBindings(
 			}
 		}
 		return false;
-	}
-	// isAsExpression is missing in tsc
-	function isAsExpression(node: ts.Node): node is ts.AsExpression {
-		return node.kind === ts.SyntaxKind.AsExpression;
 	}
 }
 

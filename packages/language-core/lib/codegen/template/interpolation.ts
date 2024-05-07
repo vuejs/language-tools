@@ -1,6 +1,6 @@
 import { isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
-import { BindingTypes, getNodeText, getStartEnd } from '../../utils/parseBindings';
+import { getNodeText, getStartEnd } from '../../utils/parseBindings';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { collectVars, createTsAst } from '../common';
 import type { TemplateCodegenContext } from './context';
@@ -86,9 +86,6 @@ export function* forEachInterpolationSegment(
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		const text = getNodeText(ts, id, ast);
-		if (text === 'record') {
-			console.log('binding:', text, BindingTypes[ctx.bindingTypes!.get(text)!]);
-		}
 		if (
 			ctx.hasLocalVariable(text) ||
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352

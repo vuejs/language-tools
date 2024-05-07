@@ -1,10 +1,13 @@
 import type { TextRange } from '../types';
 import type * as ts from 'typescript';
 import { BindingTypes, getNodeText, getStartEnd, parseBindings } from '../utils/parseBindings';
+import { createTscApiShim } from '../utils/tscApiShim';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }
 
 export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.SourceFile, hasScriptSetup: boolean, withNode: boolean) {
+
+	const tscApiShim = createTscApiShim(ts);
 
 	let exportDefault: (TextRange & {
 		expression: TextRange,
@@ -24,7 +27,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 		if (ts.isExportAssignment(raw)) {
 
 			let node: ts.AsExpression | ts.ExportAssignment | ts.ParenthesizedExpression = raw;
-			while (isAsExpression(node.expression) || ts.isParenthesizedExpression(node.expression)) { // fix https://github.com/vuejs/language-tools/issues/1882
+			while (tscApiShim.isAsExpression(node.expression) || ts.isParenthesizedExpression(node.expression)) { // fix https://github.com/vuejs/language-tools/issues/1882
 				node = node.expression;
 			}
 
@@ -72,10 +75,5 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(ts, node, ast);
-	}
-
-	// isAsExpression is missing in tsc
-	function isAsExpression(node: ts.Node): node is ts.AsExpression {
-		return node.kind === ts.SyntaxKind.AsExpression;
 	}
 }
