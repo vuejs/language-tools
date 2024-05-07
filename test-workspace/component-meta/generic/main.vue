@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import Comp from './component.vue';
 
-const title = ref('')
+const title = ref('');
 </script>
 
 <template>
