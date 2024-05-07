@@ -264,31 +264,25 @@ function* generateComponentProps(
 	scriptSetupRanges: ScriptSetupRanges,
 	definePropMirrors: Map<string, number>,
 ): Generator<Code> {
-	const hasEmit = scriptSetupRanges.emits.define || scriptSetupRanges.defineProp.some(p => p.isModel);
-	if (scriptSetupRanges.props.define?.arg || hasEmit) {
-		yield `const __VLS_fnComponent = `
-			+ `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
-		if (scriptSetupRanges.props.define?.arg) {
-			yield `	props: `;
-			yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.arg.start, scriptSetupRanges.props.define.arg.end, codeFeatures.navigation);
-			yield `,${newLine}`;
-		}
-		if (hasEmit) {
-			yield `	emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`;
-			if (scriptSetupRanges.emits.define) {
-				yield ` & typeof `;
-				yield scriptSetupRanges.emits.name ?? '__VLS_emit';
-			}
-			yield `>),${newLine}`;
-		}
-		yield `})${endOfLine}`;
-		yield `let __VLS_functionalComponentProps!: `;
-		yield `${ctx.helperTypes.OmitKeepDiscriminatedUnion.name}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
-		yield endOfLine;
+	yield `const __VLS_fnComponent = `
+		+ `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
+	if (scriptSetupRanges.props.define?.arg) {
+		yield `	props: `;
+		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.arg.start, scriptSetupRanges.props.define.arg.end, codeFeatures.navigation);
+		yield `,${newLine}`;
 	}
-	else {
-		yield `let __VLS_functionalComponentProps!: {}${endOfLine}`;
+	if (scriptSetupRanges.emits.define || scriptSetupRanges.defineProp.some(p => p.isModel)) {
+		yield `	emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`;
+		if (scriptSetupRanges.emits.define) {
+			yield ` & typeof `;
+			yield scriptSetupRanges.emits.name ?? '__VLS_emit';
+		}
+		yield `>),${newLine}`;
 	}
+	yield `})${endOfLine}`;
+	yield `let __VLS_functionalComponentProps!: `;
+	yield `${ctx.helperTypes.OmitKeepDiscriminatedUnion.name}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
+	yield endOfLine;
 
 	yield `type __VLS_BuiltInPublicProps =${newLine}`
 		+ `	import('${options.vueCompilerOptions.lib}').VNodeProps${newLine}`
