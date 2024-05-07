@@ -1,13 +1,13 @@
 import type { TextRange } from '../types';
 import type * as ts from 'typescript';
 import { BindingTypes, getNodeText, getStartEnd, parseBindings } from '../utils/parseBindings';
-import { createTscApiShim } from '../utils/tscApiShim';
+import { injectTscApiShim } from '../utils/tscApiShim';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }
 
 export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.SourceFile, hasScriptSetup: boolean, withNode: boolean) {
 
-	const tscApiShim = createTscApiShim(ts);
+	ts = injectTscApiShim(ts);
 
 	let exportDefault: (TextRange & {
 		expression: TextRange,
@@ -27,7 +27,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 		if (ts.isExportAssignment(raw)) {
 
 			let node: ts.AsExpression | ts.ExportAssignment | ts.ParenthesizedExpression = raw;
-			while (tscApiShim.isAsExpression(node.expression) || ts.isParenthesizedExpression(node.expression)) { // fix https://github.com/vuejs/language-tools/issues/1882
+			while (ts.isAsExpression(node.expression) || ts.isParenthesizedExpression(node.expression)) { // fix https://github.com/vuejs/language-tools/issues/1882
 				node = node.expression;
 			}
 

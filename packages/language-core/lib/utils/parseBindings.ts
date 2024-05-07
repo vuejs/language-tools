@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 import type { TextRange, VueCompilerOptions } from '../types';
-import { createTscApiShim } from './tscApiShim';
+import { injectTscApiShim } from './tscApiShim';
 
 export enum BindingTypes {
 	NoUnref,
@@ -13,7 +13,7 @@ export function parseBindings(
 	sourceFile: ts.SourceFile,
 	vueCompilerOptions?: VueCompilerOptions,
 ) {
-	const tscApiShim = createTscApiShim(ts);
+	ts = injectTscApiShim(ts);
 	const bindingRanges: TextRange[] = [];
 	// `bindingTypes` may include some bindings that are not in `bindingRanges`, such as `foo` in `defineProps({ foo: Number })`
 	const bindingTypes = new Map<string, BindingTypes>();
@@ -182,9 +182,9 @@ export function parseBindings(
 	}
 	function getValueNode(node: ts.Node) {
 		if (
-			tscApiShim.isAsExpression(node)
+			ts.isAsExpression(node)
 			|| ts.isSatisfiesExpression(node)
-			|| tscApiShim.isTypeAssertionExpression(node)
+			|| ts.isTypeAssertionExpression(node)
 			|| ts.isParenthesizedExpression(node)
 			|| ts.isNonNullExpression(node)
 			|| ts.isExpressionWithTypeArguments(node)
