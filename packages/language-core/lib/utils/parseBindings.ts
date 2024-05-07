@@ -15,64 +15,72 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 	ts.forEachChild(sourceFile, node => {
 		if (ts.isVariableStatement(node)) {
 			for (const decl of node.declarationList.declarations) {
-				worker(decl.name, true);
+				const declList = node.declarationList;
 
+				worker(decl.name, true);
 				function worker(_node: ts.Node, root = false) {
 					if (ts.isIdentifier(_node)) {
 						const nodeText = _getNodeText(_node);
 						bindingRanges.push(_getStartEnd(_node));
-
 						if (root) {
-							if (decl.initializer && ts.isCallExpression(decl.initializer)) {
-								const callText = _getNodeText(decl.initializer.expression);
-								if (callText === 'ref') {
-									bindingTypes.set(nodeText, BindingTypes.NeedUnref);
-								}
-								// TODO: use vue compiler options
-								else if (callText === 'defineProps') {
-									bindingTypes.set(nodeText, BindingTypes.DirectAccess);
-									if (decl.initializer.typeArguments?.length === 1) {
-										const typeNode = decl.initializer.typeArguments[0];
-										if (ts.isTypeLiteralNode(typeNode)) {
-											for (const prop of typeNode.members) {
-												if (ts.isPropertySignature(prop)) {
-													bindingTypes.set(_getNodeText(prop.name), BindingTypes.NoUnref);
-												}
-											}
-										}
-									}
-									else if (decl.initializer.arguments.length === 1) {
-										const arg = decl.initializer.arguments[0];
-										if (ts.isObjectLiteralExpression(arg)) {
-											for (const prop of arg.properties) {
-												if (ts.isPropertyAssignment(prop)) {
-													bindingTypes.set(_getNodeText(prop.name), BindingTypes.NoUnref);
-												}
-											}
-										}
-										else if (ts.isArrayLiteralExpression(arg)) {
-											for (const prop of arg.elements) {
-												if (ts.isStringLiteral(prop)) {
-													bindingTypes.set(prop.text, BindingTypes.NoUnref);
-												}
-											}
-										}
-									}
-								}
-							}
-							else {
-								// const a = 1;
+							if (declList.flags & ts.NodeFlags.Const) {
 								if (decl.initializer) {
-									const innerExpression = getInnerExpression(decl.initializer);
-									_getNodeText(innerExpression).includes('record') && console.log(_getNodeText(innerExpression));
-									if (isLiteral(innerExpression)) {
-										bindingTypes.set(nodeText, BindingTypes.NoUnref);
+									if (ts.isCallExpression(decl.initializer)) {
+										const callText = _getNodeText(decl.initializer.expression);
+										if (callText === 'ref') {
+											bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+										}
+										// TODO: use vue compiler options
+										else if (callText === 'defineProps') {
+											bindingTypes.set(nodeText, BindingTypes.DirectAccess);
+											if (decl.initializer.typeArguments?.length === 1) {
+												const typeNode = decl.initializer.typeArguments[0];
+												if (ts.isTypeLiteralNode(typeNode)) {
+													for (const prop of typeNode.members) {
+														if (ts.isPropertySignature(prop)) {
+															bindingTypes.set(_getNodeText(prop.name), BindingTypes.NoUnref);
+														}
+													}
+												}
+											}
+											else if (decl.initializer.arguments.length === 1) {
+												const arg = decl.initializer.arguments[0];
+												if (ts.isObjectLiteralExpression(arg)) {
+													for (const prop of arg.properties) {
+														if (ts.isPropertyAssignment(prop)) {
+															bindingTypes.set(_getNodeText(prop.name), BindingTypes.NoUnref);
+														}
+													}
+												}
+												else if (ts.isArrayLiteralExpression(arg)) {
+													for (const prop of arg.elements) {
+														if (ts.isStringLiteral(prop)) {
+															bindingTypes.set(prop.text, BindingTypes.NoUnref);
+														}
+													}
+												}
+											}
+										}
+									}
+									else {
+										const innerExpression = getInnerExpression(decl.initializer);
+										// const a = 1;
+										if (isLiteral(innerExpression)) {
+											bindingTypes.set(nodeText, BindingTypes.NoUnref);
+										}
+										// const a = bar;
+										else {
+											bindingTypes.set(nodeText, BindingTypes.NeedUnref);
+										}
 									}
 								}
-								// const a = bar;
 								else {
 									bindingTypes.set(nodeText, BindingTypes.NeedUnref);
 								}
+							}
+							// let a = 1;
+							else {
+								bindingTypes.set(nodeText, BindingTypes.NeedUnref);
 							}
 						}
 					}
@@ -170,14 +178,7 @@ export function parseBindings(ts: typeof import('typescript'), sourceFile: ts.So
 		return node;
 	}
 	function isLiteral(node: ts.Node) {
-		return ts.isLiteralExpression(node)
-			|| ts.isArrayLiteralExpression(node)
-			|| ts.isObjectLiteralExpression(node)
-			|| ts.isClassExpression(node)
-			|| ts.isVoidExpression(node)
-			|| ts.isArrowFunction(node)
-			|| ts.isFunctionExpression(node)
-			|| ts.isNewExpression(node);
+		return !(ts.isIdentifier(node) || ts.isPropertyAccessExpression(node) || ts.isCallExpression(node));
 	}
 	// isAsExpression is missing in tsc
 	function isAsExpression(node: ts.Node): node is ts.AsExpression {
