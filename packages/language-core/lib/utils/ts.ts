@@ -262,6 +262,5 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 				select: true
 			}
 		},
-		experimentalUseElementAccessInTemplate: vueOptions.experimentalUseElementAccessInTemplate ?? false,
 	};
 }
