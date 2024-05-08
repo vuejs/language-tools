@@ -301,6 +301,9 @@ export function parseBindingRanges(ts: typeof import('typescript'), sourceFile: 
 				if (node.importClause.namedBindings) {
 					if (ts.isNamedImports(node.importClause.namedBindings)) {
 						for (const element of node.importClause.namedBindings.elements) {
+							if (element.isTypeOnly) {
+								continue;
+							}
 							bindings.push(_getStartEnd(element.name));
 						}
 					}
