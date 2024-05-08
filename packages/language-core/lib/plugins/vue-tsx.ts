@@ -119,6 +119,7 @@ function createTsx(
 			template: _sfc.template,
 			shouldGenerateScopedClasses: shouldGenerateScopedClasses(),
 			stylesScopedClasses: stylesScopedClasses(),
+			scriptSetupBindingNames: scriptSetupBindingNames(),
 			scriptSetupImportComponentNames: scriptSetupImportComponentNames(),
 			hasDefineSlots: hasDefineSlots(),
 			slotsAssignName: slotsAssignName(),
@@ -139,6 +140,19 @@ function createTsx(
 		};
 	});
 	const hasDefineSlots = computed(() => !!scriptSetupRanges()?.slots.define);
+	const scriptSetupBindingNames = computed<Set<string>>(oldNames => {
+		const newNames = new Set<string>();
+		const bindings = scriptSetupRanges()?.bindings;
+		if (_sfc.scriptSetup && bindings) {
+			for (const binding of bindings) {
+				newNames.add(_sfc.scriptSetup?.content.substring(binding.start, binding.end));
+			}
+		}
+		if (newNames && oldNames && twoSetsEqual(newNames, oldNames)) {
+			return oldNames;
+		}
+		return newNames;
+	});
 	const scriptSetupImportComponentNames = computed<Set<string>>(oldNames => {
 		const newNames = scriptSetupRanges()?.importComponentNames ?? new Set();
 		if (newNames && oldNames && twoSetsEqual(newNames, oldNames)) {

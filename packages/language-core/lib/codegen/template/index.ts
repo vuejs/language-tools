@@ -15,14 +15,15 @@ export interface TemplateCodegenOptions {
 	template: NonNullable<Sfc['template']>;
 	shouldGenerateScopedClasses?: boolean;
 	stylesScopedClasses: Set<string>;
+	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;
 }
 
-export function* generateTemplate(options: TemplateCodegenOptions) {
-	const ctx = createTemplateCodegenContext();
+export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code> {
+	const ctx = createTemplateCodegenContext(options.scriptSetupBindingNames);
 
 	let hasSlot = false;
 

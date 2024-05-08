@@ -284,7 +284,7 @@ function* genereatePropExp(
 
 			if (variableNameRegex.test(propVariableName)) {
 				if (!ctx.hasLocalVariable(propVariableName)) {
-					ctx.accessGlobalVariable(propVariableName, exp.loc.start.offset);
+					ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
 					yield `__VLS_ctx.`;
 				}
 				yield* generateCamelized(

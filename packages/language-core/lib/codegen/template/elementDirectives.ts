@@ -23,7 +23,7 @@ export function* generateElementDirectives(
 			&& prop.name !== 'scope'
 			&& prop.name !== 'data'
 		) {
-			ctx.accessGlobalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
+			ctx.accessExternalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
 
 			if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && !prop.arg.isStatic) {
 				yield* generateInterpolation(

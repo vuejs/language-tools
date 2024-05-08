@@ -100,10 +100,10 @@ export function* forEachInterpolationSegment(
 				offset: getStartEnd(ts, id, ast).start,
 			});
 			if (offset !== undefined) {
-				ctx.accessGlobalVariable(text, offset + getStartEnd(ts, id, ast).start);
+				ctx.accessExternalVariable(text, offset + getStartEnd(ts, id, ast).start);
 			}
 			else {
-				ctx.accessGlobalVariable(text);
+				ctx.accessExternalVariable(text);
 			}
 		}
 	};

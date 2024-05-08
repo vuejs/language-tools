@@ -17,13 +17,13 @@ export function* generateTemplate(
 	ctx.generatedTemplate = true;
 
 	if (!options.vueCompilerOptions.skipTemplateCodegen) {
-		const templateCodegenCtx = createTemplateCodegenContext();
 		if (isClassComponent) {
 			yield `__VLS_template() {${newLine}`;
 		}
 		else {
 			yield `function __VLS_template() {${newLine}`;
 		}
+		const templateCodegenCtx = createTemplateCodegenContext(new Set());
 		yield* generateCtx(options, ctx, isClassComponent);
 		yield* generateTemplateContext(options, templateCodegenCtx);
 		yield* generateExportOptions(options);
@@ -255,7 +255,7 @@ export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptC
 				usageVars.add(component.split('.')[0]);
 			}
 		}
-		for (const [varName] of options.templateCodegen.ctx.accessGlobalVariables) {
+		for (const [varName] of options.templateCodegen.ctx.accessExternalVariables) {
 			usageVars.add(varName);
 		}
 	}
