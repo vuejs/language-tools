@@ -64,7 +64,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 		yield* generateSrc(options.sfc.script, options.sfc.script.src);
 	}
 	if (options.sfc.script && options.scriptRanges) {
-		const { exportDefault } = options.scriptRanges;
+		const { exportDefault, classBlockEnd } = options.scriptRanges;
 		const isExportRawObject = exportDefault
 			&& options.sfc.script.content[exportDefault.expression.start] === '{';
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
@@ -117,6 +117,11 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 			yield options.vueCompilerOptions.optionsWrapper[1];
 			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.end, options.sfc.script.content.length, codeFeatures.all);
 		}
+		else if (classBlockEnd !== undefined) {
+			yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
+			yield* generateTemplate(options, ctx, true);
+			yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
+		}
 		else {
 			yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
 		}
@@ -132,7 +137,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 	yield `\ntype __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
 
 	if (!ctx.generatedTemplate) {
-		yield* generateTemplate(options, ctx);
+		yield* generateTemplate(options, ctx, false);
 	}
 
 	if (options.sfc.scriptSetup) {

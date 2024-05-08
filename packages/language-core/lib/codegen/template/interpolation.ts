@@ -1,7 +1,7 @@
 import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript';
 import { getNodeText, getStartEnd } from '../../parsers/scriptSetupRanges';
-import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
+import type { Code, VueCodeInformation } from '../../types';
 import { collectVars, createTsAst } from '../common';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -25,7 +25,6 @@ export function* generateInterpolation(
 	}[] = [];
 	for (let [section, offset, onlyError] of forEachInterpolationSegment(
 		options.ts,
-		options.vueCompilerOptions,
 		ctx,
 		code,
 		start !== undefined ? start - prefix.length : undefined,
@@ -72,7 +71,6 @@ export function* generateInterpolation(
 
 export function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
-	vueOptions: VueCompilerOptions,
 	ctx: TemplateCodegenContext,
 	code: string,
 	offset: number | undefined,
@@ -128,53 +126,19 @@ export function* forEachInterpolationSegment(
 			// fix https://github.com/vuejs/language-tools/issues/1205
 			// fix https://github.com/vuejs/language-tools/issues/1264
 			yield ['', ctxVars[i + 1].offset, true];
-			if (vueOptions.experimentalUseElementAccessInTemplate) {
-				const varStart = ctxVars[i].offset;
-				const varEnd = ctxVars[i].offset + ctxVars[i].text.length;
-				yield ['__VLS_ctx[', undefined];
-				yield ['', varStart, true];
-				yield ["'", undefined];
-				yield [code.substring(varStart, varEnd), varStart];
-				yield ["'", undefined];
-				yield ['', varEnd, true];
-				yield [']', undefined];
-				if (ctxVars[i + 1].isShorthand) {
-					yield [code.substring(varEnd, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), varEnd];
-					yield [': ', undefined];
-				}
-				else {
-					yield [code.substring(varEnd, ctxVars[i + 1].offset), varEnd];
-				}
+			yield ['__VLS_ctx.', undefined];
+			if (ctxVars[i + 1].isShorthand) {
+				yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset];
+				yield [': ', undefined];
 			}
 			else {
-				yield ['__VLS_ctx.', undefined];
-				if (ctxVars[i + 1].isShorthand) {
-					yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset];
-					yield [': ', undefined];
-				}
-				else {
-					yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset];
-				}
+				yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset];
 			}
 		}
 
-		if (vueOptions.experimentalUseElementAccessInTemplate) {
-			const varStart = ctxVars[ctxVars.length - 1].offset;
-			const varEnd = ctxVars[ctxVars.length - 1].offset + ctxVars[ctxVars.length - 1].text.length;
-			yield ['__VLS_ctx[', undefined];
-			yield ['', varStart, true];
-			yield ["'", undefined];
-			yield [code.substring(varStart, varEnd), varStart];
-			yield ["'", undefined];
-			yield ['', varEnd, true];
-			yield [']', undefined];
-			yield [code.substring(varEnd), varEnd];
-		}
-		else {
-			yield ['', ctxVars[ctxVars.length - 1].offset, true];
-			yield ['__VLS_ctx.', undefined];
-			yield [code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset];
-		}
+		yield ['', ctxVars[ctxVars.length - 1].offset, true];
+		yield ['__VLS_ctx.', undefined];
+		yield [code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset];
 	}
 	else {
 		yield [code, 0];
