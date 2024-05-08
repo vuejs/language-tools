@@ -3,9 +3,10 @@ import type { TextRange, VueCompilerOptions } from '../types';
 import { injectTscApiShim } from './tscApiShim';
 
 export enum BindingTypes {
-	NoUnref,
-	NeedUnref,
-	DirectAccess,
+	NoUnref = 2 << 0,
+	NeedUnref = 2 << 1,
+	DirectAccess = 2 << 2,
+	Component = 2 << 3,
 }
 
 export function parseBindings(
@@ -27,7 +28,7 @@ export function parseBindings(
 
 	ts.forEachChild(sourceFile, node => {
 		// TODO: User may use package name alias then the import specifier may not be `vue`
-		if (ts.isImportDeclaration(node) && _getNodeText(node.moduleSpecifier) === 'vue') {
+		if (ts.isImportDeclaration(node) && _getNodeText(node.moduleSpecifier) === vueCompilerOptions?.lib) {
 			const namedBindings = node.importClause?.namedBindings;
 			if (namedBindings && ts.isNamedImports(namedBindings)) {
 				for (const element of namedBindings.elements) {
@@ -148,8 +149,8 @@ export function parseBindings(
 				if (node.importClause.name) {
 					const name = _getNodeText(node.importClause.name);
 					bindingRanges.push(_getStartEnd(node.importClause.name));
-					if (ts.isStringLiteral(node.moduleSpecifier) && _getNodeText(node.moduleSpecifier).endsWith('.vue')) {
-						bindingTypes.set(name, BindingTypes.NoUnref);
+					if (ts.isStringLiteral(node.moduleSpecifier) && vueCompilerOptions?.extensions.some(ext => _getNodeText(node.moduleSpecifier).endsWith(ext))) {
+						bindingTypes.set(name, BindingTypes.NoUnref | BindingTypes.Component);
 					}
 					else {
 						bindingTypes.set(name, BindingTypes.NeedUnref);
