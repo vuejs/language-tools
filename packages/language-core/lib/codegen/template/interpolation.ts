@@ -1,6 +1,6 @@
 import { isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
-import { getNodeText, getStartEnd } from '../../utils/parseBindings';
+import { BindingTypes, getNodeText, getStartEnd } from '../../utils/parseBindings';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { collectVars, createTsAst } from '../common';
 import type { TemplateCodegenContext } from './context';
@@ -91,7 +91,8 @@ export function* forEachInterpolationSegment(
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 			isGloballyAllowed(text) ||
 			text === 'require' ||
-			text.startsWith('__VLS_')
+			text.startsWith('__VLS_') ||
+			((ctx.bindingTypes?.get(text) ?? 0) & BindingTypes.NoUnref)
 		) {
 			// localVarOffsets.push(localVar.getStart(ast));
 		}
