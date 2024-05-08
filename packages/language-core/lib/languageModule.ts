@@ -58,7 +58,7 @@ export interface _Plugin extends LanguagePlugin<VueVirtualCode> {
 
 export function createVueLanguagePlugin(
 	ts: typeof import('typescript'),
-	getFileName: (fileId: string) => string,
+	getFileName: (scriptId: string) => string,
 	useCaseSensitiveFileNames: boolean,
 	getProjectVersion: () => string,
 	getScriptFileNames: () => string[] | Set<string>,
@@ -104,9 +104,9 @@ export function createVueLanguagePlugin(
 				return 'html';
 			}
 		},
-		createVirtualCode(fileId, languageId, snapshot) {
+		createVirtualCode(scriptId, languageId, snapshot) {
 			if (languageId === 'vue' || languageId === 'markdown' || languageId === 'html') {
-				const fileName = getFileName(fileId);
+				const fileName = getFileName(scriptId);
 				const projectVersion = getProjectVersion();
 				if (projectVersion !== canonicalRootFileNamesVersion) {
 					canonicalRootFileNames = new Set([...getScriptFileNames()].map(getCanonicalFileName));
@@ -116,7 +116,7 @@ export function createVueLanguagePlugin(
 					pluginContext.globalTypesHolder = fileName;
 				}
 				const fileRegistry = getFileRegistry(pluginContext.globalTypesHolder === fileName);
-				const code = fileRegistry.get(fileId);
+				const code = fileRegistry.get(scriptId);
 				if (code) {
 					code.update(snapshot);
 					return code;
@@ -134,7 +134,7 @@ export function createVueLanguagePlugin(
 								: [vueSfcPlugin, ...basePlugins],
 						ts,
 					);
-					fileRegistry.set(fileId, code);
+					fileRegistry.set(scriptId, code);
 					return code;
 				}
 			}
