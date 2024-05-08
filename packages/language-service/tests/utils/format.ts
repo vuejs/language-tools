@@ -6,7 +6,7 @@ import { createVueLanguagePlugin, getVueLanguageServicePlugins, resolveVueCompil
 const resolvedVueOptions = resolveVueCompilerOptions({});
 const vueLanguagePlugin = createVueLanguagePlugin(
 	ts,
-	fileId => formatter.env.typescript!.uriToFileName(fileId),
+	scriptId => formatter.env.typescript!.uriToFileName(scriptId),
 	false,
 	() => '',
 	() => [],
