@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
+import { BindingTypes } from '../../utils/parseBindings';
 import { collectVars, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../common';
 import { generateCamelized } from './camelized';
 import type { TemplateCodegenContext } from './context';
@@ -30,7 +31,12 @@ export function* generateComponent(
 		: [startTagOffset];
 	const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
 	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
-	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
+	const matchImportName = possibleOriginalNames.find(name => {
+		const bindingType = ctx.bindingTypes?.get(name);
+		if (bindingType) {
+			return bindingType & BindingTypes.Component;
+		}
+	});
 	const var_originalComponent = matchImportName ?? ctx.getInternalVariable();
 	const var_functionalComponent = ctx.getInternalVariable();
 	const var_componentInstance = ctx.getInternalVariable();

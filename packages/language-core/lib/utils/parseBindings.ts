@@ -149,7 +149,11 @@ export function parseBindings(
 				if (node.importClause.name) {
 					const name = _getNodeText(node.importClause.name);
 					bindingRanges.push(_getStartEnd(node.importClause.name));
-					if (ts.isStringLiteral(node.moduleSpecifier) && vueCompilerOptions?.extensions.some(ext => _getNodeText(node.moduleSpecifier).endsWith(ext))) {
+					if (
+						ts.isStringLiteral(node.moduleSpecifier)
+						&& !node.importClause.isTypeOnly
+						&& vueCompilerOptions?.extensions.some(ext => _getNodeText(node.moduleSpecifier).slice(1, -1).endsWith(ext))
+					) {
 						bindingTypes.set(name, BindingTypes.NoUnref | BindingTypes.Component);
 					}
 					else {

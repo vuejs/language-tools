@@ -50,7 +50,6 @@ export function parseScriptSetupRanges(
 	const bindings = parseBindings(ts, ast, vueCompilerOptions);
 	const text = ast.text;
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
-	const importComponentNames = new Set<string>();
 
 	ts.forEachChild(ast, node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
@@ -72,17 +71,6 @@ export function parseScriptSetupRanges(
 			}
 			foundNonImportExportNode = true;
 		}
-
-		if (
-			ts.isImportDeclaration(node)
-			&& node.importClause?.name
-			&& !node.importClause.isTypeOnly
-		) {
-			const moduleName = getNodeText(ts, node.moduleSpecifier, ast).slice(1, -1);
-			if (vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
-				importComponentNames.add(getNodeText(ts, node.importClause.name, ast));
-			}
-		}
 	});
 	ts.forEachChild(ast, child => visitNode(child, [ast]));
 
@@ -90,7 +78,6 @@ export function parseScriptSetupRanges(
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		bindings,
-		importComponentNames,
 		props,
 		slots,
 		emits,
