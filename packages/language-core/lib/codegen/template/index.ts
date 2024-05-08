@@ -15,6 +15,7 @@ export interface TemplateCodegenOptions {
 	template: NonNullable<Sfc['template']>;
 	shouldGenerateScopedClasses?: boolean;
 	stylesScopedClasses: Set<string>;
+	scriptSetupImportComponentNames: Set<string>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;

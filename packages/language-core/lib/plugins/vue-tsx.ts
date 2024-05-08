@@ -119,6 +119,7 @@ function createTsx(
 			template: _sfc.template,
 			shouldGenerateScopedClasses: shouldGenerateScopedClasses(),
 			stylesScopedClasses: stylesScopedClasses(),
+			scriptSetupImportComponentNames: scriptSetupImportComponentNames(),
 			hasDefineSlots: hasDefineSlots(),
 			slotsAssignName: slotsAssignName(),
 			propsAssignName: propsAssignName(),
@@ -138,6 +139,13 @@ function createTsx(
 		};
 	});
 	const hasDefineSlots = computed(() => !!scriptSetupRanges()?.slots.define);
+	const scriptSetupImportComponentNames = computed<Set<string>>(oldNames => {
+		const newNames = scriptSetupRanges()?.importComponentNames ?? new Set();
+		if (newNames && oldNames && twoSetsEqual(newNames, oldNames)) {
+			return oldNames;
+		}
+		return newNames;
+	});
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
 	const generatedScript = computed(() => {
@@ -181,4 +189,16 @@ function createTsx(
 		generatedScript,
 		generatedTemplate,
 	};
+}
+
+function twoSetsEqual(a: Set<string>, b: Set<string>) {
+	if (a.size !== b.size) {
+		return false;
+	}
+	for (const file of a) {
+		if (!b.has(file)) {
+			return false;
+		}
+	}
+	return true;
 }
