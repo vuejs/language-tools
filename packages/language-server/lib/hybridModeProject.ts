@@ -74,6 +74,16 @@ export function createHybridModeProjectProviderFactory(
 				...simpleProjects.values(),
 			]);
 		},
+		reload() {
+			for (const project of [
+				...tsconfigProjects.values(),
+				...simpleProjects.values(),
+			]) {
+				project.then(p => p.dispose());
+			}
+			tsconfigProjects.clear();
+			simpleProjects.clear();
+		},
 	};
 
 	function initialize(server: ServerBase) {
