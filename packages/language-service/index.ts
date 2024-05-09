@@ -3,7 +3,7 @@ export * from '@vue/language-core';
 export * from './lib/ideFeatures/nameCasing';
 export * from './lib/types';
 
-import type { ServiceContext, ServiceEnvironment, LanguageServicePlugin } from '@volar/language-service';
+import type { LanguageServicePlugin, ServiceContext, ServiceEnvironment } from '@volar/language-service';
 import type { VueCompilerOptions } from './lib/types';
 
 import { create as createEmmetPlugin } from 'volar-service-emmet';
@@ -20,6 +20,7 @@ import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoins
 import { create as createVueReferencesCodeLensPlugin } from './lib/plugins/vue-codelens-references';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
+import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-document-links';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
@@ -79,6 +80,7 @@ export function getVueLanguageServicePlugins(
 		createVueSfcPlugin(),
 		createVueTwoslashQueriesPlugin(ts, getTsPluginClient),
 		createVueReferencesCodeLensPlugin(),
+		createVueDocumentLinksPlugin(),
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueAutoWrapParenthesesPlugin(ts),

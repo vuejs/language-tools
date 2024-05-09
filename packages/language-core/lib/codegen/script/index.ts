@@ -43,11 +43,7 @@ export interface ScriptCodegenOptions {
 	lang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	templateCodegen: {
-		tsCodes: Code[];
-		ctx: TemplateCodegenContext;
-		hasSlot: boolean;
-	} | undefined;
+	templateCodegen: TemplateCodegenContext & { codes: Code[]; } | undefined;
 	globalTypes: boolean;
 	getGeneratedLength: () => number;
 	linkedCodeMappings: Mapping[];

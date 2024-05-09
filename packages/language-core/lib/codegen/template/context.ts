@@ -22,6 +22,13 @@ const _codeFeatures = {
 	navigation: {
 		navigation: true,
 	} as VueCodeInformation,
+	navigationWithoutRename: {
+		navigation: {
+			shouldRename() {
+				return false;
+			},
+		},
+	} as VueCodeInformation,
 	navigationAndCompletion: {
 		navigation: true,
 	} as VueCodeInformation,
@@ -107,6 +114,7 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 		blockConditions,
 		usedComponentCtxVars,
 		scopedClasses,
+		hasSlot: false,
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);
 			if (!arr) {

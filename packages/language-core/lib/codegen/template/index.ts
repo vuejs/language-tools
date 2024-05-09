@@ -2,10 +2,9 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { endOfLine, newLine, wrapWith } from '../common';
-import { createTemplateCodegenContext } from './context';
+import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
-import { generateStringLiteralKey } from './stringLiteralKey';
 import { generateTemplateChild, getVForNode } from './templateChild';
 
 export interface TemplateCodegenOptions {
@@ -13,8 +12,6 @@ export interface TemplateCodegenOptions {
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	template: NonNullable<Sfc['template']>;
-	shouldGenerateScopedClasses?: boolean;
-	stylesScopedClasses: Set<string>;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
 	hasDefineSlots?: boolean;
@@ -22,10 +19,8 @@ export interface TemplateCodegenOptions {
 	propsAssignName?: string;
 }
 
-export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code> {
+export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
 	const ctx = createTemplateCodegenContext(options.scriptSetupBindingNames);
-
-	let hasSlot = false;
 
 	if (options.slotsAssignName) {
 		ctx.addLocalVariable(options.slotsAssignName);
@@ -50,19 +45,16 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	yield* ctx.generateAutoImportCompletion();
 
-	return {
-		ctx,
-		hasSlot,
-	};
+	return ctx;
 
 	function* generateSlotsType(): Generator<Code> {
 		for (const { expVar, varName } of ctx.dynamicSlots) {
-			hasSlot = true;
+			ctx.hasSlot = true;
 			yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
 		}
 		yield `{${newLine}`;
 		for (const slot of ctx.slots) {
-			hasSlot = true;
+			ctx.hasSlot = true;
 			if (slot.name && slot.loc !== undefined) {
 				yield* generateObjectProperty(
 					options,
@@ -96,14 +88,26 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		yield `if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {${newLine}`;
 		for (const { className, offset } of ctx.scopedClasses) {
 			yield `__VLS_styleScopedClasses[`;
-			yield* generateStringLiteralKey(
-				className,
+			yield [
+				'',
+				'template',
 				offset,
-				{
-					...ctx.codeFeatures.navigationAndCompletion,
-					__displayWithLink: options.stylesScopedClasses.has(className),
-				},
-			);
+				ctx.codeFeatures.navigationWithoutRename,
+			];
+			yield `'`;
+			yield [
+				className,
+				'template',
+				offset,
+				ctx.codeFeatures.navigationAndCompletion,
+			];
+			yield `'`;
+			yield [
+				'',
+				'template',
+				offset + className.length,
+				ctx.codeFeatures.navigationWithoutRename,
+			];
 			yield `]${endOfLine}`;
 		}
 		yield `}${newLine}`;

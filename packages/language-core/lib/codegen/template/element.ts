@@ -353,9 +353,7 @@ function* generateVScope(
 
 	yield* generateElementDirectives(options, ctx, node);
 	yield* generateReferencesForElements(options, ctx, node); // <el ref="foo" />
-	if (options.shouldGenerateScopedClasses) {
-		yield* generateReferencesForScopedCssClasses(ctx, node);
-	}
+	yield* generateReferencesForScopedCssClasses(ctx, node);
 
 	if (inScope) {
 		yield `}${newLine}`;
