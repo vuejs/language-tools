@@ -25,14 +25,11 @@ export const codeFeatures = {
 	navigation: {
 		navigation: true,
 	} as VueCodeInformation,
-	referencesCodeLens: {
-		navigation: true,
-		__referencesCodeLens: true,
-	} as VueCodeInformation,
-	cssClassNavigation: {
+	navigationWithoutRename: {
 		navigation: {
-			resolveRenameNewName: normalizeCssRename,
-			resolveRenameEditText: applyCssRename,
+			shouldRename() {
+				return false;
+			},
 		},
 	} as VueCodeInformation,
 };
@@ -148,12 +145,4 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 			codeFeatures.verification,
 		];
 	}
-}
-
-function normalizeCssRename(newName: string) {
-	return newName.startsWith('.') ? newName.slice(1) : newName;
-}
-
-function applyCssRename(newName: string) {
-	return '.' + newName;
 }

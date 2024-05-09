@@ -7,7 +7,6 @@ import { forEachInterpolationSegment } from '../template/interpolation';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 import { generateInternalComponent } from './internalComponent';
-import { combineLastMapping } from '../common';
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
@@ -176,29 +175,24 @@ function* generateCssClassProperty(
 		'',
 		'style_' + styleIndex,
 		offset,
-		referencesCodeLens
-			? codeFeatures.navigation
-			: codeFeatures.referencesCodeLens,
+		{
+			...codeFeatures.navigationWithoutRename,
+			__referencesCodeLens: referencesCodeLens,
+		},
 	];
 	yield `'`;
-	yield [
-		'',
-		'style_' + styleIndex,
-		offset,
-		codeFeatures.cssClassNavigation,
-	];
 	yield [
 		classNameWithDot.substring(1),
 		'style_' + styleIndex,
 		offset + 1,
-		combineLastMapping,
+		codeFeatures.navigation,
 	];
 	yield `'`;
 	yield [
 		'',
 		'style_' + styleIndex,
 		offset + classNameWithDot.length,
-		codeFeatures.none,
+		codeFeatures.navigationWithoutRename,
 	];
 	yield `${optional ? '?' : ''}: ${propertyType}`;
 	yield ` }`;
