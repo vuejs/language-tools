@@ -11,7 +11,7 @@ defineSlots<{
 </script>
 
 <template>
-	<Foo v-slot="{foo}">
+	<Foo v-slot="{ foo }">
 		{{ exactType(foo, 0) }}
 	</Foo>  
 </template>
