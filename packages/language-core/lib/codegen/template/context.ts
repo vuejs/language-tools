@@ -31,6 +31,11 @@ const _codeFeatures = {
 	} as VueCodeInformation,
 	navigationAndCompletion: {
 		navigation: true,
+		completion: true,
+	} as VueCodeInformation,
+	navigationAndAdditionalCompletion: {
+		navigation: true,
+		completion: { isAdditional: true },
 	} as VueCodeInformation,
 	withoutHighlight: {
 		semantic: { shouldHighlight: () => false },
@@ -104,6 +109,7 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 	const blockConditions: string[] = [];
 	const usedComponentCtxVars = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
+	const emptyClassOffsets: number[] = [];
 
 	return {
 		slots,
@@ -114,6 +120,7 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 		blockConditions,
 		usedComponentCtxVars,
 		scopedClasses,
+		emptyClassOffsets,
 		hasSlot: false,
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);

@@ -86,6 +86,16 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	function* generateStyleScopedClasses(): Generator<Code> {
 		yield `if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {${newLine}`;
+		for (const offset of ctx.emptyClassOffsets) {
+			yield `__VLS_styleScopedClasses['`;
+			yield [
+				'',
+				'template',
+				offset,
+				ctx.codeFeatures.additionalCompletion,
+			];
+			yield `']${endOfLine}`;
+		}
 		for (const { className, offset } of ctx.scopedClasses) {
 			yield `__VLS_styleScopedClasses[`;
 			yield [
@@ -99,7 +109,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 				className,
 				'template',
 				offset,
-				ctx.codeFeatures.navigationAndCompletion,
+				ctx.codeFeatures.navigationAndAdditionalCompletion,
 			];
 			yield `'`;
 			yield [

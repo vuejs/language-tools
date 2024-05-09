@@ -549,19 +549,32 @@ function* generateReferencesForScopedCssClasses(
 			&& prop.value
 		) {
 			let startOffset = prop.value.loc.start.offset;
-			let tempClassName = '';
-			for (const char of (prop.value.loc.source + ' ')) {
-				if (char.trim() === '' || char === '"' || char === "'") {
-					if (tempClassName !== '') {
-						ctx.scopedClasses.push({ className: tempClassName, offset: startOffset });
-						startOffset += tempClassName.length;
-						tempClassName = '';
+			let content = prop.value.loc.source;
+			if (
+				(content.startsWith(`'`) && content.endsWith(`'`))
+				|| (content.startsWith(`"`) && content.endsWith(`"`))
+			) {
+				startOffset++;
+				content = content.slice(1, -1);
+			}
+			if (content) {
+				let currentClassName = '';
+				for (const char of (content + ' ')) {
+					if (char.trim() === '') {
+						if (currentClassName !== '') {
+							ctx.scopedClasses.push({ className: currentClassName, offset: startOffset });
+							startOffset += currentClassName.length;
+							currentClassName = '';
+						}
+						startOffset += char.length;
 					}
-					startOffset += char.length;
+					else {
+						currentClassName += char;
+					}
 				}
-				else {
-					tempClassName += char;
-				}
+			}
+			else {
+				ctx.emptyClassOffsets.push(startOffset);
 			}
 		}
 		else if (
