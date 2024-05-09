@@ -148,7 +148,7 @@ function* generateTemplateContext(
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
-		for (const code of options.templateCodegen.tsCodes) {
+		for (const code of options.templateCodegen.codes) {
 			yield code;
 		}
 	}
@@ -249,7 +249,7 @@ export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptC
 				usageVars.add(component.split('.')[0]);
 			}
 		}
-		for (const [varName] of options.templateCodegen.ctx.accessExternalVariables) {
+		for (const [varName] of options.templateCodegen.accessExternalVariables) {
 			usageVars.add(varName);
 		}
 	}

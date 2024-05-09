@@ -15,7 +15,6 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 
 export interface VueCodeInformation extends CodeInformation {
 	__referencesCodeLens?: boolean;
-	__displayWithLink?: boolean;
 	__hint?: {
 		setting: string;
 		label: string;
