@@ -123,6 +123,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 		yield generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
+	yield endOfLine;
 	if (options.globalTypes) {
 		yield generateGlobalTypes(options.vueCompilerOptions);
 	}
