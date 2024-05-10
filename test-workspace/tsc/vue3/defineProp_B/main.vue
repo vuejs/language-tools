@@ -31,7 +31,7 @@ declare const ScriptSetupGenericExact: <T, >(
 		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
 		attrs: any,
 		slots: {},
-		emit: any,
+		emit: {},
 		expose(_exposed: {}): void,
 	}>
 ) => import('vue').VNode & { __ctx?: Awaited<typeof _setup>; };
