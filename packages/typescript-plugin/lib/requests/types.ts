@@ -6,6 +6,6 @@ export interface RequestContext {
 	languageService: ts.LanguageService;
 	languageServiceHost: ts.LanguageServiceHost;
 	language: Language;
-	isTsPlugin: boolean,
-	getFileId: (fileName: string) => string,
+	isTsPlugin: boolean;
+	getFileId: (fileName: string) => string;
 }
