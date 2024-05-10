@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-core",
-	"version": "2.0.16",
+	"version": "2.0.17",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
