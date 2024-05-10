@@ -17,7 +17,6 @@ import { create as createCssPlugin } from './lib/plugins/css';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoWrapParenthesesPlugin } from './lib/plugins/vue-autoinsert-parentheses';
 import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoinsert-space';
-import { create as createVueReferencesCodeLensPlugin } from './lib/plugins/vue-codelens-references';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
 import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-document-links';
@@ -79,7 +78,6 @@ export function getVueLanguageServicePlugins(
 		createVueTemplatePlugin('pug', ts, getVueOptions, getTsPluginClient),
 		createVueSfcPlugin(),
 		createVueTwoslashQueriesPlugin(ts, getTsPluginClient),
-		createVueReferencesCodeLensPlugin(),
 		createVueDocumentLinksPlugin(),
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
