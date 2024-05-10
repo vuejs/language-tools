@@ -61,10 +61,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 					ctx,
 					slot.name,
 					slot.loc,
-					{
-						...ctx.codeFeatures.withoutHighlightAndCompletion,
-						__referencesCodeLens: true,
-					},
+					ctx.codeFeatures.withoutHighlightAndCompletion,
 					slot.nodeLoc
 				);
 			}
@@ -72,10 +69,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 				yield* wrapWith(
 					slot.tagRange[0],
 					slot.tagRange[1],
-					{
-						...ctx.codeFeatures.withoutHighlightAndCompletion,
-						__referencesCodeLens: true,
-					},
+					ctx.codeFeatures.withoutHighlightAndCompletion,
 					`default`,
 				);
 			}

@@ -102,7 +102,6 @@ function* generateCtx(
 						className.offset,
 						'string',
 						false,
-						true,
 					);
 				}
 				yield `>${endOfLine}`;
@@ -138,7 +137,6 @@ function* generateTemplateContext(
 					className.offset,
 					'boolean',
 					true,
-					!style.module,
 				);
 			}
 		}
@@ -168,17 +166,13 @@ function* generateCssClassProperty(
 	offset: number,
 	propertyType: string,
 	optional: boolean,
-	referencesCodeLens: boolean
 ): Generator<Code> {
 	yield `${newLine} & { `;
 	yield [
 		'',
 		'style_' + styleIndex,
 		offset,
-		{
-			...codeFeatures.navigationWithoutRename,
-			__referencesCodeLens: referencesCodeLens,
-		},
+		codeFeatures.navigationWithoutRename,
 	];
 	yield `'`;
 	yield [
