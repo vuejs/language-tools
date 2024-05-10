@@ -55,7 +55,7 @@ export function getVueLanguageServicePlugins(
 						}
 						const languageService = (created.provide as import('volar-service-typescript').Provide)['typescript/languageService']();
 						const vueOptions = getVueOptions(context.env);
-						decorateLanguageServiceForVue(context.language, languageService, vueOptions, ts, false);
+						decorateLanguageServiceForVue(context.language, languageService, vueOptions, ts, false, fileName => context.env.typescript!.fileNameToUri(fileName));
 						return created;
 					},
 				};

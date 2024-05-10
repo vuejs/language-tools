@@ -126,9 +126,6 @@ export function computedSfc(
 		get scriptSetup() { return scriptSetup(); },
 		get styles() { return styles; },
 		get customBlocks() { return customBlocks; },
-		get templateAst() { return template()?.ast; },
-		get scriptAst() { return script()?.ast; },
-		get scriptSetupAst() { return scriptSetup()?.ast; },
 	};
 
 	function computedTemplateAst(base: SfcBlock) {

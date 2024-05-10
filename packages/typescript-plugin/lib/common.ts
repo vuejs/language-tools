@@ -9,6 +9,7 @@ export function decorateLanguageServiceForVue(
 	vueOptions: vue.VueCompilerOptions,
 	ts: typeof import('typescript'),
 	isTsPlugin: boolean,
+	getScriptId: (fileName: string) => string,
 ) {
 	const {
 		getCompletionsAtPosition,
@@ -49,6 +50,12 @@ export function decorateLanguageServiceForVue(
 							break;
 						}
 					}
+					if (item.data) {
+						// @ts-expect-error
+						item.data.__isAutoImport = {
+							fileName,
+						};
+					}
 				}
 			}
 		}
@@ -69,6 +76,27 @@ export function decorateLanguageServiceForVue(
 				}
 			}
 		}
+		// @ts-expect-error
+		if (args[6]?.__isAutoImport) {
+			// @ts-expect-error
+			const { fileName } = args[6]?.__isAutoImport;
+			const sourceScript = language.scripts.get(getScriptId(fileName));
+			if (sourceScript?.generated?.root instanceof vue.VueVirtualCode) {
+				const sfc = sourceScript.generated.root.getVueSfc();
+				if (!sfc?.descriptor.script && !sfc?.descriptor.scriptSetup) {
+					for (const codeAction of details?.codeActions ?? []) {
+						for (const change of codeAction.changes) {
+							for (const textChange of change.textChanges) {
+								textChange.newText = `<script setup lang="ts">${textChange.newText}</script>\n\n`;
+								break;
+							}
+							break;
+						}
+						break;
+					}
+				}
+			}
+		}
 		return details;
 	};
 	languageService.getCodeFixesAtPosition = (...args) => {
@@ -80,7 +108,7 @@ export function decorateLanguageServiceForVue(
 	if (isTsPlugin) {
 		languageService.getEncodedSemanticClassifications = (fileName, span, format) => {
 			const result = getEncodedSemanticClassifications(fileName, span, format);
-			const file = language.scripts.get(fileName);
+			const file = language.scripts.get(getScriptId(fileName));
 			if (file?.generated?.root instanceof vue.VueVirtualCode) {
 				const { template } = file.generated.root.sfc;
 				if (template) {

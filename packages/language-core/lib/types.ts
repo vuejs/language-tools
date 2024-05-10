@@ -123,19 +123,6 @@ export interface Sfc {
 	customBlocks: readonly (SfcBlock & {
 		type: string;
 	})[];
-
-	/**
-	 * @deprecated use `template.ast` instead
-	 */
-	templateAst: CompilerDOM.RootNode | undefined;
-	/**
-	 * @deprecated use `script.ast` instead
-	 */
-	scriptAst: ts.SourceFile | undefined;
-	/**
-	 * @deprecated use `scriptSetup.ast` instead
-	 */
-	scriptSetupAst: ts.SourceFile | undefined;
 }
 
 export interface TextRange {
