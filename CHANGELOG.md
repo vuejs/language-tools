@@ -1,5 +1,49 @@
 # Changelog
 
+## 2.0.17 (2024/5/10)
+
+### Features
+
+- **language-core:** add JSDod support for component (#2377)
+- **language-core:** add JSDoc support for script setup binding variables (#3409)
+- **language-core:** add class component support (#4354)
+- **language-service:** re-support scoped class links in template (#4357)
+- **typescript-plugin:** create script setup block when auto import if needed
+- **typescript-plugin:** add JSDoc support for events in template (#4365)
+- **component-meta:** add JSDoc tags support for events
+- **language-core:** support defineOptions (#4362) - Thanks @zhiyuanzmj
+
+### Bug Fixes
+
+- **language-core:** hover not working for intrinsic element event name
+- **language-core:** showing false _declared but not used_ errors for functions used in `v-on="{}"` (#4333)
+- **language-core:** fix nameless event expression formatting
+- **language-core:** types imported in the `<script setup>` should not be used as a variable in template (#4353)
+- **language-core:** renaming classname within `scoped` not working (#4355)
+- **language-core:** `<style>` completions and html custom data completions not provided in some cases (#4092)
+- **language-core:** improve code action edits mapping fault tolerance
+- **language-core:** support defineModel for generic component (#4345) - Thanks @zhiyuanzmj
+- **language-service:** completion cannot trigger in SFC root
+- **component-meta:** `forceUseTs` options not working
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.0` to `v2.2.2`.
+  - fix(language-server): pass correct languageId when creating virtual code (https://github.com/volarjs/volar.js/issues/173)
+  - fix(typescript): additional completion not working in plugin (#4323)
+- Upgrade Volar services from `v0.0.42` to `v0.0.44`.
+  - feat(typescript): code action edits respect editor formatting settings (https://github.com/volarjs/services/issues/30)
+  - fix(typescript): not being able to jump to shims module definition
+  - fix(typescript): `allowTextChangesInNewFiles` never true for embedded documents
+  - perf(typescript): check `command` resolve capability only for specific refactors (https://github.com/volarjs/services/issues/94)
+- The following extensions have been added to Hybrid Mode’s compatibility whitelist:
+  - `mxsdev.typescript-explorer`
+- Deprecated `vueCompilerOptions.experimentalUseElementAccessInTemplate`
+- Specify `packageManager` (#4358) - Thanks @so1ve
+- **docs:** emoved possibly redundant duplicate reference (#4348) - Thanks @artshade
+- **language-service:** temporarily remove references codeLens (#4364)
+- **vscode:** auto enabling hybrid mode allows 
+
 ## 2.1.0-insiders.8 (2024/5/1)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.8), [爱发电电圈](https://afdian.net/p/f45436ca076d11ef9b7352540025c377)
