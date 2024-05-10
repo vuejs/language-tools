@@ -426,7 +426,7 @@
 			},
 			{
 				"command": "vue.findAllFileReferences",
-				"title": "Find File References via Vue Langauge Server",
+				"title": "Find File References via Vue Language Server",
 				"category": "Vue"
 			}
 		],
@@ -515,7 +515,7 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.2.0",
+		"@volar/vscode": "~2.2.1",
 		"@vue/language-core": "2.0.16",
 		"@vue/language-server": "2.0.16",
 		"@vue/typescript-plugin": "2.0.16",

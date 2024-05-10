@@ -3,7 +3,7 @@ export * from '@vue/language-core';
 export * from './lib/ideFeatures/nameCasing';
 export * from './lib/types';
 
-import type { ServiceContext, ServiceEnvironment, LanguageServicePlugin } from '@volar/language-service';
+import type { LanguageServicePlugin, ServiceContext, ServiceEnvironment } from '@volar/language-service';
 import type { VueCompilerOptions } from './lib/types';
 
 import { create as createEmmetPlugin } from 'volar-service-emmet';
@@ -17,9 +17,9 @@ import { create as createCssPlugin } from './lib/plugins/css';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoWrapParenthesesPlugin } from './lib/plugins/vue-autoinsert-parentheses';
 import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoinsert-space';
-import { create as createVueReferencesCodeLensPlugin } from './lib/plugins/vue-codelens-references';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
+import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-document-links';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
@@ -55,7 +55,7 @@ export function getVueLanguageServicePlugins(
 						}
 						const languageService = (created.provide as import('volar-service-typescript').Provide)['typescript/languageService']();
 						const vueOptions = getVueOptions(context.env);
-						decorateLanguageServiceForVue(context.language, languageService, vueOptions, ts, false);
+						decorateLanguageServiceForVue(context.language, languageService, vueOptions, ts, false, fileName => context.env.typescript!.fileNameToUri(fileName));
 						return created;
 					},
 				};
@@ -78,8 +78,8 @@ export function getVueLanguageServicePlugins(
 		createVueTemplatePlugin('pug', ts, getVueOptions, getTsPluginClient),
 		createVueSfcPlugin(),
 		createVueTwoslashQueriesPlugin(ts, getTsPluginClient),
-		createVueReferencesCodeLensPlugin(),
-		createVueDocumentDropPlugin(ts, getTsPluginClient),
+		createVueDocumentLinksPlugin(),
+		createVueDocumentDropPlugin(ts, getVueOptions, getTsPluginClient),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueAutoWrapParenthesesPlugin(ts),
 		createVueAutoAddSpacePlugin(),

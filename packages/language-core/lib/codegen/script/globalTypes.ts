@@ -3,8 +3,7 @@ import { getSlotsPropertyName } from '../../utils/shared';
 
 export function generateGlobalTypes(vueCompilerOptions: VueCompilerOptions) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}`;
-	return `
-; export const __VLS_globalTypesStart = {};
+	return `export const __VLS_globalTypesStart = {};
 declare global {
 	// @ts-ignore
 	type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<globalThis.JSX.IntrinsicElements, Record<string, any>>>;
@@ -127,5 +126,6 @@ declare global {
 	>;
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 }
-export const __VLS_globalTypesEnd = {};`;
+export const __VLS_globalTypesEnd = {};
+`;
 };

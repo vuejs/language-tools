@@ -1,8 +1,7 @@
-import type * as ts from 'typescript';
+import type { RequestContext } from './types';
+
 export function getQuickInfoAtPosition(
-	this: {
-		languageService: ts.LanguageService;
-	},
+	this: RequestContext,
 	fileName: string,
 	position: number,
 ) {

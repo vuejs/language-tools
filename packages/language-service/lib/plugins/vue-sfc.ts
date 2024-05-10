@@ -1,4 +1,4 @@
-import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginInstance, ServiceContext } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
@@ -13,51 +13,55 @@ export interface Provide {
 }
 
 export function create(): LanguageServicePlugin {
+	const htmlPlugin = createHtmlService({
+		documentSelector: ['vue'],
+		useDefaultDataProvider: false,
+		getCustomData(context) {
+			sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
+			return [sfcDataProvider];
+		},
+		async getFormattingOptions(document, options, context) {
+			return await worker(document, context, async vueCode => {
+
+				const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
+				const blockTypes = ['template', 'script', 'style'];
+
+				for (const customBlock of vueCode.sfc.customBlocks) {
+					blockTypes.push(customBlock.type);
+				}
+
+				return {
+					...options,
+					...formatSettings,
+					wrapAttributes: await context.env.getConfiguration?.<string>('vue.format.wrapAttributes') ?? 'auto',
+					unformatted: '',
+					contentUnformatted: blockTypes.join(','),
+					endWithNewline: options.insertFinalNewline ? true
+						: options.trimFinalNewlines ? false
+							: document.getText().endsWith('\n'),
+				};
+			}) ?? {};
+		},
+	});
 	return {
+		...htmlPlugin,
 		name: 'vue-sfc',
 		create(context): LanguageServicePluginInstance<Provide> {
-			const htmlPlugin = createHtmlService({
-				documentSelector: ['vue'],
-				useDefaultDataProvider: false,
-				getCustomData(context) {
-					sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
-					return [sfcDataProvider];
-				},
-				async getFormattingOptions(document, options, context) {
-					return await worker(document, async vueCode => {
-
-						const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
-						const blockTypes = ['template', 'script', 'style'];
-
-						for (const customBlock of vueCode.sfc.customBlocks) {
-							blockTypes.push(customBlock.type);
-						}
-
-						return {
-							...options,
-							...formatSettings,
-							wrapAttributes: await context.env.getConfiguration?.<string>('vue.format.wrapAttributes') ?? 'auto',
-							unformatted: '',
-							contentUnformatted: blockTypes.join(','),
-							endWithNewline: options.insertFinalNewline ? true
-								: options.trimFinalNewlines ? false
-									: document.getText().endsWith('\n'),
-						};
-					}) ?? {};
-				},
-			}).create(context);
+			const htmlPluginInstance = htmlPlugin.create(context);
 
 			return {
 
-				...htmlPlugin,
+				...htmlPluginInstance,
 
 				provide: {
 					'vue/vueFile': document => {
-						return worker(document, vueFile => {
+						return worker(document, context, vueFile => {
 							return vueFile;
 						});
 					},
 				},
+
+				provideDocumentLinks: undefined,
 
 				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
 					if (sourceScript.generated?.root instanceof vue.VueVirtualCode) {
@@ -80,10 +84,8 @@ export function create(): LanguageServicePlugin {
 					return options;
 				},
 
-				provideDocumentLinks: undefined,
-
 				provideDocumentSymbols(document) {
-					return worker(document, vueSourceFile => {
+					return worker(document, context, vueSourceFile => {
 
 						const result: vscode.DocumentSymbol[] = [];
 						const descriptor = vueSourceFile.sfc;
@@ -170,15 +172,15 @@ export function create(): LanguageServicePlugin {
 					});
 				},
 			};
-
-			function worker<T>(document: TextDocument, callback: (vueSourceFile: vue.VueVirtualCode) => T) {
-				const decoded = context.decodeEmbeddedDocumentUri(document.uri);
-				const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-				const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-				if (virtualCode instanceof vue.VueVirtualCode) {
-					return callback(virtualCode);
-				}
-			}
 		},
 	};
+
+	function worker<T>(document: TextDocument, context: ServiceContext, callback: (vueSourceFile: vue.VueVirtualCode) => T) {
+		const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+		const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+		const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+		if (virtualCode instanceof vue.VueVirtualCode) {
+			return callback(virtualCode);
+		}
+	}
 }

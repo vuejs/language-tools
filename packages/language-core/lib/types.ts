@@ -14,8 +14,6 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 };
 
 export interface VueCodeInformation extends CodeInformation {
-	__referencesCodeLens?: boolean;
-	__displayWithLink?: boolean;
 	__hint?: {
 		setting: string;
 		label: string;
@@ -56,7 +54,6 @@ export interface VueCompilerOptions {
 	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
-	experimentalUseElementAccessInTemplate: boolean;
 }
 
 export const pluginVersion = 2;
@@ -126,19 +123,6 @@ export interface Sfc {
 	customBlocks: readonly (SfcBlock & {
 		type: string;
 	})[];
-
-	/**
-	 * @deprecated use `template.ast` instead
-	 */
-	templateAst: CompilerDOM.RootNode | undefined;
-	/**
-	 * @deprecated use `script.ast` instead
-	 */
-	scriptAst: ts.SourceFile | undefined;
-	/**
-	 * @deprecated use `scriptSetup.ast` instead
-	 */
-	scriptSetupAst: ts.SourceFile | undefined;
 }
 
 export interface TextRange {

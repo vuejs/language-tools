@@ -12,7 +12,7 @@
 		"directory": "packages/component-meta"
 	},
 	"dependencies": {
-		"@volar/typescript": "~2.2.0",
+		"@volar/typescript": "~2.2.1",
 		"@vue/language-core": "2.0.16",
 		"path-browserify": "^1.0.1",
 		"vue-component-type-helpers": "2.0.16"

@@ -40,6 +40,7 @@ export interface EventMeta {
 	type: string;
 	rawType?: ts.Type;
 	signature: string;
+	tags: { name: string, text?: string; }[];
 	declarations: Declaration[];
 	schema: PropertyMetaSchema[];
 }

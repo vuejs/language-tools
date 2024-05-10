@@ -16,6 +16,7 @@ export function* generateElementEvents(
 	node: CompilerDOM.ElementNode,
 	componentVar: string,
 	componentInstanceVar: string,
+	emitVar: string,
 	eventsVar: string,
 	used: () => void,
 ): Generator<Code> {
@@ -27,7 +28,9 @@ export function* generateElementEvents(
 		) {
 			used();
 			const eventVar = ctx.getInternalVariable();
-			yield `let ${eventVar} = { '${prop.arg.loc.source}': __VLS_pickEvent(`;
+			yield `let ${eventVar} = {${newLine}`;
+			yield `/**__VLS_emit,${emitVar},${prop.arg.loc.source}*/${newLine}`;
+			yield `'${prop.arg.loc.source}': __VLS_pickEvent(`;
 			yield `${eventsVar}['${prop.arg.loc.source}'], `;
 			yield `({} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>)`;
 			yield* generateEventArg(options, ctx, prop.arg, true, false);
@@ -59,7 +62,8 @@ export function* generateElementEvents(
 			}
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
-			yield ` }${endOfLine}`;
+			yield newLine;
+			yield `}${endOfLine}`;
 		}
 		else if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE

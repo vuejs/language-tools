@@ -24,25 +24,27 @@ export function* generateComponent(
 	componentCtxVar: string | undefined,
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
-	const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
-	const var_originalComponent = ctx.getInternalVariable();
-	const var_functionalComponent = ctx.getInternalVariable();
-	const var_componentInstance = ctx.getInternalVariable();
-	const var_componentEvents = ctx.getInternalVariable();
-	const isComponentTag = node.tag.toLowerCase() === 'component';
-
-	let endTagOffset = !node.isSelfClosing && options.template.lang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
-	let tag = node.tag;
-	let tagOffsets = endTagOffset !== undefined
+	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
+	const tagOffsets = endTagOffset !== undefined
 		? [startTagOffset, endTagOffset]
 		: [startTagOffset];
+	const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
+	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
+	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
+	const var_originalComponent = matchImportName ?? ctx.getInternalVariable();
+	const var_functionalComponent = ctx.getInternalVariable();
+	const var_componentInstance = ctx.getInternalVariable();
+	const var_componentEmit = ctx.getInternalVariable();
+	const var_componentEvents = ctx.getInternalVariable();
+	const var_defineComponentCtx = ctx.getInternalVariable();
+	const isComponentTag = node.tag.toLowerCase() === 'component';
+
 	let props = node.props;
 	let dynamicTagInfo: {
 		exp: string;
 		offset: number;
 		astHolder: any;
 	} | undefined;
-	let defineComponentCtxVar: string | undefined;
 	let usedComponentEventsVar = false;
 
 	if (isComponentTag) {
@@ -58,16 +60,46 @@ export function* generateComponent(
 			}
 		}
 	}
-	else if (tag.includes('.')) {
+	else if (node.tag.includes('.')) {
 		// namespace tag
 		dynamicTagInfo = {
-			exp: tag,
+			exp: node.tag,
 			astHolder: node.loc,
 			offset: startTagOffset,
 		};
 	}
 
-	if (dynamicTagInfo) {
+	if (matchImportName) {
+		// hover, renaming / find references support
+		yield `// @ts-ignore${newLine}`; // #2304
+		yield `[`;
+		for (const tagOffset of tagOffsets) {
+			if (var_originalComponent === node.tag) {
+				yield [
+					var_originalComponent,
+					'template',
+					tagOffset,
+					ctx.codeFeatures.withoutHighlightAndCompletion,
+				];
+			}
+			else {
+				yield* generateCamelized(
+					capitalize(node.tag),
+					tagOffset,
+					{
+						...ctx.codeFeatures.withoutHighlightAndCompletion,
+						navigation: {
+							resolveRenameNewName: camelizeComponentName,
+							resolveRenameEditText: getTagRenameApply(node.tag),
+						},
+					},
+				);
+			}
+			yield `,`;
+		}
+		yield `]${endOfLine}`;
+	}
+	else if (dynamicTagInfo) {
 		yield `const ${var_originalComponent} = `;
 		yield* generateInterpolation(
 			options,
@@ -83,8 +115,8 @@ export function* generateComponent(
 	}
 	else if (!isComponentTag) {
 		yield `const ${var_originalComponent} = ({} as `;
-		for (const componentName of getPossibleOriginalComponentNames(tag, true)) {
-			yield `'${componentName}' extends keyof typeof __VLS_ctx ? { '${getCanonicalComponentName(tag)}': typeof __VLS_ctx`;
+		for (const componentName of possibleOriginalNames) {
+			yield `'${componentName}' extends keyof typeof __VLS_ctx ? { '${getCanonicalComponentName(node.tag)}': typeof __VLS_ctx`;
 			yield* generatePropertyAccess(options, ctx, componentName);
 			yield ` }: `;
 		}
@@ -92,29 +124,17 @@ export function* generateComponent(
 		yield* generatePropertyAccess(
 			options,
 			ctx,
-			getCanonicalComponentName(tag),
+			getCanonicalComponentName(node.tag),
 			startTagOffset,
 			ctx.codeFeatures.verification,
 		);
 		yield endOfLine;
-	}
-	else {
-		yield `const ${var_originalComponent} = {} as any${endOfLine}`;
-	}
 
-	yield `const ${var_functionalComponent} = __VLS_asFunctionalComponent(${var_originalComponent}, new ${var_originalComponent}({`;
-	yield* generateElementProps(options, ctx, node, props, false);
-	yield `}))${endOfLine}`;
-
-	if (
-		!dynamicTagInfo
-		&& !isComponentTag
-	) {
 		// hover support
 		for (const offset of tagOffsets) {
-			yield `({} as { ${getCanonicalComponentName(tag)}: typeof ${var_originalComponent} }).`;
+			yield `({} as { ${getCanonicalComponentName(node.tag)}: typeof ${var_originalComponent} }).`;
 			yield* generateCanonicalComponentName(
-				tag,
+				node.tag,
 				offset,
 				ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
 			);
@@ -160,13 +180,20 @@ export function* generateComponent(
 			yield `]${endOfLine}`;
 		}
 	}
+	else {
+		yield `const ${var_originalComponent} = {} as any${endOfLine}`;
+	}
+
+	yield `const ${var_functionalComponent} = __VLS_asFunctionalComponent(${var_originalComponent}, new ${var_originalComponent}({`;
+	yield* generateElementProps(options, ctx, node, props, false);
+	yield `}))${endOfLine}`;
 
 	if (options.vueCompilerOptions.strictTemplates) {
 		// with strictTemplates, generate once for props type-checking + instance type
 		yield `const ${var_componentInstance} = ${var_functionalComponent}(`;
 		yield* wrapWith(
 			startTagOffset,
-			startTagOffset + tag.length,
+			startTagOffset + node.tag.length,
 			ctx.codeFeatures.verification,
 			`{`,
 			...generateElementProps(options, ctx, node, props, true, propsFailedExps),
@@ -183,7 +210,7 @@ export function* generateComponent(
 		yield `({} as (props: __VLS_FunctionalComponentProps<typeof ${var_originalComponent}, typeof ${var_componentInstance}> & Record<string, unknown>) => void)(`;
 		yield* wrapWith(
 			startTagOffset,
-			startTagOffset + tag.length,
+			startTagOffset + node.tag.length,
 			ctx.codeFeatures.verification,
 			`{`,
 			...generateElementProps(options, ctx, node, props, true, propsFailedExps),
@@ -192,8 +219,7 @@ export function* generateComponent(
 		yield `)${endOfLine}`;
 	}
 
-	defineComponentCtxVar = ctx.getInternalVariable();
-	componentCtxVar = defineComponentCtxVar;
+	componentCtxVar = var_defineComponentCtx;
 	currentComponent = node;
 
 	for (const failedExp of propsFailedExps) {
@@ -212,24 +238,23 @@ export function* generateComponent(
 
 	yield* generateVScope(options, ctx, node, props);
 
-	if (componentCtxVar) {
-		ctx.usedComponentCtxVars.add(componentCtxVar);
-		yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEvents, () => usedComponentEventsVar = true);
-	}
+	ctx.usedComponentCtxVars.add(componentCtxVar);
+	yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents, () => usedComponentEventsVar = true);
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
-	if (slotDir && componentCtxVar) {
+	if (slotDir) {
 		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
 	}
 	else {
 		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
 	}
 
-	if (defineComponentCtxVar && ctx.usedComponentCtxVars.has(defineComponentCtxVar)) {
+	if (var_defineComponentCtx && ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
 		yield `const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!${endOfLine}`;
 	}
 	if (usedComponentEventsVar) {
-		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>${endOfLine}`;
+		yield `let ${var_componentEmit}!: typeof ${componentCtxVar}.emit${endOfLine}`;
+		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
 	}
 }
 
@@ -330,9 +355,7 @@ function* generateVScope(
 
 	yield* generateElementDirectives(options, ctx, node);
 	yield* generateReferencesForElements(options, ctx, node); // <el ref="foo" />
-	if (options.shouldGenerateScopedClasses) {
-		yield* generateReferencesForScopedCssClasses(ctx, node);
-	}
+	yield* generateReferencesForScopedCssClasses(ctx, node);
 
 	if (inScope) {
 		yield `}${newLine}`;
@@ -528,19 +551,32 @@ function* generateReferencesForScopedCssClasses(
 			&& prop.value
 		) {
 			let startOffset = prop.value.loc.start.offset;
-			let tempClassName = '';
-			for (const char of (prop.value.loc.source + ' ')) {
-				if (char.trim() === '' || char === '"' || char === "'") {
-					if (tempClassName !== '') {
-						ctx.scopedClasses.push({ className: tempClassName, offset: startOffset });
-						startOffset += tempClassName.length;
-						tempClassName = '';
+			let content = prop.value.loc.source;
+			if (
+				(content.startsWith(`'`) && content.endsWith(`'`))
+				|| (content.startsWith(`"`) && content.endsWith(`"`))
+			) {
+				startOffset++;
+				content = content.slice(1, -1);
+			}
+			if (content) {
+				let currentClassName = '';
+				for (const char of (content + ' ')) {
+					if (char.trim() === '') {
+						if (currentClassName !== '') {
+							ctx.scopedClasses.push({ className: currentClassName, offset: startOffset });
+							startOffset += currentClassName.length;
+							currentClassName = '';
+						}
+						startOffset += char.length;
 					}
-					startOffset += char.length;
+					else {
+						currentClassName += char;
+					}
 				}
-				else {
-					tempClassName += char;
-				}
+			}
+			else {
+				ctx.emptyClassOffsets.push(startOffset);
 			}
 		}
 		else if (

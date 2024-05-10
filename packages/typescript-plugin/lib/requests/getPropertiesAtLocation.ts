@@ -1,14 +1,9 @@
-import { Language, isCompletionEnabled } from '@vue/language-core';
+import { isCompletionEnabled } from '@vue/language-core';
 import type * as ts from 'typescript';
+import type { RequestContext } from './types';
 
 export function getPropertiesAtLocation(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: Language;
-		isTsPlugin: boolean,
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
 	position: number,
 ) {

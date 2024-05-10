@@ -9,12 +9,14 @@ export function decorateLanguageServiceForVue(
 	vueOptions: vue.VueCompilerOptions,
 	ts: typeof import('typescript'),
 	isTsPlugin: boolean,
+	getScriptId: (fileName: string) => string,
 ) {
 	const {
 		getCompletionsAtPosition,
 		getCompletionEntryDetails,
 		getCodeFixesAtPosition,
 		getEncodedSemanticClassifications,
+		getQuickInfoAtPosition,
 	} = languageService;
 
 	languageService.getCompletionsAtPosition = (fileName, position, options, formattingSettings) => {
@@ -49,6 +51,12 @@ export function decorateLanguageServiceForVue(
 							break;
 						}
 					}
+					if (item.data) {
+						// @ts-expect-error
+						item.data.__isAutoImport = {
+							fileName,
+						};
+					}
 				}
 			}
 		}
@@ -69,6 +77,27 @@ export function decorateLanguageServiceForVue(
 				}
 			}
 		}
+		// @ts-expect-error
+		if (args[6]?.__isAutoImport) {
+			// @ts-expect-error
+			const { fileName } = args[6]?.__isAutoImport;
+			const sourceScript = language.scripts.get(getScriptId(fileName));
+			if (sourceScript?.generated?.root instanceof vue.VueVirtualCode) {
+				const sfc = sourceScript.generated.root.getVueSfc();
+				if (!sfc?.descriptor.script && !sfc?.descriptor.scriptSetup) {
+					for (const codeAction of details?.codeActions ?? []) {
+						for (const change of codeAction.changes) {
+							for (const textChange of change.textChanges) {
+								textChange.newText = `<script setup lang="ts">${textChange.newText}</script>\n\n`;
+								break;
+							}
+							break;
+						}
+						break;
+					}
+				}
+			}
+		}
 		return details;
 	};
 	languageService.getCodeFixesAtPosition = (...args) => {
@@ -77,10 +106,50 @@ export function decorateLanguageServiceForVue(
 		result = result.filter(entry => entry.description.indexOf('__VLS_') === -1);
 		return result;
 	};
+	languageService.getQuickInfoAtPosition = (...args) => {
+		const result = getQuickInfoAtPosition(...args);
+		if (result && result.documentation?.length === 1 && result.documentation[0].text.startsWith('__VLS_emit,')) {
+			const [_, emitVarName, eventName] = result.documentation[0].text.split(',');
+			const program = languageService.getProgram()!;
+			const typeChecker = program.getTypeChecker();
+			const sourceFile = program.getSourceFile(args[0]);
+
+			result.documentation = undefined;
+
+			let symbolNode: ts.Identifier | undefined;
+
+			sourceFile?.forEachChild(function visit(node) {
+				if (ts.isIdentifier(node) && node.text === emitVarName) {
+					symbolNode = node;
+				}
+				if (symbolNode) {
+					return;
+				}
+				ts.forEachChild(node, visit);
+			});
+
+			if (symbolNode) {
+				const emitSymbol = typeChecker.getSymbolAtLocation(symbolNode);
+				if (emitSymbol) {
+					const type = typeChecker.getTypeOfSymbolAtLocation(emitSymbol, symbolNode);
+					const calls = type.getCallSignatures();
+					for (const call of calls) {
+						const callEventName = (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value;
+						call.getJsDocTags();
+						if (callEventName === eventName) {
+							result.documentation = call.getDocumentationComment(typeChecker);
+							result.tags = call.getJsDocTags();
+						}
+					}
+				}
+			}
+		}
+		return result;
+	};
 	if (isTsPlugin) {
 		languageService.getEncodedSemanticClassifications = (fileName, span, format) => {
 			const result = getEncodedSemanticClassifications(fileName, span, format);
-			const file = language.scripts.get(fileName);
+			const file = language.scripts.get(getScriptId(fileName));
 			if (file?.generated?.root instanceof vue.VueVirtualCode) {
 				const { template } = file.generated.root.sfc;
 				if (template) {

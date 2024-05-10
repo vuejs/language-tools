@@ -1,3 +1,4 @@
+import type { Language, VueCompilerOptions } from '@vue/language-core';
 import * as fs from 'fs';
 import * as net from 'net';
 import type * as ts from 'typescript';
@@ -6,8 +7,8 @@ import { getComponentEvents, getComponentNames, getComponentProps, getElementAtt
 import { getImportPathForFile } from './requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
+import type { RequestContext } from './requests/types';
 import { NamedPipeServer, connect, readPipeTable, updatePipeTable } from './utils';
-import type { Language, VueCompilerOptions } from '@vue/language-core';
 
 export interface Request {
 	type: 'projectInfoForFile'
@@ -58,12 +59,11 @@ export function startNamedPipeServer(
 				);
 			}
 			else if (project) {
-				const requestContext = {
+				const requestContext: RequestContext = {
 					typescript: ts,
 					languageService: project.info.languageService,
 					languageServiceHost: project.info.languageServiceHost,
 					language: project.language,
-					vueOptions: project.vueOptions,
 					isTsPlugin: true,
 					getFileId: (fileName: string) => fileName,
 				};
