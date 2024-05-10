@@ -34,6 +34,7 @@ export function* generateComponent(
 	const var_originalComponent = matchImportName ?? ctx.getInternalVariable();
 	const var_functionalComponent = ctx.getInternalVariable();
 	const var_componentInstance = ctx.getInternalVariable();
+	const var_componentEmit = ctx.getInternalVariable();
 	const var_componentEvents = ctx.getInternalVariable();
 	const var_defineComponentCtx = ctx.getInternalVariable();
 	const isComponentTag = node.tag.toLowerCase() === 'component';
@@ -238,7 +239,7 @@ export function* generateComponent(
 	yield* generateVScope(options, ctx, node, props);
 
 	ctx.usedComponentCtxVars.add(componentCtxVar);
-	yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEvents, () => usedComponentEventsVar = true);
+	yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents, () => usedComponentEventsVar = true);
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir) {
@@ -252,7 +253,8 @@ export function* generateComponent(
 		yield `const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!${endOfLine}`;
 	}
 	if (usedComponentEventsVar) {
-		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${componentCtxVar}.emit>${endOfLine}`;
+		yield `let ${var_componentEmit}!: typeof ${componentCtxVar}.emit${endOfLine}`;
+		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
 	}
 }
 
