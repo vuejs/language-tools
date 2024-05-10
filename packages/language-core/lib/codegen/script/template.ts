@@ -66,7 +66,7 @@ function* generateConstNameOption(options: ScriptCodegenOptions): Generator<Code
 		yield endOfLine;
 	}
 	else if (options.sfc.scriptSetup) {
-		yield `let __VLS_name!: '${options.fileBaseName.substring(0, options.fileBaseName.lastIndexOf('.'))}'${endOfLine}`;
+		yield `let __VLS_name!: '${options.scriptSetupRanges?.options.name ?? options.fileBaseName.substring(0, options.fileBaseName.lastIndexOf('.'))}'${endOfLine}`;
 	}
 	else {
 		yield `const __VLS_name = undefined${endOfLine}`;
