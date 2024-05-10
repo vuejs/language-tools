@@ -54,6 +54,7 @@ function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 		|| extension.id === 'VisualStudioExptTeam.vscodeintellicode'
 		|| extension.id === 'bierner.lit-html'
 		|| extension.id === 'jenkey2011.string-highlight'
+		|| extension.id === 'mxsdev.typescript-explorer'
 	) {
 		return true;
 	}
