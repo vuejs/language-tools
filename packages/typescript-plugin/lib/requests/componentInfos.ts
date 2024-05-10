@@ -1,14 +1,10 @@
 import * as vue from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
+import type { RequestContext } from './types';
 
 export function getComponentProps(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: vue.Language;
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
 	tag: string,
 	requiredOnly = false,
