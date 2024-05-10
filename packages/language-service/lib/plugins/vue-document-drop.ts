@@ -1,13 +1,14 @@
-import { VueVirtualCode, forEachEmbeddedCode } from '@vue/language-core';
+import { VueCompilerOptions, VueVirtualCode, forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { LanguageServicePlugin, LanguageServicePluginInstance, ServiceContext, TagNameCasing } from '../types';
+import { LanguageServicePlugin, LanguageServicePluginInstance, ServiceContext, ServiceEnvironment, TagNameCasing } from '../types';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 
 export function create(
 	ts: typeof import('typescript'),
+	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
 	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ): LanguageServicePlugin {
 	return {
@@ -17,6 +18,7 @@ export function create(
 			let casing = TagNameCasing.Pascal as TagNameCasing; // TODO
 
 			const tsPluginClient = getTsPluginClient?.(context);
+			const vueCompilerOptions = getVueOptions(context.env);
 
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
@@ -39,7 +41,7 @@ export function create(
 							importUri = item.value as string;
 						}
 					}
-					if (!importUri?.endsWith('.vue')) {
+					if (!importUri || !vueCompilerOptions.extensions.some(ext => importUri.endsWith(ext))) {
 						return;
 					}
 

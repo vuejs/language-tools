@@ -171,13 +171,16 @@ export function baseCreate(
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
 		languageServiceHost.getScriptKind = fileName => {
-			if (fileName.endsWith('.vue.js')) {
-				return ts.ScriptKind.TS;
+			const scriptKind = getScriptKind!(fileName);
+			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
+				if (scriptKind === ts.ScriptKind.JS) {
+					return ts.ScriptKind.TS;
+				}
+				if (scriptKind === ts.ScriptKind.JSX) {
+					return ts.ScriptKind.TSX;
+				}
 			}
-			if (fileName.endsWith('.vue.jsx')) {
-				return ts.ScriptKind.TSX;
-			}
-			return getScriptKind!(fileName);
+			return scriptKind;
 		};
 	}
 
@@ -196,7 +199,11 @@ export function baseCreate(
 	}
 
 	function getMetaFileName(fileName: string) {
-		return (fileName.endsWith('.vue') ? fileName : fileName.substring(0, fileName.lastIndexOf('.'))) + '.meta.ts';
+		return (
+			vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
+				? fileName
+				: fileName.substring(0, fileName.lastIndexOf('.'))
+		) + '.meta.ts';
 	}
 
 	function getMetaScriptContent(fileName: string) {

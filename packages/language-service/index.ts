@@ -79,7 +79,7 @@ export function getVueLanguageServicePlugins(
 		createVueSfcPlugin(),
 		createVueTwoslashQueriesPlugin(ts, getTsPluginClient),
 		createVueDocumentLinksPlugin(),
-		createVueDocumentDropPlugin(ts, getTsPluginClient),
+		createVueDocumentDropPlugin(ts, getVueOptions, getTsPluginClient),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueAutoWrapParenthesesPlugin(ts),
 		createVueAutoAddSpacePlugin(),
