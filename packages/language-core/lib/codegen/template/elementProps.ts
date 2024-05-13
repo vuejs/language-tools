@@ -23,25 +23,29 @@ export function* generateElementProps(
 	const isIntrinsicElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT || node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
 	const canCamelize = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
-	if (isIntrinsicElement) {
-		for (const prop of props) {
+
+	for (const prop of props) {
+		if (
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'on'
+		) {
 			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'on'
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& !prop.arg.loc.source.startsWith('[')
 				&& !prop.arg.loc.source.endsWith(']')
 			) {
-				yield `...{ `;
-				yield* generateEventArg(ctx, prop.arg, true);
-				yield `: `;
-				yield* generateEventExpression(options, ctx, prop);
-				yield `}, `;
+				if (isIntrinsicElement) {
+					yield `...{ `;
+					yield* generateEventArg(ctx, prop.arg, true);
+					yield `: `;
+					yield* generateEventExpression(options, ctx, prop);
+					yield `}, `;
+				}
+				else {
+					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': {} as any }, `;
+				}
 			}
-			else if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'on'
-			) {
+			else {
 				if (
 					prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					&& prop.arg.loc.source.startsWith('[')
@@ -52,19 +56,6 @@ export function* generateElementProps(
 				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					propsFailedExps?.push(prop.exp);
 				}
-			}
-		}
-	}
-	else {
-		for (const prop of props) {
-			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'on'
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				&& !prop.arg.loc.source.startsWith('[')
-				&& !prop.arg.loc.source.endsWith(']')
-			) {
-				yield `...{ '${camelize('on-' + prop.arg.loc.source)}': {} as any }, `;
 			}
 		}
 	}
