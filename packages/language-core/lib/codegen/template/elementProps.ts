@@ -76,12 +76,16 @@ export function* generateElementProps(
 			&& (prop.name === 'model' || prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 			&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 		) {
-			let propName =
-				prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
-						? prop.arg.content
-						: prop.arg.loc.source
-					: getModelValuePropName(node, options.vueCompilerOptions.target, options.vueCompilerOptions);
+			let propName: string | undefined;
+
+			if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+				propName = prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
+					? prop.arg.content
+					: prop.arg.loc.source;
+			}
+			else {
+				propName = getModelValuePropName(node, options.vueCompilerOptions.target, options.vueCompilerOptions);
+			}
 
 			if (
 				propName === undefined
@@ -110,26 +114,26 @@ export function* generateElementProps(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
-				...generateObjectProperty(
-					options,
-					ctx,
-					propName,
+				...(
 					prop.arg
-						? prop.arg.loc.start.offset
-						: prop.loc.start.offset,
-					prop.arg
-						? {
-							...ctx.codeFeatures.withoutHighlightAndCompletion,
-							navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
-								? {
-									resolveRenameNewName: camelize,
-									resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
-								}
-								: false,
-						}
-						: ctx.codeFeatures.withoutHighlightAndCompletion,
-					(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
-					shouldCamelize,
+						? generateObjectProperty(
+							options,
+							ctx,
+							propName,
+							prop.arg.loc.start.offset,
+							{
+								...ctx.codeFeatures.withoutHighlightAndCompletion,
+								navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
+									? {
+										resolveRenameNewName: camelize,
+										resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
+									}
+									: false,
+							},
+							(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
+							shouldCamelize,
+						)
+						: [propName]
 				),
 				`: (`,
 				...genereatePropExp(
