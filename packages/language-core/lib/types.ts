@@ -74,6 +74,7 @@ export type VueLanguagePlugin = (ctx: {
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
 	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
+	compileSFCScript?(lang: string, script: string): ts.SourceFile | undefined;
 	compileSFCTemplate?(lang: string, template: string, options: CompilerDOM.CompilerOptions): CompilerDOM.CodegenResult | undefined;
 	updateSFCTemplate?(oldResult: CompilerDOM.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDOM.CodegenResult | undefined;
 	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string; }[];

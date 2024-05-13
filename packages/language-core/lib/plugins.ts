@@ -1,11 +1,12 @@
-import useVueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
-import useVueSfcScriptsFormat from './plugins/vue-sfc-scripts';
-import useVueSfcStyles from './plugins/vue-sfc-styles';
-import useVueSfcTemplate from './plugins/vue-sfc-template';
-import useVueTemplateHtmlPlugin from './plugins/vue-template-html';
-import useVueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
-import useVueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
-import useVueTsx from './plugins/vue-tsx';
+import vueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
+import vueSfcScriptsFormat from './plugins/vue-sfc-scripts';
+import vueSfcStyles from './plugins/vue-sfc-styles';
+import vueSfcTemplate from './plugins/vue-sfc-template';
+import vueScriptJsPlugin from './plugins/vue-script-js';
+import vueTemplateHtmlPlugin from './plugins/vue-template-html';
+import vueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
+import vueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
+import vueTsx from './plugins/vue-tsx';
 import { pluginVersion, type VueLanguagePlugin } from './types';
 
 export * from './plugins/shared'
@@ -13,14 +14,15 @@ export * from './plugins/shared'
 export function getBasePlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 
 	const plugins: VueLanguagePlugin[] = [
-		useVueTemplateHtmlPlugin,
-		useVueTemplateInlineCssPlugin,
-		useVueTemplateInlineTsPlugin,
-		useVueSfcStyles,
-		useVueSfcCustomBlocks,
-		useVueSfcScriptsFormat,
-		useVueSfcTemplate,
-		useVueTsx,
+		vueScriptJsPlugin,
+		vueTemplateHtmlPlugin,
+		vueTemplateInlineCssPlugin,
+		vueTemplateInlineTsPlugin,
+		vueSfcStyles,
+		vueSfcCustomBlocks,
+		vueSfcScriptsFormat,
+		vueSfcTemplate,
+		vueTsx,
 		...pluginContext.vueCompilerOptions.plugins,
 	];
 
