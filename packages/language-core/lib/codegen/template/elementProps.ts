@@ -44,7 +44,7 @@ export function* generateElementProps(
 				&& prop.name === 'on'
 			) {
 				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					yield* generateEventArg(options, ctx, prop.arg, false, true);
+					yield* generateEventArg(options, ctx, prop.arg, true);
 					yield `: `;
 					yield* generateEventExpression(options, ctx, prop);
 					yield `,${newLine}`;

@@ -45,7 +45,6 @@ export function* generateComponent(
 		offset: number;
 		astHolder: any;
 	} | undefined;
-	let usedComponentEventsVar = false;
 
 	if (isComponentTag) {
 		for (const prop of node.props) {
@@ -239,7 +238,7 @@ export function* generateComponent(
 	yield* generateVScope(options, ctx, node, props);
 
 	ctx.usedComponentCtxVars.add(componentCtxVar);
-	yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents, () => usedComponentEventsVar = true);
+	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir) {

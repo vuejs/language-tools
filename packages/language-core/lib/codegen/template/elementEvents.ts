@@ -8,7 +8,6 @@ import { generateCamelized } from './camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateObjectProperty } from './objectProperty';
 
 export function* generateElementEvents(
 	options: TemplateCodegenOptions,
@@ -18,51 +17,40 @@ export function* generateElementEvents(
 	componentInstanceVar: string,
 	emitVar: string,
 	eventsVar: string,
-	used: () => void,
 ): Generator<Code> {
+	let usedComponentEventsVar = false;
+	let propsVar: string | undefined;
 	for (const prop of node.props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'on'
 			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			&& !prop.arg.loc.source.startsWith('[')
+			&& !prop.arg.loc.source.endsWith(']')
 		) {
-			used();
-			const eventVar = ctx.getInternalVariable();
-			yield `let ${eventVar} = {${newLine}`;
+			usedComponentEventsVar = true;
+			if (!propsVar) {
+				propsVar = ctx.getInternalVariable();
+				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>${endOfLine}`;
+			}
+			const originalPropName = camelize('on-' + prop.arg.loc.source);
+			yield `const ${ctx.getInternalVariable()}: `;
+			if (!options.vueCompilerOptions.strictTemplates) {
+				yield `Record<string, unknown> & `;
+			}
+			yield `Partial<`;
+			yield `__VLS_IsAny<__VLS_AsFunctionOrAny<typeof ${propsVar}['${originalPropName}']>> extends false${newLine}`;
+			yield `? typeof ${propsVar}${newLine}`;
+			yield `: __VLS_IsAny<typeof ${eventsVar}['${prop.arg.loc.source}']> extends false${newLine}`;
+			yield `? {${newLine}`;
 			yield `/**__VLS_emit,${emitVar},${prop.arg.loc.source}*/${newLine}`;
-			yield `'${prop.arg.loc.source}': __VLS_pickEvent(`;
-			yield `${eventsVar}['${prop.arg.loc.source}'], `;
-			yield `({} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>)`;
-			yield* generateEventArg(options, ctx, prop.arg, true, false);
-			yield `) }${endOfLine}`;
-			yield `${eventVar} = { `;
-			if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
-				yield `[(`;
-				yield* generateInterpolation(
-					options,
-					ctx,
-					prop.arg.loc.source.slice(1, -1),
-					prop.arg.loc,
-					prop.arg.loc.start.offset + 1,
-					ctx.codeFeatures.all,
-					'',
-					'',
-				);
-				yield `)!]`;
-			}
-			else {
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					prop.arg.loc.source,
-					prop.arg.loc.start.offset,
-					ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
-					prop.arg.loc
-				);
-			}
+			yield `'${originalPropName}': typeof ${eventsVar}['${prop.arg.loc.source}']${newLine}`;
+			yield `}${newLine}`;
+			yield `: typeof ${propsVar}${newLine}`;
+			yield `> = {${newLine}`;
+			yield* generateEventArg(options, ctx, prop.arg, true);
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
-			yield newLine;
 			yield `}${endOfLine}`;
 		}
 		else if (
@@ -85,6 +73,7 @@ export function* generateElementEvents(
 			yield endOfLine;
 		}
 	}
+	return usedComponentEventsVar;
 }
 
 const eventArgFeatures: VueCodeInformation = {
@@ -108,7 +97,6 @@ export function* generateEventArg(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	arg: CompilerDOM.SimpleExpressionNode,
-	access: boolean,
 	enableHover: boolean,
 ): Generator<Code> {
 	const features = enableHover
@@ -132,9 +120,6 @@ export function* generateEventArg(
 		yield `]`;
 	}
 	else if (variableNameRegex.test(camelize(arg.loc.source))) {
-		if (access) {
-			yield `.`;
-		}
 		yield ['', 'template', arg.loc.start.offset, features];
 		yield `on`;
 		yield* generateCamelized(
@@ -144,9 +129,6 @@ export function* generateEventArg(
 		);
 	}
 	else {
-		if (access) {
-			yield `[`;
-		}
 		yield* wrapWith(
 			arg.loc.start.offset,
 			arg.loc.end.offset,
@@ -161,9 +143,6 @@ export function* generateEventArg(
 			),
 			`'`,
 		);
-		if (access) {
-			yield `]`;
-		}
 	}
 }
 

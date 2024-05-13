@@ -80,12 +80,6 @@ declare global {
 		: (_: {}${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } };
 	function __VLS_elementAsFunction<T>(tag: T, endTag?: T): (_: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}) => void;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
-	function __VLS_pickEvent<E1, E2>(emitEvent: E1, propEvent: E2): __VLS_FillingEventArg<
-		__VLS_PickNotAny<
-			__VLS_AsFunctionOrAny<E2>,
-			__VLS_AsFunctionOrAny<E1>
-		>
-	> | undefined;
 	function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): __VLS_PickNotAny<
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
 		, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
