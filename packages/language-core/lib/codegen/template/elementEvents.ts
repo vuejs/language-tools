@@ -34,6 +34,9 @@ export function* generateElementEvents(
 				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>${endOfLine}`;
 			}
 			const originalPropName = camelize('on-' + prop.arg.loc.source);
+			const originalPropNameObjectKey = variableNameRegex.test(originalPropName)
+				? originalPropName
+				: `'${originalPropName}'`;
 			yield `const ${ctx.getInternalVariable()}: `;
 			if (!options.vueCompilerOptions.strictTemplates) {
 				yield `Record<string, unknown> & `;
@@ -44,13 +47,13 @@ export function* generateElementEvents(
 			yield `: __VLS_IsAny<typeof ${eventsVar}['${prop.arg.loc.source}']> extends false${newLine}`;
 			yield `? {${newLine}`;
 			yield `/**__VLS_emit,${emitVar},${prop.arg.loc.source}*/${newLine}`;
-			yield `'${originalPropName}': typeof ${eventsVar}['${prop.arg.loc.source}']${newLine}`;
+			yield `${originalPropNameObjectKey}: typeof ${eventsVar}['${prop.arg.loc.source}']${newLine}`;
 			yield `}${newLine}`;
 			if (prop.arg.loc.source !== camelize(prop.arg.loc.source)) {
 				yield `: __VLS_IsAny<typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']> extends false${newLine}`;
 				yield `? {${newLine}`;
 				yield `/**__VLS_emit,${emitVar},${camelize(prop.arg.loc.source)}*/${newLine}`;
-				yield `'${originalPropName}': typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']${newLine}`;
+				yield `${originalPropNameObjectKey}: typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']${newLine}`;
 				yield `}${newLine}`;
 			}
 			yield `: typeof ${propsVar}${newLine}`;
