@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { collectVars, createTsAst, newLine } from '../common';
+import { collectVars, createTsAst, endOfLine, newLine } from '../common';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { isFragment } from './index';
@@ -48,11 +48,32 @@ export function* generateVFor(
 		yield `{} as any`;
 	}
 	yield `) {${newLine}`;
-	if (isFragment(node)) {
-		yield* ctx.resetDirectiveComments('end of v-for start');
-	}
 	for (const varName of forBlockVars) {
 		ctx.addLocalVariable(varName);
+	}
+	for (const argument of node.codegenNode?.children.arguments ?? []) {
+		if (
+			argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
+			&& argument.returns.type === CompilerDOM.NodeTypes.VNODE_CALL
+			&& argument.returns.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
+		) {
+			for (const prop of argument.returns.props.properties) {
+				yield* generateInterpolation(
+					options,
+					ctx,
+					prop.value.loc.source,
+					prop.value.loc,
+					prop.value.loc.start.offset,
+					ctx.codeFeatures.all,
+					'(',
+					')',
+				);
+				yield endOfLine;
+			}
+		}
+	}
+	if (isFragment(node)) {
+		yield* ctx.resetDirectiveComments('end of v-for start');
 	}
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
