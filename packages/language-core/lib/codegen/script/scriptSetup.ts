@@ -290,11 +290,6 @@ function* generateComponentProps(
 	yield `${ctx.helperTypes.OmitKeepDiscriminatedUnion.name}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
 	yield endOfLine;
 
-	yield `type __VLS_BuiltInPublicProps =${newLine}`
-		+ `	import('${options.vueCompilerOptions.lib}').VNodeProps${newLine}`
-		+ `	& import('${options.vueCompilerOptions.lib}').AllowedComponentProps${newLine}`
-		+ `	& import('${options.vueCompilerOptions.lib}').ComponentCustomProps${endOfLine}`;
-
 	if (scriptSetupRanges.defineProp.length) {
 		yield `const __VLS_defaults = {${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {

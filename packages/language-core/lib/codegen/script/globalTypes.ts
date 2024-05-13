@@ -6,16 +6,20 @@ export function generateGlobalTypes(vueCompilerOptions: VueCompilerOptions) {
 	return `export const __VLS_globalTypesStart = {};
 declare global {
 	// @ts-ignore
-	type __VLS_IntrinsicElements = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<globalThis.JSX.IntrinsicElements, Record<string, any>>>;
+	type __VLS_IntrinsicElements = __VLS_PickNotAny<import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<globalThis.JSX.IntrinsicElements, Record<string, any>>>;
 	// @ts-ignore
-	type __VLS_Element = __VLS_PickNotAny<import('vue/jsx-runtime').JSX.Element, globalThis.JSX.Element>;
+	type __VLS_Element = __VLS_PickNotAny<import('${vueCompilerOptions.lib}/jsx-runtime').JSX.Element, globalThis.JSX.Element>;
 	// @ts-ignore
 	type __VLS_GlobalComponents = ${[
-			`__VLS_PickNotAny<import('vue').GlobalComponents, {}>`,
+			`__VLS_PickNotAny<import('${vueCompilerOptions.lib}').GlobalComponents, {}>`,
 			`__VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>`,
 			`__VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>`,
 			`Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`
 		].join(' & ')};
+	type __VLS_BuiltInPublicProps =
+		__VLS_PickNotAny<import('${vueCompilerOptions.lib}').VNodeProps, {}>
+		& __VLS_PickNotAny<import('${vueCompilerOptions.lib}').AllowedComponentProps, {}>
+		& __VLS_PickNotAny<import('${vueCompilerOptions.lib}').ComponentCustomProps, {}>;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 
