@@ -41,24 +41,24 @@ export function* generateElementEvents(
 			if (!options.vueCompilerOptions.strictTemplates) {
 				yield `Record<string, unknown> & `;
 			}
-			yield `Partial<`;
+			yield `(`;
 			yield `__VLS_IsAny<__VLS_AsFunctionOrAny<typeof ${propsVar}['${originalPropName}']>> extends false${newLine}`;
 			yield `? typeof ${propsVar}${newLine}`;
 			yield `: __VLS_IsAny<typeof ${eventsVar}['${prop.arg.loc.source}']> extends false${newLine}`;
 			yield `? {${newLine}`;
 			yield `/**__VLS_emit,${emitVar},${prop.arg.loc.source}*/${newLine}`;
-			yield `${originalPropNameObjectKey}: typeof ${eventsVar}['${prop.arg.loc.source}']${newLine}`;
+			yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${prop.arg.loc.source}']${newLine}`;
 			yield `}${newLine}`;
 			if (prop.arg.loc.source !== camelize(prop.arg.loc.source)) {
 				yield `: __VLS_IsAny<typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']> extends false${newLine}`;
 				yield `? {${newLine}`;
 				yield `/**__VLS_emit,${emitVar},${camelize(prop.arg.loc.source)}*/${newLine}`;
-				yield `${originalPropNameObjectKey}: typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']${newLine}`;
+				yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']${newLine}`;
 				yield `}${newLine}`;
 			}
 			yield `: typeof ${propsVar}${newLine}`;
-			yield `> = {${newLine}`;
-			yield* generateEventArg(options, ctx, prop.arg, true);
+			yield `) = {${newLine}`;
+			yield* generateEventArg(ctx, prop.arg, true);
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
 			yield `}${endOfLine}`;
@@ -104,7 +104,6 @@ const eventArgFeatures: VueCodeInformation = {
 };
 
 export function* generateEventArg(
-	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	arg: CompilerDOM.SimpleExpressionNode,
 	enableHover: boolean,
@@ -115,21 +114,7 @@ export function* generateEventArg(
 			...eventArgFeatures,
 		}
 		: eventArgFeatures;
-	if (arg.loc.source.startsWith('[') && arg.loc.source.endsWith(']')) {
-		yield `[`;
-		yield* generateInterpolation(
-			options,
-			ctx,
-			arg.loc.source.slice(1, -1),
-			arg.loc,
-			arg.loc.start.offset + 1,
-			ctx.codeFeatures.all,
-			'',
-			'',
-		);
-		yield `]`;
-	}
-	else if (variableNameRegex.test(camelize(arg.loc.source))) {
+	if (variableNameRegex.test(camelize(arg.loc.source))) {
 		yield ['', 'template', arg.loc.start.offset, features];
 		yield `on`;
 		yield* generateCamelized(

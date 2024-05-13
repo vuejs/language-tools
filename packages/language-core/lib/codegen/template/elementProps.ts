@@ -42,14 +42,27 @@ export function* generateElementProps(
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& prop.name === 'on'
+				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& !prop.arg.loc.source.startsWith('[')
+				&& !prop.arg.loc.source.endsWith(']')
 			) {
-				if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					yield* generateEventArg(options, ctx, prop.arg, true);
-					yield `: `;
-					yield* generateEventExpression(options, ctx, prop);
-					yield `,${newLine}`;
+				yield* generateEventArg(ctx, prop.arg, true);
+				yield `: `;
+				yield* generateEventExpression(options, ctx, prop);
+				yield `,${newLine}`;
+			}
+			else if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'on'
+			) {
+				if (
+					prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& prop.arg.loc.source.startsWith('[')
+					&& prop.arg.loc.source.endsWith(']')
+				) {
+					propsFailedExps?.push(prop.arg);
 				}
-				else if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					propsFailedExps?.push(prop.exp);
 				}
 			}
