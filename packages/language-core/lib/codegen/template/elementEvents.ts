@@ -46,6 +46,13 @@ export function* generateElementEvents(
 			yield `/**__VLS_emit,${emitVar},${prop.arg.loc.source}*/${newLine}`;
 			yield `'${originalPropName}': typeof ${eventsVar}['${prop.arg.loc.source}']${newLine}`;
 			yield `}${newLine}`;
+			if (prop.arg.loc.source !== camelize(prop.arg.loc.source)) {
+				yield `: __VLS_IsAny<typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']> extends false${newLine}`;
+				yield `? {${newLine}`;
+				yield `/**__VLS_emit,${emitVar},${camelize(prop.arg.loc.source)}*/${newLine}`;
+				yield `'${originalPropName}': typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']${newLine}`;
+				yield `}${newLine}`;
+			}
 			yield `: typeof ${propsVar}${newLine}`;
 			yield `> = {${newLine}`;
 			yield* generateEventArg(options, ctx, prop.arg, true);
