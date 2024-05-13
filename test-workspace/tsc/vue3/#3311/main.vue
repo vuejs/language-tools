@@ -8,5 +8,5 @@
 </template>
 
 <script lang="ts" setup>
-import HelloWorld from './component.vue'
+import HelloWorld from './component.vue';
 </script>
