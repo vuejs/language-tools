@@ -55,6 +55,7 @@ function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 		|| extension.id === 'bierner.lit-html'
 		|| extension.id === 'jenkey2011.string-highlight'
 		|| extension.id === 'mxsdev.typescript-explorer'
+		|| extension.id === 'miaonster.vscode-tsx-arrow-definition'
 	) {
 		return true;
 	}
