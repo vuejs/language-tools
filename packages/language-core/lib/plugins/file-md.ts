@@ -54,6 +54,7 @@ const plugin: VueLanguagePlugin = () => {
 			const sfc = parse(toString(codes));
 
 			if (sfc.descriptor.template) {
+				sfc.descriptor.template.lang = 'md';
 				transformRange(sfc.descriptor.template);
 			}
 			if (sfc.descriptor.script) {

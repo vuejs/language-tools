@@ -35,16 +35,26 @@ export function create(
 			},
 		};
 	};
-	const baseServicePlugin = mode === 'pug' ? createPugService : createHtmlService;
-	const baseService = baseServicePlugin({
-		getCustomData() {
-			return [
-				...customData,
-				...extraCustomData,
-			];
-		},
-		onDidChangeCustomData,
-	});
+	const baseService = mode === 'pug'
+		? createPugService({
+			getCustomData() {
+				return [
+					...customData,
+					...extraCustomData,
+				];
+			},
+			onDidChangeCustomData,
+		})
+		: createHtmlService({
+			documentSelector: ['html', 'markdown'],
+			getCustomData() {
+				return [
+					...customData,
+					...extraCustomData,
+				];
+			},
+			onDidChangeCustomData,
+		});
 
 	return {
 		name: `vue-template (${mode})`,
