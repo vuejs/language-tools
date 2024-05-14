@@ -1,6 +1,6 @@
 import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import { Sfc, VueVirtualCode } from '@vue/language-core';
-import { tsCodegen } from '@vue/language-core/lib/plugins/vue-tsx';
+import { tsCodegen } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 export function create(): LanguageServicePlugin {
