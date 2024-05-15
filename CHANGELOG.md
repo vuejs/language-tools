@@ -1,5 +1,36 @@
 # Changelog
 
+## 2.0.18 (2024-05-15)
+
+### Features
+
+- feat(language-core): report unknown events when strictTemplates is enabled (#3718)
+- feat(language-core): add `compileSFCScript` plugin hook (#3200)
+- feat(vscode): add coffeescript syntax highlight support
+
+### Bug Fixes
+
+- fix(language-core): fix event handler type for hyphen-case event names
+- fix(language-core): allow binding multiple events with the same name (#4369)
+- fix(language-core): variable used in `key` appears as unused in v-for template tag (#329) (#3421)
+- fix(language-core): generics with slots don't work with Vue 2.7 (#3241)
+- fix(language-core): template language of .md files should be markdown (#4299)
+- fix(language-core): no template class links when `experimentalResolveStyleCssClasses` is set to `always` (#4379)
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.2` to `v2.2.4`.
+  - Fixed a few URI conversion issues
+  - fix(typescript): empty items list should be valid completion result (#4368)
+  - fix(typescript): path completion not working for meta files
+- Upgrade Volar services from `v0.0.44` to `v0.0.45`.
+  - fix(typescript-twoslash-queries): inlay hints not working
+  - fix(css, html, json, yaml): failed to resolve relative path
+  - feat(emmet): port VSCode emmet extension client logic (https://github.com/volarjs/services/issues/95)
+- The following extensions have been added to Hybrid Mode’s compatibility whitelist:
+  - `miaonster.vscode-tsx-arrow-definition`
+  - `runem.lit-plugin`
+
 ## 2.1.0-insiders.9 (2024-05-10)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.9), [爱发电电圈](https://afdian.net/p/6d7547a60ead11efbc8352540025c377)
