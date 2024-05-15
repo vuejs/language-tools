@@ -1,10 +1,12 @@
 import type { LanguagePlugin, ProviderResult, ServerBase, ServerProject, ServerProjectProvider, TypeScriptProjectHost } from '@volar/language-server';
 import { createSimpleServerProject } from '@volar/language-server/lib/project/simpleProject';
 import { createServiceEnvironment, getWorkspaceFolder } from '@volar/language-server/lib/project/simpleProjectProvider';
-import { FileMap, createLanguage } from '@vue/language-core';
+import { createUriMap } from '@volar/language-server/lib/utils/uriMap';
+import { createLanguage } from '@vue/language-core';
 import { Disposable, LanguageService, ServiceEnvironment, createLanguageService } from '@vue/language-service';
 import { searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
 import type * as ts from 'typescript';
+import { URI } from 'vscode-uri';
 
 export type GetLanguagePlugin = (
 	serviceEnv: ServiceEnvironment,
@@ -22,9 +24,9 @@ export function createHybridModeProjectProviderFactory(
 ): ServerProjectProvider {
 	let initialized = false;
 
-	const serviceEnvs = new FileMap<ServiceEnvironment>(sys.useCaseSensitiveFileNames);
-	const tsconfigProjects = new FileMap<Promise<ServerProject>>(sys.useCaseSensitiveFileNames);
-	const simpleProjects = new FileMap<Promise<ServerProject>>(sys.useCaseSensitiveFileNames);
+	const serviceEnvs = createUriMap<ServiceEnvironment>(sys.useCaseSensitiveFileNames);
+	const tsconfigProjects = createUriMap<Promise<ServerProject>>(sys.useCaseSensitiveFileNames);
+	const simpleProjects = createUriMap<Promise<ServerProject>>(sys.useCaseSensitiveFileNames);
 
 	return {
 		async get(uri): Promise<ServerProject> {
@@ -32,7 +34,8 @@ export function createHybridModeProjectProviderFactory(
 				initialized = true;
 				initialize(this);
 			}
-			const workspaceFolder = getWorkspaceFolder(uri, this.workspaceFolders);
+			const parsedUri = URI.parse(uri);
+			const workspaceFolder = getWorkspaceFolder(parsedUri, this.workspaceFolders);
 			let serviceEnv = serviceEnvs.get(workspaceFolder);
 			if (!serviceEnv) {
 				serviceEnv = createServiceEnvironment(this, workspaceFolder);
@@ -42,7 +45,7 @@ export function createHybridModeProjectProviderFactory(
 			const projectInfo = (await searchNamedPipeServerForFile(fileName))?.projectInfo;
 			if (projectInfo?.kind === 1) {
 				const tsconfig = projectInfo.name;
-				const tsconfigUri = serviceEnv.typescript!.fileNameToUri(tsconfig);
+				const tsconfigUri = URI.parse(serviceEnv.typescript!.fileNameToUri(tsconfig));
 				if (!tsconfigProjects.has(tsconfigUri)) {
 					tsconfigProjects.set(tsconfigUri, (async () => {
 						const languagePlugins = await getLanguagePlugins(serviceEnv, tsconfig, undefined, {
@@ -89,9 +92,10 @@ export function createHybridModeProjectProviderFactory(
 	function initialize(server: ServerBase) {
 		server.onDidChangeWatchedFiles(({ changes }) => {
 			for (const change of changes) {
-				if (tsconfigProjects.has(change.uri)) {
-					tsconfigProjects.get(change.uri)?.then(project => project.dispose());
-					tsconfigProjects.delete(change.uri);
+				const changeUri = URI.parse(change.uri);
+				if (tsconfigProjects.has(changeUri)) {
+					tsconfigProjects.get(changeUri)?.then(project => project.dispose());
+					tsconfigProjects.delete(changeUri);
 					server.clearPushDiagnostics();
 				}
 			}

@@ -15,11 +15,12 @@
 		"directory": "packages/language-server"
 	},
 	"dependencies": {
-		"@volar/language-core": "~2.2.2",
-		"@volar/language-server": "~2.2.2",
+		"@volar/language-core": "~2.2.3",
+		"@volar/language-server": "~2.2.3",
 		"@vue/language-core": "2.0.17",
 		"@vue/language-service": "2.0.17",
 		"@vue/typescript-plugin": "2.0.17",
-		"vscode-languageserver-protocol": "^3.17.5"
+		"vscode-languageserver-protocol": "^3.17.5",
+		"vscode-uri": "^3.0.8"
 	}
 }

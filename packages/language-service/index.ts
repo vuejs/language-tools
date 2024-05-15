@@ -88,7 +88,7 @@ export function getVueLanguageServicePlugins(
 		createVueExtractFilePlugin(ts, getTsPluginClient),
 		createVueToggleVBindPlugin(ts),
 		createEmmetPlugin({
-			mappedModes: {
+			mappedLanguages: {
 				'vue': 'html',
 				'postcss': 'scss',
 			},
