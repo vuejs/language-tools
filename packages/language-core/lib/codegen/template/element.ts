@@ -28,7 +28,11 @@ export function* generateComponent(
 	const tagOffsets = endTagOffset !== undefined
 		? [startTagOffset, endTagOffset]
 		: [startTagOffset];
-	const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
+	const propsFailedExps: {
+		node: CompilerDOM.SimpleExpressionNode;
+		prefix: string;
+		suffix: string;
+	}[] = [];
 	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
 	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
 	const var_originalComponent = matchImportName ?? ctx.getInternalVariable();
@@ -225,12 +229,12 @@ export function* generateComponent(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			failedExp.loc.source,
-			failedExp.loc,
-			failedExp.loc.start.offset,
+			failedExp.node.loc.source,
+			failedExp.node.loc,
+			failedExp.node.loc.start.offset,
 			ctx.codeFeatures.all,
-			'(',
-			')',
+			failedExp.prefix,
+			failedExp.suffix,
 		);
 		yield endOfLine;
 	}
@@ -268,7 +272,11 @@ export function* generateElement(
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
 		? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)
 		: undefined;
-	const propsFailedExps: CompilerDOM.SimpleExpressionNode[] = [];
+	const propsFailedExps: {
+		node: CompilerDOM.SimpleExpressionNode;
+		prefix: string;
+		suffix: string;
+	}[] = [];
 
 	yield `__VLS_elementAsFunction(__VLS_intrinsicElements`;
 	yield* generatePropertyAccess(
@@ -303,12 +311,12 @@ export function* generateElement(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			failedExp.loc.source,
-			failedExp.loc,
-			failedExp.loc.start.offset,
+			failedExp.node.loc.source,
+			failedExp.node.loc,
+			failedExp.node.loc.start.offset,
 			ctx.codeFeatures.all,
-			'(',
-			')',
+			failedExp.prefix,
+			failedExp.suffix,
 		);
 		yield endOfLine;
 	}

@@ -18,7 +18,11 @@ export function* generateElementProps(
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
 	enableCodeFeatures: boolean,
-	propsFailedExps?: CompilerDOM.SimpleExpressionNode[],
+	propsFailedExps?: {
+		node: CompilerDOM.SimpleExpressionNode;
+		prefix: string;
+		suffix: string;
+	}[],
 ): Generator<Code> {
 	const isIntrinsicElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT || node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
 	const canCamelize = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
@@ -44,17 +48,20 @@ export function* generateElementProps(
 					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': {} as any }, `;
 				}
 			}
-			else {
-				if (
-					prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					&& prop.arg.loc.source.startsWith('[')
-					&& prop.arg.loc.source.endsWith(']')
-				) {
-					propsFailedExps?.push(prop.arg);
-				}
-				if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					propsFailedExps?.push(prop.exp);
-				}
+			else if (
+				prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& prop.arg.loc.source.startsWith('[')
+				&& prop.arg.loc.source.endsWith(']')
+			) {
+				propsFailedExps?.push({ node: prop.arg, prefix: '(', suffix: ')' });
+				propsFailedExps?.push({ node: prop.exp, prefix: '() => {', suffix: '}' });
+			}
+			else if (
+				!prop.arg
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				propsFailedExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
 			}
 		}
 	}
@@ -62,8 +69,10 @@ export function* generateElementProps(
 	for (const prop of props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& (prop.name === 'bind' || prop.name === 'model')
-			&& (prop.name === 'model' || prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+			&& (
+				(prop.name === 'bind' && prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+				|| prop.name === 'model'
+			)
 			&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 		) {
 			let propName: string | undefined;
@@ -82,7 +91,7 @@ export function* generateElementProps(
 				|| options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(propName!, pattern))
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					propsFailedExps?.push(prop.exp);
+					propsFailedExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
 				}
 				continue;
 			}
