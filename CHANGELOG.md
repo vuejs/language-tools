@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.0.19 (2024-05-16)
+
+### Bug Fixes
+
+- **language-core:** property 'xyz' does not exist on type 'abc' when using v-for (#4386)
+- **language-core:** avoid report error when events do not accept parameters (#4387)
+- **language-core:** inline dynamic event handlers should not expect commas (#4387)
+
 ## 2.1.0-insiders.10 (2024-05-15)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.10), [爱发电电圈](https://afdian.net/p/85ef35ca12b411efa0c352540025c377)
@@ -10,18 +18,18 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 ### Features
 
-- feat(language-core): report unknown events when strictTemplates is enabled (#3718)
-- feat(language-core): add `compileSFCScript` plugin hook (#3200)
-- feat(vscode): add coffeescript syntax highlight support
+- **language-core:** report unknown events when strictTemplates is enabled (#3718)
+- **language-core:** add `compileSFCScript` plugin hook (#3200)
+- **vscode:** add coffeescript syntax highlight support
 
 ### Bug Fixes
 
-- fix(language-core): fix event handler type for hyphen-case event names
-- fix(language-core): allow binding multiple events with the same name (#4369)
-- fix(language-core): variable used in `key` appears as unused in v-for template tag (#329) (#3421)
-- fix(language-core): generics with slots don't work with Vue 2.7 (#3241)
-- fix(language-core): template language of .md files should be markdown (#4299)
-- fix(language-core): no template class links when `experimentalResolveStyleCssClasses` is set to `always` (#4379)
+- **language-core:** fix event handler type for hyphen-case event names
+- **language-core:** allow binding multiple events with the same name (#4369)
+- **language-core:** variable used in `key` appears as unused in v-for template tag (#329) (#3421)
+- **language-core:** generics with slots don't work with Vue 2.7 (#3241)
+- **language-core:** template language of .md files should be markdown (#4299)
+- **language-core:** no template class links when `experimentalResolveStyleCssClasses` is set to `always` (#4379)
 
 ### Other Changes
 
