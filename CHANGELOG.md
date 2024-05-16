@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.0-insiders.11 (2024-05-16)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.11), [爱发电电圈](https://afdian.net/p/c69dc31e134211ef823d5254001e7c00)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.19](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2019-2024-05-16).
+
 ## 2.0.19 (2024-05-16)
 
 ### Bug Fixes
@@ -10,9 +20,13 @@
 
 ## 2.1.0-insiders.10 (2024-05-15)
 
-Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.10), [爱发电电圈](https://afdian.net/p/85ef35ca12b411efa0c352540025c377)
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.10), [爱发电电圈](https://afdian.net/p/6c4eaf90134211efb38652540025c377)
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.18](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2018-2024-05-15).
 
 ## 2.0.18 (2024-05-15)
 
