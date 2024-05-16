@@ -4,7 +4,6 @@ import type { Code } from '../../types';
 import { newLine } from '../common';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
-import { isFragment } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateTemplateChild } from './templateChild';
 
@@ -73,4 +72,11 @@ export function* generateVIf(
 	}
 
 	ctx.blockConditions.length = originalBlockConditionsLength;
+}
+
+function isFragment(node: CompilerDOM.IfNode) {
+	return node.codegenNode
+		&& 'consequent' in node.codegenNode
+		&& 'tag' in node.codegenNode.consequent
+		&& node.codegenNode.consequent.tag === CompilerDOM.FRAGMENT;
 }

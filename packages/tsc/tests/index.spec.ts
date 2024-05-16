@@ -5,6 +5,11 @@ import { fork } from 'child_process';
 
 const binPath = require.resolve('../bin/vue-tsc.js');
 const workspace = path.resolve(__dirname, '../../../test-workspace/tsc');
+const shouldErrorDirs = [
+	'should-error',
+	'should-error-2',
+	'should-error-3',
+];
 
 function prettyPath(path: string, isRoot: boolean) {
 	const segments = path.split('/');
@@ -26,7 +31,7 @@ function collectTests(dir: string, depth = 2, isRoot: boolean = true): [filePath
 	for (const file of files) {
 		const filePath = path.join(dir, file);
 		const stat = fs.statSync(filePath);
-		if (stat.isDirectory() && file !== 'should-error') {
+		if (stat.isDirectory() && !shouldErrorDirs.includes(file)) {
 			const tsconfigPath = path.join(filePath, 'tsconfig.json');
 			if (fs.existsSync(tsconfigPath)) {
 				tests.push([
@@ -78,12 +83,14 @@ describe(`vue-tsc`, () => {
 		it(`vue-tsc no errors (${prettyPath(path, isRoot)})`, () => runVueTsc(path), 400_000);
 	}
 
-	it(`should throw an error when no vue-expect-error is used but the there is no error`, async () => {
-		try {
-			await runVueTsc(path.resolve(workspace, 'should-error'));
-		} catch (e) {
-			return;
-		}
-		throw new Error('Expected an error but got none');
-	});
+	for (const dir of shouldErrorDirs) {
+		it(`should throw an error when no vue-expect-error is used but the there is no error (${dir})`, async () => {
+			try {
+				await runVueTsc(path.resolve(workspace, dir));
+			} catch (e) {
+				return;
+			}
+			throw new Error('Expected an error but got none');
+		});
+	}
 });

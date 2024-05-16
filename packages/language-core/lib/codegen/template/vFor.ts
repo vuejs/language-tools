@@ -3,7 +3,6 @@ import type { Code } from '../../types';
 import { collectVars, createTsAst, endOfLine, newLine } from '../common';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
-import { isFragment } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateTemplateChild } from './templateChild';
 
@@ -51,28 +50,38 @@ export function* generateVFor(
 	for (const varName of forBlockVars) {
 		ctx.addLocalVariable(varName);
 	}
+	let isFragment = true;
 	for (const argument of node.codegenNode?.children.arguments ?? []) {
 		if (
 			argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
 			&& argument.returns.type === CompilerDOM.NodeTypes.VNODE_CALL
 			&& argument.returns.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
 		) {
+			if (argument.returns.tag !== CompilerDOM.FRAGMENT) {
+				isFragment = false;
+				continue;
+			}
 			for (const prop of argument.returns.props.properties) {
-				yield* generateInterpolation(
-					options,
-					ctx,
-					prop.value.loc.source,
-					prop.value.loc,
-					prop.value.loc.start.offset,
-					ctx.codeFeatures.all,
-					'(',
-					')',
-				);
-				yield endOfLine;
+				if (
+					prop.value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& !prop.value.isStatic
+				) {
+					yield* generateInterpolation(
+						options,
+						ctx,
+						prop.value.content,
+						prop.value.loc,
+						prop.value.loc.start.offset,
+						ctx.codeFeatures.all,
+						'(',
+						')',
+					);
+					yield endOfLine;
+				}
 			}
 		}
 	}
-	if (isFragment(node)) {
+	if (isFragment) {
 		yield* ctx.resetDirectiveComments('end of v-for start');
 	}
 	let prev: CompilerDOM.TemplateChildNode | undefined;

@@ -172,7 +172,3 @@ export function* forEachElementNode(node: CompilerDOM.RootNode | CompilerDOM.Tem
 		}
 	}
 }
-
-export function isFragment(node: CompilerDOM.IfNode | CompilerDOM.ForNode) {
-	return node.codegenNode && 'consequent' in node.codegenNode && 'tag' in node.codegenNode.consequent && node.codegenNode.consequent.tag === CompilerDOM.FRAGMENT;
-}
