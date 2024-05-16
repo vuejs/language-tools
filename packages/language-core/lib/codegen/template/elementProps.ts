@@ -23,7 +23,6 @@ export function* generateElementProps(
 	const isIntrinsicElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT || node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
 	const canCamelize = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
-
 	for (const prop of props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE

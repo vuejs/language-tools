@@ -63,25 +63,6 @@ export function* generateElementEvents(
 			yield* generateEventExpression(options, ctx, prop);
 			yield `}${endOfLine}`;
 		}
-		else if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'on'
-			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-		) {
-			// for vue 2 nameless event
-			// https://github.com/johnsoncodehk/vue-tsc/issues/67
-			yield* generateInterpolation(
-				options,
-				ctx,
-				prop.exp.content,
-				prop.exp.loc,
-				prop.exp.loc.start.offset,
-				ctx.codeFeatures.all,
-				'[...[$event]] => {(',
-				')}',
-			);
-			yield endOfLine;
-		}
 	}
 	return usedComponentEventsVar;
 }
