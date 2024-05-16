@@ -860,7 +860,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n프로젝트별 요구 사항에 따라 `*.vue` 파일에 추가 커스텀 블록을 포함할 수 있습니다(예: `<docs>` 블록).\n커스텀 블록의 실제 예는 다음과 같습니다:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n커스텀 블록 처리는 도구에 따라 다릅니다.\n자체 커스텀 블록 통합을 구축하려는 경우 자세한 내용은 [SFC 커스텀 블록 통합 도구 섹션](https://ko.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)을 참고하십시오.\n"
+        "value": "\n프로젝트별 요구 사항에 따라 `*.vue` 파일에 추가 커스텀 블록을 포함할 수 있습니다(예: `<docs>` 블록).\n커스텀 블록의 실제 예는 다음과 같습니다:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n#i18n-custom-block)\n\n커스텀 블록 처리는 도구에 따라 다릅니다.\n자체 커스텀 블록 통합을 구축하려는 경우 자세한 내용은 [SFC 커스텀 블록 통합 도구 섹션](https://ko.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)을 참고하십시오.\n"
       },
       "references": [
         {

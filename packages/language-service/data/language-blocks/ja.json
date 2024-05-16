@@ -860,7 +860,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\nプロジェクト固有のニーズに応じて、`*.vue` ファイルに `<docs>` ブロックのような追加のカスタムブロックを含めることができます。カスタムブロックの実際の例としては、以下のようなものがあります:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nカスタムブロックの扱いはツールに依存します - 独自のカスタムブロック統合を構築したい場合は、[SFC カスタムブロック統合ツールのセクション](https://ja.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)で詳細を確認してください。\n"
+        "value": "\nプロジェクト固有のニーズに応じて、`*.vue` ファイルに `<docs>` ブロックのような追加のカスタムブロックを含めることができます。カスタムブロックの実際の例としては、以下のようなものがあります:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n#i18n-custom-block)\n\nカスタムブロックの扱いはツールに依存します - 独自のカスタムブロック統合を構築したい場合は、[SFC カスタムブロック統合ツールのセクション](https://ja.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)で詳細を確認してください。\n"
       },
       "references": [
         {
