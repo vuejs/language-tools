@@ -77,7 +77,7 @@ export function* generateElementEvents(
 				prop.exp.loc,
 				prop.exp.loc.start.offset,
 				ctx.codeFeatures.all,
-				'$event => {(',
+				'[...[$event]] => {(',
 				')}',
 			);
 			yield endOfLine;
@@ -154,8 +154,7 @@ export function* generateEventExpression(
 		const ast = createTsAst(options.ts, prop.exp, prop.exp.content);
 		const _isCompoundExpression = isCompoundExpression(options.ts, ast);
 		if (_isCompoundExpression) {
-
-			yield `$event => {${newLine}`;
+			yield `(...[$event]) => {${newLine}`;
 			ctx.addLocalVariable('$event');
 
 			prefix = '';
