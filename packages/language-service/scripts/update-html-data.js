@@ -15,6 +15,12 @@ const langs = [
 		supported: true,
 	},
 	{
+		name: 'zh-hk',
+		url: 'https://zh-hk.vuejs.org/',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-hk/',
+		supported: true,
+	},
+	{
 		name: 'ja',
 		url: 'https://ja.vuejs.org/',
 		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/',
