@@ -39,7 +39,7 @@ Note: The "Take Over" mode has been discontinued. Instead, a new "Hybrid" mode h
 -- local mason_registry = require('mason-registry')
 -- local vue_language_server_path = mason_registry.get_package('vue-language-server'):get_install_path() .. '/node_modules/@vue/language-server'
 
-local vue_language_server_path = '/path/to/@vue/language-server'
+local vue_typescript_plugin_path = '/path/to/@vue/typescript-plugin'
 
 local lspconfig = require('lspconfig')
 
@@ -48,7 +48,7 @@ lspconfig.tsserver.setup {
     plugins = {
       {
         name = '@vue/typescript-plugin',
-        location = vue_language_server_path,
+        location = vue_typescript_plugin_path,
         languages = { 'vue' },
       },
     },
