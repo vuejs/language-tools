@@ -860,7 +860,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\nDo souboru `*.vue` můžete navíc přidat další vlastní bloky pro potřeby konkrétního projektu, například blok `<docs>`. Některé příklady vlastních bloků z reálného světa zahrnují:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nZpracování vlastních bloků závisí na nástrojích - pokud chcete vytvořit vlastní integrace, podívejte se pro další informace na sekci [Nástroje pro integraci vlastních SFC bloků](https://cs.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations).\n"
+        "value": "\nDo souboru `*.vue` můžete navíc přidat další vlastní bloky pro potřeby konkrétního projektu, například blok `<docs>`. Některé příklady vlastních bloků z reálného světa zahrnují:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n#i18n-custom-block)\n\nZpracování vlastních bloků závisí na nástrojích - pokud chcete vytvořit vlastní integrace, podívejte se pro další informace na sekci [Nástroje pro integraci vlastních SFC bloků](https://cs.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations).\n"
       },
       "references": [
         {
