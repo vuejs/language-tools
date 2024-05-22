@@ -916,7 +916,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\nDes blocs personnalisés supplémentaires peuvent être inclus dans un fichier `*.vue` pour tout besoin spécifique au projet, par exemple un bloc `<docs>`. Voici quelques exemples concrets de blocs personnalisés :\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nLa gestion des blocs personnalisés dépendra des outils utilisés - si vous souhaitez créer vos propres intégrations de blocs personnalisés, consultez [la section dédiée aux outils](https://fr.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) pour plus de détails.\n"
+        "value": "\nDes blocs personnalisés supplémentaires peuvent être inclus dans un fichier `*.vue` pour tout besoin spécifique au projet, par exemple un bloc `<docs>`. Voici quelques exemples concrets de blocs personnalisés :\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n#i18n-custom-block)\n\nLa gestion des blocs personnalisés dépendra des outils utilisés - si vous souhaitez créer vos propres intégrations de blocs personnalisés, consultez [la section dédiée aux outils](https://fr.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) pour plus de détails.\n"
       },
       "references": [
         {
