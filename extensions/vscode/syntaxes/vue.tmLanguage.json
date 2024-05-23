@@ -1071,7 +1071,7 @@
 							"name": "source.ts.embedded.html.vue",
 							"patterns": [
 								{
-									"include": "source.ts"
+									"include": "source.ts#expression"
 								}
 							]
 						}
@@ -1092,7 +1092,7 @@
 							"name": "source.ts.embedded.html.vue",
 							"patterns": [
 								{
-									"include": "source.ts"
+									"include": "source.ts#expression"
 								}
 							]
 						}
@@ -1257,7 +1257,7 @@
 							"name": "source.ts.embedded.html.vue",
 							"patterns": [
 								{
-									"include": "source.ts"
+									"include": "source.ts#expression"
 								}
 							]
 						}
