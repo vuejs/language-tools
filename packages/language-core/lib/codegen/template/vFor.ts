@@ -54,8 +54,8 @@ export function* generateVFor(
 	for (const argument of node.codegenNode?.children.arguments ?? []) {
 		if (
 			argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
-			&& argument.returns.type === CompilerDOM.NodeTypes.VNODE_CALL
-			&& argument.returns.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
+			&& argument.returns?.type === CompilerDOM.NodeTypes.VNODE_CALL
+			&& argument.returns?.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
 		) {
 			if (argument.returns.tag !== CompilerDOM.FRAGMENT) {
 				isFragment = false;
