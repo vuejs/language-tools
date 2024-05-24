@@ -17,10 +17,10 @@ export function* generateTemplate(
 
 	if (!options.vueCompilerOptions.skipTemplateCodegen) {
 		if (isClassComponent) {
-			yield `__VLS_template() {${newLine}`;
+			yield `async __VLS_template() {${newLine}`;
 		}
 		else {
-			yield `function __VLS_template() {${newLine}`;
+			yield `async function __VLS_template() {${newLine}`;
 		}
 		const templateCodegenCtx = createTemplateCodegenContext(new Set());
 		yield* generateCtx(options, ctx, isClassComponent);
