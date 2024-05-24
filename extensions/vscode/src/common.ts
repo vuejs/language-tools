@@ -57,6 +57,7 @@ function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 		|| extension.id === 'mxsdev.typescript-explorer'
 		|| extension.id === 'miaonster.vscode-tsx-arrow-definition'
 		|| extension.id === 'runem.lit-plugin'
+		|| extension.id === 'kimuson.ts-type-expand'
 	) {
 		return true;
 	}
