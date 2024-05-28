@@ -184,7 +184,7 @@ export function baseCreate(
 		asScriptId: s => s,
 		...createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost),
 	};
-	const { languageServiceHost } = language.typescript!;
+	const { languageServiceHost } = language.typescript;
 	const tsLs = ts.createLanguageService(languageServiceHost);
 
 	if (checkerOptions.forceUseTs) {
