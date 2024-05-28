@@ -87,12 +87,7 @@ export function getComponentProps(
 }
 
 export function getComponentEvents(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: vue.Language;
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
 	tag: string,
 ) {
@@ -168,12 +163,7 @@ export function getComponentEvents(
 }
 
 export function getTemplateContextProps(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: vue.Language;
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
@@ -190,12 +180,7 @@ export function getTemplateContextProps(
 }
 
 export function getComponentNames(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: vue.Language;
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
@@ -227,12 +212,7 @@ export function _getComponentNames(
 }
 
 export function getElementAttrs(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: vue.Language;
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
 	tagName: string,
 ) {

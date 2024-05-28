@@ -244,11 +244,6 @@
 						"vue"
 					]
 				},
-				"vue.server.maxFileSize": {
-					"type": "number",
-					"default": 20971520,
-					"description": "Maximum file size for Vue Language Server to load. (default: 20MB)"
-				},
 				"vue.server.maxOldSpaceSize": {
 					"type": [
 						"number",
@@ -341,11 +336,6 @@
 					],
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
-				},
-				"vue.autoInsert.parentheses": {
-					"type": "boolean",
-					"default": true,
-					"description": "Auto-wrap `()` to As Expression in interpolations for fix issue #520."
 				},
 				"vue.autoInsert.dotValue": {
 					"type": "boolean",
@@ -517,7 +507,7 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.2.4",
+		"@volar/vscode": "~2.3.0-alpha.0",
 		"@vue/language-core": "2.0.19",
 		"@vue/language-server": "2.0.19",
 		"@vue/typescript-plugin": "2.0.19",

@@ -1,17 +1,21 @@
 import type { LanguageServicePluginInstance } from '@volar/language-service';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { LanguageServicePlugin, VueCodeInformation } from '../types';
+import { URI } from 'vscode-uri';
 
 export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-inlay-hints-hidden-callback-param',
+		capabilities: {
+			inlayHintProvider: {},
+		},
 		create(context): LanguageServicePluginInstance {
 			return {
 				async provideInlayHints(document, range) {
 
 					const settings: Record<string, boolean> = {};
 					const result: vscode.InlayHint[] = [];
-					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const vitualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 

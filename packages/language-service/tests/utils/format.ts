@@ -1,12 +1,13 @@
 import * as kit from '@volar/kit';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
+import type { URI } from 'vscode-uri';
 import { createVueLanguagePlugin, getVueLanguageServicePlugins, resolveVueCompilerOptions } from '../..';
 
 const resolvedVueOptions = resolveVueCompilerOptions({});
-const vueLanguagePlugin = createVueLanguagePlugin(
+const vueLanguagePlugin = createVueLanguagePlugin<URI>(
 	ts,
-	scriptId => formatter.env.typescript!.uriToFileName(scriptId),
+	() => '',
 	false,
 	() => '',
 	() => [],

@@ -1,95 +1,96 @@
-import type { LanguagePlugin, ProviderResult, ServerBase, ServerProject, ServerProjectProvider, TypeScriptProjectHost } from '@volar/language-server';
-import { createSimpleServerProject } from '@volar/language-server/lib/project/simpleProject';
-import { createServiceEnvironment, getWorkspaceFolder } from '@volar/language-server/lib/project/simpleProjectProvider';
-import { createUriMap } from '@volar/language-server/lib/utils/uriMap';
+import type { LanguagePlugin, LanguageServer, Project, ProviderResult } from '@volar/language-server';
+import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createLanguage } from '@vue/language-core';
-import { Disposable, LanguageService, ServiceEnvironment, createLanguageService } from '@vue/language-service';
-import { searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
+import { Disposable, LanguageService, LanguageServiceEnvironment, createLanguageService, createUriMap } from '@vue/language-service';
+import { searchNamedPipeServerForFile, TypeScriptProjectHost } from '@vue/typescript-plugin/lib/utils';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 
-export type GetLanguagePlugin = (
-	serviceEnv: ServiceEnvironment,
+export type GetLanguagePlugin<T> = (params: {
+	serviceEnv: LanguageServiceEnvironment,
+	asFileName: (scriptId: T) => string,
 	configFileName?: string,
-	host?: TypeScriptProjectHost,
+	projectHost?: TypeScriptProjectHost,
 	sys?: ts.System & {
 		version: number;
 		sync(): Promise<number>;
 	} & Disposable,
-) => ProviderResult<LanguagePlugin[]>;
+}) => ProviderResult<LanguagePlugin<URI>[]>;
 
-export function createHybridModeProjectProviderFactory(
+export function createHybridModeProject(
 	sys: ts.System,
-	getLanguagePlugins: GetLanguagePlugin,
-): ServerProjectProvider {
+	getLanguagePlugins: GetLanguagePlugin<URI>,
+): Project {
 	let initialized = false;
+	let simpleLs: Promise<LanguageService> | undefined;
+	let serviceEnv: LanguageServiceEnvironment | undefined;
 
-	const serviceEnvs = createUriMap<ServiceEnvironment>(sys.useCaseSensitiveFileNames);
-	const tsconfigProjects = createUriMap<Promise<ServerProject>>(sys.useCaseSensitiveFileNames);
-	const simpleProjects = createUriMap<Promise<ServerProject>>(sys.useCaseSensitiveFileNames);
+	const tsconfigProjects = createUriMap<Promise<LanguageService>>(sys.useCaseSensitiveFileNames);
 
 	return {
-		async get(uri): Promise<ServerProject> {
+		async getLanguageService(server, uri) {
 			if (!initialized) {
 				initialized = true;
-				initialize(this);
+				initialize(server);
 			}
-			const parsedUri = URI.parse(uri);
-			const workspaceFolder = getWorkspaceFolder(parsedUri, this.workspaceFolders);
-			let serviceEnv = serviceEnvs.get(workspaceFolder);
-			if (!serviceEnv) {
-				serviceEnv = createServiceEnvironment(this, workspaceFolder);
-				serviceEnvs.set(workspaceFolder, serviceEnv);
-			}
-			const fileName = serviceEnv.typescript!.uriToFileName(uri);
+			const fileName = asFileName(uri);
 			const projectInfo = (await searchNamedPipeServerForFile(fileName))?.projectInfo;
 			if (projectInfo?.kind === 1) {
 				const tsconfig = projectInfo.name;
-				const tsconfigUri = URI.parse(serviceEnv.typescript!.fileNameToUri(tsconfig));
+				const tsconfigUri = URI.file(tsconfig);
 				if (!tsconfigProjects.has(tsconfigUri)) {
 					tsconfigProjects.set(tsconfigUri, (async () => {
-						const languagePlugins = await getLanguagePlugins(serviceEnv, tsconfig, undefined, {
-							...sys,
-							version: 0,
-							async sync() {
-								return 0;
+						serviceEnv ??= createLanguageServiceEnvironment(server, [...server.workspaceFolders.keys()]);
+						const languagePlugins = await getLanguagePlugins({
+							serviceEnv,
+							configFileName: tsconfig,
+							sys: {
+								...sys,
+								version: 0,
+								async sync() {
+									return 0;
+								},
+								dispose() { },
 							},
-							dispose() { },
+							asFileName,
 						});
-						return createTSConfigProject(this, serviceEnv, languagePlugins);
+						return createLs(server, serviceEnv, languagePlugins);
 					})());
 				}
 				return await tsconfigProjects.get(tsconfigUri)!;
 			}
 			else {
-				if (!simpleProjects.has(workspaceFolder)) {
-					simpleProjects.set(workspaceFolder, (async () => {
-						const languagePlugins = await getLanguagePlugins(serviceEnv);
-						return createSimpleServerProject(this, serviceEnv, languagePlugins);
-					})());
-				}
-				return await simpleProjects.get(workspaceFolder)!;
+				simpleLs ??= (async () => {
+					serviceEnv ??= createLanguageServiceEnvironment(server, [...server.workspaceFolders.keys()]);
+					const languagePlugins = await getLanguagePlugins({ serviceEnv, asFileName });
+					return createLs(server, serviceEnv, languagePlugins);
+				})();
+				return await simpleLs;
 			}
 		},
-		async all() {
+		async getExistingLanguageServices() {
 			return Promise.all([
 				...tsconfigProjects.values(),
-				...simpleProjects.values(),
-			]);
+				simpleLs,
+			].filter(notEmpty));
 		},
 		reload() {
-			for (const project of [
+			for (const ls of [
 				...tsconfigProjects.values(),
-				...simpleProjects.values(),
+				simpleLs,
 			]) {
-				project.then(p => p.dispose());
+				ls?.then(ls => ls.dispose());
 			}
 			tsconfigProjects.clear();
-			simpleProjects.clear();
+			simpleLs = undefined;
 		},
 	};
 
-	function initialize(server: ServerBase) {
+	function asFileName(uri: URI) {
+		return uri.fsPath.replace(/\\/g, '/');
+	}
+
+	function initialize(server: LanguageServer) {
 		server.onDidChangeWatchedFiles(({ changes }) => {
 			for (const change of changes) {
 				const changeUri = URI.parse(change.uri);
@@ -102,40 +103,29 @@ export function createHybridModeProjectProviderFactory(
 		});
 	}
 
-	function createTSConfigProject(
-		server: ServerBase,
-		serviceEnv: ServiceEnvironment,
-		languagePlugins: LanguagePlugin[],
-	): ServerProject {
-
-		let languageService: LanguageService | undefined;
-
-		return {
-			getLanguageService,
-			getLanguageServiceDontCreate: () => languageService,
-			dispose() {
-				languageService?.dispose();
-			},
-		};
-
-		function getLanguageService() {
-			if (!languageService) {
-				const language = createLanguage(languagePlugins, false, uri => {
-					const document = server.documents.get(uri);
-					if (document) {
-						language.scripts.set(uri, document.getSnapshot(), document.languageId);
-					}
-					else {
-						language.scripts.delete(uri);
-					}
-				});
-				languageService = createLanguageService(
-					language,
-					server.languageServicePlugins,
-					serviceEnv,
-				);
+	function createLs(
+		server: LanguageServer,
+		serviceEnv: LanguageServiceEnvironment,
+		languagePlugins: LanguagePlugin<URI>[],
+	) {
+		const language = createLanguage(languagePlugins, createUriMap(), uri => {
+			const documentKey = server.getSyncedDocumentKey(uri);
+			const document = documentKey ? server.documents.get(documentKey) : undefined;
+			if (document) {
+				language.scripts.set(uri, document.getSnapshot(), document.languageId);
 			}
-			return languageService;
-		}
+			else {
+				language.scripts.delete(uri);
+			}
+		});
+		return createLanguageService(
+			language,
+			server.languageServicePlugins,
+			serviceEnv,
+		);
 	}
+}
+
+export function notEmpty<T>(value: T | null | undefined): value is T {
+	return value !== null && value !== undefined;
 }

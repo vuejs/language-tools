@@ -150,7 +150,7 @@ function cleanupPipeTable() {
 
 export const projects = new Map<ts.server.Project, {
 	info: ts.server.PluginCreateInfo;
-	language: Language;
+	language: Language<string>;
 	vueOptions: VueCompilerOptions;
 }>();
 

@@ -1,4 +1,4 @@
-import type { Disposable, ServiceContext, ServiceEnvironment, LanguageServicePluginInstance } from '@volar/language-service';
+import type { Disposable, LanguageServiceContext, LanguageServiceEnvironment, LanguageServicePluginInstance } from '@volar/language-service';
 import { VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { create as createHtmlService } from 'volar-service-html';
@@ -18,8 +18,8 @@ let modelData: html.HTMLDataV1;
 export function create(
 	mode: 'html' | 'pug',
 	ts: typeof import('typescript'),
-	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
-	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
+	getVueOptions: (env: LanguageServiceEnvironment) => VueCompilerOptions,
+	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ): LanguageServicePlugin {
 
 	let customData: html.IHTMLDataProvider[] = [];
@@ -58,13 +58,27 @@ export function create(
 
 	return {
 		name: `vue-template (${mode})`,
-		triggerCharacters: [
-			...baseService.triggerCharacters ?? [],
-			'@', // vue event shorthand
-		],
-		create(context): LanguageServicePluginInstance {
+		capabilities: {
+			...baseService.capabilities,
+			completionProvider: {
+				triggerCharacters: [
+					...baseService.capabilities.completionProvider?.triggerCharacters ?? [],
+					'@', // vue event shorthand
+				],
+			},
+			inlayHintProvider: {},
+			hoverProvider: true,
+			diagnosticProvider: true,
+			semanticTokensProvider: {
+				legend: {
+					tokenTypes: ['class'],
+					tokenModifiers: [],
+				},
+			}
+		},
+		create(context, api): LanguageServicePluginInstance {
 			const tsPluginClient = getTsPluginClient?.(context);
-			const baseServiceInstance = baseService.create(context);
+			const baseServiceInstance = baseService.create(context, api);
 			const vueCompilerOptions = getVueOptions(context.env);
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');
@@ -122,7 +136,7 @@ export function create(
 					let sync: (() => Promise<number>) | undefined;
 					let currentVersion: number | undefined;
 
-					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					if (sourceScript?.generated?.root instanceof VueVirtualCode) {
 
@@ -163,105 +177,103 @@ export function create(
 					}
 
 					const result: vscode.InlayHint[] = [];
-					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!virtualCode) {
 						return;
 					}
 
-					for (const map of context.documents.getMaps(virtualCode)) {
+					const code = context.language.scripts.get(decoded[0])?.generated?.root;
+					const scanner = getScanner(baseServiceInstance, document);
 
-						const code = context.language.scripts.get(map.sourceDocument.uri)?.generated?.root;
-						const scanner = getScanner(baseServiceInstance, document);
+					if (code instanceof VueVirtualCode && scanner) {
 
-						if (code instanceof VueVirtualCode && scanner) {
+						// visualize missing required props
+						const casing = await getNameCasing(context, decoded[0]);
+						const components = await tsPluginClient?.getComponentNames(code.fileName) ?? [];
+						const componentProps: Record<string, string[]> = {};
+						let token: html.TokenType;
+						let current: {
+							unburnedRequiredProps: string[];
+							labelOffset: number;
+							insertOffset: number;
+						} | undefined;
+						while ((token = scanner.scan()) !== html.TokenType.EOS) {
+							if (token === html.TokenType.StartTag) {
+								const tagName = scanner.getTokenText();
+								const checkTag = tagName.indexOf('.') >= 0
+									? tagName
+									: components.find(component => component === tagName || hyphenateTag(component) === tagName);
+								if (checkTag) {
+									componentProps[checkTag] ??= await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? [];
+									current = {
+										unburnedRequiredProps: [...componentProps[checkTag]],
+										labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
+										insertOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
+									};
+								}
+							}
+							else if (token === html.TokenType.AttributeName) {
+								if (current) {
+									let attrText = scanner.getTokenText();
 
-							// visualize missing required props
-							const casing = await getNameCasing(context, map.sourceDocument.uri);
-							const components = await tsPluginClient?.getComponentNames(code.fileName) ?? [];
-							const componentProps: Record<string, string[]> = {};
-							let token: html.TokenType;
-							let current: {
-								unburnedRequiredProps: string[];
-								labelOffset: number;
-								insertOffset: number;
-							} | undefined;
-							while ((token = scanner.scan()) !== html.TokenType.EOS) {
-								if (token === html.TokenType.StartTag) {
-									const tagName = scanner.getTokenText();
-									const checkTag = tagName.indexOf('.') >= 0
-										? tagName
-										: components.find(component => component === tagName || hyphenateTag(component) === tagName);
-									if (checkTag) {
-										componentProps[checkTag] ??= await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? [];
-										current = {
-											unburnedRequiredProps: [...componentProps[checkTag]],
-											labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
-											insertOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
-										};
+									if (attrText === 'v-bind') {
+										current.unburnedRequiredProps = [];
+									}
+									else {
+										// remove modifiers
+										if (attrText.indexOf('.') >= 0) {
+											attrText = attrText.split('.')[0];
+										}
+										// normalize
+										if (attrText.startsWith('v-bind:')) {
+											attrText = attrText.substring('v-bind:'.length);
+										}
+										else if (attrText.startsWith(':')) {
+											attrText = attrText.substring(':'.length);
+										}
+										else if (attrText.startsWith('v-model:')) {
+											attrText = attrText.substring('v-model:'.length);
+										}
+										else if (attrText === 'v-model') {
+											attrText = vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
+										}
+										else if (attrText.startsWith('@')) {
+											attrText = 'on-' + hyphenateAttr(attrText.substring('@'.length));
+										}
+
+										current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
+											return attrText !== propName
+												&& attrText !== hyphenateAttr(propName);
+										});
 									}
 								}
-								else if (token === html.TokenType.AttributeName) {
-									if (current) {
-										let attrText = scanner.getTokenText();
-
-										if (attrText === 'v-bind') {
-											current.unburnedRequiredProps = [];
-										}
-										else {
-											// remove modifiers
-											if (attrText.indexOf('.') >= 0) {
-												attrText = attrText.split('.')[0];
-											}
-											// normalize
-											if (attrText.startsWith('v-bind:')) {
-												attrText = attrText.substring('v-bind:'.length);
-											}
-											else if (attrText.startsWith(':')) {
-												attrText = attrText.substring(':'.length);
-											}
-											else if (attrText.startsWith('v-model:')) {
-												attrText = attrText.substring('v-model:'.length);
-											}
-											else if (attrText === 'v-model') {
-												attrText = vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
-											}
-											else if (attrText.startsWith('@')) {
-												attrText = 'on-' + hyphenateAttr(attrText.substring('@'.length));
-											}
-
-											current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
-												return attrText !== propName
-													&& attrText !== hyphenateAttr(propName);
-											});
-										}
+							}
+							else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
+								if (current) {
+									for (const requiredProp of current.unburnedRequiredProps) {
+										result.push({
+											label: `${requiredProp}!`,
+											paddingLeft: true,
+											position: document.positionAt(current.labelOffset),
+											kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
+											textEdits: [{
+												range: {
+													start: document.positionAt(current.insertOffset),
+													end: document.positionAt(current.insertOffset),
+												},
+												newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp}=`,
+											}],
+										});
 									}
+									current = undefined;
 								}
-								else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
-									if (current) {
-										for (const requiredProp of current.unburnedRequiredProps) {
-											result.push({
-												label: `${requiredProp}!`,
-												paddingLeft: true,
-												position: document.positionAt(current.labelOffset),
-												kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
-												textEdits: [{
-													range: {
-														start: document.positionAt(current.insertOffset),
-														end: document.positionAt(current.insertOffset),
-													},
-													newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp}=`,
-												}],
-											});
-										}
-										current = undefined;
-									}
-								}
-								if (token === html.TokenType.AttributeName || token === html.TokenType.AttributeValue) {
-									if (current) {
-										current.insertOffset = scanner.getTokenOffset() + scanner.getTokenLength();
-									}
+							}
+							if (token === html.TokenType.AttributeName || token === html.TokenType.AttributeValue) {
+								if (current) {
+									current.insertOffset = scanner.getTokenOffset() + scanner.getTokenLength();
 								}
 							}
 						}
@@ -276,7 +288,7 @@ export function create(
 						return;
 					}
 
-					if (context.decodeEmbeddedDocumentUri(document.uri)) {
+					if (context.decodeEmbeddedDocumentUri(URI.parse(document.uri))) {
 						updateExtraCustomData([]);
 					}
 
@@ -290,59 +302,57 @@ export function create(
 					}
 
 					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
-					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!virtualCode) {
 						return;
 					}
 
-					for (const map of context.documents.getMaps(virtualCode)) {
-
-						const code = context.language.scripts.get(map.sourceDocument.uri)?.generated?.root;
-						if (!(code instanceof VueVirtualCode)) {
-							continue;
-						}
-
-						const templateErrors: vscode.Diagnostic[] = [];
-						const { template } = code.sfc;
-
-						if (template) {
-
-							for (const error of template.errors) {
-								onCompilerError(error, 1 satisfies typeof vscode.DiagnosticSeverity.Error);
-							}
-
-							for (const warning of template.warnings) {
-								onCompilerError(warning, 2 satisfies typeof vscode.DiagnosticSeverity.Warning);
-							}
-
-							function onCompilerError(error: NonNullable<typeof template>['errors'][number], severity: vscode.DiagnosticSeverity) {
-
-								const templateHtmlRange = {
-									start: error.loc?.start.offset ?? 0,
-									end: error.loc?.end.offset ?? 0,
-								};
-								let errorMessage = error.message;
-
-								templateErrors.push({
-									range: {
-										start: document.positionAt(templateHtmlRange.start),
-										end: document.positionAt(templateHtmlRange.end),
-									},
-									severity,
-									code: error.code,
-									source: 'vue',
-									message: errorMessage,
-								});
-							}
-						}
-
-						return [
-							...originalResult ?? [],
-							...templateErrors,
-						];
+					const code = context.language.scripts.get(decoded[0])?.generated?.root;
+					if (!(code instanceof VueVirtualCode)) {
+						return;
 					}
+
+					const templateErrors: vscode.Diagnostic[] = [];
+					const { template } = code.sfc;
+
+					if (template) {
+
+						for (const error of template.errors) {
+							onCompilerError(error, 1 satisfies typeof vscode.DiagnosticSeverity.Error);
+						}
+
+						for (const warning of template.warnings) {
+							onCompilerError(warning, 2 satisfies typeof vscode.DiagnosticSeverity.Warning);
+						}
+
+						function onCompilerError(error: NonNullable<typeof template>['errors'][number], severity: vscode.DiagnosticSeverity) {
+
+							const templateHtmlRange = {
+								start: error.loc?.start.offset ?? 0,
+								end: error.loc?.end.offset ?? 0,
+							};
+							let errorMessage = error.message;
+
+							templateErrors.push({
+								range: {
+									start: document.positionAt(templateHtmlRange.start),
+									end: document.positionAt(templateHtmlRange.end),
+								},
+								severity,
+								code: error.code,
+								source: 'vue',
+								message: errorMessage,
+							});
+						}
+					}
+
+					return [
+						...originalResult ?? [],
+						...templateErrors,
+					];
 				},
 
 				provideDocumentSemanticTokens(document, range, legend) {
@@ -353,7 +363,7 @@ export function create(
 					if (!languageService) {
 						return;
 					}
-					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					if (
 						!sourceScript
@@ -390,7 +400,7 @@ export function create(
 				},
 			};
 
-			async function provideHtmlData(sourceDocumentUri: string, vueCode: VueVirtualCode) {
+			async function provideHtmlData(sourceDocumentUri: URI, vueCode: VueVirtualCode) {
 
 				await (initializing ??= initialize());
 
@@ -766,15 +776,17 @@ export function create(
 				const customData: string[] = await context.env.getConfiguration?.('html.customData') ?? [];
 				const newData: html.IHTMLDataProvider[] = [];
 				for (const customDataPath of customData) {
-					const uri = Utils.resolvePath(URI.parse(context.env.workspaceFolder), customDataPath);
-					const json = await context.env.fs?.readFile?.(uri.toString());
-					if (json) {
-						try {
-							const data = JSON.parse(json);
-							newData.push(html.newHTMLDataProvider(customDataPath, data));
-						}
-						catch (error) {
-							console.error(error);
+					for (const workspaceFolder of context.env.workspaceFolders) {
+						const uri = Utils.resolvePath(workspaceFolder, customDataPath);
+						const json = await context.env.fs?.readFile?.(uri);
+						if (json) {
+							try {
+								const data = JSON.parse(json);
+								newData.push(html.newHTMLDataProvider(customDataPath, data));
+							}
+							catch (error) {
+								console.error(error);
+							}
 						}
 					}
 				}

@@ -5,8 +5,8 @@ export function create(): LanguageServicePlugin {
 	const base = baseCreate({ scssDocumentSelector: ['scss', 'postcss'] });
 	return {
 		...base,
-		create(context): LanguageServicePluginInstance {
-			const baseInstance = base.create(context);
+		create(context, api): LanguageServicePluginInstance {
+			const baseInstance = base.create(context, api);
 			return {
 				...baseInstance,
 				async provideDiagnostics(document, token) {

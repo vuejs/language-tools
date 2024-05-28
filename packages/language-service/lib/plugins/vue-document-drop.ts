@@ -1,18 +1,22 @@
 import { VueCompilerOptions, VueVirtualCode, forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
-import type * as vscode from 'vscode-languageserver-protocol';
-import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { LanguageServicePlugin, LanguageServicePluginInstance, ServiceContext, ServiceEnvironment, TagNameCasing } from '../types';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
+import type * as vscode from 'vscode-languageserver-protocol';
+import { URI } from 'vscode-uri';
+import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
+import { LanguageServiceContext, LanguageServiceEnvironment, LanguageServicePlugin, LanguageServicePluginInstance, TagNameCasing } from '../types';
 
 export function create(
 	ts: typeof import('typescript'),
-	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
-	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
+	getVueOptions: (env: LanguageServiceEnvironment) => VueCompilerOptions,
+	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
+		capabilities: {
+			// documentDropEditsProvider: true,
+		},
 		create(context): LanguageServicePluginInstance {
 
 			let casing = TagNameCasing.Pascal as TagNameCasing; // TODO
@@ -27,7 +31,7 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					const vueVirtualCode = sourceScript?.generated?.root;
@@ -59,7 +63,8 @@ export function create(
 					const additionalEdit: vscode.WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptSetupFormat' : 'scriptFormat'))!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
-					const incomingFileName = context.env.typescript!.uriToFileName(importUri);
+					const incomingFileName = context.language.typescript?.asFileName(URI.parse(importUri))
+						?? URI.parse(importUri).fsPath.replace(/\\/g, '/');
 
 					let importPath: string | undefined;
 
@@ -83,9 +88,11 @@ export function create(
 						}
 					}
 
+					const embeddedDocumentUriStr = context.encodeEmbeddedDocumentUri(sourceScript.id, code.id).toString();
+
 					additionalEdit.changes ??= {};
-					additionalEdit.changes[context.encodeEmbeddedDocumentUri(sourceScript.id, code.id)] = [];
-					additionalEdit.changes[context.encodeEmbeddedDocumentUri(sourceScript.id, code.id)].push({
+					additionalEdit.changes[embeddedDocumentUriStr] = [];
+					additionalEdit.changes[embeddedDocumentUriStr].push({
 						range: lastImportNode ? {
 							start: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
 							end: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
@@ -100,7 +107,7 @@ export function create(
 					if (sfc.script) {
 						const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
 						if (edit) {
-							additionalEdit.changes[context.encodeEmbeddedDocumentUri(sourceScript.id, code.id)].push({
+							additionalEdit.changes[embeddedDocumentUriStr].push({
 								range: {
 									start: document.positionAt(edit.range.start),
 									end: document.positionAt(edit.range.end),

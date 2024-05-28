@@ -8,7 +8,6 @@ import * as CompilerDOM from '@vue/compiler-dom';
 
 const codeFeatures: CodeInformation = {
 	format: true,
-	// autoInserts: true, // TODO: support vue-autoinsert-parentheses
 };
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],

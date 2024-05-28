@@ -1,10 +1,11 @@
-import type { LanguageServicePlugin, LanguageServicePluginInstance, ServiceContext } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServicePluginInstance, LanguageServiceContext } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { loadLanguageBlocks } from './data';
+import { URI } from 'vscode-uri';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
@@ -46,8 +47,8 @@ export function create(): LanguageServicePlugin {
 	return {
 		...htmlPlugin,
 		name: 'vue-sfc',
-		create(context): LanguageServicePluginInstance<Provide> {
-			const htmlPluginInstance = htmlPlugin.create(context);
+		create(context, api): LanguageServicePluginInstance<Provide> {
+			const htmlPluginInstance = htmlPlugin.create(context, api);
 
 			return {
 
@@ -175,8 +176,8 @@ export function create(): LanguageServicePlugin {
 		},
 	};
 
-	function worker<T>(document: TextDocument, context: ServiceContext, callback: (vueSourceFile: vue.VueVirtualCode) => T) {
-		const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+	function worker<T>(document: TextDocument, context: LanguageServiceContext, callback: (vueSourceFile: vue.VueVirtualCode) => T) {
+		const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 		const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 		const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 		if (virtualCode instanceof vue.VueVirtualCode) {

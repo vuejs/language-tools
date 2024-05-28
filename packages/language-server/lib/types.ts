@@ -1,6 +1,4 @@
-import type { InitializationOptions } from '@volar/language-server';
-
-export type VueInitializationOptions = InitializationOptions & {
+export type VueInitializationOptions = {
 	typescript: {
 		tsdk: string;
 	};

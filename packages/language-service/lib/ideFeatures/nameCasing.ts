@@ -1,14 +1,15 @@
-import type { ServiceContext, VirtualCode } from '@volar/language-service';
+import type { LanguageServiceContext, VirtualCode } from '@volar/language-service';
 import type { CompilerDOM } from '@vue/language-core';
 import * as vue from '@vue/language-core';
 import { VueVirtualCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import { computed } from 'computeds';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { AttrNameCasing, TagNameCasing } from '../types';
+import type { URI } from 'vscode-uri';
 
 export async function convertTagName(
-	context: ServiceContext,
-	uri: string,
+	context: LanguageServiceContext,
+	uri: URI,
 	casing: TagNameCasing,
 	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ) {
@@ -55,8 +56,8 @@ export async function convertTagName(
 }
 
 export async function convertAttrName(
-	context: ServiceContext,
-	uri: string,
+	context: LanguageServiceContext,
+	uri: URI,
 	casing: AttrNameCasing,
 	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
 ) {
@@ -108,12 +109,12 @@ export async function convertAttrName(
 	return edits;
 }
 
-export async function getNameCasing(context: ServiceContext, uri: string) {
+export async function getNameCasing(context: LanguageServiceContext, uri: URI) {
 
 	const detected = await detect(context, uri);
 	const [attr, tag] = await Promise.all([
-		context.env.getConfiguration?.<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('vue.complete.casing.props', uri),
-		context.env.getConfiguration?.<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('vue.complete.casing.tags', uri),
+		context.env.getConfiguration?.<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('vue.complete.casing.props', uri.toString()),
+		context.env.getConfiguration?.<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('vue.complete.casing.tags', uri.toString()),
 	]);
 	const tagNameCasing = detected.tag.length === 1 && (tag === 'autoPascal' || tag === 'autoKebab') ? detected.tag[0] : (tag === 'autoKebab' || tag === 'kebab') ? TagNameCasing.Kebab : TagNameCasing.Pascal;
 	const attrNameCasing = detected.attr.length === 1 && (attr === 'autoCamel' || attr === 'autoKebab') ? detected.attr[0] : (attr === 'autoCamel' || attr === 'camel') ? AttrNameCasing.Camel : AttrNameCasing.Kebab;
@@ -125,8 +126,8 @@ export async function getNameCasing(context: ServiceContext, uri: string) {
 }
 
 export async function detect(
-	context: ServiceContext,
-	uri: string,
+	context: LanguageServiceContext,
+	uri: URI,
 ): Promise<{
 	tag: TagNameCasing[],
 	attr: AttrNameCasing[],
