@@ -1,7 +1,8 @@
-import type { ServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
+import { URI } from 'vscode-uri';
 
 const asts = new WeakMap<ts.IScriptSnapshot, ts.SourceFile>();
 
@@ -16,15 +17,21 @@ function getAst(ts: typeof import('typescript'), fileName: string, snapshot: ts.
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
+	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
+		capabilities: {
+			autoInsertionProvider: {
+				triggerCharacters: ['\\w'],
+				configurationSections: ['vue.autoInsert.dotValue'],
+			},
+		},
 		create(context): LanguageServicePluginInstance {
 			const tsPluginClient = getTsPluginClient?.(context);
 			let currentReq = 0;
 			return {
-				async provideAutoInsertionEdit(document, selection, change) {
+				async provideAutoInsertSnippet(document, selection, change) {
 					// selection must at end of change
 					if (document.offsetAt(selection) !== change.rangeOffset + change.text.length) {
 						return;
@@ -50,7 +57,7 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!sourceScript) {
@@ -60,7 +67,8 @@ export function create(
 					let ast: ts.SourceFile | undefined;
 					let sourceCodeOffset = document.offsetAt(selection);
 
-					const fileName = context.env.typescript!.uriToFileName(sourceScript.id);
+					const fileName = context.language.typescript?.asFileName(sourceScript.id)
+						?? sourceScript.id.fsPath.replace(/\\/g, '/');
 
 					if (sourceScript.generated) {
 						const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(sourceScript.generated.root);

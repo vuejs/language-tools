@@ -19,7 +19,6 @@ export const config = {
 		includeLanguages: string[];
 		hybridMode: 'auto' | 'typeScriptPluginOnly' | boolean;
 		maxOldSpaceSize: number;
-		maxFileSize: number;
 	}> {
 		return _config().get('server')!;
 	},

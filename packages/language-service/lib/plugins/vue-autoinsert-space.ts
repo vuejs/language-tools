@@ -3,9 +3,15 @@ import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@vola
 export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-space',
+		capabilities: {
+			autoInsertionProvider: {
+				triggerCharacters: ['}'],
+				configurationSections: ['vue.autoInsert.bracketSpacing'],
+			},
+		},
 		create(context): LanguageServicePluginInstance {
 			return {
-				async provideAutoInsertionEdit(document, selection, change) {
+				async provideAutoInsertSnippet(document, selection, change) {
 
 					if (document.languageId === 'html' || document.languageId === 'jade') {
 

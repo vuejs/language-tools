@@ -1,16 +1,19 @@
 import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
-import { Sfc, VueVirtualCode } from '@vue/language-core';
-import { tsCodegen } from '@vue/language-core';
+import { Sfc, VueVirtualCode, tsCodegen } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
+import { URI } from 'vscode-uri';
 
 export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-document-links',
+		capabilities: {
+			documentLinkProvider: {},
+		},
 		create(context): LanguageServicePluginInstance {
 			return {
 				provideDocumentLinks(document) {
 
-					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 

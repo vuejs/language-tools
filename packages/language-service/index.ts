@@ -3,7 +3,7 @@ export * from '@vue/language-core';
 export * from './lib/ideFeatures/nameCasing';
 export * from './lib/types';
 
-import type { LanguageServicePlugin, ServiceContext, ServiceEnvironment } from '@volar/language-service';
+import type { LanguageServicePlugin, LanguageServiceContext, LanguageServiceEnvironment } from '@volar/language-service';
 import type { VueCompilerOptions } from './lib/types';
 
 import { create as createEmmetPlugin } from 'volar-service-emmet';
@@ -15,7 +15,6 @@ import { create as createTypeScriptDocCommentTemplatePlugin } from 'volar-servic
 import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescript/lib/plugins/syntactic';
 import { create as createCssPlugin } from './lib/plugins/css';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
-import { create as createVueAutoWrapParenthesesPlugin } from './lib/plugins/vue-autoinsert-parentheses';
 import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoinsert-space';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
@@ -33,11 +32,13 @@ import { getComponentEvents, getComponentNames, getComponentProps, getElementAtt
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from '@vue/typescript-plugin/lib/requests/getQuickInfoAtPosition';
+import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
+import { URI } from 'vscode-uri';
 
 export function getVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
-	getTsPluginClient = createDefaultGetTsPluginClient(ts, getVueOptions),
+	getVueOptions: (env: LanguageServiceEnvironment) => VueCompilerOptions,
+	getTsPluginClient = createDefaultGetTsPluginClient(ts),
 	hybridMode = false,
 ): LanguageServicePlugin[] {
 	const plugins: LanguageServicePlugin[] = [];
@@ -48,14 +49,21 @@ export function getVueLanguageServicePlugins(
 			if (plugin.name === 'typescript-semantic') {
 				plugins[i] = {
 					...plugin,
-					create(context) {
-						const created = plugin.create(context);
+					create(context, api) {
+						const created = plugin.create(context, api);
 						if (!context.language.typescript) {
 							return created;
 						}
 						const languageService = (created.provide as import('volar-service-typescript').Provide)['typescript/languageService']();
 						const vueOptions = getVueOptions(context.env);
-						decorateLanguageServiceForVue(context.language, languageService, vueOptions, ts, false, fileName => context.env.typescript!.fileNameToUri(fileName));
+						decorateLanguageServiceForVue<URI>(
+							context.language,
+							languageService,
+							vueOptions,
+							ts,
+							false,
+							fileName => context.language.typescript?.asScriptId(fileName) ?? URI.file(fileName),
+						);
 						return created;
 					},
 				};
@@ -81,7 +89,6 @@ export function getVueLanguageServicePlugins(
 		createVueDocumentLinksPlugin(),
 		createVueDocumentDropPlugin(ts, getVueOptions, getTsPluginClient),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
-		createVueAutoWrapParenthesesPlugin(ts),
 		createVueAutoAddSpacePlugin(),
 		createVueVisualizeHiddenCallbackParamPlugin(),
 		createVueDirectiveCommentsPlugin(),
@@ -97,10 +104,7 @@ export function getVueLanguageServicePlugins(
 	return plugins;
 }
 
-export function createDefaultGetTsPluginClient(
-	ts: typeof import('typescript'),
-	getVueOptions: (env: ServiceEnvironment) => VueCompilerOptions,
-): (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined {
+export function createDefaultGetTsPluginClient(ts: typeof import('typescript')): (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined {
 	return context => {
 		if (!context.language.typescript) {
 			return;
@@ -109,14 +113,13 @@ export function createDefaultGetTsPluginClient(
 		if (!languageService) {
 			return;
 		}
-		const requestContext = {
+		const requestContext: RequestContext<URI> = {
 			typescript: ts,
 			language: context.language,
 			languageService,
 			languageServiceHost: context.language.typescript.languageServiceHost,
-			vueOptions: getVueOptions(context.env),
 			isTsPlugin: false,
-			getFileId: context.env.typescript!.fileNameToUri,
+			getFileId: context.language.typescript.asScriptId,
 		};
 		return {
 			async collectExtractProps(...args) {

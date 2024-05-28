@@ -10,7 +10,7 @@ export * from './lib/types';
 export const createComponentMetaCheckerByJsonConfig = createCheckerByJson;
 
 /**
- * @deprecated Use `createCheckerByJson` instead.
+ * @deprecated Use `createChecker` instead.
  */
 export const createComponentMetaChecker = createChecker;
 

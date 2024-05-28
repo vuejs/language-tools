@@ -1,8 +1,9 @@
-import type { CreateFile, ServiceContext, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
+import type { CreateFile, LanguageServiceContext, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
 import { Sfc, VueVirtualCode, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
+import { URI } from 'vscode-uri';
 
 interface ActionData {
 	uri: string;
@@ -14,10 +15,15 @@ const unicodeReg = /\\u/g;
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
+	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-extract-file',
+		capabilities: {
+			codeActionProvider: {
+				resolveProvider: true,
+			},
+		},
 		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			return {
@@ -29,7 +35,7 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!(sourceScript?.generated?.root instanceof VueVirtualCode) || virtualCode?.id !== 'template') {
@@ -65,14 +71,15 @@ export function create(
 
 					const { uri, range, newName } = codeAction.data as ActionData;
 					const [startOffset, endOffset]: [number, number] = range;
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
+					const parsedUri = URI.parse(uri);
+					const decoded = context.decodeEmbeddedDocumentUri(parsedUri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!(sourceScript?.generated?.root instanceof VueVirtualCode) || virtualCode?.id !== 'template') {
 						return codeAction;
 					}
 
-					const document = context.documents.get(uri, virtualCode.languageId, virtualCode.snapshot);
+					const document = context.documents.get(parsedUri, virtualCode.languageId, virtualCode.snapshot);
 					const sfcDocument = context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
 					const { sfc } = sourceScript.generated.root;
 					const script = sfc.scriptSetup ?? sfc.script;
@@ -163,7 +170,7 @@ export function create(
 								// editing vue sfc
 								{
 									textDocument: {
-										uri: sourceScript.id,
+										uri: sourceScript.id.toString(),
 										version: null,
 									},
 									edits: sfcEdits,

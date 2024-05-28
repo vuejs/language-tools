@@ -27,7 +27,7 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					decoratedLanguageServiceHosts.add(info.languageServiceHost);
 
 					const vueOptions = getVueCompilerOptions();
-					const languagePlugin = vue.createVueLanguagePlugin(
+					const languagePlugin = vue.createVueLanguagePlugin<string>(
 						ts,
 						id => id,
 						info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false,
@@ -40,9 +40,9 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					const getScriptSnapshot = info.languageServiceHost.getScriptSnapshot.bind(info.languageServiceHost);
 					const getScriptVersion = info.languageServiceHost.getScriptVersion.bind(info.languageServiceHost);
 					const syncedScriptVersions = new vue.FileMap<string>(ts.sys.useCaseSensitiveFileNames);
-					const language = createLanguage(
+					const language = createLanguage<string>(
 						[languagePlugin],
-						ts.sys.useCaseSensitiveFileNames,
+						new vue.FileMap(ts.sys.useCaseSensitiveFileNames),
 						fileName => {
 							const version = getScriptVersion(fileName);
 							if (syncedScriptVersions.get(fileName) === version) {

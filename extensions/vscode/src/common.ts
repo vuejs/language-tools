@@ -240,7 +240,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 
 	if (!enabledHybridMode) {
 		lsp.activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);
-		lsp.activateTsVersionStatusItem(selectors, 'vue.tsversion', context, client, text => 'TS ' + text);
+		lsp.activateTsVersionStatusItem(selectors, 'vue.tsversion', context, text => 'TS ' + text);
 		lsp.activateFindFileReferences('vue.findAllFileReferences', client);
 	}
 
@@ -442,7 +442,6 @@ async function getInitializationOptions(
 ): Promise<VueInitializationOptions> {
 	return {
 		typescript: { tsdk: (await lsp.getTsdk(context)).tsdk },
-		maxFileSize: config.server.maxFileSize,
 		vue: {
 			hybridMode,
 		},

@@ -1,15 +1,16 @@
 import * as vue from '@vue/language-core';
-import type * as ts from 'typescript';
 import { capitalize } from '@vue/shared';
+import type * as ts from 'typescript';
 import { _getComponentNames } from './requests/componentInfos';
+import type { RequestContext } from './requests/types';
 
-export function decorateLanguageServiceForVue(
-	language: vue.Language,
+export function decorateLanguageServiceForVue<T>(
+	language: vue.Language<T>,
 	languageService: ts.LanguageService,
 	vueOptions: vue.VueCompilerOptions,
 	ts: typeof import('typescript'),
 	isTsPlugin: boolean,
-	getScriptId: (fileName: string) => string,
+	getScriptId: (fileName: string) => T,
 ) {
 	const {
 		getCompletionsAtPosition,
@@ -154,7 +155,7 @@ export function decorateLanguageServiceForVue(
 				const { template } = file.generated.root.sfc;
 				if (template) {
 					for (const componentSpan of getComponentSpans.call(
-						{ typescript: ts, languageService, vueOptions },
+						{ typescript: ts, languageService },
 						file.generated.root,
 						template,
 						{
@@ -176,10 +177,7 @@ export function decorateLanguageServiceForVue(
 }
 
 export function getComponentSpans(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-	},
+	this: Pick<RequestContext, 'typescript' | 'languageService'>,
 	vueCode: vue.VueVirtualCode,
 	template: NonNullable<vue.VueVirtualCode['sfc']['template']>,
 	spanTemplateRange: ts.TextSpan,

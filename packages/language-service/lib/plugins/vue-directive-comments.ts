@@ -11,7 +11,11 @@ const directiveCommentReg = /<!--\s*@/;
 export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-directive-comments',
-		triggerCharacters: ['@'],
+		capabilities: {
+			completionProvider: {
+				triggerCharacters: ['@'],
+			},
+		},
 		create(): LanguageServicePluginInstance {
 			return {
 				provideCompletionItems(document, position) {
