@@ -5,6 +5,7 @@ import { createLanguage } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { decorateLanguageServiceForVue } from './lib/common';
 import { startNamedPipeServer, projects } from './lib/server';
+import { resolveFileLanguageId } from '@volar/typescript';
 
 const windowsPathReg = /\\/g;
 const externalFiles = new WeakMap<ts.server.Project, Set<string>>();
@@ -41,7 +42,14 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 					const getScriptVersion = info.languageServiceHost.getScriptVersion.bind(info.languageServiceHost);
 					const syncedScriptVersions = new vue.FileMap<string>(ts.sys.useCaseSensitiveFileNames);
 					const language = createLanguage<string>(
-						[languagePlugin],
+						[
+							languagePlugin,
+							{
+								getLanguageId(fileName) {
+									return resolveFileLanguageId(fileName);
+								},
+							},
+						],
 						new vue.FileMap(ts.sys.useCaseSensitiveFileNames),
 						fileName => {
 							const version = getScriptVersion(fileName);
