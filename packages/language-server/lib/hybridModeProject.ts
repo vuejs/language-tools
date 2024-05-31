@@ -108,7 +108,10 @@ export function createHybridModeProject(
 		serviceEnv: LanguageServiceEnvironment,
 		languagePlugins: LanguagePlugin<URI>[],
 	) {
-		const language = createLanguage(languagePlugins, createUriMap(), uri => {
+		const language = createLanguage([
+			{ getLanguageId: uri => server.documents.get(server.getSyncedDocumentKey(uri) ?? uri.toString())?.languageId },
+			...languagePlugins,
+		], createUriMap(), uri => {
 			const documentKey = server.getSyncedDocumentKey(uri);
 			const document = documentKey ? server.documents.get(documentKey) : undefined;
 			if (document) {
