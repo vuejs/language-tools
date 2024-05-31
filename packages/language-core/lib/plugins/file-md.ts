@@ -73,8 +73,16 @@ const plugin: VueLanguagePlugin = () => {
 			return sfc;
 
 			function transformRange(block: SFCBlock) {
-				block.loc.start.offset = file2VueSourceMap.getSourceOffset(block.loc.start.offset)?.[0] ?? -1;
-				block.loc.end.offset = file2VueSourceMap.getSourceOffset(block.loc.end.offset)?.[0] ?? -1;
+				block.loc.start.offset = -1;
+				block.loc.end.offset = -1;
+				for (const [start] of file2VueSourceMap.getSourceOffsets(block.loc.start.offset)) {
+					block.loc.start.offset = start;
+					break;
+				}
+				for (const [end] of file2VueSourceMap.getSourceOffsets(block.loc.end.offset)) {
+					block.loc.end.offset = end;
+					break;
+				}
 			}
 		}
 	};

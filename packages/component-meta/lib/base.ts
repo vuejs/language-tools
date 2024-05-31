@@ -681,14 +681,14 @@ function createSchemaResolvers(
 			const script = sourceFile.generated.languagePlugin.typescript?.getServiceScript(sourceFile.generated.root);
 			if (script) {
 				for (const [source, [_, map]] of language.maps.forEach(script.code)) {
-					const start = map.getSourceOffset(declaration.getStart());
-					const end = map.getSourceOffset(declaration.getEnd());
-					if (start && end) {
-						return {
-							file: source,
-							range: [start[0], end[0]],
-						};
-					};
+					for (const [start] of map.getSourceOffsets(declaration.getStart())) {
+						for (const [end] of map.getSourceOffsets(declaration.getEnd())) {
+							return {
+								file: source,
+								range: [start, end],
+							};
+						}
+					}
 				}
 			}
 			return undefined;
