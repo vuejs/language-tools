@@ -15,16 +15,17 @@
 		"release:next-base": "npm run release:base -- --dist-tag next",
 		"release:next-vue": "cd ./extensions/vscode && npm run release:next",
 		"test": "vitest run",
-		"lint": "tsl --projects {packages/*/tsconfig.json,extensions/*/tsconfig.json}",
+		"lint": "tsslint --projects {packages/*/tsconfig.json,extensions/*/tsconfig.json}",
 		"lint:fix": "npm run lint -- --fix",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@lerna-lite/publish": "latest",
+		"@tsslint/cli": "latest",
+		"@tsslint/config": "latest",
 		"@volar/language-service": "~2.3.0-alpha.4",
-		"@volar/tsl-config": "latest",
-		"tsl": "latest",
+		"@volar/tsslint-config": "latest",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"

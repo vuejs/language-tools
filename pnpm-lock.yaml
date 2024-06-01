@@ -14,15 +14,18 @@ importers:
       '@lerna-lite/publish':
         specifier: latest
         version: 3.4.0(typescript@5.4.5)
+      '@tsslint/cli':
+        specifier: latest
+        version: 0.0.11(typescript@5.4.5)
+      '@tsslint/config':
+        specifier: latest
+        version: 0.0.11
       '@volar/language-service':
         specifier: ~2.3.0-alpha.4
         version: 2.3.0-alpha.4
-      '@volar/tsl-config':
+      '@volar/tsslint-config':
         specifier: latest
-        version: 0.0.0-20240315.2(tsl@0.0.10(typescript@5.4.5))
-      tsl:
-        specifier: latest
-        version: 0.0.10(typescript@5.4.5)
+        version: 0.0.0-20240602(@tsslint/config@0.0.11)
       typescript:
         specifier: latest
         version: 5.4.5
@@ -1061,17 +1064,17 @@ packages:
     resolution: {integrity: sha512-LtoMMhxAlorcGhmFYI+LhPgbPZCkgP6ra1YL604EeF6U98pLlQ3iWIGMdWSC+vWmPBWBNgmDBAhnAobLROJmwg==}
     engines: {node: '>=18'}
 
-  '@tsslint/cli@0.0.10':
-    resolution: {integrity: sha512-0F0LbGUbFbVinvNjA3qCyx6ynZA4ScBR2Tr1ZHOXog6BnR9wrvXMqPA/cud2GMftO7mRDMtsh1mBop9NsZeHtQ==}
+  '@tsslint/cli@0.0.11':
+    resolution: {integrity: sha512-4qC7S+yGtdUIVHOz2L7Y62E5tN3D7uV6h9XW53Xypb0Hmpi28nm0JH3ZdeUyN8sW02znLAyx53KbWlAQGmHNQQ==}
     hasBin: true
     peerDependencies:
       typescript: '*'
 
-  '@tsslint/config@0.0.10':
-    resolution: {integrity: sha512-WdLrCFBH1VT6VOIaFifsIZrMeiLO4Vss5HGwxx/G+rWl90BwJXXOtIBCr00nDPISv+YNokD4QYMSJWrjlvBVCQ==}
+  '@tsslint/config@0.0.11':
+    resolution: {integrity: sha512-pcq9CpwL2W4IiiTT2MpdMJeHInXvOLmIANjAh80tJaxV75S8z1pi7IUIkzgFxTLOUIRskWq1Xn0BlTD76t8l1Q==}
 
-  '@tsslint/core@0.0.10':
-    resolution: {integrity: sha512-21RrlBbKeTwk2HPmwG9iNBws3F+S1MWsGT4gI0mchbJBQf9THMNcalK2c24knDObSjryfRdeWuIBFalldOaPOw==}
+  '@tsslint/core@0.0.11':
+    resolution: {integrity: sha512-MLGN6HrdvoQIgaPMw4d+Ky7e92Os/9OzOhSi0kY/J+KHw+bADQDFgZA24QC9DGUWhy30k3Kpw1FooqGyCNyByA==}
 
   '@tufjs/canonical-json@2.0.0':
     resolution: {integrity: sha512-yVtV8zsdo8qFHe+/3kw81dSLyF7D576A5cCFCi4X7B39tWT7SekaEFUnvnWJHz+9qO7qJTah1JbrDjWKqFtdWA==}
@@ -1137,10 +1140,10 @@ packages:
   '@volar/source-map@2.3.0-alpha.4':
     resolution: {integrity: sha512-cY73k8BZ6WqraWknof/PpA+MBiPq6fI6ShQ7FoQfPF89Vx56XKCu3fZp3tlaA/o0UwqQQkjVlqUsa6bmUafygQ==}
 
-  '@volar/tsl-config@0.0.0-20240315.2':
-    resolution: {integrity: sha512-bv57xhmegLkfjW0/FZL/sberfmUch7yLAkXlRXj5KxHPYCjIU4T1ciPuLWrtVzCa+o0q7ykQ6aR+Q/z7MSMf6w==}
+  '@volar/tsslint-config@0.0.0-20240602':
+    resolution: {integrity: sha512-dSiDDiFExwKKD+N0cl9hLHL76+X+/a4qltbdb6ayEwu7G5H4aw5Qlm99beDyvO9bpFZFSPdkR5XXqyRYZPKLtA==}
     peerDependencies:
-      tsl: '*'
+      '@tsslint/config': latest
 
   '@volar/typescript@2.3.0-alpha.4':
     resolution: {integrity: sha512-dQtdczowQCnGlJckYsfUXyieFgTpBNXYPY/EU+UzVmaA2QAmuTQPmJdx9R2CwUtbxDZAA1Zi5gNP0qscUPk/CA==}
@@ -2958,10 +2961,6 @@ packages:
   token-stream@1.0.0:
     resolution: {integrity: sha512-VSsyNPPW74RpHwR8Fc21uubwHY7wMDeJLys2IX5zJNih+OnAnaifKHo+1LHT7DAdloQ7apeaaWg8l7qnf/TnEg==}
 
-  tsl@0.0.10:
-    resolution: {integrity: sha512-hy7OuMp55TkicjtDKgpg1q2xq1Dboi2YWM+JexNEP4MZr3n+Fr5KXv64ZXzJx1NbPhMHbOuM36bHcFFXE4Ofcg==}
-    hasBin: true
-
   tslib@2.6.2:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
 
@@ -4009,19 +4008,19 @@ snapshots:
 
   '@sindresorhus/merge-streams@2.3.0': {}
 
-  '@tsslint/cli@0.0.10(typescript@5.4.5)':
+  '@tsslint/cli@0.0.11(typescript@5.4.5)':
     dependencies:
       '@clack/prompts': 0.7.0
-      '@tsslint/config': 0.0.10
-      '@tsslint/core': 0.0.10
+      '@tsslint/config': 0.0.11
+      '@tsslint/core': 0.0.11
       glob: 10.3.15
       typescript: 5.4.5
 
-  '@tsslint/config@0.0.10':
+  '@tsslint/config@0.0.11':
     dependencies:
       esbuild: 0.19.12
 
-  '@tsslint/core@0.0.10':
+  '@tsslint/core@0.0.11':
     dependencies:
       error-stack-parser: 2.1.4
       source-map-support: 0.5.21
@@ -4120,9 +4119,9 @@ snapshots:
     dependencies:
       muggle-string: 0.4.1
 
-  '@volar/tsl-config@0.0.0-20240315.2(tsl@0.0.10(typescript@5.4.5))':
+  '@volar/tsslint-config@0.0.0-20240602(@tsslint/config@0.0.11)':
     dependencies:
-      tsl: 0.0.10(typescript@5.4.5)
+      '@tsslint/config': 0.0.11
 
   '@volar/typescript@2.3.0-alpha.4':
     dependencies:
@@ -6119,14 +6118,6 @@ snapshots:
       is-number: 7.0.0
 
   token-stream@1.0.0: {}
-
-  tsl@0.0.10(typescript@5.4.5):
-    dependencies:
-      '@tsslint/cli': 0.0.10(typescript@5.4.5)
-      '@tsslint/config': 0.0.10
-      '@tsslint/core': 0.0.10
-    transitivePeerDependencies:
-      - typescript
 
   tslib@2.6.2: {}
 
