@@ -5,7 +5,7 @@ import type { RequestContext } from './types';
 export function collectExtractProps(
 	this: RequestContext,
 	fileName: string,
-	templateCodeRange: [number, number],
+	templateCodeRange: [number, number]
 ) {
 	const { typescript: ts, languageService, language, isTsPlugin, getFileId } = this;
 

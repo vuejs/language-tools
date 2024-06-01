@@ -19,7 +19,7 @@ export function create(
 	mode: 'html' | 'pug',
 	ts: typeof import('typescript'),
 	getVueOptions: (env: LanguageServiceEnvironment) => VueCompilerOptions,
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
+	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
 ): LanguageServicePlugin {
 
 	let customData: html.IHTMLDataProvider[] = [];
@@ -158,7 +158,7 @@ export function create(
 					if (sourceScript?.generated?.root instanceof VueVirtualCode) {
 						await afterHtmlCompletion(
 							htmlComplete,
-							context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot),
+							context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot)
 						);
 					}
 
@@ -531,7 +531,7 @@ export function create(
 									attributes.push(
 										{
 											name: dir,
-										},
+										}
 									);
 								}
 							}
@@ -558,7 +558,7 @@ export function create(
 										{
 											name: '@' + propNameBase,
 											description: propKey,
-										},
+										}
 									);
 								}
 								{
@@ -578,7 +578,7 @@ export function create(
 										{
 											name: 'v-bind:' + propName,
 											description: propKey,
-										},
+										}
 									);
 								}
 							}

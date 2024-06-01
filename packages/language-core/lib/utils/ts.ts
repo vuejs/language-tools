@@ -44,7 +44,7 @@ export function createParsedCommandLineByJson(
 			extension: extension.slice(1),
 			isMixedContent: true,
 			scriptKind: ts.ScriptKind.Deferred,
-		})),
+		}))
 	);
 
 	// fix https://github.com/vuejs/language-tools/issues/1786
@@ -61,7 +61,7 @@ export function createParsedCommandLineByJson(
 export function createParsedCommandLine(
 	ts: typeof import('typescript'),
 	parseConfigHost: ts.ParseConfigHost,
-	tsConfigPath: string,
+	tsConfigPath: string
 ): ParsedCommandLine {
 	try {
 		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
@@ -95,7 +95,7 @@ export function createParsedCommandLine(
 				extension: extension.slice(1),
 				isMixedContent: true,
 				scriptKind: ts.ScriptKind.Deferred,
-			})),
+			}))
 		);
 
 		// fix https://github.com/vuejs/language-tools/issues/1786
@@ -142,7 +142,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 
 function getPartialVueCompilerOptions(
 	ts: typeof import('typescript'),
-	tsConfigSourceFile: ts.TsConfigSourceFile,
+	tsConfigSourceFile: ts.TsConfigSourceFile
 ): Partial<VueCompilerOptions> {
 
 	const folder = path.dirname(tsConfigSourceFile.fileName);

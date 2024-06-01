@@ -7,7 +7,7 @@ export function getComponentProps(
 	this: RequestContext,
 	fileName: string,
 	tag: string,
-	requiredOnly = false,
+	requiredOnly = false
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -89,7 +89,7 @@ export function getComponentProps(
 export function getComponentEvents(
 	this: RequestContext,
 	fileName: string,
-	tag: string,
+	tag: string
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -164,7 +164,7 @@ export function getComponentEvents(
 
 export function getTemplateContextProps(
 	this: RequestContext,
-	fileName: string,
+	fileName: string
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -181,7 +181,7 @@ export function getTemplateContextProps(
 
 export function getComponentNames(
 	this: RequestContext,
-	fileName: string,
+	fileName: string
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -201,7 +201,7 @@ export function getComponentNames(
 export function _getComponentNames(
 	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
-	vueCode: vue.VueVirtualCode,
+	vueCode: vue.VueVirtualCode
 ) {
 	return getVariableType(ts, tsLs, vueCode, '__VLS_components')
 		?.type
@@ -214,7 +214,7 @@ export function _getComponentNames(
 export function getElementAttrs(
 	this: RequestContext,
 	fileName: string,
-	tagName: string,
+	tagName: string
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -253,7 +253,7 @@ function getVariableType(
 	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
 	vueCode: vue.VueVirtualCode,
-	name: string,
+	name: string
 ) {
 	const program: ts.Program = (tsLs as any).getCurrentProgram();
 	if (!program) {
@@ -279,7 +279,7 @@ function getVariableType(
 function searchVariableDeclarationNode(
 	ts: typeof import('typescript'),
 	sourceFile: ts.SourceFile,
-	name: string,
+	name: string
 ) {
 
 	let componentsNode: ts.Node | undefined;

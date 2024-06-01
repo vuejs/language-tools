@@ -19,7 +19,7 @@ export type GetLanguagePlugin<T> = (params: {
 
 export function createHybridModeProject(
 	sys: ts.System,
-	getLanguagePlugins: GetLanguagePlugin<URI>,
+	getLanguagePlugins: GetLanguagePlugin<URI>
 ): Project {
 	let initialized = false;
 	let simpleLs: Promise<LanguageService> | undefined;
@@ -106,7 +106,7 @@ export function createHybridModeProject(
 	function createLs(
 		server: LanguageServer,
 		serviceEnv: LanguageServiceEnvironment,
-		languagePlugins: LanguagePlugin<URI>[],
+		languagePlugins: LanguagePlugin<URI>[]
 	) {
 		const language = createLanguage([
 			{ getLanguageId: uri => server.documents.get(server.getSyncedDocumentKey(uri) ?? uri.toString())?.languageId },
@@ -124,7 +124,7 @@ export function createHybridModeProject(
 		return createLanguageService(
 			language,
 			server.languageServicePlugins,
-			serviceEnv,
+			serviceEnv
 		);
 	}
 }

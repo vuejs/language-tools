@@ -10,7 +10,7 @@ export function decorateLanguageServiceForVue<T>(
 	vueOptions: vue.VueCompilerOptions,
 	ts: typeof import('typescript'),
 	isTsPlugin: boolean,
-	getScriptId: (fileName: string) => T,
+	getScriptId: (fileName: string) => T
 ) {
 	const {
 		getCompletionsAtPosition,
@@ -161,12 +161,12 @@ export function decorateLanguageServiceForVue<T>(
 						{
 							start: span.start - template.startTagEnd,
 							length: span.length,
-						},
+						}
 					)) {
 						result.spans.push(
 							componentSpan.start + template.startTagEnd,
 							componentSpan.length,
-							256, // class
+							256 // class
 						);
 					}
 				}
@@ -180,7 +180,7 @@ export function getComponentSpans(
 	this: Pick<RequestContext, 'typescript' | 'languageService'>,
 	vueCode: vue.VueVirtualCode,
 	template: NonNullable<vue.VueVirtualCode['sfc']['template']>,
-	spanTemplateRange: ts.TextSpan,
+	spanTemplateRange: ts.TextSpan
 ) {
 	const { typescript: ts, languageService } = this;
 	const result: ts.TextSpan[] = [];

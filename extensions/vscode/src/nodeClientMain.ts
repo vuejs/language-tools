@@ -153,7 +153,7 @@ try {
 						'languages:',
 						`e.name==='typescript-vue-plugin-bundle'?[${config.server.includeLanguages.map(lang => `"${lang}"`).join(',')}]`,
 						':Array.isArray(e.languages)',
-					].join(''),
+					].join('')
 				);
 
 				// VSCode < 1.87.0

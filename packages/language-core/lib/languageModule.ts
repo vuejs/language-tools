@@ -37,7 +37,7 @@ function getVueFileRegistry(isGlobalTypesHolder: boolean, key: string, plugins: 
 function getFileRegistryKey(
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	plugins: ReturnType<VueLanguagePlugin>[],
+	plugins: ReturnType<VueLanguagePlugin>[]
 ) {
 	const values = [
 		...Object.keys(vueCompilerOptions)
@@ -63,7 +63,7 @@ export function createVueLanguagePlugin<T>(
 	getProjectVersion: () => string,
 	getScriptFileNames: () => string[] | Set<string>,
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions
 ): _Plugin<T> {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
@@ -199,7 +199,7 @@ export function createVueLanguagePlugin<T>(
 		return getVueFileRegistry(
 			isGlobalTypesHolder,
 			getFileRegistryKey(compilerOptions, vueCompilerOptions, basePlugins),
-			vueCompilerOptions.plugins,
+			vueCompilerOptions.plugins
 		);
 	}
 }

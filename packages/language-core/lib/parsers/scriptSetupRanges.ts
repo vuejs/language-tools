@@ -6,7 +6,7 @@ export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRan
 export function parseScriptSetupRanges(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
-	vueCompilerOptions: VueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions
 ) {
 
 	let foundNonImportExportNode = false;

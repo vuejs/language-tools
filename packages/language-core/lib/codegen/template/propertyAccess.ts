@@ -11,7 +11,7 @@ export function* generatePropertyAccess(
 	code: string,
 	offset?: number,
 	features?: VueCodeInformation,
-	astHolder?: any,
+	astHolder?: any
 ): Generator<Code> {
 	if (!options.compilerOptions.noPropertyAccessFromIndexSignature && variableNameRegex.test(code)) {
 		yield `.`;
@@ -28,7 +28,7 @@ export function* generatePropertyAccess(
 			offset,
 			features,
 			'',
-			'',
+			''
 		);
 	}
 	else {

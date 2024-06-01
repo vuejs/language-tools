@@ -11,7 +11,7 @@ import { generateInternalComponent } from './internalComponent';
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	isClassComponent: boolean,
+	isClassComponent: boolean
 ): Generator<Code> {
 	ctx.generatedTemplate = true;
 
@@ -76,7 +76,7 @@ function* generateConstNameOption(options: ScriptCodegenOptions): Generator<Code
 function* generateCtx(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	isClassComponent: boolean,
+	isClassComponent: boolean
 ): Generator<Code> {
 	yield `let __VLS_ctx!: `;
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
@@ -101,7 +101,7 @@ function* generateCtx(
 						className.text,
 						className.offset,
 						'string',
-						false,
+						false
 					);
 				}
 				yield `>${endOfLine}`;
@@ -114,7 +114,7 @@ function* generateCtx(
 
 function* generateTemplateContext(
 	options: ScriptCodegenOptions,
-	templateCodegenCtx: TemplateCodegenContext,
+	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
 	/* Components */
 	yield `/* Components */${newLine}`;
@@ -136,7 +136,7 @@ function* generateTemplateContext(
 					className.text,
 					className.offset,
 					'boolean',
-					true,
+					true
 				);
 			}
 		}
@@ -165,7 +165,7 @@ function* generateCssClassProperty(
 	classNameWithDot: string,
 	offset: number,
 	propertyType: string,
-	optional: boolean,
+	optional: boolean
 ): Generator<Code> {
 	yield `${newLine} & { `;
 	yield [
@@ -204,7 +204,7 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 				ctx,
 				cssBind.text,
 				cssBind.offset,
-				options.ts.createSourceFile('/a.txt', cssBind.text, 99 satisfies ts.ScriptTarget.ESNext),
+				options.ts.createSourceFile('/a.txt', cssBind.text, 99 satisfies ts.ScriptTarget.ESNext)
 			)) {
 				if (offset === undefined) {
 					yield segment;

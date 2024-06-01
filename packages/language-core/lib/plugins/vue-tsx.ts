@@ -60,7 +60,7 @@ export default plugin;
 function createTsx(
 	fileName: string,
 	_sfc: Sfc,
-	ctx: Parameters<VueLanguagePlugin>[0],
+	ctx: Parameters<VueLanguagePlugin>[0]
 ) {
 
 	const ts = ctx.modules.typescript;

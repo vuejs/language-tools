@@ -10,7 +10,7 @@ import { LanguageServiceContext, LanguageServiceEnvironment, LanguageServicePlug
 export function create(
 	ts: typeof import('typescript'),
 	getVueOptions: (env: LanguageServiceEnvironment) => VueCompilerOptions,
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
+	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',

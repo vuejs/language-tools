@@ -4,7 +4,7 @@ import { codeFeatures } from './index';
 
 export function* generateSrc(
 	script: NonNullable<Sfc['script']>,
-	src: string,
+	src: string
 ): Generator<Code> {
 	if (src.endsWith('.d.ts')) {
 		src = src.substring(0, src.length - '.d.ts'.length);

@@ -16,7 +16,7 @@ export function* generateElementEvents(
 	componentVar: string,
 	componentInstanceVar: string,
 	emitVar: string,
-	eventsVar: string,
+	eventsVar: string
 ): Generator<Code> {
 	let usedComponentEventsVar = false;
 	let propsVar: string | undefined;
@@ -87,7 +87,7 @@ const eventArgFeatures: VueCodeInformation = {
 export function* generateEventArg(
 	ctx: TemplateCodegenContext,
 	arg: CompilerDOM.SimpleExpressionNode,
-	enableHover: boolean,
+	enableHover: boolean
 ): Generator<Code> {
 	const features = enableHover
 		? {
@@ -101,7 +101,7 @@ export function* generateEventArg(
 		yield* generateCamelized(
 			capitalize(arg.loc.source),
 			arg.loc.start.offset,
-			combineLastMapping,
+			combineLastMapping
 		);
 	}
 	else {
@@ -115,9 +115,9 @@ export function* generateEventArg(
 			...generateCamelized(
 				capitalize(arg.loc.source),
 				arg.loc.start.offset,
-				combineLastMapping,
+				combineLastMapping
 			),
-			`'`,
+			`'`
 		);
 	}
 }
@@ -125,7 +125,7 @@ export function* generateEventArg(
 export function* generateEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode,
+	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		let prefix = '(';
@@ -171,7 +171,7 @@ export function* generateEventExpression(
 				return ctx.codeFeatures.all;
 			},
 			prefix,
-			suffix,
+			suffix
 		);
 
 		if (_isCompoundExpression) {

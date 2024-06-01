@@ -17,23 +17,23 @@ export const createComponentMetaChecker = createChecker;
 export function createCheckerByJson(
 	rootPath: string,
 	json: any,
-	checkerOptions: MetaCheckerOptions = {},
+	checkerOptions: MetaCheckerOptions = {}
 ) {
 	return createCheckerByJsonConfigBase(
 		ts,
 		rootPath,
 		json,
-		checkerOptions,
+		checkerOptions
 	);
 }
 
 export function createChecker(
 	tsconfig: string,
-	checkerOptions: MetaCheckerOptions = {},
+	checkerOptions: MetaCheckerOptions = {}
 ) {
 	return createCheckerBase(
 		ts,
 		tsconfig,
-		checkerOptions,
+		checkerOptions
 	);
 }

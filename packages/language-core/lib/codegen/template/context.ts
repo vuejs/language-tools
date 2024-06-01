@@ -169,7 +169,7 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 							shouldReport: () => token.errors === 0,
 						},
 					},
-					`// @ts-expect-error __VLS_TS_EXPECT_ERROR`,
+					`// @ts-expect-error __VLS_TS_EXPECT_ERROR`
 				);
 				yield `${newLine}${endOfLine}`;
 				expectErrorToken = undefined;

@@ -12,7 +12,7 @@ export function* generateVIf(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.IfNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined,
+	componentCtxVar: string | undefined
 ): Generator<Code> {
 
 	let originalBlockConditionsLength = ctx.blockConditions.length;
@@ -43,7 +43,7 @@ export function* generateVIf(
 					branch.condition.loc.start.offset,
 					ctx.codeFeatures.all,
 					'(',
-					')',
+					')'
 				),
 			];
 			for (const code of codes) {

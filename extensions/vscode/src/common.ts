@@ -103,7 +103,7 @@ function getCurrentHybridModeStatus(report = false) {
 				vscode.window.showInformationMessage(
 					`Hybrid Mode is disabled automatically because there is a potentially incompatible ${[...incompatibleExtensions, ...unknownExtensions].join(', ')} TypeScript plugin installed.`,
 					'Open Settings',
-					'Report a false positive',
+					'Report a false positive'
 				).then(value => {
 					if (value === 'Open Settings') {
 						vscode.commands.executeCommand('workbench.action.openSettings', 'vue.server.hybridMode');
@@ -142,7 +142,7 @@ function getCurrentHybridModeStatus(report = false) {
 			vscode.window.showWarningMessage(
 				`You have explicitly enabled Hybrid Mode, but you have installed known incompatible extensions: ${incompatibleExtensions.join(', ')}. You may want to change vue.server.hybridMode to "auto" to avoid compatibility issues.`,
 				'Open Settings',
-				'Report a false positive',
+				'Report a false positive'
 			).then(value => {
 				if (value === 'Open Settings') {
 					vscode.commands.executeCommand('workbench.action.openSettings', 'vue.server.hybridMode');
@@ -160,7 +160,7 @@ function getCurrentHybridModeStatus(report = false) {
 		if (nightly) {
 			const libPath = path.join(
 				nightly.extensionPath.replace(/\\/g, '/'),
-				'node_modules/typescript/lib',
+				'node_modules/typescript/lib'
 			);
 			return getTsVersion(libPath);
 		}
@@ -168,7 +168,7 @@ function getCurrentHybridModeStatus(report = false) {
 		if (vscode.env.appRoot) {
 			const libPath = path.join(
 				vscode.env.appRoot.replace(/\\/g, '/'),
-				'extensions/node_modules/typescript/lib',
+				'extensions/node_modules/typescript/lib'
 			);
 			return getTsVersion(libPath);
 		}
@@ -438,7 +438,7 @@ export function deactivate(): Thenable<any> | undefined {
 
 async function getInitializationOptions(
 	context: vscode.ExtensionContext,
-	hybridMode: boolean,
+	hybridMode: boolean
 ): Promise<VueInitializationOptions> {
 	return {
 		typescript: { tsdk: (await lsp.getTsdk(context)).tsdk },

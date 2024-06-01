@@ -21,7 +21,7 @@ export function* generateComponent(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined,
+	componentCtxVar: string | undefined
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
@@ -95,7 +95,7 @@ export function* generateComponent(
 							resolveRenameNewName: camelizeComponentName,
 							resolveRenameEditText: getTagRenameApply(node.tag),
 						},
-					},
+					}
 				);
 			}
 			yield `,`;
@@ -112,7 +112,7 @@ export function* generateComponent(
 			dynamicTagInfo.offset,
 			ctx.codeFeatures.all,
 			'(',
-			')',
+			')'
 		);
 		yield endOfLine;
 	}
@@ -129,7 +129,7 @@ export function* generateComponent(
 			ctx,
 			getCanonicalComponentName(node.tag),
 			startTagOffset,
-			ctx.codeFeatures.verification,
+			ctx.codeFeatures.verification
 		);
 		yield endOfLine;
 
@@ -139,7 +139,7 @@ export function* generateComponent(
 			yield* generateCanonicalComponentName(
 				node.tag,
 				offset,
-				ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
+				ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation
 			);
 			yield endOfLine;
 		}
@@ -158,7 +158,7 @@ export function* generateComponent(
 								resolveRenameNewName: node.tag !== expectName ? camelizeComponentName : undefined,
 								resolveRenameEditText: getTagRenameApply(node.tag),
 							},
-						} as VueCodeInformation,
+						} as VueCodeInformation
 					);
 					yield `;`;
 				}
@@ -176,7 +176,7 @@ export function* generateComponent(
 							isAdditional: true,
 							onlyImport: true,
 						},
-					} as VueCodeInformation,
+					} as VueCodeInformation
 				);
 				yield `,`;
 			}
@@ -200,7 +200,7 @@ export function* generateComponent(
 			ctx.codeFeatures.verification,
 			`{`,
 			...generateElementProps(options, ctx, node, props, true, propsFailedExps),
-			`}`,
+			`}`
 		);
 		yield `, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
 	}
@@ -217,7 +217,7 @@ export function* generateComponent(
 			ctx.codeFeatures.verification,
 			`{`,
 			...generateElementProps(options, ctx, node, props, true, propsFailedExps),
-			`}`,
+			`}`
 		);
 		yield `)${endOfLine}`;
 	}
@@ -234,7 +234,7 @@ export function* generateComponent(
 			failedExp.node.loc.start.offset,
 			ctx.codeFeatures.all,
 			failedExp.prefix,
-			failedExp.suffix,
+			failedExp.suffix
 		);
 		yield endOfLine;
 	}
@@ -266,7 +266,7 @@ export function* generateElement(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined,
+	componentCtxVar: string | undefined
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
@@ -284,7 +284,7 @@ export function* generateElement(
 		ctx,
 		node.tag,
 		startTagOffset,
-		ctx.codeFeatures.withoutHighlightAndCompletion,
+		ctx.codeFeatures.withoutHighlightAndCompletion
 	);
 	if (endTagOffset !== undefined) {
 		yield `, __VLS_intrinsicElements`;
@@ -293,7 +293,7 @@ export function* generateElement(
 			ctx,
 			node.tag,
 			endTagOffset,
-			ctx.codeFeatures.withoutHighlightAndCompletion,
+			ctx.codeFeatures.withoutHighlightAndCompletion
 		);
 	}
 	yield `)(`;
@@ -303,7 +303,7 @@ export function* generateElement(
 		ctx.codeFeatures.verification,
 		`{`,
 		...generateElementProps(options, ctx, node, node.props, true, propsFailedExps),
-		`}`,
+		`}`
 	);
 	yield `)${endOfLine}`;
 
@@ -316,7 +316,7 @@ export function* generateElement(
 			failedExp.node.loc.start.offset,
 			ctx.codeFeatures.all,
 			failedExp.prefix,
-			failedExp.suffix,
+			failedExp.suffix
 		);
 		yield endOfLine;
 	}
@@ -336,7 +336,7 @@ function* generateVScope(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[],
+	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[]
 ): Generator<Code> {
 	const vScope = props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
 	let inScope = false;
@@ -409,7 +409,7 @@ function* generateComponentSlot(
 	node: CompilerDOM.ElementNode,
 	slotDir: CompilerDOM.DirectiveNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string,
+	componentCtxVar: string
 ): Generator<Code> {
 	yield `{${newLine}`;
 	ctx.usedComponentCtxVars.add(componentCtxVar);
@@ -471,7 +471,7 @@ function* generateComponentSlot(
 									: 0
 						),
 						ctx.codeFeatures.withoutHighlightAndCompletion,
-						`default`,
+						`default`
 					)
 				]
 		)
@@ -523,7 +523,7 @@ function* generateComponentSlot(
 function* generateReferencesForElements(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
+	node: CompilerDOM.ElementNode
 ): Generator<Code> {
 	for (const prop of node.props) {
 		if (
@@ -540,7 +540,7 @@ function* generateReferencesForElements(
 				prop.value.loc.start.offset + 1,
 				ctx.codeFeatures.navigation,
 				'(',
-				')',
+				')'
 			);
 			yield endOfLine;
 		}
@@ -549,7 +549,7 @@ function* generateReferencesForElements(
 
 function* generateReferencesForScopedCssClasses(
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
+	node: CompilerDOM.ElementNode
 ): Generator<Code> {
 	for (const prop of node.props) {
 		if (

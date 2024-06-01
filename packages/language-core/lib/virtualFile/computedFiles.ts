@@ -7,7 +7,7 @@ import { VueEmbeddedCode } from './embeddedFile';
 export function computedFiles(
 	plugins: ReturnType<VueLanguagePlugin>[],
 	fileName: string,
-	sfc: Sfc,
+	sfc: Sfc
 ) {
 
 	const nameToBlock = computed(() => {
@@ -103,7 +103,7 @@ function computedPluginEmbeddedCodes(
 	plugin: ReturnType<VueLanguagePlugin>,
 	fileName: string,
 	sfc: Sfc,
-	nameToBlock: () => Record<string, SfcBlock>,
+	nameToBlock: () => Record<string, SfcBlock>
 ) {
 	const computeds = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>();
 	const getComputedKey = (code: {

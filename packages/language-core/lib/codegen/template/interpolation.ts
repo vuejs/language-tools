@@ -14,7 +14,7 @@ export function* generateInterpolation(
 	start: number | undefined,
 	data: VueCodeInformation | (() => VueCodeInformation) | undefined,
 	prefix: string,
-	suffix: string,
+	suffix: string
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
@@ -28,7 +28,7 @@ export function* generateInterpolation(
 		ctx,
 		code,
 		start !== undefined ? start - prefix.length : undefined,
-		ast,
+		ast
 	)) {
 		if (offset === undefined) {
 			yield section;
@@ -74,7 +74,7 @@ export function* forEachInterpolationSegment(
 	ctx: TemplateCodegenContext,
 	code: string,
 	offset: number | undefined,
-	ast: ts.SourceFile,
+	ast: ts.SourceFile
 ): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
 	let ctxVars: {
 		text: string,
@@ -152,7 +152,7 @@ function walkIdentifiers(
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	ctx: TemplateCodegenContext,
 	blockVars: string[] = [],
-	isRoot: boolean = true,
+	isRoot: boolean = true
 ) {
 
 	if (ts.isIdentifier(node)) {
@@ -245,7 +245,7 @@ function walkIdentifiers(
 function walkIdentifiersInTypeReference(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
+	cb: (varNode: ts.Identifier, isShorthand: boolean) => void
 ) {
 	if (ts.isTypeQueryNode(node) && ts.isIdentifier(node.exprName)) {
 		cb(node.exprName, false);

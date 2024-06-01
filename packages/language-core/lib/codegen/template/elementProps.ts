@@ -22,7 +22,7 @@ export function* generateElementProps(
 		node: CompilerDOM.SimpleExpressionNode;
 		prefix: string;
 		suffix: string;
-	}[],
+	}[]
 ): Generator<Code> {
 	const isIntrinsicElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT || node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
 	const canCamelize = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
@@ -130,7 +130,7 @@ export function* generateElementProps(
 									: false,
 							},
 							(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
-							shouldCamelize,
+							shouldCamelize
 						)
 						: [propName]
 				),
@@ -141,9 +141,9 @@ export function* generateElementProps(
 					prop.exp,
 					ctx.codeFeatures.all,
 					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
-					enableCodeFeatures,
+					enableCodeFeatures
 				),
-				`)`,
+				`)`
 			);
 			if (!enableCodeFeatures) {
 				yield toString([...codes]);
@@ -199,7 +199,7 @@ export function* generateElementProps(
 						}
 						: ctx.codeFeatures.withoutHighlightAndCompletion,
 					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
-					shouldCamelize,
+					shouldCamelize
 				),
 				`: (`,
 				...(
@@ -207,7 +207,7 @@ export function* generateElementProps(
 						? generateAttrValue(prop.value, ctx.codeFeatures.all)
 						: [`true`]
 				),
-				`)`,
+				`)`
 			);
 			if (!enableCodeFeatures) {
 				yield toString([...codes]);
@@ -240,8 +240,8 @@ export function* generateElementProps(
 					prop.exp.loc.start.offset,
 					ctx.codeFeatures.all,
 					'(',
-					')',
-				),
+					')'
+				)
 			);
 			if (!enableCodeFeatures) {
 				yield toString([...codes]);
@@ -264,7 +264,7 @@ function* genereatePropExp(
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
 	isShorthand: boolean,
-	inlayHints: boolean,
+	inlayHints: boolean
 ): Generator<Code> {
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 		if (!isShorthand) { // vue 3.4+
@@ -276,7 +276,7 @@ function* genereatePropExp(
 				exp.loc.start.offset,
 				features,
 				'(',
-				')',
+				')'
 			);
 		} else {
 			const propVariableName = camelize(exp.loc.source);
@@ -289,7 +289,7 @@ function* genereatePropExp(
 				yield* generateCamelized(
 					exp.loc.source,
 					exp.loc.start.offset,
-					features,
+					features
 				);
 				if (inlayHints) {
 					yield [
@@ -336,7 +336,7 @@ function* generateAttrValue(attrNode: CompilerDOM.TextNode, features: VueCodeInf
 			start,
 			end,
 			features,
-			toUnicode(content),
+			toUnicode(content)
 		);
 	}
 	else {

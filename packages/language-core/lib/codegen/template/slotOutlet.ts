@@ -12,7 +12,7 @@ export function* generateSlotOutlet(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.SlotOutletNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined,
+	componentCtxVar: string | undefined
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
 	const varSlot = ctx.getInternalVariable();
@@ -46,7 +46,7 @@ export function* generateSlotOutlet(
 						? nameProp.exp.content
 						: `('default' as const)`
 			),
-			`]`,
+			`]`
 		);
 		yield `)?.(`;
 		yield* wrapWith(
@@ -55,7 +55,7 @@ export function* generateSlotOutlet(
 			ctx.codeFeatures.verification,
 			`{${newLine}`,
 			...generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), true),
-			`}`,
+			`}`
 		);
 		yield `)${endOfLine}`;
 	}
@@ -90,7 +90,7 @@ export function* generateSlotOutlet(
 				nameProp.exp.loc.start.offset,
 				ctx.codeFeatures.all,
 				'(',
-				')',
+				')'
 			);
 			yield ` as const${endOfLine}`;
 			ctx.dynamicSlots.push({

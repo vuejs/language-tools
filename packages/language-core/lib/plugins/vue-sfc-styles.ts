@@ -45,7 +45,7 @@ const plugin: VueLanguagePlugin = () => {
 								cssVar.offset,
 								allCodeFeatures,
 							],
-							');\n',
+							');\n'
 						);
 					}
 				}

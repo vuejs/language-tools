@@ -46,7 +46,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 				return content.trim();
 			}
-		},
+		}
 	));
 	context.subscriptions.push(vscode.commands.registerCommand('vue.action.doctor', () => {
 		const doc = vscode.window.activeTextEditor?.document;

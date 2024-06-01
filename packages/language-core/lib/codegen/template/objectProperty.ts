@@ -14,7 +14,7 @@ export function* generateObjectProperty(
 	offset: number,
 	features: VueCodeInformation,
 	astHolder?: any,
-	shouldCamelize = false,
+	shouldCamelize = false
 ): Generator<Code> {
 	if (code.startsWith('[') && code.endsWith(']') && astHolder) {
 		yield* generateInterpolation(options, ctx, code, astHolder, offset, features, '', '');
@@ -30,7 +30,7 @@ export function* generateObjectProperty(
 				features,
 				`"`,
 				...generateCamelized(code, offset, combineLastMapping),
-				`"`,
+				`"`
 			);
 		}
 	}

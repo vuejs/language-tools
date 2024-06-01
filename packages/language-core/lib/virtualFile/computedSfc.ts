@@ -31,7 +31,7 @@ export function computedSfc(
 				get errors() { return compiledAst()?.errors; },
 				get warnings() { return compiledAst()?.warnings; },
 			});
-		},
+		}
 	);
 	const script = computedNullableSfcBlock(
 		'script',
@@ -57,7 +57,7 @@ export function computedSfc(
 				get srcOffset() { return srcOffset(); },
 				get ast() { return ast(); },
 			});
-		},
+		}
 	);
 	const scriptSetupOriginal = computedNullableSfcBlock(
 		'scriptSetup',
@@ -86,7 +86,7 @@ export function computedSfc(
 				get genericOffset() { return genericOffset(); },
 				get ast() { return ast(); },
 			});
-		},
+		}
 	);
 	const hasScript = computed(() => !!parsed()?.descriptor.script);
 	const hasScriptSetup = computed(() => !!parsed()?.descriptor.scriptSetup);
@@ -252,7 +252,7 @@ export function computedSfc(
 		name: string,
 		defaultLang: string,
 		block: () => T | undefined,
-		resolve: (block: () => T, base: SfcBlock) => K,
+		resolve: (block: () => T, base: SfcBlock) => K
 	) {
 		const hasBlock = computed(() => !!block());
 		return computed<K | undefined>(() => {
@@ -267,7 +267,7 @@ export function computedSfc(
 	function computedSfcBlock<T extends SFCBlock>(
 		name: string,
 		defaultLang: string,
-		block: () => T,
+		block: () => T
 	) {
 		const lang = computed(() => block().lang ?? defaultLang);
 		const attrs = computed(() => block().attrs); // TODO: computed it

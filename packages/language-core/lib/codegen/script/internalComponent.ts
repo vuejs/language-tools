@@ -9,7 +9,7 @@ import { getTemplateUsageVars } from './template';
 export function* generateInternalComponent(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	templateCodegenCtx: TemplateCodegenContext,
+	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
 	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		yield `const __VLS_internalComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;

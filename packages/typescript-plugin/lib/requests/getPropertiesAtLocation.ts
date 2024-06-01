@@ -5,7 +5,7 @@ import type { RequestContext } from './types';
 export function getPropertiesAtLocation(
 	this: RequestContext,
 	fileName: string,
-	position: number,
+	position: number
 ) {
 	const { languageService, language, typescript: ts, isTsPlugin, getFileId } = this;
 

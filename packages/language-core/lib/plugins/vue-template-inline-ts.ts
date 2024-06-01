@@ -84,7 +84,7 @@ const plugin: VueLanguagePlugin = ctx => {
 						addFormatCodes(
 							prop.arg.content,
 							prop.arg.loc.start.offset,
-							formatBrackets.normal,
+							formatBrackets.normal
 						);
 					}
 					if (
@@ -98,14 +98,14 @@ const plugin: VueLanguagePlugin = ctx => {
 								prop.exp.loc.start.offset,
 								isCompoundExpression(ctx.modules.typescript, ast)
 									? formatBrackets.event
-									: formatBrackets.normal,
+									: formatBrackets.normal
 							);
 						}
 						else {
 							addFormatCodes(
 								prop.exp.content,
 								prop.exp.loc.start.offset,
-								formatBrackets.normal,
+								formatBrackets.normal
 							);
 						}
 					}
@@ -121,7 +121,7 @@ const plugin: VueLanguagePlugin = ctx => {
 						addFormatCodes(
 							branch.condition.content,
 							branch.condition.loc.start.offset,
-							formatBrackets.if,
+							formatBrackets.if
 						);
 					}
 
@@ -139,7 +139,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					addFormatCodes(
 						templateContent.substring(start, end),
 						start,
-						formatBrackets.for,
+						formatBrackets.for
 					);
 				}
 				for (const child of node.children) {
@@ -168,7 +168,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					lines.length <= 1 ? formatBrackets.curly : [
 						lines[0].trim() === '' ? '(' : formatBrackets.curly[0],
 						lines[lines.length - 1].trim() === '' ? ');' : formatBrackets.curly[1],
-					],
+					]
 				);
 			}
 		}

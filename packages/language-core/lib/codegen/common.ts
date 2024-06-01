@@ -45,7 +45,7 @@ export function collectVars(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
-	result: string[],
+	result: string[]
 ) {
 	if (ts.isIdentifier(node)) {
 		result.push(getNodeText(ts, node, ast));

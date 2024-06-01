@@ -11,7 +11,7 @@ export async function convertTagName(
 	context: LanguageServiceContext,
 	uri: URI,
 	casing: TagNameCasing,
-	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client') | undefined,
+	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client') | undefined
 ) {
 
 	const sourceFile = context.language.scripts.get(uri);
@@ -59,7 +59,7 @@ export async function convertAttrName(
 	context: LanguageServiceContext,
 	uri: URI,
 	casing: AttrNameCasing,
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client'),
+	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client')
 ) {
 
 	const sourceFile = context.language.scripts.get(uri);
@@ -127,7 +127,7 @@ export async function getNameCasing(context: LanguageServiceContext, uri: URI) {
 
 export async function detect(
 	context: LanguageServiceContext,
-	uri: URI,
+	uri: URI
 ): Promise<{
 	tag: TagNameCasing[],
 	attr: AttrNameCasing[],

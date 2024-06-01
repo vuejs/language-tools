@@ -36,7 +36,7 @@ export function run() {
 					() => '',
 					() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
 					options.options,
-					vueOptions,
+					vueOptions
 				);
 				return [vueLanguagePlugin];
 			}
@@ -44,7 +44,7 @@ export function run() {
 				runExtensions = allExtensions;
 				throw extensionsChangedException;
 			}
-		},
+		}
 	);
 
 	try {

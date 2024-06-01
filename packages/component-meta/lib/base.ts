@@ -24,7 +24,7 @@ export function createCheckerByJsonConfigBase(
 	ts: typeof import('typescript'),
 	rootDir: string,
 	json: any,
-	checkerOptions: MetaCheckerOptions = {},
+	checkerOptions: MetaCheckerOptions = {}
 ) {
 	rootDir = rootDir.replace(windowsPathReg, '/');
 	return createCheckerWorker(
@@ -40,7 +40,7 @@ export function createCheckerByJsonConfigBase(
 export function createCheckerBase(
 	ts: typeof import('typescript'),
 	tsconfig: string,
-	checkerOptions: MetaCheckerOptions = {},
+	checkerOptions: MetaCheckerOptions = {}
 ) {
 	tsconfig = tsconfig.replace(windowsPathReg, '/');
 	return createCheckerWorker(
@@ -49,7 +49,7 @@ export function createCheckerBase(
 		checkerOptions,
 		path.dirname(tsconfig),
 		tsconfig + '.global.vue',
-		tsconfig,
+		tsconfig
 	);
 }
 
@@ -59,7 +59,7 @@ function createCheckerWorker(
 	checkerOptions: MetaCheckerOptions,
 	rootPath: string,
 	globalComponentName: string,
-	configFileName: string | undefined,
+	configFileName: string | undefined
 ) {
 
 	/**
@@ -118,7 +118,7 @@ export function baseCreate(
 	projectHost: TypeScriptProjectHost,
 	vueCompilerOptions: vue.VueCompilerOptions,
 	checkerOptions: MetaCheckerOptions,
-	globalComponentName: string,
+	globalComponentName: string
 ) {
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
@@ -155,7 +155,7 @@ export function baseCreate(
 		() => projectHost.getProjectVersion?.() ?? '',
 		() => projectHost.getScriptFileNames(),
 		projectHost.getCompilationSettings(),
-		vueCompilerOptions,
+		vueCompilerOptions
 	);
 	const language = vue.createLanguage(
 		[
@@ -175,7 +175,7 @@ export function baseCreate(
 			else {
 				language.scripts.delete(fileName);
 			}
-		},
+		}
 	);
 	language.typescript = {
 		sys: ts.sys,
@@ -341,7 +341,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 				snapshot.getText(0, snapshot.getLength()),
 				exportName,
 				printer,
-				ts,
+				ts
 			) : {};
 
 			for (const [propName, defaultExp] of Object.entries({
@@ -433,7 +433,7 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 	function _getExports(
 		program: ts.Program,
 		typeChecker: ts.TypeChecker,
-		componentPath: string,
+		componentPath: string
 	) {
 
 		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
@@ -479,7 +479,7 @@ function createSchemaResolvers(
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
 	ts: typeof import('typescript'),
-	language: vue.Language<string>,
+	language: vue.Language<string>
 ) {
 	const visited = new Set<ts.Type>();
 
@@ -712,7 +712,7 @@ function readVueComponentDefaultProps(
 	vueSourceFile: vue.VueVirtualCode,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript'),
-	vueCompilerOptions: vue.VueCompilerOptions,
+	vueCompilerOptions: vue.VueCompilerOptions
 ) {
 	let result: Record<string, { default?: string, required?: boolean; }> = {};
 
@@ -790,7 +790,7 @@ function readTsComponentDefaultProps(
 	tsFileText: string,
 	exportName: string,
 	printer: ts.Printer | undefined,
-	ts: typeof import('typescript'),
+	ts: typeof import('typescript')
 ) {
 
 	const ast = ts.createSourceFile('/tmp.' + lang, tsFileText, ts.ScriptTarget.Latest);
@@ -869,7 +869,7 @@ function resolvePropsOption(
 	ast: ts.SourceFile,
 	props: ts.ObjectLiteralExpression,
 	printer: ts.Printer | undefined,
-	ts: typeof import('typescript'),
+	ts: typeof import('typescript')
 ) {
 
 	const result: Record<string, { default?: string, required?: boolean; }> = {};
@@ -902,7 +902,7 @@ function resolvePropsOption(
 
 function resolveDefaultOptionExpression(
 	_default: ts.Expression,
-	ts: typeof import('typescript'),
+	ts: typeof import('typescript')
 ) {
 	if (ts.isArrowFunction(_default)) {
 		if (ts.isBlock(_default.body)) {

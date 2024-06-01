@@ -70,7 +70,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 					slot.tagRange[0],
 					slot.tagRange[1],
 					ctx.codeFeatures.withoutHighlightAndCompletion,
-					`default`,
+					`default`
 				);
 			}
 			yield `?(_: typeof ${slot.varName}): any,${newLine}`;

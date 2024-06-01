@@ -9,7 +9,7 @@ export function* generateComponent(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges,
+	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	if (options.sfc.script && options.scriptRanges?.exportDefault && options.scriptRanges.exportDefault.expression.start !== options.scriptRanges.exportDefault.args.start) {
 		// use defineComponent() from user space code if it exist
@@ -54,7 +54,7 @@ export function* generateComponentSetupReturns(scriptSetupRanges: ScriptSetupRan
 
 export function* generateScriptOptions(
 	script: NonNullable<Sfc['script']>,
-	scriptRanges: ScriptRanges,
+	scriptRanges: ScriptRanges
 ): Generator<Code> {
 	if (scriptRanges.exportDefault?.args) {
 		yield generateSfcBlockSection(script, scriptRanges.exportDefault.args.start + 1, scriptRanges.exportDefault.args.end - 1, codeFeatures.all);
@@ -65,7 +65,7 @@ export function* generateScriptSetupOptions(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges,
+	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	const propsCodegens: (() => Generator<Code>)[] = [];
 

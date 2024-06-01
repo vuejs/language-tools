@@ -39,7 +39,7 @@ export function getVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
 	getVueOptions: (env: LanguageServiceEnvironment) => VueCompilerOptions,
 	getTsPluginClient = createDefaultGetTsPluginClient(ts),
-	hybridMode = false,
+	hybridMode = false
 ): LanguageServicePlugin[] {
 	const plugins: LanguageServicePlugin[] = [];
 	if (!hybridMode) {
@@ -62,7 +62,7 @@ export function getVueLanguageServicePlugins(
 							vueOptions,
 							ts,
 							false,
-							fileName => context.language.typescript?.asScriptId(fileName) ?? URI.file(fileName),
+							fileName => context.language.typescript?.asScriptId(fileName) ?? URI.file(fileName)
 						);
 						return created;
 					},
@@ -74,7 +74,7 @@ export function getVueLanguageServicePlugins(
 	else {
 		plugins.push(
 			createTypeScriptSyntacticPlugin(ts),
-			createTypeScriptDocCommentTemplatePlugin(ts),
+			createTypeScriptDocCommentTemplatePlugin(ts)
 		);
 	}
 	plugins.push(
@@ -99,7 +99,7 @@ export function getVueLanguageServicePlugins(
 				'vue': 'html',
 				'postcss': 'scss',
 			},
-		}),
+		})
 	);
 	return plugins;
 }

@@ -35,7 +35,7 @@ function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
 						() => info.languageServiceHost.getProjectVersion?.() ?? '',
 						() => externalFiles.get(info.project) ?? [],
 						info.languageServiceHost.getCompilationSettings(),
-						vueOptions,
+						vueOptions
 					);
 					const extensions = languagePlugin.typescript?.extraFileExtensions.map(ext => '.' + ext.extension) ?? [];
 					const getScriptSnapshot = info.languageServiceHost.getScriptSnapshot.bind(info.languageServiceHost);

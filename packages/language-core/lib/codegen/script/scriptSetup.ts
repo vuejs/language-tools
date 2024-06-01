@@ -8,7 +8,7 @@ import { generateTemplate } from './template';
 
 export function generateScriptSetupImports(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges,
+	scriptSetupRanges: ScriptSetupRanges
 ): Code {
 	return [
 		scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + newLine,
@@ -22,7 +22,7 @@ export function* generateScriptSetup(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges,
+	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	const definePropMirrors = new Map<string, number>();
 
@@ -101,7 +101,7 @@ function* generateSetupFunction(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
 	syntax: 'return' | 'export default' | undefined,
-	definePropMirrors: Map<string, number>,
+	definePropMirrors: Map<string, number>
 ): Generator<Code> {
 	const definePropProposalA = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
 	const definePropProposalB = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
@@ -268,7 +268,7 @@ function* generateComponentProps(
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
-	definePropMirrors: Map<string, number>,
+	definePropMirrors: Map<string, number>
 ): Generator<Code> {
 	yield `const __VLS_fnComponent = `
 		+ `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
@@ -381,7 +381,7 @@ function* generateComponentProps(
 function* generateModelEmits(
 	options: ScriptCodegenOptions,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges,
+	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	yield `const __VLS_modelEmitsType = `;
 

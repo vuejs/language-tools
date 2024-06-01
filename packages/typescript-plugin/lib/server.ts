@@ -30,7 +30,7 @@ let started = false;
 export function startNamedPipeServer(
 	ts: typeof import('typescript'),
 	serverKind: ts.server.ProjectKind,
-	currentDirectory: string,
+	currentDirectory: string
 ) {
 	if (started) {
 		return;

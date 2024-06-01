@@ -11,7 +11,7 @@ export function* generateVFor(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ForNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined,
+	componentCtxVar: string | undefined
 ): Generator<Code> {
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
@@ -39,7 +39,7 @@ export function* generateVFor(
 			source.loc.start.offset,
 			ctx.codeFeatures.all,
 			'(',
-			')',
+			')'
 		);
 		yield `!)`; // #3102
 	}
@@ -74,7 +74,7 @@ export function* generateVFor(
 						prop.value.loc.start.offset,
 						ctx.codeFeatures.all,
 						'(',
-						')',
+						')'
 					);
 					yield endOfLine;
 				}

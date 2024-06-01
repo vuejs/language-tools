@@ -30,7 +30,7 @@ export const getLanguagePlugins: GetLanguagePlugin<URI> = async ({ serviceEnv, c
 		() => projectHost?.getProjectVersion?.() ?? '',
 		() => projectHost?.getScriptFileNames() ?? [],
 		commandLine?.options ?? {},
-		vueOptions,
+		vueOptions
 	);
 	if (!hybridMode) {
 		const extensions = [
@@ -90,7 +90,7 @@ connection.onInitialize(params => {
 			tsdk.typescript,
 			env => envToVueOptions.get(env)!,
 			getTsPluginClient,
-			hybridMode,
+			hybridMode
 		),
 		hybridMode
 			? createHybridModeProject(tsdk.typescript.sys, getLanguagePlugins)
@@ -103,7 +103,7 @@ connection.onInitialize(params => {
 			})),
 		{
 			pullModelDiagnostics: hybridMode,
-		},
+		}
 	);
 	if (hybridMode) {
 		// provided by tsserver + @vue/typescript-plugin
