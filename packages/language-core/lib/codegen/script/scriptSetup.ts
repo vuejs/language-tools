@@ -385,7 +385,7 @@ function* generateModelEmits(
 ): Generator<Code> {
 	yield `const __VLS_modelEmitsType = `;
 
-	if (scriptSetupRanges.defineProp.length) {
+	if (scriptSetupRanges.defineProp.filter(p => p.isModel).length) {
 		yield `(await import('${options.vueCompilerOptions.lib}')).defineEmits<{${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
 			if (!defineProp.isModel) {
