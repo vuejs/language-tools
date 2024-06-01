@@ -383,10 +383,10 @@ function* generateModelEmits(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
-	yield `let __VLS_modelEmitsType!: {}`;
+	yield `const __VLS_modelEmitsType = `;
 
-	if (scriptSetupRanges.defineProp.length) {
-		yield ` & ReturnType<typeof import('${options.vueCompilerOptions.lib}').defineEmits<{${newLine}`;
+	if (scriptSetupRanges.defineProp.filter(p => p.isModel).length) {
+		yield `(await import('${options.vueCompilerOptions.lib}')).defineEmits<{${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
 			if (!defineProp.isModel) {
 				continue;
@@ -406,7 +406,9 @@ function* generateModelEmits(
 			}
 			yield `]${endOfLine}`;
 		}
-		yield `}>>`;
+		yield `}>()`;
+	} else {
+		yield `{}`;
 	}
 	yield endOfLine;
 }
