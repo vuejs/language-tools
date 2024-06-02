@@ -916,7 +916,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\nВ файл `*.vue` могут быть включены дополнительные пользовательские секции для любых специфических нужд проекта, например, секция `<docs>`. Некоторые реальные примеры пользовательских секций:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nОбработка пользовательских секций зависит от инструментария — если вы хотите создать свои собственные интеграции пользовательских секций, обратитесь к разделу [инструментарий SFC](https://ru.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) для более подробной информации.\n"
+        "value": "\nВ файл `*.vue` могут быть включены дополнительные пользовательские секции для любых специфических нужд проекта, например, секция `<docs>`. Некоторые реальные примеры пользовательских секций:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n#i18n-custom-block)\n\nОбработка пользовательских секций зависит от инструментария — если вы хотите создать свои собственные интеграции пользовательских секций, обратитесь к разделу [инструментарий SFC](https://ru.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) для более подробной информации.\n"
       },
       "references": [
         {
