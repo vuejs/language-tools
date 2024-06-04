@@ -115,7 +115,7 @@ function getCurrentHybridModeStatus(report = false) {
 			}
 			return false;
 		}
-		const vscodeTsdkVersion = getVScodeTsdkVersion();
+		const vscodeTsdkVersion = getVSCodeTsdkVersion();
 		const workspaceTsdkVersion = getWorkspaceTsdkVersion();
 		if (
 			(vscodeTsdkVersion && !semver.gte(vscodeTsdkVersion, '5.3.0'))
@@ -155,7 +155,7 @@ function getCurrentHybridModeStatus(report = false) {
 		return config.server.hybridMode;
 	}
 
-	function getVScodeTsdkVersion() {
+	function getVSCodeTsdkVersion() {
 		const nightly = vscode.extensions.getExtension('ms-vscode.vscode-typescript-next');
 		if (nightly) {
 			const libPath = path.join(
