@@ -124,7 +124,7 @@ export function* generateComponent(
 			yield* generatePropertyAccess(options, ctx, componentName);
 			yield ` }: `;
 		}
-		yield `typeof __VLS_resolvedLocalAndGlobalComponents)`;
+		yield `typeof __VLS_resolvedLocalAndGlobalComponents)${newLine}`;
 		yield* generatePropertyAccess(
 			options,
 			ctx,
