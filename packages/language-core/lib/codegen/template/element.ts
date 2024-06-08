@@ -188,6 +188,7 @@ export function* generateComponent(
 		yield `const ${var_originalComponent} = {} as any${endOfLine}`;
 	}
 
+	yield `// @ts-ignore${newLine}`;
 	yield `const ${var_functionalComponent} = __VLS_asFunctionalComponent(${var_originalComponent}, new ${var_originalComponent}({`;
 	yield* generateElementProps(options, ctx, node, props, false);
 	yield `}))${endOfLine}`;
