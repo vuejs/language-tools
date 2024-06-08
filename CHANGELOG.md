@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.21 (2024-06-08)
+
+### But Fixes
+
+- fix(typescript-plugin): TS plugin cause type checking broken in .ts files (#4453)
+
 ## 2.1.0-insiders.12 (2024-06-08)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.12), [爱发电电圈](https://afdian.net/p/596ab3c0256b11ef8a9c52540025c377)
