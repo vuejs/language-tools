@@ -1,6 +1,6 @@
 import type { Disposable, LanguageServiceContext, LanguageServiceEnvironment, LanguageServicePluginInstance } from '@volar/language-service';
 import { VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
-import { camelize, capitalize } from '@vue/shared';
+import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
@@ -500,7 +500,10 @@ export function create(
 									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
 									tagInfos.set(tag, {
 										attrs,
-										props,
+										props: props.filter(prop =>
+											!prop.startsWith('ref_')
+											&& !hyphenate(prop).startsWith('on-vnode-')
+										),
 										events,
 									});
 									version++;
