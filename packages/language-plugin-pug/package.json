@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-plugin-pug",
-	"version": "2.0.19",
+	"version": "2.0.20",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -13,7 +13,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "latest",
-		"@vue/language-core": "2.0.19"
+		"@vue/language-core": "2.0.20"
 	},
 	"dependencies": {
 		"@volar/source-map": "~2.3.0-alpha.14",
