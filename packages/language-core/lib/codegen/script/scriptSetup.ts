@@ -6,16 +6,17 @@ import type { ScriptCodegenContext } from './context';
 import { ScriptCodegenOptions, codeFeatures } from './index';
 import { generateTemplate } from './template';
 
-export function generateScriptSetupImports(
+export function* generateScriptSetupImports(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
-): Code {
-	return [
-		scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)) + newLine,
+): Generator<Code> {
+	yield [
+		scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
 		'scriptSetup',
 		0,
 		codeFeatures.all,
 	];
+	yield newLine;
 }
 
 export function* generateScriptSetup(

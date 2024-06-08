@@ -61,7 +61,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 		const isExportRawObject = exportDefault
 			&& options.sfc.script.content[exportDefault.expression.start] === '{';
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
-			yield generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
+			yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 			if (exportDefault) {
 				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
@@ -120,7 +120,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 		}
 	}
 	else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
-		yield generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
+		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 	yield endOfLine;
