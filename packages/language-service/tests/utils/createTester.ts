@@ -1,4 +1,4 @@
-import { createLanguage, createLanguageService, createUriMap } from '@volar/language-service';
+import { FileMap, createLanguage, createLanguageService, createUriMap } from '@volar/language-service';
 import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 import * as path from 'path';
 import * as ts from 'typescript';
@@ -27,11 +27,16 @@ function createTester(rootUri: URI) {
 	const vueLanguagePlugin = createVueLanguagePlugin(
 		ts,
 		uriToFileName,
-		ts.sys.useCaseSensitiveFileNames,
 		() => projectHost.getProjectVersion?.() ?? '',
-		() => projectHost.getScriptFileNames(),
+		fileName => {
+			const fileMap = new FileMap(ts.sys.useCaseSensitiveFileNames);
+			for (const vueFileName of projectHost.getScriptFileNames()) {
+				fileMap.set(vueFileName, undefined);
+			}
+			return fileMap.has(fileName);
+		},
 		parsedCommandLine.options,
-		parsedCommandLine.vueOptions,
+		parsedCommandLine.vueOptions
 	);
 	const vueServicePlugins = getVueLanguageServicePlugins(ts, () => parsedCommandLine.vueOptions);
 	const defaultVSCodeSettings: any = {
@@ -60,7 +65,7 @@ function createTester(rootUri: URI) {
 			else {
 				language.scripts.delete(uri);
 			}
-		},
+		}
 	);
 	language.typescript = {
 		configFileName: realTsConfig,

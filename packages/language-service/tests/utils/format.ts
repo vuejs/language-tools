@@ -8,9 +8,8 @@ const resolvedVueOptions = resolveVueCompilerOptions({});
 const vueLanguagePlugin = createVueLanguagePlugin<URI>(
 	ts,
 	() => '',
-	false,
 	() => '',
-	() => [],
+	() => false,
 	{},
 	resolvedVueOptions,
 );
