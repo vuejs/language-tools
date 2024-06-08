@@ -647,7 +647,7 @@ export function create(
 				};
 			}
 
-			async function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument) {
+			function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument) {
 
 				const replacement = getReplacement(completionList, sourceDocument);
 

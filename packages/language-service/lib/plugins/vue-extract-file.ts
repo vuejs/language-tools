@@ -27,7 +27,7 @@ export function create(
 		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			return {
-				async provideCodeActions(document, range, _context) {
+				provideCodeActions(document, range, _context) {
 
 					const startOffset = document.offsetAt(range.start);
 					const endOffset = document.offsetAt(range.end);

@@ -25,7 +25,6 @@
 		"@tsslint/cli": "latest",
 		"@tsslint/config": "latest",
 		"@volar/language-service": "~2.3.0-alpha.15",
-		"@volar/tsslint-config": "latest",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"

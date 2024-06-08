@@ -1,11 +1,11 @@
-import type { LanguageServiceContext, VirtualCode } from '@volar/language-service';
+import type { LanguageServiceContext, ProviderResult, VirtualCode } from '@volar/language-service';
 import type { CompilerDOM } from '@vue/language-core';
 import * as vue from '@vue/language-core';
 import { VueVirtualCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import { computed } from 'computeds';
 import type * as vscode from 'vscode-languageserver-protocol';
-import { AttrNameCasing, TagNameCasing } from '../types';
 import type { URI } from 'vscode-uri';
+import { AttrNameCasing, TagNameCasing } from '../types';
 
 export async function convertTagName(
 	context: LanguageServiceContext,
@@ -170,7 +170,7 @@ export async function detect(
 
 		return result;
 	}
-	async function getTagNameCase(file: VueVirtualCode): Promise<TagNameCasing[]> {
+	function getTagNameCase(file: VueVirtualCode): ProviderResult<TagNameCasing[]> {
 
 		const result = new Set<TagNameCasing>();
 

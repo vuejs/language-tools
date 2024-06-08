@@ -21,7 +21,7 @@ type CreateLanguageClient = (
 	outputChannel: vscode.OutputChannel,
 ) => lsp.BaseLanguageClient;
 
-export async function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
+export function activate(context: vscode.ExtensionContext, createLc: CreateLanguageClient) {
 
 	const stopCheck = vscode.window.onDidChangeActiveTextEditor(tryActivate);
 	tryActivate();

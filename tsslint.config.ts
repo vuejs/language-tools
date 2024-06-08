@@ -1,8 +1,7 @@
 import { defineConfig } from '@tsslint/config';
-import VolarLintConfig from '@volar/tsslint-config';
 
 export default defineConfig({
-	...VolarLintConfig,
+	...(await import('https://raw.githubusercontent.com/volarjs/volar.js/master/tsslint.config.ts')).default,
 	plugins: [
 		({ tsconfig }) => ({
 			resolveRules(rules) {
