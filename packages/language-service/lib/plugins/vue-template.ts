@@ -738,7 +738,17 @@ export function create(
 						const [componentName] = itemId.args;
 
 						if (componentName !== '*') {
-							item.sortText = '\u0000' + (item.sortText ?? item.label);
+							if (
+								item.label === 'class'
+								|| item.label === 'ref'
+								|| item.label.endsWith(':class')
+								|| item.label.endsWith(':ref')
+							) {
+								item.sortText = '\u0000' + (item.sortText ?? item.label);
+							}
+							else {
+								item.sortText = '\u0000\u0000' + (item.sortText ?? item.label);
+							}
 						}
 
 						if (itemId.type === 'componentProp') {
