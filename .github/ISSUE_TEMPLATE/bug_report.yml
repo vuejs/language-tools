@@ -27,15 +27,19 @@ body:
       label: VSCode version
     validations:
       required: true
+  - type: input
+    id: vue-version
+    attributes:
+      label: Vue version
+    validations:
+      required: true
   - type: textarea
     id: system-info
     attributes:
       label: System Info
-      description: Output of `npx envinfo --system --npmPackages vue --binaries --browsers`
+      description: Output of `npx envinfo --system --binaries --browsers`
       render: shell
       placeholder: System, Binaries, Browsers
-    validations:
-      required: true
   - type: textarea
     id: steps-to-reproduce
     attributes:
