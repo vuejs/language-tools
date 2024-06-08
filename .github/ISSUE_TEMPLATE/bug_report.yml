@@ -27,7 +27,7 @@ body:
       label: VSCode version
     validations:
       required: true
- - type: textarea
+  - type: textarea
     id: system-info
     attributes:
       label: System Info
