@@ -441,9 +441,7 @@ async function getInitializationOptions(
 	hybridMode: boolean
 ): Promise<VueInitializationOptions> {
 	return {
-		typescript: { tsdk: (await lsp.getTsdk(context)).tsdk },
-		vue: {
-			hybridMode,
-		},
+		typescript: { tsdk: (await lsp.getTsdk(context))!.tsdk },
+		vue: { hybridMode },
 	};
 };

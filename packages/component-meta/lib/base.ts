@@ -680,7 +680,7 @@ function createSchemaResolvers(
 		if (sourceFile?.generated) {
 			const script = sourceFile.generated.languagePlugin.typescript?.getServiceScript(sourceFile.generated.root);
 			if (script) {
-				for (const [source, [_, map]] of language.maps.forEach(script.code)) {
+				for (const [source, _, map] of language.maps.forEach(script.code)) {
 					for (const [start] of map.getSourceOffsets(declaration.getStart())) {
 						for (const [end] of map.getSourceOffsets(declaration.getEnd())) {
 							return {

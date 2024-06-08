@@ -1,4 +1,4 @@
-import type { LanguagePlugin, LanguageServer, Project, ProviderResult } from '@volar/language-server';
+import type { LanguagePlugin, LanguageServer, LanguageServerProject, ProviderResult } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createLanguage } from '@vue/language-core';
 import { Disposable, LanguageService, LanguageServiceEnvironment, createLanguageService, createUriMap } from '@vue/language-service';
@@ -20,15 +20,19 @@ export type GetLanguagePlugin<T> = (params: {
 export function createHybridModeProject(
 	sys: ts.System,
 	getLanguagePlugins: GetLanguagePlugin<URI>
-): Project {
+): LanguageServerProject {
 	let initialized = false;
 	let simpleLs: Promise<LanguageService> | undefined;
 	let serviceEnv: LanguageServiceEnvironment | undefined;
+	let server: LanguageServer;
 
 	const tsconfigProjects = createUriMap<Promise<LanguageService>>(sys.useCaseSensitiveFileNames);
 
 	return {
-		async getLanguageService(server, uri) {
+		setup(_server) {
+			server = _server;
+		},
+		async getLanguageService(uri) {
 			if (!initialized) {
 				initialized = true;
 				initialize(server);

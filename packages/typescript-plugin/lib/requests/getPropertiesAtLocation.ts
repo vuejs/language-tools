@@ -17,7 +17,7 @@ export function getPropertiesAtLocation(
 			return;
 		}
 		let mapped = false;
-		for (const [_1, [_2, map]] of language.maps.forEach(virtualScript.code)) {
+		for (const [_1, _2, map] of language.maps.forEach(virtualScript.code)) {
 			for (const [position2, mapping] of map.getGeneratedOffsets(position)) {
 				if (isCompletionEnabled(mapping.data)) {
 					position = position2;

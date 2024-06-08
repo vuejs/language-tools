@@ -86,12 +86,6 @@ connection.onInitialize(params => {
 
 	const result = server.initialize(
 		params,
-		getVueLanguageServicePlugins(
-			tsdk.typescript,
-			env => envToVueOptions.get(env)!,
-			getTsPluginClient,
-			hybridMode
-		),
 		hybridMode
 			? createHybridModeProject(tsdk.typescript.sys, getLanguagePlugins)
 			: createTypeScriptProject(tsdk.typescript, tsdk.diagnosticMessages, (env, ctx) => getLanguagePlugins({
@@ -101,6 +95,12 @@ connection.onInitialize(params => {
 				sys: ctx.sys,
 				asFileName: ctx.asFileName,
 			})),
+		getVueLanguageServicePlugins(
+			tsdk.typescript,
+			env => envToVueOptions.get(env)!,
+			getTsPluginClient,
+			hybridMode
+		),
 		{
 			pullModelDiagnostics: hybridMode,
 		}
@@ -156,5 +156,5 @@ connection.onRequest(GetConnectedNamedPipeServerRequest.type, async fileName => 
 });
 
 async function getService(uri: URI) {
-	return (await server.project.getLanguageService(server, uri));
+	return (await server.project.getLanguageService(uri));
 }
