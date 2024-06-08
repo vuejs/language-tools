@@ -33,7 +33,7 @@ body:
       label: Vue version
     validations:
       required: true
-- type: input
+  - type: input
     id: ts-version
     attributes:
       label: TypeScript version
