@@ -11,9 +11,16 @@ const plugin = createLanguageServicePlugin(
 		const languagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
 			id => id,
-			info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false,
 			() => info.languageServiceHost.getProjectVersion?.() ?? '',
-			() => externalFiles.get(info.project) ?? [],
+			info.project.projectKind === ts.server.ProjectKind.Inferred
+				? () => true
+				: fileName => {
+					const fileMap = new vue.FileMap(info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false);
+					for (const vueFileName of externalFiles.get(info.project) ?? []) {
+						fileMap.set(vueFileName, undefined);
+					}
+					return fileMap.has(fileName);
+				},
 			info.languageServiceHost.getCompilationSettings(),
 			vueOptions
 		);

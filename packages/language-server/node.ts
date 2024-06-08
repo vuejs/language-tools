@@ -1,6 +1,6 @@
 import type { Connection } from '@volar/language-server';
 import { createConnection, createServer, createTypeScriptProject, loadTsdkByPath } from '@volar/language-server/node';
-import { ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
+import { FileMap, ParsedCommandLine, VueCompilerOptions, createParsedCommandLine, createVueLanguagePlugin, parse, resolveVueCompilerOptions } from '@vue/language-core';
 import { LanguageServiceEnvironment, convertAttrName, convertTagName, createDefaultGetTsPluginClient, detect, getVueLanguageServicePlugins } from '@vue/language-service';
 import * as tsPluginClient from '@vue/typescript-plugin/lib/client';
 import { searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
@@ -26,9 +26,14 @@ export const getLanguagePlugins: GetLanguagePlugin<URI> = async ({ serviceEnv, c
 	const vueLanguagePlugin = createVueLanguagePlugin(
 		tsdk.typescript,
 		asFileName,
-		sys?.useCaseSensitiveFileNames ?? false,
 		() => projectHost?.getProjectVersion?.() ?? '',
-		() => projectHost?.getScriptFileNames() ?? [],
+		fileName => {
+			const fileMap = new FileMap(sys?.useCaseSensitiveFileNames ?? false);
+			for (const vueFileName of projectHost?.getScriptFileNames() ?? []) {
+				fileMap.set(vueFileName, undefined);
+			}
+			return fileMap.has(fileName);
+		},
 		commandLine?.options ?? {},
 		vueOptions
 	);

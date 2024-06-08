@@ -51,20 +51,14 @@ function getFileRegistryKey(
 	return JSON.stringify(values);
 }
 
-export interface _Plugin<T> extends LanguagePlugin<T, VueVirtualCode> {
-	getCanonicalFileName: (fileName: string) => string;
-	pluginContext: Parameters<VueLanguagePlugin>[0];
-}
-
 export function createVueLanguagePlugin<T>(
 	ts: typeof import('typescript'),
 	asFileName: (scriptId: T) => string,
-	useCaseSensitiveFileNames: boolean,
 	getProjectVersion: () => string,
-	getScriptFileNames: () => string[] | Set<string>,
+	isRootFile: (fileName: string) => boolean,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions
-): _Plugin<T> {
+): LanguagePlugin<T, VueVirtualCode> {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
 			'@vue/compiler-dom': vueCompilerOptions.target < 3
@@ -83,16 +77,10 @@ export function createVueLanguagePlugin<T>(
 	const vueSfcPlugin = useVueFilePlugin(pluginContext);
 	const vitePressSfcPlugin = useMdFilePlugin(pluginContext);
 	const petiteVueSfcPlugin = useHtmlFilePlugin(pluginContext);
-	const getCanonicalFileName = useCaseSensitiveFileNames
-		? (fileName: string) => fileName
-		: (fileName: string) => fileName.toLowerCase();
 
-	let canonicalRootFileNames = new Set<string>();
 	let canonicalRootFileNamesVersion: string | undefined;
 
 	return {
-		getCanonicalFileName,
-		pluginContext,
 		getLanguageId(scriptId) {
 			if (vueCompilerOptions.extensions.some(ext => asFileName(scriptId).endsWith(ext))) {
 				return 'vue';
@@ -107,13 +95,11 @@ export function createVueLanguagePlugin<T>(
 		createVirtualCode(scriptId, languageId, snapshot) {
 			if (languageId === 'vue' || languageId === 'markdown' || languageId === 'html') {
 				const fileName = asFileName(scriptId);
-				const projectVersion = getProjectVersion();
-				if (projectVersion !== canonicalRootFileNamesVersion) {
-					canonicalRootFileNames = new Set([...getScriptFileNames()].map(getCanonicalFileName));
-					canonicalRootFileNamesVersion = projectVersion;
-				}
-				if (!pluginContext.globalTypesHolder && canonicalRootFileNames.has(getCanonicalFileName(fileName))) {
-					pluginContext.globalTypesHolder = fileName;
+				if (!pluginContext.globalTypesHolder && getProjectVersion() !== canonicalRootFileNamesVersion) {
+					canonicalRootFileNamesVersion = getProjectVersion();
+					if (isRootFile(fileName)) {
+						pluginContext.globalTypesHolder = fileName;
+					}
 				}
 				const fileRegistry = getFileRegistry(pluginContext.globalTypesHolder === fileName);
 				const code = fileRegistry.get(fileName);

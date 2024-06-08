@@ -32,9 +32,14 @@ export function run() {
 				const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 					ts,
 					id => id,
-					options.host?.useCaseSensitiveFileNames?.() ?? false,
 					() => '',
-					() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
+					fileName => {
+						const fileMap = new vue.FileMap(options.host?.useCaseSensitiveFileNames?.() ?? false);
+						for (const vueFileName of options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/'))) {
+							fileMap.set(vueFileName, undefined);
+						}
+						return fileMap.has(fileName);
+					},
 					options.options,
 					vueOptions
 				);
