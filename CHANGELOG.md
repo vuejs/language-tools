@@ -1,5 +1,35 @@
 # Changelog
 
+## 2.0.20 (2024-06-08)
+
+### Features
+
+- feat(language-service): add localization support for zh-hk/zh-tw
+- feat(vscode): enable syntax highlighting of cue code blocks in MDX (#4425) - Thanks @remcohaszing
+
+### But Fixes
+
+- fix(vscode): fix "as"/"instanceof" expressions syntax highlight (#4412)
+- fix(language-core): `ForIteratorExpression`'s `returns` property may be undefined (#4418) - Thanks @so1ve
+- fix(language-core): use defineEmits calls instead of type infer (#4430) - Thanks @zhiyuanzmj
+- fix(tsc): log catched errors to console (#4451) - Thanks @mik3ybark3r
+- fix(typescript-plugin): TS not working in template when tsconfig missing (#4452)
+- fix(language-core): use type infer instead of await import (#4436) - Thanks @zhiyuanzmj
+- feat(language-core): ignore type error for new functional component (#4445) - Thanks @zhiyuanzmj
+- fix(language-core): ignore type error for possible component name (#4446) - Thanks @zhiyuanzmj
+- fix(language-service): filter internal props in template completion
+- fix(language-service): sort component props in template completion
+- fix(language-core): duplicate completion appears at the beginning of script setup block
+
+### Other Changes
+
+- Upgrade Volar from `v2.2.4` to `v2.3.0-alpha.14`.
+  - LSP server performance improved
+  - Language server now responds with the exact server capabilities for initialization requests
+  - Auto insertion requests can now exit early in the language client
+- The following extensions have been added to Hybrid Mode’s compatibility whitelist:
+  - `kimuson.ts-type-expand` - Thanks @zcf0508
+
 ## 2.1.0-insiders.11 (2024-05-16)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.11), [爱发电电圈](https://afdian.net/p/c69dc31e134211ef823d5254001e7c00)
