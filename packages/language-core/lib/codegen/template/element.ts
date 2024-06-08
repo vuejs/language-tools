@@ -117,13 +117,14 @@ export function* generateComponent(
 		yield endOfLine;
 	}
 	else if (!isComponentTag) {
+		yield `// @ts-ignore${newLine}`;
 		yield `const ${var_originalComponent} = ({} as `;
 		for (const componentName of possibleOriginalNames) {
 			yield `'${componentName}' extends keyof typeof __VLS_ctx ? { '${getCanonicalComponentName(node.tag)}': typeof __VLS_ctx`;
 			yield* generatePropertyAccess(options, ctx, componentName);
 			yield ` }: `;
 		}
-		yield `typeof __VLS_resolvedLocalAndGlobalComponents)`;
+		yield `typeof __VLS_resolvedLocalAndGlobalComponents)${newLine}`;
 		yield* generatePropertyAccess(
 			options,
 			ctx,
