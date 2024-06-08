@@ -1,0 +1,65 @@
+name: "\U0001F41E Bug report"
+description: Create a report to help us improve
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Before You Start...**
+
+        Please understand that VSCode extensions and language tooling are very complex to debug.
+        A bug can depend on the version of the extension, the version of your VSCode, the version
+        of Vue, and your operating systems. In many cases, a simple description or a screenshot
+        is just **not enough** for us to reproduce the issues you are running into.
+
+        To help us fix your issue as fast as possible, you can help us by providing as much
+        information as possible. This is an open source project, and we hope as a user you can
+        think of yourself as part of the community and help the project improve by investing
+        a bit more time into your bug reports. Thank you!
+  - type: input
+    id: version
+    attributes:
+      label: Vue - Official extension or vue-tsc version
+    validations:
+      required: true
+  - type: input
+    id: vscode-version
+    attributes:
+      label: VSCode version
+    validations:
+      required: true
+ - type: textarea
+    id: system-info
+    attributes:
+      label: System Info
+      description: Output of `npx envinfo --system --npmPackages vue --binaries --browsers`
+      render: shell
+      placeholder: System, Binaries, Browsers
+    validations:
+      required: true
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: |
+        What do we need to do in order to make the bug happen?
+        Clear and concise reproduction instructions are important for us to be able to triage
+        your issue in a timely manner. Note that you can use
+        [Markdown](https://guides.github.com/features/mastering-markdown/) to format lists and code.
+        We also strongly recommend providing actual code via a reproduction repo.
+      placeholder: Steps to reproduce
+    validations:
+      required: true
+  - type: input
+    id: reproduction-link
+    attributes:
+      label: Link to minimal reproduction
+      description: |
+        If possible, please provide a GitHub repo containing a minimal reproduction
+        that can demonstrate the exact issue with the above dependency versions.
+        While not required, we strongly recommend providing one and we appreciate any effort put into it.
+      placeholder: Reproduction Link
+  - type: textarea
+    id: additional-comments
+    attributes:
+      label: Any additional comments?
+      description: e.g. some background/context of how you ran into this bug.
