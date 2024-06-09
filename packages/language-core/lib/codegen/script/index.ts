@@ -7,7 +7,7 @@ import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import type { TemplateCodegenContext } from '../template/context';
 import { createScriptCodegenContext } from './context';
 import { generateGlobalTypes } from './globalTypes';
-import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
+import { generateDefineProp, generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';
 
@@ -62,6 +62,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 			&& options.sfc.script.content[exportDefault.expression.start] === '{';
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 			yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
+			yield* generateDefineProp(options, options.sfc.scriptSetup);
 			if (exportDefault) {
 				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
@@ -121,6 +122,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 	}
 	else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
+		yield* generateDefineProp(options, options.sfc.scriptSetup);
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 	yield endOfLine;
