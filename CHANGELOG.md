@@ -12,7 +12,7 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 ## 2.0.21 (2024-06-08)
 
-### But Fixes
+### Bug Fixes
 
 - fix(typescript-plugin): TS plugin cause type checking broken in .ts files (#4453)
 
@@ -33,7 +33,7 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 - feat(language-service): add localization support for zh-hk/zh-tw
 - feat(vscode): enable syntax highlighting of cue code blocks in MDX (#4425) - Thanks @remcohaszing
 
-### But Fixes
+### Bug Fixes
 
 - fix(vscode): fix "as"/"instanceof" expressions syntax highlight (#4412)
 - fix(language-core): `ForIteratorExpression`'s `returns` property may be undefined (#4418) - Thanks @so1ve

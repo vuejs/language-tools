@@ -1,7 +1,10 @@
 import { defineConfig } from '@tsslint/config';
+import { getDefaultRules as getDefaultVolarRules } from 'https://raw.githubusercontent.com/volarjs/volar.js/master/tsslint.config.ts';
 
 export default defineConfig({
-	...(await import('https://raw.githubusercontent.com/volarjs/volar.js/master/tsslint.config.ts')).default,
+	rules: {
+		...getDefaultVolarRules(),
+	},
 	plugins: [
 		({ tsconfig }) => ({
 			resolveRules(rules) {
@@ -11,5 +14,5 @@ export default defineConfig({
 				return rules;
 			},
 		}),
-	]
+	],
 });
