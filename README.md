@@ -119,6 +119,12 @@ sources = cmp.config.sources({
     ---@param entry cmp.Entry
     ---@param ctx cmp.Context
     entry_filter = function(entry, ctx)
+      -- Check if the buffer type is 'vue'
+      local filetype = vim.bo.filetype
+      if filetype ~= 'vue' then
+        return true
+      end
+
       local cursor_before_line = ctx.cursor_before_line
       -- For events
       if cursor_before_line:sub(-1) == '@' then
