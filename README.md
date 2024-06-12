@@ -107,6 +107,32 @@ lspconfig.volar.setup {
 },
 ```
 
+### nvim-cmp integration
+
+Inspired by [this tweet](https://twitter.com/youyuxi/status/1799701740000035136) by Evan You, in neovim you can achieve the same behavior with [nvim-cmp](https://github.com/hrsh7th/nvim-cmp).
+
+```lua
+-- To see more information :h cmp-config.sources
+sources = cmp.config.sources({
+  {
+    name = 'nvim_lsp',
+    ---@param entry cmp.Entry
+    ---@param ctx cmp.Context
+    entry_filter = function(entry, ctx)
+      local cursor_before_line = ctx.cursor_before_line
+      -- For events
+      if cursor_before_line:sub(-1) == '@' then
+        return entry.completion_item.label:match('^@')
+      -- For props also exclude events with `:on-` prefix
+      elseif cursor_before_line:sub(-1) == ':' then
+        return entry.completion_item.label:match('^:') and not entry.completion_item.label:match('^:on-')
+      else
+        return true
+      end
+  },
+})
+
+```
 </details>
 
 [mattn/vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
