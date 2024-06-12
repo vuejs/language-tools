@@ -132,15 +132,12 @@ sources = cmp.config.sources({
       -- local ts_utils = require('nvim-treesitter.ts_utils')
       -- local function is_in_start_tag()
       --   local node = ts_utils.get_node_at_cursor()
-      --   while node do
-      --     if node:type() == 'start_tag' then
-      --       return true
-      --     end
-      --     node = node:parent()
+      --   if not node then
+      --    return false
       --   end
-      --   return false
+      --   return node:type() == 'start_tag'
       -- end
-      --
+
       -- -- If not in start tag, return true
       -- if not is_in_start_tag() then
       --   return true
