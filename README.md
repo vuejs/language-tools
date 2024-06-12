@@ -120,8 +120,7 @@ sources = cmp.config.sources({
     ---@param ctx cmp.Context
     entry_filter = function(entry, ctx)
       -- Check if the buffer type is 'vue'
-      local filetype = vim.bo.filetype
-      if filetype ~= 'vue' then
+      if ctx.filetype ~= 'vue' then
         return true
       end
 
