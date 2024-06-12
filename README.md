@@ -124,6 +124,28 @@ sources = cmp.config.sources({
         return true
       end
 
+      -- If you want to be more accurate and have nvim-treesitter installed, you can check if the cursor is in a start tag
+      -- This would be helpful for the following code
+      -- type ExampleType = '@a' | '@b' | '@c' | '1@c'
+      -- const v: ExampleType = ''
+
+      -- local ts_utils = require('nvim-treesitter.ts_utils')
+      -- local function is_in_start_tag()
+      --   local node = ts_utils.get_node_at_cursor()
+      --   while node do
+      --     if node:type() == 'start_tag' then
+      --       return true
+      --     end
+      --     node = node:parent()
+      --   end
+      --   return false
+      -- end
+      --
+      -- -- If not in start tag, return true
+      -- if not is_in_start_tag() then
+      --   return true
+      -- end
+
       local cursor_before_line = ctx.cursor_before_line
       -- For events
       if cursor_before_line:sub(-1) == '@' then
