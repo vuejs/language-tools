@@ -124,25 +124,6 @@ sources = cmp.config.sources({
         return true
       end
 
-      -- If you want to be more accurate and have nvim-treesitter installed, you can check if the cursor is in a start tag
-      -- This would be helpful for the following code
-      -- type ExampleType = '@a' | '@b' | '@c' | '1@c'
-      -- const v: ExampleType = ''
-
-      -- local ts_utils = require('nvim-treesitter.ts_utils')
-      -- local function is_in_start_tag()
-      --   local node = ts_utils.get_node_at_cursor()
-      --   if not node then
-      --    return false
-      --   end
-      --   return node:type() == 'start_tag'
-      -- end
-
-      -- -- If not in start tag, return true
-      -- if not is_in_start_tag() then
-      --   return true
-      -- end
-
       local cursor_before_line = ctx.cursor_before_line
       -- For events
       if cursor_before_line:sub(-1) == '@' then
@@ -156,6 +137,43 @@ sources = cmp.config.sources({
   },
 })
 
+```
+The regex performance is quite good since it only checks the beginning characters. However, this approach can still lead to issues such as a string union.
+
+For example, with this TypeScript type:
+
+```ts
+type EmailAddresses = 'a@b.c' | 'd@e.f'
+
+```
+You will lose the items in nvim-cmp if you only type `@`. To address this, you can add Treesitter to check if the cursor is in a starting tag.
+
+To use a local buffer variable to cache the result of the Treesitter is recommended to avoid performance issues as the function will call for every single entry. Here is an example of how to do it:
+
+```lua
+entry_filter = function(entry, ctx)
+  -- Use a buffer-local variable to cache the result of the Treesitter check
+  local bufnr = ctx.bufnr
+  local cached_is_in_start_tag = vim.b[bufnr]._vue_ts_cached_is_in_start_tag
+  if cached_is_in_start_tag == nil then
+    vim.b[bufnr]._vue_ts_cached_is_in_start_tag = is_in_start_tag()
+  end
+  -- If not in start tag, return true
+  if vim.b[bufnr]._vue_ts_cached_is_in_start_tag == false then
+    return true
+  end
+  -- rest of the code
+end
+
+```
+
+In your cmp configuration, register an event to clear the cache when the menu is closed:
+
+```lua
+cmp.event:on('menu_closed', function()
+  local bufnr = vim.api.nvim_get_current_buf()
+  vim.b[bufnr]._vue_ts_cached_is_in_start_tag = nil
+end)
 ```
 </details>
 
