@@ -1,11 +1,14 @@
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as vue from '@vue/language-core';
+import { createCliOptions } from './options';
 
 const windowsPathReg = /\\/g;
 
 export function run() {
 
 	let runExtensions = ['.vue'];
+
+	const customOptions = createCliOptions();
 
 	const extensionsChangedException = new Error('extensions changed');
 	const main = () => runTsc(
@@ -14,7 +17,7 @@ export function run() {
 		(ts, options) => {
 			const { configFilePath } = options.options;
 			const vueOptions = typeof configFilePath === 'string'
-				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
+				? vue.createParsedCommandLine(ts, ts.sys, (customOptions?.project || configFilePath).replace(windowsPathReg, '/')).vueOptions
 				: vue.resolveVueCompilerOptions({});
 			const allExtensions = [
 				...vueOptions.extensions,
