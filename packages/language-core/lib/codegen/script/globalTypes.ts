@@ -3,19 +3,16 @@ import { getSlotsPropertyName } from '../../utils/shared';
 
 export function generateGlobalTypes(vueCompilerOptions: VueCompilerOptions) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}`;
+	const globalComponents = `Pick<typeof import('${vueCompilerOptions.lib}'), 'BaseTransition' | 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`;
 	return `export const __VLS_globalTypesStart = {};
 declare global {
 	// @ts-ignore
 	type __VLS_IntrinsicElements = __VLS_PickNotAny<import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<globalThis.JSX.IntrinsicElements, Record<string, any>>>;
 	// @ts-ignore
 	type __VLS_Element = __VLS_PickNotAny<import('${vueCompilerOptions.lib}/jsx-runtime').JSX.Element, globalThis.JSX.Element>;
+	type __VLS_OmitRecord<T> = T extends object ? { [K in keyof T as {} extends Record<K, 1> ? never : K]: T[K] } : never;
 	// @ts-ignore
-	type __VLS_GlobalComponents = ${[
-			`__VLS_PickNotAny<import('${vueCompilerOptions.lib}').GlobalComponents, {}>`,
-			`__VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>`,
-			`__VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>`,
-			`Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`
-		].join(' & ')};
+	type __VLS_GlobalComponents = ${vueCompilerOptions.strictTemplates ? globalComponents : `__VLS_PickNotAny<__VLS_OmitRecord<import('${vueCompilerOptions.lib}').GlobalComponents>, ${globalComponents}>`}
 	type __VLS_BuiltInPublicProps =
 		__VLS_PickNotAny<import('${vueCompilerOptions.lib}').VNodeProps, {}>
 		& __VLS_PickNotAny<import('${vueCompilerOptions.lib}').AllowedComponentProps, {}>
