@@ -10,9 +10,8 @@ declare global {
 	type __VLS_IntrinsicElements = __VLS_PickNotAny<import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<globalThis.JSX.IntrinsicElements, Record<string, any>>>;
 	// @ts-ignore
 	type __VLS_Element = __VLS_PickNotAny<import('${vueCompilerOptions.lib}/jsx-runtime').JSX.Element, globalThis.JSX.Element>;
-	type __VLS_OmitRecord<T> = T extends object ? { [K in keyof T as {} extends Record<K, 1> ? never : K]: T[K] } : never;
 	// @ts-ignore
-	type __VLS_GlobalComponents = ${vueCompilerOptions.strictTemplates ? globalComponents : `__VLS_PickNotAny<__VLS_OmitRecord<import('${vueCompilerOptions.lib}').GlobalComponents>, ${globalComponents}>`}
+	type __VLS_GlobalComponents = ${vueCompilerOptions.strictTemplates ? globalComponents : `__VLS_PickNotAny<import('${vueCompilerOptions.lib}').GlobalComponents, ${globalComponents}>`}
 	type __VLS_BuiltInPublicProps =
 		__VLS_PickNotAny<import('${vueCompilerOptions.lib}').VNodeProps, {}>
 		& __VLS_PickNotAny<import('${vueCompilerOptions.lib}').AllowedComponentProps, {}>
