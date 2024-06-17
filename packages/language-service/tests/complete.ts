@@ -36,7 +36,7 @@ for (const dirName of testDirs) {
 
 				it(`${location} => ${action.label}`, async () => {
 
-					let complete = await tester.languageService.doComplete(
+					let complete = await tester.languageService.getCompletionItems(
 						uri,
 						position,
 						{ triggerKind: 1 satisfies typeof vscode.CompletionTriggerKind.Invoked },
@@ -44,7 +44,7 @@ for (const dirName of testDirs) {
 
 					if (!complete.items.length) {
 						// fix #2511 test case, it's a bug of TS 5.3
-						complete = await tester.languageService.doComplete(
+						complete = await tester.languageService.getCompletionItems(
 							uri,
 							position,
 							{ triggerKind: 1 satisfies typeof vscode.CompletionTriggerKind.Invoked },
@@ -55,7 +55,7 @@ for (const dirName of testDirs) {
 
 					expect(item).toBeDefined();
 
-					item = await tester.languageService.doCompletionResolve(item);
+					item = await tester.languageService.resolveCompletionItem(item);
 
 					const expectedFileText = outputFiles[file];
 

@@ -49,8 +49,8 @@ export function getVueLanguageServicePlugins(
 			if (plugin.name === 'typescript-semantic') {
 				plugins[i] = {
 					...plugin,
-					create(context, api) {
-						const created = plugin.create(context, api);
+					create(context) {
+						const created = plugin.create(context);
 						if (!context.language.typescript) {
 							return created;
 						}

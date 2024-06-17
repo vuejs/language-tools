@@ -1,7 +1,9 @@
-import { VirtualCode, buildMappings, toString } from '@volar/language-core';
+import type { VirtualCode } from '@volar/language-core';
 import { computed } from 'computeds';
+import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code, Sfc, SfcBlock, VueLanguagePlugin } from '../types';
+import { buildMappings } from '../utils/buildMappings';
 import { VueEmbeddedCode } from './embeddedFile';
 
 export function computedFiles(

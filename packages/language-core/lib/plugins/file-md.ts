@@ -1,6 +1,8 @@
-import { buildMappings, Segment, SourceMap, toString } from '@volar/language-core';
+import { SourceMap, toString } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
+import type { Segment } from 'muggle-string';
 import type { VueLanguagePlugin } from '../types';
+import { buildMappings } from '../utils/buildMappings';
 import { parse } from '../utils/parseSfc';
 
 const codeblockReg = /(`{3,})[\s\S]+?\1/g;

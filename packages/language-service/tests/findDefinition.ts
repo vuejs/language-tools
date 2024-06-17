@@ -34,7 +34,7 @@ for (const dirName of testDirs) {
 
 				it(`${filePath}:${position.line + 1}:${position.character + 1} => ${targetFile}:${action.targeRange.start}`, async () => {
 
-					const locations = await tester.languageService.findDefinition(
+					const locations = await tester.languageService.getDefinition(
 						uri,
 						position,
 					);

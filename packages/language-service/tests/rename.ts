@@ -36,7 +36,7 @@ for (const dirName of testDirs) {
 
 					it(`${location} => ${action.newName}`, async () => {
 
-						const edit = await tester.languageService.doRename(
+						const edit = await tester.languageService.getRenameEdits(
 							uri,
 							position,
 							action.newName,
