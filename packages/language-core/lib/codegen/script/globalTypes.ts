@@ -3,15 +3,20 @@ import { getSlotsPropertyName } from '../../utils/shared';
 
 export function generateGlobalTypes(vueCompilerOptions: VueCompilerOptions) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}`;
-	const globalComponents = `Pick<typeof import('${vueCompilerOptions.lib}'), 'BaseTransition' | 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`;
 	return `export const __VLS_globalTypesStart = {};
 declare global {
 	// @ts-ignore
 	type __VLS_IntrinsicElements = __VLS_PickNotAny<import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<globalThis.JSX.IntrinsicElements, Record<string, any>>>;
 	// @ts-ignore
 	type __VLS_Element = __VLS_PickNotAny<import('${vueCompilerOptions.lib}/jsx-runtime').JSX.Element, globalThis.JSX.Element>;
+	type __VLS_GlobalComponentNames = 'BaseTransition' | 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'
+	type __VLS_OmitGlobalComponents<T> = T extends object ? { [K in keyof T as {} extends Record<K, 1> ? never : K extends __VLS_GlobalComponentNames ? never : K]: T[K] } : never;
 	// @ts-ignore
-	type __VLS_GlobalComponents = ${vueCompilerOptions.strictTemplates ? globalComponents : `__VLS_PickNotAny<import('${vueCompilerOptions.lib}').GlobalComponents, ${globalComponents}>`}
+	type __VLS_GlobalComponents = __VLS_OmitGlobalComponents<${[
+			`__VLS_PickNotAny<import('${vueCompilerOptions.lib}').GlobalComponents, {}>`,
+			`__VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>`,
+			`__VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>`,
+		].join(' & ')}> & Pick<typeof import('${vueCompilerOptions.lib}'), __VLS_GlobalComponentNames>;
 	type __VLS_BuiltInPublicProps =
 		__VLS_PickNotAny<import('${vueCompilerOptions.lib}').VNodeProps, {}>
 		& __VLS_PickNotAny<import('${vueCompilerOptions.lib}').AllowedComponentProps, {}>
