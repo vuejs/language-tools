@@ -1490,7 +1490,7 @@ For more details, see [#2620](https://github.com/vuejs/language-tools/issues/262
 
 ## 1.0.8 (2022/10/15)
 
-- feat: support for twoslash queries (https://github.com/vuejs/language-tools-plugins/issues/9)
+- feat: support for twoslash queries (https://github.com/volarjs/services/issues/9)
 - feat: support `generic` attribute auto-complete
 - feat: add `volar.vueserver.noProjectReferences` setting for support jump to source files from reference projects ([#1344](https://github.com/vuejs/language-tools/issues/1344))
 - fix: SFC parse failed if script content including `<script>` ([#1982](https://github.com/vuejs/language-tools/issues/1982))
@@ -2260,7 +2260,7 @@ you need to install [vite-plugin-vue-component-preview](https://github.com/johns
 - fix: false positive error with withDefaults + "strictNullChecks": false ([#1187](https://github.com/vuejs/language-tools/issues/1187))
 
 **Breaking changes**
-- sass formatter is moved to external plugin: https://github.com/vuejs/language-tools-plugins/tree/master/packages/sass-formatter
+- sass formatter is moved to external plugin: https://github.com/volarjs/services/tree/master/packages/sass-formatter
 
 ## 0.34.6 (2022/4/12)
 
