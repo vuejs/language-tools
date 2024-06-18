@@ -13,6 +13,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateTemplateChild } from './templateChild';
+import { generateObjectKey } from './objectKey';
 
 const colonReg = /:/g;
 
@@ -419,50 +420,32 @@ function* generateComponentSlot(
 		ctx.hasSlotElements.add(currentComponent);
 	}
 	const slotBlockVars: string[] = [];
-	let hasProps = false;
-	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-
-		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
-		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
-		hasProps = true;
-		if (!slotDir.exp.content.includes(':')) {
-			yield `const [`;
-			yield [
-				slotDir.exp.content,
-				'template',
-				slotDir.exp.loc.start.offset,
-				ctx.codeFeatures.all,
-			];
-			yield `] = __VLS_getSlotParams(`;
-		}
-		else {
-			yield `const `;
-			yield [
-				slotDir.exp.content,
-				'template',
-				slotDir.exp.loc.start.offset,
-				ctx.codeFeatures.all,
-			];
-			yield ` = __VLS_getSlotParam(`;
-		}
-	}
 	yield* wrapWith(
 		(slotDir.arg ?? slotDir).loc.start.offset,
 		(slotDir.arg ?? slotDir).loc.end.offset,
 		ctx.codeFeatures.verification,
-		`(${componentCtxVar}.slots!)`,
+		`const {`,
 		...(
 			slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content
-				? generatePropertyAccess(
-					options,
-					ctx,
-					slotDir.arg.loc.source,
-					slotDir.arg.loc.start.offset,
-					slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
-					slotDir.arg.loc
-				)
+				? [
+					...generateObjectKey(
+						options,
+						ctx,
+						slotDir.arg.loc.source,
+						slotDir.arg.loc.start.offset,
+						slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
+						slotDir.arg.loc,
+					),
+					':',
+					...wrapWith(
+						slotDir.arg.loc.start.offset,
+						slotDir.arg.loc.end.offset,
+						ctx.codeFeatures.withoutHighlightAndCompletion,
+						`__VLS_thisSlot`
+					),
+				]
 				: [
-					`.`,
+					`default: `,
 					...wrapWith(
 						slotDir.loc.start.offset,
 						slotDir.loc.start.offset + (
@@ -473,15 +456,38 @@ function* generateComponentSlot(
 									: 0
 						),
 						ctx.codeFeatures.withoutHighlightAndCompletion,
-						`default`
-					)
+						`__VLS_thisSlot`
+					),
 				]
-		)
+		),
+		`} = ${componentCtxVar}.slots!`,
 	);
-	if (hasProps) {
-		yield `)`;
-	}
 	yield endOfLine;
+	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
+		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
+		if (!slotDir.exp.content.includes(':')) {
+			yield `const [`;
+			yield [
+				slotDir.exp.content,
+				'template',
+				slotDir.exp.loc.start.offset,
+				ctx.codeFeatures.all,
+			];
+			yield `]`;
+		}
+		else {
+			yield `const `;
+			yield [
+				slotDir.exp.content,
+				'template',
+				slotDir.exp.loc.start.offset,
+				ctx.codeFeatures.all,
+			];
+		}
+		yield ` = __VLS_getSlotParams(__VLS_thisSlot)`;
+		yield endOfLine;
+	}
 
 	for (const varName of slotBlockVars) {
 		ctx.addLocalVariable(varName);
