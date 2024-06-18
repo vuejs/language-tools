@@ -68,7 +68,7 @@ export function create(
 			},
 			inlayHintProvider: {},
 			hoverProvider: true,
-			diagnosticProvider: true,
+			diagnosticProvider: {},
 			semanticTokensProvider: {
 				legend: {
 					tokenTypes: ['class'],
@@ -76,9 +76,9 @@ export function create(
 				},
 			}
 		},
-		create(context, api): LanguageServicePluginInstance {
+		create(context): LanguageServicePluginInstance {
 			const tsPluginClient = getTsPluginClient?.(context);
-			const baseServiceInstance = baseService.create(context, api);
+			const baseServiceInstance = baseService.create(context);
 			const vueCompilerOptions = getVueOptions(context.env);
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');

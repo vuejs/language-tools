@@ -47,8 +47,8 @@ export function create(): LanguageServicePlugin {
 	return {
 		...htmlPlugin,
 		name: 'vue-sfc',
-		create(context, api): LanguageServicePluginInstance<Provide> {
-			const htmlPluginInstance = htmlPlugin.create(context, api);
+		create(context): LanguageServicePluginInstance<Provide> {
+			const htmlPluginInstance = htmlPlugin.create(context);
 
 			return {
 
