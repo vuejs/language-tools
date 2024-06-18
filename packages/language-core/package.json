@@ -12,11 +12,12 @@
 		"directory": "packages/language-core"
 	},
 	"dependencies": {
-		"@volar/language-core": "~2.3.0-alpha.15",
+		"@volar/language-core": "~2.3.0",
 		"@vue/compiler-dom": "^3.4.0",
 		"@vue/shared": "^3.4.0",
 		"computeds": "^0.0.1",
 		"minimatch": "^9.0.3",
+		"muggle-string": "^0.4.1",
 		"path-browserify": "^1.0.1",
 		"vue-template-compiler": "^2.7.14"
 	},

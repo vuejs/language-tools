@@ -33,7 +33,7 @@ for (const dirName of testDirs) {
 
 				it(`${location} => count: ${action.count}`, async () => {
 
-					const locations = await tester.languageService.findReferences(
+					const locations = await tester.languageService.getReferences(
 						uri,
 						position,
 						{ includeDeclaration: true },

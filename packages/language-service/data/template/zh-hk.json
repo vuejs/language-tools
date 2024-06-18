@@ -253,7 +253,7 @@
       "name": "Suspense",
       "description": {
         "kind": "markdown",
-        "value": "\n用于协调对组件树中嵌套的异步依赖的处理。\n\n- **Props**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n  }\n  ```\n\n- **事件**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **详细信息**\n\n  `<Suspense>` 接受两个插槽：`#default` 和 `#fallback`。它将在内存中渲染默认插槽的同时展示后备插槽内容。\n\n  如果在渲染时遇到异步依赖项 ([异步组件](https://zh-hk.vuejs.org/guide/components/async.html)和具有 [`async setup()`](https://zh-hk.vuejs.org/guide/built-ins/suspense.html#async-setup) 的组件)，它将等到所有异步依赖项解析完成时再显示默认插槽。\n\n- **参考**[指南 - Suspense](https://zh-hk.vuejs.org/guide/built-ins/suspense.html)\n"
+        "value": "\n用于协调对组件树中嵌套的异步依赖的处理。\n\n- **Props**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n    suspensible?: boolean\n  }\n  ```\n\n- **事件**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **详细信息**\n\n  `<Suspense>` 接受两个插槽：`#default` 和 `#fallback`。它将在内存中渲染默认插槽的同时展示后备插槽内容。\n\n  如果在渲染时遇到异步依赖项 ([异步组件](https://zh-hk.vuejs.org/guide/components/async.html)和具有 [`async setup()`](https://zh-hk.vuejs.org/guide/built-ins/suspense.html#async-setup) 的组件)，它将等到所有异步依赖项解析完成时再显示默认插槽。\n\n  通過將 Suspense 設置為 `suspensible`，所有異步依賴處理將由父 Suspense 處理。參見[實現細節](https://github.com/vuejs/core/pull/673)\n\n- **参考**[指南 - Suspense](https://zh-hk.vuejs.org/guide/built-ins/suspense.html)\n"
       },
       "attributes": [],
       "references": [
@@ -1236,7 +1236,7 @@
       "name": "v-once",
       "description": {
         "kind": "markdown",
-        "value": "\n仅渲染元素和组件一次，并跳过之后的更新。\n\n- **无需传入**\n\n- **详细信息**\n\n  在随后的重新渲染，元素/组件及其所有子项将被当作静态内容并跳过渲染。这可以用来优化更新时的性能。\n\n  ```html\n  <!-- 单个元素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 带有子元素的元素 -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- 组件 -->\n  <MyComponent v-once :comment=\"msg\" />\n  <!-- `v-for` 指令 -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  从 3.2 起，你也可以搭配 [`v-memo`](#v-memo) 的无效条件来缓存部分模板。\n\n- **参考**\n  - [数据绑定语法 - 插值](https://zh-hk.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
+        "value": "\n仅渲染元素和组件一次，并跳过之后的更新。\n\n- **无需传入**\n\n- **详细信息**\n\n  在随后的重新渲染，元素/组件及其所有子项将被当作静态内容并跳过渲染。这可以用来优化更新时的性能。\n\n  ```html\n  <!-- 单个元素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 带有子元素的元素 -->\n  <div v-once>\n    <h1>Comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- 组件 -->\n  <MyComponent v-once :comment=\"msg\" />\n  <!-- `v-for` 指令 -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  从 3.2 起，你也可以搭配 [`v-memo`](#v-memo) 的无效条件来缓存部分模板。\n\n- **参考**\n  - [数据绑定语法 - 插值](https://zh-hk.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
       },
       "references": [
         {

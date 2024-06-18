@@ -131,7 +131,7 @@ connection.onRequest(ParseSFCRequest.type, params => {
 
 connection.onRequest(DetectNameCasingRequest.type, async params => {
 	const uri = URI.parse(params.textDocument.uri);
-	const languageService = await getService(uri);
+	const languageService = await server.project.getLanguageService(uri);
 	if (languageService) {
 		return await detect(languageService.context, uri);
 	}
@@ -139,7 +139,7 @@ connection.onRequest(DetectNameCasingRequest.type, async params => {
 
 connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 	const uri = URI.parse(params.textDocument.uri);
-	const languageService = await getService(uri);
+	const languageService = await server.project.getLanguageService(uri);
 	if (languageService) {
 		return await convertTagName(languageService.context, uri, params.casing, getTsPluginClient(languageService.context));
 	}
@@ -147,7 +147,7 @@ connection.onRequest(GetConvertTagCasingEditsRequest.type, async params => {
 
 connection.onRequest(GetConvertAttrCasingEditsRequest.type, async params => {
 	const uri = URI.parse(params.textDocument.uri);
-	const languageService = await getService(uri);
+	const languageService = await server.project.getLanguageService(uri);
 	if (languageService) {
 		return await convertAttrName(languageService.context, uri, params.casing, getTsPluginClient(languageService.context));
 	}
@@ -159,7 +159,3 @@ connection.onRequest(GetConnectedNamedPipeServerRequest.type, async fileName => 
 		return server;
 	}
 });
-
-async function getService(uri: URI) {
-	return (await server.project.getLanguageService(uri));
-}
