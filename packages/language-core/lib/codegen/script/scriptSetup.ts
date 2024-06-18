@@ -404,7 +404,7 @@ function* generateModelEmits(
 export function* generateDefineProp(
 	options: ScriptCodegenOptions,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>
-) {
+): Generator<Code> {
 	const definePropProposalA = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
 	const definePropProposalB = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
