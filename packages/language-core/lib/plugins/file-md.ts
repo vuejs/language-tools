@@ -1,6 +1,6 @@
-import { SourceMap, toString } from '@volar/language-core';
+import { SourceMap } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
-import type { Segment } from 'muggle-string';
+import { Segment, toString } from 'muggle-string';
 import type { VueLanguagePlugin } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 import { parse } from '../utils/parseSfc';
