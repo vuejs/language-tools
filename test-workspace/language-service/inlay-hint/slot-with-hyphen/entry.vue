@@ -9,7 +9,7 @@ const t = 'a-b'
     <template #a-b="s"></template>
     <template #ab="s"></template>
     <template #c-d="s"></template>
-		<!--       ^inlayHint: "Slot<any>" -->
+    <!--       ^inlayHint: "Slot<any>" -->
     <template #cd="s"></template>
 		<template #[t]="s"></template>
   </Comp>
