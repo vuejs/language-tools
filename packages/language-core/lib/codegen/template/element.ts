@@ -436,13 +436,7 @@ function* generateComponentSlot(
 						slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
 						slotDir.arg.loc,
 					),
-					':',
-					...wrapWith(
-						slotDir.arg.loc.start.offset,
-						slotDir.arg.loc.end.offset,
-						ctx.codeFeatures.withoutHighlightAndCompletion,
-						`__VLS_thisSlot`
-					),
+					': __VLS_thisSlot',
 				]
 				: [
 					`default: `,

@@ -19,21 +19,21 @@ export function* generateObjectKey(
 			ctx,
 			code.slice(1, -1),
 			astHolder,
-			offset,
+			offset + 1,
 			features,
 			'',
 			''
 		);
 	}
 	else {
-		yield `"`;
 		yield* wrapWith(
 			offset,
 			offset + code.length,
 			features,
-			code,
+			'"',
+			[code, 'template', offset, features],
+		  `"`,
 		)
-		yield `"`;
 	}
 	yield `]`;
 }
