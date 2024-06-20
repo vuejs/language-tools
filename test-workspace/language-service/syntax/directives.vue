@@ -23,6 +23,7 @@
 	<div :[1]="value"></div>
 	<div v-bind="{ id: someProp, 'other-attr': otherProp }"></div>
 	<div :xlink:special.d="3"></div>
+	<div v-a.c.d="3"></div>
 </template>
 
 <template lang="pug">

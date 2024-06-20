@@ -985,7 +985,7 @@
 			]
 		},
 		"vue-directives-original": {
-			"begin": "(?:(?:(v-[\\w-]+)(:)?)|([:\\.])|(@)|(#))(?:(?:(\\[)([^\\]]*)(\\]))|([\\w-]+))?(?:(\\.)([\\w-]*))*",
+			"begin": "(?:(?:(v-[\\w-]+)(:)?)|([:\\.])|(@)|(#))(?:(?:(\\[)([^\\]]*)(\\]))|([\\w-]+))?",
 			"beginCaptures": {
 				"1": {
 					"name": "entity.other.attribute-name.html.vue"
@@ -1018,12 +1018,6 @@
 				},
 				"9": {
 					"name": "entity.other.attribute-name.html.vue"
-				},
-				"10": {
-					"name": "punctuation.separator.key-value.html.vue"
-				},
-				"11": {
-					"name": "entity.other.attribute-name.html.vue"
 				}
 			},
 			"end": "(?=\\s*[^=\\s])",
@@ -1034,6 +1028,15 @@
 			},
 			"name": "meta.attribute.directive.vue",
 			"patterns": [
+			  {
+					"match": "(\\.)([\\w-]*)",
+					"1": {
+						"name": "punctuation.separator.key-value.html.vue"
+					},
+					"2": {
+						"name": "entity.other.attribute-name.html.vue"
+					}
+				},
 				{
 					"include": "#vue-directives-expression"
 				}
