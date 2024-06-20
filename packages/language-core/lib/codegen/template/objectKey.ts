@@ -1,8 +1,8 @@
 import type { Code, VueCodeInformation } from '../../types';
-import { wrapWith } from '../common';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generateStringLiteralKey } from './stringLiteralKey';
 
 export function* generateObjectKey(
 	options: TemplateCodegenOptions,
@@ -26,14 +26,7 @@ export function* generateObjectKey(
 		);
 	}
 	else {
-		yield* wrapWith(
-			offset,
-			offset + code.length,
-			features,
-			'"',
-			[code, 'template', offset, features],
-		  `"`,
-		)
+		yield* generateStringLiteralKey(code, offset, features)
 	}
 	yield `]`;
 }
