@@ -16,6 +16,14 @@
 	<div :foo="':foo=123'"></div>
 	<div :foo="[{ bar: []}]"></div>
 	<div .prop="[1, 2]"></div>
+	<div v-a:[({a:1}).a]="1"></div>
+	<div v-a:[c]></div>
+	<div v-a:[({a:1}).a].d="[1, 2]"></div>
+	<div @[({a:1}).a].d="[1, 2]" v-d:[2]="3"></div>
+	<div :[1]="value"></div>
+	<div v-bind="{ id: someProp, 'other-attr': otherProp }"></div>
+	<div :xlink:special.d="3"></div>
+	<div v-a.c.d="3"></div>
 </template>
 
 <template lang="pug">
