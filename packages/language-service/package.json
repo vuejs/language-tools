@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-service",
-	"version": "2.0.21",
+	"version": "2.0.22",
 	"license": "MIT",
 	"files": [
 		"data",
@@ -20,9 +20,9 @@
 		"@volar/language-service": "~2.3.1",
 		"@volar/typescript": "~2.3.1",
 		"@vue/compiler-dom": "^3.4.0",
-		"@vue/language-core": "2.0.21",
+		"@vue/language-core": "2.0.22",
 		"@vue/shared": "^3.4.0",
-		"@vue/typescript-plugin": "2.0.21",
+		"@vue/typescript-plugin": "2.0.22",
 		"computeds": "^0.0.1",
 		"path-browserify": "^1.0.1",
 		"volar-service-css": "0.0.52",
