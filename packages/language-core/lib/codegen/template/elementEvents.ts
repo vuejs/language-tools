@@ -41,16 +41,16 @@ export function* generateElementEvents(
 			if (!options.vueCompilerOptions.strictTemplates) {
 				yield `Record<string, unknown> & `;
 			}
-			yield `(`;
-			yield `__VLS_IsAny<__VLS_AsFunctionOrAny<typeof ${propsVar}['${originalPropName}']>> extends false${newLine}`;
+			yield `(${newLine}`;
+			yield `__VLS_IsFunction<typeof ${propsVar}, '${originalPropName}'> extends true${newLine}`;
 			yield `? typeof ${propsVar}${newLine}`;
-			yield `: __VLS_IsAny<typeof ${eventsVar}['${prop.arg.loc.source}']> extends false${newLine}`;
+			yield `: __VLS_IsFunction<typeof ${eventsVar}, '${prop.arg.loc.source}'> extends true${newLine}`;
 			yield `? {${newLine}`;
 			yield `/**__VLS_emit,${emitVar},${prop.arg.loc.source}*/${newLine}`;
 			yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${prop.arg.loc.source}']${newLine}`;
 			yield `}${newLine}`;
 			if (prop.arg.loc.source !== camelize(prop.arg.loc.source)) {
-				yield `: __VLS_IsAny<typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']> extends false${newLine}`;
+				yield `: __VLS_IsFunction<typeof ${eventsVar}, '${camelize(prop.arg.loc.source)}'> extends true${newLine}`;
 				yield `? {${newLine}`;
 				yield `/**__VLS_emit,${emitVar},${camelize(prop.arg.loc.source)}*/${newLine}`;
 				yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']${newLine}`;
