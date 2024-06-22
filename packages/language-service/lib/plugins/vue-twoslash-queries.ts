@@ -39,8 +39,8 @@ export function create(
 					}
 
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
-						for (const [_1, _2, map] of context.language.maps.forEach(virtualCode)) {
-							for (const [sourceOffset] of map.getSourceOffsets(hoverOffset)) {
+						for (const [_sourceScript, map] of context.language.maps.forEach(virtualCode)) {
+							for (const [sourceOffset] of map.toSourceLocation(hoverOffset)) {
 								const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(sourceScript.generated.root.fileName, sourceOffset);
 								if (quickInfo) {
 									inlayHints.push({

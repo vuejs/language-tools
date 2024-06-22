@@ -1,5 +1,6 @@
 name: "\U0001F41E Bug report"
 description: Create a report to help us improve
+labels: ["pending triage"]
 body:
   - type: markdown
     attributes:

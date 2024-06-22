@@ -104,9 +104,6 @@ function* generateSetupFunction(
 	syntax: 'return' | 'export default' | undefined,
 	definePropMirrors: Map<string, number>
 ): Generator<Code> {
-	const definePropProposalA = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
-	const definePropProposalB = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
-
 	if (options.vueCompilerOptions.target >= 3.3) {
 		yield `const { `;
 		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
@@ -115,16 +112,6 @@ function* generateSetupFunction(
 			}
 		}
 		yield `} = await import('${options.vueCompilerOptions.lib}')${endOfLine}`;
-	}
-	if (definePropProposalA) {
-		yield `declare function defineProp<T>(name: string, options: { required: true } & Record<string, unknown>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
-		yield `declare function defineProp<T>(name: string, options: { default: any } & Record<string, unknown>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
-		yield `declare function defineProp<T>(name?: string, options?: any): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
-	}
-	if (definePropProposalB) {
-		yield `declare function defineProp<T>(value: T | (() => T), required?: boolean, rest?: any): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
-		yield `declare function defineProp<T>(value: T | (() => T) | undefined, required: true, rest?: any): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
-		yield `declare function defineProp<T>(value?: T | (() => T), required?: boolean, rest?: any): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
 	}
 
 	ctx.scriptSetupGeneratedOffset = options.getGeneratedLength() - scriptSetupRanges.importSectionEndOffset;
