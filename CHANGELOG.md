@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.1.0-insiders.14 (2024-06-22)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.14), [爱发电电圈](https://afdian.net/p/e05e95a8309d11efbebf52540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.22](https://github.com/vuejs/language-tools/releases/tag/v2.0.22).
+
 ## 2.0.22 (2024-06-22)
 
 ### Bug Fixes
