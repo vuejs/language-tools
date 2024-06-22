@@ -39,7 +39,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								if (prop === 'offset') {
 									const htmlOffset = target.offset;
 									const nums: number[] = [];
-									for (const mapped of map.getSourceOffsets(htmlOffset)) {
+									for (const mapped of map.toSourceLocation(htmlOffset)) {
 										nums.push(mapped[0]);
 									}
 									return Math.max(-1, ...nums);

@@ -1,4 +1,4 @@
-import { SourceMap } from '@volar/language-core';
+import { CodeInformation, Mapping, defaultMapperFactory } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
 import { Segment, toString } from 'muggle-string';
 import type { VueLanguagePlugin } from '../types';
@@ -52,7 +52,7 @@ const plugin: VueLanguagePlugin = () => {
 			codes.push([content, undefined, 0]);
 			codes.push('\n</template>');
 
-			const file2VueSourceMap = new SourceMap(buildMappings(codes));
+			const file2VueSourceMap = defaultMapperFactory(buildMappings(codes) as unknown as Mapping<CodeInformation>[]);
 			const sfc = parse(toString(codes));
 
 			if (sfc.descriptor.template) {
@@ -77,11 +77,11 @@ const plugin: VueLanguagePlugin = () => {
 			function transformRange(block: SFCBlock) {
 				block.loc.start.offset = -1;
 				block.loc.end.offset = -1;
-				for (const [start] of file2VueSourceMap.getSourceOffsets(block.loc.start.offset)) {
+				for (const [start] of file2VueSourceMap.toSourceLocation(block.loc.start.offset)) {
 					block.loc.start.offset = start;
 					break;
 				}
-				for (const [end] of file2VueSourceMap.getSourceOffsets(block.loc.end.offset)) {
+				for (const [end] of file2VueSourceMap.toSourceLocation(block.loc.end.offset)) {
 					block.loc.end.offset = end;
 					break;
 				}
