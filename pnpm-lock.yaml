@@ -295,9 +295,6 @@ importers:
 
   test-workspace:
     devDependencies:
-      typescript:
-        specifier: latest
-        version: 5.5.2
       vue:
         specifier: ^3.4.0
         version: 3.4.29(typescript@5.5.2)
