@@ -19,7 +19,7 @@ declare global {
 	type __VLS_GlobalComponents = import('${vueCompilerOptions.lib}').GlobalComponents
 		& Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;
 	type __VLS_BuiltInPublicProps = ${vueCompilerOptions.target < 3
-			? `JSX.IntrinsicAttributes;`
+			? `globalThis.JSX.IntrinsicAttributes;`
 			: vueCompilerOptions.target <= 3.3
 				? `import('${vueCompilerOptions.lib}').VNodeProps
 					& import('${vueCompilerOptions.lib}').AllowedComponentProps
