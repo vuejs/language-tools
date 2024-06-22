@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.json",
+	"vueCompilerOptions": {
+		"target": 3.3,
+	},
+	"include": [
+		"env.d.ts",
+		"../vue3",
+	],
+}

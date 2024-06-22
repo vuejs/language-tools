@@ -76,7 +76,7 @@ export function createHybridModeProject(
 			return Promise.all([
 				...tsconfigProjects.values(),
 				simpleLs,
-			].filter(notEmpty));
+			].filter(promise => !!promise));
 		},
 		reload() {
 			for (const ls of [
@@ -131,8 +131,4 @@ export function createHybridModeProject(
 			serviceEnv
 		);
 	}
-}
-
-export function notEmpty<T>(value: T | null | undefined): value is T {
-	return value !== null && value !== undefined;
 }

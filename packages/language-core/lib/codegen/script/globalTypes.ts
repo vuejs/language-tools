@@ -4,22 +4,29 @@ import { getSlotsPropertyName } from '../../utils/shared';
 export function generateGlobalTypes(vueCompilerOptions: VueCompilerOptions) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}`;
 	return `export const __VLS_globalTypesStart = {};
+declare module '${vueCompilerOptions.lib}' {
+	interface GlobalComponents {}
+}
 declare global {
-	// @ts-ignore
-	type __VLS_IntrinsicElements = __VLS_PickNotAny<import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements, __VLS_PickNotAny<globalThis.JSX.IntrinsicElements, Record<string, any>>>;
-	// @ts-ignore
-	type __VLS_Element = __VLS_PickNotAny<import('${vueCompilerOptions.lib}/jsx-runtime').JSX.Element, globalThis.JSX.Element>;
-	// @ts-ignore
-	type __VLS_GlobalComponents = ${[
-			`__VLS_PickNotAny<import('${vueCompilerOptions.lib}').GlobalComponents, {}>`,
-			`__VLS_PickNotAny<import('@vue/runtime-core').GlobalComponents, {}>`,
-			`__VLS_PickNotAny<import('@vue/runtime-dom').GlobalComponents, {}>`,
-			`Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`
-		].join(' & ')};
-	type __VLS_BuiltInPublicProps =
-		__VLS_PickNotAny<import('${vueCompilerOptions.lib}').VNodeProps, {}>
-		& __VLS_PickNotAny<import('${vueCompilerOptions.lib}').AllowedComponentProps, {}>
-		& __VLS_PickNotAny<import('${vueCompilerOptions.lib}').ComponentCustomProps, {}>;
+	type __VLS_IntrinsicElements = ${vueCompilerOptions.target >= 3.3
+			? `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements;`
+			: `globalThis.JSX.IntrinsicElements;`
+		}
+	type __VLS_Element = ${vueCompilerOptions.target >= 3.3
+			? `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.Element;`
+			: `globalThis.JSX.Element;`
+		}
+	type __VLS_GlobalComponents = import('${vueCompilerOptions.lib}').GlobalComponents
+		& Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;
+	type __VLS_BuiltInPublicProps = ${vueCompilerOptions.target >= 3.4
+			? `import('${vueCompilerOptions.lib}').PublicProps;`
+			: vueCompilerOptions.target >= 3.0
+				? `import('${vueCompilerOptions.lib}').VNodeProps
+					& import('${vueCompilerOptions.lib}').AllowedComponentProps
+					& import('${vueCompilerOptions.lib}').ComponentCustomProps;`
+				: `globalThis.JSX.IntrinsicAttributes;`
+
+		}
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 
@@ -90,7 +97,13 @@ declare global {
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P :
 		{};
-	type __VLS_AsFunctionOrAny<F> = unknown extends F ? any : ((...args: any) => any) extends F ? F : any;
+	type __VLS_IsFunction<T, K> = K extends keyof T
+		? __VLS_IsAny<T[K]> extends false
+		? unknown extends T[K]
+		? false
+		: true
+		: false
+		: false;
 
 	function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
 
