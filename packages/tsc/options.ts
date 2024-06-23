@@ -25,12 +25,11 @@ export function createCliOptions(): CustomOptions | undefined {
 		if (findIndex !== -1 && !!options[findIndex]) {
 			parsedOptions = {
 				...(parsedOptions ?? {}),
-				[options[findIndex]]: arg[i + 1],
+				[options[findIndex]]: args.slice(ARGS_ACCESS_NUM)[findIndex + 1],
 			};
 			// required to remove custom options and value for executing runTsc()
 			process.argv = process.argv.filter((_, j) => j !== i + ARGS_ACCESS_NUM && j !== i + ARGS_ACCESS_NUM + 1);
 		}
-		args.slice(1);
 	});
 	return parsedOptions;
 };
