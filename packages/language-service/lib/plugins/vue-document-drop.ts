@@ -61,7 +61,7 @@ export function create(
 					}
 
 					const additionalEdit: vscode.WorkspaceEdit = {};
-					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptSetupFormat' : 'scriptFormat'))!;
+					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw'))!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 					const incomingFileName = context.language.typescript?.asFileName(URI.parse(importUri))
 						?? URI.parse(importUri).fsPath.replace(/\\/g, '/');
