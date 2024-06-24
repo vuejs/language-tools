@@ -66,7 +66,7 @@ export function create(): LanguageServicePlugin {
 
 				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
 					if (sourceScript.generated?.root instanceof vue.VueVirtualCode) {
-						if (virtualCode.id === 'scriptFormat' || virtualCode.id === 'scriptSetupFormat') {
+						if (virtualCode.id === 'script_raw' || virtualCode.id === 'scriptsetup_raw') {
 							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}

@@ -24,7 +24,7 @@
 		"@lerna-lite/publish": "latest",
 		"@tsslint/cli": "latest",
 		"@tsslint/config": "latest",
-		"@volar/language-service": "~2.3.1",
+		"@volar/language-service": "~2.3.4",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"

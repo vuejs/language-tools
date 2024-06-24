@@ -36,7 +36,7 @@ const plugin: VueLanguagePlugin = ctx => {
 
 			const _tsx = useTsx(fileName, sfc);
 
-			if (embeddedFile.id.startsWith('script_')) {
+			if (/script_(js|jsx|ts|tsx)/.test(embeddedFile.id)) {
 				const tsx = _tsx.generatedScript();
 				if (tsx) {
 					const content: Code[] = [...tsx.codes];
