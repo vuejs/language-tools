@@ -261,7 +261,7 @@ importers:
   packages/tsc:
     dependencies:
       '@volar/typescript':
-        specifier: ~2.3.1
+        specifier: 2.3.1
         version: 2.3.1
       '@vue/language-core':
         specifier: 2.0.22
