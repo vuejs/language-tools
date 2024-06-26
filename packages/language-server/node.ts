@@ -1,5 +1,9 @@
 import { createConnection, createServer, loadTsdkByPath } from '@volar/language-server/node';
-import { initialize, initializeHybridMode } from './lib/initialize';
+import { createParsedCommandLine, createVueLanguagePlugin, resolveVueCompilerOptions } from '@vue/language-core';
+import { getHybridModeLanguageServicePlugins } from '@vue/language-service';
+import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
+import { createHybridModeProject } from './lib/hybridModeProject';
+import { initialize } from './lib/initialize';
 import type { VueInitializationOptions } from './lib/types';
 
 const connection = createConnection();
@@ -9,12 +13,42 @@ connection.listen();
 
 connection.onInitialize(params => {
 	const options: VueInitializationOptions = params.initializationOptions;
-	const tsdk = loadTsdkByPath(options.typescript.tsdk, params.locale);
-	if (options.vue?.hybridMode) {
-		return initializeHybridMode(server, params, tsdk.typescript);
+	const { typescript: ts, diagnosticMessages } = loadTsdkByPath(options.typescript.tsdk, params.locale);
+	const hybridMode = options.vue?.hybridMode ?? true;
+	if (hybridMode) {
+		return server.initialize(
+			params,
+			createHybridModeProject(
+				({ asFileName, configFileName }) => {
+					const commandLine = configFileName
+						? createParsedCommandLine(ts, ts.sys, configFileName)
+						: {
+							vueOptions: resolveVueCompilerOptions({}),
+							options: ts.getDefaultCompilerOptions(),
+						};
+					return {
+						languagePlugins: [createVueLanguagePlugin(
+							ts,
+							asFileName,
+							() => '',
+							() => false,
+							commandLine.options,
+							commandLine.vueOptions
+						)],
+						setup(language) {
+							language.vue = {
+								compilerOptions: commandLine.vueOptions,
+							};
+						},
+					};
+				}
+			),
+			getHybridModeLanguageServicePlugins(ts, namedPipeClient),
+			{ pullModelDiagnostics: true }
+		);
 	}
 	else {
-		return initialize(server, params, tsdk.typescript, tsdk.diagnosticMessages);
+		return initialize(server, params, ts, diagnosticMessages);
 	}
 });
 

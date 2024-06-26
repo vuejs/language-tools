@@ -1,10 +1,8 @@
 import { LanguageServer } from '@volar/language-server';
 import { createTypeScriptProject } from '@volar/language-server/node';
 import { createParsedCommandLine, createVueLanguagePlugin, FileMap, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
-import { Disposable, getFullLanguageServicePlugins, getHybridModeLanguageServicePlugins, InitializeParams } from '@vue/language-service';
-import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
+import { Disposable, getFullLanguageServicePlugins, InitializeParams } from '@vue/language-service';
 import type * as ts from 'typescript';
-import { createHybridModeProject } from './hybridModeProject';
 
 export function initialize(
 	server: LanguageServer,
@@ -79,41 +77,4 @@ export function initialize(
 			fileWatcher = server.watchFiles(['**/*.{' + [...watchingExtensions].join(',') + '}']);
 		}
 	}
-}
-
-export function initializeHybridMode(
-	server: LanguageServer,
-	params: InitializeParams,
-	ts: typeof import('typescript')
-) {
-	return server.initialize(
-		params,
-		createHybridModeProject(
-			({ asFileName, configFileName }) => {
-				const commandLine = configFileName
-					? createParsedCommandLine(ts, ts.sys, configFileName)
-					: {
-						vueOptions: resolveVueCompilerOptions({}),
-						options: ts.getDefaultCompilerOptions(),
-					};
-				return {
-					languagePlugins: [createVueLanguagePlugin(
-						ts,
-						asFileName,
-						() => '',
-						() => false,
-						commandLine.options,
-						commandLine.vueOptions
-					)],
-					setup(language) {
-						language.vue = {
-							compilerOptions: commandLine.vueOptions,
-						};
-					},
-				};
-			}
-		),
-		getHybridModeLanguageServicePlugins(ts, namedPipeClient),
-		{ pullModelDiagnostics: true }
-	);
 }
