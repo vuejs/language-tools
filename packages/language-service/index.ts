@@ -129,10 +129,7 @@ export function getHybridModeLanguageServicePlugins(
 	const plugins = [
 		createTypeScriptSyntacticPlugin(ts),
 		createTypeScriptDocCommentTemplatePlugin(ts),
-		...getCommonLanguageServicePlugins(
-			ts,
-			() => getTsPluginClient
-		)
+		...getCommonLanguageServicePlugins(ts, () => getTsPluginClient)
 	];
 	for (const plugin of plugins) {
 		// avoid affecting TS plugin
