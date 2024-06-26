@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-server",
-	"version": "2.0.22",
+	"version": "2.0.23-alpha.0",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -17,9 +17,9 @@
 	"dependencies": {
 		"@volar/language-core": "~2.4.0-alpha.0",
 		"@volar/language-server": "~2.4.0-alpha.0",
-		"@vue/language-core": "2.0.22",
-		"@vue/language-service": "2.0.22",
-		"@vue/typescript-plugin": "2.0.22",
+		"@vue/language-core": "2.0.23-alpha.0",
+		"@vue/language-service": "2.0.23-alpha.0",
+		"@vue/typescript-plugin": "2.0.23-alpha.0",
 		"vscode-languageserver-protocol": "^3.17.5",
 		"vscode-uri": "^3.0.8"
 	}
