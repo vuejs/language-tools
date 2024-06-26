@@ -1,16 +1,16 @@
-import type { Disposable, LanguageServiceContext, LanguageServiceEnvironment, LanguageServicePluginInstance } from '@volar/language-service';
-import { VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
+import type { Disposable, LanguageServiceContext, LanguageServicePluginInstance } from '@volar/language-service';
+import { VueCompilerOptions, VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
+import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { getNameCasing } from '../ideFeatures/nameCasing';
-import { AttrNameCasing, LanguageServicePlugin, TagNameCasing, VueCompilerOptions } from '../types';
-import { loadModelModifiersData, loadTemplateData } from './data';
 import { URI, Utils } from 'vscode-uri';
-import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
+import { getNameCasing } from '../ideFeatures/nameCasing';
+import { AttrNameCasing, LanguageServicePlugin, TagNameCasing } from '../types';
+import { loadModelModifiersData, loadTemplateData } from './data';
 
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
@@ -18,10 +18,8 @@ let modelData: html.HTMLDataV1;
 export function create(
 	mode: 'html' | 'pug',
 	ts: typeof import('typescript'),
-	getVueOptions: (env: LanguageServiceEnvironment) => VueCompilerOptions,
 	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
 ): LanguageServicePlugin {
-
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
 	let lastCompletionComponentNames = new Set<string>();
@@ -79,7 +77,6 @@ export function create(
 		create(context): LanguageServicePluginInstance {
 			const tsPluginClient = getTsPluginClient?.(context);
 			const baseServiceInstance = baseService.create(context);
-			const vueCompilerOptions = getVueOptions(context.env);
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');
 			modelData ??= loadModelModifiersData(context.env.locale ?? 'en');
@@ -133,6 +130,11 @@ export function create(
 						return;
 					}
 
+					if (!context.language.vue) {
+						return;
+					}
+					const vueCompilerOptions = context.language.vue.compilerOptions;
+
 					let sync: (() => Promise<number>) | undefined;
 					let currentVersion: number | undefined;
 
@@ -143,7 +145,7 @@ export function create(
 						// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
 						baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
 
-						sync = (await provideHtmlData(sourceScript.id, sourceScript.generated.root)).sync;
+						sync = (await provideHtmlData(vueCompilerOptions, sourceScript.id, sourceScript.generated.root)).sync;
 						currentVersion = await sync();
 					}
 
@@ -170,6 +172,11 @@ export function create(
 					if (!isSupportedDocument(document)) {
 						return;
 					}
+
+					if (!context.language.vue) {
+						return;
+					}
+					const vueCompilerOptions = context.language.vue.compilerOptions;
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.inlayHints.missingProps') ?? false;
 					if (!enabled) {
@@ -359,6 +366,10 @@ export function create(
 					if (!isSupportedDocument(document)) {
 						return;
 					}
+					if (!context.language.vue) {
+						return;
+					}
+					const vueCompilerOptions = context.language.vue.compilerOptions;
 					const languageService = context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService');
 					if (!languageService) {
 						return;
@@ -378,7 +389,7 @@ export function create(
 							files: context.language.scripts,
 							languageService,
 							typescript: ts,
-							vueOptions: getVueOptions(context.env),
+							vueOptions: vueCompilerOptions,
 						},
 						sourceScript.generated.root,
 						template,
@@ -400,7 +411,7 @@ export function create(
 				},
 			};
 
-			async function provideHtmlData(sourceDocumentUri: URI, vueCode: VueVirtualCode) {
+			async function provideHtmlData(vueCompilerOptions: VueCompilerOptions, sourceDocumentUri: URI, vueCode: VueVirtualCode) {
 
 				await (initializing ??= initialize());
 
@@ -458,7 +469,9 @@ export function create(
 								})());
 								return [];
 							}
-							const scriptSetupRanges = vueCode.sfc.scriptSetup ? parseScriptSetupRanges(ts, vueCode.sfc.scriptSetup.ast, vueCompilerOptions) : undefined;
+							const scriptSetupRanges = vueCode.sfc.scriptSetup
+								? parseScriptSetupRanges(ts, vueCode.sfc.scriptSetup.ast, vueCompilerOptions)
+								: undefined;
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
 

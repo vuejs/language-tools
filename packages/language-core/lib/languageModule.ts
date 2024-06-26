@@ -8,6 +8,7 @@ import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 import useHtmlFilePlugin from './plugins/file-html';
 import useMdFilePlugin from './plugins/file-md';
 import useVueFilePlugin from './plugins/file-vue';
+import type * as _ from '@volar/typescript';
 
 const normalFileRegistries: {
 	key: string;

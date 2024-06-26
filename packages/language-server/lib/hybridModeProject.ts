@@ -1,32 +1,24 @@
-import type { LanguagePlugin, LanguageServer, LanguageServerProject, ProviderResult } from '@volar/language-server';
+import type { Language, LanguagePlugin, LanguageServer, LanguageServerProject, ProviderResult } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createLanguage } from '@vue/language-core';
-import { Disposable, LanguageService, LanguageServiceEnvironment, createLanguageService, createUriMap } from '@vue/language-service';
-import { searchNamedPipeServerForFile, TypeScriptProjectHost } from '@vue/typescript-plugin/lib/utils';
-import type * as ts from 'typescript';
+import { createLanguageService, createUriMap, LanguageService } from '@vue/language-service';
+import { searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
 import { URI } from 'vscode-uri';
 
-export type GetLanguagePlugin<T> = (params: {
-	serviceEnv: LanguageServiceEnvironment,
-	asFileName: (scriptId: T) => string,
-	configFileName?: string,
-	projectHost?: TypeScriptProjectHost,
-	sys?: ts.System & {
-		version: number;
-		sync(): Promise<number>;
-	} & Disposable,
-}) => ProviderResult<LanguagePlugin<URI>[]>;
-
 export function createHybridModeProject(
-	sys: ts.System,
-	getLanguagePlugins: GetLanguagePlugin<URI>
+	create: (params: {
+		configFileName?: string;
+		asFileName: (scriptId: URI) => string;
+	}) => ProviderResult<{
+		languagePlugins: LanguagePlugin<URI>[];
+		setup?(language: Language): void;
+	}>
 ): LanguageServerProject {
 	let initialized = false;
 	let simpleLs: Promise<LanguageService> | undefined;
-	let serviceEnv: LanguageServiceEnvironment | undefined;
 	let server: LanguageServer;
 
-	const tsconfigProjects = createUriMap<Promise<LanguageService>>(sys.useCaseSensitiveFileNames);
+	const tsconfigProjects = createUriMap<Promise<LanguageService>>();
 
 	return {
 		setup(_server) {
@@ -44,30 +36,23 @@ export function createHybridModeProject(
 				const tsconfigUri = URI.file(tsconfig);
 				if (!tsconfigProjects.has(tsconfigUri)) {
 					tsconfigProjects.set(tsconfigUri, (async () => {
-						serviceEnv ??= createLanguageServiceEnvironment(server, [...server.workspaceFolders.keys()]);
-						const languagePlugins = await getLanguagePlugins({
-							serviceEnv,
+						const { languagePlugins, setup } = await create({
 							configFileName: tsconfig,
-							sys: {
-								...sys,
-								version: 0,
-								async sync() {
-									return await 0;
-								},
-								dispose() { },
-							},
 							asFileName,
 						});
-						return createLs(server, serviceEnv, languagePlugins);
+						const languageService = createLs(server, languagePlugins);
+						setup?.(languageService.context.language);
+						return languageService;
 					})());
 				}
 				return await tsconfigProjects.get(tsconfigUri)!;
 			}
 			else {
 				simpleLs ??= (async () => {
-					serviceEnv ??= createLanguageServiceEnvironment(server, [...server.workspaceFolders.keys()]);
-					const languagePlugins = await getLanguagePlugins({ serviceEnv, asFileName });
-					return createLs(server, serviceEnv, languagePlugins);
+					const { languagePlugins, setup } = await create({ asFileName });
+					const languageService = createLs(server, languagePlugins);
+					setup?.(languageService.context.language);
+					return languageService;
 				})();
 				return await simpleLs;
 			}
@@ -109,7 +94,6 @@ export function createHybridModeProject(
 
 	function createLs(
 		server: LanguageServer,
-		serviceEnv: LanguageServiceEnvironment,
 		languagePlugins: LanguagePlugin<URI>[]
 	) {
 		const language = createLanguage([
@@ -128,7 +112,7 @@ export function createHybridModeProject(
 		return createLanguageService(
 			language,
 			server.languageServicePlugins,
-			serviceEnv
+			createLanguageServiceEnvironment(server, [...server.workspaceFolders.keys()])
 		);
 	}
 }

@@ -43,7 +43,14 @@ export function run() {
 					options.options,
 					vueOptions
 				);
-				return [vueLanguagePlugin];
+				return {
+					plugins: [vueLanguagePlugin],
+					setup(language) {
+						language.vue = {
+							compilerOptions: vueOptions,
+						};
+					},
+				};
 			}
 			else {
 				runExtensions = allExtensions;

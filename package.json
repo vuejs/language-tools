@@ -24,14 +24,9 @@
 		"@lerna-lite/publish": "latest",
 		"@tsslint/cli": "latest",
 		"@tsslint/config": "latest",
-		"@volar/language-service": "~2.3.4",
+		"@volar/language-service": "~2.4.0-alpha.0",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
-	},
-	"pnpm": {
-		"overrides": {
-			"vscode-html-languageservice": "npm:@johnsoncodehk/vscode-html-languageservice"
-		}
 	}
 }

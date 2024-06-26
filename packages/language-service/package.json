@@ -16,23 +16,23 @@
 		"update-html-data": "node ./scripts/update-html-data.js"
 	},
 	"dependencies": {
-		"@volar/language-core": "~2.3.4",
-		"@volar/language-service": "~2.3.4",
-		"@volar/typescript": "~2.3.4",
+		"@volar/language-core": "~2.4.0-alpha.0",
+		"@volar/language-service": "~2.4.0-alpha.0",
+		"@volar/typescript": "~2.4.0-alpha.0",
 		"@vue/compiler-dom": "^3.4.0",
 		"@vue/language-core": "2.0.22",
 		"@vue/shared": "^3.4.0",
 		"@vue/typescript-plugin": "2.0.22",
 		"computeds": "^0.0.1",
 		"path-browserify": "^1.0.1",
-		"volar-service-css": "0.0.54",
-		"volar-service-emmet": "0.0.54",
-		"volar-service-html": "0.0.54",
-		"volar-service-json": "0.0.54",
-		"volar-service-pug": "0.0.54",
-		"volar-service-pug-beautify": "0.0.54",
-		"volar-service-typescript": "0.0.54",
-		"volar-service-typescript-twoslash-queries": "0.0.54",
+		"volar-service-css": "0.0.55",
+		"volar-service-emmet": "0.0.55",
+		"volar-service-html": "0.0.55",
+		"volar-service-json": "0.0.55",
+		"volar-service-pug": "0.0.55",
+		"volar-service-pug-beautify": "0.0.55",
+		"volar-service-typescript": "0.0.55",
+		"volar-service-typescript-twoslash-queries": "0.0.55",
 		"vscode-html-languageservice": "^5.2.0",
 		"vscode-languageserver-textdocument": "^1.0.11",
 		"vscode-uri": "^3.0.8"
@@ -40,7 +40,7 @@
 	"devDependencies": {
 		"@types/node": "latest",
 		"@types/path-browserify": "latest",
-		"@volar/kit": "~2.3.4",
+		"@volar/kit": "~2.4.0-alpha.0",
 		"vscode-languageserver-protocol": "^3.17.5"
 	}
 }

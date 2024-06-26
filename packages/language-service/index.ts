@@ -3,8 +3,8 @@ export * from '@vue/language-core';
 export * from './lib/ideFeatures/nameCasing';
 export * from './lib/types';
 
-import type { LanguageServicePlugin, LanguageServiceContext, LanguageServiceEnvironment } from '@volar/language-service';
-import type { VueCompilerOptions } from './lib/types';
+import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
+import { AttrNameCasing, TagNameCasing } from './lib/types';
 
 import { create as createEmmetPlugin } from 'volar-service-emmet';
 import { create as createJsonPlugin } from 'volar-service-json';
@@ -26,6 +26,7 @@ import { create as createVueToggleVBindPlugin } from './lib/plugins/vue-toggle-v
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 import { create as createVueVisualizeHiddenCallbackParamPlugin } from './lib/plugins/vue-visualize-hidden-callback-param';
 
+import { parse } from '@vue/language-core';
 import { decorateLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
 import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from '@vue/typescript-plugin/lib/requests/componentInfos';
@@ -34,78 +35,46 @@ import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/get
 import { getQuickInfoAtPosition } from '@vue/typescript-plugin/lib/requests/getQuickInfoAtPosition';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
 import { URI } from 'vscode-uri';
+import { convertAttrName, convertTagName, detect } from './lib/ideFeatures/nameCasing';
 
-export function getVueLanguageServicePlugins(
-	ts: typeof import('typescript'),
-	getVueOptions: (env: LanguageServiceEnvironment) => VueCompilerOptions,
-	getTsPluginClient = createDefaultGetTsPluginClient(ts),
-	hybridMode = false
-): LanguageServicePlugin[] {
-	const plugins: LanguageServicePlugin[] = [];
-	if (!hybridMode) {
-		plugins.push(...createTypeScriptPlugins(ts));
-		for (let i = 0; i < plugins.length; i++) {
-			const plugin = plugins[i];
-			if (plugin.name === 'typescript-semantic') {
-				plugins[i] = {
-					...plugin,
-					create(context) {
-						const created = plugin.create(context);
-						if (!context.language.typescript) {
-							return created;
-						}
-						const languageService = (created.provide as import('volar-service-typescript').Provide)['typescript/languageService']();
-						const vueOptions = getVueOptions(context.env);
+export function getFullLanguageServicePlugins(ts: typeof import('typescript')): LanguageServicePlugin[] {
+	const plugins: LanguageServicePlugin[] = [
+		...createTypeScriptPlugins(ts),
+		...getCommonLanguageServicePlugins(
+			ts,
+			getTsPluginClientForLSP
+		)
+	];
+	for (let i = 0; i < plugins.length; i++) {
+		const plugin = plugins[i];
+		if (plugin.name === 'typescript-semantic') {
+			plugins[i] = {
+				...plugin,
+				create(context) {
+					const created = plugin.create(context);
+					if (!context.language.typescript) {
+						return created;
+					}
+					const languageService = (created.provide as import('volar-service-typescript').Provide)['typescript/languageService']();
+					if (context.language.vue) {
 						decorateLanguageServiceForVue<URI>(
 							context.language,
 							languageService,
-							vueOptions,
+							context.language.vue.compilerOptions,
 							ts,
 							false,
-							fileName => context.language.typescript?.asScriptId(fileName) ?? URI.file(fileName)
+							context.language.typescript.asScriptId
 						);
-						return created;
-					},
-				};
-				break;
-			}
+					}
+					return created;
+				},
+			};
+			break;
 		}
 	}
-	else {
-		plugins.push(
-			createTypeScriptSyntacticPlugin(ts),
-			createTypeScriptDocCommentTemplatePlugin(ts)
-		);
-	}
-	plugins.push(
-		createTypeScriptTwoslashQueriesPlugin(ts),
-		createCssPlugin(),
-		createPugFormatPlugin(),
-		createJsonPlugin(),
-		createVueTemplatePlugin('html', ts, getVueOptions, getTsPluginClient),
-		createVueTemplatePlugin('pug', ts, getVueOptions, getTsPluginClient),
-		createVueSfcPlugin(),
-		createVueTwoslashQueriesPlugin(ts, getTsPluginClient),
-		createVueDocumentLinksPlugin(),
-		createVueDocumentDropPlugin(ts, getVueOptions, getTsPluginClient),
-		createVueAutoDotValuePlugin(ts, getTsPluginClient),
-		createVueAutoAddSpacePlugin(),
-		createVueVisualizeHiddenCallbackParamPlugin(),
-		createVueDirectiveCommentsPlugin(),
-		createVueExtractFilePlugin(ts, getTsPluginClient),
-		createVueToggleVBindPlugin(ts),
-		createEmmetPlugin({
-			mappedLanguages: {
-				'vue': 'html',
-				'postcss': 'scss',
-			},
-		})
-	);
 	return plugins;
-}
 
-export function createDefaultGetTsPluginClient(ts: typeof import('typescript')): (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined {
-	return context => {
+	function getTsPluginClientForLSP(context: LanguageServiceContext): typeof import('@vue/typescript-plugin/lib/client') | undefined {
 		if (!context.language.typescript) {
 			return;
 		}
@@ -150,5 +119,110 @@ export function createDefaultGetTsPluginClient(ts: typeof import('typescript')):
 				return await getQuickInfoAtPosition.apply(requestContext, args);
 			},
 		};
-	};
+	}
+}
+
+export function getHybridModeLanguageServicePlugins(
+	ts: typeof import('typescript'),
+	getTsPluginClient: typeof import("@vue/typescript-plugin/lib/client")
+): LanguageServicePlugin[] {
+	const plugins = [
+		createTypeScriptSyntacticPlugin(ts),
+		createTypeScriptDocCommentTemplatePlugin(ts),
+		...getCommonLanguageServicePlugins(ts, () => getTsPluginClient)
+	];
+	for (const plugin of plugins) {
+		// avoid affecting TS plugin
+		delete plugin.capabilities.semanticTokensProvider;
+	}
+	return plugins;
+}
+
+export const commands = {
+	parseSfc: 'vue.parseSfc',
+	detectNameCasing: 'vue.detectNameCasing',
+	convertTagsToKebabCase: 'vue.convertTagsToKebabCase',
+	convertTagsToPascalCase: 'vue.convertTagsToPascalCase',
+	convertPropsToKebabCase: 'vue.convertPropsToKebabCase',
+	convertPropsToCamelCase: 'vue.convertPropsToCamelCase',
+};
+
+function getCommonLanguageServicePlugins(
+	ts: typeof import('typescript'),
+	getTsPluginClient: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+): LanguageServicePlugin[] {
+	return [
+		createTypeScriptTwoslashQueriesPlugin(ts),
+		createCssPlugin(),
+		createPugFormatPlugin(),
+		createJsonPlugin(),
+		createVueTemplatePlugin('html', ts, getTsPluginClient),
+		createVueTemplatePlugin('pug', ts, getTsPluginClient),
+		createVueSfcPlugin(),
+		createVueTwoslashQueriesPlugin(ts, getTsPluginClient),
+		createVueDocumentLinksPlugin(),
+		createVueDocumentDropPlugin(ts, getTsPluginClient),
+		createVueAutoDotValuePlugin(ts, getTsPluginClient),
+		createVueAutoAddSpacePlugin(),
+		createVueVisualizeHiddenCallbackParamPlugin(),
+		createVueDirectiveCommentsPlugin(),
+		createVueExtractFilePlugin(ts, getTsPluginClient),
+		createVueToggleVBindPlugin(ts),
+		createEmmetPlugin({
+			mappedLanguages: {
+				'vue': 'html',
+				'postcss': 'scss',
+			},
+		}),
+		{
+			name: 'vue-parse-sfc',
+			capabilities: {
+				executeCommandProvider: {
+					commands: [commands.parseSfc],
+				},
+			},
+			create() {
+				return {
+					executeCommand(_command, [source]) {
+						return parse(source);
+					},
+				};
+			},
+		},
+		{
+			name: 'vue-name-casing',
+			capabilities: {
+				executeCommandProvider: {
+					commands: [
+						commands.detectNameCasing,
+						commands.convertTagsToKebabCase,
+						commands.convertTagsToPascalCase,
+						commands.convertPropsToKebabCase,
+						commands.convertPropsToCamelCase,
+					],
+				}
+			},
+			create(context) {
+				return {
+					executeCommand(command, [uri]) {
+						if (command === commands.detectNameCasing) {
+							return detect(context, URI.parse(uri));
+						}
+						else if (command === commands.convertTagsToKebabCase) {
+							return convertTagName(context, URI.parse(uri), TagNameCasing.Kebab, getTsPluginClient(context));
+						}
+						else if (command === commands.convertTagsToPascalCase) {
+							return convertTagName(context, URI.parse(uri), TagNameCasing.Pascal, getTsPluginClient(context));
+						}
+						else if (command === commands.convertPropsToKebabCase) {
+							return convertAttrName(context, URI.parse(uri), AttrNameCasing.Kebab, getTsPluginClient(context));
+						}
+						else if (command === commands.convertPropsToCamelCase) {
+							return convertAttrName(context, URI.parse(uri), AttrNameCasing.Camel, getTsPluginClient(context));
+						}
+					},
+				};
+			},
+		}
+	];
 }

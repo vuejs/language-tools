@@ -3,6 +3,7 @@ import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
+import * as _ from '@volar/typescript';
 
 const asts = new WeakMap<ts.IScriptSnapshot, ts.SourceFile>();
 
