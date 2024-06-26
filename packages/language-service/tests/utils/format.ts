@@ -32,7 +32,7 @@ export function defineFormatTest(options: {
 			const formatted = await formatter.format(
 				options.input,
 				options.languageId,
-				{ insertSpaces: false, tabSize: 4 },
+				{ insertSpaces: false, tabSize: 4 }
 			);
 
 			expect(formatted.replace(/\r\n/g, '\n')).toBe((options.output ?? options.input).replace(/\r\n/g, '\n'));
