@@ -9,14 +9,14 @@ const plugin: VueLanguagePlugin = () => {
 
 		getEmbeddedCodes(_fileName, sfc) {
 			return sfc.customBlocks.map((customBlock, i) => ({
-				id: 'customBlock_' + i,
+				id: 'custom_block_' + i,
 				lang: customBlock.lang,
 			}));
 		},
 
 		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
-			if (embeddedFile.id.startsWith('customBlock_')) {
-				const index = parseInt(embeddedFile.id.slice('customBlock_'.length));
+			if (embeddedFile.id.startsWith('custom_block_')) {
+				const index = parseInt(embeddedFile.id.slice('custom_block_'.length));
 				const customBlock = sfc.customBlocks[index];
 
 				embeddedFile.content.push([

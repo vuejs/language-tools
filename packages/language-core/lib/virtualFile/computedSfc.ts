@@ -47,7 +47,7 @@ export function computedSfc(
 				for (const plugin of plugins) {
 					const ast = plugin.compileSFCScript?.(base.lang, base.content);
 					if (ast) {
-						return ast;;
+						return ast;
 					}
 				}
 				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
@@ -76,7 +76,7 @@ export function computedSfc(
 				for (const plugin of plugins) {
 					const ast = plugin.compileSFCScript?.(base.lang, base.content);
 					if (ast) {
-						return ast;;
+						return ast;
 					}
 				}
 				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
@@ -128,7 +128,7 @@ export function computedSfc(
 	const customBlocks = computedArray(
 		computed(() => parsed()?.descriptor.customBlocks ?? []),
 		(block, i) => {
-			const base = computedSfcBlock('customBlock_' + i, 'txt', block);
+			const base = computedSfcBlock('custom_block_' + i, 'txt', block);
 			const type = computed(() => block().type);
 			return computed<Sfc['customBlocks'][number]>(() => mergeObject(base, {
 				get type() { return type(); },
