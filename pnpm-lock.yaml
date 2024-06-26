@@ -135,6 +135,9 @@ importers:
       '@types/path-browserify':
         specifier: ^1.0.1
         version: 1.0.2
+      '@volar/typescript':
+        specifier: ~2.4.0-alpha.0
+        version: 2.4.0-alpha.0
       '@vue/compiler-sfc':
         specifier: ^3.4.0
         version: 3.4.29
