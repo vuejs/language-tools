@@ -175,7 +175,9 @@ export function create(): LanguageServicePlugin {
 
 				async provideCompletionItems(document, position, context, token) {
 					const result = await htmlPluginInstance.provideCompletionItems?.(document, position, context, token)
-					if (!result) return;
+					if (!result) {
+						return;
+					}
 					result.items = [
 						...result.items.filter(item => item.label !== '!DOCTYPE' && item.label !== 'Custom Blocks'),
 						createCompletionItemWithTs(result.items.find(item => item.label === 'script')!),
