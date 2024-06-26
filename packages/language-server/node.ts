@@ -45,7 +45,8 @@ connection.onInitialize(params => {
 			getHybridModeLanguageServicePlugins(
 				tsdk.typescript,
 				tsPluginClient
-			)
+			),
+			{ pullModelDiagnostics: true }
 		);
 	}
 	else {
