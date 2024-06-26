@@ -19,6 +19,7 @@ export function initialize(
 			ts,
 			tsLocalized,
 			async ({ configFileName, sys, projectHost, asFileName }) => {
+				let compilerOptions: ts.CompilerOptions;
 				let vueCompilerOptions: VueCompilerOptions;
 				if (configFileName) {
 					let commandLine = createParsedCommandLine(ts, sys, configFileName);
@@ -29,9 +30,11 @@ export function initialize(
 						sysVersion = newSysVersion;
 						newSysVersion = await sys.sync();
 					}
+					compilerOptions = commandLine.options;
 					vueCompilerOptions = commandLine.vueOptions;
 				}
 				else {
+					compilerOptions = ts.getDefaultCompilerOptions();
 					vueCompilerOptions = resolveVueCompilerOptions({});
 				}
 				updateFileWatcher(vueCompilerOptions);
@@ -47,7 +50,7 @@ export function initialize(
 							}
 							return fileMap.has(fileName);
 						},
-						projectHost.getCompilationSettings(),
+						compilerOptions,
 						vueCompilerOptions
 					)],
 					setup(language) {
