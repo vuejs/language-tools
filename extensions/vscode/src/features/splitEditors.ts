@@ -1,9 +1,9 @@
-import type { BaseLanguageClient } from '@volar/vscode';
-import { ParseSFCRequest } from '@vue/language-server';
+import { ExecuteCommandParams, ExecuteCommandRequest, type BaseLanguageClient } from '@volar/vscode';
+import { commands, type SFCParseResult } from '@vue/language-server';
 import * as vscode from 'vscode';
 import { config } from '../config';
 
-type SFCBlock = ParseSFCRequest.ResponseType['descriptor']['customBlocks'][number];
+type SFCBlock = SFCParseResult['descriptor']['customBlocks'][number];
 
 export function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
@@ -20,7 +20,10 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 
 		const layout = config.splitEditors.layout;
 		const doc = editor.document;
-		const { descriptor } = await getDocDescriptor(doc.getText());
+		const descriptor = (await getDocDescriptor(doc.getText()))?.descriptor;
+		if (!descriptor) {
+			return;
+		}
 		let leftBlocks: SFCBlock[] = [];
 		let rightBlocks: SFCBlock[] = [];
 
@@ -96,14 +99,17 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 	function useDocDescriptor() {
 
 		let splitDocText: string | undefined;
-		let splitDocDescriptor: any;
+		let splitDocDescriptor: SFCParseResult | undefined;
 
 		return getDescriptor;
 
 		async function getDescriptor(text: string) {
 			if (text !== splitDocText) {
 				splitDocText = text;
-				splitDocDescriptor = await client.sendRequest(ParseSFCRequest.type, text);
+				splitDocDescriptor = await client.sendRequest(ExecuteCommandRequest.type, {
+					command: commands.parseSfc,
+					arguments: [text],
+				} satisfies ExecuteCommandParams);
 			}
 			return splitDocDescriptor;
 		}

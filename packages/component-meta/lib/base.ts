@@ -189,6 +189,9 @@ export function baseCreate(
 		asScriptId: s => s,
 		...createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost),
 	};
+	language.vue = {
+		compilerOptions: vueCompilerOptions,
+	};
 	const { languageServiceHost } = language.typescript;
 	const tsLs = ts.createLanguageService(languageServiceHost);
 
