@@ -1,6 +1,14 @@
 {
-	"latest": "2.1.0-insiders.13",
+	"latest": "2.1.0-insiders.14",
 	"versions": [
+		{
+			"version": "2.1.0-insiders.14",
+			"date": "2024-6-22",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.14",
+				"AFDIAN": "https://afdian.net/p/e05e95a8309d11efbebf52540025c377"
+			}
+		},
 		{
 			"version": "2.1.0-insiders.13",
 			"date": "2024-6-8",

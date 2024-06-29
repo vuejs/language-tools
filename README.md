@@ -107,6 +107,10 @@ lspconfig.volar.setup {
 },
 ```
 
+### nvim-cmp integration
+
+Check out this [discussion](https://github.com/vuejs/language-tools/discussions/4495)
+
 </details>
 
 [mattn/vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \

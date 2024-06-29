@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.1.0-insiders.14 (2024-06-22)
+
+Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.14), [爱发电电圈](https://afdian.net/p/e05e95a8309d11efbebf52540025c377)
+
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+### Other Changes
+
+- Merged [v2.0.22](https://github.com/vuejs/language-tools/releases/tag/v2.0.22).
+
+## 2.0.22 (2024-06-22)
+
+### Bug Fixes
+
+- **vscode:** directive syntax highlighting (#4482) - Thanks @KermanX
+- **language-core:** move declare defineProp out of function scope (#4454) - Thanks @zhiyuanzmj
+- **language-core:** compatible with TS 5.5 (#4492)
+
+### Other Changes
+
+- Upgrade Volar from `v2.3.0-alpha.14` to `v2.3.1`.
+  - Error tolerant to `contentChanges` length (#4457)
+- Add feature request template (#4490) - Thanks @so1ve
+- **docs:** fix wrong links in CHANGELOG.md (#4475) - Thanks @KermanX
+
 ## 2.1.0-insiders.13 (2024-06-08)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.13), [爱发电电圈](https://afdian.net/p/8f915cf625a711ef860252540025c377)

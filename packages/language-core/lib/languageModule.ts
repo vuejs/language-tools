@@ -8,6 +8,7 @@ import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 import useHtmlFilePlugin from './plugins/file-html';
 import useMdFilePlugin from './plugins/file-md';
 import useVueFilePlugin from './plugins/file-vue';
+import type * as _ from '@volar/typescript';
 
 const normalFileRegistries: {
 	key: string;
@@ -165,7 +166,7 @@ export function createVueLanguagePlugin<T>(
 			})),
 			getServiceScript(root) {
 				for (const code of forEachEmbeddedCode(root)) {
-					if (code.id.startsWith('script_')) {
+					if (/script_(js|jsx|ts|tsx)/.test(code.id)) {
 						const lang = code.id.substring('script_'.length);
 						return {
 							code,
