@@ -2,7 +2,13 @@
 
 > ⚡ High-performance Vue language tooling based-on [Volar.js](https://volarjs.dev/)
 
-💬 **#language-tools** on our [Discord Server](https://discord.gg/vue)  
+💬 **#language-tools** on our [Discord Server](https://discord.gg/vue)
+
+<!-- Editor link: https://www.mermaidchart.com/app/projects/c62d8944-0e06-47f0-a8de-f89a7378490f/diagrams/91fd02c0-5c91-4f72-a8b4-7af21b7c4d86/version/v0.1/edit -->
+
+<a href="https://www.mermaidchart.com/raw/91fd02c0-5c91-4f72-a8b4-7af21b7c4d86?theme=light&version=v0.1&format=svg">
+	<img src="./.github/mermaid.png"/>
+</a>
 
 ## Packages
 
@@ -165,153 +171,6 @@ Alternatively, you can run one of the scripts defined in the [package.json](http
 Additional info for contributing to open source projects can be found here: https://docs.github.com/en/get-started/quickstart/contributing-to-projects
 
 To develop with upstream Volar.js modules, you can setup workspace with https://github.com/volarjs/workspace.
-
-## High Level System Overview
-
-```mermaid
-flowchart LR
-	%% IDEs
-	VSC[VSCode]
-	COC[coc.nvim]
-	NEO[Neovim]
-	VIM[vim-lsp]
-	SUBLIME[Sublime]
-	ATOM[Atom]
-	EMACS[Emacs]
-	NOVA[Nova]
-	LAPCE[Lapce]
-
-	%% Language Clients
-	COC_VUE[yaegassy/coc-volar]
-	NEO_VUE[neovim/nvim-lspconfig]
-	VIM_VUE[mattn/vim-lsp-settings]
-	SUBLIME_VUE[sublimelsp/LSP-volar]
-	ATOM_VUE[kabiaa/atom-ide-volar]
-	EMACS_VUE[jadestrong/lsp-volar]
-	NOVA_VUE[tommasongr/nova-vue]
-	LAPCE_VUE[xiaoxin-sky/lapce-vue]
-
-	click COC_VUE "https://github.com/yaegassy/coc-volar"
-	click NEO_VUE "https://github.com/neovim/nvim-lspconfig"
-	click VIM_VUE "https://github.com/mattn/vim-lsp-settings"
-	click SUBLIME_VUE "https://github.com/sublimelsp/LSP-volar"
-	click ATOM_VUE "https://github.com/kabiaa/atom-ide-volar"
-	click EMACS_VUE "https://github.com/jadestrong/lsp-volar"
-	click NOVA_VUE "https://github.com/tommasongr/nova-vue"
-	click LAPCE_VUE "https://github.com/xiaoxin-sky/lapce-vue"
-
-	%% Volar - Extensions
-	VSC_VUE[vscode-vue]
-	VSC_TSVP[vscode-typescript-vue-plugin]
-
-	click VSC_VUE "https://github.com/vuejs/language-tools/tree/master/extensions/vscode"
-	click VSC_TSVP "https://github.com/vuejs/language-tools/tree/master/extensions/vscode-typescript-plugin"
-
-	%% Volar - Packages
-	VOLAR_VUE_SERVER["@vue/language-server"]
-	VOLAR_VUE_TS["@vue/typescript"]
-	VOLAR_VUE_CORE["@vue/language-core"]
-	VOLAR_VUE_SERVICE["@vue/language-service"]
-	VOLAR_PUG_SERVICE["@volar/pug-language-service"]
-	VOLAR_TS_SERVICE["@volar/typescript-language-service"]
-	VUE_TSC[vue-tsc]
-	VUE_COMPONENT_META[vue-component-meta]
-	TS_VUE_PLUGIN[typescript-vue-plugin]
-
-	click VOLAR_VUE_SERVER "https://github.com/vuejs/language-tools/tree/master/packages/language-server"
-	click VOLAR_VUE_TS "https://github.com/vuejs/language-tools/tree/master/packages/typescript"
-	click VOLAR_VUE_CORE "https://github.com/vuejs/language-tools/tree/master/packages/language-core"
-	click VOLAR_VUE_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/language-service"
-	click VUE_TSC "https://github.com/vuejs/language-tools/tree/master/packages/tsc"
-	click VUE_COMPONENT_META "https://github.com/vuejs/language-tools/tree/master/packages/component-meta"
-	click TS_VUE_PLUGIN "https://github.com/vuejs/language-tools/tree/master/packages/typescript-plugin"
-	click VOLAR_PUG_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/pug-language-service"
-	click VOLAR_TS_SERVICE "https://github.com/vuejs/language-tools/tree/master/packages/typescript-language-service"
-
-	%% External Packages
-	HTML_SERVICE[vscode-html-languageservice]
-	CSS_SERVICE[vscode-css-languageservice]
-	JSON_SERVICE[vscode-json-languageservice]
-	%% TS[typescript]
-	VSC_TS[vscode.typescript-language-features]
-	VUE_REPL["@vue/repl"]
-	MONACO_VOLAR[Kingwl/monaco-volar]
-	%% VITE_PLUGIN_CHECKER[fi3ework/vite-plugin-checker]
-	%% COMPILE_VUE_SFC[leonzalion/compile-vue-sfc]
-
-	click HTML_SERVICE "https://github.com/microsoft/vscode-html-languageservice"
-	click CSS_SERVICE "https://github.com/microsoft/vscode-css-languageservice"
-	click JSON_SERVICE "https://github.com/microsoft/vscode-json-languageservice"
-	click TS "https://github.com/microsoft/TypeScript"
-	click VSC_TS "https://github.com/microsoft/vscode/tree/main/packages/typescript-language-features"
-	click VUE_REPL "https://github.com/vuejs/repl"
-	click MONACO_VOLAR "https://github.com/Kingwl/monaco-volar"
-	%% click VITE_PLUGIN_CHECKER "https://github.com/fi3ework/vite-plugin-checker"
-	%% click COMPILE_VUE_SFC "https://github.com/leonzalion/compile-vue-sfc"
-
-	subgraph VUE_CLIENTS[Language Clients]
-	  direction LR
-	  VUE_CLIENT_SEMANTIC[Semantic Features]
-	  VUE_CLIENT_SYNTACTIC[Syntactic Features]
-	end
-
-	click VUE_CLIENT_SEMANTIC "https://github.com/vuejs/language-tools/discussions/393#discussioncomment-1213736"
-	click VUE_CLIENT_SYNTACTIC "https://github.com/vuejs/language-tools/discussions/393#discussioncomment-1213736"
-
-	subgraph Embedded Language Services
-	  direction LR
-	  VOLAR_TS_SERVICE
-	  VOLAR_PUG_SERVICE
-	  HTML_SERVICE
-	  CSS_SERVICE
-	  JSON_SERVICE
-	end
-
-	VSC --> VSC_VUE
-	COC --> COC_VUE
-	NEO --> NEO_VUE
-	SUBLIME --> SUBLIME_VUE
-	ATOM --> ATOM_VUE
-	EMACS --> EMACS_VUE
-	NOVA --> NOVA_VUE
-	VIM --> VIM_VUE
-	LAPCE --> LAPCE_VUE
-
-	VSC_VUE --> VUE_CLIENTS
-	COC_VUE --> VUE_CLIENTS
-	NEO_VUE --> VUE_CLIENTS
-	SUBLIME_VUE --> VUE_CLIENTS
-	ATOM_VUE --> VUE_CLIENTS
-	EMACS_VUE --> VUE_CLIENTS
-	NOVA_VUE --> VUE_CLIENTS
-	VIM_VUE --> VUE_CLIENTS
-	LAPCE_VUE --> VUE_CLIENTS
-
-	VUE_CLIENTS -- Language Server Protocol --> VOLAR_VUE_SERVER
-
-	VSC --> VSC_TS
-	VSC_TS --> VSC_TSVP
-	VSC_TSVP --> TS_VUE_PLUGIN
-	VOLAR_VUE_SERVER --> VOLAR_VUE_SERVICE
-	VUE_TSC --> VOLAR_VUE_TS
-	%% VITE_PLUGIN_CHECKER --> VUE_TSC
-	%% COMPILE_VUE_SFC --> VUE_TSC
-	TS_VUE_PLUGIN --> VOLAR_VUE_TS
-
-	VUE_REPL --> MONACO_VOLAR
-	MONACO_VOLAR --> VOLAR_VUE_SERVICE
-
-	%% VOLAR_VUE_TS --> TS
-	VUE_COMPONENT_META --> VOLAR_VUE_CORE
-	VOLAR_VUE_TS --> VOLAR_VUE_CORE
-
-	VOLAR_VUE_SERVICE --> VOLAR_VUE_CORE
-	VOLAR_VUE_SERVICE --> VOLAR_TS_SERVICE
-	VOLAR_VUE_SERVICE --> VOLAR_PUG_SERVICE
-	VOLAR_VUE_SERVICE --> HTML_SERVICE
-	VOLAR_VUE_SERVICE --> CSS_SERVICE
-	VOLAR_VUE_SERVICE --> JSON_SERVICE
-```
 
 ---
 
