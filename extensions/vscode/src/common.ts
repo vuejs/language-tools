@@ -59,16 +59,11 @@ function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 		|| extension.id === 'runem.lit-plugin'
 		|| extension.id === 'kimuson.ts-type-expand'
 		|| extension.id === 'p42ai.refactor'
-		|| extension.id === 'nrwl.angular-console'
-	) {
-		return true;
-	}
-	if (
-		extension.id === 'styled-components.vscode-styled-components'
+		|| extension.id === 'styled-components.vscode-styled-components'
 		|| extension.id === 'Divlo.vscode-styled-jsx-languageserver'
 		|| extension.id === 'nrwl.angular-console'
 	) {
-		return false;
+		return true;
 	}
 	if (extension.id === 'denoland.vscode-deno') {
 		return !vscode.workspace.getConfiguration('deno').get<boolean>('enable');
