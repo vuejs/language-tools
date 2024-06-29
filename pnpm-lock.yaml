@@ -253,7 +253,7 @@ importers:
         version: 1.0.2
       '@volar/kit':
         specifier: ~2.3.1
-        version: 2.3.1(typescript@5.4.5)
+        version: 2.3.1(typescript@5.5.2)
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
@@ -270,8 +270,8 @@ importers:
         specifier: ^7.5.4
         version: 7.6.2
       typescript:
-        specifier: '*'
-        version: 5.4.5
+        specifier: '>=5.3.0'
+        version: 5.5.2
     devDependencies:
       '@types/node':
         specifier: latest
@@ -297,7 +297,7 @@ importers:
     devDependencies:
       vue:
         specifier: ^3.4.0
-        version: 3.4.27(typescript@5.4.5)
+        version: 3.4.27(typescript@5.5.2)
       vue-component-type-helpers:
         specifier: 2.0.21
         version: link:../packages/component-type-helpers
@@ -2874,6 +2874,11 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  typescript@5.5.2:
+    resolution: {integrity: sha512-NcRtPEOsPFFWjobJEtfihkLCZCXZt/os3zf8nTxjVH3RvTSxjrCamJpbExGvYOF+tFHc3pA65qpdwPbzjohhew==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   uc.micro@1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
 
@@ -3871,12 +3876,12 @@ snapshots:
       loupe: 2.3.7
       pretty-format: 29.7.0
 
-  '@volar/kit@2.3.1(typescript@5.4.5)':
+  '@volar/kit@2.3.1(typescript@5.5.2)':
     dependencies:
       '@volar/language-service': 2.3.1
       '@volar/typescript': 2.3.1
       typesafe-path: 0.2.2
-      typescript: 5.4.5
+      typescript: 5.5.2
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
 
@@ -3987,11 +3992,11 @@ snapshots:
       '@vue/shared': 3.4.27
       csstype: 3.1.3
 
-  '@vue/server-renderer@3.4.27(vue@3.4.27(typescript@5.4.5))':
+  '@vue/server-renderer@3.4.27(vue@3.4.27(typescript@5.5.2))':
     dependencies:
       '@vue/compiler-ssr': 3.4.27
       '@vue/shared': 3.4.27
-      vue: 3.4.27(typescript@5.4.5)
+      vue: 3.4.27(typescript@5.5.2)
 
   '@vue/shared@3.4.27': {}
 
@@ -5925,6 +5930,8 @@ snapshots:
 
   typescript@5.4.5: {}
 
+  typescript@5.5.2: {}
+
   uc.micro@1.0.6: {}
 
   ufo@1.5.3: {}
@@ -6162,15 +6169,15 @@ snapshots:
       '@vue/compiler-sfc': 2.7.16
       csstype: 3.1.3
 
-  vue@3.4.27(typescript@5.4.5):
+  vue@3.4.27(typescript@5.5.2):
     dependencies:
       '@vue/compiler-dom': 3.4.27
       '@vue/compiler-sfc': 3.4.27
       '@vue/runtime-dom': 3.4.27
-      '@vue/server-renderer': 3.4.27(vue@3.4.27(typescript@5.4.5))
+      '@vue/server-renderer': 3.4.27(vue@3.4.27(typescript@5.5.2))
       '@vue/shared': 3.4.27
     optionalDependencies:
-      typescript: 5.4.5
+      typescript: 5.5.2
 
   wcwidth@1.0.1:
     dependencies:
