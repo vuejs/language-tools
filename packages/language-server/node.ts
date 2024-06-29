@@ -35,10 +35,8 @@ connection.onInitialize(params => {
 							commandLine.options,
 							commandLine.vueOptions
 						)],
-						setup(language) {
-							language.vue = {
-								compilerOptions: commandLine.vueOptions,
-							};
+						setup({ project }) {
+							project.vue = { compilerOptions: commandLine.vueOptions };
 						},
 					};
 				}

@@ -1,5 +1,3 @@
-import type { VueCompilerOptions } from './lib/types';
-
 export * from './lib/codegen/template';
 export * from './lib/languageModule';
 export * from './lib/parsers/scriptSetupRanges';
@@ -15,11 +13,3 @@ export { tsCodegen } from './lib/plugins/vue-tsx';
 
 export * from '@volar/language-core';
 export type * as CompilerDOM from '@vue/compiler-dom';
-
-declare module '@volar/language-core' {
-	export interface Language {
-		vue?: {
-			compilerOptions: VueCompilerOptions;
-		};
-	}
-}

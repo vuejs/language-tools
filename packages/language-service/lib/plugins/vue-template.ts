@@ -130,10 +130,10 @@ export function create(
 						return;
 					}
 
-					if (!context.language.vue) {
+					if (!context.project.vue) {
 						return;
 					}
-					const vueCompilerOptions = context.language.vue.compilerOptions;
+					const vueCompilerOptions = context.project.vue.compilerOptions;
 
 					let sync: (() => Promise<number>) | undefined;
 					let currentVersion: number | undefined;
@@ -173,10 +173,10 @@ export function create(
 						return;
 					}
 
-					if (!context.language.vue) {
+					if (!context.project.vue) {
 						return;
 					}
-					const vueCompilerOptions = context.language.vue.compilerOptions;
+					const vueCompilerOptions = context.project.vue.compilerOptions;
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.inlayHints.missingProps') ?? false;
 					if (!enabled) {
@@ -366,10 +366,10 @@ export function create(
 					if (!isSupportedDocument(document)) {
 						return;
 					}
-					if (!context.language.vue) {
+					if (!context.project.vue) {
 						return;
 					}
-					const vueCompilerOptions = context.language.vue.compilerOptions;
+					const vueCompilerOptions = context.project.vue.compilerOptions;
 					const languageService = context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService');
 					if (!languageService) {
 						return;

@@ -68,7 +68,7 @@ export function create(
 					let ast: ts.SourceFile | undefined;
 					let sourceCodeOffset = document.offsetAt(selection);
 
-					const fileName = context.language.typescript?.asFileName(sourceScript.id)
+					const fileName = context.project.typescript?.asFileName(sourceScript.id)
 						?? sourceScript.id.fsPath.replace(/\\/g, '/');
 
 					if (sourceScript.generated) {

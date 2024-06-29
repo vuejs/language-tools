@@ -1,4 +1,4 @@
-import { FileMap, createLanguage, createLanguageService, createUriMap } from '@volar/language-service';
+import { FileMap, ProjectContext, createLanguage, createLanguageService, createUriMap } from '@volar/language-service';
 import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 import * as path from 'path';
 import * as ts from 'typescript';
@@ -67,17 +67,18 @@ function createTester(rootUri: URI) {
 			}
 		}
 	);
-	language.typescript = {
+	const project: ProjectContext = {};
+	project.typescript = {
 		configFileName: realTsConfig,
 		sys: ts.sys,
 		asFileName: uriToFileName,
-		asScriptId: fileNameToUri,
+		asUri: fileNameToUri,
 		...createLanguageServiceHost(ts, ts.sys, language, fileNameToUri, projectHost),
 	};
-	language.vue = {
+	project.vue = {
 		compilerOptions: parsedCommandLine.vueOptions,
 	};
-	const languageService = createLanguageService(language, vueServicePlugins, serviceEnv);
+	const languageService = createLanguageService(language, vueServicePlugins, serviceEnv, project);
 
 	return {
 		serviceEnv,

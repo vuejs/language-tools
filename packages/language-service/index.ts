@@ -26,8 +26,8 @@ import { create as createVueToggleVBindPlugin } from './lib/plugins/vue-toggle-v
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 import { create as createVueVisualizeHiddenCallbackParamPlugin } from './lib/plugins/vue-visualize-hidden-callback-param';
 
-import { parse } from '@vue/language-core';
-import { decorateLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
+import { parse, VueCompilerOptions } from '@vue/language-core';
+import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
 import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from '@vue/typescript-plugin/lib/requests/componentInfos';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
@@ -36,6 +36,14 @@ import { getQuickInfoAtPosition } from '@vue/typescript-plugin/lib/requests/getQ
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
 import { URI } from 'vscode-uri';
 import { convertAttrName, convertTagName, detect } from './lib/ideFeatures/nameCasing';
+
+declare module '@volar/language-service' {
+	export interface ProjectContext {
+		vue?: {
+			compilerOptions: VueCompilerOptions;
+		};
+	}
+}
 
 export function getFullLanguageServicePlugins(ts: typeof import('typescript')): LanguageServicePlugin[] {
 	const plugins: LanguageServicePlugin[] = [
@@ -52,19 +60,22 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')): 
 				...plugin,
 				create(context) {
 					const created = plugin.create(context);
-					if (!context.language.typescript) {
+					if (!context.project.typescript) {
 						return created;
 					}
 					const languageService = (created.provide as import('volar-service-typescript').Provide)['typescript/languageService']();
-					if (context.language.vue) {
-						decorateLanguageServiceForVue<URI>(
+					if (context.project.vue) {
+						const proxy = proxyLanguageServiceForVue(
+							ts,
 							context.language,
 							languageService,
-							context.language.vue.compilerOptions,
-							ts,
-							false,
-							context.language.typescript.asScriptId
+							context.project.vue.compilerOptions,
+							context.project.typescript.asUri
 						);
+						languageService.getCompletionsAtPosition = proxy.getCompletionsAtPosition;
+						languageService.getCompletionEntryDetails = proxy.getCompletionEntryDetails;
+						languageService.getCodeFixesAtPosition = proxy.getCodeFixesAtPosition;
+						languageService.getQuickInfoAtPosition = proxy.getQuickInfoAtPosition;
 					}
 					return created;
 				},
@@ -75,7 +86,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')): 
 	return plugins;
 
 	function getTsPluginClientForLSP(context: LanguageServiceContext): typeof import('@vue/typescript-plugin/lib/client') | undefined {
-		if (!context.language.typescript) {
+		if (!context.project.typescript) {
 			return;
 		}
 		const languageService = context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService');
@@ -86,9 +97,9 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')): 
 			typescript: ts,
 			language: context.language,
 			languageService,
-			languageServiceHost: context.language.typescript.languageServiceHost,
+			languageServiceHost: context.project.typescript.languageServiceHost,
 			isTsPlugin: false,
-			getFileId: context.language.typescript.asScriptId,
+			getFileId: context.project.typescript.asUri,
 		};
 		return {
 			async collectExtractProps(...args) {

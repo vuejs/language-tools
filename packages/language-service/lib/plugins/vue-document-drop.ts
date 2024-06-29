@@ -17,14 +17,14 @@ export function create(
 			// documentDropEditsProvider: true,
 		},
 		create(context): LanguageServicePluginInstance {
-			if (!context.language.vue) {
+			if (!context.project.vue) {
 				return {};
 			}
 
 			let casing = TagNameCasing.Pascal as TagNameCasing; // TODO
 
 			const tsPluginClient = getTsPluginClient?.(context);
-			const vueCompilerOptions = context.language.vue.compilerOptions;
+			const vueCompilerOptions = context.project.vue.compilerOptions;
 
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
@@ -65,7 +65,7 @@ export function create(
 					const additionalEdit: vscode.WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw'))!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
-					const incomingFileName = context.language.typescript?.asFileName(URI.parse(importUri))
+					const incomingFileName = context.project.typescript?.asFileName(URI.parse(importUri))
 						?? URI.parse(importUri).fsPath.replace(/\\/g, '/');
 
 					let importPath: string | undefined;

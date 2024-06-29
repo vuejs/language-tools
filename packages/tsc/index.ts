@@ -11,7 +11,6 @@ export function run() {
 	const main = () => runTsc(
 		require.resolve('typescript/lib/tsc'),
 		runExtensions,
-		// @ts-expect-error
 		(ts, options) => {
 			const { configFilePath } = options.options;
 			const vueOptions = typeof configFilePath === 'string'
@@ -44,14 +43,7 @@ export function run() {
 					options.options,
 					vueOptions
 				);
-				return {
-					languagePlugins: [vueLanguagePlugin],
-					setup(language) {
-						language.vue = {
-							compilerOptions: vueOptions,
-						};
-					},
-				};
+				return { languagePlugins: [vueLanguagePlugin] };
 			}
 			else {
 				runExtensions = allExtensions;

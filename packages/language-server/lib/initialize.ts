@@ -53,10 +53,8 @@ export function initialize(
 						compilerOptions,
 						vueCompilerOptions
 					)],
-					setup(language) {
-						language.vue = {
-							compilerOptions: vueCompilerOptions,
-						};
+					setup({ project }) {
+						project.vue = { compilerOptions: vueCompilerOptions };
 					},
 				};
 			}

@@ -1,4 +1,4 @@
-import type { Language, LanguagePlugin, LanguageServer, LanguageServerProject, ProviderResult } from '@volar/language-server';
+import type { Language, LanguagePlugin, LanguageServer, LanguageServerProject, ProjectContext, ProviderResult } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createLanguage } from '@vue/language-core';
 import { createLanguageService, createUriMap, LanguageService } from '@vue/language-service';
@@ -11,7 +11,10 @@ export function createHybridModeProject(
 		asFileName: (scriptId: URI) => string;
 	}) => ProviderResult<{
 		languagePlugins: LanguagePlugin<URI>[];
-		setup?(language: Language): void;
+		setup?(options: {
+			language: Language;
+			project: ProjectContext;
+		}): void;
 	}>
 ): LanguageServerProject {
 	let initialized = false;
@@ -35,25 +38,12 @@ export function createHybridModeProject(
 				const tsconfig = projectInfo.name;
 				const tsconfigUri = URI.file(tsconfig);
 				if (!tsconfigProjects.has(tsconfigUri)) {
-					tsconfigProjects.set(tsconfigUri, (async () => {
-						const { languagePlugins, setup } = await create({
-							configFileName: tsconfig,
-							asFileName,
-						});
-						const languageService = createLs(server, languagePlugins);
-						setup?.(languageService.context.language);
-						return languageService;
-					})());
+					tsconfigProjects.set(tsconfigUri, createLs(server, tsconfig));
 				}
 				return await tsconfigProjects.get(tsconfigUri)!;
 			}
 			else {
-				simpleLs ??= (async () => {
-					const { languagePlugins, setup } = await create({ asFileName });
-					const languageService = createLs(server, languagePlugins);
-					setup?.(languageService.context.language);
-					return languageService;
-				})();
+				simpleLs ??= createLs(server, undefined);
 				return await simpleLs;
 			}
 		},
@@ -92,10 +82,11 @@ export function createHybridModeProject(
 		});
 	}
 
-	function createLs(
-		server: LanguageServer,
-		languagePlugins: LanguagePlugin<URI>[]
-	) {
+	async function createLs(server: LanguageServer, tsconfig: string | undefined) {
+		const { languagePlugins, setup } = await create({
+			configFileName: tsconfig,
+			asFileName,
+		});
 		const language = createLanguage([
 			{ getLanguageId: uri => server.documents.get(server.getSyncedDocumentKey(uri) ?? uri.toString())?.languageId },
 			...languagePlugins,
@@ -109,10 +100,13 @@ export function createHybridModeProject(
 				language.scripts.delete(uri);
 			}
 		});
+		const project: ProjectContext = {};
+		setup?.({ language, project });
 		return createLanguageService(
 			language,
 			server.languageServicePlugins,
-			createLanguageServiceEnvironment(server, [...server.workspaceFolders.keys()])
+			createLanguageServiceEnvironment(server, [...server.workspaceFolders.keys()]),
+			project
 		);
 	}
 }
