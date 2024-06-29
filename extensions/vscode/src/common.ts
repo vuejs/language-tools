@@ -58,6 +58,7 @@ function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 		|| extension.id === 'miaonster.vscode-tsx-arrow-definition'
 		|| extension.id === 'runem.lit-plugin'
 		|| extension.id === 'kimuson.ts-type-expand'
+		|| extension.id === 'p42ai.refactor'
 	) {
 		return true;
 	}
