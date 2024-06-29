@@ -270,7 +270,7 @@ importers:
         specifier: ^7.5.4
         version: 7.6.2
       typescript:
-        specifier: '*'
+        specifier: '>=5.0.0'
         version: 5.5.2
     devDependencies:
       '@types/node':
