@@ -59,6 +59,7 @@ function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 		|| extension.id === 'runem.lit-plugin'
 		|| extension.id === 'kimuson.ts-type-expand'
 		|| extension.id === 'p42ai.refactor'
+		|| extension.id === 'nrwl.angular-console'
 	) {
 		return true;
 	}
