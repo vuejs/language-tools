@@ -1,5 +1,6 @@
-import { BaseLanguageClient, getTsdk, ExecuteCommandRequest, ExecuteCommandParams } from '@volar/vscode';
-import { commands, SFCParseResult } from '@vue/language-server';
+import { BaseLanguageClient, ExecuteCommandParams, ExecuteCommandRequest, getTsdk } from '@volar/vscode';
+import type { SFCParseResult } from '@vue/language-server';
+import { commands } from '@vue/language-server/lib/types';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { config } from '../config';

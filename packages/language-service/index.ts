@@ -4,7 +4,7 @@ export * from './lib/ideFeatures/nameCasing';
 export * from './lib/types';
 
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
-import { AttrNameCasing, TagNameCasing } from './lib/types';
+import { AttrNameCasing, commands, TagNameCasing } from './lib/types';
 
 import { create as createEmmetPlugin } from 'volar-service-emmet';
 import { create as createJsonPlugin } from 'volar-service-json';
@@ -148,15 +148,6 @@ export function getHybridModeLanguageServicePlugins(
 	}
 	return plugins;
 }
-
-export const commands = {
-	parseSfc: 'vue.parseSfc',
-	detectNameCasing: 'vue.detectNameCasing',
-	convertTagsToKebabCase: 'vue.convertTagsToKebabCase',
-	convertTagsToPascalCase: 'vue.convertTagsToPascalCase',
-	convertPropsToKebabCase: 'vue.convertPropsToKebabCase',
-	convertPropsToCamelCase: 'vue.convertPropsToCamelCase',
-};
 
 function getCommonLanguageServicePlugins(
 	ts: typeof import('typescript'),

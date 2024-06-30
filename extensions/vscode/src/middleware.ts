@@ -1,4 +1,4 @@
-import { AttrNameCasing, TagNameCasing } from '@vue/language-server';
+import { AttrNameCasing, TagNameCasing } from '@vue/language-server/lib/types';
 import * as vscode from 'vscode';
 import * as lsp from '@volar/vscode';
 import { attrNameCasings, tagNameCasings } from './features/nameCasing';

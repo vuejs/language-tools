@@ -1,5 +1,6 @@
 import { ExecuteCommandParams, ExecuteCommandRequest, type BaseLanguageClient } from '@volar/vscode';
-import { commands, type SFCParseResult } from '@vue/language-server';
+import type { SFCParseResult } from '@vue/language-server';
+import { commands } from '@vue/language-server/lib/types';
 import * as vscode from 'vscode';
 import { config } from '../config';
 
