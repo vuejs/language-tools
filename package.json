@@ -28,5 +28,10 @@
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
+	},
+	"pnpm": {
+		"overrides": {
+			"inquirer": "9.2.23"
+		}
 	}
 }
