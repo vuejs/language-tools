@@ -3,6 +3,7 @@ import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
+import * as _ from '@volar/typescript';
 
 const asts = new WeakMap<ts.IScriptSnapshot, ts.SourceFile>();
 
@@ -67,7 +68,7 @@ export function create(
 					let ast: ts.SourceFile | undefined;
 					let sourceCodeOffset = document.offsetAt(selection);
 
-					const fileName = context.language.typescript?.asFileName(sourceScript.id)
+					const fileName = context.project.typescript?.asFileName(sourceScript.id)
 						?? sourceScript.id.fsPath.replace(/\\/g, '/');
 
 					if (sourceScript.generated) {

@@ -1,10 +1,39 @@
 # Changelog
 
+> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+
+## 2.0.24 <sup>official</sup>, 2.0.25 <sup>insiders</sup> (2024-06-30)
+
+### Features
+
+- **vscode:** pop message box if new insiders version available <sup>insiders</sup>
+- **vscode:** if insiders versions information failed to fetch from GitHub, try to fetch from CDN <sup>insiders</sup>
+- **language-service:** better sfc-level tag name completion (#4506) - Thanks @KermanX
+
+### Bug Fixes
+
+- **tsc:** update required volar version (#4498) - Thanks @davidmatter
+- **tsc:** bump peer typescript version (#4513) - Thanks @so1ve
+
+### Refactors
+
+- **language-server:** reorganize the code structure (#4507)
+
+### Other Changes
+
+- Upgrade Volar from `v2.3.1` to `v2.4.0-alpha.2`.
+  - Hybrid Mode compatibility improvements with other TS plugins (https://github.com/volarjs/volar.js/issues/216)
+- **docs:** add nvim-cmp integration (#4463) - Thanks @RayGuo-ergou
+- **docs:** update mermaid
+- The following extensions have been added to Hybrid Mode’s compatibility whitelist (#4206):
+  - `p42ai.refactor`
+  - `nrwl.angular-console`
+  - `styled-components.vscode-styled-components`
+  - `Divlo.vscode-styled-jsx-languageserver`
+
 ## 2.1.0-insiders.14 (2024-06-22)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.14), [爱发电电圈](https://afdian.net/p/e05e95a8309d11efbebf52540025c377)
-
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
 ### Other Changes
 
@@ -29,8 +58,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.13), [爱发电电圈](https://afdian.net/p/8f915cf625a711ef860252540025c377)
 
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
-
 ### Other Changes
 
 - Merged [v2.0.21](https://github.com/vuejs/language-tools/releases/tag/v2.0.21).
@@ -44,8 +71,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 ## 2.1.0-insiders.12 (2024-06-08)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.12), [爱发电电圈](https://afdian.net/p/596ab3c0256b11ef8a9c52540025c377)
-
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
 ### Other Changes
 
@@ -85,8 +110,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.11), [爱发电电圈](https://afdian.net/p/c69dc31e134211ef823d5254001e7c00)
 
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
-
 ### Other Changes
 
 - Merged [v2.0.19](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2019-2024-05-16).
@@ -102,8 +125,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 ## 2.1.0-insiders.10 (2024-05-15)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.10), [爱发电电圈](https://afdian.net/p/6c4eaf90134211efb38652540025c377)
-
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
 ### Other Changes
 
@@ -143,8 +164,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 ## 2.1.0-insiders.9 (2024-05-10)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.9), [爱发电电圈](https://afdian.net/p/6d7547a60ead11efbc8352540025c377)
-
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
 ### Other Changes
 
@@ -197,8 +216,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.8), [爱发电电圈](https://afdian.net/p/f45436ca076d11ef9b7352540025c377)
 
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
-
 ### Other Changes
 
 - Merged [v2.0.16](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2016-202451).
@@ -222,8 +239,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 ## 2.1.0-insiders.7 (2024/4/30)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.7), [爱发电电圈](https://afdian.net/p/84db515c069b11ef9eaf52540025c377)
-
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
 ### Other Changes
 
@@ -263,8 +278,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.6), [爱发电电圈](https://afdian.net/p/f73a772602ab11efa33652540025c377)
 
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
-
 ### Features
 
 - Check for Insiders version updates on startup
@@ -281,8 +294,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 ## 2.1.0-insiders.5 (2024/4/22)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.5), [爱发电电圈](https://afdian.net/p/25aca47c004e11ef8b445254001e7c00)
-
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
 ### Other Changes
 
@@ -331,8 +342,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.4), [爱发电电圈](https://afdian.net/p/46a5f4a8f72011ee97fe52540025c377)
 
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
-
 ### Other Changes
 
 - Merged [v2.0.12](https://github.com/vuejs/language-tools/blob/master/CHANGELOG.md#2012-2024410).
@@ -353,8 +362,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 ## 2.1.0-insiders.3 (2024/4/7)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.3), [爱发电电圈](https://afdian.net/p/5bf99cfaf4ec11ee9e1f5254001e7c00)
-
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
 ### Features
 
@@ -392,8 +399,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 ## 2.1.0-insiders.2 (2024/4/4)
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.2), [爱发电电圈](https://afdian.net/p/d59d0dd8f29611ee88945254001e7c00)
-
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
 ### Features
 
@@ -440,8 +445,6 @@ Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/t
 - **test:** added simple tests for vue-tsc and custom SFC extensions. (#4181) - Thanks @cabal95
 
 ## 2.1.0-insiders.1
-
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
 Download Pages: [GitHub Releases](https://github.com/volarjs/insiders/releases/tag/v2.1.0-insiders.1), [爱发电电圈](https://afdian.net/p/ba0901a2edce11ee8f2e52540025c377)
 

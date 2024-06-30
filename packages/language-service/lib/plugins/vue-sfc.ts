@@ -66,7 +66,7 @@ export function create(): LanguageServicePlugin {
 
 				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
 					if (sourceScript.generated?.root instanceof vue.VueVirtualCode) {
-						if (virtualCode.id === 'scriptFormat' || virtualCode.id === 'scriptSetupFormat') {
+						if (virtualCode.id === 'script_raw' || virtualCode.id === 'scriptsetup_raw') {
 							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
@@ -172,6 +172,19 @@ export function create(): LanguageServicePlugin {
 						return result;
 					});
 				},
+
+				async provideCompletionItems(document, position, context, token) {
+					const result = await htmlPluginInstance.provideCompletionItems?.(document, position, context, token)
+					if (!result) {
+						return;
+					}
+					result.items = [
+						...result.items.filter(item => item.label !== '!DOCTYPE' && item.label !== 'Custom Blocks'),
+						createCompletionItemWithTs(result.items.find(item => item.label === 'script')!),
+						createCompletionItemWithTs(result.items.find(item => item.label === 'script setup')!),
+					]
+					return result;
+				},
 			};
 		},
 	};
@@ -184,4 +197,15 @@ export function create(): LanguageServicePlugin {
 			return callback(virtualCode);
 		}
 	}
+}
+
+function createCompletionItemWithTs(base: vscode.CompletionItem): vscode.CompletionItem {
+	return {
+		...base,
+		label: base.label + ' lang="ts"',
+		textEdit: {
+			...base.textEdit!,
+			newText: base.textEdit!.newText + ' lang="ts"',
+		}
+	};
 }
