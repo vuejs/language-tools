@@ -28,7 +28,9 @@ export function parseScriptSetupRanges(
 	} = {};
 	const emits: {
 		name?: string;
-		define?: ReturnType<typeof parseDefineFunction>;
+		define?: ReturnType<typeof parseDefineFunction> & {
+			hasUnionTypeArg?: boolean;
+		};
 	} = {};
 	const expose: {
 		name?: string;
@@ -215,6 +217,14 @@ export function parseScriptSetupRanges(
 				emits.define = parseDefineFunction(node);
 				if (ts.isVariableDeclaration(parent)) {
 					emits.name = getNodeText(ts, parent.name, ast);
+				}
+				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0]) && node.typeArguments[0].members.at(0)) {
+					for (const member of node.typeArguments[0].members) {
+						if (ts.isCallSignatureDeclaration(member) && member.parameters[0].type && ts.isUnionTypeNode(member.parameters[0].type)) {
+							emits.define.hasUnionTypeArg = true;
+							return;
+						}
+					}
 				}
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {

@@ -1,0 +1,10 @@
+{
+	"extends": "../vue3_strictTemplate/tsconfig.json",
+	"vueCompilerOptions": {
+		"target": 3.5
+	},
+	"include": [
+		"../vue3.5/env.d.ts",
+		"../vue3_strictTemplate",
+	],
+}

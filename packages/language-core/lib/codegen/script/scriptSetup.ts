@@ -1,7 +1,7 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
-import { generateComponent } from './component';
+import { generateComponent, generateEmitsOption } from './component';
 import type { ScriptCodegenContext } from './context';
 import { ScriptCodegenOptions, codeFeatures } from './index';
 import { generateTemplate } from './template';
@@ -48,7 +48,7 @@ export function* generateScriptSetup(
 			+ `	__VLS_setup = (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined, definePropMirrors);
 
-		const emitTypes = ['typeof __VLS_modelEmitsType'];
+		const emitTypes = ['__VLS_ModelEmitsType'];
 
 		if (scriptSetupRanges.emits.define) {
 			emitTypes.unshift(`typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'}`);
@@ -265,14 +265,7 @@ function* generateComponentProps(
 		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.arg.start, scriptSetupRanges.props.define.arg.end, codeFeatures.navigation);
 		yield `,${newLine}`;
 	}
-	if (scriptSetupRanges.emits.define || scriptSetupRanges.defineProp.some(p => p.isModel)) {
-		yield `	emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`;
-		if (scriptSetupRanges.emits.define) {
-			yield ` & typeof `;
-			yield scriptSetupRanges.emits.name ?? '__VLS_emit';
-		}
-		yield `>),${newLine}`;
-	}
+	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
 	yield `})${endOfLine}`;
 	yield `let __VLS_functionalComponentProps!: `;
 	yield `${ctx.helperTypes.OmitKeepDiscriminatedUnion.name}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
@@ -371,10 +364,13 @@ function* generateModelEmits(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	yield `const __VLS_modelEmitsType = `;
-
+	yield `type __VLS_ModelEmitsType = `;
 	if (scriptSetupRanges.defineProp.filter(p => p.isModel).length) {
-		yield `(await import('${options.vueCompilerOptions.lib}')).defineEmits<{${newLine}`;
+		if (options.vueCompilerOptions.target < 3.5) {
+			yield `typeof __VLS_modelEmitsType${endOfLine}`;
+			yield `const __VLS_modelEmitsType = (await import('${options.vueCompilerOptions.lib}')).defineEmits<`;
+		}
+		yield `{${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
 			if (!defineProp.isModel) {
 				continue;
@@ -394,7 +390,10 @@ function* generateModelEmits(
 			}
 			yield `]${endOfLine}`;
 		}
-		yield `}>()`;
+		yield `}`;
+		if (options.vueCompilerOptions.target < 3.5) {
+			yield `>()`;
+		}
 	} else {
 		yield `{}`;
 	}

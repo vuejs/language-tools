@@ -1,5 +1,5 @@
 <script setup lang="ts">
-const emit = defineEmits<{
+defineEmits<{
 	(e: 'event-any', arg: any): void;
 	(e: 'event-str', arg: string): void;
 }>();
