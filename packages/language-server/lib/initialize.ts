@@ -42,10 +42,10 @@ export function initialize(
 					languagePlugins: [createVueLanguagePlugin(
 						ts,
 						asFileName,
-						() => projectHost?.getProjectVersion?.() ?? '',
+						() => projectHost.getProjectVersion?.() ?? '',
 						fileName => {
-							const fileMap = new FileMap(sys?.useCaseSensitiveFileNames ?? false);
-							for (const vueFileName of projectHost?.getScriptFileNames() ?? []) {
+							const fileMap = new FileMap(sys.useCaseSensitiveFileNames ?? false);
+							for (const vueFileName of projectHost.getScriptFileNames() ?? []) {
 								fileMap.set(vueFileName, undefined);
 							}
 							return fileMap.has(fileName);
