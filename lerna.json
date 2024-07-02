@@ -6,5 +6,5 @@
 		"packages/*",
 		"test-workspace"
 	],
-	"version": "2.0.26-alpha.1"
+	"version": "2.0.26-alpha.2"
 }
