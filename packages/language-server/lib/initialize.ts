@@ -18,7 +18,7 @@ export function initialize(
 		createTypeScriptProject(
 			ts,
 			tsLocalized,
-			async ({ configFileName, sys, projectHost, asFileName }) => {
+			async ({ configFileName, sys, projectHost, uriConverter }) => {
 				let compilerOptions: ts.CompilerOptions;
 				let vueCompilerOptions: VueCompilerOptions;
 				if (configFileName) {
@@ -41,7 +41,7 @@ export function initialize(
 				return {
 					languagePlugins: [createVueLanguagePlugin(
 						ts,
-						asFileName,
+						s => uriConverter.asFileName(s),
 						() => projectHost.getProjectVersion?.() ?? '',
 						fileName => {
 							const fileMap = new FileMap(sys.useCaseSensitiveFileNames ?? false);

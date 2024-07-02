@@ -70,7 +70,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')): 
 							context.language,
 							languageService,
 							context.project.vue.compilerOptions,
-							context.project.typescript.asUri
+							s => context.project.typescript?.uriConverter.asUri(s)
 						);
 						languageService.getCompletionsAtPosition = proxy.getCompletionsAtPosition;
 						languageService.getCompletionEntryDetails = proxy.getCompletionEntryDetails;
@@ -99,7 +99,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')): 
 			languageService,
 			languageServiceHost: context.project.typescript.languageServiceHost,
 			isTsPlugin: false,
-			getFileId: context.project.typescript.asUri,
+			getFileId: s => context.project.typescript!.uriConverter.asUri(s),
 		};
 		return {
 			async collectExtractProps(...args) {

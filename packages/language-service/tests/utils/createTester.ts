@@ -71,8 +71,10 @@ function createTester(rootUri: URI) {
 	project.typescript = {
 		configFileName: realTsConfig,
 		sys: ts.sys,
-		asFileName: uriToFileName,
-		asUri: fileNameToUri,
+		uriConverter: {
+			asFileName: uriToFileName,
+			asUri: fileNameToUri,
+		},
 		...createLanguageServiceHost(ts, ts.sys, language, fileNameToUri, projectHost),
 	};
 	project.vue = {
