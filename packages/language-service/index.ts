@@ -32,7 +32,6 @@ import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collect
 import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from '@vue/typescript-plugin/lib/requests/componentInfos';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
-import { getQuickInfoAtPosition } from '@vue/typescript-plugin/lib/requests/getQuickInfoAtPosition';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
 import { URI } from 'vscode-uri';
 import { convertAttrName, convertTagName, detect } from './lib/ideFeatures/nameCasing';
@@ -126,8 +125,38 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')): 
 			async getTemplateContextProps(...args) {
 				return await getTemplateContextProps.apply(requestContext, args);
 			},
-			async getQuickInfoAtPosition(...args) {
-				return await getQuickInfoAtPosition.apply(requestContext, args);
+			async getQuickInfoAtPosition(fileName, position) {
+				const languageService = context.getLanguageService();
+				const uri = context.project.typescript!.uriConverter.asUri(fileName);
+				const sourceScript = context.language.scripts.get(uri);
+				if (!sourceScript) {
+					return;
+				}
+				const document = context.documents.get(uri, sourceScript.languageId, sourceScript.snapshot);
+				const hover = await languageService.getHover(uri, document.positionAt(position));
+				let text = '';
+				if (typeof hover?.contents === 'string') {
+					text = hover.contents;
+				}
+				else if (Array.isArray(hover?.contents)) {
+					text = hover.contents.map(c => typeof c === 'string' ? c : c.value).join('\n');
+				}
+				else if (hover) {
+					text = hover.contents.value;
+				}
+				text = text.replace(/```typescript/g, '');
+				text = text.replace(/```/g, '');
+				text = text.replace(/---/g, '');
+				text = text.trim();
+				while (true) {
+					const newText = text.replace(/\n\n/g, '\n');
+					if (newText === text) {
+						break;
+					}
+					text = newText;
+				}
+				text = text.replace(/\n/g, ' | ');
+				return text;
 			},
 		};
 	}
@@ -161,7 +190,7 @@ function getCommonLanguageServicePlugins(
 		createVueTemplatePlugin('html', ts, getTsPluginClient),
 		createVueTemplatePlugin('pug', ts, getTsPluginClient),
 		createVueSfcPlugin(),
-		createVueTwoslashQueriesPlugin(ts, getTsPluginClient),
+		createVueTwoslashQueriesPlugin(getTsPluginClient),
 		createVueDocumentLinksPlugin(),
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
