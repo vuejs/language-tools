@@ -254,35 +254,24 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	}
 
 	const item = vscode.languages.createLanguageStatusItem('vue-insider', 'vue');
-	if (!context.extension.packageJSON.version.includes('-insider')) {
-		item.text = '✨ Get Insiders Edition';
-		item.severity = vscode.LanguageStatusSeverity.Warning;
+	item.text = 'Checking for Updates...';
+	item.busy = true;
+	let succeed = false;
+	for (const url of [
+		'https://raw.githubusercontent.com/vuejs/language-tools/HEAD/insiders.json',
+		'https://cdn.jsdelivr.net/gh/vuejs/language-tools/insiders.json',
+	]) {
+		try {
+			const res = await fetch(url);
+			onJson(await res.json());
+			succeed = true;
+			break;
+		} catch { }
 	}
-	else {
-		item.text = '🚀 Insiders Edition';
-	}
-	checkUpdate();
-
-	async function checkUpdate() {
-		item.detail = 'Checking for Updates...';
-		item.busy = true;
-		let succeed = false;
-		for (const url of [
-			'https://raw.githubusercontent.com/vuejs/language-tools/HEAD/insiders.json',
-			'https://cdn.jsdelivr.net/gh/vuejs/language-tools/insiders.json',
-		]) {
-			try {
-				const res = await fetch(url);
-				onJson(await res.json());
-				succeed = true;
-				break;
-			} catch { }
-		}
-		item.busy = false;
-		if (!succeed) {
-			item.detail = 'Failed to Fetch Versions';
-			item.severity = vscode.LanguageStatusSeverity.Error;
-		}
+	item.busy = false;
+	if (!succeed) {
+		item.text = 'Failed to Fetch Versions';
+		item.severity = vscode.LanguageStatusSeverity.Error;
 	}
 
 	function onJson(json: {
@@ -301,19 +290,25 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 			title: 'Select Version',
 			command: 'vue-insiders.update',
 		};
-		if (
-			json.versions.some(version => version.version === context.extension.packageJSON.version)
-			&& context.extension.packageJSON.version !== json.latest
-		) {
-			item.detail = 'New Version Available!';
+		if (json.versions.some(version => version.version === context.extension.packageJSON.version)) {
+			item.text = '🚀 Insiders Edition';
+			item.severity = vscode.LanguageStatusSeverity.Information;
+
+			if (context.extension.packageJSON.version !== json.latest) {
+				item.detail = 'New Version Available!';
+				item.severity = vscode.LanguageStatusSeverity.Warning;
+				vscode.window
+					.showInformationMessage('New Insiders Version Available!', 'Download')
+					.then(download => {
+						if (download) {
+							vscode.commands.executeCommand('vue-insiders.update');
+						}
+					});
+			}
+		}
+		else {
+			item.text = '✨ Get Insiders Edition';
 			item.severity = vscode.LanguageStatusSeverity.Warning;
-			vscode.window
-				.showInformationMessage('New Insiders Version Available!', 'Download')
-				.then(download => {
-					if (download) {
-						vscode.commands.executeCommand('vue-insiders.update');
-					}
-				});
 		}
 		vscode.commands.registerCommand('vue-insiders.update', async () => {
 			const quickPickItems: { [version: string]: vscode.QuickPickItem; } = {};
