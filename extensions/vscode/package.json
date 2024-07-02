@@ -547,7 +547,7 @@
 		"@vue/language-core": "2.0.26-alpha.1",
 		"@vue/language-server": "2.0.26-alpha.1",
 		"@vue/typescript-plugin": "2.0.26-alpha.1",
-		"esbuild": "latest",
+		"esbuild": "~0.21.0",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"semver": "^7.5.4",
