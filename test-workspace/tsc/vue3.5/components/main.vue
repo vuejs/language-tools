@@ -1,6 +1,6 @@
 <script lang="ts">
 import { exactType } from '../../shared';
-import { defineComponent, PropType, ref } from 'vue';
+import { defineComponent, ref } from 'vue';
 import ScriptSetup from './script-setup.vue';
 import ScriptSetupExpose from './script-setup-expose.vue';
 import ScriptSetupTypeOnly from './script-setup-type-only.vue';
@@ -39,7 +39,7 @@ const ScriptSetupTypeOnlyExact = defineComponent({
 	},
 	__typeEmits: {} as {
 		(e: 'change', id: number): void
-  	(e: 'update', value: string): void
+		(e: 'update', value: string): void
 	},
 	setup() {
 		return {};
@@ -47,15 +47,9 @@ const ScriptSetupTypeOnlyExact = defineComponent({
 });
 // https://vuejs.org/api/sfc-script-setup.html#default-props-values-when-using-type-declaration
 const ScriptSetupDefaultPropsExact = defineComponent({
-	props: {
-		msg: {
-			type: String,
-			default: 'hello'
-		},
-		labels: {
-			type: Array as PropType<string[]>,
-			default: () => ['one', 'two']
-		},
+	__typeProps: {} as {
+		msg?: string
+		labels?: string[]
 	},
 	setup() {
 		return {};

@@ -67,52 +67,58 @@ export function* generateScriptSetupOptions(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	const propsCodegens: (() => Generator<Code>)[] = [];
-	const propsName = options.vueCompilerOptions.target < 3.5 || scriptSetupRanges.props.define?.arg || scriptSetupRanges.props.withDefaults
-		? 'props' : '__typeProps';
+	if (options.vueCompilerOptions.target >= 3.5 && ctx.generatedPropsType) {
+		yield `__typeProps: {} as __VLS_PublicProps,${newLine}`;
+	}
+	else {
+		yield* generatePropsOption(ctx, scriptSetup, scriptSetupRanges);
+	}
+	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
+}
+
+export function* generatePropsOption(
+	ctx: ScriptCodegenContext,
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetupRanges: ScriptSetupRanges
+) {
+	const codegens: (() => Generator<Code>)[] = [];
 
 	if (ctx.generatedPropsType) {
-		propsCodegens.push(function* () {
+		codegens.push(function* () {
 			yield `{} as `;
-			if (propsName === 'props') {
-				if (scriptSetupRanges.props.withDefaults?.arg) {
-					yield `${ctx.helperTypes.WithDefaults.name}<`;
-				}
-				yield `${ctx.helperTypes.TypePropsToOption.name}<`;
-				yield `__VLS_PublicProps>`;
-				if (scriptSetupRanges.props.withDefaults?.arg) {
-					yield `, typeof __VLS_withDefaultsArg>`;
-				}
-			} else {
-				yield `__VLS_PublicProps`;
+			if (scriptSetupRanges.props.withDefaults?.arg) {
+				yield `${ctx.helperTypes.WithDefaults.name}<`;
+			}
+			yield `${ctx.helperTypes.TypePropsToOption.name}<`;
+			yield `__VLS_PublicProps>`;
+			if (scriptSetupRanges.props.withDefaults?.arg) {
+				yield `, typeof __VLS_withDefaultsArg>`;
 			}
 		});
 	}
 	if (scriptSetupRanges.props.define?.arg) {
 		const { arg } = scriptSetupRanges.props.define;
-		propsCodegens.push(function* () {
+		codegens.push(function* () {
 			yield generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation);
 		});
 	}
 
-	if (propsCodegens.length === 1) {
-		yield `${propsName}: `;
-		for (const generate of propsCodegens) {
+	if (codegens.length === 1) {
+		yield `props: `;
+		for (const generate of codegens) {
 			yield* generate();
 		}
 		yield `,${newLine}`;
 	}
-	else if (propsCodegens.length >= 2) {
-		yield `${propsName}: {${newLine}`;
-		for (const generate of propsCodegens) {
+	else if (codegens.length >= 2) {
+		yield `props: {${newLine}`;
+		for (const generate of codegens) {
 			yield `...`;
 			yield* generate();
 			yield `,${newLine}`;
 		}
 		yield `},${newLine}`;
 	}
-
-	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
 }
 
 export function* generateEmitsOption(
