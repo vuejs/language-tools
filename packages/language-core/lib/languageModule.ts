@@ -96,11 +96,11 @@ export function createVueLanguagePlugin<T>(
 		createVirtualCode(scriptId, languageId, snapshot) {
 			if (languageId === 'vue' || languageId === 'markdown' || languageId === 'html') {
 				const fileName = asFileName(scriptId);
-				if (!pluginContext.globalTypesHolder && getProjectVersion() !== canonicalRootFileNamesVersion) {
+				if (getProjectVersion() !== canonicalRootFileNamesVersion) {
 					canonicalRootFileNamesVersion = getProjectVersion();
-					if (isRootFile(fileName)) {
-						pluginContext.globalTypesHolder = fileName;
-					}
+				}
+				if (!pluginContext.globalTypesHolder && isRootFile(fileName)) {
+					pluginContext.globalTypesHolder = fileName;
 				}
 				const fileRegistry = getFileRegistry(pluginContext.globalTypesHolder === fileName);
 				const code = fileRegistry.get(fileName);
