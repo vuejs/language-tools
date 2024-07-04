@@ -1,9 +1,9 @@
 {
 	"private": true,
-	"version": "2.0.26-alpha.2",
+	"version": "2.0.26",
 	"devDependencies": {
 		"vue": "^3.4.0",
-		"vue-component-type-helpers": "2.0.26-alpha.2",
+		"vue-component-type-helpers": "2.0.26",
 		"vue2": "npm:vue@2.7.16",
 		"vue3.3": "npm:vue@3.3.13",
 		"vue3.5": "npm:vue@alpha"
