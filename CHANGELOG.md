@@ -2,6 +2,29 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.0.26 <sup>official</sup>, 2.0.27 <sup>insiders</sup> (2024-07-04)
+
+### Features
+
+- **language-service:** Support auto-complete for more preprocessing languages.
+- **language-core:** Improve type compatibility with Vue 3.5. (#4474) - Thanks, @zhiyuanzmj.
+
+### Bug Fixes
+
+- **vscode:** Fix insider version display condition. <sup>Insiders</sup>
+- **language-service:** Fix `vue-twoslash-queries` not working in LSP mode.
+- **language-service:** Add null handling for script tag completion items. (#4520)
+- **language-core:** Fix `any` in templates if the first checked file was not root. (#4526) - Thanks, @daniluk4000.
+
+### Other Changes
+
+- Upgraded Volar from `v2.4.0-alpha.2` to `v2.4.0-alpha.14`:
+	- Fixed an issue where, when Hybrid Mode is disabled, TS support for Vue files not included in tsconfig may be missing.
+	- Improved the consistency of `vue-tsc` and `tsc` behavior. (#3526)
+	- Fixed the `--clean` flag support for `vue-tsc`.
+- Updated the high-level overview mermaid diagram.
+- Added 'expected' and 'actually happening' sections to the bug report template. (#4515) - Thanks, @davidmatter.
+
 ## 2.0.24 <sup>official</sup>, 2.0.25 <sup>insiders</sup> (2024-06-30)
 
 ### Features
