@@ -16,10 +16,10 @@ declare global {
 			? `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.Element;`
 			: `globalThis.JSX.Element;`
 		}
-	type __VLS_GlobalComponentNames = 'BaseTransition' | 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'
-	type __VLS_OmitGlobalComponents<T> = T extends object ? { [K in keyof T as {} extends Record<K, 1> ? never : K extends __VLS_GlobalComponentNames ? never : K]: T[K] } : never;
-	type __VLS_GlobalComponents = __VLS_OmitGlobalComponents<import('${vueCompilerOptions.lib}').GlobalComponents>
-		& Pick<typeof import('${vueCompilerOptions.lib}'), __VLS_GlobalComponentNames>;
+	type __VLS_GlobalComponents = ${vueCompilerOptions.target >= 3.5
+			? `import('${vueCompilerOptions.lib}').GlobalComponents`
+			: `import('${vueCompilerOptions.lib}').GlobalComponents & Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
+		}
 	type __VLS_BuiltInPublicProps = ${vueCompilerOptions.target >= 3.4
 			? `import('${vueCompilerOptions.lib}').PublicProps;`
 			: vueCompilerOptions.target >= 3.0
