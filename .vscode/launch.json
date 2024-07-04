@@ -8,8 +8,8 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				// "--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode"
+				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode",
+				"--folder-uri=${workspaceRoot}/test-workspace",
 			],
 			"outFiles": [
 				"${workspaceRoot}/**/*.js"
