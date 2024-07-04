@@ -6,7 +6,6 @@ import { URI } from 'vscode-uri';
 const twoslashReg = /<!--\s*\^\?\s*-->/g;
 
 export function create(
-	ts: typeof import('typescript'),
 	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
 ): LanguageServicePlugin {
 	return {
@@ -39,20 +38,18 @@ export function create(
 					}
 
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
-						for (const [_sourceScript, map] of context.language.maps.forEach(virtualCode)) {
-							for (const [sourceOffset] of map.toSourceLocation(hoverOffset)) {
-								const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(sourceScript.generated.root.fileName, sourceOffset);
-								if (quickInfo) {
-									inlayHints.push({
-										position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
-										label: ts.displayPartsToString(quickInfo.displayParts),
-										paddingLeft: true,
-										paddingRight: false,
-									});
-									break;
-								}
+						const map = context.language.maps.get(virtualCode, sourceScript);
+						for (const [sourceOffset] of map.toSourceLocation(hoverOffset)) {
+							const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(sourceScript.generated.root.fileName, sourceOffset);
+							if (quickInfo) {
+								inlayHints.push({
+									position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
+									label: quickInfo,
+									paddingLeft: true,
+									paddingRight: false,
+								});
+								break;
 							}
-							break;
 						}
 					}
 
