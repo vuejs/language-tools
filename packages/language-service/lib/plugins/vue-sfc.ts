@@ -174,15 +174,21 @@ export function create(): LanguageServicePlugin {
 				},
 
 				async provideCompletionItems(document, position, context, token) {
-					const result = await htmlPluginInstance.provideCompletionItems?.(document, position, context, token)
+					const result = await htmlPluginInstance.provideCompletionItems?.(document, position, context, token);
 					if (!result) {
 						return;
 					}
-					result.items = [
-						...result.items.filter(item => item.label !== '!DOCTYPE' && item.label !== 'Custom Blocks'),
-						createCompletionItemWithTs(result.items.find(item => item.label === 'script')!),
-						createCompletionItemWithTs(result.items.find(item => item.label === 'script setup')!),
-					]
+					result.items = result.items.filter(item => item.label !== '!DOCTYPE' && item.label !== 'Custom Blocks');
+					for (const scriptItem of result.items.filter(item => item.label === 'script' || item.label === 'script setup')) {
+						result.items.push({
+							...scriptItem,
+							label: scriptItem.label + ' lang="ts"',
+							textEdit: scriptItem.textEdit ? {
+								...scriptItem.textEdit,
+								newText: scriptItem.textEdit.newText + ' lang="ts"',
+							} : undefined,
+						});
+					}
 					return result;
 				},
 			};
@@ -197,15 +203,4 @@ export function create(): LanguageServicePlugin {
 			return callback(virtualCode);
 		}
 	}
-}
-
-function createCompletionItemWithTs(base: vscode.CompletionItem): vscode.CompletionItem {
-	return {
-		...base,
-		label: base.label + ' lang="ts"',
-		textEdit: {
-			...base.textEdit!,
-			newText: base.textEdit!.newText + ' lang="ts"',
-		}
-	};
 }
