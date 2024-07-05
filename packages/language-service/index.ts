@@ -1,3 +1,5 @@
+/// <reference types="@volar/typescript" />
+
 export * from '@volar/language-service';
 export * from '@vue/language-core';
 export * from './lib/ideFeatures/nameCasing';
