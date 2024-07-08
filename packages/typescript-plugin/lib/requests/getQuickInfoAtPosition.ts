@@ -5,6 +5,6 @@ export function getQuickInfoAtPosition(
 	fileName: string,
 	position: number
 ) {
-	const { languageService } = this;
-	return languageService.getQuickInfoAtPosition(fileName, position);
+	const { typescript: ts, languageService } = this;
+	return ts.displayPartsToString(languageService.getQuickInfoAtPosition(fileName, position)?.displayParts ?? []);
 }

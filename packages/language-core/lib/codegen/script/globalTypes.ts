@@ -16,8 +16,10 @@ declare global {
 			? `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.Element;`
 			: `globalThis.JSX.Element;`
 		}
-	type __VLS_GlobalComponents = import('${vueCompilerOptions.lib}').GlobalComponents
-		& Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;
+	type __VLS_GlobalComponents = ${vueCompilerOptions.target >= 3.5
+			? `import('${vueCompilerOptions.lib}').GlobalComponents`
+			: `import('${vueCompilerOptions.lib}').GlobalComponents & Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
+		}
 	type __VLS_BuiltInPublicProps = ${vueCompilerOptions.target >= 3.4
 			? `import('${vueCompilerOptions.lib}').PublicProps;`
 			: vueCompilerOptions.target >= 3.0

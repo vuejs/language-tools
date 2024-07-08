@@ -67,60 +67,85 @@ export function* generateScriptSetupOptions(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	const propsCodegens: (() => Generator<Code>)[] = [];
+	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges);
+	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
+}
 
-	if (ctx.generatedPropsType) {
-		propsCodegens.push(function* () {
-			yield `{} as `;
-			if (scriptSetupRanges.props.withDefaults?.arg) {
-				yield `${ctx.helperTypes.WithDefaults.name}<`;
-			}
-			yield `${ctx.helperTypes.TypePropsToOption.name}<`;
-			yield `__VLS_PublicProps>`;
-			if (scriptSetupRanges.props.withDefaults?.arg) {
-				yield `, typeof __VLS_withDefaultsArg>`;
-			}
-		});
+export function* generatePropsOption(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetupRanges: ScriptSetupRanges
+) {
+	if (options.vueCompilerOptions.target >= 3.5 && ctx.generatedPropsType) {
+		yield `__typeProps: {} as __VLS_PublicProps,${newLine}`;
 	}
-	if (scriptSetupRanges.props.define?.arg) {
-		const { arg } = scriptSetupRanges.props.define;
-		propsCodegens.push(function* () {
-			yield generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation);
-		});
-	}
+	else {
+		const codegens: (() => Generator<Code>)[] = [];
 
-	if (propsCodegens.length === 1) {
-		yield `props: `;
-		for (const generate of propsCodegens) {
-			yield* generate();
+		if (ctx.generatedPropsType) {
+			codegens.push(function* () {
+				yield `{} as `;
+				if (scriptSetupRanges.props.withDefaults?.arg) {
+					yield `${ctx.helperTypes.WithDefaults.name}<`;
+				}
+				yield `${ctx.helperTypes.TypePropsToOption.name}<`;
+				yield `__VLS_PublicProps>`;
+				if (scriptSetupRanges.props.withDefaults?.arg) {
+					yield `, typeof __VLS_withDefaultsArg>`;
+				}
+			});
 		}
-		yield `,${newLine}`;
-	}
-	else if (propsCodegens.length >= 2) {
-		yield `props: {${newLine}`;
-		for (const generate of propsCodegens) {
-			yield `...`;
-			yield* generate();
+		if (scriptSetupRanges.props.define?.arg) {
+			const { arg } = scriptSetupRanges.props.define;
+			codegens.push(function* () {
+				yield generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation);
+			});
+		}
+
+		if (codegens.length === 1) {
+			yield `props: `;
+			for (const generate of codegens) {
+				yield* generate();
+			}
 			yield `,${newLine}`;
 		}
-		yield `},${newLine}`;
+		else if (codegens.length >= 2) {
+			yield `props: {${newLine}`;
+			for (const generate of codegens) {
+				yield `...`;
+				yield* generate();
+				yield `,${newLine}`;
+			}
+			yield `},${newLine}`;
+		}
 	}
-	if (scriptSetupRanges.defineProp.filter(p => p.isModel).length || scriptSetupRanges.emits.define) {
-		yield `emits: ({} as __VLS_NormalizeEmits<typeof __VLS_modelEmitsType`;
-		if (scriptSetupRanges.emits.define) {
+}
+
+export function* generateEmitsOption(
+	options: ScriptCodegenOptions,
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetupRanges: ScriptSetupRanges
+): Generator<Code> {
+	if (!scriptSetupRanges.emits.define && !scriptSetupRanges.defineProp.some(p => p.isModel)) {
+		return;
+	}
+
+	if (options.vueCompilerOptions.target < 3.5 || scriptSetupRanges.emits.define?.arg || scriptSetupRanges.emits.define?.hasUnionTypeArg) {
+		yield `emits: ({} as __VLS_NormalizeEmits<__VLS_ModelEmitsType`;
+		if (scriptSetupRanges?.emits.define) {
 			yield ` & typeof `;
 			yield scriptSetupRanges.emits.name ?? '__VLS_emit';
 		}
 		yield `>),${newLine}`;
 	}
-
-	if (options.vueCompilerOptions.target >= 3.5) {
-		// https://github.com/vuejs/core/pull/10801
-		if (scriptSetupRanges.props.define?.typeArg) {
-			yield `__typeProps: __VLS_typeProps,${newLine}`;
+	else {
+		yield `__typeEmits: {} as __VLS_ModelEmitsType`;
+		const typeArg = scriptSetupRanges.emits.define?.typeArg;
+		if (typeArg) {
+			yield ` & `;
+			yield scriptSetup.content.slice(typeArg.start, typeArg.end);
 		}
-		if (scriptSetupRanges.emits.define?.typeArg) {
-			yield `__typeEmits: ${scriptSetupRanges.emits.name ?? '__VLS_emit'},${newLine}`;
-		}
+		yield `,${newLine}`;
 	}
 }

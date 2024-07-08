@@ -1,13 +1,9 @@
 {
 	"extends": "../../tsconfig.json",
 	"vueCompilerOptions": {
-		"target": 3.3,
+		"target": 3.5,
 	},
 	"include": [
-		"env.d.ts",
-		"../vue3",
-	],
-	"exclude": [
-		"../vue3/#3782",
+		"**/*"
 	],
 }

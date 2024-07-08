@@ -1,14 +1,15 @@
+/// <reference types="@volar/typescript" />
+
 import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
+import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { getBasePlugins } from './plugins';
-import type { VueCompilerOptions, VueLanguagePlugin } from './types';
-import { VueVirtualCode } from './virtualFile/vueFile';
-import * as CompilerDOM from '@vue/compiler-dom';
-import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 import useHtmlFilePlugin from './plugins/file-html';
 import useMdFilePlugin from './plugins/file-md';
 import useVueFilePlugin from './plugins/file-vue';
-import type * as _ from '@volar/typescript';
+import type { VueCompilerOptions, VueLanguagePlugin } from './types';
+import * as CompilerVue2 from './utils/vue2TemplateCompiler';
+import { VueVirtualCode } from './virtualFile/vueFile';
 
 const normalFileRegistries: {
 	key: string;
@@ -96,11 +97,11 @@ export function createVueLanguagePlugin<T>(
 		createVirtualCode(scriptId, languageId, snapshot) {
 			if (languageId === 'vue' || languageId === 'markdown' || languageId === 'html') {
 				const fileName = asFileName(scriptId);
-				if (!pluginContext.globalTypesHolder && getProjectVersion() !== canonicalRootFileNamesVersion) {
+				if (getProjectVersion() !== canonicalRootFileNamesVersion) {
 					canonicalRootFileNamesVersion = getProjectVersion();
-					if (isRootFile(fileName)) {
-						pluginContext.globalTypesHolder = fileName;
-					}
+				}
+				if (!pluginContext.globalTypesHolder && isRootFile(fileName)) {
+					pluginContext.globalTypesHolder = fileName;
 				}
 				const fileRegistry = getFileRegistry(pluginContext.globalTypesHolder === fileName);
 				const code = fileRegistry.get(fileName);

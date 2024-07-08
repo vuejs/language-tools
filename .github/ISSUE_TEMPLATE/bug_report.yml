@@ -60,6 +60,18 @@ body:
       placeholder: Steps to reproduce
     validations:
       required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What is expected?
+    validations:
+      required: true
+  - type: textarea
+    id: actually-happening
+    attributes:
+      label: What is actually happening?
+    validations:
+      required: true
   - type: input
     id: reproduction-link
     attributes:

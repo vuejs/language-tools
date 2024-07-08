@@ -174,15 +174,59 @@ export function create(): LanguageServicePlugin {
 				},
 
 				async provideCompletionItems(document, position, context, token) {
-					const result = await htmlPluginInstance.provideCompletionItems?.(document, position, context, token)
+					const result = await htmlPluginInstance.provideCompletionItems?.(document, position, context, token);
 					if (!result) {
 						return;
 					}
-					result.items = [
-						...result.items.filter(item => item.label !== '!DOCTYPE' && item.label !== 'Custom Blocks'),
-						createCompletionItemWithTs(result.items.find(item => item.label === 'script')!),
-						createCompletionItemWithTs(result.items.find(item => item.label === 'script setup')!),
-					]
+					result.items = result.items.filter(item => item.label !== '!DOCTYPE' && item.label !== 'Custom Blocks');
+					for (const scriptItem of result.items.filter(item => item.label === 'script' || item.label === 'script setup')) {
+						scriptItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
+						scriptItem.detail = '.js';
+						for (const lang of ['ts', 'tsx', 'jsx']) {
+							result.items.push({
+								...scriptItem,
+								detail: `.${lang}`,
+								kind: 17 satisfies typeof vscode.CompletionItemKind.File,
+								label: scriptItem.label + ' lang="' + lang + '"',
+								textEdit: scriptItem.textEdit ? {
+									...scriptItem.textEdit,
+									newText: scriptItem.textEdit.newText + ' lang="' + lang + '"',
+								} : undefined,
+							});
+						}
+					}
+					const styleItem = result.items.find(item => item.label === 'style');
+					if (styleItem) {
+						styleItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
+						styleItem.detail = '.css';
+						for (const lang of ['css', 'scss', 'less', 'postcss']) {
+							result.items.push({
+								...styleItem,
+								kind: 17 satisfies typeof vscode.CompletionItemKind.File,
+								detail: lang === 'postcss' ? '.css' : `.${lang}`,
+								label: styleItem.label + ' lang="' + lang + '"',
+								textEdit: styleItem.textEdit ? {
+									...styleItem.textEdit,
+									newText: styleItem.textEdit.newText + ' lang="' + lang + '"',
+								} : undefined,
+							});
+						}
+					}
+					const templateItem = result.items.find(item => item.label === 'template');
+					if (templateItem) {
+						templateItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
+						templateItem.detail = '.html';
+						result.items.push({
+							...templateItem,
+							kind: 17 satisfies typeof vscode.CompletionItemKind.File,
+							detail: '.pug',
+							label: templateItem.label + ' lang="pug"',
+							textEdit: templateItem.textEdit ? {
+								...templateItem.textEdit,
+								newText: templateItem.textEdit.newText + ' lang="pug"',
+							} : undefined,
+						});
+					}
 					return result;
 				},
 			};
@@ -197,15 +241,4 @@ export function create(): LanguageServicePlugin {
 			return callback(virtualCode);
 		}
 	}
-}
-
-function createCompletionItemWithTs(base: vscode.CompletionItem): vscode.CompletionItem {
-	return {
-		...base,
-		label: base.label + ' lang="ts"',
-		textEdit: {
-			...base.textEdit!,
-			newText: base.textEdit!.newText + ' lang="ts"',
-		}
-	};
 }
