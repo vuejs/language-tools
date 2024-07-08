@@ -323,15 +323,15 @@ function* generateComponentProps(
 				? `: `
 				: `?: `;
 			if (defineProp.type) {
+				// Infer from defineProp<T>
 				yield scriptSetup.content.substring(defineProp.type.start, defineProp.type.end);
 			}
-			else if (defineProp.name && defineProp.nameIsString) {
-				yield `NonNullable<typeof ${propName}['value']>`;
-			}
-			else if (!defineProp.nameIsString) {
+			else if ((defineProp.name && defineProp.nameIsString) || !defineProp.nameIsString) {
+				// Infer from actual prop declaration code 
 				yield `NonNullable<typeof ${propName}['value']>`;
 			}
 			else if (defineProp.defaultValue) {
+				// Infer from defineProp({default: T})
 				yield `typeof __VLS_defaults['${propName}']`;
 			}
 			else {
