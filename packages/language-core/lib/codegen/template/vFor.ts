@@ -1,10 +1,11 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { collectVars, createTsAst, endOfLine, newLine } from '../common';
+import { collectVars, createTsAst, newLine } from '../common';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateTemplateChild } from './templateChild';
+import { generateElement } from './element';
 
 export function* generateVFor(
 	options: TemplateCodegenOptions,
@@ -51,32 +52,81 @@ export function* generateVFor(
 		ctx.addLocalVariable(varName);
 	}
 	let isFragment = true;
-	for (const argument of node.codegenNode?.children.arguments ?? []) {
-		if (
-			argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
-			&& argument.returns?.type === CompilerDOM.NodeTypes.VNODE_CALL
-			&& argument.returns?.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
-		) {
-			if (argument.returns.tag !== CompilerDOM.FRAGMENT) {
-				isFragment = false;
-				continue;
-			}
-			for (const prop of argument.returns.props.properties) {
-				if (
-					prop.value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					&& !prop.value.isStatic
-				) {
-					yield* generateInterpolation(
-						options,
-						ctx,
-						prop.value.content,
-						prop.value.loc,
-						prop.value.loc.start.offset,
-						ctx.codeFeatures.all,
-						'(',
-						')'
-					);
-					yield endOfLine;
+	if (node.codegenNode) {
+		for (const argument of node.codegenNode.children.arguments) {
+			if (
+				argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
+				&& argument.returns?.type === CompilerDOM.NodeTypes.VNODE_CALL
+				&& argument.returns?.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
+			) {
+				if (argument.returns.tag !== CompilerDOM.FRAGMENT) {
+					isFragment = false;
+					continue;
+				}
+				// #4539, #329
+				for (const prop of argument.returns.props.properties) {
+					if (
+						prop.key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+						&& prop.value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					) {
+						const codeBeforeExp = node.codegenNode.loc.source.slice(0, prop.value.loc.start.offset - node.codegenNode.loc.start.offset);
+						const lastKeyStartOffset = codeBeforeExp.lastIndexOf('key');
+						yield* generateElement(options, ctx, {
+							type: CompilerDOM.NodeTypes.ELEMENT,
+							tag: "template",
+							tagType: CompilerDOM.ElementTypes.TEMPLATE,
+							ns: 0,
+							children: node.children,
+							loc: node.codegenNode.loc,
+							props: [
+								prop.value.isStatic
+									? {
+										type: CompilerDOM.NodeTypes.ATTRIBUTE,
+										name: prop.key.content,
+										nameLoc: {} as any,
+										value: {
+											type: CompilerDOM.NodeTypes.TEXT,
+											content: prop.value.content,
+											loc: prop.value.loc,
+										},
+										loc: {
+											...prop.loc,
+											start: {
+												...prop.loc.start,
+												offset: node.codegenNode.loc.start.offset + lastKeyStartOffset,
+											},
+											end: {
+												...prop.loc.end,
+												offset: node.codegenNode.loc.start.offset + lastKeyStartOffset + 3,
+											}
+										},
+									}
+									: {
+										type: CompilerDOM.NodeTypes.DIRECTIVE,
+										name: 'bind',
+										rawName: '',
+										arg: {
+											...prop.key,
+											loc: {
+												...prop.key.loc,
+												start: {
+													...prop.key.loc.start,
+													offset: node.codegenNode.loc.start.offset + lastKeyStartOffset,
+												},
+												end: {
+													...prop.key.loc.end,
+													offset: node.codegenNode.loc.start.offset + lastKeyStartOffset + 3,
+												}
+											}
+										},
+										exp: prop.value,
+										loc: prop.loc,
+										modifiers: [],
+									}
+							],
+							codegenNode: undefined,
+						}, currentComponent, componentCtxVar);
+					}
 				}
 			}
 		}

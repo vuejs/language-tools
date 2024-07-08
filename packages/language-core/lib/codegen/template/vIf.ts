@@ -59,6 +59,7 @@ export function* generateVIf(
 		if (isFragment(node)) {
 			yield* ctx.resetDirectiveComments('end of v-if start');
 		}
+		// #4539
 		if (branch.userKey) {
 			yield* generateElement(options, ctx, {
 				...branch,
@@ -67,8 +68,7 @@ export function* generateVIf(
 				tagType: CompilerDOM.ElementTypes.TEMPLATE,
 				props: [branch.userKey],
 				ns: 0,
-				// @ts-ignore
-				codegenNode: {}
+				codegenNode: undefined
 			}, currentComponent, componentCtxVar);
 		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
