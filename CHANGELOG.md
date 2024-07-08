@@ -18,7 +18,7 @@
 
 ### Other Changes
 
-- Upgraded Volar from `v2.4.0-alpha.2` to `v2.4.0-alpha.14`:
+- Upgraded Volar from `v2.4.0-alpha.2` to `v2.4.0-alpha.15`:
 	- Fixed an issue where, when Hybrid Mode is disabled, TS support for Vue files not included in tsconfig may be missing.
 	- Improved the consistency of `vue-tsc` and `tsc` behavior. (#3526)
 	- Fixed the `--clean` flag support for `vue-tsc`.
