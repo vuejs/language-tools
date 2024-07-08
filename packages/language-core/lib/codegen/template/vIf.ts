@@ -6,6 +6,7 @@ import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateTemplateChild } from './templateChild';
+import { generateElement } from './element';
 
 export function* generateVIf(
 	options: TemplateCodegenOptions,
@@ -57,6 +58,18 @@ export function* generateVIf(
 		yield `{${newLine}`;
 		if (isFragment(node)) {
 			yield* ctx.resetDirectiveComments('end of v-if start');
+		}
+		if (branch.userKey) {
+			yield* generateElement(options, ctx, {
+				...branch,
+				type: CompilerDOM.NodeTypes.ELEMENT,
+				tag: "template",
+				tagType: CompilerDOM.ElementTypes.TEMPLATE,
+				props: [branch.userKey],
+				ns: 0,
+				// @ts-ignore
+				codegenNode: {}
+			}, currentComponent, componentCtxVar);
 		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of branch.children) {
