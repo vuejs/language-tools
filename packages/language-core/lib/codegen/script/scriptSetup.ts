@@ -308,6 +308,8 @@ function* generateComponentProps(
 			if (defineProp.name && defineProp.nameIsString) {
 				// renaming support
 				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.navigation);
+				propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+				propName = propName.replace(/['"]+/g, '');
 			}
 			else if (defineProp.name) {
 				propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
@@ -322,6 +324,9 @@ function* generateComponentProps(
 				: `?: `;
 			if (defineProp.type) {
 				yield scriptSetup.content.substring(defineProp.type.start, defineProp.type.end);
+			}
+			else if (defineProp.name && defineProp.nameIsString) {
+				yield `NonNullable<typeof ${propName}['value']>`;
 			}
 			else if (!defineProp.nameIsString) {
 				yield `NonNullable<typeof ${propName}['value']>`;
