@@ -30,7 +30,6 @@ connection.onInitialize(params => {
 						languagePlugins: [createVueLanguagePlugin(
 							ts,
 							asFileName,
-							() => '',
 							() => false,
 							commandLine.options,
 							commandLine.vueOptions

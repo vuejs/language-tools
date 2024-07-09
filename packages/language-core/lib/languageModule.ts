@@ -1,6 +1,6 @@
 /// <reference types="@volar/typescript" />
 
-import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
+import { FileMap, forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { getBasePlugins } from './plugins';
@@ -53,10 +53,28 @@ function getFileRegistryKey(
 	return JSON.stringify(values);
 }
 
+export function createRootFileChecker(
+	getProjectVersion: (() => string) | undefined,
+	getRootFileNames: () => string[],
+	caseSensitive: boolean
+) {
+	const fileNames = new FileMap(caseSensitive);
+	let projectVersion: string | undefined;
+	return (fileName: string) => {
+		if (!getProjectVersion || projectVersion !== getProjectVersion()) {
+			projectVersion = getProjectVersion?.();
+			fileNames.clear();
+			for (const rootFileName of getRootFileNames()) {
+				fileNames.set(rootFileName, undefined);
+			}
+		}
+		return fileNames.has(fileName);
+	};
+}
+
 export function createVueLanguagePlugin<T>(
 	ts: typeof import('typescript'),
 	asFileName: (scriptId: T) => string,
-	getProjectVersion: () => string,
 	isRootFile: (fileName: string) => boolean,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions
@@ -80,8 +98,6 @@ export function createVueLanguagePlugin<T>(
 	const vitePressSfcPlugin = useMdFilePlugin(pluginContext);
 	const petiteVueSfcPlugin = useHtmlFilePlugin(pluginContext);
 
-	let canonicalRootFileNamesVersion: string | undefined;
-
 	return {
 		getLanguageId(scriptId) {
 			if (vueCompilerOptions.extensions.some(ext => asFileName(scriptId).endsWith(ext))) {
@@ -97,9 +113,6 @@ export function createVueLanguagePlugin<T>(
 		createVirtualCode(scriptId, languageId, snapshot) {
 			if (languageId === 'vue' || languageId === 'markdown' || languageId === 'html') {
 				const fileName = asFileName(scriptId);
-				if (getProjectVersion() !== canonicalRootFileNamesVersion) {
-					canonicalRootFileNamesVersion = getProjectVersion();
-				}
 				if (!pluginContext.globalTypesHolder && isRootFile(fileName)) {
 					pluginContext.globalTypesHolder = fileName;
 				}

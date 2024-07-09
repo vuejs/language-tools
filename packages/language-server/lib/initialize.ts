@@ -1,6 +1,6 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createTypeScriptProject } from '@volar/language-server/node';
-import { createParsedCommandLine, createVueLanguagePlugin, FileMap, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
+import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
 import { Disposable, getFullLanguageServicePlugins, InitializeParams } from '@vue/language-service';
 import type * as ts from 'typescript';
 
@@ -42,14 +42,11 @@ export function initialize(
 					languagePlugins: [createVueLanguagePlugin(
 						ts,
 						s => uriConverter.asFileName(s),
-						() => projectHost.getProjectVersion?.() ?? '',
-						fileName => {
-							const fileMap = new FileMap(sys.useCaseSensitiveFileNames ?? false);
-							for (const vueFileName of projectHost.getScriptFileNames() ?? []) {
-								fileMap.set(vueFileName, undefined);
-							}
-							return fileMap.has(fileName);
-						},
+						createRootFileChecker(
+							projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
+							() => projectHost.getScriptFileNames(),
+							sys.useCaseSensitiveFileNames
+						),
 						compilerOptions,
 						vueCompilerOptions
 					)],
