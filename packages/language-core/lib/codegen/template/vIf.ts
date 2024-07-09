@@ -60,13 +60,18 @@ export function* generateVIf(
 			yield* ctx.resetDirectiveComments('end of v-if start');
 		}
 		// #4539
-		if (branch.userKey) {
+		if (
+			node.codegenNode
+			&& node.codegenNode.type === CompilerDOM.NodeTypes.JS_CONDITIONAL_EXPRESSION
+			&& node.codegenNode.consequent.type === CompilerDOM.NodeTypes.VNODE_CALL
+			&& node.codegenNode.consequent.tag === CompilerDOM.FRAGMENT
+		) {
 			yield* generateElement(options, ctx, {
 				...branch,
 				type: CompilerDOM.NodeTypes.ELEMENT,
 				tag: "template",
 				tagType: CompilerDOM.ElementTypes.TEMPLATE,
-				props: [branch.userKey],
+				props: branch.userKey ? [branch.userKey] : [],
 				ns: 0,
 				codegenNode: undefined
 			}, currentComponent, componentCtxVar);
