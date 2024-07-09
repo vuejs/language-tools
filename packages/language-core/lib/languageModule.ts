@@ -3,10 +3,7 @@
 import { FileMap, forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
-import { getBasePlugins } from './plugins';
-import useHtmlFilePlugin from './plugins/file-html';
-import useMdFilePlugin from './plugins/file-md';
-import useVueFilePlugin from './plugins/file-vue';
+import { createPlugins } from './plugins';
 import type { VueCompilerOptions, VueLanguagePlugin } from './types';
 import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 import { VueVirtualCode } from './virtualFile/vueFile';
@@ -93,27 +90,21 @@ export function createVueLanguagePlugin<T>(
 		vueCompilerOptions,
 		globalTypesHolder: undefined,
 	};
-	const basePlugins = getBasePlugins(pluginContext);
-	const vueSfcPlugin = useVueFilePlugin(pluginContext);
-	const vitePressSfcPlugin = useMdFilePlugin(pluginContext);
-	const petiteVueSfcPlugin = useHtmlFilePlugin(pluginContext);
+	const plugins = createPlugins(pluginContext);
 
 	return {
 		getLanguageId(scriptId) {
 			const fileName = asFileName(scriptId);
-			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				return 'vue';
-			}
-			if (vueCompilerOptions.vitePressExtensions.some(ext => fileName.endsWith(ext))) {
-				return 'markdown';
-			}
-			if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
-				return 'html';
+			for (const plugin of plugins) {
+				const languageId = plugin.getLanguageId?.(fileName);
+				if (languageId) {
+					return languageId;
+				}
 			}
 		},
 		createVirtualCode(scriptId, languageId, snapshot) {
-			if (languageId === 'vue' || languageId === 'markdown' || languageId === 'html') {
-				const fileName = asFileName(scriptId);
+			const fileName = asFileName(scriptId);
+			if (plugins.some(plugin => plugin.isValidFile?.(fileName, languageId))) {
 				if (!pluginContext.globalTypesHolder && isRootFile(fileName)) {
 					pluginContext.globalTypesHolder = fileName;
 				}
@@ -129,11 +120,7 @@ export function createVueLanguagePlugin<T>(
 						languageId,
 						snapshot,
 						vueCompilerOptions,
-						languageId === 'html'
-							? [petiteVueSfcPlugin, ...basePlugins]
-							: languageId === 'markdown'
-								? [vitePressSfcPlugin, ...basePlugins]
-								: [vueSfcPlugin, ...basePlugins],
+						plugins,
 						ts,
 					);
 					fileRegistry.set(fileName, code);
@@ -197,7 +184,7 @@ export function createVueLanguagePlugin<T>(
 	function getFileRegistry(isGlobalTypesHolder: boolean) {
 		return getVueFileRegistry(
 			isGlobalTypesHolder,
-			getFileRegistryKey(compilerOptions, vueCompilerOptions, basePlugins),
+			getFileRegistryKey(compilerOptions, vueCompilerOptions, plugins),
 			vueCompilerOptions.plugins
 		);
 	}

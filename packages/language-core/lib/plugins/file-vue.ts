@@ -1,13 +1,26 @@
 import type { VueLanguagePlugin } from '../types';
 import { parse } from '../utils/parseSfc';
 
-const plugin: VueLanguagePlugin = _ctx => {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
-		parseSFC(_fileName, content) {
+		getLanguageId(fileName) {
+			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
+				return 'vue';
+			}
+		},
+
+		isValidFile(_fileName, languageId) {
+			return languageId === 'vue';
+		},
+
+		parseSFC2(_fileName, languageId, content) {
+			if (languageId !== 'vue') {
+				return;
+			}
 			return parse(content);
 		},
 

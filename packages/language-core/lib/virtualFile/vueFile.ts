@@ -17,7 +17,7 @@ export class VueVirtualCode implements VirtualCode {
 
 	// computeds
 
-	getVueSfc = computedVueSfc(this.plugins, this.fileName, () => this._snapshot());
+	getVueSfc = computedVueSfc(this.plugins, this.fileName, this.languageId, () => this._snapshot());
 	sfc = computedSfc(this.ts, this.plugins, this.fileName, () => this._snapshot(), this.getVueSfc);
 	getMappings = computedMappings(() => this._snapshot(), this.sfc);
 	getEmbeddedCodes = computedFiles(this.plugins, this.fileName, this.sfc);

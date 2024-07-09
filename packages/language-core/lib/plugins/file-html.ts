@@ -4,13 +4,26 @@ import type { VueLanguagePlugin } from '../types';
 const sfcBlockReg = /\<(script|style)\b([\s\S]*?)\>([\s\S]*?)\<\/\1\>/g;
 const langReg = /\blang\s*=\s*(['\"]?)(\S*)\b\1/;
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
-		parseSFC(fileName, content) {
+		getLanguageId(fileName) {
+			if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
+				return 'html';
+			}
+		},
+
+		isValidFile(_fileName, languageId) {
+			return languageId === 'html';
+		},
+
+		parseSFC2(fileName, languageId, content) {
+			if (languageId !== 'html') {
+				return;
+			}
 
 			let sfc: SFCParseResult = {
 				descriptor: {

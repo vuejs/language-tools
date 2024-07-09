@@ -6,6 +6,7 @@ import type { VueLanguagePlugin } from '../types';
 export function computedVueSfc(
 	plugins: ReturnType<VueLanguagePlugin>[],
 	fileName: string,
+	languageId: string,
 	snapshot: () => ts.IScriptSnapshot
 ) {
 
@@ -36,7 +37,8 @@ export function computedVueSfc(
 		}
 
 		for (const plugin of plugins) {
-			const sfc = plugin.parseSFC?.(fileName, snapshot().getText(0, snapshot().getLength()));
+			const sfc = plugin.parseSFC?.(fileName, snapshot().getText(0, snapshot().getLength()))
+				?? plugin.parseSFC2?.(fileName, languageId, snapshot().getText(0, snapshot().getLength()));
 			if (sfc) {
 				if (!sfc.errors.length) {
 					cache = {

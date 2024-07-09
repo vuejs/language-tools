@@ -1,19 +1,26 @@
+import useHtmlFilePlugin from './plugins/file-html';
+import useMdFilePlugin from './plugins/file-md';
+import useVueFilePlugin from './plugins/file-vue';
+import vueScriptJsPlugin from './plugins/vue-script-js';
 import vueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import vueSfcScriptsFormat from './plugins/vue-sfc-scripts';
 import vueSfcStyles from './plugins/vue-sfc-styles';
 import vueSfcTemplate from './plugins/vue-sfc-template';
-import vueScriptJsPlugin from './plugins/vue-script-js';
 import vueTemplateHtmlPlugin from './plugins/vue-template-html';
 import vueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
 import vueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
 import vueTsx from './plugins/vue-tsx';
-import { pluginVersion, type VueLanguagePlugin } from './types';
+import { validVersions, VueLanguagePlugin } from './types';
 
-export * from './plugins/shared'
+export * from './plugins/shared';
 
-export function getBasePlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
+export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 
 	const plugins: VueLanguagePlugin[] = [
+		...pluginContext.vueCompilerOptions.plugins,
+		useVueFilePlugin,
+		useMdFilePlugin,
+		useHtmlFilePlugin,
 		vueScriptJsPlugin,
 		vueTemplateHtmlPlugin,
 		vueTemplateInlineCssPlugin,
@@ -23,7 +30,6 @@ export function getBasePlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) 
 		vueSfcScriptsFormat,
 		vueSfcTemplate,
 		vueTsx,
-		...pluginContext.vueCompilerOptions.plugins,
 	];
 
 	const pluginInstances = plugins
@@ -44,10 +50,10 @@ export function getBasePlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) 
 		});
 
 	return pluginInstances.filter(plugin => {
-		const valid = plugin.version === pluginVersion;
-		if (!valid) {
-			console.warn(`[Vue] Plugin ${JSON.stringify(plugin.name)} API version incompatible, expected "${pluginVersion}" but got "${plugin.version}".`);
+		if (!validVersions.includes(plugin.version)) {
+			console.warn(`[Vue] Plugin ${plugin.name} is not compatible with the current Vue language tools version. (version: ${plugin.version}, supported versions: ${JSON.stringify(validVersions)})`);
+			return false;
 		}
-		return valid;
+		return true;
 	});
 }

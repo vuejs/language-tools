@@ -57,7 +57,7 @@ export interface VueCompilerOptions {
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 }
 
-export const pluginVersion = 2;
+export const validVersions = [2, 2.1] as const;
 
 export type VueLanguagePlugin = (ctx: {
 	modules: {
@@ -68,11 +68,14 @@ export type VueLanguagePlugin = (ctx: {
 	vueCompilerOptions: VueCompilerOptions;
 	globalTypesHolder: string | undefined;
 }) => {
-	version: typeof pluginVersion;
+	version: 2.1;
 	name?: string;
 	order?: number;
 	requiredCompilerOptions?: string[];
+	getLanguageId?(fileName: string): string | undefined;
+	isValidFile?(fileName: string, languageId: string): boolean;
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
+	parseSFC2?(fileName: string, languageId: string, content: string): SFCParseResult | undefined;
 	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
 	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
 	compileSFCScript?(lang: string, script: string): ts.SourceFile | undefined;
