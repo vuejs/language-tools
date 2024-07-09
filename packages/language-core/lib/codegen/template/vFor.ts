@@ -69,8 +69,7 @@ export function* generateVFor(
 						prop.key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 						&& prop.value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					) {
-						const codeBeforeExp = node.codegenNode.loc.source.slice(0, prop.value.loc.start.offset - node.codegenNode.loc.start.offset);
-						const lastKeyStartOffset = codeBeforeExp.lastIndexOf('key');
+						const lastKeyStartOffset = node.codegenNode.loc.source.slice(0, prop.value.loc.start.offset - node.codegenNode.loc.start.offset).lastIndexOf('key');
 						yield* generateElement(options, ctx, {
 							type: CompilerDOM.NodeTypes.ELEMENT,
 							tag: "template",
