@@ -69,7 +69,68 @@ export function* generateVFor(
 						prop.key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 						&& prop.value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					) {
-						const lastKeyStartOffset = node.codegenNode.loc.source.slice(0, prop.value.loc.start.offset - node.codegenNode.loc.start.offset).lastIndexOf('key');
+						const codeBeforeKeyOffset = prop.value.loc.start.offset - node.codegenNode.loc.start.offset;
+						const codeBeforeKey = node.codegenNode.loc.source.slice(0, codeBeforeKeyOffset);
+						const isShorthand = codeBeforeKey[codeBeforeKey.length - 1] === ":";
+						const lastKeyStartOffset = isShorthand ? codeBeforeKeyOffset : codeBeforeKey.lastIndexOf('key');
+						let fakeProp: CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode;
+						if (prop.value.isStatic) {
+							fakeProp = {
+								type: CompilerDOM.NodeTypes.ATTRIBUTE,
+								name: prop.key.content,
+								nameLoc: {} as any,
+								value: {
+									type: CompilerDOM.NodeTypes.TEXT,
+									content: prop.value.content,
+									loc: prop.value.loc,
+								},
+								loc: {
+									...prop.loc,
+									start: {
+										...prop.loc.start,
+										offset: node.codegenNode.loc.start.offset + lastKeyStartOffset,
+									},
+									end: {
+										...prop.loc.end,
+										offset: node.codegenNode.loc.start.offset + lastKeyStartOffset + 3,
+									}
+								},
+							};
+						}
+						else {
+							fakeProp = {
+								type: CompilerDOM.NodeTypes.DIRECTIVE,
+								name: 'bind',
+								rawName: '',
+								arg: {
+									...prop.key,
+									loc: {
+										...prop.key.loc,
+										start: {
+											...prop.key.loc.start,
+											offset: node.codegenNode.loc.start.offset + lastKeyStartOffset,
+										},
+										end: {
+											...prop.key.loc.end,
+											offset: node.codegenNode.loc.start.offset + lastKeyStartOffset + 3,
+										}
+									}
+								},
+								exp: prop.value,
+								loc: {
+									...prop.key.loc,
+									start: {
+										...prop.key.loc.start,
+										offset: node.codegenNode.loc.start.offset + lastKeyStartOffset,
+									},
+									end: {
+										...prop.key.loc.end,
+										offset: node.codegenNode.loc.start.offset + lastKeyStartOffset + 3,
+									}
+								},
+								modifiers: [],
+							};
+						}
 						yield* generateElement(options, ctx, {
 							type: CompilerDOM.NodeTypes.ELEMENT,
 							tag: "template",
@@ -77,54 +138,12 @@ export function* generateVFor(
 							ns: 0,
 							children: node.children,
 							loc: node.codegenNode.loc,
-							props: [
-								prop.value.isStatic
-									? {
-										type: CompilerDOM.NodeTypes.ATTRIBUTE,
-										name: prop.key.content,
-										nameLoc: {} as any,
-										value: {
-											type: CompilerDOM.NodeTypes.TEXT,
-											content: prop.value.content,
-											loc: prop.value.loc,
-										},
-										loc: {
-											...prop.loc,
-											start: {
-												...prop.loc.start,
-												offset: node.codegenNode.loc.start.offset + lastKeyStartOffset,
-											},
-											end: {
-												...prop.loc.end,
-												offset: node.codegenNode.loc.start.offset + lastKeyStartOffset + 3,
-											}
-										},
-									}
-									: {
-										type: CompilerDOM.NodeTypes.DIRECTIVE,
-										name: 'bind',
-										rawName: '',
-										arg: {
-											...prop.key,
-											loc: {
-												...prop.key.loc,
-												start: {
-													...prop.key.loc.start,
-													offset: node.codegenNode.loc.start.offset + lastKeyStartOffset,
-												},
-												end: {
-													...prop.key.loc.end,
-													offset: node.codegenNode.loc.start.offset + lastKeyStartOffset + 3,
-												}
-											}
-										},
-										exp: prop.value,
-										loc: prop.loc,
-										modifiers: [],
-									}
-							],
+							props: [fakeProp],
 							codegenNode: undefined,
 						}, currentComponent, componentCtxVar);
+						yield JSON.stringify({
+							prop, codegenNode: node.codegenNode
+						}, null, 2);
 					}
 				}
 			}
