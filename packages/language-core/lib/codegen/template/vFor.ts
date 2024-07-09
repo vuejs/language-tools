@@ -71,7 +71,7 @@ export function* generateVFor(
 					) {
 						const codeBeforeKeyOffset = prop.value.loc.start.offset - node.codegenNode.loc.start.offset;
 						const codeBeforeKey = node.codegenNode.loc.source.slice(0, codeBeforeKeyOffset);
-						const isShorthand = codeBeforeKey[codeBeforeKey.length - 1] === ":";
+						const isShorthand = codeBeforeKey[codeBeforeKey.length - 1] === ':';
 						const lastKeyStartOffset = isShorthand ? codeBeforeKeyOffset : codeBeforeKey.lastIndexOf('key');
 						let fakeProp: CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode;
 						if (prop.value.isStatic) {
@@ -133,7 +133,7 @@ export function* generateVFor(
 						}
 						yield* generateElement(options, ctx, {
 							type: CompilerDOM.NodeTypes.ELEMENT,
-							tag: "template",
+							tag: 'template',
 							tagType: CompilerDOM.ElementTypes.TEMPLATE,
 							ns: 0,
 							children: node.children,
