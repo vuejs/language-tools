@@ -1,7 +1,7 @@
 import type * as ts from 'typescript';
 import * as path from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
-import { getAllExtensions } from '../languageModule';
+import { getAllExtensions } from '../languagePlugin';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
