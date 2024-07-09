@@ -141,9 +141,6 @@ export function* generateVFor(
 							props: [fakeProp],
 							codegenNode: undefined,
 						}, currentComponent, componentCtxVar);
-						yield JSON.stringify({
-							prop, codegenNode: node.codegenNode
-						}, null, 2);
 					}
 				}
 			}
