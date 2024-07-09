@@ -100,13 +100,14 @@ export function createVueLanguagePlugin<T>(
 
 	return {
 		getLanguageId(scriptId) {
-			if (vueCompilerOptions.extensions.some(ext => asFileName(scriptId).endsWith(ext))) {
+			const fileName = asFileName(scriptId);
+			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
 				return 'vue';
 			}
-			if (vueCompilerOptions.vitePressExtensions.some(ext => asFileName(scriptId).endsWith(ext))) {
+			if (vueCompilerOptions.vitePressExtensions.some(ext => fileName.endsWith(ext))) {
 				return 'markdown';
 			}
-			if (vueCompilerOptions.petiteVueExtensions.some(ext => asFileName(scriptId).endsWith(ext))) {
+			if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
 				return 'html';
 			}
 		},
@@ -169,15 +170,12 @@ export function createVueLanguagePlugin<T>(
 		// 	}
 		// },
 		typescript: {
-			extraFileExtensions: [
-				...vueCompilerOptions.extensions,
-				...vueCompilerOptions.vitePressExtensions,
-				...vueCompilerOptions.petiteVueExtensions,
-			].map<ts.FileExtensionInfo>(ext => ({
-				extension: ext.slice(1),
-				isMixedContent: true,
-				scriptKind: 7 satisfies ts.ScriptKind.Deferred,
-			})),
+			extraFileExtensions: getAllExtensions(vueCompilerOptions)
+				.map<ts.FileExtensionInfo>(ext => ({
+					extension: ext.slice(1),
+					isMixedContent: true,
+					scriptKind: 7 satisfies ts.ScriptKind.Deferred,
+				})),
 			getServiceScript(root) {
 				for (const code of forEachEmbeddedCode(root)) {
 					if (/script_(js|jsx|ts|tsx)/.test(code.id)) {
@@ -203,4 +201,19 @@ export function createVueLanguagePlugin<T>(
 			vueCompilerOptions.plugins
 		);
 	}
+}
+
+export function getAllExtensions(options: VueCompilerOptions) {
+	const result = new Set<string>();
+	for (const key in options) {
+		if (key === 'extensions' || key.endsWith('Extensions')) {
+			const value = options[key as keyof VueCompilerOptions];
+			if (Array.isArray(value) && value.every(v => typeof v === 'string')) {
+				for (const ext of value) {
+					result.add(ext);
+				}
+			}
+		}
+	}
+	return [...result];
 }

@@ -1,6 +1,6 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createTypeScriptProject } from '@volar/language-server/node';
-import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
+import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin, getAllExtensions, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
 import { Disposable, getFullLanguageServicePlugins, InitializeParams } from '@vue/language-service';
 import type * as ts from 'typescript';
 
@@ -62,9 +62,7 @@ export function initialize(
 	function updateFileWatcher(vueCompilerOptions: VueCompilerOptions) {
 		const extensions = [
 			'js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json',
-			...vueCompilerOptions.extensions.map(ext => ext.slice(1)),
-			...vueCompilerOptions.vitePressExtensions.map(ext => ext.slice(1)),
-			...vueCompilerOptions.petiteVueExtensions.map(ext => ext.slice(1)),
+			...getAllExtensions(vueCompilerOptions).map(ext => ext.slice(1)),
 		];
 		const newExtensions = extensions.filter(ext => !watchingExtensions.has(ext));
 		if (newExtensions.length) {

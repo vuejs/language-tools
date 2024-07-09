@@ -1,6 +1,7 @@
 import type * as ts from 'typescript';
 import * as path from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
+import { getAllExtensions } from '../languageModule';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -36,15 +37,12 @@ export function createParsedCommandLineByJson(
 		{},
 		configFileName,
 		undefined,
-		[
-			...resolvedVueOptions.extensions,
-			...resolvedVueOptions.vitePressExtensions,
-			...resolvedVueOptions.petiteVueExtensions,
-		].map(extension => ({
-			extension: extension.slice(1),
-			isMixedContent: true,
-			scriptKind: ts.ScriptKind.Deferred,
-		}))
+		getAllExtensions(resolvedVueOptions)
+			.map(extension => ({
+				extension: extension.slice(1),
+				isMixedContent: true,
+				scriptKind: ts.ScriptKind.Deferred,
+			}))
 	);
 
 	// fix https://github.com/vuejs/language-tools/issues/1786
@@ -87,15 +85,12 @@ export function createParsedCommandLine(
 			{},
 			tsConfigPath,
 			undefined,
-			[
-				...resolvedVueOptions.extensions,
-				...resolvedVueOptions.vitePressExtensions,
-				...resolvedVueOptions.petiteVueExtensions,
-			].map(extension => ({
-				extension: extension.slice(1),
-				isMixedContent: true,
-				scriptKind: ts.ScriptKind.Deferred,
-			}))
+			getAllExtensions(resolvedVueOptions)
+				.map(extension => ({
+					extension: extension.slice(1),
+					isMixedContent: true,
+					scriptKind: ts.ScriptKind.Deferred,
+				}))
 		);
 
 		// fix https://github.com/vuejs/language-tools/issues/1786

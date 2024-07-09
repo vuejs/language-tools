@@ -16,11 +16,7 @@ export function run() {
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 				: vue.resolveVueCompilerOptions({});
-			const allExtensions = [
-				...vueOptions.extensions,
-				...vueOptions.vitePressExtensions,
-				...vueOptions.petiteVueExtensions,
-			];
+			const allExtensions = vue.getAllExtensions(vueOptions);
 			if (
 				runExtensions.length === allExtensions.length
 				&& runExtensions.every(ext => allExtensions.includes(ext))
