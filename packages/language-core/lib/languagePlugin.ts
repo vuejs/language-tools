@@ -83,7 +83,7 @@ export function createVueLanguagePlugin<T>(
 		asFileName,
 		isRootFile,
 		compilerOptions,
-		vueCompilerOptions,
+		vueCompilerOptions
 	);
 }
 
