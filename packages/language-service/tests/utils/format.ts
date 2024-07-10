@@ -2,10 +2,10 @@ import * as kit from '@volar/kit';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import type { URI } from 'vscode-uri';
-import { createVueLanguagePlugin, getFullLanguageServicePlugins, resolveVueCompilerOptions } from '../..';
+import { createVueLanguagePlugin2, getFullLanguageServicePlugins, resolveVueCompilerOptions } from '../..';
 
 const resolvedVueOptions = resolveVueCompilerOptions({});
-const vueLanguagePlugin = createVueLanguagePlugin<URI>(
+const vueLanguagePlugin = createVueLanguagePlugin2<URI>(
 	ts,
 	() => '',
 	() => false,

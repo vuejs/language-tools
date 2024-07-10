@@ -144,7 +144,7 @@ export function baseCreate(
 		}
 	};
 
-	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
+	const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
 		ts,
 		id => id,
 		vue.createRootFileChecker(

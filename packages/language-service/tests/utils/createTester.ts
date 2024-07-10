@@ -3,7 +3,7 @@ import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId
 import * as path from 'path';
 import * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin, getFullLanguageServicePlugins } from '../..';
+import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin2, getFullLanguageServicePlugins } from '../..';
 import { createMockServiceEnv, fileNameToUri, uriToFileName } from './mockEnv';
 
 export const rootUri = URI.file(path.resolve(__dirname, '../../../../test-workspace/language-service'));
@@ -24,7 +24,7 @@ function createTester(rootUri: URI) {
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptSnapshot,
 	};
-	const vueLanguagePlugin = createVueLanguagePlugin(
+	const vueLanguagePlugin = createVueLanguagePlugin2(
 		ts,
 		uriToFileName,
 		createRootFileChecker(

@@ -1,6 +1,6 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createTypeScriptProject } from '@volar/language-server/node';
-import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin, getAllExtensions, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
+import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin2, getAllExtensions, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
 import { Disposable, getFullLanguageServicePlugins, InitializeParams } from '@vue/language-service';
 import type * as ts from 'typescript';
 
@@ -39,7 +39,7 @@ export function initialize(
 				}
 				updateFileWatcher(vueCompilerOptions);
 				return {
-					languagePlugins: [createVueLanguagePlugin(
+					languagePlugins: [createVueLanguagePlugin2(
 						ts,
 						s => uriConverter.asFileName(s),
 						createRootFileChecker(

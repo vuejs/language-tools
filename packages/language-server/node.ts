@@ -1,5 +1,5 @@
 import { createConnection, createServer, loadTsdkByPath } from '@volar/language-server/node';
-import { createParsedCommandLine, createVueLanguagePlugin, resolveVueCompilerOptions } from '@vue/language-core';
+import { createParsedCommandLine, createVueLanguagePlugin2, resolveVueCompilerOptions } from '@vue/language-core';
 import { getHybridModeLanguageServicePlugins } from '@vue/language-service';
 import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
 import { createHybridModeProject } from './lib/hybridModeProject';
@@ -27,7 +27,7 @@ connection.onInitialize(params => {
 							options: ts.getDefaultCompilerOptions(),
 						};
 					return {
-						languagePlugins: [createVueLanguagePlugin(
+						languagePlugins: [createVueLanguagePlugin2(
 							ts,
 							asFileName,
 							() => false,

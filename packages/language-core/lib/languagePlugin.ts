@@ -69,7 +69,25 @@ export function createRootFileChecker(
 	};
 }
 
+// TODO: replace `createVueLanguagePlugin` with `createVueLanguagePlugin2` in 2.1
 export function createVueLanguagePlugin<T>(
+	ts: typeof import('typescript'),
+	asFileName: (scriptId: T) => string,
+	_getProjectVersion: (() => string) | undefined,
+	isRootFile: (fileName: string) => boolean,
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: VueCompilerOptions
+): LanguagePlugin<T, VueVirtualCode> {
+	return createVueLanguagePlugin2(
+		ts,
+		asFileName,
+		isRootFile,
+		compilerOptions,
+		vueCompilerOptions,
+	);
+}
+
+export function createVueLanguagePlugin2<T>(
 	ts: typeof import('typescript'),
 	asFileName: (scriptId: T) => string,
 	isRootFile: (fileName: string) => boolean,
