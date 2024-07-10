@@ -17,7 +17,6 @@ export * from './plugins/shared';
 export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 
 	const plugins: VueLanguagePlugin[] = [
-		...pluginContext.vueCompilerOptions.plugins,
 		useVueFilePlugin,
 		useMdFilePlugin,
 		useHtmlFilePlugin,
@@ -30,6 +29,7 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		vueSfcScriptsFormat,
 		vueSfcTemplate,
 		vueTsx,
+		...pluginContext.vueCompilerOptions.plugins,
 	];
 
 	const pluginInstances = plugins
