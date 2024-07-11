@@ -51,7 +51,7 @@ export function run() {
 		if (err === extensionsChangedException) {
 			main();
 		} else {
-			console.error(err);
+			throw err;
 		}
 	}
 }
