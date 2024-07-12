@@ -36,8 +36,13 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		.flatMap(plugin => {
 			try {
 				const instance = plugin(pluginContext);
-				if (!Array.isArray(instance)) {
-					instance.name ??= (plugin as any).__moduleName;
+				const moduleName = (plugin as any).__moduleName;
+				if (Array.isArray(instance)) {
+					for (let i = 0; i < instance.length; i++) {
+						instance[i].name ??= `${moduleName} (${i})`;
+					}
+				} else {
+					instance.name ??= moduleName;
 				}
 				return instance;
 			} catch (err) {
