@@ -1,10 +1,10 @@
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import { computed } from 'computeds';
 import type * as ts from 'typescript';
-import type { VueLanguagePlugin } from '../types';
+import type { VueLanguagePluginReturn } from '../types';
 
 export function computedVueSfc(
-	plugins: ReturnType<VueLanguagePlugin>[],
+	plugins: VueLanguagePluginReturn[],
 	fileName: string,
 	languageId: string,
 	snapshot: () => ts.IScriptSnapshot
@@ -13,7 +13,7 @@ export function computedVueSfc(
 	let cache: {
 		snapshot: ts.IScriptSnapshot,
 		sfc: SFCParseResult,
-		plugin: ReturnType<VueLanguagePlugin>,
+		plugin: VueLanguagePluginReturn,
 	} | undefined;
 
 	return computed(() => {

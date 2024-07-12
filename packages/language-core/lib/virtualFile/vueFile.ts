@@ -1,7 +1,7 @@
 import type { VirtualCode } from '@volar/language-core';
 import { Signal, signal } from 'computeds';
 import type * as ts from 'typescript';
-import type { VueCompilerOptions, VueLanguagePlugin } from '../types';
+import type { VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { computedFiles } from './computedFiles';
 import { computedMappings } from './computedMappings';
 import { computedSfc } from './computedSfc';
@@ -39,7 +39,7 @@ export class VueVirtualCode implements VirtualCode {
 		public languageId: string,
 		public initSnapshot: ts.IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
-		public plugins: ReturnType<VueLanguagePlugin>[],
+		public plugins: VueLanguagePluginReturn[],
 		public ts: typeof import('typescript'),
 	) {
 		this._snapshot = signal(initSnapshot);

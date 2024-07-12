@@ -2,13 +2,13 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, computedArray, pauseTracking, resetTracking } from 'computeds';
 import type * as ts from 'typescript';
-import type { Sfc, SfcBlock, VueLanguagePlugin } from '../types';
+import type { Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 
 export function computedSfc(
 	ts: typeof import('typescript'),
-	plugins: ReturnType<VueLanguagePlugin>[],
+	plugins: VueLanguagePluginReturn[],
 	fileName: string,
 	snapshot: () => ts.IScriptSnapshot,
 	parsed: () => SFCParseResult | undefined
@@ -150,7 +150,7 @@ export function computedSfc(
 			template: string,
 			snapshot: ts.IScriptSnapshot,
 			result: CompilerDOM.CodegenResult,
-			plugin: ReturnType<VueLanguagePlugin>,
+			plugin: VueLanguagePluginReturn,
 		} | undefined;
 
 		return computed(() => {

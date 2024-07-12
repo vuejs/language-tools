@@ -59,15 +59,7 @@ export interface VueCompilerOptions {
 
 export const validVersions = [2, 2.1] as const;
 
-export type VueLanguagePlugin = (ctx: {
-	modules: {
-		typescript: typeof import('typescript');
-		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
-	};
-	compilerOptions: ts.CompilerOptions;
-	vueCompilerOptions: VueCompilerOptions;
-	globalTypesHolder: string | undefined;
-}) => {
+export type VueLanguagePluginReturn = {
 	version: 2.1;
 	name?: string;
 	order?: number;
@@ -84,6 +76,16 @@ export type VueLanguagePlugin = (ctx: {
 	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string; }[];
 	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
 };
+
+export type VueLanguagePlugin = (ctx: {
+	modules: {
+		typescript: typeof import('typescript');
+		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
+	};
+	compilerOptions: ts.CompilerOptions;
+	vueCompilerOptions: VueCompilerOptions;
+	globalTypesHolder: string | undefined;
+}) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
 
 export interface SfcBlock {
 	name: string;
