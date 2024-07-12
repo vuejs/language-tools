@@ -33,16 +33,23 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 	];
 
 	const pluginInstances = plugins
-		.map(plugin => {
+		.flatMap(plugin => {
 			try {
 				const instance = plugin(pluginContext);
-				instance.name ??= (plugin as any).__moduleName;
+				const moduleName = (plugin as any).__moduleName;
+				if (Array.isArray(instance)) {
+					for (let i = 0; i < instance.length; i++) {
+						instance[i].name ??= `${moduleName} (${i})`;
+					}
+				} else {
+					instance.name ??= moduleName;
+				}
 				return instance;
 			} catch (err) {
 				console.warn('[Vue] Failed to create plugin', err);
 			}
 		})
-		.filter((plugin): plugin is ReturnType<VueLanguagePlugin> => !!plugin)
+		.filter(plugin => !!plugin)
 		.sort((a, b) => {
 			const aOrder = a.order ?? 0;
 			const bOrder = b.order ?? 0;
