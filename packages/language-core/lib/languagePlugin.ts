@@ -4,7 +4,7 @@ import { FileMap, forEachEmbeddedCode, type LanguagePlugin } from '@volar/langua
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { createPlugins } from './plugins';
-import type { VueCompilerOptions, VueLanguagePlugin } from './types';
+import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
 import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 import { VueVirtualCode } from './virtualFile/vueFile';
 
@@ -36,7 +36,7 @@ function getVueFileRegistry(isGlobalTypesHolder: boolean, key: string, plugins: 
 function getFileRegistryKey(
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	plugins: ReturnType<VueLanguagePlugin>[]
+	plugins: VueLanguagePluginReturn[]
 ) {
 	const values = [
 		...Object.keys(vueCompilerOptions)

@@ -77,6 +77,16 @@ export type VueLanguagePluginReturn = {
 	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
 };
 
+export type VueLanguagePlugin = (ctx: {
+	modules: {
+		typescript: typeof import('typescript');
+		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
+	};
+	compilerOptions: ts.CompilerOptions;
+	vueCompilerOptions: VueCompilerOptions;
+	globalTypesHolder: string | undefined;
+}) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
+
 export interface SfcBlock {
 	name: string;
 	start: number;

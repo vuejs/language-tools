@@ -2,12 +2,12 @@ import type { VirtualCode } from '@volar/language-core';
 import { computed } from 'computeds';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
-import type { Code, Sfc, SfcBlock, VueLanguagePlugin } from '../types';
+import type { Code, Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 import { VueEmbeddedCode } from './embeddedFile';
 
 export function computedFiles(
-	plugins: ReturnType<VueLanguagePlugin>[],
+	plugins: VueLanguagePluginReturn[],
 	fileName: string,
 	sfc: Sfc
 ) {
@@ -101,8 +101,8 @@ export function computedFiles(
 }
 
 function computedPluginEmbeddedCodes(
-	plugins: ReturnType<VueLanguagePlugin>[],
-	plugin: ReturnType<VueLanguagePlugin>,
+	plugins: VueLanguagePluginReturn[],
+	plugin: VueLanguagePluginReturn,
 	fileName: string,
 	sfc: Sfc,
 	nameToBlock: () => Record<string, SfcBlock>

@@ -164,19 +164,12 @@ function getPartialVueCompilerOptions(
 	}
 	if (rawOptions.plugins) {
 		const plugins = rawOptions.plugins
-			.map<VueLanguagePlugin[] | VueLanguagePlugin>((pluginPath: string) => {
+			.map<VueLanguagePlugin>((pluginPath: string) => {
 				try {
 					const resolvedPath = resolvePath(pluginPath);
 					if (resolvedPath) {
 						const plugin = require(resolvedPath);
-						if (Array.isArray(plugin)) {
-							for (let i = 0; i < plugin.length; i++) {
-								plugin[i].__moduleName = `${pluginPath} (${i})`;
-							}
-						}
-						else {
-							plugin.__moduleName = pluginPath;
-						}
+						plugin.__moduleName = pluginPath;
 						return plugin;
 					}
 					else {
@@ -187,8 +180,7 @@ function getPartialVueCompilerOptions(
 					console.warn('[Vue] Resolve plugin path failed:', pluginPath, error);
 				}
 				return [];
-			})
-			.flat(Infinity as 1);
+			});
 
 		result.plugins = plugins;
 	}
