@@ -59,16 +59,8 @@ export interface VueCompilerOptions {
 
 export const validVersions = [2, 2.1] as const;
 
-export type VueLanguagePlugin = (ctx: {
-	modules: {
-		typescript: typeof import('typescript');
-		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
-	};
-	compilerOptions: ts.CompilerOptions;
-	vueCompilerOptions: VueCompilerOptions;
-	globalTypesHolder: string | undefined;
-}) => {
-	version: 2.1;
+export type VueLanguagePluginReturn = {
+	version: typeof validVersions[number];
 	name?: string;
 	order?: number;
 	requiredCompilerOptions?: string[];
