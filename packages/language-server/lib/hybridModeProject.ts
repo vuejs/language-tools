@@ -2,7 +2,7 @@ import type { Language, LanguagePlugin, LanguageServer, LanguageServerProject, P
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createLanguage } from '@vue/language-core';
 import { createLanguageService, createUriMap, LanguageService } from '@vue/language-service';
-import { searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
+import { searchNamedPipeServerForFile, readPipeTable } from '@vue/typescript-plugin/lib/utils';
 import { URI } from 'vscode-uri';
 
 export function createHybridModeProject(
@@ -20,17 +20,18 @@ export function createHybridModeProject(
 	let initialized = false;
 	let simpleLs: Promise<LanguageService> | undefined;
 	let server: LanguageServer;
+	let pipeTableWatcher: NodeJS.Timeout | undefined;
 
 	const tsconfigProjects = createUriMap<Promise<LanguageService>>();
-
-	return {
+	const project: LanguageServerProject = {
 		setup(_server) {
 			server = _server;
 		},
 		async getLanguageService(uri) {
 			if (!initialized) {
 				initialized = true;
-				initialize(server);
+				initialize();
+				trackPipeTableChanges();
 			}
 			const fileName = asFileName(uri);
 			const projectInfo = (await searchNamedPipeServerForFile(fileName))?.projectInfo;
@@ -62,14 +63,20 @@ export function createHybridModeProject(
 			}
 			tsconfigProjects.clear();
 			simpleLs = undefined;
+			if (pipeTableWatcher) {
+				clearInterval(pipeTableWatcher);
+				pipeTableWatcher = undefined;
+			}
 		},
 	};
+
+	return project;
 
 	function asFileName(uri: URI) {
 		return uri.fsPath.replace(/\\/g, '/');
 	}
 
-	function initialize(server: LanguageServer) {
+	function initialize() {
 		server.onDidChangeWatchedFiles(({ changes }) => {
 			for (const change of changes) {
 				const changeUri = URI.parse(change.uri);
@@ -80,6 +87,26 @@ export function createHybridModeProject(
 				}
 			}
 		});
+	}
+
+	function trackPipeTableChanges() {
+		if (pipeTableWatcher) {
+			clearInterval(pipeTableWatcher);
+			pipeTableWatcher = undefined;
+		}
+		let table = readPipeTable();
+		let remaining = 20;
+		pipeTableWatcher = setInterval(() => {
+			const newTable = readPipeTable();
+			if (JSON.stringify(table) !== JSON.stringify(newTable)) {
+				table = newTable;
+				server.refresh(project);
+			}
+			if (remaining-- <= 0) {
+				clearInterval(pipeTableWatcher);
+				pipeTableWatcher = undefined;
+			}
+		}, 1000);
 	}
 
 	async function createLs(server: LanguageServer, tsconfig: string | undefined) {
