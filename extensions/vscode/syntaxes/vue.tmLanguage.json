@@ -1288,44 +1288,44 @@
 		"type-alias-declaration": {
 			"patterns": [
 				{
-					"name": "meta.type.declaration.tsx",
+					"name": "meta.type.declaration.ts",
 					"begin": "(?<![_$[:alnum:]])(?:(?<=\\.\\.\\.)|(?<!\\.))(?:(\\bexport)\\s+)?(?:(\\bdeclare)\\s+)?\\b(type)\\b\\s+([_$[:alpha:]][_$[:alnum:]]*)\\s*",
 					"beginCaptures": {
 						"1": {
-							"name": "keyword.control.export.tsx"
+							"name": "keyword.control.export.ts"
 						},
 						"2": {
-							"name": "storage.modifier.tsx"
+							"name": "storage.modifier.ts"
 						},
 						"3": {
-							"name": "storage.type.type.tsx"
+							"name": "storage.type.type.ts"
 						},
 						"4": {
-							"name": "entity.name.type.alias.tsx"
+							"name": "entity.name.type.alias.ts"
 						}
 					},
 					"end": "(?=\\}|<\\/|;|^\\s*$|(?:^\\s*(?:abstract|async|(?:\\bawait\\s+(?:\\busing(?=\\s+(?!in\\b|of\\b(?!\\s*(?:of\\b|=)))[_$[:alpha:]])\\b)\\b)|break|case|catch|class|const|continue|declare|do|else|enum|export|finally|function|for|goto|if|import|interface|let|module|namespace|switch|return|throw|try|type|(?:\\busing(?=\\s+(?!in\\b|of\\b(?!\\s*(?:of\\b|=)))[_$[:alpha:]])\\b)|var|while)\\b))",
 					"patterns": [
 						{
-							"include": "source.tsx#comment"
+							"include": "source.ts#comment"
 						},
 						{
-							"include": "source.tsx#type-parameters"
+							"include": "source.ts#type-parameters"
 						},
 						{
 							"begin": "(=)\\s*(intrinsic)(?![_$[:alnum:]])(?:(?=\\.\\.\\.)|(?!\\.))",
 							"beginCaptures": {
 								"1": {
-									"name": "keyword.operator.assignment.tsx"
+									"name": "keyword.operator.assignment.ts"
 								},
 								"2": {
-									"name": "keyword.control.intrinsic.tsx"
+									"name": "keyword.control.intrinsic.ts"
 								}
 							},
 							"end": "(?=\\}|<\\/|;|^\\s*$|(?:^\\s*(?:abstract|async|(?:\\bawait\\s+(?:\\busing(?=\\s+(?!in\\b|of\\b(?!\\s*(?:of\\b|=)))[_$[:alpha:]])\\b)\\b)|break|case|catch|class|const|continue|declare|do|else|enum|export|finally|function|for|goto|if|import|interface|let|module|namespace|switch|return|throw|try|type|(?:\\busing(?=\\s+(?!in\\b|of\\b(?!\\s*(?:of\\b|=)))[_$[:alpha:]])\\b)|var|while)\\b))",
 							"patterns": [
 								{
-									"include": "source.tsx#type"
+									"include": "source.ts#type"
 								}
 							]
 						},
@@ -1333,13 +1333,13 @@
 							"begin": "(=)\\s*",
 							"beginCaptures": {
 								"1": {
-									"name": "keyword.operator.assignment.tsx"
+									"name": "keyword.operator.assignment.ts"
 								}
 							},
 							"end": "(?=\\}|<\\/|;|^\\s*$|(?:^\\s*(?:abstract|async|(?:\\bawait\\s+(?:\\busing(?=\\s+(?!in\\b|of\\b(?!\\s*(?:of\\b|=)))[_$[:alpha:]])\\b)\\b)|break|case|catch|class|const|continue|declare|do|else|enum|export|finally|function|for|goto|if|import|interface|let|module|namespace|switch|return|throw|try|type|(?:\\busing(?=\\s+(?!in\\b|of\\b(?!\\s*(?:of\\b|=)))[_$[:alpha:]])\\b)|var|while)\\b))",
 							"patterns": [
 								{
-									"include": "source.tsx#type"
+									"include": "source.ts#type"
 								}
 							]
 						}
