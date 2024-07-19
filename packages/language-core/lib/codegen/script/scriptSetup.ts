@@ -308,6 +308,8 @@ function* generateComponentProps(
 			if (defineProp.name && defineProp.nameIsString) {
 				// renaming support
 				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.navigation);
+				propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+				propName = propName.replace(/['"]+/g, '');
 			}
 			else if (defineProp.name) {
 				propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
@@ -320,18 +322,7 @@ function* generateComponentProps(
 			yield defineProp.required
 				? `: `
 				: `?: `;
-			if (defineProp.type) {
-				yield scriptSetup.content.substring(defineProp.type.start, defineProp.type.end);
-			}
-			else if (!defineProp.nameIsString) {
-				yield `NonNullable<typeof ${propName}['value']>`;
-			}
-			else if (defineProp.defaultValue) {
-				yield `typeof __VLS_defaults['${propName}']`;
-			}
-			else {
-				yield `any`;
-			}
+			yield* generateDefinePropType(scriptSetup, propName, defineProp);
 			yield `,${newLine}`;
 
 			if (defineProp.modifierType) {
@@ -382,12 +373,7 @@ function* generateModelEmits(
 				propName = propName.replace(/['"]+/g, '');
 			}
 			yield `'update:${propName}': [${propName}:`;
-			if (defineProp.type) {
-				yield scriptSetup.content.substring(defineProp.type.start, defineProp.type.end);
-			}
-			else {
-				yield `any`;
-			}
+			yield* generateDefinePropType(scriptSetup, propName, defineProp);
 			yield `]${endOfLine}`;
 		}
 		yield `}`;
@@ -398,4 +384,22 @@ function* generateModelEmits(
 		yield `{}`;
 	}
 	yield endOfLine;
+}
+
+function* generateDefinePropType(scriptSetup: NonNullable<Sfc['scriptSetup']>, propName: string, defineProp: ScriptSetupRanges['defineProp'][number]) {
+	if (defineProp.type) {
+		// Infer from defineProp<T>
+		yield scriptSetup.content.substring(defineProp.type.start, defineProp.type.end);
+	}
+	else if ((defineProp.name && defineProp.nameIsString) || !defineProp.nameIsString) {
+		// Infer from actual prop declaration code 
+		yield `NonNullable<typeof ${propName}['value']>`;
+	}
+	else if (defineProp.defaultValue) {
+		// Infer from defineProp({default: T})
+		yield `typeof __VLS_defaults['${propName}']`;
+	}
+	else {
+		yield `any`;
+	}
 }
