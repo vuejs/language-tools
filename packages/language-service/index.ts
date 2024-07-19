@@ -24,7 +24,6 @@ import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-docume
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
-import { create as createVueToggleVBindPlugin } from './lib/plugins/vue-toggle-v-bind-codeaction';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 import { create as createVueVisualizeHiddenCallbackParamPlugin } from './lib/plugins/vue-visualize-hidden-callback-param';
 
@@ -200,7 +199,6 @@ function getCommonLanguageServicePlugins(
 		createVueVisualizeHiddenCallbackParamPlugin(),
 		createVueDirectiveCommentsPlugin(),
 		createVueExtractFilePlugin(ts, getTsPluginClient),
-		createVueToggleVBindPlugin(ts),
 		createEmmetPlugin({
 			mappedLanguages: {
 				'vue': 'html',
