@@ -13,7 +13,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateTemplateChild } from './templateChild';
-import { generateObjectKey } from './objectKey';
+import { generateObjectProperty } from './objectProperty';
 
 const colonReg = /:/g;
 
@@ -428,13 +428,13 @@ function* generateComponentSlot(
 		...(
 			slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content
 				? [
-					...generateObjectKey(
+					...generateObjectProperty(
 						options,
 						ctx,
 						slotDir.arg.loc.source,
 						slotDir.arg.loc.start.offset,
 						slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
-						slotDir.arg.loc,
+						slotDir.arg.loc
 					),
 					': __VLS_thisSlot',
 				]
@@ -454,7 +454,7 @@ function* generateComponentSlot(
 					),
 				]
 		),
-		`} = ${componentCtxVar}.slots!`,
+		`} = ${componentCtxVar}.slots!`
 	);
 	yield endOfLine;
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -468,7 +468,8 @@ function* generateComponentSlot(
 				slotDir.exp.loc.start.offset,
 				ctx.codeFeatures.all,
 			];
-			yield `]`;
+			yield `] = __VLS_getSlotParams(__VLS_thisSlot)`;
+			yield endOfLine;
 		}
 		else {
 			yield `const `;
@@ -478,9 +479,9 @@ function* generateComponentSlot(
 				slotDir.exp.loc.start.offset,
 				ctx.codeFeatures.all,
 			];
+			yield ` = __VLS_getSlotParam(__VLS_thisSlot)`;
+			yield endOfLine;
 		}
-		yield ` = __VLS_getSlotParams(__VLS_thisSlot)`;
-		yield endOfLine;
 	}
 
 	for (const varName of slotBlockVars) {
