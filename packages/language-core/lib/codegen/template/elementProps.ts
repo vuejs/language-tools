@@ -113,27 +113,31 @@ export function* generateElementProps(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
-				!prop.arg && propName === 'modelValue' ? 'mod' : '',
 				...(
-					generateObjectProperty(
-						options,
-						ctx,
-						!prop.arg && propName === 'modelValue' ? 'elValue' : propName,
-						prop.arg
-							? prop.arg.loc.start.offset
-							: prop.loc.start.offset,
-						{
-							...ctx.codeFeatures.withoutHighlightAndCompletion,
-							navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
-								? {
-									resolveRenameNewName: camelize,
-									resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
-								}
-								: false,
-						},
-						(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
-						shouldCamelize
-					)
+					prop.arg
+						? generateObjectProperty(
+							options,
+							ctx,
+							propName,
+							prop.arg.loc.start.offset,
+							{
+								...ctx.codeFeatures.withoutHighlightAndCompletion,
+								navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
+									? {
+										resolveRenameNewName: camelize,
+										resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
+									}
+									: false,
+							},
+							(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
+							shouldCamelize
+						)
+						: wrapWith(
+							prop.loc.start.offset,
+							prop.loc.start.offset + 'v-model'.length,
+							ctx.codeFeatures.verification,
+							propName
+						)
 				),
 				`: (`,
 				...genereatePropExp(
