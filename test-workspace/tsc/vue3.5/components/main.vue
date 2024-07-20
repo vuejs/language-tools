@@ -35,11 +35,11 @@ const ScriptSetupExposeExact = defineComponent({
 const ScriptSetupTypeOnlyExact = defineComponent({
 	__typeProps: {} as {
 		foo: string,
-		bar?: number
+		bar?: number;
 	},
 	__typeEmits: {} as {
-		(e: 'change', id: number): void
-		(e: 'update', value: string): void
+		(e: 'change', id: number): void;
+		(e: 'update', value: string): void;
 	},
 	setup() {
 		return {};
@@ -48,8 +48,16 @@ const ScriptSetupTypeOnlyExact = defineComponent({
 // https://vuejs.org/api/sfc-script-setup.html#default-props-values-when-using-type-declaration
 const ScriptSetupDefaultPropsExact = defineComponent({
 	__typeProps: {} as {
-		msg?: string
-		labels?: string[]
+		msg?: string;
+		labels?: string[];
+	},
+	props: {
+		msg: {
+			default: 'hello'
+		},
+		labels: {
+			default: () => ['one', 'two']
+		}
 	},
 	setup() {
 		return {};
