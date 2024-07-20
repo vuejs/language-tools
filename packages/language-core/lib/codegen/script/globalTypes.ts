@@ -68,6 +68,7 @@ declare global {
 		: T;
 	function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
+	function __VLS_nonNullable<T>(t: T): T extends null | undefined ? never : T;
 
 	type __VLS_SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
 	type __VLS_WithComponent<N0 extends string, LocalComponents, N1 extends string, N2 extends string, N3 extends string> =

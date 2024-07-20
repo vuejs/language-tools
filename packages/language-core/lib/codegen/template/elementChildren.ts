@@ -28,7 +28,7 @@ export function* generateElementChildren(
 		&& node.tagType !== CompilerDOM.ElementTypes.ELEMENT
 		&& node.tagType !== CompilerDOM.ElementTypes.TEMPLATE
 	) {
-		yield `(${componentCtxVar}.slots!).`;
+		yield `__VLS_nonNullable(${componentCtxVar}.slots).`;
 		yield* wrapWith(
 			node.children[0].loc.start.offset,
 			node.children[node.children.length - 1].loc.end.offset,

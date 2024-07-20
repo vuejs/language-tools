@@ -247,20 +247,20 @@ export function* generateComponent(
 	ctx.usedComponentCtxVars.add(componentCtxVar);
 	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
 
+	if (var_defineComponentCtx && ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
+		yield `const ${componentCtxVar} = __VLS_nonNullable(__VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance}))${endOfLine}`;
+	}
+	if (usedComponentEventsVar) {
+		yield `let ${var_componentEmit}!: typeof ${componentCtxVar}.emit${endOfLine}`;
+		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
+	}
+
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir) {
 		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
 	}
 	else {
 		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
-	}
-
-	if (var_defineComponentCtx && ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
-		yield `const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!${endOfLine}`;
-	}
-	if (usedComponentEventsVar) {
-		yield `let ${var_componentEmit}!: typeof ${componentCtxVar}.emit${endOfLine}`;
-		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
 	}
 }
 
@@ -447,7 +447,7 @@ function* generateComponentSlot(
 			`__VLS_thisSlot`
 		);
 	}
-	yield `} = ${componentCtxVar}.slots!${endOfLine}`;
+	yield `} = __VLS_nonNullable(${componentCtxVar}.slots)${endOfLine}`;
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
@@ -494,7 +494,7 @@ function* generateComponentSlot(
 		isStatic = slotDir.arg.isStatic;
 	}
 	if (isStatic && slotDir && !slotDir.arg) {
-		yield `${componentCtxVar}.slots!['`;
+		yield `__VLS_nonNullable(${componentCtxVar}.slots)['`;
 		yield [
 			'',
 			'template',
