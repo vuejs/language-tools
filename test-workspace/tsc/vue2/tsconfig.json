@@ -20,6 +20,7 @@
 		"../vue3/#3782",
 		"../vue3/#4327",
 		"../vue3/#4512",
+		"../vue3/#4540",
 		"../vue3/components",
 		"../vue3/defineEmits",
 		"../vue3/defineModel",

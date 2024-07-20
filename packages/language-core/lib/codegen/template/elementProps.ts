@@ -132,7 +132,12 @@ export function* generateElementProps(
 							(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
 							shouldCamelize
 						)
-						: [propName]
+						: wrapWith(
+							prop.loc.start.offset,
+							prop.loc.start.offset + 'v-model'.length,
+							ctx.codeFeatures.verification,
+							propName
+						)
 				),
 				`: (`,
 				...genereatePropExp(
