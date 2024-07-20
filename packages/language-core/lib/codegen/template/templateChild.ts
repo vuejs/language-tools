@@ -31,7 +31,7 @@ export function* generateTemplateChild(
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
 	prevNode: CompilerDOM.TemplateChildNode | undefined,
-	componentCtxVar: string | undefined,
+	componentCtxVar: string | undefined
 ): Generator<Code> {
 	if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
 		const commentText = prevNode.content.trim().split(' ')[0];
@@ -102,7 +102,7 @@ export function* generateTemplateChild(
 			start,
 			ctx.codeFeatures.all,
 			`(`,
-			`)${endOfLine}`,
+			`)${endOfLine}`
 		);
 		yield* ctx.resetDirectiveComments('end of INTERPOLATION');
 	}

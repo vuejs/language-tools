@@ -1,22 +1,30 @@
 import { VueVirtualCode, forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import * as path from 'path-browserify';
-import type * as vscode from 'vscode-languageserver-protocol';
-import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { LanguageServicePlugin, LanguageServicePluginInstance, ServiceContext, TagNameCasing } from '../types';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
+import type * as vscode from 'vscode-languageserver-protocol';
+import { URI } from 'vscode-uri';
+import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
+import { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance, TagNameCasing } from '../types';
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
+	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
+		capabilities: {
+			// documentDropEditsProvider: true,
+		},
 		create(context): LanguageServicePluginInstance {
+			if (!context.project.vue) {
+				return {};
+			}
 
 			let casing = TagNameCasing.Pascal as TagNameCasing; // TODO
 
 			const tsPluginClient = getTsPluginClient?.(context);
+			const vueCompilerOptions = context.project.vue.compilerOptions;
 
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
@@ -25,7 +33,7 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					const vueVirtualCode = sourceScript?.generated?.root;
@@ -39,7 +47,7 @@ export function create(
 							importUri = item.value as string;
 						}
 					}
-					if (!importUri?.endsWith('.vue')) {
+					if (!importUri || !vueCompilerOptions.extensions.some(ext => importUri.endsWith(ext))) {
 						return;
 					}
 
@@ -55,9 +63,10 @@ export function create(
 					}
 
 					const additionalEdit: vscode.WorkspaceEdit = {};
-					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptSetupFormat' : 'scriptFormat'))!;
+					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw'))!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
-					const incomingFileName = context.env.typescript!.uriToFileName(importUri);
+					const incomingFileName = context.project.typescript?.uriConverter.asFileName(URI.parse(importUri))
+						?? URI.parse(importUri).fsPath.replace(/\\/g, '/');
 
 					let importPath: string | undefined;
 
@@ -81,9 +90,11 @@ export function create(
 						}
 					}
 
+					const embeddedDocumentUriStr = context.encodeEmbeddedDocumentUri(sourceScript.id, code.id).toString();
+
 					additionalEdit.changes ??= {};
-					additionalEdit.changes[context.encodeEmbeddedDocumentUri(sourceScript.id, code.id)] = [];
-					additionalEdit.changes[context.encodeEmbeddedDocumentUri(sourceScript.id, code.id)].push({
+					additionalEdit.changes[embeddedDocumentUriStr] = [];
+					additionalEdit.changes[embeddedDocumentUriStr].push({
 						range: lastImportNode ? {
 							start: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
 							end: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
@@ -98,7 +109,7 @@ export function create(
 					if (sfc.script) {
 						const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
 						if (edit) {
-							additionalEdit.changes[context.encodeEmbeddedDocumentUri(sourceScript.id, code.id)].push({
+							additionalEdit.changes[embeddedDocumentUriStr].push({
 								range: {
 									start: document.positionAt(edit.range.start),
 									end: document.positionAt(edit.range.end),

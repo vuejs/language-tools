@@ -1,6 +1,8 @@
-import { buildMappings, Segment, SourceMap, toString } from '@volar/language-core';
+import { CodeInformation, Mapping, defaultMapperFactory } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
+import { Segment, toString } from 'muggle-string';
 import type { VueLanguagePlugin } from '../types';
+import { buildMappings } from '../utils/buildMappings';
 import { parse } from '../utils/parseSfc';
 
 const codeblockReg = /(`{3,})[\s\S]+?\1/g;
@@ -11,13 +13,26 @@ const angleBracketReg = /\<\S*\:\S*\>/g;
 const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
 const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
-		parseSFC(_fileName, content) {
+		getLanguageId(fileName) {
+			if (vueCompilerOptions.vitePressExtensions.some(ext => fileName.endsWith(ext))) {
+				return 'markdown';
+			}
+		},
+
+		isValidFile(_fileName, languageId) {
+			return languageId === 'markdown';
+		},
+
+		parseSFC2(_fileName, languageId, content) {
+			if (languageId !== 'markdown') {
+				return;
+			}
 
 			content = content
 				// code block
@@ -50,10 +65,11 @@ const plugin: VueLanguagePlugin = () => {
 			codes.push([content, undefined, 0]);
 			codes.push('\n</template>');
 
-			const file2VueSourceMap = new SourceMap(buildMappings(codes));
+			const file2VueSourceMap = defaultMapperFactory(buildMappings(codes) as unknown as Mapping<CodeInformation>[]);
 			const sfc = parse(toString(codes));
 
 			if (sfc.descriptor.template) {
+				sfc.descriptor.template.lang = 'md';
 				transformRange(sfc.descriptor.template);
 			}
 			if (sfc.descriptor.script) {
@@ -72,8 +88,16 @@ const plugin: VueLanguagePlugin = () => {
 			return sfc;
 
 			function transformRange(block: SFCBlock) {
-				block.loc.start.offset = file2VueSourceMap.getSourceOffset(block.loc.start.offset)?.[0] ?? -1;
-				block.loc.end.offset = file2VueSourceMap.getSourceOffset(block.loc.end.offset)?.[0] ?? -1;
+				block.loc.start.offset = -1;
+				block.loc.end.offset = -1;
+				for (const [start] of file2VueSourceMap.toSourceLocation(block.loc.start.offset)) {
+					block.loc.start.offset = start;
+					break;
+				}
+				for (const [end] of file2VueSourceMap.toSourceLocation(block.loc.end.offset)) {
+					block.loc.end.offset = end;
+					break;
+				}
 			}
 		}
 	};

@@ -1,6 +1,7 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
 import { endOfLine, newLine, wrapWith } from '../common';
+import type { TemplateCodegenOptions } from './index';
 
 const _codeFeatures = {
 	all: {
@@ -21,8 +22,20 @@ const _codeFeatures = {
 	navigation: {
 		navigation: true,
 	} as VueCodeInformation,
+	navigationWithoutRename: {
+		navigation: {
+			shouldRename() {
+				return false;
+			},
+		},
+	} as VueCodeInformation,
 	navigationAndCompletion: {
 		navigation: true,
+		completion: true,
+	} as VueCodeInformation,
+	navigationAndAdditionalCompletion: {
+		navigation: true,
+		completion: { isAdditional: true },
 	} as VueCodeInformation,
 	withoutHighlight: {
 		semantic: { shouldHighlight: () => false },
@@ -43,7 +56,7 @@ const _codeFeatures = {
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
-export function createTemplateCodegenContext() {
+export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCodegenOptions['scriptSetupBindingNames']) {
 	let ignoredError = false;
 	let expectErrorToken: {
 		errors: number;
@@ -80,7 +93,7 @@ export function createTemplateCodegenContext() {
 		},
 	});
 	const localVars = new Map<string, number>();
-	const accessGlobalVariables = new Map<string, Set<number>>();
+	const accessExternalVariables = new Map<string, Set<number>>();
 	const slots: {
 		name: string;
 		loc?: number;
@@ -96,20 +109,23 @@ export function createTemplateCodegenContext() {
 	const blockConditions: string[] = [];
 	const usedComponentCtxVars = new Set<string>();
 	const scopedClasses: { className: string, offset: number; }[] = [];
+	const emptyClassOffsets: number[] = [];
 
 	return {
 		slots,
 		dynamicSlots,
 		codeFeatures,
-		accessGlobalVariables,
+		accessExternalVariables,
 		hasSlotElements,
 		blockConditions,
 		usedComponentCtxVars,
 		scopedClasses,
-		accessGlobalVariable(name: string, offset?: number) {
-			let arr = accessGlobalVariables.get(name);
+		emptyClassOffsets,
+		hasSlot: false,
+		accessExternalVariable(name: string, offset?: number) {
+			let arr = accessExternalVariables.get(name);
 			if (!arr) {
-				accessGlobalVariables.set(name, arr = new Set());
+				accessExternalVariables.set(name, arr = new Set());
 			}
 			if (offset !== undefined) {
 				arr.add(offset);
@@ -153,7 +169,7 @@ export function createTemplateCodegenContext() {
 							shouldReport: () => token.errors === 0,
 						},
 					},
-					`// @ts-expect-error __VLS_TS_EXPECT_ERROR`,
+					`// @ts-expect-error __VLS_TS_EXPECT_ERROR`
 				);
 				yield `${newLine}${endOfLine}`;
 				expectErrorToken = undefined;
@@ -165,7 +181,7 @@ export function createTemplateCodegenContext() {
 			}
 		},
 		generateAutoImportCompletion: function* (): Generator<Code> {
-			const all = [...accessGlobalVariables.entries()];
+			const all = [...accessExternalVariables.entries()];
 			if (!all.some(([_, offsets]) => offsets.size)) {
 				return;
 			}
@@ -173,12 +189,26 @@ export function createTemplateCodegenContext() {
 			yield `[`;
 			for (const [varName, offsets] of all) {
 				for (const offset of offsets) {
-					yield [
-						varName,
-						'template',
-						offset,
-						codeFeatures.additionalCompletion,
-					];
+					if (scriptSetupBindingNames.has(varName)) {
+						// #3409
+						yield [
+							varName,
+							'template',
+							offset,
+							{
+								...codeFeatures.additionalCompletion,
+								...codeFeatures.withoutHighlightAndCompletionAndNavigation,
+							},
+						];
+					}
+					else {
+						yield [
+							varName,
+							'template',
+							offset,
+							codeFeatures.additionalCompletion,
+						];
+					}
 					yield `,`;
 				}
 				offsets.clear();

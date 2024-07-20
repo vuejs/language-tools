@@ -1,5 +1,5 @@
 export * from './lib/codegen/template';
-export * from './lib/languageModule';
+export * from './lib/languagePlugin';
 export * from './lib/parsers/scriptSetupRanges';
 export * from './lib/plugins';
 export * from './lib/virtualFile/vueFile';

@@ -1,6 +1,7 @@
 import type * as ts from 'typescript';
 import * as path from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
+import { getAllExtensions } from '../languagePlugin';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -36,15 +37,12 @@ export function createParsedCommandLineByJson(
 		{},
 		configFileName,
 		undefined,
-		[
-			...resolvedVueOptions.extensions,
-			...resolvedVueOptions.vitePressExtensions,
-			...resolvedVueOptions.petiteVueExtensions,
-		].map(extension => ({
-			extension: extension.slice(1),
-			isMixedContent: true,
-			scriptKind: ts.ScriptKind.Deferred,
-		})),
+		getAllExtensions(resolvedVueOptions)
+			.map(extension => ({
+				extension: extension.slice(1),
+				isMixedContent: true,
+				scriptKind: ts.ScriptKind.Deferred,
+			}))
 	);
 
 	// fix https://github.com/vuejs/language-tools/issues/1786
@@ -61,7 +59,7 @@ export function createParsedCommandLineByJson(
 export function createParsedCommandLine(
 	ts: typeof import('typescript'),
 	parseConfigHost: ts.ParseConfigHost,
-	tsConfigPath: string,
+	tsConfigPath: string
 ): ParsedCommandLine {
 	try {
 		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
@@ -87,15 +85,12 @@ export function createParsedCommandLine(
 			{},
 			tsConfigPath,
 			undefined,
-			[
-				...resolvedVueOptions.extensions,
-				...resolvedVueOptions.vitePressExtensions,
-				...resolvedVueOptions.petiteVueExtensions,
-			].map(extension => ({
-				extension: extension.slice(1),
-				isMixedContent: true,
-				scriptKind: ts.ScriptKind.Deferred,
-			})),
+			getAllExtensions(resolvedVueOptions)
+				.map(extension => ({
+					extension: extension.slice(1),
+					isMixedContent: true,
+					scriptKind: ts.ScriptKind.Deferred,
+				}))
 		);
 
 		// fix https://github.com/vuejs/language-tools/issues/1786
@@ -142,7 +137,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 
 function getPartialVueCompilerOptions(
 	ts: typeof import('typescript'),
-	tsConfigSourceFile: ts.TsConfigSourceFile,
+	tsConfigSourceFile: ts.TsConfigSourceFile
 ): Partial<VueCompilerOptions> {
 
 	const folder = path.dirname(tsConfigSourceFile.fileName);
@@ -169,19 +164,12 @@ function getPartialVueCompilerOptions(
 	}
 	if (rawOptions.plugins) {
 		const plugins = rawOptions.plugins
-			.map<VueLanguagePlugin[] | VueLanguagePlugin>((pluginPath: string) => {
+			.map<VueLanguagePlugin>((pluginPath: string) => {
 				try {
 					const resolvedPath = resolvePath(pluginPath);
 					if (resolvedPath) {
 						const plugin = require(resolvedPath);
-						if (Array.isArray(plugin)) {
-							for (let i = 0; i < plugin.length; i++) {
-								plugin[i].__moduleName = `${pluginPath} (${i})`;
-							}
-						}
-						else {
-							plugin.__moduleName = pluginPath;
-						}
+						plugin.__moduleName = pluginPath;
 						return plugin;
 					}
 					else {
@@ -192,8 +180,7 @@ function getPartialVueCompilerOptions(
 					console.warn('[Vue] Resolve plugin path failed:', pluginPath, error);
 				}
 				return [];
-			})
-			.flat(Infinity as 1);
+			});
 
 		result.plugins = plugins;
 	}
@@ -262,6 +249,5 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 				select: true
 			}
 		},
-		experimentalUseElementAccessInTemplate: vueOptions.experimentalUseElementAccessInTemplate ?? false,
 	};
 }

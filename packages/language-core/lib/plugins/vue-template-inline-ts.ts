@@ -8,7 +8,6 @@ import * as CompilerDOM from '@vue/compiler-dom';
 
 const codeFeatures: CodeInformation = {
 	format: true,
-	// autoInserts: true, // TODO: support vue-autoinsert-parentheses
 };
 const formatBrackets = {
 	normal: ['`${', '}`;'] as [string, string],
@@ -28,7 +27,7 @@ const plugin: VueLanguagePlugin = ctx => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
 		getEmbeddedCodes(_fileName, sfc) {
 			if (!sfc.template?.ast) {
@@ -85,28 +84,28 @@ const plugin: VueLanguagePlugin = ctx => {
 						addFormatCodes(
 							prop.arg.content,
 							prop.arg.loc.start.offset,
-							formatBrackets.normal,
+							formatBrackets.normal
 						);
 					}
 					if (
 						prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 						&& prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY // style='z-index: 2' will compile to {'z-index':'2'}
 					) {
-						if (prop.name === 'on') {
+						if (prop.name === 'on' && prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 							const ast = createTsAst(ctx.modules.typescript, prop.exp, prop.exp.content);
 							addFormatCodes(
 								prop.exp.content,
 								prop.exp.loc.start.offset,
 								isCompoundExpression(ctx.modules.typescript, ast)
 									? formatBrackets.event
-									: formatBrackets.normal,
+									: formatBrackets.normal
 							);
 						}
 						else {
 							addFormatCodes(
 								prop.exp.content,
 								prop.exp.loc.start.offset,
-								formatBrackets.normal,
+								formatBrackets.normal
 							);
 						}
 					}
@@ -122,7 +121,7 @@ const plugin: VueLanguagePlugin = ctx => {
 						addFormatCodes(
 							branch.condition.content,
 							branch.condition.loc.start.offset,
-							formatBrackets.if,
+							formatBrackets.if
 						);
 					}
 
@@ -140,7 +139,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					addFormatCodes(
 						templateContent.substring(start, end),
 						start,
-						formatBrackets.for,
+						formatBrackets.for
 					);
 				}
 				for (const child of node.children) {
@@ -169,7 +168,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					lines.length <= 1 ? formatBrackets.curly : [
 						lines[0].trim() === '' ? '(' : formatBrackets.curly[0],
 						lines[lines.length - 1].trim() === '' ? ');' : formatBrackets.curly[1],
-					],
+					]
 				);
 			}
 		}

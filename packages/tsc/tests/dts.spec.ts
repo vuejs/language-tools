@@ -31,14 +31,16 @@ describe('vue-tsc-dts', () => {
 		vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 			: vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
-		const vueLanguagePlugin = vue.createVueLanguagePlugin(
+		const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
 			ts,
 			id => id,
-			options.host?.useCaseSensitiveFileNames?.() ?? false,
-			() => '',
-			() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
+			vue.createRootFileChecker(
+				undefined,
+				() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
+				options.host?.useCaseSensitiveFileNames?.() ?? false
+			),
 			options.options,
-			vueOptions,
+			vueOptions
 		);
 		return [vueLanguagePlugin];
 	});
@@ -62,7 +64,7 @@ describe('vue-tsc-dts', () => {
 					outputText = text;
 				},
 				undefined,
-				true,
+				true
 			);
 			expect(outputText ? normalizeNewline(outputText) : undefined).toMatchSnapshot();
 		});

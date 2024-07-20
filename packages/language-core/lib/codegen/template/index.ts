@@ -2,10 +2,9 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { endOfLine, newLine, wrapWith } from '../common';
-import { createTemplateCodegenContext } from './context';
+import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
-import { generateStringLiteralKey } from './stringLiteralKey';
 import { generateTemplateChild, getVForNode } from './templateChild';
 
 export interface TemplateCodegenOptions {
@@ -13,17 +12,15 @@ export interface TemplateCodegenOptions {
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	template: NonNullable<Sfc['template']>;
-	shouldGenerateScopedClasses?: boolean;
-	stylesScopedClasses: Set<string>;
+	scriptSetupBindingNames: Set<string>;
+	scriptSetupImportComponentNames: Set<string>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;
 }
 
-export function* generateTemplate(options: TemplateCodegenOptions) {
-	const ctx = createTemplateCodegenContext();
-
-	let hasSlot = false;
+export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
+	const ctx = createTemplateCodegenContext(options.scriptSetupBindingNames);
 
 	if (options.slotsAssignName) {
 		ctx.addLocalVariable(options.slotsAssignName);
@@ -48,29 +45,23 @@ export function* generateTemplate(options: TemplateCodegenOptions) {
 
 	yield* ctx.generateAutoImportCompletion();
 
-	return {
-		ctx,
-		hasSlot,
-	};
+	return ctx;
 
 	function* generateSlotsType(): Generator<Code> {
 		for (const { expVar, varName } of ctx.dynamicSlots) {
-			hasSlot = true;
+			ctx.hasSlot = true;
 			yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
 		}
 		yield `{${newLine}`;
 		for (const slot of ctx.slots) {
-			hasSlot = true;
+			ctx.hasSlot = true;
 			if (slot.name && slot.loc !== undefined) {
 				yield* generateObjectProperty(
 					options,
 					ctx,
 					slot.name,
 					slot.loc,
-					{
-						...ctx.codeFeatures.withoutHighlightAndCompletion,
-						__referencesCodeLens: true,
-					},
+					ctx.codeFeatures.withoutHighlightAndCompletion,
 					slot.nodeLoc
 				);
 			}
@@ -78,11 +69,8 @@ export function* generateTemplate(options: TemplateCodegenOptions) {
 				yield* wrapWith(
 					slot.tagRange[0],
 					slot.tagRange[1],
-					{
-						...ctx.codeFeatures.withoutHighlightAndCompletion,
-						__referencesCodeLens: true,
-					},
-					`default`,
+					ctx.codeFeatures.withoutHighlightAndCompletion,
+					`default`
 				);
 			}
 			yield `?(_: typeof ${slot.varName}): any,${newLine}`;
@@ -92,16 +80,38 @@ export function* generateTemplate(options: TemplateCodegenOptions) {
 
 	function* generateStyleScopedClasses(): Generator<Code> {
 		yield `if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {${newLine}`;
+		for (const offset of ctx.emptyClassOffsets) {
+			yield `__VLS_styleScopedClasses['`;
+			yield [
+				'',
+				'template',
+				offset,
+				ctx.codeFeatures.additionalCompletion,
+			];
+			yield `']${endOfLine}`;
+		}
 		for (const { className, offset } of ctx.scopedClasses) {
 			yield `__VLS_styleScopedClasses[`;
-			yield* generateStringLiteralKey(
-				className,
+			yield [
+				'',
+				'template',
 				offset,
-				{
-					...ctx.codeFeatures.navigationAndCompletion,
-					__displayWithLink: options.stylesScopedClasses.has(className),
-				},
-			);
+				ctx.codeFeatures.navigationWithoutRename,
+			];
+			yield `'`;
+			yield [
+				className,
+				'template',
+				offset,
+				ctx.codeFeatures.navigationAndAdditionalCompletion,
+			];
+			yield `'`;
+			yield [
+				'',
+				'template',
+				offset + className.length,
+				ctx.codeFeatures.navigationWithoutRename,
+			];
 			yield `]${endOfLine}`;
 		}
 		yield `}${newLine}`;
@@ -161,8 +171,4 @@ export function* forEachElementNode(node: CompilerDOM.RootNode | CompilerDOM.Tem
 			yield* forEachElementNode(child);
 		}
 	}
-}
-
-export function isFragment(node: CompilerDOM.IfNode | CompilerDOM.ForNode) {
-	return node.codegenNode && 'consequent' in node.codegenNode && 'tag' in node.codegenNode.consequent && node.codegenNode.consequent.tag === CompilerDOM.FRAGMENT;
 }

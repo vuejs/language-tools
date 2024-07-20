@@ -6,7 +6,7 @@ export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRan
 export function parseScriptSetupRanges(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
-	vueCompilerOptions: VueCompilerOptions,
+	vueCompilerOptions: VueCompilerOptions
 ) {
 
 	let foundNonImportExportNode = false;
@@ -28,11 +28,16 @@ export function parseScriptSetupRanges(
 	} = {};
 	const emits: {
 		name?: string;
-		define?: ReturnType<typeof parseDefineFunction>;
+		define?: ReturnType<typeof parseDefineFunction> & {
+			hasUnionTypeArg?: boolean;
+		};
 	} = {};
 	const expose: {
 		name?: string;
 		define?: ReturnType<typeof parseDefineFunction>;
+	} = {};
+	const options: {
+		name?: string;
 	} = {};
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
@@ -49,6 +54,7 @@ export function parseScriptSetupRanges(
 	const bindings = parseBindingRanges(ts, ast);
 	const text = ast.text;
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
+	const importComponentNames = new Set<string>();
 
 	ts.forEachChild(ast, node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
@@ -70,6 +76,17 @@ export function parseScriptSetupRanges(
 			}
 			foundNonImportExportNode = true;
 		}
+
+		if (
+			ts.isImportDeclaration(node)
+			&& node.importClause?.name
+			&& !node.importClause.isTypeOnly
+		) {
+			const moduleName = getNodeText(ts, node.moduleSpecifier, ast).slice(1, -1);
+			if (vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
+				importComponentNames.add(getNodeText(ts, node.importClause.name, ast));
+			}
+		}
 	});
 	ts.forEachChild(ast, child => visitNode(child, [ast]));
 
@@ -77,11 +94,13 @@ export function parseScriptSetupRanges(
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		bindings,
+		importComponentNames,
 		props,
 		slots,
 		emits,
 		expose,
 		defineProp,
+		options,
 	};
 
 	function _getStartEnd(node: ts.Node) {
@@ -199,6 +218,14 @@ export function parseScriptSetupRanges(
 				if (ts.isVariableDeclaration(parent)) {
 					emits.name = getNodeText(ts, parent.name, ast);
 				}
+				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0]) && node.typeArguments[0].members.at(0)) {
+					for (const member of node.typeArguments[0].members) {
+						if (ts.isCallSignatureDeclaration(member) && member.parameters[0].type && ts.isUnionTypeNode(member.parameters[0].type)) {
+							emits.define.hasUnionTypeArg = true;
+							return;
+						}
+					}
+				}
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
 				expose.define = parseDefineFunction(node);
@@ -246,6 +273,15 @@ export function parseScriptSetupRanges(
 					props.name = getNodeText(ts, parent.name, ast);
 				}
 			}
+			else if (vueCompilerOptions.macros.defineOptions.includes(callText)) {
+				if (node.arguments.length && ts.isObjectLiteralExpression(node.arguments[0])) {
+					for (const prop of node.arguments[0].properties) {
+						if ((ts.isPropertyAssignment(prop)) && getNodeText(ts, prop.name, ast) === 'name' && ts.isStringLiteral(prop.initializer)) {
+							options.name = prop.initializer.text;
+						}
+					}
+				}
+			}
 		}
 		ts.forEachChild(node, child => {
 			parents.push(node);
@@ -288,6 +324,9 @@ export function parseBindingRanges(ts: typeof import('typescript'), sourceFile: 
 				if (node.importClause.namedBindings) {
 					if (ts.isNamedImports(node.importClause.namedBindings)) {
 						for (const element of node.importClause.namedBindings.elements) {
+							if (element.isTypeOnly) {
+								continue;
+							}
 							bindings.push(_getStartEnd(element.name));
 						}
 					}

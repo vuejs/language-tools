@@ -1,14 +1,11 @@
 import type * as ts from 'typescript';
+import type { RequestContext } from './types';
 
 export function getImportPathForFile(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		languageServiceHost: ts.LanguageServiceHost;
-	},
+	this: RequestContext,
 	fileName: string,
 	incomingFileName: string,
-	preferences: ts.UserPreferences,
+	preferences: ts.UserPreferences
 ) {
 	const { typescript: ts, languageService, languageServiceHost } = this;
 	const program = languageService.getProgram();
@@ -37,7 +34,7 @@ export function getImportPathForFile(
 		languageServiceHost.getCompilationSettings(),
 		sourceFile,
 		resolutionHost,
-		preferences,
+		preferences
 	);
 
 	for (const moduleSpecifier of moduleSpecifiers.moduleSpecifiers) {

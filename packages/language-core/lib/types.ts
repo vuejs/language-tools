@@ -1,8 +1,9 @@
+import type { CodeInformation } from '@volar/language-core';
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
+import type { Segment } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { VueEmbeddedCode } from './virtualFile/embeddedFile';
-import type { CodeInformation, Segment } from '@volar/language-core';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
@@ -14,8 +15,6 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 };
 
 export interface VueCodeInformation extends CodeInformation {
-	__referencesCodeLens?: boolean;
-	__displayWithLink?: boolean;
 	__hint?: {
 		setting: string;
 		label: string;
@@ -56,10 +55,27 @@ export interface VueCompilerOptions {
 	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
-	experimentalUseElementAccessInTemplate: boolean;
 }
 
-export const pluginVersion = 2;
+export const validVersions = [2, 2.1] as const;
+
+export type VueLanguagePluginReturn = {
+	version: typeof validVersions[number];
+	name?: string;
+	order?: number;
+	requiredCompilerOptions?: string[];
+	getLanguageId?(fileName: string): string | undefined;
+	isValidFile?(fileName: string, languageId: string): boolean;
+	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
+	parseSFC2?(fileName: string, languageId: string, content: string): SFCParseResult | undefined;
+	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
+	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
+	compileSFCScript?(lang: string, script: string): ts.SourceFile | undefined;
+	compileSFCTemplate?(lang: string, template: string, options: CompilerDOM.CompilerOptions): CompilerDOM.CodegenResult | undefined;
+	updateSFCTemplate?(oldResult: CompilerDOM.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDOM.CodegenResult | undefined;
+	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string; }[];
+	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
+};
 
 export type VueLanguagePlugin = (ctx: {
 	modules: {
@@ -69,19 +85,7 @@ export type VueLanguagePlugin = (ctx: {
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	globalTypesHolder: string | undefined;
-}) => {
-	version: typeof pluginVersion;
-	name?: string;
-	order?: number;
-	requiredCompilerOptions?: string[];
-	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
-	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
-	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
-	compileSFCTemplate?(lang: string, template: string, options: CompilerDOM.CompilerOptions): CompilerDOM.CodegenResult | undefined;
-	updateSFCTemplate?(oldResult: CompilerDOM.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDOM.CodegenResult | undefined;
-	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string; }[];
-	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
-};
+}) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
 
 export interface SfcBlock {
 	name: string;
@@ -126,19 +130,6 @@ export interface Sfc {
 	customBlocks: readonly (SfcBlock & {
 		type: string;
 	})[];
-
-	/**
-	 * @deprecated use `template.ast` instead
-	 */
-	templateAst: CompilerDOM.RootNode | undefined;
-	/**
-	 * @deprecated use `script.ast` instead
-	 */
-	scriptAst: ts.SourceFile | undefined;
-	/**
-	 * @deprecated use `scriptSetup.ast` instead
-	 */
-	scriptSetupAst: ts.SourceFile | undefined;
 }
 
 export interface TextRange {

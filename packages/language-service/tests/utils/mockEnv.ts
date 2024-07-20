@@ -1,21 +1,17 @@
-import { FileType, ServiceEnvironment } from '@volar/language-service';
+import { FileType, LanguageServiceEnvironment } from '@volar/language-service';
 import { URI } from 'vscode-uri';
 import * as fs from 'fs';
 
-const uriToFileName = (uri: string) => URI.parse(uri).fsPath.replace(/\\/g, '/');
+export const uriToFileName = (uri: URI) => uri.fsPath.replace(/\\/g, '/');
 
-const fileNameToUri = (fileName: string) => URI.file(fileName).toString();
+export const fileNameToUri = (fileName: string) => URI.file(fileName);
 
 export function createMockServiceEnv(
-	rootUri: string,
+	rootUri: URI,
 	getSettings = () => ({} as any)
-): ServiceEnvironment {
+): LanguageServiceEnvironment {
 	return {
-		typescript: {
-			fileNameToUri,
-			uriToFileName,
-		},
-		workspaceFolder: rootUri,
+		workspaceFolders: [rootUri],
 		async getConfiguration(section: string) {
 			const settings = getSettings();
 			if (settings[section]) {
@@ -33,7 +29,7 @@ export function createMockServiceEnv(
 		},
 		fs: {
 			stat(uri) {
-				if (uri.startsWith('file://')) {
+				if (uri.scheme === 'file') {
 					try {
 						const stats = fs.statSync(uriToFileName(uri), { throwIfNoEntry: false });
 						if (stats) {
@@ -54,7 +50,7 @@ export function createMockServiceEnv(
 				}
 			},
 			readFile(uri, encoding) {
-				if (uri.startsWith('file://')) {
+				if (uri.scheme === 'file') {
 					try {
 						return fs.readFileSync(uriToFileName(uri), { encoding: encoding as 'utf-8' ?? 'utf-8' });
 					}
@@ -64,7 +60,7 @@ export function createMockServiceEnv(
 				}
 			},
 			readDirectory(uri) {
-				if (uri.startsWith('file://')) {
+				if (uri.scheme === 'file') {
 					try {
 						const dirName = uriToFileName(uri);
 						const files = fs.readdirSync(dirName, { withFileTypes: true });

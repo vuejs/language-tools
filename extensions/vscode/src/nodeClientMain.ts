@@ -1,5 +1,5 @@
 import { createLabsInfo } from '@volar/vscode';
-import * as serverLib from '@vue/language-server';
+import * as protocol from '@vue/language-server/protocol';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as lsp from '@volar/vscode/node';
@@ -9,7 +9,7 @@ import { middleware } from './middleware';
 
 export async function activate(context: vscode.ExtensionContext) {
 
-	const volarLabs = createLabsInfo(serverLib);
+	const volarLabs = createLabsInfo(protocol);
 
 	await commonActivate(context, (
 		id,
@@ -153,7 +153,7 @@ try {
 						'languages:',
 						`e.name==='typescript-vue-plugin-bundle'?[${config.server.includeLanguages.map(lang => `"${lang}"`).join(',')}]`,
 						':Array.isArray(e.languages)',
-					].join(''),
+					].join('')
 				);
 
 				// VSCode < 1.87.0

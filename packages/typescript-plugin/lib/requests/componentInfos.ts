@@ -1,17 +1,13 @@
 import * as vue from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
+import type { RequestContext } from './types';
 
 export function getComponentProps(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: vue.Language;
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
 	tag: string,
-	requiredOnly = false,
+	requiredOnly = false
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -91,14 +87,9 @@ export function getComponentProps(
 }
 
 export function getComponentEvents(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: vue.Language;
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
-	tag: string,
+	tag: string
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -172,13 +163,8 @@ export function getComponentEvents(
 }
 
 export function getTemplateContextProps(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: vue.Language;
-		getFileId: (fileName: string) => string,
-	},
-	fileName: string,
+	this: RequestContext,
+	fileName: string
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -194,13 +180,8 @@ export function getTemplateContextProps(
 }
 
 export function getComponentNames(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: vue.Language;
-		getFileId: (fileName: string) => string,
-	},
-	fileName: string,
+	this: RequestContext,
+	fileName: string
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -220,7 +201,7 @@ export function getComponentNames(
 export function _getComponentNames(
 	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
-	vueCode: vue.VueVirtualCode,
+	vueCode: vue.VueVirtualCode
 ) {
 	return getVariableType(ts, tsLs, vueCode, '__VLS_components')
 		?.type
@@ -231,14 +212,9 @@ export function _getComponentNames(
 }
 
 export function getElementAttrs(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: vue.Language;
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
-	tagName: string,
+	tagName: string
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -277,7 +253,7 @@ function getVariableType(
 	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
 	vueCode: vue.VueVirtualCode,
-	name: string,
+	name: string
 ) {
 	const program: ts.Program = (tsLs as any).getCurrentProgram();
 	if (!program) {
@@ -303,7 +279,7 @@ function getVariableType(
 function searchVariableDeclarationNode(
 	ts: typeof import('typescript'),
 	sourceFile: ts.SourceFile,
-	name: string,
+	name: string
 ) {
 
 	let componentsNode: ts.Node | undefined;

@@ -18,6 +18,10 @@
           "url": "https://cn.vuejs.org/api/built-in-components.html#transition"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-components.html#transition"
         },
@@ -74,6 +78,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#transitiongroup"
         },
         {
           "name": "ja",
@@ -134,6 +142,10 @@
           "url": "https://cn.vuejs.org/api/built-in-components.html#keepalive"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-components.html#keepalive"
         },
@@ -190,6 +202,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#teleport"
         },
         {
           "name": "ja",
@@ -250,6 +266,10 @@
           "url": "https://cn.vuejs.org/api/built-in-components.html#suspense"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-components.html#suspense"
         },
@@ -306,6 +326,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#component"
         },
         {
           "name": "ja",
@@ -366,6 +390,10 @@
           "url": "https://cn.vuejs.org/api/built-in-special-elements.html#slot"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-special-elements.html#slot"
         },
@@ -422,6 +450,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#template"
         },
         {
           "name": "ja",
@@ -483,6 +515,10 @@
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-text"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-directives.html#v-text"
         },
@@ -538,6 +574,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-html"
         },
         {
           "name": "ja",
@@ -597,6 +637,10 @@
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-show"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-directives.html#v-show"
         },
@@ -652,6 +696,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-if"
         },
         {
           "name": "ja",
@@ -712,6 +760,10 @@
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else"
         },
@@ -767,6 +819,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-else-if"
         },
         {
           "name": "ja",
@@ -826,6 +882,10 @@
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-for"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-directives.html#v-for"
         },
@@ -883,6 +943,10 @@
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-on"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-directives.html#v-on"
         },
@@ -928,7 +992,7 @@
       "name": "v-bind",
       "description": {
         "kind": "markdown",
-        "value": "\nLie dynamiquement un ou plusieurs attributs, ou une prop d'un composant à une expression.\n\n- **Raccourci :** \n  - `:` ou `.` (lorsqu'on utilise le modificateur `.prop`)\n  - En omettant la valeur (lorsque l'attribut et la valeur liée portent le même nom) <sup class=\"vt-badge\">3.4+</sup>\n\n- **Attendu :** `any (avec argument) | Object (sans argument)`\n\n- **Argument :** `attrOrProp (optionnel)`\n\n- **Modificateurs**\n\n  - `.camel` - transforme le nom de l'attribut kebab-case en camelCase.\n  - `.prop` - force une liaison à être définie comme une propriété du DOM. <sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - force une liaison à être définie comme un attribut du DOM. <sup class=\"vt-badge\">3.2+</sup>\n\n- **Utilisation :**\n\n  Lorsqu'elle est utilisée pour lier l'attribut `class` ou `style`, `v-bind` supporte des types de valeurs supplémentaires comme Array ou Objects. Voir la section du guide lié ci-dessous pour plus de détails.\n\n  Lors de la mise en place d'une liaison sur un élément, Vue va vérifier par défaut si l'élément a la clé définie comme une propriété en faisant une vérification de l'opérateur `in`. Si la propriété est définie, Vue définira la valeur comme une propriété du DOM au lieu d'un attribut. Cela devrait fonctionner dans la plupart des cas, mais vous pouvez outrepasser ce comportement en utilisant explicitement les modificateurs `.prop` ou `.attr`. Cela est parfois nécessaire, notamment lorsque vous [travaillez avec des éléments personnalisés](https://fr.vuejs.org/guide/extras/web-components.html#passing-dom-properties).\n\n  Lorsqu'elle est utilisée pour lier les props du composant, la prop doit être correctement déclarée dans le composant enfant.\n\n  Lorsqu'elle est utilisée sans argument, elle peut être utilisée pour lier un objet contenant des paires nom-valeur d'attributs.\n\n- **Exemple**\n\n  ```html\n  <!-- lie un attribut -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- nom d'attribut dynamique -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- raccourci -->\n  <img :src=\"imageSrc\" />\n\n  <!-- raccourci même nom (3.4+), se transforme en :src=\"src\" -->\n  <img :src />\n  \n  <!-- raccourci d'un nom d'attribut dynamique -->\n  <button :[key]=\"value\"></button>\n\n  <!-- avec une concaténation de chaînes de caractères en ligne -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- liaison de classe -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- liaison de style -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- liaison d'un objet d'attributs -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- liaison de prop. \"prop\" doit être déclaré dans le composant enfant. -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- transmet les props du parent en commun avec un composant enfant -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  Le modificateur `.prop` a également un raccourci dédié, `.` :\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- équivalent à -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  Le modificateur `.camel` permet de formatter un nom d'attribut `v-bind` en camelCase lors de l'utilisation de templates à l'intérieur du DOM, par exemple l'attribut SVG `viewBox` :\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  `.camel` n'est pas nécessaire si vous utilisez des templates en chaînes de caractères, ou si vous pré-compilez le template avec un outil de build.\n\n- **Voir aussi**\n  - [Liaison de classes et de styles](https://fr.vuejs.org/guide/essentials/class-and-style.html)\n  - [Composant - Détails sur le passage de props](https://fr.vuejs.org/guide/components/props.html#prop-passing-details)\n"
+        "value": "\nLie dynamiquement un ou plusieurs attributs, ou une prop d'un composant à une expression.\n\n- **Raccourci :**\n  - `:` ou `.` (lorsqu'on utilise le modificateur `.prop`)\n  - En omettant la valeur (lorsque l'attribut et la valeur liée portent le même nom) <sup class=\"vt-badge\">3.4+</sup>\n\n- **Attendu :** `any (avec argument) | Object (sans argument)`\n\n- **Argument :** `attrOrProp (optionnel)`\n\n- **Modificateurs**\n\n  - `.camel` - transforme le nom de l'attribut kebab-case en camelCase.\n  - `.prop` - force une liaison à être définie comme une propriété du DOM. <sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - force une liaison à être définie comme un attribut du DOM. <sup class=\"vt-badge\">3.2+</sup>\n\n- **Utilisation :**\n\n  Lorsqu'elle est utilisée pour lier l'attribut `class` ou `style`, `v-bind` supporte des types de valeurs supplémentaires comme Array ou Objects. Voir la section du guide lié ci-dessous pour plus de détails.\n\n  Lors de la mise en place d'une liaison sur un élément, Vue va vérifier par défaut si l'élément a la clé définie comme une propriété en faisant une vérification de l'opérateur `in`. Si la propriété est définie, Vue définira la valeur comme une propriété du DOM au lieu d'un attribut. Cela devrait fonctionner dans la plupart des cas, mais vous pouvez outrepasser ce comportement en utilisant explicitement les modificateurs `.prop` ou `.attr`. Cela est parfois nécessaire, notamment lorsque vous [travaillez avec des éléments personnalisés](https://fr.vuejs.org/guide/extras/web-components.html#passing-dom-properties).\n\n  Lorsqu'elle est utilisée pour lier les props du composant, la prop doit être correctement déclarée dans le composant enfant.\n\n  Lorsqu'elle est utilisée sans argument, elle peut être utilisée pour lier un objet contenant des paires nom-valeur d'attributs.\n\n- **Exemple**\n\n  ```html\n  <!-- lie un attribut -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- nom d'attribut dynamique -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- raccourci -->\n  <img :src=\"imageSrc\" />\n\n  <!-- raccourci même nom (3.4+), se transforme en :src=\"src\" -->\n  <img :src />\n\n  <!-- raccourci d'un nom d'attribut dynamique -->\n  <button :[key]=\"value\"></button>\n\n  <!-- avec une concaténation de chaînes de caractères en ligne -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- liaison de classe -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- liaison de style -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- liaison d'un objet d'attributs -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- liaison de prop. \"prop\" doit être déclaré dans le composant enfant. -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- transmet les props du parent en commun avec un composant enfant -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  Le modificateur `.prop` a également un raccourci dédié, `.` :\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- équivalent à -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  Le modificateur `.camel` permet de formatter un nom d'attribut `v-bind` en camelCase lors de l'utilisation de templates à l'intérieur du DOM, par exemple l'attribut SVG `viewBox` :\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  `.camel` n'est pas nécessaire si vous utilisez des templates en chaînes de caractères, ou si vous pré-compilez le template avec un outil de build.\n\n- **Voir aussi**\n  - [Liaison de classes et de styles](https://fr.vuejs.org/guide/essentials/class-and-style.html)\n  - [Composant - Détails sur le passage de props](https://fr.vuejs.org/guide/components/props.html#prop-passing-details)\n"
       },
       "references": [
         {
@@ -938,6 +1002,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-bind"
         },
         {
           "name": "ja",
@@ -997,6 +1065,10 @@
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-model"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-directives.html#v-model"
         },
@@ -1052,6 +1124,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-slot"
         },
         {
           "name": "ja",
@@ -1111,6 +1187,10 @@
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-pre"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-directives.html#v-pre"
         },
@@ -1156,7 +1236,7 @@
       "name": "v-once",
       "description": {
         "kind": "markdown",
-        "value": "\nRend l'élément et le composant une seule fois, et ignore les mises à jour futures.\n\n- **N'attend pas d'expression**\n\n- **Détails**\n\n  Lors des rendus suivants, l'élément/composant et tous ses enfants seront traités comme du contenu statique et ignorés. Cela peut être utilisé pour optimiser les performances de mise à jour.\n\n  ```html\n  <!-- élément simple -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- l'élément a des enfants -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- composant -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- directive `v-for` -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Depuis la version 3.2, vous pouvez également mémoriser une partie du template avec des conditions d'invalidation en utilisant [`v-memo`](#v-memo).\n\n- **Voir aussi**\n  - [Syntaxe de la liaison bidirectionnelle - interpolations](https://fr.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
+        "value": "\nRend l'élément et le composant une seule fois, et ignore les mises à jour futures.\n\n- **N'attend pas d'expression**\n\n- **Détails**\n\n  Lors des rendus suivants, l'élément/composant et tous ses enfants seront traités comme du contenu statique et ignorés. Cela peut être utilisé pour optimiser les performances de mise à jour.\n\n  ```html\n  <!-- élément simple -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- l'élément a des enfants -->\n  <div v-once>\n    <h1>Comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- composant -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- directive `v-for` -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Depuis la version 3.2, vous pouvez également mémoriser une partie du template avec des conditions d'invalidation en utilisant [`v-memo`](#v-memo).\n\n- **Voir aussi**\n  - [Syntaxe de la liaison bidirectionnelle - interpolations](https://fr.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
       },
       "references": [
         {
@@ -1166,6 +1246,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-once"
         },
         {
           "name": "ja",
@@ -1225,6 +1309,10 @@
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-memo"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-directives.html#v-memo"
         },
@@ -1280,6 +1368,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-cloak"
         },
         {
           "name": "ja",
@@ -1339,6 +1431,10 @@
           "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#key"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#key"
         },
@@ -1396,6 +1492,10 @@
           "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#ref"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#ref"
         },
@@ -1451,6 +1551,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#is"
         },
         {
           "name": "ja",

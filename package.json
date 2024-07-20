@@ -1,5 +1,6 @@
 {
 	"private": true,
+	"packageManager": "pnpm@9.4.0",
 	"scripts": {
 		"build": "tsc -b",
 		"watch": "npm run build && (npm run watch:base & npm run watch:vue)",
@@ -14,16 +15,16 @@
 		"release:next-base": "npm run release:base -- --dist-tag next",
 		"release:next-vue": "cd ./extensions/vscode && npm run release:next",
 		"test": "vitest run",
-		"lint": "tsl --projects {packages/*/tsconfig.json,extensions/*/tsconfig.json}",
+		"lint": "tsslint --projects {packages/*/tsconfig.json,extensions/*/tsconfig.json}",
 		"lint:fix": "npm run lint -- --fix",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@lerna-lite/publish": "latest",
-		"@volar/language-service": "2.2.0-alpha.12",
-		"@volar/tsl-config": "latest",
-		"tsl": "latest",
+		"@tsslint/cli": "latest",
+		"@tsslint/config": "latest",
+		"@volar/language-service": "~2.4.0-alpha.15",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
@@ -34,6 +35,7 @@
 			"@vue/shared": "alpha",
 			"@vue/compiler-dom": "alpha",
 			"@vue/compiler-sfc": "alpha",
+			"inquirer": "9.2.23",
 			"vue": "alpha"
 		}
 	}

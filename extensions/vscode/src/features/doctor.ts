@@ -1,5 +1,6 @@
-import { BaseLanguageClient, getTsdk } from '@volar/vscode';
-import { ParseSFCRequest } from '@vue/language-server';
+import { BaseLanguageClient, ExecuteCommandParams, ExecuteCommandRequest, getTsdk } from '@volar/vscode';
+import type { SFCParseResult } from '@vue/language-server';
+import { commands } from '@vue/language-server/lib/types';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { config } from '../config';
@@ -46,7 +47,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 				return content.trim();
 			}
-		},
+		}
 	));
 	context.subscriptions.push(vscode.commands.registerCommand('vue.action.doctor', () => {
 		const doc = vscode.window.activeTextEditor?.document;
@@ -85,7 +86,12 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	async function getProblems(fileUri: vscode.Uri) {
 
 		const vueDoc = vscode.workspace.textDocuments.find(doc => doc.fileName === fileUri.fsPath);
-		const sfc = await (vueDoc ? client.sendRequest(ParseSFCRequest.type, vueDoc.getText()) : undefined);
+		const sfc: SFCParseResult = vueDoc
+			? await client.sendRequest(ExecuteCommandRequest.type, {
+				command: commands.parseSfc,
+				arguments: [vueDoc.getText()],
+			} satisfies ExecuteCommandParams)
+			: undefined;
 		const vueMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, 'vue');
 		const domMod = getPackageJsonOfWorkspacePackage(fileUri.fsPath, '@vue/runtime-dom');
 		const problems: {
@@ -220,7 +226,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check tsdk version should be higher than 5.0.0
-		const tsdk = await getTsdk(context);
+		const tsdk = (await getTsdk(context))!;
 		if (tsdk.version && !semver.gte(tsdk.version, '5.0.0')) {
 			problems.push({
 				title: 'Requires TSDK 5.0 or higher',

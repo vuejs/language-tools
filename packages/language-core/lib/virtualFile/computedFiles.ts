@@ -1,13 +1,15 @@
-import { VirtualCode, buildMappings, toString } from '@volar/language-core';
+import type { VirtualCode } from '@volar/language-core';
 import { computed } from 'computeds';
+import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
-import type { Code, Sfc, SfcBlock, VueLanguagePlugin } from '../types';
+import type { Code, Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
+import { buildMappings } from '../utils/buildMappings';
 import { VueEmbeddedCode } from './embeddedFile';
 
 export function computedFiles(
-	plugins: ReturnType<VueLanguagePlugin>[],
+	plugins: VueLanguagePluginReturn[],
 	fileName: string,
-	sfc: Sfc,
+	sfc: Sfc
 ) {
 
 	const nameToBlock = computed(() => {
@@ -99,11 +101,11 @@ export function computedFiles(
 }
 
 function computedPluginEmbeddedCodes(
-	plugins: ReturnType<VueLanguagePlugin>[],
-	plugin: ReturnType<VueLanguagePlugin>,
+	plugins: VueLanguagePluginReturn[],
+	plugin: VueLanguagePluginReturn,
 	fileName: string,
 	sfc: Sfc,
-	nameToBlock: () => Record<string, SfcBlock>,
+	nameToBlock: () => Record<string, SfcBlock>
 ) {
 	const computeds = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>();
 	const getComputedKey = (code: {
@@ -170,24 +172,32 @@ function computedPluginEmbeddedCodes(
 
 	return computed(() => {
 		return codes().map(_file => {
-
 			const { code, snapshot } = _file();
-			const mappings = buildMappings(code.content);
+			const mappings = buildMappings(code.content.map<Code>(segment => {
+				if (typeof segment === 'string') {
+					return segment;
+				}
+				const source = segment[1];
+				if (source === undefined) {
+					return segment;
+				}
+				const block = nameToBlock()[source];
+				if (!block) {
+					// console.warn('Unable to find block: ' + source);
+					return segment;
+				}
+				return [
+					segment[0],
+					undefined,
+					segment[2] + block.startTagEnd,
+					segment[3],
+				];
+			}));
 			const newMappings: typeof mappings = [];
 			let lastValidMapping: typeof mappings[number] | undefined;
 
 			for (let i = 0; i < mappings.length; i++) {
 				const mapping = mappings[i];
-				if (mapping.source !== undefined) {
-					const block = nameToBlock()[mapping.source];
-					if (block) {
-						mapping.sourceOffsets = mapping.sourceOffsets.map(offset => offset + block.startTagEnd);
-					}
-					else {
-						// ignore
-					}
-					mapping.source = undefined;
-				}
 				if (mapping.data.__combineOffsetMapping !== undefined) {
 					const offsetMapping = mappings[i - mapping.data.__combineOffsetMapping];
 					if (typeof offsetMapping === 'string' || !offsetMapping) {

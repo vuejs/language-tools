@@ -8,7 +8,6 @@ import { generateCamelized } from './camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateObjectProperty } from './objectProperty';
 
 export function* generateElementEvents(
 	options: TemplateCodegenOptions,
@@ -16,71 +15,56 @@ export function* generateElementEvents(
 	node: CompilerDOM.ElementNode,
 	componentVar: string,
 	componentInstanceVar: string,
-	eventsVar: string,
-	used: () => void,
+	emitVar: string,
+	eventsVar: string
 ): Generator<Code> {
+	let usedComponentEventsVar = false;
+	let propsVar: string | undefined;
 	for (const prop of node.props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'on'
 			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			&& !prop.arg.loc.source.startsWith('[')
+			&& !prop.arg.loc.source.endsWith(']')
 		) {
-			used();
-			const eventVar = ctx.getInternalVariable();
-			yield `let ${eventVar} = { '${prop.arg.loc.source}': __VLS_pickEvent(`;
-			yield `${eventsVar}['${prop.arg.loc.source}'], `;
-			yield `({} as __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>)`;
-			yield* generateEventArg(options, ctx, prop.arg, true);
-			yield `) }${endOfLine}`;
-			yield `${eventVar} = { `;
-			if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
-				yield `[(`;
-				yield* generateInterpolation(
-					options,
-					ctx,
-					prop.arg.loc.source.slice(1, -1),
-					prop.arg.loc,
-					prop.arg.loc.start.offset + 1,
-					ctx.codeFeatures.all,
-					'',
-					'',
-				);
-				yield `)!]`;
+			usedComponentEventsVar = true;
+			if (!propsVar) {
+				propsVar = ctx.getInternalVariable();
+				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>${endOfLine}`;
 			}
-			else {
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					prop.arg.loc.source,
-					prop.arg.loc.start.offset,
-					ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
-					prop.arg.loc
-				);
+			const originalPropName = camelize('on-' + prop.arg.loc.source);
+			const originalPropNameObjectKey = variableNameRegex.test(originalPropName)
+				? originalPropName
+				: `'${originalPropName}'`;
+			yield `const ${ctx.getInternalVariable()}: `;
+			if (!options.vueCompilerOptions.strictTemplates) {
+				yield `Record<string, unknown> & `;
 			}
+			yield `(${newLine}`;
+			yield `__VLS_IsFunction<typeof ${propsVar}, '${originalPropName}'> extends true${newLine}`;
+			yield `? typeof ${propsVar}${newLine}`;
+			yield `: __VLS_IsFunction<typeof ${eventsVar}, '${prop.arg.loc.source}'> extends true${newLine}`;
+			yield `? {${newLine}`;
+			yield `/**__VLS_emit,${emitVar},${prop.arg.loc.source}*/${newLine}`;
+			yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${prop.arg.loc.source}']${newLine}`;
+			yield `}${newLine}`;
+			if (prop.arg.loc.source !== camelize(prop.arg.loc.source)) {
+				yield `: __VLS_IsFunction<typeof ${eventsVar}, '${camelize(prop.arg.loc.source)}'> extends true${newLine}`;
+				yield `? {${newLine}`;
+				yield `/**__VLS_emit,${emitVar},${camelize(prop.arg.loc.source)}*/${newLine}`;
+				yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']${newLine}`;
+				yield `}${newLine}`;
+			}
+			yield `: typeof ${propsVar}${newLine}`;
+			yield `) = {${newLine}`;
+			yield* generateEventArg(ctx, prop.arg, true);
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
-			yield ` }${endOfLine}`;
-		}
-		else if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'on'
-			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-		) {
-			// for vue 2 nameless event
-			// https://github.com/johnsoncodehk/vue-tsc/issues/67
-			yield* generateInterpolation(
-				options,
-				ctx,
-				prop.exp.content,
-				prop.exp.loc,
-				prop.exp.loc.start.offset,
-				ctx.codeFeatures.all,
-				'$event => {(',
-				')}',
-			);
-			yield endOfLine;
+			yield `}${endOfLine}`;
 		}
 	}
+	return usedComponentEventsVar;
 }
 
 const eventArgFeatures: VueCodeInformation = {
@@ -101,65 +85,47 @@ const eventArgFeatures: VueCodeInformation = {
 };
 
 export function* generateEventArg(
-	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	arg: CompilerDOM.SimpleExpressionNode,
-	access: boolean,
+	enableHover: boolean
 ): Generator<Code> {
-	if (arg.loc.source.startsWith('[') && arg.loc.source.endsWith(']')) {
-		yield `[`;
-		yield* generateInterpolation(
-			options,
-			ctx,
-			arg.loc.source.slice(1, -1),
-			arg.loc,
-			arg.loc.start.offset + 1,
-			ctx.codeFeatures.all,
-			'',
-			'',
-		);
-		yield `]`;
-	}
-	else if (variableNameRegex.test(camelize(arg.loc.source))) {
-		if (access) {
-			yield `.`;
+	const features = enableHover
+		? {
+			...ctx.codeFeatures.withoutHighlightAndCompletion,
+			...eventArgFeatures,
 		}
-		yield ['', 'template', arg.loc.start.offset, eventArgFeatures];
+		: eventArgFeatures;
+	if (variableNameRegex.test(camelize(arg.loc.source))) {
+		yield ['', 'template', arg.loc.start.offset, features];
 		yield `on`;
 		yield* generateCamelized(
 			capitalize(arg.loc.source),
 			arg.loc.start.offset,
-			combineLastMapping,
+			combineLastMapping
 		);
 	}
 	else {
-		if (access) {
-			yield `[`;
-		}
 		yield* wrapWith(
 			arg.loc.start.offset,
 			arg.loc.end.offset,
-			eventArgFeatures,
+			features,
 			`'`,
 			['', 'template', arg.loc.start.offset, combineLastMapping],
 			'on',
 			...generateCamelized(
 				capitalize(arg.loc.source),
 				arg.loc.start.offset,
-				combineLastMapping,
+				combineLastMapping
 			),
-			`'`,
+			`'`
 		);
-		if (access) {
-			yield `]`;
-		}
 	}
 }
 
 export function* generateEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode,
+	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		let prefix = '(';
@@ -169,8 +135,7 @@ export function* generateEventExpression(
 		const ast = createTsAst(options.ts, prop.exp, prop.exp.content);
 		const _isCompoundExpression = isCompoundExpression(options.ts, ast);
 		if (_isCompoundExpression) {
-
-			yield `$event => {${newLine}`;
+			yield `(...[$event]) => {${newLine}`;
 			ctx.addLocalVariable('$event');
 
 			prefix = '';
@@ -206,7 +171,7 @@ export function* generateEventExpression(
 				return ctx.codeFeatures.all;
 			},
 			prefix,
-			suffix,
+			suffix
 		);
 
 		if (_isCompoundExpression) {

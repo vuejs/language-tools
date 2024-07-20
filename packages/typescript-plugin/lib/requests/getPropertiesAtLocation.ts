@@ -1,16 +1,11 @@
-import { Language, isCompletionEnabled } from '@vue/language-core';
+import { isCompletionEnabled } from '@vue/language-core';
 import type * as ts from 'typescript';
+import type { RequestContext } from './types';
 
 export function getPropertiesAtLocation(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: Language;
-		isTsPlugin: boolean,
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
-	position: number,
+	position: number
 ) {
 	const { languageService, language, typescript: ts, isTsPlugin, getFileId } = this;
 
@@ -22,8 +17,8 @@ export function getPropertiesAtLocation(
 			return;
 		}
 		let mapped = false;
-		for (const [_1, [_2, map]] of language.maps.forEach(virtualScript.code)) {
-			for (const [position2, mapping] of map.getGeneratedOffsets(position)) {
+		for (const [_sourceScript, map] of language.maps.forEach(virtualScript.code)) {
+			for (const [position2, mapping] of map.toGeneratedLocation(position)) {
 				if (isCompletionEnabled(mapping.data)) {
 					position = position2;
 					mapped = true;

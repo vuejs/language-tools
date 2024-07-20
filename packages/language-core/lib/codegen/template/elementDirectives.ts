@@ -11,7 +11,7 @@ import { generateInterpolation } from './interpolation';
 export function* generateElementDirectives(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
+	node: CompilerDOM.ElementNode
 ): Generator<Code> {
 	for (const prop of node.props) {
 		if (
@@ -23,7 +23,7 @@ export function* generateElementDirectives(
 			&& prop.name !== 'scope'
 			&& prop.name !== 'data'
 		) {
-			ctx.accessGlobalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
+			ctx.accessExternalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
 
 			if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && !prop.arg.isStatic) {
 				yield* generateInterpolation(
@@ -34,7 +34,7 @@ export function* generateElementDirectives(
 					prop.arg.loc.start.offset + prop.arg.loc.source.indexOf(prop.arg.content),
 					ctx.codeFeatures.all,
 					'(',
-					')',
+					')'
 				);
 				yield endOfLine;
 			}
@@ -75,12 +75,12 @@ export function* generateElementDirectives(
 								prop.exp.loc.start.offset,
 								ctx.codeFeatures.all,
 								'(',
-								')',
-							),
+								')'
+							)
 						)
 						: [`undefined`]
 				),
-				`)`,
+				`)`
 			);
 			yield endOfLine;
 		}

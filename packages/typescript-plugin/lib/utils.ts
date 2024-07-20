@@ -5,6 +5,8 @@ import type * as ts from 'typescript';
 import * as fs from 'fs';
 import type { Request } from './server';
 
+export { TypeScriptProjectHost } from '@volar/typescript';
+
 export interface NamedPipeServer {
 	path: string;
 	serverKind: ts.server.ProjectKind;

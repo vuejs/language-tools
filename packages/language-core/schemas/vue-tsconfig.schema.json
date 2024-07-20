@@ -90,11 +90,6 @@
 					],
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1038, https://github.com/vuejs/language-tools/issues/1121"
 				},
-				"experimentalUseElementAccessInTemplate": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "https://github.com/vuejs/language-tools/issues/997"
-				},
 				"experimentalModelPropName": {
 					"type": "object",
 					"default": {

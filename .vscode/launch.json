@@ -6,10 +6,11 @@
 			"name": "Launch Client",
 			"type": "extensionHost",
 			"request": "launch",
+			"autoAttachChildProcesses": true,
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				// "--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode"
+				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode",
+				"--folder-uri=${workspaceRoot}/test-workspace",
 			],
 			"outFiles": [
 				"${workspaceRoot}/**/*.js"

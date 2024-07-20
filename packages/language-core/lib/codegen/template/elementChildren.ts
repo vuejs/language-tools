@@ -10,7 +10,7 @@ export function* generateElementChildren(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined,
+	componentCtxVar: string | undefined
 ): Generator<Code> {
 	yield* ctx.resetDirectiveComments('end of element children start');
 	let prev: CompilerDOM.TemplateChildNode | undefined;
@@ -33,7 +33,7 @@ export function* generateElementChildren(
 			node.children[0].loc.start.offset,
 			node.children[node.children.length - 1].loc.end.offset,
 			ctx.codeFeatures.navigation,
-			`default`,
+			`default`
 		);
 		yield endOfLine;
 	}

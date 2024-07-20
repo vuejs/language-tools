@@ -16,11 +16,7 @@ export function run() {
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 				: vue.resolveVueCompilerOptions({});
-			const allExtensions = [
-				...vueOptions.extensions,
-				...vueOptions.vitePressExtensions,
-				...vueOptions.petiteVueExtensions,
-			];
+			const allExtensions = vue.getAllExtensions(vueOptions);
 			if (
 				runExtensions.length === allExtensions.length
 				&& runExtensions.every(ext => allExtensions.includes(ext))
@@ -29,22 +25,24 @@ export function run() {
 				options.host!.writeFile = (fileName, contents, ...args) => {
 					return writeFile(fileName, removeEmitGlobalTypes(contents), ...args);
 				};
-				const vueLanguagePlugin = vue.createVueLanguagePlugin(
+				const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
 					ts,
 					id => id,
-					options.host?.useCaseSensitiveFileNames?.() ?? false,
-					() => '',
-					() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
+					vue.createRootFileChecker(
+						undefined,
+						() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
+						options.host?.useCaseSensitiveFileNames?.() ?? false
+					),
 					options.options,
-					vueOptions,
+					vueOptions
 				);
-				return [vueLanguagePlugin];
+				return { languagePlugins: [vueLanguagePlugin] };
 			}
 			else {
 				runExtensions = allExtensions;
 				throw extensionsChangedException;
 			}
-		},
+		}
 	);
 
 	try {
@@ -52,6 +50,8 @@ export function run() {
 	} catch (err) {
 		if (err === extensionsChangedException) {
 			main();
+		} else {
+			throw err;
 		}
 	}
 }

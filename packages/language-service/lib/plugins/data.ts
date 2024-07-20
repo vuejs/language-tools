@@ -21,6 +21,9 @@ export function loadTemplateData(lang: string) {
 	else if (lang === 'zh-cn') {
 		data = require('../../data/template/zh-cn.json');
 	}
+	else if (lang === 'zh-tw') {
+		data = require('../../data/template/zh-hk.json');
+	}
 	else if (lang === 'it') {
 		data = require('../../data/template/it.json');
 	}
@@ -76,6 +79,9 @@ export function loadLanguageBlocks(lang: string): html.HTMLDataV1 {
 	else if (lang === 'zh-cn') {
 		return require('../../data/language-blocks/zh-cn.json');
 	}
+	else if (lang === 'zh-tw') {
+		return require('../../data/language-blocks/zh-hk.json');
+	}
 	else if (lang === 'it') {
 		return require('../../data/language-blocks/it.json');
 	}
@@ -107,6 +113,9 @@ export function loadModelModifiersData(lang: string): html.HTMLDataV1 {
 	}
 	else if (lang === 'zh-cn') {
 		return require('../../data/model-modifiers/zh-cn.json');
+	}
+	else if (lang === 'zh-tw') {
+		return require('../../data/model-modifiers/zh-hk.json');
 	}
 	else if (lang === 'it') {
 		return require('../../data/model-modifiers/it.json');

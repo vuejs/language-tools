@@ -1,16 +1,11 @@
-import { Language, VueVirtualCode, isSemanticTokensEnabled } from '@vue/language-core';
+import { VueVirtualCode, isSemanticTokensEnabled } from '@vue/language-core';
 import type * as ts from 'typescript';
+import type { RequestContext } from './types';
 
 export function collectExtractProps(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		language: Language;
-		isTsPlugin: boolean,
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
-	templateCodeRange: [number, number],
+	templateCodeRange: [number, number]
 ) {
 	const { typescript: ts, languageService, language, isTsPlugin, getFileId } = this;
 
@@ -32,7 +27,7 @@ export function collectExtractProps(
 	const sourceFile = program.getSourceFile(fileName)!;
 	const checker = program.getTypeChecker();
 	const script = volarFile.generated?.languagePlugin.typescript?.getServiceScript(volarFile.generated.root);
-	const maps = script ? [...language.maps.forEach(script.code).values()] : [];
+	const maps = script ? [...language.maps.forEach(script.code)].map(([_sourceScript, map]) => map) : [];
 	const sfc = volarFile.generated.root.sfc;
 
 	sourceFile.forEachChild(function visit(node) {
@@ -43,27 +38,32 @@ export function collectExtractProps(
 			&& ts.isIdentifier(node.name)
 		) {
 			const { name } = node;
-			for (const [_, map] of maps) {
-				const source = map.getSourceOffset(name.getEnd() - (isTsPlugin ? volarFile.snapshot.getLength() : 0));
-				if (
-					source
-					&& source[0] >= sfc.template!.startTagEnd + templateCodeRange[0]
-					&& source[0] <= sfc.template!.startTagEnd + templateCodeRange[1]
-					&& isSemanticTokensEnabled(source[1].data)
-				) {
-					if (!result.has(name.text)) {
-						const type = checker.getTypeAtLocation(node);
-						const typeString = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation);
-						result.set(name.text, {
-							name: name.text,
-							type: typeString.includes('__VLS_') ? 'any' : typeString,
-							model: false,
-						});
+			for (const map of maps) {
+				let mapped = false;
+				for (const source of map.toSourceLocation(name.getEnd() - (isTsPlugin ? volarFile.snapshot.getLength() : 0))) {
+					if (
+						source[0] >= sfc.template!.startTagEnd + templateCodeRange[0]
+						&& source[0] <= sfc.template!.startTagEnd + templateCodeRange[1]
+						&& isSemanticTokensEnabled(source[1].data)
+					) {
+						mapped = true;
+						if (!result.has(name.text)) {
+							const type = checker.getTypeAtLocation(node);
+							const typeString = checker.typeToString(type, node, ts.TypeFormatFlags.NoTruncation);
+							result.set(name.text, {
+								name: name.text,
+								type: typeString.includes('__VLS_') ? 'any' : typeString,
+								model: false,
+							});
+						}
+						const isModel = ts.isPostfixUnaryExpression(node.parent) || ts.isBinaryExpression(node.parent);
+						if (isModel) {
+							result.get(name.text)!.model = true;
+						}
+						break;
 					}
-					const isModel = ts.isPostfixUnaryExpression(node.parent) || ts.isBinaryExpression(node.parent);
-					if (isModel) {
-						result.get(name.text)!.model = true;
-					}
+				}
+				if (mapped) {
 					break;
 				}
 			}

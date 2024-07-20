@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 
-export type ComponentMetaChecker = ReturnType<typeof import('./base')['baseCreate']>;
+export type ComponentMetaChecker = ReturnType<typeof import('./base')['createCheckerBase']>;
 
 export interface Declaration {
 	file: string;
@@ -40,6 +40,7 @@ export interface EventMeta {
 	type: string;
 	rawType?: ts.Type;
 	signature: string;
+	tags: { name: string, text?: string; }[];
 	declarations: Declaration[];
 	schema: PropertyMetaSchema[];
 }

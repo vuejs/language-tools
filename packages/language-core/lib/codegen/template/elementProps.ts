@@ -1,16 +1,16 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import { minimatch } from 'minimatch';
+import { toString } from 'muggle-string';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
-import { conditionWrapWith, newLine, variableNameRegex, wrapWith } from '../common';
+import { conditionWrapWith, variableNameRegex, wrapWith } from '../common';
 import { generateCamelized } from './camelized';
 import type { TemplateCodegenContext } from './context';
+import { generateEventArg, generateEventExpression } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
-import { toString } from '@volar/language-core';
-import { generateEventArg, generateEventExpression } from './elementEvents';
 
 export function* generateElementProps(
 	options: TemplateCodegenOptions,
@@ -18,58 +18,50 @@ export function* generateElementProps(
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
 	enableCodeFeatures: boolean,
-	propsFailedExps?: CompilerDOM.SimpleExpressionNode[],
+	propsFailedExps?: {
+		node: CompilerDOM.SimpleExpressionNode;
+		prefix: string;
+		suffix: string;
+	}[]
 ): Generator<Code> {
-	let styleAttrNum = 0;
-	let classAttrNum = 0;
-
 	const isIntrinsicElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT || node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
 	const canCamelize = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
-	if (props.some(prop =>
-		prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-		&& prop.name === 'bind'
-		&& !prop.arg
-		&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-	)) {
-		// fix https://github.com/vuejs/language-tools/issues/2166
-		styleAttrNum++;
-		classAttrNum++;
-	}
-
-	if (!isIntrinsicElement) {
-		let generatedEvent = false;
-		for (const prop of props) {
+	for (const prop of props) {
+		if (
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'on'
+		) {
 			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'on'
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& !prop.arg.loc.source.startsWith('[')
+				&& !prop.arg.loc.source.endsWith(']')
 			) {
-				if (prop.arg.loc.source.startsWith('[') && prop.arg.loc.source.endsWith(']')) {
-					continue;
-				}
-				if (!generatedEvent) {
+				if (isIntrinsicElement) {
 					yield `...{ `;
-					generatedEvent = true;
+					yield* generateEventArg(ctx, prop.arg, true);
+					yield `: `;
+					yield* generateEventExpression(options, ctx, prop);
+					yield `}, `;
 				}
-				yield `'${camelize('on-' + prop.arg.loc.source)}': {} as any, `;
+				else {
+					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': {} as any }, `;
+				}
 			}
-		}
-		if (generatedEvent) {
-			yield `}, `;
-		}
-	}
-	else {
-		for (const prop of props) {
-			if (
-				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-				&& prop.name === 'on'
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			else if (
+				prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+				&& prop.arg.loc.source.startsWith('[')
+				&& prop.arg.loc.source.endsWith(']')
 			) {
-				yield* generateEventArg(options, ctx, prop.arg, false);
-				yield `: `;
-				yield* generateEventExpression(options, ctx, prop);
-				yield `,${newLine}`;
+				propsFailedExps?.push({ node: prop.arg, prefix: '(', suffix: ')' });
+				propsFailedExps?.push({ node: prop.exp, prefix: '() => {', suffix: '}' });
+			}
+			else if (
+				!prop.arg
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				propsFailedExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
 			}
 		}
 	}
@@ -77,63 +69,70 @@ export function* generateElementProps(
 	for (const prop of props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& (prop.name === 'bind' || prop.name === 'model')
-			&& (prop.name === 'model' || prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+			&& (
+				(prop.name === 'bind' && prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
+				|| prop.name === 'model'
+			)
 			&& (!prop.exp || prop.exp.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION)
 		) {
-			let propName =
-				prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					? prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
-						? prop.arg.content
-						: prop.arg.loc.source
-					: getModelValuePropName(node, options.vueCompilerOptions.target, options.vueCompilerOptions);
+			let propName: string | undefined;
 
-			if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
-				propName = propName?.substring(1);
+			if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+				propName = prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
+					? prop.arg.content
+					: prop.arg.loc.source;
+			}
+			else {
+				propName = getModelValuePropName(node, options.vueCompilerOptions.target, options.vueCompilerOptions);
 			}
 
 			if (
 				propName === undefined
-				|| options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(propName, pattern))
-				|| (propName === 'style' && ++styleAttrNum >= 2)
-				|| (propName === 'class' && ++classAttrNum >= 2)
-				|| (propName === 'name' && node.tagType === CompilerDOM.ElementTypes.SLOT) // #2308
+				|| options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(propName!, pattern))
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					propsFailedExps?.push(prop.exp);
+					propsFailedExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
 				}
 				continue;
 			}
 
+			if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
+				propName = propName.substring(1);
+			}
+
+			const shouldSpread = propName === 'style' || propName === 'class';
 			const shouldCamelize = canCamelize
 				&& (!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
 				&& hyphenateAttr(propName) === propName
 				&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(propName, pattern));
 
+			if (shouldSpread) {
+				yield `...{ `;
+			}
 			const codes = wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
-				...generateObjectProperty(
-					options,
-					ctx,
-					propName,
+				...(
 					prop.arg
-						? prop.arg.loc.start.offset
-						: prop.loc.start.offset,
-					prop.arg
-						? {
-							...ctx.codeFeatures.withoutHighlightAndCompletion,
-							navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
-								? {
-									resolveRenameNewName: camelize,
-									resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
-								}
-								: false,
-						}
-						: ctx.codeFeatures.withoutHighlightAndCompletion,
-					(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
-					shouldCamelize,
+						? generateObjectProperty(
+							options,
+							ctx,
+							propName,
+							prop.arg.loc.start.offset,
+							{
+								...ctx.codeFeatures.withoutHighlightAndCompletion,
+								navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
+									? {
+										resolveRenameNewName: camelize,
+										resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
+									}
+									: false,
+							},
+							(prop.loc as any).name_2 ?? ((prop.loc as any).name_2 = {}),
+							shouldCamelize
+						)
+						: [propName]
 				),
 				`: (`,
 				...genereatePropExp(
@@ -142,9 +141,9 @@ export function* generateElementProps(
 					prop.exp,
 					ctx.codeFeatures.all,
 					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
-					enableCodeFeatures,
+					enableCodeFeatures
 				),
-				`)`,
+				`)`
 			);
 			if (!enableCodeFeatures) {
 				yield toString([...codes]);
@@ -152,31 +151,32 @@ export function* generateElementProps(
 			else {
 				yield* codes;
 			}
+			if (shouldSpread) {
+				yield ` }`;
+			}
 			yield `, `;
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
 			if (
 				options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(prop.name, pattern))
-				|| (prop.name === 'style' && ++styleAttrNum >= 2)
-				|| (prop.name === 'class' && ++classAttrNum >= 2)
-				|| (prop.name === 'name' && node.tagType === CompilerDOM.ElementTypes.SLOT) // #2308
-			) {
-				continue;
-			}
-
-			if (
-				options.vueCompilerOptions.target < 3
-				&& prop.name === 'persisted'
-				&& node.tag.toLowerCase() === 'transition'
-			) {
 				// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom always adds it (#3881)
+				|| (
+					options.vueCompilerOptions.target < 3
+					&& prop.name === 'persisted'
+					&& node.tag.toLowerCase() === 'transition'
+				)
+			) {
 				continue;
 			}
 
+			const shouldSpread = prop.name === 'style' || prop.name === 'class';
 			const shouldCamelize = canCamelize
 				&& hyphenateAttr(prop.name) === prop.name
 				&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(prop.name, pattern));
 
+			if (shouldSpread) {
+				yield `...{ `;
+			}
 			const codes = conditionWrapWith(
 				enableCodeFeatures,
 				prop.loc.start.offset,
@@ -199,7 +199,7 @@ export function* generateElementProps(
 						}
 						: ctx.codeFeatures.withoutHighlightAndCompletion,
 					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
-					shouldCamelize,
+					shouldCamelize
 				),
 				`: (`,
 				...(
@@ -207,13 +207,16 @@ export function* generateElementProps(
 						? generateAttrValue(prop.value, ctx.codeFeatures.all)
 						: [`true`]
 				),
-				`)`,
+				`)`
 			);
 			if (!enableCodeFeatures) {
 				yield toString([...codes]);
 			}
 			else {
 				yield* codes;
+			}
+			if (shouldSpread) {
+				yield ` }`;
 			}
 			yield `, `;
 		}
@@ -237,8 +240,8 @@ export function* generateElementProps(
 					prop.exp.loc.start.offset,
 					ctx.codeFeatures.all,
 					'(',
-					')',
-				),
+					')'
+				)
 			);
 			if (!enableCodeFeatures) {
 				yield toString([...codes]);
@@ -261,7 +264,7 @@ function* genereatePropExp(
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
 	isShorthand: boolean,
-	inlayHints: boolean,
+	inlayHints: boolean
 ): Generator<Code> {
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 		if (!isShorthand) { // vue 3.4+
@@ -273,20 +276,20 @@ function* genereatePropExp(
 				exp.loc.start.offset,
 				features,
 				'(',
-				')',
+				')'
 			);
 		} else {
 			const propVariableName = camelize(exp.loc.source);
 
 			if (variableNameRegex.test(propVariableName)) {
 				if (!ctx.hasLocalVariable(propVariableName)) {
-					ctx.accessGlobalVariable(propVariableName, exp.loc.start.offset);
+					ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
 					yield `__VLS_ctx.`;
 				}
 				yield* generateCamelized(
 					exp.loc.source,
 					exp.loc.start.offset,
-					features,
+					features
 				);
 				if (inlayHints) {
 					yield [
@@ -333,7 +336,7 @@ function* generateAttrValue(attrNode: CompilerDOM.TextNode, features: VueCodeInf
 			start,
 			end,
 			features,
-			toUnicode(content),
+			toUnicode(content)
 		);
 	}
 	else {

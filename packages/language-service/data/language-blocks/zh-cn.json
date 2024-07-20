@@ -20,6 +20,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
             },
@@ -85,6 +89,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
             },
@@ -139,6 +147,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#template"
         },
         {
           "name": "ja",
@@ -199,6 +211,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
               "name": "ja",
@@ -272,6 +288,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
             },
@@ -333,6 +353,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
             },
@@ -387,6 +411,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script"
         },
         {
           "name": "ja",
@@ -447,6 +475,10 @@
           "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
         },
@@ -505,6 +537,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
               "name": "ja",
@@ -584,6 +620,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
             },
@@ -642,6 +682,10 @@
               "url": "https://cn.vuejs.org/api/sfc-css-features.html#scoped-css"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-css-features.html#scoped-css"
             },
@@ -688,7 +732,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n一个 `<style module>` 标签会被编译为 [CSS Modules](https://github.com/css-modules/css-modules) 并且将生成的 CSS class 作为 `$style` 对象暴露给组件：\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\n得出的 class 将被哈希化以避免冲突，实现了同样的将 CSS 仅作用于当前组件的效果。\n\n参考 [CSS Modules spec](https://github.com/css-modules/css-modules) 以查看更多详情，例如 [global exceptions](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#exceptions) 和 [composition](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#composition)。\n\n### 自定义注入名称 \n\n你可以通过给 `module` attribute 一个值来自定义注入 class 对象的属性名：\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### 与组合式 API 一同使用 \n\n可以通过 `useCssModule` API 在 `setup()` 和 `<script setup>` 中访问注入的 class。对于使用了自定义注入名称的 `<style module>` 块，`useCssModule` 接收一个匹配的 `module` attribute 值作为第一个参数：\n\n```js\nimport { useCssModule } from 'vue'\n\n// 在 setup() 作用域中...\n// 默认情况下, 返回 <style module> 的 class\nuseCssModule()\n\n// 具名情况下, 返回 <style module=\"classes\"> 的 class\nuseCssModule('classes')\n```\n"
+            "value": "\n一个 `<style module>` 标签会被编译为 [CSS Modules](https://github.com/css-modules/css-modules) 并且将生成的 CSS class 作为 `$style` 对象暴露给组件：\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\n得出的 class 将被哈希化以避免冲突，实现了同样的将 CSS 仅作用于当前组件的效果。\n\n参考 [CSS Modules spec](https://github.com/css-modules/css-modules) 以查看更多详情，例如 [global exceptions](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#exceptions) 和 [composition](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#composition)。\n\n### 自定义注入名称 \n\n你可以通过给 `module` attribute 一个值来自定义注入 class 对象的属性名：\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### 与组合式 API 一同使用 \n\n可以通过 `useCssModule` API 在 `setup()` 和 `<script setup>` 中访问注入的 class。对于使用了自定义注入名称的 `<style module>` 块，`useCssModule` 接收一个匹配的 `module` attribute 值作为第一个参数：\n\n```js\nimport { useCssModule } from 'vue'\n\n// 在 setup() 作用域中...\n// 默认情况下，返回 <style module> 的 class\nuseCssModule()\n\n// 具名情况下，返回 <style module=\"classes\"> 的 class\nuseCssModule('classes')\n```\n"
           },
           "references": [
             {
@@ -698,6 +742,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#css-modules"
             },
             {
               "name": "ja",
@@ -754,6 +802,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#style"
         },
         {
           "name": "ja",
@@ -816,6 +868,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
             },
@@ -860,7 +916,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n在一个 `*.vue` 文件中可以为任何项目特定需求使用额外的自定义块。举例来说，一个用作写文档的 `<docs>` 块。这里是一些自定义块的真实用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n自定义块的处理需要依赖工具链。如果你想要在构建中集成你的自定义语块，请参见 [SFC 自定义块集成工具链指南](https://cn.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)获取更多细节。\n"
+        "value": "\n在一个 `*.vue` 文件中可以为任何项目特定需求使用额外的自定义块。举例来说，一个用作写文档的 `<docs>` 块。这里是一些自定义块的真实用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n#i18n-custom-block)\n\n自定义块的处理需要依赖工具链。如果你想要在构建中集成你的自定义语块，请参见 [SFC 自定义块集成工具链指南](https://cn.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)获取更多细节。\n"
       },
       "references": [
         {
@@ -870,6 +926,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#自定义块"
         },
         {
           "name": "ja",
@@ -932,6 +992,10 @@
           "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
         },
@@ -987,6 +1051,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
         },
         {
           "name": "ja",

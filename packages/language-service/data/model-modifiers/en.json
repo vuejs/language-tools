@@ -17,6 +17,10 @@
           "url": "https://cn.vuejs.org/guide/essentials/forms.html#lazy"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/guide/essentials/forms.html#lazy"
         },
@@ -74,6 +78,10 @@
           "url": "https://cn.vuejs.org/guide/essentials/forms.html#number"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/guide/essentials/forms.html#number"
         },
@@ -129,6 +137,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#trim"
         },
         {
           "name": "ja",
