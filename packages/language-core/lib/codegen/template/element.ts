@@ -420,43 +420,35 @@ function* generateComponentSlot(
 		ctx.hasSlotElements.add(currentComponent);
 	}
 	const slotBlockVars: string[] = [];
-	yield* wrapWith(
-		(slotDir.arg ?? slotDir).loc.start.offset,
-		(slotDir.arg ?? slotDir).loc.end.offset,
-		ctx.codeFeatures.verification,
-		`const {`,
-		...(
-			slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content
-				? [
-					...generateObjectProperty(
-						options,
-						ctx,
-						slotDir.arg.loc.source,
-						slotDir.arg.loc.start.offset,
-						slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
-						slotDir.arg.loc
-					),
-					': __VLS_thisSlot',
-				]
-				: [
-					`default: `,
-					...wrapWith(
-						slotDir.loc.start.offset,
-						slotDir.loc.start.offset + (
-							slotDir.loc.source.startsWith('#')
-								? '#'.length
-								: slotDir.loc.source.startsWith('v-slot:')
-									? 'v-slot:'.length
-									: 0
-						),
-						ctx.codeFeatures.withoutHighlightAndCompletion,
-						`__VLS_thisSlot`
-					),
-				]
-		),
-		`} = ${componentCtxVar}.slots!`
-	);
-	yield endOfLine;
+	yield `const {`;
+	if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
+		yield* generateObjectProperty(
+			options,
+			ctx,
+			slotDir.arg.loc.source,
+			slotDir.arg.loc.start.offset,
+			slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
+			slotDir.arg.loc
+		);
+		yield ': __VLS_thisSlot';
+	}
+	else {
+		yield `default: `;
+		yield* wrapWith(
+			slotDir.loc.start.offset,
+			slotDir.loc.start.offset + (
+				slotDir.loc.source.startsWith('#')
+					? '#'.length
+					: slotDir.loc.source.startsWith('v-slot:')
+						? 'v-slot:'.length
+						: 0
+			),
+			ctx.codeFeatures.withoutHighlightAndCompletion,
+			`__VLS_thisSlot`
+		);
+	}
+	yield `} = ${componentCtxVar}.slots!${endOfLine}`;
+
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
 		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
@@ -468,8 +460,7 @@ function* generateComponentSlot(
 				slotDir.exp.loc.start.offset,
 				ctx.codeFeatures.all,
 			];
-			yield `] = __VLS_getSlotParams(__VLS_thisSlot)`;
-			yield endOfLine;
+			yield `] = __VLS_getSlotParams(__VLS_thisSlot)${endOfLine}`;
 		}
 		else {
 			yield `const `;
@@ -479,8 +470,7 @@ function* generateComponentSlot(
 				slotDir.exp.loc.start.offset,
 				ctx.codeFeatures.all,
 			];
-			yield ` = __VLS_getSlotParam(__VLS_thisSlot)`;
-			yield endOfLine;
+			yield ` = __VLS_getSlotParam(__VLS_thisSlot)${endOfLine}`;
 		}
 	}
 
