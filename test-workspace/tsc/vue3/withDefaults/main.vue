@@ -2,17 +2,17 @@
 import { exactType } from "tsc/shared";
 
 interface Props {
-  actionText?: string;
+	actionText?: string;
 }
 
 withDefaults(defineProps<Props>(), {
-  actionText: "foo",
+	actionText: "foo",
 });
 </script>
 
 <template>
-  <div>
-    {{ exactType(actionText, {} as string) }}
-    {{ exactType($props.actionText, {} as string | undefined) }}
-  </div>
+	<div>
+		{{ exactType(actionText, {} as string) }}
+		{{ exactType($props.actionText, {} as string | undefined) }}
+	</div>
 </template>
