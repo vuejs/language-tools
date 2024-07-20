@@ -1,6 +1,6 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createTypeScriptProject } from '@volar/language-server/node';
-import { createParsedCommandLine, createVueLanguagePlugin, FileMap, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
+import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin2, getAllExtensions, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
 import { Disposable, getFullLanguageServicePlugins, InitializeParams } from '@vue/language-service';
 import type * as ts from 'typescript';
 
@@ -39,17 +39,14 @@ export function initialize(
 				}
 				updateFileWatcher(vueCompilerOptions);
 				return {
-					languagePlugins: [createVueLanguagePlugin(
+					languagePlugins: [createVueLanguagePlugin2(
 						ts,
 						s => uriConverter.asFileName(s),
-						() => projectHost.getProjectVersion?.() ?? '',
-						fileName => {
-							const fileMap = new FileMap(sys.useCaseSensitiveFileNames ?? false);
-							for (const vueFileName of projectHost.getScriptFileNames() ?? []) {
-								fileMap.set(vueFileName, undefined);
-							}
-							return fileMap.has(fileName);
-						},
+						createRootFileChecker(
+							projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
+							() => projectHost.getScriptFileNames(),
+							sys.useCaseSensitiveFileNames
+						),
 						compilerOptions,
 						vueCompilerOptions
 					)],
@@ -65,9 +62,7 @@ export function initialize(
 	function updateFileWatcher(vueCompilerOptions: VueCompilerOptions) {
 		const extensions = [
 			'js', 'cjs', 'mjs', 'ts', 'cts', 'mts', 'jsx', 'tsx', 'json',
-			...vueCompilerOptions.extensions.map(ext => ext.slice(1)),
-			...vueCompilerOptions.vitePressExtensions.map(ext => ext.slice(1)),
-			...vueCompilerOptions.petiteVueExtensions.map(ext => ext.slice(1)),
+			...getAllExtensions(vueCompilerOptions).map(ext => ext.slice(1)),
 		];
 		const newExtensions = extensions.filter(ext => !watchingExtensions.has(ext));
 		if (newExtensions.length) {

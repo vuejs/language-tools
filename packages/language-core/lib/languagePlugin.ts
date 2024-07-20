@@ -1,13 +1,10 @@
 /// <reference types="@volar/typescript" />
 
-import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
+import { FileMap, forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
-import { getBasePlugins } from './plugins';
-import useHtmlFilePlugin from './plugins/file-html';
-import useMdFilePlugin from './plugins/file-md';
-import useVueFilePlugin from './plugins/file-vue';
-import type { VueCompilerOptions, VueLanguagePlugin } from './types';
+import { createPlugins } from './plugins';
+import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
 import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 import { VueVirtualCode } from './virtualFile/vueFile';
 
@@ -39,7 +36,7 @@ function getVueFileRegistry(isGlobalTypesHolder: boolean, key: string, plugins: 
 function getFileRegistryKey(
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	plugins: ReturnType<VueLanguagePlugin>[]
+	plugins: VueLanguagePluginReturn[]
 ) {
 	const values = [
 		...Object.keys(vueCompilerOptions)
@@ -53,10 +50,46 @@ function getFileRegistryKey(
 	return JSON.stringify(values);
 }
 
+export function createRootFileChecker(
+	getProjectVersion: (() => string) | undefined,
+	getRootFileNames: () => string[],
+	caseSensitive: boolean
+) {
+	const fileNames = new FileMap(caseSensitive);
+	let projectVersion: string | undefined;
+	return (fileName: string) => {
+		if (!getProjectVersion || projectVersion !== getProjectVersion()) {
+			projectVersion = getProjectVersion?.();
+			fileNames.clear();
+			for (const rootFileName of getRootFileNames()) {
+				fileNames.set(rootFileName, undefined);
+			}
+		}
+		return fileNames.has(fileName);
+	};
+}
+
+// TODO: replace `createVueLanguagePlugin` with `createVueLanguagePlugin2` in 2.1
 export function createVueLanguagePlugin<T>(
 	ts: typeof import('typescript'),
 	asFileName: (scriptId: T) => string,
-	getProjectVersion: () => string,
+	_getProjectVersion: (() => string) | undefined,
+	isRootFile: (fileName: string) => boolean,
+	compilerOptions: ts.CompilerOptions,
+	vueCompilerOptions: VueCompilerOptions
+): LanguagePlugin<T, VueVirtualCode> {
+	return createVueLanguagePlugin2(
+		ts,
+		asFileName,
+		isRootFile,
+		compilerOptions,
+		vueCompilerOptions
+	);
+}
+
+export function createVueLanguagePlugin2<T>(
+	ts: typeof import('typescript'),
+	asFileName: (scriptId: T) => string,
 	isRootFile: (fileName: string) => boolean,
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions
@@ -75,31 +108,21 @@ export function createVueLanguagePlugin<T>(
 		vueCompilerOptions,
 		globalTypesHolder: undefined,
 	};
-	const basePlugins = getBasePlugins(pluginContext);
-	const vueSfcPlugin = useVueFilePlugin(pluginContext);
-	const vitePressSfcPlugin = useMdFilePlugin(pluginContext);
-	const petiteVueSfcPlugin = useHtmlFilePlugin(pluginContext);
-
-	let canonicalRootFileNamesVersion: string | undefined;
+	const plugins = createPlugins(pluginContext);
 
 	return {
 		getLanguageId(scriptId) {
-			if (vueCompilerOptions.extensions.some(ext => asFileName(scriptId).endsWith(ext))) {
-				return 'vue';
-			}
-			if (vueCompilerOptions.vitePressExtensions.some(ext => asFileName(scriptId).endsWith(ext))) {
-				return 'markdown';
-			}
-			if (vueCompilerOptions.petiteVueExtensions.some(ext => asFileName(scriptId).endsWith(ext))) {
-				return 'html';
+			const fileName = asFileName(scriptId);
+			for (const plugin of plugins) {
+				const languageId = plugin.getLanguageId?.(fileName);
+				if (languageId) {
+					return languageId;
+				}
 			}
 		},
 		createVirtualCode(scriptId, languageId, snapshot) {
-			if (languageId === 'vue' || languageId === 'markdown' || languageId === 'html') {
-				const fileName = asFileName(scriptId);
-				if (getProjectVersion() !== canonicalRootFileNamesVersion) {
-					canonicalRootFileNamesVersion = getProjectVersion();
-				}
+			const fileName = asFileName(scriptId);
+			if (plugins.some(plugin => plugin.isValidFile?.(fileName, languageId))) {
 				if (!pluginContext.globalTypesHolder && isRootFile(fileName)) {
 					pluginContext.globalTypesHolder = fileName;
 				}
@@ -115,11 +138,7 @@ export function createVueLanguagePlugin<T>(
 						languageId,
 						snapshot,
 						vueCompilerOptions,
-						languageId === 'html'
-							? [petiteVueSfcPlugin, ...basePlugins]
-							: languageId === 'markdown'
-								? [vitePressSfcPlugin, ...basePlugins]
-								: [vueSfcPlugin, ...basePlugins],
+						plugins,
 						ts,
 					);
 					fileRegistry.set(fileName, code);
@@ -156,15 +175,12 @@ export function createVueLanguagePlugin<T>(
 		// 	}
 		// },
 		typescript: {
-			extraFileExtensions: [
-				...vueCompilerOptions.extensions,
-				...vueCompilerOptions.vitePressExtensions,
-				...vueCompilerOptions.petiteVueExtensions,
-			].map<ts.FileExtensionInfo>(ext => ({
-				extension: ext.slice(1),
-				isMixedContent: true,
-				scriptKind: 7 satisfies ts.ScriptKind.Deferred,
-			})),
+			extraFileExtensions: getAllExtensions(vueCompilerOptions)
+				.map<ts.FileExtensionInfo>(ext => ({
+					extension: ext.slice(1),
+					isMixedContent: true,
+					scriptKind: 7 satisfies ts.ScriptKind.Deferred,
+				})),
 			getServiceScript(root) {
 				for (const code of forEachEmbeddedCode(root)) {
 					if (/script_(js|jsx|ts|tsx)/.test(code.id)) {
@@ -186,8 +202,23 @@ export function createVueLanguagePlugin<T>(
 	function getFileRegistry(isGlobalTypesHolder: boolean) {
 		return getVueFileRegistry(
 			isGlobalTypesHolder,
-			getFileRegistryKey(compilerOptions, vueCompilerOptions, basePlugins),
+			getFileRegistryKey(compilerOptions, vueCompilerOptions, plugins),
 			vueCompilerOptions.plugins
 		);
 	}
+}
+
+export function getAllExtensions(options: VueCompilerOptions) {
+	const result = new Set<string>();
+	for (const key in options) {
+		if (key === 'extensions' || key.endsWith('Extensions')) {
+			const value = options[key as keyof VueCompilerOptions];
+			if (Array.isArray(value) && value.every(v => typeof v === 'string')) {
+				for (const ext of value) {
+					result.add(ext);
+				}
+			}
+		}
+	}
+	return [...result];
 }

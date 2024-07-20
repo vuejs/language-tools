@@ -8,7 +8,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 		name: require('./package.json').name,
 
-		version: 2,
+		version: 2.1,
 
 		compileSFCTemplate(lang, template, options) {
 

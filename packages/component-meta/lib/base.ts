@@ -144,17 +144,14 @@ export function baseCreate(
 		}
 	};
 
-	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
+	const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
 		ts,
 		id => id,
-		() => projectHost.getProjectVersion?.() ?? '',
-		fileName => {
-			const fileMap = new vue.FileMap(ts.sys.useCaseSensitiveFileNames);
-			for (const vueFileName of projectHost.getScriptFileNames()) {
-				fileMap.set(vueFileName, undefined);
-			}
-			return fileMap.has(fileName);
-		},
+		vue.createRootFileChecker(
+			projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
+			() => projectHost.getScriptFileNames(),
+			ts.sys.useCaseSensitiveFileNames
+		),
 		projectHost.getCompilationSettings(),
 		vueCompilerOptions
 	);
