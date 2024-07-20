@@ -80,7 +80,7 @@ export function* generatePropsOption(
 	if (options.vueCompilerOptions.target >= 3.5 && ctx.generatedPropsType) {
 		yield `__typeProps: {} as __VLS_PublicProps,${newLine}`;
 	}
-	else {
+	if (options.vueCompilerOptions.target < 3.5 || !ctx.generatedPropsType || scriptSetupRanges.props.withDefaults) {
 		const codegens: (() => Generator<Code>)[] = [];
 
 		if (ctx.generatedPropsType) {

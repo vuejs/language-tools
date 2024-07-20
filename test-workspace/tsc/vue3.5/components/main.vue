@@ -51,6 +51,14 @@ const ScriptSetupDefaultPropsExact = defineComponent({
 		msg?: string
 		labels?: string[]
 	},
+  props:{
+    msg: {
+      default: 'hello'
+    },
+    labels: {
+      default: () => ['one', 'two']
+    }
+  },
 	setup() {
 		return {};
 	},
