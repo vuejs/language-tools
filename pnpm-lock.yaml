@@ -151,7 +151,7 @@ importers:
         specifier: ~2.4.0-alpha.15
         version: 2.4.0-alpha.15
       volar-service-pug:
-        specifier: volar-2.4
+        specifier: 0.0.59
         version: 0.0.59
     devDependencies:
       '@types/node':
@@ -215,28 +215,28 @@ importers:
         specifier: ^1.0.1
         version: 1.0.1
       volar-service-css:
-        specifier: volar-2.4
+        specifier: 0.0.59
         version: 0.0.59(@volar/language-service@2.4.0-alpha.15)
       volar-service-emmet:
-        specifier: volar-2.4
+        specifier: 0.0.59
         version: 0.0.59(@volar/language-service@2.4.0-alpha.15)
       volar-service-html:
-        specifier: volar-2.4
+        specifier: 0.0.59
         version: 0.0.59(@volar/language-service@2.4.0-alpha.15)
       volar-service-json:
-        specifier: volar-2.4
+        specifier: 0.0.59
         version: 0.0.59(@volar/language-service@2.4.0-alpha.15)
       volar-service-pug:
-        specifier: volar-2.4
+        specifier: 0.0.59
         version: 0.0.59
       volar-service-pug-beautify:
-        specifier: volar-2.4
+        specifier: 0.0.59
         version: 0.0.59(@volar/language-service@2.4.0-alpha.15)
       volar-service-typescript:
-        specifier: volar-2.4
+        specifier: 0.0.59
         version: 0.0.59(@volar/language-service@2.4.0-alpha.15)
       volar-service-typescript-twoslash-queries:
-        specifier: volar-2.4
+        specifier: 0.0.59
         version: 0.0.59(@volar/language-service@2.4.0-alpha.15)
       vscode-html-languageservice:
         specifier: ^5.2.0

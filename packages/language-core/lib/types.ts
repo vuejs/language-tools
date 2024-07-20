@@ -60,7 +60,7 @@ export interface VueCompilerOptions {
 export const validVersions = [2, 2.1] as const;
 
 export type VueLanguagePluginReturn = {
-	version: 2.1;
+	version: typeof validVersions[number];
 	name?: string;
 	order?: number;
 	requiredCompilerOptions?: string[];
