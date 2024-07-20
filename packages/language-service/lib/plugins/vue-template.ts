@@ -15,6 +15,8 @@ import { loadModelModifiersData, loadTemplateData } from './data';
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
 
+const specialTags = new Set(['slot', 'component', 'template']);
+
 export function create(
 	mode: 'html' | 'pug',
 	ts: typeof import('typescript'),
@@ -419,14 +421,8 @@ export function create(
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
-						if (tag.name === 'slot') {
-							continue;
-						}
-						if (tag.name === 'component') {
-							continue;
-						}
-						if (tag.name === 'template') {
-							continue;
+						if (specialTags.has(tag.name)) {
+							tag.name = createInternalItemId('specialTag', [tag.name]);
 						}
 						if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
@@ -735,6 +731,26 @@ export function create(
 
 				for (const item of completionList.items) {
 
+					if (specialTags.has(item.label)) {
+						completionList.items = completionList.items.filter(i => i !== item);
+					}
+
+					const nameId = readInternalItemId(item.label);
+
+					if (nameId) {
+						const name = nameId.args[0];
+						item.label = name;
+						if (item.textEdit) {
+							item.textEdit.newText = name;
+						};
+						if (item.insertText) {
+							item.insertText = name;
+						}
+						if (item.sortText) {
+							item.sortText = name;
+						}
+					}
+
 					const itemIdKey = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
 					const itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
 
@@ -848,7 +864,7 @@ export function create(
 	}
 };
 
-function createInternalItemId(type: 'componentEvent' | 'componentProp', args: string[]) {
+function createInternalItemId(type: 'componentEvent' | 'componentProp' | 'specialTag', args: string[]) {
 	return '__VLS_::' + type + '::' + args.join(',');
 }
 
@@ -856,7 +872,7 @@ function readInternalItemId(key: string) {
 	if (key.startsWith('__VLS_::')) {
 		const strs = key.split('::');
 		return {
-			type: strs[1] as 'componentEvent' | 'componentProp',
+			type: strs[1] as 'componentEvent' | 'componentProp' | 'specialTag',
 			args: strs[2].split(','),
 		};
 	}
