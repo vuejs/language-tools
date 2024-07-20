@@ -27,7 +27,7 @@ export function collectExtractProps(
 	const sourceFile = program.getSourceFile(fileName)!;
 	const checker = program.getTypeChecker();
 	const script = volarFile.generated?.languagePlugin.typescript?.getServiceScript(volarFile.generated.root);
-	const maps = script ? [...language.maps.forEach(script.code)].map(([_1, _2, map]) => map) : [];
+	const maps = script ? [...language.maps.forEach(script.code)].map(([_sourceScript, map]) => map) : [];
 	const sfc = volarFile.generated.root.sfc;
 
 	sourceFile.forEachChild(function visit(node) {
@@ -40,7 +40,7 @@ export function collectExtractProps(
 			const { name } = node;
 			for (const map of maps) {
 				let mapped = false;
-				for (const source of map.getSourceOffsets(name.getEnd() - (isTsPlugin ? volarFile.snapshot.getLength() : 0))) {
+				for (const source of map.toSourceLocation(name.getEnd() - (isTsPlugin ? volarFile.snapshot.getLength() : 0))) {
 					if (
 						source[0] >= sfc.template!.startTagEnd + templateCodeRange[0]
 						&& source[0] <= sfc.template!.startTagEnd + templateCodeRange[1]

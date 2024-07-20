@@ -32,8 +32,7 @@ export function createCheckerByJsonConfigBase(
 		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json),
 		checkerOptions,
 		rootDir,
-		path.join(rootDir, 'jsconfig.json.global.vue'),
-		undefined
+		path.join(rootDir, 'jsconfig.json.global.vue')
 	);
 }
 
@@ -48,8 +47,7 @@ export function createCheckerBase(
 		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig),
 		checkerOptions,
 		path.dirname(tsconfig),
-		tsconfig + '.global.vue',
-		tsconfig
+		tsconfig + '.global.vue'
 	);
 }
 
@@ -58,8 +56,7 @@ function createCheckerWorker(
 	loadParsedCommandLine: () => vue.ParsedCommandLine,
 	checkerOptions: MetaCheckerOptions,
 	rootPath: string,
-	globalComponentName: string,
-	configFileName: string | undefined
+	globalComponentName: string
 ) {
 
 	/**
@@ -89,7 +86,7 @@ function createCheckerWorker(
 	};
 
 	return {
-		...baseCreate(ts, configFileName, projectHost, parsedCommandLine.vueOptions, checkerOptions, globalComponentName),
+		...baseCreate(ts, projectHost, parsedCommandLine.vueOptions, checkerOptions, globalComponentName),
 		updateFile(fileName: string, text: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
@@ -114,7 +111,6 @@ function createCheckerWorker(
 
 export function baseCreate(
 	ts: typeof import('typescript'),
-	configFileName: string | undefined,
 	projectHost: TypeScriptProjectHost,
 	vueCompilerOptions: vue.VueCompilerOptions,
 	checkerOptions: MetaCheckerOptions,
@@ -148,17 +144,14 @@ export function baseCreate(
 		}
 	};
 
-	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
+	const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
 		ts,
 		id => id,
-		() => projectHost.getProjectVersion?.() ?? '',
-		fileName => {
-			const fileMap = new vue.FileMap(ts.sys.useCaseSensitiveFileNames);
-			for (const vueFileName of projectHost.getScriptFileNames()) {
-				fileMap.set(vueFileName, undefined);
-			}
-			return fileMap.has(fileName);
-		},
+		vue.createRootFileChecker(
+			projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
+			() => projectHost.getScriptFileNames(),
+			ts.sys.useCaseSensitiveFileNames
+		),
 		projectHost.getCompilationSettings(),
 		vueCompilerOptions
 	);
@@ -182,14 +175,7 @@ export function baseCreate(
 			}
 		}
 	);
-	language.typescript = {
-		sys: ts.sys,
-		configFileName,
-		asFileName: s => s,
-		asScriptId: s => s,
-		...createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost),
-	};
-	const { languageServiceHost } = language.typescript;
+	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
 
 	if (checkerOptions.forceUseTs) {
@@ -685,11 +671,11 @@ function createSchemaResolvers(
 		if (sourceFile?.generated) {
 			const script = sourceFile.generated.languagePlugin.typescript?.getServiceScript(sourceFile.generated.root);
 			if (script) {
-				for (const [source, _, map] of language.maps.forEach(script.code)) {
-					for (const [start] of map.getSourceOffsets(declaration.getStart())) {
-						for (const [end] of map.getSourceOffsets(declaration.getEnd())) {
+				for (const [sourceScript, map] of language.maps.forEach(script.code)) {
+					for (const [start] of map.toSourceLocation(declaration.getStart())) {
+						for (const [end] of map.toSourceLocation(declaration.getEnd())) {
 							return {
-								file: source,
+								file: sourceScript.id,
 								range: [start, end],
 							};
 						}

@@ -2,13 +2,13 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, computedArray, pauseTracking, resetTracking } from 'computeds';
 import type * as ts from 'typescript';
-import type { Sfc, SfcBlock, VueLanguagePlugin } from '../types';
+import type { Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 
 export function computedSfc(
 	ts: typeof import('typescript'),
-	plugins: ReturnType<VueLanguagePlugin>[],
+	plugins: VueLanguagePluginReturn[],
 	fileName: string,
 	snapshot: () => ts.IScriptSnapshot,
 	parsed: () => SFCParseResult | undefined
@@ -47,7 +47,7 @@ export function computedSfc(
 				for (const plugin of plugins) {
 					const ast = plugin.compileSFCScript?.(base.lang, base.content);
 					if (ast) {
-						return ast;;
+						return ast;
 					}
 				}
 				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
@@ -76,7 +76,7 @@ export function computedSfc(
 				for (const plugin of plugins) {
 					const ast = plugin.compileSFCScript?.(base.lang, base.content);
 					if (ast) {
-						return ast;;
+						return ast;
 					}
 				}
 				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
@@ -128,7 +128,7 @@ export function computedSfc(
 	const customBlocks = computedArray(
 		computed(() => parsed()?.descriptor.customBlocks ?? []),
 		(block, i) => {
-			const base = computedSfcBlock('customBlock_' + i, 'txt', block);
+			const base = computedSfcBlock('custom_block_' + i, 'txt', block);
 			const type = computed(() => block().type);
 			return computed<Sfc['customBlocks'][number]>(() => mergeObject(base, {
 				get type() { return type(); },
@@ -150,7 +150,7 @@ export function computedSfc(
 			template: string,
 			snapshot: ts.IScriptSnapshot,
 			result: CompilerDOM.CodegenResult,
-			plugin: ReturnType<VueLanguagePlugin>,
+			plugin: VueLanguagePluginReturn,
 		} | undefined;
 
 		return computed(() => {

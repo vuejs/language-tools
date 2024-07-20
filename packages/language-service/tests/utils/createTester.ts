@@ -1,9 +1,9 @@
-import { FileMap, createLanguage, createLanguageService, createUriMap } from '@volar/language-service';
+import { ProjectContext, createLanguage, createLanguageService, createUriMap } from '@volar/language-service';
 import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 import * as path from 'path';
 import * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { createParsedCommandLine, createVueLanguagePlugin, getVueLanguageServicePlugins } from '../..';
+import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin2, getFullLanguageServicePlugins } from '../..';
 import { createMockServiceEnv, fileNameToUri, uriToFileName } from './mockEnv';
 
 export const rootUri = URI.file(path.resolve(__dirname, '../../../../test-workspace/language-service'));
@@ -24,21 +24,18 @@ function createTester(rootUri: URI) {
 		getCompilationSettings: () => parsedCommandLine.options,
 		getScriptSnapshot,
 	};
-	const vueLanguagePlugin = createVueLanguagePlugin(
+	const vueLanguagePlugin = createVueLanguagePlugin2(
 		ts,
 		uriToFileName,
-		() => projectHost.getProjectVersion?.() ?? '',
-		fileName => {
-			const fileMap = new FileMap(ts.sys.useCaseSensitiveFileNames);
-			for (const vueFileName of projectHost.getScriptFileNames()) {
-				fileMap.set(vueFileName, undefined);
-			}
-			return fileMap.has(fileName);
-		},
+		createRootFileChecker(
+			projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
+			() => projectHost.getScriptFileNames(),
+			ts.sys.useCaseSensitiveFileNames
+		),
 		parsedCommandLine.options,
 		parsedCommandLine.vueOptions
 	);
-	const vueServicePlugins = getVueLanguageServicePlugins(ts, () => parsedCommandLine.vueOptions);
+	const vueServicePlugins = getFullLanguageServicePlugins(ts);
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',
@@ -67,14 +64,20 @@ function createTester(rootUri: URI) {
 			}
 		}
 	);
-	language.typescript = {
+	const project: ProjectContext = {};
+	project.typescript = {
 		configFileName: realTsConfig,
 		sys: ts.sys,
-		asFileName: uriToFileName,
-		asScriptId: fileNameToUri,
+		uriConverter: {
+			asFileName: uriToFileName,
+			asUri: fileNameToUri,
+		},
 		...createLanguageServiceHost(ts, ts.sys, language, fileNameToUri, projectHost),
 	};
-	const languageService = createLanguageService(language, vueServicePlugins, serviceEnv);
+	project.vue = {
+		compilerOptions: parsedCommandLine.vueOptions,
+	};
+	const languageService = createLanguageService(language, vueServicePlugins, serviceEnv, project);
 
 	return {
 		serviceEnv,

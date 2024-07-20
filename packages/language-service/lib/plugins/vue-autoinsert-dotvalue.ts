@@ -67,7 +67,7 @@ export function create(
 					let ast: ts.SourceFile | undefined;
 					let sourceCodeOffset = document.offsetAt(selection);
 
-					const fileName = context.language.typescript?.asFileName(sourceScript.id)
+					const fileName = context.project.typescript?.uriConverter.asFileName(sourceScript.id)
 						?? sourceScript.id.fsPath.replace(/\\/g, '/');
 
 					if (sourceScript.generated) {
@@ -77,8 +77,8 @@ export function create(
 						}
 						ast = getAst(ts, fileName, virtualCode.snapshot, serviceScript.scriptKind);
 						let mapped = false;
-						for (const [_1, _2, map] of context.language.maps.forEach(virtualCode)) {
-							for (const [sourceOffset] of map.getSourceOffsets(document.offsetAt(selection))) {
+						for (const [_sourceScript, map] of context.language.maps.forEach(virtualCode)) {
+							for (const [sourceOffset] of map.toSourceLocation(document.offsetAt(selection))) {
 								sourceCodeOffset = sourceOffset;
 								mapped = true;
 								break;

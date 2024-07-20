@@ -31,17 +31,14 @@ describe('vue-tsc-dts', () => {
 		vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 			: vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
-		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
+		const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
 			ts,
 			id => id,
-			() => '',
-			fileName => {
-				const fileMap = new vue.FileMap(options.host?.useCaseSensitiveFileNames?.() ?? false);
-				for (const vueFileName of options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/'))) {
-					fileMap.set(vueFileName, undefined);
-				}
-				return fileMap.has(fileName);
-			},
+			vue.createRootFileChecker(
+				undefined,
+				() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
+				options.host?.useCaseSensitiveFileNames?.() ?? false
+			),
 			options.options,
 			vueOptions
 		);

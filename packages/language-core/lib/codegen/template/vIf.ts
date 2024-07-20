@@ -1,5 +1,5 @@
-import { toString } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
+import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { newLine } from '../common';
 import type { TemplateCodegenContext } from './context';

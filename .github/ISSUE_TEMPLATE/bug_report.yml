@@ -1,5 +1,6 @@
 name: "\U0001F41E Bug report"
 description: Create a report to help us improve
+labels: ["pending triage"]
 body:
   - type: markdown
     attributes:
@@ -57,6 +58,18 @@ body:
         [Markdown](https://guides.github.com/features/mastering-markdown/) to format lists and code.
         We also strongly recommend providing actual code via a reproduction repo.
       placeholder: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What is expected?
+    validations:
+      required: true
+  - type: textarea
+    id: actually-happening
+    attributes:
+      label: What is actually happening?
     validations:
       required: true
   - type: input

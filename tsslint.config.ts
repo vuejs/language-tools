@@ -7,7 +7,7 @@ export default defineConfig({
 	},
 	plugins: [
 		({ tsconfig }) => ({
-			resolveRules(rules) {
+			resolveRules(fileName, rules) {
 				if (tsconfig.endsWith('extensions/vscode/tsconfig.json')) {
 					delete rules['missing-dependency'];
 				}

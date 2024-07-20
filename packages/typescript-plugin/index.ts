@@ -1,6 +1,6 @@
 import { createLanguageServicePlugin, externalFiles } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
-import { decorateLanguageServiceForVue } from './lib/common';
+import { proxyLanguageServiceForVue } from './lib/common';
 import { projects, startNamedPipeServer } from './lib/server';
 
 const windowsPathReg = /\\/g;
@@ -8,19 +8,16 @@ const windowsPathReg = /\\/g;
 const plugin = createLanguageServicePlugin(
 	(ts, info) => {
 		const vueOptions = getVueCompilerOptions();
-		const languagePlugin = vue.createVueLanguagePlugin<string>(
+		const languagePlugin = vue.createVueLanguagePlugin2<string>(
 			ts,
 			id => id,
-			() => info.languageServiceHost.getProjectVersion?.() ?? '',
 			info.project.projectKind === ts.server.ProjectKind.Inferred
 				? () => true
-				: fileName => {
-					const fileMap = new vue.FileMap(info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false);
-					for (const vueFileName of externalFiles.get(info.project) ?? []) {
-						fileMap.set(vueFileName, undefined);
-					}
-					return fileMap.has(fileName);
-				},
+				: vue.createRootFileChecker(
+					info.languageServiceHost.getProjectVersion ? () => info.languageServiceHost.getProjectVersion!() : undefined,
+					() => externalFiles.get(info.project) ?? [],
+					info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false
+				),
 			info.languageServiceHost.getCompilationSettings(),
 			vueOptions
 		);
@@ -30,7 +27,7 @@ const plugin = createLanguageServicePlugin(
 			setup: language => {
 				projects.set(info.project, { info, language, vueOptions });
 
-				decorateLanguageServiceForVue(language, info.languageService, vueOptions, ts, true, fileName => fileName);
+				info.languageService = proxyLanguageServiceForVue(ts, language, info.languageService, vueOptions, fileName => fileName);
 				startNamedPipeServer(ts, info.project.projectKind, info.project.getCurrentDirectory());
 
 				// #3963

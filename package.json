@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"packageManager": "pnpm@9.1.0",
+	"packageManager": "pnpm@9.4.0",
 	"scripts": {
 		"build": "tsc -b",
 		"watch": "npm run build && (npm run watch:base & npm run watch:vue)",
@@ -24,14 +24,14 @@
 		"@lerna-lite/publish": "latest",
 		"@tsslint/cli": "latest",
 		"@tsslint/config": "latest",
-		"@volar/language-service": "~2.3.0",
+		"@volar/language-service": "~2.4.0-alpha.15",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
 	},
 	"pnpm": {
 		"overrides": {
-			"vscode-html-languageservice": "npm:@johnsoncodehk/vscode-html-languageservice"
+			"inquirer": "9.2.23"
 		}
 	}
 }

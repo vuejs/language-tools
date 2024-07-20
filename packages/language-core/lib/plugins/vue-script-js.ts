@@ -4,7 +4,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
 		compileSFCScript(lang, script) {
 			if (lang === 'js' || lang === 'ts' || lang === 'jsx' || lang === 'tsx') {

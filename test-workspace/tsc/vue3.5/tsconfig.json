@@ -1,0 +1,9 @@
+{
+	"extends": "../../tsconfig.json",
+	"vueCompilerOptions": {
+		"target": 3.5,
+	},
+	"include": [
+		"**/*"
+	],
+}
