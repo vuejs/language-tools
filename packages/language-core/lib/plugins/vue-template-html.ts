@@ -12,7 +12,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
 		compileSFCTemplate(lang, template, options) {
 

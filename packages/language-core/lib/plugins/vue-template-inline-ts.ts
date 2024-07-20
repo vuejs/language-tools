@@ -27,7 +27,7 @@ const plugin: VueLanguagePlugin = ctx => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
 		getEmbeddedCodes(_fileName, sfc) {
 			if (!sfc.template?.ast) {

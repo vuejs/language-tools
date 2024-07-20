@@ -62,6 +62,7 @@ function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 		|| extension.id === 'styled-components.vscode-styled-components'
 		|| extension.id === 'Divlo.vscode-styled-jsx-languageserver'
 		|| extension.id === 'nrwl.angular-console'
+		|| extension.id === 'ShenQingchuan.vue-vine-extension'
 	) {
 		return true;
 	}

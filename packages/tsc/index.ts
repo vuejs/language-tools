@@ -16,11 +16,7 @@ export function run() {
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 				: vue.resolveVueCompilerOptions({});
-			const allExtensions = [
-				...vueOptions.extensions,
-				...vueOptions.vitePressExtensions,
-				...vueOptions.petiteVueExtensions,
-			];
+			const allExtensions = vue.getAllExtensions(vueOptions);
 			if (
 				runExtensions.length === allExtensions.length
 				&& runExtensions.every(ext => allExtensions.includes(ext))
@@ -29,17 +25,14 @@ export function run() {
 				options.host!.writeFile = (fileName, contents, ...args) => {
 					return writeFile(fileName, removeEmitGlobalTypes(contents), ...args);
 				};
-				const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
+				const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
 					ts,
 					id => id,
-					() => '',
-					fileName => {
-						const fileMap = new vue.FileMap(options.host?.useCaseSensitiveFileNames?.() ?? false);
-						for (const vueFileName of options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/'))) {
-							fileMap.set(vueFileName, undefined);
-						}
-						return fileMap.has(fileName);
-					},
+					vue.createRootFileChecker(
+						undefined,
+						() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
+						options.host?.useCaseSensitiveFileNames?.() ?? false
+					),
 					options.options,
 					vueOptions
 				);
@@ -58,7 +51,7 @@ export function run() {
 		if (err === extensionsChangedException) {
 			main();
 		} else {
-			console.error(err);
+			throw err;
 		}
 	}
 }

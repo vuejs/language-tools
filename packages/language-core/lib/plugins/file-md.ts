@@ -13,13 +13,26 @@ const angleBracketReg = /\<\S*\:\S*\>/g;
 const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
 const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
-		parseSFC(_fileName, content) {
+		getLanguageId(fileName) {
+			if (vueCompilerOptions.vitePressExtensions.some(ext => fileName.endsWith(ext))) {
+				return 'markdown';
+			}
+		},
+
+		isValidFile(_fileName, languageId) {
+			return languageId === 'markdown';
+		},
+
+		parseSFC2(_fileName, languageId, content) {
+			if (languageId !== 'markdown') {
+				return;
+			}
 
 			content = content
 				// code block
