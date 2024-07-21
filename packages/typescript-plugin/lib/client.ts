@@ -1,5 +1,5 @@
 import type { Request } from './server';
-import { connect, searchNamedPipeServerForFile, sendRequestWorker } from './utils';
+import { searchNamedPipeServerForFile, sendRequestWorker } from './utils';
 
 export function collectExtractProps(
 	...args: Parameters<typeof import('./requests/collectExtractProps.js')['collectExtractProps']>
@@ -85,15 +85,12 @@ export function getElementAttrs(
 }
 
 async function sendRequest<T>(request: Request) {
-	const server = (await searchNamedPipeServerForFile(request.args[0]))?.server;
+	const server = (await searchNamedPipeServerForFile(request.args[0]));
 	if (!server) {
 		console.warn('[Vue Named Pipe Client] No server found for', request.args[0]);
 		return;
 	}
-	const client = await connect(server.path);
-	if (!client) {
-		console.warn('[Vue Named Pipe Client] Failed to connect to', server.path);
-		return;
-	}
-	return await sendRequestWorker<T>(request, client);
+	const res = await sendRequestWorker<T>(request, server.socket);
+	server.socket.end();
+	return res;
 }
