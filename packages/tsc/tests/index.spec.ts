@@ -9,6 +9,7 @@ const shouldErrorDirs = [
 	'should-error',
 	'should-error-2',
 	'should-error-3',
+	'should-error-#4539',
 ];
 
 function prettyPath(path: string, isRoot: boolean) {
