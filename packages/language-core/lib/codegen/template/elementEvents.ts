@@ -196,7 +196,7 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 					if (ts.isArrowFunction(child_2)) {
 						result = false;
 					}
-					else if (ts.isIdentifier(child_2)) {
+					else if (isPropertyAccessOrId(ts, child_2)) {
 						result = false;
 					}
 				});
@@ -207,4 +207,14 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 		});
 	}
 	return result;
+}
+
+function isPropertyAccessOrId(ts: typeof import('typescript'), node: ts.Node): boolean {
+	if (ts.isIdentifier(node)) {
+		return true;
+	}
+	if (ts.isPropertyAccessExpression(node)) {
+		return isPropertyAccessOrId(ts, node.expression);
+	}
+	return false;
 }
