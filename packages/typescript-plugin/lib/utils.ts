@@ -39,7 +39,7 @@ function watchNamedPipeReady(namedPipePath: string) {
 		socket.end();
 		onSomePipeReadyCallbacks.forEach(cb => cb());
 	});
-	socket.on('error', (err) => {
+	socket.on('error', err => {
 		if ((err as any).code === 'ECONNREFUSED') {
 			try {
 				console.log('[Vue Named Pipe Client] Deleting:', namedPipePath);
@@ -57,7 +57,7 @@ export function getNamedPipePath(projectKind: ts.server.ProjectKind.Configured |
 		: `${inferredNamedPipePathPrefix}${key}`;
 }
 
-export async function getReadyNamedPipePaths() {
+export function getReadyNamedPipePaths() {
 	const configuredPipes: string[] = [];
 	const inferredPipes: string[] = [];
 	for (let i = 0; i < 20; i++) {
@@ -84,7 +84,7 @@ export async function getReadyNamedPipePaths() {
 	};
 }
 
-export async function connect(namedPipePath: string, timeout?: number) {
+export function connect(namedPipePath: string, timeout?: number) {
 	return new Promise<net.Socket | 'error' | 'timeout'>(resolve => {
 		const socket = net.connect(namedPipePath);
 		if (timeout) {
@@ -149,7 +149,7 @@ export async function searchNamedPipeServerForFile(fileName: string) {
 				socket,
 				projectInfo,
 			};
-		}),
+		})
 	)).filter(server => !!server);
 
 	// Sort servers by tsconfig
@@ -186,7 +186,7 @@ export async function searchNamedPipeServerForFile(fileName: string) {
 					projectInfo,
 				};
 			}
-		}),
+		})
 	)).filter(server => !!server);
 
 	// Sort servers by directory

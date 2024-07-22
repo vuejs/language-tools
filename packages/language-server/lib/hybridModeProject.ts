@@ -41,7 +41,7 @@ export function createHybridModeProject(
 			const pipeWatcher = setInterval(() => {
 				getReadyNamedPipePaths();
 				if (Date.now() > end) {
-					clearInterval(pipeWatcher!);
+					clearInterval(pipeWatcher);
 				}
 			}, 1000);
 		},
