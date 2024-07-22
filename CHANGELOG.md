@@ -6,7 +6,7 @@
 
 ### Features
 
-- **vscode:** focus mode <sup>Insiders</sup>
+- **vscode:** focus mode <sup>Insiders</sup> (https://github.com/volarjs/insiders/pull/24)
 - **language-core:** Plugin API 2.1
   - Added plugin hooks: `getLanguageId`, `isValidFile`, `parseSFC2`
   - Improve backward compatibility (#4585) - Thanks @zhiyuanzmj
