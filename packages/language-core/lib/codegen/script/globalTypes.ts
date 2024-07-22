@@ -17,7 +17,7 @@ declare global {
 			: `globalThis.JSX.Element;`
 		}
 	type __VLS_GlobalComponents = ${vueCompilerOptions.target >= 3.5
-			? `import('${vueCompilerOptions.lib}').GlobalComponents`
+			? `import('${vueCompilerOptions.lib}').GlobalComponents;`
 			: `import('${vueCompilerOptions.lib}').GlobalComponents & Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
 		}
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
