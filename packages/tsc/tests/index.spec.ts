@@ -9,6 +9,7 @@ const shouldErrorDirs = [
 	'should-error',
 	'should-error-2',
 	'should-error-3',
+	'should-error-#4569',
 ];
 
 function prettyPath(path: string, isRoot: boolean) {
@@ -52,7 +53,7 @@ function runVueTsc(cwd: string) {
 	return new Promise((resolve, reject) => {
 		const cp = fork(
 			binPath,
-			['--noEmit'],
+			[],
 			{
 				silent: true,
 				cwd

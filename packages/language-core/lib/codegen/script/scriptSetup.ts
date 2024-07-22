@@ -29,6 +29,15 @@ export function* generateScriptSetup(
 
 	if (scriptSetup.generic) {
 		if (!options.scriptRanges?.exportDefault) {
+			if (options.sfc.scriptSetup) {
+				// #4569
+				yield [
+					'',
+					'scriptSetup',
+					options.sfc.scriptSetup.content.length,
+					codeFeatures.verification,
+				];
+			}
 			yield `export default `;
 		}
 		yield `(<`;
