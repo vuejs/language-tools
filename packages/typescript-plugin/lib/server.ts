@@ -1,4 +1,4 @@
-import type { Language, VueCompilerOptions } from '@vue/language-core';
+import type { Language } from '@vue/language-core';
 import * as fs from 'fs';
 import * as net from 'net';
 import type * as ts from 'typescript';
@@ -8,10 +8,11 @@ import { getImportPathForFile } from './requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
 import type { RequestContext } from './requests/types';
-import { NamedPipeServer, connect, readPipeTable, updatePipeTable } from './utils';
+import { connect, getNamedPipePath } from './utils';
 
 export interface Request {
-	type: 'projectInfoForFile'
+	type: 'containsFile'
+	| 'projectInfo'
 	| 'collectExtractProps'
 	| 'getImportPathForFile'
 	| 'getPropertiesAtLocation'
@@ -25,139 +26,130 @@ export interface Request {
 	args: [fileName: string, ...rest: any];
 }
 
-let started = false;
+export interface ProjectInfo {
+	name: string;
+	kind: ts.server.ProjectKind;
+	currentDirectory: string;
+}
 
-export function startNamedPipeServer(
+export async function startNamedPipeServer(
 	ts: typeof import('typescript'),
-	serverKind: ts.server.ProjectKind,
-	currentDirectory: string
+	info: ts.server.PluginCreateInfo,
+	language: Language<string>,
+	projectKind: ts.server.ProjectKind.Inferred | ts.server.ProjectKind.Configured
 ) {
-	if (started) {
-		return;
-	}
-	started = true;
-
-	const pipeFile = process.platform === 'win32'
-		? `\\\\.\\pipe\\vue-tsp-${process.pid}`
-		: `/tmp/vue-tsp-${process.pid}`;
 	const server = net.createServer(connection => {
 		connection.on('data', data => {
 			const text = data.toString();
+			if (text === 'ping') {
+				connection.write('pong');
+				return;
+			}
 			const request: Request = JSON.parse(text);
 			const fileName = request.args[0];
-			const project = getProject(ts.server.toNormalizedPath(fileName));
-			if (request.type === 'projectInfoForFile') {
-				connection.write(
-					JSON.stringify(
-						project
-							? {
-								name: project.info.project.getProjectName(),
-								kind: project.info.project.projectKind,
-							}
-							: null
-					)
+			if (request.type === 'containsFile') {
+				sendResponse(
+					info.project.containsFile(ts.server.toNormalizedPath(fileName))
 				);
 			}
-			else if (project) {
-				const requestContext: RequestContext = {
-					typescript: ts,
-					languageService: project.info.languageService,
-					languageServiceHost: project.info.languageServiceHost,
-					language: project.language,
-					isTsPlugin: true,
-					getFileId: (fileName: string) => fileName,
-				};
-				if (request.type === 'collectExtractProps') {
-					const result = collectExtractProps.apply(requestContext, request.args as any);
-					connection.write(JSON.stringify(result ?? null));
-				}
-				else if (request.type === 'getImportPathForFile') {
-					const result = getImportPathForFile.apply(requestContext, request.args as any);
-					connection.write(JSON.stringify(result ?? null));
-				}
-				else if (request.type === 'getPropertiesAtLocation') {
-					const result = getPropertiesAtLocation.apply(requestContext, request.args as any);
-					connection.write(JSON.stringify(result ?? null));
-				}
-				else if (request.type === 'getQuickInfoAtPosition') {
-					const result = getQuickInfoAtPosition.apply(requestContext, request.args as any);
-					connection.write(JSON.stringify(result ?? null));
-				}
-				// Component Infos
-				else if (request.type === 'getComponentProps') {
-					const result = getComponentProps.apply(requestContext, request.args as any);
-					connection.write(JSON.stringify(result ?? null));
-				}
-				else if (request.type === 'getComponentEvents') {
-					const result = getComponentEvents.apply(requestContext, request.args as any);
-					connection.write(JSON.stringify(result ?? null));
-				}
-				else if (request.type === 'getTemplateContextProps') {
-					const result = getTemplateContextProps.apply(requestContext, request.args as any);
-					connection.write(JSON.stringify(result ?? null));
-				}
-				else if (request.type === 'getComponentNames') {
-					const result = getComponentNames.apply(requestContext, request.args as any);
-					connection.write(JSON.stringify(result ?? null));
-				}
-				else if (request.type === 'getElementAttrs') {
-					const result = getElementAttrs.apply(requestContext, request.args as any);
-					connection.write(JSON.stringify(result ?? null));
-				}
-				else {
-					console.warn('[Vue Named Pipe Server] Unknown request type:', request.type);
-				}
+			if (request.type === 'projectInfo') {
+				sendResponse({
+					name: info.project.getProjectName(),
+					kind: info.project.projectKind,
+					currentDirectory: info.project.getCurrentDirectory(),
+				} satisfies ProjectInfo);
+			}
+			const requestContext: RequestContext = {
+				typescript: ts,
+				languageService: info.languageService,
+				languageServiceHost: info.languageServiceHost,
+				language: language,
+				isTsPlugin: true,
+				getFileId: (fileName: string) => fileName,
+			};
+			if (request.type === 'collectExtractProps') {
+				const result = collectExtractProps.apply(requestContext, request.args as any);
+				sendResponse(result);
+			}
+			else if (request.type === 'getImportPathForFile') {
+				const result = getImportPathForFile.apply(requestContext, request.args as any);
+				sendResponse(result);
+			}
+			else if (request.type === 'getPropertiesAtLocation') {
+				const result = getPropertiesAtLocation.apply(requestContext, request.args as any);
+				sendResponse(result);
+			}
+			else if (request.type === 'getQuickInfoAtPosition') {
+				const result = getQuickInfoAtPosition.apply(requestContext, request.args as any);
+				sendResponse(result);
+			}
+			// Component Infos
+			else if (request.type === 'getComponentProps') {
+				const result = getComponentProps.apply(requestContext, request.args as any);
+				sendResponse(result);
+			}
+			else if (request.type === 'getComponentEvents') {
+				const result = getComponentEvents.apply(requestContext, request.args as any);
+				sendResponse(result);
+			}
+			else if (request.type === 'getTemplateContextProps') {
+				const result = getTemplateContextProps.apply(requestContext, request.args as any);
+				sendResponse(result);
+			}
+			else if (request.type === 'getComponentNames') {
+				const result = getComponentNames.apply(requestContext, request.args as any);
+				sendResponse(result);
+			}
+			else if (request.type === 'getElementAttrs') {
+				const result = getElementAttrs.apply(requestContext, request.args as any);
+				sendResponse(result);
 			}
 			else {
-				console.warn('[Vue Named Pipe Server] No project found for:', fileName);
+				console.warn('[Vue Named Pipe Server] Unknown request type:', request.type);
 			}
-			connection.end();
 		});
 		connection.on('error', err => console.error('[Vue Named Pipe Server]', err.message));
+
+		function sendResponse(data: any | undefined) {
+			connection.write(JSON.stringify(data ?? null) + '\n\n');
+		}
 	});
 
-	cleanupPipeTable();
-
-	const table = readPipeTable();
-	table.push({
-		path: pipeFile,
-		serverKind,
-		currentDirectory,
-	});
-	updatePipeTable(table);
-
-	try {
-		fs.unlinkSync(pipeFile);
-	} catch { }
-
-	server.listen(pipeFile);
-}
-
-function cleanupPipeTable() {
-	for (const server of readPipeTable()) {
-		connect(server.path).then(client => {
-			if (client) {
-				client.end();
-			}
-			else {
-				let table: NamedPipeServer[] = readPipeTable();
-				table = table.filter(item => item.path !== server.path);
-				updatePipeTable(table);
-			}
-		});
-	}
-}
-
-export const projects = new Map<ts.server.Project, {
-	info: ts.server.PluginCreateInfo;
-	language: Language<string>;
-	vueOptions: VueCompilerOptions;
-}>();
-
-function getProject(filename: ts.server.NormalizedPath) {
-	for (const [project, data] of projects) {
-		if (project.containsFile(filename)) {
-			return data;
+	for (let i = 0; i < 20; i++) {
+		const path = getNamedPipePath(projectKind, i);
+		const socket = await connect(path, 100);
+		if (typeof socket === 'object') {
+			socket.end();
+		}
+		const namedPipeOccupied = typeof socket === 'object' || socket === 'timeout';
+		if (namedPipeOccupied) {
+			continue;
+		}
+		const success = await tryListen(server, path);
+		if (success) {
+			break;
 		}
 	}
+}
+
+function tryListen(server: net.Server, namedPipePath: string) {
+	return new Promise<boolean>(resolve => {
+		const onSuccess = () => {
+			server.off('error', onError);
+			resolve(true);
+		};
+		const onError = (err: any) => {
+			if ((err as any).code === 'ECONNREFUSED') {
+				try {
+					console.log('[Vue Named Pipe Client] Deleting:', namedPipePath);
+					fs.promises.unlink(namedPipePath);
+				} catch { }
+			}
+			server.off('error', onError);
+			server.close();
+			resolve(false);
+		};
+		server.listen(namedPipePath, onSuccess);
+		server.on('error', onError);
+	});
 }

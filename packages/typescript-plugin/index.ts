@@ -1,7 +1,7 @@
 import { createLanguageServicePlugin, externalFiles } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
 import { proxyLanguageServiceForVue } from './lib/common';
-import { projects, startNamedPipeServer } from './lib/server';
+import { startNamedPipeServer } from './lib/server';
 
 const windowsPathReg = /\\/g;
 
@@ -25,10 +25,13 @@ const plugin = createLanguageServicePlugin(
 		return {
 			languagePlugins: [languagePlugin],
 			setup: language => {
-				projects.set(info.project, { info, language, vueOptions });
-
 				info.languageService = proxyLanguageServiceForVue(ts, language, info.languageService, vueOptions, fileName => fileName);
-				startNamedPipeServer(ts, info.project.projectKind, info.project.getCurrentDirectory());
+				if (
+					info.project.projectKind === ts.server.ProjectKind.Configured
+					|| info.project.projectKind === ts.server.ProjectKind.Inferred
+				) {
+					startNamedPipeServer(ts, info, language, info.project.projectKind);
+				}
 
 				// #3963
 				const timer = setInterval(() => {
