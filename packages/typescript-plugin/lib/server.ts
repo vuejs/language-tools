@@ -1,4 +1,5 @@
 import type { Language } from '@vue/language-core';
+import * as fs from 'fs';
 import * as net from 'net';
 import type * as ts from 'typescript';
 import { collectExtractProps } from './requests/collectExtractProps';
@@ -114,9 +115,9 @@ export async function startNamedPipeServer(
 		}
 	});
 
-	for (let i = 0; i < 100; i++) {
-		const path = getNamedPipePath(projectKind, process.pid + i);
-		const socket = await connect(path);
+	for (let i = 0; i < 20; i++) {
+		const path = getNamedPipePath(projectKind, i);
+		const socket = await connect(path, 100);
 		if (typeof socket === 'object') {
 			socket.end();
 		}
@@ -131,18 +132,24 @@ export async function startNamedPipeServer(
 	}
 }
 
-function tryListen(server: net.Server, path: string) {
+function tryListen(server: net.Server, namedPipePath: string) {
 	return new Promise<boolean>(resolve => {
 		const onSuccess = () => {
 			server.off('error', onError);
 			resolve(true);
 		};
-		const onError = () => {
+		const onError = (err: any) => {
+			if ((err as any).code === 'ECONNREFUSED') {
+				try {
+					console.log('[Vue Named Pipe Client] Deleting:', namedPipePath);
+					fs.promises.unlink(namedPipePath);
+				} catch { }
+			}
 			server.off('error', onError);
 			server.close();
 			resolve(false);
 		};
-		server.listen(path, onSuccess);
+		server.listen(namedPipePath, onSuccess);
 		server.on('error', onError);
 	});
 }

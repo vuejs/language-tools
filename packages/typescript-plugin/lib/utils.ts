@@ -58,35 +58,38 @@ export function getNamedPipePath(projectKind: ts.server.ProjectKind.Configured |
 }
 
 export async function getReadyNamedPipePaths() {
-	const files = await fs.promises.readdir(pipeDir);
-	const configuredPipes = files.filter(file => file.startsWith(`vue-named-pipe-${version}-configured-`));
-	const inferredPipes = files.filter(file => file.startsWith(`vue-named-pipe-${version}-inferred-`));
-	for (const pipe of [
-		...configuredPipes.map(toFullPath),
-		...inferredPipes.map(toFullPath),
-	]) {
-		if (!pipes.has(pipe)) {
-			pipes.set(pipe, 'unknown');
-			watchNamedPipeReady(pipe);
+	const configuredPipes: string[] = [];
+	const inferredPipes: string[] = [];
+	for (let i = 0; i < 20; i++) {
+		const configuredPipe = getNamedPipePath(1 satisfies ts.server.ProjectKind.Configured, i);
+		const inferredPipe = getNamedPipePath(0 satisfies ts.server.ProjectKind.Inferred, i);
+		if (pipes.get(configuredPipe) === 'ready') {
+			configuredPipes.push(configuredPipe);
+		}
+		else if (!pipes.has(configuredPipe)) {
+			pipes.set(configuredPipe, 'unknown');
+			watchNamedPipeReady(configuredPipe);
+		}
+		if (pipes.get(inferredPipe) === 'ready') {
+			inferredPipes.push(inferredPipe);
+		}
+		else if (!pipes.has(inferredPipe)) {
+			pipes.set(inferredPipe, 'unknown');
+			watchNamedPipeReady(inferredPipe);
 		}
 	}
-	const oldVersionPipes = files.filter(file => file.startsWith(`vue-tsp-`));
-	for (const pipe of oldVersionPipes.map(toFullPath)) {
-		connect(pipe).then(socket => {
-			if (typeof socket === 'object') {
-				socket.end();
-			}
-		});
-	}
 	return {
-		configured: configuredPipes.map(toFullPath).filter(pipe => pipes.get(pipe) === 'ready'),
-		inferred: inferredPipes.map(toFullPath).filter(pipe => pipes.get(pipe) === 'ready'),
+		configured: configuredPipes,
+		inferred: inferredPipes,
 	};
 }
 
-export async function connect(namedPipePath: string) {
+export async function connect(namedPipePath: string, timeout?: number) {
 	return new Promise<net.Socket | 'error' | 'timeout'>(resolve => {
 		const socket = net.connect(namedPipePath);
+		if (timeout) {
+			socket.setTimeout(timeout);
+		}
 		const onConnect = () => {
 			cleanup();
 			resolve(socket);
@@ -102,12 +105,18 @@ export async function connect(namedPipePath: string) {
 			cleanup();
 			resolve('error');
 		};
+		const onTimeout = () => {
+			cleanup();
+			resolve('timeout');
+		}
 		const cleanup = () => {
 			socket.off('connect', onConnect);
 			socket.off('error', onError);
+			socket.off('timeout', onTimeout);
 		};
 		socket.on('connect', onConnect);
 		socket.on('error', onError);
+		socket.on('timeout', onTimeout);
 	});
 }
 
