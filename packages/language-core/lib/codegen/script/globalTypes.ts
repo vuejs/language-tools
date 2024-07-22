@@ -20,15 +20,6 @@ declare global {
 			? `import('${vueCompilerOptions.lib}').GlobalComponents`
 			: `import('${vueCompilerOptions.lib}').GlobalComponents & Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
 		}
-	type __VLS_BuiltInPublicProps = ${vueCompilerOptions.target >= 3.4
-			? `import('${vueCompilerOptions.lib}').PublicProps;`
-			: vueCompilerOptions.target >= 3.0
-				? `import('${vueCompilerOptions.lib}').VNodeProps
-					& import('${vueCompilerOptions.lib}').AllowedComponentProps
-					& import('${vueCompilerOptions.lib}').ComponentCustomProps;`
-				: `globalThis.JSX.IntrinsicAttributes;`
-
-		}
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 

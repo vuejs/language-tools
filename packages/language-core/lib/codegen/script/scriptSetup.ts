@@ -42,8 +42,8 @@ export function* generateScriptSetup(
 			yield `,`;
 		}
 		yield `>(${newLine}`
-			+ `	__VLS_props: Awaited<typeof __VLS_setup>['props'],${newLine}`
-			+ `	__VLS_ctx?: ${ctx.helperTypes.Prettify.name}<Pick<Awaited<typeof __VLS_setup>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
+			+ `	__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'],${newLine}`
+			+ `	__VLS_ctx?: ${ctx.helperTypes.Prettify.name}<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
 			+ `	__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],${newLine}`
 			+ `	__VLS_setup = (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined, definePropMirrors);
@@ -267,6 +267,17 @@ function* generateComponentProps(
 	}
 	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
 	yield `})${endOfLine}`;
+
+	yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
+		? `import('${options.vueCompilerOptions.lib}').PublicProps;`
+		: options.vueCompilerOptions.target >= 3.0
+			? `import('${options.vueCompilerOptions.lib}').VNodeProps
+					& import('${options.vueCompilerOptions.lib}').AllowedComponentProps
+					& import('${options.vueCompilerOptions.lib}').ComponentCustomProps;`
+			: `globalThis.JSX.IntrinsicAttributes;`
+		}`;
+	yield endOfLine;
+
 	yield `let __VLS_functionalComponentProps!: `;
 	yield `${ctx.helperTypes.OmitKeepDiscriminatedUnion.name}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
 	yield endOfLine;
