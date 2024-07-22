@@ -2,6 +2,42 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.0.28 <sup>official</sup>, 2.0.29 <sup>insiders</sup> (2024-07-22)
+
+### Features
+
+- **vscode:** focus mode <sup>Insiders</sup>
+- **language-core:** Plugin API 2.1
+  - Added plugin hooks: `getLanguageId`, `isValidFile`, `parseSFC2`
+  - Improve backward compatibility (#4585) - Thanks @zhiyuanzmj
+- **language-core:** support default prop when using __typeProps (#4602) - Thanks @zhiyuanzmj
+- **language-core:** improve nested plugins (#4581) - Thanks @zhiyuanzmj
+- **language-service:** remove `v-bind` code action (#4601)
+- **vscode:** add empty pattern to codeblock attributes scope (#4590) - Thanks @KermanX
+
+### Fixes
+
+- **tsc:** errors should be thrown instead of being console.log printed
+- **language-server:** observe named pipes changes when server startup (#4292)
+- **language-core:** infer define model type from options type (#4545) - Thanks @davidmatter
+- **language-core:** type-checking not working with hyphen in slot name with JS (#4478) - Thanks @KermanX
+- **language-core:** add type check for v-model without argument (#4598) - Thanks @zhiyuanzmj
+- **language-service:** filter special tags (#4596) - Thanks @so1ve
+- **typescript-plugin:** improve named pipes reliability (#4603)
+- **language-core** property access is incorrectly identified as compound expression (#4600)
+- **language-core** fix compatibility of generic component virtual code with TS 5.5 (#4577)
+- **tsc** TS4082 not reported for functional component (#4569)
+
+### Other Changes
+
+- Upgraded Volar from `v2.4.0-alpha.15` to `v2.4.0-alpha.18`:
+  - Fix VS Code IntelliSense will be lost in new created files (#4424)
+  - Add workspace symbols support in Hybrid Mode (#4595)
+  - Add workspace `addMissingImports` action support in Hybrid Mode (#4586)
+- Fix yarn 4 compatibility (#4587)
+- Add vue vine to hybrid mode compatible list (#4543) - Thanks @so1ve
+- Add global components prop validation test (#4542) - Thanks @davidmatter
+
 ## 2.0.26 <sup>official</sup>, 2.0.27 <sup>insiders</sup> (2024-07-04)
 
 ### Features
