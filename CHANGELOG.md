@@ -24,9 +24,9 @@
 - **language-core:** add type check for v-model without argument (#4598) - Thanks @zhiyuanzmj
 - **language-service:** filter special tags (#4596) - Thanks @so1ve
 - **typescript-plugin:** improve named pipes reliability (#4603)
-- **language-core** property access is incorrectly identified as compound expression (#4600)
-- **language-core** fix compatibility of generic component virtual code with TS 5.5 (#4577)
-- **tsc** TS4082 not reported for functional component (#4569)
+- **language-core:** property access is incorrectly identified as compound expression (#4600)
+- **language-core:** fix compatibility of generic component virtual code with TS 5.5 (#4577)
+- **tsc:** TS4082 not reported for functional component (#4569)
 
 ### Other Changes
 
