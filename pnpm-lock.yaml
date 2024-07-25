@@ -13,13 +13,13 @@ importers:
     devDependencies:
       '@lerna-lite/cli':
         specifier: latest
-        version: 3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(@lerna-lite/version@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(typescript@5.5.3))(typescript@5.5.3)
+        version: 3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(@lerna-lite/version@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(typescript@5.5.4))(typescript@5.5.4)
       '@lerna-lite/publish':
         specifier: latest
-        version: 3.7.1(typescript@5.5.3)
+        version: 3.7.1(typescript@5.5.4)
       '@tsslint/cli':
         specifier: latest
-        version: 1.0.14(typescript@5.5.3)
+        version: 1.0.14(typescript@5.5.4)
       '@tsslint/config':
         specifier: latest
         version: 1.0.14
@@ -28,13 +28,13 @@ importers:
         version: 2.4.0-alpha.18
       typescript:
         specifier: latest
-        version: 5.5.3
+        version: 5.5.4
       vite:
         specifier: latest
-        version: 5.3.4(@types/node@20.14.11)
+        version: 5.3.4(@types/node@20.14.12)
       vitest:
         specifier: latest
-        version: 2.0.3(@types/node@20.14.11)
+        version: 2.0.4(@types/node@20.14.12)
 
   extensions/vscode:
     devDependencies:
@@ -48,13 +48,13 @@ importers:
         specifier: ~2.4.0-alpha.18
         version: 2.4.0-alpha.18
       '@vue/language-core':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../../packages/language-core
       '@vue/language-server':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../../packages/typescript-plugin
       esbuild:
         specifier: ~0.21.0
@@ -78,7 +78,7 @@ importers:
         specifier: ~2.4.0-alpha.18
         version: 2.4.0-alpha.18
       '@vue/language-core':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
@@ -87,12 +87,12 @@ importers:
         specifier: '*'
         version: 5.5.3
       vue-component-type-helpers:
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../component-type-helpers
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 20.14.11
+        version: 20.14.12
       '@types/path-browserify':
         specifier: latest
         version: 1.0.2
@@ -134,7 +134,7 @@ importers:
         version: 5.1.2
       '@types/node':
         specifier: latest
-        version: 20.14.11
+        version: 20.14.12
       '@types/path-browserify':
         specifier: ^1.0.1
         version: 1.0.2
@@ -156,9 +156,9 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 20.14.11
+        version: 20.14.12
       '@vue/language-core':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../language-core
 
   packages/language-server:
@@ -170,13 +170,13 @@ importers:
         specifier: ~2.4.0-alpha.18
         version: 2.4.0-alpha.18
       '@vue/language-core':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../language-core
       '@vue/language-service':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../language-service
       '@vue/typescript-plugin':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../typescript-plugin
       vscode-languageserver-protocol:
         specifier: ^3.17.5
@@ -200,13 +200,13 @@ importers:
         specifier: ^3.4.0
         version: 3.4.31
       '@vue/language-core':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.4.0
         version: 3.4.31
       '@vue/typescript-plugin':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../typescript-plugin
       computeds:
         specifier: ^0.0.1
@@ -250,13 +250,13 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 20.14.11
+        version: 20.14.12
       '@types/path-browserify':
         specifier: latest
         version: 1.0.2
       '@volar/kit':
         specifier: ~2.4.0-alpha.18
-        version: 2.4.0-alpha.18(typescript@5.5.3)
+        version: 2.4.0-alpha.18(typescript@5.5.4)
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
@@ -267,7 +267,7 @@ importers:
         specifier: ~2.4.0-alpha.18
         version: 2.4.0-alpha.18
       '@vue/language-core':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../language-core
       semver:
         specifier: ^7.5.4
@@ -278,7 +278,7 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 20.14.11
+        version: 20.14.12
 
   packages/typescript-plugin:
     dependencies:
@@ -286,7 +286,7 @@ importers:
         specifier: ~2.4.0-alpha.18
         version: 2.4.0-alpha.18
       '@vue/language-core':
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.4.0
@@ -294,25 +294,25 @@ importers:
     devDependencies:
       '@types/node':
         specifier: latest
-        version: 20.14.11
+        version: 20.14.12
 
   test-workspace:
     devDependencies:
       vue:
         specifier: ^3.4.0
-        version: 3.4.31(typescript@5.5.3)
+        version: 3.4.31(typescript@5.5.4)
       vue-component-type-helpers:
-        specifier: 2.0.28
+        specifier: 2.0.29
         version: link:../packages/component-type-helpers
       vue2:
         specifier: npm:vue@2.7.16
         version: vue@2.7.16
       vue3.3:
         specifier: npm:vue@3.3.13
-        version: vue@3.3.13(typescript@5.5.3)
+        version: vue@3.3.13(typescript@5.5.4)
       vue3.5:
         specifier: npm:vue@3.5.0-alpha.3
-        version: vue@3.5.0-alpha.3(typescript@5.5.3)
+        version: vue@3.5.0-alpha.3(typescript@5.5.4)
 
 packages:
 
@@ -1010,8 +1010,8 @@ packages:
   '@types/minimatch@5.1.2':
     resolution: {integrity: sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==}
 
-  '@types/node@20.14.11':
-    resolution: {integrity: sha512-kprQpL8MMeszbz6ojB5/tU8PLN4kesnN8Gjzw349rDlNgsSzg90lAVj3llK99Dh7JON+t9AuscPPFW6mPbTnSA==}
+  '@types/node@20.14.12':
+    resolution: {integrity: sha512-r7wNXakLeSsGT0H1AU863vS2wa5wBOK4bWMjZz2wj+8nBx+m5PeIn0k8AloSLpRuiwdRQZwarZqHE4FNArPuJQ==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -1025,23 +1025,23 @@ packages:
   '@types/vscode@1.91.0':
     resolution: {integrity: sha512-PgPr+bUODjG3y+ozWUCyzttqR9EHny9sPAfJagddQjDwdtf66y2sDKJMnFZRuzBA2YtBGASqJGPil8VDUPvO6A==}
 
-  '@vitest/expect@2.0.3':
-    resolution: {integrity: sha512-X6AepoOYePM0lDNUPsGXTxgXZAl3EXd0GYe/MZyVE4HzkUqyUVC6S3PrY5mClDJ6/7/7vALLMV3+xD/Ko60Hqg==}
+  '@vitest/expect@2.0.4':
+    resolution: {integrity: sha512-39jr5EguIoanChvBqe34I8m1hJFI4+jxvdOpD7gslZrVQBKhh8H9eD7J/LJX4zakrw23W+dITQTDqdt43xVcJw==}
 
-  '@vitest/pretty-format@2.0.3':
-    resolution: {integrity: sha512-URM4GLsB2xD37nnTyvf6kfObFafxmycCL8un3OC9gaCs5cti2u+5rJdIflZ2fUJUen4NbvF6jCufwViAFLvz1g==}
+  '@vitest/pretty-format@2.0.4':
+    resolution: {integrity: sha512-RYZl31STbNGqf4l2eQM1nvKPXE0NhC6Eq0suTTePc4mtMQ1Fn8qZmjV4emZdEdG2NOWGKSCrHZjmTqDCDoeFBw==}
 
-  '@vitest/runner@2.0.3':
-    resolution: {integrity: sha512-EmSP4mcjYhAcuBWwqgpjR3FYVeiA4ROzRunqKltWjBfLNs1tnMLtF+qtgd5ClTwkDP6/DGlKJTNa6WxNK0bNYQ==}
+  '@vitest/runner@2.0.4':
+    resolution: {integrity: sha512-Gk+9Su/2H2zNfNdeJR124gZckd5st4YoSuhF1Rebi37qTXKnqYyFCd9KP4vl2cQHbtuVKjfEKrNJxHHCW8thbQ==}
 
-  '@vitest/snapshot@2.0.3':
-    resolution: {integrity: sha512-6OyA6v65Oe3tTzoSuRPcU6kh9m+mPL1vQ2jDlPdn9IQoUxl8rXhBnfICNOC+vwxWY684Vt5UPgtcA2aPFBb6wg==}
+  '@vitest/snapshot@2.0.4':
+    resolution: {integrity: sha512-or6Mzoz/pD7xTvuJMFYEtso1vJo1S5u6zBTinfl+7smGUhqybn6VjzCDMhmTyVOFWwkCMuNjmNNxnyXPgKDoPw==}
 
-  '@vitest/spy@2.0.3':
-    resolution: {integrity: sha512-sfqyAw/ypOXlaj4S+w8689qKM1OyPOqnonqOc9T91DsoHbfN5mU7FdifWWv3MtQFf0lEUstEwR9L/q/M390C+A==}
+  '@vitest/spy@2.0.4':
+    resolution: {integrity: sha512-uTXU56TNoYrTohb+6CseP8IqNwlNdtPwEO0AWl+5j7NelS6x0xZZtP0bDWaLvOfUbaYwhhWp1guzXUxkC7mW7Q==}
 
-  '@vitest/utils@2.0.3':
-    resolution: {integrity: sha512-c/UdELMuHitQbbc/EVctlBaxoYAwQPQdSNwv7z/vHyBKy2edYZaFgptE27BRueZB7eW8po+cllotMNTDpL3HWg==}
+  '@vitest/utils@2.0.4':
+    resolution: {integrity: sha512-Zc75QuuoJhOBnlo99ZVUkJIuq4Oj0zAkrQ2VzCqNCx6wAwViHEh5Fnp4fiJTE9rA+sAoXRf00Z9xGgfEzV6fzQ==}
 
   '@volar/kit@2.4.0-alpha.18':
     resolution: {integrity: sha512-dZMSNhesh23lhd61ax2l04IgIcYofAjm8M+5BKAmX47ROweyc8RrrslszCFUJynlmXx6JS1PoHqvo8+E0aAYQQ==}
@@ -2983,6 +2983,11 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  typescript@5.5.4:
+    resolution: {integrity: sha512-Mtq29sKDAEYP7aljRgtPOpTvOfbwRWlS6dPRzwjdE+C0R4brX/GUyhHSecbHMFLNBLcJIPt9nl9yG5TZ1weH+Q==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
   uc.micro@1.0.6:
     resolution: {integrity: sha512-8Y75pvTYkLJW2hWQHXxoqRgV7qb9B+9vFEtidML+7koHUFapnVJAZ6cKs+Qjz5Aw3aZWHMC6u0wJE3At+nSGwA==}
 
@@ -3033,8 +3038,8 @@ packages:
     resolution: {integrity: sha512-OljLrQ9SQdOUqTaQxqL5dEfZWrXExyyWsozYlAWFawPVNuD83igl7uJD2RTkNMbniIYgt8l81eCJGIdQF7avLQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
-  vite-node@2.0.3:
-    resolution: {integrity: sha512-14jzwMx7XTcMB+9BhGQyoEAmSl0eOr3nrnn+Z12WNERtOvLN+d2scbRUvyni05rT3997Bg+rZb47NyP4IQPKXg==}
+  vite-node@2.0.4:
+    resolution: {integrity: sha512-ZpJVkxcakYtig5iakNeL7N3trufe3M6vGuzYAr4GsbCTwobDeyPJpE4cjDhhPluv8OvQCFzu2LWp6GkoKRITXA==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
 
@@ -3066,15 +3071,15 @@ packages:
       terser:
         optional: true
 
-  vitest@2.0.3:
-    resolution: {integrity: sha512-o3HRvU93q6qZK4rI2JrhKyZMMuxg/JRt30E6qeQs6ueaiz5hr1cPj+Sk2kATgQzMMqsa2DiNI0TIK++1ULx8Jw==}
+  vitest@2.0.4:
+    resolution: {integrity: sha512-luNLDpfsnxw5QSW4bISPe6tkxVvv5wn2BBs/PuDRkhXZ319doZyLOBr1sjfB5yCEpTiU7xCAdViM8TNVGPwoog==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
       '@edge-runtime/vm': '*'
       '@types/node': ^18.0.0 || >=20.0.0
-      '@vitest/browser': 2.0.3
-      '@vitest/ui': 2.0.3
+      '@vitest/browser': 2.0.4
+      '@vitest/ui': 2.0.4
       happy-dom: '*'
       jsdom: '*'
     peerDependenciesMeta:
@@ -3243,8 +3248,8 @@ packages:
     engines: {node: ^16.13.0 || >=18.0.0}
     hasBin: true
 
-  why-is-node-running@2.2.2:
-    resolution: {integrity: sha512-6tSwToZxTOcotxHeA+qGCq1mVzKR3CwcJGmVcY+QE8SHy6TnpFnh8PAvPNHYr7EcuVeG0QSMxtYCuO1ta/G/oA==}
+  why-is-node-running@2.3.0:
+    resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
     engines: {node: '>=8'}
     hasBin: true
 
@@ -3559,10 +3564,10 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.4.15
 
-  '@lerna-lite/cli@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(@lerna-lite/version@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(typescript@5.5.3))(typescript@5.5.3)':
+  '@lerna-lite/cli@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(@lerna-lite/version@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(typescript@5.5.4))(typescript@5.5.4)':
     dependencies:
-      '@lerna-lite/core': 3.7.1(typescript@5.5.3)
-      '@lerna-lite/init': 3.7.1(typescript@5.5.3)
+      '@lerna-lite/core': 3.7.1(typescript@5.5.4)
+      '@lerna-lite/init': 3.7.1(typescript@5.5.4)
       '@lerna-lite/npmlog': 3.7.0
       dedent: 1.5.3
       dotenv: 16.4.5
@@ -3570,22 +3575,22 @@ snapshots:
       load-json-file: 7.0.1
       yargs: 17.7.2
     optionalDependencies:
-      '@lerna-lite/publish': 3.7.1(typescript@5.5.3)
-      '@lerna-lite/version': 3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(typescript@5.5.3)
+      '@lerna-lite/publish': 3.7.1(typescript@5.5.4)
+      '@lerna-lite/version': 3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(typescript@5.5.4)
     transitivePeerDependencies:
       - babel-plugin-macros
       - bluebird
       - supports-color
       - typescript
 
-  '@lerna-lite/core@3.7.1(typescript@5.5.3)':
+  '@lerna-lite/core@3.7.1(typescript@5.5.4)':
     dependencies:
       '@lerna-lite/npmlog': 3.7.0
       '@npmcli/run-script': 8.1.0
       chalk: 5.3.0
       clone-deep: 4.0.1
       config-chain: 1.1.13
-      cosmiconfig: 9.0.0(typescript@5.5.3)
+      cosmiconfig: 9.0.0(typescript@5.5.4)
       dedent: 1.5.3
       execa: 8.0.1
       fs-extra: 11.2.0
@@ -3612,9 +3617,9 @@ snapshots:
       - supports-color
       - typescript
 
-  '@lerna-lite/init@3.7.1(typescript@5.5.3)':
+  '@lerna-lite/init@3.7.1(typescript@5.5.4)':
     dependencies:
-      '@lerna-lite/core': 3.7.1(typescript@5.5.3)
+      '@lerna-lite/core': 3.7.1(typescript@5.5.4)
       fs-extra: 11.2.0
       p-map: 7.0.2
       write-json-file: 5.0.0
@@ -3636,12 +3641,12 @@ snapshots:
       strip-ansi: 7.1.0
       wide-align: 1.1.5
 
-  '@lerna-lite/publish@3.7.1(typescript@5.5.3)':
+  '@lerna-lite/publish@3.7.1(typescript@5.5.4)':
     dependencies:
-      '@lerna-lite/cli': 3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(@lerna-lite/version@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(typescript@5.5.3))(typescript@5.5.3)
-      '@lerna-lite/core': 3.7.1(typescript@5.5.3)
+      '@lerna-lite/cli': 3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(@lerna-lite/version@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(typescript@5.5.4))(typescript@5.5.4)
+      '@lerna-lite/core': 3.7.1(typescript@5.5.4)
       '@lerna-lite/npmlog': 3.7.0
-      '@lerna-lite/version': 3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(typescript@5.5.3)
+      '@lerna-lite/version': 3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(typescript@5.5.4)
       '@npmcli/arborist': 7.5.4
       '@npmcli/package-json': 5.2.0
       byte-size: 8.1.1
@@ -3673,10 +3678,10 @@ snapshots:
       - supports-color
       - typescript
 
-  '@lerna-lite/version@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(typescript@5.5.3)':
+  '@lerna-lite/version@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(typescript@5.5.4)':
     dependencies:
-      '@lerna-lite/cli': 3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(@lerna-lite/version@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.3))(typescript@5.5.3))(typescript@5.5.3)
-      '@lerna-lite/core': 3.7.1(typescript@5.5.3)
+      '@lerna-lite/cli': 3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(@lerna-lite/version@3.7.1(@lerna-lite/publish@3.7.1(typescript@5.5.4))(typescript@5.5.4))(typescript@5.5.4)
+      '@lerna-lite/core': 3.7.1(typescript@5.5.4)
       '@lerna-lite/npmlog': 3.7.0
       '@octokit/plugin-enterprise-rest': 6.0.1
       '@octokit/rest': 21.0.0
@@ -4014,13 +4019,13 @@ snapshots:
 
   '@sindresorhus/merge-streams@2.3.0': {}
 
-  '@tsslint/cli@1.0.14(typescript@5.5.3)':
+  '@tsslint/cli@1.0.14(typescript@5.5.4)':
     dependencies:
       '@clack/prompts': 0.7.0
       '@tsslint/config': 1.0.14
       '@tsslint/core': 1.0.14
       glob: 10.4.2
-      typescript: 5.5.3
+      typescript: 5.5.4
 
   '@tsslint/config@1.0.14':
     dependencies:
@@ -4046,7 +4051,7 @@ snapshots:
 
   '@types/minimatch@5.1.2': {}
 
-  '@types/node@20.14.11':
+  '@types/node@20.14.12':
     dependencies:
       undici-types: 5.26.5
 
@@ -4058,45 +4063,45 @@ snapshots:
 
   '@types/vscode@1.91.0': {}
 
-  '@vitest/expect@2.0.3':
+  '@vitest/expect@2.0.4':
     dependencies:
-      '@vitest/spy': 2.0.3
-      '@vitest/utils': 2.0.3
+      '@vitest/spy': 2.0.4
+      '@vitest/utils': 2.0.4
       chai: 5.1.1
       tinyrainbow: 1.2.0
 
-  '@vitest/pretty-format@2.0.3':
+  '@vitest/pretty-format@2.0.4':
     dependencies:
       tinyrainbow: 1.2.0
 
-  '@vitest/runner@2.0.3':
+  '@vitest/runner@2.0.4':
     dependencies:
-      '@vitest/utils': 2.0.3
+      '@vitest/utils': 2.0.4
       pathe: 1.1.2
 
-  '@vitest/snapshot@2.0.3':
+  '@vitest/snapshot@2.0.4':
     dependencies:
-      '@vitest/pretty-format': 2.0.3
+      '@vitest/pretty-format': 2.0.4
       magic-string: 0.30.10
       pathe: 1.1.2
 
-  '@vitest/spy@2.0.3':
+  '@vitest/spy@2.0.4':
     dependencies:
       tinyspy: 3.0.0
 
-  '@vitest/utils@2.0.3':
+  '@vitest/utils@2.0.4':
     dependencies:
-      '@vitest/pretty-format': 2.0.3
+      '@vitest/pretty-format': 2.0.4
       estree-walker: 3.0.3
       loupe: 3.1.1
       tinyrainbow: 1.2.0
 
-  '@volar/kit@2.4.0-alpha.18(typescript@5.5.3)':
+  '@volar/kit@2.4.0-alpha.18(typescript@5.5.4)':
     dependencies:
       '@volar/language-service': 2.4.0-alpha.18
       '@volar/typescript': 2.4.0-alpha.18
       typesafe-path: 0.2.2
-      typescript: 5.5.3
+      typescript: 5.5.4
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
 
@@ -4312,23 +4317,23 @@ snapshots:
       '@vue/shared': 3.5.0-alpha.3
       csstype: 3.1.3
 
-  '@vue/server-renderer@3.3.13(vue@3.4.31(typescript@5.5.3))':
+  '@vue/server-renderer@3.3.13(vue@3.4.31(typescript@5.5.4))':
     dependencies:
       '@vue/compiler-ssr': 3.3.13
       '@vue/shared': 3.3.13
-      vue: 3.4.31(typescript@5.5.3)
+      vue: 3.4.31(typescript@5.5.4)
 
-  '@vue/server-renderer@3.4.31(vue@3.4.31(typescript@5.5.3))':
+  '@vue/server-renderer@3.4.31(vue@3.4.31(typescript@5.5.4))':
     dependencies:
       '@vue/compiler-ssr': 3.4.31
       '@vue/shared': 3.4.31
-      vue: 3.4.31(typescript@5.5.3)
+      vue: 3.4.31(typescript@5.5.4)
 
-  '@vue/server-renderer@3.5.0-alpha.3(vue@3.4.31(typescript@5.5.3))':
+  '@vue/server-renderer@3.5.0-alpha.3(vue@3.4.31(typescript@5.5.4))':
     dependencies:
       '@vue/compiler-ssr': 3.5.0-alpha.3
       '@vue/shared': 3.5.0-alpha.3
-      vue: 3.4.31(typescript@5.5.3)
+      vue: 3.4.31(typescript@5.5.4)
 
   '@vue/shared@3.3.13': {}
 
@@ -4649,14 +4654,14 @@ snapshots:
       git-semver-tags: 7.0.1
       meow: 12.1.1
 
-  cosmiconfig@9.0.0(typescript@5.5.3):
+  cosmiconfig@9.0.0(typescript@5.5.4):
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.0
       js-yaml: 4.1.0
       parse-json: 5.2.0
     optionalDependencies:
-      typescript: 5.5.3
+      typescript: 5.5.4
 
   cross-spawn@7.0.3:
     dependencies:
@@ -6226,6 +6231,8 @@ snapshots:
 
   typescript@5.5.3: {}
 
+  typescript@5.5.4: {}
+
   uc.micro@1.0.6: {}
 
   uglify-js@3.18.0:
@@ -6262,13 +6269,13 @@ snapshots:
 
   validate-npm-package-name@5.0.1: {}
 
-  vite-node@2.0.3(@types/node@20.14.11):
+  vite-node@2.0.4(@types/node@20.14.12):
     dependencies:
       cac: 6.7.14
       debug: 4.3.5
       pathe: 1.1.2
       tinyrainbow: 1.2.0
-      vite: 5.3.4(@types/node@20.14.11)
+      vite: 5.3.4(@types/node@20.14.12)
     transitivePeerDependencies:
       - '@types/node'
       - less
@@ -6279,24 +6286,24 @@ snapshots:
       - supports-color
       - terser
 
-  vite@5.3.4(@types/node@20.14.11):
+  vite@5.3.4(@types/node@20.14.12):
     dependencies:
       esbuild: 0.21.5
       postcss: 8.4.39
       rollup: 4.18.0
     optionalDependencies:
-      '@types/node': 20.14.11
+      '@types/node': 20.14.12
       fsevents: 2.3.3
 
-  vitest@2.0.3(@types/node@20.14.11):
+  vitest@2.0.4(@types/node@20.14.12):
     dependencies:
       '@ampproject/remapping': 2.3.0
-      '@vitest/expect': 2.0.3
-      '@vitest/pretty-format': 2.0.3
-      '@vitest/runner': 2.0.3
-      '@vitest/snapshot': 2.0.3
-      '@vitest/spy': 2.0.3
-      '@vitest/utils': 2.0.3
+      '@vitest/expect': 2.0.4
+      '@vitest/pretty-format': 2.0.4
+      '@vitest/runner': 2.0.4
+      '@vitest/snapshot': 2.0.4
+      '@vitest/spy': 2.0.4
+      '@vitest/utils': 2.0.4
       chai: 5.1.1
       debug: 4.3.5
       execa: 8.0.1
@@ -6306,11 +6313,11 @@ snapshots:
       tinybench: 2.8.0
       tinypool: 1.0.0
       tinyrainbow: 1.2.0
-      vite: 5.3.4(@types/node@20.14.11)
-      vite-node: 2.0.3(@types/node@20.14.11)
-      why-is-node-running: 2.2.2
+      vite: 5.3.4(@types/node@20.14.12)
+      vite-node: 2.0.4(@types/node@20.14.12)
+      why-is-node-running: 2.3.0
     optionalDependencies:
-      '@types/node': 20.14.11
+      '@types/node': 20.14.12
     transitivePeerDependencies:
       - less
       - lightningcss
@@ -6462,35 +6469,35 @@ snapshots:
       '@vue/compiler-sfc': 2.7.16
       csstype: 3.1.3
 
-  vue@3.3.13(typescript@5.5.3):
+  vue@3.3.13(typescript@5.5.4):
     dependencies:
       '@vue/compiler-dom': 3.3.13
       '@vue/compiler-sfc': 3.3.13
       '@vue/runtime-dom': 3.3.13
-      '@vue/server-renderer': 3.3.13(vue@3.4.31(typescript@5.5.3))
+      '@vue/server-renderer': 3.3.13(vue@3.4.31(typescript@5.5.4))
       '@vue/shared': 3.3.13
     optionalDependencies:
-      typescript: 5.5.3
+      typescript: 5.5.4
 
-  vue@3.4.31(typescript@5.5.3):
+  vue@3.4.31(typescript@5.5.4):
     dependencies:
       '@vue/compiler-dom': 3.4.31
       '@vue/compiler-sfc': 3.4.31
       '@vue/runtime-dom': 3.4.31
-      '@vue/server-renderer': 3.4.31(vue@3.4.31(typescript@5.5.3))
+      '@vue/server-renderer': 3.4.31(vue@3.4.31(typescript@5.5.4))
       '@vue/shared': 3.4.31
     optionalDependencies:
-      typescript: 5.5.3
+      typescript: 5.5.4
 
-  vue@3.5.0-alpha.3(typescript@5.5.3):
+  vue@3.5.0-alpha.3(typescript@5.5.4):
     dependencies:
       '@vue/compiler-dom': 3.5.0-alpha.3
       '@vue/compiler-sfc': 3.5.0-alpha.3
       '@vue/runtime-dom': 3.5.0-alpha.3
-      '@vue/server-renderer': 3.5.0-alpha.3(vue@3.4.31(typescript@5.5.3))
+      '@vue/server-renderer': 3.5.0-alpha.3(vue@3.4.31(typescript@5.5.4))
       '@vue/shared': 3.5.0-alpha.3
     optionalDependencies:
-      typescript: 5.5.3
+      typescript: 5.5.4
 
   walk-up-path@3.0.1: {}
 
@@ -6508,7 +6515,7 @@ snapshots:
     dependencies:
       isexe: 3.1.1
 
-  why-is-node-running@2.2.2:
+  why-is-node-running@2.3.0:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
