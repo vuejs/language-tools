@@ -145,35 +145,6 @@ export function* forEachInterpolationSegment(
 	}
 }
 
-function processFunction(
-	ts: typeof import('typescript'),
-	node: ts.ArrowFunction | ts.FunctionExpression | ts.AccessorDeclaration | ts.MethodDeclaration,
-	ast: ts.SourceFile,
-	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
-	ctx: TemplateCodegenContext
-) {
-	const functionArgs: string[] = [];
-
-	for (const param of node.parameters) {
-		collectVars(ts, param.name, ast, functionArgs);
-		if (param.type) {
-			walkIdentifiers(ts, param.type, ast, cb, ctx);
-		}
-	}
-
-	for (const varName of functionArgs) {
-		ctx.addLocalVariable(varName);
-	}
-
-	if (node.body) {
-		walkIdentifiers(ts, node.body, ast, cb, ctx);
-	}
-
-	for (const varName of functionArgs) {
-		ctx.removeLocalVariable(varName);
-	}
-}
-
 function walkIdentifiers(
 	ts: typeof import('typescript'),
 	node: ts.Node,
@@ -254,6 +225,31 @@ function walkIdentifiers(
 		for (const varName of blockVars) {
 			ctx.removeLocalVariable(varName);
 		}
+	}
+}
+
+function processFunction(
+	ts: typeof import('typescript'),
+	node: ts.ArrowFunction | ts.FunctionExpression | ts.AccessorDeclaration | ts.MethodDeclaration,
+	ast: ts.SourceFile,
+	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
+	ctx: TemplateCodegenContext
+) {
+	const functionArgs: string[] = [];
+	for (const param of node.parameters) {
+		collectVars(ts, param.name, ast, functionArgs);
+		if (param.type) {
+			walkIdentifiers(ts, param.type, ast, cb, ctx);
+		}
+	}
+	for (const varName of functionArgs) {
+		ctx.addLocalVariable(varName);
+	}
+	if (node.body) {
+		walkIdentifiers(ts, node.body, ast, cb, ctx);
+	}
+	for (const varName of functionArgs) {
+		ctx.removeLocalVariable(varName);
 	}
 }
 
