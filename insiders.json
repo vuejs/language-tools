@@ -1,6 +1,14 @@
 {
-	"latest": "2.0.29",
+	"latest": "2.0.29-alpha.1",
 	"versions": [
+		{
+			"version": "2.0.29-alpha.1",
+			"date": "2024-7-26",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.0.29",
+				"AFDIAN": "https://afdian.com/p/3383460647f611efbe2f52540025c377"
+			}
+		},
 		{
 			"version": "2.0.29",
 			"date": "2024-7-22",

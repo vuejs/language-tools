@@ -107,6 +107,9 @@ importers:
       '@vue/compiler-dom':
         specifier: ^3.4.0
         version: 3.4.31
+      '@vue/compiler-vue2':
+        specifier: ^2.7.16
+        version: 2.7.16
       '@vue/shared':
         specifier: ^3.4.0
         version: 3.4.31
@@ -125,9 +128,6 @@ importers:
       typescript:
         specifier: '*'
         version: 5.5.3
-      vue-template-compiler:
-        specifier: ^2.7.14
-        version: 2.7.16
     devDependencies:
       '@types/minimatch':
         specifier: ^5.1.2
@@ -1113,6 +1113,9 @@ packages:
 
   '@vue/compiler-ssr@3.5.0-alpha.3':
     resolution: {integrity: sha512-cATOOLUjg9W86ZMT87DPsi3W4BZUZIIrIGZEUrRcC91lWs00PTtXiWxhQF4QGpxKpGLPr9GK3E2z5SeQWlk5Zw==}
+
+  '@vue/compiler-vue2@2.7.16':
+    resolution: {integrity: sha512-qYC3Psj9S/mfu9uVi5WvNZIzq+xnXMhOwbTFKKDD7b1lhpnn71jXSFdTQ+WsIEk0ONCd7VV2IMm7ONl6tbQ86A==}
 
   '@vue/reactivity-transform@3.3.13':
     resolution: {integrity: sha512-oWnydGH0bBauhXvh5KXUy61xr9gKaMbtsMHk40IK9M4gMuKPJ342tKFarY0eQ6jef8906m35q37wwA8DMZOm5Q==}
@@ -3192,9 +3195,6 @@ packages:
   vscode-uri@3.0.8:
     resolution: {integrity: sha512-AyFQ0EVmsOZOlAnxoFOGOq1SQDWAB7C6aqMGS23svWAllfOaxbuFvcT8D1i8z3Gyn8fraVeZNNmN6e9bxxXkKw==}
 
-  vue-template-compiler@2.7.16:
-    resolution: {integrity: sha512-AYbUWAJHLGGQM7+cNTELw+KsOG9nl2CnSv467WobS5Cv9uk3wFcnr1Etsz2sEIHEZvw1U+o9mRlEO6QbZvUPGQ==}
-
   vue@2.7.16:
     resolution: {integrity: sha512-4gCtFXaAA3zYZdTp5s4Hl2sozuySsgz4jy1EnpBHNfpMa9dK1ZCG7viqBPCwXtmgc8nHqUsAu3G4gtmXkkY3Sw==}
     deprecated: Vue 2 has reached EOL and is no longer actively maintained. See https://v2.vuejs.org/eol/ for more details.
@@ -4251,6 +4251,11 @@ snapshots:
     dependencies:
       '@vue/compiler-dom': 3.5.0-alpha.3
       '@vue/shared': 3.5.0-alpha.3
+
+  '@vue/compiler-vue2@2.7.16':
+    dependencies:
+      de-indent: 1.0.2
+      he: 1.2.0
 
   '@vue/reactivity-transform@3.3.13':
     dependencies:
@@ -6451,11 +6456,6 @@ snapshots:
   vscode-uri@2.1.2: {}
 
   vscode-uri@3.0.8: {}
-
-  vue-template-compiler@2.7.16:
-    dependencies:
-      de-indent: 1.0.2
-      he: 1.2.0
 
   vue@2.7.16:
     dependencies:
