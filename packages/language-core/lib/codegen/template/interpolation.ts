@@ -177,25 +177,7 @@ function walkIdentifiers(
 		}
 	}
 	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
-
-		const functionArgs: string[] = [];
-
-		for (const param of node.parameters) {
-			collectVars(ts, param.name, ast, functionArgs);
-			if (param.type) {
-				walkIdentifiers(ts, param.type, ast, cb, ctx, blockVars, false);
-			}
-		}
-
-		for (const varName of functionArgs) {
-			ctx.addLocalVariable(varName);
-		}
-
-		walkIdentifiers(ts, node.body, ast, cb, ctx, blockVars, false);
-
-		for (const varName of functionArgs) {
-			ctx.removeLocalVariable(varName);
-		}
+		processFunction(ts, node, ast, cb, ctx);
 	}
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
@@ -214,6 +196,10 @@ function walkIdentifiers(
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
 				walkIdentifiers(ts, prop.expression, ast, cb, ctx, blockVars, false);
+			}
+			// fix https://github.com/vuejs/language-tools/issues/4604
+			else if (ts.isFunctionLike(prop) && prop.body) {
+				processFunction(ts, prop, ast, cb, ctx);
 			}
 		}
 	}
@@ -239,6 +225,31 @@ function walkIdentifiers(
 		for (const varName of blockVars) {
 			ctx.removeLocalVariable(varName);
 		}
+	}
+}
+
+function processFunction(
+	ts: typeof import('typescript'),
+	node: ts.ArrowFunction | ts.FunctionExpression | ts.AccessorDeclaration | ts.MethodDeclaration,
+	ast: ts.SourceFile,
+	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
+	ctx: TemplateCodegenContext
+) {
+	const functionArgs: string[] = [];
+	for (const param of node.parameters) {
+		collectVars(ts, param.name, ast, functionArgs);
+		if (param.type) {
+			walkIdentifiers(ts, param.type, ast, cb, ctx);
+		}
+	}
+	for (const varName of functionArgs) {
+		ctx.addLocalVariable(varName);
+	}
+	if (node.body) {
+		walkIdentifiers(ts, node.body, ast, cb, ctx);
+	}
+	for (const varName of functionArgs) {
+		ctx.removeLocalVariable(varName);
 	}
 }
 
