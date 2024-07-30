@@ -1,5 +1,5 @@
 {
-	"exclude": "../tsconfig.json",
+	"extends": "../tsconfig.json",
 	"compilerOptions": {
 		"paths": {
 			"__COMPLETE_ROOT__/*": [
