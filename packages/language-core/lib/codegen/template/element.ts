@@ -112,8 +112,8 @@ export function* generateComponent(
 			dynamicTagInfo.astHolder,
 			dynamicTagInfo.offsets[0],
 			ctx.codeFeatures.all,
-			'',
-			''
+			'(',
+			')'
 		);
 		if (dynamicTagInfo.offsets[1] !== undefined) {
 			yield `,`;
@@ -127,8 +127,8 @@ export function* generateComponent(
 					...ctx.codeFeatures.all,
 					completion: false,
 				},
-				'',
-				''
+				'(',
+				')'
 			);
 		}
 		yield `)${endOfLine}`;
