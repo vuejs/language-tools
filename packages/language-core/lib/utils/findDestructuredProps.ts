@@ -85,7 +85,7 @@ export function findDestructuredProps(
 			&& ts.isCallExpression(initializer)
 			&& initializer.expression.getText(ast) === 'defineProps';
 
-		for (const id of extractIdentifiers(name)) {
+		for (const id of extractIdentifiers(ts, name)) {
 			if (isDefineProps) {
 				excludedIds.add(id)
 			} else {
@@ -96,7 +96,7 @@ export function findDestructuredProps(
 
 	function walkFunctionParams(node: ts.SignatureDeclaration) {
 		for (const p of node.parameters) {
-			for (const id of extractIdentifiers(p)) {
+			for (const id of extractIdentifiers(ts, p)) {
 				registerLocalBinding(id);
 			}
 		}
@@ -167,20 +167,6 @@ export function findDestructuredProps(
 			}
 		}
 	}
-	
-	function extractIdentifiers(node: ts.Node, nodes: ts.Identifier[] = []) {
-		if (ts.isIdentifier(node)) {
-			nodes.push(node);
-		}
-		else if (ts.isParameter(node) || ts.isBindingElement(node)) {
-			extractIdentifiers(node.name, nodes);
-		}
-		else if (ts.isObjectBindingPattern(node) || ts.isArrayBindingPattern(node)) {
-			node.elements.map((el) => extractIdentifiers(el, nodes));
-		}
-
-		return nodes;
-	}
 
 	function isFunctionLike(node: ts.Node) {
 		return ts.isArrowFunction(node)
@@ -220,5 +206,26 @@ export function findDestructuredProps(
 		}
 
 		return true;
+	}
+}
+	
+export function extractIdentifiers(ts: typeof import('typescript'), node: ts.Node, includesRest = true) {
+	return extract(node, []);
+
+	function extract(node: ts.Node, nodes: ts.Identifier[] = []) {
+		if (ts.isIdentifier(node)) {
+			nodes.push(node);
+		}
+		else if (
+			ts.isParameter(node) ||
+			ts.isBindingElement(node) &&
+			(includesRest || !node.dotDotDotToken)
+		) {
+			extract(node.name, nodes);
+		}
+		else if (ts.isObjectBindingPattern(node) || ts.isArrayBindingPattern(node)) {
+			node.elements.map((el) => extract(el, nodes));
+		}
+		return nodes;
 	}
 }

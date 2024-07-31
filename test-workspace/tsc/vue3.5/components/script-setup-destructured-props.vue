@@ -5,6 +5,7 @@ import { watch } from 'vue';
 const { foo, bar, ...props } = defineProps<{
     foo: string;
     bar: string;
+    baz: string;
 }>();
 
 type foo = foo & typeof foo;
@@ -27,7 +28,7 @@ function fn1 (foo) {}
 const fn2 = function(foo) {}
 
 watch(() => foo, (foo) => {
-    console.log(foo, bar, props);
+    console.log(foo, bar, props.baz);
 });
 </script>
 
