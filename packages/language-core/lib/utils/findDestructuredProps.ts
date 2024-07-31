@@ -120,7 +120,6 @@ export function findDestructuredProps(
 				return false;
 			}
 
-			console.log(node.getText(ast), node);
 			if (isFunctionLike(node)) {
 				pushScope();
 				walkFunctionParams(node);
