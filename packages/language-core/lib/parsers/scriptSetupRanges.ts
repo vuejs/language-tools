@@ -1,5 +1,6 @@
 import type * as ts from 'typescript';
 import type { VueCompilerOptions, TextRange } from '../types';
+import { findDestructuredProps } from '../utils/findDestructuredProps';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
@@ -14,6 +15,8 @@ export function parseScriptSetupRanges(
 
 	const props: {
 		name?: string;
+		destructured?: ts.Identifier[];
+		destructuredReferences?: ts.Identifier[];
 		define?: ReturnType<typeof parseDefineFunction> & {
 			statement: TextRange;
 		};
@@ -254,6 +257,12 @@ export function parseScriptSetupRanges(
 				};
 
 				if (ts.isVariableDeclaration(parent)) {
+					if (ts.isObjectBindingPattern(parent.name)) {
+						props.destructured = parent.name.elements.map(
+							(val) => val.name as ts.Identifier
+						);
+						props.destructuredReferences = findDestructuredProps(ts, ast, props.destructured);
+					}
 					props.name = getNodeText(ts, parent.name, ast);
 				}
 				if (node.arguments.length) {
