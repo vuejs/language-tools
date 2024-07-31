@@ -16,7 +16,10 @@ interface foo {
 
 const obj = {
     foo: foo,
-    foo
+    foo,
+    foo(foo) {},
+    get bar() { return this.foo; },
+    set bar(val) { this.foo = val; }
 }
 
 class cls {

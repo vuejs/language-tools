@@ -172,7 +172,9 @@ export function findDestructuredProps(
 		return ts.isArrowFunction(node)
 			|| ts.isConstructorDeclaration(node)
 			|| ts.isFunctionExpression(node)
-			|| ts.isFunctionDeclaration(node);
+			|| ts.isFunctionDeclaration(node)
+			|| ts.isMethodDeclaration(node)
+			|| ts.isAccessor(node);
 	}
 
 	// TODO: more conditions
@@ -197,8 +199,11 @@ export function findDestructuredProps(
 		}
 
 		if (
+			ts.isPropertyAccessExpression(parent) ||
 			ts.isPropertyAssignment(parent) ||
-			ts.isPropertyDeclaration(parent)
+			ts.isPropertyDeclaration(parent) ||
+			ts.isMethodDeclaration(parent) ||
+			ts.isAccessor(parent)
 		) {
 			if (parent.name === id) {
 				return false;
