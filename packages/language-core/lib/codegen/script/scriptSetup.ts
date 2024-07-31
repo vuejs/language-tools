@@ -166,6 +166,22 @@ function* generateSetupFunction(
 			}
 		}
 	}
+	if (scriptSetupRanges.props.destructured) {
+		for (const prop of scriptSetupRanges.props.destructuredReferences!) {
+			const end = prop.getEnd();
+			const start = end - prop.text.length;
+			setupCodeModifies.push([[
+				generateSfcBlockSection(scriptSetup, start, end, {
+					__hint: {
+						setting: 'vue.inlayHints.leadingProps',
+						label: 'props.',
+						// TODO: need tooltip
+						tooltip: ''
+					}
+				})
+			], end - prop.text.length, end]);
+		}
+	}
 	if (scriptSetupRanges.slots.define) {
 		if (scriptSetupRanges.slots.isObjectBindingPattern) {
 			setupCodeModifies.push([
