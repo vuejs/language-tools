@@ -383,7 +383,7 @@
 					"default": true,
 					"description": "Auto add space between double curly brackets: {{|}} -> {{ | }}"
 				},
-				"vue.inlayHints.leadingProps": {
+				"vue.inlayHints.destructuredProps": {
 					"type": "boolean",
 					"default": false,
 					"description": "Show inlay hints for destructured prop."

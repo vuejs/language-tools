@@ -173,7 +173,7 @@ function* generateSetupFunction(
 			setupCodeModifies.push([[
 				generateSfcBlockSection(scriptSetup, start, end, {
 					__hint: {
-						setting: 'vue.inlayHints.leadingProps',
+						setting: 'vue.inlayHints.destructuredProps',
 						label: 'props.',
 						// TODO: need tooltip
 						tooltip: ''
