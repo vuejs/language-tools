@@ -18,17 +18,21 @@ const obj = {
     foo: foo,
     foo,
     foo(foo) {},
+    foo: function(foo) {},
     get bar() { return this.foo; },
     set bar(val) { this.foo = val; }
 }
+
+function func(foo) {}
 
 class cls {
     foo: string = foo;
     constructor(foo) {}
 }
 
-function fn1 (foo) {}
-const fn2 = function(foo) {}
+for (const char of foo) {}
+
+try {} catch (foo) {}
 
 watch(() => foo, (foo) => {
     console.log(foo, bar, props.baz);

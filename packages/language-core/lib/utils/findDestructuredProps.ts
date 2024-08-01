@@ -132,14 +132,18 @@ export function findDestructuredProps(
 			if (ts.isCatchClause(node)) {
 				pushScope();
 				const { variableDeclaration: p } = node;
-				if (p && ts.isIdentifier(p)) {
-					registerLocalBinding(p);
+				if (p && ts.isIdentifier(p.name)) {
+					registerLocalBinding(p.name);
 				}
 				walkScope(node.block);
 				return;
 			}
 
-			if (ts.isBlock(node) && !isFunctionLike(parent)) {
+			if (
+				ts.isBlock(node)
+				&& !isFunctionLike(parent)
+				&& !ts.isCatchClause(parent)
+			) {
 				pushScope();
 				walkScope(node);
 				return;
@@ -160,8 +164,13 @@ export function findDestructuredProps(
 		function leave(node: ts.Node) {
 			parent && parentStack.pop();
 			if (
-				(ts.isBlock(node) && !isFunctionLike(parent)) ||
 				isFunctionLike(node)
+				|| ts.isCatchClause(node)
+				|| (
+					ts.isBlock(node)
+					&& !isFunctionLike(parent)
+					&& !ts.isCatchClause(parent)
+				)
 			) {
 				popScope();
 			}
