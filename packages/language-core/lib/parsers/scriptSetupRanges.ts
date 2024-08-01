@@ -16,7 +16,7 @@ export function parseScriptSetupRanges(
 	const props: {
 		name?: string;
 		destructured?: ts.Identifier[];
-		destructuredReferences?: ts.Identifier[];
+		destructuredReferences?: [ts.Identifier, boolean /* isShorthand */][];
 		define?: ReturnType<typeof parseDefineFunction> & {
 			statement: TextRange;
 		};

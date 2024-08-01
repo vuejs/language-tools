@@ -27,7 +27,7 @@ export function findDestructuredProps(
 	function pushScope() {
 		scopeStack.push((currentScope = Object.create(currentScope)));
 	}
-	
+
 	function popScope() {
 		scopeStack.pop()
 		currentScope = scopeStack[scopeStack.length - 1] || null;
@@ -40,13 +40,13 @@ export function findDestructuredProps(
 		}
 	}
 
-	const references: ts.Identifier[] = [];
+	const references: [ts.Identifier, boolean][] = [];
 
 	walkScope(ast, true);
 	walk(ast);
 
 	return references;
-	
+
 	function walkScope(node: ts.Node, isRoot = false) {
 		ts.forEachChild(node, (stmt) => {
 			if (ts.isVariableStatement(stmt)) {
@@ -101,7 +101,7 @@ export function findDestructuredProps(
 			}
 		}
 	}
-	
+
 	async function walk(parent: ts.Node) {
 		ts.forEachChild(parent, (node) => {
 			if (enter(node) ?? true) {
@@ -156,7 +156,8 @@ export function findDestructuredProps(
 			) {
 				const name = node.text;
 				if (currentScope[name]) {
-					references.push(node);
+					const isShorthand = ts.isShorthandPropertyAssignment(parent);
+					references.push([node, isShorthand]);
 				}
 			}
 		}
@@ -222,7 +223,7 @@ export function findDestructuredProps(
 		return true;
 	}
 }
-	
+
 export function extractIdentifiers(ts: typeof import('typescript'), node: ts.Node, includesRest = true) {
 	return extract(node, []);
 

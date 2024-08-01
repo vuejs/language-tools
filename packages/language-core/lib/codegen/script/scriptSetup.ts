@@ -167,19 +167,21 @@ function* generateSetupFunction(
 		}
 	}
 	if (scriptSetupRanges.props.destructured) {
-		for (const prop of scriptSetupRanges.props.destructuredReferences!) {
+		for (const [prop, isShorthand] of scriptSetupRanges.props.destructuredReferences!) {
+			const name = prop.text;
 			const end = prop.getEnd();
-			const start = end - prop.text.length;
+			const pos = isShorthand ? end : end - name.length;
+			const label = isShorthand ? `: props.${name}` : 'props.';
 			setupCodeModifies.push([[
-				generateSfcBlockSection(scriptSetup, start, end, {
+				generateSfcBlockSection(scriptSetup, pos, pos, {
 					__hint: {
 						setting: 'vue.inlayHints.destructuredProps',
-						label: 'props.',
+						label,
 						// TODO: need tooltip
 						tooltip: ''
 					}
 				})
-			], end - prop.text.length, end]);
+			], pos, pos]);
 		}
 	}
 	if (scriptSetupRanges.slots.define) {
