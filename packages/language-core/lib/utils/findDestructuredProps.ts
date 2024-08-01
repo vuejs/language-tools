@@ -1,4 +1,5 @@
 import type * as ts from 'typescript';
+import { collectIdentifiers } from '../codegen/common';
 
 /**
  * true -> prop binding
@@ -12,7 +13,7 @@ type Scope = Record<string, boolean>;
 export function findDestructuredProps(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
-	props: ts.Identifier[]
+	props: string[]
 ) {
 	const rootScope: Scope = {};
 	const scopeStack: Scope[] = [rootScope];
@@ -21,7 +22,7 @@ export function findDestructuredProps(
 	const parentStack: ts.Node[] = [];
 
 	for (const prop of props) {
-		rootScope[prop.text] = true;
+		rootScope[prop] = true;
 	}
 
 	function pushScope() {
@@ -85,7 +86,7 @@ export function findDestructuredProps(
 			&& ts.isCallExpression(initializer)
 			&& initializer.expression.getText(ast) === 'defineProps';
 
-		for (const id of extractIdentifiers(ts, name)) {
+		for (const id of collectIdentifiers(ts, name)) {
 			if (isDefineProps) {
 				excludedIds.add(id)
 			} else {
@@ -96,7 +97,7 @@ export function findDestructuredProps(
 
 	function walkFunctionParams(node: ts.SignatureDeclaration) {
 		for (const p of node.parameters) {
-			for (const id of extractIdentifiers(ts, p)) {
+			for (const id of collectIdentifiers(ts, p)) {
 				registerLocalBinding(id);
 			}
 		}
@@ -221,26 +222,5 @@ export function findDestructuredProps(
 		}
 
 		return true;
-	}
-}
-
-export function extractIdentifiers(ts: typeof import('typescript'), node: ts.Node, includesRest = true) {
-	return extract(node, []);
-
-	function extract(node: ts.Node, nodes: ts.Identifier[] = []) {
-		if (ts.isIdentifier(node)) {
-			nodes.push(node);
-		}
-		else if (
-			ts.isParameter(node) ||
-			ts.isBindingElement(node) &&
-			(includesRest || !node.dotDotDotToken)
-		) {
-			extract(node.name, nodes);
-		}
-		else if (ts.isObjectBindingPattern(node) || ts.isArrayBindingPattern(node)) {
-			node.elements.map((el) => extract(el, nodes));
-		}
-		return nodes;
 	}
 }

@@ -45,27 +45,45 @@ export function collectVars(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
-	result: string[]
+	results: string[] = [],
+	includesRest = true
+) {
+	const identifiers = collectIdentifiers(ts, node, [], includesRest);
+	for (const id of identifiers) {
+		results.push(getNodeText(ts, id, ast));
+	}
+	return results;
+}
+
+export function collectIdentifiers(
+	ts: typeof import('typescript'),
+	node: ts.Node,
+	results: ts.Identifier[] = [],
+	includesRest = true
 ) {
 	if (ts.isIdentifier(node)) {
-		result.push(getNodeText(ts, node, ast));
+		results.push(node);
 	}
 	else if (ts.isObjectBindingPattern(node)) {
 		for (const el of node.elements) {
-			collectVars(ts, el.name, ast, result);
+			if (includesRest || !el.dotDotDotToken) {
+				collectIdentifiers(ts, el.name, results, includesRest);
+			}
 		}
 	}
 	else if (ts.isArrayBindingPattern(node)) {
 		for (const el of node.elements) {
 			if (ts.isBindingElement(el)) {
-				collectVars(ts, el.name, ast, result);
+				collectIdentifiers(ts, el.name, results, includesRest);
 			}
 		}
 	}
 	else {
-		ts.forEachChild(node, node => collectVars(ts, node, ast, result));
+		ts.forEachChild(node, node => collectIdentifiers(ts, node, results, includesRest));
 	}
+	return results;
 }
+
 export function createTsAst(ts: typeof import('typescript'), astHolder: any, text: string) {
 	if (astHolder.__volar_ast_text !== text) {
 		astHolder.__volar_ast_text = text;

@@ -1,6 +1,7 @@
 import type * as ts from 'typescript';
 import type { VueCompilerOptions, TextRange } from '../types';
-import { extractIdentifiers, findDestructuredProps } from '../utils/findDestructuredProps';
+import { collectVars } from '../codegen/common';
+import { findDestructuredProps } from '../utils/findDestructuredProps';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
@@ -15,8 +16,8 @@ export function parseScriptSetupRanges(
 
 	const props: {
 		name?: string;
-		destructured?: ts.Identifier[];
-		destructuredReferences?: [ts.Identifier, boolean /* isShorthand */][];
+		destructured?: string[];
+		destructuredReferences?: [id: ts.Identifier, isShorthand: boolean][];
 		define?: ReturnType<typeof parseDefineFunction> & {
 			statement: TextRange;
 		};
@@ -234,6 +235,15 @@ export function parseScriptSetupRanges(
 				expose.define = parseDefineFunction(node);
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
+				if (ts.isVariableDeclaration(parent)) {
+					if (ts.isObjectBindingPattern(parent.name)) {
+						props.destructured = collectVars(ts, parent.name, ast, [], false);
+						props.destructuredReferences = findDestructuredProps(ts, ast, props.destructured);
+					}
+					else {
+						props.name = getNodeText(ts, parent.name, ast);
+					}
+				}
 
 				let statementRange: TextRange | undefined;
 				for (let i = parents.length - 1; i >= 0; i--) {
@@ -256,13 +266,6 @@ export function parseScriptSetupRanges(
 					statement: statementRange,
 				};
 
-				if (ts.isVariableDeclaration(parent)) {
-					if (ts.isObjectBindingPattern(parent.name)) {
-						props.destructured = extractIdentifiers(ts, parent.name, false);
-						props.destructuredReferences = findDestructuredProps(ts, ast, props.destructured);
-					}
-					props.name = getNodeText(ts, parent.name, ast);
-				}
 				if (node.arguments.length) {
 					props.define.arg = _getStartEnd(node.arguments[0]);
 				}
