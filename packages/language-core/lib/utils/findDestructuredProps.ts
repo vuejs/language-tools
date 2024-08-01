@@ -95,8 +95,13 @@ export function findDestructuredProps(
 		}
 	}
 
-	function walkFunctionParams(node: ts.SignatureDeclaration) {
-		for (const p of node.parameters) {
+	function walkFunctionDeclaration(node: ts.SignatureDeclaration) {
+		const { name, parameters } = node;
+		if (name && ts.isIdentifier(name)) {
+			registerLocalBinding(name);
+		}
+
+		for (const p of parameters) {
 			for (const id of collectIdentifiers(ts, p)) {
 				registerLocalBinding(id);
 			}
@@ -121,11 +126,11 @@ export function findDestructuredProps(
 				return false;
 			}
 
-			if (isFunctionLike(node)) {
+			if (ts.isFunctionLike(node)) {
 				pushScope();
-				walkFunctionParams(node);
-				if (node.body) {
-					walkScope(node.body);
+				walkFunctionDeclaration(node);
+				if ('body' in node) {
+					walkScope(node.body!);
 				}
 				return;
 			}
@@ -142,7 +147,7 @@ export function findDestructuredProps(
 
 			if (
 				ts.isBlock(node)
-				&& !isFunctionLike(parent)
+				&& !ts.isFunctionLike(parent)
 				&& !ts.isCatchClause(parent)
 			) {
 				pushScope();
@@ -166,26 +171,17 @@ export function findDestructuredProps(
 		function leave(node: ts.Node) {
 			parent && parentStack.pop();
 			if (
-				isFunctionLike(node)
+				ts.isFunctionLike(node)
 				|| ts.isCatchClause(node)
 				|| (
 					ts.isBlock(node)
-					&& !isFunctionLike(parent)
+					&& !ts.isFunctionLike(parent)
 					&& !ts.isCatchClause(parent)
 				)
 			) {
 				popScope();
 			}
 		}
-	}
-
-	function isFunctionLike(node: ts.Node) {
-		return ts.isArrowFunction(node)
-			|| ts.isConstructorDeclaration(node)
-			|| ts.isFunctionExpression(node)
-			|| ts.isFunctionDeclaration(node)
-			|| ts.isMethodDeclaration(node)
-			|| ts.isAccessor(node);
 	}
 
 	// TODO: more conditions
@@ -202,6 +198,7 @@ export function findDestructuredProps(
 		}
 
 		if (
+			ts.isExpressionWithTypeArguments(parent) ||
 			ts.isInterfaceDeclaration(parent) ||
 			ts.isTypeAliasDeclaration(parent) ||
 			ts.isPropertySignature(parent)
@@ -212,9 +209,7 @@ export function findDestructuredProps(
 		if (
 			ts.isPropertyAccessExpression(parent) ||
 			ts.isPropertyAssignment(parent) ||
-			ts.isPropertyDeclaration(parent) ||
-			ts.isMethodDeclaration(parent) ||
-			ts.isAccessor(parent)
+			ts.isPropertyDeclaration(parent)
 		) {
 			if (parent.name === id) {
 				return false;
