@@ -172,16 +172,19 @@ function* generateSetupFunction(
 			const end = prop.getEnd();
 			const pos = isShorthand ? end : end - name.length;
 			const label = isShorthand ? `: props.${name}` : 'props.';
-			setupCodeModifies.push([[
-				generateSfcBlockSection(scriptSetup, pos, pos, {
+			setupCodeModifies.push([[[
+				'',
+				'script',
+				pos,
+				{
 					__hint: {
 						setting: 'vue.inlayHints.destructuredProps',
 						label,
 						// TODO: need tooltip
 						tooltip: ''
 					}
-				})
-			], pos, pos]);
+				}
+			]], pos, pos]);
 		}
 	}
 	if (scriptSetupRanges.slots.define) {
