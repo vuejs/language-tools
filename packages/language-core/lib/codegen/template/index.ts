@@ -99,12 +99,9 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 				ctx.codeFeatures.navigationWithoutRename,
 			];
 			yield `'`;
-			yield [
-				className,
-				'template',
-				offset,
-				ctx.codeFeatures.navigationAndAdditionalCompletion,
-			];
+
+			// fix https://github.com/vuejs/language-tools/issues/4537
+			yield* escapeString(className, offset, ['\\', '\'']);
 			yield `'`;
 			yield [
 				'',
@@ -135,6 +132,45 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 			}
 		}
 		yield endOfLine;
+	}
+
+	function* escapeString(className: string, offset: number, escapeTargets: string[]): Generator<Code> {
+		let count = 0;
+
+		const currentEscapeTargets = [...escapeTargets];
+		const firstEscapeTarget = currentEscapeTargets.shift()!;
+		const splitted = className.split(firstEscapeTarget);
+
+		for (let i = 0; i < splitted.length; i++) {
+			const part = splitted[i];
+			const partLength = part.length;
+
+			if (escapeTargets.length > 0) {
+				yield* escapeString(part, offset + count, [...currentEscapeTargets]);
+			} else {
+				yield [
+					part,
+					'template',
+					offset + count,
+					ctx.codeFeatures.navigationAndAdditionalCompletion,
+				];
+			}
+
+			if (i !== splitted.length - 1) {
+				yield '\\';
+
+				yield [
+					firstEscapeTarget,
+					'template',
+					offset + count + partLength,
+					ctx.codeFeatures.navigationAndAdditionalCompletion,
+				];
+
+				count += partLength + 1;
+			} else {
+				count += partLength;
+			}
+		}
 	}
 }
 
