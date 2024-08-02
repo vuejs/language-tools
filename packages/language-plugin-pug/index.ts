@@ -48,8 +48,9 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								const value = Reflect.get(target, prop, receiver);
 								if (typeof value === 'object' && value !== null) {
 									let proxyed = proxys.get(value)
-									if (proxyed)
+									if (proxyed) {
 										return proxyed;
+									}
 									proxyed = createProxyObject(value);
 									proxys.set(value, proxyed);
 									return proxyed;
