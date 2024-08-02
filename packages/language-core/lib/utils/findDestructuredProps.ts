@@ -37,7 +37,7 @@ export function findDestructuredProps(
 	function registerLocalBinding(id: ts.Identifier) {
 		excludedIds.add(id)
 		if (currentScope) {
-		  	currentScope[id.text] = false;
+			currentScope[id.text] = false;
 		}
 	}
 
@@ -49,7 +49,7 @@ export function findDestructuredProps(
 	return references;
 
 	function walkScope(node: ts.Node, isRoot = false) {
-		ts.forEachChild(node, (stmt) => {
+		ts.forEachChild(node, stmt => {
 			if (ts.isVariableStatement(stmt)) {
 				for (const decl of stmt.declarationList.declarations) {
 					walkVariableDeclaration(decl, isRoot);
@@ -59,8 +59,10 @@ export function findDestructuredProps(
 				ts.isFunctionDeclaration(stmt) ||
 				ts.isClassDeclaration(stmt)
 			) {
-				const declare = ts.getModifiers(stmt)?.find((modifier) => modifier.kind === ts.SyntaxKind.DeclareKeyword);
-				if (!stmt.name || declare) return;
+				const declare = ts.getModifiers(stmt)?.find(modifier => modifier.kind === ts.SyntaxKind.DeclareKeyword);
+				if (!stmt.name || declare) {
+					return;
+				}
 				registerLocalBinding(stmt.name);
 			}
 			else if (
@@ -108,8 +110,8 @@ export function findDestructuredProps(
 		}
 	}
 
-	async function walk(parent: ts.Node) {
-		ts.forEachChild(parent, (node) => {
+	function walk(parent: ts.Node) {
+		ts.forEachChild(parent, node => {
 			if (enter(node) ?? true) {
 				walk(node);
 				leave(node);
