@@ -34,8 +34,9 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					return createProxyObject(completed);
 
 					function createProxyObject(target: any): any {
+						const proxys = new WeakMap();
 						return new Proxy(target, {
-							get(target, prop) {
+							get(target, prop, receiver) {
 								if (prop === 'offset') {
 									const htmlOffset = target.offset;
 									const nums: number[] = [];
@@ -44,9 +45,14 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 									}
 									return Math.max(-1, ...nums);
 								}
-								const value = target[prop];
-								if (typeof value === 'object') {
-									return createProxyObject(target[prop]);
+								const value = Reflect.get(target, prop, receiver);
+								if (typeof value === 'object' && value !== null) {
+									let proxyed = proxys.get(value)
+									if (proxyed)
+										return proxyed;
+									proxyed = createProxyObject(value);
+									proxys.set(value, proxyed);
+									return proxyed;
 								}
 								return value;
 							}
