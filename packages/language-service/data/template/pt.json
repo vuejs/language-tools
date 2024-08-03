@@ -929,6 +929,7 @@
     },
     {
       "name": "v-on",
+      "value": ":",
       "description": {
         "kind": "markdown",
         "value": "\nAnexa um ouvinte de evento ao elemento.\n\n- **Atalho:** `@`\n\n- **Espera:** `Function | Inline Statement | Object (sem argumento)`\n\n- **Argumento:** `event` (opcional se estivermos usando a sintaxe de Objeto)\n\n- **Modificadores**\n\n  - `.stop` - chama `event.stopPropagation()`.\n  - `.prevent` - chama `event.preventDefault()`.\n  - `.capture` - adiciona ouvinte de evento no modo de captura.\n  - `.self` - apenas aciona o manipulador se o evento fosse despachado a partir deste elemento.\n  - `.{keyAlias}` - apenas aciona o manipulador sobre certas teclas.\n  - `.once` - aciona o manipulador no máximo uma vez.\n  - `.left` - apenas aciona o manipulador para os eventos de rato do botão esquerdo.\n  - `.right` - apenas aciona o manipulador para os eventos de rato do botão direito.\n  - `.middle` - apenas aciona o manipulador para os eventos de rato do botão do meio.\n  - `.passive` - anexa um evento de DOM com `{ passive: true }`.\n\n- **Detalhes**\n\n  O tipo de evento é denotado pelo argumento. A expressão pode ser um nome de método, uma declaração em linha, ou omitida se existirem modificadores presentes.\n\n  Quando usada num elemento normal, apenas ouve os [**eventos de DOM nativos**](https://developer.mozilla.org/en-US/docs/Web/Events). Quando usada num componente de elemento personalizado, ouve os **eventos personalizados** emitidos sobre este componente filho.\n\n  Quando ouvimos os eventos de DOM nativos, o método recebe o evento nativo como único argumento. Se usarmos a declaração em linha, a declaração tem acesso à propriedade `$event` especial: `v-on:click=\"handle('ok', $event)\"`.\n\n  `v-on` também suporta vínculo a um objeto de pares de evento / ouvinte sem um argumento. Nota que quando usamos a sintaxe de objeto, esta não suporta quaisquer modificadores.\n\n- **Exemplo**\n\n  ```html\n  <!-- manipulador de método -->\n  <button v-on:click=\"doThis\"></button>\n\n  <!-- evento dinâmico -->\n  <button v-on:[event]=\"doThis\"></button>\n\n  <!-- declaração em linha -->\n  <button v-on:click=\"doThat('hello', $event)\"></button>\n\n  <!-- atalho -->\n  <button @click=\"doThis\"></button>\n\n  <!-- atalho de evento dinâmico -->\n  <button @[event]=\"doThis\"></button>\n\n  <!-- parar propagação -->\n  <button @click.stop=\"doThis\"></button>\n\n  <!-- impedir o padrão -->\n  <button @click.prevent=\"doThis\"></button>\n\n  <!-- impedir o padrão sem expressão -->\n  <form @submit.prevent></form>\n\n  <!-- encadear modificadores -->\n  <button @click.stop.prevent=\"doThis\"></button>\n\n  <!-- modificador de tecla usando pseudónimo de tecla -->\n  <input @keyup.enter=\"onEnter\" />\n\n  <!-- o evento de clique será acionado no máximo uma vez -->\n  <button v-on:click.once=\"doThis\"></button>\n\n  <!-- sintaxe de objeto -->\n  <button v-on=\"{ mousedown: doThis, mouseup: doThat }\"></button>\n  ```\n\n  Ouvindo eventos personalizados dum componente filho (o manipulador é chamado quando \"my-event\" é emitido sobre o filho):\n\n  ```html\n  <MyComponent @my-event=\"handleThis\" />\n\n  <!-- declaração em linha -->\n  <MyComponent @my-event=\"handleThis(123, $event)\" />\n  ```\n\n- **Consultar também**\n  - [Manipulação de Eventos](https://pt.vuejs.org/guide/essentials/event-handling.html)\n  - [Componentes - Eventos Personalizados](https://pt.vuejs.org/guide/essentials/component-basics.html#listening-to-events)\n"
@@ -1173,6 +1174,7 @@
     },
     {
       "name": "v-pre",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nIgnora a compilação para este elemento e todos os seus filhos.\n\n- **Não espera expressão**\n\n- **Detalhes**\n\n  Dentro do elemento com `v-pre`, toda a sintaxe de modelo de marcação da Vue será preservada e desenhada como está. O caso de uso mais comum disto é a exibição de marcadores de bigodes puros.\n\n- **Exemplo**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
@@ -1234,6 +1236,7 @@
     },
     {
       "name": "v-once",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nDesenha o elemento e o componente apenas uma vez, e ignora as futuras atualizações.\n\n- **Não espera expressão**\n\n- **Detalhes**\n\n  Nos redesenhos subsequentes, o elemento ou componente e todos os seus filhos serão tratados como conteúdo estático e ignorados. Isto pode ser usado para otimizar o desempenho da atualização.\n\n  ```html\n  <!-- elemento único -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- o elemento tem filhos -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- componente -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- diretiva `v-for` -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Desde a 3.2, também podemos memorizar parte do modelo de marcação com condições de invalidação usando a [`v-memo`](#v-memo).\n\n- **Consultar também**\n  - [Sintaxe de Vínculo de Dados - Interpolações](https://pt.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [`v-memo`](#v-memo)\n"
@@ -1356,6 +1359,7 @@
     },
     {
       "name": "v-cloak",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nUsada para esconder o modelo de marcação que ainda não foi compilado até que estiver pronto.\n\n- **Não espera expressão**\n\n- **Detalhes**\n\n  **Esta diretiva apenas é necessária nas configurações sem etapa de construção.**\n\n  Quando usamos os modelos de marcação no DOM, pode existir um \"piscar de modelos de marcação não compilados\": o utilizador pode ver os marcadores de bigodes puros até o componente montado substituí-los com componente desenhado.\n\n  `v-cloak` permanecerá no elemento até que a instância do componente associado for montada. Combinada com as regras de CSS como `[v-cloak] { display: none }`, pode ser usada para esconder os modelos de marcação puros até o componente estiver pronto.\n\n- **Exemplo**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  O `<div>` não será visível até que a compilação estiver concluída.\n"

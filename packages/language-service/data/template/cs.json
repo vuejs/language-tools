@@ -929,6 +929,7 @@
     },
     {
       "name": "v-on",
+      "value": ":",
       "description": {
         "kind": "markdown",
         "value": "\nPřipojí k elementu event listener.\n\n- **Zkratka:** `@`\n\n- **Očekává:** `Function | Inline Statement | Object (bez parametru)`\n\n- **Parametr:** `event` (volitelné při použití objektové syntaxe)\n\n- **Modifikátory**\n\n  - `.stop` - zavolá `event.stopPropagation()`.\n  - `.prevent` - zavolá `event.preventDefault()`.\n  - `.capture` - přidá event listener v režimu zachycení (capture mode).\n  - `.self` - spustí handler pouze pokud byla událost vyvolána z tohoto elementu.\n  - `.{keyAlias}` - spustí handler pouze pro určité klávesy.\n  - `.once` - spustí handler maximálně jednou.\n  - `.left` - spustí handler pouze pro události levého tlačítka myši.\n  - `.right` - spustí handler pouze pro události pravého tlačítka myši.\n  - `.middle` - spustí handler pouze pro události středního tlačítka myši.\n  - `.passive` - připojí DOM událost s `{ passive: true }`.\n\n- **Podrobnosti**\n\n  Typ události je určen parametrem. Výraz může být název metody, vložený příkaz nebo může být vynechán, pokud jsou přítomny modifikátory.\n\n  Pokud je použito na běžném elementu, naslouchá pouze [**nativním DOM událostem**](https://developer.mozilla.org/en-US/docs/Web/Events). Pokud je použito na elementu vlastní komponenty, naslouchá **vlastním událostem** emitovaným na tomto potomkovi.\n\n  Při naslouchání nativním DOM událostem metoda přijímá jako jediný argument nativní událost. Pokud je použit vložený příkaz, příkaz má přístup k speciální vlastnosti `$event`: `v-on:click=\"handle('ok', $event)\"`.\n\n  `v-on` také podporuje binding na objekt párů událost / listener bez argumentu. Pozor, při použití objektové syntaxe nepodporuje žádné modifikátory.\n\n- **Příklad**\n\n  ```html\n  <!-- handler metody -->\n  <button v-on:click=\"doThis\"></button>\n\n  <!-- dynamická událost -->\n  <button v-on:[event]=\"doThis\"></button>\n\n  <!-- inline příkaz -->\n  <button v-on:click=\"doThat('hello', $event)\"></button>\n\n  <!-- zkratka -->\n  <button @click=\"doThis\"></button>\n\n  <!-- zkratka pro dynamickou událost -->\n  <button @[event]=\"doThis\"></button>\n\n  <!-- zastavení propagace -->\n  <button @click.stop=\"doThis\"></button>\n\n  <!-- zamezení výchozího chování -->\n  <button @click.prevent=\"doThis\"></button>\n\n  <!-- zamezení výchozího chování bez výrazu -->\n  <form @submit.prevent></form>\n\n  <!-- řetězení modifikátorů -->\n  <button @click.stop.prevent=\"doThis\"></button>\n\n  <!-- modifikátor klávesy pomocí keyAlias -->\n  <input @keyup.enter=\"onEnter\" />\n\n  <!-- událost click bude spuštěna nejvýše jednou -->\n  <button v-on:click.once=\"doThis\"></button>\n\n  <!-- objektová syntaxe -->\n  <button v-on=\"{ mousedown: doThis, mouseup: doThat }\"></button>\n  ```\n\n  Naslouchání vlastním událostem na komponentě potomka (handler je volán při emitování „my-event“ z potomka):\n\n  ```html\n  <MyComponent @my-event=\"handleThis\" />\n\n  <!-- inline příkaz -->\n  <MyComponent @my-event=\"handleThis(123, $event)\" />\n  ```\n\n- **Viz také:**\n  - [Obsluha událostí](https://cs.vuejs.org/guide/essentials/event-handling.html)\n  - [Základy komponent - Naslouchání událostem](https://cs.vuejs.org/guide/essentials/component-basics.html#listening-to-events)\n"
@@ -1173,6 +1174,7 @@
     },
     {
       "name": "v-pre",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nPřeskočit kompilaci tohoto elementu a všech jeho potomků.\n\n- **Nepředpokládá výraz** \n\n- **Podrobnosti**\n\n  Uvnitř elementu s `v-pre` budou všechny syntaxe Vue šablony zachovány a&nbsp;vykresleny tak, jak jsou. Nejběžnějším použitím je zobrazení nezpracovaných „mustache“ tagů.\n\n- **Příklad**\n\n  ```html\n  <span v-pre>{{ toto nebude zkompilováno }}</span>\n  ```\n"
@@ -1234,6 +1236,7 @@
     },
     {
       "name": "v-once",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nVykreslit element nebo komponentu pouze jednou a přeskočit budoucí aktualizace.\n\n- **Nepředpokládá výraz** \n\n- **Podrobnosti**\n\n  Při dalších překreslováních budou element/komponenta a všichni potomci považováni za statický obsah a přeskočeni. To lze použít k optimalizaci výkonu aktualizace.\n\n  ```html\n  <!-- jediný prvek -->\n  <span v-once>Toto se nikdy nezmění: {{msg}}</span>\n  <!-- element s potomky -->\n  <div v-once>\n    <h1>Komentář</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- komponenta -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- direktiva `v-for` -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Od verze 3.2 si můžete také část šablony „zapamatovat“ (memoize) s podmínkami neplatnosti pomocí [`v-memo`](#v-memo).\n\n- **Viz také:**\n  - [Syntaxe šablon - Interpolace textu](https://cs.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
@@ -1356,6 +1359,7 @@
     },
     {
       "name": "v-cloak",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nPoužívá se k skrytí nezkompilované šablony, dokud není připravena.\n\n- **Nepředpokládá výraz**\n\n- **Podrobnosti**\n\n  **Tato direktiva je potřeba pouze při použití bez build fáze.**\n\n  Při použití in-DOM šablon může dojít k „blikání (flashing) nezkompilovaných šablon“: uživatel může vidět nezpracované „mustache“ značky, dokud je připojená (mounted) komponenta nenahradí vykresleným obsahem.\n\n  `v-cloak` zůstane na elementu, dokud není připojena příslušná instance komponenty. Spolu s CSS pravidly jako `[v-cloak] { display: none }` lze použít k skrytí nezpracovaných šablon, dokud není komponenta připravena.\n\n- **Příklad**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  `<div>` nebude viditelný, dokud nebude dokončena kompilace.\n"

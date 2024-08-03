@@ -304,7 +304,13 @@ async function templateWorker(lang) {
 			 */
 			const data = {
 				name,
-				valueSet: name === 'v-else' ? 'v' : undefined,
+				value: name === 'v-on' ? ':' : undefined,
+				valueSet:
+					name === 'v-cloak' ||
+					name === 'v-else' ||
+					name === 'v-once' ||
+					name === 'v-pre'
+					? 'v' : undefined,
 				description: {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n'),
