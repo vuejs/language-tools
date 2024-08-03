@@ -805,6 +805,12 @@ export function create(
 					else {
 						item.sortText = '\u0001' + (item.sortText ?? item.label);
 					}
+
+					if (item.textEdit) {
+						if (item.label === 'v-on') {
+							item.textEdit.newText += ':';
+						}
+					}
 				}
 
 				updateExtraCustomData([]);

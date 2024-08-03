@@ -304,10 +304,10 @@ async function templateWorker(lang) {
 			 */
 			const data = {
 				name,
-				value: name === 'v-on' ? ':' : undefined,
 				valueSet:
 					name === 'v-cloak' ||
 					name === 'v-else' ||
+					name === 'v-on' ||
 					name === 'v-once' ||
 					name === 'v-pre'
 					? 'v' : undefined,
