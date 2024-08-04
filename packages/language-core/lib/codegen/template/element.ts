@@ -1,4 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import type * as ts from 'typescript';
 import { camelize, capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
@@ -365,7 +366,7 @@ function* generateVScope(
 
 	yield* generateElementDirectives(options, ctx, node);
 	yield* generateReferencesForElements(options, ctx, node); // <el ref="foo" />
-	yield* generateReferencesForScopedCssClasses(ctx, node);
+	yield* generateReferencesForScopedCssClasses(options, ctx, node);
 
 	if (inScope) {
 		yield `}${newLine}`;
@@ -541,6 +542,7 @@ function* generateReferencesForElements(
 }
 
 function* generateReferencesForScopedCssClasses(
+	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode
 ): Generator<Code> {
@@ -552,28 +554,17 @@ function* generateReferencesForScopedCssClasses(
 		) {
 			let startOffset = prop.value.loc.start.offset;
 			let content = prop.value.loc.source;
+			let isWrapped = false;
 			if (
 				(content.startsWith(`'`) && content.endsWith(`'`))
 				|| (content.startsWith(`"`) && content.endsWith(`"`))
 			) {
-				startOffset++;
+				isWrapped = true;
 				content = content.slice(1, -1);
 			}
 			if (content) {
-				let currentClassName = '';
-				for (const char of (content + ' ')) {
-					if (char.trim() === '') {
-						if (currentClassName !== '') {
-							ctx.scopedClasses.push({ className: currentClassName, offset: startOffset });
-							startOffset += currentClassName.length;
-							currentClassName = '';
-						}
-						startOffset += char.length;
-					}
-					else {
-						currentClassName += char;
-					}
-				}
+				const classes = collectClasses(content, startOffset, isWrapped);
+				ctx.scopedClasses.push(...classes);
 			}
 			else {
 				ctx.emptyClassOffsets.push(startOffset);
@@ -593,6 +584,83 @@ function* generateReferencesForScopedCssClasses(
 				ctx.codeFeatures.navigationAndCompletion,
 			];
 			yield `)${endOfLine}`;
+
+			const leading = "const temp = ";
+			const startOffset = prop.exp.loc.start.offset - leading.length;
+			const content = leading + prop.exp.content;
+
+			const { ts } = options;
+			const ast = ts.createSourceFile('', content, 99 satisfies typeof ts.ScriptTarget.Latest);
+			const literals: ts.StringLiteralLike[] = [];
+
+			ts.forEachChild(ast, node => {
+				if (!ts.isVariableStatement(node)) {
+					return;
+				}
+
+				const initializer = node.declarationList.declarations[0].initializer!;
+
+				if (ts.isStringLiteralLike(initializer)) {
+					literals.push(initializer);
+				}
+
+				if (ts.isArrayLiteralExpression(initializer)) {
+					walkArrayLiteral(initializer);
+				}
+
+				if (ts.isObjectLiteralExpression(initializer)) {
+					walkObjectLiteral(initializer);
+				}
+			});
+
+			for (const literal of literals) {
+				const classes = collectClasses(
+					literal.text,
+					literal.end - literal.text.length - 2 + startOffset,
+					true
+				);
+				ctx.scopedClasses.push(...classes);
+			}
+
+			function walkArrayLiteral(node: ts.ArrayLiteralExpression) {
+				const { elements } = node;
+				for (const element of elements) {
+					if (ts.isStringLiteralLike(element)) {
+						literals.push(element);
+					}
+					else if (ts.isObjectLiteralExpression(element)) {
+						walkObjectLiteral(element);
+					}
+				}
+			}
+
+			function walkObjectLiteral(node: ts.ObjectLiteralExpression) {
+				const { properties } = node;
+				for (const property of properties) {
+					if (ts.isPropertyAssignment(property)) {
+						const { name } = property;
+						if (ts.isIdentifier(name)) {
+							walkStringLiteral(name);
+						}
+						else if (ts.isComputedPropertyName(name)) {
+							const { expression } = name;
+							if (ts.isStringLiteralLike(expression)) {
+								literals.push(expression);
+							}
+						}
+					}
+					else if (ts.isShorthandPropertyAssignment(property)) {
+						walkStringLiteral(property.name);
+					}
+				}
+			}
+
+			function walkStringLiteral(node: ts.Identifier) {
+				ctx.scopedClasses.push({
+					className: node.text,
+					offset: node.end - node.text.length + startOffset
+				});
+			}
 		}
 	}
 }
@@ -603,4 +671,28 @@ function camelizeComponentName(newName: string) {
 
 function getTagRenameApply(oldName: string) {
 	return oldName === hyphenateTag(oldName) ? hyphenateTag : undefined;
+}
+
+function collectClasses(content: string, startOffset = 0, isWrapped = false) {
+	const classes: { className: string, offset: number; }[] = [];
+
+	let currentClassName = '';
+	let offset = isWrapped ? 1 : 0;
+	for (const char of (content + ' ')) {
+		if (char.trim() === '') {
+			if (currentClassName !== '') {
+				classes.push({
+					className: currentClassName,
+					offset: offset + startOffset
+				});
+				offset += currentClassName.length;
+				currentClassName = '';
+			}
+			offset += char.length;
+		}
+		else {
+			currentClassName += char;
+		}
+	}
+	return classes;
 }
