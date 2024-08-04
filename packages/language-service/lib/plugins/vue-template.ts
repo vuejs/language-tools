@@ -423,6 +423,7 @@ export function create(
 					for (const tag of builtInData.tags) {
 						if (specialTags.has(tag.name)) {
 							tag.name = createInternalItemId('specialTag', [tag.name]);
+							continue;
 						}
 						else if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
