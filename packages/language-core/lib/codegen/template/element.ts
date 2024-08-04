@@ -559,11 +559,11 @@ function* generateReferencesForScopedCssClasses(
 				(content.startsWith(`'`) && content.endsWith(`'`))
 				|| (content.startsWith(`"`) && content.endsWith(`"`))
 			) {
-				isWrapped = true;
 				content = content.slice(1, -1);
+				isWrapped = true;
 			}
 			if (content) {
-				const classes = collectClasses(content, startOffset, isWrapped);
+				const classes = collectClasses(content, startOffset + (isWrapped ? 1 : 0));
 				ctx.scopedClasses.push(...classes);
 			}
 			else {
@@ -616,8 +616,7 @@ function* generateReferencesForScopedCssClasses(
 			for (const literal of literals) {
 				const classes = collectClasses(
 					literal.text,
-					literal.end - literal.text.length - 2 + startOffset,
-					true
+					literal.end - literal.text.length - 1 + startOffset
 				);
 				ctx.scopedClasses.push(...classes);
 			}
@@ -673,11 +672,11 @@ function getTagRenameApply(oldName: string) {
 	return oldName === hyphenateTag(oldName) ? hyphenateTag : undefined;
 }
 
-function collectClasses(content: string, startOffset = 0, isWrapped = false) {
+function collectClasses(content: string, startOffset = 0) {
 	const classes: { className: string, offset: number; }[] = [];
 
 	let currentClassName = '';
-	let offset = isWrapped ? 1 : 0;
+	let offset = 0;
 	for (const char of (content + ' ')) {
 		if (char.trim() === '') {
 			if (currentClassName !== '') {
