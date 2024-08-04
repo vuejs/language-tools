@@ -585,31 +585,31 @@ function* generateReferencesForScopedCssClasses(
 			];
 			yield `)${endOfLine}`;
 
-			const leading = "const temp = ";
-			const startOffset = prop.exp.loc.start.offset - leading.length;
-			const content = leading + prop.exp.content;
+			const content = '`${' + prop.exp.content + '}`';
+			const startOffset = prop.exp.loc.start.offset - 3;
 
 			const { ts } = options;
 			const ast = ts.createSourceFile('', content, 99 satisfies typeof ts.ScriptTarget.Latest);
 			const literals: ts.StringLiteralLike[] = [];
 
 			ts.forEachChild(ast, node => {
-				if (!ts.isVariableStatement(node)) {
-					return;
+				if (
+					!ts.isExpressionStatement(node) ||
+					!ts.isTemplateExpression(node.expression)
+				) return;
+
+				const expression = node.expression.templateSpans[0].expression;
+
+				if (ts.isStringLiteralLike(expression)) {
+					literals.push(expression);
 				}
 
-				const initializer = node.declarationList.declarations[0].initializer!;
-
-				if (ts.isStringLiteralLike(initializer)) {
-					literals.push(initializer);
+				if (ts.isArrayLiteralExpression(expression)) {
+					walkArrayLiteral(expression);
 				}
 
-				if (ts.isArrayLiteralExpression(initializer)) {
-					walkArrayLiteral(initializer);
-				}
-
-				if (ts.isObjectLiteralExpression(initializer)) {
-					walkObjectLiteral(initializer);
+				if (ts.isObjectLiteralExpression(expression)) {
+					walkObjectLiteral(expression);
 				}
 			});
 
@@ -640,7 +640,7 @@ function* generateReferencesForScopedCssClasses(
 					if (ts.isPropertyAssignment(property)) {
 						const { name } = property;
 						if (ts.isIdentifier(name)) {
-							walkStringLiteral(name);
+							walkIdentifier(name);
 						}
 						else if (ts.isComputedPropertyName(name)) {
 							const { expression } = name;
@@ -650,12 +650,12 @@ function* generateReferencesForScopedCssClasses(
 						}
 					}
 					else if (ts.isShorthandPropertyAssignment(property)) {
-						walkStringLiteral(property.name);
+						walkIdentifier(property.name);
 					}
 				}
 			}
 
-			function walkStringLiteral(node: ts.Identifier) {
+			function walkIdentifier(node: ts.Identifier) {
 				ctx.scopedClasses.push({
 					className: node.text,
 					offset: node.end - node.text.length + startOffset
