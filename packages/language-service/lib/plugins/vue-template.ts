@@ -424,7 +424,7 @@ export function create(
 						if (specialTags.has(tag.name)) {
 							tag.name = createInternalItemId('specialTag', [tag.name]);
 						}
-						if (casing.tag === TagNameCasing.Kebab) {
+						else if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
 						}
 						else {
