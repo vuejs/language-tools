@@ -307,7 +307,6 @@ async function templateWorker(lang) {
 				valueSet:
 					name === 'v-cloak' ||
 					name === 'v-else' ||
-					name === 'v-on' ||
 					name === 'v-once' ||
 					name === 'v-pre'
 					? 'v' : undefined,
