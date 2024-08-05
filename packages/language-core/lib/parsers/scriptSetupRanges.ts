@@ -43,10 +43,12 @@ export function parseScriptSetupRanges(
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
 	const defineProp: {
+		localName?: TextRange | undefined;
 		name: TextRange | undefined;
 		nameIsString: boolean;
 		type: TextRange | undefined;
 		modifierType?: TextRange | undefined;
+		runtimeType?: TextRange | undefined;
 		defaultValue: TextRange | undefined;
 		required: boolean;
 		isModel?: boolean;
@@ -126,35 +128,58 @@ export function parseScriptSetupRanges(
 		) {
 			const callText = getNodeText(ts, node.expression, ast);
 			if (vueCompilerOptions.macros.defineModel.includes(callText)) {
-				let name: TextRange | undefined;
+				let localName: TextRange | undefined;
+				let propName: TextRange | undefined;
 				let options: ts.Node | undefined;
+
+				if (
+					ts.isVariableDeclaration(parent) &&
+					ts.isIdentifier(parent.name)
+				) {
+					localName = _getStartEnd(parent.name);
+				}
+
 				if (node.arguments.length >= 2) {
-					name = _getStartEnd(node.arguments[0]);
+					propName = _getStartEnd(node.arguments[0]);
 					options = node.arguments[1];
 				}
 				else if (node.arguments.length >= 1) {
 					if (ts.isStringLiteral(node.arguments[0])) {
-						name = _getStartEnd(node.arguments[0]);
+						propName = _getStartEnd(node.arguments[0]);
 					}
 					else {
 						options = node.arguments[0];
 					}
 				}
+
+				let runtimeType: TextRange | undefined;
+				let defaultValue: TextRange | undefined;
 				let required = false;
 				if (options && ts.isObjectLiteralExpression(options)) {
 					for (const property of options.properties) {
-						if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && getNodeText(ts, property.name, ast) === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
+						if (!ts.isPropertyAssignment(property) || !ts.isIdentifier(property.name)) {
+							continue;
+						}
+						const text = getNodeText(ts, property.name, ast);
+						if (text === 'type') {
+							runtimeType = _getStartEnd(property.initializer);
+						}
+						else if (text === 'default') {
+							defaultValue = _getStartEnd(property.initializer);
+						}
+						else if (text === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
 							required = true;
-							break;
 						}
 					}
 				}
 				defineProp.push({
-					name,
-					nameIsString: true,
+					localName,
+					name: propName,
+					nameIsString: !!propName,
 					type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
 					modifierType: node.typeArguments && node.typeArguments?.length >= 2 ? _getStartEnd(node.typeArguments[1]) : undefined,
-					defaultValue: undefined,
+					runtimeType,
+					defaultValue,
 					required,
 					isModel: true,
 				});
