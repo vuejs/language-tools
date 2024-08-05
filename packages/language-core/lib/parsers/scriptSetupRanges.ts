@@ -39,6 +39,10 @@ export function parseScriptSetupRanges(
 	const options: {
 		name?: string;
 	} = {};
+	const templateRefs: {
+		name?: string;
+		define?: ReturnType<typeof parseDefineFunction>;
+	}[] = [];
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -281,6 +285,11 @@ export function parseScriptSetupRanges(
 						}
 					}
 				}
+			} else if (vueCompilerOptions.macros.templateRef.includes(callText)) {
+				templateRefs.push({
+					name: ts.isVariableDeclaration(parent) ? getNodeText(ts, parent.name, ast) : undefined,
+					define: parseDefineFunction(node)
+				});
 			}
 		}
 		ts.forEachChild(node, child => {

@@ -48,6 +48,7 @@ export interface VueCompilerOptions {
 		defineModel: string[];
 		defineOptions: string[];
 		withDefaults: string[];
+		templateRef: string[];
 	};
 	plugins: VueLanguagePlugin[];
 
