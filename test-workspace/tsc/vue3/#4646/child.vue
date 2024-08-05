@@ -5,7 +5,7 @@ import {exactType} from 'tsc/shared'
 import {PropType} from 'vue'
 
 const msg = defineModel('msg', {
-    type: String as PropType<string | null>,
+	type: String as PropType<string | null>,
 	required: true,
 })
 
