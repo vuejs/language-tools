@@ -6,24 +6,27 @@
 
 ## Example Projects
 
-- [Basic Example](./examples/basic/) A basic example project that highlights some aspects of the Vue language tools. This example is a good starting point for new users.
-- [[Todo] nvim](./examples/with-nvim/) If you are using Neovim, feel free to contribute an example project to help others.
-- [[Todo] Vue2](./examples/with-vue2/) If you are using Vue 2, feel free to contribute an example project to help others.
+- [Basic Example](./examples/basic/) \
+*A basic example project that highlights some aspects of the Vue language tools. This example is a good starting point for new users.*
+- [[Todo] nvim](./examples/with-nvim/) \
+*If you are using Neovim, feel free to contribute an example project to help others.*
+- [[Todo] Vue2](./examples/with-vue2/) \
+*If you are using Vue 2, feel free to contribute an example project to help others.*
 
 ## Packages
 
 - [Vue Language Features](https://github.com/vuejs/language-tools/tree/master/extensions/vscode) \
-  *Vue, Vitepress, petite-vue language support extension for VSCode*
+*Vue, Vitepress, petite-vue language support extension for VSCode*
 - [vue-tsc](https://github.com/vuejs/language-tools/tree/master/packages/tsc) \
-  *Type-check and dts build command line tool*
+*Type-check and dts build command line tool*
 - [vue-component-meta](https://github.com/vuejs/language-tools/tree/master/packages/component-meta) \
-  *Component props, events, slots types information extract tool*
+*Component props, events, slots types information extract tool*
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
-  *Vite plugin for support Vue component preview view with `Vue Language Features`*
+*Vite plugin for support Vue component preview view with `Vue Language Features`*
 - [`@vue/language-server`](/packages/language-server/) \
-  *The language server itself*.
+*The language server itself*.
 - [`@vue/typescript-plugin`](/packages/typescript-plugin/) \
-  *Typescript plugin for the language server*.
+*Typescript plugin for the language server*.
 
 ## Community Integration
 
