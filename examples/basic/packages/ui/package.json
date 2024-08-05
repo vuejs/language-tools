@@ -1,0 +1,32 @@
+{
+	"name": "@examples/ui",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"module": "dist/ui.lib.es.js",
+	"main": "dist/ui.lib.cjs.js",
+	"types": "dist/types/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/types/index.d.ts",
+			"import": "./dist/ui.lib.es.js",
+			"require": "./dist/ui.lib.cjs.js"
+		}
+	},
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build && vue-tsc -b --force",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"vue": "3.4.35"
+	},
+	"devDependencies": {
+		"@vitejs/plugin-vue": "^5.1.2",
+		"@vue/runtime-core": "^3.4.35",
+		"@vue/shared": "^3.4.35",
+		"typescript": "^5.5.4",
+		"vite": "^5.3.5",
+		"vue-tsc": "^2.0.29"
+	}
+}

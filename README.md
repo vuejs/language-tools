@@ -4,28 +4,34 @@
 
 💬 **#language-tools** on our [Discord Server](https://discord.gg/vue)
 
+## Example Projects
+
+- [Basic Example](./examples/basic/) A basic example project that highlights some aspects of the Vue language tools. This example is a good starting point for new users.
+- [[Todo] nvim](./examples/with-nvim/) If you are using Neovim, feel free to contribute an example project to help others.
+- [[Todo] Vue2](./examples/with-vue2/) If you are using Vue 2, feel free to contribute an example project to help others.
+
 ## Packages
 
 - [Vue Language Features](https://github.com/vuejs/language-tools/tree/master/extensions/vscode) \
-*Vue, Vitepress, petite-vue language support extension for VSCode*
+  _Vue, Vitepress, petite-vue language support extension for VSCode_
 - [vue-tsc](https://github.com/vuejs/language-tools/tree/master/packages/tsc) \
-*Type-check and dts build command line tool*
+  _Type-check and dts build command line tool_
 - [vue-component-meta](https://github.com/vuejs/language-tools/tree/master/packages/component-meta) \
-*Component props, events, slots types information extract tool*
+  _Component props, events, slots types information extract tool_
 - [vite-plugin-vue-component-preview](https://github.com/johnsoncodehk/vite-plugin-vue-component-preview) \
-*Vite plugin for support Vue component preview view with `Vue Language Features`*
+  _Vite plugin for support Vue component preview view with `Vue Language Features`_
 - [`@vue/language-server`](/packages/language-server/) \
-*The language server itself*.
+  _The language server itself_.
 - [`@vue/typescript-plugin`](/packages/typescript-plugin/) \
-*Typescript plugin for the language server*.
+  _Typescript plugin for the language server_.
 
 ## Community Integration
 
 [yaegassy/coc-volar](https://github.com/yaegassy/coc-volar) ⚡ 🤝 🅿️ \
-*Vue language client for coc.nvim*
+_Vue language client for coc.nvim_
 
 [neovim/nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) ⚡ 🤝 \
-*Vue language server configuration for Neovim*
+_Vue language server configuration for Neovim_
 
 <details>
   <summary>How to configure vue language server with neovim and lsp?</summary>
@@ -66,13 +72,14 @@ Note: If `hybridMode` is set to `false` `Volar` will run embedded `tsserver` the
 
 For more information see [#4119](https://github.com/vuejs/language-tools/pull/4119)
 
-*Make sure you have typescript installed globally or pass the location to volar*
+_Make sure you have typescript installed globally or pass the location to volar_
 
 Use volar for all `.{vue,js,ts,tsx,jsx}` files.
+
 ```lua
 local lspconfig = require('lspconfig')
 
--- lspconfig.tsserver.setup {} 
+-- lspconfig.tsserver.setup {}
 lspconfig.volar.setup {
   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
   init_options = {
@@ -84,6 +91,7 @@ lspconfig.volar.setup {
 ```
 
 Use `volar` for only `.vue` files and `tsserver` for `.ts` and `.js` files.
+
 ```lua
 local lspconfig = require('lspconfig')
 
@@ -114,31 +122,31 @@ Check out this [discussion](https://github.com/vuejs/language-tools/discussions/
 </details>
 
 [mattn/vim-lsp-settings](https://github.com/mattn/vim-lsp-settings) ⚡ \
-*Vue language server auto configuration for vim-lsp*
+_Vue language server auto configuration for vim-lsp_
 
 [sublimelsp/LSP-volar](https://github.com/sublimelsp/LSP-volar) 🤝 \
-*Vue language client for Sublime*
+_Vue language client for Sublime_
 
 [kabiaa/atom-ide-volar](https://github.com/kabiaa/atom-ide-volar) \
-*Vue language client for Atom*
+_Vue language client for Atom_
 
 [emacs-lsp/lsp-mode](https://github.com/emacs-lsp/lsp-mode) ([jadestrong/lsp-volar](https://github.com/jadestrong/lsp-volar)) ⚡ 🤝 \
-*Vue language client for Emacs*
+_Vue language client for Emacs_
 
 [tommasongr/nova-vue](https://github.com/tommasongr/nova-vue) \
-*Vue language client for Nova*
+_Vue language client for Nova_
 
 [xiaoxin-sky/lapce-vue](https://github.com/xiaoxin-sky/lapce-vue) \
-*Vue language client for Lapce*
+_Vue language client for Lapce_
 
 [Kingwl/monaco-volar](https://github.com/Kingwl/monaco-volar) \
-*Vue language support for Monaco on Browser*
+_Vue language support for Monaco on Browser_
 
 [WebStorm](https://www.jetbrains.com/webstorm/) \
-*Built-in integration for `@vue/language-server`*
+_Built-in integration for `@vue/language-server`_
 
 [Eclipse WildWebDeveloper](https://github.com/eclipse-wildwebdeveloper/wildwebdeveloper) \
-*Vue language server configuration for Eclipse*
+_Vue language server configuration for Eclipse_
 
 \* ⚡ support [multiple servers](https://github.com/vuejs/language-tools/discussions/393#discussioncomment-1213736) \
 \* 🤝 support [take over mode](https://github.com/vuejs/language-tools/discussions/471) \

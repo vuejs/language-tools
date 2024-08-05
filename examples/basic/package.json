@@ -1,0 +1,13 @@
+{
+	"name": "vue3-vscode",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"build": "pnpm build:ui && pnpm build:app",
+		"build:ui": "pnpm --filter \"@examples/ui\" build",
+		"build:app": "pnpm --filter \"@examples/app\" build"
+	},
+	"dependencies": { },
+	"devDependencies": { }
+}
