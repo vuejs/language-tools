@@ -36,7 +36,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					function createProxyObject(target: any): any {
 						const proxys = new WeakMap();
 						return new Proxy(target, {
-							get(target, prop) {
+							get(target, prop, receiver) {
 								if (prop === 'value' && target.name === 'class') {
 									return createClassProxyObject(target[prop]);
 								}
@@ -64,8 +64,9 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					}
 
 					function createClassProxyObject(target: any): any {
+						const proxys = new WeakMap();
 						return new Proxy(target, {
-							get(target, prop) {
+							get(target, prop, receiver) {
 								if (prop === 'offset') {
 									// class=" foo"
 									//       ^^
@@ -76,9 +77,15 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 									}
 									return Math.max(-1, ...nums) - 2;
 								}
-								const value = target[prop];
-								if (typeof value === 'object') {
-									return createClassProxyObject(target[prop]);
+								const value = Reflect.get(target, prop, receiver);
+								if (typeof value === 'object' && value !== null) {
+									let proxyed = proxys.get(value)
+									if (proxyed) {
+										return proxyed;
+									}
+									proxyed = createProxyObject(value);
+									proxys.set(value, proxyed);
+									return proxyed;
 								}
 								return value;
 							}
