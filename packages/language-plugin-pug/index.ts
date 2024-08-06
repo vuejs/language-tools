@@ -41,22 +41,11 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 									return createClassProxyObject(target[prop]);
 								}
 								if (prop === 'offset') {
-									const htmlOffset = target.offset;
-									const nums: number[] = [];
-									for (const mapped of map.toSourceLocation(htmlOffset)) {
-										nums.push(mapped[0]);
-									}
-									return Math.max(-1, ...nums);
+									return getOffset(target.offset);
 								}
 								const value = Reflect.get(target, prop, receiver);
 								if (typeof value === 'object' && value !== null) {
-									let proxyed = proxys.get(value)
-									if (proxyed) {
-										return proxyed;
-									}
-									proxyed = createProxyObject(value);
-									proxys.set(value, proxyed);
-									return proxyed;
+									return getCachedProxy(proxys, value, () => createProxyObject(value));
 								}
 								return value;
 							}
@@ -70,26 +59,38 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								if (prop === 'offset') {
 									// class=" foo"
 									//       ^^
-									const htmlOffset = target.offset + 2;
-									const nums: number[] = [];
-									for (const mapped of map.toSourceLocation(htmlOffset)) {
-										nums.push(mapped[0]);
-									}
-									return Math.max(-1, ...nums) - 2;
+									return getOffset(target.offset, 2);
 								}
 								const value = Reflect.get(target, prop, receiver);
 								if (typeof value === 'object' && value !== null) {
-									let proxyed = proxys.get(value)
-									if (proxyed) {
-										return proxyed;
-									}
-									proxyed = createProxyObject(value);
-									proxys.set(value, proxyed);
-									return proxyed;
+									return getCachedProxy(proxys, value, () => createClassProxyObject(value));
 								}
 								return value;
 							}
 						});
+					}
+
+					function getOffset(offset: number, startOffset = 0) {
+						const htmlOffset = offset + startOffset;
+						const nums: number[] = [];
+						for (const mapped of map.toSourceLocation(htmlOffset)) {
+							nums.push(mapped[0]);
+						}
+						return Math.max(-1, ...nums) - startOffset;
+					}
+
+					function getCachedProxy<K extends object, V>(
+						proxys: WeakMap<K, V>,
+						key: K,
+						defaultValue: () => V
+					) {
+						let proxyed = proxys.get(key)
+						if (proxyed) {
+							return proxyed;
+						}
+						proxyed = defaultValue();
+						proxys.set(key, proxyed);
+						return proxyed;
 					}
 				}
 			}
