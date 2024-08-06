@@ -36,6 +36,29 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					function createProxyObject(target: any): any {
 						return new Proxy(target, {
 							get(target, prop) {
+								if (prop === 'value' && target.name === 'class') {
+									return createClassProxyObject(target[prop]);
+								}
+								if (prop === 'offset') {
+									const htmlOffset = target.offset;
+									const nums: number[] = [];
+									for (const mapped of map.toSourceLocation(htmlOffset)) {
+										nums.push(mapped[0]);
+									}
+									return Math.max(-1, ...nums);
+								}
+								const value = target[prop];
+								if (typeof value === 'object') {
+									return createProxyObject(target[prop]);
+								}
+								return value;
+							}
+						});
+					}
+
+					function createClassProxyObject(target: any): any {
+						return new Proxy(target, {
+							get(target, prop) {
 								if (prop === 'offset') {
 									// class=" foo"
 									//       ^^
@@ -48,7 +71,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								}
 								const value = target[prop];
 								if (typeof value === 'object') {
-									return createProxyObject(target[prop]);
+									return createClassProxyObject(target[prop]);
 								}
 								return value;
 							}
