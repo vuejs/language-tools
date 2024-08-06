@@ -568,7 +568,7 @@ function* generateReferencesForScopedCssClasses(
 			&& prop.value
 		) {
 			if (options.template.lang === 'pug') {
-				const getSourceOffset = Reflect.get(prop.value.loc.start, 'getSourceOffset') as (offset: number) => number;
+				const getClassOffset = Reflect.get(prop.value.loc.start, 'getClassOffset') as (offset: number) => number;
 				const content = prop.value.loc.source.slice(1, -1);
 
 				let startOffset = 1;
@@ -576,7 +576,7 @@ function* generateReferencesForScopedCssClasses(
 					if (className) {
 						ctx.scopedClasses.push({
 							className,
-							offset: getSourceOffset(startOffset)
+							offset: getClassOffset(startOffset)
 						});
 					}
 					startOffset += className.length + 1;

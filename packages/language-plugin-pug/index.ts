@@ -37,26 +37,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						const proxys = new WeakMap();
 						return new Proxy(target, {
 							get(target, prop, receiver) {
-								if (prop === 'value' && target.name === 'class') {
-									return createClassProxyObject(target[prop]);
-								}
-								if (prop === 'offset') {
-									return getOffset(target.offset);
-								}
-								const value = Reflect.get(target, prop, receiver);
-								if (typeof value === 'object' && value !== null) {
-									return getCachedProxy(proxys, value, () => createProxyObject(value));
-								}
-								return value;
-							}
-						});
-					}
-
-					function createClassProxyObject(target: any): any {
-						const proxys = new WeakMap();
-						return new Proxy(target, {
-							get(target, prop, receiver) {
-								if (prop === 'getSourceOffset') {
+								if (prop === 'getClassOffset') {
 									// div.foo#baz.bar
 									//     ^^^     ^^^
 									// class=" foo bar"
@@ -71,7 +52,13 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								}
 								const value = Reflect.get(target, prop, receiver);
 								if (typeof value === 'object' && value !== null) {
-									return getCachedProxy(proxys, value, () => createClassProxyObject(value));
+									let proxyed = proxys.get(value)
+									if (proxyed) {
+										return proxyed;
+									}
+									proxyed = createProxyObject(value);
+									proxys.set(value, proxyed);
+									return proxyed;
 								}
 								return value;
 							}
@@ -85,20 +72,6 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							nums.push(mapped[0]);
 						}
 						return Math.max(-1, ...nums);
-					}
-
-					function getCachedProxy<K extends object, V>(
-						proxys: WeakMap<K, V>,
-						key: K,
-						defaultValue: () => V
-					) {
-						let proxyed = proxys.get(key)
-						if (proxyed) {
-							return proxyed;
-						}
-						proxyed = defaultValue();
-						proxys.set(key, proxyed);
-						return proxyed;
 					}
 				}
 			}
