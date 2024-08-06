@@ -42,7 +42,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 									//     ^^^     ^^^
 									// class=" foo bar"
 									//         ^^^ ^^^
-									// NODE: we need to expose source offset getter
+									// NOTE: we need to expose source offset getter
 									return function(startOffset: number) {
 										return getOffset(target.offset + startOffset);
 									};
