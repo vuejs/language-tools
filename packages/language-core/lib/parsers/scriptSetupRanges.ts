@@ -43,12 +43,11 @@ export function parseScriptSetupRanges(
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
 	const defineProp: {
-		localName?: TextRange | undefined;
+		localName: TextRange | undefined;
 		name: TextRange | undefined;
-		nameIsString: boolean;
 		type: TextRange | undefined;
 		modifierType?: TextRange | undefined;
-		runtimeType?: TextRange | undefined;
+		runtimeType: TextRange | undefined;
 		defaultValue: TextRange | undefined;
 		required: boolean;
 		isModel?: boolean;
@@ -175,7 +174,6 @@ export function parseScriptSetupRanges(
 				defineProp.push({
 					localName,
 					name: propName,
-					nameIsString: !!propName,
 					type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
 					modifierType: node.typeArguments && node.typeArguments?.length >= 2 ? _getStartEnd(node.typeArguments[1]) : undefined,
 					runtimeType,
@@ -253,8 +251,7 @@ export function parseScriptSetupRanges(
 
 				defineProp.push({
 					localName,
-					name: propName ?? localName,
-					nameIsString: !!propName,
+					name: propName,
 					type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
 					runtimeType,
 					defaultValue,
