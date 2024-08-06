@@ -297,11 +297,17 @@ function* generateComponentProps(
 			if (defineProp.defaultValue) {
 				const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
-				if (defineProp.name) {
-					yield propName;
+				if (defineProp.isModel && !defineProp.name) {
+					yield 'modelValue';
+				}
+				else if (defineProp.name) {
+					yield propName!;
+				}
+				else if (defineProp.localName) {
+					yield localName!;
 				}
 				else {
-					yield localName!;
+					continue;
 				}
 				yield `: `;
 				yield getRangeName(scriptSetup, defineProp.defaultValue)!;
@@ -328,15 +334,19 @@ function* generateComponentProps(
 		for (const defineProp of scriptSetupRanges.defineProp) {
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
-			if (defineProp.name) {
+			if (defineProp.isModel && !defineProp.name) {
+				yield 'modelValue';
+			}
+			else if (defineProp.name) {
 				// renaming support
 				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.navigation);
 			}
+			else if (defineProp.localName) {
+				definePropMirrors.set(localName!, options.getGeneratedLength());
+				yield localName!;
+			}
 			else {
-				if (defineProp.localName) {
-					definePropMirrors.set(localName!, options.getGeneratedLength());
-				}
-				yield propName;
+				continue;
 			}
 
 			yield defineProp.required
@@ -405,7 +415,7 @@ function* generateModelEmits(
 
 function* generateDefinePropType(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	propName: string,
+	propName: string | undefined,
 	localName: string | undefined,
 	defineProp: ScriptSetupRanges['defineProp'][number]
 ) {
@@ -417,7 +427,7 @@ function* generateDefinePropType(
 		// Infer from actual prop declaration code 
 		yield `typeof ${localName}['value']`;
 	}
-	else if (defineProp.defaultValue) {
+	else if (defineProp.defaultValue && propName) {
 		// Infer from defineProp({default: T})
 		yield `typeof __VLS_defaults['${propName}']`;
 	}
@@ -429,11 +439,11 @@ function* generateDefinePropType(
 function getPropAndLocalName(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	defineProp: ScriptSetupRanges['defineProp'][number]
-): [string, string | undefined] {
+) {
 	const localName = getRangeName(scriptSetup, defineProp.localName);
-	let propName = getRangeName(scriptSetup, defineProp.name) ?? (defineProp.isModel ? 'modelValue' : localName) ?? '';
+	let propName = getRangeName(scriptSetup, defineProp.name) ?? (defineProp.isModel ? 'modelValue' : localName);
 	if (defineProp.name) {
-		propName = propName.replace(/['"]+/g, '')
+		propName = propName!.replace(/['"]+/g, '')
 	}
 	return [propName, localName];
 }
