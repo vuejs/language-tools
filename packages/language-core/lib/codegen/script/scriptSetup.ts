@@ -297,10 +297,7 @@ function* generateComponentProps(
 			if (defineProp.defaultValue) {
 				const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
-				if (defineProp.isModel && !defineProp.name) {
-					yield 'modelValue';
-				}
-				else if (defineProp.name) {
+				if (defineProp.name || defineProp.isModel) {
 					yield propName!;
 				}
 				else if (defineProp.localName) {
@@ -310,7 +307,7 @@ function* generateComponentProps(
 					continue;
 				}
 				yield `: `;
-				yield getRangeName(scriptSetup, defineProp.defaultValue)!;
+				yield getRangeName(scriptSetup, defineProp.defaultValue);
 				yield `,${newLine}`;
 			}
 		}
@@ -335,7 +332,7 @@ function* generateComponentProps(
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
 			if (defineProp.isModel && !defineProp.name) {
-				yield 'modelValue';
+				yield propName!;
 			}
 			else if (defineProp.name) {
 				// renaming support
@@ -421,7 +418,7 @@ function* generateDefinePropType(
 ) {
 	if (defineProp.type) {
 		// Infer from defineProp<T>
-		yield getRangeName(scriptSetup, defineProp.type)!;
+		yield getRangeName(scriptSetup, defineProp.type);
 	}
 	else if (defineProp.runtimeType && localName) {
 		// Infer from actual prop declaration code 
@@ -440,8 +437,14 @@ function getPropAndLocalName(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	defineProp: ScriptSetupRanges['defineProp'][number]
 ) {
-	const localName = getRangeName(scriptSetup, defineProp.localName);
-	let propName = getRangeName(scriptSetup, defineProp.name) ?? (defineProp.isModel ? 'modelValue' : localName);
+	const localName = defineProp.localName
+		? getRangeName(scriptSetup, defineProp.localName)
+		: undefined;
+	let propName = defineProp.name
+		? getRangeName(scriptSetup, defineProp.name)
+		: defineProp.isModel
+			? 'modelValue'
+			: localName;
 	if (defineProp.name) {
 		propName = propName!.replace(/['"]+/g, '')
 	}
@@ -450,9 +453,9 @@ function getPropAndLocalName(
 
 function getRangeName(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	range: TextRange | undefined,
+	range: TextRange,
 	unwrap = false
 ) {
 	const offset = unwrap ? 1 : 0;
-	return range ? scriptSetup.content.substring(range.start + offset, range.end - offset) : undefined;
+	return scriptSetup.content.substring(range.start + offset, range.end - offset);
 }
