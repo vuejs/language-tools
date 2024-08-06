@@ -37,12 +37,14 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						return new Proxy(target, {
 							get(target, prop) {
 								if (prop === 'offset') {
-									const htmlOffset = target.offset;
+									// class=" foo"
+									//       ^^
+									const htmlOffset = target.offset + 2;
 									const nums: number[] = [];
 									for (const mapped of map.toSourceLocation(htmlOffset)) {
 										nums.push(mapped[0]);
 									}
-									return Math.max(-1, ...nums);
+									return Math.max(-1, ...nums) - 2;
 								}
 								const value = target[prop];
 								if (typeof value === 'object') {
