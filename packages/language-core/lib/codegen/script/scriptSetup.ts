@@ -295,14 +295,16 @@ function* generateComponentProps(
 		yield `const __VLS_defaults = {${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
 			if (defineProp.defaultValue) {
+				const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
+
 				if (defineProp.name) {
-					yield scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+					yield propName;
 				}
 				else {
-					yield `modelValue`;
+					yield localName!;
 				}
 				yield `: `;
-				yield scriptSetup.content.substring(defineProp.defaultValue.start, defineProp.defaultValue.end);
+				yield getRangeName(scriptSetup, defineProp.defaultValue)!;
 				yield `,${newLine}`;
 			}
 		}
@@ -346,9 +348,9 @@ function* generateComponentProps(
 			if (defineProp.modifierType) {
 				let propModifierName = 'modelModifiers';
 				if (defineProp.name) {
-					propModifierName = `${scriptSetup.content.substring(defineProp.name.start + 1, defineProp.name.end - 1)}Modifiers`;
+					propModifierName = `${getRangeName(scriptSetup, defineProp.name, true)}Modifiers`;
 				}
-				const modifierType = scriptSetup.content.substring(defineProp.modifierType.start, defineProp.modifierType.end);
+				const modifierType = getRangeName(scriptSetup, defineProp.modifierType);
 				definePropMirrors.set(propModifierName, options.getGeneratedLength());
 				yield `${propModifierName}?: Record<${modifierType}, true>,${endOfLine}`;
 			}
@@ -436,6 +438,11 @@ function getPropAndLocalName(
 	return [propName, localName];
 }
 
-function getRangeName(scriptSetup: NonNullable<Sfc['scriptSetup']>, range: TextRange | undefined) {
-	return range ? scriptSetup.content.substring(range.start, range.end) : undefined;
+function getRangeName(
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	range: TextRange | undefined,
+	unwrap = false
+) {
+	const offset = unwrap ? 1 : 0;
+	return range ? scriptSetup.content.substring(range.start + offset, range.end - offset) : undefined;
 }
