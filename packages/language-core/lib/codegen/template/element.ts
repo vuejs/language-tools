@@ -49,7 +49,7 @@ export function* generateComponent(
 	let dynamicTagInfo: {
 		exp: CompilerDOM.ElementNode | CompilerDOM.ExpressionNode;
 		tag: string;
-		offset: number;
+		offsets: [number, number | undefined];
 		isComponentIsShorthand?: boolean;
 	} | undefined;
 
@@ -64,7 +64,7 @@ export function* generateComponent(
 				dynamicTagInfo = {
 					exp: prop.exp,
 					tag: prop.exp.content,
-					offset: prop.exp.loc.start.offset,
+					offsets: [prop.exp.loc.start.offset, undefined],
 					isComponentIsShorthand: prop.arg.loc.end.offset === prop.exp.loc.end.offset
 				};
 				props = props.filter(p => p !== prop);
@@ -77,7 +77,7 @@ export function* generateComponent(
 		dynamicTagInfo = {
 			exp: node,
 			tag: node.tag,
-			offset: startTagOffset,
+			offsets: [startTagOffset, endTagOffset],
 		};
 	}
 
@@ -118,7 +118,7 @@ export function* generateComponent(
 			ctx,
 			dynamicTagInfo.tag,
 			dynamicTagInfo.exp,
-			dynamicTagInfo.offset,
+			dynamicTagInfo.offsets[0],
 			ctx.codeFeatures.all,
 			'(',
 			')',
@@ -132,8 +132,8 @@ export function* generateComponent(
 			yield* generateInterpolation(
 				options,
 				ctx,
+				dynamicTagInfo.tag,
 				dynamicTagInfo.exp,
-				dynamicTagInfo.astHolder,
 				dynamicTagInfo.offsets[1],
 				{
 					...ctx.codeFeatures.all,
