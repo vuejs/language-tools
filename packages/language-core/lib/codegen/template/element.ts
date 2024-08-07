@@ -112,7 +112,7 @@ export function* generateComponent(
 		yield `]${endOfLine}`;
 	}
 	else if (dynamicTagInfo) {
-		yield `const ${var_originalComponent} = `;
+		yield `const ${var_originalComponent} = (`;
 		yield* generateInterpolation(
 			options,
 			ctx,
@@ -127,7 +127,23 @@ export function* generateComponent(
 				dynamicTagInfo.exp.loc.end.offset
 			]] : undefined
 		);
-		yield endOfLine;
+		if (dynamicTagInfo.offsets[1] !== undefined) {
+			yield `,`;
+			yield* generateInterpolation(
+				options,
+				ctx,
+				dynamicTagInfo.exp,
+				dynamicTagInfo.astHolder,
+				dynamicTagInfo.offsets[1],
+				{
+					...ctx.codeFeatures.all,
+					completion: false,
+				},
+				'(',
+				')'
+			);
+		}
+		yield `)${endOfLine}`;
 	}
 	else if (!isComponentTag) {
 		yield `// @ts-ignore${newLine}`;
