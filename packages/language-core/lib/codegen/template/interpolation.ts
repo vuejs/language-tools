@@ -14,15 +14,11 @@ export function* generateInterpolation(
 	start: number | undefined,
 	data: VueCodeInformation | (() => VueCodeInformation) | undefined,
 	prefix: string,
-	suffix: string
+	suffix: string,
+	inlayHints: [Code, number][] = []
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
-	const vars: {
-		text: string,
-		isShorthand: boolean,
-		offset: number,
-	}[] = [];
 	for (let [section, offset, onlyError] of forEachInterpolationSegment(
 		options.ts,
 		ctx,
@@ -47,24 +43,46 @@ export function* generateInterpolation(
 				offset = 0;
 			}
 			if (start !== undefined && data !== undefined) {
-				yield [
-					section,
-					'template',
-					start + offset,
-					onlyError
-						? ctx.codeFeatures.verification
-						: typeof data === 'function' ? data() : data,
-				];
+				const startOffset = start + offset;
+				const endOffset = startOffset + section.length;
+
+				const filtered = inlayHints.filter(
+					([, pos]) => pos > startOffset && pos <= endOffset
+				);
+
+				if (filtered.length) {
+					yield generateSection(section, startOffset, startOffset, filtered[0][1]);
+					while (filtered.length) {
+						const [inlayHint, pos] = filtered.shift()!;
+						yield inlayHint;
+						if (filtered.length) {
+							const nextStart = filtered[0][1];
+							yield generateSection(section, startOffset, pos, nextStart);
+						}
+						else {
+							yield generateSection(section, startOffset, pos, endOffset);
+						}
+					}
+				}
+				else {
+					yield generateSection(section, startOffset, startOffset, endOffset);
+				}
+
+				function generateSection(text: string, startOffset: number, from: number, to: number) {
+					return [
+						text.slice(from - startOffset, to - startOffset),
+						'template',
+						from,
+						onlyError
+							? ctx.codeFeatures.verification
+							: typeof data === 'function' ? data() : data,
+					] as Code;
+				}
 			}
 			else {
 				yield section;
 			}
 			yield addSuffix;
-		}
-	}
-	if (start !== undefined) {
-		for (const v of vars) {
-			v.offset = start + v.offset - prefix.length;
 		}
 	}
 }
