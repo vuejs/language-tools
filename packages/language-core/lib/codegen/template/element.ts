@@ -14,6 +14,7 @@ import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateTemplateChild } from './templateChild';
 import { generateObjectProperty } from './objectProperty';
+import { generateVBindShorthandInlayHint } from './vBindShorthand';
 
 const colonReg = /:/g;
 
@@ -46,18 +47,25 @@ export function* generateComponent(
 
 	let props = node.props;
 	let dynamicTagInfo: {
-		exp: string;
+		exp: CompilerDOM.ElementNode | CompilerDOM.ExpressionNode;
+		tag: string;
 		offset: number;
-		astHolder: any;
+		isComponentIsShorthand?: boolean;
 	} | undefined;
 
 	if (isComponentTag) {
 		for (const prop of node.props) {
-			if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.arg?.loc.source === 'is' && prop.exp) {
+			if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'bind'
+				&& prop.arg?.loc.source === 'is'
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
 				dynamicTagInfo = {
-					exp: prop.exp.loc.source,
+					exp: prop.exp,
+					tag: prop.exp.content,
 					offset: prop.exp.loc.start.offset,
-					astHolder: prop.exp.loc,
+					isComponentIsShorthand: prop.arg.loc.end.offset === prop.exp.loc.end.offset
 				};
 				props = props.filter(p => p !== prop);
 				break;
@@ -67,8 +75,8 @@ export function* generateComponent(
 	else if (node.tag.includes('.')) {
 		// namespace tag
 		dynamicTagInfo = {
-			exp: node.tag,
-			astHolder: node.loc,
+			exp: node,
+			tag: node.tag,
 			offset: startTagOffset,
 		};
 	}
@@ -108,12 +116,16 @@ export function* generateComponent(
 		yield* generateInterpolation(
 			options,
 			ctx,
+			dynamicTagInfo.tag,
 			dynamicTagInfo.exp,
-			dynamicTagInfo.astHolder,
 			dynamicTagInfo.offset,
 			ctx.codeFeatures.all,
 			'(',
-			')'
+			')',
+			dynamicTagInfo.isComponentIsShorthand ? [[
+				generateVBindShorthandInlayHint(dynamicTagInfo.exp.loc, 'is'),
+				dynamicTagInfo.exp.loc.end.offset
+			]] : undefined
 		);
 		yield endOfLine;
 	}
