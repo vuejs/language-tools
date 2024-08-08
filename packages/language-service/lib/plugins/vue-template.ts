@@ -757,8 +757,15 @@ export function create(
 					const itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
 
 					if (itemId) {
-						const originalItem = originals.get(itemId.args[1]);
-						item.documentation = originalItem?.documentation;
+						let label = hyphenate(itemId.args[1]);
+						if (label.startsWith('on-')) {
+							label = 'on' + label.slice('on-'.length);
+						}
+						else if (itemId.type === 'componentEvent') {
+							label = 'on' + label;
+						}
+						const original = originals.get(label);
+						item.documentation = original?.documentation;
 					}
 					else if (!originals.has(item.label)) {
 						originals.set(item.label, item);
