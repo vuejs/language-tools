@@ -444,7 +444,9 @@ function* generateComponentSlot(
 			slotDir.arg.loc.source,
 			slotDir.arg.loc.start.offset,
 			slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
-			slotDir.arg.loc
+			slotDir.arg.loc,
+			false,
+			true,
 		);
 		yield ': __VLS_thisSlot';
 	}
