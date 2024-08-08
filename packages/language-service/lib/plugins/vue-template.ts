@@ -555,7 +555,9 @@ export function create(
 								const isGlobal = !propsSet.has(prop);
 								const name = casing.attr === AttrNameCasing.Camel ? prop : hyphenateAttr(prop);
 
-								if (hyphenateAttr(name).startsWith('on-')) {
+								const isEvent = hyphenateAttr(name).startsWith('on-');
+
+								if (isEvent) {
 
 									const propNameBase = name.startsWith('on-')
 										? name.slice('on-'.length)
@@ -578,11 +580,14 @@ export function create(
 									const propName = name;
 									const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
 
-									attributes.push(
-										{
+									if (!isEvent) {
+										attributes.push({
 											name: propName,
 											description: propKey,
-										},
+										});
+									}
+
+									attributes.push(
 										{
 											name: ':' + propName,
 											description: propKey,
