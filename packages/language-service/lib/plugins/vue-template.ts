@@ -729,6 +729,8 @@ export function create(
 					}
 				}
 
+				const originals = new Map<string, html.CompletionItem>();
+
 				for (const item of completionList.items) {
 
 					if (specialTags.has(item.label)) {
@@ -755,7 +757,11 @@ export function create(
 					const itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
 
 					if (itemId) {
-						item.documentation = undefined;
+						const originalItem = originals.get(itemId.args[1]);
+						item.documentation = originalItem?.documentation;
+					}
+					else if (!originals.has(item.label)) {
+						originals.set(item.label, item);
 					}
 
 					if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && lastCompletionComponentNames.has(hyphenateTag(item.label))) {
