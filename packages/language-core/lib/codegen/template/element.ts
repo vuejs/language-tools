@@ -47,7 +47,7 @@ export function* generateComponent(
 	let props = node.props;
 	let dynamicTagInfo: {
 		exp: string;
-		offset: number;
+		offsets: [number, number | undefined];
 		astHolder: any;
 	} | undefined;
 
@@ -56,7 +56,7 @@ export function* generateComponent(
 			if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.arg?.loc.source === 'is' && prop.exp) {
 				dynamicTagInfo = {
 					exp: prop.exp.loc.source,
-					offset: prop.exp.loc.start.offset,
+					offsets: [prop.exp.loc.start.offset, undefined],
 					astHolder: prop.exp.loc,
 				};
 				props = props.filter(p => p !== prop);
@@ -69,7 +69,7 @@ export function* generateComponent(
 		dynamicTagInfo = {
 			exp: node.tag,
 			astHolder: node.loc,
-			offset: startTagOffset,
+			offsets: [startTagOffset, endTagOffset],
 		};
 	}
 
@@ -104,18 +104,34 @@ export function* generateComponent(
 		yield `]${endOfLine}`;
 	}
 	else if (dynamicTagInfo) {
-		yield `const ${var_originalComponent} = `;
+		yield `const ${var_originalComponent} = (`;
 		yield* generateInterpolation(
 			options,
 			ctx,
 			dynamicTagInfo.exp,
 			dynamicTagInfo.astHolder,
-			dynamicTagInfo.offset,
+			dynamicTagInfo.offsets[0],
 			ctx.codeFeatures.all,
 			'(',
 			')'
 		);
-		yield endOfLine;
+		if (dynamicTagInfo.offsets[1] !== undefined) {
+			yield `,`;
+			yield* generateInterpolation(
+				options,
+				ctx,
+				dynamicTagInfo.exp,
+				dynamicTagInfo.astHolder,
+				dynamicTagInfo.offsets[1],
+				{
+					...ctx.codeFeatures.all,
+					completion: false,
+				},
+				'(',
+				')'
+			);
+		}
+		yield `)${endOfLine}`;
 	}
 	else if (!isComponentTag) {
 		yield `// @ts-ignore${newLine}`;

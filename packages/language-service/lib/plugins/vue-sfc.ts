@@ -9,13 +9,9 @@ import { URI } from 'vscode-uri';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
-export interface Provide {
-	'vue/vueFile': (document: TextDocument) => vue.VueVirtualCode | undefined;
-}
-
 export function create(): LanguageServicePlugin {
 	const htmlPlugin = createHtmlService({
-		documentSelector: ['vue'],
+		documentSelector: ['vue-root-tags'],
 		useDefaultDataProvider: false,
 		getCustomData(context) {
 			sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
@@ -47,20 +43,12 @@ export function create(): LanguageServicePlugin {
 	return {
 		...htmlPlugin,
 		name: 'vue-sfc',
-		create(context): LanguageServicePluginInstance<Provide> {
+		create(context): LanguageServicePluginInstance {
 			const htmlPluginInstance = htmlPlugin.create(context);
 
 			return {
 
 				...htmlPluginInstance,
-
-				provide: {
-					'vue/vueFile': document => {
-						return worker(document, context, vueFile => {
-							return vueFile;
-						});
-					},
-				},
 
 				provideDocumentLinks: undefined,
 
@@ -234,11 +222,13 @@ export function create(): LanguageServicePlugin {
 	};
 
 	function worker<T>(document: TextDocument, context: LanguageServiceContext, callback: (vueSourceFile: vue.VueVirtualCode) => T) {
+		if (document.languageId !== 'vue-root-tags') {
+			return;
+		}
 		const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 		const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-		const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-		if (virtualCode instanceof vue.VueVirtualCode) {
-			return callback(virtualCode);
+		if (sourceScript?.generated?.root instanceof vue.VueVirtualCode) {
+			return callback(sourceScript.generated.root);
 		}
 	}
 }

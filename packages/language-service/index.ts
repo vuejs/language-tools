@@ -201,7 +201,7 @@ function getCommonLanguageServicePlugins(
 		createVueExtractFilePlugin(ts, getTsPluginClient),
 		createEmmetPlugin({
 			mappedLanguages: {
-				'vue': 'html',
+				'vue-root-tags': 'html',
 				'postcss': 'scss',
 			},
 		}),
