@@ -27,7 +27,7 @@ export function* generateObjectProperty(
 				offset + 1,
 				features,
 				'[__VLS_tryAsConstant(',
-				')]',
+				')]'
 			);
 		}
 		else {
