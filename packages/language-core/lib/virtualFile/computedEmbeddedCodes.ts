@@ -6,7 +6,7 @@ import type { Code, Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 import { VueEmbeddedCode } from './embeddedFile';
 
-export function computedFiles(
+export function computedEmbeddedCodes(
 	plugins: VueLanguagePluginReturn[],
 	fileName: string,
 	sfc: Sfc
