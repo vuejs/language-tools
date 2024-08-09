@@ -164,7 +164,7 @@ export function create(
 						if (virtualCode) {
 							const embeddedDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, virtualCode.id);
 							afterHtmlCompletion(
-								htmlComplete, 
+								htmlComplete,
 								context.documents.get(embeddedDocumentUri, virtualCode.languageId, virtualCode.snapshot)
 							);
 						}
@@ -660,9 +660,9 @@ export function create(
 				};
 			}
 
-			function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument) {
+			function afterHtmlCompletion(completionList: vscode.CompletionList, document: TextDocument) {
 
-				const replacement = getReplacement(completionList, sourceDocument);
+				const replacement = getReplacement(completionList, document);
 
 				if (replacement) {
 
