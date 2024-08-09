@@ -3,7 +3,7 @@ export interface InlayHintInfo {
 	offset: number;
 	setting: string;
 	label: string;
-	tooltip: string;
+	tooltip?: string;
 	paddingRight?: boolean;
 	paddingLeft?: boolean;
 }

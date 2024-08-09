@@ -1,5 +1,6 @@
 import type * as ts from 'typescript';
 import type { VueCompilerOptions, TextRange } from '../types';
+import { collectVars } from '../codegen/common';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
@@ -14,6 +15,7 @@ export function parseScriptSetupRanges(
 
 	const props: {
 		name?: string;
+		destructured?: string[];
 		define?: ReturnType<typeof parseDefineFunction> & {
 			statement: TextRange;
 		};
@@ -231,6 +233,14 @@ export function parseScriptSetupRanges(
 				expose.define = parseDefineFunction(node);
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
+				if (ts.isVariableDeclaration(parent)) {
+					if (ts.isObjectBindingPattern(parent.name)) {
+						props.destructured = collectVars(ts, parent.name, ast, [], false);
+					}
+					else {
+						props.name = getNodeText(ts, parent.name, ast);
+					}
+				}
 
 				let statementRange: TextRange | undefined;
 				for (let i = parents.length - 1; i >= 0; i--) {
@@ -253,9 +263,6 @@ export function parseScriptSetupRanges(
 					statement: statementRange,
 				};
 
-				if (ts.isVariableDeclaration(parent)) {
-					props.name = getNodeText(ts, parent.name, ast);
-				}
 				if (node.arguments.length) {
 					props.define.arg = _getStartEnd(node.arguments[0]);
 				}
