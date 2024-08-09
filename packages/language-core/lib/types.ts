@@ -15,13 +15,6 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 };
 
 export interface VueCodeInformation extends CodeInformation {
-	__hint?: {
-		setting: string;
-		label: string;
-		tooltip: string;
-		paddingRight?: boolean;
-		paddingLeft?: boolean;
-	};
 	__combineLastMapping?: boolean;
 	__combineOffsetMapping?: number;
 }

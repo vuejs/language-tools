@@ -5,7 +5,7 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import type { TemplateCodegenContext } from '../template/context';
-import { createScriptCodegenContext } from './context';
+import { createScriptCodegenContext, ScriptCodegenContext } from './context';
 import { generateGlobalTypes } from './globalTypes';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
@@ -49,7 +49,7 @@ export interface ScriptCodegenOptions {
 	linkedCodeMappings: Mapping[];
 }
 
-export function* generateScript(options: ScriptCodegenOptions): Generator<Code> {
+export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
 	const ctx = createScriptCodegenContext(options);
 
 	yield `/* __placeholder__ */${newLine}`;
@@ -74,40 +74,29 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 			}
 		}
 		else if (exportDefault && isExportRawObject && options.vueCompilerOptions.optionsWrapper.length) {
+			ctx.inlayHints.push({
+				blockName: options.sfc.script.name,
+				offset: exportDefault.expression.start,
+				setting: 'vue.inlayHints.optionsWrapper',
+				label: options.vueCompilerOptions.optionsWrapper.length
+					? options.vueCompilerOptions.optionsWrapper[0]
+					: '[Missing optionsWrapper[0]]',
+				tooltip: [
+					'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
+					'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
+				].join('\n\n'),
+			}, {
+				blockName: options.sfc.script.name,
+				offset: exportDefault.expression.end,
+				setting: 'vue.inlayHints.optionsWrapper',
+				label: options.vueCompilerOptions.optionsWrapper.length >= 2
+					? options.vueCompilerOptions.optionsWrapper[1]
+					: '[Missing optionsWrapper[1]]',
+				tooltip: '',
+			});
 			yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 			yield options.vueCompilerOptions.optionsWrapper[0];
-			yield [
-				'',
-				'script',
-				exportDefault.expression.start,
-				{
-					__hint: {
-						setting: 'vue.inlayHints.optionsWrapper',
-						label: options.vueCompilerOptions.optionsWrapper.length
-							? options.vueCompilerOptions.optionsWrapper[0]
-							: '[Missing optionsWrapper]',
-						tooltip: [
-							'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
-							'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
-						].join('\n\n'),
-					}
-				},
-			];
 			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.start, exportDefault.expression.end, codeFeatures.all);
-			yield [
-				'',
-				'script',
-				exportDefault.expression.end,
-				{
-					__hint: {
-						setting: 'vue.inlayHints.optionsWrapper',
-						label: options.vueCompilerOptions.optionsWrapper.length === 2
-							? options.vueCompilerOptions.optionsWrapper[1]
-							: '[Missing optionsWrapper]',
-						tooltip: '',
-					}
-				},
-			];
 			yield options.vueCompilerOptions.optionsWrapper[1];
 			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.end, options.sfc.script.content.length, codeFeatures.all);
 		}
@@ -156,6 +145,8 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code> 
 			codeFeatures.verification,
 		];
 	}
+
+	return ctx;
 }
 
 function* generateDefineProp(

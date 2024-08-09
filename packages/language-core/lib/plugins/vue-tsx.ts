@@ -140,7 +140,7 @@ function createTsx(
 		const linkedCodeMappings: Mapping[] = [];
 		const _template = generatedTemplate();
 		let generatedLength = 0;
-		for (const code of generateScript({
+		const codegen = generateScript({
 			ts,
 			fileBaseName: path.basename(fileName),
 			globalTypes: ctx.globalTypesHolder === fileName,
@@ -153,13 +153,21 @@ function createTsx(
 			vueCompilerOptions: ctx.vueCompilerOptions,
 			getGeneratedLength: () => generatedLength,
 			linkedCodeMappings,
-		})) {
+		});
+
+		let current = codegen.next();
+
+		while (!current.done) {
+			const code = current.value;
 			codes.push(code);
 			generatedLength += typeof code === 'string'
 				? code.length
 				: code[0].length;
-		};
+			current = codegen.next();
+		}
+
 		return {
+			...current.value,
 			codes,
 			linkedCodeMappings,
 		};

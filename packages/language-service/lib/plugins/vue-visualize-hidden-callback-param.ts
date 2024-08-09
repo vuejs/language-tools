@@ -1,7 +1,8 @@
 import type { LanguageServicePluginInstance } from '@volar/language-service';
+import { tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
-import type { LanguageServicePlugin, VueCodeInformation } from '../types';
 import { URI } from 'vscode-uri';
+import type { LanguageServicePlugin } from '../types';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -19,20 +20,27 @@ export function create(): LanguageServicePlugin {
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const vitualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 
-					if (vitualCode) {
+					if (vitualCode instanceof VueVirtualCode) {
 
+						const codegen = tsCodegen.get(vitualCode.sfc);
+						const inlayHints = [
+							...codegen?.generatedTemplate()?.inlayHints ?? [],
+							...codegen?.generatedScript()?.inlayHints ?? [],
+						];
+						const blocks = [
+							vitualCode.sfc.template,
+							vitualCode.sfc.script,
+							vitualCode.sfc.scriptSetup,
+						];
 						const start = document.offsetAt(range.start);
 						const end = document.offsetAt(range.end);
 
-						for (const mapping of vitualCode.mappings) {
+						for (const hint of inlayHints) {
 
-							const hint = (mapping.data as VueCodeInformation).__hint;
+							const block = blocks.find(block => block?.name === hint.blockName);
+							const hintOffset = (block?.startTagEnd ?? 0) + hint.offset;
 
-							if (
-								mapping.generatedOffsets[0] >= start
-								&& mapping.generatedOffsets[mapping.generatedOffsets.length - 1] + mapping.lengths[mapping.lengths.length - 1] <= end
-								&& hint
-							) {
+							if (hintOffset >= start && hintOffset <= end) {
 
 								settings[hint.setting] ??= await context.env.getConfiguration?.<boolean>(hint.setting) ?? false;
 
@@ -44,7 +52,7 @@ export function create(): LanguageServicePlugin {
 									label: hint.label,
 									paddingRight: hint.paddingRight,
 									paddingLeft: hint.paddingLeft,
-									position: document.positionAt(mapping.generatedOffsets[0]),
+									position: document.positionAt(hintOffset),
 									kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
 									tooltip: {
 										kind: 'markdown',
