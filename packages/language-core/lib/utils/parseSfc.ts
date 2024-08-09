@@ -110,7 +110,10 @@ function createBlock(node: ElementNode, source: string) {
 					block.scoped = true;
 				}
 				else if (p.name === 'module') {
-					block.module = attrs[p.name];
+					block.module = {
+						name: p.value?.content || '$style',
+						loc: p.value?.loc
+					};
 				}
 			}
 			else if (type === 'script' && p.name === 'setup') {

@@ -94,7 +94,18 @@ function* generateCtx(
 		for (let i = 0; i < options.sfc.styles.length; i++) {
 			const style = options.sfc.styles[i];
 			if (style.module) {
-				yield `${style.module}: Record<string, string> & ${ctx.helperTypes.Prettify.name}<{}`;
+				if (style.module.loc) {
+					yield [
+						style.module.name,
+						'main',
+						style.module.loc.start.offset + 1,
+						codeFeatures.all
+					];
+				}
+				else {
+					yield style.module.name;
+				}
+				yield `: Record<string, string> & ${ctx.helperTypes.Prettify.name}<{}`;
 				for (const className of style.classNames) {
 					yield* generateCssClassProperty(
 						i,

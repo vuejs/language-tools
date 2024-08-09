@@ -110,7 +110,10 @@ export interface Sfc {
 		ast: ts.SourceFile;
 	} | undefined;
 	styles: readonly (SfcBlock & {
-		module: string | undefined;
+		module: false | {
+			name: string;
+			loc?: CompilerDOM.SourceLocation;
+		};
 		scoped: boolean;
 		cssVars: {
 			text: string;
