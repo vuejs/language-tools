@@ -92,7 +92,6 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				label: options.vueCompilerOptions.optionsWrapper.length >= 2
 					? options.vueCompilerOptions.optionsWrapper[1]
 					: '[Missing optionsWrapper[1]]',
-				tooltip: '',
 			});
 			yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 			yield options.vueCompilerOptions.optionsWrapper[0];

@@ -166,22 +166,6 @@ function* generateSetupFunction(
 			}
 		}
 	}
-	if (scriptSetupRanges.props.destructured) {
-		for (const [prop, isShorthand] of scriptSetupRanges.props.destructuredReferences!) {
-			const name = prop.text;
-			const end = prop.getEnd();
-			const pos = isShorthand ? end : end - name.length;
-			const label = isShorthand ? `: props.${name}` : 'props.';
-			ctx.inlayHints.push({
-				blockName: 'scriptSetup',
-				offset: pos,
-				setting: 'vue.inlayHints.destructuredProps',
-				label,
-				// TODO: need tooltip
-				tooltip: '',
-			});
-		}
-	}
 	if (scriptSetupRanges.slots.define) {
 		if (scriptSetupRanges.slots.isObjectBindingPattern) {
 			setupCodeModifies.push([
