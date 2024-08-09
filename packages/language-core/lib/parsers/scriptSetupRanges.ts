@@ -293,11 +293,9 @@ export function parseScriptSetupRanges(
 						}
 					}
 				}
-			} else if (vueCompilerOptions.macros.templateRef.includes(callText)) {
+			} else if (vueCompilerOptions.macros.templateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
 				const define = parseDefineFunction(node);
-				if (node.arguments.length) {
-					define.arg = _getStartEnd(node.arguments[0]);
-				}
+				define.arg = _getStartEnd(node.arguments[0]);
 				let name;
 				if (ts.isVariableDeclaration(parent)) {
 					name = getNodeText(ts, parent.name, ast);

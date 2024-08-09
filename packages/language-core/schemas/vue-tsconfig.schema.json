@@ -80,7 +80,7 @@
 						"defineEmits": [ "defineEmits" ],
 						"defineExpose": [ "defineExpose" ],
 						"withDefaults": [ "withDefaults" ],
-						"templateRef": [ "useTemplateRef" ]
+						"templateRef": [ "templateRef", "useTemplateRef" ]
 					}
 				},
 				"experimentalResolveStyleCssClasses": {

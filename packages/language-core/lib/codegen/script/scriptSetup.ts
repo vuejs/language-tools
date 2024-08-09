@@ -116,7 +116,7 @@ function* generateSetupFunction(
 	if (options.vueCompilerOptions.target >= 3.3) {
 		yield `const { `;
 		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!ctx.bindingNames.has(macro)) {
+			if (!ctx.bindingNames.has(macro) && !['templateRef'].includes(macro)) {
 				yield macro + `, `;
 			}
 		}
@@ -248,8 +248,8 @@ function* generateSetupFunction(
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
 	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
 	yield* generateTemplate(options, ctx, false);
-	yield `type __VLS_Refs = ReturnType<typeof __VLS_template>['refs']${endOfLine};`
-	yield `type __VLS_Slots = ReturnType<typeof __VLS_template>['slots']${endOfLine};`
+	yield `type __VLS_Refs = ReturnType<typeof __VLS_template>['refs']${endOfLine};`;
+	yield `type __VLS_Slots = ReturnType<typeof __VLS_template>['slots']${endOfLine};`;
 
 	if (syntax) {
 		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges?.slots.define)) {
