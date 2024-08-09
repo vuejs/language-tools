@@ -111,8 +111,8 @@ function createBlock(node: ElementNode, source: string) {
 				}
 				else if (p.name === 'module') {
 					block.module = {
-						name: p.value?.content || '$style',
-						loc: p.value?.loc
+						name: p.value?.content ?? '$style',
+						loc: p.value?.content ? p.value?.loc : undefined
 					};
 				}
 			}
