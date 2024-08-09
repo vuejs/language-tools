@@ -14,10 +14,25 @@ export function* generateObjectProperty(
 	offset: number,
 	features: VueCodeInformation,
 	astHolder?: any,
-	shouldCamelize = false
+	shouldCamelize = false,
+	shouldBeConstant = false
 ): Generator<Code> {
 	if (code.startsWith('[') && code.endsWith(']') && astHolder) {
-		yield* generateInterpolation(options, ctx, code, astHolder, offset, features, '', '');
+		if (shouldBeConstant) {
+			yield* generateInterpolation(
+				options,
+				ctx,
+				code.slice(1, -1),
+				astHolder,
+				offset + 1,
+				features,
+				'[__VLS_tryAsConstant(',
+				')]',
+			);
+		}
+		else {
+			yield* generateInterpolation(options, ctx, code, astHolder, offset, features, '', '');
+		}
 	}
 	else if (shouldCamelize) {
 		if (variableNameRegex.test(camelize(code))) {
