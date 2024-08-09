@@ -41,6 +41,10 @@ export function parseScriptSetupRanges(
 	const options: {
 		name?: string;
 	} = {};
+	const templateRefs: {
+		name?: string;
+		define?: ReturnType<typeof parseDefineFunction>;
+	}[] = [];
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -103,6 +107,7 @@ export function parseScriptSetupRanges(
 		expose,
 		defineProp,
 		options,
+		templateRefs,
 	};
 
 	function _getStartEnd(node: ts.Node) {
@@ -288,6 +293,17 @@ export function parseScriptSetupRanges(
 						}
 					}
 				}
+			} else if (vueCompilerOptions.macros.templateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
+				const define = parseDefineFunction(node);
+				define.arg = _getStartEnd(node.arguments[0]);
+				let name;
+				if (ts.isVariableDeclaration(parent)) {
+					name = getNodeText(ts, parent.name, ast);
+				}
+				templateRefs.push({
+					name,
+					define
+				});
 			}
 		}
 		ts.forEachChild(node, child => {

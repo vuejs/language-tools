@@ -36,6 +36,9 @@ export function* generateComponent(
 	if (options.sfc.script && options.scriptRanges) {
 		yield* generateScriptOptions(options.sfc.script, options.scriptRanges);
 	}
+	if (options.vueCompilerOptions.target >= 3.5 && scriptSetupRanges.templateRefs.length) {
+		yield `__typeRefs: {} as __VLS_Refs,${newLine}`;
+	}
 	yield `})`;
 }
 

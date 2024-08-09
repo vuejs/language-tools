@@ -79,7 +79,8 @@
 						"defineSlots": [ "defineSlots" ],
 						"defineEmits": [ "defineEmits" ],
 						"defineExpose": [ "defineExpose" ],
-						"withDefaults": [ "withDefaults" ]
+						"withDefaults": [ "withDefaults" ],
+						"templateRef": [ "templateRef", "useTemplateRef" ]
 					}
 				},
 				"experimentalResolveStyleCssClasses": {
