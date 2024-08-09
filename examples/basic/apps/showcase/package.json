@@ -1,0 +1,22 @@
+{
+	"name": "@examples/app",
+	"private": true,
+	"version": "0.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vue-tsc -b && vite build",
+		"type-check": "vue-tsc -b --force",
+		"preview": "vite preview"
+	},
+	"dependencies": {
+		"vue": "^3.4.35",
+		"@examples/ui": "workspace:*"
+	},
+	"devDependencies": {
+		"@vitejs/plugin-vue": "^5.1.2",
+		"typescript": "^5.5.4",
+		"vite": "^5.3.5",
+		"vue-tsc": "^2.0.29"
+	}
+}

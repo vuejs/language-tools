@@ -4,6 +4,15 @@
 
 💬 **#language-tools** on our [Discord Server](https://discord.gg/vue)
 
+## Example Projects
+
+- [Basic Example](./examples/basic/) \
+*A basic example project that highlights some aspects of the Vue language tools. This example is a good starting point for new users.*
+- [[Todo] nvim](./examples/with-nvim/) \
+*If you are using Neovim, feel free to contribute an example project to help others.*
+- [[Todo] Vue2](./examples/with-vue2/) \
+*If you are using Vue 2, feel free to contribute an example project to help others.*
+
 ## Packages
 
 - [Vue Language Features](https://github.com/vuejs/language-tools/tree/master/extensions/vscode) \
@@ -69,10 +78,11 @@ For more information see [#4119](https://github.com/vuejs/language-tools/pull/41
 *Make sure you have typescript installed globally or pass the location to volar*
 
 Use volar for all `.{vue,js,ts,tsx,jsx}` files.
+
 ```lua
 local lspconfig = require('lspconfig')
 
--- lspconfig.tsserver.setup {} 
+-- lspconfig.tsserver.setup {}
 lspconfig.volar.setup {
   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
   init_options = {
@@ -84,6 +94,7 @@ lspconfig.volar.setup {
 ```
 
 Use `volar` for only `.vue` files and `tsserver` for `.ts` and `.js` files.
+
 ```lua
 local lspconfig = require('lspconfig')
 
