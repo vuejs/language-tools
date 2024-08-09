@@ -133,10 +133,10 @@ declare global {
 		? { [K in keyof T]: 'expose' extends keyof T[K]
 		// @ts-ignore
 		? Parameters<T[K]['expose']>[0] | null
-    : T[K] extends any[]
-    ? Parameters<T[K][0]['expose']>[0][]
-    : T[K] }
-    : never;
+		: T[K] extends any[]
+		? Parameters<T[K][0]['expose']>[0][]
+		: T[K] }
+		: never;
 }
 export const __VLS_globalTypesEnd = {};
 `;
