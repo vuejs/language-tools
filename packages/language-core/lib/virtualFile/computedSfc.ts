@@ -123,10 +123,10 @@ export function computedSfc(
 					return undefined;
 				}
 				else {
-					const [name, offset] = (_module as string).split('::');
+					const [name, offset] = _module as any as [string, number?];
 					return {
 						name,
-						offset: base.start + Number(offset)
+						offset: offset ? base.start + offset : undefined
 					};
 				}
 			});

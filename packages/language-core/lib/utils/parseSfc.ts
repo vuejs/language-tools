@@ -110,11 +110,10 @@ function createBlock(node: ElementNode, source: string) {
 					block.scoped = true;
 				}
 				else if (p.name === 'module') {
-					block.module = `${
-						p.value?.content ?? '$style'
-					}::${
-						p.value?.content ? p.value?.loc.start.offset - node.loc.start.offset : ''
-					}`;
+					block.module = [
+						p.value?.content ?? '$style',
+						p.value?.content ? p.value?.loc.start.offset - node.loc.start.offset : undefined
+					] as any;
 				}
 			}
 			else if (type === 'script' && p.name === 'setup') {
