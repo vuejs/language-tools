@@ -167,10 +167,15 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 					result.items = result.items.filter(item => item.label !== '!DOCTYPE' && item.label !== 'Custom Blocks');
-					for (const scriptItem of result.items.filter(item => item.label === 'script' || item.label === 'script setup')) {
+
+					const tags = sfcDataProvider?.provideTags();
+
+					const scriptLangs = getLangs('script');
+					const scriptItems = result.items.filter(item => item.label === 'script' || item.label === 'script setup');
+					for (const scriptItem of scriptItems) {
 						scriptItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						scriptItem.detail = '.js';
-						for (const lang of ['ts', 'tsx', 'jsx']) {
+						for (const lang of scriptLangs) {
 							result.items.push({
 								...scriptItem,
 								detail: `.${lang}`,
@@ -183,11 +188,13 @@ export function create(): LanguageServicePlugin {
 							});
 						}
 					}
+
+					const styleLangs = getLangs('style');
 					const styleItem = result.items.find(item => item.label === 'style');
 					if (styleItem) {
 						styleItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						styleItem.detail = '.css';
-						for (const lang of ['css', 'scss', 'less', 'postcss']) {
+						for (const lang of styleLangs) {
 							result.items.push({
 								...styleItem,
 								kind: 17 satisfies typeof vscode.CompletionItemKind.File,
@@ -200,22 +207,36 @@ export function create(): LanguageServicePlugin {
 							});
 						}
 					}
+
+					const templateLangs = getLangs('template');
 					const templateItem = result.items.find(item => item.label === 'template');
 					if (templateItem) {
 						templateItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						templateItem.detail = '.html';
-						result.items.push({
-							...templateItem,
-							kind: 17 satisfies typeof vscode.CompletionItemKind.File,
-							detail: '.pug',
-							label: templateItem.label + ' lang="pug"',
-							textEdit: templateItem.textEdit ? {
-								...templateItem.textEdit,
-								newText: templateItem.textEdit.newText + ' lang="pug"',
-							} : undefined,
-						});
+						for (const lang of templateLangs) {
+							if (lang === 'html') {
+								continue;
+							}
+							result.items.push({
+								...templateItem,
+								kind: 17 satisfies typeof vscode.CompletionItemKind.File,
+								detail: `.${lang}`,
+								label: templateItem.label + ' lang="' + lang + '"',
+								textEdit: templateItem.textEdit ? {
+									...templateItem.textEdit,
+									newText: templateItem.textEdit.newText + ' lang="' + lang + '"',
+								} : undefined,
+							});
+						}
 					}
 					return result;
+
+					function getLangs(label: string) {
+						return tags
+							?.find(tag => tag.name === label)?.attributes
+							.find(attr => attr.name === 'lang')?.values
+							?.map(({ name }) => name) ?? [];
+					}
 				},
 			};
 		},
