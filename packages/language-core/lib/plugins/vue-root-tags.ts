@@ -55,7 +55,7 @@ const plugin: VueLanguagePlugin = () => {
 						sfc.content.substring(
 							block.startTagEnd + offset,
 							block.endTagStart
-						),
+						)
 					);
 				}
 			}
