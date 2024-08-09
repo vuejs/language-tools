@@ -29,7 +29,7 @@ export function* generateInternalComponent(
 		]) {
 			for (const expose of bindings) {
 				const varName = content.substring(expose.start, expose.end);
-				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
+				if ((!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) || options.scriptSetupRanges.templateRefs.some(ref => ref.name == varName)) {
 					continue;
 				}
 				const templateOffset = options.getGeneratedLength();

@@ -107,6 +107,7 @@ export function parseScriptSetupRanges(
 		expose,
 		defineProp,
 		options,
+		templateRefs,
 	};
 
 	function _getStartEnd(node: ts.Node) {
@@ -293,9 +294,17 @@ export function parseScriptSetupRanges(
 					}
 				}
 			} else if (vueCompilerOptions.macros.templateRef.includes(callText)) {
+				const define = parseDefineFunction(node);
+				if (node.arguments.length) {
+					define.arg = _getStartEnd(node.arguments[0]);
+				}
+				let name;
+				if (ts.isVariableDeclaration(parent)) {
+					name = getNodeText(ts, parent.name, ast);
+				}
 				templateRefs.push({
-					name: ts.isVariableDeclaration(parent) ? getNodeText(ts, parent.name, ast) : undefined,
-					define: parseDefineFunction(node)
+					name,
+					define
 				});
 			}
 		}

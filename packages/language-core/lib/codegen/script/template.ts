@@ -109,7 +109,7 @@ function* generateCtx(
 		}
 		yield `}`;
 	}
-	yield endOfLine;
+	yield ` & __VLS_TypeRefs & { $refs: __VLS_TypeRefs }${endOfLine}`;
 }
 
 function* generateTemplateContext(
@@ -154,10 +154,14 @@ function* generateTemplateContext(
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.slots.define) {
 			yield `const __VLS_slots = {}${endOfLine}`;
+			yield `const __VLS_refs = {}${endOfLine}`;
 		}
 	}
 
-	yield `return ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'}${endOfLine}`;
+	yield `return {${newLine}`;
+	yield `slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
+	yield `refs: __VLS_refs as __VLS_PickRefsExpose<typeof __VLS_refs>,${newLine}`;
+	yield `}${endOfLine}`;
 }
 
 function* generateCssClassProperty(
