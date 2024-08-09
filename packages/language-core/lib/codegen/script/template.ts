@@ -109,7 +109,7 @@ function* generateCtx(
 		}
 		yield `}`;
 	}
-	yield ` & __VLS_TypeRefs & { $refs: __VLS_TypeRefs }${endOfLine}`;
+	yield endOfLine;
 }
 
 function* generateTemplateContext(

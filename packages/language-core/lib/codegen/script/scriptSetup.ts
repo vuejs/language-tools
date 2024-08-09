@@ -247,9 +247,9 @@ function* generateSetupFunction(
 
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
 	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
-	yield* generateRefsType(options, scriptSetupRanges);
 
 	yield* generateTemplate(options, ctx, false);
+	yield `type __VLS_Refs = ReturnType<typeof __VLS_template>['refs']${endOfLine};`
 
 	if (syntax) {
 		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges?.slots.define)) {
@@ -429,15 +429,4 @@ function* generateDefinePropType(scriptSetup: NonNullable<Sfc['scriptSetup']>, p
 	else {
 		yield `any`;
 	}
-}
-
-function* generateRefsType(options: ScriptCodegenOptions, scriptSetupRanges: ScriptSetupRanges) {
-	yield `type __VLS_TypeRefs = import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`;
-	for (const { name } of scriptSetupRanges.templateRefs) {
-		if (name) {
-			yield `${name}: typeof ${name}${newLine}`;
-		}
-	}
-	yield `}>${newLine}`;
-	yield `type __VLS_Refs = ReturnType<typeof __VLS_template>['refs']${endOfLine}`;
 }

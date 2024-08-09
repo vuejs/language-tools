@@ -29,7 +29,7 @@ export function* generateInternalComponent(
 		]) {
 			for (const expose of bindings) {
 				const varName = content.substring(expose.start, expose.end);
-				if ((!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) || options.scriptSetupRanges.templateRefs.some(ref => ref.name == varName)) {
+				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
 					continue;
 				}
 				const templateOffset = options.getGeneratedLength();
@@ -48,6 +48,9 @@ export function* generateInternalComponent(
 		}
 		yield `}${endOfLine}`; // return {
 		yield `},${newLine}`; // setup() {
+		if (options.vueCompilerOptions.target >= 3.5) {
+			yield `__typeRefs: {} as __VLS_Refs,${newLine}`;
+		}
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
 			yield* generateScriptSetupOptions(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 		}

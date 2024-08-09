@@ -132,9 +132,9 @@ declare global {
 	type __VLS_PickRefsExpose<T> = T extends object
 		? { [K in keyof T]: 'expose' extends keyof T[K]
 		// @ts-ignore
-		? Parameters<T[K]['expose']>[0]
+		? Parameters<T[K]['expose']>[0] | null
 		: T[K] extends any[]
-		? Parameters<T[K][0]['expose']>[0][]
+		? Parameters<T[K][0]['expose']>[0][] | null
 		: T[K] }
 		: never;
 }
