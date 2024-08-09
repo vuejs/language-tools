@@ -112,7 +112,7 @@ export interface Sfc {
 	styles: readonly (SfcBlock & {
 		module: {
 			name: string;
-			loc?: CompilerDOM.SourceLocation;
+			offset?: number;
 		} | undefined;
 		scoped: boolean;
 		cssVars: {

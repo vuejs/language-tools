@@ -94,11 +94,11 @@ function* generateCtx(
 		for (let i = 0; i < options.sfc.styles.length; i++) {
 			const style = options.sfc.styles[i];
 			if (style.module) {
-				if (style.module.loc) {
+				if (style.module.offset) {
 					yield [
 						style.module.name,
 						'main',
-						style.module.loc.start.offset + 1,
+						style.module.offset + 1,
 						codeFeatures.all
 					];
 				}

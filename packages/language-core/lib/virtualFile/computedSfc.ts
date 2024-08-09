@@ -117,7 +117,13 @@ export function computedSfc(
 		computed(() => parsed()?.descriptor.styles ?? []),
 		(block, i) => {
 			const base = computedSfcBlock('style_' + i, 'css', block);
-			const module = computed(() => block().module);
+			const module = computed(() => {
+				const _module = block().module;
+				return _module ? {
+					name: _module.name,
+					offset: _module.loc ? _module.loc.start.offset + base.start - _module.tagLoc.start.offset : undefined
+				} : undefined;
+			});
 			const scoped = computed(() => !!block().scoped);
 			const cssVars = computed(() => [...parseCssVars(base.content)]);
 			const classNames = computed(() => [...parseCssClassNames(base.content)]);
