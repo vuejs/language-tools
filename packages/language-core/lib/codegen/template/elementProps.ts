@@ -269,7 +269,7 @@ function* genereatePropExp(
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
 	isShorthand: boolean,
-	inlayHints: boolean
+	enableCodeFeatures: boolean
 ): Generator<Code> {
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 		if (!isShorthand) { // vue 3.4+
@@ -296,23 +296,18 @@ function* genereatePropExp(
 					exp.loc.start.offset,
 					features
 				);
-				if (inlayHints) {
-					yield [
-						'',
-						'template',
-						exp.loc.end.offset,
-						{
-							__hint: {
-								setting: 'vue.inlayHints.vBindShorthand',
-								label: `="${propVariableName}"`,
-								tooltip: [
-									`This is a shorthand for \`${exp.loc.source}="${propVariableName}"\`.`,
-									'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
-									'[More info](https://github.com/vuejs/core/pull/9451)',
-								].join('\n\n'),
-							},
-						} as VueCodeInformation,
-					];
+				if (enableCodeFeatures) {
+					ctx.inlayHints.push({
+						blockName: 'template',
+						offset: exp.loc.end.offset,
+						setting: 'vue.inlayHints.vBindShorthand',
+						label: `="${propVariableName}"`,
+						tooltip: [
+							`This is a shorthand for \`${exp.loc.source}="${propVariableName}"\`.`,
+							'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
+							'[More info](https://github.com/vuejs/core/pull/9451)',
+						].join('\n\n'),
+					});
 				}
 			}
 		}
