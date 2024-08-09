@@ -381,7 +381,7 @@ function* generateVScope(
 
 	yield* generateElementDirectives(options, ctx, node);
 	yield* generateReferencesForElements(options, ctx, node); // <el ref="foo" />
-	yield* generateReferencesForScopedCssClasses(ctx, node);
+	yield* generateReferencesForScopedCssClasses(options, ctx, node);
 
 	if (inScope) {
 		yield `}${newLine}`;
@@ -559,6 +559,7 @@ function* generateReferencesForElements(
 }
 
 function* generateReferencesForScopedCssClasses(
+	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode
 ): Generator<Code> {
@@ -568,33 +569,50 @@ function* generateReferencesForScopedCssClasses(
 			&& prop.name === 'class'
 			&& prop.value
 		) {
-			let startOffset = prop.value.loc.start.offset;
-			let content = prop.value.loc.source;
-			if (
-				(content.startsWith(`'`) && content.endsWith(`'`))
-				|| (content.startsWith(`"`) && content.endsWith(`"`))
-			) {
-				startOffset++;
-				content = content.slice(1, -1);
-			}
-			if (content) {
-				let currentClassName = '';
-				for (const char of (content + ' ')) {
-					if (char.trim() === '') {
-						if (currentClassName !== '') {
-							ctx.scopedClasses.push({ className: currentClassName, offset: startOffset });
-							startOffset += currentClassName.length;
-							currentClassName = '';
-						}
-						startOffset += char.length;
+			if (options.template.lang === 'pug') {
+				const getClassOffset = Reflect.get(prop.value.loc.start, 'getClassOffset') as (offset: number) => number;
+				const content = prop.value.loc.source.slice(1, -1);
+
+				let startOffset = 1;
+				for (const className of content.split(' ')) {
+					if (className) {
+						ctx.scopedClasses.push({
+							className,
+							offset: getClassOffset(startOffset)
+						});
 					}
-					else {
-						currentClassName += char;
-					}
+					startOffset += className.length + 1;
 				}
 			}
 			else {
-				ctx.emptyClassOffsets.push(startOffset);
+				let startOffset = prop.value.loc.start.offset;
+				let content = prop.value.loc.source;
+				if (
+					(content.startsWith(`'`) && content.endsWith(`'`))
+					|| (content.startsWith(`"`) && content.endsWith(`"`))
+				) {
+					startOffset++;
+					content = content.slice(1, -1);
+				}
+				if (content) {
+					let currentClassName = '';
+					for (const char of (content + ' ')) {
+						if (char.trim() === '') {
+							if (currentClassName !== '') {
+								ctx.scopedClasses.push({ className: currentClassName, offset: startOffset });
+								startOffset += currentClassName.length;
+								currentClassName = '';
+							}
+							startOffset += char.length;
+						}
+						else {
+							currentClassName += char;
+						}
+					}
+				}
+				else {
+					ctx.emptyClassOffsets.push(startOffset);
+				}
 			}
 		}
 		else if (
