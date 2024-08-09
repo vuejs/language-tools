@@ -159,11 +159,15 @@ export function create(
 						return;
 					}
 
-					if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-						await afterHtmlCompletion(
-							htmlComplete,
-							context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot)
-						);
+					if (sourceScript?.generated) {
+						const virtualCode = sourceScript.generated.embeddedCodes.get('template');
+						if (virtualCode) {
+							const embeddedDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, virtualCode.id);
+							afterHtmlCompletion(
+								htmlComplete,
+								context.documents.get(embeddedDocumentUri, virtualCode.languageId, virtualCode.snapshot)
+							);
+						}
 					}
 
 					return htmlComplete;
@@ -660,9 +664,9 @@ export function create(
 				};
 			}
 
-			function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument) {
+			function afterHtmlCompletion(completionList: vscode.CompletionList, document: TextDocument) {
 
-				const replacement = getReplacement(completionList, sourceDocument);
+				const replacement = getReplacement(completionList, document);
 
 				if (replacement) {
 
