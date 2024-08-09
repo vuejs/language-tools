@@ -421,10 +421,14 @@ export function create(
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
+						if (isInternalItemId(tag.name)) {
+							continue;
+						}
+
 						if (specialTags.has(tag.name)) {
 							tag.name = createInternalItemId('specialTag', [tag.name]);
 						}
-						if (casing.tag === TagNameCasing.Kebab) {
+						else if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
 						}
 						else {
@@ -881,8 +885,12 @@ function createInternalItemId(type: 'componentEvent' | 'componentProp' | 'specia
 	return '__VLS_::' + type + '::' + args.join(',');
 }
 
+function isInternalItemId(key: string) {
+	return key.startsWith('__VLS_::');
+}
+
 function readInternalItemId(key: string) {
-	if (key.startsWith('__VLS_::')) {
+	if (isInternalItemId(key)) {
 		const strs = key.split('::');
 		return {
 			type: strs[1] as 'componentEvent' | 'componentProp' | 'specialTag',
