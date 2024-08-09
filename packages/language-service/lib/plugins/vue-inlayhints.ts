@@ -8,7 +8,7 @@ import { collectIdentifiers } from '@vue/language-core/lib/codegen/common';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
-		name: 'vue-inlay-hints-hidden-callback-param',
+		name: 'vue-inlay-hints',
 		capabilities: {
 			inlayHintProvider: {},
 		},
