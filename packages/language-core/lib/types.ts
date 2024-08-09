@@ -99,6 +99,7 @@ export interface SfcBlock {
 }
 
 export interface Sfc {
+	content: string;
 	template: SfcBlock & {
 		ast: CompilerDOM.RootNode | undefined;
 		errors: CompilerDOM.CompilerError[];
