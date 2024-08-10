@@ -42,6 +42,9 @@ export interface VueCompilerOptions {
 		defineOptions: string[];
 		withDefaults: string[];
 	};
+	composibles: {
+		useCssModule: string[];
+	};
 	plugins: VueLanguagePlugin[];
 
 	// experimental

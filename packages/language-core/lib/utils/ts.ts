@@ -232,6 +232,9 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			withDefaults: ['withDefaults'],
 			...vueOptions.macros,
 		},
+		composibles: {
+			useCssModule: ['useCssModule']
+		},
 		plugins: vueOptions.plugins ?? [],
 
 		// experimental

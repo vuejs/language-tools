@@ -4,7 +4,7 @@ import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponent, generateEmitsOption } from './component';
 import type { ScriptCodegenContext } from './context';
 import { ScriptCodegenOptions, codeFeatures } from './index';
-import { generateTemplate } from './template';
+import { generateCssClassProperty, generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
@@ -211,6 +211,30 @@ function* generateSetupFunction(
 			]);
 		}
 	}
+	if (scriptSetupRanges.cssModules.length) {
+		for (const { id, arg } of scriptSetupRanges.cssModules) {
+			setupCodeModifies.push([
+				[
+					`(`,
+					generateSfcBlockSection(scriptSetup, id!.start, id!.end, codeFeatures.all),
+					` as __VLS_useCssModule)`
+				],
+				id!.start,
+				id!.end
+			]);
+			if (arg) {
+				setupCodeModifies.push([
+					[
+						`({} as Omit<__VLS_StyleModules, '$style'>)[`,
+						generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+						`] as unknown as ${scriptSetup.content.slice(arg.start, arg.end)}`
+					],
+					arg.start,
+					arg.end
+				]);
+			}
+		}
+	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
 	if (setupCodeModifies.length) {
@@ -242,6 +266,7 @@ function* generateSetupFunction(
 
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
 	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
+	yield* generateStyleModules(options, ctx);
 	yield* generateTemplate(options, ctx, false);
 
 	if (syntax) {
@@ -403,6 +428,54 @@ function* generateModelEmits(
 	} else {
 		yield `{}`;
 	}
+	yield endOfLine;
+}
+
+function *generateStyleModules(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext
+): Generator<Code> {
+	const styles = options.sfc.styles.filter(style => style.module);
+	if (!styles.length) {
+		return;
+	}
+	const defaultName = '$style';
+
+	yield `interface __VLS_useCssModule {`;
+	if (styles.some(style => style.module!.name === defaultName)) {
+		yield `(): __VLS_StyleModules['${defaultName}'];`;
+	}
+	yield `<N extends keyof __VLS_StyleModules>(name: N): __VLS_StyleModules[N];`;
+	yield `}`;
+	yield endOfLine;
+	yield `type __VLS_StyleModules = {${newLine}`;
+	for (let i = 0; i < styles.length; i++) {
+		const style = styles[i];
+		const { name, offset } = style.module!;
+		if (offset) {
+			yield [
+				name,
+				'main',
+				offset + 1,
+				codeFeatures.all
+			];
+		}
+		else {
+			yield name;
+		}
+		yield `: Record<string, string> & ${ctx.helperTypes.Prettify.name}<{}`;
+		for (const className of style.classNames) {
+			yield* generateCssClassProperty(
+				i,
+				className.text,
+				className.offset,
+				'string',
+				false
+			);
+		}
+		yield `>${endOfLine}`;
+	}
+	yield `}`;
 	yield endOfLine;
 }
 

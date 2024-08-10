@@ -41,6 +41,10 @@ export function parseScriptSetupRanges(
 	const options: {
 		name?: string;
 	} = {};
+	const cssModules: {
+		id: TextRange;
+		arg?: TextRange;
+	}[] = [];
 
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -103,6 +107,7 @@ export function parseScriptSetupRanges(
 		expose,
 		defineProp,
 		options,
+		cssModules,
 	};
 
 	function _getStartEnd(node: ts.Node) {
@@ -288,6 +293,15 @@ export function parseScriptSetupRanges(
 						}
 					}
 				}
+			}
+			else if (vueCompilerOptions.composibles.useCssModule.includes(callText)) {
+				const module: (typeof cssModules)[number] = {
+					id: _getStartEnd(node.expression)
+				};
+				if (node.arguments.length) {
+					module.arg =  _getStartEnd(node.arguments[0]);
+				}
+				cssModules.push(module);
 			}
 		}
 		ts.forEachChild(node, child => {
