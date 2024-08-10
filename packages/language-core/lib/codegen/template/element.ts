@@ -595,7 +595,7 @@ function* generateReferencesForScopedCssClasses(
 			ts.forEachChild(ast, node => {
 				if (
 					!ts.isExpressionStatement(node) ||
-					!ts.isTemplateExpression(node.expression)
+					!isTemplateExpression(node.expression)
 				) return;
 
 				const expression = node.expression.templateSpans[0].expression;
@@ -694,4 +694,9 @@ function collectClasses(content: string, startOffset = 0) {
 		}
 	}
 	return classes;
+}
+
+// isTemplateExpression is missing in tsc
+function isTemplateExpression(node: ts.Node): node is ts.TemplateExpression {
+	return node.kind === 228 satisfies ts.SyntaxKind.TemplateExpression;
 }
