@@ -91,6 +91,13 @@ export interface SfcBlock {
 	attrs: Record<string, string | true>;
 }
 
+export interface SFCStyleOverride {
+	module?: {
+		name: string;
+		offset?: number;
+	}
+}
+
 export interface Sfc {
 	content: string;
 	template: SfcBlock & {
@@ -109,11 +116,7 @@ export interface Sfc {
 		genericOffset: number;
 		ast: ts.SourceFile;
 	} | undefined;
-	styles: readonly (SfcBlock & {
-		module: {
-			name: string;
-			offset?: number;
-		} | undefined;
+	styles: readonly (SfcBlock & SFCStyleOverride & {
 		scoped: boolean;
 		cssVars: {
 			text: string;
