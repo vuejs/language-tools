@@ -1,6 +1,6 @@
 import { clearComments } from './parseCssVars';
 
-const cssClassNameReg = /(?=([\.]{1}[a-zA-Z_]+[\w\_\-]*)[\s\.\,\+\{\>#\:]{1})/g;
+const cssClassNameReg = /(?=(\.[a-z_][-\w]*)[\s.,+~>:#[{])/gi;
 
 export function* parseCssClassNames(styleContent: string) {
 	styleContent = clearComments(styleContent);
