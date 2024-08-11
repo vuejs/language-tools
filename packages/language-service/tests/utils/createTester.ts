@@ -39,6 +39,7 @@ function createTester(rootUri: URI) {
 	const defaultVSCodeSettings: any = {
 		'typescript.preferences.quoteStyle': 'single',
 		'javascript.preferences.quoteStyle': 'single',
+		'vue.inlayHints.destructuredProps': true,
 		'vue.inlayHints.missingProps': true,
 		'vue.inlayHints.optionsWrapper': true,
 		'vue.inlayHints.inlineHandlerLeading': true,

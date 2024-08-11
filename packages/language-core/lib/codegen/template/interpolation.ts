@@ -12,7 +12,7 @@ export function* generateInterpolation(
 	_code: string,
 	astHolder: any,
 	start: number | undefined,
-	data: VueCodeInformation | (() => VueCodeInformation) | undefined,
+	data: VueCodeInformation | ((offset: number) => VueCodeInformation) | undefined,
 	prefix: string,
 	suffix: string,
 	inlayHints: [Code, number][] = []
@@ -43,41 +43,14 @@ export function* generateInterpolation(
 				offset = 0;
 			}
 			if (start !== undefined && data !== undefined) {
-				const startOffset = start + offset;
-				const endOffset = startOffset + section.length;
-
-				const filtered = inlayHints.filter(
-					([, pos]) => pos > startOffset && pos <= endOffset
-				);
-
-				if (filtered.length) {
-					yield generateSection(section, startOffset, startOffset, filtered[0][1]);
-					while (filtered.length) {
-						const [inlayHint, pos] = filtered.shift()!;
-						yield inlayHint;
-						if (filtered.length) {
-							const nextStart = filtered[0][1];
-							yield generateSection(section, startOffset, pos, nextStart);
-						}
-						else {
-							yield generateSection(section, startOffset, pos, endOffset);
-						}
-					}
-				}
-				else {
-					yield generateSection(section, startOffset, startOffset, endOffset);
-				}
-
-				function generateSection(text: string, startOffset: number, from: number, to: number) {
-					return [
-						text.slice(from - startOffset, to - startOffset),
-						'template',
-						from,
-						onlyError
-							? ctx.codeFeatures.verification
-							: typeof data === 'function' ? data() : data,
-					] as Code;
-				}
+				yield [
+					section,
+					'template',
+					start + offset,
+					onlyError
+						? ctx.codeFeatures.verification
+						: typeof data === 'function' ? data(start + offset) : data,
+				];
 			}
 			else {
 				yield section;

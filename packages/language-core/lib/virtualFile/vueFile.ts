@@ -1,11 +1,11 @@
 import type { VirtualCode } from '@volar/language-core';
-import { Signal, signal } from 'computeds';
+import { computed, Signal, signal } from 'computeds';
 import type * as ts from 'typescript';
 import type { VueCompilerOptions, VueLanguagePluginReturn } from '../types';
-import { computedFiles } from './computedFiles';
-import { computedMappings } from './computedMappings';
+import { computedEmbeddedCodes } from './computedEmbeddedCodes';
 import { computedSfc } from './computedSfc';
 import { computedVueSfc } from './computedVueSfc';
+import { allCodeFeatures } from '../plugins';
 
 export class VueVirtualCode implements VirtualCode {
 
@@ -13,14 +13,22 @@ export class VueVirtualCode implements VirtualCode {
 
 	id = 'main';
 
-	_snapshot: Signal<ts.IScriptSnapshot>;
+	getSnapshot: Signal<ts.IScriptSnapshot>;
 
 	// computeds
 
-	getVueSfc = computedVueSfc(this.plugins, this.fileName, this.languageId, () => this._snapshot());
-	sfc = computedSfc(this.ts, this.plugins, this.fileName, () => this._snapshot(), this.getVueSfc);
-	getMappings = computedMappings(() => this._snapshot(), this.sfc);
-	getEmbeddedCodes = computedFiles(this.plugins, this.fileName, this.sfc);
+	getVueSfc = computedVueSfc(this.plugins, this.fileName, this.languageId, () => this.getSnapshot());
+	sfc = computedSfc(this.ts, this.plugins, this.fileName, () => this.getSnapshot(), this.getVueSfc);
+	getMappings = computed(() => {
+		const snapshot = this.getSnapshot();
+		return [{
+			sourceOffsets: [0],
+			generatedOffsets: [0],
+			lengths: [snapshot.getLength()],
+			data: allCodeFeatures,
+		}];
+	});
+	getEmbeddedCodes = computedEmbeddedCodes(this.plugins, this.fileName, this.sfc);
 
 	// others
 
@@ -28,7 +36,7 @@ export class VueVirtualCode implements VirtualCode {
 		return this.getEmbeddedCodes();
 	}
 	get snapshot() {
-		return this._snapshot();
+		return this.getSnapshot();
 	}
 	get mappings() {
 		return this.getMappings();
@@ -42,10 +50,10 @@ export class VueVirtualCode implements VirtualCode {
 		public plugins: VueLanguagePluginReturn[],
 		public ts: typeof import('typescript'),
 	) {
-		this._snapshot = signal(initSnapshot);
+		this.getSnapshot = signal(initSnapshot);
 	}
 
 	update(newSnapshot: ts.IScriptSnapshot) {
-		this._snapshot.set(newSnapshot);
+		this.getSnapshot.set(newSnapshot);
 	}
 }

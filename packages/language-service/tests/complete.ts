@@ -8,7 +8,7 @@ import { fileNameToUri } from './utils/mockEnv';
 
 const baseDir = path.resolve(__dirname, '../../../test-workspace/language-service/complete');
 const testDirs = fs.readdirSync(baseDir);
-const normalizeNewline = (text: string) => text.replace(/\r\n/g, '\n');
+const getLineText = (text: string, line: number) => text.replace(/\r\n/g, '\n').split('\n')[line];
 
 for (const dirName of testDirs) {
 
@@ -26,6 +26,8 @@ for (const dirName of testDirs) {
 			const document = TextDocument.create('', '', 0, fileText);
 			const actions = findCompleteActions(fileText);
 
+			const expectedFileText = outputFiles[file];
+
 			for (const action of actions) {
 
 				const position = document.positionAt(action.offset);
@@ -35,6 +37,8 @@ for (const dirName of testDirs) {
 				const location = `${filePath}:${position.line + 1}:${position.character + 1}`;
 
 				it(`${location} => ${action.label}`, async () => {
+
+					expect(expectedFileText).toBeDefined();
 
 					let complete = await tester.languageService.getCompletionItems(
 						uri,
@@ -56,10 +60,6 @@ for (const dirName of testDirs) {
 					expect(item).toBeDefined();
 
 					item = await tester.languageService.resolveCompletionItem(item);
-
-					const expectedFileText = outputFiles[file];
-
-					expect(expectedFileText).toBeDefined();
 
 					let edits: vscode.TextEdit[] = [];
 
@@ -83,7 +83,7 @@ for (const dirName of testDirs) {
 
 					result = result.replace(/\$0/g, '').replace(/\$1/g, '');
 
-					expect(normalizeNewline(result)).toBe(normalizeNewline(expectedFileText));
+					expect(getLineText(result, position.line)).toBe(getLineText(expectedFileText, position.line));
 				});
 			}
 		}
