@@ -82,6 +82,9 @@ export function* generateSlotOutlet(
 			&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			const isShortHand = nameProp.arg?.loc.start.offset === nameProp.exp.loc.start.offset;
+			if (isShortHand) {
+				ctx.inlayHints.push(generateVBindShorthandInlayHint(nameProp.exp.loc, 'name'));
+			}
 			const slotExpVar = ctx.getInternalVariable();
 			yield `var ${slotExpVar} = `;
 			yield* generateInterpolation(
@@ -92,11 +95,7 @@ export function* generateSlotOutlet(
 				nameProp.exp.loc.start.offset,
 				ctx.codeFeatures.all,
 				'(',
-				')',
-				isShortHand ? [[
-					generateVBindShorthandInlayHint(nameProp.exp.loc, 'name'),
-					nameProp.exp.loc.end.offset
-				]] : undefined
+				')'
 			);
 			yield ` as const${endOfLine}`;
 			ctx.dynamicSlots.push({

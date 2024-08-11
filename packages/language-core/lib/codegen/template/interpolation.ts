@@ -14,8 +14,7 @@ export function* generateInterpolation(
 	start: number | undefined,
 	data: VueCodeInformation | ((offset: number) => VueCodeInformation) | undefined,
 	prefix: string,
-	suffix: string,
-	inlayHints: [Code, number][] = []
+	suffix: string
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);

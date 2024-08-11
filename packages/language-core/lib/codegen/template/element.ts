@@ -112,6 +112,9 @@ export function* generateComponent(
 		yield `]${endOfLine}`;
 	}
 	else if (dynamicTagInfo) {
+		if (dynamicTagInfo.isComponentIsShorthand) {
+			ctx.inlayHints.push(generateVBindShorthandInlayHint(dynamicTagInfo.exp.loc, 'is'));
+		}
 		yield `const ${var_originalComponent} = (`;
 		yield* generateInterpolation(
 			options,
@@ -121,11 +124,7 @@ export function* generateComponent(
 			dynamicTagInfo.offsets[0],
 			ctx.codeFeatures.all,
 			'(',
-			')',
-			dynamicTagInfo.isComponentIsShorthand ? [[
-				generateVBindShorthandInlayHint(dynamicTagInfo.exp.loc, 'is'),
-				dynamicTagInfo.exp.loc.end.offset
-			]] : undefined
+			')'
 		);
 		if (dynamicTagInfo.offsets[1] !== undefined) {
 			yield `,`;

@@ -298,17 +298,7 @@ function* genereatePropExp(
 					features
 				);
 				if (enableCodeFeatures) {
-					ctx.inlayHints.push({
-						blockName: 'template',
-						offset: exp.loc.end.offset,
-						setting: 'vue.inlayHints.vBindShorthand',
-						label: `="${propVariableName}"`,
-						tooltip: [
-							`This is a shorthand for \`${exp.loc.source}="${propVariableName}"\`.`,
-							'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
-							'[More info](https://github.com/vuejs/core/pull/9451)',
-						].join('\n\n'),
-					});
+					ctx.inlayHints.push(generateVBindShorthandInlayHint(exp.loc, propVariableName));
 				}
 			}
 		}
