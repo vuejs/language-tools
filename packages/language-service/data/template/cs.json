@@ -1173,6 +1173,7 @@
     },
     {
       "name": "v-pre",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nPřeskočit kompilaci tohoto elementu a všech jeho potomků.\n\n- **Nepředpokládá výraz** \n\n- **Podrobnosti**\n\n  Uvnitř elementu s `v-pre` budou všechny syntaxe Vue šablony zachovány a&nbsp;vykresleny tak, jak jsou. Nejběžnějším použitím je zobrazení nezpracovaných „mustache“ tagů.\n\n- **Příklad**\n\n  ```html\n  <span v-pre>{{ toto nebude zkompilováno }}</span>\n  ```\n"
@@ -1234,6 +1235,7 @@
     },
     {
       "name": "v-once",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nVykreslit element nebo komponentu pouze jednou a přeskočit budoucí aktualizace.\n\n- **Nepředpokládá výraz** \n\n- **Podrobnosti**\n\n  Při dalších překreslováních budou element/komponenta a všichni potomci považováni za statický obsah a přeskočeni. To lze použít k optimalizaci výkonu aktualizace.\n\n  ```html\n  <!-- jediný prvek -->\n  <span v-once>Toto se nikdy nezmění: {{msg}}</span>\n  <!-- element s potomky -->\n  <div v-once>\n    <h1>Komentář</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- komponenta -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- direktiva `v-for` -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Od verze 3.2 si můžete také část šablony „zapamatovat“ (memoize) s podmínkami neplatnosti pomocí [`v-memo`](#v-memo).\n\n- **Viz také:**\n  - [Syntaxe šablon - Interpolace textu](https://cs.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
@@ -1356,6 +1358,7 @@
     },
     {
       "name": "v-cloak",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nPoužívá se k skrytí nezkompilované šablony, dokud není připravena.\n\n- **Nepředpokládá výraz**\n\n- **Podrobnosti**\n\n  **Tato direktiva je potřeba pouze při použití bez build fáze.**\n\n  Při použití in-DOM šablon může dojít k „blikání (flashing) nezkompilovaných šablon“: uživatel může vidět nezpracované „mustache“ značky, dokud je připojená (mounted) komponenta nenahradí vykresleným obsahem.\n\n  `v-cloak` zůstane na elementu, dokud není připojena příslušná instance komponenty. Spolu s CSS pravidly jako `[v-cloak] { display: none }` lze použít k skrytí nezpracovaných šablon, dokud není komponenta připravena.\n\n- **Příklad**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  `<div>` nebude viditelný, dokud nebude dokončena kompilace.\n"
