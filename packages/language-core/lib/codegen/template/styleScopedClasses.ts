@@ -5,7 +5,6 @@ import { endOfLine, newLine } from '../common';
 export function* generateStyleScopedClasses(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
-	yield `if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {${newLine}`;
 	for (const offset of ctx.emptyClassOffsets) {
 		yield `__VLS_styleScopedClasses['`;
 		yield [
@@ -37,7 +36,7 @@ export function* generateStyleScopedClasses(
 		];
 		yield `]${endOfLine}`;
 	}
-	yield `}${newLine}`;
+	yield newLine;
 
 	function* escapeString(source: string, className: string, offset: number, escapeTargets: string[]): Generator<Code> {
 		let count = 0;

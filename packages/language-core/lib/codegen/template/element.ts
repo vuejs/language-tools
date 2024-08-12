@@ -594,15 +594,6 @@ function* generateReferencesForScopedCssClasses(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			&& prop.arg.content === 'class'
 		) {
-			yield `__VLS_styleScopedClasses = (`;
-			yield [
-				prop.exp.content,
-				'template',
-				prop.exp.loc.start.offset,
-				ctx.codeFeatures.navigationAndCompletion,
-			];
-			yield `)${endOfLine}`;
-
 			const content = '`${' + prop.exp.content + '}`';
 			const startOffset = prop.exp.loc.start.offset - 3;
 

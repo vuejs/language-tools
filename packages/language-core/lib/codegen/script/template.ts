@@ -127,7 +127,7 @@ function* generateTemplateContext(
 	/* Style Scoped */
 	const firstClasses = new Set<string>();
 	yield `/* Style Scoped */${newLine}`;
-	yield `type __VLS_StyleScopedClasses = {}`;
+	yield `let __VLS_styleScopedClasses!: {}`;
 	for (let i = 0; i < options.sfc.styles.length; i++) {
 		const style = options.sfc.styles[i];
 		const option = options.vueCompilerOptions.experimentalResolveStyleCssClasses;
@@ -153,7 +153,6 @@ function* generateTemplateContext(
 		}
 	}
 	yield endOfLine;
-	yield `let __VLS_styleScopedClasses!: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[]${endOfLine}`;
 	yield* generateStyleScopedClasses(templateCodegenCtx);
 	yield* generateCssVars(options, templateCodegenCtx);
 
