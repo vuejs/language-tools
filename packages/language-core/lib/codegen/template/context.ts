@@ -108,7 +108,11 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 	const hasSlotElements = new Set<CompilerDOM.ElementNode>();;
 	const blockConditions: string[] = [];
 	const usedComponentCtxVars = new Set<string>();
-	const scopedClasses: { className: string, offset: number; }[] = [];
+	const scopedClasses: {
+		source: string;
+		className: string;
+		offset: number;
+	 }[] = [];
 	const emptyClassOffsets: number[] = [];
 
 	return {

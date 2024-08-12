@@ -656,6 +656,7 @@ function* generateReferencesForScopedCssClasses(
 
 			function walkIdentifier(node: ts.Identifier) {
 				ctx.scopedClasses.push({
+					source: 'template',
 					className: node.text,
 					offset: node.end - node.text.length + startOffset
 				});
@@ -673,7 +674,11 @@ function getTagRenameApply(oldName: string) {
 }
 
 function collectClasses(content: string, startOffset = 0) {
-	const classes: { className: string, offset: number; }[] = [];
+	const classes: {
+		source: string;
+		className: string;
+		offset: number;
+	}[] = [];
 
 	let currentClassName = '';
 	let offset = 0;
@@ -681,6 +686,7 @@ function collectClasses(content: string, startOffset = 0) {
 		if (char.trim() === '') {
 			if (currentClassName !== '') {
 				classes.push({
+					source: 'template',
 					className: currentClassName,
 					offset: offset + startOffset
 				});

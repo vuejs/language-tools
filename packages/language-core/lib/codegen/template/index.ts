@@ -6,6 +6,7 @@ import { TemplateCodegenContext, createTemplateCodegenContext } from './context'
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
 import { generateTemplateChild, getVForNode } from './templateChild';
+import { generateStyleScopedClasses } from './styleScopedClasses';
 
 export interface TemplateCodegenOptions {
 	ts: typeof ts;
@@ -35,7 +36,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		yield* generateTemplateChild(options, ctx, options.template.ast, undefined, undefined, undefined);
 	}
 
-	yield* generateStyleScopedClasses();
+	yield* generateStyleScopedClasses(ctx);
 
 	if (!options.hasDefineSlots) {
 		yield `var __VLS_slots!:`;
@@ -76,45 +77,6 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 			yield `?(_: typeof ${slot.varName}): any,${newLine}`;
 		}
 		yield `}`;
-	}
-
-	function* generateStyleScopedClasses(): Generator<Code> {
-		yield `if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {${newLine}`;
-		for (const offset of ctx.emptyClassOffsets) {
-			yield `__VLS_styleScopedClasses['`;
-			yield [
-				'',
-				'template',
-				offset,
-				ctx.codeFeatures.additionalCompletion,
-			];
-			yield `']${endOfLine}`;
-		}
-		for (const { className, offset } of ctx.scopedClasses) {
-			yield `__VLS_styleScopedClasses[`;
-			yield [
-				'',
-				'template',
-				offset,
-				ctx.codeFeatures.navigationWithoutRename,
-			];
-			yield `'`;
-			yield [
-				className,
-				'template',
-				offset,
-				ctx.codeFeatures.navigationAndAdditionalCompletion,
-			];
-			yield `'`;
-			yield [
-				'',
-				'template',
-				offset + className.length,
-				ctx.codeFeatures.navigationWithoutRename,
-			];
-			yield `]${endOfLine}`;
-		}
-		yield `}${newLine}`;
 	}
 
 	function* generatePreResolveComponents(): Generator<Code> {
