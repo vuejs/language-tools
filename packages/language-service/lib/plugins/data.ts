@@ -39,7 +39,10 @@ export function loadTemplateData(lang: string) {
 
 	for (const attr of [...data.globalAttributes ?? []]) {
 		if (!attr.name.startsWith('v-')) {
-			data.globalAttributes?.push({ ...attr, name: `:${attr.name}` });
+			data.globalAttributes?.push(
+				{ ...attr, name: `:${attr.name}` },
+				{ ...attr, name: `v-bind:${attr.name}` }
+			);
 		}
 	}
 

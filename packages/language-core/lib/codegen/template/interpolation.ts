@@ -12,7 +12,7 @@ export function* generateInterpolation(
 	_code: string,
 	astHolder: any,
 	start: number | undefined,
-	data: VueCodeInformation | (() => VueCodeInformation) | undefined,
+	data: VueCodeInformation | ((offset: number) => VueCodeInformation) | undefined,
 	prefix: string,
 	suffix: string
 ): Generator<Code> {
@@ -53,7 +53,7 @@ export function* generateInterpolation(
 					start + offset,
 					onlyError
 						? ctx.codeFeatures.verification
-						: typeof data === 'function' ? data() : data,
+						: typeof data === 'function' ? data(start + offset) : data,
 				];
 			}
 			else {

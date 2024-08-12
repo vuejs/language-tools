@@ -2,6 +2,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
 import { endOfLine, newLine, wrapWith } from '../common';
 import type { TemplateCodegenOptions } from './index';
+import { InlayHintInfo } from '../types';
 
 const _codeFeatures = {
 	all: {
@@ -114,6 +115,7 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 		offset: number;
 	 }[] = [];
 	const emptyClassOffsets: number[] = [];
+	const inlayHints: InlayHintInfo[] = [];
 
 	return {
 		slots,
@@ -125,6 +127,7 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 		usedComponentCtxVars,
 		scopedClasses,
 		emptyClassOffsets,
+		inlayHints,
 		hasSlot: false,
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);

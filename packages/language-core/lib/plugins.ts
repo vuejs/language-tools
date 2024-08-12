@@ -1,6 +1,7 @@
 import useHtmlFilePlugin from './plugins/file-html';
 import useMdFilePlugin from './plugins/file-md';
 import useVueFilePlugin from './plugins/file-vue';
+import vueRootTagsPlugin from './plugins/vue-root-tags';
 import vueScriptJsPlugin from './plugins/vue-script-js';
 import vueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import vueSfcScriptsFormat from './plugins/vue-sfc-scripts';
@@ -20,6 +21,7 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		useVueFilePlugin,
 		useMdFilePlugin,
 		useHtmlFilePlugin,
+		vueRootTagsPlugin,
 		vueScriptJsPlugin,
 		vueTemplateHtmlPlugin,
 		vueTemplateInlineCssPlugin,
