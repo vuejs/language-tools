@@ -9,6 +9,9 @@ export function create(): LanguageServicePlugin {
 			const baseInstance = base.create(context);
 			return {
 				...baseInstance,
+				async provideRenameEdits() {
+					return undefined;
+				},
 				async provideDiagnostics(document, token) {
 					let diagnostics = await baseInstance.provideDiagnostics?.(document, token) ?? [];
 					if (document.languageId === 'postcss') {
