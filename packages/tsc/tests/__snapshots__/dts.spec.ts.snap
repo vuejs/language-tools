@@ -634,7 +634,7 @@ export {};
 `;
 
 exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slots/component.vue.d.ts 1`] = `
-"declare function __VLS_template(): {
+"declare const __VLS_template: () => {
     "no-bind"?(_: {}): any;
     default?(_: {
         num: number;
@@ -660,7 +660,7 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 
 exports[`vue-tsc-dts > Input: template-slots/component-define-slots.vue, Output: template-slots/component-define-slots.vue.d.ts 1`] = `
 "import { VNode } from 'vue';
-declare function __VLS_template(): Readonly<{
+declare const __VLS_template: () => Readonly<{
     default: (props: {
         num: number;
     }) => VNode[];
@@ -697,7 +697,7 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 `;
 
 exports[`vue-tsc-dts > Input: template-slots/component-destructuring.vue, Output: template-slots/component-destructuring.vue.d.ts 1`] = `
-"declare function __VLS_template(): Readonly<{
+"declare const __VLS_template: () => Readonly<{
     bottom: (props: {
         num: number;
     }) => any[];
@@ -718,7 +718,7 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 `;
 
 exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: template-slots/component-no-script.vue.d.ts 1`] = `
-"declare function __VLS_template(): {
+"declare const __VLS_template: () => {
     "no-bind"?(_: {}): any;
     default?(_: {
         num: number;

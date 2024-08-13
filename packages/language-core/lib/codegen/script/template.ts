@@ -17,18 +17,20 @@ export function* generateTemplate(
 
 	if (!options.vueCompilerOptions.skipTemplateCodegen) {
 		if (isClassComponent) {
-			yield `__VLS_template() {${newLine}`;
+			yield `__VLS_template = (() => {${newLine}`;
 		}
 		else {
-			yield `function __VLS_template() {${newLine}`;
+			yield `const __VLS_template = (() => {${newLine}`;
 		}
 		const templateCodegenCtx = createTemplateCodegenContext(new Set());
+		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
+		yield `return () => {${newLine}`;
 		yield* generateCtx(options, ctx, isClassComponent);
 		yield* generateTemplateContext(options, templateCodegenCtx);
 		yield* generateExportOptions(options);
 		yield* generateConstNameOption(options);
-		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
-		yield `}${newLine}`;
+		yield `}${endOfLine}`;
+		yield `})()${endOfLine}`;
 	}
 	else {
 		yield `function __VLS_template() {${newLine}`;
