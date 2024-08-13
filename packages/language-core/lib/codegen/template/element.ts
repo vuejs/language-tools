@@ -542,18 +542,20 @@ function* generateReferencesForElements(
 			&& prop.name === 'ref'
 			&& prop.value
 		) {
+			let [content, startOffset] = normalizeAttributeValue(prop.value); 
+
 			yield `// @ts-ignore${newLine}`;
-			yield* generateInterpolation(
+			yield `__VLS_ctx`;
+			yield* generatePropertyAccess(
 				options,
 				ctx,
-				prop.value.content,
-				prop.value.loc,
-				prop.value.loc.start.offset + 1,
+				content,
+				startOffset,
 				ctx.codeFeatures.navigation,
-				'(',
-				')'
+				prop.value.loc
 			);
 			yield endOfLine;
+			ctx.accessExternalVariable(content, startOffset);
 		}
 	}
 }
@@ -568,15 +570,7 @@ function* generateReferencesForScopedCssClasses(
 			&& prop.name === 'class'
 			&& prop.value
 		) {
-			let startOffset = prop.value.loc.start.offset;
-			let content = prop.value.loc.source;
-			if (
-				(content.startsWith(`'`) && content.endsWith(`'`))
-				|| (content.startsWith(`"`) && content.endsWith(`"`))
-			) {
-				startOffset++;
-				content = content.slice(1, -1);
-			}
+			let [content, startOffset] = normalizeAttributeValue(prop.value); 
 			if (content) {
 				let currentClassName = '';
 				for (const char of (content + ' ')) {
@@ -621,4 +615,17 @@ function camelizeComponentName(newName: string) {
 
 function getTagRenameApply(oldName: string) {
 	return oldName === hyphenateTag(oldName) ? hyphenateTag : undefined;
+}
+
+function normalizeAttributeValue(node: CompilerDOM.TextNode): [string, number] {
+	let offset = node.loc.start.offset;
+	let content = node.loc.source;
+	if (
+		(content.startsWith(`'`) && content.endsWith(`'`))
+		|| (content.startsWith(`"`) && content.endsWith(`"`))
+	) {
+		offset++;
+		content = content.slice(1, -1);
+	}
+	return [content, offset];
 }
