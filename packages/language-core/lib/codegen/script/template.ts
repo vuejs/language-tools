@@ -23,13 +23,14 @@ export function* generateTemplate(
 			yield `const __VLS_template = (() => {${newLine}`;
 		}
 		const templateCodegenCtx = createTemplateCodegenContext(new Set());
-		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
-		yield `return () => {${newLine}`;
+		yield `const __VLS_template_return = () => {${newLine}`;
 		yield* generateCtx(options, ctx, isClassComponent);
 		yield* generateTemplateContext(options, templateCodegenCtx);
 		yield* generateExportOptions(options);
 		yield* generateConstNameOption(options);
 		yield `}${endOfLine}`;
+		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
+		yield `return __VLS_template_return${endOfLine}`;
 		yield `})()${endOfLine}`;
 	}
 	else {
