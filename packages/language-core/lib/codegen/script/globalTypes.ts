@@ -105,6 +105,7 @@ declare global {
 		: false;
 
 	function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
+	function __VLS_tryAsConstant<const T>(t: T): T;
 
 	/**
 	 * emit

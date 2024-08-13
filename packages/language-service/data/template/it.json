@@ -1173,6 +1173,7 @@
     },
     {
       "name": "v-pre",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nSkip compilation for this element and all its children.\n\n- **Does not expect expression**\n\n- **Details**\n\n  Inside the element with `v-pre`, all Vue template syntax will be preserved and rendered as-is. The most common use case of this is displaying raw mustache tags.\n\n- **Example**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
@@ -1234,6 +1235,7 @@
     },
     {
       "name": "v-once",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nRender the element and component once only, and skip future updates.\n\n- **Does not expect expression**\n\n- **Details**\n\n  On subsequent re-renders, the element/component and all its children will be treated as static content and skipped. This can be used to optimize update performance.\n\n  ```html\n  <!-- single element -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- the element have children -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- component -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- `v-for` directive -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Since 3.2, you can also memoize part of the template with invalidation conditions using [`v-memo`](#v-memo).\n\n- **See also**\n  - [Data Binding Syntax - interpolations](https://it.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
@@ -1356,6 +1358,7 @@
     },
     {
       "name": "v-cloak",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nUsed to hide un-compiled template until it is ready.\n\n- **Does not expect expression**\n\n- **Details**\n\n  **This directive is only needed in no-build-step setups.**\n\n  When using in-DOM templates, there can be a \"flash of un-compiled templates\": the user may see raw mustache tags until the mounted component replaces them with rendered content.\n\n  `v-cloak` will remain on the element until the associated component instance is mounted. Combined with CSS rules such as `[v-cloak] { display: none }`, it can be used to hide the raw templates until the component is ready.\n\n- **Example**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  The `<div>` will not be visible until the compilation is done.\n"

@@ -159,11 +159,15 @@ export function create(
 						return;
 					}
 
-					if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-						await afterHtmlCompletion(
-							htmlComplete,
-							context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot)
-						);
+					if (sourceScript?.generated) {
+						const virtualCode = sourceScript.generated.embeddedCodes.get('template');
+						if (virtualCode) {
+							const embeddedDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, virtualCode.id);
+							afterHtmlCompletion(
+								htmlComplete,
+								context.documents.get(embeddedDocumentUri, virtualCode.languageId, virtualCode.snapshot)
+							);
+						}
 					}
 
 					return htmlComplete;
@@ -421,10 +425,14 @@ export function create(
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
+						if (isInternalItemId(tag.name)) {
+							continue;
+						}
+
 						if (specialTags.has(tag.name)) {
 							tag.name = createInternalItemId('specialTag', [tag.name]);
 						}
-						if (casing.tag === TagNameCasing.Kebab) {
+						else if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
 						}
 						else {
@@ -656,9 +664,9 @@ export function create(
 				};
 			}
 
-			function afterHtmlCompletion(completionList: vscode.CompletionList, sourceDocument: TextDocument) {
+			function afterHtmlCompletion(completionList: vscode.CompletionList, document: TextDocument) {
 
-				const replacement = getReplacement(completionList, sourceDocument);
+				const replacement = getReplacement(completionList, document);
 
 				if (replacement) {
 
@@ -729,6 +737,8 @@ export function create(
 					}
 				}
 
+				const originals = new Map<string, html.CompletionItem>();
+
 				for (const item of completionList.items) {
 
 					if (specialTags.has(item.label)) {
@@ -755,7 +765,18 @@ export function create(
 					const itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
 
 					if (itemId) {
-						item.documentation = undefined;
+						let label = hyphenate(itemId.args[1]);
+						if (label.startsWith('on-')) {
+							label = 'on' + label.slice('on-'.length);
+						}
+						else if (itemId.type === 'componentEvent') {
+							label = 'on' + label;
+						}
+						const original = originals.get(label);
+						item.documentation = original?.documentation;
+					}
+					else if (!originals.has(item.label)) {
+						originals.set(item.label, item);
 					}
 
 					if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && lastCompletionComponentNames.has(hyphenateTag(item.label))) {
@@ -868,8 +889,12 @@ function createInternalItemId(type: 'componentEvent' | 'componentProp' | 'specia
 	return '__VLS_::' + type + '::' + args.join(',');
 }
 
+function isInternalItemId(key: string) {
+	return key.startsWith('__VLS_::');
+}
+
 function readInternalItemId(key: string) {
-	if (key.startsWith('__VLS_::')) {
+	if (isInternalItemId(key)) {
 		const strs = key.split('::');
 		return {
 			type: strs[1] as 'componentEvent' | 'componentProp' | 'specialTag',
