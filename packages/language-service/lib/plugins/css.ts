@@ -43,7 +43,7 @@ export function create(): LanguageServicePlugin {
 						if (sourceScript?.generated?.root instanceof VueVirtualCode) {
 							const style = sourceScript.generated.root.sfc.styles[i];
 							const option = sourceScript.generated.root.vueCompilerOptions.experimentalResolveStyleCssClasses;
-							if (option === 'always' || (option === 'scoped' && style.scoped)) {
+							if (option === 'always' || (option === 'scoped' && style.scoped) || style.module) {
 								regexps.push(cssClassNameReg);
 							}
 						}
