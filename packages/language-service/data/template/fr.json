@@ -1173,6 +1173,7 @@
     },
     {
       "name": "v-pre",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nIgnore la compilation pour cet élément et tous ses enfants.\n\n- **N'attend pas d'expression**\n\n- **Détails**\n\n  À l'intérieur de l'élément contenant `v-pre`, toute la syntaxe du template Vue sera préservée et rendue telle quelle. Le cas d'utilisation le plus courant est l'affichage brut des balises moustaches.\n\n- **Exemple**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
@@ -1234,6 +1235,7 @@
     },
     {
       "name": "v-once",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nRend l'élément et le composant une seule fois, et ignore les mises à jour futures.\n\n- **N'attend pas d'expression**\n\n- **Détails**\n\n  Lors des rendus suivants, l'élément/composant et tous ses enfants seront traités comme du contenu statique et ignorés. Cela peut être utilisé pour optimiser les performances de mise à jour.\n\n  ```html\n  <!-- élément simple -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- l'élément a des enfants -->\n  <div v-once>\n    <h1>Comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- composant -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- directive `v-for` -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Depuis la version 3.2, vous pouvez également mémoriser une partie du template avec des conditions d'invalidation en utilisant [`v-memo`](#v-memo).\n\n- **Voir aussi**\n  - [Syntaxe de la liaison bidirectionnelle - interpolations](https://fr.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
@@ -1356,6 +1358,7 @@
     },
     {
       "name": "v-cloak",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nUtilisée pour cacher un template non compilé jusqu'à ce qu'il soit prêt.\n\n- **N'attend pas d'expression**\n\n- **Détails**\n\n  **Cette directive n'est nécessaire que dans les configurations sans étape de build.**\n\n  Lors de l'utilisation de templates à l'intérieur du DOM, il peut y avoir un \"flash de templates non compilés\" : l'utilisateur peut voir des balises moustaches brutes jusqu'à ce que le composant monté les remplace par du contenu rendu.\n\n  `v-cloak` restera sur l'élément jusqu'à ce que l'instance du composant associé soit montée. Combiné à des règles CSS telles que `[v-cloak] { display : none }`, elle peut être utilisée pour masquer les templates bruts jusqu'à ce que le composant soit prêt.\n\n- **Exemple**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  La `<div>` ne sera pas visible tant que la compilation n'est pas terminée.\n"

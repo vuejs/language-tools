@@ -1173,6 +1173,7 @@
     },
     {
       "name": "v-pre",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\n跳过该元素及其所有子元素的编译。\n\n- **无需传入**\n\n- **详细信息**\n\n  元素内具有 `v-pre`，所有 Vue 模板语法都会被保留并按原样渲染。最常见的用例就是显示原始双大括号标签及内容。\n\n- **示例**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
@@ -1234,6 +1235,7 @@
     },
     {
       "name": "v-once",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\n仅渲染元素和组件一次，并跳过之后的更新。\n\n- **无需传入**\n\n- **详细信息**\n\n  在随后的重新渲染，元素/组件及其所有子项将被当作静态内容并跳过渲染。这可以用来优化更新时的性能。\n\n  ```html\n  <!-- 单个元素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 带有子元素的元素 -->\n  <div v-once>\n    <h1>Comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- 组件 -->\n  <MyComponent v-once :comment=\"msg\" />\n  <!-- `v-for` 指令 -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  从 3.2 起，你也可以搭配 [`v-memo`](#v-memo) 的无效条件来缓存部分模板。\n\n- **参考**\n  - [数据绑定语法 - 插值](https://zh-hk.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
@@ -1356,6 +1358,7 @@
     },
     {
       "name": "v-cloak",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\n用于隐藏尚未完成编译的 DOM 模板。\n\n- **无需传入**\n\n- **详细信息**\n\n  **该指令只在没有构建步骤的环境下需要使用。**\n\n  当使用直接在 DOM 中书写的模板时，可能会出现一种叫做“未编译模板闪现”的情况：用户可能先看到的是还没编译完成的双大括号标签，直到挂载的组件将它们替换为实际渲染的内容。\n\n  `v-cloak` 会保留在所绑定的元素上，直到相关组件实例被挂载后才移除。配合像 `[v-cloak] { display: none }` 这样的 CSS 规则，它可以在组件编译完毕前隐藏原始模板。\n\n- **示例**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  直到编译完成前，`<div>` 将不可见。\n"
