@@ -3,7 +3,8 @@ import type { TemplateCodegenContext } from './context';
 import { endOfLine, newLine } from '../common';
 
 export function* generateStyleScopedClasses(
-	ctx: TemplateCodegenContext
+	ctx: TemplateCodegenContext,
+	withDot = false
 ): Generator<Code> {
 	for (const offset of ctx.emptyClassOffsets) {
 		yield `__VLS_styleScopedClasses['`;
@@ -20,8 +21,8 @@ export function* generateStyleScopedClasses(
 		yield [
 			'',
 			source,
-			offset,
-			ctx.codeFeatures.navigationWithoutRename,
+			offset - (withDot ? 1 : 0),
+			ctx.codeFeatures.navigation,
 		];
 		yield `'`;
 

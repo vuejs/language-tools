@@ -153,7 +153,7 @@ function* generateTemplateContext(
 		}
 	}
 	yield endOfLine;
-	yield* generateStyleScopedClasses(templateCodegenCtx);
+	yield* generateStyleScopedClasses(templateCodegenCtx, true);
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
@@ -183,7 +183,7 @@ function* generateCssClassProperty(
 		'',
 		'style_' + styleIndex,
 		offset,
-		codeFeatures.navigationWithoutRename,
+		codeFeatures.navigation,
 	];
 	yield `'`;
 	yield [
