@@ -580,7 +580,10 @@ function* generateReferencesForElements(
 			yield endOfLine;
 
 			const refName = CompilerDOM.toValidAssetId(prop.value.content, '_VLS_refs' as any);
-			options.templateRefNames.set(prop.value.content, refName);
+			options.templateRefNames.set(
+				prop.value.content,
+				[refName, prop.value.loc.start.offset + 1]
+			);
 			return refName;
 		}
 	}
