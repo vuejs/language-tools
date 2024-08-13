@@ -1,6 +1,6 @@
 // https://github.com/vuejs/core/blob/main/packages/compiler-sfc/src/cssVars.ts#L47-L61
 
-const vBindCssVarReg = /\bv-bind\(\s*(?:'([^']+)'|"([^"]+)"|([a-z_]\w+))\s*\)/gi;
+const vBindCssVarReg = /\bv-bind\(\s*(?:'([^']+)'|"([^"]+)"|([a-z_]\w*))\s*\)/gi;
 const commentReg1 = /\/\*([\s\S]*?)\*\//g;
 const commentReg2 = /\/\/([\s\S]*?)\n/g;
 
