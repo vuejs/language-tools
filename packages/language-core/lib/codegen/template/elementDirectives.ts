@@ -68,10 +68,9 @@ export function* generateElementDirectives(
 								prop.exp.loc.start.offset,
 								prop.exp.loc.end.offset,
 								ctx.codeFeatures.verification,
-								'["value"',
-								prop.exp.content.length ? [' '.repeat(prop.exp.content.length - 1) + ']', 'template', prop.exp.loc.start.offset, ctx.codeFeatures.verification] satisfies Code : ']',
-								': ',
+								'value',
 							),
+							': ',
 							...wrapWith(
 								prop.exp.loc.start.offset,
 								prop.exp.loc.end.offset,
