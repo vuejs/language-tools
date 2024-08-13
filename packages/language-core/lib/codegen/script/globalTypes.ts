@@ -130,12 +130,12 @@ declare global {
 	>;
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 	type __VLS_PickRefsExpose<T> = T extends object
-		? { [K in keyof T]: 'expose' extends keyof T[K]
+		? { [K in keyof T]: ('expose' extends keyof T[K]
 		// @ts-ignore
-		? Parameters<T[K]['expose']>[0] | null
+		? Parameters<T[K]['expose']>[0]
 		: T[K] extends any[]
-		? Parameters<T[K][0]['expose']>[0][] | null
-		: T[K] }
+		? Parameters<T[K][0]['expose']>[0][]
+		: T[K]) | null }
 		: never;
 }
 export const __VLS_globalTypesEnd = {};
