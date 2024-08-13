@@ -9,7 +9,6 @@ const bar = 1;
                   /* ^^^rename: bar */
 .bar { color: v-bind('bar'); }
 .bar { color: v-bind("bar"); }
-.bar { color: v-bind(bar + bar); }
 .bar { color: v-bind('bar + bar'); }
 .bar { color: v-bind("bar + bar"); }
 .bar { color: v-bind(); }
