@@ -10,16 +10,20 @@ export function computedSfc(
 	ts: typeof import('typescript'),
 	plugins: VueLanguagePluginReturn[],
 	fileName: string,
-	snapshot: () => ts.IScriptSnapshot,
+	getSnapshot: () => ts.IScriptSnapshot,
 	parsed: () => SFCParseResult | undefined
 ): Sfc {
 
 	const untrackedSnapshot = () => {
 		pauseTracking();
-		const res = snapshot();
+		const res = getSnapshot();
 		resetTracking();
 		return res;
 	};
+	const content = computed(() => {
+		const snapshot = getSnapshot();
+		return snapshot.getText(0, snapshot.getLength());
+	});
 	const template = computedNullableSfcBlock(
 		'template',
 		'html',
@@ -137,6 +141,7 @@ export function computedSfc(
 	);
 
 	return {
+		get content() { return content(); },
 		get template() { return template(); },
 		get script() { return script(); },
 		get scriptSetup() { return scriptSetup(); },

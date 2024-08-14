@@ -413,7 +413,7 @@ function* generateDefinePropType(scriptSetup: NonNullable<Sfc['scriptSetup']>, p
 	}
 	else if ((defineProp.name && defineProp.nameIsString) || !defineProp.nameIsString) {
 		// Infer from actual prop declaration code 
-		yield `NonNullable<typeof ${propName}['value']>`;
+		yield `typeof ${propName}['value']`;
 	}
 	else if (defineProp.defaultValue) {
 		// Infer from defineProp({default: T})
