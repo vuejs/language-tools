@@ -9,6 +9,7 @@ const shouldErrorDirs = [
 	'should-error',
 	'should-error-2',
 	'should-error-3',
+	'should-error-#3632',
 	'should-error-#4569',
 ];
 

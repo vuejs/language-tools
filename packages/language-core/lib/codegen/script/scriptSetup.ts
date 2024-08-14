@@ -233,6 +233,14 @@ function* generateSetupFunction(
 		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.importSectionEndOffset, scriptSetup.content.length, codeFeatures.all);
 	}
 
+	// #3632
+	yield [
+		';',
+		'scriptSetup',
+		scriptSetup.content.length - 1,
+		codeFeatures.verification,
+	];
+
 	if (scriptSetupRanges.props.define?.typeArg && scriptSetupRanges.props.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
 		yield `const __VLS_withDefaultsArg = (function <T>(t: T) { return t })(`;

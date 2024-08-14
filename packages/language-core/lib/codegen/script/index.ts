@@ -114,7 +114,15 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 
-	yield `;`;
+	if (options.sfc.script) {
+		// #3632
+		yield [
+			';',
+			'script',
+			options.sfc.script.content.length - 1,
+			codeFeatures.verification,
+		];
+	}
 	if (options.sfc.scriptSetup) {
 		// #4569
 		yield [
