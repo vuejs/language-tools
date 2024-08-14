@@ -42,7 +42,7 @@ export function parseScriptSetupRanges(
 		name?: string;
 	} = {};
 	const cssModules: {
-		id: TextRange;
+		exp: TextRange;
 		arg?: TextRange;
 	}[] = [];
 
@@ -296,7 +296,7 @@ export function parseScriptSetupRanges(
 			}
 			else if (vueCompilerOptions.composibles.useCssModule.includes(callText)) {
 				const module: (typeof cssModules)[number] = {
-					id: _getStartEnd(node.expression)
+					exp: _getStartEnd(node)
 				};
 				if (node.arguments.length) {
 					module.arg =  _getStartEnd(node.arguments[0]);

@@ -212,25 +212,29 @@ function* generateSetupFunction(
 		}
 	}
 	if (scriptSetupRanges.cssModules.length) {
-		for (const { id, arg } of scriptSetupRanges.cssModules) {
-			setupCodeModifies.push([
-				[
-					`(`,
-					generateSfcBlockSection(scriptSetup, id!.start, id!.end, codeFeatures.all),
-					` as __VLS_useCssModule)`
-				],
-				id!.start,
-				id!.end
-			]);
+		for (const { exp, arg } of scriptSetupRanges.cssModules) {
 			if (arg) {
 				setupCodeModifies.push([
 					[
-						`({} as Omit<__VLS_StyleModules, '$style'>)[`,
+						` as Omit<__VLS_StyleModules, '$style'>[`,
 						generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
-						`] as unknown as ${scriptSetup.content.slice(arg.start, arg.end)}`
+						`]`
 					],
-					arg.start,
-					arg.end
+					exp.end,
+					exp.end
+				]);
+			}
+			else {
+				setupCodeModifies.push([
+					[
+						` as __VLS_StyleModules[`,
+						['', scriptSetup.name, exp.start, codeFeatures.verification],
+						`'$style'`,
+						['', scriptSetup.name, exp.end, codeFeatures.verification],
+						`]`
+					],
+					exp.end,
+					exp.end
 				]);
 			}
 		}
@@ -439,15 +443,6 @@ function *generateStyleModules(
 	if (!styles.length) {
 		return;
 	}
-	const defaultName = '$style';
-
-	yield `interface __VLS_useCssModule {`;
-	if (styles.some(style => style.module!.name === defaultName)) {
-		yield `(): __VLS_StyleModules['${defaultName}'];`;
-	}
-	yield `<N extends keyof __VLS_StyleModules>(name: N): __VLS_StyleModules[N];`;
-	yield `}`;
-	yield endOfLine;
 	yield `type __VLS_StyleModules = {${newLine}`;
 	for (let i = 0; i < styles.length; i++) {
 		const style = styles[i];
