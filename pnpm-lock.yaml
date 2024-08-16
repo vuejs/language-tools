@@ -5,14 +5,13 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@volar/kit': https://pkg.pr.new/volarjs/volar.js/@volar/kit@ed93382
-  '@volar/language-core': https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382
-  '@volar/language-server': https://pkg.pr.new/volarjs/volar.js/@volar/language-server@ed93382
-  '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
-  '@volar/snapshot-document': https://pkg.pr.new/volarjs/volar.js/@volar/snapshot-document@ed93382
-  '@volar/source-map': https://pkg.pr.new/volarjs/volar.js/@volar/source-map@ed93382
-  '@volar/typescript': https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
-  '@volar/vscode': https://pkg.pr.new/volarjs/volar.js/@volar/vscode@ed93382
+  '@volar/kit': https://pkg.pr.new/volarjs/volar.js/@volar/kit@7f93034
+  '@volar/language-core': https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034
+  '@volar/language-server': https://pkg.pr.new/volarjs/volar.js/@volar/language-server@7f93034
+  '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
+  '@volar/source-map': https://pkg.pr.new/volarjs/volar.js/@volar/source-map@7f93034
+  '@volar/typescript': https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
+  '@volar/vscode': https://pkg.pr.new/volarjs/volar.js/@volar/vscode@7f93034
   volar-service-css: https://pkg.pr.new/volarjs/services/volar-service-css@f520ee3
   volar-service-emmet: https://pkg.pr.new/volarjs/services/volar-service-emmet@f520ee3
   volar-service-html: https://pkg.pr.new/volarjs/services/volar-service-html@f520ee3
@@ -42,8 +41,8 @@ importers:
         specifier: latest
         version: 1.0.14
       '@volar/language-service':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
       typescript:
         specifier: latest
         version: 5.5.3
@@ -63,8 +62,8 @@ importers:
         specifier: ^1.82.0
         version: 1.91.0
       '@volar/vscode':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/vscode@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/vscode@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/vscode@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/vscode@7f93034
       '@vscode/vsce':
         specifier: latest
         version: 3.0.0
@@ -93,8 +92,8 @@ importers:
   packages/component-meta:
     dependencies:
       '@volar/typescript':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
       '@vue/language-core':
         specifier: 2.0.28
         version: link:../language-core
@@ -120,8 +119,8 @@ importers:
   packages/language-core:
     dependencies:
       '@volar/language-core':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034
       '@vue/compiler-dom':
         specifier: ^3.4.0
         version: 3.4.31
@@ -157,8 +156,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.2
       '@volar/typescript':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
       '@vue/compiler-sfc':
         specifier: ^3.4.0
         version: 3.4.31
@@ -166,8 +165,8 @@ importers:
   packages/language-plugin-pug:
     dependencies:
       '@volar/source-map':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/source-map@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/source-map@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/source-map@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/source-map@7f93034
       volar-service-pug:
         specifier: https://pkg.pr.new/volarjs/services/volar-service-pug@f520ee3
         version: https://pkg.pr.new/volarjs/services/volar-service-pug@f520ee3
@@ -182,11 +181,11 @@ importers:
   packages/language-server:
     dependencies:
       '@volar/language-core':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034
       '@volar/language-server':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-server@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-server@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-server@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-server@7f93034
       '@vue/language-core':
         specifier: 2.0.28
         version: link:../language-core
@@ -206,14 +205,14 @@ importers:
   packages/language-service:
     dependencies:
       '@volar/language-core':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034
       '@volar/language-service':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
       '@volar/typescript':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
       '@vue/compiler-dom':
         specifier: ^3.4.0
         version: 3.4.31
@@ -234,28 +233,28 @@ importers:
         version: 1.0.1
       volar-service-css:
         specifier: https://pkg.pr.new/volarjs/services/volar-service-css@f520ee3
-        version: https://pkg.pr.new/volarjs/services/volar-service-css@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382)
+        version: https://pkg.pr.new/volarjs/services/volar-service-css@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034)
       volar-service-emmet:
         specifier: https://pkg.pr.new/volarjs/services/volar-service-emmet@f520ee3
-        version: https://pkg.pr.new/volarjs/services/volar-service-emmet@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382)
+        version: https://pkg.pr.new/volarjs/services/volar-service-emmet@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034)
       volar-service-html:
         specifier: https://pkg.pr.new/volarjs/services/volar-service-html@f520ee3
-        version: https://pkg.pr.new/volarjs/services/volar-service-html@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382)
+        version: https://pkg.pr.new/volarjs/services/volar-service-html@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034)
       volar-service-json:
         specifier: https://pkg.pr.new/volarjs/services/volar-service-json@f520ee3
-        version: https://pkg.pr.new/volarjs/services/volar-service-json@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382)
+        version: https://pkg.pr.new/volarjs/services/volar-service-json@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034)
       volar-service-pug:
         specifier: https://pkg.pr.new/volarjs/services/volar-service-pug@f520ee3
         version: https://pkg.pr.new/volarjs/services/volar-service-pug@f520ee3
       volar-service-pug-beautify:
         specifier: https://pkg.pr.new/volarjs/services/volar-service-pug-beautify@f520ee3
-        version: https://pkg.pr.new/volarjs/services/volar-service-pug-beautify@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382)
+        version: https://pkg.pr.new/volarjs/services/volar-service-pug-beautify@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034)
       volar-service-typescript:
         specifier: https://pkg.pr.new/volarjs/services/volar-service-typescript@f520ee3
-        version: https://pkg.pr.new/volarjs/services/volar-service-typescript@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382)
+        version: https://pkg.pr.new/volarjs/services/volar-service-typescript@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034)
       volar-service-typescript-twoslash-queries:
         specifier: https://pkg.pr.new/volarjs/services/volar-service-typescript-twoslash-queries@f520ee3
-        version: https://pkg.pr.new/volarjs/services/volar-service-typescript-twoslash-queries@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382)
+        version: https://pkg.pr.new/volarjs/services/volar-service-typescript-twoslash-queries@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034)
       vscode-html-languageservice:
         specifier: ^5.2.0
         version: 5.3.0
@@ -273,8 +272,8 @@ importers:
         specifier: latest
         version: 1.0.2
       '@volar/kit':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/kit@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/kit@ed93382(typescript@5.5.3)
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/kit@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/kit@7f93034(typescript@5.5.3)
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
@@ -282,8 +281,8 @@ importers:
   packages/tsc:
     dependencies:
       '@volar/typescript':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
       '@vue/language-core':
         specifier: 2.0.28
         version: link:../language-core
@@ -301,8 +300,8 @@ importers:
   packages/typescript-plugin:
     dependencies:
       '@volar/typescript':
-        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
-        version: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
+        specifier: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
+        version: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
       '@vue/language-core':
         specifier: 2.0.28
         version: link:../language-core
@@ -1109,38 +1108,34 @@ packages:
   '@vitest/utils@2.0.3':
     resolution: {integrity: sha512-c/UdELMuHitQbbc/EVctlBaxoYAwQPQdSNwv7z/vHyBKy2edYZaFgptE27BRueZB7eW8po+cllotMNTDpL3HWg==}
 
-  '@volar/kit@https://pkg.pr.new/volarjs/volar.js/@volar/kit@ed93382':
-    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/kit@ed93382}
+  '@volar/kit@https://pkg.pr.new/volarjs/volar.js/@volar/kit@7f93034':
+    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/kit@7f93034}
     version: 2.4.0-alpha.18
     peerDependencies:
       typescript: '*'
 
-  '@volar/language-core@https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382':
-    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382}
+  '@volar/language-core@https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034':
+    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034}
     version: 2.4.0-alpha.18
 
-  '@volar/language-server@https://pkg.pr.new/volarjs/volar.js/@volar/language-server@ed93382':
-    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/language-server@ed93382}
+  '@volar/language-server@https://pkg.pr.new/volarjs/volar.js/@volar/language-server@7f93034':
+    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/language-server@7f93034}
     version: 2.4.0-alpha.18
 
-  '@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382':
-    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382}
+  '@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034':
+    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034}
     version: 2.4.0-alpha.18
 
-  '@volar/snapshot-document@https://pkg.pr.new/volarjs/volar.js/@volar/snapshot-document@ed93382':
-    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/snapshot-document@ed93382}
+  '@volar/source-map@https://pkg.pr.new/volarjs/volar.js/@volar/source-map@7f93034':
+    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/source-map@7f93034}
     version: 2.4.0-alpha.18
 
-  '@volar/source-map@https://pkg.pr.new/volarjs/volar.js/@volar/source-map@ed93382':
-    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/source-map@ed93382}
+  '@volar/typescript@https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034':
+    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034}
     version: 2.4.0-alpha.18
 
-  '@volar/typescript@https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382':
-    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382}
-    version: 2.4.0-alpha.18
-
-  '@volar/vscode@https://pkg.pr.new/volarjs/volar.js/@volar/vscode@ed93382':
-    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/vscode@ed93382}
+  '@volar/vscode@https://pkg.pr.new/volarjs/volar.js/@volar/vscode@7f93034':
+    resolution: {tarball: https://pkg.pr.new/volarjs/volar.js/@volar/vscode@7f93034}
     version: 2.4.0-alpha.18
 
   '@vscode/emmet-helper@2.9.3':
@@ -3306,7 +3301,7 @@ packages:
     resolution: {tarball: https://pkg.pr.new/volarjs/services/volar-service-css@f520ee3}
     version: 0.0.59
     peerDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -3315,7 +3310,7 @@ packages:
     resolution: {tarball: https://pkg.pr.new/volarjs/services/volar-service-emmet@f520ee3}
     version: 0.0.59
     peerDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -3324,7 +3319,7 @@ packages:
     resolution: {tarball: https://pkg.pr.new/volarjs/services/volar-service-html@f520ee3}
     version: 0.0.59
     peerDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -3333,7 +3328,7 @@ packages:
     resolution: {tarball: https://pkg.pr.new/volarjs/services/volar-service-json@f520ee3}
     version: 0.0.59
     peerDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -3342,7 +3337,7 @@ packages:
     resolution: {tarball: https://pkg.pr.new/volarjs/services/volar-service-pug-beautify@f520ee3}
     version: 0.0.59
     peerDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -3355,7 +3350,7 @@ packages:
     resolution: {tarball: https://pkg.pr.new/volarjs/services/volar-service-typescript-twoslash-queries@f520ee3}
     version: 0.0.59
     peerDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -3364,7 +3359,7 @@ packages:
     resolution: {tarball: https://pkg.pr.new/volarjs/services/volar-service-typescript@f520ee3}
     version: 0.0.59
     peerDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
     peerDependenciesMeta:
       '@volar/language-service':
         optional: true
@@ -4387,25 +4382,24 @@ snapshots:
       loupe: 3.1.1
       tinyrainbow: 1.2.0
 
-  '@volar/kit@https://pkg.pr.new/volarjs/volar.js/@volar/kit@ed93382(typescript@5.5.3)':
+  '@volar/kit@https://pkg.pr.new/volarjs/volar.js/@volar/kit@7f93034(typescript@5.5.3)':
     dependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
-      '@volar/typescript': https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
+      '@volar/typescript': https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
       typesafe-path: 0.2.2
       typescript: 5.5.3
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
 
-  '@volar/language-core@https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382':
+  '@volar/language-core@https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034':
     dependencies:
-      '@volar/source-map': https://pkg.pr.new/volarjs/volar.js/@volar/source-map@ed93382
+      '@volar/source-map': https://pkg.pr.new/volarjs/volar.js/@volar/source-map@7f93034
 
-  '@volar/language-server@https://pkg.pr.new/volarjs/volar.js/@volar/language-server@ed93382':
+  '@volar/language-server@https://pkg.pr.new/volarjs/volar.js/@volar/language-server@7f93034':
     dependencies:
-      '@volar/language-core': https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
-      '@volar/snapshot-document': https://pkg.pr.new/volarjs/volar.js/@volar/snapshot-document@ed93382
-      '@volar/typescript': https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382
+      '@volar/language-core': https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
+      '@volar/typescript': https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034
       path-browserify: 1.0.1
       request-light: 0.7.0
       vscode-languageserver: 9.0.1
@@ -4413,29 +4407,24 @@ snapshots:
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
 
-  '@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382':
+  '@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034':
     dependencies:
-      '@volar/language-core': https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382
+      '@volar/language-core': https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034
       vscode-languageserver-protocol: 3.17.5
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
 
-  '@volar/snapshot-document@https://pkg.pr.new/volarjs/volar.js/@volar/snapshot-document@ed93382':
-    dependencies:
-      vscode-languageserver-protocol: 3.17.5
-      vscode-languageserver-textdocument: 1.0.11
+  '@volar/source-map@https://pkg.pr.new/volarjs/volar.js/@volar/source-map@7f93034': {}
 
-  '@volar/source-map@https://pkg.pr.new/volarjs/volar.js/@volar/source-map@ed93382': {}
-
-  '@volar/typescript@https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ed93382':
+  '@volar/typescript@https://pkg.pr.new/volarjs/volar.js/@volar/typescript@7f93034':
     dependencies:
-      '@volar/language-core': https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ed93382
+      '@volar/language-core': https://pkg.pr.new/volarjs/volar.js/@volar/language-core@7f93034
       path-browserify: 1.0.1
       vscode-uri: 3.0.8
 
-  '@volar/vscode@https://pkg.pr.new/volarjs/volar.js/@volar/vscode@ed93382':
+  '@volar/vscode@https://pkg.pr.new/volarjs/volar.js/@volar/vscode@7f93034':
     dependencies:
-      '@volar/language-server': https://pkg.pr.new/volarjs/volar.js/@volar/language-server@ed93382
+      '@volar/language-server': https://pkg.pr.new/volarjs/volar.js/@volar/language-server@7f93034
       path-browserify: 1.0.1
       vscode-languageclient: 9.0.1
       vscode-nls: 5.2.0
@@ -6797,61 +6786,61 @@ snapshots:
       - supports-color
       - terser
 
-  volar-service-css@https://pkg.pr.new/volarjs/services/volar-service-css@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382):
+  volar-service-css@https://pkg.pr.new/volarjs/services/volar-service-css@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034):
     dependencies:
       vscode-css-languageservice: 6.3.0
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
     optionalDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
 
-  volar-service-emmet@https://pkg.pr.new/volarjs/services/volar-service-emmet@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382):
+  volar-service-emmet@https://pkg.pr.new/volarjs/services/volar-service-emmet@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034):
     dependencies:
       '@emmetio/css-parser': 0.4.0
       '@emmetio/html-matcher': 1.3.0
       '@vscode/emmet-helper': 2.9.3
       vscode-uri: 3.0.8
     optionalDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
 
-  volar-service-html@https://pkg.pr.new/volarjs/services/volar-service-html@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382):
+  volar-service-html@https://pkg.pr.new/volarjs/services/volar-service-html@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034):
     dependencies:
       vscode-html-languageservice: 5.3.0
       vscode-languageserver-textdocument: 1.0.11
       vscode-uri: 3.0.8
     optionalDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
 
-  volar-service-json@https://pkg.pr.new/volarjs/services/volar-service-json@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382):
+  volar-service-json@https://pkg.pr.new/volarjs/services/volar-service-json@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034):
     dependencies:
       vscode-json-languageservice: 5.4.0
       vscode-uri: 3.0.8
     optionalDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
 
-  volar-service-pug-beautify@https://pkg.pr.new/volarjs/services/volar-service-pug-beautify@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382):
+  volar-service-pug-beautify@https://pkg.pr.new/volarjs/services/volar-service-pug-beautify@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034):
     dependencies:
       '@johnsoncodehk/pug-beautify': 0.2.2
     optionalDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
 
   volar-service-pug@https://pkg.pr.new/volarjs/services/volar-service-pug@f520ee3:
     dependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
       muggle-string: 0.4.1
       pug-lexer: 5.0.1
       pug-parser: 6.0.0
-      volar-service-html: https://pkg.pr.new/volarjs/services/volar-service-html@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382)
+      volar-service-html: https://pkg.pr.new/volarjs/services/volar-service-html@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034)
       vscode-html-languageservice: 5.3.0
       vscode-languageserver-textdocument: 1.0.11
 
-  volar-service-typescript-twoslash-queries@https://pkg.pr.new/volarjs/services/volar-service-typescript-twoslash-queries@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382):
+  volar-service-typescript-twoslash-queries@https://pkg.pr.new/volarjs/services/volar-service-typescript-twoslash-queries@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034):
     dependencies:
       vscode-uri: 3.0.8
     optionalDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
 
-  volar-service-typescript@https://pkg.pr.new/volarjs/services/volar-service-typescript@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382):
+  volar-service-typescript@https://pkg.pr.new/volarjs/services/volar-service-typescript@f520ee3(@volar/language-service@https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034):
     dependencies:
       path-browserify: 1.0.1
       semver: 7.6.2
@@ -6860,7 +6849,7 @@ snapshots:
       vscode-nls: 5.2.0
       vscode-uri: 3.0.8
     optionalDependencies:
-      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ed93382
+      '@volar/language-service': https://pkg.pr.new/volarjs/volar.js/@volar/language-service@7f93034
 
   vscode-css-languageservice@6.3.0:
     dependencies:
