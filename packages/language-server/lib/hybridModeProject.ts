@@ -25,7 +25,7 @@ export function createHybridModeProject(
 		setup(_server) {
 			server = _server;
 			onSomePipeReadyCallbacks.push(() => {
-				server.refresh(project);
+				server.diagnosticsSupport?.refresh(project, false);
 			});
 			server.onDidChangeWatchedFiles(({ changes }) => {
 				for (const change of changes) {
@@ -33,7 +33,6 @@ export function createHybridModeProject(
 					if (tsconfigProjects.has(changeUri)) {
 						tsconfigProjects.get(changeUri)?.then(project => project.dispose());
 						tsconfigProjects.delete(changeUri);
-						server.clearPushDiagnostics();
 					}
 				}
 			});
