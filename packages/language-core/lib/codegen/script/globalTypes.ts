@@ -23,6 +23,8 @@ declare global {
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 
+	type __VLS_IsEqualStrict<A, B> = A extends B ? B extends A ? true : false : false;
+
 	const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 
 	// v-for
@@ -76,7 +78,7 @@ declare global {
 		? (props: ${fnPropsType}, ctx?: any) => __VLS_Element & { __ctx?: {
 			attrs?: any,
 			slots?: K extends { ${getSlotsPropertyName(vueCompilerOptions.target)}: infer Slots } ? Slots : any,
-			emit?: K extends { $emit: infer Emit } ? Emit : any
+			emit?: K extends { $emit: infer Emit } ? ${vueCompilerOptions.strictTemplates ? 'Emit extends (event: infer E, ...args: any[]) => void ? __VLS_IsEqualStrict<E, string> extends true ? {} : Emit : any' : 'Emit'} : any
 		} & { props?: ${fnPropsType}; expose?(exposed: K): void; } }
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
