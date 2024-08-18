@@ -190,7 +190,8 @@ export function create(): LanguageServicePlugin {
 						for (const lang of ['css', 'scss', 'less', 'postcss']) {
 							result.items.push(
 								getStyleCompletionItem(styleItem, lang),
-								getStyleCompletionItem(styleItem, lang, true)
+								getStyleCompletionItem(styleItem, lang, 'scoped'),
+								getStyleCompletionItem(styleItem, lang, 'module')
 							);
 						}
 					}
@@ -230,16 +231,16 @@ export function create(): LanguageServicePlugin {
 function getStyleCompletionItem(
 	styleItem: vscode.CompletionItem,
 	lang: string,
-	module = false,
+	attr = ''
 ): vscode.CompletionItem {
 	return {
 		...styleItem,
 		kind: 17 satisfies typeof vscode.CompletionItemKind.File,
 		detail: lang === 'postcss' ? '.css' : `.${lang}`,
-		label: styleItem.label + ' lang="' + lang + '"' + (module ? ' module' : ''),
+		label: styleItem.label + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
 		textEdit: styleItem.textEdit ? {
 			...styleItem.textEdit,
-			newText: styleItem.textEdit.newText + ' lang="' + lang + '"' + (module ? ' module' : ''),
+			newText: styleItem.textEdit.newText + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
 		} : undefined
 	};
 }
