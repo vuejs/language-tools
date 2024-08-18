@@ -25,9 +25,9 @@ export function createHybridModeProject(
 		setup(_server) {
 			server = _server;
 			onSomePipeReadyCallbacks.push(() => {
-				server.diagnosticsSupport?.refresh(project, false);
+				server.languageFeatures.refreshDiagnostics(false);
 			});
-			server.onDidChangeWatchedFiles(({ changes }) => {
+			server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
 				for (const change of changes) {
 					const changeUri = URI.parse(change.uri);
 					if (tsconfigProjects.has(changeUri)) {
@@ -90,11 +90,10 @@ export function createHybridModeProject(
 			asFileName,
 		});
 		const language = createLanguage([
-			{ getLanguageId: uri => server.documents.get(server.getSyncedDocumentKey(uri) ?? uri.toString())?.languageId },
+			{ getLanguageId: uri => server.documents.get(uri)?.languageId },
 			...languagePlugins,
 		], createUriMap(), uri => {
-			const documentKey = server.getSyncedDocumentKey(uri);
-			const document = documentKey ? server.documents.get(documentKey) : undefined;
+			const document = server.documents.get(uri);
 			if (document) {
 				language.scripts.set(uri, document.getSnapshot(), document.languageId);
 			}
@@ -107,7 +106,7 @@ export function createHybridModeProject(
 		return createLanguageService(
 			language,
 			server.languageServicePlugins,
-			createLanguageServiceEnvironment(server, [...server.workspaceFolders.keys()]),
+			createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
 			project
 		);
 	}
