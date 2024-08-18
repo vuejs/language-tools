@@ -176,7 +176,7 @@ export function* generateComponent(
 								resolveRenameNewName: node.tag !== expectName ? camelizeComponentName : undefined,
 								resolveRenameEditText: getTagRenameApply(node.tag),
 							},
-						} as VueCodeInformation
+						}
 					);
 					yield `;`;
 				}
@@ -194,7 +194,7 @@ export function* generateComponent(
 							isAdditional: true,
 							onlyImport: true,
 						},
-					} as VueCodeInformation
+					}
 				);
 				yield `,`;
 			}
