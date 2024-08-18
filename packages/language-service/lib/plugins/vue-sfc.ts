@@ -9,6 +9,25 @@ import { URI } from 'vscode-uri';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
+const styleLangs = ['css', 'scss', 'less', 'postcss'] as const;
+
+function getStyleCompletionItem(
+	styleItem: vscode.CompletionItem,
+	lang: (typeof styleLangs)[number],
+	scoped = false,
+): vscode.CompletionItem {
+	return {
+		...styleItem,
+		kind: 17 satisfies typeof vscode.CompletionItemKind.File,
+		detail: lang === 'postcss' ? '.css' : `.${lang}`,
+		label: styleItem.label + ' lang="' + lang + '"' + (scoped ? ' scoped' : ''),
+		textEdit: styleItem.textEdit ? {
+			...styleItem.textEdit,
+			newText: styleItem.textEdit.newText + ' lang="' + lang + '"' + (scoped ? ' scoped' : ''),
+		} : undefined
+	};
+}
+
 export function create(): LanguageServicePlugin {
 	const htmlPlugin = createHtmlService({
 		documentSelector: ['vue-root-tags'],
@@ -187,17 +206,11 @@ export function create(): LanguageServicePlugin {
 					if (styleItem) {
 						styleItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						styleItem.detail = '.css';
-						for (const lang of ['css', 'scss', 'less', 'postcss']) {
-							result.items.push({
-								...styleItem,
-								kind: 17 satisfies typeof vscode.CompletionItemKind.File,
-								detail: lang === 'postcss' ? '.css' : `.${lang}`,
-								label: styleItem.label + ' lang="' + lang + '"',
-								textEdit: styleItem.textEdit ? {
-									...styleItem.textEdit,
-									newText: styleItem.textEdit.newText + ' lang="' + lang + '"',
-								} : undefined,
-							});
+						for (const lang of styleLangs) {
+							result.items.push(
+								getStyleCompletionItem(styleItem, lang),
+								getStyleCompletionItem(styleItem, lang, true)
+							);
 						}
 					}
 					const templateItem = result.items.find(item => item.label === 'template');
