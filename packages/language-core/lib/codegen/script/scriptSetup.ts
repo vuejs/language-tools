@@ -248,8 +248,8 @@ function* generateSetupFunction(
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
 	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
 	yield* generateTemplate(options, ctx, false);
-	yield `type __VLS_Refs = ReturnType<typeof __VLS_template>['refs']${endOfLine};`;
-	yield `type __VLS_Slots = ReturnType<typeof __VLS_template>['slots']${endOfLine};`;
+	yield `type __VLS_Refs = ReturnType<typeof __VLS_template>['refs']${endOfLine}`;
+	yield `type __VLS_Slots = ReturnType<typeof __VLS_template>['slots']${endOfLine}`;
 
 	if (syntax) {
 		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges?.slots.define)) {
