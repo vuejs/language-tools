@@ -24,30 +24,13 @@
 		"@lerna-lite/publish": "latest",
 		"@tsslint/cli": "latest",
 		"@tsslint/config": "latest",
-		"@volar/language-service": "~2.4.0-alpha.18",
+		"@volar/language-service": "~2.4.0",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
 	},
 	"pnpm": {
 		"overrides": {
-			"@volar/kit": "https://pkg.pr.new/volarjs/volar.js/@volar/kit@ab44192",
-			"@volar/language-core": "https://pkg.pr.new/volarjs/volar.js/@volar/language-core@ab44192",
-			"@volar/language-server": "https://pkg.pr.new/volarjs/volar.js/@volar/language-server@ab44192",
-			"@volar/language-service": "https://pkg.pr.new/volarjs/volar.js/@volar/language-service@ab44192",
-			"@volar/source-map": "https://pkg.pr.new/volarjs/volar.js/@volar/source-map@ab44192",
-			"@volar/typescript": "https://pkg.pr.new/volarjs/volar.js/@volar/typescript@ab44192",
-			"@volar/vscode": "https://pkg.pr.new/volarjs/volar.js/@volar/vscode@ab44192",
-			"volar-service-css": "https://pkg.pr.new/volarjs/services/volar-service-css@f520ee3",
-			"volar-service-emmet": "https://pkg.pr.new/volarjs/services/volar-service-emmet@f520ee3",
-			"volar-service-html": "https://pkg.pr.new/volarjs/services/volar-service-html@f520ee3",
-			"volar-service-json": "https://pkg.pr.new/volarjs/services/volar-service-json@f520ee3",
-			"volar-service-markdown": "https://pkg.pr.new/volarjs/services/volar-service-markdown@f520ee3",
-			"volar-service-prettyhtml": "https://pkg.pr.new/volarjs/services/volar-service-prettyhtml@f520ee3",
-			"volar-service-pug": "https://pkg.pr.new/volarjs/services/volar-service-pug@f520ee3",
-			"volar-service-pug-beautify": "https://pkg.pr.new/volarjs/services/volar-service-pug-beautify@f520ee3",
-			"volar-service-typescript": "https://pkg.pr.new/volarjs/services/volar-service-typescript@f520ee3",
-			"volar-service-typescript-twoslash-queries": "https://pkg.pr.new/volarjs/services/volar-service-typescript-twoslash-queries@f520ee3",
 			"inquirer": "9.2.23"
 		}
 	}

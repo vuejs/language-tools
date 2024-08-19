@@ -548,7 +548,7 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.4.0-alpha.18",
+		"@volar/vscode": "~2.4.0",
 		"@vscode/vsce": "latest",
 		"@vue/language-core": "2.0.28",
 		"@vue/language-server": "2.0.28",
