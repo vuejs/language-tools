@@ -216,7 +216,7 @@ function* generateSetupFunction(
 			setupCodeModifies.push([
 				[
 					`<__VLS_Refs[`,
-					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.all),
+					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
 					`], keyof __VLS_Refs>`
 				],
 				define.arg.start - 1,
