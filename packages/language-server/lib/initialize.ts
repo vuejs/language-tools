@@ -70,7 +70,11 @@ export function initialize(
 				watchingExtensions.add(ext);
 			}
 			fileWatcher?.then(dispose => dispose.dispose());
-			fileWatcher = server.fileWatcher.watchFiles(['**/*.{' + [...watchingExtensions].join(',') + '}']);
+      if (server.watchFiles) {
+          fileWatcher = server.watchFiles(['**/*.{' + [...watchingExtensions].join(',') + '}']);
+      } else {
+          console.warn("server.watchFiles is not a function");
+      }
 		}
 	}
 }
