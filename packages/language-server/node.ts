@@ -32,8 +32,7 @@ connection.onInitialize(params => {
 							asFileName,
 							() => false,
 							commandLine.options,
-							commandLine.vueOptions,
-							false
+							commandLine.vueOptions
 						)],
 						setup({ project }) {
 							project.vue = { compilerOptions: commandLine.vueOptions };

@@ -19,8 +19,7 @@ const plugin = createLanguageServicePlugin(
 					info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false
 				),
 			info.languageServiceHost.getCompilationSettings(),
-			vueOptions,
-			false
+			vueOptions
 		);
 
 		return {

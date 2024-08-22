@@ -137,39 +137,37 @@ export function* generateComponent(
 		yield* generateCanonicalComponentName(
 			node.tag,
 			startTagOffset,
-			options.typeCheckOnly
-				? ctx.codeFeatures.verification
-				: {
-					// hover support
-					...ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
-					...ctx.codeFeatures.verification,
-				}
+			{
+				// with hover support
+				...ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
+				...ctx.codeFeatures.verification,
+			}
 		);
 		yield `${endOfLine}`;
 
-		if (!options.typeCheckOnly) {
-			const camelizedTag = camelize(node.tag);
-			if (variableNameRegex.test(camelizedTag)) {
-				// renaming / find references support
-				for (const tagOffset of tagOffsets) {
-					for (const shouldCapitalize of (node.tag[0] === node.tag[0].toUpperCase() ? [false] : [true, false])) {
-						const expectName = shouldCapitalize ? capitalize(camelizedTag) : camelizedTag;
-						yield `__VLS_components.`;
-						yield* generateCamelized(
-							shouldCapitalize ? capitalize(node.tag) : node.tag,
-							tagOffset,
-							{
-								navigation: {
-									resolveRenameNewName: node.tag !== expectName ? camelizeComponentName : undefined,
-									resolveRenameEditText: getTagRenameApply(node.tag),
-								},
-							}
-						);
-						yield `;`;
-					}
+		const camelizedTag = camelize(node.tag);
+		if (variableNameRegex.test(camelizedTag)) {
+			// renaming / find references support
+			for (const tagOffset of tagOffsets) {
+				for (const shouldCapitalize of (node.tag[0] === node.tag[0].toUpperCase() ? [false] : [true, false])) {
+					const expectName = shouldCapitalize ? capitalize(camelizedTag) : camelizedTag;
+					yield `__VLS_components.`;
+					yield* generateCamelized(
+						shouldCapitalize ? capitalize(node.tag) : node.tag,
+						tagOffset,
+						{
+							navigation: {
+								resolveRenameNewName: node.tag !== expectName ? camelizeComponentName : undefined,
+								resolveRenameEditText: getTagRenameApply(node.tag),
+							},
+						}
+					);
+					yield `;`;
 				}
-				yield `${newLine}`;
-				// auto import support
+			}
+			yield `${newLine}`;
+			// auto import support
+			if (options.edited) {
 				yield `// @ts-ignore${newLine}`; // #2304
 				yield* generateCamelized(
 					capitalize(node.tag),

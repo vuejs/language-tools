@@ -57,7 +57,7 @@ const _codeFeatures = {
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
-export function createTemplateCodegenContext(options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames' | 'typeCheckOnly'>) {
+export function createTemplateCodegenContext(options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames' | 'edited'>) {
 	let ignoredError = false;
 	let expectErrorToken: {
 		errors: number;
@@ -184,7 +184,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 			}
 		},
 		generateAutoImportCompletion: function* (): Generator<Code> {
-			if (options.typeCheckOnly) {
+			if (!options.edited) {
 				return;
 			}
 			const all = [...accessExternalVariables.entries()];

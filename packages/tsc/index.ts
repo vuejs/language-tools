@@ -34,8 +34,7 @@ export function run() {
 						options.host?.useCaseSensitiveFileNames?.() ?? false
 					),
 					options.options,
-					vueOptions,
-					true
+					vueOptions
 				);
 				return { languagePlugins: [vueLanguagePlugin] };
 			}
