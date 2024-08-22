@@ -206,36 +206,16 @@ export function* generateComponent(
 	yield* generateElementProps(options, ctx, node, props, false);
 	yield `}))${endOfLine}`;
 
-	if (options.vueCompilerOptions.strictTemplates) {
-		// with strictTemplates, generate once for props type-checking + instance type
-		yield `const ${var_componentInstance} = ${var_functionalComponent}(`;
-		yield* wrapWith(
-			startTagOffset,
-			startTagOffset + node.tag.length,
-			ctx.codeFeatures.verification,
-			`{`,
-			...generateElementProps(options, ctx, node, props, true, propsFailedExps),
-			`}`
-		);
-		yield `, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
-	}
-	else {
-		// without strictTemplates, this only for instacne type
-		yield `const ${var_componentInstance} = ${var_functionalComponent}({`;
-		yield* generateElementProps(options, ctx, node, props, false);
-		yield `}, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
-		// and this for props type-checking
-		yield `({} as (props: __VLS_FunctionalComponentProps<typeof ${var_originalComponent}, typeof ${var_componentInstance}> & Record<string, unknown>) => void)(`;
-		yield* wrapWith(
-			startTagOffset,
-			startTagOffset + node.tag.length,
-			ctx.codeFeatures.verification,
-			`{`,
-			...generateElementProps(options, ctx, node, props, true, propsFailedExps),
-			`}`
-		);
-		yield `)${endOfLine}`;
-	}
+	yield `const ${var_componentInstance} = ${var_functionalComponent}(`;
+	yield* wrapWith(
+		startTagOffset,
+		startTagOffset + node.tag.length,
+		ctx.codeFeatures.verification,
+		`{`,
+		...generateElementProps(options, ctx, node, props, true, propsFailedExps),
+		`}`
+	);
+	yield `, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
 
 	currentComponent = node;
 

@@ -31,6 +31,13 @@
 	},
 	"pnpm": {
 		"overrides": {
+			"@volar/kit": "https://pkg.pr.new/volarjs/volar.js/@volar/kit@337182c",
+			"@volar/language-core": "https://pkg.pr.new/volarjs/volar.js/@volar/language-core@337182c",
+			"@volar/language-server": "https://pkg.pr.new/volarjs/volar.js/@volar/language-server@337182c",
+			"@volar/language-service": "https://pkg.pr.new/volarjs/volar.js/@volar/language-service@337182c",
+			"@volar/source-map": "https://pkg.pr.new/volarjs/volar.js/@volar/source-map@337182c",
+			"@volar/typescript": "https://pkg.pr.new/volarjs/volar.js/@volar/typescript@337182c",
+			"@volar/vscode": "https://pkg.pr.new/volarjs/volar.js/@volar/vscode@337182c",
 			"inquirer": "9.2.23"
 		}
 	}
