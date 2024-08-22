@@ -32,8 +32,7 @@ function createTester(rootUri: URI) {
 			ts.sys.useCaseSensitiveFileNames
 		),
 		parsedCommandLine.options,
-		parsedCommandLine.vueOptions,
-		false
+		parsedCommandLine.vueOptions
 	);
 	const vueServicePlugins = getFullLanguageServicePlugins(ts);
 	const defaultVSCodeSettings: any = {
