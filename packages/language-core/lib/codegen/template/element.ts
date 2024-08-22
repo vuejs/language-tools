@@ -21,8 +21,7 @@ export function* generateComponent(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined
+	currentComponent: CompilerDOM.ElementNode | undefined
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
@@ -241,7 +240,6 @@ export function* generateComponent(
 		yield `)${endOfLine}`;
 	}
 
-	componentCtxVar = var_defineComponentCtx;
 	currentComponent = node;
 
 	for (const failedExp of propsFailedExps) {
@@ -260,23 +258,23 @@ export function* generateComponent(
 
 	yield* generateVScope(options, ctx, node, props);
 
-	ctx.usedComponentCtxVars.add(componentCtxVar);
 	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
-
-	if (var_defineComponentCtx && ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
-		yield `const ${componentCtxVar} = __VLS_nonNullable(__VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance}))${endOfLine}`;
-	}
 	if (usedComponentEventsVar) {
-		yield `let ${var_componentEmit}!: typeof ${componentCtxVar}.emit${endOfLine}`;
+		ctx.usedComponentCtxVars.add(var_defineComponentCtx)
+		yield `let ${var_componentEmit}!: typeof ${var_defineComponentCtx}.emit${endOfLine}`;
 		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir) {
-		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
+		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, var_defineComponentCtx);
 	}
 	else {
-		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
+		yield* generateElementChildren(options, ctx, node, currentComponent, var_defineComponentCtx);
+	}
+
+	if (ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
+		yield `const ${var_defineComponentCtx} = __VLS_nonNullable(__VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance}))${endOfLine}`;
 	}
 }
 

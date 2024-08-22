@@ -75,7 +75,7 @@ export function* generateTemplateChild(
 				yield* generateElement(options, ctx, node, currentComponent, componentCtxVar);
 			}
 			else {
-				yield* generateComponent(options, ctx, node, currentComponent, componentCtxVar);
+				yield* generateComponent(options, ctx, node, currentComponent);
 			}
 		}
 	}
