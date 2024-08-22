@@ -152,6 +152,7 @@ function createTsx(
 			templateCodegen: _template,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: ctx.vueCompilerOptions,
+			typeCheckOnly: ctx.typeCheckOnly,
 			getGeneratedLength: () => generatedLength,
 			linkedCodeMappings,
 		});

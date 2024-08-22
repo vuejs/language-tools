@@ -22,7 +22,7 @@ export function* generateTemplate(
 		else {
 			yield `function __VLS_template() {${newLine}`;
 		}
-		const templateCodegenCtx = createTemplateCodegenContext(new Set());
+		const templateCodegenCtx = createTemplateCodegenContext({ scriptSetupBindingNames: new Set(), typeCheckOnly: options.typeCheckOnly });
 		yield* generateCtx(options, ctx, isClassComponent);
 		yield* generateTemplateContext(options, templateCodegenCtx);
 		yield* generateExportOptions(options);
