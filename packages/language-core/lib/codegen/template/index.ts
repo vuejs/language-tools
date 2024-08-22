@@ -116,7 +116,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	function* generatePreResolveComponents(): Generator<Code> {
-		yield `let __VLS_resolvedLocalAndGlobalComponents!: {}`;
+		yield `let __VLS_resolvedLocalAndGlobalComponents!: Required<{}`;
 		if (options.template.ast) {
 			const components = new Set<string>();
 			for (const node of forEachElementNode(options.template.ast)) {
@@ -138,7 +138,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 				}
 			}
 		}
-		yield endOfLine;
+		yield `>${endOfLine}`;
 	}
 
 	function* escapeString(className: string, offset: number, escapeTargets: string[]): Generator<Code> {

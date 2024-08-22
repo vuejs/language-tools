@@ -133,29 +133,21 @@ export function* generateComponent(
 		yield `)${endOfLine}`;
 	}
 	else if (!isComponentTag) {
-		yield `// @ts-ignore${newLine}`;
-		yield `const ${var_originalComponent} = __VLS_nonNullable(__VLS_resolvedLocalAndGlobalComponents`;
-		yield newLine;
-		yield* generatePropertyAccess(
-			options,
-			ctx,
-			getCanonicalComponentName(node.tag),
+		yield `const ${var_originalComponent} = __VLS_resolvedLocalAndGlobalComponents.`;
+		yield* generateCanonicalComponentName(
+			node.tag,
 			startTagOffset,
-			ctx.codeFeatures.verification
+			options.typeCheckOnly
+				? ctx.codeFeatures.verification
+				: {
+					// hover support
+					...ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
+					...ctx.codeFeatures.verification,
+				}
 		);
-		yield `)${endOfLine}`;
+		yield `${endOfLine}`;
 
 		if (!options.typeCheckOnly) {
-			// hover support
-			for (const offset of tagOffsets) {
-				yield `({} as { ${getCanonicalComponentName(node.tag)}: typeof ${var_originalComponent} }).`;
-				yield* generateCanonicalComponentName(
-					node.tag,
-					offset,
-					ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation
-				);
-				yield endOfLine;
-			}
 			const camelizedTag = camelize(node.tag);
 			if (variableNameRegex.test(camelizedTag)) {
 				// renaming / find references support
@@ -179,21 +171,17 @@ export function* generateComponent(
 				yield `${newLine}`;
 				// auto import support
 				yield `// @ts-ignore${newLine}`; // #2304
-				yield `[`;
-				for (const tagOffset of tagOffsets) {
-					yield* generateCamelized(
-						capitalize(node.tag),
-						tagOffset,
-						{
-							completion: {
-								isAdditional: true,
-								onlyImport: true,
-							},
-						}
-					);
-					yield `,`;
-				}
-				yield `]${endOfLine}`;
+				yield* generateCamelized(
+					capitalize(node.tag),
+					startTagOffset,
+					{
+						completion: {
+							isAdditional: true,
+							onlyImport: true,
+						},
+					}
+				);
+				yield `${endOfLine}`;
 			}
 		}
 	}
