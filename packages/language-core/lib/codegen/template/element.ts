@@ -148,10 +148,11 @@ export function* generateComponent(
 		const camelizedTag = camelize(node.tag);
 		if (variableNameRegex.test(camelizedTag)) {
 			// renaming / find references support
+			yield `/** @type { [`;
 			for (const tagOffset of tagOffsets) {
 				for (const shouldCapitalize of (node.tag[0] === node.tag[0].toUpperCase() ? [false] : [true, false])) {
 					const expectName = shouldCapitalize ? capitalize(camelizedTag) : camelizedTag;
-					yield `__VLS_components.`;
+					yield `typeof __VLS_components.`;
 					yield* generateCamelized(
 						shouldCapitalize ? capitalize(node.tag) : node.tag,
 						tagOffset,
@@ -162,10 +163,10 @@ export function* generateComponent(
 							},
 						}
 					);
-					yield `;`;
+					yield `, `;
 				}
 			}
-			yield `${newLine}`;
+			yield `] } */${newLine}`;
 			// auto import support
 			if (options.edited) {
 				yield `// @ts-ignore${newLine}`; // #2304
