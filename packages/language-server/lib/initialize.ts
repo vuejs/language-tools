@@ -48,7 +48,8 @@ export function initialize(
 							sys.useCaseSensitiveFileNames
 						),
 						compilerOptions,
-						vueCompilerOptions
+						vueCompilerOptions,
+						false
 					)],
 					setup({ project }) {
 						project.vue = { compilerOptions: vueCompilerOptions };

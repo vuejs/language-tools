@@ -145,54 +145,56 @@ export function* generateComponent(
 		);
 		yield `)${endOfLine}`;
 
-		// hover support
-		for (const offset of tagOffsets) {
-			yield `({} as { ${getCanonicalComponentName(node.tag)}: typeof ${var_originalComponent} }).`;
-			yield* generateCanonicalComponentName(
-				node.tag,
-				offset,
-				ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation
-			);
-			yield endOfLine;
-		}
-		const camelizedTag = camelize(node.tag);
-		if (variableNameRegex.test(camelizedTag)) {
-			// renaming / find references support
-			for (const tagOffset of tagOffsets) {
-				for (const shouldCapitalize of (node.tag[0] === node.tag[0].toUpperCase() ? [false] : [true, false])) {
-					const expectName = shouldCapitalize ? capitalize(camelizedTag) : camelizedTag;
-					yield `__VLS_components.`;
+		if (!options.typeCheckOnly) {
+			// hover support
+			for (const offset of tagOffsets) {
+				yield `({} as { ${getCanonicalComponentName(node.tag)}: typeof ${var_originalComponent} }).`;
+				yield* generateCanonicalComponentName(
+					node.tag,
+					offset,
+					ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation
+				);
+				yield endOfLine;
+			}
+			const camelizedTag = camelize(node.tag);
+			if (variableNameRegex.test(camelizedTag)) {
+				// renaming / find references support
+				for (const tagOffset of tagOffsets) {
+					for (const shouldCapitalize of (node.tag[0] === node.tag[0].toUpperCase() ? [false] : [true, false])) {
+						const expectName = shouldCapitalize ? capitalize(camelizedTag) : camelizedTag;
+						yield `__VLS_components.`;
+						yield* generateCamelized(
+							shouldCapitalize ? capitalize(node.tag) : node.tag,
+							tagOffset,
+							{
+								navigation: {
+									resolveRenameNewName: node.tag !== expectName ? camelizeComponentName : undefined,
+									resolveRenameEditText: getTagRenameApply(node.tag),
+								},
+							}
+						);
+						yield `;`;
+					}
+				}
+				yield `${newLine}`;
+				// auto import support
+				yield `// @ts-ignore${newLine}`; // #2304
+				yield `[`;
+				for (const tagOffset of tagOffsets) {
 					yield* generateCamelized(
-						shouldCapitalize ? capitalize(node.tag) : node.tag,
+						capitalize(node.tag),
 						tagOffset,
 						{
-							navigation: {
-								resolveRenameNewName: node.tag !== expectName ? camelizeComponentName : undefined,
-								resolveRenameEditText: getTagRenameApply(node.tag),
+							completion: {
+								isAdditional: true,
+								onlyImport: true,
 							},
 						}
 					);
-					yield `;`;
+					yield `,`;
 				}
+				yield `]${endOfLine}`;
 			}
-			yield `${newLine}`;
-			// auto import support
-			yield `// @ts-ignore${newLine}`; // #2304
-			yield `[`;
-			for (const tagOffset of tagOffsets) {
-				yield* generateCamelized(
-					capitalize(node.tag),
-					tagOffset,
-					{
-						completion: {
-							isAdditional: true,
-							onlyImport: true,
-						},
-					}
-				);
-				yield `,`;
-			}
-			yield `]${endOfLine}`;
 		}
 	}
 	else {
@@ -255,7 +257,7 @@ export function* generateComponent(
 
 	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
 	if (usedComponentEventsVar) {
-		ctx.usedComponentCtxVars.add(var_defineComponentCtx)
+		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
 		yield `let ${var_componentEmit}!: typeof ${var_defineComponentCtx}.emit${endOfLine}`;
 		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
 	}

@@ -91,6 +91,7 @@ function createTsx(
 			ts,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: ctx.vueCompilerOptions,
+			typeCheckOnly: ctx.typeCheckOnly,
 			template: _sfc.template,
 			scriptSetupBindingNames: scriptSetupBindingNames(),
 			scriptSetupImportComponentNames: scriptSetupImportComponentNames(),

@@ -76,14 +76,16 @@ export function createVueLanguagePlugin<T>(
 	_getProjectVersion: (() => string) | undefined,
 	isRootFile: (fileName: string) => boolean,
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions
+	vueCompilerOptions: VueCompilerOptions,
+	typeCheckOnly = true
 ): LanguagePlugin<T, VueVirtualCode> {
 	return createVueLanguagePlugin2(
 		ts,
 		asFileName,
 		isRootFile,
 		compilerOptions,
-		vueCompilerOptions
+		vueCompilerOptions,
+		typeCheckOnly
 	);
 }
 
@@ -92,7 +94,8 @@ export function createVueLanguagePlugin2<T>(
 	asFileName: (scriptId: T) => string,
 	isRootFile: (fileName: string) => boolean,
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions
+	vueCompilerOptions: VueCompilerOptions,
+	typeCheckOnly = true
 ): LanguagePlugin<T, VueVirtualCode> {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
@@ -106,6 +109,7 @@ export function createVueLanguagePlugin2<T>(
 		},
 		compilerOptions,
 		vueCompilerOptions,
+		typeCheckOnly,
 		globalTypesHolder: undefined,
 	};
 	const plugins = createPlugins(pluginContext);

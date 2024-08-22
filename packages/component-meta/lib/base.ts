@@ -92,7 +92,8 @@ export function baseCreate(
 			ts.sys.useCaseSensitiveFileNames
 		),
 		projectHost.getCompilationSettings(),
-		commandLine.vueOptions
+		commandLine.vueOptions,
+		true
 	);
 	const language = vue.createLanguage(
 		[

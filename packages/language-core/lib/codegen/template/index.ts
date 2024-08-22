@@ -14,6 +14,7 @@ export interface TemplateCodegenOptions {
 	template: NonNullable<Sfc['template']>;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
+	typeCheckOnly: boolean;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;
