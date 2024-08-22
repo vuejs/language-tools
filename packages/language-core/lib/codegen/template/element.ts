@@ -237,7 +237,7 @@ export function* generateComponent(
 	}
 
 	if (ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
-		yield `const ${var_defineComponentCtx} = __VLS_nonNullable(__VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance}))${endOfLine}`;
+		yield `const ${var_defineComponentCtx} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})${endOfLine}`;
 	}
 }
 
