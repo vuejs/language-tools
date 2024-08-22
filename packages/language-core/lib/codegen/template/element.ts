@@ -134,13 +134,8 @@ export function* generateComponent(
 	}
 	else if (!isComponentTag) {
 		yield `// @ts-ignore${newLine}`;
-		yield `const ${var_originalComponent} = ({} as `;
-		for (const componentName of possibleOriginalNames) {
-			yield `'${componentName}' extends keyof typeof __VLS_ctx ? { '${getCanonicalComponentName(node.tag)}': typeof __VLS_ctx`;
-			yield* generatePropertyAccess(options, ctx, componentName);
-			yield ` }: `;
-		}
-		yield `typeof __VLS_resolvedLocalAndGlobalComponents)${newLine}`;
+		yield `const ${var_originalComponent} = __VLS_nonNullable(__VLS_resolvedLocalAndGlobalComponents`;
+		yield newLine;
 		yield* generatePropertyAccess(
 			options,
 			ctx,
@@ -148,7 +143,7 @@ export function* generateComponent(
 			startTagOffset,
 			ctx.codeFeatures.verification
 		);
-		yield endOfLine;
+		yield `)${endOfLine}`;
 
 		// hover support
 		for (const offset of tagOffsets) {

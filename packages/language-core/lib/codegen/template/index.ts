@@ -117,13 +117,19 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	function* generatePreResolveComponents(): Generator<Code> {
 		yield `let __VLS_resolvedLocalAndGlobalComponents!: {}`;
 		if (options.template.ast) {
+			const components = new Set<string>();
 			for (const node of forEachElementNode(options.template.ast)) {
 				if (
 					node.tagType === CompilerDOM.ElementTypes.COMPONENT
 					&& node.tag.toLowerCase() !== 'component'
 					&& !node.tag.includes('.') // namespace tag 
 				) {
-					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+					if (components.has(node.tag)) {
+						continue;
+					}
+					components.add(node.tag);
+					yield newLine;
+					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_ctx, typeof __VLS_localComponents, `;
 					yield getPossibleOriginalComponentNames(node.tag, false)
 						.map(name => `"${name}"`)
 						.join(', ');
