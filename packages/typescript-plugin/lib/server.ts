@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as net from 'net';
 import type * as ts from 'typescript';
 import { collectExtractProps } from './requests/collectExtractProps';
-import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from './requests/componentInfos';
+import { getComponentEvents, getComponentNames, getComponentProps, getComponentPropsWithComment, getElementAttrs, getTemplateContextProps } from './requests/componentInfos';
 import { getImportPathForFile } from './requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
@@ -19,6 +19,7 @@ export interface Request {
 	| 'getQuickInfoAtPosition'
 	// Component Infos
 	| 'getComponentProps'
+	| 'getComponentPropsWithComment'
 	| 'getComponentEvents'
 	| 'getTemplateContextProps'
 	| 'getComponentNames'
@@ -86,6 +87,10 @@ export async function startNamedPipeServer(
 			// Component Infos
 			else if (request.type === 'getComponentProps') {
 				const result = getComponentProps.apply(requestContext, request.args as any);
+				sendResponse(result);
+			}
+			else if (request.type === 'getComponentPropsWithComment') {
+				const result = getComponentPropsWithComment.apply(requestContext, request.args as any);
 				sendResponse(result);
 			}
 			else if (request.type === 'getComponentEvents') {

@@ -30,7 +30,7 @@ import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhint
 import { parse, VueCompilerOptions } from '@vue/language-core';
 import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
-import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from '@vue/typescript-plugin/lib/requests/componentInfos';
+import { getComponentEvents, getComponentNames, getComponentProps, getComponentPropsWithComment, getElementAttrs, getTemplateContextProps } from '@vue/typescript-plugin/lib/requests/componentInfos';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
@@ -119,6 +119,9 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')): 
 			},
 			async getComponentProps(...args) {
 				return await getComponentProps.apply(requestContext, args);
+			},
+			async getComponentPropsWithComment(...args) {
+				return await getComponentPropsWithComment.apply(requestContext, args);
 			},
 			async getElementAttrs(...args) {
 				return await getElementAttrs.apply(requestContext, args);

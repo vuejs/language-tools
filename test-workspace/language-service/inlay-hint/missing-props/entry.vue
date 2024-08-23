@@ -5,4 +5,5 @@ import Comp from './Comp.vue';
 <template>
   <Comp></Comp>
   <!--  ^inlayHint: "foo!" -->
+  <!--  ^inlayHint: "book!" -->
 </template>

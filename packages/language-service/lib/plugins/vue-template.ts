@@ -11,6 +11,7 @@ import { URI, Utils } from 'vscode-uri';
 import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, LanguageServicePlugin, TagNameCasing } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
+import * as ts from 'typescript';
 
 let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
@@ -449,6 +450,7 @@ export function create(
 					attrs: string[];
 					props: string[];
 					events: string[];
+					propsWithComment: { name: string, description: string; }[];
 				}>();
 
 				let version = 0;
@@ -517,6 +519,7 @@ export function create(
 								promises.push((async () => {
 									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
 									const props = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
+									const propsWithComment = await tsPluginClient?.getComponentPropsWithComment(vueCode.fileName, tag) ?? [];
 									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
 									tagInfos.set(tag, {
 										attrs,
@@ -525,13 +528,29 @@ export function create(
 											&& !hyphenate(prop).startsWith('on-vnode-')
 										),
 										events,
+										propsWithComment: propsWithComment.filter(({ name: prop }) =>
+											typeof prop === 'string' && !prop.startsWith('ref_')
+											&& !hyphenate(prop).startsWith('on-vnode-')
+										).map(({ name, comment, jsdoc }) => {
+											const markdownComment = symbolDisplayPartsToMarkdown(comment);
+											const markdownJsdoc = jsDocTagInfoToMarkdown(jsdoc);
+											let description = markdownComment;
+
+											if (markdownJsdoc) {
+												if (description) {
+													description += '\n\n';
+												}
+												description += jsDocTagInfoToMarkdown(jsdoc);
+											}
+											return { name, description };
+										}),
 									});
 									version++;
 								})());
 								return [];
 							}
 
-							const { attrs, props, events } = tagInfo;
+							const { attrs, props, events, propsWithComment } = tagInfo;
 							const attributes: html.IAttributeData[] = [];
 							const _tsCodegen = tsCodegen.get(vueCode.sfc);
 
@@ -587,7 +606,8 @@ export function create(
 								{
 
 									const propName = name;
-									const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
+									const propDesc = propsWithComment.find(p => p.name === propName)?.description;
+									const propKey = propDesc || createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
 
 									attributes.push(
 										{
@@ -916,4 +936,34 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 			};
 		}
 	}
+}
+
+
+
+function jsDocTagInfoToMarkdown(jsDocTags: ts.JSDocTagInfo[]) {
+	return jsDocTags.map(tag => {
+		const tagName = `*@${tag.name}*`;
+		const tagText = tag.text?.map(t => {
+			if (t.kind === 'parameterName') {
+				return `\`${t.text}\``;
+			} else {
+				return t.text;
+			}
+		}).join('') || '';
+
+		return `${tagName} ${tagText}`;
+	}).join('\n\n');
+}
+
+function symbolDisplayPartsToMarkdown(parts: ts.SymbolDisplayPart[]) {
+	return parts.map(part => {
+		switch (part.kind) {
+			case 'keyword':
+				return `\`${part.text}\``;
+			case 'functionName':
+				return `**${part.text}**`;
+			default:
+				return part.text;
+		}
+	}).join('');
 }

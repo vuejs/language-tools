@@ -86,6 +86,96 @@ export function getComponentProps(
 	return [...result];
 }
 
+// most are copied from getComponentProps except for the return type
+export function getComponentPropsWithComment(
+	this: RequestContext,
+	fileName: string,
+	tag: string,
+	requiredOnly = false,
+) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
+		return;
+	}
+	const vueCode = volarFile.generated.root;
+	const program: ts.Program = (languageService as any).getCurrentProgram();
+	if (!program) {
+		return;
+	}
+
+	const checker = program.getTypeChecker();
+	const components = getVariableType(ts, languageService, vueCode, '__VLS_components');
+	if (!components) {
+		return [];
+	}
+
+	const name = tag.split('.');
+
+	let componentSymbol = components.type.getProperty(name[0]);
+
+	if (!componentSymbol) {
+		componentSymbol = components.type.getProperty(camelize(name[0]))
+			?? components.type.getProperty(capitalize(camelize(name[0])));
+	}
+
+	if (!componentSymbol) {
+		return [];
+	}
+
+	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
+
+	for (let i = 1; i < name.length; i++) {
+		componentSymbol = componentType.getProperty(name[i]);
+		if (componentSymbol) {
+			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
+		}
+		else {
+			return [];
+		}
+	}
+
+	const result = new Set<{ name: string, comment: ts.SymbolDisplayPart[], jsdoc: ts.JSDocTagInfo[]; }>();
+
+	for (const sig of componentType.getCallSignatures()) {
+		const propParam = sig.parameters[0];
+		if (propParam) {
+			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.node);
+			const props = propsType.getProperties();
+			for (const prop of props) {
+				if (!requiredOnly || !(prop.flags & ts.SymbolFlags.Optional)) {
+					const comment = prop.getDocumentationComment(checker);
+					const jsdoc = prop.getJsDocTags();
+
+					result.add({ name: prop.name, comment, jsdoc });
+				}
+			}
+		}
+	}
+
+	for (const sig of componentType.getConstructSignatures()) {
+		const instanceType = sig.getReturnType();
+		const propsSymbol = instanceType.getProperty('$props');
+		if (propsSymbol) {
+			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, components.node);
+			const props = propsType.getProperties();
+			for (const prop of props) {
+				if (prop.flags & ts.SymbolFlags.Method) { // #2443
+					continue;
+				}
+				if (!requiredOnly || !(prop.flags & ts.SymbolFlags.Optional)) {
+					const comment = prop.getDocumentationComment(checker);
+					const jsdoc = prop.getJsDocTags();
+
+					result.add({ name: prop.name, comment, jsdoc });
+				}
+			}
+		}
+	}
+
+	return [...result];
+}
+
 export function getComponentEvents(
 	this: RequestContext,
 	fileName: string,

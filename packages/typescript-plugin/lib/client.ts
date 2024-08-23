@@ -48,6 +48,15 @@ export function getComponentProps(
 	});
 }
 
+export function getComponentPropsWithComment(
+	...args: Parameters<typeof import('./requests/componentInfos.js')['getComponentPropsWithComment']>
+) {
+	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentPropsWithComment']>>({
+		type: 'getComponentPropsWithComment',
+		args,
+	});
+}
+
 export function getComponentEvents(
 	...args: Parameters<typeof import('./requests/componentInfos.js')['getComponentEvents']>
 ) {
