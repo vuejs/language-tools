@@ -2,9 +2,10 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	test: {
+		include: ['packages/language-server/tests/**/*.spec.ts'],
 		poolOptions: {
-			threads: {
-				singleThread: true,
+			forks: {
+				singleFork: true,
 				isolate: false,
 			},
 		},

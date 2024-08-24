@@ -1,0 +1,91 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Definitions > Default slot 1`] = `"tsconfigProject/foo.vue"`;
+
+exports[`Definitions > Default slot 2`] = `
+{
+  "end": {
+    "character": 16,
+    "line": 7,
+  },
+  "start": {
+    "character": 5,
+    "line": 7,
+  },
+}
+`;
+
+exports[`Definitions > Default slot 3`] = `"tsconfigProject/fixture.vue"`;
+
+exports[`Definitions > Default slot 4`] = `
+{
+  "end": {
+    "character": 9,
+    "line": 2,
+  },
+  "start": {
+    "character": 5,
+    "line": 2,
+  },
+}
+`;
+
+exports[`Definitions > Named slot 1`] = `"tsconfigProject/foo.vue"`;
+
+exports[`Definitions > Named slot 2`] = `
+{
+  "end": {
+    "character": 17,
+    "line": 6,
+  },
+  "start": {
+    "character": 14,
+    "line": 6,
+  },
+}
+`;
+
+exports[`Definitions > Named slot 3`] = `"tsconfigProject/fixture.vue"`;
+
+exports[`Definitions > Named slot 4`] = `
+{
+  "end": {
+    "character": 19,
+    "line": 2,
+  },
+  "start": {
+    "character": 16,
+    "line": 2,
+  },
+}
+`;
+
+exports[`Definitions > v-bind shorthand 1`] = `"tsconfigProject/fixture.vue"`;
+
+exports[`Definitions > v-bind shorthand 2`] = `
+{
+  "end": {
+    "character": 13,
+    "line": 6,
+  },
+  "start": {
+    "character": 10,
+    "line": 6,
+  },
+}
+`;
+
+exports[`Definitions > v-bind shorthand 3`] = `"tsconfigProject/fixture.vue"`;
+
+exports[`Definitions > v-bind shorthand 4`] = `
+{
+  "end": {
+    "character": 12,
+    "line": 2,
+  },
+  "start": {
+    "character": 9,
+    "line": 2,
+  },
+}
+`;

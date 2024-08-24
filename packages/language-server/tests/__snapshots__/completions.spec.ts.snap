@@ -1,0 +1,124 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Completions > #2454 1`] = `
+"
+			<script setup lang="ts">
+			let vLoading: any;
+			</script>
+
+			<template>
+			<div v-loading="vLoading"></div>
+			</template>
+		"
+`;
+
+exports[`Completions > #2511 1`] = `
+"
+			<script setup lang="ts">
+			import componentForAutoImport$1 from './component-for-auto-import.vue';
+			</script>
+		"
+`;
+
+exports[`Completions > #3658 1`] = `
+"
+			<template>
+				<Comp>
+					<template #foo="foo">
+						{{ foo }}
+					</template>
+				</Comp>
+			</template>
+		"
+`;
+
+exports[`Completions > #4639 1`] = `
+"
+			<template>
+				<div @click.capture />
+			</template>
+		"
+`;
+
+exports[`Completions > $event argument 1`] = `"<template><div @click="console.log($event)"></div></template>"`;
+
+exports[`Completions > <script setup> 1`] = `
+"
+			<template>{{ foo }}</template>
+
+			<script lang="ts" setup>
+			const foo = 1;
+			</script>
+		"
+`;
+
+exports[`Completions > Alias path 1`] = `
+"
+			<script setup lang="ts">
+			import Component from '@/empty.vue';
+			</script>
+		"
+`;
+
+exports[`Completions > Component auto import 1`] = `
+"
+			<script setup lang="ts">
+import ComponentForAutoImport from './ComponentForAutoImport.vue';
+
+			</script>
+
+			<template>
+				<ComponentForAutoImport />
+			</template>
+		"
+`;
+
+exports[`Completions > Directives 1`] = `"<template><div v-html="$1"></div></template>"`;
+
+exports[`Completions > Directives 2`] = `"<template><div v-cloak></div></template>"`;
+
+exports[`Completions > Directives 3`] = `"<template><div v-else></div></template>"`;
+
+exports[`Completions > Directives 4`] = `"<template><div v-pre></div></template>"`;
+
+exports[`Completions > Relative path 1`] = `
+"
+			<script setup lang="ts">
+			import Component from './empty.vue';
+			</script>
+		"
+`;
+
+exports[`Completions > Slot name 1`] = `
+"
+			<template>
+				<Foo>
+					<template #default></template>
+				</Foo>
+			</template>
+
+			<script lang="ts" setup>
+			let Foo: new () => {
+				$slots: {
+					default: any;
+				};
+			};
+			</script>
+		"
+`;
+
+exports[`Completions > core#8811 1`] = `
+"
+			<script setup lang="ts">
+			declare const Foo: new () => {
+				$props: {
+					FooBar: string;
+				};
+			};
+			</script>
+
+			<template>
+				<Foo :-foo-bar="$1" ></Foo>
+			</template>
+		"
+`;
