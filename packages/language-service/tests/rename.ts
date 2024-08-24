@@ -39,7 +39,7 @@ for (const dirName of testDirs) {
 						const edit = await tester.languageService.getRenameEdits(
 							uri,
 							position,
-							action.newName,
+							action.newName
 						);
 
 						expect(edit).toBeDefined();
@@ -86,7 +86,7 @@ function findRenameActions(text: string) {
 
 	return [...text.matchAll(renameReg)].map(flag => {
 
-		const start = flag.index!;
+		const start = flag.index;
 		const end = start + flag[1].length;
 		const newName = flag[2];
 

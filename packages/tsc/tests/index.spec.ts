@@ -57,19 +57,19 @@ function runVueTsc(cwd: string) {
 			{
 				silent: true,
 				cwd
-			},
+			}
 		);
 
 		cp.stdout?.setEncoding('utf8');
-		cp.stdout?.on('data', (data) => {
+		cp.stdout?.on('data', data => {
 			console.log(data);
 		});
 		cp.stderr?.setEncoding('utf8');
-		cp.stderr?.on('data', (data) => {
+		cp.stderr?.on('data', data => {
 			console.error(data);
 		});
 
-		cp.on('exit', (code) => {
+		cp.on('exit', code => {
 			if (code === 0) {
 				resolve(undefined);
 			} else {

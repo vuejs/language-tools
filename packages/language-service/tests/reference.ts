@@ -36,7 +36,7 @@ for (const dirName of testDirs) {
 					const locations = await tester.languageService.getReferences(
 						uri,
 						position,
-						{ includeDeclaration: true },
+						{ includeDeclaration: true }
 					);
 
 					expect(locations).toBeDefined();
@@ -67,7 +67,7 @@ function findActions(text: string) {
 
 	return [...text.matchAll(referenceReg)].map(flag => {
 
-		const offset = flag.index!;
+		const offset = flag.index;
 		// The definition itself is also counted
 		const count = Number(flag[2]) + 1;
 

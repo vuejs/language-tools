@@ -43,7 +43,7 @@ for (const dirName of testDirs) {
 					let complete = await tester.languageService.getCompletionItems(
 						uri,
 						position,
-						{ triggerKind: 1 satisfies typeof vscode.CompletionTriggerKind.Invoked },
+						{ triggerKind: 1 satisfies typeof vscode.CompletionTriggerKind.Invoked }
 					);
 
 					if (!complete.items.length) {
@@ -51,7 +51,7 @@ for (const dirName of testDirs) {
 						complete = await tester.languageService.getCompletionItems(
 							uri,
 							position,
-							{ triggerKind: 1 satisfies typeof vscode.CompletionTriggerKind.Invoked },
+							{ triggerKind: 1 satisfies typeof vscode.CompletionTriggerKind.Invoked }
 						);
 					}
 
@@ -107,7 +107,7 @@ function findCompleteActions(text: string) {
 
 	return [...text.matchAll(/(\^*)complete:\s*([\S]*)/g)].map(flag => {
 
-		const offset = flag.index!;
+		const offset = flag.index;
 		const label = flag[2];
 
 		return {

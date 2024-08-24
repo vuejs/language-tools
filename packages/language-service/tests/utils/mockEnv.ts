@@ -12,7 +12,7 @@ export function createMockServiceEnv(
 ): LanguageServiceEnvironment {
 	return {
 		workspaceFolders: [rootUri],
-		async getConfiguration(section: string) {
+		getConfiguration(section: string) {
 			const settings = getSettings();
 			if (settings[section]) {
 				return settings[section];

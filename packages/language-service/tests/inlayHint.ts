@@ -38,7 +38,7 @@ for (const dirName of testDirs) {
 
 					const inlayHints = await tester.languageService.getInlayHints(
 						uri,
-						range,
+						range
 					);
 
 					const inlayHint = inlayHints?.find(inlayHint => inlayHint.label === action.label);
@@ -69,7 +69,7 @@ function findActions(text: string) {
 
 	return [...text.matchAll(inlayHintReg)].map(flag => {
 
-		const offset = flag.index!;
+		const offset = flag.index;
 		const label = flag[2];
 
 		return {

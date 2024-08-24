@@ -36,7 +36,7 @@ for (const dirName of testDirs) {
 
 					const locations = await tester.languageService.getDefinition(
 						uri,
-						position,
+						position
 					);
 
 					expect(locations).toBeDefined();
@@ -78,7 +78,7 @@ function findActions(text: string) {
 
 	return [...text.matchAll(definitionReg)].map(flag => {
 
-		const offset = flag.index!;
+		const offset = flag.index;
 		const targetFile = flag[2];
 		const targeRange = {
 			start: Number(flag[3]),

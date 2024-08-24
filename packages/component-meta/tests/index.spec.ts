@@ -727,7 +727,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	test('emits-generic', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/events/component-generic.vue');
 		const meta = checker.getComponentMeta(componentPath);
-		const foo = meta.events.find(event =>event.name === 'foo');
+		const foo = meta.events.find(event => event.name === 'foo');
 
 		expect(foo?.description).toBe('Emitted when foo...');
 	});
@@ -736,7 +736,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	test.skip('emits-class', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/events/component-class.vue');
 		const meta = checker.getComponentMeta(componentPath);
-		const foo = meta.events.find(event =>event.name === 'foo');
+		const foo = meta.events.find(event => event.name === 'foo');
 
 		expect(foo?.description).toBe('Emitted when foo...');
 	});
@@ -858,7 +858,7 @@ const checkerOptions: MetaCheckerOptions = {
 };
 const tsconfigChecker = createChecker(
 	path.resolve(__dirname, '../../../test-workspace/component-meta/tsconfig.json'),
-	checkerOptions,
+	checkerOptions
 );
 const noTsConfigChecker = createCheckerByJson(
 	path.resolve(__dirname, '../../../test-workspace/component-meta'),
@@ -868,7 +868,7 @@ const noTsConfigChecker = createCheckerByJson(
 			"**/*",
 		],
 	},
-	checkerOptions,
+	checkerOptions
 );
 
 worker(tsconfigChecker, true);
