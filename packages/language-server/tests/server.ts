@@ -11,6 +11,14 @@ export async function getLanguageServer() {
 	if (!serverHandle) {
 		serverHandle = startLanguageServer(require.resolve('../bin/vue-language-server.js'), testWorkspacePath);
 		serverHandle.connection.onNotification('textDocument/publishDiagnostics', () => { });
+		serverHandle.connection.onRequest('workspace/configuration', ({ items }) => {
+			return items.map(({ section }) => {
+				if (section.startsWith('vue.inlayHints.')) {
+					return true;
+				}
+				return null;
+			});
+		});
 
 		await serverHandle.initialize(
 			URI.file(testWorkspacePath).toString(),
@@ -21,6 +29,11 @@ export async function getLanguageServer() {
 				},
 				vue: {
 					hybridMode: false,
+				},
+			},
+			{
+				workspace: {
+					configuration: true,
 				},
 			}
 		);

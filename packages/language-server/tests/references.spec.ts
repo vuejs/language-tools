@@ -78,6 +78,7 @@ describe('Definitions', async () => {
 
 	async function assertReferences(fileName: string, languageId: string, content: string) {
 		const offset = content.indexOf('|');
+		expect(offset).toBeGreaterThanOrEqual(0);
 		content = content.slice(0, offset) + content.slice(offset + 1);
 
 		const server = await getLanguageServer();
