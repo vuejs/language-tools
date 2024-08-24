@@ -1,5 +1,4 @@
 import { VueVirtualCode, isSemanticTokensEnabled } from '@vue/language-core';
-import type * as ts from 'typescript';
 import type { RequestContext } from './types';
 
 export function collectExtractProps(
@@ -19,11 +18,7 @@ export function collectExtractProps(
 		type: string;
 		model: boolean;
 	}>();
-	const program: ts.Program = (languageService as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
-
+	const program = languageService.getProgram()!;
 	const sourceFile = program.getSourceFile(fileName)!;
 	const checker = program.getTypeChecker();
 	const script = volarFile.generated?.languagePlugin.typescript?.getServiceScript(volarFile.generated.root);

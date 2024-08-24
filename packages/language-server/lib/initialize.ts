@@ -56,7 +56,7 @@ export function initialize(
 				};
 			}
 		),
-		getFullLanguageServicePlugins(ts)
+		getFullLanguageServicePlugins(ts, { disableAutoImportCache: params.initializationOptions.typescript.disableAutoImportCache })
 	);
 
 	function updateFileWatcher(vueCompilerOptions: VueCompilerOptions) {
