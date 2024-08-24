@@ -22,7 +22,6 @@ function createTester(rootUri: URI) {
 		getProjectVersion: () => '0',
 		getScriptFileNames: () => parsedCommandLine.fileNames,
 		getCompilationSettings: () => parsedCommandLine.options,
-		getScriptSnapshot,
 	};
 	const vueLanguagePlugin = createVueLanguagePlugin2(
 		ts,
