@@ -337,34 +337,15 @@ describe('Renaming', async () => {
 
 	it('Component props', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		expect(
-			await prepareDocument('tsconfigProject/foo.vue', 'vue', `
-				<template>
-					<Comp :aaa-bbb="'foo'"></Comp>
-					<Comp :aaaBbb="'foo'"></Comp>
-				</template>
+		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
+			<template>
+				<Comp :aaa-bbb="'foo'"></Comp>
+				<Comp :aaaBbb="'foo'"></Comp>
+			</template>
 
-				<script lang="ts" setup>
-				import Comp from './fixture.vue';
-				</script>
-			`)
-		).toMatchInlineSnapshot(`
-			FullTextDocument {
-			  "_content": "
-							<template>
-								<Comp :aaa-bbb="'foo'"></Comp>
-								<Comp :aaaBbb="'foo'"></Comp>
-							</template>
-
-							<script lang="ts" setup>
-							import Comp from './fixture.vue';
-							</script>
-						",
-			  "_languageId": "vue",
-			  "_lineOffsets": undefined,
-			  "_uri": "file:///Users/johnsonchu/Desktop/volar/vue/test-workspace/tsconfigProject/foo.vue",
-			  "_version": 1,
-			}
+			<script lang="ts" setup>
+			import Comp from './fixture.vue';
+			</script>
 		`);
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
@@ -412,11 +393,11 @@ describe('Renaming', async () => {
 			        "newText": "cccDdd",
 			        "range": {
 			          "end": {
-			            "character": 18,
+			            "character": 17,
 			            "line": 3,
 			          },
 			          "start": {
-			            "character": 12,
+			            "character": 11,
 			            "line": 3,
 			          },
 			        },
@@ -425,11 +406,11 @@ describe('Renaming', async () => {
 			        "newText": "ccc-ddd",
 			        "range": {
 			          "end": {
-			            "character": 19,
+			            "character": 18,
 			            "line": 2,
 			          },
 			          "start": {
-			            "character": 12,
+			            "character": 11,
 			            "line": 2,
 			          },
 			        },
