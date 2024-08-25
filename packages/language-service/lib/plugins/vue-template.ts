@@ -850,7 +850,7 @@ export function create(
 							else if (item.label.startsWith('v-on:')) {
 								tokens.push('\u0004');
 							}
-							else  {
+							else {
 								tokens.push('\u0000');
 							}
 
