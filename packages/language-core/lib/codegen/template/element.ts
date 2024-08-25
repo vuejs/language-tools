@@ -583,18 +583,23 @@ function* generateReferencesForElements(
 			&& prop.name === 'ref'
 			&& prop.value
 		) {
+			const [content, startOffset] = normalizeAttributeValue(prop.value);
+
 			yield `// @ts-ignore${newLine}`;
-			yield* generateInterpolation(
+			yield `__VLS_ctx`;
+			yield* generatePropertyAccess(
 				options,
 				ctx,
-				prop.value.content,
-				prop.value.loc,
-				prop.value.loc.start.offset + 1,
+				content,
+				startOffset,
 				ctx.codeFeatures.navigation,
-				'(',
-				')'
+				prop.value.loc
 			);
 			yield endOfLine;
+
+			if (variableNameRegex.test(content)) {
+				ctx.accessExternalVariable(content, startOffset);
+			}
 
 			const refName = CompilerDOM.toValidAssetId(prop.value.content, '_VLS_refs' as any);
 			options.templateRefNames.set(prop.value.content, refName);
@@ -631,16 +636,8 @@ function* generateReferencesForScopedCssClasses(
 				}
 			}
 			else {
-				let startOffset = prop.value.loc.start.offset;
-				let content = prop.value.loc.source;
 				let isWrapped = false;
-				if (
-					(content.startsWith(`'`) && content.endsWith(`'`))
-					|| (content.startsWith(`"`) && content.endsWith(`"`))
-				) {
-					content = content.slice(1, -1);
-					isWrapped = true;
-				}
+				const [content, startOffset] = normalizeAttributeValue(prop.value);
 				if (content) {
 					const classes = collectClasses(content, startOffset + (isWrapped ? 1 : 0));
 					ctx.scopedClasses.push(...classes);
@@ -744,6 +741,19 @@ function camelizeComponentName(newName: string) {
 
 function getTagRenameApply(oldName: string) {
 	return oldName === hyphenateTag(oldName) ? hyphenateTag : undefined;
+}
+
+function normalizeAttributeValue(node: CompilerDOM.TextNode): [string, number] {
+	let offset = node.loc.start.offset;
+	let content = node.loc.source;
+	if (
+		(content.startsWith(`'`) && content.endsWith(`'`))
+		|| (content.startsWith(`"`) && content.endsWith(`"`))
+	) {
+		offset++;
+		content = content.slice(1, -1);
+	}
+	return [content, offset];
 }
 
 function collectClasses(content: string, startOffset = 0) {
