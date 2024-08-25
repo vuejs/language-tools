@@ -1,8 +1,9 @@
 import { getSlotsPropertyName } from '../../utils/shared';
 import { newLine } from '../common';
+import { InlayHintInfo } from '../types';
 import type { ScriptCodegenOptions } from './index';
 
-interface HelperType {
+export interface HelperType {
 	name: string;
 	used?: boolean;
 	generated?: boolean;
@@ -101,7 +102,17 @@ export function createScriptCodegenContext(options: ScriptCodegenOptions) {
 					};`;
 			},
 		} satisfies HelperType as HelperType,
+		OmitIndexSignature: {
+			get name() {
+				this.used = true;
+				return `__VLS_OmitIndexSignature`;
+			},
+			get code() {
+				return `type __VLS_OmitIndexSignature<T> = { [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K]; };`;
+			}
+		} satisfies HelperType as HelperType,
 	};
+	const inlayHints: InlayHintInfo[] = [];
 
 	return {
 		generatedTemplate: false,
@@ -113,6 +124,7 @@ export function createScriptCodegenContext(options: ScriptCodegenOptions) {
 			...options.scriptSetupRanges?.bindings.map(range => options.sfc.scriptSetup!.content.substring(range.start, range.end)) ?? [],
 		]),
 		helperTypes,
+		inlayHints,
 		generateHelperTypes,
 	};
 

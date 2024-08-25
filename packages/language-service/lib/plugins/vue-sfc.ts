@@ -9,13 +9,9 @@ import { URI } from 'vscode-uri';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
-export interface Provide {
-	'vue/vueFile': (document: TextDocument) => vue.VueVirtualCode | undefined;
-}
-
 export function create(): LanguageServicePlugin {
 	const htmlPlugin = createHtmlService({
-		documentSelector: ['vue'],
+		documentSelector: ['vue-root-tags'],
 		useDefaultDataProvider: false,
 		getCustomData(context) {
 			sfcDataProvider ??= html.newHTMLDataProvider('vue', loadLanguageBlocks(context.env.locale ?? 'en'));
@@ -47,20 +43,12 @@ export function create(): LanguageServicePlugin {
 	return {
 		...htmlPlugin,
 		name: 'vue-sfc',
-		create(context): LanguageServicePluginInstance<Provide> {
+		create(context): LanguageServicePluginInstance {
 			const htmlPluginInstance = htmlPlugin.create(context);
 
 			return {
 
 				...htmlPluginInstance,
-
-				provide: {
-					'vue/vueFile': document => {
-						return worker(document, context, vueFile => {
-							return vueFile;
-						});
-					},
-				},
 
 				provideDocumentLinks: undefined,
 
@@ -179,10 +167,15 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 					result.items = result.items.filter(item => item.label !== '!DOCTYPE' && item.label !== 'Custom Blocks');
-					for (const scriptItem of result.items.filter(item => item.label === 'script' || item.label === 'script setup')) {
+
+					const tags = sfcDataProvider?.provideTags();
+
+					const scriptLangs = getLangs('script');
+					const scriptItems = result.items.filter(item => item.label === 'script' || item.label === 'script setup');
+					for (const scriptItem of scriptItems) {
 						scriptItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						scriptItem.detail = '.js';
-						for (const lang of ['ts', 'tsx', 'jsx']) {
+						for (const lang of scriptLangs) {
 							result.items.push({
 								...scriptItem,
 								detail: `.${lang}`,
@@ -195,11 +188,13 @@ export function create(): LanguageServicePlugin {
 							});
 						}
 					}
+
+					const styleLangs = getLangs('style');
 					const styleItem = result.items.find(item => item.label === 'style');
 					if (styleItem) {
 						styleItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						styleItem.detail = '.css';
-						for (const lang of ['css', 'scss', 'less', 'postcss']) {
+						for (const lang of styleLangs) {
 							result.items.push({
 								...styleItem,
 								kind: 17 satisfies typeof vscode.CompletionItemKind.File,
@@ -212,33 +207,49 @@ export function create(): LanguageServicePlugin {
 							});
 						}
 					}
+
+					const templateLangs = getLangs('template');
 					const templateItem = result.items.find(item => item.label === 'template');
 					if (templateItem) {
 						templateItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						templateItem.detail = '.html';
-						result.items.push({
-							...templateItem,
-							kind: 17 satisfies typeof vscode.CompletionItemKind.File,
-							detail: '.pug',
-							label: templateItem.label + ' lang="pug"',
-							textEdit: templateItem.textEdit ? {
-								...templateItem.textEdit,
-								newText: templateItem.textEdit.newText + ' lang="pug"',
-							} : undefined,
-						});
+						for (const lang of templateLangs) {
+							if (lang === 'html') {
+								continue;
+							}
+							result.items.push({
+								...templateItem,
+								kind: 17 satisfies typeof vscode.CompletionItemKind.File,
+								detail: `.${lang}`,
+								label: templateItem.label + ' lang="' + lang + '"',
+								textEdit: templateItem.textEdit ? {
+									...templateItem.textEdit,
+									newText: templateItem.textEdit.newText + ' lang="' + lang + '"',
+								} : undefined,
+							});
+						}
 					}
 					return result;
+
+					function getLangs(label: string) {
+						return tags
+							?.find(tag => tag.name === label)?.attributes
+							.find(attr => attr.name === 'lang')?.values
+							?.map(({ name }) => name) ?? [];
+					}
 				},
 			};
 		},
 	};
 
 	function worker<T>(document: TextDocument, context: LanguageServiceContext, callback: (vueSourceFile: vue.VueVirtualCode) => T) {
+		if (document.languageId !== 'vue-root-tags') {
+			return;
+		}
 		const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 		const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-		const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-		if (virtualCode instanceof vue.VueVirtualCode) {
-			return callback(virtualCode);
+		if (sourceScript?.generated?.root instanceof vue.VueVirtualCode) {
+			return callback(sourceScript.generated.root);
 		}
 	}
 }

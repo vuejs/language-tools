@@ -15,13 +15,6 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 };
 
 export interface VueCodeInformation extends CodeInformation {
-	__hint?: {
-		setting: string;
-		label: string;
-		tooltip: string;
-		paddingRight?: boolean;
-		paddingLeft?: boolean;
-	};
 	__combineLastMapping?: boolean;
 	__combineOffsetMapping?: number;
 }
@@ -48,6 +41,7 @@ export interface VueCompilerOptions {
 		defineModel: string[];
 		defineOptions: string[];
 		withDefaults: string[];
+		templateRef: string[];
 	};
 	plugins: VueLanguagePlugin[];
 
@@ -99,6 +93,7 @@ export interface SfcBlock {
 }
 
 export interface Sfc {
+	content: string;
 	template: SfcBlock & {
 		ast: CompilerDOM.RootNode | undefined;
 		errors: CompilerDOM.CompilerError[];

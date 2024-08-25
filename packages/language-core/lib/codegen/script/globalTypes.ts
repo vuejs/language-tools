@@ -100,6 +100,7 @@ declare global {
 		: false;
 
 	function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
+	function __VLS_tryAsConstant<const T>(t: T): T;
 
 	/**
 	 * emit
@@ -128,6 +129,13 @@ declare global {
 		>
 	>;
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
+	type __VLS_PickRefsExpose<T> = T extends object
+		? { [K in keyof T]: (T[K] extends any[]
+		? Parameters<T[K][0]['expose']>[0][]
+		: T[K] extends { expose?: (exposed: infer E) => void }
+		? E
+		: T[K]) | null }
+		: never;
 }
 export const __VLS_globalTypesEnd = {};
 `;

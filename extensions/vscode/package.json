@@ -255,7 +255,7 @@
 					"description": "Traces the communication between VS Code and the language server."
 				},
 				"vue.server.hybridMode": {
-					"type": "boolean",
+					"type": ["boolean", "string"],
 					"default": "auto",
 					"enum": [
 						"auto",
@@ -382,6 +382,11 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Auto add space between double curly brackets: {{|}} -> {{ | }}"
+				},
+				"vue.inlayHints.destructuredProps": {
+					"type": "boolean",
+					"default": false,
+					"description": "Show inlay hints for destructured prop."
 				},
 				"vue.inlayHints.missingProps": {
 					"type": "boolean",
@@ -543,7 +548,8 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.4.0-alpha.18",
+		"@volar/vscode": "~2.4.0",
+		"@vscode/vsce": "latest",
 		"@vue/language-core": "2.0.28",
 		"@vue/language-server": "2.0.28",
 		"@vue/typescript-plugin": "2.0.28",
@@ -551,6 +557,6 @@
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"semver": "^7.5.4",
-		"vsce": "latest"
+		"vscode-tmlanguage-snapshot": "latest"
 	}
 }

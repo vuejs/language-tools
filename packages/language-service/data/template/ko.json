@@ -1173,6 +1173,7 @@
     },
     {
       "name": "v-pre",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\n이 엘리먼트와 모든 자식 엘리먼트의 컴파일을 생략합니다.\n\n- **표현식을 허용하지 않습니다**.\n\n- **세부 사항**:\n\n  `v-pre`가 있는 엘리먼트 내에서 모든 Vue 템플릿 구문은 그대로 유지되고 렌더링됩니다. 가장 일반적인 사용 사례는 이중 중괄호 태그를 표시하는 것입니다.\n\n- **예제**\n\n  ```html\n  <span v-pre>{{ 이곳은 컴파일되지 않습니다. }}</span>\n  ```\n"
@@ -1234,6 +1235,7 @@
     },
     {
       "name": "v-once",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\n엘리먼트와 컴포넌트를 한 번만 렌더링하고, 향후 업데이트를 생략합니다.\n\n- **표현식을 허용하지 않습니다**.\n\n- **세부 사항**:\n\n  이후 다시 렌더링할 때 엘리먼트/컴포넌트 및 모든 자식들은 정적 컨텐츠로 처리되어 생략됩니다. 이것은 업데이트 성능을 최적화하는 데 사용할 수 있습니다.\n\n  ```html\n  <!-- 단일 엘리먼트 -->\n  <span v-once>절대 바뀌지 않음: {{msg}}</span>\n  <!-- 자식이 있는 엘리먼트 -->\n  <div v-once>\n    <h1>댓글</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- 컴포넌트 -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- `v-for` 디렉티브 -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  3.2부터는 [`v-memo`](#v-memo)를 사용하여 무효화 조건으로 템플릿의 일부를 메모화할 수도 있습니다.\n\n- **참고**:\n  - [가이드 - 템플릿 문법: 텍스트 보간법](https://ko.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
@@ -1356,6 +1358,7 @@
     },
     {
       "name": "v-cloak",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\n준비될 때까지 컴파일되지 않은 템플릿을 숨기는 데 사용됩니다.\n\n- **표현식을 허용하지 않습니다**.\n\n- **세부 사항**:\n\n  **이 디렉티브는 빌드 과정이 없는 설정에서만 필요합니다**.\n\n  DOM 내 템플릿을 사용할 때, \"컴파일되지 않은 템플릿이 순간 보이는 현상\"이 있을 수 있습니다. 이러면 사용자는 컴포넌트가 렌더링된 컨텐츠로 대체할 때까지 이중 중괄호 태그를 볼 수 있습니다.\n\n  `v-cloak`은 연결된 컴포넌트 인스턴스가 마운트될 때까지 엘리먼트에 남아 있습니다. `[v-cloak] { display: none }`과 같은 CSS 규칙과 결합하여, 컴포넌트가 준비될 때까지 템플릿을 숨기는 데 사용할 수 있습니다.\n\n- **예제**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  `<div>`는 컴파일이 완료될 때까지 표시되지 않습니다.\n"

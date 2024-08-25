@@ -1173,6 +1173,7 @@
     },
     {
       "name": "v-pre",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nこの要素とすべての子要素のコンパイルをスキップします。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  `v-pre` を指定した要素の内部では、Vue テンプレートの構文はすべて維持され、そのままレンダリングされます。この最も一般的な使用例は、未加工のマスタッシュタグを表示することです。\n\n- **例**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
@@ -1234,6 +1235,7 @@
     },
     {
       "name": "v-once",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\n要素やコンポーネントを一度だけレンダリングし、その後の更新はスキップします。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  その後の再レンダリングでは、要素/コンポーネントとそのすべての子要素は静的コンテンツとして扱われ、スキップされます。これは、更新のパフォーマンスを最適化するために使用できます。\n\n  ```html\n  <!-- 単一要素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 子要素を持つ要素 -->\n  <div v-once>\n    <h1>Comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- コンポーネント -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- `v-for` ディレクティブ -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  3.2 以降では、[`v-memo`](#v-memo) を使って、テンプレートの一部を無効化する条件付きでメモ化できます。\n\n- **参照**\n  - [データバインディング構文 - 展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
@@ -1356,6 +1358,7 @@
     },
     {
       "name": "v-cloak",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nコンパイルされていないテンプレートを、準備が整うまで非表示にするために使用します。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  **このディレクティブは、ビルドステップがないセットアップでのみ必要です。**\n\n  DOM 内テンプレートを使用する場合、「コンパイルされていないテンプレートのフラッシュ」が発生することがあります。マウントされたコンポーネントがそれをレンダリングされたコンテンツに置き換えるまで、未加工のマスタッシュタグがユーザーに表示される場合があります。\n\n  `v-cloak` は関連するコンポーネントインスタンスがマウントされるまで、その要素に残ります。`[v-cloak] { display: none }` のような CSS ルールと組み合わせることで、コンポーネントの準備が整うまで未加工のテンプレートを非表示にできます。\n\n- **例**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  この `<div>` はコンパイルが完了するまで表示されません。\n"
