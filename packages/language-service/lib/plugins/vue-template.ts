@@ -1,6 +1,6 @@
 import type { Disposable, LanguageServiceContext, LanguageServicePluginInstance } from '@volar/language-service';
 import { VueCompilerOptions, VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
-import { camelize, capitalize, hyphenate } from '@vue/shared';
+import { camelize, capitalize } from '@vue/shared';
 import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
@@ -12,10 +12,16 @@ import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, LanguageServicePlugin, TagNameCasing } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
 
-let builtInData: html.HTMLDataV1;
-let modelData: html.HTMLDataV1;
+type InternalItemId =
+	| 'componentEvent'
+	| 'componentProp'
+	| 'specialTag';
 
 const specialTags = new Set(['slot', 'component', 'template']);
+const specialProps = new Set(['class', 'is', 'key', 'ref', 'style']);
+
+let builtInData: html.HTMLDataV1;
+let modelData: html.HTMLDataV1;
 
 export function create(
 	mode: 'html' | 'pug',
@@ -522,7 +528,6 @@ export function create(
 										attrs,
 										props: props.filter(prop =>
 											!prop.startsWith('ref_')
-											&& !hyphenate(prop).startsWith('on-vnode-')
 										),
 										events,
 									});
@@ -566,7 +571,9 @@ export function create(
 								const isGlobal = !propsSet.has(prop);
 								const name = casing.attr === AttrNameCasing.Camel ? prop : hyphenateAttr(prop);
 
-								if (hyphenateAttr(name).startsWith('on-')) {
+								const isEvent = hyphenateAttr(name).startsWith('on-');
+
+								if (isEvent) {
 
 									const propNameBase = name.startsWith('on-')
 										? name.slice('on-'.length)
@@ -584,7 +591,7 @@ export function create(
 										}
 									);
 								}
-								{
+								else {
 
 									const propName = name;
 									const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
@@ -611,14 +618,16 @@ export function create(
 								const name = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
 								const propKey = createInternalItemId('componentEvent', [tag, name]);
 
-								attributes.push({
-									name: 'v-on:' + name,
-									description: propKey,
-								});
-								attributes.push({
-									name: '@' + name,
-									description: propKey,
-								});
+								attributes.push(
+									{
+										name: 'v-on:' + name,
+										description: propKey,
+									},
+									{
+										name: '@' + name,
+										description: propKey,
+									}
+								);
 							}
 
 							const models: [boolean, string][] = [];
@@ -765,53 +774,97 @@ export function create(
 					}
 
 					const itemIdKey = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
-					const itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
+					let itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
 
 					if (itemId) {
-						let label = hyphenate(itemId.args[1]);
-						if (label.startsWith('on-')) {
-							label = 'on' + label.slice('on-'.length);
+						let [isEvent, name] = tryGetEventName(itemId);
+						if (isEvent) {
+							name = 'on' + name;
 						}
-						else if (itemId.type === 'componentEvent') {
-							label = 'on' + label;
-						}
-						const original = originals.get(label);
+						const original = originals.get(name);
 						item.documentation = original?.documentation;
 					}
-					else if (!originals.has(item.label)) {
-						originals.set(item.label, item);
+					else {
+						let name = item.label;
+						const isVBind = name.startsWith('v-bind:') ? (
+							name = name.slice('v-bind:'.length), true
+						) : false;
+						const isVBindAbbr = name.startsWith(':') && name !== ':' ? (
+							name = name.slice(':'.length), true
+						) : false;
+
+						/**
+						 * for `is`, `key` and `ref` starting with `v-bind:` or `:`
+						 * that without `internalItemId`.
+						 */
+						if (isVBind || isVBindAbbr) {
+							itemId = {
+								type: 'componentProp',
+								args: ['^', name]
+							};
+						}
+						else if (!originals.has(item.label)) {
+							originals.set(item.label, item);
+						}
 					}
+
+					const tokens: string[] = [];
 
 					if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && lastCompletionComponentNames.has(hyphenateTag(item.label))) {
 						item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
-						item.sortText = '\u0000' + (item.sortText ?? item.label);
+						tokens.push('\u0000');
 					}
-					else if (itemId && (itemId.type === 'componentProp' || itemId.type === 'componentEvent')) {
+					else if (itemId) {
 
-						const [componentName] = itemId.args;
-
-						if (componentName !== '*') {
-							if (
-								item.label === 'class'
-								|| item.label === 'ref'
-								|| item.label.endsWith(':class')
-								|| item.label.endsWith(':ref')
-							) {
-								item.sortText = '\u0000' + (item.sortText ?? item.label);
-							}
-							else {
-								item.sortText = '\u0000\u0000' + (item.sortText ?? item.label);
-							}
-						}
+						const isComponent = itemId.args[0] !== '*';
+						const [isEvent, name] = tryGetEventName(itemId);
 
 						if (itemId.type === 'componentProp') {
-							if (componentName !== '*') {
+							if (isComponent || specialProps.has(name)) {
 								item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
 							}
 						}
-						else {
-							item.kind = componentName !== '*' ? 3 satisfies typeof vscode.CompletionItemKind.Function : 23 satisfies typeof vscode.CompletionItemKind.Event;
+						else if (isEvent) {
+							item.kind = 23 satisfies typeof vscode.CompletionItemKind.Event;
+							if (name.startsWith('vnode-')) {
+								tokens.push('\u0004');
+							}
 						}
+
+						if (
+							isComponent
+							|| (isComponent && isEvent)
+							|| specialProps.has(name)
+						) {
+							tokens.push('\u0000');
+
+							if (item.label.startsWith(':')) {
+								tokens.push('\u0001');
+							}
+							else if (item.label.startsWith('@')) {
+								tokens.push('\u0002');
+							}
+							else if (item.label.startsWith('v-bind:')) {
+								tokens.push('\u0003');
+							}
+							else if (item.label.startsWith('v-on:')) {
+								tokens.push('\u0004');
+							}
+							else {
+								tokens.push('\u0000');
+							}
+
+							if (specialProps.has(name)) {
+								tokens.push('\u0001');
+							}
+							else {
+								tokens.push('\u0000');
+							}
+						}
+					}
+					else if (specialProps.has(item.label)) {
+						item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
+						tokens.push('\u0000', '\u0000', '\u0001');
 					}
 					else if (
 						item.label === 'v-if'
@@ -820,15 +873,17 @@ export function create(
 						|| item.label === 'v-for'
 					) {
 						item.kind = 14 satisfies typeof vscode.CompletionItemKind.Keyword;
-						item.sortText = '\u0003' + (item.sortText ?? item.label);
+						tokens.push('\u0003');
 					}
 					else if (item.label.startsWith('v-')) {
 						item.kind = 3 satisfies typeof vscode.CompletionItemKind.Function;
-						item.sortText = '\u0002' + (item.sortText ?? item.label);
+						tokens.push('\u0002');
 					}
 					else {
-						item.sortText = '\u0001' + (item.sortText ?? item.label);
+						tokens.push('\u0001');
 					}
+
+					item.sortText = tokens.join('') + (item.sortText ?? item.label);
 				}
 
 				updateExtraCustomData([]);
@@ -888,7 +943,7 @@ export function create(
 	}
 };
 
-function createInternalItemId(type: 'componentEvent' | 'componentProp' | 'specialTag', args: string[]) {
+function createInternalItemId(type: InternalItemId, args: string[]) {
 	return '__VLS_::' + type + '::' + args.join(',');
 }
 
@@ -900,7 +955,7 @@ function readInternalItemId(key: string) {
 	if (isInternalItemId(key)) {
 		const strs = key.split('::');
 		return {
-			type: strs[1] as 'componentEvent' | 'componentProp' | 'specialTag',
+			type: strs[1] as InternalItemId,
 			args: strs[2].split(','),
 		};
 	}
@@ -916,4 +971,17 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 			};
 		}
 	}
+}
+
+function tryGetEventName(
+	itemId: ReturnType<typeof readInternalItemId> & {}
+): [isEvent: boolean, name: string] {
+	const name = hyphenateAttr(itemId.args[1]);
+	if (name.startsWith('on-')) {
+		return [true, name.slice('on-'.length)];
+	}
+	else if (itemId.type === 'componentEvent') {
+		return [true, name];
+	}
+	return [false, name];
 }

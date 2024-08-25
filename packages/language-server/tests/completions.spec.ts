@@ -33,6 +33,23 @@ describe('Completions', async () => {
 		`);
 	});
 
+	it('#4670', async () => {
+		expect(
+			(await requestCompletionList('fixture.vue', 'vue', `<template><div click| /></template>`)).items.map(item => item.label).filter(label => label.includes('click'))
+		).toMatchInlineSnapshot(`
+			[
+			  "onclick",
+			  "ondblclick",
+			  "v-on:auxclick",
+			  "@auxclick",
+			  "v-on:click",
+			  "@click",
+			  "v-on:dblclick",
+			  "@dblclick",
+			]
+		`);
+	});
+
 	it('HTML tags and built-in components', async () => {
 		expect(
 			(await requestCompletionList('fixture.vue', 'vue', `<template><| /></template>`)).items.map(item => item.label)
