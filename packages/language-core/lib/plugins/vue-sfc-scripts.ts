@@ -1,39 +1,38 @@
-import { disableAllFeatures } from '../generators/utils';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
-		getEmbeddedFiles(_fileName, sfc) {
+		getEmbeddedCodes(_fileName, sfc) {
 			const names: {
 				id: string;
 				lang: string;
 			}[] = [];
 			if (sfc.script) {
-				names.push({ id: 'scriptFormat', lang: sfc.script.lang });
+				names.push({ id: 'script_raw', lang: sfc.script.lang });
 			}
 			if (sfc.scriptSetup) {
-				names.push({ id: 'scriptSetupFormat', lang: sfc.scriptSetup.lang });
+				names.push({ id: 'scriptsetup_raw', lang: sfc.scriptSetup.lang });
 			}
 			return names;
 		},
 
-		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
-			const script = embeddedFile.id === 'scriptFormat' ? sfc.script
-				: embeddedFile.id === 'scriptSetupFormat' ? sfc.scriptSetup
+		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
+			const script = embeddedFile.id === 'script_raw' ? sfc.script
+				: embeddedFile.id === 'scriptsetup_raw' ? sfc.scriptSetup
 					: undefined;
 			if (script) {
 				embeddedFile.content.push([
 					script.content,
 					script.name,
 					0,
-					disableAllFeatures({
+					{
 						structure: true,
 						format: true,
-					}),
+					},
 				]);
 			}
 		},

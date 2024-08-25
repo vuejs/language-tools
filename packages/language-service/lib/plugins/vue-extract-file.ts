@@ -1,9 +1,9 @@
-import type { CreateFile, ServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
+import type { CreateFile, LanguageServiceContext, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import { Sfc, VueGeneratedCode, scriptRanges } from '@vue/language-core';
-import { collectExtractProps } from '@vue/typescript-plugin/lib/client';
+import { Sfc, VueVirtualCode, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
+import { URI } from 'vscode-uri';
 
 interface ActionData {
 	uri: string;
@@ -13,12 +13,21 @@ interface ActionData {
 
 const unicodeReg = /\\u/g;
 
-export function create(ts: typeof import('typescript')): ServicePlugin {
+export function create(
+	ts: typeof import('typescript'),
+	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+): LanguageServicePlugin {
 	return {
 		name: 'vue-extract-file',
+		capabilities: {
+			codeActionProvider: {
+				resolveProvider: true,
+			},
+		},
 		create(context) {
+			const tsPluginClient = getTsPluginClient?.(context);
 			return {
-				async provideCodeActions(document, range, _context) {
+				provideCodeActions(document, range, _context) {
 
 					const startOffset = document.offsetAt(range.start);
 					const endOffset = document.offsetAt(range.end);
@@ -26,19 +35,24 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 						return;
 					}
 
-					const [code, vueCode] = context.documents.getVirtualCodeByUri(document.uri);
-					if (!(vueCode?.generated?.code instanceof VueGeneratedCode) || code?.id !== 'template')
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+					if (!(sourceScript?.generated?.root instanceof VueVirtualCode) || virtualCode?.id !== 'template') {
 						return;
+					}
 
-					const { sfc } = vueCode.generated.code;
+					const { sfc } = sourceScript.generated.root;
 					const script = sfc.scriptSetup ?? sfc.script;
 
-					if (!sfc.template || !script)
+					if (!sfc.template || !script) {
 						return;
+					}
 
 					const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
-					if (!templateCodeRange)
+					if (!templateCodeRange) {
 						return;
+					}
 
 					return [
 						{
@@ -57,25 +71,32 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 
 					const { uri, range, newName } = codeAction.data as ActionData;
 					const [startOffset, endOffset]: [number, number] = range;
-					const [code, sourceFile] = context.documents.getVirtualCodeByUri(uri);
-					if (!(sourceFile?.generated?.code instanceof VueGeneratedCode) || code?.id !== 'template')
+					const parsedUri = URI.parse(uri);
+					const decoded = context.decodeEmbeddedDocumentUri(parsedUri);
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+					if (!(sourceScript?.generated?.root instanceof VueVirtualCode) || virtualCode?.id !== 'template') {
 						return codeAction;
+					}
 
-					const document = context.documents.get(uri, code.languageId, code.snapshot)!;
-					const sfcDocument = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot)!;
-					const { sfc } = sourceFile.generated.code;
+					const document = context.documents.get(parsedUri, virtualCode.languageId, virtualCode.snapshot);
+					const sfcDocument = context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
+					const { sfc } = sourceScript.generated.root;
 					const script = sfc.scriptSetup ?? sfc.script;
 
-					if (!sfc.template || !script)
+					if (!sfc.template || !script) {
 						return codeAction;
+					}
 
 					const templateCodeRange = selectTemplateCode(startOffset, endOffset, sfc.template);
-					if (!templateCodeRange)
+					if (!templateCodeRange) {
 						return codeAction;
+					}
 
-					const toExtract = await collectExtractProps(sourceFile.generated.code.fileName, templateCodeRange) ?? [];
-					if (!toExtract)
+					const toExtract = await tsPluginClient?.collectExtractProps(sourceScript.generated.root.fileName, templateCodeRange) ?? [];
+					if (!toExtract) {
 						return codeAction;
+					}
 
 					const templateInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
 					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.script.initialIndent') ?? false;
@@ -149,7 +170,7 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 								// editing vue sfc
 								{
 									textDocument: {
-										uri: sourceFile.id,
+										uri: sourceScript.id.toString(),
 										version: null,
 									},
 									edits: sfcEdits,
@@ -244,7 +265,9 @@ function selectTemplateCode(startOffset: number, endOffset: number, templateBloc
 }
 
 function constructTag(name: string, attributes: string[], initialIndent: boolean, content: string) {
-	if (initialIndent) content = content.split('\n').map(line => `\t${line}`).join('\n');
+	if (initialIndent) {
+		content = content.split('\n').map(line => `\t${line}`).join('\n');
+	}
 	const attributesString = attributes.length ? ` ${attributes.join(' ')}` : '';
 	return `<${name}${attributesString}>\n${content}\n</${name}>\n`;
 }
@@ -268,8 +291,9 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 export function createAddComponentToOptionEdit(ts: typeof import('typescript'), ast: ts.SourceFile, componentName: string) {
 
 	const exportDefault = scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault;
-	if (!exportDefault)
+	if (!exportDefault) {
 		return;
+	}
 
 	// https://github.com/microsoft/TypeScript/issues/36174
 	const printer = ts.createPrinter();

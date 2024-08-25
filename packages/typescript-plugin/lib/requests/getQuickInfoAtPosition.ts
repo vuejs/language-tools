@@ -1,14 +1,10 @@
-import { getProject } from '../utils';
+import type { RequestContext } from './types';
 
-export function getQuickInfoAtPosition(fileName: string, position: number) {
-
-	const match = getProject(fileName);
-	if (!match) {
-		return;
-	}
-
-	const { info } = match;
-	const languageService = info.languageService;
-
-	return languageService.getQuickInfoAtPosition(fileName, position);
+export function getQuickInfoAtPosition(
+	this: RequestContext,
+	fileName: string,
+	position: number
+) {
+	const { typescript: ts, languageService } = this;
+	return ts.displayPartsToString(languageService.getQuickInfoAtPosition(fileName, position)?.displayParts ?? []);
 }

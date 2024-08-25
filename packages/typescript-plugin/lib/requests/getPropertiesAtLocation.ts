@@ -1,27 +1,49 @@
-import { getProject } from '../utils';
+import { isCompletionEnabled } from '@vue/language-core';
 import type * as ts from 'typescript';
+import type { RequestContext } from './types';
 
-export function getPropertiesAtLocation(fileName: string, position: number, isTsPlugin: boolean = true) {
+export function getPropertiesAtLocation(
+	this: RequestContext,
+	fileName: string,
+	position: number
+) {
+	const { languageService, language, typescript: ts, isTsPlugin, getFileId } = this;
 
-	const match = getProject(fileName);
-	if (!match) {
-		return;
+	// mapping
+	const file = language.scripts.get(getFileId(fileName));
+	if (file?.generated) {
+		const virtualScript = file.generated.languagePlugin.typescript?.getServiceScript(file.generated.root);
+		if (!virtualScript) {
+			return;
+		}
+		let mapped = false;
+		for (const [_sourceScript, map] of language.maps.forEach(virtualScript.code)) {
+			for (const [position2, mapping] of map.toGeneratedLocation(position)) {
+				if (isCompletionEnabled(mapping.data)) {
+					position = position2;
+					mapped = true;
+					break;
+				}
+			}
+			if (mapped) {
+				break;
+			}
+		}
+		if (!mapped) {
+			return;
+		}
+		if (isTsPlugin) {
+			position += file.snapshot.getLength();
+		}
 	}
 
-	const { info, files, ts } = match;
-	const languageService = info.languageService;
-	const program: ts.Program = (languageService as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
-
+	const program = languageService.getProgram()!;
 	const sourceFile = program.getSourceFile(fileName);
 	if (!sourceFile) {
 		return;
 	}
 
-	const volarFile = files.get(fileName);
-	const node = findPositionIdentifier(sourceFile, sourceFile, position + (isTsPlugin ? (volarFile?.snapshot.getLength() ?? 0) : 0));
+	const node = findPositionIdentifier(sourceFile, sourceFile, position);
 	if (!node) {
 		return;
 	}

@@ -1,0 +1,188 @@
+{
+  "version": 1.1,
+  "globalAttributes": [
+    {
+      "name": "lazy",
+      "description": {
+        "kind": "markdown",
+        "value": "\n默認情況下，`v-model` 會在每次 `input` 事件後更新數據 ([IME 拼字階段的狀態](#vmodel-ime-tip)例外)。你可以添加 `lazy` 修飾符來改為在每次 `change` 事件後更新數據：\n\n```html\n<!-- 在 \"change\" 事件後同步更新而不是 \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/guide/essentials/forms.html#lazy"
+        }
+      ]
+    },
+    {
+      "name": "number",
+      "description": {
+        "kind": "markdown",
+        "value": "\n如果你想讓用戶輸入自動轉換為數字，你可以在 `v-model` 後添加 `.number` 修飾符來管理輸入：\n\n```html\n<input v-model.number=\"age\" />\n```\n\n如果該值無法被 `parseFloat()` 處理，那麼將返回原始值。\n\n`number` 修飾符會在輸入框有 `type=\"number\"` 時自動啟用。\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/guide/essentials/forms.html#number"
+        }
+      ]
+    },
+    {
+      "name": "trim",
+      "description": {
+        "kind": "markdown",
+        "value": "\n如果你想要默認自動去除用戶輸入內容中兩端的空格，你可以在 `v-model` 後添加 `.trim` 修飾符：\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/guide/essentials/forms.html#trim"
+        }
+      ]
+    }
+  ]
+}

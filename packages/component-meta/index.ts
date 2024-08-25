@@ -10,30 +10,30 @@ export * from './lib/types';
 export const createComponentMetaCheckerByJsonConfig = createCheckerByJson;
 
 /**
- * @deprecated Use `createCheckerByJson` instead.
+ * @deprecated Use `createChecker` instead.
  */
 export const createComponentMetaChecker = createChecker;
 
 export function createCheckerByJson(
 	rootPath: string,
 	json: any,
-	checkerOptions: MetaCheckerOptions = {},
+	checkerOptions: MetaCheckerOptions = {}
 ) {
 	return createCheckerByJsonConfigBase(
 		ts,
 		rootPath,
 		json,
-		checkerOptions,
+		checkerOptions
 	);
 }
 
 export function createChecker(
 	tsconfig: string,
-	checkerOptions: MetaCheckerOptions = {},
+	checkerOptions: MetaCheckerOptions = {}
 ) {
 	return createCheckerBase(
 		ts,
 		tsconfig,
-		checkerOptions,
+		checkerOptions
 	);
 }

@@ -1,5 +1,35 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`vue-tsc-dts > Input: #4577/main.vue, Output: #4577/main.vue.d.ts 1`] = `
+"export type BaseRow = {
+    value: string;
+};
+declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: __VLS_Prettify<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>>, never>, never> & {
+        nonGeneric: string;
+        rows: Row[];
+    }> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
+    attrs: any;
+    slots: ReturnType<() => {
+        default?(_: {
+            row: Row;
+        }): any;
+    }>;
+    emit: {};
+}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+    [key: string]: any;
+}> & {
+    __ctx?: Awaited<typeof __VLS_setup>;
+};
+export default _default;
+
+type __VLS_Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+"
+`;
+
 exports[`vue-tsc-dts > Input: class-slots/component.vue, Output: class-slots/component.vue.d.ts 1`] = `
 "import { VNode } from 'vue';
 declare const _default: new () => {
@@ -22,34 +52,63 @@ export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
-"declare const _default: <T>(__VLS_props: {
-    onBar?: (data: number) => any;
-    foo: number;
-} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, __VLS_ctx?: {
+exports[`vue-tsc-dts > Input: empty-component/custom-extension-component.cext, Output: empty-component/custom-extension-component.cext.d.ts 1`] = `
+"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: events/component-class.vue, Output: events/component-class.vue.d.ts 1`] = `
+"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+    foo: (value: string) => void;
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>> & {
+    onFoo?: (value: string) => any;
+}, {}, {}>;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/component-generic.vue.d.ts 1`] = `
+"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: __VLS_Prettify<Pick<Partial<{}> & Omit<{
+        onFoo?: (value: string) => any;
+    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>> & {
+        onFoo?: (value: string) => any;
+    }, never>, "onFoo"> & {}> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
-    emit: (e: 'bar', data: number) => void;
-    slots: Readonly<{
-        default?(data: {
-            foo: number;
-        }): any;
-    }> & {
-        default?(data: {
-            foo: number;
-        }): any;
-    };
-}, __VLS_expose?: (exposed: import("vue").ShallowUnwrapRef<{
-    baz: number;
-}>) => void, __VLS_setup?: Promise<{
-    props: {
+    slots: ReturnType<() => {}>;
+    emit: ((evt: "foo", value: string) => void) & {};
+}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+    [key: string]: any;
+}> & {
+    __ctx?: Awaited<typeof __VLS_setup>;
+};
+export default _default;
+type __VLS_Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+"
+`;
+
+exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
+"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: __VLS_Prettify<Pick<Partial<{}> & Omit<{
+        "onUpdate:title"?: (title: string) => any;
         onBar?: (data: number) => any;
+    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>> & {
+        "onUpdate:title"?: (title: string) => any;
+        onBar?: (data: number) => any;
+    }, never>, "onUpdate:title" | "onBar"> & ({
+        title?: string;
+    } & {
         foo: number;
-    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
+    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
     attrs: any;
-    slots: Readonly<{
+    slots: ReturnType<() => Readonly<{
         default?(data: {
             foo: number;
         }): any;
@@ -57,37 +116,62 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         default?(data: {
             foo: number;
         }): any;
-    };
-    emit: (e: 'bar', data: number) => void;
+    }>;
+    emit: ((e: "bar", data: number) => void) & ((evt: "update:title", title: string) => void);
 }>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
     [key: string]: any;
 }> & {
-    __ctx?: {
-        props: {
-            onBar?: (data: number) => any;
-            foo: number;
-        } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps;
-        expose(exposed: import("vue").ShallowUnwrapRef<{
-            baz: number;
-        }>): void;
-        attrs: any;
-        slots: Readonly<{
-            default?(data: {
-                foo: number;
-            }): any;
-        }> & {
-            default?(data: {
-                foo: number;
-            }): any;
-        };
-        emit: (e: 'bar', data: number) => void;
-    };
+    __ctx?: Awaited<typeof __VLS_setup>;
 };
 export default _default;
-type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any ? Pick<T, Exclude<keyof T, K>> : never;
 type __VLS_Prettify<T> = {
     [K in keyof T]: T[K];
 } & {};
+"
+`;
+
+exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: generic/custom-extension-component.cext.d.ts 1`] = `
+"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: __VLS_Prettify<Pick<Partial<{}> & Omit<{
+        "onUpdate:title"?: (title: string) => any;
+        onBar?: (data: number) => any;
+    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>> & {
+        "onUpdate:title"?: (title: string) => any;
+        onBar?: (data: number) => any;
+    }, never>, "onUpdate:title" | "onBar"> & ({
+        title?: string;
+    } & {
+        foo: number;
+    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    expose(exposed: import("vue").ShallowUnwrapRef<{
+        baz: number;
+    }>): void;
+    attrs: any;
+    slots: ReturnType<() => Readonly<{
+        default?(data: {
+            foo: number;
+        }): any;
+    }> & {
+        default?(data: {
+            foo: number;
+        }): any;
+    }>;
+    emit: ((e: "bar", data: number) => void) & ((evt: "update:title", title: string) => void);
+}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+    [key: string]: any;
+}> & {
+    __ctx?: Awaited<typeof __VLS_setup>;
+};
+export default _default;
+type __VLS_Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+"
+`;
+
+exports[`vue-tsc-dts > Input: generic/main.vue, Output: generic/main.vue.d.ts 1`] = `
+"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
+export default _default;
 "
 `;
 
@@ -195,12 +279,12 @@ exports[`vue-tsc-dts > Input: reference-type-events/component.vue, Output: refer
     }) => void;
     baz: () => void;
 }, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>> & {
+    onFoo?: (data?: {
+        foo: string;
+    }) => any;
     onBar?: (value: {
         arg1: number;
         arg2?: any;
-    }) => any;
-    onFoo?: (data?: {
-        foo: string;
     }) => any;
     onBaz?: () => any;
 }, {}, {}>;
@@ -239,20 +323,31 @@ export default _default;
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{
-    foo: import("vue").PropType<number>;
-    bar: import("vue").PropType<string[]>;
-}, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+"type __VLS_PublicProps = {
+    "foo"?: number;
+    "bar"?: string[];
+    "qux"?: string;
+    quxModifiers?: Record<'lazy' | 'trim', true>;
+};
+declare const _default: import("vue").DefineComponent<__VLS_TypePropsToOption<__VLS_PublicProps>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     "update:foo": (foo: number) => void;
     "update:bar": (bar: string[]) => void;
-}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
-    foo: import("vue").PropType<number>;
-    bar: import("vue").PropType<string[]>;
-}>> & {
+    "update:qux": (qux: string) => void;
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<__VLS_PublicProps>>> & {
     "onUpdate:foo"?: (foo: number) => any;
     "onUpdate:bar"?: (bar: string[]) => any;
+    "onUpdate:qux"?: (qux: string) => any;
 }, {}, {}>;
 export default _default;
+type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
+type __VLS_TypePropsToOption<T> = {
+    [K in keyof T]-?: {} extends Pick<T, K> ? {
+        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
+    } : {
+        type: import('vue').PropType<T[K]>;
+        required: true;
+    };
+};
 "
 `;
 
@@ -539,7 +634,7 @@ export {};
 `;
 
 exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slots/component.vue.d.ts 1`] = `
-"declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>, {
+"declare function __VLS_template(): {
     "no-bind"?(_: {}): any;
     default?(_: {
         num: number;
@@ -551,7 +646,68 @@ exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slo
         num: number;
         str: string;
     }): any;
-}>;
+};
+declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
+declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, ReturnType<typeof __VLS_template>>;
+export default _default;
+type __VLS_WithTemplateSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
+"
+`;
+
+exports[`vue-tsc-dts > Input: template-slots/component-define-slots.vue, Output: template-slots/component-define-slots.vue.d.ts 1`] = `
+"import { VNode } from 'vue';
+declare function __VLS_template(): Readonly<{
+    default: (props: {
+        num: number;
+    }) => VNode[];
+    'named-slot': (props: {
+        str: string;
+    }) => VNode[];
+    vbind: (props: {
+        num: number;
+        str: string;
+    }) => VNode[];
+    'no-bind': () => VNode[];
+}> & {
+    default: (props: {
+        num: number;
+    }) => VNode[];
+    'named-slot': (props: {
+        str: string;
+    }) => VNode[];
+    vbind: (props: {
+        num: number;
+        str: string;
+    }) => VNode[];
+    'no-bind': () => VNode[];
+};
+declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
+declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, ReturnType<typeof __VLS_template>>;
+export default _default;
+type __VLS_WithTemplateSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
+"
+`;
+
+exports[`vue-tsc-dts > Input: template-slots/component-destructuring.vue, Output: template-slots/component-destructuring.vue.d.ts 1`] = `
+"declare function __VLS_template(): Readonly<{
+    bottom: (props: {
+        num: number;
+    }) => any[];
+}> & {
+    bottom: (props: {
+        num: number;
+    }) => any[];
+};
+declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
+declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, ReturnType<typeof __VLS_template>>;
 export default _default;
 type __VLS_WithTemplateSlots<T, S> = T & {
     new (): {
@@ -562,7 +718,7 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 `;
 
 exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: template-slots/component-no-script.vue.d.ts 1`] = `
-"declare const _default: __VLS_WithTemplateSlots<import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>, {
+"declare function __VLS_template(): {
     "no-bind"?(_: {}): any;
     default?(_: {
         num: number;
@@ -574,7 +730,9 @@ exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: te
         num: number;
         str: string;
     }): any;
-}>;
+};
+declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
+declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, ReturnType<typeof __VLS_template>>;
 export default _default;
 type __VLS_WithTemplateSlots<T, S> = T & {
     new (): {

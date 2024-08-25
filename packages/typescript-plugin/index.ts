@@ -1,117 +1,58 @@
-import type * as ts from 'typescript';
-import { decorateLanguageService } from '@volar/typescript/lib/node/decorateLanguageService';
-import { decorateLanguageServiceHost, searchExternalFiles } from '@volar/typescript/lib/node/decorateLanguageServiceHost';
-import { createFileRegistry, resolveCommonLanguageId } from '@vue/language-core';
-import { projects } from './lib/utils';
+import { createLanguageServicePlugin, externalFiles } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
+import { proxyLanguageServiceForVue } from './lib/common';
 import { startNamedPipeServer } from './lib/server';
 
 const windowsPathReg = /\\/g;
-const externalFiles = new WeakMap<ts.server.Project, string[]>();
-const projectExternalFileExtensions = new WeakMap<ts.server.Project, string[]>();
-const decoratedLanguageServices = new WeakSet<ts.LanguageService>();
-const decoratedLanguageServiceHosts = new WeakSet<ts.LanguageServiceHost>();
 
-export = createLanguageServicePlugin();
+const plugin = createLanguageServicePlugin(
+	(ts, info) => {
+		const vueOptions = getVueCompilerOptions();
+		const languagePlugin = vue.createVueLanguagePlugin2<string>(
+			ts,
+			id => id,
+			info.project.projectKind === ts.server.ProjectKind.Inferred
+				? () => true
+				: vue.createRootFileChecker(
+					info.languageServiceHost.getProjectVersion ? () => info.languageServiceHost.getProjectVersion!() : undefined,
+					() => externalFiles.get(info.project) ?? [],
+					info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false
+				),
+			info.languageServiceHost.getCompilationSettings(),
+			vueOptions
+		);
 
-function createLanguageServicePlugin(): ts.server.PluginModuleFactory {
-	return modules => {
-		const { typescript: ts } = modules;
-		const pluginModule: ts.server.PluginModule = {
-			create(info) {
+		return {
+			languagePlugins: [languagePlugin],
+			setup: language => {
+				info.languageService = proxyLanguageServiceForVue(ts, language, info.languageService, vueOptions, fileName => fileName);
 				if (
-					!decoratedLanguageServices.has(info.languageService)
-					&& !decoratedLanguageServiceHosts.has(info.languageServiceHost)
+					info.project.projectKind === ts.server.ProjectKind.Configured
+					|| info.project.projectKind === ts.server.ProjectKind.Inferred
 				) {
-					decoratedLanguageServices.add(info.languageService);
-					decoratedLanguageServiceHosts.add(info.languageServiceHost);
-
-					const vueOptions = vue.resolveVueCompilerOptions(getVueCompilerOptions());
-					const languagePlugin = vue.createVueLanguagePlugin(
-						ts,
-						id => id,
-						info.languageServiceHost.getCompilationSettings(),
-						vueOptions,
-					);
-					const extensions = languagePlugin.typescript?.extraFileExtensions.map(ext => '.' + ext.extension) ?? [];
-					const getScriptSnapshot = info.languageServiceHost.getScriptSnapshot.bind(info.languageServiceHost);
-					const files = createFileRegistry(
-						[languagePlugin],
-						ts.sys.useCaseSensitiveFileNames,
-						fileName => {
-							const snapshot = getScriptSnapshot(fileName);
-							if (snapshot) {
-								files.set(fileName, resolveCommonLanguageId(fileName), snapshot);
-							}
-							else {
-								files.delete(fileName);
-							}
-						}
-					);
-
-					projectExternalFileExtensions.set(info.project, extensions);
-					projects.set(info.project, {
-						info,
-						files,
-						ts,
-						vueOptions,
-					});
-
-					decorateLanguageService(files, info.languageService);
-					decorateLanguageServiceHost(files, info.languageServiceHost, ts);
-					startNamedPipeServer();
-
-					const getCompletionsAtPosition = info.languageService.getCompletionsAtPosition;
-
-					info.languageService.getCompletionsAtPosition = (fileName, position, options) => {
-						const result = getCompletionsAtPosition(fileName, position, options);
-						if (result) {
-							result.entries = result.entries.filter(entry => entry.name.indexOf('__VLS_') === -1);
-						}
-						return result;
-					};
+					startNamedPipeServer(ts, info, language, info.project.projectKind);
 				}
 
-				return info.languageService;
-
-				function getVueCompilerOptions() {
-					if (info.project.projectKind === ts.server.ProjectKind.Configured) {
-						const tsconfig = info.project.getProjectName();
-						return vue.createParsedCommandLine(ts, ts.sys, tsconfig.replace(windowsPathReg, '/')).vueOptions;
+				// #3963
+				const timer = setInterval(() => {
+					if (info.project['program']) {
+						clearInterval(timer);
+						(info.project['program'] as any).__vue__ = { language };
 					}
-					else {
-						return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {}).vueOptions;
-					}
-				}
-			},
-			getExternalFiles(project, updateLevel = 0) {
-				if (
-					updateLevel >= (1 satisfies ts.ProgramUpdateLevel.RootNamesAndUpdate)
-					|| !externalFiles.has(project)
-				) {
-					const oldFiles = externalFiles.get(project);
-					const newFiles = searchExternalFiles(ts, project, projectExternalFileExtensions.get(project)!);
-					externalFiles.set(project, newFiles);
-					if (oldFiles && !arrayItemsEqual(oldFiles, newFiles)) {
-						project.refreshDiagnostics();
-					}
-				}
-				return externalFiles.get(project)!;
-			},
+				}, 50);
+			}
 		};
-		return pluginModule;
-	};
-}
 
-function arrayItemsEqual(a: string[], b: string[]) {
-	if (a.length !== b.length) {
-		return false;
-	}
-	const set = new Set(a);
-	for (const file of b) {
-		if (!set.has(file)) {
-			return false;
+		function getVueCompilerOptions() {
+			if (info.project.projectKind === ts.server.ProjectKind.Configured) {
+				const tsconfig = info.project.getProjectName();
+				return vue.createParsedCommandLine(ts, ts.sys, tsconfig.replace(windowsPathReg, '/')).vueOptions;
+			}
+			else {
+				return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {}).vueOptions;
+			}
 		}
 	}
-	return true;
-}
+);
+
+export = plugin;

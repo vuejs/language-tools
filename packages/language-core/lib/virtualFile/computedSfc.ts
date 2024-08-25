@@ -2,24 +2,28 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, computedArray, pauseTracking, resetTracking } from 'computeds';
 import type * as ts from 'typescript';
-import type { Sfc, SfcBlock, VueLanguagePlugin } from '../types';
+import type { Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 
 export function computedSfc(
 	ts: typeof import('typescript'),
-	plugins: ReturnType<VueLanguagePlugin>[],
+	plugins: VueLanguagePluginReturn[],
 	fileName: string,
-	snapshot: () => ts.IScriptSnapshot,
+	getSnapshot: () => ts.IScriptSnapshot,
 	parsed: () => SFCParseResult | undefined
 ): Sfc {
 
 	const untrackedSnapshot = () => {
 		pauseTracking();
-		const res = snapshot();
+		const res = getSnapshot();
 		resetTracking();
 		return res;
 	};
+	const content = computed(() => {
+		const snapshot = getSnapshot();
+		return snapshot.getText(0, snapshot.getLength());
+	});
 	const template = computedNullableSfcBlock(
 		'template',
 		'html',
@@ -31,7 +35,7 @@ export function computedSfc(
 				get errors() { return compiledAst()?.errors; },
 				get warnings() { return compiledAst()?.warnings; },
 			});
-		},
+		}
 	);
 	const script = computedNullableSfcBlock(
 		'script',
@@ -43,15 +47,23 @@ export function computedSfc(
 				const _src = src();
 				return _src ? untrackedSnapshot().getText(0, base.startTagEnd).lastIndexOf(_src) - base.startTagEnd : -1;
 			});
-			const ast = computed(() => ts.createSourceFile(fileName + '.' + base.lang, base.content, 99 satisfies ts.ScriptTarget.Latest));
+			const ast = computed(() => {
+				for (const plugin of plugins) {
+					const ast = plugin.compileSFCScript?.(base.lang, base.content);
+					if (ast) {
+						return ast;
+					}
+				}
+				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
+			});
 			return mergeObject(base, {
 				get src() { return src(); },
 				get srcOffset() { return srcOffset(); },
 				get ast() { return ast(); },
 			});
-		},
+		}
 	);
-	const scriptSetup = computedNullableSfcBlock(
+	const scriptSetupOriginal = computedNullableSfcBlock(
 		'scriptSetup',
 		'js',
 		computed(() => parsed()?.descriptor.scriptSetup ?? undefined),
@@ -64,14 +76,43 @@ export function computedSfc(
 				const _generic = generic();
 				return _generic !== undefined ? untrackedSnapshot().getText(0, base.startTagEnd).lastIndexOf(_generic) - base.startTagEnd : -1;
 			});
-			const ast = computed(() => ts.createSourceFile(fileName + '.' + base.lang, base.content, 99 satisfies ts.ScriptTarget.Latest));
+			const ast = computed(() => {
+				for (const plugin of plugins) {
+					const ast = plugin.compileSFCScript?.(base.lang, base.content);
+					if (ast) {
+						return ast;
+					}
+				}
+				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
+			});
 			return mergeObject(base, {
 				get generic() { return generic(); },
 				get genericOffset() { return genericOffset(); },
 				get ast() { return ast(); },
 			});
-		},
+		}
 	);
+	const hasScript = computed(() => !!parsed()?.descriptor.script);
+	const hasScriptSetup = computed(() => !!parsed()?.descriptor.scriptSetup);
+	const scriptSetup = computed(() => {
+		if (!hasScript() && !hasScriptSetup()) {
+			//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
+			return {
+				content: '',
+				lang: 'ts',
+				name: '',
+				start: 0,
+				end: 0,
+				startTagEnd: 0,
+				endTagStart: 0,
+				generic: undefined,
+				genericOffset: 0,
+				attrs: {},
+				ast: ts.createSourceFile('', '', 99 satisfies ts.ScriptTarget.Latest, false, ts.ScriptKind.TS),
+			};
+		}
+		return scriptSetupOriginal();
+	});
 	const styles = computedArray(
 		computed(() => parsed()?.descriptor.styles ?? []),
 		(block, i) => {
@@ -91,7 +132,7 @@ export function computedSfc(
 	const customBlocks = computedArray(
 		computed(() => parsed()?.descriptor.customBlocks ?? []),
 		(block, i) => {
-			const base = computedSfcBlock('customBlock_' + i, 'txt', block);
+			const base = computedSfcBlock('custom_block_' + i, 'txt', block);
 			const type = computed(() => block().type);
 			return computed<Sfc['customBlocks'][number]>(() => mergeObject(base, {
 				get type() { return type(); },
@@ -100,14 +141,12 @@ export function computedSfc(
 	);
 
 	return {
+		get content() { return content(); },
 		get template() { return template(); },
 		get script() { return script(); },
 		get scriptSetup() { return scriptSetup(); },
 		get styles() { return styles; },
 		get customBlocks() { return customBlocks; },
-		get templateAst() { return template()?.ast; },
-		get scriptAst() { return script()?.ast; },
-		get scriptSetupAst() { return scriptSetup()?.ast; },
 	};
 
 	function computedTemplateAst(base: SfcBlock) {
@@ -116,7 +155,7 @@ export function computedSfc(
 			template: string,
 			snapshot: ts.IScriptSnapshot,
 			result: CompilerDOM.CodegenResult,
-			plugin: ReturnType<VueLanguagePlugin>,
+			plugin: VueLanguagePluginReturn,
 		} | undefined;
 
 		return computed(() => {
@@ -218,7 +257,7 @@ export function computedSfc(
 		name: string,
 		defaultLang: string,
 		block: () => T | undefined,
-		resolve: (block: () => T, base: SfcBlock) => K,
+		resolve: (block: () => T, base: SfcBlock) => K
 	) {
 		const hasBlock = computed(() => !!block());
 		return computed<K | undefined>(() => {
@@ -233,7 +272,7 @@ export function computedSfc(
 	function computedSfcBlock<T extends SFCBlock>(
 		name: string,
 		defaultLang: string,
-		block: () => T,
+		block: () => T
 	) {
 		const lang = computed(() => block().lang ?? defaultLang);
 		const attrs = computed(() => block().attrs); // TODO: computed it

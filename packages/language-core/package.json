@@ -1,10 +1,10 @@
 {
 	"name": "@vue/language-core",
-	"version": "1.8.27",
+	"version": "2.0.28",
 	"license": "MIT",
 	"files": [
-		"out/**/*.js",
-		"out/**/*.d.ts"
+		"**/*.js",
+		"**/*.d.ts"
 	],
 	"repository": {
 		"type": "git",
@@ -12,18 +12,20 @@
 		"directory": "packages/language-core"
 	},
 	"dependencies": {
-		"@volar/language-core": "~2.1.0",
+		"@volar/language-core": "~2.4.0",
 		"@vue/compiler-dom": "^3.4.0",
 		"@vue/shared": "^3.4.0",
 		"computeds": "^0.0.1",
 		"minimatch": "^9.0.3",
+		"muggle-string": "^0.4.1",
 		"path-browserify": "^1.0.1",
-		"vue-template-compiler": "^2.7.14"
+		"@vue/compiler-vue2": "^2.7.16"
 	},
 	"devDependencies": {
 		"@types/minimatch": "^5.1.2",
 		"@types/node": "latest",
 		"@types/path-browserify": "^1.0.1",
+		"@volar/typescript": "~2.4.0",
 		"@vue/compiler-sfc": "^3.4.0"
 	},
 	"peerDependencies": {

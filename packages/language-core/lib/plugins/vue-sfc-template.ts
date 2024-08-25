@@ -1,13 +1,13 @@
-import { enableAllFeatures } from '../generators/utils';
 import type { VueLanguagePlugin } from '../types';
+import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
-		getEmbeddedFiles(_fileName, sfc) {
+		getEmbeddedCodes(_fileName, sfc) {
 			if (sfc.template) {
 				return [{
 					id: 'template',
@@ -17,13 +17,13 @@ const plugin: VueLanguagePlugin = () => {
 			return [];
 		},
 
-		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
 			if (embeddedFile.id === 'template' && sfc.template) {
 				embeddedFile.content.push([
 					sfc.template.content,
 					sfc.template.name,
 					0,
-					enableAllFeatures({}),
+					allCodeFeatures,
 				]);
 			}
 		},

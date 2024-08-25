@@ -20,6 +20,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
             },
@@ -46,6 +50,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -71,6 +87,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
             },
             {
               "name": "ja",
@@ -99,6 +119,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         }
@@ -115,6 +147,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#template"
         },
         {
           "name": "ja",
@@ -143,6 +179,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#template"
         }
       ]
     },
@@ -163,6 +211,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
               "name": "ja",
@@ -191,6 +243,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -224,6 +288,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
             },
@@ -250,6 +318,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -271,6 +351,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
             },
             {
               "name": "ja",
@@ -299,6 +383,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
             }
           ]
         }
@@ -315,6 +411,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script"
         },
         {
           "name": "ja",
@@ -343,6 +443,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script"
         }
       ]
     },
@@ -361,6 +473,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
         },
         {
           "name": "ja",
@@ -389,6 +505,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
         }
       ]
     },
@@ -409,6 +537,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
               "name": "ja",
@@ -437,6 +569,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -476,6 +620,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
             },
@@ -502,6 +650,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -520,6 +680,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#scoped-css"
             },
             {
               "name": "ja",
@@ -548,6 +712,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#scoped-css"
             }
           ]
         },
@@ -566,6 +742,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#css-modules"
             },
             {
               "name": "ja",
@@ -594,6 +774,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#css-modules"
             }
           ]
         }
@@ -610,6 +802,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#style"
         },
         {
           "name": "ja",
@@ -638,6 +834,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#style"
         }
       ]
     },
@@ -658,6 +866,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
               "name": "ja",
@@ -686,6 +898,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         }
@@ -702,6 +926,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#blocchi-custom"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#blocchi-custom"
         },
         {
           "name": "ja",
@@ -730,6 +958,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#blocchi-custom"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#blocchi-custom"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#blocchi-custom"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#blocchi-custom"
         }
       ]
     }
@@ -750,6 +990,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
         },
         {
           "name": "ja",
@@ -778,6 +1022,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
         }
       ]
     },
@@ -795,6 +1051,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
         },
         {
           "name": "ja",
@@ -823,6 +1083,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
         }
       ]
     }

@@ -1,0 +1,188 @@
+{
+  "version": 1.1,
+  "globalAttributes": [
+    {
+      "name": "lazy",
+      "description": {
+        "kind": "markdown",
+        "value": "\nVe výchozím nastavení `v-model` synchronizuje vstup s daty po každé události `input` (s&nbsp;výjimkou IME kompozice, jak je [uvedeno výše](#vmodel-ime-tip)). Místo toho můžete přidat modifikátor`lazy` k synchronizaci po události `change`:\n\n```html\n<!-- synchronizuje se po „change“ místo „input“ -->\n<input v-model.lazy=\"msg\" />\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/guide/essentials/forms.html#lazy"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/guide/essentials/forms.html#lazy"
+        }
+      ]
+    },
+    {
+      "name": "number",
+      "description": {
+        "kind": "markdown",
+        "value": "\nPokud chcete, aby byl uživatelský vstup automaticky přetypován jako číslo, můžete do vašich vstupů spravovaných přes `v-model` přidat modifikátor `number`:\n\n```html\n<input v-model.number=\"age\" />\n```\n\nPokud hodnotu nelze přetypovat pomocí `parseFloat()`, bude použita původní hodnota.\n\nModifikátor `number` se aplikuje automaticky, pokud má vstupní pole atribut `type=\"number\"`.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/guide/essentials/forms.html#number"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/guide/essentials/forms.html#number"
+        }
+      ]
+    },
+    {
+      "name": "trim",
+      "description": {
+        "kind": "markdown",
+        "value": "\nPokud chcete z uživatelského vstupu automaticky odstranit bílé znaky (whitespace), můžete do vašich vstupů spravovaných přes `v-model` přidat modifikátor `trim`:\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/guide/essentials/forms.html#trim"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/guide/essentials/forms.html#trim"
+        }
+      ]
+    }
+  ]
+}

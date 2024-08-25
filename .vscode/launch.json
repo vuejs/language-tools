@@ -6,14 +6,14 @@
 			"name": "Launch Client",
 			"type": "extensionHost",
 			"request": "launch",
+			"autoAttachChildProcesses": true,
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				// "--disable-extensions",
-				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode"
+				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode",
+				"--folder-uri=${workspaceRoot}/test-workspace",
 			],
 			"outFiles": [
-				"${workspaceRoot}/*/*/*.js",
-				"${workspaceRoot}/*/*/lib/**/*.js"
+				"${workspaceRoot}/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -31,8 +31,7 @@
 				"--extensionDevelopmentKind=web"
 			],
 			"outFiles": [
-				"${workspaceRoot}/*/*/*.js",
-				"${workspaceRoot}/*/*/lib/**/*.js"
+				"${workspaceRoot}/**/*.js"
 			],
 			"preLaunchTask": {
 				"type": "npm",
@@ -46,8 +45,7 @@
 			"port": 6009,
 			"restart": true,
 			"outFiles": [
-				"${workspaceRoot}/*/*/*.js",
-				"${workspaceRoot}/*/*/lib/**/*.js"
+				"${workspaceRoot}/**/*.js"
 			]
 		}
 	],

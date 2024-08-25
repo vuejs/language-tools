@@ -1,4 +1,4 @@
-import type { CompletionItem, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { CompletionItem, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 
 const cmds = [
 	'vue-ignore',
@@ -8,21 +8,27 @@ const cmds = [
 
 const directiveCommentReg = /<!--\s*@/;
 
-export function create(): ServicePlugin {
+export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-directive-comments',
-		triggerCharacters: ['@'],
-		create(): ServicePluginInstance {
+		capabilities: {
+			completionProvider: {
+				triggerCharacters: ['@'],
+			},
+		},
+		create(): LanguageServicePluginInstance {
 			return {
 				provideCompletionItems(document, position) {
 
-					if (document.languageId !== 'html')
+					if (document.languageId !== 'html') {
 						return;
+					}
 
 					const line = document.getText({ start: { line: position.line, character: 0 }, end: position });
 					const cmdStart = line.match(directiveCommentReg);
-					if (!cmdStart)
+					if (!cmdStart) {
 						return;
+					}
 
 					const startIndex = cmdStart.index! + cmdStart[0].length;
 					const remainText = line.substring(startIndex);
@@ -32,7 +38,6 @@ export function create(): ServicePlugin {
 						let match = true;
 						for (let i = 0; i < remainText.length; i++) {
 							if (remainText[i] !== cmd[i]) {
-								console.log(JSON.stringify(remainText[i]), JSON.stringify(cmd[i]));
 								match = false;
 								break;
 							}

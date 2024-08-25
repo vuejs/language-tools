@@ -1,12 +1,20 @@
-import * as net from 'net';
 import type { Request } from './server';
-import { pipeFile } from './utils';
+import { searchNamedPipeServerForFile, sendRequestWorker } from './utils';
 
 export function collectExtractProps(
 	...args: Parameters<typeof import('./requests/collectExtractProps.js')['collectExtractProps']>
 ) {
 	return sendRequest<ReturnType<typeof import('./requests/collectExtractProps')['collectExtractProps']>>({
 		type: 'collectExtractProps',
+		args,
+	});
+}
+
+export async function getImportPathForFile(
+	...args: Parameters<typeof import('./requests/getImportPathForFile.js')['getImportPathForFile']>
+) {
+	return await sendRequest<ReturnType<typeof import('./requests/getImportPathForFile')['getImportPathForFile']>>({
+		type: 'getImportPathForFile',
 		args,
 	});
 }
@@ -76,25 +84,13 @@ export function getElementAttrs(
 	});
 }
 
-function sendRequest<T>(request: Request) {
-	return new Promise<T | undefined | null>(resolve => {
-		try {
-			const client = net.connect(pipeFile);
-			client.on('connect', () => {
-				client.write(JSON.stringify(request));
-			});
-			client.on('data', data => {
-				const text = data.toString();
-				resolve(JSON.parse(text));
-				client.end();
-			});
-			client.on('error', err => {
-				console.error('[Vue Named Pipe Client]', err);
-				return resolve(undefined);
-			});
-		} catch (e) {
-			console.error('[Vue Named Pipe Client]', e);
-			return resolve(undefined);
-		}
-	});
+async function sendRequest<T>(request: Request) {
+	const server = (await searchNamedPipeServerForFile(request.args[0]));
+	if (!server) {
+		console.warn('[Vue Named Pipe Client] No server found for', request.args[0]);
+		return;
+	}
+	const res = await sendRequestWorker<T>(request, server.socket);
+	server.socket.end();
+	return res;
 }

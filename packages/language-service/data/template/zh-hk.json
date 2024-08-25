@@ -1,0 +1,1605 @@
+{
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "Transition",
+      "description": {
+        "kind": "markdown",
+        "value": "\n为**单个**元素或组件提供动画过渡效果。\n\n- **Props**\n\n  ```ts\n  interface TransitionProps {\n    /**\n     * 用于自动生成过渡 CSS class 名。\n     * 例如 `name: 'fade'` 将自动扩展为 `.fade-enter`、\n     * `.fade-enter-active` 等。\n     */\n    name?: string\n    /**\n     * 是否应用 CSS 过渡 class。\n     * 默认：true\n     */\n    css?: boolean\n    /**\n     * 指定要等待的过渡事件类型\n     * 来确定过渡结束的时间。\n     * 默认情况下会自动检测\n     * 持续时间较长的类型。\n     */\n    type?: 'transition' | 'animation'\n    /**\n     * 显式指定过渡的持续时间。\n     * 默认情况下是等待过渡效果的根元素的第一个 `transitionend`\n     * 或`animationend`事件。\n     */\n    duration?: number | { enter: number; leave: number }\n    /**\n     * 控制离开/进入过渡的时序。\n     * 默认情况下是同时的。\n     */\n    mode?: 'in-out' | 'out-in' | 'default'\n    /**\n     * 是否对初始渲染使用过渡。\n     * 默认：false\n     */\n    appear?: boolean\n\n    /**\n     * 用于自定义过渡 class 的 prop。\n     * 在模板中使用短横线命名，例如：enter-from-class=\"xxx\"\n     */\n    enterFromClass?: string\n    enterActiveClass?: string\n    enterToClass?: string\n    appearFromClass?: string\n    appearActiveClass?: string\n    appearToClass?: string\n    leaveFromClass?: string\n    leaveActiveClass?: string\n    leaveToClass?: string\n  }\n  ```\n\n- **事件**\n\n  - `@before-enter`\n  - `@before-leave`\n  - `@enter`\n  - `@leave`\n  - `@appear`\n  - `@after-enter`\n  - `@after-leave`\n  - `@after-appear`\n  - `@enter-cancelled`\n  - `@leave-cancelled` (`v-show` only)\n  - `@appear-cancelled`\n\n- **示例**\n\n  简单元素：\n\n  ```html\n  <Transition>\n    <div v-if=\"ok\">toggled content</div>\n  </Transition>\n  ```\n\n  通过改变 `key` 属性来强制过度执行：\n\n  ```html\n  <Transition>\n    <div :key=\"text\">{{ text }}</div>\n  </Transition>\n  ```\n\n  动态组件，初始渲染时带有过渡模式 + 动画出现：\n\n  ```html\n  <Transition name=\"fade\" mode=\"out-in\" appear>\n    <component :is=\"view\"></component>\n  </Transition>\n  ```\n\n  监听过渡事件：\n\n  ```html\n  <Transition @after-enter=\"onTransitionComplete\">\n    <div v-show=\"ok\">toggled content</div>\n  </Transition>\n  ```\n\n- **参考**[指南 - `<Transition>`](https://zh-hk.vuejs.org/guide/built-ins/transition.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#transition"
+        }
+      ]
+    },
+    {
+      "name": "TransitionGroup",
+      "description": {
+        "kind": "markdown",
+        "value": "\n为列表中的**多个**元素或组件提供过渡效果。\n\n- **Props**\n\n  `<TransitionGroup>` 拥有与 `<Transition>` 除了 `mode` 以外所有的 props，并增加了两个额外的 props：\n\n  ```ts\n  interface TransitionGroupProps extends Omit<TransitionProps, 'mode'> {\n    /**\n     * 如果未定义，则渲染为片段 (fragment)。\n     */\n    tag?: string\n    /**\n     * 用于自定义过渡期间被应用的 CSS class。\n     * 在模板中使用 kebab-case，例如 move-class=\"xxx\"\n     */\n    moveClass?: string\n  }\n  ```\n\n- **事件**\n\n  `<TransitionGroup>` 抛出与 `<Transition>` 相同的事件。\n\n- **详细信息**\n\n  默认情况下，`<TransitionGroup>` 不会渲染一个容器 DOM 元素，但是可以通过 `tag` prop 启用。\n\n  注意，每个 `<transition-group>` 的子节点必须有[**独立的 key**](https://zh-hk.vuejs.org/guide/essentials/list.html#maintaining-state-with-key)，动画才能正常工作。\n\n  `<TransitionGroup>` 支持通过 CSS transform 控制移动效果。当一个子节点在屏幕上的位置在更新之后发生变化时，它会被添加一个使其位移的 CSS class (基于 `name` attribute 推导，或使用 `move-class` prop 显式配置)。如果使其位移的 class 被添加时 CSS 的 `transform` 属性是“可过渡的”，那么该元素会基于 [FLIP 技巧](https://aerotwist.com/blog/flip-your-animations/)平滑地到达动画终点。\n\n- **示例**\n\n  ```html\n  <TransitionGroup tag=\"ul\" name=\"slide\">\n    <li v-for=\"item in items\" :key=\"item.id\">\n      {{ item.text }}\n    </li>\n  </TransitionGroup>\n  ```\n\n- **参考**[指南 - TransitionGroup](https://zh-hk.vuejs.org/guide/built-ins/transition-group.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#transitiongroup"
+        }
+      ]
+    },
+    {
+      "name": "KeepAlive",
+      "description": {
+        "kind": "markdown",
+        "value": "\n缓存包裹在其中的动态切换组件。\n\n- **Props**\n\n  ```ts\n  interface KeepAliveProps {\n    /**\n     * 如果指定，则只有与 `include` 名称\n     * 匹配的组件才会被缓存。\n     */\n    include?: MatchPattern\n    /**\n     * 任何名称与 `exclude`\n     * 匹配的组件都不会被缓存。\n     */\n    exclude?: MatchPattern\n    /**\n     * 最多可以缓存多少组件实例。\n     */\n    max?: number | string\n  }\n\n  type MatchPattern = string | RegExp | (string | RegExp)[]\n  ```\n\n- **详细信息**\n\n  `<KeepAlive>` 包裹动态组件时，会缓存不活跃的组件实例，而不是销毁它们。\n\n  任何时候都只能有一个活跃组件实例作为 `<KeepAlive>` 的直接子节点。\n\n  当一个组件在 `<KeepAlive>` 中被切换时，它的 `activated` 和 `deactivated` 生命周期钩子将被调用，用来替代 `mounted` 和 `unmounted`。这适用于 `<KeepAlive>` 的直接子节点及其所有子孙节点。\n\n- **示例**\n\n  基本用法：\n\n  ```html\n  <KeepAlive>\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n  与 `v-if` / `v-else` 分支一起使用时，同一时间只能有一个组件被渲染：\n\n  ```html\n  <KeepAlive>\n    <comp-a v-if=\"a > 1\"></comp-a>\n    <comp-b v-else></comp-b>\n  </KeepAlive>\n  ```\n\n  与 `<Transition>` 一起使用：\n\n  ```html\n  <Transition>\n    <KeepAlive>\n      <component :is=\"view\"></component>\n    </KeepAlive>\n  </Transition>\n  ```\n\n  使用 `include` / `exclude`：\n\n  ```html\n  <!-- 用逗号分隔的字符串 -->\n  <KeepAlive include=\"a,b\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n\n  <!-- 正则表达式 (使用 `v-bind`) -->\n  <KeepAlive :include=\"/a|b/\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n\n  <!-- 数组 (使用 `v-bind`) -->\n  <KeepAlive :include=\"['a', 'b']\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n  使用 `max`：\n\n  ```html\n  <KeepAlive :max=\"10\">\n    <component :is=\"view\"></component>\n  </KeepAlive>\n  ```\n\n- **参考**[指南 - KeepAlive](https://zh-hk.vuejs.org/guide/built-ins/keep-alive.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#keepalive"
+        }
+      ]
+    },
+    {
+      "name": "Teleport",
+      "description": {
+        "kind": "markdown",
+        "value": "\n将其插槽内容渲染到 DOM 中的另一个位置。\n\n- **Props**\n\n  ```ts\n  interface TeleportProps {\n    /**\n     * 必填项。指定目标容器。\n     * 可以是选择器或实际元素。\n     */\n    to: string | HTMLElement\n    /**\n     * 当值为 `true` 时，内容将保留在其原始位置\n     * 而不是移动到目标容器中。\n     * 可以动态更改。\n     */\n    disabled?: boolean\n  }\n  ```\n\n- **示例**\n\n  指定目标容器：\n\n  ```html\n  <Teleport to=\"#some-id\" />\n  <Teleport to=\".some-class\" />\n  <Teleport to=\"[data-teleport]\" />\n  ```\n\n  有条件地禁用：\n\n  ```html\n  <Teleport to=\"#popup\" :disabled=\"displayVideoInline\">\n    <video src=\"./my-movie.mp4\">\n  </Teleport>\n  ```\n\n- **参考**[指南 - Teleport](https://zh-hk.vuejs.org/guide/built-ins/teleport.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#teleport"
+        }
+      ]
+    },
+    {
+      "name": "Suspense",
+      "description": {
+        "kind": "markdown",
+        "value": "\n用于协调对组件树中嵌套的异步依赖的处理。\n\n- **Props**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n    suspensible?: boolean\n  }\n  ```\n\n- **事件**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **详细信息**\n\n  `<Suspense>` 接受两个插槽：`#default` 和 `#fallback`。它将在内存中渲染默认插槽的同时展示后备插槽内容。\n\n  如果在渲染时遇到异步依赖项 ([异步组件](https://zh-hk.vuejs.org/guide/components/async.html)和具有 [`async setup()`](https://zh-hk.vuejs.org/guide/built-ins/suspense.html#async-setup) 的组件)，它将等到所有异步依赖项解析完成时再显示默认插槽。\n\n  通過將 Suspense 設置為 `suspensible`，所有異步依賴處理將由父 Suspense 處理。參見[實現細節](https://github.com/vuejs/core/pull/673)\n\n- **参考**[指南 - Suspense](https://zh-hk.vuejs.org/guide/built-ins/suspense.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#suspense"
+        }
+      ]
+    },
+    {
+      "name": "component",
+      "description": {
+        "kind": "markdown",
+        "value": "\n一个用于渲染动态组件或元素的“元组件”。\n\n- **Props**\n\n  ```ts\n  interface DynamicComponentProps {\n    is: string | Component\n  }\n  ```\n\n- **详细信息**\n\n  要渲染的实际组件由 `is` prop 决定。\n\n  - 当 `is` 是字符串，它既可以是 HTML 标签名也可以是组件的注册名。\n\n  - 或者，`is` 也可以直接绑定到组件的定义。\n\n- **示例**\n\n  按注册名渲染组件 (选项式 API)：\n\n  ```vue\n  <script>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n\n  export default {\n    components: { Foo, Bar },\n    data() {\n      return {\n        view: 'Foo'\n      }\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"view\" />\n  </template>\n  ```\n\n  按定义渲染组件 (`<script setup>` 组合式 API)：\n\n  ```vue\n  <script setup>\n  import Foo from './Foo.vue'\n  import Bar from './Bar.vue'\n  </script>\n\n  <template>\n    <component :is=\"Math.random() > 0.5 ? Foo : Bar\" />\n  </template>\n  ```\n\n  渲染 HTML 元素：\n\n  ```html\n  <component :is=\"href ? 'a' : 'span'\"></component>\n  ```\n\n  [内置组件](./built-in-components)都可以传递给 `is`，但是如果想通过名称传递则必须先对其进行注册。举例来说：\n\n  ```vue\n  <script>\n  import { Transition, TransitionGroup } from 'vue'\n\n  export default {\n    components: {\n      Transition,\n      TransitionGroup\n    }\n  }\n  </script>\n\n  <template>\n    <component :is=\"isGroup ? 'TransitionGroup' : 'Transition'\">\n      ...\n    </component>\n  </template>\n  ```\n\n  如果将组件本身传递给 `is` 而不是其名称，则不需要注册，例如在 `<script setup>` 中。\n\n  如果在 `<component>` 标签上使用 `v-model`，模板编译器会将其扩展为 `modelValue` prop 和 `update:modelValue` 事件监听器，就像对任何其他组件一样。但是，这与原生 HTML 元素不兼容，例如 `<input>` 或 `<select>`。因此，在动态创建的原生元素上使用 `v-model` 将不起作用：\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n\n  const tag = ref('input')\n  const username = ref('')\n  </script>\n\n  <template>\n    <!-- 由于 'input' 是原生 HTML 元素，因此这个 v-model 不起作用 -->\n    <component :is=\"tag\" v-model=\"username\" />\n  </template>\n  ```\n\n  在实践中，这种极端情况并不常见，因为原生表单字段通常包裹在实际应用的组件中。如果确实需要直接使用原生元素，那么你可以手动将 `v-model` 拆分为 attribute 和事件。\n\n- **参考**[动态组件](https://zh-hk.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#component"
+        }
+      ]
+    },
+    {
+      "name": "slot",
+      "description": {
+        "kind": "markdown",
+        "value": "\n表示模板中的插槽内容出口。\n\n- **Props**\n\n  ```ts\n  interface SlotProps {\n    /**\n     * 任何传递给 <slot> 的 prop 都可以作为作用域插槽\n     * 的参数传递\n     */\n    [key: string]: any\n    /**\n     * 保留，用于指定插槽名。\n     */\n    name?: string\n  }\n  ```\n\n- **详细信息**\n\n  `<slot>` 元素可以使用 `name` attribute 来指定插槽名。当没有指定 `name` 时，将会渲染默认插槽。传递给插槽元素的附加 attributes 将作为插槽 props，传递给父级中定义的作用域插槽。\n\n  元素本身将被其所匹配的插槽内容替换。\n\n  Vue 模板里的 `<slot>` 元素会被编译到 JavaScript，因此不要与[原生 `<slot>` 元素](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/slot)进行混淆。\n\n- **参考**[组件 - 插槽](https://zh-hk.vuejs.org/guide/components/slots.html)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#slot"
+        }
+      ]
+    },
+    {
+      "name": "template",
+      "description": {
+        "kind": "markdown",
+        "value": "\n当我们想要使用内置指令而不在 DOM 中渲染元素时，`<template>` 标签可以作为占位符使用。\n\n- **详细信息**\n\n  对 `<template>` 的特殊处理只有在它与以下任一指令一起使用时才会被触发：\n\n  - `v-if`、`v-else-if` 或 `v-else`\n  - `v-for`\n  - `v-slot`\n\n  如果这些指令都不存在，那么它将被渲染成一个[原生的 `<template>` 元素](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template)。\n\n  带有 `v-for` 的 `<template>` 也可以有一个 [`key` 属性](https://zh-hk.vuejs.org/api/built-in-special-attributes.html#key)。所有其他的属性和指令都将被丢弃，因为没有相应的元素，它们就没有意义。\n\n  单文件组件使用[顶层的 `<template>` 标签](https://zh-hk.vuejs.org/api/sfc-spec.html#language-blocks)来包裹整个模板。这种用法与上面描述的 `<template>` 使用方式是有区别的。该顶层标签不是模板本身的一部分，不支持指令等模板语法。\n\n- **参考**\n  - [指南 - `<template>` 上的 `v-if`](https://zh-hk.vuejs.org/guide/essentials/conditional.html#v-if-on-template)\n  - [指南 - `<template>` 上的 `v-for`](https://zh-hk.vuejs.org/guide/essentials/list.html#v-for-on-template)\n  - [指南 - 具名插槽](https://zh-hk.vuejs.org/guide/components/slots.html#named-slots)\n"
+      },
+      "attributes": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#template"
+        }
+      ]
+    }
+  ],
+  "globalAttributes": [
+    {
+      "name": "v-text",
+      "description": {
+        "kind": "markdown",
+        "value": "\n更新元素的文本内容。\n\n- **期望的绑定值类型：**`string`\n\n- **详细信息**\n\n  `v-text` 通过设置元素的 [textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent) 属性来工作，因此它将覆盖元素中所有现有的内容。如果你需要更新 `textContent` 的部分，应该使用 [mustache interpolations](https://zh-hk.vuejs.org/guide/essentials/template-syntax.html#text-interpolation) 代替。\n\n- **示例**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- 等同于 -->\n  <span>{{msg}}</span>\n  ```\n\n- **参考**[模板语法 - 文本插值](https://zh-hk.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-text"
+        }
+      ]
+    },
+    {
+      "name": "v-html",
+      "description": {
+        "kind": "markdown",
+        "value": "\n更新元素的 [innerHTML](https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML)。\n\n- **期望的绑定值类型：**`string`\n\n- **详细信息**\n\n `v-html` 的内容直接作为普通 HTML 插入—— Vue 模板语法是不会被解析的。如果你发现自己正打算用 `v-html` 来编写模板，不如重新想想怎么使用组件来代替。\n\n ::: warning 安全说明\n 在你的站点上动态渲染任意的 HTML 是非常危险的，因为它很容易导致 [XSS 攻击](https://en.wikipedia.org/wiki/Cross-site_scripting)。请只对可信内容使用 HTML 插值，**绝不要**将用户提供的内容作为插值\n  :::\n\n 在[单文件组件](https://zh-hk.vuejs.org/guide/scaling-up/sfc.html)，`scoped` 样式将不会作用于 `v-html` 里的内容，因为 HTML 内容不会被 Vue 的模板编译器解析。如果你想让 `v-html` 的内容也支持 scoped CSS，你可以使用 [CSS modules](./sfc-css-features#css-modules) 或使用一个额外的全局 `<style>` 元素，手动设置类似 BEM 的作用域策略。\n\n- **示例**\n\n  ```html\n  <div v-html=\"html\"></div>\n  ```\n\n- **参考**[模板语法 - 原始 HTML](https://zh-hk.vuejs.org/guide/essentials/template-syntax.html#raw-html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-html"
+        }
+      ]
+    },
+    {
+      "name": "v-show",
+      "description": {
+        "kind": "markdown",
+        "value": "\n基于表达式值的真假性，来改变元素的可见性。\n\n- **期望的绑定值类型：**`any`\n\n- **详细信息**\n\n  `v-show` 通过设置内联样式的 `display` CSS 属性来工作，当元素可见时将使用初始 `display` 值。当条件改变时，也会触发过渡效果。\n\n- **参考**[条件渲染 - v-show](https://zh-hk.vuejs.org/guide/essentials/conditional.html#v-show)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-show"
+        }
+      ]
+    },
+    {
+      "name": "v-if",
+      "description": {
+        "kind": "markdown",
+        "value": "\n基于表达式值的真假性，来条件性地渲染元素或者模板片段。\n\n- **期望的绑定值类型：**`any`\n\n- **详细信息**\n\n  当 `v-if` 元素被触发，元素及其所包含的指令/组件都会销毁和重构。如果初始条件是假，那么其内部的内容根本都不会被渲染。\n\n  可用于 `<template>` 表示仅包含文本或多个元素的条件块。\n\n  当条件改变时会触发过渡效果。\n\n  当同时使用时，`v-if` 比 `v-for` 优先级更高。我们并不推荐在一元素上同时使用这两个指令 — 查看[列表渲染指南](https://zh-hk.vuejs.org/guide/essentials/list.html#v-for-with-v-if)详情。\n\n- **参考**[条件渲染 - v-if](https://zh-hk.vuejs.org/guide/essentials/conditional.html#v-if)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-if"
+        }
+      ]
+    },
+    {
+      "name": "v-else",
+      "valueSet": "v",
+      "description": {
+        "kind": "markdown",
+        "value": "\n表示 `v-if` 或 `v-if` / `v-else-if` 链式调用的“else 块”。\n\n- **无需传入表达式**\n\n- **详细信息**\n\n  - 限定：上一个兄弟元素必须有 `v-if` 或 `v-else-if`。\n\n  - 可用于 `<template>` 表示仅包含文本或多个元素的条件块。\n\n- **示例**\n\n  ```html\n  <div v-if=\"Math.random() > 0.5\">\n    Now you see me\n  </div>\n  <div v-else>\n    Now you don't\n  </div>\n  ```\n\n- **参考**[条件渲染 - v-else](https://zh-hk.vuejs.org/guide/essentials/conditional.html#v-else)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-else"
+        }
+      ]
+    },
+    {
+      "name": "v-else-if",
+      "description": {
+        "kind": "markdown",
+        "value": "\n表示 `v-if` 的“else if 块”。可以进行链式调用。\n\n- **期望的绑定值类型：**`any`\n\n- **详细信息**\n\n  - 限定：上一个兄弟元素必须有 `v-if` 或 `v-else-if`。\n\n  - 可用于 `<template>` 表示仅包含文本或多个元素的条件块。\n\n- **示例**\n\n  ```html\n  <div v-if=\"type === 'A'\">\n    A\n  </div>\n  <div v-else-if=\"type === 'B'\">\n    B\n  </div>\n  <div v-else-if=\"type === 'C'\">\n    C\n  </div>\n  <div v-else>\n    Not A/B/C\n  </div>\n  ```\n\n- **参考**[条件渲染 - v-else-if](https://zh-hk.vuejs.org/guide/essentials/conditional.html#v-else-if)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-else-if"
+        }
+      ]
+    },
+    {
+      "name": "v-for",
+      "description": {
+        "kind": "markdown",
+        "value": "\n基于原始数据多次渲染元素或模板块。\n\n- **期望的绑定值类型：**`Array | Object | number | string | Iterable`\n\n- **详细信息**\n\n  指令值必须使用特殊语法 `alias in expression` 为正在迭代的元素提供一个别名：\n\n  ```html\n  <div v-for=\"item in items\">\n    {{ item.text }}\n  </div>\n  ```\n\n  或者，你也可以为索引指定别名 (如果用在对象，则是键值)：\n\n  ```html\n  <div v-for=\"(item, index) in items\"></div>\n  <div v-for=\"(value, key) in object\"></div>\n  <div v-for=\"(value, name, index) in object\"></div>\n  ```\n\n  `v-for` 的默认方式是尝试就地更新元素而不移动它们。要强制其重新排序元素，你需要用特殊 attribute `key` 来提供一个排序提示：\n\n  ```html\n  <div v-for=\"item in items\" :key=\"item.id\">\n    {{ item.text }}\n  </div>\n  ```\n\n  `v-for` 也可以用于 [Iterable Protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol) 的实现，包括原生 `Map` 和 `Set`。\n\n- **参考**\n  - [列表渲染](https://zh-hk.vuejs.org/guide/essentials/list.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-for"
+        }
+      ]
+    },
+    {
+      "name": "v-on",
+      "description": {
+        "kind": "markdown",
+        "value": "\n给元素绑定事件监听器。\n\n- **缩写：**`@`\n\n- **期望的绑定值类型：**`Function | Inline Statement | Object (不带参数)`\n\n- **参数：**`event` (使用对象语法则为可选项)\n\n- **修饰符**\n\n  - `.stop` - 调用 `event.stopPropagation()`。\n  - `.prevent` - 调用 `event.preventDefault()`。\n  - `.capture` - 在捕获模式添加事件监听器。\n  - `.self` - 只有事件从元素本身发出才触发处理函数。\n  - `.{keyAlias}` - 只在某些按键下触发处理函数。\n  - `.once` - 最多触发一次处理函数。\n  - `.left` - 只在鼠标左键事件触发处理函数。\n  - `.right` - 只在鼠标右键事件触发处理函数。\n  - `.middle` - 只在鼠标中键事件触发处理函数。\n  - `.passive` - 通过 `{ passive: true }` 附加一个 DOM 事件。\n\n- **详细信息**\n\n  事件类型由参数来指定。表达式可以是一个方法名，一个内联声明，如果有修饰符则可省略。\n\n  当用于普通元素，只监听[**原生 DOM 事件**](https://developer.mozilla.org/en-US/docs/Web/Events)。当用于自定义元素组件，则监听子组件触发的**自定义事件**。\n\n  当监听原生 DOM 事件时，方法接收原生事件作为唯一参数。如果使用内联声明，声明可以访问一个特殊的 `$event` 变量：`v-on:click=\"handle('ok', $event)\"`。\n\n  `v-on` 还支持绑定不带参数的事件/监听器对的对象。请注意，当使用对象语法时，不支持任何修饰符。\n\n- **示例**\n\n  ```html\n  <!-- 方法处理函数 -->\n  <button v-on:click=\"doThis\"></button>\n\n  <!-- 动态事件 -->\n  <button v-on:[event]=\"doThis\"></button>\n\n  <!-- 内联声明 -->\n  <button v-on:click=\"doThat('hello', $event)\"></button>\n\n  <!-- 缩写 -->\n  <button @click=\"doThis\"></button>\n\n  <!-- 使用缩写的动态事件 -->\n  <button @[event]=\"doThis\"></button>\n\n  <!-- 停止传播 -->\n  <button @click.stop=\"doThis\"></button>\n\n  <!-- 阻止默认事件 -->\n  <button @click.prevent=\"doThis\"></button>\n\n  <!-- 不带表达式地阻止默认事件 -->\n  <form @submit.prevent></form>\n\n  <!-- 链式调用修饰符 -->\n  <button @click.stop.prevent=\"doThis\"></button>\n\n  <!-- 按键用于 keyAlias 修饰符-->\n  <input @keyup.enter=\"onEnter\" />\n\n  <!-- 点击事件将最多触发一次 -->\n  <button v-on:click.once=\"doThis\"></button>\n\n  <!-- 对象语法 -->\n  <button v-on=\"{ mousedown: doThis, mouseup: doThat }\"></button>\n  ```\n\n  监听子组件的自定义事件 (当子组件的“my-event”事件被触发，处理函数将被调用)：\n\n  ```html\n  <MyComponent @my-event=\"handleThis\" />\n\n  <!-- 内联声明 -->\n  <MyComponent @my-event=\"handleThis(123, $event)\" />\n  ```\n\n- **参考**\n  - [事件处理](https://zh-hk.vuejs.org/guide/essentials/event-handling.html)\n  - [组件 - 自定义事件](https://zh-hk.vuejs.org/guide/essentials/component-basics.html#listening-to-events)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-on"
+        }
+      ]
+    },
+    {
+      "name": "v-bind",
+      "description": {
+        "kind": "markdown",
+        "value": "\n动态的绑定一个或多个 attribute，也可以是组件的 prop。\n\n- **缩写：**\n  - `:` 或者 `.` (当使用 `.prop` 修饰符)\n  - 值可以省略 (当 attribute 和绑定的值同名时) <sup class=\"vt-badge\">3.4+</sup>\n\n- **期望：**`any (带参数) | Object (不带参数)`\n\n- **参数：**`attrOrProp (可选的)`\n\n- **修饰符**\n\n  - `.camel` - 将短横线命名的 attribute 转变为驼峰式命名。\n  - `.prop` - 强制绑定为 DOM property。<sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - 强制绑定为 DOM attribute。<sup class=\"vt-badge\">3.2+</sup>\n\n- **用途**\n\n  当用于绑定 `class` 或 `style` attribute，`v-bind` 支持额外的值类型如数组或对象。详见下方的指南链接。\n\n  在处理绑定时，Vue 默认会利用 `in` 操作符来检查该元素上是否定义了和绑定的 key 同名的 DOM property。如果存在同名的 property，则 Vue 会将它作为 DOM property 赋值，而不是作为 attribute 设置。这个行为在大多数情况都符合期望的绑定值类型，但是你也可以显式用 `.prop` 和 `.attr` 修饰符来强制绑定方式。有时这是必要的，特别是在和[自定义元素](https://zh-hk.vuejs.org/guide/extras/web-components.html#passing-dom-properties)打交道时。\n\n  当用于组件 props 绑定时，所绑定的 props 必须在子组件中已被正确声明。\n\n  当不带参数使用时，可以用于绑定一个包含了多个 attribute 名称-绑定值对的对象。\n\n- **示例**\n\n  ```html\n  <!-- 绑定 attribute -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- 动态 attribute 名 -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- 缩写 -->\n  <img :src=\"imageSrc\" />\n\n  <!-- 缩写形式的动态 attribute 名 (3.4+)，扩展为 :src=\"src\" -->\n  <img :src />\n\n  <!-- 动态 attribute 名的缩写 -->\n  <button :[key]=\"value\"></button>\n\n  <!-- 内联字符串拼接 -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- class 绑定 -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- style 绑定 -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- 绑定对象形式的 attribute -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- prop 绑定。“prop” 必须在子组件中已声明。 -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- 传递子父组件共有的 prop -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  `.prop` 修饰符也有专门的缩写，`.`：\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- 等同于 -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  当在 DOM 内模板使用 `.camel` 修饰符，可以驼峰化 `v-bind` attribute 的名称，例如 SVG `viewBox` attribute：\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  如果使用字符串模板或使用构建步骤预编译模板，则不需要 `.camel`。\n\n- **参考**\n  - [Class 与 Style 绑定](https://zh-hk.vuejs.org/guide/essentials/class-and-style.html)\n  - [组件 -  Prop 传递细节](https://zh-hk.vuejs.org/guide/components/props.html#prop-passing-details)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-bind"
+        }
+      ]
+    },
+    {
+      "name": "v-model",
+      "description": {
+        "kind": "markdown",
+        "value": "\n在表单输入元素或组件上创建双向绑定。\n\n- **期望的绑定值类型**：根据表单输入元素或组件输出的值而变化\n\n- **仅限：**\n\n  - `<input>`\n  - `<select>`\n  - `<textarea>`\n  - components\n\n- **修饰符**\n\n  - [`.lazy`](https://zh-hk.vuejs.org/guide/essentials/forms.html#lazy) - 监听 `change` 事件而不是 `input`\n  - [`.number`](https://zh-hk.vuejs.org/guide/essentials/forms.html#number) - 将输入的合法字符串转为数字\n  - [`.trim`](https://zh-hk.vuejs.org/guide/essentials/forms.html#trim) - 移除输入内容两端空格\n\n- **参考**\n\n  - [表单输入绑定](https://zh-hk.vuejs.org/guide/essentials/forms.html)\n  - [组件事件 - 配合 `v-model` 使用](https://zh-hk.vuejs.org/guide/components/v-model.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-model"
+        }
+      ]
+    },
+    {
+      "name": "v-slot",
+      "description": {
+        "kind": "markdown",
+        "value": "\n用于声明具名插槽或是期望接收 props 的作用域插槽。\n\n- **缩写：**`#`\n\n- **期望的绑定值类型**：能够合法在函数参数位置使用的 JavaScript 表达式。支持解构语法。绑定值是可选的——只有在给作用域插槽传递 props 才需要。\n\n- **参数**：插槽名 (可选，默认是 `default`)\n\n- **仅限：**\n\n  - `<template>`\n  - [components](https://zh-hk.vuejs.org/guide/components/slots.html#scoped-slots) (用于带有 prop 的单个默认插槽)\n\n- **示例**\n\n  ```html\n  <!-- 具名插槽 -->\n  <BaseLayout>\n    <template v-slot:header>\n      Header content\n    </template>\n\n    <template v-slot:default>\n      Default slot content\n    </template>\n\n    <template v-slot:footer>\n      Footer content\n    </template>\n  </BaseLayout>\n\n  <!-- 接收 prop 的具名插槽 -->\n  <InfiniteScroll>\n    <template v-slot:item=\"slotProps\">\n      <div class=\"item\">\n        {{ slotProps.item.text }}\n      </div>\n    </template>\n  </InfiniteScroll>\n\n  <!-- 接收 prop 的默认插槽，并解构 -->\n  <Mouse v-slot=\"{ x, y }\">\n    Mouse position: {{ x }}, {{ y }}\n  </Mouse>\n  ```\n\n- **参考**\n  - [组件 - 插槽](https://zh-hk.vuejs.org/guide/components/slots.html)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-slot"
+        }
+      ]
+    },
+    {
+      "name": "v-pre",
+      "valueSet": "v",
+      "description": {
+        "kind": "markdown",
+        "value": "\n跳过该元素及其所有子元素的编译。\n\n- **无需传入**\n\n- **详细信息**\n\n  元素内具有 `v-pre`，所有 Vue 模板语法都会被保留并按原样渲染。最常见的用例就是显示原始双大括号标签及内容。\n\n- **示例**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-pre"
+        }
+      ]
+    },
+    {
+      "name": "v-once",
+      "valueSet": "v",
+      "description": {
+        "kind": "markdown",
+        "value": "\n仅渲染元素和组件一次，并跳过之后的更新。\n\n- **无需传入**\n\n- **详细信息**\n\n  在随后的重新渲染，元素/组件及其所有子项将被当作静态内容并跳过渲染。这可以用来优化更新时的性能。\n\n  ```html\n  <!-- 单个元素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 带有子元素的元素 -->\n  <div v-once>\n    <h1>Comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- 组件 -->\n  <MyComponent v-once :comment=\"msg\" />\n  <!-- `v-for` 指令 -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  从 3.2 起，你也可以搭配 [`v-memo`](#v-memo) 的无效条件来缓存部分模板。\n\n- **参考**\n  - [数据绑定语法 - 插值](https://zh-hk.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-once"
+        }
+      ]
+    },
+    {
+      "name": "v-memo",
+      "description": {
+        "kind": "markdown",
+        "value": "\n- **期望的绑定值类型：**`any[]`\n\n- **详细信息**\n\n  缓存一个模板的子树。在元素和组件上都可以使用。为了实现缓存，该指令需要传入一个固定长度的依赖值数组进行比较。如果数组里的每个值都与最后一次的渲染相同，那么整个子树的更新将被跳过。举例来说：\n\n  ```html\n  <div v-memo=\"[valueA, valueB]\">\n    ...\n  </div>\n  ```\n\n  当组件重新渲染，如果 `valueA` 和 `valueB` 都保持不变，这个 `<div>` 及其子项的所有更新都将被跳过。实际上，甚至虚拟 DOM 的 vnode 创建也将被跳过，因为缓存的子树副本可以被重新使用。\n\n  正确指定缓存数组很重要，否则应该生效的更新可能被跳过。`v-memo` 传入空依赖数组 (`v-memo=\"[]\"`) 将与 `v-once` 效果相同。\n\n  **与 `v-for` 一起使用**\n\n  `v-memo` 仅用于性能至上场景中的微小优化，应该很少需要。最常见的情况可能是有助于渲染海量 `v-for` 列表 (长度超过 1000 的情况)：\n\n  ```html\n  <div v-for=\"item in list\" :key=\"item.id\" v-memo=\"[item.id === selected]\">\n    <p>ID: {{ item.id }} - selected: {{ item.id === selected }}</p>\n    <p>...more child nodes</p>\n  </div>\n  ```\n\n  当组件的 `selected` 状态改变，默认会重新创建大量的 vnode，尽管绝大部分都跟之前是一模一样的。`v-memo` 用在这里本质上是在说“只有当该项的被选中状态改变时才需要更新”。这使得每个选中状态没有变的项能完全重用之前的 vnode 并跳过差异比较。注意这里 memo 依赖数组中并不需要包含 `item.id`，因为 Vue 也会根据 item 的 `:key` 进行判断。\n\n  :::warning 警告\n  当搭配 `v-for` 使用 `v-memo`，确保两者都绑定在同一个元素上。**`v-memo` 不能用在 `v-for` 内部。**\n  :::\n\n  `v-memo` 也能被用于在一些默认优化失败的边际情况下，手动避免子组件出现不需要的更新。但是一样的，开发者需要负责指定正确的依赖数组以免跳过必要的更新。\n\n- **参考**\n  - [v-once](#v-once)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-memo"
+        }
+      ]
+    },
+    {
+      "name": "v-cloak",
+      "valueSet": "v",
+      "description": {
+        "kind": "markdown",
+        "value": "\n用于隐藏尚未完成编译的 DOM 模板。\n\n- **无需传入**\n\n- **详细信息**\n\n  **该指令只在没有构建步骤的环境下需要使用。**\n\n  当使用直接在 DOM 中书写的模板时，可能会出现一种叫做“未编译模板闪现”的情况：用户可能先看到的是还没编译完成的双大括号标签，直到挂载的组件将它们替换为实际渲染的内容。\n\n  `v-cloak` 会保留在所绑定的元素上，直到相关组件实例被挂载后才移除。配合像 `[v-cloak] { display: none }` 这样的 CSS 规则，它可以在组件编译完毕前隐藏原始模板。\n\n- **示例**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  直到编译完成前，`<div>` 将不可见。\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-cloak"
+        }
+      ]
+    },
+    {
+      "name": "key",
+      "description": {
+        "kind": "markdown",
+        "value": "\n`key` 这个特殊的 attribute 主要作为 Vue 的虚拟 DOM 算法提示，在比较新旧节点列表时用于识别 vnode。\n\n- **预期**：`number | string | symbol`\n\n- **详细信息**\n\n  在没有 key 的情况下，Vue 将使用一种最小化元素移动的算法，并尽可能地就地更新/复用相同类型的元素。如果传了 key，则将根据 key 的变化顺序来重新排列元素，并且将始终移除/销毁 key 已经不存在的元素。\n\n  同一个父元素下的子元素必须具有**唯一的 key**。重复的 key 将会导致渲染异常。\n\n  最常见的用例是与 `v-for` 结合：\n\n  ```html\n  <ul>\n    <li v-for=\"item in items\" :key=\"item.id\">...</li>\n  </ul>\n  ```\n\n  也可以用于强制替换一个元素/组件而不是复用它。当你想这么做时它可能会很有用：\n\n  - 在适当的时候触发组件的生命周期钩子\n  - 触发过渡\n\n  举例来说：\n\n  ```html\n  <transition>\n    <span :key=\"text\">{{ text }}</span>\n  </transition>\n  ```\n\n  当 `text` 变化时，`<span>` 总是会被替换而不是更新，因此 transition 将会被触发。\n\n- **参考**[指南 - 列表渲染 - 通过 `key` 管理状态](https://zh-hk.vuejs.org/guide/essentials/list.html#maintaining-state-with-key)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#key"
+        }
+      ]
+    },
+    {
+      "name": "ref",
+      "description": {
+        "kind": "markdown",
+        "value": "\n用于注册[模板引用](https://zh-hk.vuejs.org/guide/essentials/template-refs.html)。\n\n- **预期**：`string | Function`\n\n- **详细信息**\n\n  `ref` 用于注册元素或子组件的引用。\n\n  使用选项式 API，引用将被注册在组件的 `this.$refs` 对象里：\n\n  ```html\n  <!-- 存储为 this.$refs.p -->\n  <p ref=\"p\">hello</p>\n  ```\n\n  使用组合式 API，引用将存储在与名字匹配的 ref 里：\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n\n  const p = ref()\n  </script>\n\n  <template>\n    <p ref=\"p\">hello</p>\n  </template>\n  ```\n\n  如果用于普通 DOM 元素，引用将是元素本身；如果用于子组件，引用将是子组件的实例。\n\n  或者 `ref` 可以接收一个函数值，用于对存储引用位置的完全控制：\n\n  ```html\n  <ChildComponent :ref=\"(el) => child = el\" />\n  ```\n\n  关于 ref 注册时机的重要说明：因为 ref 本身是作为渲染函数的结果来创建的，必须等待组件挂载后才能对它进行访问。\n\n  `this.$refs` 也是非响应式的，因此你不应该尝试在模板中使用它来进行数据绑定。\n\n- **参考**\n  - [指南 - 模板引用](https://zh-hk.vuejs.org/guide/essentials/template-refs.html)\n  - [指南 - 为模板引用标注类型](https://zh-hk.vuejs.org/guide/typescript/composition-api.html#typing-template-refs) <sup class=\"vt-badge ts\" />\n  - [指南 - 为组件模板引用标注类型](https://zh-hk.vuejs.org/guide/typescript/composition-api.html#typing-component-template-refs) <sup class=\"vt-badge ts\" />\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#ref"
+        }
+      ]
+    },
+    {
+      "name": "is",
+      "description": {
+        "kind": "markdown",
+        "value": "\n用于绑定[动态组件](https://zh-hk.vuejs.org/guide/essentials/component-basics.html#dynamic-components)。\n\n- **预期**：`string | Component`\n\n- **用于原生元素** <sup class=\"vt-badge\">3.1+</sup>\n\n  当 `is` attribute 用于原生 HTML 元素时，它将被当作 [Customized built-in element](https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-customized-builtin-example)，其为原生 web 平台的特性。\n\n  但是，在这种用例中，你可能需要 Vue 用其组件来替换原生元素，如 [DOM 内模板解析注意事项](https://zh-hk.vuejs.org/guide/essentials/component-basics.html#in-dom-template-parsing-caveats)所述。你可以在 `is` attribute 的值中加上 `vue:` 前缀，这样 Vue 就会把该元素渲染为 Vue 组件：\n\n  ```html\n  <table>\n    <tr is=\"vue:my-row-component\"></tr>\n  </table>\n  ```\n\n- **参考**\n\n  - [内置特殊元素 - `<component>`](https://zh-hk.vuejs.org/api/built-in-special-elements.html#component)\n  - [动态组件](https://zh-hk.vuejs.org/guide/essentials/component-basics.html#dynamic-components)\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#is"
+        }
+      ]
+    }
+  ]
+}

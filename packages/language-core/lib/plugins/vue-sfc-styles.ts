@@ -1,30 +1,62 @@
-import { enableAllFeatures } from '../generators/utils';
 import type { VueLanguagePlugin } from '../types';
+import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
-		getEmbeddedFiles(_fileName, sfc) {
-			return sfc.styles.map((style, i) => ({
-				id: 'style_' + i,
-				lang: style.lang,
-			}));
+		getEmbeddedCodes(_fileName, sfc) {
+			const result: {
+				id: string;
+				lang: string;
+			}[] = [];
+			for (let i = 0; i < sfc.styles.length; i++) {
+				const style = sfc.styles[i];
+				if (style) {
+					result.push({
+						id: 'style_' + i,
+						lang: style.lang,
+					});
+					if (style.cssVars.length) {
+						result.push({
+							id: 'style_' + i + '_inline_ts',
+							lang: 'ts',
+						});
+					}
+				}
+			}
+			return result;
 		},
 
-		resolveEmbeddedFile(_fileName, sfc, embeddedFile) {
+		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
 			if (embeddedFile.id.startsWith('style_')) {
-				const index = parseInt(embeddedFile.id.slice('style_'.length));
+				const index = parseInt(embeddedFile.id.split('_')[1]);
 				const style = sfc.styles[index];
-
-				embeddedFile.content.push([
-					style.content,
-					style.name,
-					0,
-					enableAllFeatures({}),
-				]);
+				if (embeddedFile.id.endsWith('_inline_ts')) {
+					embeddedFile.parentCodeId = 'style_' + index;
+					for (const cssVar of style.cssVars) {
+						embeddedFile.content.push(
+							'(',
+							[
+								cssVar.text,
+								style.name,
+								cssVar.offset,
+								allCodeFeatures,
+							],
+							');\n'
+						);
+					}
+				}
+				else {
+					embeddedFile.content.push([
+						style.content,
+						style.name,
+						0,
+						allCodeFeatures,
+					]);
+				}
 			}
 		},
 	};

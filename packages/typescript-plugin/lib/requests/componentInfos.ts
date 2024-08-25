@@ -1,41 +1,39 @@
 import * as vue from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import { getProject } from '../utils';
+import type { RequestContext } from './types';
 
-export function getComponentProps(fileName: string, tag: string, requiredOnly = false) {
-	const match = getProject(fileName);
-	if (!match) {
+export function getComponentProps(
+	this: RequestContext,
+	fileName: string,
+	tag: string,
+	requiredOnly = false
+) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
-	const { ts, files, vueOptions } = match;
-	const volarFile = files.get(fileName);
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
-		return;
-	}
-	const vueCode = volarFile.generated.code;
-	const tsLs = match.info.languageService;
-	const program: ts.Program = (tsLs as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
-
+	const vueCode = volarFile.generated.root;
+	const program = languageService.getProgram()!;
 	const checker = program.getTypeChecker();
-	const components = getVariableType(ts, tsLs, vueCode, '__VLS_components');
-	if (!components)
+	const components = getVariableType(ts, languageService, vueCode, '__VLS_components');
+	if (!components) {
 		return [];
+	}
 
 	const name = tag.split('.');
 
 	let componentSymbol = components.type.getProperty(name[0]);
 
-	if (!componentSymbol && !vueOptions.nativeTags.includes(name[0])) {
+	if (!componentSymbol) {
 		componentSymbol = components.type.getProperty(camelize(name[0]))
 			?? components.type.getProperty(capitalize(camelize(name[0])));
 	}
 
-	if (!componentSymbol)
+	if (!componentSymbol) {
 		return [];
+	}
 
 	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 
@@ -84,39 +82,36 @@ export function getComponentProps(fileName: string, tag: string, requiredOnly = 
 	return [...result];
 }
 
-export function getComponentEvents(fileName: string, tag: string) {
-	const match = getProject(fileName);
-	if (!match) {
+export function getComponentEvents(
+	this: RequestContext,
+	fileName: string,
+	tag: string
+) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
-	const { ts, files, vueOptions } = match;
-	const volarFile = files.get(fileName);
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
-		return;
-	}
-	const tsLs = match.info.languageService;
-	const vueCode = volarFile.generated.code;
-	const program: ts.Program = (tsLs as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
-
+	const vueCode = volarFile.generated.root;
+	const program = languageService.getProgram()!;
 	const checker = program.getTypeChecker();
-	const components = getVariableType(ts, tsLs, vueCode, '__VLS_components');
-	if (!components)
+	const components = getVariableType(ts, languageService, vueCode, '__VLS_components');
+	if (!components) {
 		return [];
+	}
 
 	const name = tag.split('.');
 
 	let componentSymbol = components.type.getProperty(name[0]);
 
-	if (!componentSymbol && !vueOptions.nativeTags.includes(name[0])) {
+	if (!componentSymbol) {
 		componentSymbol = components.type.getProperty(camelize(name[0]))
 			?? components.type.getProperty(capitalize(camelize(name[0])));
 	}
 
-	if (!componentSymbol)
+	if (!componentSymbol) {
 		return [];
+	}
 
 	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 
@@ -159,62 +154,66 @@ export function getComponentEvents(fileName: string, tag: string) {
 	return [...result];
 }
 
-export function getTemplateContextProps(fileName: string) {
-	const match = getProject(fileName);
-	if (!match) {
+export function getTemplateContextProps(
+	this: RequestContext,
+	fileName: string
+) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
-	const { ts, files } = match;
-	const volarFile = files.get(fileName);
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
-		return;
-	}
-	const tsLs = match.info.languageService;
-	const vueCode = volarFile.generated.code;
+	const vueCode = volarFile.generated.root;
 
-	return getVariableType(ts, tsLs, vueCode, '__VLS_ctx')
+	return getVariableType(ts, languageService, vueCode, '__VLS_ctx')
 		?.type
 		?.getProperties()
 		.map(c => c.name);
 }
 
-export function getComponentNames(fileName: string) {
-	const match = getProject(fileName);
-	if (!match) {
+export function getComponentNames(
+	this: RequestContext,
+	fileName: string
+) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
-	const { ts, files, vueOptions } = match;
-	const volarFile = files.get(fileName);
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
-		return;
-	}
-	const tsLs = match.info.languageService;
-	const vueCode = volarFile.generated.code;
+	const vueCode = volarFile.generated.root;
 
+	return getVariableType(ts, languageService, vueCode, '__VLS_components')
+		?.type
+		?.getProperties()
+		.map(c => c.name)
+		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
+		?? [];
+}
+
+export function _getComponentNames(
+	ts: typeof import('typescript'),
+	tsLs: ts.LanguageService,
+	vueCode: vue.VueVirtualCode
+) {
 	return getVariableType(ts, tsLs, vueCode, '__VLS_components')
 		?.type
 		?.getProperties()
 		.map(c => c.name)
 		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
-		.filter(entry => !vueOptions.nativeTags.includes(entry))
 		?? [];
 }
 
-export function getElementAttrs(fileName: string, tagName: string) {
-	const match = getProject(fileName);
-	if (!match) {
+export function getElementAttrs(
+	this: RequestContext,
+	fileName: string,
+	tagName: string
+) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
-	const { ts, files } = match;
-	const volarFile = files.get(fileName);
-	if (!(volarFile?.generated?.code instanceof vue.VueGeneratedCode)) {
-		return;
-	}
-	const tsLs = match.info.languageService;
-	const program: ts.Program = (tsLs as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
+	const program = languageService.getProgram()!;
 
 	let tsSourceFile: ts.SourceFile | undefined;
 
@@ -241,14 +240,11 @@ export function getElementAttrs(fileName: string, tagName: string) {
 
 function getVariableType(
 	ts: typeof import('typescript'),
-	tsLs: ts.LanguageService,
-	vueCode: vue.VueGeneratedCode,
-	name: string,
+	languageService: ts.LanguageService,
+	vueCode: vue.VueVirtualCode,
+	name: string
 ) {
-	const program: ts.Program = (tsLs as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
+	const program = languageService.getProgram()!;
 
 	let tsSourceFile: ts.SourceFile | undefined;
 
@@ -269,7 +265,7 @@ function getVariableType(
 function searchVariableDeclarationNode(
 	ts: typeof import('typescript'),
 	sourceFile: ts.SourceFile,
-	name: string,
+	name: string
 ) {
 
 	let componentsNode: ts.Node | undefined;

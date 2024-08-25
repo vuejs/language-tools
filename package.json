@@ -1,5 +1,6 @@
 {
 	"private": true,
+	"packageManager": "pnpm@9.4.0",
 	"scripts": {
 		"build": "tsc -b",
 		"watch": "npm run build && (npm run watch:base & npm run watch:vue)",
@@ -8,22 +9,41 @@
 		"prerelease": "npm run build && npm run test",
 		"version:test": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
 		"release": "npm run release:base && npm run release:vue",
-		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock --no-push",
+		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock",
 		"release:vue": "cd ./extensions/vscode && npm run release",
 		"release:next": "npm run release:next-base && npm run release:next-vue",
 		"release:next-base": "npm run release:base -- --dist-tag next",
 		"release:next-vue": "cd ./extensions/vscode && npm run release:next",
 		"test": "vitest run",
+		"test:update": "vitest run --update",
+		"lint": "tsslint --projects {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
+		"lint:fix": "npm run lint -- --fix",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
 		"@lerna-lite/cli": "latest",
 		"@lerna-lite/publish": "latest",
-		"@volar/language-service": "~2.1.0",
+		"@tsslint/cli": "latest",
+		"@tsslint/config": "latest",
+		"@volar/language-service": "~2.4.0",
 		"fast-glob": "^3.3.2",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest",
 		"vscode-tmlanguage-snapshot": "^0.1.3"
+	},
+	"pnpm": {
+		"overrides": {
+			"@volar/kit": "https://pkg.pr.new/volarjs/volar.js/@volar/kit@28cbdee",
+			"@volar/language-core": "https://pkg.pr.new/volarjs/volar.js/@volar/language-core@28cbdee",
+			"@volar/language-server": "https://pkg.pr.new/volarjs/volar.js/@volar/language-server@28cbdee",
+			"@volar/language-service": "https://pkg.pr.new/volarjs/volar.js/@volar/language-service@28cbdee",
+			"@volar/source-map": "https://pkg.pr.new/volarjs/volar.js/@volar/source-map@28cbdee",
+			"@volar/test-utils": "https://pkg.pr.new/volarjs/volar.js/@volar/test-utils@28cbdee",
+			"@volar/typescript": "https://pkg.pr.new/volarjs/volar.js/@volar/typescript@28cbdee",
+			"@volar/vscode": "https://pkg.pr.new/volarjs/volar.js/@volar/vscode@28cbdee",
+			"volar-service-typescript": "https://pkg.pr.new/volarjs/services/volar-service-typescript@177b9ed",
+			"inquirer": "9.2.23"
+		}
 	}
 }

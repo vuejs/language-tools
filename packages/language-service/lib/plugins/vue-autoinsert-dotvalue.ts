@@ -1,52 +1,105 @@
-import type { ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
-import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
 import type * as ts from 'typescript';
-import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { getAst } from './typescript';
+import { URI } from 'vscode-uri';
 
-export function create(ts: typeof import('typescript')): ServicePlugin {
+const asts = new WeakMap<ts.IScriptSnapshot, ts.SourceFile>();
+
+function getAst(ts: typeof import('typescript'), fileName: string, snapshot: ts.IScriptSnapshot, scriptKind?: ts.ScriptKind) {
+	let ast = asts.get(snapshot);
+	if (!ast) {
+		ast = ts.createSourceFile(fileName, snapshot.getText(0, snapshot.getLength()), ts.ScriptTarget.Latest, undefined, scriptKind);
+		asts.set(snapshot, ast);
+	}
+	return ast;
+}
+
+export function create(
+	ts: typeof import('typescript'),
+	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
-		create(context): ServicePluginInstance {
+		capabilities: {
+			autoInsertionProvider: {
+				triggerCharacters: ['\\w'],
+				configurationSections: ['vue.autoInsert.dotValue'],
+			},
+		},
+		create(context): LanguageServicePluginInstance {
+			const tsPluginClient = getTsPluginClient?.(context);
+			let currentReq = 0;
 			return {
-				async provideAutoInsertionEdit(document, position, lastChange) {
-
-					if (!isTsDocument(document))
+				async provideAutoInsertSnippet(document, selection, change) {
+					// selection must at end of change
+					if (document.offsetAt(selection) !== change.rangeOffset + change.text.length) {
 						return;
+					}
 
-					if (!isCharacterTyping(document, lastChange))
+					if (!isTsDocument(document)) {
 						return;
+					}
+
+					if (!isCharacterTyping(document, change)) {
+						return;
+					}
+
+					const req = ++currentReq;
+					// Wait for tsserver to sync
+					await sleep(250);
+					if (req !== currentReq) {
+						return;
+					}
 
 					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.dotValue') ?? true;
-					if (!enabled)
+					if (!enabled) {
 						return;
+					}
 
-					const [_, file] = context.documents.getVirtualCodeByUri(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+					if (!sourceScript) {
+						return;
+					}
 
-					let fileName: string | undefined;
 					let ast: ts.SourceFile | undefined;
+					let sourceCodeOffset = document.offsetAt(selection);
 
-					if (file?.generated) {
-						const script = file.generated.languagePlugin.typescript?.getScript(file.generated.code);
-						if (script) {
-							fileName = context.env.typescript!.uriToFileName(file.id);
-							ast = getAst(fileName, script.code.snapshot, script.scriptKind);
+					const fileName = context.project.typescript?.uriConverter.asFileName(sourceScript.id)
+						?? sourceScript.id.fsPath.replace(/\\/g, '/');
+
+					if (sourceScript.generated) {
+						const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(sourceScript.generated.root);
+						if (!serviceScript || serviceScript?.code !== virtualCode) {
+							return;
+						}
+						ast = getAst(ts, fileName, virtualCode.snapshot, serviceScript.scriptKind);
+						let mapped = false;
+						for (const [_sourceScript, map] of context.language.maps.forEach(virtualCode)) {
+							for (const [sourceOffset] of map.toSourceLocation(document.offsetAt(selection))) {
+								sourceCodeOffset = sourceOffset;
+								mapped = true;
+								break;
+							}
+							if (mapped) {
+								break;
+							}
+						}
+						if (!mapped) {
+							return;
 						}
 					}
-					else if (file) {
-						fileName = context.env.typescript!.uriToFileName(file.id);
-						ast = getAst(fileName, file.snapshot);
+					else {
+						ast = getAst(ts, fileName, sourceScript.snapshot);
 					}
 
-					if (!ast || !fileName)
+					if (isBlacklistNode(ts, ast, document.offsetAt(selection), false)) {
 						return;
+					}
 
-					if (isBlacklistNode(ts, ast, document.offsetAt(position), false))
-						return;
-
-					const props = await namedPipeClient.getPropertiesAtLocation(fileName, document.offsetAt(position)) ?? [];
+					const props = await tsPluginClient?.getPropertiesAtLocation(fileName, sourceCodeOffset) ?? [];
 					if (props.some(prop => prop === 'value')) {
 						return '${1:.value}';
 					}
@@ -54,6 +107,10 @@ export function create(ts: typeof import('typescript')): ServicePlugin {
 			};
 		},
 	};
+}
+
+function sleep(ms: number) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 function isTsDocument(document: TextDocument) {
@@ -65,26 +122,18 @@ function isTsDocument(document: TextDocument) {
 
 const charReg = /\w/;
 
-export function isCharacterTyping(document: TextDocument, lastChange: { range: vscode.Range; text: string; }) {
-
-	const lastCharacter = lastChange.text[lastChange.text.length - 1];
-	const rangeStart = lastChange.range.start;
-	const position: vscode.Position = {
-		line: rangeStart.line,
-		character: rangeStart.character + lastChange.text.length,
-	};
-	const nextCharacter = document.getText({
-		start: position,
-		end: { line: position.line, character: position.character + 1 },
-	});
-
+export function isCharacterTyping(document: TextDocument, change: { text: string; rangeOffset: number; rangeLength: number; }) {
+	const lastCharacter = change.text[change.text.length - 1];
+	const nextCharacter = document.getText().substring(
+		change.rangeOffset + change.text.length,
+		change.rangeOffset + change.text.length + 1
+	);
 	if (lastCharacter === undefined) { // delete text
 		return false;
 	}
-	if (lastChange.text.indexOf('\n') >= 0) { // multi-line change
+	if (change.text.indexOf('\n') >= 0) { // multi-line change
 		return false;
 	}
-
 	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);
 }
 
@@ -127,7 +176,9 @@ export function isBlacklistNode(ts: typeof import('typescript'), node: ts.Node, 
 	else {
 		let _isBlacklistNode = false;
 		node.forEachChild(node => {
-			if (_isBlacklistNode) return;
+			if (_isBlacklistNode) {
+				return;
+			}
 			if (pos >= node.getFullStart() && pos <= node.getEnd()) {
 				if (isBlacklistNode(ts, node, pos, allowAccessDotValue)) {
 					_isBlacklistNode = true;

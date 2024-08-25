@@ -1,0 +1,1102 @@
+{
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "template",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\nЕсли вы предпочитаете разделять компоненты `*.vue` на несколько файлов, вы можете использовать атрибут `src` для импорта внешнего файла для языковой секции:\n\n```vue\n<template src=\"./template\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nИмпорты через `src` следуют тем же правилам разрешения путей, что и запросы модулей webpack, что означает:\n\n- Относительные пути должны начинаться с `./`\n- Можно импортировать ресурсы из зависимостей npm:\n\n```vue\n<!-- импорт файла из установленного npm-пакета \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nИмпорты через `src` также работают с пользовательскими секциями, например:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\nВ секциях можно объявить язык пре-процессора с помощью атрибута `lang`. Наиболее распространённый случай — использование TypeScript для секции `<script>`:\n\n```html\n<script lang=\"ts\">\n  // используем TypeScript\n</script>\n```\n\nАтрибут `lang` можно применить к любой секции — например можно использовать [SASS](https://sass-lang.com/) в секции `<style>` и [Pug](https://pugjs.org/api/getting-started.html) в секции `<template>`:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nОбратите внимание, что интеграция с различными пре-процессорами может отличаться в зависимости от инструментария. Примеры можно найти в соответствующей документации:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
+          },
+          "values": [
+            {
+              "name": "html"
+            },
+            {
+              "name": "pug"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- В каждом файле `*.vue` может быть не более одной секции `<template>` верхнего уровня.\n\n- Содержимое будет извлечено и передано в `@vue/compiler-dom`, где предварительно скомпилируется в render-функцию JavaScript и будет присоединено к экспортируемому компоненту в качестве его опции `render`.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#template"
+        }
+      ]
+    },
+    {
+      "name": "script",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\nЕсли вы предпочитаете разделять компоненты `*.vue` на несколько файлов, вы можете использовать атрибут `src` для импорта внешнего файла для языковой секции:\n\n```vue\n<template src=\"./template\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nИмпорты через `src` следуют тем же правилам разрешения путей, что и запросы модулей webpack, что означает:\n\n- Относительные пути должны начинаться с `./`\n- Можно импортировать ресурсы из зависимостей npm:\n\n```vue\n<!-- импорт файла из установленного npm-пакета \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nИмпорты через `src` также работают с пользовательскими секциями, например:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\nВ секциях можно объявить язык пре-процессора с помощью атрибута `lang`. Наиболее распространённый случай — использование TypeScript для секции `<script>`:\n\n```html\n<script lang=\"ts\">\n  // используем TypeScript\n</script>\n```\n\nАтрибут `lang` можно применить к любой секции — например можно использовать [SASS](https://sass-lang.com/) в секции `<style>` и [Pug](https://pugjs.org/api/getting-started.html) в секции `<template>`:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nОбратите внимание, что интеграция с различными пре-процессорами может отличаться в зависимости от инструментария. Примеры можно найти в соответствующей документации:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
+          },
+          "values": [
+            {
+              "name": "ts"
+            },
+            {
+              "name": "js"
+            },
+            {
+              "name": "tsx"
+            },
+            {
+              "name": "jsx"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        },
+        {
+          "name": "generic"
+        },
+        {
+          "name": "setup",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\n- В каждом файле `*.vue` может быть не более одной секции`<script setup>` (не считая обычной секции `<script>`).\n\n- Секция предварительно обрабатывается и используется в качестве функции компонента `setup()`, то есть он будет выполняться **для каждого экземпляра компонента**. Привязки верхнего уровня в `<script setup>` автоматически становятся доступны шаблону. Подробнее об этом см. на [специальной странице документации про `<script setup>`](https://ru.vuejs.org/api/sfc-script-setup.html).\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- Каждый файл `*.vue` может иметь не более одной секции `<script>` (за исключением случаев использования [`<script setup>`](https://ru.vuejs.org/api/sfc-script-setup.html)).\n\n- Скрипт выполняется как ES-модуль.\n\n- **Экспорт по умолчанию** должен быть объектом опций компонента Vue, либо обычным объектом, либо значением, которое возвращает [defineComponent](https://ru.vuejs.org/api/general.html#definecomponent).\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script"
+        }
+      ]
+    },
+    {
+      "name": "script setup",
+      "attributes": [],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- В каждом файле `*.vue` может быть не более одной секции`<script setup>` (не считая обычной секции `<script>`).\n\n- Секция предварительно обрабатывается и используется в качестве функции компонента `setup()`, то есть он будет выполняться **для каждого экземпляра компонента**. Привязки верхнего уровня в `<script setup>` автоматически становятся доступны шаблону. Подробнее об этом см. на [специальной странице документации про `<script setup>`](https://ru.vuejs.org/api/sfc-script-setup.html).\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
+        }
+      ]
+    },
+    {
+      "name": "style",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\nЕсли вы предпочитаете разделять компоненты `*.vue` на несколько файлов, вы можете использовать атрибут `src` для импорта внешнего файла для языковой секции:\n\n```vue\n<template src=\"./template\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nИмпорты через `src` следуют тем же правилам разрешения путей, что и запросы модулей webpack, что означает:\n\n- Относительные пути должны начинаться с `./`\n- Можно импортировать ресурсы из зависимостей npm:\n\n```vue\n<!-- импорт файла из установленного npm-пакета \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nИмпорты через `src` также работают с пользовательскими секциями, например:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\nВ секциях можно объявить язык пре-процессора с помощью атрибута `lang`. Наиболее распространённый случай — использование TypeScript для секции `<script>`:\n\n```html\n<script lang=\"ts\">\n  // используем TypeScript\n</script>\n```\n\nАтрибут `lang` можно применить к любой секции — например можно использовать [SASS](https://sass-lang.com/) в секции `<style>` и [Pug](https://pugjs.org/api/getting-started.html) в секции `<template>`:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nОбратите внимание, что интеграция с различными пре-процессорами может отличаться в зависимости от инструментария. Примеры можно найти в соответствующей документации:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
+          },
+          "values": [
+            {
+              "name": "css"
+            },
+            {
+              "name": "scss"
+            },
+            {
+              "name": "less"
+            },
+            {
+              "name": "stylus"
+            },
+            {
+              "name": "postcss"
+            },
+            {
+              "name": "sass"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        },
+        {
+          "name": "scoped",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\nКогда секция `<style>` имеет атрибут `scoped`, его CSS будет применяться только к элементам текущего компонента. Это похоже на инкапсуляцию стилей в Shadow DOM. Есть некоторые оговорки, но зато не требуется никаких полифилов. Это достигается путем использования PostCSS для преобразования следующего кода:\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">привет</div>\n</template>\n```\n\nВ этот код:\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>привет</div>\n</template>\n```\n\n### Корневые элементы дочернего компонента \n\nПри использовании `scoped` стили родительского компонента не будут проникать в дочерние компоненты. Однако корневой элемент дочернего компонента будет подвержен влиянию как родительского, так и дочернего CSS. Это сделано специально для того, чтобы родитель мог стилизовать корневой элемент дочернего компонента в целях вёрстки.\n\n### Глубокие селекторы \n\nЕсли требуется, чтобы селектор в `scoped` стилях был \"глубоким\", т.е. влиял на дочерние компоненты, можно использовать псевдокласс `:deep()`:\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\nКод выше будет скомпилирован в:\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip Совет\nСодержимое DOM, созданное при помощи `v-html`, не подвержено влиянию стилей c ограниченной областью действия, но его все же можно стилизовать с помощью глубоких селекторов.\n:::\n\n### Селекторы слотов \n\nПо умолчанию стили с ограниченной областью действия не влияют на содержимое, отображаемое с помощью `<slot/>`, так как считается, что оно принадлежит родительскому компоненту, который его передаёт. Чтобы явно указать на содержимое слота, используйте псевдокласс `:slotted`:\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### Глобальные селекторы \n\nЕсли необходимо, чтобы одно правило применялось глобально, можно использовать псевдокласс `:global`, а не создавать еще одну секцию `<style>` (см. ниже):\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### Сочетание локальных и глобальных стилей \n\nВ одном компоненте можно вместе использовать как scoped, так и обычные секции style:\n\n```vue\n<style>\n/* глобальные стили */\n</style>\n\n<style scoped>\n/* локальные стили */\n</style>\n```\n\n### Советы по использованию стилей с ограниченной областью действия \n\n- **Стили с ограниченной областью действия не избавляют от необходимости использования классов**. Ввиду того, как браузеры отрисовывают различные CSS-селекторы, `p { color: red }` будет работать гораздо медленнее при использовании стилей с ограниченной областью действия (т.е. в сочетании с селектором атрибутов). Если вместо этого использовать классы или идентификаторы, как, например, в `.example { color: red }`, то это практически исключает снижение производительности.\n\n- **Будьте осторожны с селекторами потомков в рекурсивных компонентах!** Для правила CSS с селектором `.a .b`, если элемент, соответствующий `.a`, содержит рекурсивный дочерний компонент, то все `.b` в этом дочернем компоненте будут соответствовать правилу.\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#scoped-css"
+            }
+          ]
+        },
+        {
+          "name": "module",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\nСекция `<style module>` компилируется как [CSS модуль](https://github.com/css-modules/css-modules) и объявляет результирующие CSS-классы компоненту в виде объекта под ключом `$style`:\n\n```vue\n<template>\n  <p :class=\"$style.red\">Это должно быть красным</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\nПолученные классы хэшируются во избежание коллизий, что позволяет добиться того же эффекта, что и при выборе CSS с ограниченной областью действия только для текущего компонента.\n\nОбратитесь к [спецификации CSS модулей](https://github.com/css-modules/css-modules) для получения более подробной информации, такой как [глобальные исключения](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#exceptions) и [композиция](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#composition).\n\n### Внедрение пользовательского имени \n\nМожно настроить ключ свойства объекта внедряемых классов, указав значение атрибуту `module`:\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Использование с Composition API \n\nДоступ к внедряемым классам можно получить в `setup()` и `<script setup>` через API `useCssModule`. Для секций `<style module>` с пользовательским внедряемым именем, `useCssModule` принимает в качестве первого аргумента соответствующее значение атрибута `module`:\n\n```js\nimport { useCssModule } from 'vue'\n\n// внутри области видимости setup()...\n// по умолчанию, возвращает классы для <style module>\nuseCssModule()\n\n// при указании имени,  возвращает классы для <style module=\"classes\">\nuseCssModule('classes')\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#css-modules"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- В одном файле `*.vue` может быть несколько секций `<style>`.\n\n- Тег `<style>` может иметь атрибуты `scoped` или `module` (подробнее см. разделе [возможности стилей SFC](https://ru.vuejs.org/api/sfc-css-features.html)), помогающие инкапсулировать стили для текущего компонента. В одном компоненте можно смешивать несколько тегов `<style>` с различными режимами инкапсуляции.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#style"
+        }
+      ]
+    },
+    {
+      "name": "Пользовательские секции",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\nЕсли вы предпочитаете разделять компоненты `*.vue` на несколько файлов, вы можете использовать атрибут `src` для импорта внешнего файла для языковой секции:\n\n```vue\n<template src=\"./template\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nИмпорты через `src` следуют тем же правилам разрешения путей, что и запросы модулей webpack, что означает:\n\n- Относительные пути должны начинаться с `./`\n- Можно импортировать ресурсы из зависимостей npm:\n\n```vue\n<!-- импорт файла из установленного npm-пакета \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nИмпорты через `src` также работают с пользовательскими секциями, например:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\nВ файл `*.vue` могут быть включены дополнительные пользовательские секции для любых специфических нужд проекта, например, секция `<docs>`. Некоторые реальные примеры пользовательских секций:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n#i18n-custom-block)\n\nОбработка пользовательских секций зависит от инструментария — если вы хотите создать свои собственные интеграции пользовательских секций, обратитесь к разделу [инструментарий SFC](https://ru.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) для более подробной информации.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#пользовательские-секции"
+        }
+      ]
+    }
+  ],
+  "globalAttributes": [
+    {
+      "name": "lang",
+      "description": {
+        "kind": "markdown",
+        "value": "\nВ секциях можно объявить язык пре-процессора с помощью атрибута `lang`. Наиболее распространённый случай — использование TypeScript для секции `<script>`:\n\n```html\n<script lang=\"ts\">\n  // используем TypeScript\n</script>\n```\n\nАтрибут `lang` можно применить к любой секции — например можно использовать [SASS](https://sass-lang.com/) в секции `<style>` и [Pug](https://pugjs.org/api/getting-started.html) в секции `<template>`:\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nОбратите внимание, что интеграция с различными пре-процессорами может отличаться в зависимости от инструментария. Примеры можно найти в соответствующей документации:\n\n- [Vite](https://vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors#using-pre-processors)\n"
+      },
+      "values": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+        }
+      ]
+    },
+    {
+      "name": "src",
+      "description": {
+        "kind": "markdown",
+        "value": "\nЕсли вы предпочитаете разделять компоненты `*.vue` на несколько файлов, вы можете использовать атрибут `src` для импорта внешнего файла для языковой секции:\n\n```vue\n<template src=\"./template\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nИмпорты через `src` следуют тем же правилам разрешения путей, что и запросы модулей webpack, что означает:\n\n- Относительные пути должны начинаться с `./`\n- Можно импортировать ресурсы из зависимостей npm:\n\n```vue\n<!-- импорт файла из установленного npm-пакета \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nИмпорты через `src` также работают с пользовательскими секциями, например:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+        }
+      ]
+    }
+  ]
+}

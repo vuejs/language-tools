@@ -18,6 +18,10 @@
           "url": "https://cn.vuejs.org/api/built-in-components.html#transition"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-components.html#transition"
         },
@@ -44,6 +48,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#transition"
         }
       ]
     },
@@ -62,6 +78,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#transitiongroup"
         },
         {
           "name": "ja",
@@ -90,6 +110,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#transitiongroup"
         }
       ]
     },
@@ -108,6 +140,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#keepalive"
         },
         {
           "name": "ja",
@@ -136,6 +172,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#keepalive"
         }
       ]
     },
@@ -154,6 +202,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#teleport"
         },
         {
           "name": "ja",
@@ -182,6 +234,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#teleport"
         }
       ]
     },
@@ -200,6 +264,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#suspense"
         },
         {
           "name": "ja",
@@ -228,6 +296,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#suspense"
         }
       ]
     },
@@ -246,6 +326,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#component"
         },
         {
           "name": "ja",
@@ -274,6 +358,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#component"
         }
       ]
     },
@@ -292,6 +388,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#slot"
         },
         {
           "name": "ja",
@@ -320,6 +420,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#slot"
         }
       ]
     },
@@ -338,6 +450,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#template"
         },
         {
           "name": "ja",
@@ -366,6 +482,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#template"
         }
       ]
     }
@@ -385,6 +513,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-text"
         },
         {
           "name": "ja",
@@ -413,6 +545,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-text"
         }
       ]
     },
@@ -430,6 +574,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-html"
         },
         {
           "name": "ja",
@@ -458,6 +606,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-html"
         }
       ]
     },
@@ -475,6 +635,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-show"
         },
         {
           "name": "ja",
@@ -503,6 +667,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-show"
         }
       ]
     },
@@ -520,6 +696,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-if"
         },
         {
           "name": "ja",
@@ -548,6 +728,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-if"
         }
       ]
     },
@@ -566,6 +758,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-else"
         },
         {
           "name": "ja",
@@ -594,6 +790,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-else"
         }
       ]
     },
@@ -611,6 +819,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-else-if"
         },
         {
           "name": "ja",
@@ -639,6 +851,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-else-if"
         }
       ]
     },
@@ -656,6 +880,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-for"
         },
         {
           "name": "ja",
@@ -684,6 +912,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-for"
         }
       ]
     },
@@ -701,6 +941,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-on"
         },
         {
           "name": "ja",
@@ -729,6 +973,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-on"
         }
       ]
     },
@@ -746,6 +1002,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-bind"
         },
         {
           "name": "ja",
@@ -774,6 +1034,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-bind"
         }
       ]
     },
@@ -791,6 +1063,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-model"
         },
         {
           "name": "ja",
@@ -819,6 +1095,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-model"
         }
       ]
     },
@@ -836,6 +1124,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-slot"
         },
         {
           "name": "ja",
@@ -864,11 +1156,24 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-slot"
         }
       ]
     },
     {
       "name": "v-pre",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nSkip compilation for this element and all its children.\n\n- **Does not expect expression**\n\n- **Details**\n\n  Inside the element with `v-pre`, all Vue template syntax will be preserved and rendered as-is. The most common use case of this is displaying raw mustache tags.\n\n- **Example**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
@@ -881,6 +1186,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-pre"
         },
         {
           "name": "ja",
@@ -909,11 +1218,24 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-pre"
         }
       ]
     },
     {
       "name": "v-once",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nRender the element and component once only, and skip future updates.\n\n- **Does not expect expression**\n\n- **Details**\n\n  On subsequent re-renders, the element/component and all its children will be treated as static content and skipped. This can be used to optimize update performance.\n\n  ```html\n  <!-- single element -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- the element have children -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- component -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- `v-for` directive -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  Since 3.2, you can also memoize part of the template with invalidation conditions using [`v-memo`](#v-memo).\n\n- **See also**\n  - [Data Binding Syntax - interpolations](https://it.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
@@ -926,6 +1248,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-once"
         },
         {
           "name": "ja",
@@ -954,6 +1280,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-once"
         }
       ]
     },
@@ -971,6 +1309,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-memo"
         },
         {
           "name": "ja",
@@ -999,11 +1341,24 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-memo"
         }
       ]
     },
     {
       "name": "v-cloak",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nUsed to hide un-compiled template until it is ready.\n\n- **Does not expect expression**\n\n- **Details**\n\n  **This directive is only needed in no-build-step setups.**\n\n  When using in-DOM templates, there can be a \"flash of un-compiled templates\": the user may see raw mustache tags until the mounted component replaces them with rendered content.\n\n  `v-cloak` will remain on the element until the associated component instance is mounted. Combined with CSS rules such as `[v-cloak] { display: none }`, it can be used to hide the raw templates until the component is ready.\n\n- **Example**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  The `<div>` will not be visible until the compilation is done.\n"
@@ -1016,6 +1371,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-cloak"
         },
         {
           "name": "ja",
@@ -1044,6 +1403,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-cloak"
         }
       ]
     },
@@ -1061,6 +1432,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#key"
         },
         {
           "name": "ja",
@@ -1089,6 +1464,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#key"
         }
       ]
     },
@@ -1106,6 +1493,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#ref"
         },
         {
           "name": "ja",
@@ -1134,6 +1525,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#ref"
         }
       ]
     },
@@ -1151,6 +1554,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#is"
         },
         {
           "name": "ja",
@@ -1179,6 +1586,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#is"
         }
       ]
     }
