@@ -1,5 +1,4 @@
 import { TextDocument } from '@volar/language-server';
-import * as path from 'path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server.js';
@@ -8,7 +7,7 @@ describe('Definitions', async () => {
 
 	it('Default slot', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await openDocument('tsconfigProject/foo.vue', 'vue', `
+		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<script setup lang="ts">
 			import Fixture from './fixture.vue';
 			</script>
@@ -19,16 +18,47 @@ describe('Definitions', async () => {
 				</Fixture>
 			</template>
 		`);
-		await assertReferences('tsconfigProject/fixture.vue', 'vue', `
-			<template>
-				<slot|></slot>
-			</template>
+		expect(
+			await requestReferences('tsconfigProject/fixture.vue', 'vue', `
+				<template>
+					<slot|></slot>
+				</template>
+			`)
+		).toMatchInlineSnapshot(`
+			[
+			  {
+			    "range": {
+			      "end": {
+			        "character": 16,
+			        "line": 7,
+			      },
+			      "start": {
+			        "character": 5,
+			        "line": 7,
+			      },
+			    },
+			    "uri": "file://\${testWorkspacePath}/tsconfigProject/foo.vue",
+			  },
+			  {
+			    "range": {
+			      "end": {
+			        "character": 10,
+			        "line": 2,
+			      },
+			      "start": {
+			        "character": 6,
+			        "line": 2,
+			      },
+			    },
+			    "uri": "file://\${testWorkspacePath}/tsconfigProject/fixture.vue",
+			  },
+			]
 		`);
 	});
 
 	it('Named slot', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await openDocument('tsconfigProject/foo.vue', 'vue', `
+		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<script setup lang="ts">
 			import Fixture from './fixture.vue';
 			</script>
@@ -37,23 +67,85 @@ describe('Definitions', async () => {
 				<Fixture #foo></Fixture>
 			</template>
 		`);
-		await assertReferences('tsconfigProject/fixture.vue', 'vue', `
+		expect(
+			await requestReferences('tsconfigProject/fixture.vue', 'vue', `
 			<template>
 				<slot name="|foo"></slot>
 			</template>
+		`)
+		).toMatchInlineSnapshot(`
+			[
+			  {
+			    "range": {
+			      "end": {
+			        "character": 17,
+			        "line": 6,
+			      },
+			      "start": {
+			        "character": 14,
+			        "line": 6,
+			      },
+			    },
+			    "uri": "file://\${testWorkspacePath}/tsconfigProject/foo.vue",
+			  },
+			  {
+			    "range": {
+			      "end": {
+			        "character": 19,
+			        "line": 2,
+			      },
+			      "start": {
+			        "character": 16,
+			        "line": 2,
+			      },
+			    },
+			    "uri": "file://\${testWorkspacePath}/tsconfigProject/fixture.vue",
+			  },
+			]
 		`);
 	});
 
 	it('v-bind shorthand', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await assertReferences('tsconfigProject/fixture.vue', 'vue', `
-			<script setup lang="ts">
-			const |foo = 1;
-			</script>
+		expect(
+			await requestReferences('tsconfigProject/fixture.vue', 'vue', `
+				<script setup lang="ts">
+				const |foo = 1;
+				</script>
 
-			<template>
-				<Foo :foo></Foo>
-			</template>
+				<template>
+					<Foo :foo></Foo>
+				</template>
+			`)
+		).toMatchInlineSnapshot(`
+			[
+			  {
+			    "range": {
+			      "end": {
+			        "character": 14,
+			        "line": 6,
+			      },
+			      "start": {
+			        "character": 11,
+			        "line": 6,
+			      },
+			    },
+			    "uri": "file://\${testWorkspacePath}/tsconfigProject/fixture.vue",
+			  },
+			  {
+			    "range": {
+			      "end": {
+			        "character": 13,
+			        "line": 2,
+			      },
+			      "start": {
+			        "character": 10,
+			        "line": 2,
+			      },
+			    },
+			    "uri": "file://\${testWorkspacePath}/tsconfigProject/fixture.vue",
+			  },
+			]
 		`);
 	});
 
@@ -71,31 +163,31 @@ describe('Definitions', async () => {
 	 * @deprecated Remove this when #4717 fixed.
 	 */
 	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await openDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
+		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
 		const server = await getLanguageServer();
 		await server.sendDocumentDiagnosticRequest(document.uri);
 	}
 
-	async function assertReferences(fileName: string, languageId: string, content: string) {
+	async function requestReferences(fileName: string, languageId: string, content: string) {
 		const offset = content.indexOf('|');
 		expect(offset).toBeGreaterThanOrEqual(0);
 		content = content.slice(0, offset) + content.slice(offset + 1);
 
 		const server = await getLanguageServer();
-		let document = await openDocument(fileName, languageId, content);
+		let document = await prepareDocument(fileName, languageId, content);
 
 		const position = document.positionAt(offset);
 		const references = await server.sendReferencesRequest(document.uri, position, { includeDeclaration: false });
 		expect(references).toBeDefined();
-		expect(references!.length).greaterThan(0);
 
 		for (const loc of references!) {
-			expect(path.relative(testWorkspacePath, URI.parse(loc.uri).fsPath)).toMatchSnapshot();
-			expect(loc.range).toMatchSnapshot();
+			loc.uri = loc.uri.replace(testWorkspacePath, '${testWorkspacePath}');
 		}
+
+		return references!;
 	}
 
-	async function openDocument(fileName: string, languageId: string, content: string) {
+	async function prepareDocument(fileName: string, languageId: string, content: string) {
 		const server = await getLanguageServer();
 		const uri = URI.file(`${testWorkspacePath}/${fileName}`);
 		const document = await server.openInMemoryDocument(uri.toString(), languageId, content);

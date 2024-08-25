@@ -1,5 +1,4 @@
 import { Location, TextDocument } from '@volar/language-server';
-import * as path from 'path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server.js';
@@ -8,23 +7,77 @@ describe('Definitions', async () => {
 
 	it('TS to vue', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await assertDefinition('tsconfigProject/fixture1.ts', 'typescript', `import C|omponent from './empty.vue';`);
-		await assertDefinition('tsconfigProject/fixture2.ts', 'typescript', `import Component from '|./empty.vue';`);
+		expect(
+			await requestDefinition('tsconfigProject/fixture1.ts', 'typescript', `import C|omponent from './empty.vue';`)
+		).toMatchInlineSnapshot(`
+			[
+			  {
+			    "range": {
+			      "end": {
+			        "character": 0,
+			        "line": 0,
+			      },
+			      "start": {
+			        "character": 0,
+			        "line": 0,
+			      },
+			    },
+			    "uri": "file://\${testWorkspacePath}/tsconfigProject/empty.vue",
+			  },
+			]
+		`);
+		expect(
+			await requestDefinition('tsconfigProject/fixture2.ts', 'typescript', `import Component from '|./empty.vue';`)
+		).toMatchInlineSnapshot(`
+			[
+			  {
+			    "range": {
+			      "end": {
+			        "character": 0,
+			        "line": 0,
+			      },
+			      "start": {
+			        "character": 0,
+			        "line": 0,
+			      },
+			    },
+			    "uri": "file://\${testWorkspacePath}/tsconfigProject/empty.vue",
+			  },
+			]
+		`);
 	});
 
 	it('Alias path', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await openDocument('tsconfigProject/foo.ts', 'typescript', `export const foo = 'foo';`);
-		await assertDefinition('tsconfigProject/fixture.vue', 'vue', `
-			<script setup lang="ts">
-			import { foo| } from '@/foo';
-			</script>
+		await prepareDocument('tsconfigProject/foo.ts', 'typescript', `export const foo = 'foo';`);
+		expect(
+			await requestDefinition('tsconfigProject/fixture.vue', 'vue', `
+				<script setup lang="ts">
+				import { foo| } from '@/foo';
+				</script>
+			`)
+		).toMatchInlineSnapshot(`
+			[
+			  {
+			    "range": {
+			      "end": {
+			        "character": 25,
+			        "line": 0,
+			      },
+			      "start": {
+			        "character": 0,
+			        "line": 0,
+			      },
+			    },
+			    "uri": "file://\${testWorkspacePath}/tsconfigProject/foo.ts",
+			  },
+			]
 		`);
 	});
 
 	it('#2600', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await openDocument('tsconfigProject/foo.vue', 'vue', `
+		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<template>
 				<h1>{{ msg }}</h1>
 			</template>
@@ -33,10 +86,28 @@ describe('Definitions', async () => {
 			export default defineProps<{ msg: string }>()
 			</script>
 		`);
-		await assertDefinition('tsconfigProject/fixture.vue', 'vue', `
-			<script setup lang="ts">
-			import Foo from '|@/foo.vue';
-			</script>
+		expect(
+			await requestDefinition('tsconfigProject/fixture.vue', 'vue', `
+				<script setup lang="ts">
+				import Foo from '|@/foo.vue';
+				</script>
+			`)
+		).toMatchInlineSnapshot(`
+			[
+			  {
+			    "range": {
+			      "end": {
+			        "character": 0,
+			        "line": 0,
+			      },
+			      "start": {
+			        "character": 0,
+			        "line": 0,
+			      },
+			    },
+			    "uri": "file://\${testWorkspacePath}/tsconfigProject/foo.vue",
+			  },
+			]
 		`);
 	});
 
@@ -54,31 +125,31 @@ describe('Definitions', async () => {
 	 * @deprecated Remove this when #4717 fixed.
 	 */
 	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await openDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
+		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
 		const server = await getLanguageServer();
 		await server.sendDocumentDiagnosticRequest(document.uri);
 	}
 
-	async function assertDefinition(fileName: string, languageId: string, content: string) {
+	async function requestDefinition(fileName: string, languageId: string, content: string) {
 		const offset = content.indexOf('|');
 		expect(offset).toBeGreaterThanOrEqual(0);
 		content = content.slice(0, offset) + content.slice(offset + 1);
 
 		const server = await getLanguageServer();
-		let document = await openDocument(fileName, languageId, content);
+		let document = await prepareDocument(fileName, languageId, content);
 
 		const position = document.positionAt(offset);
 		const definition = await server.sendDefinitionRequest(document.uri, position) as Location[] | null;
 		expect(definition).toBeDefined();
-		expect(definition!.length).greaterThan(0);
 
 		for (const loc of definition!) {
-			expect(path.relative(testWorkspacePath, URI.parse(loc.uri).fsPath)).toMatchSnapshot();
-			expect(loc.range).toMatchSnapshot();
+			loc.uri = loc.uri.replace(testWorkspacePath, '${testWorkspacePath}');
 		}
+
+		return definition!;
 	}
 
-	async function openDocument(fileName: string, languageId: string, content: string) {
+	async function prepareDocument(fileName: string, languageId: string, content: string) {
 		const server = await getLanguageServer();
 		const uri = URI.file(`${testWorkspacePath}/${fileName}`);
 		const document = await server.openInMemoryDocument(uri.toString(), languageId, content);

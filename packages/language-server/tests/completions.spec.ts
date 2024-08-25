@@ -1,23 +1,47 @@
-import { InsertReplaceEdit, TextDocument, TextEdit } from '@volar/language-server';
+import { TextDocument } from '@volar/language-server';
 import { afterEach, describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server.js';
 
 describe('Completions', async () => {
 
+	it('Vue tags', async () => {
+		expect(
+			(await requestCompletionList('fixture.vue', 'vue', `<|`)).items.map(item => item.label)
+		).toMatchInlineSnapshot(`
+			[
+			  "template",
+			  "script",
+			  "script setup",
+			  "style",
+			  "script lang="ts"",
+			  "script lang="tsx"",
+			  "script lang="jsx"",
+			  "script setup lang="ts"",
+			  "script setup lang="tsx"",
+			  "script setup lang="jsx"",
+			  "style lang="css"",
+			  "style lang="scss"",
+			  "style lang="less"",
+			  "style lang="postcss"",
+			  "template lang="pug"",
+			]
+		`);
+	});
+
 	it('Directives', async () => {
-		await assertCompletion('fixture.vue', 'vue', `<template><div v-ht|></div></template>`, 'v-html');
-		await assertCompletion('fixture.vue', 'vue', `<template><div v-cl|></div></template>`, 'v-cloak');
-		await assertCompletion('fixture.vue', 'vue', `<template><div v-el|></div></template>`, 'v-else');
-		await assertCompletion('fixture.vue', 'vue', `<template><div v-p|></div></template>`, 'v-pre');
+		await requestCompletionItem('fixture.vue', 'vue', `<template><div v-ht|></div></template>`, 'v-html');
+		await requestCompletionItem('fixture.vue', 'vue', `<template><div v-cl|></div></template>`, 'v-cloak');
+		await requestCompletionItem('fixture.vue', 'vue', `<template><div v-el|></div></template>`, 'v-else');
+		await requestCompletionItem('fixture.vue', 'vue', `<template><div v-p|></div></template>`, 'v-pre');
 	});
 
 	it('$event argument', async () => {
-		await assertCompletion('fixture.vue', 'vue', `<template><div @click="console.log($eve|)"></div></template>`, '$event');
+		await requestCompletionItem('fixture.vue', 'vue', `<template><div @click="console.log($eve|)"></div></template>`, 'event');
 	});
 
 	it('<script setup>', async () => {
-		await assertCompletion('fixture.vue', 'vue', `
+		await requestCompletionItem('fixture.vue', 'vue', `
 			<template>{{ f| }}</template>
 
 			<script lang="ts" setup>
@@ -27,7 +51,7 @@ describe('Completions', async () => {
 	});
 
 	it('Slot name', async () => {
-		await assertCompletion('fixture.vue', 'vue', `
+		await requestCompletionItem('fixture.vue', 'vue', `
 			<template>
 				<Foo>
 					<template #|></template>
@@ -45,7 +69,7 @@ describe('Completions', async () => {
 	});
 
 	it('#2454', async () => {
-		await assertCompletion('fixture.vue', 'vue', `
+		await requestCompletionItem('fixture.vue', 'vue', `
 			<script setup lang="ts">
 			let vLoading: any;
 			</script>
@@ -58,16 +82,32 @@ describe('Completions', async () => {
 
 	it('#2511', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await openDocument('tsconfigProject/component-for-auto-import.vue', 'vue', `<script setup lang="ts"></script>`);
-		await assertCompletion('tsconfigProject/fixture.vue', 'vue', `
-			<script setup lang="ts">
-			import componentFor|
-			</script>
-		`, 'ComponentForAutoImport');
+		await prepareDocument('tsconfigProject/component-for-auto-import.vue', 'vue', `<script setup lang="ts"></script>`);
+		expect(
+			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
+				<script setup lang="ts">
+				import componentFor|
+				</script>
+			`, 'ComponentForAutoImport')).textEdit
+		).toMatchInlineSnapshot(`
+			{
+			  "newText": "import componentForAutoImport$1 from './component-for-auto-import.vue';",
+			  "range": {
+			    "end": {
+			      "character": 23,
+			      "line": 2,
+			    },
+			    "start": {
+			      "character": 4,
+			      "line": 2,
+			    },
+			  },
+			}
+		`);
 	});
 
 	it('#3658', async () => {
-		await assertCompletion('fixture.vue', 'vue', `
+		await requestCompletionItem('fixture.vue', 'vue', `
 			<template>
 				<Comp>
 					<template #foo="foo">
@@ -79,7 +119,7 @@ describe('Completions', async () => {
 	});
 
 	it('#4639', async () => {
-		await assertCompletion('fixture.vue', 'vue', `
+		await requestCompletionItem('fixture.vue', 'vue', `
 			<template>
 				<div @click.| />
 			</template>
@@ -88,7 +128,7 @@ describe('Completions', async () => {
 
 	it('Alias path', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await assertCompletion('tsconfigProject/fixture.vue', 'vue', `
+		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			import Component from '@/|';
 			</script>
@@ -97,7 +137,7 @@ describe('Completions', async () => {
 
 	it('Relative path', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await assertCompletion('tsconfigProject/fixture.vue', 'vue', `
+		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			import Component from './|';
 			</script>
@@ -106,20 +146,68 @@ describe('Completions', async () => {
 
 	it('Component auto import', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await openDocument('tsconfigProject/ComponentForAutoImport.vue', 'vue', `<script setup lang="ts"></script>`);
-		await assertCompletion('tsconfigProject/fixture.vue', 'vue', `
-			<script setup lang="ts">
-			</script>
+		await prepareDocument('tsconfigProject/ComponentForAutoImport.vue', 'vue', `<script setup lang="ts"></script>`);
+		expect(
+			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
+				<script setup lang="ts">
+				</script>
 
-			<template>
-				<ComponentForA| />
-			</template>
-		`, 'ComponentForAutoImport');
+				<template>
+					<ComponentForA| />
+				</template>
+			`, 'ComponentForAutoImport'))
+		).toMatchInlineSnapshot(`
+			{
+			  "additionalTextEdits": [
+			    {
+			      "newText": "
+			import ComponentForAutoImport from './ComponentForAutoImport.vue';
+			",
+			      "range": {
+			        "end": {
+			          "character": 28,
+			          "line": 1,
+			        },
+			        "start": {
+			          "character": 28,
+			          "line": 1,
+			        },
+			      },
+			    },
+			  ],
+			  "detail": "Add import from "./ComponentForAutoImport.vue"
+			(property) default: DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<ExtractPropTypes<{}>>, {}, {}>",
+			  "documentation": {
+			    "kind": "markdown",
+			    "value": "",
+			  },
+			  "insertTextFormat": 1,
+			  "kind": 5,
+			  "label": "ComponentForAutoImport",
+			  "labelDetails": {
+			    "description": "./ComponentForAutoImport.vue",
+			  },
+			  "sortText": "￿16",
+			  "textEdit": {
+			    "newText": "ComponentForAutoImport",
+			    "range": {
+			      "end": {
+			        "character": 19,
+			        "line": 5,
+			      },
+			      "start": {
+			        "character": 6,
+			        "line": 5,
+			      },
+			    },
+			  },
+			}
+		`);
 	});
 
 	it('core#8811', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await assertCompletion('tsconfigProject/fixture.vue', 'vue', `
+		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			declare const Foo: new () => {
 				$props: {
@@ -148,58 +236,39 @@ describe('Completions', async () => {
 	 * @deprecated Remove this when #4717 fixed.
 	 */
 	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await openDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
+		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
 		const server = await getLanguageServer();
 		await server.sendDocumentDiagnosticRequest(document.uri);
 	}
 
-	async function assertCompletion(fileName: string, languageId: string, content: string, itemLabel: string) {
+	async function requestCompletionItem(fileName: string, languageId: string, content: string, itemLabel: string) {
+		const completions = await requestCompletionList(fileName, languageId, content);
+		let completion = completions.items.find(item => item.label === itemLabel);
+		expect(completion).toBeDefined();
+		if (completion!.data) {
+			const server = await getLanguageServer();
+			completion = await server.sendCompletionResolveRequest(completion!);
+			expect(completion).toBeDefined();
+		}
+		return completion!;
+	}
+
+	async function requestCompletionList(fileName: string, languageId: string, content: string) {
 		const offset = content.indexOf('|');
 		expect(offset).toBeGreaterThanOrEqual(0);
 		content = content.slice(0, offset) + content.slice(offset + 1);
 
 		const server = await getLanguageServer();
-		let document = await openDocument(fileName, languageId, content);
+		let document = await prepareDocument(fileName, languageId, content);
 
 		const position = document.positionAt(offset);
 		const completions = await server.sendCompletionRequest(document.uri, position);
+		expect(completions).toBeDefined();
 
-		let completion = completions?.items.find(item => item.label === itemLabel);
-		expect(completion).toBeDefined();
-
-		completion = await server.sendCompletionResolveRequest(completion!);
-		expect(completion).toBeDefined();
-
-		const edits: TextEdit[] = [];
-
-		if (completion.textEdit) {
-			if (InsertReplaceEdit.is(completion.textEdit)) {
-				edits.push({ newText: completion.textEdit.newText, range: completion.textEdit.replace });
-			}
-			else {
-				edits.push(completion.textEdit);
-			}
-		}
-		else {
-			edits.push({
-				newText: completion.insertText ?? completion.label,
-				range: { start: position, end: position },
-			});
-		}
-		if (completion.additionalTextEdits) {
-			edits.push(...completion.additionalTextEdits);
-		}
-		if (edits.length === 0) {
-			console.log(completion);
-		}
-		expect(edits.length).toBeGreaterThan(0);
-
-		document = await server.updateTextDocument(document.uri, edits);
-
-		expect(document.getText()).toMatchSnapshot();
+		return completions!;
 	}
 
-	async function openDocument(fileName: string, languageId: string, content: string) {
+	async function prepareDocument(fileName: string, languageId: string, content: string) {
 		const server = await getLanguageServer();
 		const uri = URI.file(`${testWorkspacePath}/${fileName}`);
 		const document = await server.openInMemoryDocument(uri.toString(), languageId, content);

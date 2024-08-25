@@ -7,91 +7,170 @@ describe('Definitions', async () => {
 
 	it('Inline handler leading', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await assertInlayHints('tsconfigProject/fixture.vue', 'vue', `
-			<script setup lang="ts">
-			let a = 0;
-			</script>
+		expect(
+			await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
+				<script setup lang="ts">
+				let a = 0;
+				</script>
 
-			<template>
-				<div @click="a = 1"></div>
-			</template>
+				<template>
+					<div @click="a = 1"></div>
+				</template>
+			`)
+		).toMatchInlineSnapshot(`
+			"
+							<script setup lang="ts">
+							let a = 0;
+							</script>
+
+							<template>
+								<div @click="/* $event => */a = 1"></div>
+							</template>
+						"
 		`);
 	});
 
 	it('Missing props', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		openDocument('tsconfigProject/foo.vue', 'vue', `
+		prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<script setup lang="ts">
 			defineProps<{
 				foo: number;
 			}>();
 			</script>
 		`);
-		await assertInlayHints('tsconfigProject/fixture.vue', 'vue', `
-			<script setup lang="ts">
-			import Foo from './foo.vue';
-			</script>
+		expect(
+			await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
+				<script setup lang="ts">
+				import Foo from './foo.vue';
+				</script>
 
-			<template>
-				<Foo></Foo>
-			</template>
+				<template>
+					<Foo></Foo>
+				</template>
+			`)
+		).toMatchInlineSnapshot(`
+			"
+							<script setup lang="ts">
+							import Foo from './foo.vue';
+							</script>
+
+							<template>
+								<Foo/* foo! */></Foo>
+							</template>
+						"
 		`);
 	});
 
 	it('Options wrapper', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await assertInlayHints('tsconfigProject/fixture.vue', 'vue', `
-			<script>
-			export default {};
-			</script>
+		expect(
+			await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
+				<script>
+				export default {};
+				</script>
+			`)
+		).toMatchInlineSnapshot(`
+			"
+							<script>
+							export default /* (await import('vue')).defineComponent( */{}/* ) */;
+							</script>
+						"
 		`);
 	});
 
 	it('Destructured props', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
-		await assertInlayHints('tsconfigProject/fixture.vue', 'vue', `
-			<script setup lang="ts">
-			import { watch } from 'vue';
+		expect(
+			await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
+				<script setup lang="ts">
+				import { watch } from 'vue';
 
-			const { foo, bar, ...props } = defineProps<{
-				foo: string;
-				bar: string;
-				baz: string;
-			}>();
+				const { foo, bar, ...props } = defineProps<{
+					foo: string;
+					bar: string;
+					baz: string;
+				}>();
 
-			type foo = foo[string] & typeof foo;
+				type foo = foo[string] & typeof foo;
 
-			interface foo extends (typeof foo) {
-				foo: string;
-				foo(foo: string): void;
-				foo: (foo: string) => void;
-			}
+				interface foo extends (typeof foo) {
+					foo: string;
+					foo(foo: string): void;
+					foo: (foo: string) => void;
+				}
 
-			const obj = {
-				foo: foo,
-				[foo]: '',
-				foo,
-				foo(foo) { },
-				foo: function (foo) { },
-				get bar() { return this.foo; },
-				set bar(val) { this.foo = val; }
-			};
+				const obj = {
+					foo: foo,
+					[foo]: '',
+					foo,
+					foo(foo) { },
+					foo: function (foo) { },
+					get bar() { return this.foo; },
+					set bar(val) { this.foo = val; }
+				};
 
-			function func(foo) { }
+				function func(foo) { }
 
-			class cls {
-				foo: string = foo;
-				constructor(foo) { }
-			}
+				class cls {
+					foo: string = foo;
+					constructor(foo) { }
+				}
 
-			for (const char of foo) { }
+				for (const char of foo) { }
 
-			try { } catch (foo) { }
+				try { } catch (foo) { }
 
-			watch(() => foo, (foo) => {
-				console.log(foo, bar, props.baz);
-			});
-			</script>
+				watch(() => foo, (foo) => {
+					console.log(foo, bar, props.baz);
+				});
+				</script>
+			`)
+		).toMatchInlineSnapshot(`
+			"
+							<script setup lang="ts">
+							import { watch } from 'vue';
+
+							const { foo, bar, ...props } = defineProps<{
+								foo: string;
+								bar: string;
+								baz: string;
+							}>();
+
+							type foo = foo[string] & typeof /* props. */foo;
+
+							interface foo extends (typeof /* props. */foo) {
+								foo: string;
+								foo(foo: string): void;
+								foo: (foo: string) => void;
+							}
+
+							const obj = {
+								foo: /* props. */foo,
+								[/* props. */foo]: '',
+								foo/* : props.foo */,
+								foo(foo) { },
+								foo: function (foo) { },
+								get bar() { return this.foo; },
+								set bar(val) { this.foo = val; }
+							};
+
+							function func(foo) { }
+
+							class cls {
+								foo: string = /* props. */foo;
+								constructor(foo) { }
+							}
+
+							for (const char of /* props. */foo) { }
+
+							try { } catch (foo) { }
+
+							watch(() => /* props. */foo, (foo) => {
+								console.log(foo, /* props. */bar, props.baz);
+							});
+							</script>
+						"
 		`);
 	});
 
@@ -109,14 +188,14 @@ describe('Definitions', async () => {
 	 * @deprecated Remove this when #4717 fixed.
 	 */
 	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await openDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
+		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
 		const server = await getLanguageServer();
 		await server.sendDocumentDiagnosticRequest(document.uri);
 	}
 
-	async function assertInlayHints(fileName: string, languageId: string, content: string) {
+	async function requestInlayHintsResult(fileName: string, languageId: string, content: string) {
 		const server = await getLanguageServer();
-		let document = await openDocument(fileName, languageId, content);
+		let document = await prepareDocument(fileName, languageId, content);
 
 		const inlayHints = await server.sendInlayHintRequest(document.uri, { start: document.positionAt(0), end: document.positionAt(content.length) });
 		expect(inlayHints).toBeDefined();
@@ -125,13 +204,13 @@ describe('Definitions', async () => {
 		let text = document.getText();
 		for (const hint of inlayHints!.sort((a, b) => document.offsetAt(b.position) - document.offsetAt(a.position))) {
 			const offset = document.offsetAt(hint.position);
-			text = text.slice(0, offset) + '[' + hint.label + ']' + text.slice(offset);
+			text = text.slice(0, offset) + '/* ' + hint.label + ' */' + text.slice(offset);
 		}
 
-		expect(text).toMatchSnapshot();
+		return text;
 	}
 
-	async function openDocument(fileName: string, languageId: string, content: string) {
+	async function prepareDocument(fileName: string, languageId: string, content: string) {
 		const server = await getLanguageServer();
 		const uri = URI.file(`${testWorkspacePath}/${fileName}`);
 		const document = await server.openInMemoryDocument(uri.toString(), languageId, content);
