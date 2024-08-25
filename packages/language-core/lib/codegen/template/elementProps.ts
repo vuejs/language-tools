@@ -144,6 +144,7 @@ export function* generateElementProps(
 					options,
 					ctx,
 					prop,
+					prop.exp,
 					ctx.codeFeatures.all,
 					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
 					enableCodeFeatures
@@ -267,11 +268,11 @@ function* genereatePropExp(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
+	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
 	isShorthand: boolean,
 	enableCodeFeatures: boolean
 ): Generator<Code> {
-	const exp = prop.exp as CompilerDOM.SimpleExpressionNode;
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 		if (!isShorthand) { // vue 3.4+
 			yield* generateInterpolation(
