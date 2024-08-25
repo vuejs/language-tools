@@ -54,7 +54,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	return ctx;
 
-	function* generateRefs(): Generator<Code>{
+	function* generateRefs(): Generator<Code> {
 		for (const [, validId] of options.templateRefNames) {
 			yield `let ${validId}${newLine}`;
 		}

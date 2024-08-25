@@ -116,7 +116,7 @@ function* generateSetupFunction(
 	if (options.vueCompilerOptions.target >= 3.3) {
 		yield `const { `;
 		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!ctx.bindingNames.has(macro) && !['templateRef'].includes(macro)) {
+			if (!ctx.bindingNames.has(macro) && macro !== 'templateRef') {
 				yield macro + `, `;
 			}
 		}
