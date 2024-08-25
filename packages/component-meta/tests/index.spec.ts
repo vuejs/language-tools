@@ -863,7 +863,7 @@ const tsconfigChecker = createChecker(
 const noTsConfigChecker = createCheckerByJson(
 	path.resolve(__dirname, '../../../test-workspace/component-meta'),
 	{
-		"extends": "../tsconfig.json",
+		"extends": "../tsconfig.base.json",
 		"include": [
 			"**/*",
 		],
