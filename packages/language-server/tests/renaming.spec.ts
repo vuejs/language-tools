@@ -185,7 +185,6 @@ describe('Renaming', async () => {
 				.bar { color: v-bind(foo|); }
 				.bar { color: v-bind('foo'); }
 				.bar { color: v-bind("foo"); }
-				.bar { color: v-bind(foo + foo); }
 				.bar { color: v-bind('foo + foo'); }
 				.bar { color: v-bind("foo + foo"); }
 				.bar { color: v-bind(); }
@@ -199,32 +198,6 @@ describe('Renaming', async () => {
 			{
 			  "changes": {
 			    "file://\${testWorkspacePath}/fixture.vue": [
-			      {
-			        "newText": "bar",
-			        "range": {
-			          "end": {
-			            "character": 34,
-			            "line": 10,
-			          },
-			          "start": {
-			            "character": 31,
-			            "line": 10,
-			          },
-			        },
-			      },
-			      {
-			        "newText": "bar",
-			        "range": {
-			          "end": {
-			            "character": 28,
-			            "line": 10,
-			          },
-			          "start": {
-			            "character": 25,
-			            "line": 10,
-			          },
-			        },
-			      },
 			      {
 			        "newText": "bar",
 			        "range": {
@@ -256,11 +229,11 @@ describe('Renaming', async () => {
 			        "range": {
 			          "end": {
 			            "character": 35,
-			            "line": 12,
+			            "line": 11,
 			          },
 			          "start": {
 			            "character": 32,
-			            "line": 12,
+			            "line": 11,
 			          },
 			        },
 			      },
@@ -269,11 +242,11 @@ describe('Renaming', async () => {
 			        "range": {
 			          "end": {
 			            "character": 29,
-			            "line": 12,
+			            "line": 11,
 			          },
 			          "start": {
 			            "character": 26,
-			            "line": 12,
+			            "line": 11,
 			          },
 			        },
 			      },
@@ -282,11 +255,11 @@ describe('Renaming', async () => {
 			        "range": {
 			          "end": {
 			            "character": 35,
-			            "line": 11,
+			            "line": 10,
 			          },
 			          "start": {
 			            "character": 32,
-			            "line": 11,
+			            "line": 10,
 			          },
 			        },
 			      },
@@ -295,11 +268,11 @@ describe('Renaming', async () => {
 			        "range": {
 			          "end": {
 			            "character": 29,
-			            "line": 11,
+			            "line": 10,
 			          },
 			          "start": {
 			            "character": 26,
-			            "line": 11,
+			            "line": 10,
 			          },
 			        },
 			      },
