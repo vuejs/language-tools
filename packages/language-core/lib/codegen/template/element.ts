@@ -621,7 +621,9 @@ function* generateReferencesForScopedCssClasses(
 				if (
 					!ts.isExpressionStatement(node) ||
 					!isTemplateExpression(node.expression)
-				) return;
+				) {
+					return;
+				}
 
 				const expression = node.expression.templateSpans[0].expression;
 

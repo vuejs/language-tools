@@ -113,7 +113,7 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 		source: string;
 		className: string;
 		offset: number;
-	 }[] = [];
+	}[] = [];
 	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
 

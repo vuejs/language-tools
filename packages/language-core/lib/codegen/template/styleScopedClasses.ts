@@ -41,15 +41,15 @@ export function* generateStyleScopedClasses(
 
 	function* escapeString(source: string, className: string, offset: number, escapeTargets: string[]): Generator<Code> {
 		let count = 0;
-	
+
 		const currentEscapeTargets = [...escapeTargets];
 		const firstEscapeTarget = currentEscapeTargets.shift()!;
 		const splitted = className.split(firstEscapeTarget);
-	
+
 		for (let i = 0; i < splitted.length; i++) {
 			const part = splitted[i];
 			const partLength = part.length;
-	
+
 			if (escapeTargets.length > 0) {
 				yield* escapeString(source, part, offset + count, [...currentEscapeTargets]);
 			} else {
@@ -60,17 +60,17 @@ export function* generateStyleScopedClasses(
 					ctx.codeFeatures.navigationAndAdditionalCompletion,
 				];
 			}
-	
+
 			if (i !== splitted.length - 1) {
 				yield '\\';
-	
+
 				yield [
 					firstEscapeTarget,
 					source,
 					offset + count + partLength,
 					ctx.codeFeatures.navigationAndAdditionalCompletion,
 				];
-	
+
 				count += partLength + 1;
 			} else {
 				count += partLength;
