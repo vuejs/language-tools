@@ -97,6 +97,7 @@ function createTsx(
 			hasDefineSlots: hasDefineSlots(),
 			slotsAssignName: slotsAssignName(),
 			propsAssignName: propsAssignName(),
+			inheritAttrs: inheritAttrs(),
 		});
 
 		let current = codegen.next();
@@ -135,6 +136,10 @@ function createTsx(
 	});
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
+	const inheritAttrs = computed(() => {
+		const value = scriptSetupRanges()?.options.inheritAttrs ?? scriptRanges()?.exportDefault?.inheritAttrsOption;
+		return value !== 'false';
+	});
 	const generatedScript = computed(() => {
 		const codes: Code[] = [];
 		const linkedCodeMappings: Mapping[] = [];

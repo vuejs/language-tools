@@ -67,7 +67,7 @@ export function* generateScriptSetup(
 			+ `			props: ${ctx.helperTypes.Prettify.name}<typeof __VLS_functionalComponentProps & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
 			+ `			expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
 			+ `			attrs: any,${newLine}`
-			+ `			slots: ReturnType<typeof __VLS_template>,${newLine}`
+			+ `			slots: ReturnType<typeof __VLS_template>[0],${newLine}`
 			+ `			emit: ${emitTypes.join(' & ')},${newLine}`
 			+ `		}${endOfLine}`;
 		yield `	})(),${newLine}`; // __VLS_setup = (async () => {
@@ -250,7 +250,7 @@ function* generateSetupFunction(
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield `${syntax} `;
-			yield `{} as ${ctx.helperTypes.WithTemplateSlots.name}<typeof __VLS_component, ReturnType<typeof __VLS_template>>${endOfLine}`;
+			yield `{} as ${ctx.helperTypes.WithTemplateSlots.name}<typeof __VLS_component, ReturnType<typeof __VLS_template>[0]>${endOfLine}`;
 		}
 		else {
 			yield `${syntax} `;

@@ -17,6 +17,7 @@ export interface TemplateCodegenOptions {
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;
+	inheritAttrs: boolean;
 }
 
 export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
@@ -42,6 +43,8 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		yield* generateSlotsType();
 		yield endOfLine;
 	}
+
+	yield* generateInheritedAttrs();
 
 	yield* ctx.generateAutoImportCompletion();
 
@@ -76,6 +79,14 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 			yield `?(_: typeof ${slot.varName}): any,${newLine}`;
 		}
 		yield `}`;
+	}
+
+	function* generateInheritedAttrs(): Generator<Code> {
+		yield 'var __VLS_inheritedAttrs!: {}';
+		for (const varName of ctx.inheritedAttrVars) {
+			yield ` & typeof ${varName}`;
+		}
+		yield endOfLine;
 	}
 
 	function* generateStyleScopedClasses(): Generator<Code> {

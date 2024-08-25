@@ -12,5 +12,6 @@
 		"../vue3_strictTemplate/#3140",
 		"../vue3_strictTemplate/#3718",
 		"../vue3_strictTemplate/intrinsicProps",
+		"../vue3_strictTemplate/inheritAttrs",
 	]
 }

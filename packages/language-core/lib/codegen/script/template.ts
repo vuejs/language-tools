@@ -35,7 +35,7 @@ export function* generateTemplate(
 		const templateUsageVars = [...getTemplateUsageVars(options, ctx)];
 		yield `// @ts-ignore${newLine}`;
 		yield `[${templateUsageVars.join(', ')}]${newLine}`;
-		yield `return {}${endOfLine}`;
+		yield `return [{}, {}] as const${endOfLine}`;
 		yield `}${newLine}`;
 	}
 }
@@ -154,10 +154,11 @@ function* generateTemplateContext(
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.slots.define) {
 			yield `const __VLS_slots = {}${endOfLine}`;
+			yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
 		}
 	}
 
-	yield `return ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'}${endOfLine}`;
+	yield `return [${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'}, __VLS_inheritedAttrs] as const${endOfLine}`;
 }
 
 function* generateCssClassProperty(

@@ -224,7 +224,7 @@ export function* generateComponent(
 		yield `, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
 	}
 	else {
-		// without strictTemplates, this only for instacne type
+		// without strictTemplates, this only for instance type
 		yield `const ${var_componentInstance} = ${var_functionalComponent}({`;
 		yield* generateElementProps(options, ctx, node, props, false);
 		yield `}, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
@@ -269,6 +269,15 @@ export function* generateComponent(
 	if (usedComponentEventsVar) {
 		yield `let ${var_componentEmit}!: typeof ${componentCtxVar}.emit${endOfLine}`;
 		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
+	}
+
+	if (
+		node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
+		|| node === ctx.singleRootNode
+	) {
+		const varAttrs = ctx.getInternalVariable();
+		ctx.inheritedAttrVars.add(varAttrs);
+		yield `var ${varAttrs}!: Parameters<typeof ${var_functionalComponent}>[0];\n`;
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
@@ -348,6 +357,13 @@ export function* generateElement(
 	}
 	else {
 		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
+	}
+
+	if (
+		node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
+		|| node === ctx.singleRootNode
+	) {
+		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
 	}
 }
 
