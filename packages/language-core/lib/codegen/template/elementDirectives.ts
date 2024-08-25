@@ -68,7 +68,7 @@ export function* generateElementDirectives(
 								prop.exp.loc.start.offset,
 								prop.exp.loc.end.offset,
 								ctx.codeFeatures.verification,
-								'value',
+								'value'
 							),
 							': ',
 							...wrapWith(
@@ -84,7 +84,7 @@ export function* generateElementDirectives(
 									ctx.codeFeatures.all,
 									'(',
 									')'
-								),
+								)
 							)
 						]
 						: [`undefined`]
