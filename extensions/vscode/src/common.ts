@@ -234,7 +234,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	lsp.activateAutoInsertion(selectors, client);
 	lsp.activateDocumentDropEdit(selectors, client);
 	lsp.activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
-	lsp.activateServerSys(client);
 
 	if (!enabledHybridMode) {
 		lsp.activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);

@@ -14,7 +14,7 @@ export function create(
 	return {
 		name: 'vue-document-drop',
 		capabilities: {
-			// documentDropEditsProvider: true,
+			documentDropEditsProvider: true,
 		},
 		create(context): LanguageServicePluginInstance {
 			if (!context.project.vue) {
