@@ -230,7 +230,11 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			defineModel: ['defineModel'],
 			defineOptions: ['defineOptions'],
 			withDefaults: ['withDefaults'],
+			templateRef: ['templateRef', 'useTemplateRef'],
 			...vueOptions.macros,
+		},
+		composibles: {
+			useCssModule: ['useCssModule']
 		},
 		plugins: vueOptions.plugins ?? [],
 

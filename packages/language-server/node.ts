@@ -40,8 +40,7 @@ connection.onInitialize(params => {
 					};
 				}
 			),
-			getHybridModeLanguageServicePlugins(ts, namedPipeClient),
-			{ pullModelDiagnostics: true }
+			getHybridModeLanguageServicePlugins(ts, namedPipeClient)
 		);
 	}
 	else {
