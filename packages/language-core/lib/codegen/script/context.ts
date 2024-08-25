@@ -102,6 +102,15 @@ export function createScriptCodegenContext(options: ScriptCodegenOptions) {
 					};`;
 			},
 		} satisfies HelperType as HelperType,
+		OmitIndexSignature: {
+			get name() {
+				this.used = true;
+				return `__VLS_OmitIndexSignature`;
+			},
+			get code() {
+				return `type __VLS_OmitIndexSignature<T> = { [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K]; };`;
+			}
+		} satisfies HelperType as HelperType,
 	};
 	const inlayHints: InlayHintInfo[] = [];
 

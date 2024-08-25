@@ -556,6 +556,7 @@
 		"esbuild": "~0.21.0",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
-		"semver": "^7.5.4"
+		"semver": "^7.5.4",
+		"vscode-tmlanguage-snapshot": "latest"
 	}
 }
