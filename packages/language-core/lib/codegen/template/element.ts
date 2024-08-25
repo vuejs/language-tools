@@ -27,9 +27,10 @@ export function* generateComponent(
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
-	const tagOffsets = endTagOffset !== undefined
-		? [startTagOffset, endTagOffset]
-		: [startTagOffset];
+	const tagOffsets =
+		endTagOffset !== undefined && endTagOffset > startTagOffset
+			? [startTagOffset, endTagOffset]
+			: [startTagOffset];
 	const propsFailedExps: {
 		node: CompilerDOM.SimpleExpressionNode;
 		prefix: string;
