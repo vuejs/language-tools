@@ -15,7 +15,7 @@ declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<t
         default?(_: {
             row: Row;
         }): any;
-    }, {}]>[0];
+    }, import("vue").HTMLAttributes & import("vue").ReservedProps]>[0];
     emit: {};
 }>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
     [key: string]: any;
