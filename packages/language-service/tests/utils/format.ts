@@ -1,17 +1,18 @@
 import * as kit from '@volar/kit';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { createVueLanguagePlugin, createVueServicePlugins, resolveVueCompilerOptions } from '../..';
+import type { URI } from 'vscode-uri';
+import { createVueLanguagePlugin2, getFullLanguageServicePlugins, resolveVueCompilerOptions } from '../..';
 
 const resolvedVueOptions = resolveVueCompilerOptions({});
-const vueLanguagePlugin = createVueLanguagePlugin(
+const vueLanguagePlugin = createVueLanguagePlugin2<URI>(
 	ts,
-	fileId => formatter.env.typescript!.uriToFileName(fileId),
+	() => '',
 	() => false,
 	{},
-	resolvedVueOptions,
+	resolvedVueOptions
 );
-const vueServicePLugins = createVueServicePlugins(ts, () => resolvedVueOptions);
+const vueServicePLugins = getFullLanguageServicePlugins(ts);
 const formatter = kit.createFormatter([vueLanguagePlugin], vueServicePLugins);
 
 export function defineFormatTest(options: {
@@ -30,7 +31,7 @@ export function defineFormatTest(options: {
 			const formatted = await formatter.format(
 				options.input,
 				options.languageId,
-				{ insertSpaces: false, tabSize: 4 },
+				{ insertSpaces: false, tabSize: 4 }
 			);
 
 			expect(formatted.replace(/\r\n/g, '\n')).toBe((options.output ?? options.input).replace(/\r\n/g, '\n'));

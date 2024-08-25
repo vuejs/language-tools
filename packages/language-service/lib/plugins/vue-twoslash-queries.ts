@@ -1,22 +1,27 @@
-import type { ServiceContext, ServicePlugin, ServicePluginInstance } from '@volar/language-service';
+import type { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
+import { URI } from 'vscode-uri';
 
 const twoslashReg = /<!--\s*\^\?\s*-->/g;
 
 export function create(
-	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: ServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined,
-): ServicePlugin {
+	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+): LanguageServicePlugin {
 	return {
 		name: 'vue-twoslash-queries',
-		create(context): ServicePluginInstance {
+		capabilities: {
+			inlayHintProvider: {},
+		},
+		create(context): LanguageServicePluginInstance {
 			const tsPluginClient = getTsPluginClient?.(context);
 			return {
 				async provideInlayHints(document, range) {
 
-					const [virtualCode, sourceFile] = context.documents.getVirtualCodeByUri(document.uri);
-					if (!(sourceFile?.generated?.code instanceof vue.VueGeneratedCode) || virtualCode?.id !== 'template') {
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+					if (!(sourceScript?.generated?.root instanceof vue.VueVirtualCode) || virtualCode?.id !== 'template') {
 						return;
 					}
 
@@ -24,7 +29,7 @@ export function create(
 					const inlayHints: vscode.InlayHint[] = [];
 
 					for (const pointer of document.getText(range).matchAll(twoslashReg)) {
-						const offset = pointer.index! + pointer[0].indexOf('^?') + document.offsetAt(range.start);
+						const offset = pointer.index + pointer[0].indexOf('^?') + document.offsetAt(range.start);
 						const position = document.positionAt(offset);
 						hoverOffsets.push([position, document.offsetAt({
 							line: position.line - 1,
@@ -33,20 +38,18 @@ export function create(
 					}
 
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
-						for (const [_1, [_2, map]] of context.language.files.getMaps(virtualCode)) {
-							for (const [sourceOffset] of map.getSourceOffsets(hoverOffset)) {
-								const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(sourceFile.generated.code.fileName, sourceOffset);
-								if (quickInfo) {
-									inlayHints.push({
-										position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
-										label: ts.displayPartsToString(quickInfo.displayParts),
-										paddingLeft: true,
-										paddingRight: false,
-									});
-									break;
-								}
+						const map = context.language.maps.get(virtualCode, sourceScript);
+						for (const [sourceOffset] of map.toSourceLocation(hoverOffset)) {
+							const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(sourceScript.generated.root.fileName, sourceOffset);
+							if (quickInfo) {
+								inlayHints.push({
+									position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
+									label: quickInfo,
+									paddingLeft: true,
+									paddingRight: false,
+								});
+								break;
 							}
-							break;
 						}
 					}
 

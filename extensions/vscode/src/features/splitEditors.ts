@@ -1,24 +1,30 @@
-import { ParseSFCRequest } from '@vue/language-server';
+import { ExecuteCommandParams, ExecuteCommandRequest, type BaseLanguageClient } from '@volar/vscode';
+import type { SFCParseResult } from '@vue/language-server';
+import { commands } from '@vue/language-server/lib/types';
 import * as vscode from 'vscode';
-import type { BaseLanguageClient } from 'vscode-languageclient';
 import { config } from '../config';
 
-type SFCBlock = ParseSFCRequest.ResponseType['descriptor']['customBlocks'][number];
+type SFCBlock = SFCParseResult['descriptor']['customBlocks'][number];
 
 export function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
-	const getDocDescriptor = useDocDescriptor();
+	const getDocDescriptor = useDocDescriptor(client);
 
 	context.subscriptions.push(vscode.commands.registerCommand('vue.action.splitEditors', onSplit));
 
 	async function onSplit() {
 
 		const editor = vscode.window.activeTextEditor;
-		if (!editor) return;
+		if (!editor) {
+			return;
+		}
 
 		const layout = config.splitEditors.layout;
 		const doc = editor.document;
-		const { descriptor } = await getDocDescriptor(doc.getText());
+		const descriptor = (await getDocDescriptor(doc.getText()))?.descriptor;
+		if (!descriptor) {
+			return;
+		}
 		let leftBlocks: SFCBlock[] = [];
 		let rightBlocks: SFCBlock[] = [];
 
@@ -73,7 +79,9 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 		async function foldingBlocks(blocks: SFCBlock[]) {
 
 			const editor = vscode.window.activeTextEditor;
-			if (!editor) return;
+			if (!editor) {
+				return;
+			}
 
 			editor.selections = blocks.length
 				? blocks.map(block => new vscode.Selection(doc.positionAt(block.loc.start.offset), doc.positionAt(block.loc.start.offset)))
@@ -88,20 +96,23 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 			}
 		}
 	}
+}
 
-	function useDocDescriptor() {
+export function useDocDescriptor(client: BaseLanguageClient) {
 
-		let splitDocText: string | undefined;
-		let splitDocDescriptor: any;
+	let splitDocText: string | undefined;
+	let splitDocDescriptor: SFCParseResult | undefined;
 
-		return getDescriptor;
+	return getDescriptor;
 
-		async function getDescriptor(text: string) {
-			if (text !== splitDocText) {
-				splitDocText = text;
-				splitDocDescriptor = await client.sendRequest(ParseSFCRequest.type, text);
-			}
-			return splitDocDescriptor;
+	async function getDescriptor(text: string) {
+		if (text !== splitDocText) {
+			splitDocText = text;
+			splitDocDescriptor = await client.sendRequest(ExecuteCommandRequest.type, {
+				command: commands.parseSfc,
+				arguments: [text],
+			} satisfies ExecuteCommandParams);
 		}
+		return splitDocDescriptor;
 	}
 }

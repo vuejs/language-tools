@@ -12,11 +12,11 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
 		compileSFCTemplate(lang, template, options) {
 
-			if (lang === 'html') {
+			if (lang === 'html' || lang === 'md') {
 
 				const compiler = modules['@vue/compiler-dom'];
 

@@ -1,0 +1,1102 @@
+{
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "template",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\nPokud dáváte přednost rozdělení vašich `*.vue` komponent do více souborů, můžete použít atribut `src` pro import externího souboru do příslušného bloku jazyka:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nPozor na to, že pro importy pomocí `src` platí stejná pravidla pro zadávání cest jako pro požadavky na webpack moduly, což znamená:\n\n- Relativní cesty musí začínat s `./`\n- Můžete importovat zdroje z npm závislostí:\n\n```vue\n<!-- import souboru z nainstalovaného npm balíčku \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` importy fungují í s vlastními bloky, např.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\nBloky mohou pomocí atributu `lang` deklarovat programovací jazyk, v němž má proběhnout pre-processing. Nejběžnější případ je použití TypeScriptu pro blok `<script>`:\n\n```html\n<script lang=\"ts\">\n  // použití TypeScriptu\n</script>\n```\n\n`lang` lze použít na jakýkoli blok - například můžeme použít `<style>` se [Sass](https://sass-lang.com/) a&nbsp;`<template>` + [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nDejte pozor, že integrace s různými pre-procesory se může lišit podle zvolené sady softwarových nástrojů. Pro příklady se podívejte do příslušné dokumentace:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+          },
+          "values": [
+            {
+              "name": "html"
+            },
+            {
+              "name": "pug"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- Každý soubor `*.vue` může obsahovat maximálně jeden blok `<template>` nejvyšší úrovně.\n\n- Obsah bude extrahován a předán do `@vue/compiler-dom`, předkompilován do JavaScriptových funkcí pro vykreslování a připojen k exportované komponentě jako její možnost (option) `render`.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#template"
+        }
+      ]
+    },
+    {
+      "name": "script",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\nPokud dáváte přednost rozdělení vašich `*.vue` komponent do více souborů, můžete použít atribut `src` pro import externího souboru do příslušného bloku jazyka:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nPozor na to, že pro importy pomocí `src` platí stejná pravidla pro zadávání cest jako pro požadavky na webpack moduly, což znamená:\n\n- Relativní cesty musí začínat s `./`\n- Můžete importovat zdroje z npm závislostí:\n\n```vue\n<!-- import souboru z nainstalovaného npm balíčku \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` importy fungují í s vlastními bloky, např.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\nBloky mohou pomocí atributu `lang` deklarovat programovací jazyk, v němž má proběhnout pre-processing. Nejběžnější případ je použití TypeScriptu pro blok `<script>`:\n\n```html\n<script lang=\"ts\">\n  // použití TypeScriptu\n</script>\n```\n\n`lang` lze použít na jakýkoli blok - například můžeme použít `<style>` se [Sass](https://sass-lang.com/) a&nbsp;`<template>` + [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nDejte pozor, že integrace s různými pre-procesory se může lišit podle zvolené sady softwarových nástrojů. Pro příklady se podívejte do příslušné dokumentace:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+          },
+          "values": [
+            {
+              "name": "ts"
+            },
+            {
+              "name": "js"
+            },
+            {
+              "name": "tsx"
+            },
+            {
+              "name": "jsx"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        },
+        {
+          "name": "generic"
+        },
+        {
+          "name": "setup",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\n- Každý soubor `*.vue` může obsahovat maximálně jeden blok `<script setup>` (s&nbsp;výjimkou normálního `<script>`).\n\n- Skript je předzpracován a používán jako `setup()` funkce komponenty, což znamená, že bude spuštěn **pro každou instanci komponenty**. Hlavní (top-level) vazby uvnitř `<script setup>` jsou automaticky vystaveny šabloně. Pro více informací se podívejte na [samostatnou dokumentaci pro `<script setup>`](https://cs.vuejs.org/api/sfc-script-setup.html).\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- Každý soubor `*.vue` může obsahovat maximálně jeden blok `<script>` (s výjimkou [`<script setup>`](https://cs.vuejs.org/api/sfc-script-setup.html)).\n\n- Skript je spuštěn jako ES modul.\n\n- **Default export** by měl být objekt s možnostmi Vue komponenty, buď jako prostý objekt nebo jako návratová hodnota funkce [defineComponent](https://cs.vuejs.org/api/general.html#definecomponent).\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script"
+        }
+      ]
+    },
+    {
+      "name": "script setup",
+      "attributes": [],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- Každý soubor `*.vue` může obsahovat maximálně jeden blok `<script setup>` (s&nbsp;výjimkou normálního `<script>`).\n\n- Skript je předzpracován a používán jako `setup()` funkce komponenty, což znamená, že bude spuštěn **pro každou instanci komponenty**. Hlavní (top-level) vazby uvnitř `<script setup>` jsou automaticky vystaveny šabloně. Pro více informací se podívejte na [samostatnou dokumentaci pro `<script setup>`](https://cs.vuejs.org/api/sfc-script-setup.html).\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
+        }
+      ]
+    },
+    {
+      "name": "style",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\nPokud dáváte přednost rozdělení vašich `*.vue` komponent do více souborů, můžete použít atribut `src` pro import externího souboru do příslušného bloku jazyka:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nPozor na to, že pro importy pomocí `src` platí stejná pravidla pro zadávání cest jako pro požadavky na webpack moduly, což znamená:\n\n- Relativní cesty musí začínat s `./`\n- Můžete importovat zdroje z npm závislostí:\n\n```vue\n<!-- import souboru z nainstalovaného npm balíčku \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` importy fungují í s vlastními bloky, např.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\nBloky mohou pomocí atributu `lang` deklarovat programovací jazyk, v němž má proběhnout pre-processing. Nejběžnější případ je použití TypeScriptu pro blok `<script>`:\n\n```html\n<script lang=\"ts\">\n  // použití TypeScriptu\n</script>\n```\n\n`lang` lze použít na jakýkoli blok - například můžeme použít `<style>` se [Sass](https://sass-lang.com/) a&nbsp;`<template>` + [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nDejte pozor, že integrace s různými pre-procesory se může lišit podle zvolené sady softwarových nástrojů. Pro příklady se podívejte do příslušné dokumentace:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+          },
+          "values": [
+            {
+              "name": "css"
+            },
+            {
+              "name": "scss"
+            },
+            {
+              "name": "less"
+            },
+            {
+              "name": "stylus"
+            },
+            {
+              "name": "postcss"
+            },
+            {
+              "name": "sass"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        },
+        {
+          "name": "scoped",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\nKdyž má sekce `<style>` atribut `scoped`, její CSS se aplikuje pouze na prvky aktuální komponenty. To je podobné zapouzdření stylů v Shadow DOM. S tím jsou spojena některá omezení, ale nejsou vyžadovány žádné polyfills. Toho se dosáhne pomocí PostCSS transformace následujícího kódu:\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">ahoj</div>\n</template>\n```\n\nNa toto:\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>ahoj</div>\n</template>\n```\n\n### Root elementy komponent potomka\n\nSe `scoped` atributem nebudou styly komponenty rodiče prosakovat do komponent potomků. Nicméně root element komponenty potomka bude ovlivněn jak rodičovským `scoped` CSS, tak vlastním `scoped` CSS. Toto je záměr, aby rodič mohl stylovat root element svého potomka pro účely rozvržení (layout).\n\n### Deep selektory \n\nPokud chcete, aby selektor ve `scoped` stylech byl „hluboký“ a ovlivňoval i komponenty potomků, můžete použít pseudotřídu `:deep()`:\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\nVýše uvedený kód se zkompiluje na:\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip\nObsah DOM vytvořený pomocí `v-html` není ovlivněn `scoped` styly, ale pomocí deep selektorů jej stále lze stylovat.\n:::\n\n### Selektory pro sloty \n\nVe výchozím nastavení `scoped` styly neovlivňují obsah vykreslený pomocí `<slot/>`, protože ty jsou považovány za vlastnictví komponenty rodiče, která je předává. Pro explicitní cílení na obsah slotu použijte pseudotřídu `:slotted`:\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### Globální selektory \n\nPokud chcete, aby se pravidlo aplikovalo globálně, můžete místo vytváření dalšího `<style>` použít pseudotřídu `:global` (viz níže):\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### Kombinace lokálních a globálních stylů \n\nMůžete také do stejné komponenty zahrnout jak lokální, tak globální styly:\n\n```vue\n<style>\n/* globální styly */\n</style>\n\n<style scoped>\n/* lokální styly */\n</style>\n```\n\n### Tipy pro lokální styly \n\n- **Lokální styly neodstraňují potřebu tříd**. Kvůli způsobu, jakým prohlížeče vyhodnocují různé CSS selektory, bude `p { color: red }` mnohem pomalejší, když je použit s&nbsp;atributovým selektorem. Pokud místo toho použijete třídy nebo id, například `.example { color: red }`, prakticky tím tento problém výkonosti eliminujete.\n\n- **Buďte opatrní s selektory potomků v rekurzivních komponentách!** Pro CSS pravidlo se selektorem `.a .b`, pokud prvek odpovídající `.a` obsahuje rekurzivní komponentu potomka, pak všechny `.b` v této komponentě potomka budou pravidlu odpovídat.\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#scoped-css"
+            }
+          ]
+        },
+        {
+          "name": "module",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\nTag `<style module>` je kompilován jako [CSS moduly](https://github.com/css-modules/css-modules) a vystavuje výsledné CSS třídy komponenty jako objekt pod klíčem `$style`:\n\n```vue\n<template>\n  <p :class=\"$style.red\">Toto by mělo být červené</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\nVýsledné třídy jsou hashovány, aby se předešlo kolizím, čímž se dosáhne stejného efektu omezování platnosti CSS pouze na aktuální komponentu.\n\nPro více podrobností, jako jsou [globální výjimky](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#exceptions) a [kompozice](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#composition), se podívejte na [specifikaci CSS modulů](https://github.com/css-modules/css-modules).\n\n### Vlastní název implementovaných tříd \n\nMůžete přizpůsobit klíč vlastnosti implementovaného objektu tříd tím, že atributu `module` přiřadíte hodnotu:\n\n```vue\n<template>\n  <p :class=\"classes.red\">červená</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Použití s Composition API \n\nNa implementované třídy lze přistupovat v `setup()` a `<script setup>` pomocí API `useCssModule`. Pro bloky `<style module>` s vlastními implementovanými názvy přijímá `useCssModule` odpovídající hodnotu atributu `module` jako první argument:\n\n```js\nimport { useCssModule } from 'vue'\n\n// uvnitř scope setup()...\n// výchozí, vrací třídy pro <style module>\nuseCssModule()\n\n// pojmenovaný, vrací třídy pro <style module=\"classes\">\nuseCssModule('classes')\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#css-modules"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- Každý soubor `*.vue` může obsahovat více bloků `<style>`.\n\n- Element `<style>` může mít atributy `scoped` nebo `module` (podrobnosti naleznete na stránce [CSS funkce pro SFC](https://cs.vuejs.org/api/sfc-css-features.html)), které pomáhají zapouzdřit styly do aktuální komponenty. V jedné komponentě mohou být smíchány různé značky `<style>` s&nbsp;různými režimy zapouzdření.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#style"
+        }
+      ]
+    },
+    {
+      "name": "Vlastní bloky",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\nPokud dáváte přednost rozdělení vašich `*.vue` komponent do více souborů, můžete použít atribut `src` pro import externího souboru do příslušného bloku jazyka:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nPozor na to, že pro importy pomocí `src` platí stejná pravidla pro zadávání cest jako pro požadavky na webpack moduly, což znamená:\n\n- Relativní cesty musí začínat s `./`\n- Můžete importovat zdroje z npm závislostí:\n\n```vue\n<!-- import souboru z nainstalovaného npm balíčku \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` importy fungují í s vlastními bloky, např.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\nDo souboru `*.vue` můžete navíc přidat další vlastní bloky pro potřeby konkrétního projektu, například blok `<docs>`. Některé příklady vlastních bloků z reálného světa zahrnují:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n#i18n-custom-block)\n\nZpracování vlastních bloků závisí na nástrojích - pokud chcete vytvořit vlastní integrace, podívejte se pro další informace na sekci [Nástroje pro integraci vlastních SFC bloků](https://cs.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations).\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#vlastní-bloky"
+        }
+      ]
+    }
+  ],
+  "globalAttributes": [
+    {
+      "name": "lang",
+      "description": {
+        "kind": "markdown",
+        "value": "\nBloky mohou pomocí atributu `lang` deklarovat programovací jazyk, v němž má proběhnout pre-processing. Nejběžnější případ je použití TypeScriptu pro blok `<script>`:\n\n```html\n<script lang=\"ts\">\n  // použití TypeScriptu\n</script>\n```\n\n`lang` lze použít na jakýkoli blok - například můžeme použít `<style>` se [Sass](https://sass-lang.com/) a&nbsp;`<template>` + [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nDejte pozor, že integrace s různými pre-procesory se může lišit podle zvolené sady softwarových nástrojů. Pro příklady se podívejte do příslušné dokumentace:\n\n- [Vite](https://vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+      },
+      "values": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+        }
+      ]
+    },
+    {
+      "name": "src",
+      "description": {
+        "kind": "markdown",
+        "value": "\nPokud dáváte přednost rozdělení vašich `*.vue` komponent do více souborů, můžete použít atribut `src` pro import externího souboru do příslušného bloku jazyka:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nPozor na to, že pro importy pomocí `src` platí stejná pravidla pro zadávání cest jako pro požadavky na webpack moduly, což znamená:\n\n- Relativní cesty musí začínat s `./`\n- Můžete importovat zdroje z npm závislostí:\n\n```vue\n<!-- import souboru z nainstalovaného npm balíčku \"todomvc-app-css\" -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` importy fungují í s vlastními bloky, např.:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+        }
+      ]
+    }
+  ]
+}

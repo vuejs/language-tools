@@ -15,6 +15,12 @@ const langs = [
 		supported: true,
 	},
 	{
+		name: 'zh-hk',
+		url: 'https://zh-hk.vuejs.org/',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-zh-hk/',
+		supported: true,
+	},
+	{
 		name: 'ja',
 		url: 'https://ja.vuejs.org/',
 		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ja/',
@@ -55,6 +61,24 @@ const langs = [
 		url: 'https://it.vuejs.org/',
 		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-it/',
 		supported: true,
+	},
+	{
+		name: 'cs',
+		url: 'https://cs.vuejs.org/',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-cs/',
+		supported: true,
+	},
+	{
+		name: 'ru',
+		url: 'https://ru.vuejs.org/',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-ru/',
+		supported: true,
+	},
+	{
+		name: 'fa',
+		url: 'https://fa.vuejs.org/',
+		repoUrl: 'https://raw.githubusercontent.com/vuejs-translations/docs-fa/',
+		supported: false,
 	},
 ];
 
@@ -280,7 +304,12 @@ async function templateWorker(lang) {
 			 */
 			const data = {
 				name,
-				valueSet: name === 'v-else' ? 'v' : undefined,
+				valueSet:
+					name === 'v-cloak' ||
+					name === 'v-else' ||
+					name === 'v-once' ||
+					name === 'v-pre'
+					? 'v' : undefined,
 				description: {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n'),

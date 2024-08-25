@@ -1,29 +1,24 @@
-import { FileRegistry, isCompletionEnabled } from '@vue/language-core';
+import { isCompletionEnabled } from '@vue/language-core';
 import type * as ts from 'typescript';
+import type { RequestContext } from './types';
 
 export function getPropertiesAtLocation(
-	this: {
-		typescript: typeof import('typescript');
-		languageService: ts.LanguageService;
-		files: FileRegistry;
-		isTsPlugin: boolean,
-		getFileId: (fileName: string) => string,
-	},
+	this: RequestContext,
 	fileName: string,
-	position: number,
+	position: number
 ) {
-	const { languageService, files, typescript: ts, isTsPlugin, getFileId } = this;
+	const { languageService, language, typescript: ts, isTsPlugin, getFileId } = this;
 
 	// mapping
-	const file = files.get(getFileId(fileName));
+	const file = language.scripts.get(getFileId(fileName));
 	if (file?.generated) {
-		const virtualScript = file.generated.languagePlugin.typescript?.getScript(file.generated.code);
+		const virtualScript = file.generated.languagePlugin.typescript?.getServiceScript(file.generated.root);
 		if (!virtualScript) {
 			return;
 		}
 		let mapped = false;
-		for (const [_1, [_2, map]] of files.getMaps(virtualScript.code)) {
-			for (const [position2, mapping] of map.getGeneratedOffsets(position)) {
+		for (const [_sourceScript, map] of language.maps.forEach(virtualScript.code)) {
+			for (const [position2, mapping] of map.toGeneratedLocation(position)) {
 				if (isCompletionEnabled(mapping.data)) {
 					position = position2;
 					mapped = true;
@@ -42,12 +37,7 @@ export function getPropertiesAtLocation(
 		}
 	}
 
-
-	const program: ts.Program = (languageService as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
-
+	const program = languageService.getProgram()!;
 	const sourceFile = program.getSourceFile(fileName);
 	if (!sourceFile) {
 		return;

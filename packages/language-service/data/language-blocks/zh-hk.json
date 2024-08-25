@@ -1,0 +1,1102 @@
+{
+  "version": 1.1,
+  "tags": [
+    {
+      "name": "template",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\n如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\n代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n"
+          },
+          "values": [
+            {
+              "name": "html"
+            },
+            {
+              "name": "pug"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- 每个 `*.vue` 文件最多可以包含一个顶层 `<template>` 块。\n\n- 语块包裹的内容将会被提取、传递给 `@vue/compiler-dom`，预编译为 JavaScript 渲染函数，并附在导出的组件上作为其 `render` 选项。\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#template"
+        }
+      ]
+    },
+    {
+      "name": "script",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\n如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\n代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n"
+          },
+          "values": [
+            {
+              "name": "ts"
+            },
+            {
+              "name": "js"
+            },
+            {
+              "name": "tsx"
+            },
+            {
+              "name": "jsx"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        },
+        {
+          "name": "generic"
+        },
+        {
+          "name": "setup",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\n- 每个 `*.vue` 文件最多可以包含一个 `<script setup>`。(不包括一般的 `<script>`)\n\n- 这个脚本块将被预处理为组件的 `setup()` 函数，这意味着它将**为每一个组件实例**都执行。`<script setup>` 中的顶层绑定都将自动暴露给模板。要了解更多细节，请看 [`<script setup>` 的专门文档](https://zh-hk.vuejs.org/api/sfc-script-setup.html)。\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- 每个 `*.vue` 文件最多可以包含一个 `<script>` 块。(使用 [`<script setup>`](https://zh-hk.vuejs.org/api/sfc-script-setup.html) 的情况除外)\n\n- 这个脚本代码块将作为 ES 模块执行。\n\n- **默认导出**应该是 Vue 的组件选项对象，可以是一个对象字面量或是 [defineComponent](https://zh-hk.vuejs.org/api/general.html#definecomponent) 函数的返回值。\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script"
+        }
+      ]
+    },
+    {
+      "name": "script setup",
+      "attributes": [],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- 每个 `*.vue` 文件最多可以包含一个 `<script setup>`。(不包括一般的 `<script>`)\n\n- 这个脚本块将被预处理为组件的 `setup()` 函数，这意味着它将**为每一个组件实例**都执行。`<script setup>` 中的顶层绑定都将自动暴露给模板。要了解更多细节，请看 [`<script setup>` 的专门文档](https://zh-hk.vuejs.org/api/sfc-script-setup.html)。\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
+        }
+      ]
+    },
+    {
+      "name": "style",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\n如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        },
+        {
+          "name": "lang",
+          "description": {
+            "kind": "markdown",
+            "value": "\n代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n"
+          },
+          "values": [
+            {
+              "name": "css"
+            },
+            {
+              "name": "scss"
+            },
+            {
+              "name": "less"
+            },
+            {
+              "name": "stylus"
+            },
+            {
+              "name": "postcss"
+            },
+            {
+              "name": "sass"
+            }
+          ],
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+            }
+          ]
+        },
+        {
+          "name": "scoped",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\n当 `<style>` 标签带有 `scoped` attribute 的时候，它的 CSS 只会影响当前组件的元素，和 Shadow DOM 中的样式封装类似。使用时有一些注意事项，不过好处是不需要任何的 polyfill。它的实现方式是通过 PostCSS 将以下内容：\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">hi</div>\n</template>\n```\n\n转换为：\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>hi</div>\n</template>\n```\n\n### 子组件的根元素 \n\n使用 `scoped` 后，父组件的样式将不会渗透到子组件中。不过，子组件的根节点会同时被父组件的作用域样式和子组件的作用域样式影响。这样设计是为了让父组件可以从布局的角度出发，调整其子组件根元素的样式。\n\n### 深度选择器 \n\n处于 `scoped` 样式中的选择器如果想要做更“深度”的选择，也即：影响到子组件，可以使用 `:deep()` 这个伪类：\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\n上面的代码会被编译成：\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip\n通过 `v-html` 创建的 DOM 内容不会被作用域样式影响，但你仍然可以使用深度选择器来设置其样式。\n:::\n\n### 插槽选择器 \n\n默认情况下，作用域样式不会影响到 `<slot/>` 渲染出来的内容，因为它们被认为是父组件所持有并传递进来的。使用 `:slotted` 伪类以明确地将插槽内容作为选择器的目标：\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### 全局选择器 \n\n如果想让其中一个样式规则应用到全局，比起另外创建一个 `<style>`，可以使用 `:global` 伪类来实现 (看下面的代码)：\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### 混合使用局部与全局样式 \n\n你也可以在同一个组件中同时包含作用域样式和非作用域样式：\n\n```vue\n<style>\n/* 全局样式 */\n</style>\n\n<style scoped>\n/* 局部样式 */\n</style>\n```\n\n### 作用域样式须知 \n\n- **作用域样式并没有消除对 class 的需求**。由于浏览器渲染各种各样 CSS 选择器的方式，`p { color: red }` 结合作用域样式使用时 (即当与 attribute 选择器组合的时候) 会慢很多倍。如果你使用 class 或者 id 来替代，例如 `.example { color: red }`，那你几乎就可以避免性能的损失。\n\n- **小心递归组件中的后代选择器**！对于一个使用了 `.a .b` 选择器的样式规则来说，如果匹配到 `.a` 的元素包含了一个递归的子组件，那么所有的在那个子组件中的 `.b` 都会匹配到这条样式规则。\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#scoped-css"
+            }
+          ]
+        },
+        {
+          "name": "module",
+          "valueSet": "v",
+          "description": {
+            "kind": "markdown",
+            "value": "\n一个 `<style module>` 标签会被编译为 [CSS Modules](https://github.com/css-modules/css-modules) 并且将生成的 CSS class 作为 `$style` 对象暴露给组件：\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\n得出的 class 将被哈希化以避免冲突，实现了同样的将 CSS 仅作用于当前组件的效果。\n\n参考 [CSS Modules spec](https://github.com/css-modules/css-modules) 以查看更多详情，例如 [global exceptions](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#exceptions) 和 [composition](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#composition)。\n\n### 自定义注入名称 \n\n你可以通过给 `module` attribute 一个值来自定义注入 class 对象的属性名：\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### 与组合式 API 一同使用 \n\n可以通过 `useCssModule` API 在 `setup()` 和 `<script setup>` 中访问注入的 class。对于使用了自定义注入名称的 `<style module>` 块，`useCssModule` 接收一个匹配的 `module` attribute 值作为第一个参数：\n\n```js\nimport { useCssModule } from 'vue'\n\n// 在 setup() 作用域中...\n// 默认情况下, 返回 <style module> 的 class\nuseCssModule()\n\n// 具名情况下, 返回 <style module=\"classes\"> 的 class\nuseCssModule('classes')\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#css-modules"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n- 每个 `*.vue` 文件可以包含多个 `<style>` 标签。\n\n- 一个 `<style>` 标签可以使用 `scoped` 或 `module` attribute (查看 [SFC 样式功能](https://zh-hk.vuejs.org/api/sfc-css-features.html)了解更多细节) 来帮助封装当前组件的样式。使用了不同封装模式的多个 `<style>` 标签可以被混合入同一个组件。\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#style"
+        }
+      ]
+    },
+    {
+      "name": "自定义块",
+      "attributes": [
+        {
+          "name": "src",
+          "description": {
+            "kind": "markdown",
+            "value": "\n如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+          },
+          "references": [
+            {
+              "name": "en",
+              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-cn",
+              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ja",
+              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ua",
+              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fr",
+              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ko",
+              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "pt",
+              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "bn",
+              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "it",
+              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+            }
+          ]
+        }
+      ],
+      "description": {
+        "kind": "markdown",
+        "value": "\n在一个 `*.vue` 文件中可以为任何项目特定需求使用额外的自定义块。举例来说，一个用作写文档的 `<docs>` 块。这里是一些自定义块的真实用例：\n\n- [Gridsome：`<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql：`<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n：`<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\n自定义块的处理需要依赖工具链。如果你想要在构建中集成你的自定义语块，请参见 [SFC 自定义块集成工具链指南](https://zh-hk.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)获取更多细节。\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#自定义块"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#自定义块"
+        }
+      ]
+    }
+  ],
+  "globalAttributes": [
+    {
+      "name": "lang",
+      "description": {
+        "kind": "markdown",
+        "value": "\n代码块可以使用 `lang` 这个 attribute 来声明预处理器语言，最常见的用例就是在 `<script>` 中使用 TypeScript：\n\n```html\n<script lang=\"ts\">\n  // use TypeScript\n</script>\n```\n\n`lang` 在任意块上都能使用，比如我们可以在 `<style>` 标签中使用 [Sass](https://sass-lang.com/) 或是 `<template>` 中使用 [Pug](https://pugjs.org/api/getting-started.html)：\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\n注意对不同预处理器的集成会根据你所使用的工具链而有所不同，具体细节请查看相应的工具链文档来确认：\n\n- [Vite](https://cn.vitejs.dev/guide/features.html#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/zh/guide/css.html#%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/zh/guide/pre-processors.html#%E4%BD%BF%E7%94%A8%E9%A2%84%E5%A4%84%E7%90%86%E5%99%A8)\n"
+      },
+      "values": [],
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
+        }
+      ]
+    },
+    {
+      "name": "src",
+      "description": {
+        "kind": "markdown",
+        "value": "\n如果你更喜欢将 `*.vue` 组件分散到多个文件中，可以为一个语块使用 `src` 这个 attribute 来导入一个外部文件：\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n请注意 `src` 导入和 JS 模块导入遵循相同的路径解析规则，这意味着：\n\n- 相对路径需要以 `./` 开头\n- 你也可以从 npm 依赖中导入资源\n\n```vue\n<!-- 从所安装的 \"todomvc-app-css\" npm 包中导入一个文件 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 导入对自定义语块也同样适用：\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
+        }
+      ]
+    }
+  ]
+}

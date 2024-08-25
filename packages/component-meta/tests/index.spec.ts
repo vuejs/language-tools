@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { describe, expect, test } from 'vitest';
-import { createComponentMetaChecker, createComponentMetaCheckerByJsonConfig, MetaCheckerOptions, ComponentMetaChecker, TypeMeta } from '..';
+import { createChecker, createCheckerByJson, MetaCheckerOptions, ComponentMetaChecker, TypeMeta } from '..';
 
 const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
@@ -26,16 +26,23 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		// expect(meta.type).toEqual(TypeMeta.Class);
 
 		const foo = meta.props.find(prop => prop.name === 'foo');
-		const onUpdateFoo = meta.events.find(event => event.name === 'update:foo')
+		const onUpdateFoo = meta.events.find(event => event.name === 'update:foo');
 
 		const bar = meta.props.find(prop => prop.name === 'bar');
-		const onUpdateBar = meta.events.find(event => event.name === 'update:bar')
+		const onUpdateBar = meta.events.find(event => event.name === 'update:bar');
+
+		const qux = meta.props.find(prop => prop.name === 'qux');
+		const quxModifiers = meta.props.find(prop => prop.name === 'quxModifiers');
+		const onUpdateQux = meta.events.find(event => event.name === 'update:qux');
 
 		expect(foo).toBeDefined();
 		expect(bar).toBeDefined();
+		expect(qux).toBeDefined();
+		expect(quxModifiers).toBeDefined();
 		expect(onUpdateFoo).toBeDefined();
 		expect(onUpdateBar).toBeDefined();
-	})
+		expect(onUpdateQux).toBeDefined();
+	});
 
 	test('reference-type-props', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-props/component.vue');
@@ -717,6 +724,23 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(b).toBeDefined();
 	});
 
+	test('emits-generic', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/events/component-generic.vue');
+		const meta = checker.getComponentMeta(componentPath);
+		const foo = meta.events.find(event => event.name === 'foo');
+
+		expect(foo?.description).toBe('Emitted when foo...');
+	});
+
+	// Wait for https://github.com/vuejs/core/pull/10801
+	test.skip('emits-class', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/events/component-class.vue');
+		const meta = checker.getComponentMeta(componentPath);
+		const foo = meta.events.find(event => event.name === 'foo');
+
+		expect(foo?.description).toBe('Emitted when foo...');
+	});
+
 	test('ts-named-exports', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/ts-named-export/component.ts');
 		const exportNames = checker.getExportNames(componentPath);
@@ -832,19 +856,19 @@ const checkerOptions: MetaCheckerOptions = {
 	schema: { ignore: ['MyIgnoredNestedProps'] },
 	printer: { newLine: 1 },
 };
-const tsconfigChecker = createComponentMetaChecker(
+const tsconfigChecker = createChecker(
 	path.resolve(__dirname, '../../../test-workspace/component-meta/tsconfig.json'),
-	checkerOptions,
+	checkerOptions
 );
-const noTsConfigChecker = createComponentMetaCheckerByJsonConfig(
+const noTsConfigChecker = createCheckerByJson(
 	path.resolve(__dirname, '../../../test-workspace/component-meta'),
 	{
-		"extends": "../tsconfig.json",
+		"extends": "../tsconfig.base.json",
 		"include": [
 			"**/*",
 		],
 	},
-	checkerOptions,
+	checkerOptions
 );
 
 worker(tsconfigChecker, true);

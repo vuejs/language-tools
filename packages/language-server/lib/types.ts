@@ -1,14 +1,11 @@
-import type { InitializationOptions } from "@volar/language-server";
-
-export type VueInitializationOptions = InitializationOptions & {
+export type VueInitializationOptions = {
 	typescript: {
 		tsdk: string;
 	};
 	vue?: {
 		hybridMode?: boolean;
-		/**
-		 * @example ['vue1', 'vue2']
-		 */
-		additionalExtensions?: string[];
 	};
 };
+
+export * from '@volar/language-server/lib/types';
+export * from '@vue/language-service/lib/types';

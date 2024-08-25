@@ -20,6 +20,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
             },
@@ -46,6 +50,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -71,6 +87,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
             },
             {
               "name": "ja",
@@ -99,6 +119,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         }
@@ -115,6 +147,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#template"
         },
         {
           "name": "ja",
@@ -143,6 +179,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#template"
         }
       ]
     },
@@ -163,6 +211,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
               "name": "ja",
@@ -191,6 +243,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -224,6 +288,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
             },
@@ -250,6 +318,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -271,6 +351,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
             },
             {
               "name": "ja",
@@ -299,6 +383,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
             }
           ]
         }
@@ -315,6 +411,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script"
         },
         {
           "name": "ja",
@@ -343,6 +443,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script"
         }
       ]
     },
@@ -361,6 +473,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
         },
         {
           "name": "ja",
@@ -389,6 +505,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
         }
       ]
     },
@@ -409,6 +537,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
               "name": "ja",
@@ -437,6 +569,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         },
@@ -476,6 +620,10 @@
               "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
             },
             {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
               "name": "ja",
               "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
             },
@@ -502,6 +650,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
             }
           ]
         },
@@ -520,6 +680,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#scoped-css"
             },
             {
               "name": "ja",
@@ -548,6 +712,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#scoped-css"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#scoped-css"
             }
           ]
         },
@@ -556,7 +732,7 @@
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\n`<style module>` タグは [CSS モジュール](https://github.com/css-modules/css-modules)としてコンパイルされ、結果として得られる CSS クラスを `$style` というキーの下にオブジェクトとしてコンポーネントに公開します:\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\n生成されたクラスは衝突を避けるためにハッシュ化され、CSS を現在のコンポーネントのみにスコープするのと同じ効果を得ることができます。\n\n[グローバルの例外](https://github.com/css-modules/css-modules#exceptions)や[コンポジション](https://github.com/css-modules/css-modules#composition)などの詳細は、[CSS モジュールの仕様](https://github.com/css-modules/css-modules)を参照してください。\n\n### カスタム注入名 \n\n`module` 属性に値を与えることで、注入されるクラスオブジェクトのプロパティキーをカスタマイズできます:\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Composition API での使用 \n\n注入されたクラスは、`useCssModule` API を介して `setup()` や `<script setup>` の中でアクセスできます。カスタム注入名を持つ `<style module>` ブロックの場合、`useCssModule` は最初の引数としてマッチする `module` 属性の値を受け取ります:\n\n```js\nimport { useCssModule } from 'vue'\n\n// setup() スコープの内側...\n// デフォルトでは <style module> のクラスを返します\nuseCssModule()\n\n// 名前付きの例、<style module=\"classes\"> のクラスを返します\nuseCssModule('classes')\n```\n"
+            "value": "\n`<style module>` タグは [CSS モジュール](https://github.com/css-modules/css-modules)としてコンパイルされ、結果として得られる CSS クラスを `$style` というキーの下にオブジェクトとしてコンポーネントに公開します:\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\n生成されたクラスは衝突を避けるためにハッシュ化され、CSS を現在のコンポーネントのみにスコープするのと同じ効果を得ることができます。\n\n[グローバルの例外](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#exceptions)や[コンポジション](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#composition)などの詳細は、[CSS モジュールの仕様](https://github.com/css-modules/css-modules)を参照してください。\n\n### カスタム注入名 \n\n`module` 属性に値を与えることで、注入されるクラスオブジェクトのプロパティキーをカスタマイズできます:\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Composition API での使用 \n\n注入されたクラスは、`useCssModule` API を介して `setup()` や `<script setup>` の中でアクセスできます。カスタム注入名を持つ `<style module>` ブロックの場合、`useCssModule` は最初の引数としてマッチする `module` 属性の値を受け取ります:\n\n```js\nimport { useCssModule } from 'vue'\n\n// setup() スコープの内側...\n// デフォルトでは <style module> のクラスを返します\nuseCssModule()\n\n// 名前付きの例、<style module=\"classes\"> のクラスを返します\nuseCssModule('classes')\n```\n"
           },
           "references": [
             {
@@ -566,6 +742,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#css-modules"
             },
             {
               "name": "ja",
@@ -594,6 +774,18 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-css-features.html#css-modules"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-css-features.html#css-modules"
             }
           ]
         }
@@ -610,6 +802,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#style"
         },
         {
           "name": "ja",
@@ -638,6 +834,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#style"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#style"
         }
       ]
     },
@@ -658,6 +866,10 @@
             {
               "name": "zh-cn",
               "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "zh-hk",
+              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
             },
             {
               "name": "ja",
@@ -686,13 +898,25 @@
             {
               "name": "it",
               "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "cs",
+              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "ru",
+              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+            },
+            {
+              "name": "fa",
+              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
             }
           ]
         }
       ],
       "description": {
         "kind": "markdown",
-        "value": "\nプロジェクト固有のニーズに応じて、`*.vue` ファイルに `<docs>` ブロックのような追加のカスタムブロックを含めることができます。カスタムブロックの実際の例としては、以下のようなものがあります:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nカスタムブロックの扱いはツールに依存します - 独自のカスタムブロック統合を構築したい場合は、[SFC カスタムブロック統合ツールのセクション](https://ja.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)で詳細を確認してください。\n"
+        "value": "\nプロジェクト固有のニーズに応じて、`*.vue` ファイルに `<docs>` ブロックのような追加のカスタムブロックを含めることができます。カスタムブロックの実際の例としては、以下のようなものがあります:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/unplugin-vue-i18n#i18n-custom-block)\n\nカスタムブロックの扱いはツールに依存します - 独自のカスタムブロック統合を構築したい場合は、[SFC カスタムブロック統合ツールのセクション](https://ja.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations)で詳細を確認してください。\n"
       },
       "references": [
         {
@@ -702,6 +926,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#カスタムブロック"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#カスタムブロック"
         },
         {
           "name": "ja",
@@ -730,6 +958,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#カスタムブロック"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#カスタムブロック"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#カスタムブロック"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#カスタムブロック"
         }
       ]
     }
@@ -750,6 +990,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
         },
         {
           "name": "ja",
@@ -778,6 +1022,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
         }
       ]
     },
@@ -795,6 +1051,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
         },
         {
           "name": "ja",
@@ -823,6 +1083,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
         }
       ]
     }

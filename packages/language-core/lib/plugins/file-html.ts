@@ -4,89 +4,99 @@ import type { VueLanguagePlugin } from '../types';
 const sfcBlockReg = /\<(script|style)\b([\s\S]*?)\>([\s\S]*?)\<\/\1\>/g;
 const langReg = /\blang\s*=\s*(['\"]?)(\S*)\b\1/;
 
-const plugin: VueLanguagePlugin = () => {
+const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 	return {
 
-		version: 2,
+		version: 2.1,
 
-		parseSFC(fileName, content) {
+		getLanguageId(fileName) {
+			if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
+				return 'html';
+			}
+		},
 
-			if (fileName.endsWith('.html')) {
+		isValidFile(_fileName, languageId) {
+			return languageId === 'html';
+		},
 
-				let sfc: SFCParseResult = {
-					descriptor: {
-						filename: fileName,
-						source: content,
-						template: null,
-						script: null,
-						scriptSetup: null,
-						styles: [],
-						customBlocks: [],
-						cssVars: [],
-						shouldForceReload: () => false,
-						slotted: false,
-					},
-					errors: [],
-				};
+		parseSFC2(fileName, languageId, content) {
+			if (languageId !== 'html') {
+				return;
+			}
 
-				let templateContent = content;
+			let sfc: SFCParseResult = {
+				descriptor: {
+					filename: fileName,
+					source: content,
+					template: null,
+					script: null,
+					scriptSetup: null,
+					styles: [],
+					customBlocks: [],
+					cssVars: [],
+					shouldForceReload: () => false,
+					slotted: false,
+				},
+				errors: [],
+			};
 
-				for (const match of content.matchAll(sfcBlockReg)) {
+			let templateContent = content;
 
-					const matchText = match[0];
-					const tag = match[1];
-					const attrs = match[2];
-					const lang = attrs.match(langReg)?.[2];
-					const content = match[3];
-					const contentStart = match.index! + matchText.indexOf(content);
+			for (const match of content.matchAll(sfcBlockReg)) {
 
-					if (tag === 'style') {
-						sfc.descriptor.styles.push({
-							attrs: {},
-							content,
-							loc: {
-								start: { column: -1, line: -1, offset: contentStart },
-								end: { column: -1, line: -1, offset: contentStart + content.length },
-								source: content,
-							},
-							type: 'style',
-							lang,
-						});
-					}
-					// ignore `<script src="...">`
-					else if (tag === 'script' && attrs.indexOf('src=') === -1) {
-						let type: 'script' | 'scriptSetup' = attrs.indexOf('type=') >= 0 ? 'scriptSetup' : 'script';
-						sfc.descriptor[type] = {
-							attrs: {},
-							content,
-							loc: {
-								start: { column: -1, line: -1, offset: contentStart },
-								end: { column: -1, line: -1, offset: contentStart + content.length },
-								source: content,
-							},
-							type: 'script',
-							lang,
-						};
-					}
+				const matchText = match[0];
+				const tag = match[1];
+				const attrs = match[2];
+				const lang = attrs.match(langReg)?.[2];
+				const content = match[3];
+				const contentStart = match.index + matchText.indexOf(content);
 
-					templateContent = templateContent.substring(0, match.index) + ' '.repeat(matchText.length) + templateContent.substring(match.index! + matchText.length);
+				if (tag === 'style') {
+					sfc.descriptor.styles.push({
+						attrs: {},
+						content,
+						loc: {
+							start: { column: -1, line: -1, offset: contentStart },
+							end: { column: -1, line: -1, offset: contentStart + content.length },
+							source: content,
+						},
+						type: 'style',
+						lang,
+					});
+				}
+				// ignore `<script src="...">`
+				else if (tag === 'script' && attrs.indexOf('src=') === -1) {
+					let type: 'script' | 'scriptSetup' = attrs.indexOf('type=') >= 0 ? 'scriptSetup' : 'script';
+					sfc.descriptor[type] = {
+						attrs: {},
+						content,
+						loc: {
+							start: { column: -1, line: -1, offset: contentStart },
+							end: { column: -1, line: -1, offset: contentStart + content.length },
+							source: content,
+						},
+						type: 'script',
+						lang,
+					};
 				}
 
-				sfc.descriptor.template = {
-					attrs: {},
-					content: templateContent,
-					loc: {
-						start: { column: -1, line: -1, offset: 0 },
-						end: { column: -1, line: -1, offset: templateContent.length },
-						source: templateContent,
-					},
-					type: 'template',
-					ast: {} as any,
-				};
+				templateContent = templateContent.substring(0, match.index) + ' '.repeat(matchText.length) + templateContent.substring(match.index + matchText.length);
+			}
 
-				return sfc;
+			sfc.descriptor.template = {
+				attrs: {},
+				content: templateContent,
+				loc: {
+					start: { column: -1, line: -1, offset: 0 },
+					end: { column: -1, line: -1, offset: templateContent.length },
+					source: templateContent,
+				},
+				type: 'template',
+				ast: {} as any,
 			};
+
+			return sfc;
 		}
 	};
 };

@@ -18,6 +18,10 @@
           "url": "https://cn.vuejs.org/api/built-in-components.html#transition"
         },
         {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
           "name": "ja",
           "url": "https://ja.vuejs.org/api/built-in-components.html#transition"
         },
@@ -44,6 +48,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#transition"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#transition"
         }
       ]
     },
@@ -62,6 +78,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#transitiongroup"
         },
         {
           "name": "ja",
@@ -90,6 +110,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#transitiongroup"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#transitiongroup"
         }
       ]
     },
@@ -108,6 +140,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#keepalive"
         },
         {
           "name": "ja",
@@ -136,6 +172,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#keepalive"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#keepalive"
         }
       ]
     },
@@ -154,6 +202,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#teleport"
         },
         {
           "name": "ja",
@@ -182,6 +234,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#teleport"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#teleport"
         }
       ]
     },
@@ -189,7 +253,7 @@
       "name": "Suspense",
       "description": {
         "kind": "markdown",
-        "value": "\nコンポーネントツリー内のネストした非同期な依存関係を管理するために使用します。\n\n- **props**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n  }\n  ```\n\n- **イベント**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **詳細**\n\n  `<Suspense>` は `#default` スロットと `#fallback` スロットの 2 つのスロットを受け付けます。default スロットをメモリー内にレンダリングする間、fallback スロットの内容を表示します。\n\n  デフォルトスロットのレンダリング中に非同期な依存関係（[非同期コンポーネント](https://ja.vuejs.org/guide/components/async.html)や [`async setup()`](https://ja.vuejs.org/guide/built-ins/suspense.html#async-setup) のコンポーネント）が発生すると、それらが全て解決するまで待ってからデフォルトスロットを表示します。\n\n- **参照** [ガイド - Suspense](https://ja.vuejs.org/guide/built-ins/suspense.html)\n"
+        "value": "\nコンポーネントツリー内のネストした非同期な依存関係を管理するために使用します。\n\n- **props**\n\n  ```ts\n  interface SuspenseProps {\n    timeout?: string | number\n    suspensible?: boolean\n  }\n  ```\n\n- **イベント**\n\n  - `@resolve`\n  - `@pending`\n  - `@fallback`\n\n- **詳細**\n\n  `<Suspense>` は `#default` スロットと `#fallback` スロットの 2 つのスロットを受け付けます。default スロットをメモリー内にレンダリングする間、fallback スロットの内容を表示します。\n\n  デフォルトスロットのレンダリング中に非同期な依存関係（[非同期コンポーネント](https://ja.vuejs.org/guide/components/async.html)や [`async setup()`](https://ja.vuejs.org/guide/built-ins/suspense.html#async-setup) のコンポーネント）が発生すると、それらが全て解決するまで待ってからデフォルトスロットを表示します。\n\n  Suspense を `suspensible` に設定することで、すべての非同期依存処理は親の Suspense によって処理されます。[実装の詳細](https://github.com/vuejs/core/pull/6736) を参照してください。\n\n- **参照** [ガイド - Suspense](https://ja.vuejs.org/guide/built-ins/suspense.html)\n"
       },
       "attributes": [],
       "references": [
@@ -200,6 +264,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-components.html#suspense"
         },
         {
           "name": "ja",
@@ -228,6 +296,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-components.html#suspense"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-components.html#suspense"
         }
       ]
     },
@@ -246,6 +326,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#component"
         },
         {
           "name": "ja",
@@ -274,6 +358,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#component"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#component"
         }
       ]
     },
@@ -292,6 +388,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#slot"
         },
         {
           "name": "ja",
@@ -320,6 +420,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#slot"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#slot"
         }
       ]
     },
@@ -338,6 +450,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-elements.html#template"
         },
         {
           "name": "ja",
@@ -366,6 +482,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-elements.html#template"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-elements.html#template"
         }
       ]
     }
@@ -385,6 +513,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-text"
         },
         {
           "name": "ja",
@@ -413,6 +545,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-text"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-text"
         }
       ]
     },
@@ -430,6 +574,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-html"
         },
         {
           "name": "ja",
@@ -458,6 +606,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-html"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-html"
         }
       ]
     },
@@ -475,6 +635,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-show"
         },
         {
           "name": "ja",
@@ -503,6 +667,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-show"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-show"
         }
       ]
     },
@@ -520,6 +696,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-if"
         },
         {
           "name": "ja",
@@ -548,6 +728,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-if"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-if"
         }
       ]
     },
@@ -566,6 +758,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-else"
         },
         {
           "name": "ja",
@@ -594,6 +790,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-else"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-else"
         }
       ]
     },
@@ -611,6 +819,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-else-if"
         },
         {
           "name": "ja",
@@ -639,6 +851,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-else-if"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-else-if"
         }
       ]
     },
@@ -656,6 +880,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-for"
         },
         {
           "name": "ja",
@@ -684,6 +912,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-for"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-for"
         }
       ]
     },
@@ -701,6 +941,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-on"
         },
         {
           "name": "ja",
@@ -729,6 +973,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-on"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-on"
         }
       ]
     },
@@ -736,7 +992,7 @@
       "name": "v-bind",
       "description": {
         "kind": "markdown",
-        "value": "\n1 つ以上の属性やコンポーネントの props を式に動的にバインドします。\n\n- **省略記法:**\n  - `:` or `.`（`.prop` 修飾子使用時）\n  - 値の省略（属性とバインドされた値が同じ名前の場合）<sup class=\"vt-badge\">3.4+</sup>\n\n- **期待する値:** `any（引数ありの場合） | Object（引数なしの場合）`\n\n- **引数:** `attrOrProp（省略可能）`\n\n- **修飾子**\n\n  - `.camel` - kebab-case の属性名を camelCase に変換します。\n  - `.prop` - バインディングを DOM プロパティとして設定するよう強制します。<sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - バインディングを DOM 属性として設定するよう強制します。<sup class=\"vt-badge\">3.2+</sup>\n\n- **使用法**\n\n  `class` や `style` 属性をバインドする際に使用する `v-bind` は、Array や Object などの追加の値の型をサポートします。詳しくは、以下のリンク先のガイドを参照してください。\n\n  要素にバインディングを設定するとき、Vue はデフォルトで、`in` 演算子チェックを使用して、プロパティとして定義されたキーが要素にあるかどうかを確認します。プロパティが定義されている場合、Vue はその値を属性ではなく DOM プロパティとして設定します。これはほとんどの場合において有効ですが、`.prop` や `.attr` という修飾子を明示的に使用することでこの動作をオーバーライドできます。これは、特に[カスタム要素を扱う](https://ja.vuejs.org/guide/extras/web-components.html#passing-dom-properties)ときに必要になることがあります。\n\n  コンポーネントの props をバインドするために使用する場合、その props は子コンポーネントで適切に宣言されている必要があります。\n\n  引数なしで使用する場合、属性の名前と値のペアを含むオブジェクトをバインドするために使用できます。\n\n- **例**\n\n  ```html\n  <!-- 属性をバインドする -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- 動的な属性名 -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- 省略記法 -->\n  <img :src=\"imageSrc\" />\n\n  <!-- 同名省略記法 (3.4+), :src=\"src\" のように展開する -->\n  <img :src />\n\n  <!-- 動的な属性名の省略記法 -->\n  <button :[key]=\"value\"></button>\n\n  <!-- インラインの文字列連結 -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- クラスのバインド -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- スタイルのバインド -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- 属性のオブジェクトをバインド -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- props のバインド。\"prop\" は子コンポーネントで宣言する必要があります。 -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- 親の props を子コンポーネントと共有するために渡す -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  `.prop` 修飾子には、専用の短縮形 `.` もあります:\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- 以下と同じ -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  `.camel` 修飾子は、DOM 内テンプレートを使用する際に、 `v-bind` 属性名をキャメル化できます（例: SVG の `viewBox` 属性）:\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  文字列テンプレートを使用する場合や、ビルドステップでテンプレートを事前コンパイルする場合は、`.camel` は必要ありません。\n\n- **参照**\n  - [クラスとスタイルのバインディング](https://ja.vuejs.org/guide/essentials/class-and-style.html)\n  - [コンポーネント - props 渡しの詳細](https://ja.vuejs.org/guide/components/props.html#prop-passing-details)\n"
+        "value": "\n1 つ以上の属性やコンポーネントの props を式に動的にバインドします。\n\n- **省略記法:**\n  - `:` or `.`（`.prop` 修飾子使用時）\n  - 値の省略（属性とバインドされた値が同じ名前の場合）<sup class=\"vt-badge\">3.4+</sup>\n\n- **期待する値:** `any（引数ありの場合）| Object（引数なしの場合）`\n\n- **引数:** `attrOrProp（省略可能）`\n\n- **修飾子**\n\n  - `.camel` - kebab-case の属性名を camelCase に変換します。\n  - `.prop` - バインディングを DOM プロパティとして設定するよう強制します。<sup class=\"vt-badge\">3.2+</sup>\n  - `.attr` - バインディングを DOM 属性として設定するよう強制します。<sup class=\"vt-badge\">3.2+</sup>\n\n- **使用法**\n\n  `class` や `style` 属性をバインドする際に使用する `v-bind` は、Array や Object などの追加の値の型をサポートします。詳しくは、以下のリンク先のガイドを参照してください。\n\n  要素にバインディングを設定するとき、Vue はデフォルトで、`in` 演算子チェックを使用して、プロパティとして定義されたキーが要素にあるかどうかを確認します。プロパティが定義されている場合、Vue はその値を属性ではなく DOM プロパティとして設定します。これはほとんどの場合において有効ですが、`.prop` や `.attr` という修飾子を明示的に使用することでこの動作をオーバーライドできます。これは、特に[カスタム要素を扱う](https://ja.vuejs.org/guide/extras/web-components.html#passing-dom-properties)ときに必要になることがあります。\n\n  コンポーネントの props をバインドするために使用する場合、その props は子コンポーネントで適切に宣言されている必要があります。\n\n  引数なしで使用する場合、属性の名前と値のペアを含むオブジェクトをバインドするために使用できます。\n\n- **例**\n\n  ```html\n  <!-- 属性をバインドする -->\n  <img v-bind:src=\"imageSrc\" />\n\n  <!-- 動的な属性名 -->\n  <button v-bind:[key]=\"value\"></button>\n\n  <!-- 省略記法 -->\n  <img :src=\"imageSrc\" />\n\n  <!-- 同名省略記法（3.4+）, :src=\"src\" のように展開する -->\n  <img :src />\n\n  <!-- 動的な属性名の省略記法 -->\n  <button :[key]=\"value\"></button>\n\n  <!-- インラインの文字列連結 -->\n  <img :src=\"'/path/to/images/' + fileName\" />\n\n  <!-- クラスのバインド -->\n  <div :class=\"{ red: isRed }\"></div>\n  <div :class=\"[classA, classB]\"></div>\n  <div :class=\"[classA, { classB: isB, classC: isC }]\"></div>\n\n  <!-- スタイルのバインド -->\n  <div :style=\"{ fontSize: size + 'px' }\"></div>\n  <div :style=\"[styleObjectA, styleObjectB]\"></div>\n\n  <!-- 属性のオブジェクトをバインド -->\n  <div v-bind=\"{ id: someProp, 'other-attr': otherProp }\"></div>\n\n  <!-- props のバインド。\"prop\" は子コンポーネントで宣言する必要があります。 -->\n  <MyComponent :prop=\"someThing\" />\n\n  <!-- 親の props を子コンポーネントと共有するために渡す -->\n  <MyComponent v-bind=\"$props\" />\n\n  <!-- XLink -->\n  <svg><a :xlink:special=\"foo\"></a></svg>\n  ```\n\n  `.prop` 修飾子には、専用の短縮形 `.` もあります:\n\n  ```html\n  <div :someProperty.prop=\"someObject\"></div>\n\n  <!-- 以下と同じ -->\n  <div .someProperty=\"someObject\"></div>\n  ```\n\n  `.camel` 修飾子は、DOM 内テンプレートを使用する際に、 `v-bind` 属性名をキャメル化できます（例: SVG の `viewBox` 属性）:\n\n  ```html\n  <svg :view-box.camel=\"viewBox\"></svg>\n  ```\n\n  文字列テンプレートを使用する場合や、ビルドステップでテンプレートを事前コンパイルする場合は、`.camel` は必要ありません。\n\n- **参照**\n  - [クラスとスタイルのバインディング](https://ja.vuejs.org/guide/essentials/class-and-style.html)\n  - [コンポーネント - props 渡しの詳細](https://ja.vuejs.org/guide/components/props.html#prop-passing-details)\n"
       },
       "references": [
         {
@@ -746,6 +1002,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-bind"
         },
         {
           "name": "ja",
@@ -774,6 +1034,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-bind"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-bind"
         }
       ]
     },
@@ -791,6 +1063,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-model"
         },
         {
           "name": "ja",
@@ -819,6 +1095,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-model"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-model"
         }
       ]
     },
@@ -836,6 +1124,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-slot"
         },
         {
           "name": "ja",
@@ -864,11 +1156,24 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-slot"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-slot"
         }
       ]
     },
     {
       "name": "v-pre",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nこの要素とすべての子要素のコンパイルをスキップします。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  `v-pre` を指定した要素の内部では、Vue テンプレートの構文はすべて維持され、そのままレンダリングされます。この最も一般的な使用例は、未加工のマスタッシュタグを表示することです。\n\n- **例**\n\n  ```html\n  <span v-pre>{{ this will not be compiled }}</span>\n  ```\n"
@@ -881,6 +1186,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-pre"
         },
         {
           "name": "ja",
@@ -909,14 +1218,27 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-pre"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-pre"
         }
       ]
     },
     {
       "name": "v-once",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
-        "value": "\n要素やコンポーネントを一度だけレンダリングし、その後の更新はスキップします。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  その後の再レンダリングでは、要素/コンポーネントとそのすべての子要素は静的コンテンツとして扱われ、スキップされます。これは、更新のパフォーマンスを最適化するために使用できます。\n\n  ```html\n  <!-- 単一要素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 子要素を持つ要素 -->\n  <div v-once>\n    <h1>comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- コンポーネント -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- `v-for` ディレクティブ -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  3.2 以降では、[`v-memo`](#v-memo) を使って、テンプレートの一部を無効化する条件付きでメモ化できます。\n\n- **参照**\n  - [データバインディング構文 - 展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
+        "value": "\n要素やコンポーネントを一度だけレンダリングし、その後の更新はスキップします。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  その後の再レンダリングでは、要素/コンポーネントとそのすべての子要素は静的コンテンツとして扱われ、スキップされます。これは、更新のパフォーマンスを最適化するために使用できます。\n\n  ```html\n  <!-- 単一要素 -->\n  <span v-once>This will never change: {{msg}}</span>\n  <!-- 子要素を持つ要素 -->\n  <div v-once>\n    <h1>Comment</h1>\n    <p>{{msg}}</p>\n  </div>\n  <!-- コンポーネント -->\n  <MyComponent v-once :comment=\"msg\"></MyComponent>\n  <!-- `v-for` ディレクティブ -->\n  <ul>\n    <li v-for=\"i in list\" v-once>{{i}}</li>\n  </ul>\n  ```\n\n  3.2 以降では、[`v-memo`](#v-memo) を使って、テンプレートの一部を無効化する条件付きでメモ化できます。\n\n- **参照**\n  - [データバインディング構文 - 展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)\n  - [v-memo](#v-memo)\n"
       },
       "references": [
         {
@@ -926,6 +1248,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-once"
         },
         {
           "name": "ja",
@@ -954,6 +1280,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-once"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-once"
         }
       ]
     },
@@ -971,6 +1309,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-memo"
         },
         {
           "name": "ja",
@@ -999,11 +1341,24 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-memo"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-memo"
         }
       ]
     },
     {
       "name": "v-cloak",
+      "valueSet": "v",
       "description": {
         "kind": "markdown",
         "value": "\nコンパイルされていないテンプレートを、準備が整うまで非表示にするために使用します。\n\n- **式を受け取りません**\n\n- **詳細**\n\n  **このディレクティブは、ビルドステップがないセットアップでのみ必要です。**\n\n  DOM 内テンプレートを使用する場合、「コンパイルされていないテンプレートのフラッシュ」が発生することがあります。マウントされたコンポーネントがそれをレンダリングされたコンテンツに置き換えるまで、未加工のマスタッシュタグがユーザーに表示される場合があります。\n\n  `v-cloak` は関連するコンポーネントインスタンスがマウントされるまで、その要素に残ります。`[v-cloak] { display: none }` のような CSS ルールと組み合わせることで、コンポーネントの準備が整うまで未加工のテンプレートを非表示にできます。\n\n- **例**\n\n  ```css\n  [v-cloak] {\n    display: none;\n  }\n  ```\n\n  ```html\n  <div v-cloak>\n    {{ message }}\n  </div>\n  ```\n\n  この `<div>` はコンパイルが完了するまで表示されません。\n"
@@ -1016,6 +1371,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-directives.html#v-cloak"
         },
         {
           "name": "ja",
@@ -1044,6 +1403,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-directives.html#v-cloak"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-directives.html#v-cloak"
         }
       ]
     },
@@ -1061,6 +1432,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#key"
         },
         {
           "name": "ja",
@@ -1089,6 +1464,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#key"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#key"
         }
       ]
     },
@@ -1106,6 +1493,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#ref"
         },
         {
           "name": "ja",
@@ -1134,6 +1525,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#ref"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#ref"
         }
       ]
     },
@@ -1151,6 +1554,10 @@
         {
           "name": "zh-cn",
           "url": "https://cn.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/built-in-special-attributes.html#is"
         },
         {
           "name": "ja",
@@ -1179,6 +1586,18 @@
         {
           "name": "it",
           "url": "https://it.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/built-in-special-attributes.html#is"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#is"
         }
       ]
     }
