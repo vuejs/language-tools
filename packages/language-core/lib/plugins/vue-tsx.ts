@@ -138,7 +138,7 @@ function createTsx(
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
 	const inheritAttrs = computed(() => {
 		const value = scriptSetupRanges()?.options.inheritAttrs ?? scriptRanges()?.exportDefault?.inheritAttrsOption;
-		return value === 'false';
+		return value !== 'false';
 	});
 	const generatedScript = computed(() => {
 		const codes: Code[] = [];
