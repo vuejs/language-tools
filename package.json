@@ -15,6 +15,7 @@
 		"release:next-base": "npm run release:base -- --dist-tag next",
 		"release:next-vue": "cd ./extensions/vscode && npm run release:next",
 		"test": "vitest run",
+		"test:update": "vitest run --update",
 		"lint": "tsslint --projects {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
 		"lint:fix": "npm run lint -- --fix",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
@@ -31,6 +32,15 @@
 	},
 	"pnpm": {
 		"overrides": {
+			"@volar/kit": "https://pkg.pr.new/volarjs/volar.js/@volar/kit@28cbdee",
+			"@volar/language-core": "https://pkg.pr.new/volarjs/volar.js/@volar/language-core@28cbdee",
+			"@volar/language-server": "https://pkg.pr.new/volarjs/volar.js/@volar/language-server@28cbdee",
+			"@volar/language-service": "https://pkg.pr.new/volarjs/volar.js/@volar/language-service@28cbdee",
+			"@volar/source-map": "https://pkg.pr.new/volarjs/volar.js/@volar/source-map@28cbdee",
+			"@volar/test-utils": "https://pkg.pr.new/volarjs/volar.js/@volar/test-utils@28cbdee",
+			"@volar/typescript": "https://pkg.pr.new/volarjs/volar.js/@volar/typescript@28cbdee",
+			"@volar/vscode": "https://pkg.pr.new/volarjs/volar.js/@volar/vscode@28cbdee",
+			"volar-service-typescript": "https://pkg.pr.new/volarjs/services/volar-service-typescript@177b9ed",
 			"inquirer": "9.2.23"
 		}
 	}

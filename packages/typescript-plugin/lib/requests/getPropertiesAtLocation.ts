@@ -37,12 +37,7 @@ export function getPropertiesAtLocation(
 		}
 	}
 
-
-	const program: ts.Program = (languageService as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
-
+	const program = languageService.getProgram()!;
 	const sourceFile = program.getSourceFile(fileName);
 	if (!sourceFile) {
 		return;
