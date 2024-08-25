@@ -7,6 +7,7 @@ import { forEachInterpolationSegment } from '../template/interpolation';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 import { generateInternalComponent } from './internalComponent';
+import { generateStyleScopedClasses } from '../template/styleScopedClasses';
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
@@ -124,13 +125,23 @@ function* generateTemplateContext(
 	yield `let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents & typeof __VLS_ctx${endOfLine}`; // for html completion, TS references...
 
 	/* Style Scoped */
+	const firstClasses = new Set<string>();
 	yield `/* Style Scoped */${newLine}`;
-	yield `type __VLS_StyleScopedClasses = {}`;
+	yield `let __VLS_styleScopedClasses!: {}`;
 	for (let i = 0; i < options.sfc.styles.length; i++) {
 		const style = options.sfc.styles[i];
 		const option = options.vueCompilerOptions.experimentalResolveStyleCssClasses;
 		if (option === 'always' || (option === 'scoped' && style.scoped)) {
 			for (const className of style.classNames) {
+				if (firstClasses.has(className.text)) {
+					templateCodegenCtx.scopedClasses.push({
+						source: 'style_' + i,
+						className: className.text.slice(1),
+						offset: className.offset + 1
+					});
+					continue;
+				}
+				firstClasses.add(className.text);
 				yield* generateCssClassProperty(
 					i,
 					className.text,
@@ -142,7 +153,7 @@ function* generateTemplateContext(
 		}
 	}
 	yield endOfLine;
-	yield `let __VLS_styleScopedClasses!: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[]${endOfLine}`;
+	yield* generateStyleScopedClasses(templateCodegenCtx, true);
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
@@ -173,7 +184,7 @@ function* generateCssClassProperty(
 		'',
 		'style_' + styleIndex,
 		offset,
-		codeFeatures.navigationWithoutRename,
+		codeFeatures.navigation,
 	];
 	yield `'`;
 	yield [
