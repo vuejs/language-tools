@@ -259,13 +259,26 @@ export function* generateComponent(
 		yield endOfLine;
 	}
 
-	yield* generateVScope(options, ctx, node, props);
+	const refName = yield* generateVScope(options, ctx, node, props);
 
 	ctx.usedComponentCtxVars.add(componentCtxVar);
 	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
 
 	if (var_defineComponentCtx && ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
 		yield `const ${componentCtxVar} = __VLS_nonNullable(__VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance}))${endOfLine}`;
+		if (refName) {
+			yield `// @ts-ignore${newLine}`;
+			if (node.codegenNode?.type === CompilerDOM.NodeTypes.VNODE_CALL
+				&& node.codegenNode.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
+				&& node.codegenNode.props.properties.find(({ key }) => key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && key.content === 'ref_for')
+			) {
+				yield `(${refName} ??= []).push(${var_defineComponentCtx})`;
+			} else {
+				yield `${refName} = ${var_defineComponentCtx}`;
+			}
+
+			yield endOfLine;
+		}
 	}
 	if (usedComponentEventsVar) {
 		yield `let ${var_componentEmit}!: typeof ${componentCtxVar}.emit${endOfLine}`;
@@ -350,7 +363,17 @@ export function* generateElement(
 		yield endOfLine;
 	}
 
-	yield* generateVScope(options, ctx, node, node.props);
+	const refName = yield* generateVScope(options, ctx, node, node.props);
+	if (refName) {
+		yield `// @ts-ignore${newLine}`;
+		yield `${refName} = __VLS_intrinsicElements`;
+		yield* generatePropertyAccess(
+			options,
+			ctx,
+			node.tag
+		);
+		yield endOfLine;
+	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir && componentCtxVar) {
@@ -397,13 +420,14 @@ function* generateVScope(
 	}
 
 	yield* generateElementDirectives(options, ctx, node);
-	yield* generateReferencesForElements(options, ctx, node); // <el ref="foo" />
+	const refName = yield* generateReferencesForElements(options, ctx, node); // <el ref="foo" />
 	yield* generateReferencesForScopedCssClasses(options, ctx, node);
 
 	if (inScope) {
 		yield `}${newLine}`;
 		ctx.blockConditions.length = originalConditionsNum;
 	}
+	return refName;
 }
 
 export function getCanonicalComponentName(tagText: string) {
@@ -571,6 +595,10 @@ function* generateReferencesForElements(
 				')'
 			);
 			yield endOfLine;
+
+			const refName = CompilerDOM.toValidAssetId(prop.value.content, '_VLS_refs' as any);
+			options.templateRefNames.set(prop.value.content, refName);
+			return refName;
 		}
 	}
 }

@@ -15,6 +15,7 @@ export interface TemplateCodegenOptions {
 	template: NonNullable<Sfc['template']>;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
+	templateRefNames: Map<string, string>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;
@@ -49,7 +50,20 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	yield* ctx.generateAutoImportCompletion();
 
+	yield* generateRefs()
+
 	return ctx;
+
+	function* generateRefs(): Generator<Code> {
+		for (const [, validId] of options.templateRefNames) {
+			yield `let ${validId}${newLine}`;
+		}
+		yield `const __VLS_refs = {${newLine}`;
+		for (const [name, validId] of options.templateRefNames) {
+			yield `'${name}': ${validId}!,${newLine}`;
+		}
+		yield `}${endOfLine}`;
+	}
 
 	function* generateSlotsType(): Generator<Code> {
 		for (const { expVar, varName } of ctx.dynamicSlots) {

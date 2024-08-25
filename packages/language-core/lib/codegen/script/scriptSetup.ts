@@ -67,7 +67,7 @@ export function* generateScriptSetup(
 			+ `			props: ${ctx.helperTypes.Prettify.name}<typeof __VLS_functionalComponentProps & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
 			+ `			expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
 			+ `			attrs: any,${newLine}`
-			+ `			slots: ReturnType<typeof __VLS_template>[0],${newLine}`
+			+ `			slots: __VLS_Slots,${newLine}`
 			+ `			emit: ${emitTypes.join(' & ')},${newLine}`
 			+ `		}${endOfLine}`;
 		yield `	})(),${newLine}`; // __VLS_setup = (async () => {
@@ -116,7 +116,7 @@ function* generateSetupFunction(
 	if (options.vueCompilerOptions.target >= 3.3) {
 		yield `const { `;
 		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!ctx.bindingNames.has(macro)) {
+			if (!ctx.bindingNames.has(macro) && macro !== 'templateRef') {
 				yield macro + `, `;
 			}
 		}
@@ -211,6 +211,11 @@ function* generateSetupFunction(
 			]);
 		}
 	}
+	for (const { define } of scriptSetupRanges.templateRefs) {
+		if (define?.arg) {
+			setupCodeModifies.push([[`<__VLS_Refs[${scriptSetup.content.slice(define.arg.start, define.arg.end)}], keyof __VLS_Refs>`], define.arg.start - 1, define.arg.start - 1]);
+		}
+	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
 	if (setupCodeModifies.length) {
@@ -243,6 +248,8 @@ function* generateSetupFunction(
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
 	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
 	yield* generateTemplate(options, ctx, false);
+	yield `type __VLS_Refs = ReturnType<typeof __VLS_template>['refs']${endOfLine}`;
+	yield `type __VLS_Slots = ReturnType<typeof __VLS_template>['slots']${endOfLine}`;
 
 	if (syntax) {
 		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges?.slots.define)) {
@@ -250,7 +257,7 @@ function* generateSetupFunction(
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield `${syntax} `;
-			yield `{} as ${ctx.helperTypes.WithTemplateSlots.name}<typeof __VLS_component, ReturnType<typeof __VLS_template>[0]>${endOfLine}`;
+			yield `{} as ${ctx.helperTypes.WithTemplateSlots.name}<typeof __VLS_component, __VLS_Slots>${endOfLine}`;
 		}
 		else {
 			yield `${syntax} `;

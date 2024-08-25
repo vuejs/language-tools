@@ -165,11 +165,16 @@ function* generateTemplateContext(
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.slots.define) {
 			yield `const __VLS_slots = {}${endOfLine}`;
+			yield `const __VLS_refs = {}${endOfLine}`;
 			yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
 		}
 	}
 
-	yield `return [${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'}, __VLS_inheritedAttrs] as const${endOfLine}`;
+	yield `return {${newLine}`;
+	yield `slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
+	yield `refs: __VLS_refs as __VLS_PickRefsExpose<typeof __VLS_refs>,${newLine}`;
+	yield `attrs: __VLS_inheritedAttrs,${newLine}`;
+	yield `}${endOfLine}`;
 }
 
 function* generateCssClassProperty(

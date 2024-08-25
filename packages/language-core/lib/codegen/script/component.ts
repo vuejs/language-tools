@@ -36,6 +36,9 @@ export function* generateComponent(
 	if (options.sfc.script && options.scriptRanges) {
 		yield* generateScriptOptions(options.sfc.script, options.scriptRanges);
 	}
+	if (options.vueCompilerOptions.target >= 3.5 && scriptSetupRanges.templateRefs.length) {
+		yield `__typeRefs: {} as __VLS_Refs,${newLine}`;
+	}
 	yield `})`;
 }
 
@@ -83,10 +86,10 @@ export function* generatePropsOption(
 	if (options.vueCompilerOptions.target >= 3.5) {
 		const types = [];
 		if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
-			types.push('typeof __VLS_template>[1]');
+			types.push(`ReturnType<typeof __VLS_template>['attrs']`);
 		}
 		if (ctx.generatedPropsType) {
-			types.push('{} as __VLS_PublicProps');
+			types.push(`{} as __VLS_PublicProps`);
 		}
 		if (types.length) {
 			yield `__typeProps: ${types.join(' & ')},${newLine}`;
@@ -97,7 +100,7 @@ export function* generatePropsOption(
 
 		if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
 			codegens.push(function* () {
-				yield `{} as ${ctx.helperTypes.TypePropsToOption.name}<__VLS_PickNotAny<${ctx.helperTypes.OmitIndexSignature.name}<ReturnType<typeof __VLS_template>[1]>, {}>>`;
+				yield `{} as ${ctx.helperTypes.TypePropsToOption.name}<__VLS_PickNotAny<${ctx.helperTypes.OmitIndexSignature.name}<ReturnType<typeof __VLS_template>['attrs']>, {}>>`;
 			});
 		}
 
