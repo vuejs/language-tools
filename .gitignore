@@ -13,3 +13,6 @@ packages/*/*.map
 packages/*/lib/**/*.d.ts
 packages/*/lib/**/*.js
 packages/*/lib/**/*.map
+
+# MacOS
+.DS_Store
