@@ -1,5 +1,5 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, Sfc } from '../../types';
+import type { Code, Sfc, TextRange } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponent, generateEmitsOption } from './component';
 import type { ScriptCodegenContext } from './context';
@@ -88,16 +88,16 @@ export function* generateScriptSetup(
 
 	if (ctx.scriptSetupGeneratedOffset !== undefined) {
 		for (const defineProp of scriptSetupRanges.defineProp) {
-			if (!defineProp.name) {
+			if (!defineProp.localName) {
 				continue;
 			}
-			const propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-			const propMirror = definePropMirrors.get(propName);
+			const [_, localName] = getPropAndLocalName(scriptSetup, defineProp);
+			const propMirror = definePropMirrors.get(localName!);
 			if (propMirror !== undefined) {
 				options.linkedCodeMappings.push({
-					sourceOffsets: [defineProp.name.start + ctx.scriptSetupGeneratedOffset],
+					sourceOffsets: [defineProp.localName.start + ctx.scriptSetupGeneratedOffset],
 					generatedOffsets: [propMirror],
-					lengths: [defineProp.name.end - defineProp.name.start],
+					lengths: [defineProp.localName.end - defineProp.localName.start],
 					data: undefined,
 				});
 			}
@@ -302,14 +302,19 @@ function* generateComponentProps(
 		yield `const __VLS_defaults = {${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
 			if (defineProp.defaultValue) {
-				if (defineProp.name) {
-					yield scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
+				const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
+
+				if (defineProp.name || defineProp.isModel) {
+					yield propName!;
+				}
+				else if (defineProp.localName) {
+					yield localName!;
 				}
 				else {
-					yield `modelValue`;
+					continue;
 				}
 				yield `: `;
-				yield scriptSetup.content.substring(defineProp.defaultValue.start, defineProp.defaultValue.end);
+				yield getRangeName(scriptSetup, defineProp.defaultValue);
 				yield `,${newLine}`;
 			}
 		}
@@ -331,33 +336,35 @@ function* generateComponentProps(
 		ctx.generatedPropsType = true;
 		yield `{${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
-			let propName = 'modelValue';
-			if (defineProp.name && defineProp.nameIsString) {
-				// renaming support
-				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.navigation);
-				propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-				propName = propName.replace(/['"]+/g, '');
+			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
+
+			if (defineProp.isModel && !defineProp.name) {
+				yield propName!;
 			}
 			else if (defineProp.name) {
-				propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-				definePropMirrors.set(propName, options.getGeneratedLength());
-				yield propName;
+				// renaming support
+				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.navigation);
+			}
+			else if (defineProp.localName) {
+				definePropMirrors.set(localName!, options.getGeneratedLength());
+				yield localName!;
 			}
 			else {
-				yield propName;
+				continue;
 			}
+
 			yield defineProp.required
 				? `: `
 				: `?: `;
-			yield* generateDefinePropType(scriptSetup, propName, defineProp);
+			yield* generateDefinePropType(scriptSetup, propName, localName, defineProp);
 			yield `,${newLine}`;
 
 			if (defineProp.modifierType) {
 				let propModifierName = 'modelModifiers';
 				if (defineProp.name) {
-					propModifierName = `${scriptSetup.content.substring(defineProp.name.start + 1, defineProp.name.end - 1)}Modifiers`;
+					propModifierName = `${getRangeName(scriptSetup, defineProp.name, true)}Modifiers`;
 				}
-				const modifierType = scriptSetup.content.substring(defineProp.modifierType.start, defineProp.modifierType.end);
+				const modifierType = getRangeName(scriptSetup, defineProp.modifierType);
 				definePropMirrors.set(propModifierName, options.getGeneratedLength());
 				yield `${propModifierName}?: Record<${modifierType}, true>,${endOfLine}`;
 			}
@@ -394,13 +401,10 @@ function* generateModelEmits(
 				continue;
 			}
 
-			let propName = 'modelValue';
-			if (defineProp.name) {
-				propName = scriptSetup.content.substring(defineProp.name.start, defineProp.name.end);
-				propName = propName.replace(/['"]+/g, '');
-			}
+			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
+
 			yield `'update:${propName}': [${propName}:`;
-			yield* generateDefinePropType(scriptSetup, propName, defineProp);
+			yield* generateDefinePropType(scriptSetup, propName, localName, defineProp);
 			yield `]${endOfLine}`;
 		}
 		yield `}`;
@@ -413,20 +417,52 @@ function* generateModelEmits(
 	yield endOfLine;
 }
 
-function* generateDefinePropType(scriptSetup: NonNullable<Sfc['scriptSetup']>, propName: string, defineProp: ScriptSetupRanges['defineProp'][number]) {
+function* generateDefinePropType(
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	propName: string | undefined,
+	localName: string | undefined,
+	defineProp: ScriptSetupRanges['defineProp'][number]
+) {
 	if (defineProp.type) {
 		// Infer from defineProp<T>
-		yield scriptSetup.content.substring(defineProp.type.start, defineProp.type.end);
+		yield getRangeName(scriptSetup, defineProp.type);
 	}
-	else if ((defineProp.name && defineProp.nameIsString) || !defineProp.nameIsString) {
+	else if (defineProp.runtimeType && localName) {
 		// Infer from actual prop declaration code 
-		yield `typeof ${propName}['value']`;
+		yield `typeof ${localName}['value']`;
 	}
-	else if (defineProp.defaultValue) {
+	else if (defineProp.defaultValue && propName) {
 		// Infer from defineProp({default: T})
 		yield `typeof __VLS_defaults['${propName}']`;
 	}
 	else {
 		yield `any`;
 	}
+}
+
+function getPropAndLocalName(
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	defineProp: ScriptSetupRanges['defineProp'][number]
+) {
+	const localName = defineProp.localName
+		? getRangeName(scriptSetup, defineProp.localName)
+		: undefined;
+	let propName = defineProp.name
+		? getRangeName(scriptSetup, defineProp.name)
+		: defineProp.isModel
+			? 'modelValue'
+			: localName;
+	if (defineProp.name) {
+		propName = propName!.replace(/['"]+/g, '')
+	}
+	return [propName, localName];
+}
+
+function getRangeName(
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	range: TextRange,
+	unwrap = false
+) {
+	const offset = unwrap ? 1 : 0;
+	return scriptSetup.content.substring(range.start + offset, range.end - offset);
 }
