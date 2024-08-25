@@ -583,7 +583,7 @@ function* generateReferencesForElements(
 			&& prop.name === 'ref'
 			&& prop.value
 		) {
-			let [content, startOffset] = normalizeAttributeValue(prop.value);
+			const [content, startOffset] = normalizeAttributeValue(prop.value);
 
 			yield `// @ts-ignore${newLine}`;
 			yield `__VLS_ctx`;
@@ -636,15 +636,8 @@ function* generateReferencesForScopedCssClasses(
 				}
 			}
 			else {
-				let [content, startOffset] = normalizeAttributeValue(prop.value);
 				let isWrapped = false;
-				if (
-					(content.startsWith(`'`) && content.endsWith(`'`))
-					|| (content.startsWith(`"`) && content.endsWith(`"`))
-				) {
-					content = content.slice(1, -1);
-					isWrapped = true;
-				}
+				const [content, startOffset] = normalizeAttributeValue(prop.value);
 				if (content) {
 					const classes = collectClasses(content, startOffset + (isWrapped ? 1 : 0));
 					ctx.scopedClasses.push(...classes);
