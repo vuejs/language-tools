@@ -31,5 +31,5 @@ describe(`vue-tsc`, () => {
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",
 			]
 		`);;
-	}, 2_000_000);
+	});
 });
