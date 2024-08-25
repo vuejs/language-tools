@@ -26,11 +26,9 @@
 		"@tsslint/cli": "latest",
 		"@tsslint/config": "latest",
 		"@volar/language-service": "~2.4.0",
-		"fast-glob": "^3.3.2",
 		"typescript": "latest",
 		"vite": "latest",
-		"vitest": "latest",
-		"vscode-tmlanguage-snapshot": "^0.1.3"
+		"vitest": "latest"
 	},
 	"pnpm": {
 		"overrides": {

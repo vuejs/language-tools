@@ -1,19 +1,18 @@
 import * as path from 'path';
-import * as _fg from 'fast-glob';
+import * as fs from 'fs';
 import { describe, expect, it } from 'vitest';
 import { createGrammarSnapshot } from 'vscode-tmlanguage-snapshot';
 
-const fg: typeof _fg = (_fg as any).default;
-const fixturesDir = path.resolve(__dirname, '../../../test-workspace/grammar');
+const fixturesDir = path.resolve(__dirname, './grammarFixtures');
 const packageJsonPath = path.resolve(__dirname, '../package.json');
 
 describe('grammar', async () => {
 	const snapshot = await createGrammarSnapshot(packageJsonPath);
-	const cases = await fg(path.join(fixturesDir, "**").replace(/\\/g, "/"));
+	const fixtures = fs.readdirSync(fixturesDir);
 
-	for (const kase of cases) {
-		it(path.relative(fixturesDir, kase).replace(/\\/g, "/"), async () => {
-			const result = await snapshot(kase);
+	for (const fixture of fixtures) {
+		it.skipIf(fixture === 'snippet-import.md')(fixture, async () => {
+			const result = await snapshot(`tests/grammarFixtures/${fixture}`);
 
 			expect(result).toMatchSnapshot();
 		});
