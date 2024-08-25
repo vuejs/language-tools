@@ -1,0 +1,27 @@
+{
+	"include": [ ],
+	"references": [
+		// { "path": "./failureFixtures/#4569" }, // TODO: not working with --build flag
+		{ "path": "./failureFixtures/directives" },
+
+		{ "path": "./passedFixtures/#1886" },
+		{ "path": "./passedFixtures/#2157" },
+		{ "path": "./passedFixtures/#2472" },
+		{ "path": "./passedFixtures/#3373" },
+		{ "path": "./passedFixtures/#3574" },
+		{ "path": "./passedFixtures/#3592" },
+		{ "path": "./passedFixtures/#3688" },
+		{ "path": "./passedFixtures/#3819" },
+		{ "path": "./passedFixtures/#4503" },
+		{ "path": "./passedFixtures/core#9923" },
+		{ "path": "./passedFixtures/noPropertyAccessFromIndexSignature" },
+		// { "path": "./passedFixtures/petite-vue" },
+		{ "path": "./passedFixtures/pug" },
+		{ "path": "./passedFixtures/vue2" },
+		{ "path": "./passedFixtures/vue2_strictTemplate" },
+		{ "path": "./passedFixtures/vue3" },
+		{ "path": "./passedFixtures/vue3_strictTemplate" },
+		{ "path": "./passedFixtures/vue3.3" },
+		{ "path": "./passedFixtures/vue3.5" },
+	]
+}
