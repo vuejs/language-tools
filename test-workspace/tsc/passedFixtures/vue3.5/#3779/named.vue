@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { exactType } from '../../shared';
-const props = defineProps<{
+defineProps<{
 	optionalBoolean?: boolean;
 }>();
 </script>
 
 <template>
-	<h1>{{ exactType(optionalBoolean, true as boolean) }}</h1>
+	<h1>{{ exactType(optionalBoolean, {} as boolean | undefined) }}</h1>
 </template>
