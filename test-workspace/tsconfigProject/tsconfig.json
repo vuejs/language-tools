@@ -1,5 +1,5 @@
 {
-	"exclude": [ "../tsconfig.json" ],
+	"exclude": [ "../tsconfig.base.json" ],
 	"include": [ "**/*" ],
 	"compilerOptions": {
 		"paths": {
