@@ -99,7 +99,7 @@ export interface SFCStyleOverride {
 	module?: {
 		name: string;
 		offset?: number;
-	}
+	};
 }
 
 export interface Sfc {
