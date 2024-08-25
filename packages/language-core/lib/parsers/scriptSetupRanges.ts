@@ -212,7 +212,7 @@ export function parseScriptSetupRanges(
 					if (node.arguments.length >= 1) {
 						propName = _getStartEnd(node.arguments[0]);
 					}
-					
+
 					if (options && ts.isObjectLiteralExpression(options)) {
 						for (const property of options.properties) {
 							if (!ts.isPropertyAssignment(property) || !ts.isIdentifier(property.name)) {
