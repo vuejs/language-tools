@@ -10,15 +10,15 @@ const baz = '1';
 
 <template>
 	<!-- @vue-expect-error -->
-    <ModelComp v-model="model"/>
+	<ModelComp v-model="model" />
 	<!-- @vue-expect-error -->
-	<ModelComp v-model:foo="foo"/>
+	<ModelComp v-model:foo="foo" />
 	<!-- @vue-expect-error -->
-	<ModelComp v-model:bar="bar"/>
+	<ModelComp v-model:bar="bar" />
 	<!-- @vue-expect-error -->
-	<PropComp :foo="foo"/>
+	<PropComp :foo="foo" />
 	<!-- @vue-expect-error -->
-	<PropComp :bar="bar"/>
+	<PropComp :bar="bar" />
 	<!-- @vue-expect-error -->
-	<PropComp :baz="baz"/>
+	<PropComp :baz="baz" />
 </template>

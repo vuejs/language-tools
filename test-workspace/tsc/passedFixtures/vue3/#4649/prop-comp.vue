@@ -3,16 +3,16 @@
 import { exactType } from '../../shared';
 
 const fooAlias = defineProp('foo', {
-    type: Number
+	type: Number
 });
 
 const barAlias = defineProp('bar', {
-    type: Number,
-    default: 1
+	type: Number,
+	default: 1
 });
 
 const bazAlias = defineProp('baz', {
-    default: 1
+	default: 1
 });
 
 exactType(fooAlias.value, {} as number | undefined);
