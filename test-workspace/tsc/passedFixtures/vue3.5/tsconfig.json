@@ -1,6 +1,7 @@
 {
 	"extends": "../../../tsconfig.base.json",
 	"vueCompilerOptions": {
+		"lib": "vue3.5",
 		"target": 3.5,
 	},
 	"include": [
