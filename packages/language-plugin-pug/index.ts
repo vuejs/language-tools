@@ -37,13 +37,18 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						const proxys = new WeakMap();
 						return new Proxy(target, {
 							get(target, prop, receiver) {
+								if (prop === 'getClassOffset') {
+									// div.foo#baz.bar
+									//     ^^^     ^^^
+									// class=" foo bar"
+									//         ^^^ ^^^
+									// NOTE: we need to expose source offset getter
+									return function(startOffset: number) {
+										return getOffset(target.offset + startOffset);
+									};
+								}
 								if (prop === 'offset') {
-									const htmlOffset = target.offset;
-									const nums: number[] = [];
-									for (const mapped of map.toSourceLocation(htmlOffset)) {
-										nums.push(mapped[0]);
-									}
-									return Math.max(-1, ...nums);
+									return getOffset(target.offset);
 								}
 								const value = Reflect.get(target, prop, receiver);
 								if (typeof value === 'object' && value !== null) {
@@ -58,6 +63,15 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								return value;
 							}
 						});
+					}
+
+					function getOffset(offset: number) {
+						const htmlOffset = offset;
+						const nums: number[] = [];
+						for (const mapped of map.toSourceLocation(htmlOffset)) {
+							nums.push(mapped[0]);
+						}
+						return Math.max(-1, ...nums);
 					}
 				}
 			}

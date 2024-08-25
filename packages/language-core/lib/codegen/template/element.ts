@@ -614,22 +614,40 @@ function* generateReferencesForScopedCssClasses(
 			&& prop.name === 'class'
 			&& prop.value
 		) {
-			let startOffset = prop.value.loc.start.offset;
-			let content = prop.value.loc.source;
-			let isWrapped = false;
-			if (
-				(content.startsWith(`'`) && content.endsWith(`'`))
-				|| (content.startsWith(`"`) && content.endsWith(`"`))
-			) {
-				content = content.slice(1, -1);
-				isWrapped = true;
-			}
-			if (content) {
-				const classes = collectClasses(content, startOffset + (isWrapped ? 1 : 0));
-				ctx.scopedClasses.push(...classes);
+			if (options.template.lang === 'pug') {
+				const getClassOffset = Reflect.get(prop.value.loc.start, 'getClassOffset') as (offset: number) => number;
+				const content = prop.value.loc.source.slice(1, -1);
+
+				let startOffset = 1;
+				for (const className of content.split(' ')) {
+					if (className) {
+						ctx.scopedClasses.push({
+							source: 'template',
+							className,
+							offset: getClassOffset(startOffset),
+						});
+					}
+					startOffset += className.length + 1;
+				}
 			}
 			else {
-				ctx.emptyClassOffsets.push(startOffset);
+				let startOffset = prop.value.loc.start.offset;
+				let content = prop.value.loc.source;
+				let isWrapped = false;
+				if (
+					(content.startsWith(`'`) && content.endsWith(`'`))
+					|| (content.startsWith(`"`) && content.endsWith(`"`))
+				) {
+					content = content.slice(1, -1);
+					isWrapped = true;
+				}
+				if (content) {
+					const classes = collectClasses(content, startOffset + (isWrapped ? 1 : 0));
+					ctx.scopedClasses.push(...classes);
+				}
+				else {
+					ctx.emptyClassOffsets.push(startOffset);
+				}
 			}
 		}
 		else if (
