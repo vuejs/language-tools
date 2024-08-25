@@ -4,7 +4,7 @@ import { run } from '..';
 
 describe(`vue-tsc`, () => {
 
-	it(`typecheck`, async () => {
+	it(`typecheck`, () => {
 		const consoleOutput: string[] = [];
 		const originalConsoleLog = process.stdout.write;
 		const originalArgv = process.argv;
