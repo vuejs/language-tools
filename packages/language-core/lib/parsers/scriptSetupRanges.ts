@@ -104,7 +104,6 @@ export function parseScriptSetupRanges(
 		expose,
 		options,
 		defineProp,
-		options,
 	};
 
 	function _getStartEnd(node: ts.Node) {

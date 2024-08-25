@@ -1,9 +1,9 @@
 <script setup	lang="ts">
 import { exactType } from '../../shared';
 import basic from './basic.vue';
-import inheritAttrsFalse from 'tsc/vue3_strictTemplate/inherit-attrs/inherit-attrs-false.vue';
-import defineOptionsInheritAttrsFalse from 'tsc/vue3_strictTemplate/inherit-attrs/define-options-inherit-attrs-false.vue';
-import inheritAttrsFalseVBind from 'tsc/vue3_strictTemplate/inherit-attrs/inherit-attrs-false-v-bind.vue';
+import inheritAttrsFalse from './inherit-attrs-false.vue';
+import defineOptionsInheritAttrsFalse from './define-options-inherit-attrs-false.vue';
+import inheritAttrsFalseVBind from './inherit-attrs-false-v-bind.vue';
 </script>
 
 <template>

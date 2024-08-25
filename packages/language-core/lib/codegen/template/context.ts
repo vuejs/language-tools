@@ -125,6 +125,8 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 		emptyClassOffsets,
 		inlayHints,
 		hasSlot: false,
+		inheritedAttrVars: new Set(),
+		singleRootNode: undefined as CompilerDOM.ElementNode | undefined,
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);
 			if (!arr) {
