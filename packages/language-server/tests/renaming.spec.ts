@@ -1,7 +1,6 @@
 import { TextDocument } from '@volar/language-server';
 import { afterEach, describe, expect, it } from 'vitest';
 import { URI } from 'vscode-uri';
-import * as path from 'path';
 import { getLanguageServer, testWorkspacePath } from './server.js';
 
 describe('Renaming', async () => {
