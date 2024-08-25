@@ -1,13 +1,13 @@
 <script setup lang="ts" generic="const T">
 const { foo } = defineProps<{
-  foo: T;
+	foo: T;
 }>();
 
 defineExpose({
-  foo,
+	foo,
 });
 </script>
 
 <template>
-  <div />
+	<div />
 </template>
