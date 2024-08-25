@@ -4,7 +4,7 @@
 		"target": 2.7,
 	},
 	"include": [
-		"**/*",
+		"env.d.ts",
 		"../vue3",
 	],
 	"exclude": [
