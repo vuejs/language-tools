@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 
-const Vue2TemplateCompiler: typeof import('vue-template-compiler') = require('vue-template-compiler/build');
+const Vue2TemplateCompiler: typeof import('@vue/compiler-vue2') = require('@vue/compiler-vue2/build');
 
 export const compile: typeof CompilerDOM.compile = (template, options = {}) => {
 

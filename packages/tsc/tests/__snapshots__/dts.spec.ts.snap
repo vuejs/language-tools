@@ -1,5 +1,35 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`vue-tsc-dts > Input: #4577/main.vue, Output: #4577/main.vue.d.ts 1`] = `
+"export type BaseRow = {
+    value: string;
+};
+declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: __VLS_Prettify<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>>, never>, never> & {
+        nonGeneric: string;
+        rows: Row[];
+    }> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
+    attrs: any;
+    slots: ReturnType<() => {
+        default?(_: {
+            row: Row;
+        }): any;
+    }>;
+    emit: {};
+}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
+    [key: string]: any;
+}> & {
+    __ctx?: Awaited<typeof __VLS_setup>;
+};
+export default _default;
+
+type __VLS_Prettify<T> = {
+    [K in keyof T]: T[K];
+} & {};
+"
+`;
+
 exports[`vue-tsc-dts > Input: class-slots/component.vue, Output: class-slots/component.vue.d.ts 1`] = `
 "import { VNode } from 'vue';
 declare const _default: new () => {
@@ -39,12 +69,12 @@ export default _default;
 `;
 
 exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/component-generic.vue.d.ts 1`] = `
-"declare const _default: <T>(__VLS_props: Awaited<typeof __VLS_setup>["props"], __VLS_ctx?: __VLS_Prettify<Pick<Awaited<typeof __VLS_setup>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
     props: __VLS_Prettify<Pick<Partial<{}> & Omit<{
         onFoo?: (value: string) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>> & {
         onFoo?: (value: string) => any;
-    }, never>, "onFoo"> & {}> & __VLS_BuiltInPublicProps;
+    }, never>, "onFoo"> & {}> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: ReturnType<() => {}>;
@@ -62,7 +92,7 @@ type __VLS_Prettify<T> = {
 `;
 
 exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
-"declare const _default: <T>(__VLS_props: Awaited<typeof __VLS_setup>["props"], __VLS_ctx?: __VLS_Prettify<Pick<Awaited<typeof __VLS_setup>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
     props: __VLS_Prettify<Pick<Partial<{}> & Omit<{
         "onUpdate:title"?: (title: string) => any;
         onBar?: (data: number) => any;
@@ -73,7 +103,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         title?: string;
     } & {
         foo: number;
-    })> & __VLS_BuiltInPublicProps;
+    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
@@ -101,7 +131,7 @@ type __VLS_Prettify<T> = {
 `;
 
 exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: generic/custom-extension-component.cext.d.ts 1`] = `
-"declare const _default: <T>(__VLS_props: Awaited<typeof __VLS_setup>["props"], __VLS_ctx?: __VLS_Prettify<Pick<Awaited<typeof __VLS_setup>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
     props: __VLS_Prettify<Pick<Partial<{}> & Omit<{
         "onUpdate:title"?: (title: string) => any;
         onBar?: (data: number) => any;
@@ -112,7 +142,7 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
         title?: string;
     } & {
         foo: number;
-    })> & __VLS_BuiltInPublicProps;
+    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;

@@ -1,0 +1,8 @@
+{
+	"extends": "../../../tsconfig.base.json",
+	"compilerOptions": {
+		"importsNotUsedAsValues": "error",
+		"ignoreDeprecations": "5.0"
+	},
+	"include": [ "**/*" ]
+}

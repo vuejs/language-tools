@@ -25,7 +25,7 @@ import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
-import { create as createVueVisualizeHiddenCallbackParamPlugin } from './lib/plugins/vue-visualize-hidden-callback-param';
+import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 
 import { parse, VueCompilerOptions } from '@vue/language-core';
 import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
@@ -45,9 +45,12 @@ declare module '@volar/language-service' {
 	}
 }
 
-export function getFullLanguageServicePlugins(ts: typeof import('typescript')): LanguageServicePlugin[] {
+export function getFullLanguageServicePlugins(
+	ts: typeof import('typescript'),
+	{ disableAutoImportCache }: { disableAutoImportCache?: boolean; } = {}
+): LanguageServicePlugin[] {
 	const plugins: LanguageServicePlugin[] = [
-		...createTypeScriptPlugins(ts),
+		...createTypeScriptPlugins(ts, { disableAutoImportCache }),
 		...getCommonLanguageServicePlugins(
 			ts,
 			getTsPluginClientForLSP
@@ -196,12 +199,12 @@ function getCommonLanguageServicePlugins(
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueAutoAddSpacePlugin(),
-		createVueVisualizeHiddenCallbackParamPlugin(),
+		createVueInlayHintsPlugin(ts),
 		createVueDirectiveCommentsPlugin(),
 		createVueExtractFilePlugin(ts, getTsPluginClient),
 		createEmmetPlugin({
 			mappedLanguages: {
-				'vue': 'html',
+				'vue-root-tags': 'html',
 				'postcss': 'scss',
 			},
 		}),

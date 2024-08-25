@@ -47,7 +47,7 @@ export function* generateComponent(
 	let props = node.props;
 	let dynamicTagInfo: {
 		exp: string;
-		offset: number;
+		offsets: [number, number | undefined];
 		astHolder: any;
 	} | undefined;
 
@@ -56,7 +56,7 @@ export function* generateComponent(
 			if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.arg?.loc.source === 'is' && prop.exp) {
 				dynamicTagInfo = {
 					exp: prop.exp.loc.source,
-					offset: prop.exp.loc.start.offset,
+					offsets: [prop.exp.loc.start.offset, undefined],
 					astHolder: prop.exp.loc,
 				};
 				props = props.filter(p => p !== prop);
@@ -69,7 +69,7 @@ export function* generateComponent(
 		dynamicTagInfo = {
 			exp: node.tag,
 			astHolder: node.loc,
-			offset: startTagOffset,
+			offsets: [startTagOffset, endTagOffset],
 		};
 	}
 
@@ -104,18 +104,34 @@ export function* generateComponent(
 		yield `]${endOfLine}`;
 	}
 	else if (dynamicTagInfo) {
-		yield `const ${var_originalComponent} = `;
+		yield `const ${var_originalComponent} = (`;
 		yield* generateInterpolation(
 			options,
 			ctx,
 			dynamicTagInfo.exp,
 			dynamicTagInfo.astHolder,
-			dynamicTagInfo.offset,
+			dynamicTagInfo.offsets[0],
 			ctx.codeFeatures.all,
 			'(',
 			')'
 		);
-		yield endOfLine;
+		if (dynamicTagInfo.offsets[1] !== undefined) {
+			yield `,`;
+			yield* generateInterpolation(
+				options,
+				ctx,
+				dynamicTagInfo.exp,
+				dynamicTagInfo.astHolder,
+				dynamicTagInfo.offsets[1],
+				{
+					...ctx.codeFeatures.all,
+					completion: false,
+				},
+				'(',
+				')'
+			);
+		}
+		yield `)${endOfLine}`;
 	}
 	else if (!isComponentTag) {
 		yield `// @ts-ignore${newLine}`;
@@ -160,7 +176,7 @@ export function* generateComponent(
 								resolveRenameNewName: node.tag !== expectName ? camelizeComponentName : undefined,
 								resolveRenameEditText: getTagRenameApply(node.tag),
 							},
-						} as VueCodeInformation
+						}
 					);
 					yield `;`;
 				}
@@ -178,7 +194,7 @@ export function* generateComponent(
 							isAdditional: true,
 							onlyImport: true,
 						},
-					} as VueCodeInformation
+					}
 				);
 				yield `,`;
 			}
@@ -247,20 +263,20 @@ export function* generateComponent(
 	ctx.usedComponentCtxVars.add(componentCtxVar);
 	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
 
+	if (var_defineComponentCtx && ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
+		yield `const ${componentCtxVar} = __VLS_nonNullable(__VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance}))${endOfLine}`;
+	}
+	if (usedComponentEventsVar) {
+		yield `let ${var_componentEmit}!: typeof ${componentCtxVar}.emit${endOfLine}`;
+		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
+	}
+
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir) {
 		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
 	}
 	else {
 		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
-	}
-
-	if (var_defineComponentCtx && ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
-		yield `const ${componentCtxVar} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})!${endOfLine}`;
-	}
-	if (usedComponentEventsVar) {
-		yield `let ${var_componentEmit}!: typeof ${componentCtxVar}.emit${endOfLine}`;
-		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
 	}
 }
 
@@ -428,7 +444,9 @@ function* generateComponentSlot(
 			slotDir.arg.loc.source,
 			slotDir.arg.loc.start.offset,
 			slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
-			slotDir.arg.loc
+			slotDir.arg.loc,
+			false,
+			true
 		);
 		yield ': __VLS_thisSlot';
 	}
@@ -447,7 +465,7 @@ function* generateComponentSlot(
 			`__VLS_thisSlot`
 		);
 	}
-	yield `} = ${componentCtxVar}.slots!${endOfLine}`;
+	yield `} = __VLS_nonNullable(${componentCtxVar}.slots)${endOfLine}`;
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
@@ -494,7 +512,7 @@ function* generateComponentSlot(
 		isStatic = slotDir.arg.isStatic;
 	}
 	if (isStatic && slotDir && !slotDir.arg) {
-		yield `${componentCtxVar}.slots!['`;
+		yield `__VLS_nonNullable(${componentCtxVar}.slots)['`;
 		yield [
 			'',
 			'template',

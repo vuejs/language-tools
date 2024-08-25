@@ -1,0 +1,33 @@
+{
+	"extends": "../../../tsconfig.base.json",
+	"vueCompilerOptions": {
+		"target": 2.7,
+	},
+	"include": [
+		"env.d.ts",
+		"../vue3",
+	],
+	"exclude": [
+		"../vue3/#2700",
+		"../vue3/#3123",
+		"../vue3/#3289",
+		"../vue3/#3476",
+		"../vue3/#3518",
+		"../vue3/#3561",
+		"../vue3/#3615",
+		"../vue3/#3656",
+		"../vue3/#3672",
+		"../vue3/#3782",
+		"../vue3/#4327",
+		"../vue3/#4512",
+		"../vue3/#4540",
+		"../vue3/#4646",
+		"../vue3/components",
+		"../vue3/defineEmits",
+		"../vue3/defineModel",
+		"../vue3/defineProp_B",
+		"../vue3/events",
+		"../vue3/no-script-block",
+		"../vue3/slots",
+	]
+}

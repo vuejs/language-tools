@@ -17,17 +17,8 @@ declare global {
 			: `globalThis.JSX.Element;`
 		}
 	type __VLS_GlobalComponents = ${vueCompilerOptions.target >= 3.5
-			? `import('${vueCompilerOptions.lib}').GlobalComponents`
+			? `import('${vueCompilerOptions.lib}').GlobalComponents;`
 			: `import('${vueCompilerOptions.lib}').GlobalComponents & Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
-		}
-	type __VLS_BuiltInPublicProps = ${vueCompilerOptions.target >= 3.4
-			? `import('${vueCompilerOptions.lib}').PublicProps;`
-			: vueCompilerOptions.target >= 3.0
-				? `import('${vueCompilerOptions.lib}').VNodeProps
-					& import('${vueCompilerOptions.lib}').AllowedComponentProps
-					& import('${vueCompilerOptions.lib}').ComponentCustomProps;`
-				: `globalThis.JSX.IntrinsicAttributes;`
-
 		}
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
@@ -68,6 +59,7 @@ declare global {
 		: T;
 	function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
+	function __VLS_nonNullable<T>(t: T): T extends null | undefined ? never : T;
 
 	type __VLS_SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
 	type __VLS_WithComponent<N0 extends string, LocalComponents, N1 extends string, N2 extends string, N3 extends string> =
@@ -108,6 +100,7 @@ declare global {
 		: false;
 
 	function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
+	function __VLS_tryAsConstant<const T>(t: T): T;
 
 	/**
 	 * emit

@@ -151,22 +151,21 @@ export function* generateEventExpression(
 			prop.exp.content,
 			prop.exp.loc,
 			prop.exp.loc.start.offset,
-			() => {
+			offset => {
 				if (_isCompoundExpression && isFirstMapping) {
 					isFirstMapping = false;
-					return {
-						...ctx.codeFeatures.all,
-						__hint: {
-							setting: 'vue.inlayHints.inlineHandlerLeading',
-							label: '$event =>',
-							tooltip: [
-								'`$event` is a hidden parameter, you can use it in this callback.',
-								'To hide this hint, set `vue.inlayHints.inlineHandlerLeading` to `false` in IDE settings.',
-								'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
-							].join('\n\n'),
-							paddingRight: true,
-						},
-					};
+					ctx.inlayHints.push({
+						blockName: 'template',
+						offset,
+						setting: 'vue.inlayHints.inlineHandlerLeading',
+						label: '$event =>',
+						paddingRight: true,
+						tooltip: [
+							'`$event` is a hidden parameter, you can use it in this callback.',
+							'To hide this hint, set `vue.inlayHints.inlineHandlerLeading` to `false` in IDE settings.',
+							'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
+						].join('\n\n'),
+					});
 				}
 				return ctx.codeFeatures.all;
 			},
@@ -196,7 +195,7 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 					if (ts.isArrowFunction(child_2)) {
 						result = false;
 					}
-					else if (ts.isIdentifier(child_2)) {
+					else if (isPropertyAccessOrId(ts, child_2)) {
 						result = false;
 					}
 				});
@@ -207,4 +206,14 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 		});
 	}
 	return result;
+}
+
+function isPropertyAccessOrId(ts: typeof import('typescript'), node: ts.Node): boolean {
+	if (ts.isIdentifier(node)) {
+		return true;
+	}
+	if (ts.isPropertyAccessExpression(node)) {
+		return isPropertyAccessOrId(ts, node.expression);
+	}
+	return false;
 }
