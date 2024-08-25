@@ -233,6 +233,9 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			templateRef: ['templateRef', 'useTemplateRef'],
 			...vueOptions.macros,
 		},
+		composibles: {
+			useCssModule: ['useCssModule']
+		},
 		plugins: vueOptions.plugins ?? [],
 
 		// experimental

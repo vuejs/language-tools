@@ -43,6 +43,9 @@ export interface VueCompilerOptions {
 		withDefaults: string[];
 		templateRef: string[];
 	};
+	composibles: {
+		useCssModule: string[];
+	};
 	plugins: VueLanguagePlugin[];
 
 	// experimental
@@ -92,6 +95,13 @@ export interface SfcBlock {
 	attrs: Record<string, string | true>;
 }
 
+export interface SFCStyleOverride {
+	module?: {
+		name: string;
+		offset?: number;
+	};
+}
+
 export interface Sfc {
 	content: string;
 	template: SfcBlock & {
@@ -110,8 +120,7 @@ export interface Sfc {
 		genericOffset: number;
 		ast: ts.SourceFile;
 	} | undefined;
-	styles: readonly (SfcBlock & {
-		module: string | undefined;
+	styles: readonly (SfcBlock & SFCStyleOverride & {
 		scoped: boolean;
 		cssVars: {
 			text: string;

@@ -747,6 +747,76 @@ describe('Renaming', async () => {
 		`);
 	});
 
+	it('#4673', async () => {
+		expect(
+			await requestRename('fixture.vue', 'vue', `
+				<script setup lang="ts">
+				import { useCssModule } from 'vue';
+				const $style = useCssModule();
+				const stylAlias = useCssModule('styl');
+				</script>
+
+				<template>
+					<div :class="styl|.foo">{{  }}</div>
+				</template>
+
+				<style module>
+				.foo { }
+				</style>
+
+				<style module="styl">
+				.foo { }
+				</style>
+			`, 'stylus')
+		).toMatchInlineSnapshot(`
+			{
+			  "changes": {
+			    "file://\${testWorkspacePath}/fixture.vue": [
+			      {
+			        "newText": "stylus",
+			        "range": {
+			          "end": {
+			            "character": 22,
+			            "line": 8,
+			          },
+			          "start": {
+			            "character": 18,
+			            "line": 8,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "stylus",
+			        "range": {
+			          "end": {
+			            "character": 23,
+			            "line": 15,
+			          },
+			          "start": {
+			            "character": 19,
+			            "line": 15,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "stylus",
+			        "range": {
+			          "end": {
+			            "character": 40,
+			            "line": 4,
+			          },
+			          "start": {
+			            "character": 36,
+			            "line": 4,
+			          },
+			        },
+			      },
+			    ],
+			  },
+			}
+		`);
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {

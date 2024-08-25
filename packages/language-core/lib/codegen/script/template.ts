@@ -24,7 +24,7 @@ export function* generateTemplate(
 			yield `function __VLS_template() {${newLine}`;
 		}
 		const templateCodegenCtx = createTemplateCodegenContext(new Set());
-		yield* generateCtx(options, ctx, isClassComponent);
+		yield* generateCtx(options, isClassComponent);
 		yield* generateTemplateContext(options, templateCodegenCtx);
 		yield* generateExportOptions(options);
 		yield* generateConstNameOption(options);
@@ -76,7 +76,6 @@ function* generateConstNameOption(options: ScriptCodegenOptions): Generator<Code
 
 function* generateCtx(
 	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
 	isClassComponent: boolean
 ): Generator<Code> {
 	yield `let __VLS_ctx!: `;
@@ -91,24 +90,7 @@ function* generateCtx(
 	}
 	/* CSS Module */
 	if (options.sfc.styles.some(style => style.module)) {
-		yield `& {${newLine}`;
-		for (let i = 0; i < options.sfc.styles.length; i++) {
-			const style = options.sfc.styles[i];
-			if (style.module) {
-				yield `${style.module}: Record<string, string> & ${ctx.helperTypes.Prettify.name}<{}`;
-				for (const className of style.classNames) {
-					yield* generateCssClassProperty(
-						i,
-						className.text,
-						className.offset,
-						'string',
-						false
-					);
-				}
-				yield `>${endOfLine}`;
-			}
-		}
-		yield `}`;
+		yield ` & __VLS_StyleModules`;
 	}
 	yield endOfLine;
 }
@@ -177,7 +159,7 @@ function* generateTemplateContext(
 	yield `}${endOfLine}`;
 }
 
-function* generateCssClassProperty(
+export function* generateCssClassProperty(
 	styleIndex: number,
 	classNameWithDot: string,
 	offset: number,

@@ -42,6 +42,10 @@ export function parseScriptSetupRanges(
 		name?: string;
 		inheritAttrs?: string;
 	} = {};
+	const cssModules: {
+		exp: TextRange;
+		arg?: TextRange;
+	}[] = [];
 	const templateRefs: {
 		name?: string;
 		define?: ReturnType<typeof parseDefineFunction>;
@@ -108,6 +112,7 @@ export function parseScriptSetupRanges(
 		emits,
 		expose,
 		options,
+		cssModules,
 		defineProp,
 		templateRefs,
 	};
@@ -370,6 +375,15 @@ export function parseScriptSetupRanges(
 					name,
 					define
 				});
+			}
+			else if (vueCompilerOptions.composibles.useCssModule.includes(callText)) {
+				const module: (typeof cssModules)[number] = {
+					exp: _getStartEnd(node)
+				};
+				if (node.arguments.length) {
+					module.arg = _getStartEnd(node.arguments[0]);
+				}
+				cssModules.push(module);
 			}
 		}
 		ts.forEachChild(node, child => {

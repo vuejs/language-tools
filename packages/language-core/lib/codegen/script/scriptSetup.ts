@@ -4,7 +4,7 @@ import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponent, generateEmitsOption } from './component';
 import type { ScriptCodegenContext } from './context';
 import { ScriptCodegenOptions, codeFeatures } from './index';
-import { generateTemplate } from './template';
+import { generateCssClassProperty, generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
@@ -211,6 +211,34 @@ function* generateSetupFunction(
 			]);
 		}
 	}
+	if (scriptSetupRanges.cssModules.length) {
+		for (const { exp, arg } of scriptSetupRanges.cssModules) {
+			if (arg) {
+				setupCodeModifies.push([
+					[
+						` as Omit<__VLS_StyleModules, '$style'>[`,
+						generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+						`]`
+					],
+					exp.end,
+					exp.end
+				]);
+			}
+			else {
+				setupCodeModifies.push([
+					[
+						` as __VLS_StyleModules[`,
+						['', scriptSetup.name, exp.start, codeFeatures.verification],
+						`'$style'`,
+						['', scriptSetup.name, exp.end, codeFeatures.verification],
+						`]`
+					],
+					exp.end,
+					exp.end
+				]);
+			}
+		}
+	}
 	for (const { define } of scriptSetupRanges.templateRefs) {
 		if (define?.arg) {
 			setupCodeModifies.push([[`<__VLS_Refs[${scriptSetup.content.slice(define.arg.start, define.arg.end)}], keyof __VLS_Refs>`], define.arg.start - 1, define.arg.start - 1]);
@@ -247,6 +275,7 @@ function* generateSetupFunction(
 
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
 	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
+	yield* generateStyleModules(options, ctx);
 	yield* generateTemplate(options, ctx, false);
 	yield `type __VLS_Refs = ReturnType<typeof __VLS_template>['refs']${endOfLine}`;
 	yield `type __VLS_Slots = ReturnType<typeof __VLS_template>['slots']${endOfLine}`;
@@ -417,6 +446,45 @@ function* generateModelEmits(
 	yield endOfLine;
 }
 
+function* generateStyleModules(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext
+): Generator<Code> {
+	const styles = options.sfc.styles.filter(style => style.module);
+	if (!styles.length) {
+		return;
+	}
+	yield `type __VLS_StyleModules = {${newLine}`;
+	for (let i = 0; i < styles.length; i++) {
+		const style = styles[i];
+		const { name, offset } = style.module!;
+		if (offset) {
+			yield [
+				name,
+				'main',
+				offset + 1,
+				codeFeatures.all
+			];
+		}
+		else {
+			yield name;
+		}
+		yield `: Record<string, string> & ${ctx.helperTypes.Prettify.name}<{}`;
+		for (const className of style.classNames) {
+			yield* generateCssClassProperty(
+				i,
+				className.text,
+				className.offset,
+				'string',
+				false
+			);
+		}
+		yield `>${endOfLine}`;
+	}
+	yield `}`;
+	yield endOfLine;
+}
+
 function* generateDefinePropType(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	propName: string | undefined,
@@ -453,7 +521,7 @@ function getPropAndLocalName(
 			? 'modelValue'
 			: localName;
 	if (defineProp.name) {
-		propName = propName!.replace(/['"]+/g, '')
+		propName = propName!.replace(/['"]+/g, '');
 	}
 	return [propName, localName];
 }
