@@ -143,7 +143,7 @@ export function* generateElementProps(
 				...genereatePropExp(
 					options,
 					ctx,
-					prop.exp,
+					prop,
 					ctx.codeFeatures.all,
 					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
 					enableCodeFeatures
@@ -266,11 +266,12 @@ export function* generateElementProps(
 function* genereatePropExp(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	exp: CompilerDOM.SimpleExpressionNode | undefined,
+	prop: CompilerDOM.DirectiveNode,
 	features: VueCodeInformation,
 	isShorthand: boolean,
 	enableCodeFeatures: boolean
 ): Generator<Code> {
+	const exp = prop.exp as CompilerDOM.SimpleExpressionNode;
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 		if (!isShorthand) { // vue 3.4+
 			yield* generateInterpolation(
@@ -299,11 +300,11 @@ function* genereatePropExp(
 				if (enableCodeFeatures) {
 					ctx.inlayHints.push({
 						blockName: 'template',
-						offset: exp.loc.end.offset,
+						offset: prop.loc.end.offset,
 						setting: 'vue.inlayHints.vBindShorthand',
 						label: `="${propVariableName}"`,
 						tooltip: [
-							`This is a shorthand for \`${exp.loc.source}="${propVariableName}"\`.`,
+							`This is a shorthand for \`${prop.loc.source}="${propVariableName}"\`.`,
 							'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
 							'[More info](https://github.com/vuejs/core/pull/9451)',
 						].join('\n\n'),
