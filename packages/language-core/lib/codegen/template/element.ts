@@ -358,6 +358,13 @@ export function* generateElement(
 	else {
 		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
 	}
+
+	if (
+		node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
+		|| node === ctx.singleRootNode
+	) {
+		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
+	}
 }
 
 function* generateVScope(
