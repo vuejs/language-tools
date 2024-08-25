@@ -25,7 +25,7 @@ export function createHybridModeProject(
 		setup(_server) {
 			server = _server;
 			onSomePipeReadyCallbacks.push(() => {
-				server.languageFeatures.refreshDiagnostics(false);
+				server.languageFeatures.requestRefresh(false);
 			});
 			server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
 				for (const change of changes) {

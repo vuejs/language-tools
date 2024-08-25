@@ -1,0 +1,433 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`grammar > basic.vue 1`] = `
+"><div></div>
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^ source.vue entity.name.tag.div.html.vue
+#    ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+#     ^^ source.vue punctuation.definition.tag.begin.html.vue
+#       ^^^ source.vue entity.name.tag.div.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue"
+`;
+
+exports[`grammar > directives.vue 1`] = `
+"><template>
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#         ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>	<div @click></div>
+#^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div @click="{}"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div @click="log('hello'); log('world');"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div #default></div>
+#^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div #default="args"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div #></div>
+#^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div #="args"></div>
+#^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div :key></div>
+#^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div :key="{}"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-if="true"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-else-if="true"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-else></div>
+#^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-for="n in []"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-if="true" v-else-if="true" v-else></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div :foo="':foo=123'"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div :foo="[{ bar: []}]"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div .prop="[1, 2]"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-a:[({a:1}).a]="1"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-a:[c]></div>
+#^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-a:[({a:1}).a].d="[1, 2]"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div @[({a:1}).a].d="[1, 2]" v-d:[2]="3"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div :[1]="value"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-bind="{ id: someProp, 'other-attr': otherProp }"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div :xlink:special.d="3"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-a.c.d="3"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+></template>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><template lang="pug">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#         ^^^^^^^^^^^ source.vue meta.tag-stuff
+#                    ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>div(@click)
+#^^^^^^^^^^^^ source.vue
+>div(@click="{}")
+#^^^^^^^^^^^^^^^^^ source.vue
+>div(@click="log('hello'); log('world');")
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>div(#default)
+#^^^^^^^^^^^^^^ source.vue
+>div(#default="args")
+#^^^^^^^^^^^^^^^^^^^^^ source.vue
+>div(#)
+#^^^^^^^ source.vue
+>div(#="args")
+#^^^^^^^^^^^^^^ source.vue
+>div(:key)
+#^^^^^^^^^^ source.vue
+>div(:key="{}")
+#^^^^^^^^^^^^^^^ source.vue
+>div(v-if="true")
+#^^^^^^^^^^^^^^^^^ source.vue
+>div(v-else-if="true")
+#^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>div(v-else)
+#^^^^^^^^^^^^ source.vue
+>div(v-for="n in []")
+#^^^^^^^^^^^^^^^^^^^^^ source.vue
+>div(v-if="true" v-else-if="true" v-else)
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>div(:foo="':foo=123'")
+#^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>div(:foo="[{ bar: []}]")
+#^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>div(.prop="[1, 2]")
+#^^^^^^^^^^^^^^^^^^^^ source.vue
+></template>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><template lang="pug">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#         ^^^^^^^^^^^ source.vue meta.tag-stuff
+#                    ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>h1.myClass(class="text-right") hello
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>//- https://github.com/vuejs/language-tools/issues/1826
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>h1#myId(class="text-right") hello
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+></template>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><!-- TODO -->
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^ source.vue
+#  ^^ source.vue entity.name.tag.--.html.vue
+#    ^^^^^^^^ source.vue meta.tag-stuff
+#            ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+><template lang="html">
+#^^^^^^^^^^^^^^^^^^^^^^^ source.vue text
+>	<div @click></div>
+#^^^^^^^^^^^^^ source.vue text
+#             ^^^^^^^ source.vue text
+>	<div @click="{}"></div>
+#^^^^^^^^^^^^^^^^^^ source.vue text
+#                  ^^^^^^^ source.vue text
+>	<div @click="log('hello'); log('world');"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text
+#                                           ^^^^^^^ source.vue text
+>	<div #default></div>
+#^^^^^^^^^^^^^^^ source.vue text
+#               ^^^^^^^ source.vue text
+>	<div #default="args"></div>
+#^^^^^^^^^^^^^^^^^^^^^^ source.vue text
+#                      ^^^^^^^ source.vue text
+>	<div #></div>
+#^^^^^^^^ source.vue text
+#        ^^^^^^^ source.vue text
+>	<div #="args"></div>
+#^^^^^^^^^^^^^^^ source.vue text
+#               ^^^^^^^ source.vue text
+>	<div :key></div>
+#^^^^^^^^^^^ source.vue text
+#           ^^^^^^^ source.vue text
+>	<div :key="{}"></div>
+#^^^^^^^^^^^^^^^^ source.vue text
+#                ^^^^^^^ source.vue text
+>	<div v-if="true"></div>
+#^^^^^^^^^^^^^^^^^^ source.vue text
+#                  ^^^^^^^ source.vue text
+>	<div v-else-if="true"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^ source.vue text
+#                       ^^^^^^^ source.vue text
+>	<div v-else></div>
+#^^^^^^^^^^^^^ source.vue text
+#             ^^^^^^^ source.vue text
+>	<div v-for="n in []"></div>
+#^^^^^^^^^^^^^^^^^^^^^^ source.vue text
+#                      ^^^^^^^ source.vue text
+>	<div v-if="true" v-else-if="true" v-else></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text
+#                                          ^^^^^^^ source.vue text
+>	<div :foo="':foo=123'"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text
+#                        ^^^^^^^ source.vue text
+>	<div :foo="[{ bar: []}]"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text
+#                          ^^^^^^^ source.vue text
+>	<div .prop="[1, 2]"></div>
+#^^^^^^^^^^^^^^^^^^^^^ source.vue text
+#                     ^^^^^^^ source.vue text
+></template>
+#^^^^^^^^^^^ source.vue
+>
+#^ source.vue text"
+`;
+
+exports[`grammar > generic.vue 1`] = `
+"><script setup generic="T"></script>
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ source.vue entity.name.tag.script.html.vue
+#       ^^^^^^^ source.vue meta.tag-stuff
+#              ^^^^^^^ source.vue meta.tag-stuff meta.attribute.generic.vue entity.other.attribute-name.html.vue
+#                     ^ source.vue meta.tag-stuff meta.attribute.generic.vue punctuation.separator.key-value.html.vue
+#                      ^ source.vue meta.tag-stuff meta.attribute.generic.vue meta.type.parameters.vue punctuation.definition.string.begin.html.vue
+#                       ^ source.vue meta.tag-stuff meta.attribute.generic.vue meta.type.parameters.vue
+#                        ^ source.vue meta.tag-stuff meta.attribute.generic.vue meta.type.parameters.vue punctuation.definition.string.end.html.vue
+#                         ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+#                          ^^ source.vue punctuation.definition.tag.begin.html.vue
+#                            ^^^^^^ source.vue entity.name.tag.script.html.vue
+#                                  ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue"
+`;
+
+exports[`grammar > inline-style.vue 1`] = `
+"><template>
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#         ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>	<div style="width: 100%; height: auto;"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+></template>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><template lang="pug">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#         ^^^^^^^^^^^ source.vue meta.tag-stuff
+#                    ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>div(style="width: 100%; height: auto;")
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+></template>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue"
+`;
+
+exports[`grammar > jsx.vue 1`] = `
+"><script lang="tsx">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ source.vue entity.name.tag.script.html.vue
+#       ^^^^^^^^^^^ source.vue meta.tag-stuff
+#                  ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>(<Foo
+#^^^^^^ source.vue
+>	class={{ 'foo': 123 }}
+#^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>/>);
+#^^^^^ source.vue
+></script>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^ source.vue entity.name.tag.script.html.vue
+#        ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><script lang="jsx">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ source.vue entity.name.tag.script.html.vue
+#       ^^^^^^^^^^^ source.vue meta.tag-stuff
+#                  ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>(<Foo
+#^^^^^^ source.vue
+>	class={{ 'foo': 123 }}
+#^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>/>)
+#^^^^ source.vue
+></script>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^ source.vue entity.name.tag.script.html.vue
+#        ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue"
+`;
+
+exports[`grammar > namespaced.vue 1`] = `
+"><script setup lang="ts">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ source.vue entity.name.tag.script.html.vue
+#       ^^^^^^^^^^^^^^^^ source.vue meta.tag-stuff
+#                       ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>import { Component } from "vue";
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>import { defineComponent } from "vue";
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>const A = {
+#^^^^^^^^^^^^ source.vue
+>  B: {
+#^^^^^^^ source.vue
+>    C: defineComponent({
+#^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>      setup() {
+#^^^^^^^^^^^^^^^^ source.vue
+>        return () => "";
+#^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>      },
+#^^^^^^^^^ source.vue
+>    }),
+#^^^^^^^^ source.vue
+>  },
+#^^^^^ source.vue
+>};
+#^^^ source.vue
+>const C: Component & {
+#^^^^^^^^^^^^^^^^^^^^^^^ source.vue
+>  D: Component;
+#^^^^^^^^^^^^^^^^ source.vue
+>} = null!;
+#^^^^^^^^^^^ source.vue
+></script>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^ source.vue entity.name.tag.script.html.vue
+#        ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><template>
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#         ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>  <A.B.C> {{ A.B.C }} </A.B.C>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>  <A.B.C />
+#^^^^^^^^^^^^ source.vue text.html.derivative
+>  <C>
+#^^^^^^ source.vue text.html.derivative
+>    <C.D> 222 </C.D>
+#^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>    <C.D />
+#^^^^^^^^^^^^ source.vue text.html.derivative
+>  </C>
+#^^^^^^^ source.vue text.html.derivative
+></template>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue"
+`;
+
+exports[`grammar > script-tag-in-script.vue 1`] = `
+"><script>'<script></script>'</script>
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ source.vue entity.name.tag.script.html.vue
+#       ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+#        ^^^^^^^^^ source.vue
+#                 ^^ source.vue punctuation.definition.tag.begin.html.vue
+#                   ^^^^^^ source.vue entity.name.tag.script.html.vue
+#                         ^ source.vue punctuation.definition.tag.end.html.vue
+#                          ^ source.vue
+#                           ^ source.vue punctuation.definition.tag.begin.html.vue
+#                            ^ source.vue
+#                             ^^^^^^ source.vue entity.name.tag.script.html.vue
+#                                   ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>
+#^ source.vue"
+`;
+
+exports[`grammar > template-expression.vue 1`] = `
+"><template>
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#         ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>	<div v-if="var as XXX"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-if="var instanceof XXX"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-if="typeof xxx"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-if="typeof XXX"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-if="''.toString('xxx')"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+></template>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue"
+`;
+
+exports[`grammar > template-in-template.vue 1`] = `
+"><template>
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#         ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>	<template>
+#^ source.vue text.html.derivative
+# ^ source.vue text.html.derivative meta.template-tag.start punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue text.html.derivative meta.template-tag.start entity.name.tag.template.html.vue
+#          ^ source.vue text.html.derivative meta.template-tag.start punctuation.definition.tag.end.html.vue
+>		<template></template>
+#^^ source.vue text.html.derivative meta.template-tag.start meta.template-tag.end
+#  ^ source.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.template-tag.start punctuation.definition.tag.begin.html.vue
+#   ^^^^^^^^ source.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.template-tag.start entity.name.tag.template.html.vue
+#           ^ source.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.template-tag.start punctuation.definition.tag.end.html.vue
+#            ^^ source.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.template-tag.start meta.template-tag.end punctuation.definition.tag.begin.html.vue
+#              ^^^^^^^^ source.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.template-tag.start meta.template-tag.end entity.name.tag.template.html.vue
+#                      ^ source.vue text.html.derivative meta.template-tag.start meta.template-tag.end meta.template-tag.start punctuation.definition.tag.end.html.vue
+>	</template>
+#^ source.vue text.html.derivative meta.template-tag.start meta.template-tag.end
+# ^^ source.vue text.html.derivative meta.template-tag.start meta.template-tag.end punctuation.definition.tag.begin.html.vue
+#   ^^^^^^^^ source.vue text.html.derivative meta.template-tag.start meta.template-tag.end entity.name.tag.template.html.vue
+#           ^ source.vue text.html.derivative meta.template-tag.start punctuation.definition.tag.end.html.vue
+></template>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><template lang="pug">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#         ^^^^^^^^^^^ source.vue meta.tag-stuff
+#                    ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>template
+#^^^^^^^^^ source.vue
+>	template
+#^^^^^^^^^^ source.vue
+></template>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue"
+`;
