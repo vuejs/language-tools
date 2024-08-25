@@ -776,7 +776,7 @@ describe('Renaming', async () => {
 
 		const position = document.positionAt(offset);
 		const edit = await server.sendRenameRequest(document.uri, position, newName);
-		expect(edit).toBeDefined();
+		expect(edit?.changes).toBeDefined();
 
 		for (const [uri, edits] of Object.entries(edit!.changes!)) {
 			delete edit!.changes![uri];
