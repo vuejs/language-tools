@@ -40,13 +40,8 @@
 			"@volar/test-utils": "https://pkg.pr.new/volarjs/volar.js/@volar/test-utils@28cbdee",
 			"@volar/typescript": "https://pkg.pr.new/volarjs/volar.js/@volar/typescript@28cbdee",
 			"@volar/vscode": "https://pkg.pr.new/volarjs/volar.js/@volar/vscode@28cbdee",
-			"@vue/runtime-dom": "beta",
-			"@vue/shared": "beta",
-			"@vue/compiler-dom": "beta",
-			"@vue/compiler-sfc": "beta",
 			"volar-service-typescript": "https://pkg.pr.new/volarjs/services/volar-service-typescript@177b9ed",
-			"inquirer": "9.2.23",
-			"vue": "beta"
+			"inquirer": "9.2.23"
 		}
 	}
 }
