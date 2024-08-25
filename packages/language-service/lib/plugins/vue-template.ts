@@ -68,7 +68,10 @@ export function create(
 			},
 			inlayHintProvider: {},
 			hoverProvider: true,
-			diagnosticProvider: {},
+			diagnosticProvider: {
+				interFileDependencies: false,
+				workspaceDiagnostics: false,
+			},
 			semanticTokensProvider: {
 				legend: {
 					tokenTypes: ['class'],

@@ -31,7 +31,7 @@ export function* generateComponent(
 	yield `}${endOfLine}`;
 	yield `},${newLine}`;
 	if (!ctx.bypassDefineComponent) {
-		yield* generateScriptSetupOptions(options, ctx, scriptSetup, scriptSetupRanges);
+		yield* generateScriptSetupOptions(options, ctx, scriptSetup, scriptSetupRanges, true);
 	}
 	if (options.sfc.script && options.scriptRanges) {
 		yield* generateScriptOptions(options.sfc.script, options.scriptRanges);
@@ -68,9 +68,10 @@ export function* generateScriptSetupOptions(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges
+	scriptSetupRanges: ScriptSetupRanges,
+	inheritAttrs: boolean
 ): Generator<Code> {
-	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges);
+	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, inheritAttrs);
 	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
 }
 
@@ -78,13 +79,30 @@ export function* generatePropsOption(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges
+	scriptSetupRanges: ScriptSetupRanges,
+	inheritAttrs: boolean
 ) {
-	if (options.vueCompilerOptions.target >= 3.5 && ctx.generatedPropsType) {
-		yield `__typeProps: {} as __VLS_PublicProps,${newLine}`;
+
+	if (options.vueCompilerOptions.target >= 3.5) {
+		const types = [];
+		if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
+			types.push('typeof __VLS_template>[1]');
+		}
+		if (ctx.generatedPropsType) {
+			types.push('{} as __VLS_PublicProps');
+		}
+		if (types.length) {
+			yield `__typeProps: ${types.join(' & ')},${newLine}`;
+		}
 	}
 	if (options.vueCompilerOptions.target < 3.5 || !ctx.generatedPropsType || scriptSetupRanges.props.withDefaults) {
 		const codegens: (() => Generator<Code>)[] = [];
+
+		if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
+			codegens.push(function* () {
+				yield `{} as ${ctx.helperTypes.TypePropsToOption.name}<__VLS_PickNotAny<${ctx.helperTypes.OmitIndexSignature.name}<ReturnType<typeof __VLS_template>[1]>, {}>>`;
+			});
+		}
 
 		if (ctx.generatedPropsType) {
 			codegens.push(function* () {
