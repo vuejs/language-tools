@@ -1,5 +1,5 @@
 <script lang="ts" setup>
 defineProps<{
-    foo: number;
+	foo: number;
 }>();
 </script>

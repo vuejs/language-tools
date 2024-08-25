@@ -8,5 +8,5 @@ if (!value) {
 </script>
 
 <template>
-    <Comp :foo="value"></Comp>
+	<Comp :foo="value"></Comp>
 </template>
