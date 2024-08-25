@@ -170,13 +170,7 @@ type __VLS_Prettify<T> = {
 `;
 
 exports[`vue-tsc-dts > Input: generic/main.vue, Output: generic/main.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<Readonly<import("vue").ComponentPropsOptions<{
-    [x: string]: unknown;
-}>>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, readonly string[] | Readonly<import("vue").ExtractPropTypes<Readonly<import("vue").ComponentObjectPropsOptions<{
-    [x: string]: unknown;
-}>>>>, {
-    readonly [x: number]: string;
-} | {}, {}>;
+"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
 export default _default;
 "
 `;
