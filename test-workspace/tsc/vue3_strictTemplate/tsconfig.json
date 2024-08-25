@@ -1,7 +1,0 @@
-{
-	"extends": "../../tsconfig.json",
-	"vueCompilerOptions": {
-		"strictTemplates": true
-	},
-	"include": [ "**/*" ],
-}

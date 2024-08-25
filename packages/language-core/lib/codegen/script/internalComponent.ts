@@ -48,8 +48,11 @@ export function* generateInternalComponent(
 		}
 		yield `}${endOfLine}`; // return {
 		yield `},${newLine}`; // setup() {
+		if (options.vueCompilerOptions.target >= 3.5) {
+			yield `__typeRefs: {} as __VLS_Refs,${newLine}`;
+		}
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
-			yield* generateScriptSetupOptions(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
+			yield* generateScriptSetupOptions(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges, false);
 		}
 		if (options.sfc.script && options.scriptRanges) {
 			yield* generateScriptOptions(options.sfc.script, options.scriptRanges);
