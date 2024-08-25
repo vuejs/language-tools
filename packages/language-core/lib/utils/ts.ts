@@ -249,6 +249,5 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 				select: true
 			}
 		},
-		experimentalInheritAttrs: vueOptions.experimentalInheritAttrs ?? false,
 	};
 }

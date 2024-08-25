@@ -2,7 +2,6 @@
 	"extends": "../../../tsconfig.base.json",
 	"vueCompilerOptions": {
 		"strictTemplates": true,
-		"experimentalInheritAttrs": true,
 	},
 	"include": [ "**/*" ],
 }

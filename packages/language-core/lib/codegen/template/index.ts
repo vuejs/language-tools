@@ -83,10 +83,8 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	function* generateInheritedAttrs(): Generator<Code> {
 		yield 'var __VLS_inheritedAttrs!: {}';
-		if (options.vueCompilerOptions.experimentalInheritAttrs) {
-			for (const varName of ctx.inheritedAttrVars) {
-				yield ` & typeof ${varName}`;
-			}
+		for (const varName of ctx.inheritedAttrVars) {
+			yield ` & typeof ${varName}`;
 		}
 		yield endOfLine;
 	}
