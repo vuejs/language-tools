@@ -1,3 +1,3 @@
 declare module 'vue' {
-	export * from 'vue3.5';
+	export * from 'vue3.4';
 }
