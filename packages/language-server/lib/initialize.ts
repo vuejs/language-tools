@@ -56,7 +56,7 @@ export function initialize(
 				};
 			}
 		),
-		getFullLanguageServicePlugins(ts)
+		getFullLanguageServicePlugins(ts, { disableAutoImportCache: params.initializationOptions.typescript.disableAutoImportCache })
 	);
 
 	function updateFileWatcher(vueCompilerOptions: VueCompilerOptions) {
@@ -70,7 +70,7 @@ export function initialize(
 				watchingExtensions.add(ext);
 			}
 			fileWatcher?.then(dispose => dispose.dispose());
-			fileWatcher = server.watchFiles(['**/*.{' + [...watchingExtensions].join(',') + '}']);
+			fileWatcher = server.fileWatcher.watchFiles(['**/*.{' + [...watchingExtensions].join(',') + '}']);
 		}
 	}
 }

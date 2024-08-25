@@ -7,6 +7,7 @@ import { forEachInterpolationSegment } from '../template/interpolation';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 import { generateInternalComponent } from './internalComponent';
+import { generateStyleScopedClasses } from '../template/styleScopedClasses';
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
@@ -24,7 +25,7 @@ export function* generateTemplate(
 		}
 		const templateCodegenCtx = createTemplateCodegenContext(new Set());
 		yield `const __VLS_template_return = () => {${newLine}`;
-		yield* generateCtx(options, ctx, isClassComponent);
+		yield* generateCtx(options, isClassComponent);
 		yield* generateTemplateContext(options, templateCodegenCtx);
 		yield* generateExportOptions(options);
 		yield* generateConstNameOption(options);
@@ -38,7 +39,7 @@ export function* generateTemplate(
 		const templateUsageVars = [...getTemplateUsageVars(options, ctx)];
 		yield `// @ts-ignore${newLine}`;
 		yield `[${templateUsageVars.join(', ')}]${newLine}`;
-		yield `return {}${endOfLine}`;
+		yield `return [{}, {}] as const${endOfLine}`;
 		yield `}${newLine}`;
 	}
 }
@@ -78,7 +79,6 @@ function* generateConstNameOption(options: ScriptCodegenOptions): Generator<Code
 
 function* generateCtx(
 	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
 	isClassComponent: boolean
 ): Generator<Code> {
 	yield `let __VLS_ctx!: `;
@@ -93,24 +93,7 @@ function* generateCtx(
 	}
 	/* CSS Module */
 	if (options.sfc.styles.some(style => style.module)) {
-		yield `& {${newLine}`;
-		for (let i = 0; i < options.sfc.styles.length; i++) {
-			const style = options.sfc.styles[i];
-			if (style.module) {
-				yield `${style.module}: Record<string, string> & ${ctx.helperTypes.Prettify.name}<{}`;
-				for (const className of style.classNames) {
-					yield* generateCssClassProperty(
-						i,
-						className.text,
-						className.offset,
-						'string',
-						false
-					);
-				}
-				yield `>${endOfLine}`;
-			}
-		}
-		yield `}`;
+		yield ` & __VLS_StyleModules`;
 	}
 	yield endOfLine;
 }
@@ -127,13 +110,23 @@ function* generateTemplateContext(
 	yield `let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents & typeof __VLS_ctx${endOfLine}`; // for html completion, TS references...
 
 	/* Style Scoped */
+	const firstClasses = new Set<string>();
 	yield `/* Style Scoped */${newLine}`;
-	yield `type __VLS_StyleScopedClasses = {}`;
+	yield `let __VLS_styleScopedClasses!: {}`;
 	for (let i = 0; i < options.sfc.styles.length; i++) {
 		const style = options.sfc.styles[i];
 		const option = options.vueCompilerOptions.experimentalResolveStyleCssClasses;
 		if (option === 'always' || (option === 'scoped' && style.scoped)) {
 			for (const className of style.classNames) {
+				if (firstClasses.has(className.text)) {
+					templateCodegenCtx.scopedClasses.push({
+						source: 'style_' + i,
+						className: className.text.slice(1),
+						offset: className.offset + 1
+					});
+					continue;
+				}
+				firstClasses.add(className.text);
 				yield* generateCssClassProperty(
 					i,
 					className.text,
@@ -145,7 +138,7 @@ function* generateTemplateContext(
 		}
 	}
 	yield endOfLine;
-	yield `let __VLS_styleScopedClasses!: __VLS_StyleScopedClasses | keyof __VLS_StyleScopedClasses | (keyof __VLS_StyleScopedClasses)[]${endOfLine}`;
+	yield* generateStyleScopedClasses(templateCodegenCtx, true);
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
@@ -157,13 +150,19 @@ function* generateTemplateContext(
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.slots.define) {
 			yield `const __VLS_slots = {}${endOfLine}`;
+			yield `const __VLS_refs = {}${endOfLine}`;
+			yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
 		}
 	}
 
-	yield `return ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'}${endOfLine}`;
+	yield `return {${newLine}`;
+	yield `slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
+	yield `refs: __VLS_refs as __VLS_PickRefsExpose<typeof __VLS_refs>,${newLine}`;
+	yield `attrs: __VLS_inheritedAttrs,${newLine}`;
+	yield `}${endOfLine}`;
 }
 
-function* generateCssClassProperty(
+export function* generateCssClassProperty(
 	styleIndex: number,
 	classNameWithDot: string,
 	offset: number,
@@ -175,7 +174,7 @@ function* generateCssClassProperty(
 		'',
 		'style_' + styleIndex,
 		offset,
-		codeFeatures.navigationWithoutRename,
+		codeFeatures.navigation,
 	];
 	yield `'`;
 	yield [

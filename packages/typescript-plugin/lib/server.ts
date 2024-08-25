@@ -47,18 +47,6 @@ export async function startNamedPipeServer(
 			}
 			const request: Request = JSON.parse(text);
 			const fileName = request.args[0];
-			if (request.type === 'containsFile') {
-				sendResponse(
-					info.project.containsFile(ts.server.toNormalizedPath(fileName))
-				);
-			}
-			if (request.type === 'projectInfo') {
-				sendResponse({
-					name: info.project.getProjectName(),
-					kind: info.project.projectKind,
-					currentDirectory: info.project.getCurrentDirectory(),
-				} satisfies ProjectInfo);
-			}
 			const requestContext: RequestContext = {
 				typescript: ts,
 				languageService: info.languageService,
@@ -67,7 +55,19 @@ export async function startNamedPipeServer(
 				isTsPlugin: true,
 				getFileId: (fileName: string) => fileName,
 			};
-			if (request.type === 'collectExtractProps') {
+			if (request.type === 'containsFile') {
+				sendResponse(
+					info.project.containsFile(ts.server.toNormalizedPath(fileName))
+				);
+			}
+			else if (request.type === 'projectInfo') {
+				sendResponse({
+					name: info.project.getProjectName(),
+					kind: info.project.projectKind,
+					currentDirectory: info.project.getCurrentDirectory(),
+				} satisfies ProjectInfo);
+			}
+			else if (request.type === 'collectExtractProps') {
 				const result = collectExtractProps.apply(requestContext, request.args as any);
 				sendResponse(result);
 			}
