@@ -1,0 +1,7 @@
+{
+	"extends": "../../../tsconfig.base.json",
+	"vueCompilerOptions": {
+		"jsxSlots": true
+	},
+	"include": [ "**/*" ]
+}

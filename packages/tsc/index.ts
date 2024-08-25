@@ -3,13 +3,13 @@ import * as vue from '@vue/language-core';
 
 const windowsPathReg = /\\/g;
 
-export function run() {
+export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 
 	let runExtensions = ['.vue'];
 
 	const extensionsChangedException = new Error('extensions changed');
 	const main = () => runTsc(
-		require.resolve('typescript/lib/tsc'),
+		tscPath,
 		runExtensions,
 		(ts, options) => {
 			const { configFilePath } = options.options;
