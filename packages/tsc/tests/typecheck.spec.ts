@@ -31,7 +31,7 @@ describe(`vue-tsc`, () => {
 	});
 });
 
-function getTscOutput(tsVersion) {
+function getTscOutput(tsVersion: 'stable' | 'next') {
 	const consoleOutput: string[] = [];
 	const originalConsoleLog = process.stdout.write;
 	const originalArgv = process.argv;
