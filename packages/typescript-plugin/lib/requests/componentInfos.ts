@@ -15,11 +15,7 @@ export function getComponentProps(
 		return;
 	}
 	const vueCode = volarFile.generated.root;
-	const program: ts.Program = (languageService as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
-
+	const program = languageService.getProgram()!;
 	const checker = program.getTypeChecker();
 	const components = getVariableType(ts, languageService, vueCode, '__VLS_components');
 	if (!components) {
@@ -97,11 +93,7 @@ export function getComponentEvents(
 		return;
 	}
 	const vueCode = volarFile.generated.root;
-	const program: ts.Program = (languageService as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
-
+	const program = languageService.getProgram()!;
 	const checker = program.getTypeChecker();
 	const components = getVariableType(ts, languageService, vueCode, '__VLS_components');
 	if (!components) {
@@ -221,10 +213,7 @@ export function getElementAttrs(
 	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
 		return;
 	}
-	const program: ts.Program = (languageService as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
+	const program = languageService.getProgram()!;
 
 	let tsSourceFile: ts.SourceFile | undefined;
 
@@ -251,14 +240,11 @@ export function getElementAttrs(
 
 function getVariableType(
 	ts: typeof import('typescript'),
-	tsLs: ts.LanguageService,
+	languageService: ts.LanguageService,
 	vueCode: vue.VueVirtualCode,
 	name: string
 ) {
-	const program: ts.Program = (tsLs as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
+	const program = languageService.getProgram()!;
 
 	let tsSourceFile: ts.SourceFile | undefined;
 

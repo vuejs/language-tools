@@ -109,7 +109,11 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	const hasSlotElements = new Set<CompilerDOM.ElementNode>();;
 	const blockConditions: string[] = [];
 	const usedComponentCtxVars = new Set<string>();
-	const scopedClasses: { className: string, offset: number; }[] = [];
+	const scopedClasses: {
+		source: string;
+		className: string;
+		offset: number;
+	}[] = [];
 	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
 
@@ -125,6 +129,8 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		emptyClassOffsets,
 		inlayHints,
 		hasSlot: false,
+		inheritedAttrVars: new Set(),
+		singleRootNode: undefined as CompilerDOM.ElementNode | undefined,
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);
 			if (!arr) {

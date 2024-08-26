@@ -6,6 +6,7 @@ import { TemplateCodegenContext, createTemplateCodegenContext } from './context'
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
 import { generateTemplateChild, getVForNode } from './templateChild';
+import { generateStyleScopedClasses } from './styleScopedClasses';
 
 export interface TemplateCodegenOptions {
 	ts: typeof ts;
@@ -15,9 +16,11 @@ export interface TemplateCodegenOptions {
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
 	edited: boolean;
+	templateRefNames: Map<string, string>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;
+	inheritAttrs: boolean;
 }
 
 export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
@@ -36,7 +39,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		yield* generateTemplateChild(options, ctx, options.template.ast, undefined, undefined, undefined);
 	}
 
-	yield* generateStyleScopedClasses();
+	yield* generateStyleScopedClasses(ctx);
 
 	if (!options.hasDefineSlots) {
 		yield `var __VLS_slots!:`;
@@ -44,9 +47,24 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		yield endOfLine;
 	}
 
+	yield* generateInheritedAttrs();
+
 	yield* ctx.generateAutoImportCompletion();
 
+	yield* generateRefs()
+
 	return ctx;
+
+	function* generateRefs(): Generator<Code> {
+		for (const [, validId] of options.templateRefNames) {
+			yield `let ${validId}${newLine}`;
+		}
+		yield `const __VLS_refs = {${newLine}`;
+		for (const [name, validId] of options.templateRefNames) {
+			yield `'${name}': ${validId}!,${newLine}`;
+		}
+		yield `}${endOfLine}`;
+	}
 
 	function* generateSlotsType(): Generator<Code> {
 		for (const { expVar, varName } of ctx.dynamicSlots) {
@@ -79,40 +97,12 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		yield `}`;
 	}
 
-	function* generateStyleScopedClasses(): Generator<Code> {
-		yield `if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {${newLine}`;
-		for (const offset of ctx.emptyClassOffsets) {
-			yield `__VLS_styleScopedClasses['`;
-			yield [
-				'',
-				'template',
-				offset,
-				ctx.codeFeatures.additionalCompletion,
-			];
-			yield `']${endOfLine}`;
+	function* generateInheritedAttrs(): Generator<Code> {
+		yield 'var __VLS_inheritedAttrs!: {}';
+		for (const varName of ctx.inheritedAttrVars) {
+			yield ` & typeof ${varName}`;
 		}
-		for (const { className, offset } of ctx.scopedClasses) {
-			yield `__VLS_styleScopedClasses[`;
-			yield [
-				'',
-				'template',
-				offset,
-				ctx.codeFeatures.navigationWithoutRename,
-			];
-			yield `'`;
-
-			// fix https://github.com/vuejs/language-tools/issues/4537
-			yield* escapeString(className, offset, ['\\', '\'']);
-			yield `'`;
-			yield [
-				'',
-				'template',
-				offset + className.length,
-				ctx.codeFeatures.navigationWithoutRename,
-			];
-			yield `]${endOfLine}`;
-		}
-		yield `}${newLine}`;
+		yield endOfLine;
 	}
 
 	function* generatePreResolveComponents(): Generator<Code> {
@@ -139,45 +129,6 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 			}
 		}
 		yield `>${endOfLine}`;
-	}
-
-	function* escapeString(className: string, offset: number, escapeTargets: string[]): Generator<Code> {
-		let count = 0;
-
-		const currentEscapeTargets = [...escapeTargets];
-		const firstEscapeTarget = currentEscapeTargets.shift()!;
-		const splitted = className.split(firstEscapeTarget);
-
-		for (let i = 0; i < splitted.length; i++) {
-			const part = splitted[i];
-			const partLength = part.length;
-
-			if (escapeTargets.length > 0) {
-				yield* escapeString(part, offset + count, [...currentEscapeTargets]);
-			} else {
-				yield [
-					part,
-					'template',
-					offset + count,
-					ctx.codeFeatures.navigationAndAdditionalCompletion,
-				];
-			}
-
-			if (i !== splitted.length - 1) {
-				yield '\\';
-
-				yield [
-					firstEscapeTarget,
-					'template',
-					offset + count + partLength,
-					ctx.codeFeatures.navigationAndAdditionalCompletion,
-				];
-
-				count += partLength + 1;
-			} else {
-				count += partLength;
-			}
-		}
 	}
 }
 

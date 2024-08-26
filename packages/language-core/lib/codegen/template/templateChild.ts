@@ -47,8 +47,13 @@ export function* generateTemplateChild(
 		}
 	}
 
+	const shouldInheritRootNodeAttrs = options.inheritAttrs;
+
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		let prev: CompilerDOM.TemplateChildNode | undefined;
+		if (shouldInheritRootNodeAttrs && node.children.length === 1 && node.children[0].type === CompilerDOM.NodeTypes.ELEMENT) {
+			ctx.singleRootNode = node.children[0];
+		}
 		for (const childNode of node.children) {
 			yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
 			prev = childNode;

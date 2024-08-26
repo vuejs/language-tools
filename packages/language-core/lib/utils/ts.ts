@@ -1,3 +1,4 @@
+import { camelize } from '@vue/shared';
 import type * as ts from 'typescript';
 import * as path from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
@@ -230,7 +231,11 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			defineModel: ['defineModel'],
 			defineOptions: ['defineOptions'],
 			withDefaults: ['withDefaults'],
+			templateRef: ['templateRef', 'useTemplateRef'],
 			...vueOptions.macros,
+		},
+		composibles: {
+			useCssModule: ['useCssModule']
 		},
 		plugins: vueOptions.plugins ?? [],
 
@@ -239,15 +244,17 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 		// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
-		experimentalModelPropName: vueOptions.experimentalModelPropName ?? {
-			'': {
-				input: true
-			},
-			value: {
-				input: { type: 'text' },
-				textarea: true,
-				select: true
+		experimentalModelPropName: Object.fromEntries(Object.entries(
+			vueOptions.experimentalModelPropName ?? {
+				'': {
+					input: true
+				},
+				value: {
+					input: { type: 'text' },
+					textarea: true,
+					select: true
+				}
 			}
-		},
+		).map(([k, v]) => [camelize(k), v])),
 	};
 }

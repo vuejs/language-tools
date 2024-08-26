@@ -54,9 +54,14 @@ declare global {
 	function __VLS_getSlotParams<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
 	// @ts-ignore
 	function __VLS_getSlotParam<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
-	function __VLS_directiveFunction<T>(dir: T):
-		T extends import('${vueCompilerOptions.lib}').ObjectDirective<infer E, infer V> | import('${vueCompilerOptions.lib}').FunctionDirective<infer E, infer V> ? (value: V) => void
-		: T;
+
+	// Custom Directives
+	type __VLS_unknownDirective = (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
+	function __VLS_directiveAsFunction<T extends import('${vueCompilerOptions.lib}').Directive>(dir: T): T extends (...args: any) => any
+	  ? T | __VLS_unknownDirective
+		: NonNullable<(T & Record<string, __VLS_unknownDirective>)['created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted']>;
+	const __VLS_directiveBindingRestFields = { instance: null, oldValue: null, modifiers: null as any, dir: null as any };
+
 	function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 	function __VLS_nonNullable<T>(t: T): T extends null | undefined ? never : T;
@@ -132,6 +137,13 @@ declare global {
 		>
 	>;
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
+	type __VLS_PickRefsExpose<T> = T extends object
+		? { [K in keyof T]: (T[K] extends any[]
+		? Parameters<T[K][0]['expose']>[0][]
+		: T[K] extends { expose?: (exposed: infer E) => void }
+		? E
+		: T[K]) | null }
+		: never;
 }
 export const __VLS_globalTypesEnd = {};
 `;
