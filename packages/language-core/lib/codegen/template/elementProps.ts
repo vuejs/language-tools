@@ -144,6 +144,7 @@ export function* generateElementProps(
 				...genereatePropExp(
 					options,
 					ctx,
+					prop,
 					prop.exp,
 					ctx.codeFeatures.all,
 					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
@@ -267,6 +268,7 @@ export function* generateElementProps(
 function* genereatePropExp(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
+	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
 	isShorthand: boolean,
@@ -298,7 +300,7 @@ function* genereatePropExp(
 					features
 				);
 				if (enableCodeFeatures) {
-					ctx.inlayHints.push(generateVBindShorthandInlayHint(exp.loc, propVariableName));
+					ctx.inlayHints.push(generateVBindShorthandInlayHint(prop.loc, propVariableName));
 				}
 			}
 		}

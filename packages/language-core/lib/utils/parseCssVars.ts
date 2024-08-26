@@ -1,6 +1,6 @@
 // https://github.com/vuejs/core/blob/main/packages/compiler-sfc/src/cssVars.ts#L47-L61
 
-const vBindCssVarReg = /\bv-bind\(\s*(?:'([^']+)'|"([^"]+)"|([^'"][^)]*))\s*\)/g;
+const vBindCssVarReg = /\bv-bind\(\s*(?:'([^']+)'|"([^"]+)"|([a-z_]\w*))\s*\)/gi;
 const commentReg1 = /\/\*([\s\S]*?)\*\//g;
 const commentReg2 = /\/\/([\s\S]*?)\n/g;
 
@@ -8,12 +8,10 @@ export function* parseCssVars(styleContent: string) {
 	styleContent = clearComments(styleContent);
 	const matchs = styleContent.matchAll(vBindCssVarReg);
 	for (const match of matchs) {
-		if (match.index !== undefined) {
-			const matchText = match[1] ?? match[2] ?? match[3];
-			if (matchText !== undefined) {
-				const offset = match.index + styleContent.slice(match.index).indexOf(matchText);
-				yield { offset, text: matchText };
-			}
+		const matchText = match.slice(1).find(t => t);
+		if (matchText) {
+			const offset = match.index + styleContent.slice(match.index).indexOf(matchText);
+			yield { offset, text: matchText };
 		}
 	}
 }
