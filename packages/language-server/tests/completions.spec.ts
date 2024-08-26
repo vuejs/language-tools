@@ -338,6 +338,12 @@ describe('Completions', async () => {
 			      },
 			    },
 			  ],
+			  "commitCharacters": [
+			    ".",
+			    ",",
+			    ";",
+			    "(",
+			  ],
 			  "detail": "Add import from "./ComponentForAutoImport.vue"
 			(property) default: DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<ExtractPropTypes<{}>>, {}, {}>",
 			  "documentation": {

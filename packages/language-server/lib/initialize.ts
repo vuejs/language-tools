@@ -48,7 +48,8 @@ export function initialize(
 							sys.useCaseSensitiveFileNames
 						),
 						compilerOptions,
-						vueCompilerOptions
+						vueCompilerOptions,
+						params.initializationOptions.typescript.disableAutoImportCache
 					)],
 					setup({ project }) {
 						project.vue = { compilerOptions: vueCompilerOptions };
