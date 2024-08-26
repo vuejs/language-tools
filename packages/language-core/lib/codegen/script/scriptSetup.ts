@@ -57,10 +57,13 @@ export function* generateScriptSetup(
 			+ `	__VLS_setup = (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined, definePropMirrors);
 
-		const emitTypes = ['__VLS_ModelEmitsType'];
+		const emitTypes: string[] = [];
 
 		if (scriptSetupRanges.emits.define) {
-			emitTypes.unshift(`typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'}`);
+			emitTypes.push(`typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'}`);
+		}
+		if (scriptSetupRanges.defineProp.some(p => p.isModel)) {
+			emitTypes.push(`__VLS_ModelEmitsType`);
 		}
 
 		yield `		return {} as {${newLine}`
@@ -68,7 +71,7 @@ export function* generateScriptSetup(
 			+ `			expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
 			+ `			attrs: any,${newLine}`
 			+ `			slots: __VLS_Slots,${newLine}`
-			+ `			emit: ${emitTypes.join(' & ')},${newLine}`
+			+ `			emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
 			+ `		}${endOfLine}`;
 		yield `	})(),${newLine}`; // __VLS_setup = (async () => {
 		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))`;
@@ -441,9 +444,6 @@ function* generateModelEmits(
 			yield `}>()${endOfLine}`;
 			yield `type __VLS_ModelEmitsType = typeof __VLS_modelEmitsType${endOfLine}`;
 		}
-	}
-	else {
-		yield `type __VLS_ModelEmitsType = {}${endOfLine}`;
 	}
 }
 

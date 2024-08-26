@@ -78,7 +78,7 @@ exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/compo
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {};
-    emit: ((evt: "foo", value: string) => void) & {};
+    emit: (evt: "foo", value: string) => void;
 }>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
     [key: string]: any;
 }> & {
