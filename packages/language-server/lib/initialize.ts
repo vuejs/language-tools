@@ -37,6 +37,7 @@ export function initialize(
 					compilerOptions = ts.getDefaultCompilerOptions();
 					vueCompilerOptions = resolveVueCompilerOptions({});
 				}
+				vueCompilerOptions.__test = params.initializationOptions.typescript.disableAutoImportCache;
 				updateFileWatcher(vueCompilerOptions);
 				return {
 					languagePlugins: [createVueLanguagePlugin2(
@@ -48,8 +49,7 @@ export function initialize(
 							sys.useCaseSensitiveFileNames
 						),
 						compilerOptions,
-						vueCompilerOptions,
-						params.initializationOptions.typescript.disableAutoImportCache
+						vueCompilerOptions
 					)],
 					setup({ project }) {
 						project.vue = { compilerOptions: vueCompilerOptions };

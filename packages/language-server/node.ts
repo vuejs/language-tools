@@ -26,14 +26,14 @@ connection.onInitialize(params => {
 							vueOptions: resolveVueCompilerOptions({}),
 							options: ts.getDefaultCompilerOptions(),
 						};
+					commandLine.vueOptions.__test = params.initializationOptions.typescript.disableAutoImportCache;
 					return {
 						languagePlugins: [createVueLanguagePlugin2(
 							ts,
 							asFileName,
 							() => false,
 							commandLine.options,
-							commandLine.vueOptions,
-							params.initializationOptions.typescript.disableAutoImportCache
+							commandLine.vueOptions
 						)],
 						setup({ project }) {
 							project.vue = { compilerOptions: commandLine.vueOptions };

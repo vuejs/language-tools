@@ -92,8 +92,7 @@ export function createVueLanguagePlugin2<T>(
 	asFileName: (scriptId: T) => string,
 	isRootFile: (fileName: string) => boolean,
 	compilerOptions: ts.CompilerOptions,
-	vueCompilerOptions: VueCompilerOptions,
-	test?: boolean
+	vueCompilerOptions: VueCompilerOptions
 ): LanguagePlugin<T, VueVirtualCode> {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
@@ -108,7 +107,6 @@ export function createVueLanguagePlugin2<T>(
 		compilerOptions,
 		vueCompilerOptions,
 		globalTypesHolder: undefined,
-		test,
 	};
 	const plugins = createPlugins(pluginContext);
 
