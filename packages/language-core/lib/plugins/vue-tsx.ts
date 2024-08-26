@@ -94,7 +94,7 @@ function createTsx(
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: ctx.vueCompilerOptions,
 			template: _sfc.template,
-			edited: ctx.test || (fileEditTimes.get(fileName) ?? 0) >= 2,
+			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			scriptSetupBindingNames: scriptSetupBindingNames(),
 			scriptSetupImportComponentNames: scriptSetupImportComponentNames(),
 			templateRefNames: new Map(),
@@ -160,7 +160,7 @@ function createTsx(
 			templateCodegen: _template,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: ctx.vueCompilerOptions,
-			edited: ctx.test || (fileEditTimes.get(fileName) ?? 0) >= 2,
+			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			getGeneratedLength: () => generatedLength,
 			linkedCodeMappings,
 		});
