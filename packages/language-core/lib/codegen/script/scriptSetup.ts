@@ -303,14 +303,16 @@ function* generateComponentProps(
 	scriptSetupRanges: ScriptSetupRanges,
 	definePropMirrors: Map<string, number>
 ): Generator<Code> {
-	yield `const __VLS_fnComponent = `
-		+ `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
+	yield `const __VLS_fnComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
+
 	if (scriptSetupRanges.props.define?.arg) {
-		yield `	props: `;
+		yield `props: `;
 		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.arg.start, scriptSetupRanges.props.define.arg.end, codeFeatures.navigation);
 		yield `,${newLine}`;
 	}
+
 	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
+
 	yield `})${endOfLine}`;
 
 	yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
@@ -418,32 +420,31 @@ function* generateModelEmits(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	yield `type __VLS_ModelEmitsType = `;
-	if (scriptSetupRanges.defineProp.filter(p => p.isModel).length) {
-		if (options.vueCompilerOptions.target < 3.5) {
-			yield `typeof __VLS_modelEmitsType${endOfLine}`;
-			yield `const __VLS_modelEmitsType = (await import('${options.vueCompilerOptions.lib}')).defineEmits<`;
-		}
-		yield `{${newLine}`;
-		for (const defineProp of scriptSetupRanges.defineProp) {
-			if (!defineProp.isModel) {
-				continue;
+	const defineModels = scriptSetupRanges.defineProp.filter(p => p.isModel);
+	if (defineModels.length) {
+		const generateDefineModels = function* () {
+			for (const defineModel of defineModels) {
+				const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
+				yield `'update:${propName}': [${propName}:`;
+				yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
+				yield `]${endOfLine}`;
 			}
-
-			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
-
-			yield `'update:${propName}': [${propName}:`;
-			yield* generateDefinePropType(scriptSetup, propName, localName, defineProp);
-			yield `]${endOfLine}`;
+		};
+		if (options.vueCompilerOptions.target >= 3.5) {
+			yield `type __VLS_ModelEmitsType = {${newLine}`;
+			yield* generateDefineModels();
+			yield `}${endOfLine}`;
 		}
-		yield `}`;
-		if (options.vueCompilerOptions.target < 3.5) {
-			yield `>()`;
+		else {
+			yield `const __VLS_modelEmitsType = (await import('${options.vueCompilerOptions.lib}')).defineEmits<{${newLine}`;
+			yield* generateDefineModels();
+			yield `}>()${endOfLine}`;
+			yield `type __VLS_ModelEmitsType = typeof __VLS_modelEmitsType${endOfLine}`;
 		}
-	} else {
-		yield `{}`;
 	}
-	yield endOfLine;
+	else {
+		yield `type __VLS_ModelEmitsType = {}${endOfLine}`;
+	}
 }
 
 function* generateStyleModules(

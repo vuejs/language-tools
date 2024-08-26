@@ -71,34 +71,34 @@ export function* generateScriptSetupOptions(
 	scriptSetupRanges: ScriptSetupRanges,
 	inheritAttrs: boolean
 ): Generator<Code> {
-	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, inheritAttrs);
-	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
-}
-
-export function* generatePropsOption(
-	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges,
-	inheritAttrs: boolean
-) {
+	const emitOptionCodes = [...generateEmitsOption(options, scriptSetup, scriptSetupRanges)];
+	for (const code of emitOptionCodes) {
+		yield code;
+	}
 
 	if (options.vueCompilerOptions.target >= 3.5) {
 		const types = [];
-		if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
-			types.push(`ReturnType<typeof __VLS_template>['attrs']`);
+		if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size && !emitOptionCodes.length) {
+			types.push(`{} as ReturnType<typeof __VLS_template>['attrs']`);
 		}
 		if (ctx.generatedPropsType) {
 			types.push(`{} as __VLS_PublicProps`);
 		}
-		if (types.length) {
-			yield `__typeProps: ${types.join(' & ')},${newLine}`;
+		if (types.length === 1) {
+			yield `__typeProps: ${types[0]},${newLine}`;
+		}
+		else if (types.length >= 2) {
+			yield `__typeProps: {${newLine}`;
+			for (const type of types) {
+				yield `...${type},${newLine}`;
+			}
+			yield `},${newLine}`;
 		}
 	}
 	if (options.vueCompilerOptions.target < 3.5 || !ctx.generatedPropsType || scriptSetupRanges.props.withDefaults) {
 		const codegens: (() => Generator<Code>)[] = [];
 
-		if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
+		if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size && !emitOptionCodes.length) {
 			codegens.push(function* () {
 				yield `{} as ${ctx.helperTypes.TypePropsToOption.name}<__VLS_PickNotAny<${ctx.helperTypes.OmitIndexSignature.name}<ReturnType<typeof __VLS_template>['attrs']>, {}>>`;
 			});
@@ -148,25 +148,63 @@ export function* generateEmitsOption(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	if (!scriptSetupRanges.emits.define && !scriptSetupRanges.defineProp.some(p => p.isModel)) {
-		return;
+	const codes: {
+		optionExp?: Code[],
+		typeOptionType?: Code[],
+	}[] = [];
+	if (scriptSetupRanges.defineProp.some(p => p.isModel)) {
+		codes.push({
+			optionExp: [`{} as __VLS_NormalizeEmits<__VLS_ModelEmitsType>`],
+			typeOptionType: [`__VLS_ModelEmitsType`],
+		});
 	}
-
-	if (options.vueCompilerOptions.target < 3.5 || scriptSetupRanges.emits.define?.arg || scriptSetupRanges.emits.define?.hasUnionTypeArg) {
-		yield `emits: ({} as __VLS_NormalizeEmits<__VLS_ModelEmitsType`;
-		if (scriptSetupRanges?.emits.define) {
-			yield ` & typeof `;
-			yield scriptSetupRanges.emits.name ?? '__VLS_emit';
-		}
-		yield `>),${newLine}`;
+	if (scriptSetupRanges.emits.define) {
+		const { typeArg, hasUnionTypeArg } = scriptSetupRanges.emits.define;
+		codes.push({
+			optionExp: [`{} as __VLS_NormalizeEmits<typeof `, scriptSetupRanges.emits.name ?? '__VLS_emit', `>`],
+			typeOptionType: typeArg && !hasUnionTypeArg ? [scriptSetup.content.slice(typeArg.start, typeArg.end)] : undefined,
+		});
 	}
-	else {
-		yield `__typeEmits: {} as __VLS_ModelEmitsType`;
-		const typeArg = scriptSetupRanges.emits.define?.typeArg;
-		if (typeArg) {
-			yield ` & `;
-			yield scriptSetup.content.slice(typeArg.start, typeArg.end);
+	if (options.vueCompilerOptions.target >= 3.5 && codes.every(code => code.typeOptionType)) {
+		if (codes.length === 1) {
+			yield `__typeEmits: {} as `;
+			for (const code of codes[0].typeOptionType!) {
+				yield code;
+			}
+			yield `,${newLine}`;
 		}
-		yield `,${newLine}`;
+		else if (codes.length >= 2) {
+			yield `__typeEmits: {} as `;
+			for (const code of codes[0].typeOptionType!) {
+				yield code;
+			}
+			for (let i = 1; i < codes.length; i++) {
+				yield ` & `;
+				for (const code of codes[i].typeOptionType!) {
+					yield code;
+				}
+			}
+			yield `,${newLine}`;
+		}
+	}
+	else if (codes.every(code => code.optionExp)) {
+		if (codes.length === 1) {
+			yield `emits: `;
+			for (const code of codes[0].optionExp!) {
+				yield code;
+			}
+			yield `,${newLine}`;
+		}
+		else if (codes.length >= 2) {
+			yield `emits: {${newLine}`;
+			for (const code of codes) {
+				yield `...`;
+				for (const c of code.optionExp!) {
+					yield c;
+				}
+				yield `,${newLine}`;
+			}
+			yield `},${newLine}`;
+		}
 	}
 }
