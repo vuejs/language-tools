@@ -790,6 +790,54 @@ describe('Renaming', async () => {
 		`);
 	});
 
+	it.only('Template Ref', async () => {
+		await ensureGlobalTypesHolder('tsconfigProject');
+		expect(await requestRename('tsconfigProject/fixture.vue', 'vue', `
+				<template>
+					<a ref="foo"></a>
+				</template>
+
+				<script lang="ts" setup>
+				import { useTemplateRef } from 'vue';
+				const el = useTemplateRef('foo|');
+				</script>
+			`, 'bar')
+		).toMatchInlineSnapshot(`
+			{
+			  "changes": {
+			    "file://\${testWorkspacePath}/tsconfigProject/fixture.vue": [
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 16,
+			            "line": 2,
+			          },
+			          "start": {
+			            "character": 13,
+			            "line": 2,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 34,
+			            "line": 7,
+			          },
+			          "start": {
+			            "character": 31,
+			            "line": 7,
+			          },
+			        },
+			      },
+			    ],
+			  },
+			}
+		`);
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {

@@ -5,6 +5,7 @@ import { endOfLine, newLine, wrapWith } from '../common';
 import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
+import { generateStringLiteralKey } from './stringLiteralKey';
 import { generateTemplateChild, getVForNode } from './templateChild';
 import { generateStyleScopedClasses } from './styleScopedClasses';
 
@@ -15,7 +16,7 @@ export interface TemplateCodegenOptions {
 	template: NonNullable<Sfc['template']>;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
-	templateRefNames: Map<string, string>;
+	templateRefNames: Map<string, [validId: string, offset: number]>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;
@@ -55,12 +56,17 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	return ctx;
 
 	function* generateRefs(): Generator<Code> {
-		for (const [, validId] of options.templateRefNames) {
+		for (const [, [validId]] of options.templateRefNames) {
 			yield `let ${validId}${newLine}`;
 		}
 		yield `const __VLS_refs = {${newLine}`;
-		for (const [name, validId] of options.templateRefNames) {
-			yield `'${name}': ${validId}!,${newLine}`;
+		for (const [name, [validId, offset]] of options.templateRefNames) {
+			yield* generateStringLiteralKey(
+				name,
+				offset,
+				ctx.codeFeatures.all
+			)
+			yield `: ${validId}!,${newLine}`;
 		}
 		yield `}${endOfLine}`;
 	}
