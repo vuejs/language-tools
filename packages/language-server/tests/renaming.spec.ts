@@ -790,7 +790,7 @@ describe('Renaming', async () => {
 		`);
 	});
 
-	it.only('Template Ref', async () => {
+	it('Template Ref', async () => {
 		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
