@@ -174,6 +174,22 @@ describe('Definitions', async () => {
 		`);
 	});
 
+	it('#4720', async () => {
+		expect(
+			await requestInlayHintsResult('fixture.vue', 'vue', `
+				<template>
+					<div :foo.attr></div>
+				</template>
+			`)
+		).toMatchInlineSnapshot(`
+			"
+							<template>
+								<div :foo.attr/* ="foo" */></div>
+							</template>
+						"
+		`);
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {
