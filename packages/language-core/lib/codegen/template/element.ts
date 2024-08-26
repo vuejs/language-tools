@@ -15,6 +15,7 @@ import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateTemplateChild } from './templateChild';
 import { generateObjectProperty } from './objectProperty';
+import { getNodeText } from '../../parsers/scriptSetupRanges';
 
 const colonReg = /:/g;
 
@@ -726,10 +727,11 @@ function* generateReferencesForScopedCssClasses(
 			}
 
 			function walkIdentifier(node: ts.Identifier) {
+				const text = getNodeText(ts, node, ast);
 				ctx.scopedClasses.push({
 					source: 'template',
-					className: node.text,
-					offset: node.end - node.text.length + startOffset
+					className: text,
+					offset: node.end - text.length + startOffset
 				});
 			}
 		}
