@@ -713,6 +713,9 @@ function* generateReferencesForScopedCssClasses(
 						if (ts.isIdentifier(name)) {
 							walkIdentifier(name);
 						}
+						else if (ts.isStringLiteral(name)) {
+							literals.push(name);
+						}
 						else if (ts.isComputedPropertyName(name)) {
 							const { expression } = name;
 							if (ts.isStringLiteralLike(expression)) {
