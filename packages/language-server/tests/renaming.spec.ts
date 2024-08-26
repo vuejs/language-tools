@@ -790,6 +790,93 @@ describe('Renaming', async () => {
 		`);
 	});
 
+	it('Scoped Classes', async () => {
+		expect(
+			await requestRename('fixture.vue', 'vue', `
+				<template>
+					<div :class="'foo|'"></div>
+					<div :class="['foo', { 'foo': true }]"></div>
+					<div :class="{ foo }"></div>
+				</template>
+				<style scoped>
+				.foo { }
+				</style>
+			`, 'bar')
+		).toMatchInlineSnapshot(`
+			{
+			  "changes": {
+			    "file://\${testWorkspacePath}/fixture.vue": [
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 23,
+			            "line": 4,
+			          },
+			          "start": {
+			            "character": 20,
+			            "line": 4,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 32,
+			            "line": 3,
+			          },
+			          "start": {
+			            "character": 29,
+			            "line": 3,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 23,
+			            "line": 3,
+			          },
+			          "start": {
+			            "character": 20,
+			            "line": 3,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 22,
+			            "line": 2,
+			          },
+			          "start": {
+			            "character": 19,
+			            "line": 2,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 8,
+			            "line": 7,
+			          },
+			          "start": {
+			            "character": 5,
+			            "line": 7,
+			          },
+			        },
+			      },
+			    ],
+			  },
+			}
+		`);
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {
