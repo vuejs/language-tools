@@ -142,7 +142,7 @@ export function* generatePropsOption(
 		optionExpCodes.push(generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation));
 	}
 	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
-		let attrsType = `ReturnType<typeof __VLS_template>['attrs']`;
+		let attrsType = `typeof __VLS_templateResult['attrs']`;
 		if (hasEmitsOption) {
 			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
 		}

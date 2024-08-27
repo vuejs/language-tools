@@ -66,11 +66,7 @@ declare global {
 	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 	function __VLS_nonNullable<T>(t: T): T extends null | undefined ? never : T;
 
-	type __VLS_SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
-	type __VLS_WithComponent<N0 extends string, Ctx, LocalComponents, N1 extends string, N2 extends string, N3 extends string> =
-		N1 extends keyof Ctx ? N1 extends N0 ? Pick<Ctx, N0 extends keyof Ctx ? N0 : never> : { [K in N0]: Ctx[N1] } :
-		N2 extends keyof Ctx ? N2 extends N0 ? Pick<Ctx, N0 extends keyof Ctx ? N0 : never> : { [K in N0]: Ctx[N2] } :
-		N3 extends keyof Ctx ? N3 extends N0 ? Pick<Ctx, N0 extends keyof Ctx ? N0 : never> : { [K in N0]: Ctx[N3] } :
+	type __VLS_WithComponent<N0 extends string, LocalComponents, N1 extends string, N2 extends string, N3 extends string> =
 		N1 extends keyof LocalComponents ? N1 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N1] } :
 		N2 extends keyof LocalComponents ? N2 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N2] } :
 		N3 extends keyof LocalComponents ? N3 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N3] } :
