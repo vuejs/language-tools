@@ -39,7 +39,7 @@ export function* generateTemplate(
 		const templateUsageVars = [...getTemplateUsageVars(options, ctx)];
 		yield `// @ts-ignore${newLine}`;
 		yield `[${templateUsageVars.join(', ')}]${newLine}`;
-		yield `return [{}, {}] as const${endOfLine}`;
+		yield `return { slots: {}, refs: {}, attrs: {} }${endOfLine}`;
 		yield `}${newLine}`;
 	}
 }
