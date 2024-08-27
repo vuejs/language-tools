@@ -128,10 +128,6 @@ export function* generatePropsOption(
 	const optionExpCodes: Code[] = [];
 	const typeOptionExpCodes: Code[] = [];
 
-	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size && !hasEmitsOption) {
-		optionExpCodes.push(`{} as ${ctx.helperTypes.TypePropsToOption.name}<__VLS_PickNotAny<${ctx.helperTypes.OmitIndexSignature.name}<ReturnType<typeof __VLS_template>['attrs']>, {}>>`);
-		typeOptionExpCodes.push(`{} as ReturnType<typeof __VLS_template>['attrs']`);
-	}
 	if (ctx.generatedPropsType) {
 		optionExpCodes.push([
 			`{} as `,
@@ -141,10 +137,22 @@ export function* generatePropsOption(
 		].join(''));
 		typeOptionExpCodes.push(`{} as __VLS_PublicProps`);
 	}
-
 	if (scriptSetupRanges.props.define?.arg) {
 		const { arg } = scriptSetupRanges.props.define;
 		optionExpCodes.push(generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation));
+	}
+	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size && !hasEmitsOption) {
+		const attrsType = `ReturnType<typeof __VLS_template>['attrs']`;
+		const propsType = `__VLS_PickNotAny<${ctx.helperTypes.OmitIndexSignature.name}<${attrsType}>, {}>`;
+		const optionType = `${ctx.helperTypes.TypePropsToOption.name}<${propsType}>`;
+		if (optionExpCodes.length) {
+			optionExpCodes.unshift(`{} as ${optionType}`);
+		}
+		else {
+			// workaround for https://github.com/vuejs/core/pull/7419
+			optionExpCodes.unshift(`{} as keyof ${propsType} extends never ? never: ${optionType}`);
+		}
+		typeOptionExpCodes.unshift(`{} as ${attrsType}`);
 	}
 
 	const useTypeOption = options.vueCompilerOptions.target >= 3.5 && typeOptionExpCodes.length;
