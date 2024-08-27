@@ -39,7 +39,7 @@ export function* generateTemplate(
 		const templateUsageVars = [...getTemplateUsageVars(options, ctx)];
 		yield `// @ts-ignore${newLine}`;
 		yield `[${templateUsageVars.join(', ')}]${newLine}`;
-		yield `return [{}, {}] as const${endOfLine}`;
+		yield `return { slots: {}, refs: {}, attrs: {} }${endOfLine}`;
 		yield `}${newLine}`;
 	}
 }
@@ -158,7 +158,7 @@ function* generateTemplateContext(
 	yield `return {${newLine}`;
 	yield `slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
 	yield `refs: __VLS_refs as __VLS_PickRefsExpose<typeof __VLS_refs>,${newLine}`;
-	yield `attrs: __VLS_inheritedAttrs,${newLine}`;
+	yield `attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `}${endOfLine}`;
 }
 

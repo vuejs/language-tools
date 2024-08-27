@@ -15,6 +15,7 @@ import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateTemplateChild } from './templateChild';
 import { generateObjectProperty } from './objectProperty';
+import { getNodeText } from '../../parsers/scriptSetupRanges';
 
 const colonReg = /:/g;
 
@@ -235,8 +236,11 @@ export function* generateComponent(
 	}
 
 	if (
-		node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
-		|| node === ctx.singleRootNode
+		options.vueCompilerOptions.fallthroughAttributes
+		&& (
+			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
+			|| node === ctx.singleRootNode
+		)
 	) {
 		const varAttrs = ctx.getInternalVariable();
 		ctx.inheritedAttrVars.add(varAttrs);
@@ -350,8 +354,11 @@ export function* generateElement(
 	}
 
 	if (
-		node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
-		|| node === ctx.singleRootNode
+		options.vueCompilerOptions.fallthroughAttributes
+		&& (
+			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
+			|| node === ctx.singleRootNode
+		)
 	) {
 		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
 	}
@@ -677,6 +684,9 @@ function* generateReferencesForScopedCssClasses(
 						if (ts.isIdentifier(name)) {
 							walkIdentifier(name);
 						}
+						else if (ts.isStringLiteral(name)) {
+							literals.push(name);
+						}
 						else if (ts.isComputedPropertyName(name)) {
 							const { expression } = name;
 							if (ts.isStringLiteralLike(expression)) {
@@ -691,10 +701,11 @@ function* generateReferencesForScopedCssClasses(
 			}
 
 			function walkIdentifier(node: ts.Identifier) {
+				const text = getNodeText(ts, node, ast);
 				ctx.scopedClasses.push({
 					source: 'template',
-					className: node.text,
-					offset: node.end - node.text.length + startOffset
+					className: text,
+					offset: node.end - text.length + startOffset
 				});
 			}
 		}

@@ -47,7 +47,13 @@
 				},
 				"skipTemplateCodegen": {
 					"type": "boolean",
+					"default": false,
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/577"
+				},
+				"fallthroughAttributes": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Enable to support typed fallthrough attributes. Please note that enabling may significantly slow down type checking."
 				},
 				"dataAttributes": {
 					"type": "array",

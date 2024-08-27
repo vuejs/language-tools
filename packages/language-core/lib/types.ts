@@ -30,6 +30,7 @@ export interface VueCompilerOptions {
 	jsxSlots: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
+	fallthroughAttributes: boolean;
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];

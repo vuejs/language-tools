@@ -1,9 +1,9 @@
 import type { Code } from '../../types';
-import { endOfLine, newLine } from '../common';
+import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import type { TemplateCodegenContext } from '../template/context';
-import { generateComponentSetupReturns, generateScriptOptions, generateScriptSetupOptions } from './component';
+import { generateComponentSetupReturns, generateEmitsOption, generatePropsOption } from './component';
 import type { ScriptCodegenContext } from './context';
-import type { ScriptCodegenOptions } from './index';
+import { codeFeatures, type ScriptCodegenOptions } from './index';
 import { getTemplateUsageVars } from './template';
 
 export function* generateInternalComponent(
@@ -52,10 +52,15 @@ export function* generateInternalComponent(
 			yield `__typeRefs: {} as __VLS_Refs,${newLine}`;
 		}
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
-			yield* generateScriptSetupOptions(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges, false);
+			const emitOptionCodes = [...generateEmitsOption(options, options.sfc.scriptSetup, options.scriptSetupRanges)];
+			for (const code of emitOptionCodes) {
+				yield code;
+			}
+			yield* generatePropsOption(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges, !!emitOptionCodes.length, false);
 		}
-		if (options.sfc.script && options.scriptRanges) {
-			yield* generateScriptOptions(options.sfc.script, options.scriptRanges);
+		if (options.sfc.script && options.scriptRanges?.exportDefault?.args) {
+			const { args } = options.scriptRanges.exportDefault;
+			yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
 		}
 		yield `})${endOfLine}`; // defineComponent {
 	}
