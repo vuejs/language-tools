@@ -45,6 +45,7 @@ export interface ScriptCodegenOptions {
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[]; } | undefined;
 	globalTypes: boolean;
+	edited: boolean;
 	getGeneratedLength: () => number;
 	linkedCodeMappings: Mapping[];
 }

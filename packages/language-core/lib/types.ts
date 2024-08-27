@@ -53,6 +53,9 @@ export interface VueCompilerOptions {
 	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
+
+	// internal
+	__test?: boolean;
 }
 
 export const validVersions = [2, 2.1] as const;

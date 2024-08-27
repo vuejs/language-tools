@@ -57,7 +57,7 @@ const _codeFeatures = {
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
-export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCodegenOptions['scriptSetupBindingNames']) {
+export function createTemplateCodegenContext(options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames' | 'edited'>) {
 	let ignoredError = false;
 	let expectErrorToken: {
 		errors: number;
@@ -190,6 +190,9 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 			}
 		},
 		generateAutoImportCompletion: function* (): Generator<Code> {
+			if (!options.edited) {
+				return;
+			}
 			const all = [...accessExternalVariables.entries()];
 			if (!all.some(([_, offsets]) => offsets.size)) {
 				return;
@@ -198,7 +201,7 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 			yield `[`;
 			for (const [varName, offsets] of all) {
 				for (const offset of offsets) {
-					if (scriptSetupBindingNames.has(varName)) {
+					if (options.scriptSetupBindingNames.has(varName)) {
 						// #3409
 						yield [
 							varName,

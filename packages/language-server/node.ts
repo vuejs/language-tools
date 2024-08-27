@@ -26,6 +26,7 @@ connection.onInitialize(params => {
 							vueOptions: resolveVueCompilerOptions({}),
 							options: ts.getDefaultCompilerOptions(),
 						};
+					commandLine.vueOptions.__test = params.initializationOptions.typescript.disableAutoImportCache;
 					return {
 						languagePlugins: [createVueLanguagePlugin2(
 							ts,

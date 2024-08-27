@@ -23,7 +23,7 @@ export function* generateTemplate(
 		else {
 			yield `const __VLS_template = (() => {${newLine}`;
 		}
-		const templateCodegenCtx = createTemplateCodegenContext(new Set());
+		const templateCodegenCtx = createTemplateCodegenContext({ scriptSetupBindingNames: new Set(), edited: options.edited });
 		yield `const __VLS_template_return = () => {${newLine}`;
 		yield* generateCtx(options, isClassComponent);
 		yield* generateTemplateContext(options, templateCodegenCtx);

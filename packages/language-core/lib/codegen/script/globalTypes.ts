@@ -67,7 +67,10 @@ declare global {
 	function __VLS_nonNullable<T>(t: T): T extends null | undefined ? never : T;
 
 	type __VLS_SelfComponent<N, C> = string extends N ? {} : N extends string ? { [P in N]: C } : {};
-	type __VLS_WithComponent<N0 extends string, LocalComponents, N1 extends string, N2 extends string, N3 extends string> =
+	type __VLS_WithComponent<N0 extends string, Ctx, LocalComponents, N1 extends string, N2 extends string, N3 extends string> =
+		N1 extends keyof Ctx ? N1 extends N0 ? Pick<Ctx, N0 extends keyof Ctx ? N0 : never> : { [K in N0]: Ctx[N1] } :
+		N2 extends keyof Ctx ? N2 extends N0 ? Pick<Ctx, N0 extends keyof Ctx ? N0 : never> : { [K in N0]: Ctx[N2] } :
+		N3 extends keyof Ctx ? N3 extends N0 ? Pick<Ctx, N0 extends keyof Ctx ? N0 : never> : { [K in N0]: Ctx[N3] } :
 		N1 extends keyof LocalComponents ? N1 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N1] } :
 		N2 extends keyof LocalComponents ? N2 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N2] } :
 		N3 extends keyof LocalComponents ? N3 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N3] } :
@@ -88,10 +91,10 @@ declare global {
 		: (_: {}${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'} } };
 	function __VLS_elementAsFunction<T>(tag: T, endTag?: T): (_: T${vueCompilerOptions.strictTemplates ? '' : ' & Record<string, unknown>'}) => void;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
-	function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): __VLS_PickNotAny<
+	function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): NonNullable<__VLS_PickNotAny<
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
 		, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
-	>;
+	>>;
 	type __VLS_FunctionalComponentProps<T, K> =
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P :

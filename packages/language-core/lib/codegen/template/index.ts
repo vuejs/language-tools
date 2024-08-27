@@ -15,6 +15,7 @@ export interface TemplateCodegenOptions {
 	template: NonNullable<Sfc['template']>;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
+	edited: boolean;
 	templateRefNames: Map<string, string>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
@@ -23,7 +24,7 @@ export interface TemplateCodegenOptions {
 }
 
 export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
-	const ctx = createTemplateCodegenContext(options.scriptSetupBindingNames);
+	const ctx = createTemplateCodegenContext(options);
 
 	if (options.slotsAssignName) {
 		ctx.addLocalVariable(options.slotsAssignName);
@@ -105,15 +106,21 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	function* generatePreResolveComponents(): Generator<Code> {
-		yield `let __VLS_resolvedLocalAndGlobalComponents!: {}`;
+		yield `let __VLS_resolvedLocalAndGlobalComponents!: Required<{}`;
 		if (options.template.ast) {
+			const components = new Set<string>();
 			for (const node of forEachElementNode(options.template.ast)) {
 				if (
 					node.tagType === CompilerDOM.ElementTypes.COMPONENT
 					&& node.tag.toLowerCase() !== 'component'
 					&& !node.tag.includes('.') // namespace tag 
 				) {
-					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+					if (components.has(node.tag)) {
+						continue;
+					}
+					components.add(node.tag);
+					yield newLine;
+					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_ctx, typeof __VLS_localComponents, `;
 					yield getPossibleOriginalComponentNames(node.tag, false)
 						.map(name => `"${name}"`)
 						.join(', ');
@@ -121,7 +128,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 				}
 			}
 		}
-		yield endOfLine;
+		yield `>${endOfLine}`;
 	}
 }
 
