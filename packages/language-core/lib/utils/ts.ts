@@ -216,6 +216,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		jsxSlots: vueOptions.jsxSlots ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
+		fallthroughAttributes: vueOptions.fallthroughAttributes ?? false,
 		dataAttributes: vueOptions.dataAttributes ?? [],
 		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
 		optionsWrapper: vueOptions.optionsWrapper ?? (

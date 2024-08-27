@@ -288,8 +288,11 @@ export function* generateComponent(
 	}
 
 	if (
-		node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
-		|| node === ctx.singleRootNode
+		options.vueCompilerOptions.fallthroughAttributes
+		&& (
+			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
+			|| node === ctx.singleRootNode
+		)
 	) {
 		const varAttrs = ctx.getInternalVariable();
 		ctx.inheritedAttrVars.add(varAttrs);
@@ -386,8 +389,11 @@ export function* generateElement(
 	}
 
 	if (
-		node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
-		|| node === ctx.singleRootNode
+		options.vueCompilerOptions.fallthroughAttributes
+		&& (
+			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
+			|| node === ctx.singleRootNode
+		)
 	) {
 		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
 	}

@@ -170,30 +170,8 @@ type __VLS_Prettify<T> = {
 `;
 
 exports[`vue-tsc-dts > Input: generic/main.vue, Output: generic/main.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<__VLS_TypePropsToOption<__VLS_OmitIndexSignature<Partial<{
-    "onUpdate:title"?: (title: string) => any;
-    onBar?: (data: number) => any;
-    title?: string;
-    foo: number;
-} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps>>>, {}, unknown, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<__VLS_OmitIndexSignature<Partial<{
-    "onUpdate:title"?: (title: string) => any;
-    onBar?: (data: number) => any;
-    title?: string;
-    foo: number;
-} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps>>>>>, {}, {}>;
+"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
 export default _default;
-type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
-type __VLS_TypePropsToOption<T> = {
-    [K in keyof T]-?: {} extends Pick<T, K> ? {
-        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
-    } : {
-        type: import('vue').PropType<T[K]>;
-        required: true;
-    };
-};
-type __VLS_OmitIndexSignature<T> = {
-    [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K];
-};
 "
 `;
 
