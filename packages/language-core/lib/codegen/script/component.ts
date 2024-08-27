@@ -141,8 +141,11 @@ export function* generatePropsOption(
 		const { arg } = scriptSetupRanges.props.define;
 		optionExpCodes.push(generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation));
 	}
-	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size && !hasEmitsOption) {
-		const attrsType = `ReturnType<typeof __VLS_template>['attrs']`;
+	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
+		let attrsType = `ReturnType<typeof __VLS_template>['attrs']`;
+		if (hasEmitsOption) {
+			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
+		}
 		const propsType = `__VLS_PickNotAny<${ctx.helperTypes.OmitIndexSignature.name}<${attrsType}>, {}>`;
 		const optionType = `${ctx.helperTypes.TypePropsToOption.name}<${propsType}>`;
 		if (optionExpCodes.length) {
