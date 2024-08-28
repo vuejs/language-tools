@@ -25,22 +25,13 @@
 		"@lerna-lite/publish": "latest",
 		"@tsslint/cli": "latest",
 		"@tsslint/config": "latest",
-		"@volar/language-service": "~2.4.0",
+		"@volar/language-service": "~2.4.1",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
 	},
 	"pnpm": {
 		"overrides": {
-			"@volar/kit": "https://pkg.pr.new/volarjs/volar.js/@volar/kit@0e1be44",
-			"@volar/language-core": "https://pkg.pr.new/volarjs/volar.js/@volar/language-core@0e1be44",
-			"@volar/language-server": "https://pkg.pr.new/volarjs/volar.js/@volar/language-server@0e1be44",
-			"@volar/language-service": "https://pkg.pr.new/volarjs/volar.js/@volar/language-service@0e1be44",
-			"@volar/source-map": "https://pkg.pr.new/volarjs/volar.js/@volar/source-map@0e1be44",
-			"@volar/test-utils": "https://pkg.pr.new/volarjs/volar.js/@volar/test-utils@0e1be44",
-			"@volar/typescript": "https://pkg.pr.new/volarjs/volar.js/@volar/typescript@0e1be44",
-			"@volar/vscode": "https://pkg.pr.new/volarjs/volar.js/@volar/vscode@0e1be44",
-			"volar-service-typescript": "https://pkg.pr.new/volarjs/services/volar-service-typescript@177b9ed",
 			"inquirer": "9.2.23"
 		}
 	}
