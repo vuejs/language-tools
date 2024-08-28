@@ -6,7 +6,6 @@ import { getLanguageServer, testWorkspacePath } from './server.js';
 describe('Definitions', async () => {
 
 	it('TS to vue', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestDefinition('tsconfigProject/fixture1.ts', 'typescript', `import C|omponent from './empty.vue';`)
 		).toMatchInlineSnapshot(`
@@ -48,7 +47,6 @@ describe('Definitions', async () => {
 	});
 
 	it('Alias path', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/foo.ts', 'typescript', `export const foo = 'foo';`);
 		expect(
 			await requestDefinition('tsconfigProject/fixture.vue', 'vue', `
@@ -76,7 +74,6 @@ describe('Definitions', async () => {
 	});
 
 	it('#2600', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<template>
 				<h1>{{ msg }}</h1>
@@ -120,15 +117,6 @@ describe('Definitions', async () => {
 		}
 		openedDocuments.length = 0;
 	});
-
-	/**
-	 * @deprecated Remove this when #4717 fixed.
-	 */
-	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
-		const server = await getLanguageServer();
-		await server.sendDocumentDiagnosticRequest(document.uri);
-	}
 
 	async function requestDefinition(fileName: string, languageId: string, content: string) {
 		const offset = content.indexOf('|');
