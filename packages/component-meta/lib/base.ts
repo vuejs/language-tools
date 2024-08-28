@@ -83,14 +83,6 @@ export function baseCreate(
 		];
 	};
 
-	try {
-		const libDir = require.resolve(`${commandLine.vueOptions.lib}/package.json`, { paths: [rootPath] })
-			.slice(0, -'package.json'.length);
-		const globalTypesPath = `${libDir}__globalTypes_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
-		const globalTypesContents = vue.generateGlobalTypes(commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
-		ts.sys.writeFile(globalTypesPath, globalTypesContents);
-	} catch { }
-
 	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 		ts,
 		projectHost.getCompilationSettings(),
@@ -142,6 +134,31 @@ export function baseCreate(
 	);
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
+
+	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
+	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
+	const globalTypesName = `__globalTypes_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
+	const snapshots = new Map<string, ts.IScriptSnapshot>();
+	languageServiceHost.fileExists = path => {
+		if (path.endsWith(globalTypesName)) {
+			return true;
+		}
+		return fileExists(path);
+	};
+	languageServiceHost.getScriptSnapshot = path => {
+		if (path.endsWith(globalTypesName)) {
+			if (!snapshots.has(path)) {
+				const contents = vue.generateGlobalTypes(commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
+				snapshots.set(path, {
+					getText: (start, end) => contents.substring(start, end),
+					getLength: () => contents.length,
+					getChangeRange: () => undefined,
+				});
+			}
+			return snapshots.get(path)!;
+		}
+		return getScriptSnapshot(path);
+	};
 
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
