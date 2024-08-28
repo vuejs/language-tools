@@ -244,7 +244,6 @@ describe('Completions', async () => {
 	});
 
 	it('#2511', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/component-for-auto-import.vue', 'vue', `<script setup lang="ts"></script>`);
 		expect(
 			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
@@ -290,7 +289,6 @@ describe('Completions', async () => {
 	});
 
 	it('Alias path', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			import Component from '@/|';
@@ -299,7 +297,6 @@ describe('Completions', async () => {
 	});
 
 	it('Relative path', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			import Component from './|';
@@ -308,7 +305,6 @@ describe('Completions', async () => {
 	});
 
 	it('Component auto import', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/ComponentForAutoImport.vue', 'vue', `<script setup lang="ts"></script>`);
 		expect(
 			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
@@ -375,7 +371,6 @@ describe('Completions', async () => {
 	});
 
 	it('core#8811', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			declare const Foo: new () => {
@@ -400,15 +395,6 @@ describe('Completions', async () => {
 		}
 		openedDocuments.length = 0;
 	});
-
-	/**
-	 * @deprecated Remove this when #4717 fixed.
-	 */
-	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
-		const server = await getLanguageServer();
-		await server.sendDocumentDiagnosticRequest(document.uri);
-	}
 
 	async function requestCompletionItem(fileName: string, languageId: string, content: string, itemLabel: string) {
 		const completions = await requestCompletionList(fileName, languageId, content);

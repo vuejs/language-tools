@@ -309,7 +309,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<template>
 				<Comp :aaa-bbb="'foo'"></Comp>
@@ -395,7 +394,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component type props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<template>
 				<Comp :aaa-bbb="'foo'"></Comp>
@@ -481,7 +479,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component dynamic props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -529,7 +526,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component returns', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -585,7 +581,6 @@ describe('Renaming', async () => {
 	});
 
 	it('<script setup>', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -633,7 +628,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component tags', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -886,15 +880,6 @@ describe('Renaming', async () => {
 		}
 		openedDocuments.length = 0;
 	});
-
-	/**
-	 * @deprecated Remove this when #4717 fixed.
-	 */
-	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
-		const server = await getLanguageServer();
-		await server.sendDocumentDiagnosticRequest(document.uri);
-	}
 
 	async function requestRename(fileName: string, languageId: string, _content: string, newName: string) {
 		const offset = _content.indexOf('|');

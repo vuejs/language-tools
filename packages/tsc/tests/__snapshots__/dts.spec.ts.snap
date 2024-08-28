@@ -4,8 +4,8 @@ exports[`vue-tsc-dts > Input: #4577/main.vue, Output: #4577/main.vue.d.ts 1`] = 
 "export type BaseRow = {
     value: string;
 };
-declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_Prettify<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>>, never>, never> & {
+declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>>, never>, never> & {
         nonGeneric: string;
         rows: Row[];
     }> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
@@ -23,8 +23,7 @@ declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<t
     __ctx?: Awaited<typeof __VLS_setup>;
 };
 export default _default;
-
-type __VLS_Prettify<T> = {
+type __VLS_PrettifyLocal<T> = {
     [K in keyof T]: T[K];
 } & {};
 "
@@ -69,8 +68,8 @@ export default _default;
 `;
 
 exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/component-generic.vue.d.ts 1`] = `
-"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_Prettify<Pick<Partial<{}> & Omit<{
+"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
         onFoo?: (value: string) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>> & {
         onFoo?: (value: string) => any;
@@ -85,15 +84,15 @@ exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/compo
     __ctx?: Awaited<typeof __VLS_setup>;
 };
 export default _default;
-type __VLS_Prettify<T> = {
+type __VLS_PrettifyLocal<T> = {
     [K in keyof T]: T[K];
 } & {};
 "
 `;
 
 exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
-"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_Prettify<Pick<Partial<{}> & Omit<{
+"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
         "onUpdate:title"?: (title: string) => any;
         onBar?: (data: number) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>> & {
@@ -124,15 +123,15 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
     __ctx?: Awaited<typeof __VLS_setup>;
 };
 export default _default;
-type __VLS_Prettify<T> = {
+type __VLS_PrettifyLocal<T> = {
     [K in keyof T]: T[K];
 } & {};
 "
 `;
 
 exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: generic/custom-extension-component.cext.d.ts 1`] = `
-"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_Prettify<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_Prettify<Pick<Partial<{}> & Omit<{
+"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
         "onUpdate:title"?: (title: string) => any;
         onBar?: (data: number) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>> & {
@@ -163,7 +162,7 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
     __ctx?: Awaited<typeof __VLS_setup>;
 };
 export default _default;
-type __VLS_Prettify<T> = {
+type __VLS_PrettifyLocal<T> = {
     [K in keyof T]: T[K];
 } & {};
 "
@@ -365,13 +364,10 @@ declare const _default: import("vue").DefineComponent<__VLS_WithDefaults<__VLS_T
 }, {}>;
 export default _default;
 type __VLS_WithDefaults<P, D> = {
-    [K in keyof Pick<P, keyof P>]: K extends keyof D ? __VLS_Prettify<P[K] & {
+    [K in keyof Pick<P, keyof P>]: K extends keyof D ? __VLS_PrettifyLocal<P[K] & {
         default: D[K];
     }> : P[K];
 };
-type __VLS_Prettify<T> = {
-    [K in keyof T]: T[K];
-} & {};
 type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
 type __VLS_TypePropsToOption<T> = {
     [K in keyof T]-?: {} extends Pick<T, K> ? {
@@ -381,6 +377,9 @@ type __VLS_TypePropsToOption<T> = {
         required: true;
     };
 };
+type __VLS_PrettifyLocal<T> = {
+    [K in keyof T]: T[K];
+} & {};
 "
 `;
 
@@ -661,6 +660,11 @@ type __VLS_Slots = typeof __VLS_templateResult['slots'];
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
 declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;
+type __VLS_PickRefsExpose<T> = T extends object ? {
+    [K in keyof T]: (T[K] extends any[] ? Parameters<T[K][0]['expose']>[0][] : T[K] extends {
+        expose?: (exposed: infer E) => void;
+    } ? E : T[K]) | null;
+} : never;
 type __VLS_WithTemplateSlots<T, S> = T & {
     new (): {
         $slots: S;
@@ -706,6 +710,11 @@ type __VLS_Slots = typeof __VLS_templateResult['slots'];
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
 declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;
+type __VLS_PickRefsExpose<T> = T extends object ? {
+    [K in keyof T]: (T[K] extends any[] ? Parameters<T[K][0]['expose']>[0][] : T[K] extends {
+        expose?: (exposed: infer E) => void;
+    } ? E : T[K]) | null;
+} : never;
 type __VLS_WithTemplateSlots<T, S> = T & {
     new (): {
         $slots: S;
@@ -734,6 +743,11 @@ type __VLS_Slots = typeof __VLS_templateResult['slots'];
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
 declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;
+type __VLS_PickRefsExpose<T> = T extends object ? {
+    [K in keyof T]: (T[K] extends any[] ? Parameters<T[K][0]['expose']>[0][] : T[K] extends {
+        expose?: (exposed: infer E) => void;
+    } ? E : T[K]) | null;
+} : never;
 type __VLS_WithTemplateSlots<T, S> = T & {
     new (): {
         $slots: S;
@@ -770,6 +784,11 @@ type __VLS_Slots = typeof __VLS_templateResult['slots'];
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{}>>, {}, {}>;
 declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;
+type __VLS_PickRefsExpose<T> = T extends object ? {
+    [K in keyof T]: (T[K] extends any[] ? Parameters<T[K][0]['expose']>[0][] : T[K] extends {
+        expose?: (exposed: infer E) => void;
+    } ? E : T[K]) | null;
+} : never;
 type __VLS_WithTemplateSlots<T, S> = T & {
     new (): {
         $slots: S;

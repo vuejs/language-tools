@@ -1,19 +1,19 @@
+import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import type * as ts from 'typescript';
 import * as path from 'path-browserify';
+import type * as ts from 'typescript';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
-import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 
 import type {
-	MetaCheckerOptions,
 	ComponentMeta,
+	Declaration,
 	EventMeta,
 	ExposeMeta,
+	MetaCheckerOptions,
 	PropertyMeta,
 	PropertyMetaSchema,
-	SlotMeta,
-	Declaration
+	SlotMeta
 } from './types';
 
 export * from './types';
@@ -83,16 +83,11 @@ export function baseCreate(
 		];
 	};
 
-	const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
+	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 		ts,
-		id => id,
-		vue.createRootFileChecker(
-			projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
-			() => projectHost.getScriptFileNames(),
-			ts.sys.useCaseSensitiveFileNames
-		),
 		projectHost.getCompilationSettings(),
-		commandLine.vueOptions
+		commandLine.vueOptions,
+		id => id
 	);
 	const language = vue.createLanguage(
 		[
@@ -139,6 +134,31 @@ export function baseCreate(
 	);
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
+
+	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
+	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
+	const globalTypesName = `__globalTypes_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
+	const snapshots = new Map<string, ts.IScriptSnapshot>();
+	languageServiceHost.fileExists = path => {
+		if (path.endsWith(globalTypesName)) {
+			return true;
+		}
+		return fileExists(path);
+	};
+	languageServiceHost.getScriptSnapshot = path => {
+		if (path.endsWith(globalTypesName)) {
+			if (!snapshots.has(path)) {
+				const contents = vue.generateGlobalTypes(commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
+				snapshots.set(path, {
+					getText: (start, end) => contents.substring(start, end),
+					getLength: () => contents.length,
+					getChangeRange: () => undefined,
+				});
+			}
+			return snapshots.get(path)!;
+		}
+		return getScriptSnapshot(path);
+	};
 
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);

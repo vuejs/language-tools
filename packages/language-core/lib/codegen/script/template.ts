@@ -9,7 +9,10 @@ import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 import { generateInternalComponent } from './internalComponent';
 
-export function* generateTemplateCtx(options: ScriptCodegenOptions, isClassComponent: boolean): Generator<Code> {
+export function* generateTemplateCtx(
+	options: ScriptCodegenOptions,
+	isClassComponent: boolean
+): Generator<Code> {
 	const types = [];
 	if (isClassComponent) {
 		types.push(`typeof this`);
@@ -78,10 +81,13 @@ export function* generateTemplate(
 	ctx.generatedTemplate = true;
 
 	if (!options.vueCompilerOptions.skipTemplateCodegen) {
-		const templateCodegenCtx = createTemplateCodegenContext({ scriptSetupBindingNames: new Set(), edited: options.edited });
+		const templateCodegenCtx = createTemplateCodegenContext({
+			scriptSetupBindingNames: new Set(),
+			edited: options.edited,
+		});
 		yield* generateTemplateCtx(options, isClassComponent);
 		yield* generateTemplateComponents(options);
-		yield* generateTemplateBody(options, templateCodegenCtx);
+		yield* generateTemplateBody(options, ctx, templateCodegenCtx);
 		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
 	}
 	else {
@@ -94,6 +100,7 @@ export function* generateTemplate(
 
 function* generateTemplateBody(
 	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
 	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
 	const firstClasses = new Set<string>();
@@ -142,7 +149,7 @@ function* generateTemplateBody(
 
 	yield `const __VLS_templateResult = {`;
 	yield `slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
-	yield `refs: __VLS_refs as __VLS_PickRefsExpose<typeof __VLS_refs>,${newLine}`;
+	yield `refs: __VLS_refs as ${ctx.localTypes.PickRefsExpose}<typeof __VLS_refs>,${newLine}`;
 	yield `attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `}${endOfLine}`;
 }

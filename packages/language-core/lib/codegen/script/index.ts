@@ -6,7 +6,6 @@ import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../ty
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import type { TemplateCodegenContext } from '../template/context';
 import { createScriptCodegenContext, ScriptCodegenContext } from './context';
-import { generateGlobalTypes } from './globalTypes';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';
@@ -44,7 +43,6 @@ export interface ScriptCodegenOptions {
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[]; } | undefined;
-	globalTypes: boolean;
 	edited: boolean;
 	getGeneratedLength: () => number;
 	linkedCodeMappings: Mapping[];
@@ -53,7 +51,8 @@ export interface ScriptCodegenOptions {
 export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
 	const ctx = createScriptCodegenContext(options);
 
-	yield `/* __placeholder__ */${newLine}`;
+	yield `/// <reference types="${options.vueCompilerOptions.lib}/__globalTypes_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}" />${newLine}`;
+
 	if (options.sfc.script?.src) {
 		yield* generateSrc(options.sfc.script, options.sfc.script.src);
 	}
@@ -129,15 +128,14 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 	yield newLine;
 
-	if (options.globalTypes) {
-		yield generateGlobalTypes(options.vueCompilerOptions);
-	}
-	yield* ctx.generateHelperTypes();
-	yield `\ntype __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
-
 	if (!ctx.generatedTemplate) {
 		yield* generateTemplate(options, ctx, false);
 	}
+
+	if (options.edited) {
+		yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
+	}
+	yield* ctx.localTypes.generate([...ctx.localTypes.getUsedNames()]);
 
 	if (options.sfc.scriptSetup) {
 		yield ['', 'scriptSetup', options.sfc.scriptSetup.content.length, codeFeatures.verification];

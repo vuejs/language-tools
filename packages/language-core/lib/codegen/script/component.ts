@@ -131,8 +131,8 @@ export function* generatePropsOption(
 	if (ctx.generatedPropsType) {
 		optionExpCodes.push([
 			`{} as `,
-			scriptSetupRanges.props.withDefaults?.arg ? `${ctx.helperTypes.WithDefaults.name}<` : '',
-			`${ctx.helperTypes.TypePropsToOption.name}<__VLS_PublicProps>`,
+			scriptSetupRanges.props.withDefaults?.arg ? `${ctx.localTypes.WithDefaults}<` : '',
+			`${ctx.localTypes.TypePropsToOption}<__VLS_PublicProps>`,
 			scriptSetupRanges.props.withDefaults?.arg ? `, typeof __VLS_withDefaultsArg>` : '',
 		].join(''));
 		typeOptionExpCodes.push(`{} as __VLS_PublicProps`);
@@ -146,8 +146,8 @@ export function* generatePropsOption(
 		if (hasEmitsOption) {
 			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
 		}
-		const propsType = `__VLS_PickNotAny<${ctx.helperTypes.OmitIndexSignature.name}<${attrsType}>, {}>`;
-		const optionType = `${ctx.helperTypes.TypePropsToOption.name}<${propsType}>`;
+		const propsType = `__VLS_PickNotAny<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>`;
+		const optionType = `${ctx.localTypes.TypePropsToOption}<${propsType}>`;
 		if (optionExpCodes.length) {
 			optionExpCodes.unshift(`{} as ${optionType}`);
 		}
