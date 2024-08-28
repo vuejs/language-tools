@@ -30,6 +30,18 @@ describe('vue-tsc-dts', () => {
 		vueOptions = typeof configFilePath === 'string'
 			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 			: vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
+
+		try {
+			const rootDir = typeof configFilePath === 'string'
+				? configFilePath
+				: options.host?.getCurrentDirectory() ?? ts.sys.getCurrentDirectory();
+			const libDir = require.resolve(`${vueOptions.lib}/package.json`, { paths: [rootDir] })
+				.slice(0, -'package.json'.length);
+			const globalTypesPath = `${libDir}__globalTypes_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`;
+			const globalTypesContents = vue.generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
+			ts.sys.writeFile(globalTypesPath, globalTypesContents);
+		} catch { }
+
 		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
 			options.options,
