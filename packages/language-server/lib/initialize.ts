@@ -1,6 +1,6 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createTypeScriptProject } from '@volar/language-server/node';
-import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin2, getAllExtensions, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
+import { createParsedCommandLine, createVueLanguagePlugin, generateGlobalTypes, getAllExtensions, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
 import { Disposable, getFullLanguageServicePlugins, InitializeParams } from '@vue/language-service';
 import type * as ts from 'typescript';
 
@@ -18,7 +18,7 @@ export function initialize(
 		createTypeScriptProject(
 			ts,
 			tsLocalized,
-			async ({ configFileName, sys, projectHost, uriConverter }) => {
+			async ({ configFileName, sys, uriConverter }) => {
 				let compilerOptions: ts.CompilerOptions;
 				let vueCompilerOptions: VueCompilerOptions;
 				if (configFileName) {
@@ -40,19 +40,43 @@ export function initialize(
 				vueCompilerOptions.__test = params.initializationOptions.typescript.disableAutoImportCache;
 				updateFileWatcher(vueCompilerOptions);
 				return {
-					languagePlugins: [createVueLanguagePlugin2(
-						ts,
-						s => uriConverter.asFileName(s),
-						createRootFileChecker(
-							projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
-							() => projectHost.getScriptFileNames(),
-							sys.useCaseSensitiveFileNames
+					languagePlugins: [
+						createVueLanguagePlugin(
+							ts,
+							compilerOptions,
+							vueCompilerOptions,
+							s => uriConverter.asFileName(s)
 						),
-						compilerOptions,
-						vueCompilerOptions
-					)],
+					],
 					setup({ project }) {
 						project.vue = { compilerOptions: vueCompilerOptions };
+
+						if (project.typescript) {
+							const globalTypesName = `__globalTypes_${vueCompilerOptions.target}_${vueCompilerOptions.strictTemplates}.d.ts`;
+							const fileExists = project.typescript.languageServiceHost.fileExists.bind(project.typescript.languageServiceHost);
+							const getScriptSnapshot = project.typescript.languageServiceHost.getScriptSnapshot.bind(project.typescript.languageServiceHost);
+							const snapshots = new Map<string, ts.IScriptSnapshot>();
+							project.typescript.languageServiceHost.fileExists = path => {
+								if (path.endsWith(globalTypesName)) {
+									return true;
+								}
+								return fileExists(path);
+							};
+							project.typescript.languageServiceHost.getScriptSnapshot = path => {
+								if (path.endsWith(globalTypesName)) {
+									if (!snapshots.has(path)) {
+										const contents = generateGlobalTypes(vueCompilerOptions.lib, vueCompilerOptions.target, vueCompilerOptions.strictTemplates);
+										snapshots.set(path, {
+											getText: (start, end) => contents.substring(start, end),
+											getLength: () => contents.length,
+											getChangeRange: () => undefined,
+										});
+									}
+									return snapshots.get(path)!;
+								}
+								return getScriptSnapshot(path);
+							};
+						}
 					},
 				};
 			}

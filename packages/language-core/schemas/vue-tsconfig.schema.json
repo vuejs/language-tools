@@ -32,7 +32,7 @@
 					"markdownDescription": "Valid file extensions that should be considered as regular PetiteVue SFC."
 				},
 				"lib": {
-					"default": "",
+					"default": "vue",
 					"markdownDescription": "Specify module name for import regular types. (If empty, will use `@vue/runtime-dom` for target < 2.7, `vue` for target >= 2.7)"
 				},
 				"jsxSlots": {

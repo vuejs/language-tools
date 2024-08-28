@@ -152,7 +152,6 @@ function createTsx(
 		const codegen = generateScript({
 			ts,
 			fileBaseName: path.basename(fileName),
-			globalTypes: ctx.globalTypesHolder === fileName,
 			sfc: _sfc,
 			lang: lang(),
 			scriptRanges: scriptRanges(),

@@ -85,7 +85,6 @@ export type VueLanguagePlugin = (ctx: {
 	};
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
-	globalTypesHolder: string | undefined;
 }) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
 
 export interface SfcBlock {

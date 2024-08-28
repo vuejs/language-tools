@@ -52,7 +52,7 @@ export function* generateScriptSetup(
 		}
 		yield `>(${newLine}`
 			+ `	__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'],${newLine}`
-			+ `	__VLS_ctx?: ${ctx.helperTypes.Prettify.name}<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
+			+ `	__VLS_ctx?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
 			+ `	__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],${newLine}`
 			+ `	__VLS_setup = (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined, definePropMirrors);
@@ -67,7 +67,7 @@ export function* generateScriptSetup(
 		}
 
 		yield `		return {} as {${newLine}`
-			+ `			props: ${ctx.helperTypes.Prettify.name}<typeof __VLS_functionalComponentProps & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
+			+ `			props: ${ctx.localTypes.PrettifyLocal}<typeof __VLS_functionalComponentProps & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
 			+ `			expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
 			+ `			attrs: any,${newLine}`
 			+ `			slots: __VLS_Slots,${newLine}`
@@ -289,7 +289,7 @@ function* generateSetupFunction(
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield `${syntax} `;
-			yield `{} as ${ctx.helperTypes.WithTemplateSlots.name}<typeof __VLS_component, __VLS_Slots>${endOfLine}`;
+			yield `{} as ${ctx.localTypes.WithTemplateSlots}<typeof __VLS_component, __VLS_Slots>${endOfLine}`;
 		}
 		else {
 			yield `${syntax} `;
@@ -329,7 +329,7 @@ function* generateComponentProps(
 	yield endOfLine;
 
 	yield `let __VLS_functionalComponentProps!: `;
-	yield `${ctx.helperTypes.OmitKeepDiscriminatedUnion.name}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
+	yield `${ctx.localTypes.OmitKeepDiscriminatedUnion}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
 	yield endOfLine;
 
 	if (scriptSetupRanges.defineProp.length) {
@@ -361,7 +361,7 @@ function* generateComponentProps(
 			yield ` & `;
 		}
 		ctx.generatedPropsType = true;
-		yield `${ctx.helperTypes.PropsChildren.name}<typeof __VLS_slots>`;
+		yield `${ctx.localTypes.PropsChildren}<typeof __VLS_slots>`;
 	}
 	if (scriptSetupRanges.defineProp.length) {
 		if (ctx.generatedPropsType) {
@@ -470,7 +470,7 @@ function* generateStyleModules(
 		else {
 			yield name;
 		}
-		yield `: Record<string, string> & ${ctx.helperTypes.Prettify.name}<{}`;
+		yield `: Record<string, string> & ${ctx.localTypes.PrettifyLocal}<{}`;
 		for (const className of style.classNames) {
 			yield* generateCssClassProperty(
 				i,

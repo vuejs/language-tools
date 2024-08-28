@@ -1,19 +1,19 @@
+import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import type * as ts from 'typescript';
 import * as path from 'path-browserify';
+import type * as ts from 'typescript';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
-import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 
 import type {
-	MetaCheckerOptions,
 	ComponentMeta,
+	Declaration,
 	EventMeta,
 	ExposeMeta,
+	MetaCheckerOptions,
 	PropertyMeta,
 	PropertyMetaSchema,
-	SlotMeta,
-	Declaration
+	SlotMeta
 } from './types';
 
 export * from './types';
@@ -83,16 +83,19 @@ export function baseCreate(
 		];
 	};
 
-	const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
+	try {
+		const libDir = require.resolve(`${commandLine.vueOptions.lib}/package.json`, { paths: [rootPath] })
+			.slice(0, -'package.json'.length);
+		const globalTypesPath = `${libDir}__globalTypes_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
+		const globalTypesContents = vue.generateGlobalTypes(commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
+		ts.sys.writeFile(globalTypesPath, globalTypesContents);
+	} catch { }
+
+	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 		ts,
-		id => id,
-		vue.createRootFileChecker(
-			projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
-			() => projectHost.getScriptFileNames(),
-			ts.sys.useCaseSensitiveFileNames
-		),
 		projectHost.getCompilationSettings(),
-		commandLine.vueOptions
+		commandLine.vueOptions,
+		id => id
 	);
 	const language = vue.createLanguage(
 		[
