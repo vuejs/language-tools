@@ -2,6 +2,13 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.1.2 <sup>official</sup>, 2.1.3 <sup>insiders</sup> (2024-08-29)
+
+### Bug Fixes
+
+- **language-core, typescript-plugin, language-server:** write globalTypes into dist for correct export (#4740) (#4737) (#4738) (#4739) - Thanks to @KazariEX!
+- **language-core:** don't default `vueCompilerOptions.lib` to `@vue/runtime-dom` for Vue 2
+
 ## 2.1.0 <sup>official</sup>, 2.1.1 <sup>insiders</sup> (2024-08-29)
 
 ### Features
