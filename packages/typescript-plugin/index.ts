@@ -63,7 +63,7 @@ const plugin: ts.server.PluginModuleFactory = mods => {
 				try {
 					const libDir = require.resolve(`${options.lib}/package.json`, { paths: [proj.getCurrentDirectory()] })
 						.slice(0, -'package.json'.length);
-					const globalTypesPath = `${libDir}dist/__globalTypes_${options.target}_${options.strictTemplates}.d.ts`;
+					const globalTypesPath = `${libDir}dist/__global_types_${options.target}_${options.strictTemplates}.d.ts`;
 					const globalTypesContents = vue.generateGlobalTypes(options.lib, options.target, options.strictTemplates);
 					proj.writeFile(globalTypesPath, globalTypesContents);
 				} catch { }

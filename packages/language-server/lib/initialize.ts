@@ -52,7 +52,7 @@ export function initialize(
 						project.vue = { compilerOptions: vueCompilerOptions };
 
 						if (project.typescript) {
-							const globalTypesName = `__globalTypes_${vueCompilerOptions.target}_${vueCompilerOptions.strictTemplates}.d.ts`;
+							const globalTypesName = `__global_types_${vueCompilerOptions.target}_${vueCompilerOptions.strictTemplates}.d.ts`;
 							const fileExists = project.typescript.languageServiceHost.fileExists.bind(project.typescript.languageServiceHost);
 							const getScriptSnapshot = project.typescript.languageServiceHost.getScriptSnapshot.bind(project.typescript.languageServiceHost);
 							const snapshots = new Map<string, ts.IScriptSnapshot>();

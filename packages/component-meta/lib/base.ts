@@ -137,7 +137,7 @@ export function baseCreate(
 
 	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
 	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
-	const globalTypesName = `__globalTypes_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
+	const globalTypesName = `__global_types_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
 	const snapshots = new Map<string, ts.IScriptSnapshot>();
 	languageServiceHost.fileExists = path => {
 		if (path.endsWith(globalTypesName)) {
