@@ -205,7 +205,7 @@ function getPartialVueCompilerOptions(
 
 export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3.3;
-	const lib = vueOptions.lib || (target < 2.7 ? '@vue/runtime-dom' : 'vue');
+	const lib = vueOptions.lib ?? 'vue';
 	return {
 		...vueOptions,
 		target,
@@ -222,7 +222,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		optionsWrapper: vueOptions.optionsWrapper ?? (
 			target >= 2.7
 				? [`(await import('${lib}')).defineComponent(`, `)`]
-				: [`(await import('vue')).default.extend(`, `)`]
+				: [`(await import('${lib}')).default.extend(`, `)`]
 		),
 		macros: {
 			defineProps: ['defineProps'],
