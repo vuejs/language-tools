@@ -37,7 +37,7 @@ describe('vue-tsc-dts', () => {
 				: options.host?.getCurrentDirectory() ?? ts.sys.getCurrentDirectory();
 			const libDir = require.resolve(`${vueOptions.lib}/package.json`, { paths: [rootDir] })
 				.slice(0, -'package.json'.length);
-			const globalTypesPath = `${libDir}__globalTypes_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`;
+			const globalTypesPath = `${libDir}dist/__globalTypes_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`;
 			const globalTypesContents = vue.generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
 			ts.sys.writeFile(globalTypesPath, globalTypesContents);
 		} catch { }
