@@ -62,7 +62,7 @@ export function initialize(
 									if (path.endsWith('.vue-global-types')) {
 										return true;
 									}
-									return directoryExists!(path);
+									return directoryExists(path);
 								};
 							}
 							project.typescript.languageServiceHost.fileExists = path => {
