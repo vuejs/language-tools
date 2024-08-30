@@ -21,8 +21,8 @@ describe(`vue-tsc`, () => {
 			getTscOutput('next')
 		).toMatchInlineSnapshot(`
 			[
-			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstance<Readonly<ExtractPropTypes<{}>>, { exist: typeof exist; }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 12 more ..., {}>'.",
-			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstance<Readonly<ExtractPropTypes<{}>>, { exist: typeof exist; }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 12 more ..., {}>'.",
+			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type '{ $refs: {}; $: ComponentInternalInstance; $data: {}; $props: Partial<{}> & Omit<{} & VNodeProps & AllowedComponentProps & ComponentCustomProps & Readonly<...>, never>; ... 10 more ...; exist: typeof exist; }'.",
+			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type '{ $refs: {}; $: ComponentInternalInstance; $data: {}; $props: Partial<{}> & Omit<{} & VNodeProps & AllowedComponentProps & ComponentCustomProps & Readonly<...>, never>; ... 10 more ...; exist: typeof exist; }'.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",
 			  "test-workspace/tsc/passedFixtures/#3373/tsconfig.json(4,3): error TS5102: Option 'importsNotUsedAsValues' has been removed. Please remove it from your configuration.
 			  Use 'verbatimModuleSyntax' instead.",
