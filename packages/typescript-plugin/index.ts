@@ -70,7 +70,7 @@ const plugin: ts.server.PluginModuleFactory = mods => {
 						}
 						dir = parentDir;
 					}
-					const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${options.target}_${options.strictTemplates}.d.ts`);
+					const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${options.lib}_${options.target}_${options.strictTemplates}.d.ts`);
 					const globalTypesContents = vue.generateGlobalTypes(options.lib, options.target, options.strictTemplates);
 					proj.writeFile(globalTypesPath, globalTypesContents);
 				} catch { }

@@ -138,7 +138,7 @@ export function baseCreate(
 	const directoryExists = languageServiceHost.directoryExists?.bind(languageServiceHost);
 	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
 	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
-	const globalTypesName = `${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
+	const globalTypesName = `${commandLine.vueOptions.lib}_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
 	const snapshots = new Map<string, ts.IScriptSnapshot>();
 	if (directoryExists) {
 		languageServiceHost.directoryExists = path => {
