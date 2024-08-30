@@ -48,6 +48,18 @@ body:
       render: shell
       placeholder: System, Binaries, Browsers
   - type: textarea
+    id: dependencies
+    attributes:
+      label: package.json dependencies
+      description: You may add your list of dependencies here as it helps us to investigate your report.
+      render: json
+      placeholder: ```json
+      {
+      "dependencies": {},
+      "devDependencies": {},
+      }
+      ```
+  - type: textarea
     id: steps-to-reproduce
     attributes:
       label: Steps to reproduce
