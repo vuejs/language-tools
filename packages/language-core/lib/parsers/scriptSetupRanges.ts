@@ -50,7 +50,6 @@ export function parseScriptSetupRanges(
 		name?: string;
 		define?: ReturnType<typeof parseDefineFunction>;
 	}[] = [];
-
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
 	const defineProp: {
@@ -63,10 +62,11 @@ export function parseScriptSetupRanges(
 		required: boolean;
 		isModel?: boolean;
 	}[] = [];
-	const bindings = parseBindingRanges(ts, ast);
 	const text = ast.text;
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
 	const importComponentNames = new Set<string>();
+
+	let bindings = parseBindingRanges(ts, ast);
 
 	ts.forEachChild(ast, node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
@@ -101,6 +101,11 @@ export function parseScriptSetupRanges(
 		}
 	});
 	ts.forEachChild(ast, child => visitNode(child, [ast]));
+
+	bindings = bindings.filter(range => {
+		const name = ast.text.substring(range.start, range.end);
+		return templateRefs.every(ref => ref.name !== name);
+	});
 
 	return {
 		leadingCommentEndOffset,

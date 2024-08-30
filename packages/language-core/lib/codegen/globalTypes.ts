@@ -121,7 +121,7 @@ declare function __VLS_asFunctionalComponent<T, K = T extends new (...args: any)
 	: T extends (...args: any) => any ? T
 	: (_: {}${strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${strictTemplates ? '' : ' & Record<string, unknown>'} } };
 declare function __VLS_elementAsFunction<T>(tag: T, endTag?: T): (_: T${strictTemplates ? '' : ' & Record<string, unknown>'}) => void;
-declare function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): Parameters<T>['length'] extends 2 ? [any] : [];
+declare function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
 declare function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): NonNullable<__VLS_PickNotAny<
 	'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
 	, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
