@@ -52,11 +52,16 @@ export function initialize(
 						project.vue = { compilerOptions: vueCompilerOptions };
 
 						if (project.typescript) {
-							const globalTypesName = `${vueCompilerOptions.lib}_${vueCompilerOptions.target}_${vueCompilerOptions.strictTemplates}.d.ts`;
 							const directoryExists = project.typescript.languageServiceHost.directoryExists?.bind(project.typescript.languageServiceHost);
 							const fileExists = project.typescript.languageServiceHost.fileExists.bind(project.typescript.languageServiceHost);
 							const getScriptSnapshot = project.typescript.languageServiceHost.getScriptSnapshot.bind(project.typescript.languageServiceHost);
-							const snapshots = new Map<string, ts.IScriptSnapshot>();
+							const globalTypesName = `${vueCompilerOptions.lib}_${vueCompilerOptions.target}_${vueCompilerOptions.strictTemplates}.d.ts`;
+							const globalTypesContents = generateGlobalTypes(vueCompilerOptions.lib, vueCompilerOptions.target, vueCompilerOptions.strictTemplates);
+							const globalTypesSnapshot: ts.IScriptSnapshot = {
+								getText: (start, end) => globalTypesContents.substring(start, end),
+								getLength: () => globalTypesContents.length,
+								getChangeRange: () => undefined,
+							};
 							if (directoryExists) {
 								project.typescript.languageServiceHost.directoryExists = path => {
 									if (path.endsWith('.vue-global-types')) {
@@ -66,22 +71,14 @@ export function initialize(
 								};
 							}
 							project.typescript.languageServiceHost.fileExists = path => {
-								if (path.endsWith(globalTypesName)) {
+								if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
 									return true;
 								}
 								return fileExists(path);
 							};
 							project.typescript.languageServiceHost.getScriptSnapshot = path => {
 								if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
-									if (!snapshots.has(path)) {
-										const contents = generateGlobalTypes(vueCompilerOptions.lib, vueCompilerOptions.target, vueCompilerOptions.strictTemplates);
-										snapshots.set(path, {
-											getText: (start, end) => contents.substring(start, end),
-											getLength: () => contents.length,
-											getChangeRange: () => undefined,
-										});
-									}
-									return snapshots.get(path)!;
+									return globalTypesSnapshot;
 								}
 								return getScriptSnapshot(path);
 							};
