@@ -53,7 +53,8 @@ body:
       label: package.json dependencies
       description: You may add your list of dependencies here as it helps us to investigate your report.
       render: json
-      placeholder: ```json
+      placeholder: |
+      ```json
       {
       "dependencies": {},
       "devDependencies": {},
