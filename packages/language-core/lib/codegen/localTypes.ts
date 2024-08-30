@@ -80,19 +80,6 @@ type __VLS_TypePropsToOption<T> = {
 		`__VLS_OmitIndexSignature`,
 		() => `type __VLS_OmitIndexSignature<T> = { [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K]; }${endOfLine}`
 	);
-	const PickRefsExpose = defineHelper(
-		`__VLS_PickRefsExpose`,
-		() => `
-type __VLS_PickRefsExpose<T> = T extends object
-	? { [K in keyof T]: (T[K] extends any[]
-	? Parameters<T[K][0]['expose']>[0][]
-	: T[K] extends { expose?: (exposed: infer E) => void }
-	? E
-	: T[K]) | null }
-	: never;
-`.trimStart()
-	);
-
 	const helpers = {
 		[PrettifyLocal.name]: PrettifyLocal,
 		[OmitKeepDiscriminatedUnion.name]: OmitKeepDiscriminatedUnion,
@@ -101,7 +88,6 @@ type __VLS_PickRefsExpose<T> = T extends object
 		[PropsChildren.name]: PropsChildren,
 		[TypePropsToOption.name]: TypePropsToOption,
 		[OmitIndexSignature.name]: OmitIndexSignature,
-		[PickRefsExpose.name]: PickRefsExpose,
 	};
 	used.clear();
 
@@ -117,7 +103,6 @@ type __VLS_PickRefsExpose<T> = T extends object
 		get PropsChildren() { return PropsChildren.name; },
 		get TypePropsToOption() { return TypePropsToOption.name; },
 		get OmitIndexSignature() { return OmitIndexSignature.name; },
-		get PickRefsExpose() { return PickRefsExpose.name; },
 	};
 
 	function* generate(names: string[]) {

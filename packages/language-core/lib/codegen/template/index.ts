@@ -51,7 +51,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	yield* ctx.generateAutoImportCompletion();
 
-	yield* generateRefs()
+	yield* generateRefs();
 
 	return ctx;
 
@@ -59,11 +59,11 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		for (const [, validId] of options.templateRefNames) {
 			yield `let ${validId}${newLine}`;
 		}
-		yield `const __VLS_refs = {${newLine}`;
+		yield `declare const __VLS_refs: __VLS_PickRefsExpose<{${newLine}`;
 		for (const [name, validId] of options.templateRefNames) {
-			yield `'${name}': ${validId}!,${newLine}`;
+			yield `'${name}': NonNullable<typeof ${validId}>,${newLine}`;
 		}
-		yield `}${endOfLine}`;
+		yield `}>${endOfLine}`;
 	}
 
 	function* generateSlotsType(): Generator<Code> {
