@@ -51,7 +51,7 @@ export interface ScriptCodegenOptions {
 export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
 	const ctx = createScriptCodegenContext(options);
 
-	yield `/// <reference types="${options.vueCompilerOptions.lib}/dist/__global_types_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+	yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
 
 	if (options.sfc.script?.src) {
 		yield* generateSrc(options.sfc.script, options.sfc.script.src);

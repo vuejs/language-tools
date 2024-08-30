@@ -1,4 +1,5 @@
 import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
+import * as path from 'path';
 import * as vue from '@vue/language-core';
 import { proxyLanguageServiceForVue } from './lib/common';
 import { startNamedPipeServer } from './lib/server';
@@ -61,9 +62,15 @@ const plugin: ts.server.PluginModuleFactory = mods => {
 			const options = vueCompilerOptions.get(proj);
 			if (updateLevel >= 1 && options) {
 				try {
-					const libDir = require.resolve(`${options.lib}/package.json`, { paths: [proj.getCurrentDirectory()] })
-						.slice(0, -'package.json'.length);
-					const globalTypesPath = `${libDir}dist/__global_types_${options.target}_${options.strictTemplates}.d.ts`;
+					let dir = proj.getCurrentDirectory();
+					while (!proj.directoryExists(path.resolve(dir, 'node_modules'))) {
+						const parentDir = path.resolve(dir, '..');
+						if (dir === parentDir) {
+							throw 0;
+						}
+						dir = parentDir;
+					}
+					const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${options.lib}_${options.target}_${options.strictTemplates}.d.ts`);
 					const globalTypesContents = vue.generateGlobalTypes(options.lib, options.target, options.strictTemplates);
 					proj.writeFile(globalTypesPath, globalTypesContents);
 				} catch { }
