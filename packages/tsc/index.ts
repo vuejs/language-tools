@@ -33,7 +33,7 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 						}
 						dir = parentDir;
 					}
-					const globalTypesPath = path.resolve(dir, `node_modules/.vue/global_types_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
+					const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
 					const globalTypesContents = vue.generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
 					ts.sys.writeFile(globalTypesPath, globalTypesContents);
 				} catch { }

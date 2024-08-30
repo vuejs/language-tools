@@ -52,10 +52,19 @@ export function initialize(
 						project.vue = { compilerOptions: vueCompilerOptions };
 
 						if (project.typescript) {
-							const globalTypesName = `global_types_${vueCompilerOptions.target}_${vueCompilerOptions.strictTemplates}.d.ts`;
+							const globalTypesName = `${vueCompilerOptions.target}_${vueCompilerOptions.strictTemplates}.d.ts`;
+							const directoryExists = project.typescript.languageServiceHost.directoryExists?.bind(project.typescript.languageServiceHost);
 							const fileExists = project.typescript.languageServiceHost.fileExists.bind(project.typescript.languageServiceHost);
 							const getScriptSnapshot = project.typescript.languageServiceHost.getScriptSnapshot.bind(project.typescript.languageServiceHost);
 							const snapshots = new Map<string, ts.IScriptSnapshot>();
+							if (directoryExists) {
+								project.typescript.languageServiceHost.directoryExists = path => {
+									if (path.endsWith('.vue-global-types')) {
+										return true;
+									}
+									return directoryExists!(path);
+								};
+							}
 							project.typescript.languageServiceHost.fileExists = path => {
 								if (path.endsWith(globalTypesName)) {
 									return true;
