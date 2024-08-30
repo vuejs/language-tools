@@ -225,7 +225,19 @@ export function* generateComponent(
 
 	const refName = yield* generateVScope(options, ctx, node, props);
 	if (refName) {
+		const varName = ctx.getInternalVariable();
+		options.templateRefNames.set(refName, varName);
 		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
+
+		yield `// @ts-ignore${newLine}`;
+		if (node.codegenNode?.type === CompilerDOM.NodeTypes.VNODE_CALL
+			&& node.codegenNode.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
+			&& node.codegenNode.props.properties.find(({ key }) => key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && key.content === 'ref_for')
+		) {
+			yield `var ${varName} = [{} as Parameters<typeof ${var_defineComponentCtx}['expose']>[0]]${endOfLine}`;
+		} else {
+			yield `var ${varName} = {} as Parameters<typeof ${var_defineComponentCtx}['expose']>[0]${endOfLine}`;
+		}
 	}
 
 	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
@@ -257,19 +269,6 @@ export function* generateComponent(
 
 	if (ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
 		yield `const ${var_defineComponentCtx} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})${endOfLine}`;
-		if (refName) {
-			yield `// @ts-ignore${newLine}`;
-			if (node.codegenNode?.type === CompilerDOM.NodeTypes.VNODE_CALL
-				&& node.codegenNode.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
-				&& node.codegenNode.props.properties.find(({ key }) => key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && key.content === 'ref_for')
-			) {
-				yield `(${refName} ??= []).push(${var_defineComponentCtx})`;
-			} else {
-				yield `${refName} = ${var_defineComponentCtx}`;
-			}
-
-			yield endOfLine;
-		}
 	}
 }
 
@@ -335,14 +334,7 @@ export function* generateElement(
 
 	const refName = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
-		yield `// @ts-ignore${newLine}`;
-		yield `${refName} = __VLS_intrinsicElements`;
-		yield* generatePropertyAccess(
-			options,
-			ctx,
-			node.tag
-		);
-		yield endOfLine;
+		options.templateRefNames.set(refName, `__VLS_intrinsicElements['${node.tag}']`);
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
@@ -574,9 +566,7 @@ function* generateReferencesForElements(
 				ctx.accessExternalVariable(content, startOffset);
 			}
 
-			const refName = CompilerDOM.toValidAssetId(prop.value.content, '_VLS_refs' as any);
-			options.templateRefNames.set(prop.value.content, refName);
-			return refName;
+			return prop.value.content;
 		}
 	}
 }

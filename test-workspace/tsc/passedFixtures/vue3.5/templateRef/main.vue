@@ -6,5 +6,5 @@ import { exactType } from '../../shared';
 <template>
 	<TemplateRef ref="templateRef" />
 
-	{{ exactType($refs.templateRef?.$refs.generic?.foo, {} as 1 | undefined) }}
+	{{ exactType($refs.templateRef.$refs.generic.foo, {} as 1) }}
 </template>

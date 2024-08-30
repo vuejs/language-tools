@@ -13,20 +13,34 @@ export function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	isClassComponent: boolean
 ): Generator<Code> {
-	const types = [];
+	const exps = [];
 	if (isClassComponent) {
-		types.push(`typeof this`);
+		exps.push(`this`);
 	}
 	else {
-		types.push(`InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
+		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
 	}
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
-		types.push(`typeof globalThis`);
+		exps.push(`globalThis`);
 	}
 	if (options.sfc.styles.some(style => style.module)) {
-		types.push(`__VLS_StyleModules`);
+		exps.push(`{} as __VLS_StyleModules`);
 	}
-	yield `let __VLS_ctx!: ${types.join(' & ')}${endOfLine}`;
+
+	yield `const __VLS_ctx = `;
+	if (exps.length === 1) {
+		yield exps[0];
+		yield endOfLine;
+	}
+	else {
+		yield `{${newLine}`;
+		for (const exp of exps) {
+			yield `...`;
+			yield exp;
+			yield `,${newLine}`;
+		}
+		yield `}${endOfLine}`;
+	}
 }
 
 export function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
@@ -87,7 +101,7 @@ export function* generateTemplate(
 		});
 		yield* generateTemplateCtx(options, isClassComponent);
 		yield* generateTemplateComponents(options);
-		yield* generateTemplateBody(options, ctx, templateCodegenCtx);
+		yield* generateTemplateBody(options, templateCodegenCtx);
 		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
 	}
 	else {
@@ -100,7 +114,6 @@ export function* generateTemplate(
 
 function* generateTemplateBody(
 	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
 	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
 	const firstClasses = new Set<string>();
@@ -142,14 +155,14 @@ function* generateTemplateBody(
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.slots.define) {
 			yield `const __VLS_slots = {}${endOfLine}`;
-			yield `const __VLS_refs = {}${endOfLine}`;
+			yield `const $refs = {}${endOfLine}`;
 			yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
 		}
 	}
 
 	yield `const __VLS_templateResult = {`;
 	yield `slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
-	yield `refs: __VLS_refs as ${ctx.localTypes.PickRefsExpose}<typeof __VLS_refs>,${newLine}`;
+	yield `refs: $refs,${newLine}`;
 	yield `attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `}${endOfLine}`;
 }

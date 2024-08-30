@@ -32,6 +32,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
+	ctx.addLocalVariable('$refs');
 
 	yield* generatePreResolveComponents();
 
@@ -51,19 +52,17 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	yield* ctx.generateAutoImportCompletion();
 
-	yield* generateRefs()
+	yield* generateRefs();
 
 	return ctx;
 
 	function* generateRefs(): Generator<Code> {
-		for (const [, validId] of options.templateRefNames) {
-			yield `let ${validId}${newLine}`;
-		}
 		yield `const __VLS_refs = {${newLine}`;
-		for (const [name, validId] of options.templateRefNames) {
-			yield `'${name}': ${validId}!,${newLine}`;
+		for (const [name, varName] of options.templateRefNames) {
+			yield `'${name}': ${varName}!,${newLine}`;
 		}
 		yield `}${endOfLine}`;
+		yield `declare var $refs: typeof __VLS_refs${endOfLine}`;
 	}
 
 	function* generateSlotsType(): Generator<Code> {
