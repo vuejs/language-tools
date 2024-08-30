@@ -135,10 +135,19 @@ export function baseCreate(
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
 
+	const directoryExists = languageServiceHost.directoryExists?.bind(languageServiceHost);
 	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
 	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
 	const globalTypesName = `${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
 	const snapshots = new Map<string, ts.IScriptSnapshot>();
+	if (directoryExists) {
+		languageServiceHost.directoryExists = path => {
+			if (path.endsWith('.vue-global-types')) {
+				return true;
+			}
+			return directoryExists(path);
+		};
+	}
 	languageServiceHost.fileExists = path => {
 		if (path.endsWith(globalTypesName)) {
 			return true;
