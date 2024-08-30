@@ -2,7 +2,8 @@ import { getSlotsPropertyName } from '../utils/shared';
 
 export function generateGlobalTypes(lib: string, target: number, strictTemplates: boolean) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${strictTemplates ? '' : ' & Record<string, unknown>'}`;
-	return `
+	return `// @ts-nocheck
+
 const __VLS_globalComponents = { ...{} as import('${lib}').GlobalComponents };
 
 declare const __VLS_intrinsicElements: __VLS_IntrinsicElements;
