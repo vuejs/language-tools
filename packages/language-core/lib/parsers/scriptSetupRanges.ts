@@ -102,9 +102,10 @@ export function parseScriptSetupRanges(
 	});
 	ts.forEachChild(ast, child => visitNode(child, [ast]));
 
+	const templateRefNames = new Set(templateRefs.map(ref => ref.name));
 	bindings = bindings.filter(range => {
-		const name = ast.text.substring(range.start, range.end);
-		return templateRefs.every(ref => ref.name !== name);
+		const name = text.substring(range.start, range.end);
+		return !templateRefNames.has(name);
 	});
 
 	return {
