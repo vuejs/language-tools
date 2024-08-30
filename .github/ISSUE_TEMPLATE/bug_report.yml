@@ -54,10 +54,10 @@ body:
       description: You may add your list of dependencies here as it helps us to investigate your report.
       render: json
       placeholder: |
-      {
-      "dependencies": {},
-      "devDependencies": {},
-      }
+      \{
+      "dependencies": \{\},
+      "devDependencies": \{\},
+      \}
   - type: textarea
     id: steps-to-reproduce
     attributes:
