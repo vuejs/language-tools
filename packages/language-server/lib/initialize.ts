@@ -72,7 +72,7 @@ export function initialize(
 								return fileExists(path);
 							};
 							project.typescript.languageServiceHost.getScriptSnapshot = path => {
-								if (path.endsWith(globalTypesName)) {
+								if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
 									if (!snapshots.has(path)) {
 										const contents = generateGlobalTypes(vueCompilerOptions.lib, vueCompilerOptions.target, vueCompilerOptions.strictTemplates);
 										snapshots.set(path, {
