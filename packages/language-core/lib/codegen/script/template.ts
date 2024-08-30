@@ -26,7 +26,6 @@ export function* generateTemplateCtx(
 	if (options.sfc.styles.some(style => style.module)) {
 		exps.push(`{} as __VLS_StyleModules`);
 	}
-	exps.push(`{ $refs: __VLS_refs }`);
 
 	yield `const __VLS_ctx = `;
 	if (exps.length === 1) {
@@ -156,14 +155,14 @@ function* generateTemplateBody(
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.slots.define) {
 			yield `const __VLS_slots = {}${endOfLine}`;
-			yield `const __VLS_refs = {}${endOfLine}`;
+			yield `const $refs = {}${endOfLine}`;
 			yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
 		}
 	}
 
 	yield `const __VLS_templateResult = {`;
 	yield `slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
-	yield `refs: __VLS_refs,${newLine}`;
+	yield `refs: $refs,${newLine}`;
 	yield `attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `}${endOfLine}`;
 }
