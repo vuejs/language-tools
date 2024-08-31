@@ -9,6 +9,7 @@ import { createScriptCodegenContext, ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';
+import { generateGlobalTypes } from '../globalTypes';
 
 export const codeFeatures = {
 	all: {
@@ -51,7 +52,12 @@ export interface ScriptCodegenOptions {
 export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
 	const ctx = createScriptCodegenContext(options);
 
-	yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+	if (options.vueCompilerOptions.__setupedGlobalTypes?.()) {
+		yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+	}
+	else {
+		yield `/* placeholder */`;
+	}
 
 	if (options.sfc.script?.src) {
 		yield* generateSrc(options.sfc.script, options.sfc.script.src);
@@ -136,6 +142,9 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
 	}
 	yield* ctx.localTypes.generate([...ctx.localTypes.getUsedNames()]);
+	if (!options.vueCompilerOptions.__setupedGlobalTypes?.()) {
+		yield generateGlobalTypes(options.vueCompilerOptions.lib, options.vueCompilerOptions.target, options.vueCompilerOptions.strictTemplates);
+	}
 
 	if (options.sfc.scriptSetup) {
 		yield ['', 'scriptSetup', options.sfc.scriptSetup.content.length, codeFeatures.verification];
