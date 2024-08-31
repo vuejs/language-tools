@@ -3,11 +3,8 @@ import type { ElementNode, SourceLocation } from '@vue/compiler-dom';
 import * as compiler from '@vue/compiler-dom';
 import { SFCStyleOverride } from '../types';
 
-const regex = /(?=<\/template>(?![\s\S]*<\/template>))/;
 
 export function parse(source: string): SFCParseResult {
-	// #4583
-	source = source.replace(regex, '>');
 
 	const errors: CompilerError[] = [];
 	const ast = compiler.parse(source, {

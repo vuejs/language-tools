@@ -8,6 +8,8 @@ interface Loc {
 }
 type Node = CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.ExpressionNode | CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode;
 
+const shouldAddSuffix = /(?<=<[^>/]+)$/;
+
 const plugin: VueLanguagePlugin = ({ modules }) => {
 
 	return {
@@ -19,6 +21,11 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 			if (lang === 'html' || lang === 'md') {
 
 				const compiler = modules['@vue/compiler-dom'];
+
+				// #4583
+				if (shouldAddSuffix.test(template)) {
+					template += '>';
+				}
 
 				return compiler.compile(template, {
 					...options,
