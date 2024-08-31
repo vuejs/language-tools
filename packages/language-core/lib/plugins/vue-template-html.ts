@@ -153,8 +153,16 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							node.parseResult.key,
 							node.parseResult.index,
 						]) {
-							if (child && !tryUpdateNode(child)) {
-								return false;
+							if (child) {
+								if (!tryUpdateNode(child)) {
+									return false;
+								}
+								if (child.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+									const content = child.content.trim();
+									if (content.startsWith('(') || content.endsWith(')')) {
+										return false;
+									}
+								}
 							}
 						}
 						for (const child of node.children) {
