@@ -3,7 +3,6 @@ import type { ElementNode, SourceLocation } from '@vue/compiler-dom';
 import * as compiler from '@vue/compiler-dom';
 import { SFCStyleOverride } from '../types';
 
-
 export function parse(source: string): SFCParseResult {
 
 	const errors: CompilerError[] = [];
