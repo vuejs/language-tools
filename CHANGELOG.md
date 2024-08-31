@@ -2,6 +2,30 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.1.4 <sup>official</sup>, 2.1.5 <sup>insiders</sup> (2024-09-01)
+
+### Features
+
+- **typescript-plugin, language-server:** generate global types file into `node_modules/.vue-global-types` (#4752) - Thanks to @KazariEX!
+- **language-core:** navigation support for template-ref (#4726) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- **language-core, typescript-plugin, language-server:** apply snake case on globalTypes filename (#4749) - Thanks to @KazariEX!
+- **language-core:** hoist `$refs` type (#4763)
+- **language-core:** disable lib check on global types file (#4767) - Thanks to @KazariEX!
+- **language-core:** prevent circular reference of templateRef (#4768) - Thanks to @zhiyuanzmj!
+- **language-core:** using interface merging for `GlobalComponents`
+- **language-core:** `fallthroughAttributes` causes global components to be self-referential (#4761)
+- **language-core:** auto-completion for the last line of template block (#4771) - Thanks to @zhiyuanzmj!
+- **language-server:** leaking named pipes (#4672)
+- **typescript-plugin:** compatible with Yarn PnP (#4751)
+- **vscode:** whitelist `ms-dynamics-smb.al` extension for Vue Hybrid Mode. (#4765) - Thanks to @kyleweishaupt!
+
+### Other Changes
+
+- Add optional "dependencies" textarea to issue template (#4758) - Thanks to @davidmatter!
+
 ## 2.1.2 <sup>official</sup>, 2.1.3 <sup>insiders</sup> (2024-08-29)
 
 ### Bug Fixes
