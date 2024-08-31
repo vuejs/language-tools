@@ -109,6 +109,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
+			const codeInfo = ctx.codeFeatures.withoutHighlightAndCompletion;
 			const codes = wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
@@ -121,8 +122,20 @@ export function* generateElementProps(
 							propName,
 							prop.arg.loc.start.offset,
 							{
-								...ctx.codeFeatures.withoutHighlightAndCompletion,
-								navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
+								...codeInfo,
+								verification: options.vueCompilerOptions.strictTemplates
+									? codeInfo.verification
+									: {
+										shouldReport(_source, code) {
+											if (String(code) === '2353' || String(code) === '2561') {
+												return false;
+											}
+											return typeof codeInfo.verification === 'object'
+												? codeInfo.verification.shouldReport?.(_source, code) ?? true
+												: true;
+										},
+									},
+								navigation: codeInfo.navigation
 									? {
 										resolveRenameNewName: camelize,
 										resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
@@ -183,6 +196,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
+			const codeInfo = ctx.codeFeatures.withoutHighlightAndCompletion;
 			const codes = conditionWrapWith(
 				enableCodeFeatures,
 				prop.loc.start.offset,
@@ -195,7 +209,19 @@ export function* generateElementProps(
 					prop.loc.start.offset,
 					shouldCamelize
 						? {
-							...ctx.codeFeatures.withoutHighlightAndCompletion,
+							...codeInfo,
+							verification: options.vueCompilerOptions.strictTemplates
+								? codeInfo.verification
+								: {
+									shouldReport(_source, code) {
+										if (String(code) === '2353' || String(code) === '2561') {
+											return false;
+										}
+										return typeof codeInfo.verification === 'object'
+											? codeInfo.verification.shouldReport?.(_source, code) ?? true
+											: true;
+									},
+								},
 							navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
 								? {
 									resolveRenameNewName: camelize,

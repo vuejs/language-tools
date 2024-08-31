@@ -1,4 +1,5 @@
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
+import * as path from 'path';
 import * as vue from '@vue/language-core';
 
 const windowsPathReg = /\\/g;
@@ -21,20 +22,27 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 				runExtensions.length === allExtensions.length
 				&& runExtensions.every(ext => allExtensions.includes(ext))
 			) {
-				const writeFile = options.host!.writeFile.bind(options.host);
-				options.host!.writeFile = (fileName, contents, ...args) => {
-					return writeFile(fileName, removeEmitGlobalTypes(contents), ...args);
-				};
-				const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
+				try {
+					let dir = typeof configFilePath === 'string'
+						? configFilePath
+						: options.host?.getCurrentDirectory() ?? ts.sys.getCurrentDirectory();
+					while (!ts.sys.directoryExists(path.resolve(dir, 'node_modules'))) {
+						const parentDir = path.resolve(dir, '..');
+						if (dir === parentDir) {
+							throw 0;
+						}
+						dir = parentDir;
+					}
+					const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
+					const globalTypesContents = vue.generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
+					ts.sys.writeFile(globalTypesPath, globalTypesContents);
+				} catch { }
+
+				const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 					ts,
-					id => id,
-					vue.createRootFileChecker(
-						undefined,
-						() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
-						options.host?.useCaseSensitiveFileNames?.() ?? false
-					),
 					options.options,
-					vueOptions
+					vueOptions,
+					id => id
 				);
 				return { languagePlugins: [vueLanguagePlugin] };
 			}
@@ -54,10 +62,4 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 			throw err;
 		}
 	}
-}
-
-const removeEmitGlobalTypesRegexp = /^[^\n]*__VLS_globalTypesStart[\w\W]*__VLS_globalTypesEnd[^\n]*\n?$/mg;
-
-export function removeEmitGlobalTypes(dts: string) {
-	return dts.replace(removeEmitGlobalTypesRegexp, '');
 }

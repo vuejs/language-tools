@@ -4,10 +4,88 @@ import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
 import { endOfLine, newLine } from '../common';
 import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { forEachInterpolationSegment } from '../template/interpolation';
+import { generateStyleScopedClasses } from '../template/styleScopedClasses';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 import { generateInternalComponent } from './internalComponent';
-import { generateStyleScopedClasses } from '../template/styleScopedClasses';
+
+export function* generateTemplateCtx(
+	options: ScriptCodegenOptions,
+	isClassComponent: boolean
+): Generator<Code> {
+	const exps = [];
+	if (isClassComponent) {
+		exps.push(`this`);
+	}
+	else {
+		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
+	}
+	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
+		exps.push(`globalThis`);
+	}
+	if (options.sfc.styles.some(style => style.module)) {
+		exps.push(`{} as __VLS_StyleModules`);
+	}
+
+	yield `const __VLS_ctx = `;
+	if (exps.length === 1) {
+		yield exps[0];
+		yield endOfLine;
+	}
+	else {
+		yield `{${newLine}`;
+		for (const exp of exps) {
+			yield `...`;
+			yield exp;
+			yield `,${newLine}`;
+		}
+		yield `}${endOfLine}`;
+	}
+}
+
+export function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
+	const exps: Code[] = [];
+
+	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
+		const { componentsOption } = options.scriptRanges.exportDefault;
+		exps.push([
+			options.sfc.script.content.substring(componentsOption.start, componentsOption.end),
+			'script',
+			componentsOption.start,
+			codeFeatures.navigation,
+		]);
+	}
+
+	let nameType: Code | undefined;
+	if (options.sfc.script && options.scriptRanges?.exportDefault?.nameOption) {
+		const { nameOption } = options.scriptRanges.exportDefault;
+		nameType = options.sfc.script.content.substring(nameOption.start, nameOption.end);
+	}
+	else if (options.sfc.scriptSetup) {
+		yield `let __VLS_name!: '${options.scriptSetupRanges?.options.name ?? options.fileBaseName.substring(0, options.fileBaseName.lastIndexOf('.'))}'${endOfLine}`;
+		nameType = 'typeof __VLS_name';
+	}
+	if (nameType) {
+		exps.push(`{} as {
+			[K in ${nameType}]: typeof __VLS_internalComponent
+				& (new () => {
+					${getSlotsPropertyName(options.vueCompilerOptions.target)}: typeof ${options.scriptSetupRanges?.slots?.name ?? '__VLS_slots'}
+				})
+		}`);
+	}
+
+	exps.push(`{} as NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}>`);
+	exps.push(`{} as __VLS_GlobalComponents`);
+	exps.push(`{} as typeof __VLS_ctx`);
+
+	yield `const __VLS_components = {${newLine}`;
+	for (const type of exps) {
+		yield `...`;
+		yield type;
+		yield `,${newLine}`;
+	}
+	yield `}${endOfLine}`;
+}
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
@@ -17,101 +95,28 @@ export function* generateTemplate(
 	ctx.generatedTemplate = true;
 
 	if (!options.vueCompilerOptions.skipTemplateCodegen) {
-		if (isClassComponent) {
-			yield `__VLS_template = (() => {${newLine}`;
-		}
-		else {
-			yield `const __VLS_template = (() => {${newLine}`;
-		}
-		const templateCodegenCtx = createTemplateCodegenContext(new Set());
-		yield `const __VLS_template_return = () => {${newLine}`;
-		yield* generateCtx(options, isClassComponent);
-		yield* generateTemplateContext(options, templateCodegenCtx);
-		yield* generateExportOptions(options);
-		yield* generateConstNameOption(options);
-		yield `}${endOfLine}`;
+		const templateCodegenCtx = createTemplateCodegenContext({
+			scriptSetupBindingNames: new Set(),
+			edited: options.edited,
+		});
+		yield* generateTemplateCtx(options, isClassComponent);
+		yield* generateTemplateComponents(options);
+		yield* generateTemplateBody(options, templateCodegenCtx);
 		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
-		yield `return __VLS_template_return${endOfLine}`;
-		yield `})()${endOfLine}`;
 	}
 	else {
-		yield `function __VLS_template() {${newLine}`;
 		const templateUsageVars = [...getTemplateUsageVars(options, ctx)];
 		yield `// @ts-ignore${newLine}`;
 		yield `[${templateUsageVars.join(', ')}]${newLine}`;
-		yield `return [{}, {}] as const${endOfLine}`;
-		yield `}${newLine}`;
+		yield `const __VLS_templateResult { slots: {}, refs: {}, attrs: {} }${endOfLine}`;
 	}
 }
 
-function* generateExportOptions(options: ScriptCodegenOptions): Generator<Code> {
-	yield newLine;
-	yield `const __VLS_componentsOption = `;
-	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
-		const componentsOption = options.scriptRanges.exportDefault.componentsOption;
-		yield [
-			options.sfc.script.content.substring(componentsOption.start, componentsOption.end),
-			'script',
-			componentsOption.start,
-			codeFeatures.navigation,
-		];
-	}
-	else {
-		yield `{}`;
-	}
-	yield endOfLine;
-}
-
-function* generateConstNameOption(options: ScriptCodegenOptions): Generator<Code> {
-	if (options.sfc.script && options.scriptRanges?.exportDefault?.nameOption) {
-		const nameOption = options.scriptRanges.exportDefault.nameOption;
-		yield `const __VLS_name = `;
-		yield `${options.sfc.script.content.substring(nameOption.start, nameOption.end)} as const`;
-		yield endOfLine;
-	}
-	else if (options.sfc.scriptSetup) {
-		yield `let __VLS_name!: '${options.scriptSetupRanges?.options.name ?? options.fileBaseName.substring(0, options.fileBaseName.lastIndexOf('.'))}'${endOfLine}`;
-	}
-	else {
-		yield `const __VLS_name = undefined${endOfLine}`;
-	}
-}
-
-function* generateCtx(
-	options: ScriptCodegenOptions,
-	isClassComponent: boolean
-): Generator<Code> {
-	yield `let __VLS_ctx!: `;
-	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
-		yield `typeof globalThis & `;
-	}
-	if (!isClassComponent) {
-		yield `InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`;
-	}
-	else {
-		yield `typeof this`;
-	}
-	/* CSS Module */
-	if (options.sfc.styles.some(style => style.module)) {
-		yield ` & __VLS_StyleModules`;
-	}
-	yield endOfLine;
-}
-
-function* generateTemplateContext(
+function* generateTemplateBody(
 	options: ScriptCodegenOptions,
 	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
-	/* Components */
-	yield `/* Components */${newLine}`;
-	yield `let __VLS_otherComponents!: NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}> & typeof __VLS_componentsOption${endOfLine}`;
-	yield `let __VLS_own!: __VLS_SelfComponent<typeof __VLS_name, typeof __VLS_internalComponent & (new () => { ${getSlotsPropertyName(options.vueCompilerOptions.target)}: typeof ${options.scriptSetupRanges?.slots?.name ?? '__VLS_slots'} })>${endOfLine}`;
-	yield `let __VLS_localComponents!: typeof __VLS_otherComponents & Omit<typeof __VLS_own, keyof typeof __VLS_otherComponents>${endOfLine}`;
-	yield `let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents & typeof __VLS_ctx${endOfLine}`; // for html completion, TS references...
-
-	/* Style Scoped */
 	const firstClasses = new Set<string>();
-	yield `/* Style Scoped */${newLine}`;
 	yield `let __VLS_styleScopedClasses!: {}`;
 	for (let i = 0; i < options.sfc.styles.length; i++) {
 		const style = options.sfc.styles[i];
@@ -150,15 +155,15 @@ function* generateTemplateContext(
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.slots.define) {
 			yield `const __VLS_slots = {}${endOfLine}`;
-			yield `const __VLS_refs = {}${endOfLine}`;
+			yield `const $refs = {}${endOfLine}`;
 			yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
 		}
 	}
 
-	yield `return {${newLine}`;
+	yield `const __VLS_templateResult = {`;
 	yield `slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
-	yield `refs: __VLS_refs as __VLS_PickRefsExpose<typeof __VLS_refs>,${newLine}`;
-	yield `attrs: __VLS_inheritedAttrs,${newLine}`;
+	yield `refs: $refs,${newLine}`;
+	yield `attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `}${endOfLine}`;
 }
 

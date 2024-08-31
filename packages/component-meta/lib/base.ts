@@ -1,19 +1,19 @@
+import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import type * as ts from 'typescript';
 import * as path from 'path-browserify';
+import type * as ts from 'typescript';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
-import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 
 import type {
-	MetaCheckerOptions,
 	ComponentMeta,
+	Declaration,
 	EventMeta,
 	ExposeMeta,
+	MetaCheckerOptions,
 	PropertyMeta,
 	PropertyMetaSchema,
-	SlotMeta,
-	Declaration
+	SlotMeta
 } from './types';
 
 export * from './types';
@@ -83,16 +83,11 @@ export function baseCreate(
 		];
 	};
 
-	const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
+	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 		ts,
-		id => id,
-		vue.createRootFileChecker(
-			projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
-			() => projectHost.getScriptFileNames(),
-			ts.sys.useCaseSensitiveFileNames
-		),
 		projectHost.getCompilationSettings(),
-		commandLine.vueOptions
+		commandLine.vueOptions,
+		id => id
 	);
 	const language = vue.createLanguage(
 		[
@@ -139,6 +134,37 @@ export function baseCreate(
 	);
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
+
+	const directoryExists = languageServiceHost.directoryExists?.bind(languageServiceHost);
+	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
+	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
+	const globalTypesName = `${commandLine.vueOptions.lib}_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
+	const globalTypesContents = vue.generateGlobalTypes(commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
+	const globalTypesSnapshot: ts.IScriptSnapshot = {
+		getText: (start, end) => globalTypesContents.substring(start, end),
+		getLength: () => globalTypesContents.length,
+		getChangeRange: () => undefined,
+	};
+	if (directoryExists) {
+		languageServiceHost.directoryExists = path => {
+			if (path.endsWith('.vue-global-types')) {
+				return true;
+			}
+			return directoryExists(path);
+		};
+	}
+	languageServiceHost.fileExists = path => {
+		if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
+			return true;
+		}
+		return fileExists(path);
+	};
+	languageServiceHost.getScriptSnapshot = path => {
+		if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
+			return globalTypesSnapshot;
+		}
+		return getScriptSnapshot(path);
+	};
 
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);

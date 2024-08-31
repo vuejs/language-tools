@@ -1,4 +1,4 @@
-<script setup	lang="ts">
+<script setup lang="ts">
 import { exactType } from '../../shared';
 import basic from './basic.vue';
 import inheritAttrsFalse from './inherit-attrs-false.vue';

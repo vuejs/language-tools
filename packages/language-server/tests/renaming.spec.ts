@@ -309,7 +309,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<template>
 				<Comp :aaa-bbb="'foo'"></Comp>
@@ -395,7 +394,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component type props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<template>
 				<Comp :aaa-bbb="'foo'"></Comp>
@@ -481,7 +479,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component dynamic props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -529,7 +526,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component returns', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -585,7 +581,6 @@ describe('Renaming', async () => {
 	});
 
 	it('<script setup>', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -633,7 +628,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component tags', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -790,9 +784,96 @@ describe('Renaming', async () => {
 		`);
 	});
 
-	it('Template Ref', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
-		expect(await requestRename('tsconfigProject/fixture.vue', 'vue', `
+	it('Scoped Classes', async () => {
+		expect(
+			await requestRename('fixture.vue', 'vue', `
+				<template>
+					<div :class="'foo|'"></div>
+					<div :class="['foo', { 'foo': true }]"></div>
+					<div :class="{ foo }"></div>
+				</template>
+				<style scoped>
+				.foo { }
+				</style>
+			`, 'bar')
+		).toMatchInlineSnapshot(`
+			{
+			  "changes": {
+			    "file://\${testWorkspacePath}/fixture.vue": [
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 23,
+			            "line": 4,
+			          },
+			          "start": {
+			            "character": 20,
+			            "line": 4,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 32,
+			            "line": 3,
+			          },
+			          "start": {
+			            "character": 29,
+			            "line": 3,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 23,
+			            "line": 3,
+			          },
+			          "start": {
+			            "character": 20,
+			            "line": 3,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 22,
+			            "line": 2,
+			          },
+			          "start": {
+			            "character": 19,
+			            "line": 2,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 8,
+			            "line": 7,
+			          },
+			          "start": {
+			            "character": 5,
+			            "line": 7,
+			          },
+			        },
+			      },
+			    ],
+			  },
+			}
+		`);
+	});
+
+	it.only('Template Ref', async () => {
+		expect(
+			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
 					<a ref="foo"></a>
 				</template>
@@ -847,15 +928,6 @@ describe('Renaming', async () => {
 		}
 		openedDocuments.length = 0;
 	});
-
-	/**
-	 * @deprecated Remove this when #4717 fixed.
-	 */
-	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
-		const server = await getLanguageServer();
-		await server.sendDocumentDiagnosticRequest(document.uri);
-	}
 
 	async function requestRename(fileName: string, languageId: string, _content: string, newName: string) {
 		const offset = _content.indexOf('|');

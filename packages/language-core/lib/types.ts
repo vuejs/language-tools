@@ -30,6 +30,7 @@ export interface VueCompilerOptions {
 	jsxSlots: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
+	fallthroughAttributes: boolean;
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
@@ -52,6 +53,9 @@ export interface VueCompilerOptions {
 	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
+
+	// internal
+	__test?: boolean;
 }
 
 export const validVersions = [2, 2.1] as const;
@@ -81,7 +85,6 @@ export type VueLanguagePlugin = (ctx: {
 	};
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
-	globalTypesHolder: string | undefined;
 }) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
 
 export interface SfcBlock {

@@ -9,6 +9,8 @@ import type { Code, Sfc, VueLanguagePlugin } from '../types';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 
+const fileEditTimes = new Map<string, number>();
+
 const plugin: VueLanguagePlugin = ctx => {
 
 	return {
@@ -92,6 +94,7 @@ function createTsx(
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: ctx.vueCompilerOptions,
 			template: _sfc.template,
+			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			scriptSetupBindingNames: scriptSetupBindingNames(),
 			scriptSetupImportComponentNames: scriptSetupImportComponentNames(),
 			templateRefNames: new Map(),
@@ -149,7 +152,6 @@ function createTsx(
 		const codegen = generateScript({
 			ts,
 			fileBaseName: path.basename(fileName),
-			globalTypes: ctx.globalTypesHolder === fileName,
 			sfc: _sfc,
 			lang: lang(),
 			scriptRanges: scriptRanges(),
@@ -157,9 +159,11 @@ function createTsx(
 			templateCodegen: _template,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: ctx.vueCompilerOptions,
+			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			getGeneratedLength: () => generatedLength,
 			linkedCodeMappings,
 		});
+		fileEditTimes.set(fileName, (fileEditTimes.get(fileName) ?? 0) + 1);
 
 		let current = codegen.next();
 

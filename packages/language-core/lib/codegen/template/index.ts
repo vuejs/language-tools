@@ -16,6 +16,7 @@ export interface TemplateCodegenOptions {
 	template: NonNullable<Sfc['template']>;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
+	edited: boolean;
 	templateRefNames: Map<string, [validId: string, offset: number]>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
@@ -24,7 +25,7 @@ export interface TemplateCodegenOptions {
 }
 
 export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
-	const ctx = createTemplateCodegenContext(options.scriptSetupBindingNames);
+	const ctx = createTemplateCodegenContext(options);
 
 	if (options.slotsAssignName) {
 		ctx.addLocalVariable(options.slotsAssignName);
@@ -32,6 +33,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
+	ctx.addLocalVariable('$refs');
 
 	yield* generatePreResolveComponents();
 
@@ -51,24 +53,17 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	yield* ctx.generateAutoImportCompletion();
 
-	yield* generateRefs()
+	yield* generateRefs();
 
 	return ctx;
 
 	function* generateRefs(): Generator<Code> {
-		for (const [, [validId]] of options.templateRefNames) {
-			yield `let ${validId}${newLine}`;
-		}
 		yield `const __VLS_refs = {${newLine}`;
-		for (const [name, [validId, offset]] of options.templateRefNames) {
-			yield* generateStringLiteralKey(
-				name,
-				offset,
-				ctx.codeFeatures.all
-			)
-			yield `: ${validId}!,${newLine}`;
+		for (const [name, [validId]] of options.templateRefNames) {
+			yield `'${name}': ${validId}!,${newLine}`;
 		}
 		yield `}${endOfLine}`;
+		yield `declare var $refs: typeof __VLS_refs${endOfLine}`;
 	}
 
 	function* generateSlotsType(): Generator<Code> {
@@ -111,15 +106,21 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	function* generatePreResolveComponents(): Generator<Code> {
-		yield `let __VLS_resolvedLocalAndGlobalComponents!: {}`;
+		yield `let __VLS_resolvedLocalAndGlobalComponents!: Required<{}`;
 		if (options.template.ast) {
+			const components = new Set<string>();
 			for (const node of forEachElementNode(options.template.ast)) {
 				if (
 					node.tagType === CompilerDOM.ElementTypes.COMPONENT
 					&& node.tag.toLowerCase() !== 'component'
 					&& !node.tag.includes('.') // namespace tag 
 				) {
-					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+					if (components.has(node.tag)) {
+						continue;
+					}
+					components.add(node.tag);
+					yield newLine;
+					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_components, `;
 					yield getPossibleOriginalComponentNames(node.tag, false)
 						.map(name => `"${name}"`)
 						.join(', ');
@@ -127,7 +128,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 				}
 			}
 		}
-		yield endOfLine;
+		yield `>${endOfLine}`;
 	}
 }
 
