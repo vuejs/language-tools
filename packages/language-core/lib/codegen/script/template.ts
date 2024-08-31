@@ -29,13 +29,13 @@ export function* generateTemplateCtx(
 		extraExps.push(`{} as __VLS_StyleModules`);
 	}
 	if (options.scriptSetupRanges?.templateRefs.length) {
-		let exp = (`{} as import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`);
+		let exp = `{} as import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`;
 		for (const { name } of options.scriptSetupRanges.templateRefs) {
 			if (name) {
-				exp += (`${name}: typeof ${name}${newLine}`);
+				exp += `${name}: typeof ${name}${newLine}`;
 			}
 		}
-		exp += (`}>${newLine}`);
+		exp += `}>${newLine}`;
 		extraExps.push(exp);
 	}
 
