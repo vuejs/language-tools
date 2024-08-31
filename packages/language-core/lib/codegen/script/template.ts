@@ -13,28 +13,55 @@ export function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	isClassComponent: boolean
 ): Generator<Code> {
-	const exps = [];
+	const baseExps = [];
+	const extraExps = [];
+
 	if (isClassComponent) {
-		exps.push(`this`);
+		baseExps.push(`this`);
 	}
 	else {
-		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
+		baseExps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
 	}
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
-		exps.push(`globalThis`);
+		extraExps.push(`globalThis`);
 	}
 	if (options.sfc.styles.some(style => style.module)) {
-		exps.push(`{} as __VLS_StyleModules`);
+		extraExps.push(`{} as __VLS_StyleModules`);
+	}
+	if (options.scriptSetupRanges?.templateRefs.length) {
+		let exp = `{} as import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`;
+		for (const { name } of options.scriptSetupRanges.templateRefs) {
+			if (name) {
+				exp += `${name}: typeof ${name}${newLine}`;
+			}
+		}
+		exp += `}>${newLine}`;
+		extraExps.push(exp);
 	}
 
-	yield `const __VLS_ctx = `;
-	if (exps.length === 1) {
-		yield exps[0];
+	yield `const __VLS_ctxBase = `;
+	if (baseExps.length === 1) {
+		yield baseExps[0];
 		yield endOfLine;
 	}
 	else {
 		yield `{${newLine}`;
-		for (const exp of exps) {
+		for (const exp of baseExps) {
+			yield `...`;
+			yield exp;
+			yield `,${newLine}`;
+		}
+		yield `}${endOfLine}`;
+	}
+
+	yield `const __VLS_ctx = `;
+	if (extraExps.length === 0) {
+		yield `__VLS_ctxBase${endOfLine}`;
+	}
+	else {
+		yield `{${newLine}`;
+		yield `...__VLS_ctxBase,${newLine}`;
+		for (const exp of extraExps) {
 			yield `...`;
 			yield exp;
 			yield `,${newLine}`;
@@ -76,7 +103,7 @@ export function* generateTemplateComponents(options: ScriptCodegenOptions): Gene
 
 	exps.push(`{} as NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}>`);
 	exps.push(`{} as __VLS_GlobalComponents`);
-	exps.push(`{} as typeof __VLS_ctx`);
+	exps.push(`__VLS_ctxBase`);
 
 	yield `const __VLS_components = {${newLine}`;
 	for (const type of exps) {

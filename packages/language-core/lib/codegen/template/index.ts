@@ -65,7 +65,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 				offset,
 				ctx.codeFeatures.navigationAndCompletion
 			)
-			yield `: ${varName}!,${newLine}`;
+			yield `: ${varName},${newLine}`;
 		}
 		yield `}${endOfLine}`;
 		yield `declare var $refs: typeof __VLS_refs${endOfLine}`;
