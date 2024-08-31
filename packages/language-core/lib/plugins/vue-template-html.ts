@@ -22,19 +22,36 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 				const compiler = modules['@vue/compiler-dom'];
 
+				let addedSuffix = false;
+
 				// #4583
 				if (shouldAddSuffix.test(template)) {
 					template += '>';
+					addedSuffix = true;
 				}
 
-				return compiler.compile(template, {
+				const result = compiler.compile(template, {
 					...options,
 					comments: true,
 				});
+				// @ts-expect-error
+				result.__addedSuffix = addedSuffix;
+				return result;
 			}
 		},
 
 		updateSFCTemplate(oldResult, change) {
+			oldResult.code = oldResult.code.slice(0, change.start)
+				+ change.newText
+				+ oldResult.code.slice(change.end);
+
+			// @ts-expect-error
+			if (oldResult.__addedSuffix) {
+				const originalTemplate = oldResult.code.slice(0, -1); // remove added '>'
+				if (!shouldAddSuffix.test(originalTemplate)) {
+					return undefined;
+				}
+			}
 
 			const CompilerDOM = modules['@vue/compiler-dom'];
 
