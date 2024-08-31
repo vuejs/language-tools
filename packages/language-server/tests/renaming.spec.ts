@@ -871,7 +871,7 @@ describe('Renaming', async () => {
 		`);
 	});
 
-	it.only('Template Ref', async () => {
+	it('Template Ref', async () => {
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
