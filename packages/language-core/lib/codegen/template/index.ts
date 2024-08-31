@@ -125,7 +125,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 					}
 					components.add(node.tag);
 					yield newLine;
-					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_components, `;
+					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
 					yield getPossibleOriginalComponentNames(node.tag, false)
 						.map(name => `"${name}"`)
 						.join(', ');

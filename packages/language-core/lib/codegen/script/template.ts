@@ -102,16 +102,17 @@ export function* generateTemplateComponents(options: ScriptCodegenOptions): Gene
 	}
 
 	exps.push(`{} as NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}>`);
-	exps.push(`{} as __VLS_GlobalComponents`);
 	exps.push(`__VLS_ctxBase`);
 
-	yield `const __VLS_components = {${newLine}`;
+	yield `const __VLS_localComponents = {${newLine}`;
 	for (const type of exps) {
 		yield `...`;
 		yield type;
 		yield `,${newLine}`;
 	}
 	yield `}${endOfLine}`;
+
+	yield `let __VLS_components: typeof __VLS_localComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
 export function* generateTemplate(
