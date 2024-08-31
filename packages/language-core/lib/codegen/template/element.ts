@@ -226,7 +226,7 @@ export function* generateComponent(
 	const [refName, offset] = yield* generateVScope(options, ctx, node, props);
 	if (refName) {
 		const varName = ctx.getInternalVariable();
-		options.templateRefNames.set(refName, [varName, offset]);
+		options.templateRefNames.set(refName, [varName, offset!]);
 		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
 
 		yield `// @ts-ignore${newLine}`;
@@ -334,7 +334,7 @@ export function* generateElement(
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
-		options.templateRefNames.set(refName, [`__VLS_intrinsicElements['${node.tag}']`, offset]);
+		options.templateRefNames.set(refName, [`__VLS_intrinsicElements['${node.tag}']`, offset!]);
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
@@ -361,7 +361,7 @@ function* generateVScope(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[]
-): Generator<Code> {
+): Generator<Code, [refName?: string, offset?: number]> {
 	const vScope = props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
 	let inScope = false;
 	let originalConditionsNum = ctx.blockConditions.length;
@@ -541,7 +541,7 @@ function* generateReferencesForElements(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode
-): Generator<Code> {
+): Generator<Code, [refName: string, offset: number] | []> {
 	for (const prop of node.props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -569,6 +569,7 @@ function* generateReferencesForElements(
 			return [content, startOffset];
 		}
 	}
+	return [];
 }
 
 function* generateReferencesForScopedCssClasses(
