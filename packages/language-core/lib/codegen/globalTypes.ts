@@ -5,6 +5,7 @@ export function generateGlobalTypes(mode: 'global' | 'local', lib: string, targe
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${strictTemplates ? '' : ' & Record<string, unknown>'}`;
 
 	let str = '';
+	let globalComponentsType: string;
 
 	if (mode === 'global') {
 		str += `// @ts-nocheck${newLine}`;
@@ -13,6 +14,11 @@ export function generateGlobalTypes(mode: 'global' | 'local', lib: string, targe
 		str += `	export interface GlobalComponents { }${newLine}`;
 		str += `}${newLine}`;
 		str += `declare global {${newLine}`;
+		globalComponentsType = `import('${lib}').GlobalComponents`;
+	}
+	else {
+		str += `const __VLS_globalComponents = { ...{} as import('${lib}').GlobalComponents }${endOfLine}`;
+		globalComponentsType = `void extends typeof __VLS_globalComponents ? {} : typeof __VLS_globalComponents`;
 	}
 
 	str += `
@@ -31,8 +37,8 @@ type __VLS_Element = ${(
 		)}
 type __VLS_GlobalComponents = ${(
 			target >= 3.5
-				? `import('vue').GlobalComponents;`
-				: `import('vue').GlobalComponents & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
+				? globalComponentsType
+				: `(${globalComponentsType}) & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
 		)}
 type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
