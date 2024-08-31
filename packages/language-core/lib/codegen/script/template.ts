@@ -23,10 +23,10 @@ export function* generateTemplateCtx(
 		baseExps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
 	}
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
-		baseExps.push(`globalThis`);
+		extraExps.push(`globalThis`);
 	}
 	if (options.sfc.styles.some(style => style.module)) {
-		baseExps.push(`{} as __VLS_StyleModules`);
+		extraExps.push(`{} as __VLS_StyleModules`);
 	}
 	if (options.scriptSetupRanges?.templateRefs.length) {
 		let exp = (`{} as import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`);
