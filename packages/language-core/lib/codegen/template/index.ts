@@ -59,7 +59,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	function* generateRefs(): Generator<Code> {
 		yield `const __VLS_refs = {${newLine}`;
 		for (const [name, varName] of options.templateRefNames) {
-			yield `'${name}': ${varName}!,${newLine}`;
+			yield `'${name}': ${varName},${newLine}`;
 		}
 		yield `}${endOfLine}`;
 		yield `declare var $refs: typeof __VLS_refs${endOfLine}`;

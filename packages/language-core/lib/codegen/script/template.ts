@@ -8,6 +8,7 @@ import { generateStyleScopedClasses } from '../template/styleScopedClasses';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 import { generateInternalComponent } from './internalComponent';
+import { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 
 export function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
@@ -25,6 +26,9 @@ export function* generateTemplateCtx(
 	}
 	if (options.sfc.styles.some(style => style.module)) {
 		exps.push(`{} as __VLS_StyleModules`);
+	}
+	if (options.scriptSetupRanges?.templateRefs.length) {
+		exps.push(getRefsType(options, options.scriptSetupRanges));
 	}
 
 	yield `const __VLS_ctx = `;
@@ -76,7 +80,7 @@ export function* generateTemplateComponents(options: ScriptCodegenOptions): Gene
 
 	exps.push(`{} as NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}>`);
 	exps.push(`{} as __VLS_GlobalComponents`);
-	exps.push(`{} as typeof __VLS_ctx`);
+	exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
 
 	yield `const __VLS_components = {${newLine}`;
 	for (const type of exps) {
@@ -256,4 +260,16 @@ export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptC
 	}
 
 	return usageVars;
+}
+
+function getRefsType(options: ScriptCodegenOptions, scriptSetupRanges: ScriptSetupRanges) {
+	let result = '';
+	result += (`{} as import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`);
+	for (const { name } of scriptSetupRanges.templateRefs) {
+		if (name) {
+			result += (`${name}: typeof ${name}${newLine}`);
+		}
+	}
+	result += (`}>${newLine}`);
+	return result;
 }

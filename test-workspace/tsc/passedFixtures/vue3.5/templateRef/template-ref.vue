@@ -1,27 +1,30 @@
 <script setup lang="ts">
-import { useTemplateRef } from 'vue';
-import { exactType } from '../../shared';
+import { useTemplateRef } from "vue";
+import { exactType } from "../../shared";
 
-const comp1 = useTemplateRef('generic');
+const comp1 = useTemplateRef("generic");
 if (comp1.value) {
-	exactType(comp1.value.foo, 1)
+  exactType(comp1.value.foo, 1);
 }
 
-const comp2 = useTemplateRef('v-for');
+const comp2 = useTemplateRef("v-for");
 if (comp2.value) {
-	exactType(comp2.value[0]?.foo, {} as number | undefined);
+  exactType(comp2.value[0]?.foo, {} as number | undefined);
 }
 
-const comp3 = useTemplateRef('a');
+const comp3 = useTemplateRef("a");
 if (comp3.value) {
-	exactType(comp3.value.href, {} as string | undefined);
+  exactType(comp3.value.href, {} as string | undefined);
 }
 </script>
 
 <template>
-	<Generic ref="generic" :foo="1"></Generic>
-	
-	<Generic v-for="i in 4" ref="v-for" :foo="i"></Generic>
+  <Generic ref="generic" :foo="1"></Generic>
+  {{ exactType(comp1?.foo, {} as 1 | undefined) }}
 
-	<a ref="a"></a>
+  <Generic v-for="i in 4" ref="v-for" :foo="i"></Generic>
+  {{ exactType(comp2?.[0]?.foo, {} as number | undefined) }}
+
+  <a ref="a"></a>
+  {{ exactType(comp3?.href, {} as string | undefined) }}
 </template>

@@ -229,15 +229,14 @@ export function* generateComponent(
 		options.templateRefNames.set(refName, varName);
 		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
 
-		yield `// @ts-ignore${newLine}`;
+		yield `var ${varName} = {} as (Parameters<typeof ${var_defineComponentCtx}['expose']>[0] | null)`;
 		if (node.codegenNode?.type === CompilerDOM.NodeTypes.VNODE_CALL
 			&& node.codegenNode.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
-			&& node.codegenNode.props.properties.find(({ key }) => key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && key.content === 'ref_for')
+			&& node.codegenNode.props.properties.some(({ key }) => key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && key.content === 'ref_for')
 		) {
-			yield `var ${varName} = [{} as Parameters<typeof ${var_defineComponentCtx}['expose']>[0]]${endOfLine}`;
-		} else {
-			yield `var ${varName} = {} as Parameters<typeof ${var_defineComponentCtx}['expose']>[0]${endOfLine}`;
+			yield `[]`;
 		}
+		yield `${endOfLine}`;
 	}
 
 	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
