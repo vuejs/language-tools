@@ -244,7 +244,15 @@ function* generateSetupFunction(
 	}
 	for (const { define } of scriptSetupRanges.templateRefs) {
 		if (define?.arg) {
-			setupCodeModifies.push([[`<__VLS_Refs[${scriptSetup.content.slice(define.arg.start, define.arg.end)}], keyof __VLS_Refs>`], define.arg.start - 1, define.arg.start - 1]);
+			setupCodeModifies.push([
+				[
+					`<__VLS_Refs[`,
+					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
+					`], keyof __VLS_Refs>`
+				],
+				define.arg.start - 1,
+				define.arg.start - 1
+			]);
 		}
 	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);

@@ -223,10 +223,10 @@ export function* generateComponent(
 		yield endOfLine;
 	}
 
-	const refName = yield* generateVScope(options, ctx, node, props);
+	const [refName, offset] = yield* generateVScope(options, ctx, node, props);
 	if (refName) {
 		const varName = ctx.getInternalVariable();
-		options.templateRefNames.set(refName, varName);
+		options.templateRefNames.set(refName, [varName, offset!]);
 		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
 
 		yield `// @ts-ignore${newLine}`;
@@ -332,9 +332,9 @@ export function* generateElement(
 		yield endOfLine;
 	}
 
-	const refName = yield* generateVScope(options, ctx, node, node.props);
+	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
-		options.templateRefNames.set(refName, `__VLS_intrinsicElements['${node.tag}']`);
+		options.templateRefNames.set(refName, [`__VLS_intrinsicElements['${node.tag}']`, offset!]);
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
@@ -361,7 +361,7 @@ function* generateVScope(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[]
-): Generator<Code> {
+): Generator<Code, [refName?: string, offset?: number]> {
 	const vScope = props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
 	let inScope = false;
 	let originalConditionsNum = ctx.blockConditions.length;
@@ -385,14 +385,14 @@ function* generateVScope(
 	}
 
 	yield* generateElementDirectives(options, ctx, node);
-	const refName = yield* generateReferencesForElements(options, ctx, node); // <el ref="foo" />
+	const [refName, offset] = yield* generateReferencesForElements(options, ctx, node); // <el ref="foo" />
 	yield* generateReferencesForScopedCssClasses(options, ctx, node);
 
 	if (inScope) {
 		yield `}${newLine}`;
 		ctx.blockConditions.length = originalConditionsNum;
 	}
-	return refName;
+	return [refName, offset];
 }
 
 export function getCanonicalComponentName(tagText: string) {
@@ -541,7 +541,7 @@ function* generateReferencesForElements(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode
-): Generator<Code> {
+): Generator<Code, [refName: string, offset: number] | []> {
 	for (const prop of node.props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
@@ -566,9 +566,10 @@ function* generateReferencesForElements(
 				ctx.accessExternalVariable(content, startOffset);
 			}
 
-			return prop.value.content;
+			return [content, startOffset];
 		}
 	}
+	return [];
 }
 
 function* generateReferencesForScopedCssClasses(
