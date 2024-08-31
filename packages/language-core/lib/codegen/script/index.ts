@@ -143,7 +143,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 	yield* ctx.localTypes.generate([...ctx.localTypes.getUsedNames()]);
 	if (!options.vueCompilerOptions.__setupedGlobalTypes?.()) {
-		yield generateGlobalTypes(options.vueCompilerOptions.lib, options.vueCompilerOptions.target, options.vueCompilerOptions.strictTemplates);
+		yield generateGlobalTypes('local', options.vueCompilerOptions.lib, options.vueCompilerOptions.target, options.vueCompilerOptions.strictTemplates);
 	}
 
 	if (options.sfc.scriptSetup) {

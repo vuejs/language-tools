@@ -142,7 +142,7 @@ export function baseCreate(
 	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
 	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
 	const globalTypesName = `${commandLine.vueOptions.lib}_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
-	const globalTypesContents = vue.generateGlobalTypes(commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
+	const globalTypesContents = vue.generateGlobalTypes('global', commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
 	const globalTypesSnapshot: ts.IScriptSnapshot = {
 		getText: (start, end) => globalTypesContents.substring(start, end),
 		getLength: () => globalTypesContents.length,

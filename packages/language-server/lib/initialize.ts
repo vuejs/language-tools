@@ -59,7 +59,7 @@ export function initialize(
 							const fileExists = project.typescript.languageServiceHost.fileExists.bind(project.typescript.languageServiceHost);
 							const getScriptSnapshot = project.typescript.languageServiceHost.getScriptSnapshot.bind(project.typescript.languageServiceHost);
 							const globalTypesName = `${vueCompilerOptions.lib}_${vueCompilerOptions.target}_${vueCompilerOptions.strictTemplates}.d.ts`;
-							const globalTypesContents = generateGlobalTypes(vueCompilerOptions.lib, vueCompilerOptions.target, vueCompilerOptions.strictTemplates);
+							const globalTypesContents = generateGlobalTypes('global', vueCompilerOptions.lib, vueCompilerOptions.target, vueCompilerOptions.strictTemplates);
 							const globalTypesSnapshot: ts.IScriptSnapshot = {
 								getText: (start, end) => globalTypesContents.substring(start, end),
 								getLength: () => globalTypesContents.length,
