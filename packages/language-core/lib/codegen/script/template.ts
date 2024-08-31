@@ -263,8 +263,7 @@ export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptC
 }
 
 function getRefsType(options: ScriptCodegenOptions, scriptSetupRanges: ScriptSetupRanges) {
-	let result = '';
-	result += (`{} as import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`);
+	let result = (`{} as import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`);
 	for (const { name } of scriptSetupRanges.templateRefs) {
 		if (name) {
 			result += (`${name}: typeof ${name}${newLine}`);
