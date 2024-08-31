@@ -18,6 +18,7 @@
 - **language-core:** using interface merging for `GlobalComponents`
 - **language-core:** `fallthroughAttributes` causes global components to be self-referential (#4761)
 - **language-core:** auto-completion for the last line of template block (#4771) - Thanks to @zhiyuanzmj!
+- **language-core:** update ast correctly on repeated `v-for` modifications (#4772) - Thanks to @KazariEX!
 - **language-server:** leaking named pipes (#4672)
 - **typescript-plugin:** compatible with Yarn PnP (#4751)
 - **vscode:** whitelist `ms-dynamics-smb.al` extension for Vue Hybrid Mode. (#4765) - Thanks to @kyleweishaupt!
