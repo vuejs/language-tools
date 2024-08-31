@@ -22,6 +22,7 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 				runExtensions.length === allExtensions.length
 				&& runExtensions.every(ext => allExtensions.includes(ext))
 			) {
+				let setupedGlobalTypes = false;
 				try {
 					let dir = typeof configFilePath === 'string'
 						? configFilePath
@@ -36,12 +37,16 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 					const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
 					const globalTypesContents = vue.generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
 					ts.sys.writeFile(globalTypesPath, globalTypesContents);
+					setupedGlobalTypes = true;
 				} catch { }
 
 				const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 					ts,
 					options.options,
-					vueOptions,
+					{
+						...vueOptions,
+						__setupedGlobalTypes: () => setupedGlobalTypes,
+					},
 					id => id
 				);
 				return { languagePlugins: [vueLanguagePlugin] };

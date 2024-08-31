@@ -86,7 +86,10 @@ export function baseCreate(
 	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 		ts,
 		projectHost.getCompilationSettings(),
-		commandLine.vueOptions,
+		{
+			...commandLine.vueOptions,
+			__setupedGlobalTypes: () => true,
+		},
 		id => id
 	);
 	const language = vue.createLanguage(

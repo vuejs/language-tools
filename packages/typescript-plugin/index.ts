@@ -6,8 +6,8 @@ import { startNamedPipeServer } from './lib/server';
 import type * as ts from 'typescript';
 
 const windowsPathReg = /\\/g;
-
 const vueCompilerOptions = new WeakMap<ts.server.Project, vue.VueCompilerOptions>();
+const setupedProjects = new WeakSet<ts.server.Project>();
 
 const basePlugin = createLanguageServicePlugin(
 	(ts, info) => {
@@ -15,7 +15,10 @@ const basePlugin = createLanguageServicePlugin(
 		const languagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
 			info.languageServiceHost.getCompilationSettings(),
-			vueOptions,
+			{
+				...vueOptions,
+				__setupedGlobalTypes: () => setupedProjects.has(info.project),
+			},
 			id => id
 		);
 
@@ -73,6 +76,7 @@ const plugin: ts.server.PluginModuleFactory = mods => {
 					const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${options.lib}_${options.target}_${options.strictTemplates}.d.ts`);
 					const globalTypesContents = vue.generateGlobalTypes(options.lib, options.target, options.strictTemplates);
 					proj.writeFile(globalTypesPath, globalTypesContents);
+					setupedProjects.add(proj);
 				} catch { }
 			}
 			return pluginModule.getExternalFiles?.(proj, updateLevel) ?? [];

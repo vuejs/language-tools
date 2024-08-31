@@ -44,7 +44,10 @@ export function initialize(
 						createVueLanguagePlugin(
 							ts,
 							compilerOptions,
-							vueCompilerOptions,
+							{
+								...vueCompilerOptions,
+								__setupedGlobalTypes: () => true,
+							},
 							s => uriConverter.asFileName(s)
 						),
 					],
