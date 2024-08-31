@@ -856,7 +856,7 @@
 			]
 		},
 		"template-tag-1": {
-			"begin": "(<)(template[a-zA-Z0-9:-]*)\\b(>)",
+			"begin": "(<)(template)\\b(>)",
 			"beginCaptures": {
 				"1": {
 					"name": "punctuation.definition.tag.begin.html.vue"
@@ -878,7 +878,7 @@
 			"patterns": [
 				{
 					"begin": "\\G",
-					"end": "(?=/>)|((</)(template[a-zA-Z0-9:-]*)\\b)",
+					"end": "(?=/>)|((</)(template)\\b)",
 					"endCaptures": {
 						"2": {
 							"name": "punctuation.definition.tag.begin.html.vue"
@@ -897,7 +897,7 @@
 			]
 		},
 		"template-tag-2": {
-			"begin": "(<)(template[a-zA-Z0-9:-]*)\\b",
+			"begin": "(<)(template)\\b",
 			"beginCaptures": {
 				"1": {
 					"name": "punctuation.definition.tag.begin.html.vue"
@@ -916,7 +916,7 @@
 			"patterns": [
 				{
 					"begin": "\\G",
-					"end": "(?=/>)|((</)(template[a-zA-Z0-9:-]*)\\b)",
+					"end": "(?=/>)|((</)(template)\\b)",
 					"endCaptures": {
 						"2": {
 							"name": "punctuation.definition.tag.begin.html.vue"
