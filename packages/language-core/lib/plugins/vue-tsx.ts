@@ -132,16 +132,21 @@ function createTsx(
 	});
 	const scriptSetupImportComponentNames = computed<Set<string>>(oldNames => {
 		const newNames = scriptSetupRanges()?.importComponentNames ?? new Set();
-		if (newNames && oldNames && twoSetsEqual(newNames, oldNames)) {
+		if (oldNames && twoSetsEqual(newNames, oldNames)) {
 			return oldNames;
 		}
 		return newNames;
 	});
-	const templateRefsString = computed(() => {
-		return scriptSetupRanges()?.templateRefs.map(({ name }) => name).join(',');
-	});
-	const templateRefNames = computed(() => {
-		return new Set(templateRefsString()?.split(',') ?? []);
+	const templateRefNames = computed<Set<string>>(oldNames => {
+		const newNames = new Set(
+			scriptSetupRanges()?.templateRefs
+				.map(({ name }) => name)
+				.filter(name => name !== undefined)
+		);
+		if (oldNames && twoSetsEqual(newNames, oldNames)) {
+			return oldNames;
+		}
+		return newNames;
 	});
 	const hasDefineSlots = computed(() => !!scriptSetupRanges()?.slots.define);
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
