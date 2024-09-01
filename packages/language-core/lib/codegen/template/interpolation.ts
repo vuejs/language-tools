@@ -128,9 +128,6 @@ export function* forEachInterpolationSegment(
 			const curVar = ctxVars[i];
 			const nextVar = ctxVars[i + 1];
 
-			// fix https://github.com/vuejs/language-tools/issues/1205
-			// fix https://github.com/vuejs/language-tools/issues/1264
-			
 			yield* generateVar(curVar, nextVar);
 
 			if (nextVar.isShorthand) {
@@ -154,18 +151,19 @@ export function* forEachInterpolationSegment(
 		curVar: (typeof ctxVars)[number],
 		nextVar: (typeof ctxVars)[number] = curVar
 	): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
-		const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
+		// fix https://github.com/vuejs/language-tools/issues/1205
+		// fix https://github.com/vuejs/language-tools/issues/1264
+		yield ['', nextVar.offset, true];
 
+		const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
 		if (isTemplateRef) {
 			yield [`__VLS_unref(`, undefined];
+			yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
+			yield [`)`, undefined];
 		}
 		else {
-			yield ['', nextVar.offset, true];
 			yield [`__VLS_ctx.`, undefined];
-		}
-		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
-		if (isTemplateRef) {
-			yield [`)`, undefined];
+			yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 		}
 	}
 }
