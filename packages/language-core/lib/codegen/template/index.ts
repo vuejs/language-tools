@@ -17,7 +17,6 @@ export interface TemplateCodegenOptions {
 	edited: boolean;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
-	templateRefs: Map<string, [varName: string, offset: number]>;
 	templateRefNames: Set<string>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
@@ -60,7 +59,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	function* generateRefs(): Generator<Code> {
 		yield `const __VLS_refs = {${newLine}`;
-		for (const [name, [varName, offset]] of options.templateRefs) {
+		for (const [name, [varName, offset]] of ctx.templateRefs) {
 			yield* generateStringLiteralKey(
 				name,
 				offset,
