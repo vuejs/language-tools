@@ -37,6 +37,7 @@ export function* generateTemplateCtx(
 		}
 		exp += `}>${newLine}`;
 		extraExps.push(exp);
+		extraExps.push(`{} as { $refs: typeof __VLS_refs }`);
 	}
 
 	yield `const __VLS_ctxBase = `;
@@ -183,14 +184,14 @@ function* generateTemplateBody(
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.slots.define) {
 			yield `const __VLS_slots = {}${endOfLine}`;
-			yield `const $refs = {}${endOfLine}`;
+			yield `const __VLS_refs = {}${endOfLine}`;
 			yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
 		}
 	}
 
-	yield `const __VLS_templateResult = {`;
+	yield `const __VLS_templateResult = {${newLine}`;
 	yield `slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
-	yield `refs: $refs,${newLine}`;
+	yield `refs: __VLS_refs,${newLine}`;
 	yield `attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `}${endOfLine}`;
 }
