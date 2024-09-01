@@ -4,6 +4,7 @@ import { endOfLine, newLine } from './common';
 export function generateGlobalTypes(mode: 'global' | 'local', lib: string, target: number, strictTemplates: boolean) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${strictTemplates ? '' : ' & Record<string, unknown>'}`;
 
+	let decl = '';
 	let str = '';
 	let globalComponentsType: string;
 
@@ -17,14 +18,16 @@ export function generateGlobalTypes(mode: 'global' | 'local', lib: string, targe
 		globalComponentsType = `import('${lib}').GlobalComponents`;
 	}
 	else {
+		decl = 'declare ';
+		str += `// @ts-ignore${endOfLine}`;
 		str += `const __VLS_globalComponents = { ...{} as import('${lib}').GlobalComponents }${endOfLine}`;
 		globalComponentsType = `void extends typeof __VLS_globalComponents ? {} : typeof __VLS_globalComponents`;
 	}
 
 	str += `
-const __VLS_intrinsicElements: __VLS_IntrinsicElements;
-const __VLS_directiveBindingRestFields = { instance: null, oldValue: null, modifiers: null as any, dir: null as any };
-const __VLS_unref: import('${lib}').unref;
+${decl}const __VLS_intrinsicElements: __VLS_IntrinsicElements;
+${decl}const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
+${decl}const __VLS_unref: import('${lib}').unref;
 
 type __VLS_IntrinsicElements = ${(
 			target >= 3.3
@@ -88,40 +91,40 @@ type __VLS_NormalizeEmits<T> = __VLS_PrettifyGlobal<
 >;
 type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 
-function __VLS_getVForSourceType(source: number): [number, number, number][];
-function __VLS_getVForSourceType(source: string): [string, number, number][];
-function __VLS_getVForSourceType<T extends any[]>(source: T): [
+${decl}function __VLS_getVForSourceType(source: number): [number, number, number][];
+${decl}function __VLS_getVForSourceType(source: string): [string, number, number][];
+${decl}function __VLS_getVForSourceType<T extends any[]>(source: T): [
 	item: T[number],
 	key: number,
 	index: number,
 ][];
-function __VLS_getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
+${decl}function __VLS_getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
 	item: T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never, 
 	key: number,
 	index: undefined,
 ][];
 // #3845
-function __VLS_getVForSourceType<T extends number | { [Symbol.iterator](): Iterator<any> }>(source: T): [
+${decl}function __VLS_getVForSourceType<T extends number | { [Symbol.iterator](): Iterator<any> }>(source: T): [
 	item: number | (Exclude<T, number> extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never), 
 	key: number,
 	index: undefined,
 ][];
-function __VLS_getVForSourceType<T>(source: T): [
+${decl}function __VLS_getVForSourceType<T>(source: T): [
 	item: T[keyof T],
 	key: keyof T,
 	index: number,
 ][];
 // @ts-ignore
-function __VLS_getSlotParams<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
+${decl}function __VLS_getSlotParams<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
 // @ts-ignore
-function __VLS_getSlotParam<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
-function __VLS_directiveAsFunction<T extends import('${lib}').Directive>(dir: T): T extends (...args: any) => any
+${decl}function __VLS_getSlotParam<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
+${decl}function __VLS_directiveAsFunction<T extends import('${lib}').Directive>(dir: T): T extends (...args: any) => any
 	? T | __VLS_unknownDirective
 	: NonNullable<(T & Record<string, __VLS_unknownDirective>)['created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted']>;
-function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
-function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
-function __VLS_nonNullable<T>(t: T): T extends null | undefined ? never : T;
-function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
+${decl}function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
+${decl}function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
+${decl}function __VLS_nonNullable<T>(t: T): T extends null | undefined ? never : T;
+${decl}function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 	T extends new (...args: any) => any
 	? (props: ${fnPropsType}, ctx?: any) => __VLS_Element & { __ctx?: {
 		attrs?: any,
@@ -131,14 +134,14 @@ function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any 
 	: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 	: T extends (...args: any) => any ? T
 	: (_: {}${strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${strictTemplates ? '' : ' & Record<string, unknown>'} } };
-function __VLS_elementAsFunction<T>(tag: T, endTag?: T): (_: T${strictTemplates ? '' : ' & Record<string, unknown>'}) => void;
-function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
-function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): NonNullable<__VLS_PickNotAny<
+${decl}function __VLS_elementAsFunction<T>(tag: T, endTag?: T): (_: T${strictTemplates ? '' : ' & Record<string, unknown>'}) => void;
+${decl}function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
+${decl}function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): NonNullable<__VLS_PickNotAny<
 	'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
 	, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 >>;
-function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
-function __VLS_tryAsConstant<const T>(t: T): T;
+${decl}function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
+${decl}function __VLS_tryAsConstant<const T>(t: T): T;
 `;
 
 	if (mode === 'global') {
