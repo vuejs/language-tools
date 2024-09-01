@@ -2,6 +2,8 @@
 import { useTemplateRef } from 'vue';
 import { exactType } from '../../shared';
 
+const foo = 1;
+
 const comp1 = useTemplateRef('generic');
 if (comp1.value) {
 	exactType(comp1.value.foo, 1);
@@ -19,7 +21,7 @@ if (comp3.value) {
 </script>
 
 <template>
-	<Generic ref="generic" :foo="1"></Generic>
+	<Generic ref="generic" :foo></Generic>
 	{{ exactType(comp1?.foo, {} as 1 | undefined) }}
 
 	<Generic v-for="i in 4" ref="v-for" :foo="i"></Generic>
