@@ -116,6 +116,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	}[] = [];
 	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
+	const templateRefs = new Map<string, [string, number]>();
 
 	return {
 		slots,
@@ -130,6 +131,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		inlayHints,
 		hasSlot: false,
 		inheritedAttrVars: new Set(),
+		templateRefs,
 		singleRootNode: undefined as CompilerDOM.ElementNode | undefined,
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);

@@ -226,7 +226,7 @@ export function* generateComponent(
 	const [refName, offset] = yield* generateVScope(options, ctx, node, props);
 	if (refName) {
 		const varName = ctx.getInternalVariable();
-		options.templateRefNames.set(refName, [varName, offset!]);
+		ctx.templateRefs.set(refName, [varName, offset!]);
 		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
 
 		yield `var ${varName} = {} as (Parameters<typeof ${var_defineComponentCtx}['expose']>[0] | null)`;
@@ -333,7 +333,7 @@ export function* generateElement(
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
-		options.templateRefNames.set(refName, [`__VLS_intrinsicElements['${node.tag}']`, offset!]);
+		ctx.templateRefs.set(refName, [`__VLS_intrinsicElements['${node.tag}']`, offset!]);
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
