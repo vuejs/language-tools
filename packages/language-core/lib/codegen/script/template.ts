@@ -14,7 +14,6 @@ export function* generateTemplateCtx(
 	isClassComponent: boolean
 ): Generator<Code> {
 	const exps = [];
-	const extraExps = [];
 
 	if (isClassComponent) {
 		exps.push(`this`);
@@ -28,40 +27,15 @@ export function* generateTemplateCtx(
 	if (options.sfc.styles.some(style => style.module)) {
 		exps.push(`{} as __VLS_StyleModules`);
 	}
-	if (options.scriptSetupRanges?.templateRefs.length) {
-		let exp = `{} as import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`;
-		for (const { name } of options.scriptSetupRanges.templateRefs) {
-			if (name) {
-				exp += `${name}: typeof ${name}${newLine}`;
-			}
-		}
-		exp += `}>`;
-		extraExps.push(exp);
-	}
 
-	yield `const __VLS_ctxWithoutRefs = `;
+	yield `const __VLS_ctx = `;
 	if (exps.length === 1) {
 		yield exps[0];
-		yield endOfLine;
+		yield `${endOfLine}`;
 	}
 	else {
 		yield `{${newLine}`;
 		for (const exp of exps) {
-			yield `...`;
-			yield exp;
-			yield `,${newLine}`;
-		}
-		yield `}${endOfLine}`;
-	}
-
-	yield `const __VLS_ctx = `;
-	if (extraExps.length === 0) {
-		yield `__VLS_ctxWithoutRefs${endOfLine}`;
-	}
-	else {
-		yield `{${newLine}`;
-		yield `...__VLS_ctxWithoutRefs,${newLine}`
-		for (const exp of extraExps) {
 			yield `...`;
 			yield exp;
 			yield `,${newLine}`;
@@ -102,7 +76,7 @@ export function* generateTemplateComponents(options: ScriptCodegenOptions): Gene
 	}
 
 	exps.push(`{} as NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}>`);
-	exps.push(`__VLS_ctxWithoutRefs`);
+	exps.push(`__VLS_ctx`);
 
 	yield `const __VLS_localComponents = {${newLine}`;
 	for (const type of exps) {
@@ -236,6 +210,7 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 		for (const cssBind of style.cssVars) {
 			for (const [segment, offset, onlyError] of forEachInterpolationSegment(
 				options.ts,
+				undefined,
 				ctx,
 				cssBind.text,
 				cssBind.offset,

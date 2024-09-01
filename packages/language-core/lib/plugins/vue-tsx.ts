@@ -82,6 +82,12 @@ function createTsx(
 			? parseScriptSetupRanges(ts, _sfc.scriptSetup.ast, ctx.vueCompilerOptions)
 			: undefined
 	);
+	const templateRefsString = computed(() => {
+		return scriptSetupRanges()?.templateRefs.map(({ name }) => name).join(',');
+	});
+	const templateRefNames = computed(() => {
+		return new Set(templateRefsString()?.split(',') ?? []);
+	});
 	const generatedTemplate = computed(() => {
 
 		if (!_sfc.template) {
@@ -97,7 +103,8 @@ function createTsx(
 			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			scriptSetupBindingNames: scriptSetupBindingNames(),
 			scriptSetupImportComponentNames: scriptSetupImportComponentNames(),
-			templateRefNames: new Map(),
+			templateRefs: new Map(),
+			templateRefNames: templateRefNames(),
 			hasDefineSlots: hasDefineSlots(),
 			slotsAssignName: slotsAssignName(),
 			propsAssignName: propsAssignName(),

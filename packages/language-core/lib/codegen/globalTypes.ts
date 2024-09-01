@@ -87,6 +87,8 @@ type __VLS_NormalizeEmits<T> = __VLS_PrettifyGlobal<
 >;
 type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 
+declare const __VLS_unref: typeof import('${lib}').unref;
+
 function __VLS_getVForSourceType(source: number): [number, number, number][];
 function __VLS_getVForSourceType(source: string): [string, number, number][];
 function __VLS_getVForSourceType<T extends any[]>(source: T): [

@@ -14,8 +14,7 @@ export function* generateInterpolation(
 	start: number | undefined,
 	data: VueCodeInformation | ((offset: number) => VueCodeInformation) | undefined,
 	prefix: string,
-	suffix: string,
-	withinTemplateRef = false
+	suffix: string
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
@@ -26,11 +25,11 @@ export function* generateInterpolation(
 	}[] = [];
 	for (let [section, offset, onlyError] of forEachInterpolationSegment(
 		options.ts,
+		options.templateRefNames,
 		ctx,
 		code,
 		start !== undefined ? start - prefix.length : undefined,
-		ast,
-		withinTemplateRef
+		ast
 	)) {
 		if (offset === undefined) {
 			yield section;
@@ -73,14 +72,12 @@ export function* generateInterpolation(
 
 export function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
+	templateRefNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
 	code: string,
 	offset: number | undefined,
-	ast: ts.SourceFile,
-	withinTemplateRef = false
+	ast: ts.SourceFile
 ): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
-
-	const __VLS_ctx = withinTemplateRef ? `__VLS_ctxWithoutRefs` : `__VLS_ctx`;
 
 	let ctxVars: {
 		text: string,
@@ -128,26 +125,48 @@ export function* forEachInterpolationSegment(
 		}
 
 		for (let i = 0; i < ctxVars.length - 1; i++) {
+			const curVar = ctxVars[i];
+			const nextVar = ctxVars[i + 1];
 
 			// fix https://github.com/vuejs/language-tools/issues/1205
 			// fix https://github.com/vuejs/language-tools/issues/1264
-			yield ['', ctxVars[i + 1].offset, true];
-			yield [__VLS_ctx + '.', undefined];
-			if (ctxVars[i + 1].isShorthand) {
-				yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset];
+			
+			yield* generateVar(curVar, nextVar);
+
+			if (nextVar.isShorthand) {
+				yield [code.substring(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
 				yield [': ', undefined];
 			}
 			else {
-				yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset];
+				yield [code.substring(curVar.offset + curVar.text.length, nextVar.offset), curVar.offset + curVar.text.length];
 			}
 		}
 
-		yield ['', ctxVars[ctxVars.length - 1].offset, true];
-		yield [__VLS_ctx + '.', undefined];
-		yield [code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset];
+		const lastVar = ctxVars.at(-1)!;
+		yield* generateVar(lastVar);
+		yield [code.substring(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length];
 	}
 	else {
 		yield [code, 0];
+	}
+
+	function* generateVar(
+		curVar: (typeof ctxVars)[number],
+		nextVar: (typeof ctxVars)[number] = curVar
+	): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
+		const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
+
+		if (isTemplateRef) {
+			yield [`__VLS_unref(`, undefined];
+		}
+		else {
+			yield ['', nextVar.offset, true];
+			yield [`__VLS_ctx.`, undefined];
+		}
+		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
+		if (isTemplateRef) {
+			yield [`)`, undefined];
+		}
 	}
 }
 
