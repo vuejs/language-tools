@@ -24,6 +24,7 @@ export function generateGlobalTypes(mode: 'global' | 'local', lib: string, targe
 	str += `
 const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 const __VLS_directiveBindingRestFields = { instance: null, oldValue: null, modifiers: null as any, dir: null as any };
+const __VLS_unref: import('${lib}').unref;
 
 type __VLS_IntrinsicElements = ${(
 			target >= 3.3
@@ -86,8 +87,6 @@ type __VLS_NormalizeEmits<T> = __VLS_PrettifyGlobal<
 	>
 >;
 type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
-
-declare const __VLS_unref: typeof import('${lib}').unref;
 
 function __VLS_getVForSourceType(source: number): [number, number, number][];
 function __VLS_getVForSourceType(source: string): [string, number, number][];
