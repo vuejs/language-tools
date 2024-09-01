@@ -77,7 +77,7 @@ export function* forEachInterpolationSegment(
 	code: string,
 	offset: number | undefined,
 	ast: ts.SourceFile
-): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
+): Generator<[fragment: string, offset: number | undefined, errorMappingOnly?: boolean]> {
 	let ctxVars: {
 		text: string,
 		isShorthand: boolean,
@@ -127,7 +127,7 @@ export function* forEachInterpolationSegment(
 			const curVar = ctxVars[i];
 			const nextVar = ctxVars[i + 1];
 
-			yield* generateVar(curVar, nextVar);
+			yield* generateVar(code, templateRefNames, curVar, nextVar);
 
 			if (nextVar.isShorthand) {
 				yield [code.substring(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
@@ -139,31 +139,41 @@ export function* forEachInterpolationSegment(
 		}
 
 		const lastVar = ctxVars.at(-1)!;
-		yield* generateVar(lastVar);
+		yield* generateVar(code, templateRefNames, lastVar);
 		yield [code.substring(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length];
 	}
 	else {
 		yield [code, 0];
 	}
+}
 
-	function* generateVar(
-		curVar: (typeof ctxVars)[number],
-		nextVar: (typeof ctxVars)[number] = curVar
-	): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
-		// fix https://github.com/vuejs/language-tools/issues/1205
-		// fix https://github.com/vuejs/language-tools/issues/1264
-		yield ['', nextVar.offset, true];
+function* generateVar(
+	code: string,
+	templateRefNames: Set<string> | undefined,
+	curVar: {
+		text: string,
+		isShorthand: boolean,
+		offset: number,
+	},
+	nextVar: {
+		text: string,
+		isShorthand: boolean,
+		offset: number,
+	} = curVar
+): Generator<[fragment: string, offset: number | undefined, errorMappingOnly?: boolean]> {
+	// fix https://github.com/vuejs/language-tools/issues/1205
+	// fix https://github.com/vuejs/language-tools/issues/1264
+	yield ['', nextVar.offset, true];
 
-		const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
-		if (isTemplateRef) {
-			yield [`__VLS_unref(`, undefined];
-			yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
-			yield [`)`, undefined];
-		}
-		else {
-			yield [`__VLS_ctx.`, undefined];
-			yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
-		}
+	const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
+	if (isTemplateRef) {
+		yield [`__VLS_unref(`, undefined];
+		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
+		yield [`)`, undefined];
+	}
+	else {
+		yield [`__VLS_ctx.`, undefined];
+		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 	}
 }
 
