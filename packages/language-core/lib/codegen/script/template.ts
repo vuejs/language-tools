@@ -37,7 +37,6 @@ export function* generateTemplateCtx(
 		}
 		exp += `}>${newLine}`;
 		extraExps.push(exp);
-		extraExps.push(`{} as { $refs: typeof __VLS_refs }`);
 	}
 
 	yield `const __VLS_ctxBase = `;
@@ -55,20 +54,15 @@ export function* generateTemplateCtx(
 		yield `}${endOfLine}`;
 	}
 
-	yield `const __VLS_ctx = `;
-	if (extraExps.length === 0) {
-		yield `__VLS_ctxBase${endOfLine}`;
+	yield `const __VLS_ctx = {${newLine}`;
+	yield `...__VLS_ctxBase,${newLine}`;
+	yield `$refs: {} as __VLS_Refs,${newLine}`;
+	for (const exp of extraExps) {
+		yield `...`;
+		yield exp;
+		yield `,${newLine}`;
 	}
-	else {
-		yield `{${newLine}`;
-		yield `...__VLS_ctxBase,${newLine}`;
-		for (const exp of extraExps) {
-			yield `...`;
-			yield exp;
-			yield `,${newLine}`;
-		}
-		yield `}${endOfLine}`;
-	}
+	yield `}${endOfLine}`;
 }
 
 export function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
