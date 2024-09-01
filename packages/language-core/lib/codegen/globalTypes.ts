@@ -19,7 +19,7 @@ export function generateGlobalTypes(mode: 'global' | 'local', lib: string, targe
 	}
 	else {
 		decl = 'declare ';
-		str += `// @ts-ignore${endOfLine}`;
+		str += `// @ts-ignore${newLine}`;
 		str += `const __VLS_globalComponents = { ...{} as import('${lib}').GlobalComponents }${endOfLine}`;
 		globalComponentsType = `void extends typeof __VLS_globalComponents ? {} : typeof __VLS_globalComponents`;
 	}
