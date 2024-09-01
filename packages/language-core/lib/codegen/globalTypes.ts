@@ -24,7 +24,7 @@ export function generateGlobalTypes(mode: 'global' | 'local', lib: string, targe
 	str += `
 const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 const __VLS_directiveBindingRestFields = { instance: null, oldValue: null, modifiers: null as any, dir: null as any };
-const __VLS_unref: import('${lib}').unref;
+const __VLS_unref: typeof import('${lib}').unref;
 
 type __VLS_IntrinsicElements = ${(
 			target >= 3.3
