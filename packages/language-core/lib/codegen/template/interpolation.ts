@@ -78,7 +78,6 @@ export function* forEachInterpolationSegment(
 	offset: number | undefined,
 	ast: ts.SourceFile
 ): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
-
 	let ctxVars: {
 		text: string,
 		isShorthand: boolean,
