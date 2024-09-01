@@ -14,7 +14,8 @@ export function* generateInterpolation(
 	start: number | undefined,
 	data: VueCodeInformation | ((offset: number) => VueCodeInformation) | undefined,
 	prefix: string,
-	suffix: string
+	suffix: string,
+	withinTemplateRef = false
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
@@ -28,7 +29,8 @@ export function* generateInterpolation(
 		ctx,
 		code,
 		start !== undefined ? start - prefix.length : undefined,
-		ast
+		ast,
+		withinTemplateRef
 	)) {
 		if (offset === undefined) {
 			yield section;
@@ -74,8 +76,12 @@ export function* forEachInterpolationSegment(
 	ctx: TemplateCodegenContext,
 	code: string,
 	offset: number | undefined,
-	ast: ts.SourceFile
+	ast: ts.SourceFile,
+	withinTemplateRef = false
 ): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
+
+	const __VLS_ctx = withinTemplateRef ? `__VLS_ctxWithoutRefs` : `__VLS_ctx`;
+
 	let ctxVars: {
 		text: string,
 		isShorthand: boolean,
@@ -126,7 +132,7 @@ export function* forEachInterpolationSegment(
 			// fix https://github.com/vuejs/language-tools/issues/1205
 			// fix https://github.com/vuejs/language-tools/issues/1264
 			yield ['', ctxVars[i + 1].offset, true];
-			yield ['__VLS_ctx.', undefined];
+			yield [__VLS_ctx + '.', undefined];
 			if (ctxVars[i + 1].isShorthand) {
 				yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset];
 				yield [': ', undefined];
@@ -137,7 +143,7 @@ export function* forEachInterpolationSegment(
 		}
 
 		yield ['', ctxVars[ctxVars.length - 1].offset, true];
-		yield ['__VLS_ctx.', undefined];
+		yield [__VLS_ctx + '.', undefined];
 		yield [code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset];
 	}
 	else {

@@ -25,6 +25,7 @@ export function* generateElementProps(
 	}[]
 ): Generator<Code> {
 	const isIntrinsicElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT || node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
+	const isTemplateRef = props.some(prop => prop.name === 'ref');
 	const canCamelize = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
 	for (const prop of props) {
@@ -160,6 +161,7 @@ export function* generateElementProps(
 					prop.exp,
 					ctx.codeFeatures.all,
 					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
+					isTemplateRef,
 					enableCodeFeatures
 				),
 				`)`
@@ -297,6 +299,7 @@ function* generatePropExp(
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
 	isShorthand: boolean,
+	withinTemplateRef: boolean,
 	enableCodeFeatures: boolean
 ): Generator<Code> {
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
@@ -309,7 +312,8 @@ function* generatePropExp(
 				exp.loc.start.offset,
 				features,
 				'(',
-				')'
+				')',
+				withinTemplateRef
 			);
 		} else {
 			const propVariableName = camelize(exp.loc.source);
@@ -317,7 +321,7 @@ function* generatePropExp(
 			if (variableNameRegex.test(propVariableName)) {
 				if (!ctx.hasLocalVariable(propVariableName)) {
 					ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
-					yield `__VLS_ctx.`;
+					yield withinTemplateRef ? `__VLS_ctxWithoutRefs.` : `__VLS_ctx.`;
 				}
 				yield* generateCamelized(
 					exp.loc.source,

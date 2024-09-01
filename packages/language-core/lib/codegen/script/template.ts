@@ -13,20 +13,20 @@ export function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	isClassComponent: boolean
 ): Generator<Code> {
-	const baseExps = [];
-	const extraExps = [];
+	const exps = [];
+	const excludedExps = new Set();
 
 	if (isClassComponent) {
-		baseExps.push(`this`);
+		exps.push(`this`);
 	}
 	else {
-		baseExps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
+		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
 	}
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
-		extraExps.push(`globalThis`);
+		exps.push(`globalThis`);
 	}
 	if (options.sfc.styles.some(style => style.module)) {
-		extraExps.push(`{} as __VLS_StyleModules`);
+		exps.push(`{} as __VLS_StyleModules`);
 	}
 	if (options.scriptSetupRanges?.templateRefs.length) {
 		let exp = `{} as import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`;
@@ -36,17 +36,18 @@ export function* generateTemplateCtx(
 			}
 		}
 		exp += `}>${newLine}`;
-		extraExps.push(exp);
+		exps.push(exp);
+		excludedExps.add(exp);
 	}
 
-	yield `const __VLS_ctxBase = `;
-	if (baseExps.length === 1) {
-		yield baseExps[0];
+	yield `const __VLS_ctx = `;
+	if (exps.length === 1) {
+		yield exps[0];
 		yield endOfLine;
 	}
 	else {
 		yield `{${newLine}`;
-		for (const exp of baseExps) {
+		for (const exp of exps) {
 			yield `...`;
 			yield exp;
 			yield `,${newLine}`;
@@ -54,20 +55,16 @@ export function* generateTemplateCtx(
 		yield `}${endOfLine}`;
 	}
 
-	yield `const __VLS_ctx = `;
-	if (extraExps.length === 0) {
-		yield `__VLS_ctxBase${endOfLine}`;
-	}
-	else {
-		yield `{${newLine}`;
-		yield `...__VLS_ctxBase,${newLine}`;
-		for (const exp of extraExps) {
-			yield `...`;
-			yield exp;
-			yield `,${newLine}`;
+	yield `const __VLS_ctxWithoutRefs = {${newLine}`;
+	for (const exp of exps) {
+		if (excludedExps.has(exp)) {
+			continue;
 		}
-		yield `}${endOfLine}`;
+		yield `...`;
+		yield exp;
+		yield `,${newLine}`;
 	}
+	yield `}${endOfLine}`;
 }
 
 export function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
@@ -102,7 +99,7 @@ export function* generateTemplateComponents(options: ScriptCodegenOptions): Gene
 	}
 
 	exps.push(`{} as NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}>`);
-	exps.push(`__VLS_ctxBase`);
+	exps.push(`__VLS_ctxWithoutRefs`);
 
 	yield `const __VLS_localComponents = {${newLine}`;
 	for (const type of exps) {
