@@ -82,12 +82,6 @@ function createTsx(
 			? parseScriptSetupRanges(ts, _sfc.scriptSetup.ast, ctx.vueCompilerOptions)
 			: undefined
 	);
-	const templateRefsString = computed(() => {
-		return scriptSetupRanges()?.templateRefs.map(({ name }) => name).join(',');
-	});
-	const templateRefNames = computed(() => {
-		return new Set(templateRefsString()?.split(',') ?? []);
-	});
 	const generatedTemplate = computed(() => {
 
 		if (!_sfc.template) {
@@ -124,7 +118,6 @@ function createTsx(
 			codes: codes,
 		};
 	});
-	const hasDefineSlots = computed(() => !!scriptSetupRanges()?.slots.define);
 	const scriptSetupBindingNames = computed<Set<string>>(oldNames => {
 		const newNames = new Set<string>();
 		const bindings = scriptSetupRanges()?.bindings;
@@ -145,6 +138,13 @@ function createTsx(
 		}
 		return newNames;
 	});
+	const templateRefsString = computed(() => {
+		return scriptSetupRanges()?.templateRefs.map(({ name }) => name).join(',');
+	});
+	const templateRefNames = computed(() => {
+		return new Set(templateRefsString()?.split(',') ?? []);
+	});
+	const hasDefineSlots = computed(() => !!scriptSetupRanges()?.slots.define);
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
 	const inheritAttrs = computed(() => {

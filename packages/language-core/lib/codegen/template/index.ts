@@ -14,9 +14,9 @@ export interface TemplateCodegenOptions {
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	template: NonNullable<Sfc['template']>;
+	edited: boolean;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
-	edited: boolean;
 	templateRefs: Map<string, [varName: string, offset: number]>;
 	templateRefNames: Set<string>;
 	hasDefineSlots?: boolean;
