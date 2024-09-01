@@ -14,7 +14,7 @@ export function* generateTemplateCtx(
 	isClassComponent: boolean
 ): Generator<Code> {
 	const exps = [];
-	const excludedExps = new Set();
+	const excludedExps = [];
 
 	if (isClassComponent) {
 		exps.push(`this`);
@@ -35,12 +35,11 @@ export function* generateTemplateCtx(
 				exp += `${name}: typeof ${name}${newLine}`;
 			}
 		}
-		exp += `}>${newLine}`;
-		exps.push(exp);
-		excludedExps.add(exp);
+		exp += `}>`;
+		excludedExps.push(exp);
 	}
 
-	yield `const __VLS_ctx = `;
+	yield `const __VLS_ctxWithoutRefs = `;
 	if (exps.length === 1) {
 		yield exps[0];
 		yield endOfLine;
@@ -55,11 +54,9 @@ export function* generateTemplateCtx(
 		yield `}${endOfLine}`;
 	}
 
-	yield `const __VLS_ctxWithoutRefs = {${newLine}`;
-	for (const exp of exps) {
-		if (excludedExps.has(exp)) {
-			continue;
-		}
+	yield `const __VLS_ctx = {${newLine}`;
+	yield `...__VLS_ctxWithoutRefs,${newLine}`
+	for (const exp of excludedExps) {
 		yield `...`;
 		yield exp;
 		yield `,${newLine}`;
