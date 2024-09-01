@@ -131,7 +131,9 @@ export function* generateTemplate(
 		const templateUsageVars = [...getTemplateUsageVars(options, ctx)];
 		yield `// @ts-ignore${newLine}`;
 		yield `[${templateUsageVars.join(', ')}]${newLine}`;
-		yield `const __VLS_templateResult { slots: {}, refs: {}, attrs: {} }${endOfLine}`;
+		yield `const __VLS_templateSlots = {}${endOfLine}`;
+		yield `const __VLS_templateRefs = {}${endOfLine}`;
+		yield `const __VLS_templateAttrs = {}${endOfLine}`;
 	}
 }
 
@@ -183,11 +185,9 @@ function* generateTemplateBody(
 		}
 	}
 
-	yield `const __VLS_templateResult = {${newLine}`;
-	yield `slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
-	yield `refs: __VLS_refs,${newLine}`;
-	yield `attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
-	yield `}${endOfLine}`;
+	yield `const __VLS_templateSlots = ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'}${endOfLine}`;
+	yield `const __VLS_templateRefs = __VLS_refs${endOfLine}`;
+	yield `const __VLS_templateAttrs = {} as Partial<typeof __VLS_inheritedAttrs>${endOfLine}`;
 }
 
 export function* generateCssClassProperty(

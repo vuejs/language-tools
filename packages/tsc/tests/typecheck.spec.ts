@@ -9,8 +9,8 @@ describe(`vue-tsc`, () => {
 			getTscOutput('stable')
 		).toMatchInlineSnapshot(`
 			[
-			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstance<Readonly<ExtractPropTypes<{}>>, { exist: typeof exist; }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 12 more ..., {}>'.",
-			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstance<Readonly<ExtractPropTypes<{}>>, { exist: typeof exist; }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 12 more ..., {}>'.",
+			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type '{ $refs: __VLS_Refs; $: ComponentInternalInstance; $data: {}; $props: Partial<{}> & Omit<{} & VNodeProps & AllowedComponentProps & ComponentCustomProps & Readonly<...>, never>; ... 10 more ...; exist: typeof exist; }'.",
+			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type '{ $refs: __VLS_Refs; $: ComponentInternalInstance; $data: {}; $props: Partial<{}> & Omit<{} & VNodeProps & AllowedComponentProps & ComponentCustomProps & Readonly<...>, never>; ... 10 more ...; exist: typeof exist; }'.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",
 			]
 		`);
