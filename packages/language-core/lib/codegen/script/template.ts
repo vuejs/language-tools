@@ -29,13 +29,12 @@ export function* generateTemplateCtx(
 	}
 
 	yield `const __VLS_ctx = {${newLine}`;
-	yield `{${newLine}`;
-	yield `$refs: {} as __VLS_Refs,${newLine}`;
 	for (const exp of exps) {
 		yield `...`;
 		yield exp;
 		yield `,${newLine}`;
 	}
+	yield `$refs: {} as __VLS_Refs,${newLine}`;
 	yield `}${endOfLine}`;
 }
 
