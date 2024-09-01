@@ -188,7 +188,9 @@ export function* generateEventExpression(
 
 export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.SourceFile) {
 	let result = true;
-	if (ast.statements.length === 1) {
+	if (ast.statements.length === 0) {
+		result = false;
+	} else if (ast.statements.length === 1) {
 		ts.forEachChild(ast, child_1 => {
 			if (ts.isExpressionStatement(child_1)) {
 				ts.forEachChild(child_1, child_2 => {
