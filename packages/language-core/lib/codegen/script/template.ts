@@ -7,7 +7,6 @@ import { forEachInterpolationSegment } from '../template/interpolation';
 import { generateStyleScopedClasses } from '../template/styleScopedClasses';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
-import { generateInternalComponent } from './internalComponent';
 
 export function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
@@ -93,7 +92,7 @@ export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	isClassComponent: boolean
-): Generator<Code> {
+): Generator<Code, TemplateCodegenContext | undefined> {
 	ctx.generatedTemplate = true;
 
 	if (!options.vueCompilerOptions.skipTemplateCodegen) {
@@ -104,15 +103,17 @@ export function* generateTemplate(
 		yield* generateTemplateCtx(options, isClassComponent);
 		yield* generateTemplateComponents(options);
 		yield* generateTemplateBody(options, templateCodegenCtx);
-		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
+		return templateCodegenCtx;
 	}
 	else {
 		const templateUsageVars = [...getTemplateUsageVars(options, ctx)];
 		yield `// @ts-ignore${newLine}`;
 		yield `[${templateUsageVars.join(', ')}]${newLine}`;
-		yield `const __VLS_templateSlots = {}${endOfLine}`;
-		yield `const __VLS_templateRefs = {}${endOfLine}`;
-		yield `const __VLS_templateAttrs = {}${endOfLine}`;
+		yield `return {${newLine}`;
+		yield `	slots: {},${newLine}`;
+		yield `	refs: {},${newLine}`;
+		yield `	attrs: {},${newLine}`;
+		yield `}${endOfLine}`;
 	}
 }
 
@@ -164,9 +165,11 @@ function* generateTemplateBody(
 		}
 	}
 
-	yield `const __VLS_templateSlots = ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'}${endOfLine}`;
-	yield `const __VLS_templateRefs = $refs${endOfLine}`;
-	yield `const __VLS_templateAttrs = {} as Partial<typeof __VLS_inheritedAttrs>${endOfLine}`;
+	yield `return {${newLine}`;
+	yield `	slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
+	yield `	refs: $refs,${newLine}`;
+	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
+	yield `}${endOfLine}`;
 }
 
 export function* generateCssClassProperty(

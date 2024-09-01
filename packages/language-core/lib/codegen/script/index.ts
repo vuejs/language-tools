@@ -10,6 +10,7 @@ import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';
 import { generateGlobalTypes } from '../globalTypes';
+import { generateInternalComponent } from './internalComponent';
 
 export const codeFeatures = {
 	all: {
@@ -112,7 +113,10 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			else {
 				yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
 				yield `__VLS_template = () => {`;
-				yield* generateTemplate(options, ctx, true);
+				const templateCodegenCtx = yield* generateTemplate(options, ctx, true);
+				if (templateCodegenCtx) {
+					yield* generateInternalComponent(options, ctx, templateCodegenCtx);
+				}
 				yield `},${newLine}`;
 				yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
 			}
@@ -135,7 +139,12 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	yield newLine;
 
 	if (!ctx.generatedTemplate) {
-		yield* generateTemplate(options, ctx, false);
+		yield `function __VLS_template() {${newLine}`;
+		const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
+		yield `}${endOfLine}`;
+		if (templateCodegenCtx) {
+			yield* generateInternalComponent(options, ctx, templateCodegenCtx);
+		}
 	}
 
 	if (options.edited) {

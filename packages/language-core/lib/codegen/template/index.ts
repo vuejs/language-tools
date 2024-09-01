@@ -68,7 +68,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 			yield `: ${varName},${newLine}`;
 		}
 		yield `}${endOfLine}`;
-		yield `declare var $refs: typeof __VLS_refs${endOfLine}`;
+		yield `var $refs!: typeof __VLS_refs${endOfLine}`;
 	}
 
 	function* generateSlotsType(): Generator<Code> {

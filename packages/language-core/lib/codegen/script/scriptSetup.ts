@@ -4,6 +4,7 @@ import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponent, generateEmitsOption } from './component';
 import type { ScriptCodegenContext } from './context';
 import { ScriptCodegenOptions, codeFeatures } from './index';
+import { generateInternalComponent } from './internalComponent';
 import { generateCssClassProperty, generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
@@ -70,7 +71,7 @@ export function* generateScriptSetup(
 			+ `			props: ${ctx.localTypes.PrettifyLocal}<typeof __VLS_functionalComponentProps & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
 			+ `			expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
 			+ `			attrs: any,${newLine}`
-			+ `			slots: __VLS_Slots,${newLine}`
+			+ `			slots: __VLS_TemplateResult['slots'],${newLine}`
 			+ `			emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
 			+ `		}${endOfLine}`;
 		yield `	})(),${newLine}`; // __VLS_setup = (async () => {
@@ -246,9 +247,9 @@ function* generateSetupFunction(
 		if (define?.arg) {
 			setupCodeModifies.push([
 				[
-					`<__VLS_Refs[`,
+					`<__VLS_TemplateResult['refs'][`,
 					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
-					`], keyof __VLS_Refs>`
+					`], keyof __VLS_TemplateResult['refs']>`
 				],
 				define.arg.start - 1,
 				define.arg.start - 1
@@ -287,9 +288,13 @@ function* generateSetupFunction(
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
 	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
 	yield* generateStyleModules(options, ctx);
-	yield* generateTemplate(options, ctx, false);
-	yield `type __VLS_Refs = typeof __VLS_templateRefs${endOfLine}`;
-	yield `type __VLS_Slots = typeof __VLS_templateSlots${endOfLine}`;
+	yield `function __VLS_template() {${newLine}`;
+	const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
+	yield `}${endOfLine}`;
+	if (templateCodegenCtx) {
+		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
+	}
+	yield `type __VLS_TemplateResult = ReturnType<typeof __VLS_template>${endOfLine}`;
 
 	if (syntax) {
 		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges?.slots.define)) {
@@ -297,7 +302,7 @@ function* generateSetupFunction(
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield `${syntax} `;
-			yield `{} as ${ctx.localTypes.WithTemplateSlots}<typeof __VLS_component, __VLS_Slots>${endOfLine}`;
+			yield `{} as ${ctx.localTypes.WithTemplateSlots}<typeof __VLS_component, __VLS_TemplateResult['slots']>${endOfLine}`;
 		}
 		else {
 			yield `${syntax} `;
