@@ -54,14 +54,20 @@ export function* generateTemplateCtx(
 		yield `}${endOfLine}`;
 	}
 
-	yield `const __VLS_ctx = {${newLine}`;
-	yield `...__VLS_ctxWithoutRefs,${newLine}`
-	for (const exp of excludedExps) {
-		yield `...`;
-		yield exp;
-		yield `,${newLine}`;
+	yield `const __VLS_ctx = `;
+	if (excludedExps.length === 0) {
+		yield `__VLS_ctxWithoutRefs${endOfLine}`;
 	}
-	yield `}${endOfLine}`;
+	else {
+		yield `{${newLine}`;
+		yield `...__VLS_ctxWithoutRefs,${newLine}`
+		for (const exp of excludedExps) {
+			yield `...`;
+			yield exp;
+			yield `,${newLine}`;
+		}
+		yield `}${endOfLine}`;
+	}
 }
 
 export function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
