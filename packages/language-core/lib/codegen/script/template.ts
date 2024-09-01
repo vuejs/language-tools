@@ -13,51 +13,25 @@ export function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	isClassComponent: boolean
 ): Generator<Code> {
-	const baseExps = [];
-	const extraExps = [];
+	const exps = [];
 
 	if (isClassComponent) {
-		baseExps.push(`this`);
+		exps.push(`this`);
 	}
 	else {
-		baseExps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
+		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
 	}
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
-		extraExps.push(`globalThis`);
+		exps.push(`globalThis`);
 	}
 	if (options.sfc.styles.some(style => style.module)) {
-		extraExps.push(`{} as __VLS_StyleModules`);
-	}
-	if (options.scriptSetupRanges?.templateRefs.length) {
-		let exp = `{} as import('${options.vueCompilerOptions.lib}').UnwrapRef<{${newLine}`;
-		for (const { name } of options.scriptSetupRanges.templateRefs) {
-			if (name) {
-				exp += `${name}: typeof ${name}${newLine}`;
-			}
-		}
-		exp += `}>${newLine}`;
-		extraExps.push(exp);
-	}
-
-	yield `const __VLS_ctxBase = `;
-	if (baseExps.length === 1) {
-		yield baseExps[0];
-		yield endOfLine;
-	}
-	else {
-		yield `{${newLine}`;
-		for (const exp of baseExps) {
-			yield `...`;
-			yield exp;
-			yield `,${newLine}`;
-		}
-		yield `}${endOfLine}`;
+		exps.push(`{} as __VLS_StyleModules`);
 	}
 
 	yield `const __VLS_ctx = {${newLine}`;
-	yield `...__VLS_ctxBase,${newLine}`;
+	yield `{${newLine}`;
 	yield `$refs: {} as __VLS_Refs,${newLine}`;
-	for (const exp of extraExps) {
+	for (const exp of exps) {
 		yield `...`;
 		yield exp;
 		yield `,${newLine}`;
@@ -97,7 +71,7 @@ export function* generateTemplateComponents(options: ScriptCodegenOptions): Gene
 	}
 
 	exps.push(`{} as NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}>`);
-	exps.push(`__VLS_ctxBase`);
+	exps.push(`__VLS_ctx`);
 
 	yield `const __VLS_localComponents = {${newLine}`;
 	for (const type of exps) {
@@ -231,6 +205,7 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 		for (const cssBind of style.cssVars) {
 			for (const [segment, offset, onlyError] of forEachInterpolationSegment(
 				options.ts,
+				undefined,
 				ctx,
 				cssBind.text,
 				cssBind.offset,

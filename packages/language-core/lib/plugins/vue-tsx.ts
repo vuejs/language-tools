@@ -97,7 +97,7 @@ function createTsx(
 			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			scriptSetupBindingNames: scriptSetupBindingNames(),
 			scriptSetupImportComponentNames: scriptSetupImportComponentNames(),
-			templateRefNames: new Map(),
+			templateRefNames: templateRefNames(),
 			hasDefineSlots: hasDefineSlots(),
 			slotsAssignName: slotsAssignName(),
 			propsAssignName: propsAssignName(),
@@ -117,7 +117,6 @@ function createTsx(
 			codes: codes,
 		};
 	});
-	const hasDefineSlots = computed(() => !!scriptSetupRanges()?.slots.define);
 	const scriptSetupBindingNames = computed<Set<string>>(oldNames => {
 		const newNames = new Set<string>();
 		const bindings = scriptSetupRanges()?.bindings;
@@ -133,11 +132,23 @@ function createTsx(
 	});
 	const scriptSetupImportComponentNames = computed<Set<string>>(oldNames => {
 		const newNames = scriptSetupRanges()?.importComponentNames ?? new Set();
-		if (newNames && oldNames && twoSetsEqual(newNames, oldNames)) {
+		if (oldNames && twoSetsEqual(newNames, oldNames)) {
 			return oldNames;
 		}
 		return newNames;
 	});
+	const templateRefNames = computed<Set<string>>(oldNames => {
+		const newNames = new Set(
+			scriptSetupRanges()?.templateRefs
+				.map(({ name }) => name)
+				.filter(name => name !== undefined)
+		);
+		if (oldNames && twoSetsEqual(newNames, oldNames)) {
+			return oldNames;
+		}
+		return newNames;
+	});
+	const hasDefineSlots = computed(() => !!scriptSetupRanges()?.slots.define);
 	const slotsAssignName = computed(() => scriptSetupRanges()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges()?.props.name);
 	const inheritAttrs = computed(() => {
