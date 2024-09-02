@@ -1,5 +1,5 @@
 <script lang="ts">
-import { exactType } from '../../../passedFixtures/shared';
+import { exactType } from '../../shared';
 
 export default {
 	setup() {
