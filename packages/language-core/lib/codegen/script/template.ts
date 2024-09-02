@@ -18,7 +18,7 @@ export function* generateTemplateCtx(
 		exps.push(`this`);
 	}
 	else {
-		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
+		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
 	}
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
 		exps.push(`globalThis`);
@@ -67,14 +67,14 @@ export function* generateTemplateComponents(options: ScriptCodegenOptions): Gene
 	}
 	if (nameType) {
 		exps.push(`{} as {
-			[K in ${nameType}]: typeof __VLS_internalComponent
+			[K in ${nameType}]: typeof __VLS_self
 				& (new () => {
 					${getSlotsPropertyName(options.vueCompilerOptions.target)}: typeof ${options.scriptSetupRanges?.slots?.name ?? '__VLS_slots'}
 				})
 		}`);
 	}
 
-	exps.push(`{} as NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}>`);
+	exps.push(`{} as NonNullable<typeof __VLS_self extends { components: infer C } ? C : {}>`);
 	exps.push(`__VLS_ctx`);
 
 	yield `const __VLS_localComponents = {${newLine}`;
