@@ -6,7 +6,7 @@ import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 import { getTemplateUsageVars } from './template';
 
-export function* generateInternalComponent(
+export function* generateComponentSelf(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	templateCodegenCtx: TemplateCodegenContext

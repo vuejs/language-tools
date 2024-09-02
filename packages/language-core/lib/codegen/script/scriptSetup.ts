@@ -4,7 +4,7 @@ import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponent, generateEmitsOption } from './component';
 import type { ScriptCodegenContext } from './context';
 import { ScriptCodegenOptions, codeFeatures } from './index';
-import { generateInternalComponent } from './internalComponent';
+import { generateComponentSelf } from './componentSelf';
 import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
@@ -290,9 +290,7 @@ function* generateSetupFunction(
 	yield `function __VLS_template() {${newLine}`;
 	const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
 	yield `}${endOfLine}`;
-	if (templateCodegenCtx) {
-		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
-	}
+	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	yield `type __VLS_TemplateResult = ReturnType<typeof __VLS_template>${endOfLine}`;
 
 	if (syntax) {

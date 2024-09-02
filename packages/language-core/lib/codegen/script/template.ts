@@ -91,29 +91,17 @@ export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	isClassComponent: boolean
-): Generator<Code, TemplateCodegenContext | undefined> {
+): Generator<Code, TemplateCodegenContext> {
 	ctx.generatedTemplate = true;
 
-	if (!options.vueCompilerOptions.skipTemplateCodegen) {
-		const templateCodegenCtx = createTemplateCodegenContext({
-			scriptSetupBindingNames: new Set(),
-			edited: options.edited,
-		});
-		yield* generateTemplateCtx(options, isClassComponent);
-		yield* generateTemplateComponents(options);
-		yield* generateTemplateBody(options, templateCodegenCtx);
-		return templateCodegenCtx;
-	}
-	else {
-		const templateUsageVars = [...getTemplateUsageVars(options, ctx)];
-		yield `// @ts-ignore${newLine}`;
-		yield `[${templateUsageVars.join(', ')}]${newLine}`;
-		yield `return {${newLine}`;
-		yield `	slots: {},${newLine}`;
-		yield `	refs: {},${newLine}`;
-		yield `	attrs: {},${newLine}`;
-		yield `}${endOfLine}`;
-	}
+	const templateCodegenCtx = createTemplateCodegenContext({
+		scriptSetupBindingNames: new Set(),
+		edited: options.edited,
+	});
+	yield* generateTemplateCtx(options, isClassComponent);
+	yield* generateTemplateComponents(options);
+	yield* generateTemplateBody(options, templateCodegenCtx);
+	return templateCodegenCtx;
 }
 
 function* generateTemplateBody(

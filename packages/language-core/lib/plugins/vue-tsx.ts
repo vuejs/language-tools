@@ -84,7 +84,7 @@ function createTsx(
 	);
 	const generatedTemplate = computed(() => {
 
-		if (!_sfc.template) {
+		if (ctx.vueCompilerOptions.skipTemplateCodegen || !_sfc.template) {
 			return;
 		}
 
@@ -158,7 +158,6 @@ function createTsx(
 	const generatedScript = computed(() => {
 		const codes: Code[] = [];
 		const linkedCodeMappings: Mapping[] = [];
-		const _template = generatedTemplate();
 		let generatedLength = 0;
 		const codegen = generateScript({
 			ts,
@@ -167,7 +166,7 @@ function createTsx(
 			lang: lang(),
 			scriptRanges: scriptRanges(),
 			scriptSetupRanges: scriptSetupRanges(),
-			templateCodegen: _template,
+			templateCodegen: generatedTemplate(),
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: ctx.vueCompilerOptions,
 			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
