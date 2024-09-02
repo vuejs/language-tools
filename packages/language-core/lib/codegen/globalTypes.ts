@@ -91,6 +91,9 @@ type __VLS_NormalizeEmits<T> = __VLS_PrettifyGlobal<
 >;
 type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 
+type ElementTagNameMap = HTMLElementTagNameMap & Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>;
+${decl}function __VLS_getNativeElement<T extends keyof ElementTagNameMap>(name: T): ElementTagNameMap[T];
+
 ${decl}function __VLS_getVForSourceType(source: number): [number, number, number][];
 ${decl}function __VLS_getVForSourceType(source: string): [string, number, number][];
 ${decl}function __VLS_getVForSourceType<T extends any[]>(source: T): [
