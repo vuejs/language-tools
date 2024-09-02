@@ -5,14 +5,14 @@ export default {
 	setup() {
 		return {
 			exactType,
-			a: 1
+			a: 1 as const,
 		}
 	}
 };
 </script>
 
 <template>
-	{{ exactType(a, 1 as number) }}
+	{{ exactType(a, {} as 1) }}
 </template>
 
 <style module>

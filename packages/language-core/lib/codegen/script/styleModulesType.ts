@@ -1,10 +1,10 @@
 import type { Code } from '../../types';
-import type { ScriptCodegenContext } from '../script/context';
-import { type ScriptCodegenOptions, codeFeatures } from '../script';
-import { generateCssClassProperty } from '../script/template';
+import type { ScriptCodegenContext } from './context';
+import { ScriptCodegenOptions, codeFeatures } from './index';
+import { generateCssClassProperty } from './template';
 import { endOfLine, newLine } from '../common';
 
-export function* generateStyleModules(
+export function* generateStyleModulesType(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext
 ): Generator<Code> {
