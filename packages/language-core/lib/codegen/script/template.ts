@@ -102,7 +102,7 @@ export function* generateTemplate(
 		});
 		yield* generateTemplateCtx(options, isClassComponent);
 		yield* generateTemplateComponents(options);
-		yield* generateTemplateBody(options, templateCodegenCtx);
+		yield* generateTemplateBody(options, ctx, templateCodegenCtx);
 		return templateCodegenCtx;
 	}
 	else {
@@ -119,6 +119,7 @@ export function* generateTemplate(
 
 function* generateTemplateBody(
 	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
 	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
 	const firstClasses = new Set<string>();
@@ -149,6 +150,7 @@ function* generateTemplateBody(
 	}
 	yield endOfLine;
 	yield* generateStyleScopedClasses(templateCodegenCtx, true);
+	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
@@ -202,6 +204,45 @@ export function* generateCssClassProperty(
 	];
 	yield `${optional ? '?' : ''}: ${propertyType}`;
 	yield ` }`;
+}
+
+function* generateStyleModules(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext
+): Generator<Code> {
+	const styles = options.sfc.styles.filter(style => style.module);
+	if (!styles.length) {
+		return;
+	}
+	yield `type __VLS_StyleModules = {${newLine}`;
+	for (let i = 0; i < styles.length; i++) {
+		const style = styles[i];
+		const { name, offset } = style.module!;
+		if (offset) {
+			yield [
+				name,
+				'main',
+				offset + 1,
+				codeFeatures.all
+			];
+		}
+		else {
+			yield name;
+		}
+		yield `: Record<string, string> & ${ctx.localTypes.PrettifyLocal}<{}`;
+		for (const className of style.classNames) {
+			yield* generateCssClassProperty(
+				i,
+				className.text,
+				className.offset,
+				'string',
+				false
+			);
+		}
+		yield `>${endOfLine}`;
+	}
+	yield `}`;
+	yield endOfLine;
 }
 
 function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
