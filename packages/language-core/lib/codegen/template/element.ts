@@ -333,7 +333,7 @@ export function* generateElement(
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
-		ctx.templateRefs.set(refName, [`__VLS_intrinsicElements['${node.tag}']`, offset!]);
+		ctx.templateRefs.set(refName, [`__VLS_nativeElements['${node.tag}']`, offset!]);
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
