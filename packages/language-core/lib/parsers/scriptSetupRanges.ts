@@ -370,7 +370,7 @@ export function parseScriptSetupRanges(
 						}
 					}
 				}
-			} else if (vueCompilerOptions.macros.templateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
+			} else if (vueCompilerOptions.composibles.useTemplateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
 				const define = parseDefineFunction(node);
 				define.arg = _getStartEnd(node.arguments[0]);
 				let name;

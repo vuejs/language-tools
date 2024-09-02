@@ -42,10 +42,10 @@ export interface VueCompilerOptions {
 		defineModel: string[];
 		defineOptions: string[];
 		withDefaults: string[];
-		templateRef: string[];
 	};
 	composibles: {
 		useCssModule: string[];
+		useTemplateRef: string[];
 	};
 	plugins: VueLanguagePlugin[];
 
