@@ -62,8 +62,7 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		nameType = options.sfc.script.content.substring(nameOption.start, nameOption.end);
 	}
 	else if (options.sfc.scriptSetup) {
-		yield `let __VLS_name!: '${options.scriptSetupRanges?.options.name ?? options.fileBaseName.substring(0, options.fileBaseName.lastIndexOf('.'))}'${endOfLine}`;
-		nameType = 'typeof __VLS_name';
+		nameType = `'${options.scriptSetupRanges?.options.name ?? options.fileBaseName.substring(0, options.fileBaseName.lastIndexOf('.'))}'`;
 	}
 	if (nameType) {
 		exps.push(`{} as {
