@@ -21,6 +21,11 @@ const feImageEl = useTemplateRef('feImage');
 if (feImageEl.value) {
 	exactType(feImageEl.value, {} as SVGFEImageElement);
 }
+
+const aEl = useTemplateRef('a');
+if (aEl.value) {
+	exactType(aEl.value, {} as HTMLAnchorElement);
+}
 </script>
 
 <template>
@@ -29,4 +34,5 @@ if (feImageEl.value) {
 	<svg ref="svg">
 		<feImage ref="feImage"></feImage>
 	</svg>
+	<a ref="a"></a>
 </template>

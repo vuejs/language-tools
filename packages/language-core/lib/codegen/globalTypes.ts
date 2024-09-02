@@ -29,6 +29,11 @@ ${decl}const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 ${decl}const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 ${decl}const __VLS_unref: typeof import('${lib}').unref;
 
+const __VLS_nativeElements = {
+	...{} as SVGElementTagNameMap,
+	...{} as HTMLElementTagNameMap,
+};
+
 type __VLS_IntrinsicElements = ${(
 			target >= 3.3
 				? `import('${lib}/jsx-runtime').JSX.IntrinsicElements;`
@@ -90,9 +95,6 @@ type __VLS_NormalizeEmits<T> = __VLS_PrettifyGlobal<
 	>
 >;
 type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
-
-type ElementTagNameMap = HTMLElementTagNameMap & Pick<SVGElementTagNameMap, Exclude<keyof SVGElementTagNameMap, keyof HTMLElementTagNameMap>>;
-${decl}function __VLS_getNativeElement<T extends keyof ElementTagNameMap>(name: T): ElementTagNameMap[T];
 
 ${decl}function __VLS_getVForSourceType(source: number): [number, number, number][];
 ${decl}function __VLS_getVForSourceType(source: string): [string, number, number][];
