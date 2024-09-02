@@ -14,7 +14,7 @@ if (comp2.value) {
 
 const comp3 = useTemplateRef('a');
 if (comp3.value) {
-	exactType(comp3.value.href, {} as string | undefined);
+	exactType(comp3.value.href, {} as string);
 }
 </script>
 
