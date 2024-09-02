@@ -3,13 +3,14 @@ import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import type { TemplateCodegenContext } from '../template/context';
+import { endOfLine, generateSfcBlockSection, newLine } from '../common';
+import { generateGlobalTypes } from '../globalTypes';
+import { generateStyleModules } from '../template/styleModules';
 import { createScriptCodegenContext, ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';
-import { generateGlobalTypes } from '../globalTypes';
 import { generateInternalComponent } from './internalComponent';
 
 export const codeFeatures = {
@@ -146,6 +147,9 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			yield* generateInternalComponent(options, ctx, templateCodegenCtx);
 		}
 	}
+
+	// #4788
+	yield* generateStyleModules(options, ctx);
 
 	if (options.edited) {
 		yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
