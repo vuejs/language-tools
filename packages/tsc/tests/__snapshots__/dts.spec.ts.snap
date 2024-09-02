@@ -8,7 +8,7 @@ declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<t
     props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>>, never>, never> & {
         nonGeneric: string;
         rows: Row[];
-    }> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    }> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps) & Record<string, unknown>;
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {
@@ -73,7 +73,7 @@ exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/compo
         onFoo?: (value: string) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<import("vue").ExtractPropTypes<{}>> & {
         onFoo?: (value: string) => any;
-    }, never>, "onFoo"> & {}> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    }, never>, "onFoo"> & {}> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps) & Record<string, unknown>;
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {};
@@ -102,7 +102,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         title?: string;
     } & {
         foo: number;
-    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps) & Record<string, unknown>;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
@@ -141,7 +141,7 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
         title?: string;
     } & {
         foo: number;
-    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps) & Record<string, unknown>;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
