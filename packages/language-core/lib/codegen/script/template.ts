@@ -8,7 +8,7 @@ import { generateStyleScopedClasses } from '../template/styleScopedClasses';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 
-export function* generateTemplateCtx(
+function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	isClassComponent: boolean
 ): Generator<Code> {
@@ -43,7 +43,7 @@ export function* generateTemplateCtx(
 	}
 }
 
-export function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
+function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
 	const exps: Code[] = [];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useTemplateRef } from 'vue';
-import { exactType } from '../../../passedFixtures/shared';
+import { exactType } from '../../shared';
 
 const audioEl = useTemplateRef('audio');
 if (audioEl.value) {
