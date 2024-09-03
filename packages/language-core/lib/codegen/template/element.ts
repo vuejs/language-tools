@@ -229,7 +229,7 @@ export function* generateComponent(
 		ctx.templateRefs.set(refName, [varName, offset!]);
 		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
 
-		yield `var ${varName} = {} as (Parameters<Required<typeof ${var_defineComponentCtx}>['expose']>[0] | null)`;
+		yield `var ${varName} = {} as (Parameters<NonNullable<typeof ${var_defineComponentCtx}['expose']>>[0] | null)`;
 		if (node.codegenNode?.type === CompilerDOM.NodeTypes.VNODE_CALL
 			&& node.codegenNode.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
 			&& node.codegenNode.props.properties.some(({ key }) => key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && key.content === 'ref_for')
