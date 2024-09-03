@@ -26,7 +26,7 @@ const pipes = new Map<string, 'unknown' | 'ready'>();
 
 export const onSomePipeReadyCallbacks: (() => void)[] = [];
 
-function watchNamedPipeReady(namedPipePath: string) {
+function waitingForNamedPipeServerReady(namedPipePath: string) {
 	const socket = net.connect(namedPipePath);
 	const start = Date.now();
 	socket.on('connect', () => {
@@ -49,6 +49,10 @@ function watchNamedPipeReady(namedPipePath: string) {
 		pipes.delete(namedPipePath);
 		socket.end();
 	});
+	socket.on('timeout', () => {
+		pipes.delete(namedPipePath);
+		socket.end();
+	});
 }
 
 export function getNamedPipePath(projectKind: ts.server.ProjectKind.Configured | ts.server.ProjectKind.Inferred, key: number) {
@@ -68,14 +72,14 @@ export function getReadyNamedPipePaths() {
 		}
 		else if (!pipes.has(configuredPipe)) {
 			pipes.set(configuredPipe, 'unknown');
-			watchNamedPipeReady(configuredPipe);
+			waitingForNamedPipeServerReady(configuredPipe);
 		}
 		if (pipes.get(inferredPipe) === 'ready') {
 			inferredPipes.push(inferredPipe);
 		}
 		else if (!pipes.has(inferredPipe)) {
 			pipes.set(inferredPipe, 'unknown');
-			watchNamedPipeReady(inferredPipe);
+			waitingForNamedPipeServerReady(inferredPipe);
 		}
 	}
 	return {
@@ -104,11 +108,13 @@ export function connect(namedPipePath: string, timeout?: number) {
 			pipes.delete(namedPipePath);
 			cleanup();
 			resolve('error');
+			socket.end();
 		};
 		const onTimeout = () => {
 			cleanup();
 			resolve('timeout');
-		}
+			socket.end();
+		};
 		const cleanup = () => {
 			socket.off('connect', onConnect);
 			socket.off('error', onError);
