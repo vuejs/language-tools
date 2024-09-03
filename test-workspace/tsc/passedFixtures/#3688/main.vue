@@ -1,8 +1,6 @@
 <template>
 	{{ () => {
-		if (Array.isArray(__VLS_styleScopedClasses)) {
-			exactType(__VLS_styleScopedClasses, {} as 'foo'[]);
-		}
+		exactType(__VLS_styleScopedClasses, {} as { 'foo'?: boolean });
 	} }}
 </template>
 

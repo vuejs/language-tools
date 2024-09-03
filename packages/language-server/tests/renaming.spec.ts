@@ -104,12 +104,12 @@ describe('Renaming', async () => {
 			        "newText": "bar",
 			        "range": {
 			          "end": {
-			            "character": 28,
-			            "line": 2,
+			            "character": 8,
+			            "line": 7,
 			          },
 			          "start": {
-			            "character": 25,
-			            "line": 2,
+			            "character": 5,
+			            "line": 7,
 			          },
 			        },
 			      },
@@ -117,12 +117,12 @@ describe('Renaming', async () => {
 			        "newText": "bar",
 			        "range": {
 			          "end": {
-			            "character": 8,
-			            "line": 7,
+			            "character": 28,
+			            "line": 2,
 			          },
 			          "start": {
-			            "character": 5,
-			            "line": 7,
+			            "character": 25,
+			            "line": 2,
 			          },
 			        },
 			      },
@@ -185,7 +185,6 @@ describe('Renaming', async () => {
 				.bar { color: v-bind(foo|); }
 				.bar { color: v-bind('foo'); }
 				.bar { color: v-bind("foo"); }
-				.bar { color: v-bind(foo + foo); }
 				.bar { color: v-bind('foo + foo'); }
 				.bar { color: v-bind("foo + foo"); }
 				.bar { color: v-bind(); }
@@ -199,32 +198,6 @@ describe('Renaming', async () => {
 			{
 			  "changes": {
 			    "file://\${testWorkspacePath}/fixture.vue": [
-			      {
-			        "newText": "bar",
-			        "range": {
-			          "end": {
-			            "character": 34,
-			            "line": 10,
-			          },
-			          "start": {
-			            "character": 31,
-			            "line": 10,
-			          },
-			        },
-			      },
-			      {
-			        "newText": "bar",
-			        "range": {
-			          "end": {
-			            "character": 28,
-			            "line": 10,
-			          },
-			          "start": {
-			            "character": 25,
-			            "line": 10,
-			          },
-			        },
-			      },
 			      {
 			        "newText": "bar",
 			        "range": {
@@ -256,11 +229,11 @@ describe('Renaming', async () => {
 			        "range": {
 			          "end": {
 			            "character": 35,
-			            "line": 12,
+			            "line": 11,
 			          },
 			          "start": {
 			            "character": 32,
-			            "line": 12,
+			            "line": 11,
 			          },
 			        },
 			      },
@@ -269,11 +242,11 @@ describe('Renaming', async () => {
 			        "range": {
 			          "end": {
 			            "character": 29,
-			            "line": 12,
+			            "line": 11,
 			          },
 			          "start": {
 			            "character": 26,
-			            "line": 12,
+			            "line": 11,
 			          },
 			        },
 			      },
@@ -282,11 +255,11 @@ describe('Renaming', async () => {
 			        "range": {
 			          "end": {
 			            "character": 35,
-			            "line": 11,
+			            "line": 10,
 			          },
 			          "start": {
 			            "character": 32,
-			            "line": 11,
+			            "line": 10,
 			          },
 			        },
 			      },
@@ -295,11 +268,11 @@ describe('Renaming', async () => {
 			        "range": {
 			          "end": {
 			            "character": 29,
-			            "line": 11,
+			            "line": 10,
 			          },
 			          "start": {
 			            "character": 26,
-			            "line": 11,
+			            "line": 10,
 			          },
 			        },
 			      },
@@ -336,7 +309,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<template>
 				<Comp :aaa-bbb="'foo'"></Comp>
@@ -422,7 +394,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component type props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<template>
 				<Comp :aaa-bbb="'foo'"></Comp>
@@ -508,7 +479,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component dynamic props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -556,7 +526,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component returns', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -612,7 +581,6 @@ describe('Renaming', async () => {
 	});
 
 	it('<script setup>', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -660,7 +628,6 @@ describe('Renaming', async () => {
 	});
 
 	it('Component tags', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -747,6 +714,211 @@ describe('Renaming', async () => {
 		`);
 	});
 
+	it('#4673', async () => {
+		expect(
+			await requestRename('fixture.vue', 'vue', `
+				<script setup lang="ts">
+				import { useCssModule } from 'vue';
+				const $style = useCssModule();
+				const stylAlias = useCssModule('styl');
+				</script>
+
+				<template>
+					<div :class="styl|.foo">{{  }}</div>
+				</template>
+
+				<style module>
+				.foo { }
+				</style>
+
+				<style module="styl">
+				.foo { }
+				</style>
+			`, 'stylus')
+		).toMatchInlineSnapshot(`
+			{
+			  "changes": {
+			    "file://\${testWorkspacePath}/fixture.vue": [
+			      {
+			        "newText": "stylus",
+			        "range": {
+			          "end": {
+			            "character": 23,
+			            "line": 15,
+			          },
+			          "start": {
+			            "character": 19,
+			            "line": 15,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "stylus",
+			        "range": {
+			          "end": {
+			            "character": 22,
+			            "line": 8,
+			          },
+			          "start": {
+			            "character": 18,
+			            "line": 8,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "stylus",
+			        "range": {
+			          "end": {
+			            "character": 40,
+			            "line": 4,
+			          },
+			          "start": {
+			            "character": 36,
+			            "line": 4,
+			          },
+			        },
+			      },
+			    ],
+			  },
+			}
+		`);
+	});
+
+	it('Scoped Classes', async () => {
+		expect(
+			await requestRename('fixture.vue', 'vue', `
+				<template>
+					<div :class="'foo|'"></div>
+					<div :class="['foo', { 'foo': true }]"></div>
+					<div :class="{ foo }"></div>
+				</template>
+				<style scoped>
+				.foo { }
+				</style>
+			`, 'bar')
+		).toMatchInlineSnapshot(`
+			{
+			  "changes": {
+			    "file://\${testWorkspacePath}/fixture.vue": [
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 23,
+			            "line": 4,
+			          },
+			          "start": {
+			            "character": 20,
+			            "line": 4,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 32,
+			            "line": 3,
+			          },
+			          "start": {
+			            "character": 29,
+			            "line": 3,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 23,
+			            "line": 3,
+			          },
+			          "start": {
+			            "character": 20,
+			            "line": 3,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 22,
+			            "line": 2,
+			          },
+			          "start": {
+			            "character": 19,
+			            "line": 2,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 8,
+			            "line": 7,
+			          },
+			          "start": {
+			            "character": 5,
+			            "line": 7,
+			          },
+			        },
+			      },
+			    ],
+			  },
+			}
+		`);
+	});
+
+	it('Template Ref', async () => {
+		expect(
+			await requestRename('tsconfigProject/fixture.vue', 'vue', `
+				<template>
+					<a ref="foo"></a>
+				</template>
+
+				<script lang="ts" setup>
+				import { useTemplateRef } from 'vue';
+				const el = useTemplateRef('foo|');
+				</script>
+			`, 'bar')
+		).toMatchInlineSnapshot(`
+			{
+			  "changes": {
+			    "file://\${testWorkspacePath}/tsconfigProject/fixture.vue": [
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 16,
+			            "line": 2,
+			          },
+			          "start": {
+			            "character": 13,
+			            "line": 2,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 34,
+			            "line": 7,
+			          },
+			          "start": {
+			            "character": 31,
+			            "line": 7,
+			          },
+			        },
+			      },
+			    ],
+			  },
+			}
+		`);
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {
@@ -756,15 +928,6 @@ describe('Renaming', async () => {
 		}
 		openedDocuments.length = 0;
 	});
-
-	/**
-	 * @deprecated Remove this when #4717 fixed.
-	 */
-	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
-		const server = await getLanguageServer();
-		await server.sendDocumentDiagnosticRequest(document.uri);
-	}
 
 	async function requestRename(fileName: string, languageId: string, _content: string, newName: string) {
 		const offset = _content.indexOf('|');

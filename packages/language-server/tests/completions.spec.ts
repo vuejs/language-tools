@@ -15,16 +15,49 @@ describe('Completions', async () => {
 			  "script setup",
 			  "style",
 			  "script lang="ts"",
+			  "script lang="js"",
 			  "script lang="tsx"",
 			  "script lang="jsx"",
 			  "script setup lang="ts"",
+			  "script setup lang="js"",
 			  "script setup lang="tsx"",
 			  "script setup lang="jsx"",
 			  "style lang="css"",
+			  "style lang="css" scoped",
+			  "style lang="css" module",
 			  "style lang="scss"",
+			  "style lang="scss" scoped",
+			  "style lang="scss" module",
 			  "style lang="less"",
+			  "style lang="less" scoped",
+			  "style lang="less" module",
+			  "style lang="stylus"",
+			  "style lang="stylus" scoped",
+			  "style lang="stylus" module",
 			  "style lang="postcss"",
+			  "style lang="postcss" scoped",
+			  "style lang="postcss" module",
+			  "style lang="sass"",
+			  "style lang="sass" scoped",
+			  "style lang="sass" module",
 			  "template lang="pug"",
+			]
+		`);
+	});
+
+	it('#4670', async () => {
+		expect(
+			(await requestCompletionList('fixture.vue', 'vue', `<template><div click| /></template>`)).items.map(item => item.label).filter(label => label.includes('click'))
+		).toMatchInlineSnapshot(`
+			[
+			  "onclick",
+			  "ondblclick",
+			  "v-on:auxclick",
+			  "@auxclick",
+			  "v-on:click",
+			  "@click",
+			  "v-on:dblclick",
+			  "@dblclick",
 			]
 		`);
 	});
@@ -212,7 +245,6 @@ describe('Completions', async () => {
 	});
 
 	it('#2511', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/component-for-auto-import.vue', 'vue', `<script setup lang="ts"></script>`);
 		expect(
 			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
@@ -258,7 +290,6 @@ describe('Completions', async () => {
 	});
 
 	it('Alias path', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			import Component from '@/|';
@@ -267,7 +298,6 @@ describe('Completions', async () => {
 	});
 
 	it('Relative path', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			import Component from './|';
@@ -276,7 +306,6 @@ describe('Completions', async () => {
 	});
 
 	it('Component auto import', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/ComponentForAutoImport.vue', 'vue', `<script setup lang="ts"></script>`);
 		expect(
 			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
@@ -305,6 +334,12 @@ describe('Completions', async () => {
 			        },
 			      },
 			    },
+			  ],
+			  "commitCharacters": [
+			    ".",
+			    ",",
+			    ";",
+			    "(",
 			  ],
 			  "detail": "Add import from "./ComponentForAutoImport.vue"
 			(property) default: DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<{}>, ... 7 more ..., {}>",
@@ -337,7 +372,6 @@ describe('Completions', async () => {
 	});
 
 	it('core#8811', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			declare const Foo: new () => {
@@ -362,15 +396,6 @@ describe('Completions', async () => {
 		}
 		openedDocuments.length = 0;
 	});
-
-	/**
-	 * @deprecated Remove this when #4717 fixed.
-	 */
-	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
-		const server = await getLanguageServer();
-		await server.sendDocumentDiagnosticRequest(document.uri);
-	}
 
 	async function requestCompletionItem(fileName: string, languageId: string, content: string, itemLabel: string) {
 		const completions = await requestCompletionList(fileName, languageId, content);

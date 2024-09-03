@@ -109,6 +109,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
+			const codeInfo = ctx.codeFeatures.withoutHighlightAndCompletion;
 			const codes = wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
@@ -121,8 +122,20 @@ export function* generateElementProps(
 							propName,
 							prop.arg.loc.start.offset,
 							{
-								...ctx.codeFeatures.withoutHighlightAndCompletion,
-								navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
+								...codeInfo,
+								verification: options.vueCompilerOptions.strictTemplates
+									? codeInfo.verification
+									: {
+										shouldReport(_source, code) {
+											if (String(code) === '2353' || String(code) === '2561') {
+												return false;
+											}
+											return typeof codeInfo.verification === 'object'
+												? codeInfo.verification.shouldReport?.(_source, code) ?? true
+												: true;
+										},
+									},
+								navigation: codeInfo.navigation
 									? {
 										resolveRenameNewName: camelize,
 										resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
@@ -140,9 +153,10 @@ export function* generateElementProps(
 						)
 				),
 				`: (`,
-				...genereatePropExp(
+				...generatePropExp(
 					options,
 					ctx,
+					prop,
 					prop.exp,
 					ctx.codeFeatures.all,
 					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
@@ -182,6 +196,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
+			const codeInfo = ctx.codeFeatures.withoutHighlightAndCompletion;
 			const codes = conditionWrapWith(
 				enableCodeFeatures,
 				prop.loc.start.offset,
@@ -194,7 +209,19 @@ export function* generateElementProps(
 					prop.loc.start.offset,
 					shouldCamelize
 						? {
-							...ctx.codeFeatures.withoutHighlightAndCompletion,
+							...codeInfo,
+							verification: options.vueCompilerOptions.strictTemplates
+								? codeInfo.verification
+								: {
+									shouldReport(_source, code) {
+										if (String(code) === '2353' || String(code) === '2561') {
+											return false;
+										}
+										return typeof codeInfo.verification === 'object'
+											? codeInfo.verification.shouldReport?.(_source, code) ?? true
+											: true;
+									},
+								},
 							navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
 								? {
 									resolveRenameNewName: camelize,
@@ -263,9 +290,10 @@ export function* generateElementProps(
 	}
 }
 
-function* genereatePropExp(
+function* generatePropExp(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
+	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
 	isShorthand: boolean,
@@ -299,11 +327,11 @@ function* genereatePropExp(
 				if (enableCodeFeatures) {
 					ctx.inlayHints.push({
 						blockName: 'template',
-						offset: exp.loc.end.offset,
+						offset: prop.loc.end.offset,
 						setting: 'vue.inlayHints.vBindShorthand',
 						label: `="${propVariableName}"`,
 						tooltip: [
-							`This is a shorthand for \`${exp.loc.source}="${propVariableName}"\`.`,
+							`This is a shorthand for \`${prop.loc.source}="${propVariableName}"\`.`,
 							'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
 							'[More info](https://github.com/vuejs/core/pull/9451)',
 						].join('\n\n'),

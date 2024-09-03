@@ -1,6 +1,6 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createTypeScriptProject } from '@volar/language-server/node';
-import { createParsedCommandLine, createRootFileChecker, createVueLanguagePlugin2, getAllExtensions, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
+import { createParsedCommandLine, createVueLanguagePlugin, generateGlobalTypes, getAllExtensions, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
 import { Disposable, getFullLanguageServicePlugins, InitializeParams } from '@vue/language-service';
 import type * as ts from 'typescript';
 
@@ -18,7 +18,7 @@ export function initialize(
 		createTypeScriptProject(
 			ts,
 			tsLocalized,
-			async ({ configFileName, sys, projectHost, uriConverter }) => {
+			async ({ configFileName, sys, uriConverter }) => {
 				let compilerOptions: ts.CompilerOptions;
 				let vueCompilerOptions: VueCompilerOptions;
 				if (configFileName) {
@@ -37,21 +37,55 @@ export function initialize(
 					compilerOptions = ts.getDefaultCompilerOptions();
 					vueCompilerOptions = resolveVueCompilerOptions({});
 				}
+				vueCompilerOptions.__test = params.initializationOptions.typescript.disableAutoImportCache;
 				updateFileWatcher(vueCompilerOptions);
 				return {
-					languagePlugins: [createVueLanguagePlugin2(
-						ts,
-						s => uriConverter.asFileName(s),
-						createRootFileChecker(
-							projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
-							() => projectHost.getScriptFileNames(),
-							sys.useCaseSensitiveFileNames
+					languagePlugins: [
+						createVueLanguagePlugin(
+							ts,
+							compilerOptions,
+							{
+								...vueCompilerOptions,
+								__setupedGlobalTypes: () => true,
+							},
+							s => uriConverter.asFileName(s)
 						),
-						compilerOptions,
-						vueCompilerOptions
-					)],
+					],
 					setup({ project }) {
 						project.vue = { compilerOptions: vueCompilerOptions };
+
+						if (project.typescript) {
+							const directoryExists = project.typescript.languageServiceHost.directoryExists?.bind(project.typescript.languageServiceHost);
+							const fileExists = project.typescript.languageServiceHost.fileExists.bind(project.typescript.languageServiceHost);
+							const getScriptSnapshot = project.typescript.languageServiceHost.getScriptSnapshot.bind(project.typescript.languageServiceHost);
+							const globalTypesName = `${vueCompilerOptions.lib}_${vueCompilerOptions.target}_${vueCompilerOptions.strictTemplates}.d.ts`;
+							const globalTypesContents = generateGlobalTypes('global', vueCompilerOptions.lib, vueCompilerOptions.target, vueCompilerOptions.strictTemplates);
+							const globalTypesSnapshot: ts.IScriptSnapshot = {
+								getText: (start, end) => globalTypesContents.substring(start, end),
+								getLength: () => globalTypesContents.length,
+								getChangeRange: () => undefined,
+							};
+							if (directoryExists) {
+								project.typescript.languageServiceHost.directoryExists = path => {
+									if (path.endsWith('.vue-global-types')) {
+										return true;
+									}
+									return directoryExists(path);
+								};
+							}
+							project.typescript.languageServiceHost.fileExists = path => {
+								if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
+									return true;
+								}
+								return fileExists(path);
+							};
+							project.typescript.languageServiceHost.getScriptSnapshot = path => {
+								if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
+									return globalTypesSnapshot;
+								}
+								return getScriptSnapshot(path);
+							};
+						}
 					},
 				};
 			}

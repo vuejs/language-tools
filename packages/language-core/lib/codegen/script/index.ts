@@ -4,11 +4,13 @@ import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
+import { generateGlobalTypes } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
 import { createScriptCodegenContext, ScriptCodegenContext } from './context';
-import { generateGlobalTypes } from './globalTypes';
+import { generateComponentSelf } from './componentSelf';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
+import { generateStyleModulesType } from './styleModulesType';
 import { generateTemplate } from './template';
 
 export const codeFeatures = {
@@ -44,7 +46,7 @@ export interface ScriptCodegenOptions {
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[]; } | undefined;
-	globalTypes: boolean;
+	edited: boolean;
 	getGeneratedLength: () => number;
 	linkedCodeMappings: Mapping[];
 }
@@ -52,7 +54,13 @@ export interface ScriptCodegenOptions {
 export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
 	const ctx = createScriptCodegenContext(options);
 
-	yield `/* __placeholder__ */${newLine}`;
+	if (options.vueCompilerOptions.__setupedGlobalTypes?.()) {
+		yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+	}
+	else {
+		yield `/* placeholder */`;
+	}
+
 	if (options.sfc.script?.src) {
 		yield* generateSrc(options.sfc.script, options.sfc.script.src);
 	}
@@ -100,9 +108,17 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.end, options.sfc.script.content.length, codeFeatures.all);
 		}
 		else if (classBlockEnd !== undefined) {
-			yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
-			yield* generateTemplate(options, ctx, true);
-			yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
+			if (options.vueCompilerOptions.skipTemplateCodegen) {
+				yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
+			}
+			else {
+				yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
+				yield `__VLS_template = () => {`;
+				const templateCodegenCtx = yield* generateTemplate(options, ctx, true);
+				yield* generateComponentSelf(options, ctx, templateCodegenCtx);
+				yield `},${newLine}`;
+				yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
+			}
 		}
 		else {
 			yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
@@ -117,32 +133,30 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	yield `;`;
 	if (options.sfc.scriptSetup) {
 		// #4569
-		yield [
-			'',
-			'scriptSetup',
-			options.sfc.scriptSetup.content.length,
-			codeFeatures.verification,
-		];
+		yield ['', 'scriptSetup', options.sfc.scriptSetup.content.length, codeFeatures.verification];
 	}
 	yield newLine;
 
-	if (options.globalTypes) {
-		yield generateGlobalTypes(options.vueCompilerOptions);
-	}
-	yield* ctx.generateHelperTypes();
-	yield `\ntype __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
-
 	if (!ctx.generatedTemplate) {
-		yield* generateTemplate(options, ctx, false);
+		yield `function __VLS_template() {${newLine}`;
+		const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
+		yield `}${endOfLine}`;
+		yield* generateComponentSelf(options, ctx, templateCodegenCtx);
+	}
+
+	// #4788
+	yield* generateStyleModulesType(options, ctx);
+
+	if (options.edited) {
+		yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
+	}
+	yield* ctx.localTypes.generate([...ctx.localTypes.getUsedNames()]);
+	if (!options.vueCompilerOptions.__setupedGlobalTypes?.()) {
+		yield generateGlobalTypes('local', options.vueCompilerOptions.lib, options.vueCompilerOptions.target, options.vueCompilerOptions.strictTemplates);
 	}
 
 	if (options.sfc.scriptSetup) {
-		yield [
-			'',
-			'scriptSetup',
-			options.sfc.scriptSetup.content.length,
-			codeFeatures.verification,
-		];
+		yield ['', 'scriptSetup', options.sfc.scriptSetup.content.length, codeFeatures.verification];
 	}
 
 	return ctx;

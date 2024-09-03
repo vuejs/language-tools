@@ -14,6 +14,8 @@
 		{ "path": "./passedFixtures/#3819" },
 		{ "path": "./passedFixtures/#4503" },
 		{ "path": "./passedFixtures/core#9923" },
+		{ "path": "./passedFixtures/fallthroughAttributes" },
+		{ "path": "./passedFixtures/fallthroughAttributes_strictTemplate" },
 		{ "path": "./passedFixtures/noPropertyAccessFromIndexSignature" },
 		// { "path": "./passedFixtures/petite-vue" },
 		{ "path": "./passedFixtures/pug" },

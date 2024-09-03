@@ -8,6 +8,8 @@ interface Loc {
 }
 type Node = CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.ExpressionNode | CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode;
 
+const shouldAddSuffix = /(?<=<[^>/]+)$/;
+
 const plugin: VueLanguagePlugin = ({ modules }) => {
 
 	return {
@@ -20,14 +22,36 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 				const compiler = modules['@vue/compiler-dom'];
 
-				return compiler.compile(template, {
+				let addedSuffix = false;
+
+				// #4583
+				if (shouldAddSuffix.test(template)) {
+					template += '>';
+					addedSuffix = true;
+				}
+
+				const result = compiler.compile(template, {
 					...options,
 					comments: true,
 				});
+				// @ts-expect-error
+				result.__addedSuffix = addedSuffix;
+				return result;
 			}
 		},
 
 		updateSFCTemplate(oldResult, change) {
+			oldResult.code = oldResult.code.slice(0, change.start)
+				+ change.newText
+				+ oldResult.code.slice(change.end);
+
+			// @ts-expect-error
+			if (oldResult.__addedSuffix) {
+				const originalTemplate = oldResult.code.slice(0, -1); // remove added '>'
+				if (!shouldAddSuffix.test(originalTemplate)) {
+					return undefined;
+				}
+			}
 
 			const CompilerDOM = modules['@vue/compiler-dom'];
 
@@ -129,8 +153,16 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							node.parseResult.key,
 							node.parseResult.index,
 						]) {
-							if (child && !tryUpdateNode(child)) {
-								return false;
+							if (child) {
+								if (!tryUpdateNode(child)) {
+									return false;
+								}
+								if (child.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+									const content = child.content.trim();
+									if (content.startsWith('(') || content.endsWith(')')) {
+										return false;
+									}
+								}
 							}
 						}
 						for (const child of node.children) {

@@ -43,7 +43,7 @@ export function* generateElementDirectives(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
-				`__VLS_directiveFunction(__VLS_ctx.`,
+				`__VLS_directiveAsFunction(__VLS_ctx.`,
 				...generateCamelized(
 					'v-' + prop.name,
 					prop.loc.start.offset,
@@ -60,27 +60,36 @@ export function* generateElementDirectives(
 						},
 					}
 				),
-				`)(`,
+				`)(null!, { ...__VLS_directiveBindingRestFields, `,
 				...(
 					prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-						? wrapWith(
-							prop.exp.loc.start.offset,
-							prop.exp.loc.end.offset,
-							ctx.codeFeatures.verification,
-							...generateInterpolation(
-								options,
-								ctx,
-								prop.exp.content,
-								prop.exp.loc,
+						? [
+							...wrapWith(
 								prop.exp.loc.start.offset,
-								ctx.codeFeatures.all,
-								'(',
-								')'
+								prop.exp.loc.end.offset,
+								ctx.codeFeatures.verification,
+								'value'
+							),
+							': ',
+							...wrapWith(
+								prop.exp.loc.start.offset,
+								prop.exp.loc.end.offset,
+								ctx.codeFeatures.verification,
+								...generateInterpolation(
+									options,
+									ctx,
+									prop.exp.content,
+									prop.exp.loc,
+									prop.exp.loc.start.offset,
+									ctx.codeFeatures.all,
+									'(',
+									')'
+								)
 							)
-						)
+						]
 						: [`undefined`]
 				),
-				`)`
+				`}, null!, null!)`
 			);
 			yield endOfLine;
 		}

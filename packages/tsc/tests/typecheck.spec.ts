@@ -16,7 +16,7 @@ describe(`vue-tsc`, () => {
 		`);
 	});
 
-	test(`TypeScript - next`, () => {
+	test.skipIf(!process.env.GITHUB_ACTIONS)(`TypeScript - Next`, () => {
 		expect(
 			getTscOutput('next')
 		).toMatchInlineSnapshot(`

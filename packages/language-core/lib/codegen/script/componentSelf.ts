@@ -1,19 +1,18 @@
 import type { Code } from '../../types';
-import { endOfLine, newLine } from '../common';
+import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import type { TemplateCodegenContext } from '../template/context';
-import { generateComponentSetupReturns, generateScriptOptions, generateScriptSetupOptions } from './component';
+import { generateComponentSetupReturns, generateEmitsOption, generatePropsOption } from './component';
 import type { ScriptCodegenContext } from './context';
-import type { ScriptCodegenOptions } from './index';
+import { codeFeatures, type ScriptCodegenOptions } from './index';
 import { getTemplateUsageVars } from './template';
 
-export function* generateInternalComponent(
+export function* generateComponentSelf(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
 	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
-		yield `let __VLS_defineComponent!: typeof import('${options.vueCompilerOptions.lib}').defineComponent${endOfLine}`;
-		yield `const __VLS_internalComponent = __VLS_defineComponent({${newLine}`;
+		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 		yield `setup() {${newLine}`;
 		yield `return {${newLine}`;
 		if (ctx.bypassDefineComponent) {
@@ -49,17 +48,22 @@ export function* generateInternalComponent(
 		yield `}${endOfLine}`; // return {
 		yield `},${newLine}`; // setup() {
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
-			yield* generateScriptSetupOptions(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
+			const emitOptionCodes = [...generateEmitsOption(options, options.sfc.scriptSetup, options.scriptSetupRanges)];
+			for (const code of emitOptionCodes) {
+				yield code;
+			}
+			yield* generatePropsOption(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges, !!emitOptionCodes.length, false);
 		}
-		if (options.sfc.script && options.scriptRanges) {
-			yield* generateScriptOptions(options.sfc.script, options.scriptRanges);
+		if (options.sfc.script && options.scriptRanges?.exportDefault?.args) {
+			const { args } = options.scriptRanges.exportDefault;
+			yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
 		}
 		yield `})${endOfLine}`; // defineComponent {
 	}
 	else if (options.sfc.script) {
-		yield `let __VLS_internalComponent!: typeof import('./${options.fileBaseName}').default${endOfLine}`;
+		yield `let __VLS_self!: typeof import('./${options.fileBaseName}').default${endOfLine}`;
 	}
 	else {
-		yield `const __VLS_internalComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
+		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 	}
 }

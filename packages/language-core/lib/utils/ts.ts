@@ -1,3 +1,4 @@
+import { camelize } from '@vue/shared';
 import type * as ts from 'typescript';
 import * as path from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
@@ -204,7 +205,7 @@ function getPartialVueCompilerOptions(
 
 export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3.3;
-	const lib = vueOptions.lib || (target < 2.7 ? '@vue/runtime-dom' : 'vue');
+	const lib = vueOptions.lib ?? 'vue';
 	return {
 		...vueOptions,
 		target,
@@ -215,12 +216,13 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		jsxSlots: vueOptions.jsxSlots ?? false,
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
+		fallthroughAttributes: vueOptions.fallthroughAttributes ?? false,
 		dataAttributes: vueOptions.dataAttributes ?? [],
 		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
 		optionsWrapper: vueOptions.optionsWrapper ?? (
 			target >= 2.7
 				? [`(await import('${lib}')).defineComponent(`, `)`]
-				: [`(await import('vue')).default.extend(`, `)`]
+				: [`(await import('${lib}')).default.extend(`, `)`]
 		),
 		macros: {
 			defineProps: ['defineProps'],
@@ -232,6 +234,11 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			withDefaults: ['withDefaults'],
 			...vueOptions.macros,
 		},
+		composibles: {
+			useCssModule: ['useCssModule'],
+			useTemplateRef: ['useTemplateRef', 'templateRef'],
+			...vueOptions.composibles,
+		},
 		plugins: vueOptions.plugins ?? [],
 
 		// experimental
@@ -239,15 +246,17 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 		// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
-		experimentalModelPropName: vueOptions.experimentalModelPropName ?? {
-			'': {
-				input: true
-			},
-			value: {
-				input: { type: 'text' },
-				textarea: true,
-				select: true
+		experimentalModelPropName: Object.fromEntries(Object.entries(
+			vueOptions.experimentalModelPropName ?? {
+				'': {
+					input: true
+				},
+				value: {
+					input: { type: 'text' },
+					textarea: true,
+					select: true
+				}
 			}
-		},
+		).map(([k, v]) => [camelize(k), v])),
 	};
 }
