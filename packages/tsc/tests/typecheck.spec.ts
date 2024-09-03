@@ -12,7 +12,6 @@ describe(`vue-tsc`, () => {
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<Readonly<{}> & Readonly<{}>, { exist: typeof exist; }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 17 more ..., {}>'.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<Readonly<{}> & Readonly<{}>, { exist: typeof exist; }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 17 more ..., {}>'.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",
-			  "test-workspace/tsc/passedFixtures/vue3_strictTemplate/#3718/main.vue(2,2): error TS2578: Unused '@ts-expect-error' directive.",
 			]
 		`);
 	});
@@ -27,7 +26,6 @@ describe(`vue-tsc`, () => {
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",
 			  "test-workspace/tsc/passedFixtures/#3373/tsconfig.json(4,3): error TS5102: Option 'importsNotUsedAsValues' has been removed. Please remove it from your configuration.
 			  Use 'verbatimModuleSyntax' instead.",
-			  "test-workspace/tsc/passedFixtures/vue3_strictTemplate/#3718/main.vue(2,2): error TS2578: Unused '@ts-expect-error' directive.",
 			]
 		`);
 	});
