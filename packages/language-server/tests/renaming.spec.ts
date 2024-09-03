@@ -871,6 +871,54 @@ describe('Renaming', async () => {
 		`);
 	});
 
+	it('Ref', async () => {
+		expect(
+			await requestRename('tsconfigProject/fixture.vue', 'vue', `
+				<template>
+					<a ref="foo"></a>
+				</template>
+
+				<script lang="ts" setup>
+				import { ref } from 'vue';
+				const foo| = ref();
+				</script>
+			`, 'bar')
+		).toMatchInlineSnapshot(`
+			{
+			  "changes": {
+			    "file://\${testWorkspacePath}/tsconfigProject/fixture.vue": [
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 16,
+			            "line": 2,
+			          },
+			          "start": {
+			            "character": 13,
+			            "line": 2,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 13,
+			            "line": 7,
+			          },
+			          "start": {
+			            "character": 10,
+			            "line": 7,
+			          },
+			        },
+			      },
+			    ],
+			  },
+			}
+		`);
+	});
+
 	it('Template Ref', async () => {
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `

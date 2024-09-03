@@ -549,7 +549,7 @@ function* generateReferencesForElements(
 		) {
 			const [content, startOffset] = normalizeAttributeValue(prop.value);
 
-			yield `// @ts-ignore${newLine}`;
+			yield `// @ts-ignore navigation for \`const ${content} = ref()\`${newLine}`;
 			yield `__VLS_ctx`;
 			yield* generatePropertyAccess(
 				options,
