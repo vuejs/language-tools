@@ -2,12 +2,8 @@
 	"extends": "../../../tsconfig.base.json",
 	"vueCompilerOptions": {
 		"target": 3.3,
+		"lib": "vue3.4",
+		"strictTemplates": true,
 	},
-	"include": [
-		"env.d.ts",
-		"../vue3",
-	],
-	"exclude": [
-		"../vue3/#3782",
-	],
+	"include": [ "**/*" ],
 }
