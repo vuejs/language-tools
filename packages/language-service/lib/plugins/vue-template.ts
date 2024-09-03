@@ -229,7 +229,7 @@ export function create(
 									? tagName
 									: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 								if (checkTag) {
-									componentProps[checkTag] ??= await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? [];
+									componentProps[checkTag] ??= (await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? []).map(prop => prop.name);
 									current = {
 										unburnedRequiredProps: [...componentProps[checkTag]],
 										labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -453,7 +453,7 @@ export function create(
 				const promises: Promise<void>[] = [];
 				const tagInfos = new Map<string, {
 					attrs: string[];
-					props: string[];
+					propsInfo: { name: string, commentMarkdown: string; }[];
 					events: string[];
 				}>();
 
@@ -522,12 +522,12 @@ export function create(
 							if (!tagInfo) {
 								promises.push((async () => {
 									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
-									const props = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
+									const propsInfo = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
 									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
 									tagInfos.set(tag, {
 										attrs,
-										props: props.filter(prop =>
-											!prop.startsWith('ref_')
+										propsInfo: propsInfo.filter(prop =>
+											!prop.name.startsWith('ref_')
 										),
 										events,
 									});
@@ -536,7 +536,8 @@ export function create(
 								return [];
 							}
 
-							const { attrs, props, events } = tagInfo;
+							const { attrs, propsInfo, events } = tagInfo;
+							const props = propsInfo.map(prop => prop.name);
 							const attributes: html.IAttributeData[] = [];
 							const _tsCodegen = tsCodegen.get(vueCode.sfc);
 
@@ -594,7 +595,12 @@ export function create(
 								else {
 
 									const propName = name;
-									const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
+									const propDescription = propsInfo.find(prop => {
+										const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
+										return name === propName;
+									})?.commentMarkdown;
+
+									const propKey = propDescription || createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
 
 									attributes.push(
 										{

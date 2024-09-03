@@ -86,7 +86,7 @@ export async function convertAttrName(
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
 		if (componentName) {
-			const props = await tsPluginClient?.getComponentProps(rootCode.fileName, componentName) ?? [];
+			const props = (await tsPluginClient?.getComponentProps(rootCode.fileName, componentName) ?? []).map(prop => prop.name);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenateAttr(prop) === attrName);
 				if (propName) {
