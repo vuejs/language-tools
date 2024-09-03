@@ -384,7 +384,7 @@ function* generateVScope(
 	}
 
 	yield* generateElementDirectives(options, ctx, node);
-	const [refName, offset] = yield* generateReferencesForElements(options, ctx, node); // <el ref="foo" />
+	const [refName, offset] = yield* generateReferencesForElements(ctx, node); // <el ref="foo" />
 	yield* generateReferencesForScopedCssClasses(options, ctx, node);
 
 	if (inScope) {
@@ -537,7 +537,6 @@ function* generateComponentSlot(
 }
 
 function* generateReferencesForElements(
-	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode
 ): Generator<Code, [refName: string, offset: number] | []> {
@@ -548,18 +547,6 @@ function* generateReferencesForElements(
 			&& prop.value
 		) {
 			const [content, startOffset] = normalizeAttributeValue(prop.value);
-
-			yield `// @ts-ignore${newLine}`;
-			yield `__VLS_ctx`;
-			yield* generatePropertyAccess(
-				options,
-				ctx,
-				content,
-				startOffset,
-				ctx.codeFeatures.navigation,
-				prop.value.loc
-			);
-			yield endOfLine;
 
 			if (variableNameRegex.test(content)) {
 				ctx.accessExternalVariable(content, startOffset);
