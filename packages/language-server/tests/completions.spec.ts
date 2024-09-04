@@ -410,10 +410,8 @@ describe('Completions', async () => {
 		).toMatchInlineSnapshot(`
 			{
 			  "documentation": {
-			    "kind": "plaintext",
-			    "value": "The message to display
-
-			",
+			    "kind": "markdown",
+			    "value": "The message to display",
 			  },
 			  "insertTextFormat": 2,
 			  "kind": 5,
