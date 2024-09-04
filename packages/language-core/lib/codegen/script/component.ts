@@ -167,7 +167,7 @@ export function* generatePropsOption(
 		});
 	}
 
-	const useTypeOption = codes.every(code => code.typeOptionExp) && options.vueCompilerOptions.target >= 3.5;
+	const useTypeOption = options.vueCompilerOptions.target >= 3.5 && codes.every(code => code.typeOptionExp);
 	const useOption = !useTypeOption || scriptSetupRanges.props.withDefaults;
 
 	if (useTypeOption) {
