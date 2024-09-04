@@ -32,6 +32,7 @@ export function create(
 	let extraCustomData: html.IHTMLDataProvider[] = [];
 	let lastCompletionComponentNames = new Set<string>();
 
+	const tsDocumentations = new Map<string, string>();
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
 		onDidChangeCustomDataListeners.add(listener);
@@ -229,7 +230,7 @@ export function create(
 									? tagName
 									: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 								if (checkTag) {
-									componentProps[checkTag] ??= await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? [];
+									componentProps[checkTag] ??= (await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? []).map(prop => prop.name);
 									current = {
 										unburnedRequiredProps: [...componentProps[checkTag]],
 										labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -434,12 +435,12 @@ export function create(
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
-						if (isInternalItemId(tag.name)) {
+						if (isItemKey(tag.name)) {
 							continue;
 						}
 
 						if (specialTags.has(tag.name)) {
-							tag.name = createInternalItemId('specialTag', [tag.name]);
+							tag.name = parseItemKey('specialTag', tag.name, '');
 						}
 						else if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
@@ -453,13 +454,15 @@ export function create(
 				const promises: Promise<void>[] = [];
 				const tagInfos = new Map<string, {
 					attrs: string[];
-					props: string[];
+					propsInfo: { name: string, commentMarkdown: string; }[];
 					events: string[];
 				}>();
 
 				let version = 0;
 				let components: string[] | undefined;
 				let templateContextProps: string[] | undefined;
+
+				tsDocumentations.clear();
 
 				updateExtraCustomData([
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
@@ -522,12 +525,12 @@ export function create(
 							if (!tagInfo) {
 								promises.push((async () => {
 									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
-									const props = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
+									const propsInfo = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
 									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
 									tagInfos.set(tag, {
 										attrs,
-										props: props.filter(prop =>
-											!prop.startsWith('ref_')
+										propsInfo: propsInfo.filter(prop =>
+											!prop.name.startsWith('ref_')
 										),
 										events,
 									});
@@ -536,7 +539,8 @@ export function create(
 								return [];
 							}
 
-							const { attrs, props, events } = tagInfo;
+							const { attrs, propsInfo, events } = tagInfo;
+							const props = propsInfo.map(prop => prop.name);
 							const attributes: html.IAttributeData[] = [];
 							const _tsCodegen = tsCodegen.get(vueCode.sfc);
 
@@ -578,7 +582,7 @@ export function create(
 									const propNameBase = name.startsWith('on-')
 										? name.slice('on-'.length)
 										: (name['on'.length].toLowerCase() + name.slice('onX'.length));
-									const propKey = createInternalItemId('componentEvent', [isGlobal ? '*' : tag, propNameBase]);
+									const propKey = parseItemKey('componentEvent', isGlobal ? '*' : tag, propNameBase);
 
 									attributes.push(
 										{
@@ -594,7 +598,15 @@ export function create(
 								else {
 
 									const propName = name;
-									const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
+									const propKey = parseItemKey('componentProp', isGlobal ? '*' : tag, propName);
+									const propDescription = propsInfo.find(prop => {
+										const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
+										return name === propName;
+									})?.commentMarkdown;
+
+									if (propDescription) {
+										tsDocumentations.set(propName, propDescription);
+									}
 
 									attributes.push(
 										{
@@ -616,7 +628,7 @@ export function create(
 							for (const event of events) {
 
 								const name = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
-								const propKey = createInternalItemId('componentEvent', [tag, name]);
+								const propKey = parseItemKey('componentEvent', tag, name);
 
 								attributes.push(
 									{
@@ -647,7 +659,7 @@ export function create(
 							for (const [isGlobal, model] of models) {
 
 								const name = casing.attr === AttrNameCasing.Camel ? model : hyphenateAttr(model);
-								const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, name]);
+								const propKey = parseItemKey('componentProp', isGlobal ? '*' : tag, name);
 
 								attributes.push({
 									name: 'v-model:' + name,
@@ -749,18 +761,23 @@ export function create(
 					}
 				}
 
-				const originals = new Map<string, html.CompletionItem>();
+				completionList.items = completionList.items.filter(item => !specialTags.has(item.label));
+
+				const htmlDocumentations = new Map<string, string>();
+
+				for (const item of completionList.items) {
+					const documentation = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+					if (documentation && !isItemKey(documentation) && item.documentation) {
+						htmlDocumentations.set(item.label, documentation);
+					}
+				}
 
 				for (const item of completionList.items) {
 
-					if (specialTags.has(item.label)) {
-						completionList.items = completionList.items.filter(i => i !== item);
-					}
+					const resolvedLabelKey = resolveItemKey(item.label);
 
-					const nameId = readInternalItemId(item.label);
-
-					if (nameId) {
-						const name = nameId.args[0];
+					if (resolvedLabelKey) {
+						const name = resolvedLabelKey.tag;
 						item.label = name;
 						if (item.textEdit) {
 							item.textEdit.newText = name;
@@ -773,24 +790,43 @@ export function create(
 						}
 					}
 
-					const itemIdKey = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
-					let itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
+					const itemKeyStr = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
 
-					if (itemId) {
-						let [isEvent, name] = tryGetEventName(itemId);
-						if (isEvent) {
-							name = 'on' + name;
+					let resolvedKey = itemKeyStr ? resolveItemKey(itemKeyStr) : undefined;
+					if (resolvedKey) {
+						const documentations: string[] = [];
+
+						if (tsDocumentations.has(resolvedKey.prop)) {
+							documentations.push(tsDocumentations.get(resolvedKey.prop)!);
 						}
-						const original = originals.get(name);
-						item.documentation = original?.documentation;
+
+						let { isEvent, propName } = getPropName(resolvedKey);
+						if (isEvent) {
+							// click -> onclick
+							propName = 'on' + propName;
+						}
+						if (htmlDocumentations.has(propName)) {
+							documentations.push(htmlDocumentations.get(propName)!);
+						}
+
+						if (documentations.length) {
+							item.documentation = {
+								kind: 'markdown',
+								value: documentations.join('\n\n'),
+							};
+						}
+						else {
+							item.documentation = undefined;
+						}
 					}
 					else {
-						let name = item.label;
-						const isVBind = name.startsWith('v-bind:') ? (
-							name = name.slice('v-bind:'.length), true
+						let propName = item.label;
+
+						const isVBind = propName.startsWith('v-bind:') ? (
+							propName = propName.slice('v-bind:'.length), true
 						) : false;
-						const isVBindAbbr = name.startsWith(':') && name !== ':' ? (
-							name = name.slice(':'.length), true
+						const isVBindAbbr = propName.startsWith(':') && propName !== ':' ? (
+							propName = propName.slice(':'.length), true
 						) : false;
 
 						/**
@@ -798,13 +834,22 @@ export function create(
 						 * that without `internalItemId`.
 						 */
 						if (isVBind || isVBindAbbr) {
-							itemId = {
+							resolvedKey = {
 								type: 'componentProp',
-								args: ['^', name]
+								tag: '^',
+								prop: propName,
 							};
 						}
-						else if (!originals.has(item.label)) {
-							originals.set(item.label, item);
+
+						if (tsDocumentations.has(propName)) {
+							const originalDocumentation = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+							item.documentation = {
+								kind: 'markdown',
+								value: [
+									tsDocumentations.get(propName)!,
+									originalDocumentation,
+								].filter(str => !!str).join('\n\n'),
+							};
 						}
 					}
 
@@ -814,19 +859,19 @@ export function create(
 						item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
 						tokens.push('\u0000');
 					}
-					else if (itemId) {
+					else if (resolvedKey) {
 
-						const isComponent = itemId.args[0] !== '*';
-						const [isEvent, name] = tryGetEventName(itemId);
+						const isComponent = resolvedKey.tag !== '*';
+						const { isEvent, propName } = getPropName(resolvedKey);
 
-						if (itemId.type === 'componentProp') {
-							if (isComponent || specialProps.has(name)) {
+						if (resolvedKey.type === 'componentProp') {
+							if (isComponent || specialProps.has(propName)) {
 								item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
 							}
 						}
 						else if (isEvent) {
 							item.kind = 23 satisfies typeof vscode.CompletionItemKind.Event;
-							if (name.startsWith('vnode-')) {
+							if (propName.startsWith('vnode-')) {
 								tokens.push('\u0004');
 							}
 						}
@@ -834,7 +879,7 @@ export function create(
 						if (
 							isComponent
 							|| (isComponent && isEvent)
-							|| specialProps.has(name)
+							|| specialProps.has(propName)
 						) {
 							tokens.push('\u0000');
 
@@ -854,7 +899,7 @@ export function create(
 								tokens.push('\u0000');
 							}
 
-							if (specialProps.has(name)) {
+							if (specialProps.has(propName)) {
 								tokens.push('\u0001');
 							}
 							else {
@@ -943,20 +988,21 @@ export function create(
 	}
 };
 
-function createInternalItemId(type: InternalItemId, args: string[]) {
-	return '__VLS_::' + type + '::' + args.join(',');
+function parseItemKey(type: InternalItemId, tag: string, prop: string) {
+	return '__VLS_data=' + type + ',' + tag + ',' + prop;
 }
 
-function isInternalItemId(key: string) {
-	return key.startsWith('__VLS_::');
+function isItemKey(key: string) {
+	return key.startsWith('__VLS_data=');
 }
 
-function readInternalItemId(key: string) {
-	if (isInternalItemId(key)) {
-		const strs = key.split('::');
+function resolveItemKey(key: string) {
+	if (isItemKey(key)) {
+		const strs = key.slice('__VLS_data='.length).split(',');
 		return {
-			type: strs[1] as InternalItemId,
-			args: strs[2].split(','),
+			type: strs[0] as InternalItemId,
+			tag: strs[1],
+			prop: strs[2],
 		};
 	}
 }
@@ -973,15 +1019,15 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 	}
 }
 
-function tryGetEventName(
-	itemId: ReturnType<typeof readInternalItemId> & {}
-): [isEvent: boolean, name: string] {
-	const name = hyphenateAttr(itemId.args[1]);
+function getPropName(
+	itemKey: ReturnType<typeof resolveItemKey> & {}
+): { isEvent: boolean, propName: string; } {
+	const name = hyphenateAttr(itemKey.prop);
 	if (name.startsWith('on-')) {
-		return [true, name.slice('on-'.length)];
+		return { isEvent: true, propName: name.slice('on-'.length) };
 	}
-	else if (itemId.type === 'componentEvent') {
-		return [true, name];
+	else if (itemKey.type === 'componentEvent') {
+		return { isEvent: true, propName: name };
 	}
-	return [false, name];
+	return { isEvent: false, propName: name };
 }

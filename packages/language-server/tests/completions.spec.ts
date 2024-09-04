@@ -387,6 +387,53 @@ describe('Completions', async () => {
 		`, ':-foo-bar');
 	});
 
+	it('#4796', async () => {
+		expect(
+			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
+				<template>
+					<HelloWorld :msg| />
+				</template>
+
+				<script lang="ts" setup>
+				import { defineComponent } from 'vue';
+
+				const HelloWorld = defineComponent({
+					props: {
+						/**
+						 * The message to display
+						 */
+						msg: String
+					}
+				})
+				</script>
+			`, ':msg'))
+		).toMatchInlineSnapshot(`
+			{
+			  "documentation": {
+			    "kind": "markdown",
+			    "value": "The message to display",
+			  },
+			  "insertTextFormat": 2,
+			  "kind": 5,
+			  "label": ":msg",
+			  "sortText": "  :msg",
+			  "textEdit": {
+			    "newText": ":msg="$1"",
+			    "range": {
+			      "end": {
+			        "character": 21,
+			        "line": 2,
+			      },
+			      "start": {
+			        "character": 17,
+			        "line": 2,
+			      },
+			    },
+			  },
+			}
+		`);
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {

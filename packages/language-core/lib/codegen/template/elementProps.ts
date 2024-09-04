@@ -210,13 +210,14 @@ export function* generateElementProps(
 					...ctx.codeFeatures.withoutHighlightAndCompletion,
 				};
 			if (!options.vueCompilerOptions.strictTemplates) {
+				const verification = codeInfo.verification;
 				codeInfo.verification = {
 					shouldReport(_source, code) {
 						if (String(code) === '2353' || String(code) === '2561') {
 							return false;
 						}
-						return typeof codeInfo.verification === 'object'
-							? codeInfo.verification.shouldReport?.(_source, code) ?? true
+						return typeof verification === 'object'
+							? verification.shouldReport?.(_source, code) ?? true
 							: true;
 					},
 				};
@@ -301,6 +302,12 @@ function* generatePropExp(
 	isShorthand: boolean,
 	enableCodeFeatures: boolean
 ): Generator<Code> {
+	if (isShorthand && features.completion) {
+		features = {
+			...features,
+			completion: undefined,
+		};
+	}
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 		if (!isShorthand) { // vue 3.4+
 			yield* generateInterpolation(
