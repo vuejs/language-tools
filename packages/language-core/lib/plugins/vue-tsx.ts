@@ -1,6 +1,6 @@
 import type { Mapping } from '@volar/language-core';
 import { computed } from 'computeds';
-import * as path from 'path-browserify';
+import { posix as path } from 'path-browserify';
 import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
