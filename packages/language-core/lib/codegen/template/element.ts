@@ -572,6 +572,10 @@ function* generateReferencesForElements(
 			);
 			yield endOfLine;
 
+			if (variableNameRegex.test(content)) {
+				ctx.accessExternalVariable(content, startOffset);
+			}
+
 			return [content, startOffset];
 		}
 	}
