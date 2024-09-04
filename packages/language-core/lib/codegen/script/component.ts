@@ -65,7 +65,9 @@ export function* generateEmitsOption(
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	const codes: {
+		// undefined means the emit source cannot be explained by expression
 		optionExp?: Code,
+		// undefined means the emit source cannot be explained by type
 		typeOptionType?: Code,
 	}[] = [];
 	if (scriptSetupRanges.defineProp.some(p => p.isModel)) {
@@ -125,21 +127,29 @@ export function* generatePropsOption(
 	hasEmitsOption: boolean,
 	inheritAttrs: boolean
 ): Generator<Code> {
-	const optionExpCodes: Code[] = [];
-	const typeOptionExpCodes: Code[] = [];
+	const codes: {
+		optionExp: Code,
+		// undefined means the prop source cannot be explained by type
+		typeOptionExp?: Code,
+	}[] = [];
 
 	if (ctx.generatedPropsType) {
-		optionExpCodes.push([
-			`{} as `,
-			scriptSetupRanges.props.withDefaults?.arg ? `${ctx.localTypes.WithDefaults}<` : '',
-			`${ctx.localTypes.TypePropsToOption}<__VLS_PublicProps>`,
-			scriptSetupRanges.props.withDefaults?.arg ? `, typeof __VLS_withDefaultsArg>` : '',
-		].join(''));
-		typeOptionExpCodes.push(`{} as __VLS_PublicProps`);
+		codes.push({
+			optionExp: [
+				`{} as `,
+				scriptSetupRanges.props.withDefaults?.arg ? `${ctx.localTypes.WithDefaults}<` : '',
+				`${ctx.localTypes.TypePropsToOption}<__VLS_PublicProps>`,
+				scriptSetupRanges.props.withDefaults?.arg ? `, typeof __VLS_withDefaultsArg>` : '',
+			].join(''),
+			typeOptionExp: `{} as __VLS_PublicProps`,
+		});
 	}
 	if (scriptSetupRanges.props.define?.arg) {
 		const { arg } = scriptSetupRanges.props.define;
-		optionExpCodes.push(generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation));
+		codes.push({
+			optionExp: generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation),
+			typeOptionExp: undefined,
+		});
 	}
 	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
 		let attrsType = `__VLS_TemplateResult['attrs']`;
@@ -148,46 +158,45 @@ export function* generatePropsOption(
 		}
 		const propsType = `__VLS_PickNotAny<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>`;
 		const optionType = `${ctx.localTypes.TypePropsToOption}<${propsType}>`;
-		if (optionExpCodes.length) {
-			optionExpCodes.unshift(`{} as ${optionType}`);
-		}
-		else {
-			// workaround for https://github.com/vuejs/core/pull/7419
-			optionExpCodes.unshift(`{} as keyof ${propsType} extends never ? never: ${optionType}`);
-		}
-		typeOptionExpCodes.unshift(`{} as ${attrsType}`);
+		codes.unshift({
+			optionExp: codes.length
+				? `{} as ${optionType}`
+				// workaround for https://github.com/vuejs/core/pull/7419
+				: `{} as keyof ${propsType} extends never ? never: ${optionType}`,
+			typeOptionExp: `{} as ${attrsType}`,
+		});
 	}
 
-	const useTypeOption = typeOptionExpCodes.length && options.vueCompilerOptions.target >= 3.5 && !scriptSetupRanges.props.define?.arg;
-	const useOption = optionExpCodes.length && (!useTypeOption || scriptSetupRanges.props.withDefaults);
+	const useTypeOption = codes.every(code => code.typeOptionExp) && options.vueCompilerOptions.target >= 3.5;
+	const useOption = !useTypeOption || scriptSetupRanges.props.withDefaults;
 
 	if (useTypeOption) {
-		if (typeOptionExpCodes.length === 1) {
+		if (codes.length === 1) {
 			yield `__typeProps: `;
-			yield typeOptionExpCodes[0];
+			yield codes[0].typeOptionExp!;
 			yield `,${newLine}`;
 		}
-		else if (typeOptionExpCodes.length >= 2) {
+		else if (codes.length >= 2) {
 			yield `__typeProps: {${newLine}`;
-			for (const code of typeOptionExpCodes) {
+			for (const { typeOptionExp } of codes) {
 				yield `...`;
-				yield code;
+				yield typeOptionExp!;
 				yield `,${newLine}`;
 			}
 			yield `},${newLine}`;
 		}
 	}
 	if (useOption) {
-		if (optionExpCodes.length === 1) {
+		if (codes.length === 1) {
 			yield `props: `;
-			yield optionExpCodes[0];
+			yield codes[0].optionExp;
 			yield `,${newLine}`;
 		}
-		else if (optionExpCodes.length >= 2) {
+		else if (codes.length >= 2) {
 			yield `props: {${newLine}`;
-			for (const code of optionExpCodes) {
+			for (const { optionExp } of codes) {
 				yield `...`;
-				yield code;
+				yield optionExp;
 				yield `,${newLine}`;
 			}
 			yield `},${newLine}`;
