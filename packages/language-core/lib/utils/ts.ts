@@ -1,6 +1,6 @@
 import { camelize } from '@vue/shared';
 import type * as ts from 'typescript';
-import * as path from 'path-browserify';
+import { posix as path } from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { getAllExtensions } from '../languagePlugin';
 import { generateGlobalTypes } from '../codegen/globalTypes';
@@ -287,14 +287,14 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 	}
 	try {
 		let dir = rootDir;
-		while (!host.fileExists(path.resolve(dir, `node_modules/${vueOptions.lib}/package.json`))) {
-			const parentDir = path.resolve(dir, '..');
+		while (!host.fileExists(path.join(dir, 'node_modules', vueOptions.lib, 'package.json'))) {
+			const parentDir = path.dirname(dir);
 			if (dir === parentDir) {
 				throw 0;
 			}
 			dir = parentDir;
 		}
-		const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
+		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', `${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
 		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return true;
