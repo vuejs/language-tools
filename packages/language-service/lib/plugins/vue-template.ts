@@ -815,6 +815,9 @@ export function create(
 								value: documentations.join('\n\n'),
 							};
 						}
+						else {
+							item.documentation = undefined;
+						}
 					}
 					else {
 						let propName = item.label;
