@@ -145,7 +145,9 @@ function* generateTemplateBody(
 	}
 	else {
 		yield `// no template${newLine}`;
-		yield `const __VLS_slots = {}${endOfLine}`;
+		if (!options.scriptSetupRanges?.slots.define) {
+			yield `const __VLS_slots = {}${endOfLine}`;
+		}
 		yield `const $refs = {}${endOfLine}`;
 		yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
 	}
