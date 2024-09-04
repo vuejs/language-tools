@@ -188,7 +188,6 @@ describe('Completions', async () => {
 			  "slot",
 			  "template",
 			  "fixture",
-			  "BaseTransition",
 			]
 		`);
 	});
@@ -342,7 +341,7 @@ describe('Completions', async () => {
 			    "(",
 			  ],
 			  "detail": "Add import from "./ComponentForAutoImport.vue"
-			(property) default: DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<{}> & Readonly<...>, ... 7 more ..., {}>",
+			(property) default: DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<ExtractPropTypes<{}>>, {}, {}>",
 			  "documentation": {
 			    "kind": "markdown",
 			    "value": "",
