@@ -84,7 +84,34 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 	}
 	yield `}${endOfLine}`;
 
-	yield `let __VLS_components: typeof __VLS_localComponents & __VLS_GlobalComponents${endOfLine}`;
+	yield `let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents${endOfLine}`;
+}
+
+export function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
+	const exps: Code[] = [];
+
+	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
+		const { directivesOption } = options.scriptRanges.exportDefault;
+		exps.push([
+			options.sfc.script.content.substring(directivesOption.start, directivesOption.end),
+			'script',
+			directivesOption.start,
+			codeFeatures.navigation,
+		]);
+	}
+
+	exps.push(`{} as NonNullable<typeof __VLS_self extends { directives: infer D } ? D : {}>`);
+	exps.push(`__VLS_ctx`);
+
+	yield `const __VLS_localDirectives = {${newLine}`;
+	for (const type of exps) {
+		yield `...`;
+		yield type;
+		yield `,${newLine}`;
+	}
+	yield `}${endOfLine}`;
+
+	yield `let __VLS_directives!: typeof __VLS_localDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
 export function* generateTemplate(
@@ -100,6 +127,7 @@ export function* generateTemplate(
 	});
 	yield* generateTemplateCtx(options, isClassComponent);
 	yield* generateTemplateComponents(options);
+	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, templateCodegenCtx);
 	return templateCodegenCtx;
 }
@@ -146,17 +174,18 @@ function* generateTemplateBody(
 	else {
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.slots.define) {
-			yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
 			yield `const __VLS_slots = {}${endOfLine}`;
-			yield `const $refs = {}${endOfLine}`;
 		}
+		yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
+		yield `const $refs = {}${endOfLine}`;
+		yield `const $el = {} as any${endOfLine}`;
 	}
 
 	yield `return {${newLine}`;
 	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `	slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
-	yield `	refs: __VLS_refs,${newLine}`;
-	yield `	rootEl: __VLS_rootEl,${newLine}`;
+	yield `	refs: $refs,${newLine}`;
+	yield `	rootEl: $el,${newLine}`;
 	yield `}${endOfLine}`;
 }
 

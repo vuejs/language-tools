@@ -25,38 +25,20 @@ describe('vue-tsc-dts', () => {
 	};
 
 	let vueOptions: vue.VueCompilerOptions;
+
 	const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
 		const { configFilePath } = options.options;
-		vueOptions = typeof configFilePath === 'string'
-			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-			: vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
-
-		let setupedGlobalTypes = false;
-
-		try {
-			let dir = typeof configFilePath === 'string'
-				? configFilePath
-				: options.host?.getCurrentDirectory() ?? ts.sys.getCurrentDirectory();
-			while (!ts.sys.directoryExists(path.resolve(dir, 'node_modules'))) {
-				const parentDir = path.resolve(dir, '..');
-				if (dir === parentDir) {
-					throw 0;
-				}
-				dir = parentDir;
-			}
-			const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
-			const globalTypesContents = vue.generateGlobalTypes('global', vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
-			ts.sys.writeFile(globalTypesPath, globalTypesContents);
-			setupedGlobalTypes = true;
-		} catch { }
-
+		if (typeof configFilePath === 'string') {
+			vueOptions = vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
+		}
+		else {
+			vueOptions = vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
+			vueOptions.__setupedGlobalTypes = vue.setupGlobalTypes(workspace.replace(windowsPathReg, '/'), vueOptions, ts.sys);
+		}
 		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
 			options.options,
-			{
-				...vueOptions,
-				__setupedGlobalTypes: () => setupedGlobalTypes,
-			},
+			vueOptions,
 			id => id
 		);
 		return [vueLanguagePlugin];

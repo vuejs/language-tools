@@ -47,7 +47,7 @@ export function getComponentProps(
 		}
 	}
 
-	const result = new Set<string>();
+	const result = new Map<string, { name: string, commentMarkdown: string; }>();
 
 	for (const sig of componentType.getCallSignatures()) {
 		const propParam = sig.parameters[0];
@@ -56,7 +56,10 @@ export function getComponentProps(
 			const props = propsType.getProperties();
 			for (const prop of props) {
 				if (!requiredOnly || !(prop.flags & ts.SymbolFlags.Optional)) {
-					result.add(prop.name);
+					const name = prop.name;
+					const commentMarkdown = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
+
+					result.set(name, { name, commentMarkdown });
 				}
 			}
 		}
@@ -73,13 +76,16 @@ export function getComponentProps(
 					continue;
 				}
 				if (!requiredOnly || !(prop.flags & ts.SymbolFlags.Optional)) {
-					result.add(prop.name);
+					const name = prop.name;
+					const commentMarkdown = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
+
+					result.set(name, { name, commentMarkdown });
 				}
 			}
 		}
 	}
 
-	return [...result];
+	return [...result.values()];
 }
 
 export function getComponentEvents(
@@ -285,4 +291,41 @@ function searchVariableDeclarationNode(
 			node.forEachChild(walk);
 		}
 	}
+}
+
+function generateCommentMarkdown(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JSDocTagInfo[]) {
+	const parsedComment = _symbolDisplayPartsToMarkdown(parts);
+	const parsedJsDoc = _jsDocTagInfoToMarkdown(jsDocTags);
+	let result = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
+	return result;
+}
+
+
+function _symbolDisplayPartsToMarkdown(parts: ts.SymbolDisplayPart[]) {
+	return parts.map(part => {
+		switch (part.kind) {
+			case 'keyword':
+				return `\`${part.text}\``;
+			case 'functionName':
+				return `**${part.text}**`;
+			default:
+				return part.text;
+		}
+	}).join('');
+}
+
+
+function _jsDocTagInfoToMarkdown(jsDocTags: ts.JSDocTagInfo[]) {
+	return jsDocTags.map(tag => {
+		const tagName = `*@${tag.name}*`;
+		const tagText = tag.text?.map(t => {
+			if (t.kind === 'parameterName') {
+				return `\`${t.text}\``;
+			} else {
+				return t.text;
+			}
+		}).join('') || '';
+
+		return `${tagName} ${tagText}`;
+	}).join('\n\n');
 }

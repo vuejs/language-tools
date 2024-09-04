@@ -1,6 +1,6 @@
 import type { Mapping } from '@volar/language-core';
 import { computed } from 'computeds';
-import * as path from 'path-browserify';
+import { posix as path } from 'path-browserify';
 import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
@@ -12,6 +12,8 @@ export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 const fileEditTimes = new Map<string, number>();
 
 const plugin: VueLanguagePlugin = ctx => {
+
+	let appendedGlobalTypes = false;
 
 	return {
 
@@ -51,7 +53,12 @@ const plugin: VueLanguagePlugin = ctx => {
 
 	function useTsx(fileName: string, sfc: Sfc) {
 		if (!tsCodegen.has(sfc)) {
-			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx));
+			let appendGlobalTypes = false;
+			if (!ctx.vueCompilerOptions.__setupedGlobalTypes && !appendedGlobalTypes) {
+				appendGlobalTypes = true;
+				appendedGlobalTypes = true;
+			}
+			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx, appendGlobalTypes));
 		}
 		return tsCodegen.get(sfc)!;
 	}
@@ -62,9 +69,9 @@ export default plugin;
 function createTsx(
 	fileName: string,
 	_sfc: Sfc,
-	ctx: Parameters<VueLanguagePlugin>[0]
+	ctx: Parameters<VueLanguagePlugin>[0],
+	appendGlobalTypes: boolean
 ) {
-
 	const ts = ctx.modules.typescript;
 	const lang = computed(() => {
 		return !_sfc.script && !_sfc.scriptSetup ? 'ts'
@@ -172,6 +179,7 @@ function createTsx(
 			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			getGeneratedLength: () => generatedLength,
 			linkedCodeMappings,
+			appendGlobalTypes,
 		});
 		fileEditTimes.set(fileName, (fileEditTimes.get(fileName) ?? 0) + 1);
 

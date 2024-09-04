@@ -1,8 +1,9 @@
 import { camelize } from '@vue/shared';
 import type * as ts from 'typescript';
-import * as path from 'path-browserify';
+import { posix as path } from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { getAllExtensions } from '../languagePlugin';
+import { generateGlobalTypes } from '../codegen/globalTypes';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -10,10 +11,13 @@ export type ParsedCommandLine = ts.ParsedCommandLine & {
 
 export function createParsedCommandLineByJson(
 	ts: typeof import('typescript'),
-	parseConfigHost: ts.ParseConfigHost,
+	parseConfigHost: ts.ParseConfigHost & {
+		writeFile?(path: string, data: string): void;
+	},
 	rootDir: string,
 	json: any,
-	configFileName = rootDir + '/jsconfig.json'
+	configFileName = rootDir + '/jsconfig.json',
+	skipGlobalTypesSetup = false
 ): ParsedCommandLine {
 
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
@@ -31,6 +35,12 @@ export function createParsedCommandLineByJson(
 	}
 
 	const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
+	if (skipGlobalTypesSetup) {
+		resolvedVueOptions.__setupedGlobalTypes = true;
+	}
+	else {
+		resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(rootDir, resolvedVueOptions, parseConfigHost);
+	}
 	const parsed = ts.parseJsonConfigFileContent(
 		json,
 		proxyHost.host,
@@ -60,7 +70,8 @@ export function createParsedCommandLineByJson(
 export function createParsedCommandLine(
 	ts: typeof import('typescript'),
 	parseConfigHost: ts.ParseConfigHost,
-	tsConfigPath: string
+	tsConfigPath: string,
+	skipGlobalTypesSetup = false
 ): ParsedCommandLine {
 	try {
 		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
@@ -79,6 +90,12 @@ export function createParsedCommandLine(
 		}
 
 		const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
+		if (skipGlobalTypesSetup) {
+			resolvedVueOptions.__setupedGlobalTypes = true;
+		}
+		else {
+			resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost);
+		}
 		const parsed = ts.parseJsonSourceFileConfigFileContent(
 			config,
 			proxyHost.host,
@@ -259,4 +276,29 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			}
 		).map(([k, v]) => [camelize(k), v])),
 	};
+}
+
+export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions, host: {
+	fileExists(path: string): boolean;
+	writeFile?(path: string, data: string): void;
+}) {
+	if (!host.writeFile) {
+		return false;
+	}
+	try {
+		let dir = rootDir;
+		while (!host.fileExists(path.join(dir, 'node_modules', vueOptions.lib, 'package.json'))) {
+			const parentDir = path.dirname(dir);
+			if (dir === parentDir) {
+				throw 0;
+			}
+			dir = parentDir;
+		}
+		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', `${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
+		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
+		host.writeFile(globalTypesPath, globalTypesContents);
+		return true;
+	} catch {
+		return false;
+	}
 }

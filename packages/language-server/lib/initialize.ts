@@ -22,11 +22,11 @@ export function initialize(
 				let compilerOptions: ts.CompilerOptions;
 				let vueCompilerOptions: VueCompilerOptions;
 				if (configFileName) {
-					let commandLine = createParsedCommandLine(ts, sys, configFileName);
+					let commandLine = createParsedCommandLine(ts, sys, configFileName, true);
 					let sysVersion = sys.version;
 					let newSysVersion = await sys.sync();
 					while (sysVersion !== newSysVersion) {
-						commandLine = createParsedCommandLine(ts, sys, configFileName);
+						commandLine = createParsedCommandLine(ts, sys, configFileName, true);
 						sysVersion = newSysVersion;
 						newSysVersion = await sys.sync();
 					}
@@ -44,10 +44,7 @@ export function initialize(
 						createVueLanguagePlugin(
 							ts,
 							compilerOptions,
-							{
-								...vueCompilerOptions,
-								__setupedGlobalTypes: () => true,
-							},
+							vueCompilerOptions,
 							s => uriConverter.asFileName(s)
 						),
 					],
@@ -59,7 +56,7 @@ export function initialize(
 							const fileExists = project.typescript.languageServiceHost.fileExists.bind(project.typescript.languageServiceHost);
 							const getScriptSnapshot = project.typescript.languageServiceHost.getScriptSnapshot.bind(project.typescript.languageServiceHost);
 							const globalTypesName = `${vueCompilerOptions.lib}_${vueCompilerOptions.target}_${vueCompilerOptions.strictTemplates}.d.ts`;
-							const globalTypesContents = generateGlobalTypes('global', vueCompilerOptions.lib, vueCompilerOptions.target, vueCompilerOptions.strictTemplates);
+							const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueCompilerOptions.lib, vueCompilerOptions.target, vueCompilerOptions.strictTemplates);
 							const globalTypesSnapshot: ts.IScriptSnapshot = {
 								getText: (start, end) => globalTypesContents.substring(start, end),
 								getLength: () => globalTypesContents.length,

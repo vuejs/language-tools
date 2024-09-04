@@ -47,6 +47,7 @@ export interface ScriptCodegenOptions {
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[]; } | undefined;
 	edited: boolean;
+	appendGlobalTypes: boolean;
 	getGeneratedLength: () => number;
 	linkedCodeMappings: Mapping[];
 }
@@ -54,7 +55,7 @@ export interface ScriptCodegenOptions {
 export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
 	const ctx = createScriptCodegenContext(options);
 
-	if (options.vueCompilerOptions.__setupedGlobalTypes?.()) {
+	if (options.vueCompilerOptions.__setupedGlobalTypes) {
 		yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
 	}
 	else {
@@ -151,8 +152,8 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
 	}
 	yield* ctx.localTypes.generate([...ctx.localTypes.getUsedNames()]);
-	if (!options.vueCompilerOptions.__setupedGlobalTypes?.()) {
-		yield generateGlobalTypes('local', options.vueCompilerOptions.lib, options.vueCompilerOptions.target, options.vueCompilerOptions.strictTemplates);
+	if (options.appendGlobalTypes) {
+		yield generateGlobalTypes(options.vueCompilerOptions.lib, options.vueCompilerOptions.target, options.vueCompilerOptions.strictTemplates);
 	}
 
 	if (options.sfc.scriptSetup) {
