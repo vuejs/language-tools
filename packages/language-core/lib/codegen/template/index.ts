@@ -33,6 +33,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
+	ctx.addLocalVariable('$el');
 	ctx.addLocalVariable('$refs');
 
 	yield* generatePreResolveComponents();
@@ -58,6 +59,11 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	return ctx;
 
 	function* generateRefs(): Generator<Code> {
+		if (ctx.singleRootEl !== undefined) {
+			yield `const __VLS_rootEl = ${ctx.singleRootEl}${endOfLine}`;
+			yield `var $el!: typeof __VLS_rootEl${endOfLine}`;
+		}
+
 		yield `const __VLS_refs = {${newLine}`;
 		for (const [name, [varName, offset]] of ctx.templateRefs) {
 			yield* generateStringLiteralKey(
