@@ -7,7 +7,7 @@
 		"watch:base": "tsc -b -w",
 		"watch:vue": "cd ./extensions/vscode && npm run watch",
 		"prerelease": "npm run build && npm run test",
-		"version:test": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
+		"version": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
 		"release": "npm run release:base && npm run release:vue",
 		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock --no-git-tag-version",
 		"release:vue": "cd ./extensions/vscode && npm run release",

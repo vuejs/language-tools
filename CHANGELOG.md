@@ -2,6 +2,44 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.1.6 <sup>official</sup>, 2.1.7 <sup>insiders</sup> (2024-09-05)
+
+### Features
+
+- **language-plugin-pug:** support initial indentation (#4774)
+- **language-service:** JSDoc display support when typing props on component template (#4796) - Thanks to @joy-yu!
+- **language-core:** typed directives in template (#4807) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- **language-core:** wrap template refs with `unref` in interpolation (#4777) - Thanks to @KazariEX!
+- **language-core:** ensure to pass tsc on inline global types (#4782) - Thanks to @KazariEX!
+- **language-core:** infer native template ref as build-in element interface (#4786) - Thanks to @KazariEX!
+- **language-core:** generate `__VLS_StyleModules` after template (#4790) - Thanks to @KazariEX!
+- **language-core:** make `expose` of non-generic template ref required (#4795) - Thanks to @zhiyuanzmj!
+- **language-core:** avoid using `__typeProps` with runtime props (#4800) - Thanks to @KazariEX!
+- **language-core:** ignore unknown attrs error when strictTemplates is not enabled (#4785)
+- **language-core:** prevent append globalTypes to virtual file (#4806) - Thanks to @zhiyuanzmj!
+- **language-core:** prevent type error when use defineSlots and non-template (#4809) - Thanks to @zhiyuanzmj!
+- **typescript-plugin:** disconnect socket on error (#4672)
+
+### Performance
+
+- **language-core:** don't emit event lnlayhint when content is none (#4776) - Thanks to @Gehbt!
+
+### Other Changes
+
+- **language-core:** split `__VLS_templateResult` (#4781) - Thanks to @KazariEX!
+- **language-core:** wrap template virtual code into a function (#4784)
+- **language-core:** move `templateRef` into `composibles` (#4791) - Thanks to @KazariEX!
+- **language-core:** generate global types for the first parsed Vue component if cannot write global types file
+
+### Tests
+
+- **language-server:** add renaming case for template `ref()` (#4794) - Thanks to @KazariEX!
+- **tsc:** update to Vue 3.5 (#4725)
+- **tsc:** unknown props on non-strict generic component (#4792)
+
 ## 2.1.4 <sup>official</sup>, 2.1.5 <sup>insiders</sup> (2024-09-01)
 
 ### Features
