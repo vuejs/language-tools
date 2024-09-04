@@ -28,11 +28,13 @@ describe('vue-tsc-dts', () => {
 
 	const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
 		const { configFilePath } = options.options;
-
-		vueOptions = typeof configFilePath === 'string'
-			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-			: vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
-
+		if (typeof configFilePath === 'string') {
+			vueOptions = vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
+		}
+		else {
+			vueOptions = vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
+			vueOptions.__setupedGlobalTypes = vue.setupGlobalTypes(workspace.replace(windowsPathReg, '/'), vueOptions, ts.sys);
+		}
 		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
 			options.options,

@@ -295,7 +295,7 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 			dir = parentDir;
 		}
 		const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
-		const globalTypesContents = generateGlobalTypes('global', vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
+		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return true;
 	} catch {
