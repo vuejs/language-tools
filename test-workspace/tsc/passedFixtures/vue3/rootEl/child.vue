@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { exactType } from '../../shared';
-import Base from './temp';
+import Base from './base.vue';
 </script>
 
 <template>
