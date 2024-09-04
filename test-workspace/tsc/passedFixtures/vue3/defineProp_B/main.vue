@@ -28,7 +28,7 @@ declare const ScriptSetupGenericExact: <T, >(
 			b?: T | undefined;
 			c?: T | undefined;
 			d: T;
-		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps & Record<string, unknown>,
+		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
 		attrs: any,
 		slots: {},
 		emit: {},
