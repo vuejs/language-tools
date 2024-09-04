@@ -296,7 +296,7 @@ function searchVariableDeclarationNode(
 function generateCommentMarkdown(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JSDocTagInfo[]) {
 	const parsedComment = _symbolDisplayPartsToMarkdown(parts);
 	const parsedJsDoc = _jsDocTagInfoToMarkdown(jsDocTags);
-	let result = [parsedComment, parsedJsDoc].join('\n\n');
+	let result = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
 	return result;
 }
 

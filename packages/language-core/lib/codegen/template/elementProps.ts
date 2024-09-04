@@ -210,13 +210,14 @@ export function* generateElementProps(
 					...ctx.codeFeatures.withoutHighlightAndCompletion,
 				};
 			if (!options.vueCompilerOptions.strictTemplates) {
+				const verification = codeInfo.verification;
 				codeInfo.verification = {
 					shouldReport(_source, code) {
 						if (String(code) === '2353' || String(code) === '2561') {
 							return false;
 						}
-						return typeof codeInfo.verification === 'object'
-							? codeInfo.verification.shouldReport?.(_source, code) ?? true
+						return typeof verification === 'object'
+							? verification.shouldReport?.(_source, code) ?? true
 							: true;
 					},
 				};

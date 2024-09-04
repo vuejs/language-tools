@@ -32,6 +32,7 @@ export function create(
 	let extraCustomData: html.IHTMLDataProvider[] = [];
 	let lastCompletionComponentNames = new Set<string>();
 
+	const tsDocumentations = new Map<string, string>();
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
 		onDidChangeCustomDataListeners.add(listener);
@@ -461,6 +462,8 @@ export function create(
 				let components: string[] | undefined;
 				let templateContextProps: string[] | undefined;
 
+				tsDocumentations.clear();
+
 				updateExtraCustomData([
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
 					{
@@ -595,12 +598,15 @@ export function create(
 								else {
 
 									const propName = name;
+									const propKey = parseItemKey('componentProp', isGlobal ? '*' : tag, propName);
 									const propDescription = propsInfo.find(prop => {
 										const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === propName;
 									})?.commentMarkdown;
 
-									const propKey = propDescription || parseItemKey('componentProp', isGlobal ? '*' : tag, propName);
+									if (propDescription) {
+										tsDocumentations.set(propName, propDescription);
+									}
 
 									attributes.push(
 										{
@@ -755,18 +761,23 @@ export function create(
 					}
 				}
 
-				const originals = new Map<string, html.CompletionItem>();
+				completionList.items = completionList.items.filter(item => !specialTags.has(item.label));
+
+				const htmlDocumentations = new Map<string, string>();
+
+				for (const item of completionList.items) {
+					const documentation = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+					if (documentation && !isItemKey(documentation) && item.documentation) {
+						htmlDocumentations.set(item.label, documentation);
+					}
+				}
 
 				for (const item of completionList.items) {
 
-					if (specialTags.has(item.label)) {
-						completionList.items = completionList.items.filter(i => i !== item);
-					}
+					const resolvedLabelKey = resolveItemKey(item.label);
 
-					const resolvedLabel = resolveItemKey(item.label);
-
-					if (resolvedLabel) {
-						const name = resolvedLabel.tag;
+					if (resolvedLabelKey) {
+						const name = resolvedLabelKey.tag;
 						item.label = name;
 						if (item.textEdit) {
 							item.textEdit.newText = name;
@@ -780,23 +791,39 @@ export function create(
 					}
 
 					const itemKeyStr = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
-					let resolvedDocumentation = itemKeyStr ? resolveItemKey(itemKeyStr) : undefined;
 
-					if (resolvedDocumentation) {
-						let [isEvent, name] = tryGetEventName(resolvedDocumentation);
-						if (isEvent) {
-							name = 'on' + name;
+					let resolvedKey = itemKeyStr ? resolveItemKey(itemKeyStr) : undefined;
+					if (resolvedKey) {
+						const documentations: string[] = [];
+
+						if (tsDocumentations.has(resolvedKey.prop)) {
+							documentations.push(tsDocumentations.get(resolvedKey.prop)!);
 						}
-						const original = originals.get(name);
-						item.documentation = original?.documentation;
+
+						let { isEvent, propName } = getPropName(resolvedKey);
+						if (isEvent) {
+							// click -> onclick
+							propName = 'on' + propName;
+						}
+						if (htmlDocumentations.has(propName)) {
+							documentations.push(htmlDocumentations.get(propName)!);
+						}
+
+						if (documentations.length) {
+							item.documentation = {
+								kind: 'markdown',
+								value: documentations.join('\n\n'),
+							};
+						}
 					}
 					else {
-						let name = item.label;
-						const isVBind = name.startsWith('v-bind:') ? (
-							name = name.slice('v-bind:'.length), true
+						let propName = item.label;
+
+						const isVBind = propName.startsWith('v-bind:') ? (
+							propName = propName.slice('v-bind:'.length), true
 						) : false;
-						const isVBindAbbr = name.startsWith(':') && name !== ':' ? (
-							name = name.slice(':'.length), true
+						const isVBindAbbr = propName.startsWith(':') && propName !== ':' ? (
+							propName = propName.slice(':'.length), true
 						) : false;
 
 						/**
@@ -804,14 +831,22 @@ export function create(
 						 * that without `internalItemId`.
 						 */
 						if (isVBind || isVBindAbbr) {
-							resolvedDocumentation = {
+							resolvedKey = {
 								type: 'componentProp',
 								tag: '^',
-								prop: name,
+								prop: propName,
 							};
 						}
-						else if (!originals.has(item.label)) {
-							originals.set(item.label, item);
+
+						if (tsDocumentations.has(propName)) {
+							const originalDocumentation = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+							item.documentation = {
+								kind: 'markdown',
+								value: [
+									tsDocumentations.get(propName)!,
+									originalDocumentation,
+								].filter(str => !!str).join('\n\n'),
+							};
 						}
 					}
 
@@ -821,19 +856,19 @@ export function create(
 						item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
 						tokens.push('\u0000');
 					}
-					else if (resolvedDocumentation) {
+					else if (resolvedKey) {
 
-						const isComponent = resolvedDocumentation.tag !== '*';
-						const [isEvent, name] = tryGetEventName(resolvedDocumentation);
+						const isComponent = resolvedKey.tag !== '*';
+						const { isEvent, propName } = getPropName(resolvedKey);
 
-						if (resolvedDocumentation.type === 'componentProp') {
-							if (isComponent || specialProps.has(name)) {
+						if (resolvedKey.type === 'componentProp') {
+							if (isComponent || specialProps.has(propName)) {
 								item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
 							}
 						}
 						else if (isEvent) {
 							item.kind = 23 satisfies typeof vscode.CompletionItemKind.Event;
-							if (name.startsWith('vnode-')) {
+							if (propName.startsWith('vnode-')) {
 								tokens.push('\u0004');
 							}
 						}
@@ -841,7 +876,7 @@ export function create(
 						if (
 							isComponent
 							|| (isComponent && isEvent)
-							|| specialProps.has(name)
+							|| specialProps.has(propName)
 						) {
 							tokens.push('\u0000');
 
@@ -861,7 +896,7 @@ export function create(
 								tokens.push('\u0000');
 							}
 
-							if (specialProps.has(name)) {
+							if (specialProps.has(propName)) {
 								tokens.push('\u0001');
 							}
 							else {
@@ -981,15 +1016,15 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 	}
 }
 
-function tryGetEventName(
+function getPropName(
 	itemKey: ReturnType<typeof resolveItemKey> & {}
-): [isEvent: boolean, name: string] {
+): { isEvent: boolean, propName: string; } {
 	const name = hyphenateAttr(itemKey.prop);
 	if (name.startsWith('on-')) {
-		return [true, name.slice('on-'.length)];
+		return { isEvent: true, propName: name.slice('on-'.length) };
 	}
 	else if (itemKey.type === 'componentEvent') {
-		return [true, name];
+		return { isEvent: true, propName: name };
 	}
-	return [false, name];
+	return { isEvent: false, propName: name };
 }
