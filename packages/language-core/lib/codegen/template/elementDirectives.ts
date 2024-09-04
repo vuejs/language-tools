@@ -43,7 +43,7 @@ export function* generateElementDirectives(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
-				`__VLS_directiveAsFunction(__VLS_ctx.`,
+				`__VLS_directiveAsFunction(__VLS_directives.`,
 				...generateCamelized(
 					'v-' + prop.name,
 					prop.loc.start.offset,

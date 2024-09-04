@@ -2,11 +2,16 @@ import { getSlotsPropertyName } from '../utils/shared';
 
 export function generateGlobalTypes(lib: string, target: number, strictTemplates: boolean) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${strictTemplates ? '' : ' & Record<string, unknown>'}`;
-	return `
+	let text = ``;
+	if (target < 3.5) {
+		text += `
 ; declare module '${lib}' {
 	export interface GlobalComponents { }
-}
-declare global {
+	export interface GlobalDirectives { }
+}`;
+	}
+	text += `
+; declare global {
 	const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 	const __VLS_unref: typeof import('${lib}').unref;
@@ -28,9 +33,10 @@ declare global {
 		)}
 	type __VLS_GlobalComponents = ${(
 			target >= 3.5
-				? `import('${lib}').GlobalComponents`
+				? `import('${lib}').GlobalComponents;`
 				: `import('${lib}').GlobalComponents & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
 		)}
+	type __VLS_GlobalDirectives = import('${lib}').GlobalDirectives;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 	type __VLS_unknownDirective = (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
@@ -131,4 +137,5 @@ declare global {
 	function __VLS_tryAsConstant<const T>(t: T): T;
 }
 `;
+	return text;
 };
