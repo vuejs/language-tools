@@ -294,22 +294,18 @@ function* generateSetupFunction(
 	yield `type __VLS_TemplateResult = ReturnType<typeof __VLS_template>${endOfLine}`;
 
 	if (syntax) {
-		yield `const __VLS_component = `;
-		yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
-		yield endOfLine;
-		yield `${syntax} {} as `;
-
-		let exp = 'typeof __VLS_component';
-		if (!options.vueCompilerOptions.skipTemplateCodegen) {
-			if (options.templateCodegen?.hasSlot || scriptSetupRanges?.slots.define) {
-				exp = `${ctx.localTypes.WithTemplateSlots}<${exp}, __VLS_TemplateResult['slots']>`;
-			}
-			if (options.templateCodegen?.singleRootEl) {
-				exp = `${ctx.localTypes.WithTemplateRootEl}<${exp}, __VLS_TemplateResult['rootEl']>`;
-			}
+		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges?.slots.define)) {
+			yield `const __VLS_component = `;
+			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
+			yield endOfLine;
+			yield `${syntax} `;
+			yield `{} as ${ctx.localTypes.WithTemplateSlots}<typeof __VLS_component, __VLS_TemplateResult['slots']>${endOfLine}`;
 		}
-		yield exp;
-		yield endOfLine;
+		else {
+			yield `${syntax} `;
+			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
+			yield endOfLine;
+		}
 	}
 }
 

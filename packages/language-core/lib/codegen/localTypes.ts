@@ -39,13 +39,6 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 };
 `.trimStart()
 	);
-	// TODO:
-	const WithTemplateRootEl = defineHelper(
-		`__VLS_WithTemplateRootEl`,
-		() => `
-type __VLS_WithTemplateRootEl<T, E> = T;
-`.trimStart()
-	);
 	const PropsChildren = defineHelper(
 		`__VLS_PropsChildren`,
 		() => `
@@ -92,7 +85,6 @@ type __VLS_TypePropsToOption<T> = {
 		[OmitKeepDiscriminatedUnion.name]: OmitKeepDiscriminatedUnion,
 		[WithDefaults.name]: WithDefaults,
 		[WithTemplateSlots.name]: WithTemplateSlots,
-		[WithTemplateRootEl.name]: WithTemplateRootEl,
 		[PropsChildren.name]: PropsChildren,
 		[TypePropsToOption.name]: TypePropsToOption,
 		[OmitIndexSignature.name]: OmitIndexSignature,
@@ -108,7 +100,6 @@ type __VLS_TypePropsToOption<T> = {
 		get OmitKeepDiscriminatedUnion() { return OmitKeepDiscriminatedUnion.name; },
 		get WithDefaults() { return WithDefaults.name; },
 		get WithTemplateSlots() { return WithTemplateSlots.name; },
-		get WithTemplateRootEl() { return WithTemplateRootEl.name; },
 		get PropsChildren() { return PropsChildren.name; },
 		get TypePropsToOption() { return TypePropsToOption.name; },
 		get OmitIndexSignature() { return OmitIndexSignature.name; },
