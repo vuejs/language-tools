@@ -111,7 +111,7 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 	}
 	yield `}${endOfLine}`;
 
-	yield `let __VLS_directives: typeof __VLS_localDirectives & import('${options.vueCompilerOptions.lib}').GlobalDirectives${endOfLine}`;
+	yield `let __VLS_directives: typeof __VLS_localDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
 export function* generateTemplate(
