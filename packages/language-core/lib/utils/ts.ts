@@ -11,10 +11,13 @@ export type ParsedCommandLine = ts.ParsedCommandLine & {
 
 export function createParsedCommandLineByJson(
 	ts: typeof import('typescript'),
-	parseConfigHost: ts.ParseConfigHost,
+	parseConfigHost: ts.ParseConfigHost & {
+		writeFile?(path: string, data: string): void;
+	},
 	rootDir: string,
 	json: any,
-	configFileName = rootDir + '/jsconfig.json'
+	configFileName = rootDir + '/jsconfig.json',
+	skipGlobalTypesSetup = false
 ): ParsedCommandLine {
 
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
@@ -32,7 +35,12 @@ export function createParsedCommandLineByJson(
 	}
 
 	const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
-	resolvedVueOptions.__setupedGlobalTypes ??= setupGlobalTypes(rootDir, resolvedVueOptions, ts);
+	if (skipGlobalTypesSetup) {
+		resolvedVueOptions.__setupedGlobalTypes = true;
+	}
+	else {
+		resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(rootDir, resolvedVueOptions, parseConfigHost);
+	}
 	const parsed = ts.parseJsonConfigFileContent(
 		json,
 		proxyHost.host,
@@ -62,7 +70,8 @@ export function createParsedCommandLineByJson(
 export function createParsedCommandLine(
 	ts: typeof import('typescript'),
 	parseConfigHost: ts.ParseConfigHost,
-	tsConfigPath: string
+	tsConfigPath: string,
+	skipGlobalTypesSetup = false
 ): ParsedCommandLine {
 	try {
 		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
@@ -81,6 +90,12 @@ export function createParsedCommandLine(
 		}
 
 		const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
+		if (skipGlobalTypesSetup) {
+			resolvedVueOptions.__setupedGlobalTypes = true;
+		}
+		else {
+			resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost);
+		}
 		const parsed = ts.parseJsonSourceFileConfigFileContent(
 			config,
 			proxyHost.host,
@@ -263,11 +278,16 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 	};
 }
 
-export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions, ts: typeof import('typescript')) {
-	let setupedGlobalTypes = false;
+export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions, host: {
+	fileExists(path: string): boolean;
+	writeFile?(path: string, data: string): void;
+}) {
+	if (!host.writeFile) {
+		return false;
+	}
 	try {
 		let dir = rootDir;
-		while (!ts.sys.directoryExists(path.resolve(dir, 'node_modules'))) {
+		while (!host.fileExists(path.resolve(dir, `node_modules/${vueOptions.lib}/package.json`))) {
 			const parentDir = path.resolve(dir, '..');
 			if (dir === parentDir) {
 				throw 0;
@@ -276,10 +296,9 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 		}
 		const globalTypesPath = path.resolve(dir, `node_modules/.vue-global-types/${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
 		const globalTypesContents = generateGlobalTypes('global', vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
-		ts.sys.writeFile(globalTypesPath, globalTypesContents);
-		setupedGlobalTypes = true;
+		host.writeFile(globalTypesPath, globalTypesContents);
+		return true;
 	} catch {
-	} finally {
-		return () => setupedGlobalTypes;
+		return false;
 	}
 }

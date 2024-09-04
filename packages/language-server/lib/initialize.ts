@@ -22,11 +22,11 @@ export function initialize(
 				let compilerOptions: ts.CompilerOptions;
 				let vueCompilerOptions: VueCompilerOptions;
 				if (configFileName) {
-					let commandLine = createParsedCommandLine(ts, sys, configFileName);
+					let commandLine = createParsedCommandLine(ts, sys, configFileName, true);
 					let sysVersion = sys.version;
 					let newSysVersion = await sys.sync();
 					while (sysVersion !== newSysVersion) {
-						commandLine = createParsedCommandLine(ts, sys, configFileName);
+						commandLine = createParsedCommandLine(ts, sys, configFileName, true);
 						sysVersion = newSysVersion;
 						newSysVersion = await sys.sync();
 					}
@@ -44,10 +44,7 @@ export function initialize(
 						createVueLanguagePlugin(
 							ts,
 							compilerOptions,
-							{
-								...vueCompilerOptions,
-								__setupedGlobalTypes: () => true,
-							},
+							vueCompilerOptions,
 							s => uriConverter.asFileName(s)
 						),
 					],
