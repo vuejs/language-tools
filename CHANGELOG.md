@@ -7,7 +7,7 @@
 ### Features
 
 - **language-plugin-pug:** support initial indentation (#4774)
-- **language-service:** JSDoc display support when typing props on component template (#4796) - Thanks to joy-yu!
+- **language-service:** JSDoc display support when typing props on component template (#4796) - Thanks to @joy-yu!
 - **language-core:** typed directives in template (#4807) - Thanks to @KazariEX!
 
 ### Bug Fixes
