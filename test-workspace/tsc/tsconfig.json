@@ -23,7 +23,6 @@
 		{ "path": "./passedFixtures/vue2_strictTemplate" },
 		{ "path": "./passedFixtures/vue3" },
 		{ "path": "./passedFixtures/vue3_strictTemplate" },
-		{ "path": "./passedFixtures/vue3.3" },
-		{ "path": "./passedFixtures/vue3.5" },
+		{ "path": "./passedFixtures/vue3.4" },
 	]
 }

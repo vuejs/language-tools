@@ -1,6 +1,6 @@
 <script lang="ts">
 import { exactType } from '../../shared';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, PropType, ref } from 'vue';
 import ScriptSetup from './script-setup.vue';
 import ScriptSetupExpose from './script-setup-expose.vue';
 import ScriptSetupTypeOnly from './script-setup-type-only.vue';
@@ -33,13 +33,16 @@ const ScriptSetupExposeExact = defineComponent({
 });
 // https://vuejs.org/api/sfc-script-setup.html#typescript-only-features
 const ScriptSetupTypeOnlyExact = defineComponent({
-	__typeProps: {} as {
-		foo: string,
-		bar?: number;
+	props: {
+		foo: {
+			type: String,
+			required: true
+		},
+		bar: Number
 	},
-	__typeEmits: {} as {
-		(e: 'change', id: number): void;
-		(e: 'update', value: string): void;
+	emits: {
+		change(_id: number) { },
+		update(_value: string) { },
 	},
 	setup() {
 		return {};
@@ -47,17 +50,15 @@ const ScriptSetupTypeOnlyExact = defineComponent({
 });
 // https://vuejs.org/api/sfc-script-setup.html#default-props-values-when-using-type-declaration
 const ScriptSetupDefaultPropsExact = defineComponent({
-	__typeProps: {} as {
-		msg?: string;
-		labels?: string[];
-	},
 	props: {
 		msg: {
+			type: String,
 			default: 'hello'
 		},
 		labels: {
+			type: Array as PropType<string[]>,
 			default: () => ['one', 'two']
-		}
+		},
 	},
 	setup() {
 		return {};
@@ -70,7 +71,7 @@ declare const ScriptSetupGenericExact: <T, >(
 	_expose?: NonNullable<Awaited<typeof _setup>>['expose'],
 	_setup?: Promise<{
 		props: {
-			readonly onBar?: ((data: T) => any) | undefined;
+			onBar?: ((data: T) => any) | undefined;
 			foo: T;
 		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
 		attrs: any,

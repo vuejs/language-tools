@@ -1,4 +1,4 @@
-declare module 'vue3.5' {
+declare module 'vue' {
 	export interface GlobalComponents {
 		GenericGlobal: typeof import('./generic.vue')['default'];
 	}
