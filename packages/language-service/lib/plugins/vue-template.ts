@@ -434,12 +434,12 @@ export function create(
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
-						if (isInternalItemId(tag.name)) {
+						if (isItemKey(tag.name)) {
 							continue;
 						}
 
 						if (specialTags.has(tag.name)) {
-							tag.name = createInternalItemId('specialTag', [tag.name]);
+							tag.name = parseItemKey('specialTag', tag.name, '');
 						}
 						else if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
@@ -579,7 +579,7 @@ export function create(
 									const propNameBase = name.startsWith('on-')
 										? name.slice('on-'.length)
 										: (name['on'.length].toLowerCase() + name.slice('onX'.length));
-									const propKey = createInternalItemId('componentEvent', [isGlobal ? '*' : tag, propNameBase]);
+									const propKey = parseItemKey('componentEvent', isGlobal ? '*' : tag, propNameBase);
 
 									attributes.push(
 										{
@@ -600,7 +600,7 @@ export function create(
 										return name === propName;
 									})?.commentMarkdown;
 
-									const propKey = propDescription || createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
+									const propKey = propDescription || parseItemKey('componentProp', isGlobal ? '*' : tag, propName);
 
 									attributes.push(
 										{
@@ -622,7 +622,7 @@ export function create(
 							for (const event of events) {
 
 								const name = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
-								const propKey = createInternalItemId('componentEvent', [tag, name]);
+								const propKey = parseItemKey('componentEvent', tag, name);
 
 								attributes.push(
 									{
@@ -653,7 +653,7 @@ export function create(
 							for (const [isGlobal, model] of models) {
 
 								const name = casing.attr === AttrNameCasing.Camel ? model : hyphenateAttr(model);
-								const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, name]);
+								const propKey = parseItemKey('componentProp', isGlobal ? '*' : tag, name);
 
 								attributes.push({
 									name: 'v-model:' + name,
@@ -763,10 +763,10 @@ export function create(
 						completionList.items = completionList.items.filter(i => i !== item);
 					}
 
-					const nameId = readInternalItemId(item.label);
+					const resolvedLabel = resolveItemKey(item.label);
 
-					if (nameId) {
-						const name = nameId.args[0];
+					if (resolvedLabel) {
+						const name = resolvedLabel.tag;
 						item.label = name;
 						if (item.textEdit) {
 							item.textEdit.newText = name;
@@ -779,11 +779,11 @@ export function create(
 						}
 					}
 
-					const itemIdKey = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
-					let itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
+					const itemKeyStr = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+					let resolvedDocumentation = itemKeyStr ? resolveItemKey(itemKeyStr) : undefined;
 
-					if (itemId) {
-						let [isEvent, name] = tryGetEventName(itemId);
+					if (resolvedDocumentation) {
+						let [isEvent, name] = tryGetEventName(resolvedDocumentation);
 						if (isEvent) {
 							name = 'on' + name;
 						}
@@ -804,9 +804,10 @@ export function create(
 						 * that without `internalItemId`.
 						 */
 						if (isVBind || isVBindAbbr) {
-							itemId = {
+							resolvedDocumentation = {
 								type: 'componentProp',
-								args: ['^', name]
+								tag: '^',
+								prop: name,
 							};
 						}
 						else if (!originals.has(item.label)) {
@@ -820,12 +821,12 @@ export function create(
 						item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
 						tokens.push('\u0000');
 					}
-					else if (itemId) {
+					else if (resolvedDocumentation) {
 
-						const isComponent = itemId.args[0] !== '*';
-						const [isEvent, name] = tryGetEventName(itemId);
+						const isComponent = resolvedDocumentation.tag !== '*';
+						const [isEvent, name] = tryGetEventName(resolvedDocumentation);
 
-						if (itemId.type === 'componentProp') {
+						if (resolvedDocumentation.type === 'componentProp') {
 							if (isComponent || specialProps.has(name)) {
 								item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
 							}
@@ -949,20 +950,21 @@ export function create(
 	}
 };
 
-function createInternalItemId(type: InternalItemId, args: string[]) {
-	return '__VLS_::' + type + '::' + args.join(',');
+function parseItemKey(type: InternalItemId, tag: string, prop: string) {
+	return '__VLS_data=' + type + ',' + tag + ',' + prop;
 }
 
-function isInternalItemId(key: string) {
-	return key.startsWith('__VLS_::');
+function isItemKey(key: string) {
+	return key.startsWith('__VLS_data=');
 }
 
-function readInternalItemId(key: string) {
-	if (isInternalItemId(key)) {
-		const strs = key.split('::');
+function resolveItemKey(key: string) {
+	if (isItemKey(key)) {
+		const strs = key.slice('__VLS_data='.length).split(',');
 		return {
-			type: strs[1] as InternalItemId,
-			args: strs[2].split(','),
+			type: strs[0] as InternalItemId,
+			tag: strs[1],
+			prop: strs[2],
 		};
 	}
 }
@@ -980,13 +982,13 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 }
 
 function tryGetEventName(
-	itemId: ReturnType<typeof readInternalItemId> & {}
+	itemKey: ReturnType<typeof resolveItemKey> & {}
 ): [isEvent: boolean, name: string] {
-	const name = hyphenateAttr(itemId.args[1]);
+	const name = hyphenateAttr(itemKey.prop);
 	if (name.startsWith('on-')) {
 		return [true, name.slice('on-'.length)];
 	}
-	else if (itemId.type === 'componentEvent') {
+	else if (itemKey.type === 'componentEvent') {
 		return [true, name];
 	}
 	return [false, name];
