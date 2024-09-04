@@ -301,6 +301,12 @@ function* generatePropExp(
 	isShorthand: boolean,
 	enableCodeFeatures: boolean
 ): Generator<Code> {
+	if (isShorthand && features.completion) {
+		features = {
+			...features,
+			completion: undefined,
+		};
+	}
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 		if (!isShorthand) { // vue 3.4+
 			yield* generateInterpolation(
