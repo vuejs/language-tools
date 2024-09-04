@@ -2,11 +2,18 @@
 import { FunctionDirective } from 'vue';
 import { exactType } from '../../shared';
 
-let Foo: (_: { foo?: string; }) => void;
+declare module 'vue' {
+	interface GlobalDirectives {
+		vFoo: FunctionDirective<typeof Comp, (_: number) => void>;
+	}
+}
 
-let vFoo: FunctionDirective<typeof Foo, (_: number) => void>;
+let Comp!: (_: { foo?: string; }) => void;
+
+let vBar!: FunctionDirective<typeof Comp, (_: boolean) => void>;
 </script>
 
 <template>
-	<Foo v-foo="v => exactType(v, {} as number)"></Foo>
+	<Comp v-foo="v => exactType(v, {} as number)" />
+	<Comp v-bar="v => exactType(v, {} as boolean)" />
 </template>
