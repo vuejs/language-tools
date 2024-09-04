@@ -8,6 +8,7 @@
 
 - **language-plugin-pug:** support initial indentation (#4774)
 - **language-service:** JSDoc display support when typing props on component template (#4796) - Thanks to joy-yu!
+- **language-core:** typed directives in template (#4807) - Thanks to @KazariEX!
 
 ### Bug Fixes
 
@@ -19,6 +20,7 @@
 - **language-core:** avoid using `__typeProps` with runtime props (#4800) - Thanks to @KazariEX!
 - **language-core:** ignore unknown attrs error when strictTemplates is not enabled (#4785)
 - **language-core:** prevent append globalTypes to virtual file (#4806) - Thanks to @zhiyuanzmj!
+- **language-core:** prevent type error when use defineSlots and non-template (#4809) - Thanks to @zhiyuanzmj!
 - **typescript-plugin:** disconnect socket on error (#4672)
 
 ### Performance
