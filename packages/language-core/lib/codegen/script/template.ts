@@ -155,7 +155,7 @@ function* generateTemplateBody(
 	yield `return {${newLine}`;
 	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `	slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
-	yield `	refs: $refs,${newLine}`;
+	yield `	refs: __VLS_refs,${newLine}`;
 	yield `	rootEl: __VLS_rootEl,${newLine}`;
 	yield `}${endOfLine}`;
 }
