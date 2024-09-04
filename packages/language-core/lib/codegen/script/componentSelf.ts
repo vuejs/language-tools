@@ -6,13 +6,13 @@ import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 import { getTemplateUsageVars } from './template';
 
-export function* generateInternalComponent(
+export function* generateComponentSelf(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
 	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
-		yield `const __VLS_internalComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
+		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 		yield `setup() {${newLine}`;
 		yield `return {${newLine}`;
 		if (ctx.bypassDefineComponent) {
@@ -61,9 +61,9 @@ export function* generateInternalComponent(
 		yield `})${endOfLine}`; // defineComponent {
 	}
 	else if (options.sfc.script) {
-		yield `let __VLS_internalComponent!: typeof import('./${options.fileBaseName}').default${endOfLine}`;
+		yield `let __VLS_self!: typeof import('./${options.fileBaseName}').default${endOfLine}`;
 	}
 	else {
-		yield `const __VLS_internalComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
+		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 	}
 }

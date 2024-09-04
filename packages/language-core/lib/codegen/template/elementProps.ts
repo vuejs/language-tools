@@ -196,7 +196,31 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codeInfo = ctx.codeFeatures.withoutHighlightAndCompletion;
+			const codeInfo = shouldCamelize
+				? {
+					...ctx.codeFeatures.withoutHighlightAndCompletion,
+					navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
+						? {
+							resolveRenameNewName: camelize,
+							resolveRenameEditText: hyphenateAttr,
+						}
+						: false,
+				}
+				: {
+					...ctx.codeFeatures.withoutHighlightAndCompletion,
+				};
+			if (!options.vueCompilerOptions.strictTemplates) {
+				codeInfo.verification = {
+					shouldReport(_source, code) {
+						if (String(code) === '2353' || String(code) === '2561') {
+							return false;
+						}
+						return typeof codeInfo.verification === 'object'
+							? codeInfo.verification.shouldReport?.(_source, code) ?? true
+							: true;
+					},
+				};
+			}
 			const codes = conditionWrapWith(
 				enableCodeFeatures,
 				prop.loc.start.offset,
@@ -207,29 +231,7 @@ export function* generateElementProps(
 					ctx,
 					prop.name,
 					prop.loc.start.offset,
-					shouldCamelize
-						? {
-							...codeInfo,
-							verification: options.vueCompilerOptions.strictTemplates
-								? codeInfo.verification
-								: {
-									shouldReport(_source, code) {
-										if (String(code) === '2353' || String(code) === '2561') {
-											return false;
-										}
-										return typeof codeInfo.verification === 'object'
-											? codeInfo.verification.shouldReport?.(_source, code) ?? true
-											: true;
-									},
-								},
-							navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
-								? {
-									resolveRenameNewName: camelize,
-									resolveRenameEditText: hyphenateAttr,
-								}
-								: false,
-						}
-						: ctx.codeFeatures.withoutHighlightAndCompletion,
+					codeInfo,
 					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					shouldCamelize
 				),

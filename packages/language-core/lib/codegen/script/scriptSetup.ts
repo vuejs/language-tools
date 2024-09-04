@@ -4,8 +4,8 @@ import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponent, generateEmitsOption } from './component';
 import type { ScriptCodegenContext } from './context';
 import { ScriptCodegenOptions, codeFeatures } from './index';
-import { generateInternalComponent } from './internalComponent';
-import { generateCssClassProperty, generateTemplate } from './template';
+import { generateComponentSelf } from './componentSelf';
+import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
@@ -287,13 +287,10 @@ function* generateSetupFunction(
 
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
 	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
-	yield* generateStyleModules(options, ctx);
 	yield `function __VLS_template() {${newLine}`;
 	const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
 	yield `}${endOfLine}`;
-	if (templateCodegenCtx) {
-		yield* generateInternalComponent(options, ctx, templateCodegenCtx);
-	}
+	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	yield `type __VLS_TemplateResult = ReturnType<typeof __VLS_template>${endOfLine}`;
 
 	if (syntax) {
@@ -458,45 +455,6 @@ function* generateModelEmits(
 			yield `type __VLS_ModelEmitsType = typeof __VLS_modelEmitsType${endOfLine}`;
 		}
 	}
-}
-
-function* generateStyleModules(
-	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext
-): Generator<Code> {
-	const styles = options.sfc.styles.filter(style => style.module);
-	if (!styles.length) {
-		return;
-	}
-	yield `type __VLS_StyleModules = {${newLine}`;
-	for (let i = 0; i < styles.length; i++) {
-		const style = styles[i];
-		const { name, offset } = style.module!;
-		if (offset) {
-			yield [
-				name,
-				'main',
-				offset + 1,
-				codeFeatures.all
-			];
-		}
-		else {
-			yield name;
-		}
-		yield `: Record<string, string> & ${ctx.localTypes.PrettifyLocal}<{}`;
-		for (const className of style.classNames) {
-			yield* generateCssClassProperty(
-				i,
-				className.text,
-				className.offset,
-				'string',
-				false
-			);
-		}
-		yield `>${endOfLine}`;
-	}
-	yield `}`;
-	yield endOfLine;
 }
 
 function* generateDefinePropType(

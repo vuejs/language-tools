@@ -104,12 +104,12 @@ describe('Renaming', async () => {
 			        "newText": "bar",
 			        "range": {
 			          "end": {
-			            "character": 28,
-			            "line": 2,
+			            "character": 8,
+			            "line": 7,
 			          },
 			          "start": {
-			            "character": 25,
-			            "line": 2,
+			            "character": 5,
+			            "line": 7,
 			          },
 			        },
 			      },
@@ -117,12 +117,12 @@ describe('Renaming', async () => {
 			        "newText": "bar",
 			        "range": {
 			          "end": {
-			            "character": 8,
-			            "line": 7,
+			            "character": 28,
+			            "line": 2,
 			          },
 			          "start": {
-			            "character": 5,
-			            "line": 7,
+			            "character": 25,
+			            "line": 2,
 			          },
 			        },
 			      },
@@ -743,12 +743,12 @@ describe('Renaming', async () => {
 			        "newText": "stylus",
 			        "range": {
 			          "end": {
-			            "character": 22,
-			            "line": 8,
+			            "character": 23,
+			            "line": 15,
 			          },
 			          "start": {
-			            "character": 18,
-			            "line": 8,
+			            "character": 19,
+			            "line": 15,
 			          },
 			        },
 			      },
@@ -756,12 +756,12 @@ describe('Renaming', async () => {
 			        "newText": "stylus",
 			        "range": {
 			          "end": {
-			            "character": 23,
-			            "line": 15,
+			            "character": 22,
+			            "line": 8,
 			          },
 			          "start": {
-			            "character": 19,
-			            "line": 15,
+			            "character": 18,
+			            "line": 8,
 			          },
 			        },
 			      },
@@ -871,7 +871,7 @@ describe('Renaming', async () => {
 		`);
 	});
 
-	it('Template Ref', async () => {
+	it('Ref', async () => {
 		expect(
 			await requestRename('tsconfigProject/fixture.vue', 'vue', `
 				<template>
@@ -879,8 +879,8 @@ describe('Renaming', async () => {
 				</template>
 
 				<script lang="ts" setup>
-				import { useTemplateRef } from 'vue';
-				const el = useTemplateRef('foo|');
+				import { ref } from 'vue';
+				const foo| = ref();
 				</script>
 			`, 'bar')
 		).toMatchInlineSnapshot(`
@@ -904,12 +904,60 @@ describe('Renaming', async () => {
 			        "newText": "bar",
 			        "range": {
 			          "end": {
+			            "character": 13,
+			            "line": 7,
+			          },
+			          "start": {
+			            "character": 10,
+			            "line": 7,
+			          },
+			        },
+			      },
+			    ],
+			  },
+			}
+		`);
+	});
+
+	it('Template Ref', async () => {
+		expect(
+			await requestRename('tsconfigProject/fixture.vue', 'vue', `
+				<template>
+					<a ref="foo"></a>
+				</template>
+
+				<script lang="ts" setup>
+				import { useTemplateRef } from 'vue';
+				const el = useTemplateRef('foo|');
+				</script>
+			`, 'bar')
+		).toMatchInlineSnapshot(`
+			{
+			  "changes": {
+			    "file://\${testWorkspacePath}/tsconfigProject/fixture.vue": [
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
 			            "character": 34,
 			            "line": 7,
 			          },
 			          "start": {
 			            "character": 31,
 			            "line": 7,
+			          },
+			        },
+			      },
+			      {
+			        "newText": "bar",
+			        "range": {
+			          "end": {
+			            "character": 16,
+			            "line": 2,
+			          },
+			          "start": {
+			            "character": 13,
+			            "line": 2,
 			          },
 			        },
 			      },

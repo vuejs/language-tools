@@ -1,18 +1,18 @@
 <script lang="ts">
 import { exactType } from '../../shared';
-import { defineComponent } from 'vue';
+import { defineComponent, PropType } from 'vue';
 import ScriptSetup from './script-setup.vue';
 import ScriptSetupGeneric from './script-setup-generic.vue';
 
 const ScriptSetupExact = defineComponent({
-	__typeProps: {} as {
-		a?: string,
-		b: string,
-		c: number,
-		d?: number,
-		e?: string,
-		f: string,
-		g?: string,
+	props: {} as {
+		a: PropType<string>;
+		b: { type: PropType<string>, required: true; };
+		c: { type: PropType<number>, required: true; };
+		d: PropType<number>;
+		e: PropType<string>;
+		f: { type: PropType<string>, required: true; };
+		g: PropType<string>;
 	},
 	setup() {
 		return {};

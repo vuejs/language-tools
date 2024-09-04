@@ -229,7 +229,7 @@ export function* generateComponent(
 		ctx.templateRefs.set(refName, [varName, offset!]);
 		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
 
-		yield `var ${varName} = {} as (Parameters<typeof ${var_defineComponentCtx}['expose']>[0] | null)`;
+		yield `var ${varName} = {} as (Parameters<NonNullable<typeof ${var_defineComponentCtx}['expose']>>[0] | null)`;
 		if (node.codegenNode?.type === CompilerDOM.NodeTypes.VNODE_CALL
 			&& node.codegenNode.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
 			&& node.codegenNode.props.properties.some(({ key }) => key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && key.content === 'ref_for')
@@ -333,7 +333,7 @@ export function* generateElement(
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
-		ctx.templateRefs.set(refName, [`__VLS_intrinsicElements['${node.tag}']`, offset!]);
+		ctx.templateRefs.set(refName, [`__VLS_nativeElements['${node.tag}']`, offset!]);
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
@@ -549,7 +549,7 @@ function* generateReferencesForElements(
 		) {
 			const [content, startOffset] = normalizeAttributeValue(prop.value);
 
-			yield `// @ts-ignore${newLine}`;
+			yield `// @ts-ignore navigation for \`const ${content} = ref()\`${newLine}`;
 			yield `__VLS_ctx`;
 			yield* generatePropertyAccess(
 				options,

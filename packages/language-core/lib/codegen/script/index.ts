@@ -4,13 +4,14 @@ import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
+import { generateGlobalTypes } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
 import { createScriptCodegenContext, ScriptCodegenContext } from './context';
+import { generateComponentSelf } from './componentSelf';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
+import { generateStyleModulesType } from './styleModulesType';
 import { generateTemplate } from './template';
-import { generateGlobalTypes } from '../globalTypes';
-import { generateInternalComponent } from './internalComponent';
 
 export const codeFeatures = {
 	all: {
@@ -114,9 +115,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
 				yield `__VLS_template = () => {`;
 				const templateCodegenCtx = yield* generateTemplate(options, ctx, true);
-				if (templateCodegenCtx) {
-					yield* generateInternalComponent(options, ctx, templateCodegenCtx);
-				}
+				yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 				yield `},${newLine}`;
 				yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
 			}
@@ -142,10 +141,11 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield `function __VLS_template() {${newLine}`;
 		const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
 		yield `}${endOfLine}`;
-		if (templateCodegenCtx) {
-			yield* generateInternalComponent(options, ctx, templateCodegenCtx);
-		}
+		yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	}
+
+	// #4788
+	yield* generateStyleModulesType(options, ctx);
 
 	if (options.edited) {
 		yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;

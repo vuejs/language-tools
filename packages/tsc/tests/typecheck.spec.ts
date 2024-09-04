@@ -16,7 +16,10 @@ describe(`vue-tsc`, () => {
 		`);
 	});
 
-	test.skipIf(!process.env.GITHUB_ACTIONS)(`TypeScript - Next`, () => {
+	const isUpdateEvent = process.env.npm_lifecycle_event === 'test:update';
+	const isGithubActions = !!process.env.GITHUB_ACTIONS;
+
+	test.skipIf(!isUpdateEvent && isGithubActions)(`TypeScript - Next`, () => {
 		expect(
 			getTscOutput('next')
 		).toMatchInlineSnapshot(`

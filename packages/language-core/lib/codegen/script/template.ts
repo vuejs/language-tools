@@ -8,7 +8,7 @@ import { generateStyleScopedClasses } from '../template/styleScopedClasses';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 
-export function* generateTemplateCtx(
+function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	isClassComponent: boolean
 ): Generator<Code> {
@@ -18,7 +18,7 @@ export function* generateTemplateCtx(
 		exps.push(`this`);
 	}
 	else {
-		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_internalComponent, new () => {}>>`);
+		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
 	}
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
 		exps.push(`globalThis`);
@@ -43,7 +43,7 @@ export function* generateTemplateCtx(
 	}
 }
 
-export function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
+function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
 	const exps: Code[] = [];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
@@ -62,19 +62,18 @@ export function* generateTemplateComponents(options: ScriptCodegenOptions): Gene
 		nameType = options.sfc.script.content.substring(nameOption.start, nameOption.end);
 	}
 	else if (options.sfc.scriptSetup) {
-		yield `let __VLS_name!: '${options.scriptSetupRanges?.options.name ?? options.fileBaseName.substring(0, options.fileBaseName.lastIndexOf('.'))}'${endOfLine}`;
-		nameType = 'typeof __VLS_name';
+		nameType = `'${options.scriptSetupRanges?.options.name ?? options.fileBaseName.substring(0, options.fileBaseName.lastIndexOf('.'))}'`;
 	}
 	if (nameType) {
 		exps.push(`{} as {
-			[K in ${nameType}]: typeof __VLS_internalComponent
+			[K in ${nameType}]: typeof __VLS_self
 				& (new () => {
 					${getSlotsPropertyName(options.vueCompilerOptions.target)}: typeof ${options.scriptSetupRanges?.slots?.name ?? '__VLS_slots'}
 				})
 		}`);
 	}
 
-	exps.push(`{} as NonNullable<typeof __VLS_internalComponent extends { components: infer C } ? C : {}>`);
+	exps.push(`{} as NonNullable<typeof __VLS_self extends { components: infer C } ? C : {}>`);
 	exps.push(`__VLS_ctx`);
 
 	yield `const __VLS_localComponents = {${newLine}`;
@@ -92,29 +91,17 @@ export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	isClassComponent: boolean
-): Generator<Code, TemplateCodegenContext | undefined> {
+): Generator<Code, TemplateCodegenContext> {
 	ctx.generatedTemplate = true;
 
-	if (!options.vueCompilerOptions.skipTemplateCodegen) {
-		const templateCodegenCtx = createTemplateCodegenContext({
-			scriptSetupBindingNames: new Set(),
-			edited: options.edited,
-		});
-		yield* generateTemplateCtx(options, isClassComponent);
-		yield* generateTemplateComponents(options);
-		yield* generateTemplateBody(options, templateCodegenCtx);
-		return templateCodegenCtx;
-	}
-	else {
-		const templateUsageVars = [...getTemplateUsageVars(options, ctx)];
-		yield `// @ts-ignore${newLine}`;
-		yield `[${templateUsageVars.join(', ')}]${newLine}`;
-		yield `return {${newLine}`;
-		yield `	slots: {},${newLine}`;
-		yield `	refs: {},${newLine}`;
-		yield `	attrs: {},${newLine}`;
-		yield `}${endOfLine}`;
-	}
+	const templateCodegenCtx = createTemplateCodegenContext({
+		scriptSetupBindingNames: new Set(),
+		edited: options.edited,
+	});
+	yield* generateTemplateCtx(options, isClassComponent);
+	yield* generateTemplateComponents(options);
+	yield* generateTemplateBody(options, templateCodegenCtx);
+	return templateCodegenCtx;
 }
 
 function* generateTemplateBody(

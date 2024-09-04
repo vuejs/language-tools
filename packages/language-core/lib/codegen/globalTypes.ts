@@ -29,6 +29,11 @@ ${decl}const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 ${decl}const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 ${decl}const __VLS_unref: typeof import('${lib}').unref;
 
+const __VLS_nativeElements = {
+	...{} as SVGElementTagNameMap,
+	...{} as HTMLElementTagNameMap,
+};
+
 type __VLS_IntrinsicElements = ${(
 			target >= 3.3
 				? `import('${lib}/jsx-runtime').JSX.IntrinsicElements;`
