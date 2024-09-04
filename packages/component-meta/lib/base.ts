@@ -29,7 +29,7 @@ export function createCheckerByJsonConfigBase(
 	rootDir = rootDir.replace(windowsPathReg, '/');
 	return baseCreate(
 		ts,
-		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json),
+		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json, undefined, true),
 		checkerOptions,
 		rootDir,
 		path.join(rootDir, 'jsconfig.json.global.vue')
@@ -44,7 +44,7 @@ export function createCheckerBase(
 	tsconfig = tsconfig.replace(windowsPathReg, '/');
 	return baseCreate(
 		ts,
-		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig),
+		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig, true),
 		checkerOptions,
 		path.dirname(tsconfig),
 		tsconfig + '.global.vue'
@@ -86,10 +86,7 @@ export function baseCreate(
 	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 		ts,
 		projectHost.getCompilationSettings(),
-		{
-			...commandLine.vueOptions,
-			__setupedGlobalTypes: () => true,
-		},
+		commandLine.vueOptions,
 		id => id
 	);
 	const language = vue.createLanguage(
