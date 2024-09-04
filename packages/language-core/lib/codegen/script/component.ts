@@ -158,8 +158,8 @@ export function* generatePropsOption(
 		typeOptionExpCodes.unshift(`{} as ${attrsType}`);
 	}
 
-	const useTypeOption = options.vueCompilerOptions.target >= 3.5 && typeOptionExpCodes.length;
-	const useOption = (!useTypeOption || scriptSetupRanges.props.withDefaults) && optionExpCodes.length;
+	const useTypeOption = typeOptionExpCodes.length && options.vueCompilerOptions.target >= 3.5 && !scriptSetupRanges.props.define?.arg;
+	const useOption = optionExpCodes.length && (!useTypeOption || scriptSetupRanges.props.withDefaults);
 
 	if (useTypeOption) {
 		if (typeOptionExpCodes.length === 1) {
