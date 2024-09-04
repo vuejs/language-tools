@@ -3,17 +3,17 @@ import { FunctionDirective } from 'vue';
 import { exactType } from '../../shared';
 
 declare module 'vue' {
-    interface GlobalDirectives {
-        vFoo: FunctionDirective<typeof Comp, (_: number) => void>;
-    }
+	interface GlobalDirectives {
+		vFoo: FunctionDirective<typeof Comp, (_: number) => void>;
+	}
 }
 
 let Comp!: (_: { foo?: string; }) => void;
 
 export default {
-    directives: {
-        vBar: {} as FunctionDirective<typeof Comp, (_: string) => void>
-    }
+	directives: {
+		vBar: {} as FunctionDirective<typeof Comp, (_: string) => void>
+	}
 };
 </script>
 
@@ -23,6 +23,6 @@ let vBaz!: FunctionDirective<typeof Comp, (_: boolean) => void>;
 
 <template>
 	<Comp v-foo="v => exactType(v, {} as number)" />
-    <Comp v-bar="v => exactType(v, {} as string)" />
-    <Comp v-baz="v => exactType(v, {} as boolean)" />
+	<Comp v-bar="v => exactType(v, {} as string)" />
+	<Comp v-baz="v => exactType(v, {} as boolean)" />
 </template>
