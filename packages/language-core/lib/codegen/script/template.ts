@@ -84,7 +84,7 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 	}
 	yield `}${endOfLine}`;
 
-	yield `let __VLS_components: typeof __VLS_localComponents & __VLS_GlobalComponents${endOfLine}`;
+	yield `let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
 export function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
@@ -111,7 +111,7 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 	}
 	yield `}${endOfLine}`;
 
-	yield `let __VLS_directives: typeof __VLS_localDirectives & __VLS_GlobalDirectives${endOfLine}`;
+	yield `let __VLS_directives!: typeof __VLS_localDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
 export function* generateTemplate(
