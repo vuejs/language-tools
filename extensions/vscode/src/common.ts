@@ -264,7 +264,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	]) {
 		try {
 			const res = await fetch(url);
-			onJson(await res.json());
+			onJson(await res.json() as any);
 			succeed = true;
 			break;
 		} catch { }
