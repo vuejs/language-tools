@@ -17,25 +17,25 @@ declare global {
 	};
 
 	type __VLS_IntrinsicElements = ${(
-		target >= 3.3
-			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements;`
-			: `globalThis.JSX.IntrinsicElements;`
-	)}
+			target >= 3.3
+				? `import('${lib}/jsx-runtime').JSX.IntrinsicElements;`
+				: `globalThis.JSX.IntrinsicElements;`
+		)}
 	type __VLS_Element = ${(
-		target >= 3.3
-			? `import('${lib}/jsx-runtime').JSX.Element;`
-			: `globalThis.JSX.Element;`
-	)}
+			target >= 3.3
+				? `import('${lib}/jsx-runtime').JSX.Element;`
+				: `globalThis.JSX.Element;`
+		)}
 	type __VLS_GlobalComponents = ${(
-		target >= 3.5
-			? `import('${lib}').GlobalComponents;`
-			: `import('${lib}').GlobalComponents & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
-	)}
+			target >= 3.5
+				? `import('${lib}').GlobalComponents;`
+				: `import('${lib}').GlobalComponents & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
+		)}
 	type __VLS_GlobalDirectives = ${(
-		target >= 3.5
-			? `import('${lib}').GlobalDirectives;`
-			: `{};`
-	)}
+			target >= 3.5
+				? `import('${lib}').GlobalDirectives;`
+				: `{};`
+		)}
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 	type __VLS_unknownDirective = (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
