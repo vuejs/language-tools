@@ -200,6 +200,27 @@ describe('Completions', async () => {
 		await requestCompletionItem('fixture.vue', 'vue', `<template><div v-p|></div></template>`, 'v-pre');
 	});
 
+	it('Directive Modifiers', async () => {
+		expect(
+			(await requestCompletionList('fixture.vue', 'vue', `
+				<template>
+					<div v-foo.|></div>
+				</template>
+
+				<script setup lang="ts">
+				import { FunctionDirective } from 'vue';
+
+				let vFoo!: FunctionDirective<any, any, 'attr' | 'prop'>;
+				</script>
+			`)).items.map(item => item.label)
+		).toMatchInlineSnapshot(`
+			[
+			  "attr",
+			  "prop"
+			]
+		`);
+	});
+
 	it('$event argument', async () => {
 		await requestCompletionItem('fixture.vue', 'vue', `<template><div @click="console.log($eve|)"></div></template>`, 'event');
 	});

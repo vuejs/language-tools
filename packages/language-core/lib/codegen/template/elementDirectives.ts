@@ -7,6 +7,7 @@ import { generateCamelized } from './camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generateObjectProperty } from './objectProperty';
 
 export function* generateElementDirectives(
 	options: TemplateCodegenOptions,
@@ -61,6 +62,24 @@ export function* generateElementDirectives(
 					}
 				),
 				`)(null!, { ...__VLS_directiveBindingRestFields, `,
+				...(
+					options.vueCompilerOptions.target >= 3.5
+						? [
+							'modifiers: { ',
+							...prop.modifiers.map(mod => [
+								...generateObjectProperty(
+									options,
+									ctx,
+									mod.content,
+									mod.loc.start.offset,
+									ctx.codeFeatures.navigationAndCompletion
+								),
+								': true, ',
+							]).flat(1),
+							'}, '
+						]
+						: []
+				),
 				...(
 					prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 						? [
