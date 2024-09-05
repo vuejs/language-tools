@@ -29,19 +29,17 @@ export function* generateElementDirectives(
 		}
 		ctx.accessExternalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
 
-		const dirVar = ctx.getInternalVariable();
-
 		yield* wrapWith(
 			prop.loc.start.offset,
 			prop.loc.end.offset,
 			ctx.codeFeatures.verification,
-			`const ${dirVar}: __VLS_DirectiveOptions<typeof `,
+			`__VLS_asFunctionalDirective(`,
 			...generateIdentifier(ctx, prop),
-			`> = { `,
+			`)(null!, { ...__VLS_directiveBindingRestFields, `,
 			...generateArg(options, ctx, prop),
 			...generateModifiers(options, ctx, prop),
 			...generateValue(options, ctx, prop),
-			`}`
+			`}, null!, null!)`
 		);
 		yield endOfLine;
 	}
