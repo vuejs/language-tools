@@ -13,7 +13,7 @@
 	},
 	"dependencies": {
 		"@volar/language-core": "~2.4.1",
-		"@vue/compiler-dom": "^3.4.0",
+		"@vue/compiler-dom": "https://pkg.pr.new/@vue/compiler-dom@11819",
 		"@vue/compiler-vue2": "^2.7.16",
 		"@vue/shared": "^3.4.0",
 		"computeds": "^0.0.1",
