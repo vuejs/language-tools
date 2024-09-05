@@ -208,7 +208,7 @@ describe('Completions', async () => {
 				</template>
 
 				<script setup lang="ts">
-				import { FunctionDirective } from 'vue';
+				import type { FunctionDirective } from 'vue';
 
 				let vFoo!: FunctionDirective<any, any, 'attr' | 'prop'>;
 				</script>

@@ -1,5 +1,5 @@
 <script lang="ts">
-import { FunctionDirective } from 'vue';
+import type { FunctionDirective } from 'vue';
 import { exactType } from '../../shared';
 
 let Comp!: (_: { foo?: string; }) => void;

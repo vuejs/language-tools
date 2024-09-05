@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FunctionDirective } from 'vue';
+import type { FunctionDirective } from 'vue';
 import { exactType } from '../../shared';
 
 declare module 'vue' {
