@@ -1,4 +1,4 @@
-import { camelize } from '@vue/shared';
+import { camelize, hyphenate } from '@vue/shared';
 import type * as ts from 'typescript';
 import { posix as path } from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
@@ -234,6 +234,12 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
 		fallthroughAttributes: vueOptions.fallthroughAttributes ?? false,
+		fallthroughComponentTags: (vueOptions.fallthroughComponentTags ?? [
+			'Transition',
+			'KeepAlive',
+			'Teleport',
+			'Suspense'
+		]).map(tag => hyphenate(tag)),
 		dataAttributes: vueOptions.dataAttributes ?? [],
 		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
 		optionsWrapper: vueOptions.optionsWrapper ?? (

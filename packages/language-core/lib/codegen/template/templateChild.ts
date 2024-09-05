@@ -1,4 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import { hyphenate } from '@vue/shared';
 import type { Code } from '../../types';
 import { endOfLine, newLine } from '../common';
 import type { TemplateCodegenContext } from './context';
@@ -47,13 +48,11 @@ export function* generateTemplateChild(
 		}
 	}
 
-	const shouldInheritRootNodeAttrs = options.inheritAttrs;
-
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
-		let prev: CompilerDOM.TemplateChildNode | undefined;
-		if (shouldInheritRootNodeAttrs && node.children.length === 1 && node.children[0].type === CompilerDOM.NodeTypes.ELEMENT) {
-			ctx.singleRootNode = node.children[0];
+		if (options.inheritAttrs) {
+			ctx.singleRootNodes = findSingleRootNodes(options, node);
 		}
+		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of node.children) {
 			yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
 			prev = childNode;
@@ -121,6 +120,32 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 		// not needed progress
+	}
+}
+
+function findSingleRootNodes(
+	options: TemplateCodegenOptions,
+	node: CompilerDOM.RootNode | CompilerDOM.BaseElementNode | CompilerDOM.IfBranchNode
+): CompilerDOM.ElementNode[] {
+	if (node.children.length !== 1) {
+		return [];
+	}
+
+	const child = node.children[0];
+	if (child.type === CompilerDOM.NodeTypes.IF) {
+		const nodes = child.branches.map(branch => findSingleRootNodes(options, branch)).flat(1);
+		return nodes.every(n => n !== undefined) ? nodes : [];
+	}
+	else if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
+		return [];
+	}
+
+	const tag = hyphenate(child.tag);
+	if (options.vueCompilerOptions.fallthroughComponentTags.includes(tag)) {
+		return [child, ...findSingleRootNodes(options, child)];
+	}
+	else {
+		return [child];
 	}
 }
 

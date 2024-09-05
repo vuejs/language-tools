@@ -250,7 +250,7 @@ export function* generateComponent(
 		options.vueCompilerOptions.fallthroughAttributes
 		&& (
 			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
-			|| node === ctx.singleRootNode
+			|| ctx.singleRootNodes.includes(node)
 		)
 	) {
 		const varAttrs = ctx.getInternalVariable();
@@ -348,7 +348,7 @@ export function* generateElement(
 		options.vueCompilerOptions.fallthroughAttributes
 		&& (
 			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
-			|| node === ctx.singleRootNode
+			|| ctx.singleRootNodes.includes(node)
 		)
 	) {
 		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);

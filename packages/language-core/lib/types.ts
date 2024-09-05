@@ -31,6 +31,7 @@ export interface VueCompilerOptions {
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
+	fallthroughComponentTags: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
