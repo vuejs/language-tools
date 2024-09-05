@@ -342,7 +342,7 @@ describe('Completions', async () => {
 			    "(",
 			  ],
 			  "detail": "Add import from "./ComponentForAutoImport.vue"
-			(property) default: DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<{}> & Readonly<...>, ... 7 more ..., {}>",
+			(property) default: DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, ToResolvedProps<{}, {}>, ... 8 more ..., any>",
 			  "documentation": {
 			    "kind": "markdown",
 			    "value": "",
