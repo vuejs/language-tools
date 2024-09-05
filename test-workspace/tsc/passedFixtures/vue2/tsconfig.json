@@ -29,6 +29,7 @@
 		"../vue3/defineEmits",
 		"../vue3/defineModel",
 		"../vue3/defineProp_B",
+		"../vue3/directives/arg-modifiers.vue",
 		"../vue3/directives/option.vue",
 		"../vue3/events",
 		"../vue3/no-script-block",

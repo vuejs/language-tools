@@ -16,5 +16,6 @@
 		"../vue3/components",
 		"../vue3/defineModel",
 		"../vue3/defineProp_B",
+		"../vue3/directives/arg-modifiers.vue",
 	],
 }
