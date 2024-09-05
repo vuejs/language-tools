@@ -389,7 +389,7 @@
 				"vue.inlayHints.destructuredProps": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for destructured prop."
+					"description": "Show inlay hints for destructured props."
 				},
 				"vue.inlayHints.missingProps": {
 					"type": "boolean",
