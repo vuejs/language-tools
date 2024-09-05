@@ -96,7 +96,7 @@ export function* generateElementProps(
 				continue;
 			}
 
-			if (prop.modifiers.some(m => m.content === 'prop' || m.content === 'attr')) {
+			if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
 				propName = propName.substring(1);
 			}
 
