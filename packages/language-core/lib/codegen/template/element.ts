@@ -224,7 +224,8 @@ export function* generateComponent(
 	}
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, props);
-	const isRootNode = node === ctx.singleRootNode;
+	const tag = hyphenateTag(node.tag);
+	const isRootNode = ctx.singleRootNodes.includes(node) && !options.vueCompilerOptions.fallthroughComponentTags.includes(tag);
 
 	if (refName || isRootNode) {
 		const varName = ctx.getInternalVariable();
@@ -243,7 +244,7 @@ export function* generateComponent(
 			ctx.templateRefs.set(refName, [varName, offset!]);
 		}
 		if (isRootNode) {
-			ctx.singleRootElType = `NonNullable<typeof ${varName}>['$el']`;
+			ctx.singleRootElTypes.push(`NonNullable<typeof ${varName}>['$el']`);
 		}
 	}
 
@@ -343,8 +344,8 @@ export function* generateElement(
 	if (refName) {
 		ctx.templateRefs.set(refName, [`__VLS_nativeElements['${node.tag}']`, offset!]);
 	}
-	if (ctx.singleRootNode === node) {
-		ctx.singleRootElType = `typeof __VLS_nativeElements['${node.tag}']`;
+	if (ctx.singleRootNodes.includes(node)) {
+		ctx.singleRootElTypes.push(`typeof __VLS_nativeElements['${node.tag}']`);
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;

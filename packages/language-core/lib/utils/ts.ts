@@ -1,9 +1,10 @@
-import { camelize, hyphenate } from '@vue/shared';
+import { camelize } from '@vue/shared';
 import type * as ts from 'typescript';
 import { posix as path } from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { getAllExtensions } from '../languagePlugin';
 import { generateGlobalTypes } from '../codegen/globalTypes';
+import { hyphenateTag } from './shared';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -239,7 +240,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			'KeepAlive',
 			'Teleport',
 			'Suspense'
-		]).map(tag => hyphenate(tag)),
+		]).map(tag => hyphenateTag(tag)),
 		dataAttributes: vueOptions.dataAttributes ?? [],
 		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
 		optionsWrapper: vueOptions.optionsWrapper ?? (

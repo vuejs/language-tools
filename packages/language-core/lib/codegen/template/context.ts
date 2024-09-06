@@ -132,7 +132,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		hasSlot: false,
 		inheritedAttrVars: new Set(),
 		templateRefs,
-		singleRootElType: undefined as string | undefined,
+		singleRootElTypes: [] as string[],
 		singleRootNodes: [] as CompilerDOM.ElementNode[],
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);

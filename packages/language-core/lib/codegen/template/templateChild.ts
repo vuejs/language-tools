@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { hyphenate } from '@vue/shared';
 import type { Code } from '../../types';
 import { endOfLine, newLine } from '../common';
+import { hyphenateTag } from '../../utils/shared';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
 import type { TemplateCodegenOptions } from './index';
@@ -139,7 +139,7 @@ function findSingleRootNodes(
 		return [];
 	}
 
-	const tag = hyphenate(child.tag);
+	const tag = hyphenateTag(child.tag);
 	if (options.vueCompilerOptions.fallthroughComponentTags.includes(tag)) {
 		return [child, ...findSingleRootNodes(options, child)];
 	}

@@ -113,12 +113,17 @@ function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {
 }
 
 function* generateRootEl(ctx: TemplateCodegenContext): Generator<Code> {
-	if (ctx.singleRootElType) {
-		yield `var $el!: ${ctx.singleRootElType}${endOfLine}`;
+	yield `var $el!: `;
+	if (ctx.singleRootElTypes.length) {
+		yield newLine;
+		for (const type of ctx.singleRootElTypes) {
+			yield `| ${type}${newLine}`;
+		}
 	}
 	else {
-		yield `var $el!: any${endOfLine}`;
+		yield `any`;
 	}
+	yield endOfLine;
 }
 
 function* generatePreResolveComponents(options: TemplateCodegenOptions): Generator<Code> {
