@@ -25,6 +25,7 @@ export function* generateInterpolation(
 	}[] = [];
 	for (let [section, offset, onlyError] of forEachInterpolationSegment(
 		options.ts,
+		options.destructuredPropNames,
 		options.templateRefNames,
 		ctx,
 		code,
@@ -72,6 +73,7 @@ export function* generateInterpolation(
 
 export function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
+	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
 	code: string,
@@ -101,6 +103,9 @@ export function* forEachInterpolationSegment(
 				isShorthand: isShorthand,
 				offset: getStartEnd(ts, id, ast).start,
 			});
+			if (destructuredPropNames?.has(text)) {
+				return;
+			}
 			if (offset !== undefined) {
 				ctx.accessExternalVariable(text, offset + getStartEnd(ts, id, ast).start);
 			}
@@ -127,7 +132,7 @@ export function* forEachInterpolationSegment(
 			const curVar = ctxVars[i];
 			const nextVar = ctxVars[i + 1];
 
-			yield* generateVar(code, templateRefNames, curVar, nextVar);
+			yield* generateVar(code, destructuredPropNames, templateRefNames, curVar, nextVar);
 
 			if (nextVar.isShorthand) {
 				yield [code.substring(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
@@ -139,7 +144,7 @@ export function* forEachInterpolationSegment(
 		}
 
 		const lastVar = ctxVars.at(-1)!;
-		yield* generateVar(code, templateRefNames, lastVar);
+		yield* generateVar(code, destructuredPropNames, templateRefNames, lastVar);
 		yield [code.substring(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length];
 	}
 	else {
@@ -149,6 +154,7 @@ export function* forEachInterpolationSegment(
 
 function* generateVar(
 	code: string,
+	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
 	curVar: {
 		text: string,
@@ -165,6 +171,7 @@ function* generateVar(
 	// fix https://github.com/vuejs/language-tools/issues/1264
 	yield ['', nextVar.offset, true];
 
+	const isDestructuredProp = destructuredPropNames?.has(curVar.text) ?? false;
 	const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
 	if (isTemplateRef) {
 		yield [`__VLS_unref(`, undefined];
@@ -172,7 +179,9 @@ function* generateVar(
 		yield [`)`, undefined];
 	}
 	else {
-		yield [`__VLS_ctx.`, undefined];
+		if (!isDestructuredProp) {
+			yield [`__VLS_ctx.`, undefined];
+		}
 		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 	}
 }

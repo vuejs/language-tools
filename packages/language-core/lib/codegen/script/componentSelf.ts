@@ -31,9 +31,6 @@ export function* generateComponentSelf(
 				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
 					continue;
 				}
-				if (options.scriptSetupRanges.props.destructured?.has(varName)) {
-					continue;
-				}
 				const templateOffset = options.getGeneratedLength();
 				yield `${varName}: ${varName} as typeof `;
 
