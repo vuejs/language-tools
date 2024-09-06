@@ -43,6 +43,9 @@ export function* generateComponent(
 	if (options.vueCompilerOptions.target >= 3.5 && scriptSetupRanges.templateRefs.length) {
 		yield `__typeRefs: {} as __VLS_TemplateResult['refs'],${newLine}`;
 	}
+	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.singleRootElType) {
+		yield `__typeEl: {} as __VLS_TemplateResult['rootEl'],${newLine}`;
+	}
 	yield `})`;
 }
 

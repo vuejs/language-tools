@@ -13,9 +13,9 @@
 	},
 	"dependencies": {
 		"@volar/language-core": "~2.4.1",
-		"@vue/compiler-dom": "^3.4.0",
+		"@vue/compiler-dom": "^3.5.2",
 		"@vue/compiler-vue2": "^2.7.16",
-		"@vue/shared": "^3.4.0",
+		"@vue/shared": "^3.5.2",
 		"computeds": "^0.0.1",
 		"minimatch": "^9.0.3",
 		"muggle-string": "^0.4.1",
@@ -26,7 +26,7 @@
 		"@types/node": "latest",
 		"@types/path-browserify": "^1.0.1",
 		"@volar/typescript": "~2.4.1",
-		"@vue/compiler-sfc": "^3.4.0"
+		"@vue/compiler-sfc": "^3.5.2"
 	},
 	"peerDependencies": {
 		"typescript": "*"
