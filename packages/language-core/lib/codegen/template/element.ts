@@ -243,7 +243,7 @@ export function* generateComponent(
 			ctx.templateRefs.set(refName, [varName, offset!]);
 		}
 		if (isRootNode) {
-			ctx.singleRootEl = `${varName}.$el`;
+			ctx.singleRootElType = `NonNullable<typeof ${varName}>['$el']`;
 		}
 	}
 
@@ -275,7 +275,7 @@ export function* generateComponent(
 	}
 
 	if (ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
-		yield `const ${var_defineComponentCtx} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})${endOfLine}`;
+		yield `var ${var_defineComponentCtx}!: __VLS_PickFunctionalComponentCtx<typeof ${var_originalComponent}, typeof ${var_componentInstance}>${endOfLine}`;
 	}
 }
 
@@ -344,7 +344,7 @@ export function* generateElement(
 		ctx.templateRefs.set(refName, [`__VLS_nativeElements['${node.tag}']`, offset!]);
 	}
 	if (ctx.singleRootNode === node) {
-		ctx.singleRootEl = `__VLS_nativeElements['${node.tag}']`;
+		ctx.singleRootElType = `typeof __VLS_nativeElements['${node.tag}']`;
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;

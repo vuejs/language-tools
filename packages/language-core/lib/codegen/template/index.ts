@@ -51,11 +51,8 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	yield* ctx.generateAutoImportCompletion();
-
 	yield* generateInheritedAttrs(ctx);
-
 	yield* generateRefs(ctx);
-	
 	yield* generateRootEl(ctx);
 
 	return ctx;
@@ -107,7 +104,7 @@ function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {
 			name,
 			offset,
 			ctx.codeFeatures.navigationAndCompletion
-		)
+		);
 		yield `: ${varName},${newLine}`;
 	}
 	yield `}${endOfLine}`;
@@ -115,8 +112,12 @@ function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {
 }
 
 function* generateRootEl(ctx: TemplateCodegenContext): Generator<Code> {
-	yield `const __VLS_rootEl = ${ctx.singleRootEl ?? '{} as any'}${endOfLine}`;
-	yield `var $el!: typeof __VLS_rootEl${endOfLine}`;
+	if (ctx.singleRootElType) {
+		yield `var $el!: ${ctx.singleRootElType}${endOfLine}`;
+	}
+	else {
+		yield `var $el!: any${endOfLine}`;
+	}
 }
 
 function* generatePreResolveComponents(options: TemplateCodegenOptions): Generator<Code> {
