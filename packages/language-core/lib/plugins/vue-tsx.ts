@@ -147,6 +147,10 @@ function createTsx(
 	});
 	const destructuredPropNames = computed<Set<string>>(oldNames => {
 		const newNames = scriptSetupRanges()?.props.destructured ?? new Set();
+		const rest = scriptSetupRanges()?.props.destructuredRest;
+		if (rest) {
+			newNames.add(rest);
+		}
 		if (oldNames && twoSetsEqual(newNames, oldNames)) {
 			return oldNames;
 		}
