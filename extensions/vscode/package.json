@@ -538,15 +538,15 @@
 		]
 	},
 	"scripts": {
-		"prebuild": "cd ../.. && npm run build",
+		"prebuild": "cd ../.. && pnpm run build",
 		"build": "node scripts/build",
-		"build:minify": "npm run build -- --minify",
-		"watch": "npm run build -- --watch",
-		"pack": "npm run build:minify && vsce package",
-		"pack:next": "npm run build && vsce package",
-		"release": "npm run build:minify && vsce publish",
-		"release:next": "npm run build && vsce publish --pre-release",
-		"size": "npm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
+		"build:minify": "pnpm run build -- --minify",
+		"watch": "pnpm run build -- --watch",
+		"pack": "pnpm run build:minify && vsce package",
+		"pack:next": "pnpm run build && vsce package",
+		"release": "pnpm run build:minify && vsce publish",
+		"release:next": "pnpm run build && vsce publish --pre-release",
+		"size": "pnpm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
