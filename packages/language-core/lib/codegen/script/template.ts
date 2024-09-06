@@ -231,6 +231,7 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 			for (const [segment, offset, onlyError] of forEachInterpolationSegment(
 				options.ts,
 				undefined,
+				undefined,
 				ctx,
 				cssBind.text,
 				cssBind.offset,

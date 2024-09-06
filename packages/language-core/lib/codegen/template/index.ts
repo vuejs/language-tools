@@ -17,6 +17,7 @@ export interface TemplateCodegenOptions {
 	edited: boolean;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
+	destructuredPropNames: Set<string>;
 	templateRefNames: Set<string>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
