@@ -133,8 +133,7 @@ function findSingleRootNodes(
 
 	const child = node.children[0];
 	if (child.type === CompilerDOM.NodeTypes.IF) {
-		const nodes = child.branches.map(branch => findSingleRootNodes(options, branch)).flat(1);
-		return nodes.every(n => n !== undefined) ? nodes : [];
+		return child.branches.map(branch => findSingleRootNodes(options, branch)).flat(1);
 	}
 	else if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
 		return [];
