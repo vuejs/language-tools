@@ -224,9 +224,10 @@ export function* generateComponent(
 	}
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, props);
-	if (refName) {
+	const isRootNode = node === ctx.singleRootNode;
+
+	if (refName || isRootNode) {
 		const varName = ctx.getInternalVariable();
-		ctx.templateRefs.set(refName, [varName, offset!]);
 		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
 
 		yield `var ${varName} = {} as (Parameters<NonNullable<typeof ${var_defineComponentCtx}['expose']>>[0] | null)`;
@@ -237,6 +238,13 @@ export function* generateComponent(
 			yield `[]`;
 		}
 		yield `${endOfLine}`;
+
+		if (refName) {
+			ctx.templateRefs.set(refName, [varName, offset!]);
+		}
+		if (isRootNode) {
+			ctx.singleRootElType = `NonNullable<typeof ${varName}>['$el']`;
+		}
 	}
 
 	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
@@ -267,7 +275,7 @@ export function* generateComponent(
 	}
 
 	if (ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
-		yield `const ${var_defineComponentCtx} = __VLS_pickFunctionalComponentCtx(${var_originalComponent}, ${var_componentInstance})${endOfLine}`;
+		yield `var ${var_defineComponentCtx}!: __VLS_PickFunctionalComponentCtx<typeof ${var_originalComponent}, typeof ${var_componentInstance}>${endOfLine}`;
 	}
 }
 
@@ -334,6 +342,9 @@ export function* generateElement(
 	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
 		ctx.templateRefs.set(refName, [`__VLS_nativeElements['${node.tag}']`, offset!]);
+	}
+	if (ctx.singleRootNode === node) {
+		ctx.singleRootElType = `typeof __VLS_nativeElements['${node.tag}']`;
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;

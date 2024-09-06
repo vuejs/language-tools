@@ -83,6 +83,10 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		>
 	>;
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
+	type __VLS_PickFunctionalComponentCtx<T, K> = NonNullable<__VLS_PickNotAny<
+		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
+		, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
+	>>;
 
 	function __VLS_getVForSourceType(source: number): [number, number, number][];
 	function __VLS_getVForSourceType(source: string): [string, number, number][];
@@ -129,10 +133,6 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		: (_: {}${strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${strictTemplates ? '' : ' & Record<string, unknown>'} } };
 	function __VLS_elementAsFunction<T>(tag: T, endTag?: T): (_: T${strictTemplates ? '' : ' & Record<string, unknown>'}) => void;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
-	function __VLS_pickFunctionalComponentCtx<T, K>(comp: T, compInstance: K): NonNullable<__VLS_PickNotAny<
-		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
-		, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
-	>>;
 	function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
 	function __VLS_tryAsConstant<const T>(t: T): T;
 }

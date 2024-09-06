@@ -104,6 +104,7 @@ function createTsx(
 			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			scriptSetupBindingNames: scriptSetupBindingNames(),
 			scriptSetupImportComponentNames: scriptSetupImportComponentNames(),
+			destructuredPropNames: destructuredPropNames(),
 			templateRefNames: templateRefNames(),
 			hasDefineSlots: hasDefineSlots(),
 			slotsAssignName: slotsAssignName(),
@@ -139,6 +140,17 @@ function createTsx(
 	});
 	const scriptSetupImportComponentNames = computed<Set<string>>(oldNames => {
 		const newNames = scriptSetupRanges()?.importComponentNames ?? new Set();
+		if (oldNames && twoSetsEqual(newNames, oldNames)) {
+			return oldNames;
+		}
+		return newNames;
+	});
+	const destructuredPropNames = computed<Set<string>>(oldNames => {
+		const newNames = scriptSetupRanges()?.props.destructured ?? new Set();
+		const rest = scriptSetupRanges()?.props.destructuredRest;
+		if (rest) {
+			newNames.add(rest);
+		}
 		if (oldNames && twoSetsEqual(newNames, oldNames)) {
 			return oldNames;
 		}

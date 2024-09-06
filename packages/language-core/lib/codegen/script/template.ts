@@ -176,14 +176,16 @@ function* generateTemplateBody(
 		if (!options.scriptSetupRanges?.slots.define) {
 			yield `const __VLS_slots = {}${endOfLine}`;
 		}
-		yield `const $refs = {}${endOfLine}`;
 		yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
+		yield `const $refs = {}${endOfLine}`;
+		yield `const $el = {} as any${endOfLine}`;
 	}
 
 	yield `return {${newLine}`;
+	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `	slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
 	yield `	refs: $refs,${newLine}`;
-	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
+	yield `	rootEl: $el,${newLine}`;
 	yield `}${endOfLine}`;
 }
 
@@ -228,6 +230,7 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 		for (const cssBind of style.cssVars) {
 			for (const [segment, offset, onlyError] of forEachInterpolationSegment(
 				options.ts,
+				undefined,
 				undefined,
 				ctx,
 				cssBind.text,

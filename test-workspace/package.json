@@ -4,7 +4,7 @@
 	"devDependencies": {
 		"typescript-next": "npm:typescript@next",
 		"typescript-stable": "npm:typescript@latest",
-		"vue": "~3.5.2",
+		"vue": "^3.5.2",
 		"vue-component-type-helpers": "2.1.6",
 		"vue2": "npm:vue@2.7.16",
 		"vue3.4": "npm:vue@3.4.38"
