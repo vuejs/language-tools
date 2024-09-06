@@ -32,17 +32,22 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						const scriptSetupRanges = codegen?.scriptSetupRanges();
 
 						if (scriptSetupRanges?.props.destructured && virtualCode.sfc.scriptSetup?.ast) {
-							for (const [prop, isShorthand] of findDestructuredProps(ts, virtualCode.sfc.scriptSetup.ast, scriptSetupRanges.props.destructured)) {
-								const name = prop.text;
-								const end = prop.getEnd();
-								const pos = isShorthand ? end : end - name.length;
-								const label = isShorthand ? `: props.${name}` : 'props.';
-								inlayHints.push({
-									blockName: 'scriptSetup',
-									offset: pos,
-									setting: 'vue.inlayHints.destructuredProps',
-									label,
-								});
+							const setting = 'vue.inlayHints.destructuredProps';
+							settings[setting] ??= await context.env.getConfiguration?.<boolean>(setting) ?? false;
+
+							if (settings[setting]) {
+								for (const [prop, isShorthand] of findDestructuredProps(ts, virtualCode.sfc.scriptSetup.ast, scriptSetupRanges.props.destructured)) {
+									const name = prop.text;
+									const end = prop.getEnd();
+									const pos = isShorthand ? end : end - name.length;
+									const label = isShorthand ? `: props.${name}` : 'props.';
+									inlayHints.push({
+										blockName: 'scriptSetup',
+										offset: pos,
+										setting,
+										label,
+									});
+								}
 							}
 						}
 
