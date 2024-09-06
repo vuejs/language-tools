@@ -15,7 +15,7 @@ export function parseScriptSetupRanges(
 
 	const props: {
 		name?: string;
-		destructured?: string[];
+		destructured?: Set<string>;
 		define?: ReturnType<typeof parseDefineFunction> & {
 			statement: TextRange;
 		};
@@ -308,7 +308,7 @@ export function parseScriptSetupRanges(
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 				if (ts.isVariableDeclaration(parent)) {
 					if (ts.isObjectBindingPattern(parent.name)) {
-						props.destructured = collectVars(ts, parent.name, ast, [], false);
+						props.destructured = new Set(collectVars(ts, parent.name, ast, [], false));
 					}
 					else {
 						props.name = getNodeText(ts, parent.name, ast);

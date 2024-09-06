@@ -31,7 +31,7 @@ export function* generateComponentSelf(
 				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
 					continue;
 				}
-				if (options.scriptSetupRanges.props.destructured?.includes(varName)) {
+				if (options.scriptSetupRanges.props.destructured?.has(varName)) {
 					continue;
 				}
 				const templateOffset = options.getGeneratedLength();

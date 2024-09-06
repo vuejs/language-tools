@@ -100,7 +100,7 @@ type Scope = Record<string, boolean>;
 export function findDestructuredProps(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
-	props: string[]
+	props: Set<string>
 ) {
 	const rootScope: Scope = {};
 	const scopeStack: Scope[] = [rootScope];
