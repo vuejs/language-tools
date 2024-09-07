@@ -225,7 +225,7 @@ export function* generateComponent(
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, props);
 	const tag = hyphenateTag(node.tag);
-	const isRootNode = ctx.singleRootNodes.includes(node) && !options.vueCompilerOptions.fallthroughComponentTags.includes(tag);
+	const isRootNode = ctx.singleRootNodes.has(node) && !options.vueCompilerOptions.fallthroughComponentTags.includes(tag);
 
 	if (refName || isRootNode) {
 		const varName = ctx.getInternalVariable();
@@ -259,7 +259,7 @@ export function* generateComponent(
 		options.vueCompilerOptions.fallthroughAttributes
 		&& (
 			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
-			|| ctx.singleRootNodes.includes(node)
+			|| ctx.singleRootNodes.has(node)
 		)
 	) {
 		const varAttrs = ctx.getInternalVariable();
@@ -344,7 +344,7 @@ export function* generateElement(
 	if (refName) {
 		ctx.templateRefs.set(refName, [`__VLS_nativeElements['${node.tag}']`, offset!]);
 	}
-	if (ctx.singleRootNodes.includes(node)) {
+	if (ctx.singleRootNodes.has(node)) {
 		ctx.singleRootElTypes.push(`typeof __VLS_nativeElements['${node.tag}']`);
 	}
 
@@ -360,7 +360,7 @@ export function* generateElement(
 		options.vueCompilerOptions.fallthroughAttributes
 		&& (
 			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
-			|| ctx.singleRootNodes.includes(node)
+			|| ctx.singleRootNodes.has(node)
 		)
 	) {
 		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);

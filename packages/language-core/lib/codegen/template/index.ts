@@ -114,7 +114,7 @@ function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {
 
 function* generateRootEl(ctx: TemplateCodegenContext): Generator<Code> {
 	yield `var $el!: `;
-	if (ctx.singleRootElTypes.length) {
+	if (ctx.singleRootElTypes.length && !ctx.singleRootNodes.has(null)) {
 		yield newLine;
 		for (const type of ctx.singleRootElTypes) {
 			yield `| ${type}${newLine}`;

@@ -50,7 +50,7 @@ export function* generateTemplateChild(
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		if (options.inheritAttrs) {
-			ctx.singleRootNodes = findSingleRootNodes(options, node);
+			ctx.singleRootNodes = new Set(collectSingleRootNodes(options, node));
 		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of node.children) {
@@ -123,28 +123,32 @@ export function* generateTemplateChild(
 	}
 }
 
-function findSingleRootNodes(
+function* collectSingleRootNodes(
 	options: TemplateCodegenOptions,
 	node: CompilerDOM.RootNode | CompilerDOM.BaseElementNode | CompilerDOM.IfBranchNode
-): CompilerDOM.ElementNode[] {
-	if (node.children.length !== 1) {
-		return [];
+): Generator<CompilerDOM.ElementNode | null> {
+	if (node.children.length < 1) {
+		return;
+	}
+	if (node.children.length > 1) {
+		yield null;
 	}
 
 	const child = node.children[0];
 	if (child.type === CompilerDOM.NodeTypes.IF) {
-		return child.branches.map(branch => findSingleRootNodes(options, branch)).flat(1);
+		for (const branch of child.branches) {
+			yield* collectSingleRootNodes(options, branch);
+		}
+		return;
 	}
 	else if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
-		return [];
+		return;
 	}
-
+	yield child;
+	
 	const tag = hyphenateTag(child.tag);
 	if (options.vueCompilerOptions.fallthroughComponentTags.includes(tag)) {
-		return [child, ...findSingleRootNodes(options, child)];
-	}
-	else {
-		return [child];
+		yield* collectSingleRootNodes(options, child);
 	}
 }
 
