@@ -64,7 +64,7 @@ export function* generateScriptSetup(
 			emitTypes.push(`typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'}`);
 		}
 		if (scriptSetupRanges.defineProp.some(p => p.isModel)) {
-			emitTypes.push(`__VLS_ModelEmitsType`);
+			emitTypes.push(`typeof __VLS_modelEmit`);
 		}
 
 		yield `		return {} as {${newLine}`
@@ -132,31 +132,31 @@ function* generateSetupFunction(
 	let setupCodeModifies: [Code[], number, number][] = [];
 	const propsRange = scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define;
 	if (propsRange && scriptSetupRanges.props.define) {
-		const statement = scriptSetupRanges.props.define.statement;
-		if (scriptSetupRanges.props.define.typeArg) {
+		const { statement, typeArg } = scriptSetupRanges.props.define;
+		if (typeArg) {
 			setupCodeModifies.push([[
-				`let __VLS_typeProps!: `,
-				generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.typeArg.start, scriptSetupRanges.props.define.typeArg.end, codeFeatures.all),
+				`type __VLS_Props = `,
+				generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
 				endOfLine,
 			], statement.start, statement.start]);
-			setupCodeModifies.push([[`typeof __VLS_typeProps`], scriptSetupRanges.props.define.typeArg.start, scriptSetupRanges.props.define.typeArg.end]);
+			setupCodeModifies.push([[`__VLS_Props`], typeArg.start, typeArg.end]);
 		}
 		if (!scriptSetupRanges.props.name) {
 			if (statement.start === propsRange.start && statement.end === propsRange.end) {
 				setupCodeModifies.push([[`const __VLS_props = `], propsRange.start, propsRange.start]);
 			}
 			else {
-				if (scriptSetupRanges.props.define.typeArg) {
+				if (typeArg) {
 					setupCodeModifies.push([[
 						`const __VLS_props = `,
-						generateSfcBlockSection(scriptSetup, propsRange.start, scriptSetupRanges.props.define.typeArg.start, codeFeatures.all),
-					], statement.start, scriptSetupRanges.props.define.typeArg.start]);
+						generateSfcBlockSection(scriptSetup, propsRange.start, typeArg.start, codeFeatures.all),
+					], statement.start, typeArg.start]);
 					setupCodeModifies.push([[
-						generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.typeArg.end, propsRange.end, codeFeatures.all),
+						generateSfcBlockSection(scriptSetup, typeArg.end, propsRange.end, codeFeatures.all),
 						`${endOfLine}`,
 						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
 						`__VLS_props`,
-					], scriptSetupRanges.props.define.typeArg.end, propsRange.end]);
+					], typeArg.end, propsRange.end]);
 				}
 				else {
 					setupCodeModifies.push([[
@@ -182,7 +182,44 @@ function* generateSetupFunction(
 		}
 	}
 	if (scriptSetupRanges.emits.define && !scriptSetupRanges.emits.name) {
-		setupCodeModifies.push([[`const __VLS_emit = `], scriptSetupRanges.emits.define.start, scriptSetupRanges.emits.define.start]);
+		const emitsRange = scriptSetupRanges.emits.define;
+		const { statement, typeArg } = emitsRange;
+		if (typeArg) {
+			setupCodeModifies.push([[
+				`type __VLS_Emit = `,
+				generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
+				endOfLine,
+			], statement.start, statement.start]);
+			setupCodeModifies.push([[`__VLS_Emit`], typeArg.start, typeArg.end]);
+		}
+		if (!scriptSetupRanges.emits.name) {
+			if (statement.start === emitsRange.start && statement.end === emitsRange.end) {
+				setupCodeModifies.push([[`const __VLS_emit = `], emitsRange.start, emitsRange.start]);
+			}
+			else {
+				if (typeArg) {
+					setupCodeModifies.push([[
+						`const __VLS_emit = `,
+						generateSfcBlockSection(scriptSetup, emitsRange.start, typeArg.start, codeFeatures.all),
+					], statement.start, typeArg.start]);
+					setupCodeModifies.push([[
+						generateSfcBlockSection(scriptSetup, typeArg.end, emitsRange.end, codeFeatures.all),
+						`${endOfLine}`,
+						generateSfcBlockSection(scriptSetup, statement.start, emitsRange.start, codeFeatures.all),
+						`__VLS_emit`,
+					], typeArg.end, emitsRange.end]);
+				}
+				else {
+					setupCodeModifies.push([[
+						`const __VLS_emit = `,
+						generateSfcBlockSection(scriptSetup, emitsRange.start, emitsRange.end, codeFeatures.all),
+						`${endOfLine}`,
+						generateSfcBlockSection(scriptSetup, statement.start, emitsRange.start, codeFeatures.all),
+						`__VLS_emit`,
+					], statement.start, emitsRange.end]);
+				}
+			}
+		}
 	}
 	if (scriptSetupRanges.expose.define) {
 		if (scriptSetupRanges.expose.define?.typeArg) {
@@ -286,7 +323,7 @@ function* generateSetupFunction(
 	}
 
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
-	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
+	yield* generateModelEmit(scriptSetup, scriptSetupRanges);
 	yield `function __VLS_template() {${newLine}`;
 	const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
 	yield `}${endOfLine}`;
@@ -324,7 +361,7 @@ function* generateComponentProps(
 		yield `,${newLine}`;
 	}
 
-	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
+	yield* generateEmitsOption(options, scriptSetupRanges);
 
 	yield `})${endOfLine}`;
 
@@ -420,7 +457,7 @@ function* generateComponentProps(
 			yield ` & `;
 		}
 		ctx.generatedPropsType = true;
-		yield `typeof __VLS_typeProps`;
+		yield `__VLS_Props`;
 	}
 	if (!ctx.generatedPropsType) {
 		yield `{}`;
@@ -428,32 +465,21 @@ function* generateComponentProps(
 	yield endOfLine;
 }
 
-function* generateModelEmits(
-	options: ScriptCodegenOptions,
+function* generateModelEmit(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	const defineModels = scriptSetupRanges.defineProp.filter(p => p.isModel);
 	if (defineModels.length) {
-		const generateDefineModels = function* () {
-			for (const defineModel of defineModels) {
-				const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
-				yield `'update:${propName}': [${propName}:`;
-				yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
-				yield `]${endOfLine}`;
-			}
-		};
-		if (options.vueCompilerOptions.target >= 3.5) {
-			yield `type __VLS_ModelEmitsType = {${newLine}`;
-			yield* generateDefineModels();
-			yield `}${endOfLine}`;
+		yield `type __VLS_ModelEmit = {${newLine}`;
+		for (const defineModel of defineModels) {
+			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
+			yield `'update:${propName}': [${propName}:`;
+			yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
+			yield `]${endOfLine}`;
 		}
-		else {
-			yield `const __VLS_modelEmitsType = (await import('${options.vueCompilerOptions.lib}')).defineEmits<{${newLine}`;
-			yield* generateDefineModels();
-			yield `}>()${endOfLine}`;
-			yield `type __VLS_ModelEmitsType = typeof __VLS_modelEmitsType${endOfLine}`;
-		}
+		yield `}${endOfLine}`;
+		yield `const __VLS_modelEmit = defineEmits<__VLS_ModelEmit>()${endOfLine}`;
 	}
 }
 
