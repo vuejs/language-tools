@@ -181,7 +181,7 @@ function* generateSetupFunction(
 			setupCodeModifies.push([[`const __VLS_slots = `], scriptSetupRanges.slots.define.start, scriptSetupRanges.slots.define.start]);
 		}
 	}
-	if (scriptSetupRanges.emits.define && !scriptSetupRanges.emits.name) {
+	if (scriptSetupRanges.emits.define) {
 		const emitsRange = scriptSetupRanges.emits.define;
 		const { statement, typeArg } = emitsRange;
 		if (typeArg) {
