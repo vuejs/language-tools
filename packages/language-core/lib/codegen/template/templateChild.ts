@@ -50,7 +50,7 @@ export function* generateTemplateChild(
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		if (options.inheritAttrs) {
-			ctx.singleRootNodes = new Set(collectSingleRootNodes(options, node));
+			ctx.singleRootNodes = new Set(collectSingleRootNodes(options, node.children));
 		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of node.children) {
@@ -125,19 +125,20 @@ export function* generateTemplateChild(
 
 function* collectSingleRootNodes(
 	options: TemplateCodegenOptions,
-	node: CompilerDOM.RootNode | CompilerDOM.BaseElementNode | CompilerDOM.IfBranchNode
+	children: CompilerDOM.TemplateChildNode[]
 ): Generator<CompilerDOM.ElementNode | null> {
-	if (node.children.length < 1) {
+	if (children.length !== 1) {
+		// used to determine whether the component is always has a single root
+		if (children.length > 1) {
+			yield null;
+		}
 		return;
 	}
-	if (node.children.length > 1) {
-		yield null;
-	}
 
-	const child = node.children[0];
+	const child = children[0];
 	if (child.type === CompilerDOM.NodeTypes.IF) {
 		for (const branch of child.branches) {
-			yield* collectSingleRootNodes(options, branch);
+			yield* collectSingleRootNodes(options, branch.children);
 		}
 		return;
 	}
@@ -145,10 +146,10 @@ function* collectSingleRootNodes(
 		return;
 	}
 	yield child;
-	
+
 	const tag = hyphenateTag(child.tag);
 	if (options.vueCompilerOptions.fallthroughComponentTags.includes(tag)) {
-		yield* collectSingleRootNodes(options, child);
+		yield* collectSingleRootNodes(options, child.children);
 	}
 }
 
