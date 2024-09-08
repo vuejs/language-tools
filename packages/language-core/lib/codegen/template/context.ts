@@ -130,10 +130,10 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		emptyClassOffsets,
 		inlayHints,
 		hasSlot: false,
-		inheritedAttrVars: new Set(),
+		inheritedAttrVars: new Set<string>(),
 		templateRefs,
-		singleRootElType: undefined as string | undefined,
-		singleRootNode: undefined as CompilerDOM.ElementNode | undefined,
+		singleRootElTypes: [] as string[],
+		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);
 			if (!arr) {

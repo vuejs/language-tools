@@ -4,6 +4,7 @@ import { posix as path } from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { getAllExtensions } from '../languagePlugin';
 import { generateGlobalTypes } from '../codegen/globalTypes';
+import { hyphenateTag } from './shared';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -234,6 +235,12 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		strictTemplates: vueOptions.strictTemplates ?? false,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
 		fallthroughAttributes: vueOptions.fallthroughAttributes ?? false,
+		fallthroughComponentTags: (vueOptions.fallthroughComponentTags ?? [
+			'Transition',
+			'KeepAlive',
+			'Teleport',
+			'Suspense'
+		]).map(tag => hyphenateTag(tag)),
 		dataAttributes: vueOptions.dataAttributes ?? [],
 		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
 		optionsWrapper: vueOptions.optionsWrapper ?? (
