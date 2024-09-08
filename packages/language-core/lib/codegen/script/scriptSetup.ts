@@ -130,45 +130,15 @@ function* generateSetupFunction(
 	ctx.scriptSetupGeneratedOffset = options.getGeneratedLength() - scriptSetupRanges.importSectionEndOffset;
 
 	let setupCodeModifies: [Code[], number, number][] = [];
-	const propsRange = scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define;
-	if (propsRange && scriptSetupRanges.props.define) {
-		const { statement, typeArg } = scriptSetupRanges.props.define;
-		if (typeArg) {
-			setupCodeModifies.push([[
-				`type __VLS_Props = `,
-				generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
-				endOfLine,
-			], statement.start, statement.start]);
-			setupCodeModifies.push([[`__VLS_Props`], typeArg.start, typeArg.end]);
-		}
-		if (!scriptSetupRanges.props.name) {
-			if (statement.start === propsRange.start && statement.end === propsRange.end) {
-				setupCodeModifies.push([[`const __VLS_props = `], propsRange.start, propsRange.start]);
-			}
-			else {
-				if (typeArg) {
-					setupCodeModifies.push([[
-						`const __VLS_props = `,
-						generateSfcBlockSection(scriptSetup, propsRange.start, typeArg.start, codeFeatures.all),
-					], statement.start, typeArg.start]);
-					setupCodeModifies.push([[
-						generateSfcBlockSection(scriptSetup, typeArg.end, propsRange.end, codeFeatures.all),
-						`${endOfLine}`,
-						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
-						`__VLS_props`,
-					], typeArg.end, propsRange.end]);
-				}
-				else {
-					setupCodeModifies.push([[
-						`const __VLS_props = `,
-						generateSfcBlockSection(scriptSetup, propsRange.start, propsRange.end, codeFeatures.all),
-						`${endOfLine}`,
-						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
-						`__VLS_props`,
-					], statement.start, propsRange.end]);
-				}
-			}
-		}
+	if (scriptSetupRanges.props.define) {
+		setupCodeModifies.push(...generateDefineWithType(
+			scriptSetup,
+			scriptSetupRanges.props.name,
+			scriptSetupRanges.props.define,
+			scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define,
+			'__VLS_props',
+			'__VLS_Props'
+		));
 	}
 	if (scriptSetupRanges.slots.define) {
 		if (scriptSetupRanges.slots.isObjectBindingPattern) {
@@ -182,44 +152,14 @@ function* generateSetupFunction(
 		}
 	}
 	if (scriptSetupRanges.emits.define) {
-		const emitsRange = scriptSetupRanges.emits.define;
-		const { statement, typeArg } = emitsRange;
-		if (typeArg) {
-			setupCodeModifies.push([[
-				`type __VLS_Emit = `,
-				generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
-				endOfLine,
-			], statement.start, statement.start]);
-			setupCodeModifies.push([[`__VLS_Emit`], typeArg.start, typeArg.end]);
-		}
-		if (!scriptSetupRanges.emits.name) {
-			if (statement.start === emitsRange.start && statement.end === emitsRange.end) {
-				setupCodeModifies.push([[`const __VLS_emit = `], emitsRange.start, emitsRange.start]);
-			}
-			else {
-				if (typeArg) {
-					setupCodeModifies.push([[
-						`const __VLS_emit = `,
-						generateSfcBlockSection(scriptSetup, emitsRange.start, typeArg.start, codeFeatures.all),
-					], statement.start, typeArg.start]);
-					setupCodeModifies.push([[
-						generateSfcBlockSection(scriptSetup, typeArg.end, emitsRange.end, codeFeatures.all),
-						`${endOfLine}`,
-						generateSfcBlockSection(scriptSetup, statement.start, emitsRange.start, codeFeatures.all),
-						`__VLS_emit`,
-					], typeArg.end, emitsRange.end]);
-				}
-				else {
-					setupCodeModifies.push([[
-						`const __VLS_emit = `,
-						generateSfcBlockSection(scriptSetup, emitsRange.start, emitsRange.end, codeFeatures.all),
-						`${endOfLine}`,
-						generateSfcBlockSection(scriptSetup, statement.start, emitsRange.start, codeFeatures.all),
-						`__VLS_emit`,
-					], statement.start, emitsRange.end]);
-				}
-			}
-		}
+		setupCodeModifies.push(...generateDefineWithType(
+			scriptSetup,
+			scriptSetupRanges.emits.name,
+			scriptSetupRanges.emits.define,
+			scriptSetupRanges.emits.define,
+			'__VLS_emit',
+			'__VLS_Emit'
+		));
 	}
 	if (scriptSetupRanges.expose.define) {
 		if (scriptSetupRanges.expose.define?.typeArg) {
@@ -254,30 +194,21 @@ function* generateSetupFunction(
 	}
 	if (scriptSetupRanges.cssModules.length) {
 		for (const { exp, arg } of scriptSetupRanges.cssModules) {
-			if (arg) {
-				setupCodeModifies.push([
-					[
-						` as Omit<__VLS_StyleModules, '$style'>[`,
-						generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
-						`]`
-					],
-					exp.end,
-					exp.end
-				]);
-			}
-			else {
-				setupCodeModifies.push([
-					[
-						` as __VLS_StyleModules[`,
-						['', scriptSetup.name, exp.start, codeFeatures.verification],
-						`'$style'`,
-						['', scriptSetup.name, exp.end, codeFeatures.verification],
-						`]`
-					],
-					exp.end,
-					exp.end
-				]);
-			}
+			setupCodeModifies.push([
+				arg ? [
+					` as Omit<__VLS_StyleModules, '$style'>[`,
+					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+					`]`
+				] : [
+					` as __VLS_StyleModules[`,
+					['', scriptSetup.name, exp.start, codeFeatures.verification],
+					`'$style'`,
+					['', scriptSetup.name, exp.end, codeFeatures.verification],
+					`]`
+				],
+				exp.end,
+				exp.end
+			]);
 		}
 	}
 	for (const { define } of scriptSetupRanges.templateRefs) {
@@ -295,25 +226,15 @@ function* generateSetupFunction(
 	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
-	if (setupCodeModifies.length) {
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.importSectionEndOffset, setupCodeModifies[0][1], codeFeatures.all);
-		while (setupCodeModifies.length) {
-			const [codes, _start, end] = setupCodeModifies.shift()!;
-			for (const code of codes) {
-				yield code;
-			}
-			if (setupCodeModifies.length) {
-				const nextStart = setupCodeModifies[0][1];
-				yield generateSfcBlockSection(scriptSetup, end, nextStart, codeFeatures.all);
-			}
-			else {
-				yield generateSfcBlockSection(scriptSetup, end, scriptSetup.content.length, codeFeatures.all);
-			}
+	let nextStart = scriptSetupRanges.importSectionEndOffset;
+	for (const [codes, start, end] of setupCodeModifies) {
+		yield generateSfcBlockSection(scriptSetup, nextStart, start, codeFeatures.all);
+		for (const code of codes) {
+			yield code;
 		}
+		nextStart = end;
 	}
-	else {
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.importSectionEndOffset, scriptSetup.content.length, codeFeatures.all);
-	}
+	yield generateSfcBlockSection(scriptSetup, nextStart, scriptSetup.content.length, codeFeatures.all);
 
 	if (scriptSetupRanges.props.define?.typeArg && scriptSetupRanges.props.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
@@ -342,6 +263,47 @@ function* generateSetupFunction(
 			yield `${syntax} `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
+		}
+	}
+}
+
+function* generateDefineWithType(
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	name: string | undefined,
+	define: {
+		statement: TextRange,
+		typeArg?: TextRange
+	},
+	expression: TextRange,
+	defaultName: string,
+	typeName: string
+): Generator<[Code[], number, number]> {
+	const { statement, typeArg } = define;
+	if (typeArg) {
+		yield [[
+			`type ${typeName} = `,
+			generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
+			endOfLine,
+		], statement.start, statement.start];
+		yield [[typeName], typeArg.start, typeArg.end];
+	}
+	if (!name) {
+		if (statement.start === expression.start && statement.end === expression.end) {
+			yield [[`const ${defaultName} = `], expression.start, expression.start];
+		}
+		else {
+			const typeArgStart = typeArg?.start ?? expression.end;
+			const typeArgEnd = typeArg?.end ?? expression.start;
+			yield [[
+				`const ${defaultName} = `,
+				generateSfcBlockSection(scriptSetup, expression.start, typeArgStart, codeFeatures.all)
+			], statement.start, typeArgStart];
+			yield [[
+				generateSfcBlockSection(scriptSetup, typeArgEnd, expression.end, codeFeatures.all),
+				endOfLine,
+				generateSfcBlockSection(scriptSetup, statement.start, expression.start, codeFeatures.all),
+				defaultName
+			], typeArgEnd, expression.end];
 		}
 	}
 }
