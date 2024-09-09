@@ -51,7 +51,8 @@ export function* generateVFor(
 		ctx.addLocalVariable(varName);
 	}
 	let isFragment = true;
-	for (const argument of node.codegenNode?.children.arguments ?? []) {
+	// children is undefined with v-once (#4827)
+	for (const argument of node.codegenNode?.children?.arguments ?? []) {
 		if (
 			argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
 			&& argument.returns?.type === CompilerDOM.NodeTypes.VNODE_CALL
