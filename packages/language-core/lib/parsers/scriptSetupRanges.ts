@@ -44,12 +44,11 @@ export function parseScriptSetupRanges(
 		inheritAttrs?: string;
 	} = {};
 	const cssModules: {
-		exp: TextRange;
-		arg?: TextRange;
+		define: ReturnType<typeof parseDefineFunction>;
 	}[] = [];
 	const templateRefs: {
 		name?: string;
-		define?: ReturnType<typeof parseDefineFunction>;
+		define: ReturnType<typeof parseDefineFunction>;
 	}[] = [];
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -129,11 +128,13 @@ export function parseScriptSetupRanges(
 	}
 
 	function parseDefineFunction(node: ts.CallExpression): TextRange & {
+		exp: TextRange;
 		arg?: TextRange;
 		typeArg?: TextRange;
 	} {
 		return {
 			..._getStartEnd(node),
+			exp: _getStartEnd(node.expression),
 			arg: node.arguments.length ? _getStartEnd(node.arguments[0]) : undefined,
 			typeArg: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
 		};
@@ -383,7 +384,6 @@ export function parseScriptSetupRanges(
 				}
 			} else if (vueCompilerOptions.composibles.useTemplateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
 				const define = parseDefineFunction(node);
-				define.arg = _getStartEnd(node.arguments[0]);
 				let name;
 				if (ts.isVariableDeclaration(parent)) {
 					name = getNodeText(ts, parent.name, ast);
@@ -394,13 +394,10 @@ export function parseScriptSetupRanges(
 				});
 			}
 			else if (vueCompilerOptions.composibles.useCssModule.includes(callText)) {
-				const module: (typeof cssModules)[number] = {
-					exp: _getStartEnd(node)
-				};
-				if (node.arguments.length) {
-					module.arg = _getStartEnd(node.arguments[0]);
-				}
-				cssModules.push(module);
+				const define = parseDefineFunction(node);
+				cssModules.push({
+					define
+				});
 			}
 		}
 		ts.forEachChild(node, child => {

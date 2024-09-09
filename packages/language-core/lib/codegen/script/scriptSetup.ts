@@ -216,29 +216,29 @@ function* generateSetupFunction(
 		}
 	}
 	if (scriptSetupRanges.cssModules.length) {
-		for (const { exp, arg } of scriptSetupRanges.cssModules) {
-			if (arg) {
+		for (const { define } of scriptSetupRanges.cssModules) {
+			if (define.arg) {
 				setupCodeModifies.push([
 					[
 						` as Omit<__VLS_StyleModules, '$style'>[`,
-						generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+						generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.all),
 						`]`
 					],
-					exp.end,
-					exp.end
+					define.exp.end,
+					define.exp.end
 				]);
 			}
 			else {
 				setupCodeModifies.push([
 					[
 						` as __VLS_StyleModules[`,
-						['', scriptSetup.name, exp.start, codeFeatures.verification],
+						['', scriptSetup.name, define.exp.start, codeFeatures.verification],
 						`'$style'`,
-						['', scriptSetup.name, exp.end, codeFeatures.verification],
+						['', scriptSetup.name, define.exp.end, codeFeatures.verification],
 						`]`
 					],
-					exp.end,
-					exp.end
+					define.exp.end,
+					define.exp.end
 				]);
 			}
 		}
@@ -251,8 +251,8 @@ function* generateSetupFunction(
 					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
 					`], keyof __VLS_TemplateResult['refs']>`
 				],
-				define.arg.start - 1,
-				define.arg.start - 1
+				define.exp.end,
+				define.exp.end
 			]);
 		}
 	}
