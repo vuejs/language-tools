@@ -49,6 +49,11 @@ export function* generateTemplateChild(
 
 	const shouldInheritRootNodeAttrs = options.inheritAttrs;
 
+	const cur = node as CompilerDOM.ElementNode | CompilerDOM.IfNode | CompilerDOM.ForNode;
+	if (cur.codegenNode?.type === CompilerDOM.NodeTypes.JS_CACHE_EXPRESSION) {
+		cur.codegenNode = cur.codegenNode.value as any;
+	}
+
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		if (shouldInheritRootNodeAttrs && node.children.length === 1 && node.children[0].type === CompilerDOM.NodeTypes.ELEMENT) {
