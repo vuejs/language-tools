@@ -52,7 +52,7 @@ export function* generateVFor(
 	}
 	let isFragment = true;
 	// children is undefined with v-once (#4827)
-	for (const argument of node.codegenNode?.children?.arguments ?? []) {
+	for (const argument of (node.codegenNode?.children as CompilerDOM.ForRenderListExpression | undefined)?.arguments ?? []) {
 		if (
 			argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
 			&& argument.returns?.type === CompilerDOM.NodeTypes.VNODE_CALL
