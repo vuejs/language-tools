@@ -15,6 +15,7 @@ import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateTemplateChild } from './templateChild';
 import { generateObjectProperty } from './objectProperty';
+import { generateVBindShorthandInlayHint } from './vBindShorthand';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
 
 const colonReg = /:/g;
@@ -48,18 +49,25 @@ export function* generateComponent(
 
 	let props = node.props;
 	let dynamicTagInfo: {
-		exp: string;
+		exp: CompilerDOM.ElementNode | CompilerDOM.ExpressionNode;
+		tag: string;
 		offsets: [number, number | undefined];
-		astHolder: any;
+		isComponentIsShorthand?: boolean;
 	} | undefined;
 
 	if (isComponentTag) {
 		for (const prop of node.props) {
-			if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.arg?.loc.source === 'is' && prop.exp) {
+			if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'bind'
+				&& prop.arg?.loc.source === 'is'
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
 				dynamicTagInfo = {
-					exp: prop.exp.loc.source,
+					exp: prop.exp,
+					tag: prop.exp.content,
 					offsets: [prop.exp.loc.start.offset, undefined],
-					astHolder: prop.exp.loc,
+					isComponentIsShorthand: prop.arg.loc.end.offset === prop.exp.loc.end.offset
 				};
 				props = props.filter(p => p !== prop);
 				break;
@@ -69,8 +77,8 @@ export function* generateComponent(
 	else if (node.tag.includes('.')) {
 		// namespace tag
 		dynamicTagInfo = {
-			exp: node.tag,
-			astHolder: node.loc,
+			exp: node,
+			tag: node.tag,
 			offsets: [startTagOffset, endTagOffset],
 		};
 	}
@@ -106,12 +114,15 @@ export function* generateComponent(
 		yield `]${endOfLine}`;
 	}
 	else if (dynamicTagInfo) {
+		if (dynamicTagInfo.isComponentIsShorthand) {
+			ctx.inlayHints.push(generateVBindShorthandInlayHint(dynamicTagInfo.exp.loc, 'is'));
+		}
 		yield `const ${var_originalComponent} = (`;
 		yield* generateInterpolation(
 			options,
 			ctx,
+			dynamicTagInfo.tag,
 			dynamicTagInfo.exp,
-			dynamicTagInfo.astHolder,
 			dynamicTagInfo.offsets[0],
 			ctx.codeFeatures.all,
 			'(',
@@ -122,8 +133,8 @@ export function* generateComponent(
 			yield* generateInterpolation(
 				options,
 				ctx,
+				dynamicTagInfo.tag,
 				dynamicTagInfo.exp,
-				dynamicTagInfo.astHolder,
 				dynamicTagInfo.offsets[1],
 				{
 					...ctx.codeFeatures.all,
