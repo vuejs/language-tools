@@ -79,6 +79,9 @@ function createTsx(
 				: _sfc.script && _sfc.script.lang !== 'js' ? _sfc.script.lang
 					: 'js';
 	});
+	const isTs = computed(() => {
+		return lang() !== 'js' && lang() !== 'jsx';
+	});
 	const scriptRanges = computed(() =>
 		_sfc.script
 			? parseScriptRanges(ts, _sfc.script.ast, !!_sfc.scriptSetup, false)
@@ -183,6 +186,7 @@ function createTsx(
 			fileBaseName: path.basename(fileName),
 			sfc: _sfc,
 			lang: lang(),
+			isTs: isTs(),
 			scriptRanges: scriptRanges(),
 			scriptSetupRanges: scriptSetupRanges(),
 			templateCodegen: generatedTemplate(),
