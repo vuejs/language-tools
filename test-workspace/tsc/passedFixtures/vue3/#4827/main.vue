@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import Main from './child.vue'
+</script>
+
 <template>
-	<pre v-for="_ in []" v-once></pre>
+  <Main />
 </template>
