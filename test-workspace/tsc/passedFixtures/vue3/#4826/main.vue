@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { exactType } from 'tsc/passedFixtures/shared';
-import Child from './child.vue';
 import { useTemplateRef } from 'vue';
+import { exactType } from '../../shared';
+import Child from './child.vue';
 
 const child = useTemplateRef('child');
 exactType(child.value?.a, {} as unknown);
