@@ -288,7 +288,7 @@ function* generateSetupFunction(
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
 	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
 	yield `function __VLS_template() {${newLine}`;
-	const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
+	const templateCodegenCtx = yield* generateTemplate(options, ctx);
 	yield `}${endOfLine}`;
 	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	yield `type __VLS_TemplateResult = ReturnType<typeof __VLS_template>${endOfLine}`;
