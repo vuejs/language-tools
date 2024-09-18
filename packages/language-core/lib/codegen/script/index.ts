@@ -114,8 +114,8 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			}
 			else {
 				yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
-				yield `__VLS_template = () => {`;
-				const templateCodegenCtx = yield* generateTemplate(options, ctx, true);
+				yield `__VLS_template = () => {${newLine}`;
+				const templateCodegenCtx = yield* generateTemplate(options, ctx);
 				yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 				yield `},${newLine}`;
 				yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
@@ -140,7 +140,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 
 	if (!ctx.generatedTemplate) {
 		yield `function __VLS_template() {${newLine}`;
-		const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
+		const templateCodegenCtx = yield* generateTemplate(options, ctx);
 		yield `}${endOfLine}`;
 		yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	}
