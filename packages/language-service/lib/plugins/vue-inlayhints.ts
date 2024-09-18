@@ -107,7 +107,7 @@ export function findDestructuredProps(
 	ast: ts.SourceFile,
 	props: Set<string>
 ) {
-	const rootScope: Scope = {};
+	const rootScope: Scope = Object.create(null);
 	const scopeStack: Scope[] = [rootScope];
 	let currentScope: Scope = rootScope;
 	const excludedIds = new WeakSet<ts.Identifier>();
