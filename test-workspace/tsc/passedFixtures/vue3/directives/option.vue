@@ -6,7 +6,7 @@ let Comp!: (_: { foo?: string; }) => void;
 
 export default {
 	directives: {
-		vBar: {} as FunctionDirective<typeof Comp, (_: string) => void>
+		vFoo: {} as FunctionDirective<typeof Comp, (_: string) => void>
 	}
 };
 </script>
@@ -15,5 +15,5 @@ export default {
 </script>
 
 <template>
-	<Comp v-bar="v => exactType(v, {} as string)" />
+	<Comp v-foo="v => exactType(v, {} as string)" />
 </template>
