@@ -96,12 +96,7 @@ export function* generateElementProps(
 				continue;
 			}
 
-			// https://github.com/vuejs/core/pull/11819
-			const modifiers = options.vueCompilerOptions.target >= 3.5
-				? prop.modifiers.map(mod => mod.content)
-				: prop.modifiers;
-
-			if (modifiers.some(m => m === 'prop' || m === 'attr')) {
+			if (prop.modifiers.some(m => m.content === 'prop' || m.content === 'attr')) {
 				propName = propName.substring(1);
 			}
 

@@ -32,17 +32,22 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						const scriptSetupRanges = codegen?.scriptSetupRanges();
 
 						if (scriptSetupRanges?.props.destructured && virtualCode.sfc.scriptSetup?.ast) {
-							for (const [prop, isShorthand] of findDestructuredProps(ts, virtualCode.sfc.scriptSetup.ast, scriptSetupRanges.props.destructured)) {
-								const name = prop.text;
-								const end = prop.getEnd();
-								const pos = isShorthand ? end : end - name.length;
-								const label = isShorthand ? `: props.${name}` : 'props.';
-								inlayHints.push({
-									blockName: 'scriptSetup',
-									offset: pos,
-									setting: 'vue.inlayHints.destructuredProps',
-									label,
-								});
+							const setting = 'vue.inlayHints.destructuredProps';
+							settings[setting] ??= await context.env.getConfiguration?.<boolean>(setting) ?? false;
+
+							if (settings[setting]) {
+								for (const [prop, isShorthand] of findDestructuredProps(ts, virtualCode.sfc.scriptSetup.ast, scriptSetupRanges.props.destructured)) {
+									const name = prop.text;
+									const end = prop.getEnd();
+									const pos = isShorthand ? end : end - name.length;
+									const label = isShorthand ? `: props.${name}` : 'props.';
+									inlayHints.push({
+										blockName: 'scriptSetup',
+										offset: pos,
+										setting,
+										label,
+									});
+								}
 							}
 						}
 
@@ -100,7 +105,7 @@ type Scope = Record<string, boolean>;
 export function findDestructuredProps(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
-	props: string[]
+	props: Set<string>
 ) {
 	const rootScope: Scope = {};
 	const scopeStack: Scope[] = [rootScope];
@@ -175,7 +180,7 @@ export function findDestructuredProps(
 			&& ts.isCallExpression(initializer)
 			&& initializer.expression.getText(ast) === 'defineProps';
 
-		for (const id of collectIdentifiers(ts, name)) {
+		for (const [id] of collectIdentifiers(ts, name)) {
 			if (isDefineProps) {
 				excludedIds.add(id);
 			} else {
@@ -191,7 +196,7 @@ export function findDestructuredProps(
 		}
 
 		for (const p of parameters) {
-			for (const id of collectIdentifiers(ts, p)) {
+			for (const [id] of collectIdentifiers(ts, p)) {
 				registerLocalBinding(id);
 			}
 		}

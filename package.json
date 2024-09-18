@@ -3,21 +3,21 @@
 	"packageManager": "pnpm@9.4.0",
 	"scripts": {
 		"build": "tsc -b",
-		"watch": "npm run build && (npm run watch:base & npm run watch:vue)",
+		"watch": "pnpm run build && pnpm run \"/^watch:.*/\"",
 		"watch:base": "tsc -b -w",
-		"watch:vue": "cd ./extensions/vscode && npm run watch",
-		"prerelease": "npm run build && npm run test",
+		"watch:vue": "cd ./extensions/vscode && pnpm run watch",
+		"prerelease": "pnpm run build && pnpm run test",
 		"version": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
-		"release": "npm run release:base && npm run release:vue",
+		"release": "pnpm run release:base && pnpm run release:vue",
 		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock --no-git-tag-version",
-		"release:vue": "cd ./extensions/vscode && npm run release",
-		"release:next": "npm run release:next-base && npm run release:next-vue",
-		"release:next-base": "npm run release:base -- --dist-tag next",
-		"release:next-vue": "cd ./extensions/vscode && npm run release:next",
+		"release:vue": "cd ./extensions/vscode && pnpm run release",
+		"release:next": "pnpm run release:next-base && pnpm run release:next-vue",
+		"release:next-base": "pnpm run release:base -- --dist-tag next",
+		"release:next-vue": "cd ./extensions/vscode && pnpm run release:next",
 		"test": "vitest run",
 		"test:update": "vitest run --update",
 		"lint": "tsslint --projects {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
-		"lint:fix": "npm run lint -- --fix",
+		"lint:fix": "pnpm run lint -- --fix",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
@@ -29,10 +29,5 @@
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"
-	},
-	"pnpm": {
-		"overrides": {
-			"inquirer": "9.2.23"
-		}
 	}
 }

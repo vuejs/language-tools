@@ -17,6 +17,7 @@ export interface TemplateCodegenOptions {
 	edited: boolean;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
+	destructuredPropNames: Set<string>;
 	templateRefNames: Set<string>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
@@ -33,9 +34,10 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
+	ctx.addLocalVariable('$el');
 	ctx.addLocalVariable('$refs');
 
-	yield* generatePreResolveComponents();
+	yield* generatePreResolveComponents(options);
 
 	if (options.template.ast) {
 		yield* generateTemplateChild(options, ctx, options.template.ast, undefined, undefined, undefined);
@@ -45,96 +47,104 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	if (!options.hasDefineSlots) {
 		yield `var __VLS_slots!:`;
-		yield* generateSlotsType();
+		yield* generateSlotsType(options, ctx);
 		yield endOfLine;
 	}
-
-	yield* generateInheritedAttrs();
 
 	yield* ctx.generateAutoImportCompletion();
-
-	yield* generateRefs();
+	yield* generateInheritedAttrs(ctx);
+	yield* generateRefs(ctx);
+	yield* generateRootEl(ctx);
 
 	return ctx;
+}
 
-	function* generateRefs(): Generator<Code> {
-		yield `const __VLS_refs = {${newLine}`;
-		for (const [name, [varName, offset]] of ctx.templateRefs) {
-			yield* generateStringLiteralKey(
-				name,
-				offset,
-				ctx.codeFeatures.navigationAndCompletion
-			)
-			yield `: ${varName},${newLine}`;
-		}
-		yield `}${endOfLine}`;
-		yield `var $refs!: typeof __VLS_refs${endOfLine}`;
+function* generateSlotsType(options: TemplateCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
+	for (const { expVar, varName } of ctx.dynamicSlots) {
+		ctx.hasSlot = true;
+		yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
 	}
-
-	function* generateSlotsType(): Generator<Code> {
-		for (const { expVar, varName } of ctx.dynamicSlots) {
-			ctx.hasSlot = true;
-			yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
+	yield `{${newLine}`;
+	for (const slot of ctx.slots) {
+		ctx.hasSlot = true;
+		if (slot.name && slot.loc !== undefined) {
+			yield* generateObjectProperty(
+				options,
+				ctx,
+				slot.name,
+				slot.loc,
+				ctx.codeFeatures.withoutHighlightAndCompletion,
+				slot.nodeLoc
+			);
 		}
-		yield `{${newLine}`;
-		for (const slot of ctx.slots) {
-			ctx.hasSlot = true;
-			if (slot.name && slot.loc !== undefined) {
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					slot.name,
-					slot.loc,
-					ctx.codeFeatures.withoutHighlightAndCompletion,
-					slot.nodeLoc
-				);
-			}
-			else {
-				yield* wrapWith(
-					slot.tagRange[0],
-					slot.tagRange[1],
-					ctx.codeFeatures.withoutHighlightAndCompletion,
-					`default`
-				);
-			}
-			yield `?(_: typeof ${slot.varName}): any,${newLine}`;
+		else {
+			yield* wrapWith(
+				slot.tagRange[0],
+				slot.tagRange[1],
+				ctx.codeFeatures.withoutHighlightAndCompletion,
+				`default`
+			);
 		}
-		yield `}`;
+		yield `?(_: typeof ${slot.varName}): any,${newLine}`;
 	}
+	yield `}`;
+}
 
-	function* generateInheritedAttrs(): Generator<Code> {
-		yield 'var __VLS_inheritedAttrs!: {}';
-		for (const varName of ctx.inheritedAttrVars) {
-			yield ` & typeof ${varName}`;
-		}
-		yield endOfLine;
+function* generateInheritedAttrs(ctx: TemplateCodegenContext): Generator<Code> {
+	yield 'var __VLS_inheritedAttrs!: {}';
+	for (const varName of ctx.inheritedAttrVars) {
+		yield ` & typeof ${varName}`;
 	}
+	yield endOfLine;
+}
 
-	function* generatePreResolveComponents(): Generator<Code> {
-		yield `let __VLS_resolvedLocalAndGlobalComponents!: Required<{}`;
-		if (options.template.ast) {
-			const components = new Set<string>();
-			for (const node of forEachElementNode(options.template.ast)) {
-				if (
-					node.tagType === CompilerDOM.ElementTypes.COMPONENT
-					&& node.tag.toLowerCase() !== 'component'
-					&& !node.tag.includes('.') // namespace tag 
-				) {
-					if (components.has(node.tag)) {
-						continue;
-					}
-					components.add(node.tag);
-					yield newLine;
-					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
-					yield getPossibleOriginalComponentNames(node.tag, false)
-						.map(name => `"${name}"`)
-						.join(', ');
-					yield `>`;
+function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {
+	yield `const __VLS_refs = {${newLine}`;
+	for (const [name, [varName, offset]] of ctx.templateRefs) {
+		yield* generateStringLiteralKey(
+			name,
+			offset,
+			ctx.codeFeatures.navigationAndCompletion
+		);
+		yield `: ${varName},${newLine}`;
+	}
+	yield `}${endOfLine}`;
+	yield `var $refs!: typeof __VLS_refs${endOfLine}`;
+}
+
+function* generateRootEl(ctx: TemplateCodegenContext): Generator<Code> {
+	if (ctx.singleRootElType) {
+		yield `var $el!: ${ctx.singleRootElType}${endOfLine}`;
+	}
+	else {
+		yield `var $el!: any${endOfLine}`;
+	}
+}
+
+function* generatePreResolveComponents(options: TemplateCodegenOptions): Generator<Code> {
+	yield `let __VLS_resolvedLocalAndGlobalComponents!: Required<{}`;
+	if (options.template.ast) {
+		const components = new Set<string>();
+		for (const node of forEachElementNode(options.template.ast)) {
+			if (
+				node.tagType === CompilerDOM.ElementTypes.COMPONENT
+				&& node.tag.toLowerCase() !== 'component'
+				&& !node.tag.includes('.') // namespace tag 
+			) {
+				if (components.has(node.tag)) {
+					continue;
 				}
+				components.add(node.tag);
+				yield newLine;
+				yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+				yield getPossibleOriginalComponentNames(node.tag, false)
+					.map(name => `"${name}"`)
+					.join(', ');
+				yield `>`;
 			}
 		}
-		yield `>${endOfLine}`;
 	}
+	yield `>${endOfLine}`;
 }
 
 export function* forEachElementNode(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode): Generator<CompilerDOM.ElementNode> {

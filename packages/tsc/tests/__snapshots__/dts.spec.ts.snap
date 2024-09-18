@@ -634,6 +634,7 @@ export {};
 
 exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slots/component.vue.d.ts 1`] = `
 "declare function __VLS_template(): {
+    attrs: Partial<{}>;
     slots: {
         "no-bind"?(_: {}): any;
         default?(_: {
@@ -648,7 +649,7 @@ exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slo
         }): any;
     };
     refs: {};
-    attrs: Partial<{}>;
+    rootEl: any;
 };
 type __VLS_TemplateResult = ReturnType<typeof __VLS_template>;
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
@@ -665,6 +666,7 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 exports[`vue-tsc-dts > Input: template-slots/component-define-slots.vue, Output: template-slots/component-define-slots.vue.d.ts 1`] = `
 "import { VNode } from 'vue';
 declare function __VLS_template(): {
+    attrs: Partial<{}>;
     slots: Readonly<{
         default: (props: {
             num: number;
@@ -691,7 +693,7 @@ declare function __VLS_template(): {
         'no-bind': () => VNode[];
     };
     refs: {};
-    attrs: Partial<{}>;
+    rootEl: any;
 };
 type __VLS_TemplateResult = ReturnType<typeof __VLS_template>;
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
@@ -707,6 +709,7 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 
 exports[`vue-tsc-dts > Input: template-slots/component-destructuring.vue, Output: template-slots/component-destructuring.vue.d.ts 1`] = `
 "declare function __VLS_template(): {
+    attrs: Partial<{}>;
     slots: Readonly<{
         bottom: (props: {
             num: number;
@@ -717,7 +720,7 @@ exports[`vue-tsc-dts > Input: template-slots/component-destructuring.vue, Output
         }) => any[];
     };
     refs: {};
-    attrs: Partial<{}>;
+    rootEl: any;
 };
 type __VLS_TemplateResult = ReturnType<typeof __VLS_template>;
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
@@ -733,6 +736,7 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 
 exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: template-slots/component-no-script.vue.d.ts 1`] = `
 "declare function __VLS_template(): {
+    attrs: Partial<{}>;
     slots: {
         "no-bind"?(_: {}): any;
         default?(_: {
@@ -747,7 +751,7 @@ exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: te
         }): any;
     };
     refs: {};
-    attrs: Partial<{}>;
+    rootEl: any;
 };
 type __VLS_TemplateResult = ReturnType<typeof __VLS_template>;
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;

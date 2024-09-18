@@ -45,11 +45,10 @@ export function collectVars(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
-	results: string[] = [],
-	includesRest = true
+	results: string[] = []
 ) {
-	const identifiers = collectIdentifiers(ts, node, [], includesRest);
-	for (const id of identifiers) {
+	const identifiers = collectIdentifiers(ts, node, []);
+	for (const [id] of identifiers) {
 		results.push(getNodeText(ts, id, ast));
 	}
 	return results;
@@ -58,28 +57,26 @@ export function collectVars(
 export function collectIdentifiers(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	results: ts.Identifier[] = [],
-	includesRest = true
+	results: [id: ts.Identifier, isRest: boolean][] = [],
+	isRest = false
 ) {
 	if (ts.isIdentifier(node)) {
-		results.push(node);
+		results.push([node, isRest]);
 	}
 	else if (ts.isObjectBindingPattern(node)) {
 		for (const el of node.elements) {
-			if (includesRest || !el.dotDotDotToken) {
-				collectIdentifiers(ts, el.name, results, includesRest);
-			}
+			collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken);
 		}
 	}
 	else if (ts.isArrayBindingPattern(node)) {
 		for (const el of node.elements) {
 			if (ts.isBindingElement(el)) {
-				collectIdentifiers(ts, el.name, results, includesRest);
+				collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken);
 			}
 		}
 	}
 	else {
-		ts.forEachChild(node, node => collectIdentifiers(ts, node, results, includesRest));
+		ts.forEachChild(node, node => collectIdentifiers(ts, node, results, false));
 	}
 	return results;
 }
