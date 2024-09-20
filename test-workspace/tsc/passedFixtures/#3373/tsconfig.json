@@ -1,7 +1,7 @@
 {
 	"extends": "../../../tsconfig.base.json",
 	"compilerOptions": {
-		"importsNotUsedAsValues": "error",
+		"verbatimModuleSyntax": true,
 		"ignoreDeprecations": "5.0"
 	},
 	"include": [ "**/*" ]
