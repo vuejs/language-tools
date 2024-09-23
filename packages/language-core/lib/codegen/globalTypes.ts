@@ -1,7 +1,7 @@
 import { getSlotsPropertyName } from '../utils/shared';
 
 export function generateGlobalTypes(lib: string, target: number, strictTemplates: boolean) {
-	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${strictTemplates ? '' : ' & Record<string, unknown>'}`;
+	const fnPropsType = `__VLS_WithEventTarget<K['$el'], (K extends { $props: infer Props } ? Props : any)${strictTemplates ? '' : ' & Record<string, unknown>'}>`;
 	let text = ``;
 	if (target < 3.5) {
 		text += `
@@ -87,6 +87,13 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
 		, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 	>>;
+	type __VLS_WithEventTarget<E, T> = {
+		[K in keyof T]: T[K] extends ((payload: infer P) => void) | undefined
+			? P extends Event
+				? ((payload: P & { currentTarget: __VLS_PickNotAny<E, Element>, target: Element }) => void) | undefined
+				: T[K]
+			: T[K];
+	};
 
 	function __VLS_getVForSourceType(source: number): [number, number, number][];
 	function __VLS_getVForSourceType(source: string): [string, number, number][];
@@ -131,7 +138,7 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: (_: {}${strictTemplates ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${strictTemplates ? '' : ' & Record<string, unknown>'} } };
-	function __VLS_elementAsFunction<T>(tag: T, endTag?: T): (_: T${strictTemplates ? '' : ' & Record<string, unknown>'}) => void;
+	function __VLS_asFunctionalElement<E, T>(el: E, tag: T, endTag?: T): (_: __VLS_WithEventTarget<E, T>${strictTemplates ? '' : ' & Record<string, unknown>'}) => void;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
 	function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
 	function __VLS_tryAsConstant<const T>(t: T): T;

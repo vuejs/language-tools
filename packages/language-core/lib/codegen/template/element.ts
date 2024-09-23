@@ -296,7 +296,15 @@ export function* generateElement(
 		suffix: string;
 	}[] = [];
 
-	yield `__VLS_elementAsFunction(__VLS_intrinsicElements`;
+	yield `__VLS_asFunctionalElement(__VLS_nativeElements`;
+	yield* generatePropertyAccess(
+		options,
+		ctx,
+		node.tag,
+		startTagOffset,
+		ctx.codeFeatures.withoutHighlightAndCompletion
+	);
+	yield `, __VLS_intrinsicElements`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
