@@ -1,7 +1,7 @@
 import { getSlotsPropertyName } from '../utils/shared';
 
 export function generateGlobalTypes(lib: string, target: number, strictTemplates: boolean) {
-	const fnPropsType = `__VLS_WithEventTarget<K['$el'], (K extends { $props: infer Props } ? Props : any)${strictTemplates ? '' : ' & Record<string, unknown>'}>`;
+	const fnPropsType = `(K extends { $props: infer Props } ? __VLS_WithEventTarget<K['$el'], Props> : any)${strictTemplates ? '' : ' & Record<string, unknown>'}`;
 	let text = ``;
 	if (target < 3.5) {
 		text += `
