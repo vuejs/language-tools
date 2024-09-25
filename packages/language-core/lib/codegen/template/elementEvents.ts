@@ -38,7 +38,7 @@ export function* generateElementEvents(
 				? originalPropName
 				: `'${originalPropName}'`;
 			yield `const ${ctx.getInternalVariable()}: `;
-			if (!options.vueCompilerOptions.strictTemplates) {
+			if (!options.vueCompilerOptions.strictAttributes) {
 				yield `Record<string, unknown> & `;
 			}
 			yield `(${newLine}`;

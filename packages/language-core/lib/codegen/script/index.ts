@@ -4,7 +4,7 @@ import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
-import { generateGlobalTypes } from '../globalTypes';
+import { generateGlobalTypes, resolveGlobalTypesName } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
 import { createScriptCodegenContext, ScriptCodegenContext } from './context';
 import { generateComponentSelf } from './componentSelf';
@@ -56,7 +56,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	const ctx = createScriptCodegenContext(options);
 
 	if (options.vueCompilerOptions.__setupedGlobalTypes) {
-		yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+		yield `/// <reference types=".vue-global-types/${resolveGlobalTypesName(options.vueCompilerOptions)}" />${newLine}`;
 	}
 	else {
 		yield `/* placeholder */`;
@@ -153,7 +153,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 	yield* ctx.localTypes.generate([...ctx.localTypes.getUsedNames()]);
 	if (options.appendGlobalTypes) {
-		yield generateGlobalTypes(options.vueCompilerOptions.lib, options.vueCompilerOptions.target, options.vueCompilerOptions.strictTemplates);
+		yield generateGlobalTypes(options.vueCompilerOptions);
 	}
 
 	if (options.sfc.scriptSetup) {

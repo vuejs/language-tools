@@ -29,6 +29,8 @@ export interface VueCompilerOptions {
 	petiteVueExtensions: string[];
 	jsxSlots: boolean;
 	strictTemplates: boolean;
+	strictAttributes: boolean;
+	strictComponents: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
 	dataAttributes: string[];
