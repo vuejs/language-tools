@@ -200,7 +200,7 @@ importers:
         specifier: ~2.4.1
         version: 2.4.2
       '@vue/compiler-dom':
-        specifier: ^3.4.0
+        specifier: ^3.5.2
         version: 3.5.3
       '@vue/language-core':
         specifier: 2.1.6
