@@ -43,7 +43,17 @@
 				"strictTemplates": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Strict props, component type-checking in templates."
+					"markdownDescription": "Strict props(attrs), component type-checking in templates."
+				},
+				"strictAttributes": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Strict props(attrs) type-checking in templates."
+				},
+				"strictComponents": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Strict component type-checking in templates."
 				},
 				"skipTemplateCodegen": {
 					"type": "boolean",
@@ -85,8 +95,16 @@
 						"defineSlots": [ "defineSlots" ],
 						"defineEmits": [ "defineEmits" ],
 						"defineExpose": [ "defineExpose" ],
-						"withDefaults": [ "withDefaults" ],
-						"templateRef": [ "templateRef", "useTemplateRef" ]
+						"defineModel": [ "defineModel" ],
+						"defineOptions": [ "defineOptions" ],
+						"withDefaults": [ "withDefaults" ]
+					}
+				},
+				"composibles": {
+					"type": "object",
+					"default": {
+						"useCssModule": [ "useCssModule" ],
+						"useTemplateRef": [ "useTemplateRef", "templateRef" ]
 					}
 				},
 				"experimentalResolveStyleCssClasses": {
