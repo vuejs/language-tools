@@ -223,6 +223,7 @@ function getPartialVueCompilerOptions(
 export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3.3;
 	const lib = vueOptions.lib ?? 'vue';
+	const strictTemplates = vueOptions.strictTemplates ?? false;
 	return {
 		...vueOptions,
 		target,
@@ -231,7 +232,9 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		petiteVueExtensions: vueOptions.petiteVueExtensions ?? [],
 		lib,
 		jsxSlots: vueOptions.jsxSlots ?? false,
-		strictTemplates: vueOptions.strictTemplates ?? false,
+		strictTemplates,
+		strictAttributes: vueOptions.strictAttributes ?? strictTemplates,
+		strictComponents: vueOptions.strictComponents ?? strictTemplates,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
 		fallthroughAttributes: vueOptions.fallthroughAttributes ?? false,
 		dataAttributes: vueOptions.dataAttributes ?? [],
@@ -295,7 +298,7 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 			dir = parentDir;
 		}
 		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', `${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
-		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
+		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions);
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return true;
 	} catch {
