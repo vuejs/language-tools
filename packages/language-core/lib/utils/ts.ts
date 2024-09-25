@@ -3,7 +3,7 @@ import type * as ts from 'typescript';
 import { posix as path } from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { getAllExtensions } from '../languagePlugin';
-import { generateGlobalTypes } from '../codegen/globalTypes';
+import { generateGlobalTypes, resolveGlobalTypesName } from '../codegen/globalTypes';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -297,7 +297,7 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 			}
 			dir = parentDir;
 		}
-		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', `${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
+		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', resolveGlobalTypesName(vueOptions));
 		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions);
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return true;
