@@ -5,10 +5,10 @@ exports[`vue-tsc-dts > Input: #4577/main.vue, Output: #4577/main.vue.d.ts 1`] = 
     value: string;
 };
 declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<{}> & Readonly<{}>, never>, never> & {
+    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<{}> & Readonly<{}>, never>, never> & Partial<{}> & {
         nonGeneric: string;
         rows: Row[];
-    } & Partial<{}>> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    }> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {
@@ -73,7 +73,7 @@ exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/compo
         readonly onFoo?: (value: string) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<{}> & Readonly<{
         onFoo?: (value: string) => any;
-    }>, never>, "onFoo"> & {} & Partial<{}>> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    }>, never>, "onFoo"> & Partial<{}> & {}> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {};
@@ -98,11 +98,11 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<{}> & Readonly<{
         "onUpdate:title"?: (title: string) => any;
         onBar?: (data: number) => any;
-    }>, never>, "onUpdate:title" | "onBar"> & ({
+    }>, never>, "onUpdate:title" | "onBar"> & Partial<{}> & ({
         title?: string;
     } & {
         foo: number;
-    }) & Partial<{}>> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
@@ -137,11 +137,11 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<{}> & Readonly<{
         "onUpdate:title"?: (title: string) => any;
         onBar?: (data: number) => any;
-    }>, never>, "onUpdate:title" | "onBar"> & ({
+    }>, never>, "onUpdate:title" | "onBar"> & Partial<{}> & ({
         title?: string;
     } & {
         foo: number;
-    }) & Partial<{}>> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
