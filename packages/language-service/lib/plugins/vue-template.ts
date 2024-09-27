@@ -761,7 +761,7 @@ export function create(
 					}
 				}
 
-				completionList.items = completionList.items.filter(item => !specialTags.has(item.label));
+				completionList.items = completionList.items.filter(item => !specialTags.has(parseLabel(item.label).name));
 
 				const htmlDocumentations = new Map<string, string>();
 
@@ -773,12 +773,11 @@ export function create(
 				}
 
 				for (const item of completionList.items) {
-
 					const resolvedLabelKey = resolveItemKey(item.label);
 
 					if (resolvedLabelKey) {
 						const name = resolvedLabelKey.tag;
-						item.label = name;
+						item.label = resolvedLabelKey.leadingSlash ? '/' + name : name;
 						if (item.textEdit) {
 							item.textEdit.newText = name;
 						};
@@ -838,6 +837,7 @@ export function create(
 								type: 'componentProp',
 								tag: '^',
 								prop: propName,
+								leadingSlash: false
 							};
 						}
 
@@ -988,6 +988,15 @@ export function create(
 	}
 };
 
+function parseLabel(label: string) {
+	const leadingSlash = label.startsWith('/');
+	const name = label.slice(leadingSlash ? 1 : 0);
+	return {
+		name,
+		leadingSlash
+	}
+}
+
 function parseItemKey(type: InternalItemId, tag: string, prop: string) {
 	return '__VLS_data=' + type + ',' + tag + ',' + prop;
 }
@@ -997,12 +1006,14 @@ function isItemKey(key: string) {
 }
 
 function resolveItemKey(key: string) {
-	if (isItemKey(key)) {
-		const strs = key.slice('__VLS_data='.length).split(',');
+	const { leadingSlash, name } = parseLabel(key);
+	if (isItemKey(name)) {
+		const strs = name.slice('__VLS_data='.length).split(',');
 		return {
 			type: strs[0] as InternalItemId,
 			tag: strs[1],
 			prop: strs[2],
+			leadingSlash
 		};
 	}
 }
