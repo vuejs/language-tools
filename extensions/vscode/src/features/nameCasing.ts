@@ -1,4 +1,4 @@
-import { BaseLanguageClient, ExecuteCommandParams, ExecuteCommandRequest, State, TextEdit } from '@volar/vscode';
+import { BaseLanguageClient, type ExecuteCommandParams, ExecuteCommandRequest, State, TextEdit } from '@volar/vscode';
 import { quickPick } from '@volar/vscode/lib/common';
 import { AttrNameCasing, TagNameCasing, commands } from '@vue/language-server/lib/types';
 import * as vscode from 'vscode';
