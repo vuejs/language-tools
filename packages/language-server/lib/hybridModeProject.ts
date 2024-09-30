@@ -1,7 +1,7 @@
 import type { Language, LanguagePlugin, LanguageServer, LanguageServerProject, ProjectContext, ProviderResult } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createLanguage } from '@vue/language-core';
-import { createLanguageService, createUriMap, LanguageService } from '@vue/language-service';
+import { createLanguageService, createUriMap, type LanguageService } from '@vue/language-service';
 import { getReadyNamedPipePaths, onSomePipeReadyCallbacks, searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
 import { URI } from 'vscode-uri';
 

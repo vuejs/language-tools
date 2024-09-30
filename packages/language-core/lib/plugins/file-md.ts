@@ -1,6 +1,6 @@
-import { CodeInformation, Mapping, defaultMapperFactory } from '@volar/language-core';
+import { type CodeInformation, type Mapping, defaultMapperFactory } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
-import { Segment, toString } from 'muggle-string';
+import { type Segment, toString } from 'muggle-string';
 import type { VueLanguagePlugin } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 import { parse } from '../utils/parseSfc';

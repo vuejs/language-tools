@@ -6,7 +6,7 @@ import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../ty
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateGlobalTypes } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
-import { createScriptCodegenContext, ScriptCodegenContext } from './context';
+import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateComponentSelf } from './componentSelf';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';

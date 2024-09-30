@@ -7,7 +7,7 @@ import type { VueEmbeddedCode } from './virtualFile/embeddedFile';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
-export { VueEmbeddedCode };
+export { type VueEmbeddedCode };
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
 	target?: 'auto' | 2 | 2.7 | 3 | 3.3;

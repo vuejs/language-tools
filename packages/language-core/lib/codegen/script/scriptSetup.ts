@@ -3,7 +3,7 @@ import type { Code, Sfc, TextRange } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponent, generateEmitsOption } from './component';
 import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures } from './index';
+import { type ScriptCodegenOptions, codeFeatures } from './index';
 import { generateComponentSelf } from './componentSelf';
 import { generateTemplate } from './template';
 

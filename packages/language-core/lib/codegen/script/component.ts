@@ -2,7 +2,7 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures } from './index';
+import { type ScriptCodegenOptions, codeFeatures } from './index';
 
 export function* generateComponent(
 	options: ScriptCodegenOptions,

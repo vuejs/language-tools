@@ -2,7 +2,7 @@ import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
 import { endOfLine, newLine } from '../common';
-import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
+import { type TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { forEachInterpolationSegment } from '../template/interpolation';
 import { generateStyleScopedClasses } from '../template/styleScopedClasses';
 import type { ScriptCodegenContext } from './context';

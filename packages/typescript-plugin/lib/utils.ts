@@ -5,7 +5,7 @@ import * as path from 'path';
 import type * as ts from 'typescript';
 import type { ProjectInfo, Request } from './server';
 
-export { TypeScriptProjectHost } from '@volar/typescript';
+export { type TypeScriptProjectHost } from '@volar/typescript';
 
 const { version } = require('../package.json');
 const platform = os.platform();

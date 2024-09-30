@@ -1,5 +1,5 @@
 import type { VirtualCode } from '@volar/language-core';
-import { computed, Signal, signal } from 'computeds';
+import { computed, type Signal, signal } from 'computeds';
 import type * as ts from 'typescript';
 import type { VueCompilerOptions, VueLanguagePluginReturn } from '../types';
 import { computedEmbeddedCodes } from './computedEmbeddedCodes';

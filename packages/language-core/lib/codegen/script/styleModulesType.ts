@@ -1,6 +1,6 @@
 import type { Code } from '../../types';
 import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures } from './index';
+import { type ScriptCodegenOptions, codeFeatures } from './index';
 import { generateCssClassProperty } from './template';
 import { endOfLine, newLine } from '../common';
 
