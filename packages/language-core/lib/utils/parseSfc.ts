@@ -1,7 +1,7 @@
 import type { CompilerError, SFCDescriptor, SFCBlock, SFCStyleBlock, SFCScriptBlock, SFCTemplateBlock, SFCParseResult } from '@vue/compiler-sfc';
 import type { ElementNode, SourceLocation } from '@vue/compiler-dom';
 import * as compiler from '@vue/compiler-dom';
-import type { SFCStyleOverride } from '../types';
+import { SFCStyleOverride } from '../types';
 
 export function parse(source: string): SFCParseResult {
 

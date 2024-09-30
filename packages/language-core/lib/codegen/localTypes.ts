@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import type { VueCompilerOptions } from '../types';
+import { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 import { endOfLine } from './common';
 

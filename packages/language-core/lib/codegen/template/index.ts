@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { endOfLine, newLine, wrapWith } from '../common';
-import { type TemplateCodegenContext, createTemplateCodegenContext } from './context';
+import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
 import { generateStringLiteralKey } from './stringLiteralKey';

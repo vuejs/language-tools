@@ -1,7 +1,7 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createTypeScriptProject } from '@volar/language-server/node';
-import { createParsedCommandLine, createVueLanguagePlugin, generateGlobalTypes, getAllExtensions, resolveVueCompilerOptions, type VueCompilerOptions } from '@vue/language-core';
-import { type Disposable, getFullLanguageServicePlugins, type InitializeParams } from '@vue/language-service';
+import { createParsedCommandLine, createVueLanguagePlugin, generateGlobalTypes, getAllExtensions, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
+import { Disposable, getFullLanguageServicePlugins, InitializeParams } from '@vue/language-service';
 import type * as ts from 'typescript';
 
 export function initialize(

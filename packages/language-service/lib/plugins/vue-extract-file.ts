@@ -1,6 +1,6 @@
 import type { CreateFile, LanguageServiceContext, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import { type Sfc, VueVirtualCode, scriptRanges } from '@vue/language-core';
+import { Sfc, VueVirtualCode, scriptRanges } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';

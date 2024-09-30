@@ -1,6 +1,6 @@
 /// <reference types="@volar/typescript" />
 
-import { forEachEmbeddedCode, type LanguagePlugin } from '@volar/language-core';
+import { forEachEmbeddedCode, LanguagePlugin } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { createPlugins } from './plugins';

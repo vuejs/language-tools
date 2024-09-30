@@ -5,7 +5,7 @@ import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUser
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { type LanguageServiceContext, type LanguageServicePlugin, type LanguageServicePluginInstance, TagNameCasing } from '../types';
+import { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance, TagNameCasing } from '../types';
 
 export function create(
 	ts: typeof import('typescript'),

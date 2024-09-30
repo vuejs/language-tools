@@ -1,8 +1,8 @@
 export {
-	type ComponentType,
-	type ComponentProps,
-	type ComponentEmit,
-	type ComponentExposed,
+	ComponentType,
+	ComponentProps,
+	ComponentEmit,
+	ComponentExposed,
 } from './index';
 
 export type ComponentSlots<T> =

@@ -1,5 +1,5 @@
 import type { Disposable, LanguageServiceContext, LanguageServicePluginInstance } from '@volar/language-service';
-import { type VueCompilerOptions, VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
+import { VueCompilerOptions, VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
 import { create as createHtmlService } from 'volar-service-html';
@@ -9,7 +9,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI, Utils } from 'vscode-uri';
 import { getNameCasing } from '../ideFeatures/nameCasing';
-import { AttrNameCasing, type LanguageServicePlugin, TagNameCasing } from '../types';
+import { AttrNameCasing, LanguageServicePlugin, TagNameCasing } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
 
 type InternalItemId =

@@ -2,7 +2,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
 import { endOfLine, newLine, wrapWith } from '../common';
 import type { TemplateCodegenOptions } from './index';
-import type { InlayHintInfo } from '../types';
+import { InlayHintInfo } from '../types';
 
 const _codeFeatures = {
 	all: {

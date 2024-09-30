@@ -1,4 +1,4 @@
-import { type TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
+import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 import * as vue from '@vue/language-core';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';

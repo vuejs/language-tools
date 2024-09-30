@@ -27,7 +27,7 @@ import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 
-import { parse, type VueCompilerOptions } from '@vue/language-core';
+import { parse, VueCompilerOptions } from '@vue/language-core';
 import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
 import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from '@vue/typescript-plugin/lib/requests/componentInfos';

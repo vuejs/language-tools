@@ -2,8 +2,7 @@
 	"compilerOptions": {
 		"target": "ES2021",
 		"lib": [ "ES2021" ],
-		"module": "Preserve",
-		"moduleResolution": "Bundler",
+		"module": "Node16",
 		"sourceMap": true,
 		"composite": true,
 		"strict": true,
@@ -13,7 +12,7 @@
 		"esModuleInterop": false,
 		"forceConsistentCasingInFileNames": true,
 		"ignoreDeprecations": "5.0",
-		"verbatimModuleSyntax": true,
+		"verbatimModuleSyntax": false,
 	},
 	"include": [ ],
 }
