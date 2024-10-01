@@ -258,8 +258,9 @@ function* generateSetupFunction(
 	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
+	const startOffset = Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset);
 	if (setupCodeModifies.length) {
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.importSectionEndOffset, setupCodeModifies[0][1], codeFeatures.all);
+		yield generateSfcBlockSection(scriptSetup, startOffset, setupCodeModifies[0][1], codeFeatures.all);
 		while (setupCodeModifies.length) {
 			const [codes, _start, end] = setupCodeModifies.shift()!;
 			for (const code of codes) {
@@ -275,7 +276,7 @@ function* generateSetupFunction(
 		}
 	}
 	else {
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.importSectionEndOffset, scriptSetup.content.length, codeFeatures.all);
+		yield generateSfcBlockSection(scriptSetup, startOffset, scriptSetup.content.length, codeFeatures.all);
 	}
 
 	if (scriptSetupRanges.props.define?.typeArg && scriptSetupRanges.props.withDefaults?.arg) {
