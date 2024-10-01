@@ -7,9 +7,9 @@
 const a = 1;
 
 defineProps({
-    foo: {
-        /** @type PropType<string> */
-        type: String
-    }
+	foo: {
+		/** @type PropType<string> */
+		type: String
+	}
 });
 </script>
