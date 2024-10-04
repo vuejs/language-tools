@@ -146,6 +146,9 @@ function* generateSetupFunction(
 				setupCodeModifies.push([[`const __VLS_props = `], propsRange.start, propsRange.start]);
 			}
 			else {
+				// workaround for #4811
+				const propsExpression = `{} as typeof __VLS_props`;
+
 				if (scriptSetupRanges.props.define.typeArg) {
 					setupCodeModifies.push([[
 						`const __VLS_props = `,
@@ -155,7 +158,7 @@ function* generateSetupFunction(
 						generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.typeArg.end, propsRange.end, codeFeatures.all),
 						`${endOfLine}`,
 						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
-						`__VLS_props`,
+						propsExpression,
 					], scriptSetupRanges.props.define.typeArg.end, propsRange.end]);
 				}
 				else {
@@ -164,7 +167,7 @@ function* generateSetupFunction(
 						generateSfcBlockSection(scriptSetup, propsRange.start, propsRange.end, codeFeatures.all),
 						`${endOfLine}`,
 						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
-						`__VLS_props`,
+						propsExpression,
 					], statement.start, propsRange.end]);
 				}
 			}
