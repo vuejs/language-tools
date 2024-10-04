@@ -291,19 +291,26 @@ function* generateDefineWithType(
 		if (statement.start === expression.start && statement.end === expression.end) {
 			yield [[`const ${defaultName} = `], expression.start, expression.start];
 		}
-		else {
-			const typeArgStart = typeArg?.start ?? expression.end;
-			const typeArgEnd = typeArg?.end ?? expression.start;
+		else if (typeArg) {
 			yield [[
 				`const ${defaultName} = `,
-				generateSfcBlockSection(scriptSetup, expression.start, typeArgStart, codeFeatures.all)
-			], statement.start, typeArgStart];
+				generateSfcBlockSection(scriptSetup, expression.start, typeArg.start, codeFeatures.all)
+			], statement.start, typeArg.start];
 			yield [[
-				generateSfcBlockSection(scriptSetup, typeArgEnd, expression.end, codeFeatures.all),
+				generateSfcBlockSection(scriptSetup, typeArg.end, expression.end, codeFeatures.all),
 				endOfLine,
 				generateSfcBlockSection(scriptSetup, statement.start, expression.start, codeFeatures.all),
 				defaultName
-			], typeArgEnd, expression.end];
+			], typeArg.end, expression.end];
+		}
+		else {
+			yield [[
+				`const ${defaultName} = `,
+				generateSfcBlockSection(scriptSetup, expression.start, expression.end, codeFeatures.all),
+				endOfLine,
+				generateSfcBlockSection(scriptSetup, statement.start, expression.start, codeFeatures.all),
+				defaultName
+			], statement.start, expression.end];
 		}
 	}
 }
