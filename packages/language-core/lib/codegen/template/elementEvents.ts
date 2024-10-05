@@ -43,7 +43,9 @@ export function* generateElementEvents(
 			}
 			yield `(${newLine}`;
 			yield `__VLS_IsFunction<typeof ${propsVar}, '${originalPropName}'> extends true${newLine}`;
-			yield `? typeof ${propsVar}${newLine}`;
+			yield `? {${newLine}`;
+			yield `${originalPropNameObjectKey}?: typeof ${propsVar}['${originalPropName}']${newLine}`;
+			yield `}${newLine}`;
 			yield `: __VLS_IsFunction<typeof ${eventsVar}, '${prop.arg.loc.source}'> extends true${newLine}`;
 			yield `? {${newLine}`;
 			yield `/**__VLS_emit,${emitVar},${prop.arg.loc.source}*/${newLine}`;
