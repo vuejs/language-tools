@@ -59,21 +59,13 @@ type __VLS_PropsChildren<S> = {
 	);
 	const TypePropsToOption = defineHelper(
 		`__VLS_TypePropsToOption`,
-		() => compilerOptions.exactOptionalPropertyTypes ?
-			`
-type __VLS_TypePropsToOption<T> = {
-	[K in keyof T]-?: {} extends Pick<T, K>
-		? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> }
-		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
-};
-`.trimStart() :
-			`
-type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
-type __VLS_TypePropsToOption<T> = {
-	[K in keyof T]-?: {} extends Pick<T, K>
-		? { type: import('${vueCompilerOptions.lib}').PropType<__VLS_NonUndefinedable<T[K]>> }
-		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
-};
+		() => (compilerOptions.exactOptionalPropertyTypes ? 'type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;' : '') + `
+type __VLS_TypePropsToOption<T> = __VLS_PrettifyUnion<__VLS_MergeUnion<T>> extends infer U ? {
+	[K in keyof U]-?: {
+        type: import('${vueCompilerOptions.lib}').PropType<${compilerOptions.exactOptionalPropertyTypes ? '__VLS_NonUndefinedable<U[K]>' : 'U[K]'}>,
+        required: {} extends Pick<U, K> ? false : true
+    }
+} : never;
 `.trimStart()
 	);
 	const OmitIndexSignature = defineHelper(

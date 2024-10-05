@@ -87,6 +87,25 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
 		, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 	>>;
+	type __VLS_InferUnionType<T, U, K> = K extends keyof T ? T[K] : K extends keyof U ? U[K] : never;
+	type __VLS_UnionKeys<T> = T extends any ? keyof T : never;
+	type __VLS_UnionRequiredKeys<T, K = __VLS_UnionKeys<T>> = Exclude<K, __VLS_UnionOptionalKeys<T>>;
+	type __VLS_UnionOptionalKeys<T, K = __VLS_UnionKeys<T>> = T extends any
+		? K extends keyof T
+			? {} extends Pick<T, K>
+				? K
+				: never
+			: never
+		: never;
+	type __VLS_MergeUnion<T, U = T> = T extends any
+		? { [V in __VLS_UnionRequiredKeys<U>]: __VLS_InferUnionType<T, U, V> }
+		& { [V in __VLS_UnionOptionalKeys<U>]?: __VLS_InferUnionType<T, U, V> }
+		: never;
+	type __VLS_PrettifyUnion<T> = {
+		[K in __VLS_UnionRequiredKeys<T>]: T[K]
+	} & {
+		[K in __VLS_UnionOptionalKeys<T>]?: T[K]
+	};
 
 	function __VLS_getVForSourceType(source: number): [number, number, number][];
 	function __VLS_getVForSourceType(source: string): [string, number, number][];
