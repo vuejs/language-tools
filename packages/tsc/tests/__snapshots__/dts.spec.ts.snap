@@ -5,7 +5,7 @@ exports[`vue-tsc-dts > Input: #4577/main.vue, Output: #4577/main.vue.d.ts 1`] = 
     value: string;
 };
 declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<{}> & Readonly<{}>, never>, never> & {
+    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, never> & {
         nonGeneric: string;
         rows: Row[];
     }> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
@@ -71,9 +71,7 @@ exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/compo
 "declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
     props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
         readonly onFoo?: (value: string) => any;
-    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<{}> & Readonly<{
-        onFoo?: (value: string) => any;
-    }>, never>, "onFoo"> & {}> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onFoo"> & {}> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {};
@@ -95,10 +93,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
     props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
         readonly "onUpdate:title"?: (title: string) => any;
         readonly onBar?: (data: number) => any;
-    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<{}> & Readonly<{
-        "onUpdate:title"?: (title: string) => any;
-        onBar?: (data: number) => any;
-    }>, never>, "onUpdate:title" | "onBar"> & ({
+    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onUpdate:title" | "onBar"> & ({
         title?: string;
     } & {
         foo: number;
@@ -134,10 +129,7 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
     props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
         readonly "onUpdate:title"?: (title: string) => any;
         readonly onBar?: (data: number) => any;
-    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps & Readonly<{}> & Readonly<{
-        "onUpdate:title"?: (title: string) => any;
-        onBar?: (data: number) => any;
-    }>, never>, "onUpdate:title" | "onBar"> & ({
+    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onUpdate:title" | "onBar"> & ({
         title?: string;
     } & {
         foo: number;
@@ -328,23 +320,21 @@ exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: refere
     "qux"?: string;
     quxModifiers?: Record<'lazy' | 'trim', true>;
 };
-declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<__VLS_PublicProps>>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
+declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<__VLS_PublicProps, __VLS_PublicProps>>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     "update:foo": (foo: number) => void;
     "update:bar": (bar: string[]) => void;
     "update:qux": (qux: string) => void;
-}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<__VLS_PublicProps>>> & Readonly<{
+}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<__VLS_PublicProps, __VLS_PublicProps>>> & Readonly<{
     "onUpdate:foo"?: (foo: number) => any;
     "onUpdate:bar"?: (bar: string[]) => any;
     "onUpdate:qux"?: (qux: string) => any;
 }>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 export default _default;
 type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
-type __VLS_TypePropsToOption<T> = {
-    [K in keyof T]-?: {} extends Pick<T, K> ? {
-        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
-    } : {
-        type: import('vue').PropType<T[K]>;
-        required: true;
+type __VLS_TypePropsToOption<T, U = __VLS_IsUnion<T> extends true ? __VLS_PrettifyUnion<__VLS_MergeUnion<T>> : T> = {
+    [K in keyof U]-?: {
+        type: import('vue').PropType<__VLS_NonUndefinedable<U[K]>>;
+        required: {} extends Pick<U, K> ? false : true;
     };
 };
 "
@@ -352,10 +342,10 @@ type __VLS_TypePropsToOption<T> = {
 
 exports[`vue-tsc-dts > Input: reference-type-props/component.vue, Output: reference-type-props/component.vue.d.ts 1`] = `
 "import { MyProps } from './my-props';
-declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps>, {
+declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps, MyProps>, {
     bar: number;
     baz: () => string[];
-}>>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps>, {
+}>>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps, MyProps>, {
     bar: number;
     baz: () => string[];
 }>>> & Readonly<{}>, {
@@ -369,12 +359,10 @@ type __VLS_WithDefaults<P, D> = {
     }> : P[K];
 };
 type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
-type __VLS_TypePropsToOption<T> = {
-    [K in keyof T]-?: {} extends Pick<T, K> ? {
-        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
-    } : {
-        type: import('vue').PropType<T[K]>;
-        required: true;
+type __VLS_TypePropsToOption<T, U = __VLS_IsUnion<T> extends true ? __VLS_PrettifyUnion<__VLS_MergeUnion<T>> : T> = {
+    [K in keyof U]-?: {
+        type: import('vue').PropType<__VLS_NonUndefinedable<U[K]>>;
+        required: {} extends Pick<U, K> ? false : true;
     };
 };
 type __VLS_PrettifyLocal<T> = {
