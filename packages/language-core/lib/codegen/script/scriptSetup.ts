@@ -215,7 +215,7 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	if (scriptSetupRanges.cssModules.length) {
+	if (options.isTs) {
 		for (const { exp, arg } of scriptSetupRanges.cssModules) {
 			if (arg) {
 				setupCodeModifies.push([
@@ -242,18 +242,18 @@ function* generateSetupFunction(
 				]);
 			}
 		}
-	}
-	for (const { define } of scriptSetupRanges.templateRefs) {
-		if (define?.arg) {
-			setupCodeModifies.push([
-				[
-					`<__VLS_TemplateResult['refs'][`,
-					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
-					`], keyof __VLS_TemplateResult['refs']>`
-				],
-				define.arg.start - 1,
-				define.arg.start - 1
-			]);
+		for (const { define } of scriptSetupRanges.templateRefs) {
+			if (define?.arg) {
+				setupCodeModifies.push([
+					[
+						`<__VLS_TemplateResult['refs'][`,
+						generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
+						`], keyof __VLS_TemplateResult['refs']>`
+					],
+					define.arg.start - 1,
+					define.arg.start - 1
+				]);
+			}
 		}
 	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
