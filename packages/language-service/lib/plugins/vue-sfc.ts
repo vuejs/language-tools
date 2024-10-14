@@ -23,7 +23,7 @@ export function create(): LanguageServicePlugin {
 				const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
 				const blockTypes = ['template', 'script', 'style'];
 
-				for (const customBlock of vueCode.sfc.customBlocks) {
+				for (const customBlock of vueCode._sfc.customBlocks) {
 					blockTypes.push(customBlock.type);
 				}
 
@@ -77,7 +77,7 @@ export function create(): LanguageServicePlugin {
 					return worker(document, context, vueSourceFile => {
 
 						const result: vscode.DocumentSymbol[] = [];
-						const descriptor = vueSourceFile.sfc;
+						const descriptor = vueSourceFile._sfc;
 
 						if (descriptor.template) {
 							result.push({
