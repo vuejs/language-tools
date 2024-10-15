@@ -39,7 +39,9 @@ export function createParsedCommandLineByJson(
 		resolvedVueOptions.__setupedGlobalTypes = true;
 	}
 	else {
-		resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(rootDir, resolvedVueOptions, parseConfigHost);
+		const setupResult = setupGlobalTypes(rootDir, resolvedVueOptions, parseConfigHost);
+		resolvedVueOptions.__setupedGlobalTypes = setupResult.done;
+		resolvedVueOptions.__setupedGlobalTypesAbsolutePath = setupResult.absolutePath;
 	}
 	const parsed = ts.parseJsonConfigFileContent(
 		json,
@@ -94,7 +96,9 @@ export function createParsedCommandLine(
 			resolvedVueOptions.__setupedGlobalTypes = true;
 		}
 		else {
-			resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost);
+			const setupResult = setupGlobalTypes(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost);
+			resolvedVueOptions.__setupedGlobalTypes = setupResult.done;
+			resolvedVueOptions.__setupedGlobalTypesAbsolutePath = setupResult.absolutePath;
 		}
 		const parsed = ts.parseJsonSourceFileConfigFileContent(
 			config,
@@ -281,9 +285,9 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions, host: {
 	fileExists(path: string): boolean;
 	writeFile?(path: string, data: string): void;
-}) {
+}): { done: boolean; absolutePath?: string; } {
 	if (!host.writeFile) {
-		return false;
+		return { done: false };
 	}
 	try {
 		let dir = rootDir;
@@ -297,8 +301,8 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', `${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
 		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
 		host.writeFile(globalTypesPath, globalTypesContents);
-		return true;
+		return { done: true, absolutePath: globalTypesPath };
 	} catch {
-		return false;
+		return { done: false };
 	}
 }

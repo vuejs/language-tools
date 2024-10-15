@@ -56,6 +56,7 @@ export interface VueCompilerOptions {
 
 	// internal
 	__setupedGlobalTypes?: boolean;
+	__setupedGlobalTypesAbsolutePath?: string;
 	__test?: boolean;
 }
 
