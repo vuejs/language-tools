@@ -8,13 +8,12 @@ export function* generateStyleModulesType(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext
 ): Generator<Code> {
-	const styles = options.sfc.styles.filter(style => style.module);
+	const styles = options.sfc.styles.map((style, i) => [style, i] as const).filter(([style]) => style.module);
 	if (!styles.length) {
 		return;
 	}
 	yield `type __VLS_StyleModules = {${newLine}`;
-	for (let i = 0; i < styles.length; i++) {
-		const style = styles[i];
+	for (const [style, i] of styles) {
 		const { name, offset } = style.module!;
 		if (offset) {
 			yield [
@@ -39,6 +38,5 @@ export function* generateStyleModulesType(
 		}
 		yield `>${endOfLine}`;
 	}
-	yield `}`;
-	yield endOfLine;
+	yield `}${endOfLine}`;
 }
