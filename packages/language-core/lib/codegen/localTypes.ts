@@ -59,20 +59,13 @@ type __VLS_PropsChildren<S> = {
 	);
 	const TypePropsToOption = defineHelper(
 		`__VLS_TypePropsToOption`,
-		() => compilerOptions.exactOptionalPropertyTypes ?
-			`
-type __VLS_TypePropsToOption<T> = {
-	[K in keyof T]-?: {} extends Pick<T, K>
-		? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> }
-		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
-};
-`.trimStart() :
-			`
-type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
-type __VLS_TypePropsToOption<T> = {
-	[K in keyof T]-?: {} extends Pick<T, K>
-		? { type: import('${vueCompilerOptions.lib}').PropType<__VLS_NonUndefinedable<T[K]>> }
-		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
+		() => `
+${compilerOptions.exactOptionalPropertyTypes ? '' : 'type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;'}
+type __VLS_TypePropsToOption<T, U = __VLS_IsUnion<T> extends true ? __VLS_PrettifyUnion<__VLS_MergeUnion<T>> : T> = {
+	[K in keyof U]-?: {
+        type: import('${vueCompilerOptions.lib}').PropType<${compilerOptions.exactOptionalPropertyTypes ? 'U[K]' : '__VLS_NonUndefinedable<U[K]>'}>,
+        required: {} extends Pick<U, K> ? false : true
+    }
 };
 `.trimStart()
 	);
