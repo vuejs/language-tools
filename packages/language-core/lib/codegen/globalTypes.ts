@@ -115,9 +115,11 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 	function __VLS_getSlotParams<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
 	// @ts-ignore
 	function __VLS_getSlotParam<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
-	function __VLS_directiveAsFunction<T extends import('${lib}').Directive>(dir: T): T extends (...args: any) => any
-		? T | __VLS_unknownDirective
-		: NonNullable<(T & Record<string, __VLS_unknownDirective>)['created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted']>;
+	function __VLS_asFunctionalDirective<T>(dir: T): T extends import('${lib}').ObjectDirective
+		? NonNullable<T['created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted']>
+		: T extends (...args: any) => any
+			? T
+			: __VLS_unknownDirective;
 	function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 	function __VLS_nonNullable<T>(t: T): T extends null | undefined ? never : T;

@@ -19,7 +19,7 @@
 		"@volar/language-core": "~2.4.1",
 		"@volar/language-service": "~2.4.1",
 		"@volar/typescript": "~2.4.1",
-		"@vue/compiler-dom": "^3.4.0",
+		"@vue/compiler-dom": "^3.5.2",
 		"@vue/language-core": "2.1.6",
 		"@vue/shared": "^3.4.0",
 		"@vue/typescript-plugin": "2.1.6",
