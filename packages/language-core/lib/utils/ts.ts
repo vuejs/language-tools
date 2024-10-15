@@ -40,6 +40,7 @@ export function createParsedCommandLineByJson(
 	}
 	else {
 		resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(rootDir, resolvedVueOptions, parseConfigHost);
+		resolvedVueOptions.__setupedGlobalTypesAbsolutePath = getSetupedGlobalTypesAbsolutePath(rootDir, resolvedVueOptions, parseConfigHost);
 	}
 	const parsed = ts.parseJsonConfigFileContent(
 		json,
@@ -95,6 +96,7 @@ export function createParsedCommandLine(
 		}
 		else {
 			resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost);
+			resolvedVueOptions.__setupedGlobalTypesAbsolutePath = getSetupedGlobalTypesAbsolutePath(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost);
 		}
 		const parsed = ts.parseJsonSourceFileConfigFileContent(
 			config,
@@ -300,5 +302,29 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 		return true;
 	} catch {
 		return false;
+	}
+}
+
+function getSetupedGlobalTypesAbsolutePath(rootDir: string, vueOptions: VueCompilerOptions, host: {
+	fileExists(path: string): boolean;
+	writeFile?(path: string, data: string): void;
+}) {
+	try {
+		let dir = rootDir;
+
+		while (!host.fileExists(path.posix.join(dir, 'node_modules', vueOptions.lib, 'package.json'))) {
+
+			const parentDir = path.posix.dirname(dir);
+			if (dir === parentDir) {
+				throw 0;
+			}
+			dir = parentDir;
+		}
+		const globalTypesPath = path.posix.join(dir, 'node_modules', '.vue-global-types', `${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
+
+		return globalTypesPath;
+	}
+	catch {
+		return '';
 	}
 }
