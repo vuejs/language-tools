@@ -284,7 +284,8 @@ export function* generateElement(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined
+	componentCtxVar: string | undefined,
+	isVForChild: boolean
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
@@ -341,7 +342,11 @@ export function* generateElement(
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
-		ctx.templateRefs.set(refName, [`__VLS_nativeElements['${node.tag}']`, offset!]);
+		let refValue = `__VLS_nativeElements['${node.tag}']`;
+		if (isVForChild) {
+			refValue = `[${refValue}]`;
+		}
+		ctx.templateRefs.set(refName, [refValue, offset!]);
 	}
 	if (ctx.singleRootNode === node) {
 		ctx.singleRootElType = `typeof __VLS_nativeElements['${node.tag}']`;
