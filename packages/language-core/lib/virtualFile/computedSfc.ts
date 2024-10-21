@@ -1,6 +1,6 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
-import { Computed, computed, Signal, System, Unstable } from 'alien-signals';
+import { computed, ISignal, Signal, System, Unstable } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, SFCStyleOverride, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
@@ -11,14 +11,14 @@ export function computedSfc(
 	plugins: VueLanguagePluginReturn[],
 	fileName: string,
 	snapshot: Signal<ts.IScriptSnapshot>,
-	parsed: Computed<SFCParseResult | undefined>
+	parsed: ISignal<SFCParseResult | undefined>
 ): Sfc {
 
 	const untrackedSnapshot = () => {
-		const depth = System.activeSubsDepth;
-		System.activeSubsDepth = 0;
+		const prevTrackId = System.activeTrackId = 0;
+		System.activeTrackId = 0;
 		const res = snapshot.get();
-		System.activeSubsDepth = depth;
+		System.activeTrackId = prevTrackId;
 		return res;
 	};
 	const content = computed(() => {
@@ -180,10 +180,10 @@ export function computedSfc(
 				const change = untrackedSnapshot().getChangeRange(cache.snapshot);
 				if (change) {
 
-					const depth = System.activeSubsDepth;
-					System.activeSubsDepth = 0;
+					const prevTrackId = System.activeTrackId;
+					System.activeTrackId = 0;
 					const templateOffset = base.startTagEnd;
-					System.activeSubsDepth = depth;
+					System.activeTrackId = prevTrackId;
 
 					const newText = untrackedSnapshot().getText(change.span.start, change.span.start + change.newLength);
 					const newResult = cache.plugin.updateSFCTemplate(cache.result, {
@@ -263,8 +263,8 @@ export function computedSfc(
 	function computedNullableSfcBlock<T extends SFCBlock, K extends SfcBlock>(
 		name: string,
 		defaultLang: string,
-		block: Computed<T | undefined>,
-		resolve: (block: Computed<T>, base: SfcBlock) => K
+		block: ISignal<T | undefined>,
+		resolve: (block: ISignal<T>, base: SfcBlock) => K
 	) {
 		const hasBlock = computed(() => !!block.get());
 		return computed<K | undefined>(() => {
@@ -279,7 +279,7 @@ export function computedSfc(
 	function computedSfcBlock<T extends SFCBlock>(
 		name: string,
 		defaultLang: string,
-		block: Computed<T>
+		block: ISignal<T>
 	) {
 		const lang = computed(() => block.get().lang ?? defaultLang);
 		const attrs = computed(() => block.get().attrs); // TODO: computed it

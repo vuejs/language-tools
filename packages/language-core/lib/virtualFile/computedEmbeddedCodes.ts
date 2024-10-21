@@ -1,5 +1,5 @@
 import type { VirtualCode } from '@volar/language-core';
-import { Computed, computed } from 'alien-signals';
+import { computed, ISignal } from 'alien-signals';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code, Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
@@ -105,9 +105,9 @@ function computedPluginEmbeddedCodes(
 	plugin: VueLanguagePluginReturn,
 	fileName: string,
 	sfc: Sfc,
-	nameToBlock: Computed<Record<string, SfcBlock>>
+	nameToBlock: ISignal<Record<string, SfcBlock>>
 ) {
-	const computeds = new Map<string, Computed<{ code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>>();
+	const computeds = new Map<string, ISignal<{ code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>>();
 	const getComputedKey = (code: {
 		id: string;
 		lang: string;

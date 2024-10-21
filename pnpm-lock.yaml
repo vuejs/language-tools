@@ -114,8 +114,8 @@ importers:
         specifier: ^3.5.2
         version: 3.5.3
       alien-signals:
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.2.0
+        version: 0.2.0
       minimatch:
         specifier: ^9.0.3
         version: 9.0.5
@@ -212,8 +212,8 @@ importers:
         specifier: 2.1.6
         version: link:../typescript-plugin
       alien-signals:
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.2.0
+        version: 0.2.0
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -1307,8 +1307,8 @@ packages:
     resolution: {integrity: sha512-4I7Td01quW/RpocfNayFdFVk1qSuoh0E7JrbRJ16nH01HhKFQ88INq9Sd+nd72zqRySlr9BmDA8xlEJ6vJMrYA==}
     engines: {node: '>=8'}
 
-  alien-signals@0.1.0:
-    resolution: {integrity: sha512-dzvTyd/M19vUTCKObk3sk8Mvcng1I/NFXcZ0k3OmJD9snevkf+c5wM3FxYw8pMhlnVh1u3FhiTkpyfWYckNomw==}
+  alien-signals@0.2.0:
+    resolution: {integrity: sha512-StlonZhBBrsPPwrDjiPAiVTf/rolxffLxVPT60Qv/t88BZ81BvUVzHgGqEFvJ1ii8HXtm1+zU2Icr59tfWEcag==}
 
   ansi-escapes@4.3.2:
     resolution: {integrity: sha512-gKXj5ALrKWQLsYG9jlTRmR/xKluxHV+Z9QEwNIgCfM1/uwPMCuzVVnh5mwTd+OuBZcwSIMbqssNWRm1lE51QaQ==}
@@ -4674,7 +4674,7 @@ snapshots:
       clean-stack: 2.2.0
       indent-string: 4.0.0
 
-  alien-signals@0.1.0: {}
+  alien-signals@0.2.0: {}
 
   ansi-escapes@4.3.2:
     dependencies:
