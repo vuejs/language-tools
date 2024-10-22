@@ -10,15 +10,59 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 		version: 2.1,
 
+		getEmbeddedCodes(_fileName, sfc) {
+			if (sfc.template?.lang === 'pug') {
+				return [{
+					id: 'template',
+					lang: sfc.template.lang,
+				}];
+			}
+			return [];
+		},
+
+		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
+			if (embeddedFile.id === 'template' && sfc.template?.lang === 'pug') {
+				const minIndent = calculateMinIndent(sfc.template.content);
+				if (minIndent !== 0) {
+					embeddedFile.content.push(`template\n`);
+				}
+				embeddedFile.content.push([
+					sfc.template.content,
+					sfc.template.name,
+					0,
+					{
+						verification: true,
+						completion: true,
+						semantic: true,
+						navigation: true,
+						structure: true,
+						format: true,
+					},
+				]);
+			}
+		},
+
 		compileSFCTemplate(lang, template, options) {
 
 			if (lang === 'pug') {
 
-				const pugFile = pug?.baseParse(template);
-				const map = new SourceMap(pugFile.mappings);
+				let pugFile: ReturnType<typeof pug.baseParse>;
+				let baseOffset = 0;
+
+				const minIndent = calculateMinIndent(template);
+				if (minIndent === 0) {
+					pugFile = pug?.baseParse(template);
+				}
+				else {
+					pugFile = pug?.baseParse(`template\n${template}`);
+					baseOffset = 'template\n'.length;
+					pugFile.htmlCode = ' '.repeat('<template>'.length)
+						+ pugFile.htmlCode.slice('<template>'.length, -'</template>'.length)
+						+ ' '.repeat('</template>'.length);
+				}
 
 				if (pugFile) {
-
+					const map = new SourceMap(pugFile.mappings);
 					const compiler = modules['@vue/compiler-dom'];
 					const completed = compiler.compile(pugFile.htmlCode, {
 						...options,
@@ -52,7 +96,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								}
 								const value = Reflect.get(target, prop, receiver);
 								if (typeof value === 'object' && value !== null) {
-									let proxyed = proxys.get(value)
+									let proxyed = proxys.get(value);
 									if (proxyed) {
 										return proxyed;
 									}
@@ -69,7 +113,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						const htmlOffset = offset;
 						const nums: number[] = [];
 						for (const mapped of map.toSourceLocation(htmlOffset)) {
-							nums.push(mapped[0]);
+							nums.push(mapped[0] - baseOffset);
 						}
 						return Math.max(-1, ...nums);
 					}
@@ -79,3 +123,15 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 	};
 };
 export = plugin;
+
+function calculateMinIndent(s: string) {
+	const lines = s.split('\n');
+	const minIndent = lines.reduce(function (minIndent, line) {
+		if (line.trim() === '') {
+			return minIndent;
+		}
+		const indent = line.match(/^\s*/)?.[0]?.length || 0;
+		return Math.min(indent, minIndent);
+	}, Infinity);
+	return minIndent;
+}

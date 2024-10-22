@@ -1,0 +1,22 @@
+{
+	"extends": "../../../tsconfig.base.json",
+	"vueCompilerOptions": {
+		"target": 3.3,
+		"lib": "vue3.4",
+	},
+	"include": [
+		"**/*",
+		"../vue3",
+	],
+	"exclude": [
+		"../vue3/#3820",
+		"../vue3/#4777",
+		"../vue3/#4820",
+		"../vue3/rootEl",
+		"../vue3/templateRef",
+		"../vue3/templateRef_native",
+		"../vue3/components",
+		"../vue3/defineModel",
+		"../vue3/defineProp_B",
+	],
+}

@@ -21,20 +21,11 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 				runExtensions.length === allExtensions.length
 				&& runExtensions.every(ext => allExtensions.includes(ext))
 			) {
-				const writeFile = options.host!.writeFile.bind(options.host);
-				options.host!.writeFile = (fileName, contents, ...args) => {
-					return writeFile(fileName, removeEmitGlobalTypes(contents), ...args);
-				};
-				const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
+				const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 					ts,
-					id => id,
-					vue.createRootFileChecker(
-						undefined,
-						() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
-						options.host?.useCaseSensitiveFileNames?.() ?? false
-					),
 					options.options,
-					vueOptions
+					vueOptions,
+					id => id
 				);
 				return { languagePlugins: [vueLanguagePlugin] };
 			}
@@ -54,10 +45,4 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 			throw err;
 		}
 	}
-}
-
-const removeEmitGlobalTypesRegexp = /^[^\n]*__VLS_globalTypesStart[\w\W]*__VLS_globalTypesEnd[^\n]*\n?$/mg;
-
-export function removeEmitGlobalTypes(dts: string) {
-	return dts.replace(removeEmitGlobalTypesRegexp, '');
 }
