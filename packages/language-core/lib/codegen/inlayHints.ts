@@ -1,7 +1,16 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
-import type { InlayHintInfo } from "../types";
 
-export function generateVBindShorthandInlayHint(loc: CompilerDOM.SourceLocation, variableName: string): InlayHintInfo {
+export interface InlayHintInfo {
+	blockName: string;
+	offset: number;
+	setting: string;
+	label: string;
+	tooltip?: string;
+	paddingRight?: boolean;
+	paddingLeft?: boolean;
+}
+
+export function createVBindShorthandInlayHintInfo(loc: CompilerDOM.SourceLocation, variableName: string): InlayHintInfo {
 	return {
 		blockName: 'template',
 		offset: loc.end.offset,
@@ -13,4 +22,4 @@ export function generateVBindShorthandInlayHint(loc: CompilerDOM.SourceLocation,
 			'[More info](https://github.com/vuejs/core/pull/9451)',
 		].join('\n\n'),
 	};
-};
+}

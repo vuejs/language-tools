@@ -15,7 +15,7 @@ import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateTemplateChild } from './templateChild';
 import { generateObjectProperty } from './objectProperty';
-import { generateVBindShorthandInlayHint } from './vBindShorthand';
+import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
 
 const colonReg = /:/g;
@@ -115,7 +115,7 @@ export function* generateComponent(
 	}
 	else if (dynamicTagInfo) {
 		if (dynamicTagInfo.isComponentIsShorthand) {
-			ctx.inlayHints.push(generateVBindShorthandInlayHint(dynamicTagInfo.exp.loc, 'is'));
+			ctx.inlayHints.push(createVBindShorthandInlayHintInfo(dynamicTagInfo.exp.loc, 'is'));
 		}
 		yield `const ${var_originalComponent} = (`;
 		yield* generateInterpolation(

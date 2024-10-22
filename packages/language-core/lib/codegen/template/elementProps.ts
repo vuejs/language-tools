@@ -11,7 +11,7 @@ import { generateEventArg, generateEventExpression } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
-import { generateVBindShorthandInlayHint } from './vBindShorthand';
+import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 
 export function* generateElementProps(
 	options: TemplateCodegenOptions,
@@ -335,7 +335,7 @@ function* generatePropExp(
 					features
 				);
 				if (enableCodeFeatures) {
-					ctx.inlayHints.push(generateVBindShorthandInlayHint(prop.loc, propVariableName));
+					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 				}
 			}
 		}
