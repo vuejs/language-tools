@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 import type { VueCompilerOptions, TextRange } from '../types';
-import { collectVars } from '../codegen/common';
+import { collectIdentifiers } from '../codegen/common';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
@@ -15,7 +15,8 @@ export function parseScriptSetupRanges(
 
 	const props: {
 		name?: string;
-		destructured?: string[];
+		destructured?: Set<string>;
+		destructuredRest?: string;
 		define?: ReturnType<typeof parseDefineFunction> & {
 			statement: TextRange;
 		};
@@ -50,7 +51,6 @@ export function parseScriptSetupRanges(
 		name?: string;
 		define?: ReturnType<typeof parseDefineFunction>;
 	}[] = [];
-
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
 	const defineProp: {
@@ -63,10 +63,11 @@ export function parseScriptSetupRanges(
 		required: boolean;
 		isModel?: boolean;
 	}[] = [];
-	const bindings = parseBindingRanges(ts, ast);
 	const text = ast.text;
 	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
 	const importComponentNames = new Set<string>();
+
+	let bindings = parseBindingRanges(ts, ast);
 
 	ts.forEachChild(ast, node => {
 		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
@@ -101,6 +102,12 @@ export function parseScriptSetupRanges(
 		}
 	});
 	ts.forEachChild(ast, child => visitNode(child, [ast]));
+
+	const templateRefNames = new Set(templateRefs.map(ref => ref.name));
+	bindings = bindings.filter(range => {
+		const name = text.substring(range.start, range.end);
+		return !templateRefNames.has(name);
+	});
 
 	return {
 		leadingCommentEndOffset,
@@ -302,7 +309,17 @@ export function parseScriptSetupRanges(
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 				if (ts.isVariableDeclaration(parent)) {
 					if (ts.isObjectBindingPattern(parent.name)) {
-						props.destructured = collectVars(ts, parent.name, ast, [], false);
+						props.destructured = new Set();
+						const identifiers = collectIdentifiers(ts, parent.name, []);
+						for (const [id, isRest] of identifiers) {
+							const name = getNodeText(ts, id, ast);
+							if (isRest) {
+								props.destructuredRest = name;
+							}
+							else {
+								props.destructured.add(name);
+							}
+						}
 					}
 					else {
 						props.name = getNodeText(ts, parent.name, ast);
@@ -364,7 +381,7 @@ export function parseScriptSetupRanges(
 						}
 					}
 				}
-			} else if (vueCompilerOptions.macros.templateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
+			} else if (vueCompilerOptions.composibles.useTemplateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
 				const define = parseDefineFunction(node);
 				define.arg = _getStartEnd(node.arguments[0]);
 				let name;

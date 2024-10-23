@@ -47,6 +47,7 @@ export function createHybridModeProject(
 		async getLanguageService(uri) {
 			const fileName = asFileName(uri);
 			const namedPipeServer = (await searchNamedPipeServerForFile(fileName));
+			namedPipeServer?.socket.end();
 			if (namedPipeServer?.projectInfo?.kind === 1) {
 				const tsconfig = namedPipeServer.projectInfo.name;
 				const tsconfigUri = URI.file(tsconfig);

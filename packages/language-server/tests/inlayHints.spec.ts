@@ -6,7 +6,6 @@ import { getLanguageServer, testWorkspacePath } from './server.js';
 describe('Definitions', async () => {
 
 	it('Inline handler leading', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
 				<script setup lang="ts">
@@ -31,7 +30,6 @@ describe('Definitions', async () => {
 	});
 
 	it('Missing props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<script setup lang="ts">
 			defineProps<{
@@ -63,7 +61,6 @@ describe('Definitions', async () => {
 	});
 
 	it('Options wrapper', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
 				<script>
@@ -80,7 +77,6 @@ describe('Definitions', async () => {
 	});
 
 	it('Destructured props', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
 				<script setup lang="ts">
@@ -174,6 +170,44 @@ describe('Definitions', async () => {
 		`);
 	});
 
+	it('#4720', async () => {
+		expect(
+			await requestInlayHintsResult('fixture.vue', 'vue', `
+				<template>
+					<div :foo.attr></div>
+				</template>
+			`)
+		).toMatchInlineSnapshot(`
+			"
+							<template>
+								<div :foo.attr/* ="foo" */></div>
+							</template>
+						"
+		`);
+	});
+
+	it('#4855', async () => {
+		expect(
+			await requestInlayHintsResult('fixture.vue', 'vue', `
+				<script setup lang="ts">
+				import { toString } from './utils';
+
+				const { foo } = defineProps<{ foo: string }>();
+				console.log(foo);
+				</script>
+			`)
+		).toMatchInlineSnapshot(`
+			"
+							<script setup lang="ts">
+							import { toString } from './utils';
+
+							const { foo } = defineProps<{ foo: string }>();
+							console.log(/* props. */foo);
+							</script>
+						"
+		`);
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {
@@ -183,15 +217,6 @@ describe('Definitions', async () => {
 		}
 		openedDocuments.length = 0;
 	});
-
-	/**
-	 * @deprecated Remove this when #4717 fixed.
-	 */
-	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
-		const server = await getLanguageServer();
-		await server.sendDocumentDiagnosticRequest(document.uri);
-	}
 
 	async function requestInlayHintsResult(fileName: string, languageId: string, content: string) {
 		const server = await getLanguageServer();

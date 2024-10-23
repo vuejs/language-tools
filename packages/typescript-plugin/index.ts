@@ -1,26 +1,22 @@
-import { createLanguageServicePlugin, externalFiles } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
+import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
 import { proxyLanguageServiceForVue } from './lib/common';
 import { startNamedPipeServer } from './lib/server';
+import type * as ts from 'typescript';
 
 const windowsPathReg = /\\/g;
-
+const vueCompilerOptions = new WeakMap<ts.server.Project, vue.VueCompilerOptions>();
 const plugin = createLanguageServicePlugin(
 	(ts, info) => {
 		const vueOptions = getVueCompilerOptions();
-		const languagePlugin = vue.createVueLanguagePlugin2<string>(
+		const languagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
-			id => id,
-			info.project.projectKind === ts.server.ProjectKind.Inferred
-				? () => true
-				: vue.createRootFileChecker(
-					info.languageServiceHost.getProjectVersion ? () => info.languageServiceHost.getProjectVersion!() : undefined,
-					() => externalFiles.get(info.project) ?? [],
-					info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false
-				),
 			info.languageServiceHost.getCompilationSettings(),
-			vueOptions
+			vueOptions,
+			id => id
 		);
+
+		vueCompilerOptions.set(info.project, vueOptions);
 
 		return {
 			languagePlugins: [languagePlugin],

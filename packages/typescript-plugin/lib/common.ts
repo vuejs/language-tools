@@ -113,7 +113,7 @@ function getCompletionEntryDetails<T>(language: Language<T>, asScriptId: (fileNa
 			const { fileName } = args[6]?.__isAutoImport;
 			const sourceScript = language.scripts.get(asScriptId(fileName));
 			if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-				const sfc = sourceScript.generated.root.getVueSfc();
+				const sfc = sourceScript.generated.root._vueSfc.get();
 				if (!sfc?.descriptor.script && !sfc?.descriptor.scriptSetup) {
 					for (const codeAction of details?.codeActions ?? []) {
 						for (const change of codeAction.changes) {
@@ -196,7 +196,7 @@ function getEncodedSemanticClassifications<T>(
 		const result = getEncodedSemanticClassifications(fileName, span, format);
 		const file = language.scripts.get(asScriptId(fileName));
 		if (file?.generated?.root instanceof VueVirtualCode) {
-			const { template } = file.generated.root.sfc;
+			const { template } = file.generated.root._sfc;
 			if (template) {
 				for (const componentSpan of getComponentSpans.call(
 					{ typescript: ts, languageService },
@@ -222,7 +222,7 @@ function getEncodedSemanticClassifications<T>(
 export function getComponentSpans(
 	this: Pick<RequestContext, 'typescript' | 'languageService'>,
 	vueCode: VueVirtualCode,
-	template: NonNullable<VueVirtualCode['sfc']['template']>,
+	template: NonNullable<VueVirtualCode['_sfc']['template']>,
 	spanTemplateRange: ts.TextSpan
 ) {
 	const { typescript: ts, languageService } = this;

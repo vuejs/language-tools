@@ -23,7 +23,7 @@ export function create(): LanguageServicePlugin {
 				const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
 				const blockTypes = ['template', 'script', 'style'];
 
-				for (const customBlock of vueCode.sfc.customBlocks) {
+				for (const customBlock of vueCode._sfc.customBlocks) {
 					blockTypes.push(customBlock.type);
 				}
 
@@ -77,7 +77,7 @@ export function create(): LanguageServicePlugin {
 					return worker(document, context, vueSourceFile => {
 
 						const result: vscode.DocumentSymbol[] = [];
-						const descriptor = vueSourceFile.sfc;
+						const descriptor = vueSourceFile._sfc;
 
 						if (descriptor.template) {
 							result.push({
@@ -195,16 +195,11 @@ export function create(): LanguageServicePlugin {
 						styleItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						styleItem.detail = '.css';
 						for (const lang of styleLangs) {
-							result.items.push({
-								...styleItem,
-								kind: 17 satisfies typeof vscode.CompletionItemKind.File,
-								detail: lang === 'postcss' ? '.css' : `.${lang}`,
-								label: styleItem.label + ' lang="' + lang + '"',
-								textEdit: styleItem.textEdit ? {
-									...styleItem.textEdit,
-									newText: styleItem.textEdit.newText + ' lang="' + lang + '"',
-								} : undefined,
-							});
+							result.items.push(
+								getStyleCompletionItem(styleItem, lang),
+								getStyleCompletionItem(styleItem, lang, 'scoped'),
+								getStyleCompletionItem(styleItem, lang, 'module')
+							);
 						}
 					}
 
@@ -252,4 +247,21 @@ export function create(): LanguageServicePlugin {
 			return callback(sourceScript.generated.root);
 		}
 	}
+}
+
+function getStyleCompletionItem(
+	styleItem: vscode.CompletionItem,
+	lang: string,
+	attr?: string
+): vscode.CompletionItem {
+	return {
+		...styleItem,
+		kind: 17 satisfies typeof vscode.CompletionItemKind.File,
+		detail: lang === 'postcss' ? '.css' : `.${lang}`,
+		label: styleItem.label + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
+		textEdit: styleItem.textEdit ? {
+			...styleItem.textEdit,
+			newText: styleItem.textEdit.newText + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
+		} : undefined
+	};
 }

@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import { exactType } from '../../shared';
-import { defineComponent, PropType } from 'vue';
+import { defineComponent } from 'vue';
 import ScriptSetup from './script-setup.vue';
 
 const ScriptSetupExact = defineComponent({
-	props: {} as {
-		modelValue: PropType<string>;
-		c: { type: PropType<number>, required: true };
-		d: PropType<number>;
-		e: PropType<string>;
-		f: { type: PropType<string>, required: true };
-		g: PropType<string>;
+	__typeProps: {} as {
+		modelValue?: string,
+		'c': number,
+		'd'?: number,
+		'e'?: string,
+		'f': string,
+		'g'?: string,
 	},
-	emits: {} as {
-		"update:modelValue": (_:string) => void
-		"update:c": (_:number) => void
-		"update:d": (_:number) => void
-		"update:e": (_:string) => void
-		"update:f": (_:string) => void
-		"update:g": (_:string) => void
+	__typeEmits: {} as {
+		'update:modelValue': [modelValue:string];
+		'update:c': [c:number];
+		'update:d': [d:number];
+		'update:e': [e:string];
+		'update:f': [f:string];
+		'update:g': [g:string];
 	},
 	setup() {
 		return {};

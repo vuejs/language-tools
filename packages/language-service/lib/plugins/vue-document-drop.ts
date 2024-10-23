@@ -1,6 +1,6 @@
 import { VueVirtualCode, forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
-import * as path from 'path-browserify';
+import { posix as path } from 'path-browserify';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
@@ -55,7 +55,7 @@ export function create(
 					baseName = baseName.substring(0, baseName.lastIndexOf('.'));
 
 					const newName = capitalize(camelize(baseName));
-					const { sfc } = vueVirtualCode;
+					const { _sfc: sfc } = vueVirtualCode;
 					const script = sfc.scriptSetup ?? sfc.script;
 
 					if (!script) {

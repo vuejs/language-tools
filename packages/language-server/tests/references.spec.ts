@@ -6,7 +6,6 @@ import { getLanguageServer, testWorkspacePath } from './server.js';
 describe('Definitions', async () => {
 
 	it('Default slot', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<script setup lang="ts">
 			import Fixture from './fixture.vue';
@@ -57,7 +56,6 @@ describe('Definitions', async () => {
 	});
 
 	it('Named slot', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/foo.vue', 'vue', `
 			<script setup lang="ts">
 			import Fixture from './fixture.vue';
@@ -106,7 +104,6 @@ describe('Definitions', async () => {
 	});
 
 	it('v-bind shorthand', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		expect(
 			await requestReferences('tsconfigProject/fixture.vue', 'vue', `
 				<script setup lang="ts">
@@ -158,15 +155,6 @@ describe('Definitions', async () => {
 		}
 		openedDocuments.length = 0;
 	});
-
-	/**
-	 * @deprecated Remove this when #4717 fixed.
-	 */
-	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
-		const server = await getLanguageServer();
-		await server.sendDocumentDiagnosticRequest(document.uri);
-	}
 
 	async function requestReferences(fileName: string, languageId: string, content: string) {
 		const offset = content.indexOf('|');

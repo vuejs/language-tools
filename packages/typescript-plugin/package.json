@@ -1,19 +1,20 @@
 {
 	"name": "@vue/typescript-plugin",
-	"version": "2.0.28",
+	"version": "2.1.6",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
 		"**/*.d.ts"
 	],
+	"sideEffects": false,
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/typescript-plugin"
 	},
 	"dependencies": {
-		"@volar/typescript": "~2.4.0",
-		"@vue/language-core": "2.0.28",
+		"@volar/typescript": "~2.4.1",
+		"@vue/language-core": "2.1.6",
 		"@vue/shared": "^3.4.0"
 	},
 	"devDependencies": {
