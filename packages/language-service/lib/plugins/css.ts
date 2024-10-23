@@ -6,7 +6,7 @@ import * as css from 'vscode-css-languageservice';
 import { URI } from 'vscode-uri';
 
 const cssClassNameReg = /(?=(\.[a-z_][-\w]*)[\s.,+~>:#[{])/gi;
-const vBindCssVarReg = /\bv-bind\(\s*(?:'([^']+)'|"([^"]+)"|([a-z_]\w+))\s*\)/gi;
+const vBindCssVarReg = /\bv-bind\(\s*(?:'([^']+)'|"([^"]+)"|([a-z_]\w*))\s*\)/gi;
 
 export function create(): LanguageServicePlugin {
 	const base = baseCreate({ scssDocumentSelector: ['scss', 'postcss'] });
@@ -41,7 +41,7 @@ export function create(): LanguageServicePlugin {
 					if (virtualCode?.id.startsWith('style_')) {
 						const i = Number(virtualCode.id.slice('style_'.length));
 						if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-							const style = sourceScript.generated.root.sfc.styles[i];
+							const style = sourceScript.generated.root._sfc.styles[i];
 							const option = sourceScript.generated.root.vueCompilerOptions.experimentalResolveStyleCssClasses;
 							if (option === 'always' || (option === 'scoped' && style.scoped) || style.module) {
 								regexps.push(cssClassNameReg);
