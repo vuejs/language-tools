@@ -2,7 +2,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
 import { endOfLine, newLine, wrapWith } from '../common';
 import type { TemplateCodegenOptions } from './index';
-import { InlayHintInfo } from '../types';
+import { InlayHintInfo } from '../inlayHints';
 
 const _codeFeatures = {
 	all: {
@@ -57,7 +57,7 @@ const _codeFeatures = {
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
-export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCodegenOptions['scriptSetupBindingNames']) {
+export function createTemplateCodegenContext(options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames' | 'edited'>) {
 	let ignoredError = false;
 	let expectErrorToken: {
 		errors: number;
@@ -109,9 +109,14 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 	const hasSlotElements = new Set<CompilerDOM.ElementNode>();;
 	const blockConditions: string[] = [];
 	const usedComponentCtxVars = new Set<string>();
-	const scopedClasses: { className: string, offset: number; }[] = [];
+	const scopedClasses: {
+		source: string;
+		className: string;
+		offset: number;
+	}[] = [];
 	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
+	const templateRefs = new Map<string, [varName: string, offset: number]>();
 
 	return {
 		slots,
@@ -125,6 +130,10 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 		emptyClassOffsets,
 		inlayHints,
 		hasSlot: false,
+		inheritedAttrVars: new Set(),
+		templateRefs,
+		singleRootElType: undefined as string | undefined,
+		singleRootNode: undefined as CompilerDOM.ElementNode | undefined,
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);
 			if (!arr) {
@@ -184,6 +193,9 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 			}
 		},
 		generateAutoImportCompletion: function* (): Generator<Code> {
+			if (!options.edited) {
+				return;
+			}
 			const all = [...accessExternalVariables.entries()];
 			if (!all.some(([_, offsets]) => offsets.size)) {
 				return;
@@ -192,7 +204,7 @@ export function createTemplateCodegenContext(scriptSetupBindingNames: TemplateCo
 			yield `[`;
 			for (const [varName, offsets] of all) {
 				for (const offset of offsets) {
-					if (scriptSetupBindingNames.has(varName)) {
+					if (options.scriptSetupBindingNames.has(varName)) {
 						// #3409
 						yield [
 							varName,

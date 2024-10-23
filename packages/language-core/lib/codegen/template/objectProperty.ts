@@ -26,8 +26,8 @@ export function* generateObjectProperty(
 				astHolder,
 				offset + 1,
 				features,
-				'[__VLS_tryAsConstant(',
-				')]'
+				`[__VLS_tryAsConstant(`,
+				`)]`
 			);
 		}
 		else {

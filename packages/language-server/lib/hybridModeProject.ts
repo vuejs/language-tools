@@ -25,15 +25,14 @@ export function createHybridModeProject(
 		setup(_server) {
 			server = _server;
 			onSomePipeReadyCallbacks.push(() => {
-				server.refresh(project);
+				server.languageFeatures.requestRefresh(false);
 			});
-			server.onDidChangeWatchedFiles(({ changes }) => {
+			server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
 				for (const change of changes) {
 					const changeUri = URI.parse(change.uri);
 					if (tsconfigProjects.has(changeUri)) {
 						tsconfigProjects.get(changeUri)?.then(project => project.dispose());
 						tsconfigProjects.delete(changeUri);
-						server.clearPushDiagnostics();
 					}
 				}
 			});
@@ -48,6 +47,7 @@ export function createHybridModeProject(
 		async getLanguageService(uri) {
 			const fileName = asFileName(uri);
 			const namedPipeServer = (await searchNamedPipeServerForFile(fileName));
+			namedPipeServer?.socket.end();
 			if (namedPipeServer?.projectInfo?.kind === 1) {
 				const tsconfig = namedPipeServer.projectInfo.name;
 				const tsconfigUri = URI.file(tsconfig);
@@ -91,11 +91,10 @@ export function createHybridModeProject(
 			asFileName,
 		});
 		const language = createLanguage([
-			{ getLanguageId: uri => server.documents.get(server.getSyncedDocumentKey(uri) ?? uri.toString())?.languageId },
+			{ getLanguageId: uri => server.documents.get(uri)?.languageId },
 			...languagePlugins,
 		], createUriMap(), uri => {
-			const documentKey = server.getSyncedDocumentKey(uri);
-			const document = documentKey ? server.documents.get(documentKey) : undefined;
+			const document = server.documents.get(uri);
 			if (document) {
 				language.scripts.set(uri, document.getSnapshot(), document.languageId);
 			}
@@ -108,7 +107,7 @@ export function createHybridModeProject(
 		return createLanguageService(
 			language,
 			server.languageServicePlugins,
-			createLanguageServiceEnvironment(server, [...server.workspaceFolders.keys()]),
+			createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
 			project
 		);
 	}

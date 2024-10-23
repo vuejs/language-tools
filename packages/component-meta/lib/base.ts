@@ -1,19 +1,19 @@
+import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 import * as vue from '@vue/language-core';
+import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
-import * as path from 'path-browserify';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
-import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 
 import type {
-	MetaCheckerOptions,
 	ComponentMeta,
+	Declaration,
 	EventMeta,
 	ExposeMeta,
+	MetaCheckerOptions,
 	PropertyMeta,
 	PropertyMetaSchema,
-	SlotMeta,
-	Declaration
+	SlotMeta
 } from './types';
 
 export * from './types';
@@ -27,9 +27,9 @@ export function createCheckerByJsonConfigBase(
 	checkerOptions: MetaCheckerOptions = {}
 ) {
 	rootDir = rootDir.replace(windowsPathReg, '/');
-	return createCheckerWorker(
+	return baseCreate(
 		ts,
-		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json),
+		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json, undefined, true),
 		checkerOptions,
 		rootDir,
 		path.join(rootDir, 'jsconfig.json.global.vue')
@@ -42,84 +42,37 @@ export function createCheckerBase(
 	checkerOptions: MetaCheckerOptions = {}
 ) {
 	tsconfig = tsconfig.replace(windowsPathReg, '/');
-	return createCheckerWorker(
+	return baseCreate(
 		ts,
-		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig),
+		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig, true),
 		checkerOptions,
 		path.dirname(tsconfig),
 		tsconfig + '.global.vue'
 	);
 }
 
-function createCheckerWorker(
+export function baseCreate(
 	ts: typeof import('typescript'),
-	loadParsedCommandLine: () => vue.ParsedCommandLine,
+	getCommandLine: () => vue.ParsedCommandLine,
 	checkerOptions: MetaCheckerOptions,
 	rootPath: string,
 	globalComponentName: string
 ) {
-
-	/**
-	 * Original Host
-	 */
-
-	let parsedCommandLine = loadParsedCommandLine();
-	let fileNames = parsedCommandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
+	let commandLine = getCommandLine();
+	let fileNames = commandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
 	let projectVersion = 0;
 
-	const scriptSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
-		getCompilationSettings: () => parsedCommandLine.options,
+		getCompilationSettings: () => commandLine.options,
 		getScriptFileNames: () => fileNames,
-		getProjectReferences: () => parsedCommandLine.projectReferences,
-		getScriptSnapshot: fileName => {
-			if (!scriptSnapshots.has(fileName)) {
-				const fileText = ts.sys.readFile(fileName);
-				if (fileText !== undefined) {
-					scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(fileText));
-				}
-			}
-			return scriptSnapshots.get(fileName);
-		},
+		getProjectReferences: () => commandLine.projectReferences,
 	};
-
-	return {
-		...baseCreate(ts, projectHost, parsedCommandLine.vueOptions, checkerOptions, globalComponentName),
-		updateFile(fileName: string, text: string) {
-			fileName = fileName.replace(windowsPathReg, '/');
-			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
-			projectVersion++;
-		},
-		deleteFile(fileName: string) {
-			fileName = fileName.replace(windowsPathReg, '/');
-			fileNames = fileNames.filter(f => f !== fileName);
-			projectVersion++;
-		},
-		reload() {
-			parsedCommandLine = loadParsedCommandLine();
-			fileNames = parsedCommandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
-			this.clearCache();
-		},
-		clearCache() {
-			scriptSnapshots.clear();
-			projectVersion++;
-		},
-	};
-}
-
-export function baseCreate(
-	ts: typeof import('typescript'),
-	projectHost: TypeScriptProjectHost,
-	vueCompilerOptions: vue.VueCompilerOptions,
-	checkerOptions: MetaCheckerOptions,
-	globalComponentName: string
-) {
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
-	const metaSnapshots: Record<string, ts.IScriptSnapshot> = {};
+	const scriptSnapshots = new Map<string, ts.IScriptSnapshot | undefined>();
+	const metaSnapshots = new Map<string, ts.IScriptSnapshot>();
 	const getScriptFileNames = projectHost.getScriptFileNames;
-	const getScriptSnapshot = projectHost.getScriptSnapshot;
 	projectHost.getScriptFileNames = () => {
 		const names = getScriptFileNames();
 		return [
@@ -129,31 +82,12 @@ export function baseCreate(
 			getMetaFileName(globalComponentName),
 		];
 	};
-	projectHost.getScriptSnapshot = fileName => {
-		if (isMetaFileName(fileName)) {
-			if (!metaSnapshots[fileName]) {
-				metaSnapshots[fileName] = ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName));
-			}
-			return metaSnapshots[fileName];
-		}
-		else if (fileName === globalComponentName) {
-			return globalComponentSnapshot;
-		}
-		else {
-			return getScriptSnapshot(fileName);
-		}
-	};
 
-	const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
+	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 		ts,
-		id => id,
-		vue.createRootFileChecker(
-			projectHost.getProjectVersion ? () => projectHost.getProjectVersion!() : undefined,
-			() => projectHost.getScriptFileNames(),
-			ts.sys.useCaseSensitiveFileNames
-		),
 		projectHost.getCompilationSettings(),
-		vueCompilerOptions
+		commandLine.vueOptions,
+		id => id
 	);
 	const language = vue.createLanguage(
 		[
@@ -166,7 +100,30 @@ export function baseCreate(
 		],
 		new vue.FileMap(ts.sys.useCaseSensitiveFileNames),
 		fileName => {
-			const snapshot = projectHost.getScriptSnapshot(fileName);
+			let snapshot = scriptSnapshots.get(fileName);
+
+			if (fileName === globalComponentName) {
+				snapshot = globalComponentSnapshot;
+			}
+			else if (isMetaFileName(fileName)) {
+				if (!metaSnapshots.has(fileName)) {
+					metaSnapshots.set(fileName, ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName)));
+				}
+				snapshot = metaSnapshots.get(fileName);
+			}
+			else {
+				if (!scriptSnapshots.has(fileName)) {
+					const fileText = ts.sys.readFile(fileName);
+					if (fileText !== undefined) {
+						scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(fileText));
+					}
+					else {
+						scriptSnapshots.set(fileName, undefined);
+					}
+				}
+				snapshot = scriptSnapshots.get(fileName);
+			}
+
 			if (snapshot) {
 				language.scripts.set(fileName, snapshot);
 			}
@@ -178,11 +135,42 @@ export function baseCreate(
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
 
+	const directoryExists = languageServiceHost.directoryExists?.bind(languageServiceHost);
+	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
+	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
+	const globalTypesName = `${commandLine.vueOptions.lib}_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
+	const globalTypesContents = `// @ts-nocheck\nexport {};\n` + vue.generateGlobalTypes(commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
+	const globalTypesSnapshot: ts.IScriptSnapshot = {
+		getText: (start, end) => globalTypesContents.substring(start, end),
+		getLength: () => globalTypesContents.length,
+		getChangeRange: () => undefined,
+	};
+	if (directoryExists) {
+		languageServiceHost.directoryExists = path => {
+			if (path.endsWith('.vue-global-types')) {
+				return true;
+			}
+			return directoryExists(path);
+		};
+	}
+	languageServiceHost.fileExists = path => {
+		if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
+			return true;
+		}
+		return fileExists(path);
+	};
+	languageServiceHost.getScriptSnapshot = path => {
+		if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
+			return globalTypesSnapshot;
+		}
+		return getScriptSnapshot(path);
+	};
+
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
 		languageServiceHost.getScriptKind = fileName => {
 			const scriptKind = getScriptKind!(fileName);
-			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {
+			if (commandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
 				if (scriptKind === ts.ScriptKind.JS) {
 					return ts.ScriptKind.TS;
 				}
@@ -199,6 +187,25 @@ export function baseCreate(
 	return {
 		getExportNames,
 		getComponentMeta,
+		updateFile(fileName: string, text: string) {
+			fileName = fileName.replace(windowsPathReg, '/');
+			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
+			projectVersion++;
+		},
+		deleteFile(fileName: string) {
+			fileName = fileName.replace(windowsPathReg, '/');
+			fileNames = fileNames.filter(f => f !== fileName);
+			projectVersion++;
+		},
+		reload() {
+			commandLine = getCommandLine();
+			fileNames = commandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
+			this.clearCache();
+		},
+		clearCache() {
+			scriptSnapshots.clear();
+			projectVersion++;
+		},
 		__internal__: {
 			tsLs,
 		},
@@ -210,7 +217,7 @@ export function baseCreate(
 
 	function getMetaFileName(fileName: string) {
 		return (
-			vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))
+			commandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))
 				? fileName
 				: fileName.substring(0, fileName.lastIndexOf('.'))
 		) + '.meta.ts';
@@ -229,7 +236,7 @@ interface ComponentMeta<T> {
 	exposed: ComponentExposed<T>;
 };
 
-${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
+${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 `.trim();
 		return code;
 	}
@@ -321,11 +328,11 @@ ${vueCompilerOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 
 			// fill defaults
 			const printer = ts.createPrinter(checkerOptions.printer);
-			const snapshot = projectHost.getScriptSnapshot(componentPath)!;
+			const snapshot = language.scripts.get(componentPath)?.snapshot!;
 
 			const vueFile = language.scripts.get(componentPath)?.generated?.root;
 			const vueDefaults = vueFile && exportName === 'default'
-				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts, vueCompilerOptions) : {})
+				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts, commandLine.vueOptions) : {})
 				: {};
 			const tsDefaults = !vueFile ? readTsComponentDefaultProps(
 				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
@@ -714,7 +721,7 @@ function readVueComponentDefaultProps(
 
 	function scriptSetupWorker() {
 
-		const descriptor = vueSourceFile.sfc;
+		const descriptor = vueSourceFile._sfc;
 		const scriptSetupRanges = descriptor.scriptSetup ? vue.parseScriptSetupRanges(ts, descriptor.scriptSetup.ast, vueCompilerOptions) : undefined;
 
 		if (descriptor.scriptSetup && scriptSetupRanges?.props.withDefaults?.arg) {
@@ -765,7 +772,7 @@ function readVueComponentDefaultProps(
 
 	function scriptWorker() {
 
-		const descriptor = vueSourceFile.sfc;
+		const descriptor = vueSourceFile._sfc;
 
 		if (descriptor.script) {
 			const scriptResult = readTsComponentDefaultProps(descriptor.script.lang, descriptor.script.content, 'default', printer, ts);

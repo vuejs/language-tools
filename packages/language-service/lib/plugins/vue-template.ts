@@ -1,6 +1,6 @@
 import type { Disposable, LanguageServiceContext, LanguageServicePluginInstance } from '@volar/language-service';
 import { VueCompilerOptions, VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges, tsCodegen } from '@vue/language-core';
-import { camelize, capitalize, hyphenate } from '@vue/shared';
+import { camelize, capitalize } from '@vue/shared';
 import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
@@ -12,10 +12,16 @@ import { getNameCasing } from '../ideFeatures/nameCasing';
 import { AttrNameCasing, LanguageServicePlugin, TagNameCasing } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
 
-let builtInData: html.HTMLDataV1;
-let modelData: html.HTMLDataV1;
+type InternalItemId =
+	| 'componentEvent'
+	| 'componentProp'
+	| 'specialTag';
 
 const specialTags = new Set(['slot', 'component', 'template']);
+const specialProps = new Set(['class', 'is', 'key', 'ref', 'style']);
+
+let builtInData: html.HTMLDataV1;
+let modelData: html.HTMLDataV1;
 
 export function create(
 	mode: 'html' | 'pug',
@@ -26,6 +32,7 @@ export function create(
 	let extraCustomData: html.IHTMLDataProvider[] = [];
 	let lastCompletionComponentNames = new Set<string>();
 
+	const tsDocumentations = new Map<string, string>();
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
 		onDidChangeCustomDataListeners.add(listener);
@@ -68,7 +75,10 @@ export function create(
 			},
 			inlayHintProvider: {},
 			hoverProvider: true,
-			diagnosticProvider: {},
+			diagnosticProvider: {
+				interFileDependencies: false,
+				workspaceDiagnostics: false,
+			},
 			semanticTokensProvider: {
 				legend: {
 					tokenTypes: ['class'],
@@ -220,7 +230,7 @@ export function create(
 									? tagName
 									: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 								if (checkTag) {
-									componentProps[checkTag] ??= await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? [];
+									componentProps[checkTag] ??= (await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? []).map(prop => prop.name);
 									current = {
 										unburnedRequiredProps: [...componentProps[checkTag]],
 										labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -329,7 +339,7 @@ export function create(
 					}
 
 					const templateErrors: vscode.Diagnostic[] = [];
-					const { template } = code.sfc;
+					const { template } = code._sfc;
 
 					if (template) {
 
@@ -385,11 +395,11 @@ export function create(
 					if (
 						!sourceScript
 						|| !(sourceScript.generated?.root instanceof VueVirtualCode)
-						|| !sourceScript.generated.root.sfc.template
+						|| !sourceScript.generated.root._sfc.template
 					) {
 						return [];
 					}
-					const { template } = sourceScript.generated.root.sfc;
+					const { template } = sourceScript.generated.root._sfc;
 					const spans = getComponentSpans.call(
 						{
 							files: context.language.scripts,
@@ -425,12 +435,12 @@ export function create(
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
-						if (isInternalItemId(tag.name)) {
+						if (isItemKey(tag.name)) {
 							continue;
 						}
 
 						if (specialTags.has(tag.name)) {
-							tag.name = createInternalItemId('specialTag', [tag.name]);
+							tag.name = parseItemKey('specialTag', tag.name, '');
 						}
 						else if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
@@ -444,13 +454,15 @@ export function create(
 				const promises: Promise<void>[] = [];
 				const tagInfos = new Map<string, {
 					attrs: string[];
-					props: string[];
+					propsInfo: { name: string, commentMarkdown: string; }[];
 					events: string[];
 				}>();
 
 				let version = 0;
 				let components: string[] | undefined;
 				let templateContextProps: string[] | undefined;
+
+				tsDocumentations.clear();
 
 				updateExtraCustomData([
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
@@ -473,8 +485,8 @@ export function create(
 								})());
 								return [];
 							}
-							const scriptSetupRanges = vueCode.sfc.scriptSetup
-								? parseScriptSetupRanges(ts, vueCode.sfc.scriptSetup.ast, vueCompilerOptions)
+							const scriptSetupRanges = vueCode._sfc.scriptSetup
+								? parseScriptSetupRanges(ts, vueCode._sfc.scriptSetup.ast, vueCompilerOptions)
 								: undefined;
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
@@ -489,7 +501,7 @@ export function create(
 							}
 
 							for (const binding of scriptSetupRanges?.bindings ?? []) {
-								const name = vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end);
+								const name = vueCode._sfc.scriptSetup!.content.substring(binding.start, binding.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}
@@ -513,13 +525,12 @@ export function create(
 							if (!tagInfo) {
 								promises.push((async () => {
 									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
-									const props = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
+									const propsInfo = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
 									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
 									tagInfos.set(tag, {
 										attrs,
-										props: props.filter(prop =>
-											!prop.startsWith('ref_')
-											&& !hyphenate(prop).startsWith('on-vnode-')
+										propsInfo: propsInfo.filter(prop =>
+											!prop.name.startsWith('ref_')
 										),
 										events,
 									});
@@ -528,9 +539,10 @@ export function create(
 								return [];
 							}
 
-							const { attrs, props, events } = tagInfo;
+							const { attrs, propsInfo, events } = tagInfo;
+							const props = propsInfo.map(prop => prop.name);
 							const attributes: html.IAttributeData[] = [];
-							const _tsCodegen = tsCodegen.get(vueCode.sfc);
+							const _tsCodegen = tsCodegen.get(vueCode._sfc);
 
 							if (_tsCodegen) {
 								if (!templateContextProps) {
@@ -541,8 +553,8 @@ export function create(
 									return [];
 								}
 								let ctxVars = [
-									..._tsCodegen.scriptRanges()?.bindings.map(binding => vueCode.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
-									..._tsCodegen.scriptSetupRanges()?.bindings.map(binding => vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
+									..._tsCodegen.scriptRanges.get()?.bindings.map(binding => vueCode._sfc.script!.content.substring(binding.start, binding.end)) ?? [],
+									..._tsCodegen.scriptSetupRanges.get()?.bindings.map(binding => vueCode._sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
 									...templateContextProps,
 								];
 								ctxVars = [...new Set(ctxVars)];
@@ -563,12 +575,14 @@ export function create(
 								const isGlobal = !propsSet.has(prop);
 								const name = casing.attr === AttrNameCasing.Camel ? prop : hyphenateAttr(prop);
 
-								if (hyphenateAttr(name).startsWith('on-')) {
+								const isEvent = hyphenateAttr(name).startsWith('on-');
+
+								if (isEvent) {
 
 									const propNameBase = name.startsWith('on-')
 										? name.slice('on-'.length)
 										: (name['on'.length].toLowerCase() + name.slice('onX'.length));
-									const propKey = createInternalItemId('componentEvent', [isGlobal ? '*' : tag, propNameBase]);
+									const propKey = parseItemKey('componentEvent', isGlobal ? '*' : tag, propNameBase);
 
 									attributes.push(
 										{
@@ -581,10 +595,18 @@ export function create(
 										}
 									);
 								}
-								{
+								else {
 
 									const propName = name;
-									const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, propName]);
+									const propKey = parseItemKey('componentProp', isGlobal ? '*' : tag, propName);
+									const propDescription = propsInfo.find(prop => {
+										const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
+										return name === propName;
+									})?.commentMarkdown;
+
+									if (propDescription) {
+										tsDocumentations.set(propName, propDescription);
+									}
 
 									attributes.push(
 										{
@@ -606,16 +628,18 @@ export function create(
 							for (const event of events) {
 
 								const name = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
-								const propKey = createInternalItemId('componentEvent', [tag, name]);
+								const propKey = parseItemKey('componentEvent', tag, name);
 
-								attributes.push({
-									name: 'v-on:' + name,
-									description: propKey,
-								});
-								attributes.push({
-									name: '@' + name,
-									description: propKey,
-								});
+								attributes.push(
+									{
+										name: 'v-on:' + name,
+										description: propKey,
+									},
+									{
+										name: '@' + name,
+										description: propKey,
+									}
+								);
 							}
 
 							const models: [boolean, string][] = [];
@@ -635,7 +659,7 @@ export function create(
 							for (const [isGlobal, model] of models) {
 
 								const name = casing.attr === AttrNameCasing.Camel ? model : hyphenateAttr(model);
-								const propKey = createInternalItemId('componentProp', [isGlobal ? '*' : tag, name]);
+								const propKey = parseItemKey('componentProp', isGlobal ? '*' : tag, name);
 
 								attributes.push({
 									name: 'v-model:' + name,
@@ -737,18 +761,23 @@ export function create(
 					}
 				}
 
-				const originals = new Map<string, html.CompletionItem>();
+				completionList.items = completionList.items.filter(item => !specialTags.has(item.label));
+
+				const htmlDocumentations = new Map<string, string>();
+
+				for (const item of completionList.items) {
+					const documentation = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+					if (documentation && !isItemKey(documentation) && item.documentation) {
+						htmlDocumentations.set(item.label, documentation);
+					}
+				}
 
 				for (const item of completionList.items) {
 
-					if (specialTags.has(item.label)) {
-						completionList.items = completionList.items.filter(i => i !== item);
-					}
+					const resolvedLabelKey = resolveItemKey(item.label);
 
-					const nameId = readInternalItemId(item.label);
-
-					if (nameId) {
-						const name = nameId.args[0];
+					if (resolvedLabelKey) {
+						const name = resolvedLabelKey.tag;
 						item.label = name;
 						if (item.textEdit) {
 							item.textEdit.newText = name;
@@ -761,54 +790,126 @@ export function create(
 						}
 					}
 
-					const itemIdKey = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
-					const itemId = itemIdKey ? readInternalItemId(itemIdKey) : undefined;
+					const itemKeyStr = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
 
-					if (itemId) {
-						let label = hyphenate(itemId.args[1]);
-						if (label.startsWith('on-')) {
-							label = 'on' + label.slice('on-'.length);
+					let resolvedKey = itemKeyStr ? resolveItemKey(itemKeyStr) : undefined;
+					if (resolvedKey) {
+						const documentations: string[] = [];
+
+						if (tsDocumentations.has(resolvedKey.prop)) {
+							documentations.push(tsDocumentations.get(resolvedKey.prop)!);
 						}
-						else if (itemId.type === 'componentEvent') {
-							label = 'on' + label;
+
+						let { isEvent, propName } = getPropName(resolvedKey);
+						if (isEvent) {
+							// click -> onclick
+							propName = 'on' + propName;
 						}
-						const original = originals.get(label);
-						item.documentation = original?.documentation;
+						if (htmlDocumentations.has(propName)) {
+							documentations.push(htmlDocumentations.get(propName)!);
+						}
+
+						if (documentations.length) {
+							item.documentation = {
+								kind: 'markdown',
+								value: documentations.join('\n\n'),
+							};
+						}
+						else {
+							item.documentation = undefined;
+						}
 					}
-					else if (!originals.has(item.label)) {
-						originals.set(item.label, item);
+					else {
+						let propName = item.label;
+
+						const isVBind = propName.startsWith('v-bind:') ? (
+							propName = propName.slice('v-bind:'.length), true
+						) : false;
+						const isVBindAbbr = propName.startsWith(':') && propName !== ':' ? (
+							propName = propName.slice(':'.length), true
+						) : false;
+
+						/**
+						 * for `is`, `key` and `ref` starting with `v-bind:` or `:`
+						 * that without `internalItemId`.
+						 */
+						if (isVBind || isVBindAbbr) {
+							resolvedKey = {
+								type: 'componentProp',
+								tag: '^',
+								prop: propName,
+							};
+						}
+
+						if (tsDocumentations.has(propName)) {
+							const originalDocumentation = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+							item.documentation = {
+								kind: 'markdown',
+								value: [
+									tsDocumentations.get(propName)!,
+									originalDocumentation,
+								].filter(str => !!str).join('\n\n'),
+							};
+						}
 					}
+
+					const tokens: string[] = [];
 
 					if (item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property && lastCompletionComponentNames.has(hyphenateTag(item.label))) {
 						item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
-						item.sortText = '\u0000' + (item.sortText ?? item.label);
+						tokens.push('\u0000');
 					}
-					else if (itemId && (itemId.type === 'componentProp' || itemId.type === 'componentEvent')) {
+					else if (resolvedKey) {
 
-						const [componentName] = itemId.args;
+						const isComponent = resolvedKey.tag !== '*';
+						const { isEvent, propName } = getPropName(resolvedKey);
 
-						if (componentName !== '*') {
-							if (
-								item.label === 'class'
-								|| item.label === 'ref'
-								|| item.label.endsWith(':class')
-								|| item.label.endsWith(':ref')
-							) {
-								item.sortText = '\u0000' + (item.sortText ?? item.label);
-							}
-							else {
-								item.sortText = '\u0000\u0000' + (item.sortText ?? item.label);
-							}
-						}
-
-						if (itemId.type === 'componentProp') {
-							if (componentName !== '*') {
+						if (resolvedKey.type === 'componentProp') {
+							if (isComponent || specialProps.has(propName)) {
 								item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
 							}
 						}
-						else {
-							item.kind = componentName !== '*' ? 3 satisfies typeof vscode.CompletionItemKind.Function : 23 satisfies typeof vscode.CompletionItemKind.Event;
+						else if (isEvent) {
+							item.kind = 23 satisfies typeof vscode.CompletionItemKind.Event;
+							if (propName.startsWith('vnode-')) {
+								tokens.push('\u0004');
+							}
 						}
+
+						if (
+							isComponent
+							|| (isComponent && isEvent)
+							|| specialProps.has(propName)
+						) {
+							tokens.push('\u0000');
+
+							if (item.label.startsWith(':')) {
+								tokens.push('\u0001');
+							}
+							else if (item.label.startsWith('@')) {
+								tokens.push('\u0002');
+							}
+							else if (item.label.startsWith('v-bind:')) {
+								tokens.push('\u0003');
+							}
+							else if (item.label.startsWith('v-on:')) {
+								tokens.push('\u0004');
+							}
+							else {
+								tokens.push('\u0000');
+							}
+
+							if (specialProps.has(propName)) {
+								tokens.push('\u0001');
+							}
+							else {
+								tokens.push('\u0000');
+							}
+						}
+					}
+					else if (specialProps.has(item.label)) {
+						item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
+						tokens.push('\u0000', '\u0000', '\u0001');
 					}
 					else if (
 						item.label === 'v-if'
@@ -817,15 +918,17 @@ export function create(
 						|| item.label === 'v-for'
 					) {
 						item.kind = 14 satisfies typeof vscode.CompletionItemKind.Keyword;
-						item.sortText = '\u0003' + (item.sortText ?? item.label);
+						tokens.push('\u0003');
 					}
 					else if (item.label.startsWith('v-')) {
 						item.kind = 3 satisfies typeof vscode.CompletionItemKind.Function;
-						item.sortText = '\u0002' + (item.sortText ?? item.label);
+						tokens.push('\u0002');
 					}
 					else {
-						item.sortText = '\u0001' + (item.sortText ?? item.label);
+						tokens.push('\u0001');
 					}
+
+					item.sortText = tokens.join('') + (item.sortText ?? item.label);
 				}
 
 				updateExtraCustomData([]);
@@ -885,20 +988,21 @@ export function create(
 	}
 };
 
-function createInternalItemId(type: 'componentEvent' | 'componentProp' | 'specialTag', args: string[]) {
-	return '__VLS_::' + type + '::' + args.join(',');
+function parseItemKey(type: InternalItemId, tag: string, prop: string) {
+	return '__VLS_data=' + type + ',' + tag + ',' + prop;
 }
 
-function isInternalItemId(key: string) {
-	return key.startsWith('__VLS_::');
+function isItemKey(key: string) {
+	return key.startsWith('__VLS_data=');
 }
 
-function readInternalItemId(key: string) {
-	if (isInternalItemId(key)) {
-		const strs = key.split('::');
+function resolveItemKey(key: string) {
+	if (isItemKey(key)) {
+		const strs = key.slice('__VLS_data='.length).split(',');
 		return {
-			type: strs[1] as 'componentEvent' | 'componentProp' | 'specialTag',
-			args: strs[2].split(','),
+			type: strs[0] as InternalItemId,
+			tag: strs[1],
+			prop: strs[2],
 		};
 	}
 }
@@ -913,4 +1017,17 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 			};
 		}
 	}
+}
+
+function getPropName(
+	itemKey: ReturnType<typeof resolveItemKey> & {}
+): { isEvent: boolean, propName: string; } {
+	const name = hyphenateAttr(itemKey.prop);
+	if (name.startsWith('on-')) {
+		return { isEvent: true, propName: name.slice('on-'.length) };
+	}
+	else if (itemKey.type === 'componentEvent') {
+		return { isEvent: true, propName: name };
+	}
+	return { isEvent: false, propName: name };
 }

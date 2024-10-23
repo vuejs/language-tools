@@ -5,22 +5,28 @@ import { endOfLine, newLine, wrapWith } from '../common';
 import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
+import { generateStringLiteralKey } from './stringLiteralKey';
 import { generateTemplateChild, getVForNode } from './templateChild';
+import { generateStyleScopedClasses } from './styleScopedClasses';
 
 export interface TemplateCodegenOptions {
 	ts: typeof ts;
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	template: NonNullable<Sfc['template']>;
+	edited: boolean;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
+	destructuredPropNames: Set<string>;
+	templateRefNames: Set<string>;
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;
+	inheritAttrs: boolean;
 }
 
 export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
-	const ctx = createTemplateCodegenContext(options.scriptSetupBindingNames);
+	const ctx = createTemplateCodegenContext(options);
 
 	if (options.slotsAssignName) {
 		ctx.addLocalVariable(options.slotsAssignName);
@@ -28,150 +34,117 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
+	ctx.addLocalVariable('$el');
+	ctx.addLocalVariable('$refs');
 
-	yield* generatePreResolveComponents();
+	yield* generatePreResolveComponents(options);
 
 	if (options.template.ast) {
 		yield* generateTemplateChild(options, ctx, options.template.ast, undefined, undefined, undefined);
 	}
 
-	yield* generateStyleScopedClasses();
+	yield* generateStyleScopedClasses(ctx);
 
 	if (!options.hasDefineSlots) {
 		yield `var __VLS_slots!:`;
-		yield* generateSlotsType();
+		yield* generateSlotsType(options, ctx);
 		yield endOfLine;
 	}
 
 	yield* ctx.generateAutoImportCompletion();
+	yield* generateInheritedAttrs(ctx);
+	yield* generateRefs(ctx);
+	yield* generateRootEl(ctx);
 
 	return ctx;
+}
 
-	function* generateSlotsType(): Generator<Code> {
-		for (const { expVar, varName } of ctx.dynamicSlots) {
-			ctx.hasSlot = true;
-			yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
-		}
-		yield `{${newLine}`;
-		for (const slot of ctx.slots) {
-			ctx.hasSlot = true;
-			if (slot.name && slot.loc !== undefined) {
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					slot.name,
-					slot.loc,
-					ctx.codeFeatures.withoutHighlightAndCompletion,
-					slot.nodeLoc
-				);
-			}
-			else {
-				yield* wrapWith(
-					slot.tagRange[0],
-					slot.tagRange[1],
-					ctx.codeFeatures.withoutHighlightAndCompletion,
-					`default`
-				);
-			}
-			yield `?(_: typeof ${slot.varName}): any,${newLine}`;
-		}
-		yield `}`;
+function* generateSlotsType(options: TemplateCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
+	for (const { expVar, varName } of ctx.dynamicSlots) {
+		ctx.hasSlot = true;
+		yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
 	}
-
-	function* generateStyleScopedClasses(): Generator<Code> {
-		yield `if (typeof __VLS_styleScopedClasses === 'object' && !Array.isArray(__VLS_styleScopedClasses)) {${newLine}`;
-		for (const offset of ctx.emptyClassOffsets) {
-			yield `__VLS_styleScopedClasses['`;
-			yield [
-				'',
-				'template',
-				offset,
-				ctx.codeFeatures.additionalCompletion,
-			];
-			yield `']${endOfLine}`;
+	yield `{${newLine}`;
+	for (const slot of ctx.slots) {
+		ctx.hasSlot = true;
+		if (slot.name && slot.loc !== undefined) {
+			yield* generateObjectProperty(
+				options,
+				ctx,
+				slot.name,
+				slot.loc,
+				ctx.codeFeatures.withoutHighlightAndCompletion,
+				slot.nodeLoc
+			);
 		}
-		for (const { className, offset } of ctx.scopedClasses) {
-			yield `__VLS_styleScopedClasses[`;
-			yield [
-				'',
-				'template',
-				offset,
-				ctx.codeFeatures.navigationWithoutRename,
-			];
-			yield `'`;
-
-			// fix https://github.com/vuejs/language-tools/issues/4537
-			yield* escapeString(className, offset, ['\\', '\'']);
-			yield `'`;
-			yield [
-				'',
-				'template',
-				offset + className.length,
-				ctx.codeFeatures.navigationWithoutRename,
-			];
-			yield `]${endOfLine}`;
+		else {
+			yield* wrapWith(
+				slot.tagRange[0],
+				slot.tagRange[1],
+				ctx.codeFeatures.withoutHighlightAndCompletion,
+				`default`
+			);
 		}
-		yield `}${newLine}`;
+		yield `?(_: typeof ${slot.varName}): any,${newLine}`;
 	}
+	yield `}`;
+}
 
-	function* generatePreResolveComponents(): Generator<Code> {
-		yield `let __VLS_resolvedLocalAndGlobalComponents!: {}`;
-		if (options.template.ast) {
-			for (const node of forEachElementNode(options.template.ast)) {
-				if (
-					node.tagType === CompilerDOM.ElementTypes.COMPONENT
-					&& node.tag.toLowerCase() !== 'component'
-					&& !node.tag.includes('.') // namespace tag 
-				) {
-					yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
-					yield getPossibleOriginalComponentNames(node.tag, false)
-						.map(name => `"${name}"`)
-						.join(', ');
-					yield `>`;
+function* generateInheritedAttrs(ctx: TemplateCodegenContext): Generator<Code> {
+	yield 'var __VLS_inheritedAttrs!: {}';
+	for (const varName of ctx.inheritedAttrVars) {
+		yield ` & typeof ${varName}`;
+	}
+	yield endOfLine;
+}
+
+function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {
+	yield `const __VLS_refs = {${newLine}`;
+	for (const [name, [varName, offset]] of ctx.templateRefs) {
+		yield* generateStringLiteralKey(
+			name,
+			offset,
+			ctx.codeFeatures.navigationAndCompletion
+		);
+		yield `: ${varName},${newLine}`;
+	}
+	yield `}${endOfLine}`;
+	yield `var $refs!: typeof __VLS_refs${endOfLine}`;
+}
+
+function* generateRootEl(ctx: TemplateCodegenContext): Generator<Code> {
+	if (ctx.singleRootElType) {
+		yield `var $el!: ${ctx.singleRootElType}${endOfLine}`;
+	}
+	else {
+		yield `var $el!: any${endOfLine}`;
+	}
+}
+
+function* generatePreResolveComponents(options: TemplateCodegenOptions): Generator<Code> {
+	yield `let __VLS_resolvedLocalAndGlobalComponents!: Required<{}`;
+	if (options.template.ast) {
+		const components = new Set<string>();
+		for (const node of forEachElementNode(options.template.ast)) {
+			if (
+				node.tagType === CompilerDOM.ElementTypes.COMPONENT
+				&& node.tag.toLowerCase() !== 'component'
+				&& !node.tag.includes('.') // namespace tag 
+			) {
+				if (components.has(node.tag)) {
+					continue;
 				}
-			}
-		}
-		yield endOfLine;
-	}
-
-	function* escapeString(className: string, offset: number, escapeTargets: string[]): Generator<Code> {
-		let count = 0;
-
-		const currentEscapeTargets = [...escapeTargets];
-		const firstEscapeTarget = currentEscapeTargets.shift()!;
-		const splitted = className.split(firstEscapeTarget);
-
-		for (let i = 0; i < splitted.length; i++) {
-			const part = splitted[i];
-			const partLength = part.length;
-
-			if (escapeTargets.length > 0) {
-				yield* escapeString(part, offset + count, [...currentEscapeTargets]);
-			} else {
-				yield [
-					part,
-					'template',
-					offset + count,
-					ctx.codeFeatures.navigationAndAdditionalCompletion,
-				];
-			}
-
-			if (i !== splitted.length - 1) {
-				yield '\\';
-
-				yield [
-					firstEscapeTarget,
-					'template',
-					offset + count + partLength,
-					ctx.codeFeatures.navigationAndAdditionalCompletion,
-				];
-
-				count += partLength + 1;
-			} else {
-				count += partLength;
+				components.add(node.tag);
+				yield newLine;
+				yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+				yield getPossibleOriginalComponentNames(node.tag, false)
+					.map(name => `"${name}"`)
+					.join(', ');
+				yield `>`;
 			}
 		}
 	}
+	yield `>${endOfLine}`;
 }
 
 export function* forEachElementNode(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode): Generator<CompilerDOM.ElementNode> {

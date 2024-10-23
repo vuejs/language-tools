@@ -23,7 +23,7 @@ export function create(): LanguageServicePlugin {
 				const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
 				const blockTypes = ['template', 'script', 'style'];
 
-				for (const customBlock of vueCode.sfc.customBlocks) {
+				for (const customBlock of vueCode._sfc.customBlocks) {
 					blockTypes.push(customBlock.type);
 				}
 
@@ -77,7 +77,7 @@ export function create(): LanguageServicePlugin {
 					return worker(document, context, vueSourceFile => {
 
 						const result: vscode.DocumentSymbol[] = [];
-						const descriptor = vueSourceFile.sfc;
+						const descriptor = vueSourceFile._sfc;
 
 						if (descriptor.template) {
 							result.push({
@@ -167,10 +167,15 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 					result.items = result.items.filter(item => item.label !== '!DOCTYPE' && item.label !== 'Custom Blocks');
-					for (const scriptItem of result.items.filter(item => item.label === 'script' || item.label === 'script setup')) {
+
+					const tags = sfcDataProvider?.provideTags();
+
+					const scriptLangs = getLangs('script');
+					const scriptItems = result.items.filter(item => item.label === 'script' || item.label === 'script setup');
+					for (const scriptItem of scriptItems) {
 						scriptItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						scriptItem.detail = '.js';
-						for (const lang of ['ts', 'tsx', 'jsx']) {
+						for (const lang of scriptLangs) {
 							result.items.push({
 								...scriptItem,
 								detail: `.${lang}`,
@@ -183,39 +188,50 @@ export function create(): LanguageServicePlugin {
 							});
 						}
 					}
+
+					const styleLangs = getLangs('style');
 					const styleItem = result.items.find(item => item.label === 'style');
 					if (styleItem) {
 						styleItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						styleItem.detail = '.css';
-						for (const lang of ['css', 'scss', 'less', 'postcss']) {
-							result.items.push({
-								...styleItem,
-								kind: 17 satisfies typeof vscode.CompletionItemKind.File,
-								detail: lang === 'postcss' ? '.css' : `.${lang}`,
-								label: styleItem.label + ' lang="' + lang + '"',
-								textEdit: styleItem.textEdit ? {
-									...styleItem.textEdit,
-									newText: styleItem.textEdit.newText + ' lang="' + lang + '"',
-								} : undefined,
-							});
+						for (const lang of styleLangs) {
+							result.items.push(
+								getStyleCompletionItem(styleItem, lang),
+								getStyleCompletionItem(styleItem, lang, 'scoped'),
+								getStyleCompletionItem(styleItem, lang, 'module')
+							);
 						}
 					}
+
+					const templateLangs = getLangs('template');
 					const templateItem = result.items.find(item => item.label === 'template');
 					if (templateItem) {
 						templateItem.kind = 17 satisfies typeof vscode.CompletionItemKind.File;
 						templateItem.detail = '.html';
-						result.items.push({
-							...templateItem,
-							kind: 17 satisfies typeof vscode.CompletionItemKind.File,
-							detail: '.pug',
-							label: templateItem.label + ' lang="pug"',
-							textEdit: templateItem.textEdit ? {
-								...templateItem.textEdit,
-								newText: templateItem.textEdit.newText + ' lang="pug"',
-							} : undefined,
-						});
+						for (const lang of templateLangs) {
+							if (lang === 'html') {
+								continue;
+							}
+							result.items.push({
+								...templateItem,
+								kind: 17 satisfies typeof vscode.CompletionItemKind.File,
+								detail: `.${lang}`,
+								label: templateItem.label + ' lang="' + lang + '"',
+								textEdit: templateItem.textEdit ? {
+									...templateItem.textEdit,
+									newText: templateItem.textEdit.newText + ' lang="' + lang + '"',
+								} : undefined,
+							});
+						}
 					}
 					return result;
+
+					function getLangs(label: string) {
+						return tags
+							?.find(tag => tag.name === label)?.attributes
+							.find(attr => attr.name === 'lang')?.values
+							?.map(({ name }) => name) ?? [];
+					}
 				},
 			};
 		},
@@ -231,4 +247,21 @@ export function create(): LanguageServicePlugin {
 			return callback(sourceScript.generated.root);
 		}
 	}
+}
+
+function getStyleCompletionItem(
+	styleItem: vscode.CompletionItem,
+	lang: string,
+	attr?: string
+): vscode.CompletionItem {
+	return {
+		...styleItem,
+		kind: 17 satisfies typeof vscode.CompletionItemKind.File,
+		detail: lang === 'postcss' ? '.css' : `.${lang}`,
+		label: styleItem.label + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
+		textEdit: styleItem.textEdit ? {
+			...styleItem.textEdit,
+			newText: styleItem.textEdit.newText + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
+		} : undefined
+	};
 }

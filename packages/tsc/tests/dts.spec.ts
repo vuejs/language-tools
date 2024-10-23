@@ -4,7 +4,6 @@ import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import { proxyCreateProgram } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import { removeEmitGlobalTypes } from '..';
 
 const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
@@ -26,21 +25,21 @@ describe('vue-tsc-dts', () => {
 	};
 
 	let vueOptions: vue.VueCompilerOptions;
+
 	const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
 		const { configFilePath } = options.options;
-		vueOptions = typeof configFilePath === 'string'
-			? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-			: vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
-		const vueLanguagePlugin = vue.createVueLanguagePlugin2<string>(
+		if (typeof configFilePath === 'string') {
+			vueOptions = vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
+		}
+		else {
+			vueOptions = vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
+			vueOptions.__setupedGlobalTypes = vue.setupGlobalTypes(workspace.replace(windowsPathReg, '/'), vueOptions, ts.sys);
+		}
+		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
-			id => id,
-			vue.createRootFileChecker(
-				undefined,
-				() => options.rootNames.map(rootName => rootName.replace(windowsPathReg, '/')),
-				options.host?.useCaseSensitiveFileNames?.() ?? false
-			),
 			options.options,
-			vueOptions
+			vueOptions,
+			id => id
 		);
 		return [vueLanguagePlugin];
 	});
@@ -60,7 +59,6 @@ describe('vue-tsc-dts', () => {
 				sourceFile,
 				(outputFile, text) => {
 					expect(outputFile.replace(windowsPathReg, '/')).toBe(expectedOutputFile.replace(windowsPathReg, '/'));
-					text = removeEmitGlobalTypes(text);
 					outputText = text;
 				},
 				undefined,

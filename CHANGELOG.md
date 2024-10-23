@@ -2,6 +2,137 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.1.6 <sup>official</sup>, 2.1.7 <sup>insiders</sup> (2024-09-05)
+
+### Features
+
+- **language-plugin-pug:** support initial indentation (#4774)
+- **language-service:** JSDoc display support when typing props on component template (#4796) - Thanks to @joy-yu!
+- **language-core:** typed directives in template (#4807) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- **language-core:** wrap template refs with `unref` in interpolation (#4777) - Thanks to @KazariEX!
+- **language-core:** ensure to pass tsc on inline global types (#4782) - Thanks to @KazariEX!
+- **language-core:** infer native template ref as build-in element interface (#4786) - Thanks to @KazariEX!
+- **language-core:** generate `__VLS_StyleModules` after template (#4790) - Thanks to @KazariEX!
+- **language-core:** make `expose` of non-generic template ref required (#4795) - Thanks to @zhiyuanzmj!
+- **language-core:** avoid using `__typeProps` with runtime props (#4800) - Thanks to @KazariEX!
+- **language-core:** ignore unknown attrs error when strictTemplates is not enabled (#4785)
+- **language-core:** prevent append globalTypes to virtual file (#4806) - Thanks to @zhiyuanzmj!
+- **language-core:** prevent type error when use defineSlots and non-template (#4809) - Thanks to @zhiyuanzmj!
+- **typescript-plugin:** disconnect socket on error (#4672)
+
+### Performance
+
+- **language-core:** don't emit event lnlayhint when content is none (#4776) - Thanks to @Gehbt!
+
+### Other Changes
+
+- **language-core:** split `__VLS_templateResult` (#4781) - Thanks to @KazariEX!
+- **language-core:** wrap template virtual code into a function (#4784)
+- **language-core:** move `templateRef` into `composibles` (#4791) - Thanks to @KazariEX!
+- **language-core:** generate global types for the first parsed Vue component if cannot write global types file
+
+### Tests
+
+- **language-server:** add renaming case for template `ref()` (#4794) - Thanks to @KazariEX!
+- **tsc:** update to Vue 3.5 (#4725)
+- **tsc:** unknown props on non-strict generic component (#4792)
+
+## 2.1.4 <sup>official</sup>, 2.1.5 <sup>insiders</sup> (2024-09-01)
+
+### Features
+
+- **typescript-plugin, language-server:** generate global types file into `node_modules/.vue-global-types` (#4752) - Thanks to @KazariEX!
+- **language-core:** navigation support for template-ref (#4726) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- **language-core, typescript-plugin, language-server:** apply snake case on globalTypes filename (#4749) - Thanks to @KazariEX!
+- **language-core:** hoist `$refs` type (#4763)
+- **language-core:** disable lib check on global types file (#4767) - Thanks to @KazariEX!
+- **language-core:** prevent circular reference of templateRef (#4768) - Thanks to @zhiyuanzmj!
+- **language-core:** using interface merging for `GlobalComponents`
+- **language-core:** `fallthroughAttributes` causes global components to be self-referential (#4761)
+- **language-core:** auto-completion for the last line of template block (#4771) - Thanks to @zhiyuanzmj!
+- **language-core:** update ast correctly on repeated `v-for` modifications (#4772) - Thanks to @KazariEX!
+- **language-server:** leaking named pipes (#4672)
+- **typescript-plugin:** compatible with Yarn PnP (#4751)
+- **vscode:** whitelist `ms-dynamics-smb.al` extension for Vue Hybrid Mode. (#4765) - Thanks to @kyleweishaupt!
+
+### Other Changes
+
+- Add optional "dependencies" textarea to issue template (#4758) - Thanks to @davidmatter!
+
+## 2.1.2 <sup>official</sup>, 2.1.3 <sup>insiders</sup> (2024-08-29)
+
+### Bug Fixes
+
+- **language-core, typescript-plugin, language-server:** write globalTypes into dist for correct export (#4740) (#4737) (#4738) (#4739) - Thanks to @KazariEX!
+- **language-core:** don't default `vueCompilerOptions.lib` to `@vue/runtime-dom` for Vue 2
+
+## 2.1.0 <sup>official</sup>, 2.1.1 <sup>insiders</sup> (2024-08-29)
+
+### Features
+
+- **language-core:** inlay hints for destructured props (#4634) - Thanks to @KazariEX!
+- **language-core:** typed fallthrough attributes (#4103) - Thanks to @A5rocks, @so1ve!
+- **language-core:** document links for classname within `:class` (#4642) - Thanks to @KazariEX!
+- **language-core:** auto infer type for $refs & useTemplateRef (#4644) - Thanks to @zhiyuanzmj!
+- **language-core:** type support for CSS Modules API (#4674) - Thanks to @KazariEX!
+- **language-service:** better completion for directives (#4640) - Thanks to @KazariEX!
+- **language-service:** better sorting & filtering of completion (#4671) - Thanks to @KazariEX!
+- **language-service:** add style scoped and module completion (#4705) - Thanks to @runyasak!
+
+### Bug Fixes
+
+- **vscode:** type of `vue.server.hybridMode` config (#4703) - Thanks to @KermanX!
+- **language-core:** dependency on vulnerable version of `vue-template-compiler` (#4613) - Thanks to @yyx990803!
+- **language-core:** support parse method to access ctx var in object (#4609) - Thanks to @linghaoSu!
+- **language-core:** escape \ and ' in className avoid type error (#4619) - Thanks to @linghaoSu!
+- **language-core:** semantic highlight of the end tag of namespaced elements (#4623) - Thanks to @KermanX!
+- **language-core:** nullable modelvalues (#4648) - Thanks to @davidmatter!
+- **language-core:** should try casting dynamic slot name into constant (#4669) - Thanks to @KermanX!
+- **language-core:** local name support for prop using runtime api (#4650) - Thanks to @KazariEX!
+- **language-core:** optimize matching of scoped class and `v-bind()` (#4679) - Thanks to @KazariEX!
+- **language-core:** should preserve generic info in directive (#4686) - Thanks to @KermanX!
+- **language-core:** generate `ref` as identifier instead of interpolation (#4688) - Thanks to @KazariEX!
+- **language-core:** correct type narrowing from script to template (#4689) - Thanks to @KazariEX!
+- **language-core:** should camelize prop name in `experimentalModelPropName` (#4691) - Thanks to @KermanX!
+- **language-core:** drop duplicate hints on incomplete tag (#4696) - Thanks to @KazariEX!
+- **language-core:** correct inlay hints for v-bind with modifier (#4721) - Thanks to @KazariEX!
+- **language-core:** transform range of `file-md` correctly (#4735) - Thanks to @KazariEX!
+- **language-plugin-pug:** should cache proxyed object (#4626) - Thanks to @KermanX!
+- **language-plugin-pug:** compute offset correctly of pug class (#4652) - Thanks to @KazariEX!
+- **language-service:** completion documentations for binding attributes (#4667) - Thanks to @KazariEX!
+- **language-service:** avoid converting internal id of special tags (#4643) - Thanks to @KazariEX!
+- **language-service:** reinstate the completion for modifiers (#4639) - Thanks to @KazariEX!
+- **language-service:** consistent data from provider for sfc completion (#4645) - Thanks to @KazariEX!
+- **typescript-plugin:** unknown request type warning (#4715) - Thanks to @davidmatter!
+
+### Refactors
+
+- **language-core:** extract SFC root tags to separate virtual code
+- **language-core:** removed `__hint` trick from codegen
+- **language-core:** rewrite a part of confusing codegen code
+- **language-core:** reduce virtual code generated by component tags (#4714)
+- **language-core:** do not wrap template virtual code with function (#4731)
+- **language-core**: write real files to FS for shared global types (#4736)
+- **component-meta:** remove deprecated `createComponentMetaCheckerByJsonConfig`, `createComponentMetaChecker` api
+
+### Other Changes
+
+- Upgraded Volar from `v2.4.0-alpha.18` to `v2.4.1`:
+  - Ensure unopened files are synced to project (#4711) (#4632) - Thanks to @davidmatter!
+- **ci:** integrated [pkg.pr.new](https://github.com/stackblitz-labs/pkg.pr.new)
+- **tsc:** test all typecheck cases in one tsconfig (#4723)
+- **tsc:** add test for TS-next (#4724)
+- **tsc:** add tests for for #3779, #3820 (#3838) - Thanks to @so1ve!
+- **vscode:** add grammar test (#3861) - Thanks to @so1ve!
+- **language-service:** migrate tests to `@volar/test-utils` (#4719)
+- **language-core:** add scoped classes renaming case (#4727) - Thanks to @KazariEX!
+
 ## 2.0.28 <sup>official</sup>, 2.0.29 <sup>insiders</sup> (2024-07-22)
 
 ### Features
@@ -15,7 +146,7 @@
 - **language-service:** remove `v-bind` code action (#4601)
 - **vscode:** add empty pattern to codeblock attributes scope (#4590) - Thanks @KermanX
 
-### Fixes
+### Bug Fixes
 
 - **tsc:** errors should be thrown instead of being console.log printed
 - **language-server:** observe named pipes changes when server startup (#4292)

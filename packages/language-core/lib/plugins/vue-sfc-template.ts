@@ -8,7 +8,7 @@ const plugin: VueLanguagePlugin = () => {
 		version: 2.1,
 
 		getEmbeddedCodes(_fileName, sfc) {
-			if (sfc.template) {
+			if (sfc.template?.lang === 'html') {
 				return [{
 					id: 'template',
 					lang: sfc.template.lang,
@@ -18,7 +18,7 @@ const plugin: VueLanguagePlugin = () => {
 		},
 
 		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
-			if (embeddedFile.id === 'template' && sfc.template) {
+			if (embeddedFile.id === 'template' && sfc.template?.lang === 'html') {
 				embeddedFile.content.push([
 					sfc.template.content,
 					sfc.template.name,

@@ -30,6 +30,7 @@ export interface VueCompilerOptions {
 	jsxSlots: boolean;
 	strictTemplates: boolean;
 	skipTemplateCodegen: boolean;
+	fallthroughAttributes: boolean;
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
@@ -42,12 +43,20 @@ export interface VueCompilerOptions {
 		defineOptions: string[];
 		withDefaults: string[];
 	};
+	composibles: {
+		useCssModule: string[];
+		useTemplateRef: string[];
+	};
 	plugins: VueLanguagePlugin[];
 
 	// experimental
 	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
+
+	// internal
+	__setupedGlobalTypes?: boolean;
+	__test?: boolean;
 }
 
 export const validVersions = [2, 2.1] as const;
@@ -77,7 +86,6 @@ export type VueLanguagePlugin = (ctx: {
 	};
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
-	globalTypesHolder: string | undefined;
 }) => VueLanguagePluginReturn | VueLanguagePluginReturn[];
 
 export interface SfcBlock {
@@ -89,6 +97,13 @@ export interface SfcBlock {
 	lang: string;
 	content: string;
 	attrs: Record<string, string | true>;
+}
+
+export interface SFCStyleOverride {
+	module?: {
+		name: string;
+		offset?: number;
+	};
 }
 
 export interface Sfc {
@@ -109,8 +124,7 @@ export interface Sfc {
 		genericOffset: number;
 		ast: ts.SourceFile;
 	} | undefined;
-	styles: readonly (SfcBlock & {
-		module: string | undefined;
+	styles: readonly (SfcBlock & SFCStyleOverride & {
 		scoped: boolean;
 		cssVars: {
 			text: string;

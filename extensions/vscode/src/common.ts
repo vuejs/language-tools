@@ -63,6 +63,7 @@ function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 		|| extension.id === 'Divlo.vscode-styled-jsx-languageserver'
 		|| extension.id === 'nrwl.angular-console'
 		|| extension.id === 'ShenQingchuan.vue-vine-extension'
+		|| extension.id === 'ms-dynamics-smb.al'
 	) {
 		return true;
 	}
@@ -234,7 +235,6 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	lsp.activateAutoInsertion(selectors, client);
 	lsp.activateDocumentDropEdit(selectors, client);
 	lsp.activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
-	lsp.activateServerSys(client);
 
 	if (!enabledHybridMode) {
 		lsp.activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);
@@ -264,7 +264,7 @@ async function doActivate(context: vscode.ExtensionContext, createLc: CreateLang
 	]) {
 		try {
 			const res = await fetch(url);
-			onJson(await res.json());
+			onJson(await res.json() as any);
 			succeed = true;
 			break;
 		} catch { }

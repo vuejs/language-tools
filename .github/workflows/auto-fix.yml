@@ -22,7 +22,7 @@ jobs:
 
       # lint
       - name: Auto-fix
-        run: npm run lint:fix
+        run: pnpm run lint:fix
 
       # commit
       - name: Commit
