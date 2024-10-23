@@ -9,6 +9,7 @@
 	"bin": {
 		"vue-language-server": "./bin/vue-language-server.js"
 	},
+	"sideEffects": true,
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
