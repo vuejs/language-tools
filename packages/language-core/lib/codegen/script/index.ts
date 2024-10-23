@@ -6,8 +6,8 @@ import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../ty
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateGlobalTypes } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
-import { createScriptCodegenContext, ScriptCodegenContext } from './context';
 import { generateComponentSelf } from './componentSelf';
+import { createScriptCodegenContext, ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateStyleModulesType } from './styleModulesType';
@@ -79,6 +79,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			}
 			else {
 				yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
+				yield* generateScriptSectionPartiallyEnding(options.sfc.script.name, options.sfc.script.content.length, '#3632/both.vue');
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 			}
 		}
@@ -131,12 +132,12 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 
-	yield `;`;
-	if (options.sfc.scriptSetup) {
-		// #4569
-		yield ['', 'scriptSetup', options.sfc.scriptSetup.content.length, codeFeatures.verification];
+	if (options.sfc.script) {
+		yield* generateScriptSectionPartiallyEnding(options.sfc.script.name, options.sfc.script.content.length, '#3632/script.vue');
 	}
-	yield newLine;
+	if (options.sfc.scriptSetup) {
+		yield* generateScriptSectionPartiallyEnding(options.sfc.scriptSetup.name, options.sfc.scriptSetup.content.length, '#4569/main.vue');
+	}
 
 	if (!ctx.generatedTemplate) {
 		yield `function __VLS_template() {${newLine}`;
@@ -161,6 +162,12 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 
 	return ctx;
+}
+
+export function* generateScriptSectionPartiallyEnding(source: string, end: number, mark: string): Generator<Code> {
+	yield `;`;
+	yield ['', source, end, codeFeatures.verification];
+	yield `/* PartiallyEnd: ${mark} */${newLine}`;
 }
 
 function* generateDefineProp(

@@ -2,9 +2,9 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponent, generateEmitsOption } from './component';
-import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures } from './index';
 import { generateComponentSelf } from './componentSelf';
+import type { ScriptCodegenContext } from './context';
+import { ScriptCodegenOptions, codeFeatures, generateScriptSectionPartiallyEnding } from './index';
 import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
@@ -277,6 +277,8 @@ function* generateSetupFunction(
 	else {
 		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.importSectionEndOffset, scriptSetup.content.length, codeFeatures.all);
 	}
+
+	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
 
 	if (scriptSetupRanges.props.define?.typeArg && scriptSetupRanges.props.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
