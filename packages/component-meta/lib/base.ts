@@ -721,7 +721,7 @@ function readVueComponentDefaultProps(
 
 	function scriptSetupWorker() {
 
-		const descriptor = vueSourceFile.sfc;
+		const descriptor = vueSourceFile._sfc;
 		const scriptSetupRanges = descriptor.scriptSetup ? vue.parseScriptSetupRanges(ts, descriptor.scriptSetup.ast, vueCompilerOptions) : undefined;
 
 		if (descriptor.scriptSetup && scriptSetupRanges?.props.withDefaults?.arg) {
@@ -772,7 +772,7 @@ function readVueComponentDefaultProps(
 
 	function scriptWorker() {
 
-		const descriptor = vueSourceFile.sfc;
+		const descriptor = vueSourceFile._sfc;
 
 		if (descriptor.script) {
 			const scriptResult = readTsComponentDefaultProps(descriptor.script.lang, descriptor.script.content, 'default', printer, ts);

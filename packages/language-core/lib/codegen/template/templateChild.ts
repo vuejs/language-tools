@@ -48,6 +48,11 @@ export function* generateTemplateChild(
 		}
 	}
 
+	const cur = node as CompilerDOM.ElementNode | CompilerDOM.IfNode | CompilerDOM.ForNode;
+	if (cur.codegenNode?.type === CompilerDOM.NodeTypes.JS_CACHE_EXPRESSION) {
+		cur.codegenNode = cur.codegenNode.value as any;
+	}
+
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		if (options.inheritAttrs) {
 			ctx.singleRootNodes = new Set(collectSingleRootNodes(options, node.children));
