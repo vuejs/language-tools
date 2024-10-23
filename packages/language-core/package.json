@@ -6,6 +6,7 @@
 		"**/*.js",
 		"**/*.d.ts"
 	],
+	"sideEffects": false,
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -16,7 +17,7 @@
 		"@vue/compiler-dom": "^3.5.2",
 		"@vue/compiler-vue2": "^2.7.16",
 		"@vue/shared": "^3.5.2",
-		"computeds": "^0.0.1",
+		"alien-signals": "^0.2.0",
 		"minimatch": "^9.0.3",
 		"muggle-string": "^0.4.1",
 		"path-browserify": "^1.0.1"
