@@ -49,9 +49,9 @@ export function* generateComponent(
 
 	let props = node.props;
 	let dynamicTagInfo: {
-		exp: CompilerDOM.ElementNode | CompilerDOM.ExpressionNode;
 		tag: string;
 		offsets: [number, number | undefined];
+		astHolder: CompilerDOM.SourceLocation;
 	} | undefined;
 
 	if (isComponentTag) {
@@ -66,9 +66,9 @@ export function* generateComponent(
 					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.exp.loc, 'is'));
 				}
 				dynamicTagInfo = {
-					exp: prop.exp,
 					tag: prop.exp.content,
 					offsets: [prop.exp.loc.start.offset, undefined],
+					astHolder: prop.exp.loc,
 				};
 				props = props.filter(p => p !== prop);
 				break;
@@ -78,9 +78,9 @@ export function* generateComponent(
 	else if (node.tag.includes('.')) {
 		// namespace tag
 		dynamicTagInfo = {
-			exp: node,
 			tag: node.tag,
 			offsets: [startTagOffset, endTagOffset],
+			astHolder: node.loc,
 		};
 	}
 
@@ -120,7 +120,7 @@ export function* generateComponent(
 			options,
 			ctx,
 			dynamicTagInfo.tag,
-			dynamicTagInfo.exp,
+			dynamicTagInfo.astHolder,
 			dynamicTagInfo.offsets[0],
 			ctx.codeFeatures.all,
 			'(',
@@ -132,7 +132,7 @@ export function* generateComponent(
 				options,
 				ctx,
 				dynamicTagInfo.tag,
-				dynamicTagInfo.exp,
+				dynamicTagInfo.astHolder,
 				dynamicTagInfo.offsets[1],
 				{
 					...ctx.codeFeatures.all,
