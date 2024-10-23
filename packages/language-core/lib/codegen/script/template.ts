@@ -8,18 +8,11 @@ import { generateStyleScopedClasses } from '../template/styleScopedClasses';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 
-function* generateTemplateCtx(
-	options: ScriptCodegenOptions,
-	isClassComponent: boolean
-): Generator<Code> {
+function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 	const exps = [];
 
-	if (isClassComponent) {
-		exps.push(`this`);
-	}
-	else {
-		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
-	}
+	exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
+
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
 		exps.push(`globalThis`);
 	}
@@ -116,8 +109,7 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
-	isClassComponent: boolean
+	ctx: ScriptCodegenContext
 ): Generator<Code, TemplateCodegenContext> {
 	ctx.generatedTemplate = true;
 
@@ -125,7 +117,7 @@ export function* generateTemplate(
 		scriptSetupBindingNames: new Set(),
 		edited: options.edited,
 	});
-	yield* generateTemplateCtx(options, isClassComponent);
+	yield* generateTemplateCtx(options);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, templateCodegenCtx);
