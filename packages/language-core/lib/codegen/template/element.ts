@@ -52,7 +52,6 @@ export function* generateComponent(
 		exp: CompilerDOM.ElementNode | CompilerDOM.ExpressionNode;
 		tag: string;
 		offsets: [number, number | undefined];
-		isComponentIsShorthand?: boolean;
 	} | undefined;
 
 	if (isComponentTag) {
@@ -63,11 +62,13 @@ export function* generateComponent(
 				&& prop.arg?.loc.source === 'is'
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
+				if (prop.arg.loc.end.offset === prop.exp.loc.end.offset) {
+					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.exp.loc, 'is'));
+				}
 				dynamicTagInfo = {
 					exp: prop.exp,
 					tag: prop.exp.content,
 					offsets: [prop.exp.loc.start.offset, undefined],
-					isComponentIsShorthand: prop.arg.loc.end.offset === prop.exp.loc.end.offset
 				};
 				props = props.filter(p => p !== prop);
 				break;
@@ -114,9 +115,6 @@ export function* generateComponent(
 		yield `]${endOfLine}`;
 	}
 	else if (dynamicTagInfo) {
-		if (dynamicTagInfo.isComponentIsShorthand) {
-			ctx.inlayHints.push(createVBindShorthandInlayHintInfo(dynamicTagInfo.exp.loc, 'is'));
-		}
 		yield `const ${var_originalComponent} = (`;
 		yield* generateInterpolation(
 			options,
