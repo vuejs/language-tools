@@ -97,6 +97,7 @@ lspconfig.tsserver.setup {
       },
     },
   },
+}
 
 lspconfig.volar.setup {
   init_options = {
@@ -104,7 +105,7 @@ lspconfig.volar.setup {
       hybridMode = false,
     },
   },
-},
+}
 ```
 
 ### nvim-cmp integration

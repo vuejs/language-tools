@@ -11,6 +11,7 @@ import { generateEventArg, generateEventExpression } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
+import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 
 export function* generateElementProps(
 	options: TemplateCodegenOptions,
@@ -96,7 +97,7 @@ export function* generateElementProps(
 				continue;
 			}
 
-			if (prop.modifiers.some(m => m === 'prop' || m === 'attr')) {
+			if (prop.modifiers.some(m => m.content === 'prop' || m.content === 'attr')) {
 				propName = propName.substring(1);
 			}
 
@@ -109,6 +110,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
+			const codeInfo = ctx.codeFeatures.withoutHighlightAndCompletion;
 			const codes = wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
@@ -121,8 +123,20 @@ export function* generateElementProps(
 							propName,
 							prop.arg.loc.start.offset,
 							{
-								...ctx.codeFeatures.withoutHighlightAndCompletion,
-								navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
+								...codeInfo,
+								verification: options.vueCompilerOptions.strictTemplates
+									? codeInfo.verification
+									: {
+										shouldReport(_source, code) {
+											if (String(code) === '2353' || String(code) === '2561') {
+												return false;
+											}
+											return typeof codeInfo.verification === 'object'
+												? codeInfo.verification.shouldReport?.(_source, code) ?? true
+												: true;
+										},
+									},
+								navigation: codeInfo.navigation
 									? {
 										resolveRenameNewName: camelize,
 										resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
@@ -140,7 +154,7 @@ export function* generateElementProps(
 						)
 				),
 				`: (`,
-				...genereatePropExp(
+				...generatePropExp(
 					options,
 					ctx,
 					prop,
@@ -183,6 +197,32 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
+			const codeInfo = shouldCamelize
+				? {
+					...ctx.codeFeatures.withoutHighlightAndCompletion,
+					navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
+						? {
+							resolveRenameNewName: camelize,
+							resolveRenameEditText: hyphenateAttr,
+						}
+						: false,
+				}
+				: {
+					...ctx.codeFeatures.withoutHighlightAndCompletion,
+				};
+			if (!options.vueCompilerOptions.strictTemplates) {
+				const verification = codeInfo.verification;
+				codeInfo.verification = {
+					shouldReport(_source, code) {
+						if (String(code) === '2353' || String(code) === '2561') {
+							return false;
+						}
+						return typeof verification === 'object'
+							? verification.shouldReport?.(_source, code) ?? true
+							: true;
+					},
+				};
+			}
 			const codes = conditionWrapWith(
 				enableCodeFeatures,
 				prop.loc.start.offset,
@@ -193,17 +233,7 @@ export function* generateElementProps(
 					ctx,
 					prop.name,
 					prop.loc.start.offset,
-					shouldCamelize
-						? {
-							...ctx.codeFeatures.withoutHighlightAndCompletion,
-							navigation: ctx.codeFeatures.withoutHighlightAndCompletion.navigation
-								? {
-									resolveRenameNewName: camelize,
-									resolveRenameEditText: hyphenateAttr,
-								}
-								: false,
-						}
-						: ctx.codeFeatures.withoutHighlightAndCompletion,
+					codeInfo,
 					(prop.loc as any).name_1 ?? ((prop.loc as any).name_1 = {}),
 					shouldCamelize
 				),
@@ -264,7 +294,7 @@ export function* generateElementProps(
 	}
 }
 
-function* genereatePropExp(
+function* generatePropExp(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
@@ -273,6 +303,12 @@ function* genereatePropExp(
 	isShorthand: boolean,
 	enableCodeFeatures: boolean
 ): Generator<Code> {
+	if (isShorthand && features.completion) {
+		features = {
+			...features,
+			completion: undefined,
+		};
+	}
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 		if (!isShorthand) { // vue 3.4+
 			yield* generateInterpolation(
@@ -299,17 +335,7 @@ function* genereatePropExp(
 					features
 				);
 				if (enableCodeFeatures) {
-					ctx.inlayHints.push({
-						blockName: 'template',
-						offset: prop.loc.end.offset,
-						setting: 'vue.inlayHints.vBindShorthand',
-						label: `="${propVariableName}"`,
-						tooltip: [
-							`This is a shorthand for \`${prop.loc.source}="${propVariableName}"\`.`,
-							'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
-							'[More info](https://github.com/vuejs/core/pull/9451)',
-						].join('\n\n'),
-					});
+					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 				}
 			}
 		}

@@ -18,13 +18,10 @@ export function* generateInterpolation(
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
-	const vars: {
-		text: string,
-		isShorthand: boolean,
-		offset: number,
-	}[] = [];
-	for (let [section, offset, onlyError] of forEachInterpolationSegment(
+	for (let [section, offset, type] of forEachInterpolationSegment(
 		options.ts,
+		options.destructuredPropNames,
+		options.templateRefNames,
 		ctx,
 		code,
 		start !== undefined ? start - prefix.length : undefined,
@@ -46,36 +43,39 @@ export function* generateInterpolation(
 				section = section.substring(-offset);
 				offset = 0;
 			}
-			if (start !== undefined && data !== undefined) {
-				yield [
-					section,
-					'template',
-					start + offset,
-					onlyError
-						? ctx.codeFeatures.verification
-						: typeof data === 'function' ? data(start + offset) : data,
-				];
-			}
-			else {
-				yield section;
+			const shouldSkip = section.length === 0 && (type === 'startText' || type === 'endText');
+			if (!shouldSkip) {
+				if (
+					start !== undefined
+					&& data
+				) {
+					yield [
+						section,
+						'template',
+						start + offset,
+						type === 'errorMappingOnly'
+							? ctx.codeFeatures.verification
+							: typeof data === 'function' ? data(start + offset) : data,
+					];
+				}
+				else {
+					yield section;
+				}
 			}
 			yield addSuffix;
-		}
-	}
-	if (start !== undefined) {
-		for (const v of vars) {
-			v.offset = start + v.offset - prefix.length;
 		}
 	}
 }
 
 export function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
+	destructuredPropNames: Set<string> | undefined,
+	templateRefNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
 	code: string,
 	offset: number | undefined,
 	ast: ts.SourceFile
-): Generator<[fragment: string, offset: number | undefined, isJustForErrorMapping?: boolean]> {
+): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly' | 'startText' | 'endText']> {
 	let ctxVars: {
 		text: string,
 		isShorthand: boolean,
@@ -99,6 +99,9 @@ export function* forEachInterpolationSegment(
 				isShorthand: isShorthand,
 				offset: getStartEnd(ts, id, ast).start,
 			});
+			if (destructuredPropNames?.has(text)) {
+				return;
+			}
 			if (offset !== undefined) {
 				ctx.accessExternalVariable(text, offset + getStartEnd(ts, id, ast).start);
 			}
@@ -117,31 +120,67 @@ export function* forEachInterpolationSegment(
 			yield [code.substring(0, ctxVars[0].offset + ctxVars[0].text.length), 0];
 			yield [': ', undefined];
 		}
-		else {
-			yield [code.substring(0, ctxVars[0].offset), 0];
+		else if (ctxVars[0].offset > 0) {
+			yield [code.substring(0, ctxVars[0].offset), 0, 'startText'];
 		}
 
 		for (let i = 0; i < ctxVars.length - 1; i++) {
+			const curVar = ctxVars[i];
+			const nextVar = ctxVars[i + 1];
 
-			// fix https://github.com/vuejs/language-tools/issues/1205
-			// fix https://github.com/vuejs/language-tools/issues/1264
-			yield ['', ctxVars[i + 1].offset, true];
-			yield ['__VLS_ctx.', undefined];
-			if (ctxVars[i + 1].isShorthand) {
-				yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset + ctxVars[i + 1].text.length), ctxVars[i].offset];
+			yield* generateVar(code, destructuredPropNames, templateRefNames, curVar, nextVar);
+
+			if (nextVar.isShorthand) {
+				yield [code.substring(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
 				yield [': ', undefined];
 			}
 			else {
-				yield [code.substring(ctxVars[i].offset, ctxVars[i + 1].offset), ctxVars[i].offset];
+				yield [code.substring(curVar.offset + curVar.text.length, nextVar.offset), curVar.offset + curVar.text.length];
 			}
 		}
 
-		yield ['', ctxVars[ctxVars.length - 1].offset, true];
-		yield ['__VLS_ctx.', undefined];
-		yield [code.substring(ctxVars[ctxVars.length - 1].offset), ctxVars[ctxVars.length - 1].offset];
+		const lastVar = ctxVars.at(-1)!;
+		yield* generateVar(code, destructuredPropNames, templateRefNames, lastVar);
+		if (lastVar.offset + lastVar.text.length < code.length) {
+			yield [code.substring(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length, 'endText'];
+		}
 	}
 	else {
 		yield [code, 0];
+	}
+}
+
+function* generateVar(
+	code: string,
+	destructuredPropNames: Set<string> | undefined,
+	templateRefNames: Set<string> | undefined,
+	curVar: {
+		text: string,
+		isShorthand: boolean,
+		offset: number,
+	},
+	nextVar: {
+		text: string,
+		isShorthand: boolean,
+		offset: number,
+	} = curVar
+): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly']> {
+	// fix https://github.com/vuejs/language-tools/issues/1205
+	// fix https://github.com/vuejs/language-tools/issues/1264
+	yield ['', nextVar.offset, 'errorMappingOnly'];
+
+	const isDestructuredProp = destructuredPropNames?.has(curVar.text) ?? false;
+	const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
+	if (isTemplateRef) {
+		yield [`__VLS_unref(`, undefined];
+		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
+		yield [`)`, undefined];
+	}
+	else {
+		if (!isDestructuredProp) {
+			yield [`__VLS_ctx.`, undefined];
+		}
+		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 	}
 }
 

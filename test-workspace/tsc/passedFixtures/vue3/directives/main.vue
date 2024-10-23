@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { FunctionDirective } from 'vue';
+import type { FunctionDirective } from 'vue';
 import { exactType } from '../../shared';
 
-let Foo: (_: { foo?: string; }) => void;
+declare module 'vue' {
+	interface GlobalDirectives {
+		vGlobal: FunctionDirective<typeof Comp, (_: number) => void>;
+	}
+}
 
-let vFoo: FunctionDirective<typeof Foo, (_: number) => void>;
+let Comp!: (_: { foo?: string; }) => void;
+
+let vLocal!: FunctionDirective<typeof Comp, (_: boolean) => void>;
 </script>
 
 <template>
-	<Foo v-foo="v => exactType(v, {} as number)"></Foo>
+	<Comp v-global="v => exactType(v, {} as number)" />
+	<Comp v-local="v => exactType(v, {} as boolean)" />
 </template>

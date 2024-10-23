@@ -13,6 +13,5 @@
 		"../vue3_strictTemplate/#3718",
 		"../vue3_strictTemplate/emptyEmits",
 		"../vue3_strictTemplate/intrinsicProps",
-		"../vue3_strictTemplate/inheritAttrs",
 	]
 }

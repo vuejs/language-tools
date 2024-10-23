@@ -188,6 +188,7 @@ describe('Completions', async () => {
 			  "slot",
 			  "template",
 			  "fixture",
+			  "BaseTransition",
 			]
 		`);
 	});
@@ -197,6 +198,28 @@ describe('Completions', async () => {
 		await requestCompletionItem('fixture.vue', 'vue', `<template><div v-cl|></div></template>`, 'v-cloak');
 		await requestCompletionItem('fixture.vue', 'vue', `<template><div v-el|></div></template>`, 'v-else');
 		await requestCompletionItem('fixture.vue', 'vue', `<template><div v-p|></div></template>`, 'v-pre');
+	});
+
+	// FIXME:
+	it.skip('Directive Modifiers', async () => {
+		expect(
+			(await requestCompletionList('fixture.vue', 'vue', `
+				<template>
+					<div v-foo.|></div>
+				</template>
+
+				<script setup lang="ts">
+				import type { FunctionDirective } from 'vue';
+
+				let vFoo!: FunctionDirective<any, any, 'attr' | 'prop'>;
+				</script>
+			`)).items.map(item => item.label)
+		).toMatchInlineSnapshot(`
+			[
+			  "attr",
+			  "prop"
+			]
+		`);
 	});
 
 	it('$event argument', async () => {
@@ -244,7 +267,6 @@ describe('Completions', async () => {
 	});
 
 	it('#2511', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/component-for-auto-import.vue', 'vue', `<script setup lang="ts"></script>`);
 		expect(
 			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
@@ -290,7 +312,6 @@ describe('Completions', async () => {
 	});
 
 	it('Alias path', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			import Component from '@/|';
@@ -299,7 +320,6 @@ describe('Completions', async () => {
 	});
 
 	it('Relative path', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			import Component from './|';
@@ -308,7 +328,6 @@ describe('Completions', async () => {
 	});
 
 	it('Component auto import', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await prepareDocument('tsconfigProject/ComponentForAutoImport.vue', 'vue', `<script setup lang="ts"></script>`);
 		expect(
 			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
@@ -338,8 +357,14 @@ describe('Completions', async () => {
 			      },
 			    },
 			  ],
+			  "commitCharacters": [
+			    ".",
+			    ",",
+			    ";",
+			    "(",
+			  ],
 			  "detail": "Add import from "./ComponentForAutoImport.vue"
-			(property) default: DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, Readonly<ExtractPropTypes<{}>>, {}, {}>",
+			(property) default: DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, PublicProps, ToResolvedProps<{}, {}>, ... 8 more ..., any>",
 			  "documentation": {
 			    "kind": "markdown",
 			    "value": "",
@@ -369,7 +394,6 @@ describe('Completions', async () => {
 	});
 
 	it('core#8811', async () => {
-		await ensureGlobalTypesHolder('tsconfigProject');
 		await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
 			<script setup lang="ts">
 			declare const Foo: new () => {
@@ -385,6 +409,53 @@ describe('Completions', async () => {
 		`, ':-foo-bar');
 	});
 
+	it('#4796', async () => {
+		expect(
+			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
+				<template>
+					<HelloWorld :msg| />
+				</template>
+
+				<script lang="ts" setup>
+				import { defineComponent } from 'vue';
+
+				const HelloWorld = defineComponent({
+					props: {
+						/**
+						 * The message to display
+						 */
+						msg: String
+					}
+				})
+				</script>
+			`, ':msg'))
+		).toMatchInlineSnapshot(`
+			{
+			  "documentation": {
+			    "kind": "markdown",
+			    "value": "The message to display",
+			  },
+			  "insertTextFormat": 2,
+			  "kind": 5,
+			  "label": ":msg",
+			  "sortText": "  :msg",
+			  "textEdit": {
+			    "newText": ":msg="$1"",
+			    "range": {
+			      "end": {
+			        "character": 21,
+			        "line": 2,
+			      },
+			      "start": {
+			        "character": 17,
+			        "line": 2,
+			      },
+			    },
+			  },
+			}
+		`);
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {
@@ -394,15 +465,6 @@ describe('Completions', async () => {
 		}
 		openedDocuments.length = 0;
 	});
-
-	/**
-	 * @deprecated Remove this when #4717 fixed.
-	 */
-	async function ensureGlobalTypesHolder(folderName: string) {
-		const document = await prepareDocument(`${folderName}/globalTypesHolder.vue`, 'vue', '');
-		const server = await getLanguageServer();
-		await server.sendDocumentDiagnosticRequest(document.uri);
-	}
 
 	async function requestCompletionItem(fileName: string, languageId: string, content: string, itemLabel: string) {
 		const completions = await requestCompletionList(fileName, languageId, content);
