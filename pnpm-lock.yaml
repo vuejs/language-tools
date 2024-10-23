@@ -242,7 +242,7 @@ importers:
         specifier: 0.0.62
         version: 0.0.62(@volar/language-service@2.4.2)
       vscode-css-languageservice:
-        specifier: ^6.3.0
+        specifier: ^6.3.1
         version: 6.3.1
       vscode-html-languageservice:
         specifier: ^5.2.0
