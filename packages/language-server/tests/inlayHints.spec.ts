@@ -186,6 +186,28 @@ describe('Definitions', async () => {
 		`);
 	});
 
+	it('#4855', async () => {
+		expect(
+			await requestInlayHintsResult('fixture.vue', 'vue', `
+				<script setup lang="ts">
+				import { toString } from './utils';
+
+				const { foo } = defineProps<{ foo: string }>();
+				console.log(foo);
+				</script>
+			`)
+		).toMatchInlineSnapshot(`
+			"
+							<script setup lang="ts">
+							import { toString } from './utils';
+
+							const { foo } = defineProps<{ foo: string }>();
+							console.log(/* props. */foo);
+							</script>
+						"
+		`);
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {

@@ -2,9 +2,9 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponent, generateEmitsOption } from './component';
-import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures } from './index';
 import { generateComponentSelf } from './componentSelf';
+import type { ScriptCodegenContext } from './context';
+import { ScriptCodegenOptions, codeFeatures, generateScriptSectionPartiallyEnding } from './index';
 import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
@@ -64,7 +64,7 @@ export function* generateScriptSetup(
 			emitTypes.push(`typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'}`);
 		}
 		if (scriptSetupRanges.defineProp.some(p => p.isModel)) {
-			emitTypes.push(`__VLS_ModelEmitsType`);
+			emitTypes.push(`typeof __VLS_modelEmit`);
 		}
 
 		yield `		return {} as {${newLine}`
@@ -130,45 +130,15 @@ function* generateSetupFunction(
 	ctx.scriptSetupGeneratedOffset = options.getGeneratedLength() - scriptSetupRanges.importSectionEndOffset;
 
 	let setupCodeModifies: [Code[], number, number][] = [];
-	const propsRange = scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define;
-	if (propsRange && scriptSetupRanges.props.define) {
-		const statement = scriptSetupRanges.props.define.statement;
-		if (scriptSetupRanges.props.define.typeArg) {
-			setupCodeModifies.push([[
-				`let __VLS_typeProps!: `,
-				generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.typeArg.start, scriptSetupRanges.props.define.typeArg.end, codeFeatures.all),
-				endOfLine,
-			], statement.start, statement.start]);
-			setupCodeModifies.push([[`typeof __VLS_typeProps`], scriptSetupRanges.props.define.typeArg.start, scriptSetupRanges.props.define.typeArg.end]);
-		}
-		if (!scriptSetupRanges.props.name) {
-			if (statement.start === propsRange.start && statement.end === propsRange.end) {
-				setupCodeModifies.push([[`const __VLS_props = `], propsRange.start, propsRange.start]);
-			}
-			else {
-				if (scriptSetupRanges.props.define.typeArg) {
-					setupCodeModifies.push([[
-						`const __VLS_props = `,
-						generateSfcBlockSection(scriptSetup, propsRange.start, scriptSetupRanges.props.define.typeArg.start, codeFeatures.all),
-					], statement.start, scriptSetupRanges.props.define.typeArg.start]);
-					setupCodeModifies.push([[
-						generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.typeArg.end, propsRange.end, codeFeatures.all),
-						`${endOfLine}`,
-						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
-						`__VLS_props`,
-					], scriptSetupRanges.props.define.typeArg.end, propsRange.end]);
-				}
-				else {
-					setupCodeModifies.push([[
-						`const __VLS_props = `,
-						generateSfcBlockSection(scriptSetup, propsRange.start, propsRange.end, codeFeatures.all),
-						`${endOfLine}`,
-						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
-						`__VLS_props`,
-					], statement.start, propsRange.end]);
-				}
-			}
-		}
+	if (scriptSetupRanges.props.define) {
+		setupCodeModifies.push(...generateDefineWithType(
+			scriptSetup,
+			scriptSetupRanges.props.name,
+			scriptSetupRanges.props.define,
+			scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define,
+			'__VLS_props',
+			'__VLS_Props'
+		));
 	}
 	if (scriptSetupRanges.slots.define) {
 		if (scriptSetupRanges.slots.isObjectBindingPattern) {
@@ -181,8 +151,15 @@ function* generateSetupFunction(
 			setupCodeModifies.push([[`const __VLS_slots = `], scriptSetupRanges.slots.define.start, scriptSetupRanges.slots.define.start]);
 		}
 	}
-	if (scriptSetupRanges.emits.define && !scriptSetupRanges.emits.name) {
-		setupCodeModifies.push([[`const __VLS_emit = `], scriptSetupRanges.emits.define.start, scriptSetupRanges.emits.define.start]);
+	if (scriptSetupRanges.emits.define) {
+		setupCodeModifies.push(...generateDefineWithType(
+			scriptSetup,
+			scriptSetupRanges.emits.name,
+			scriptSetupRanges.emits.define,
+			scriptSetupRanges.emits.define,
+			'__VLS_emit',
+			'__VLS_Emit'
+		));
 	}
 	if (scriptSetupRanges.expose.define) {
 		if (scriptSetupRanges.expose.define?.typeArg) {
@@ -217,30 +194,21 @@ function* generateSetupFunction(
 	}
 	if (scriptSetupRanges.cssModules.length) {
 		for (const { define } of scriptSetupRanges.cssModules) {
-			if (define.arg) {
-				setupCodeModifies.push([
-					[
-						` as Omit<__VLS_StyleModules, '$style'>[`,
-						generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.all),
-						`]`
-					],
-					define.exp.end,
-					define.exp.end
-				]);
-			}
-			else {
-				setupCodeModifies.push([
-					[
-						` as __VLS_StyleModules[`,
-						['', scriptSetup.name, define.exp.start, codeFeatures.verification],
-						`'$style'`,
-						['', scriptSetup.name, define.exp.end, codeFeatures.verification],
-						`]`
-					],
-					define.exp.end,
-					define.exp.end
-				]);
-			}
+			setupCodeModifies.push([
+				define.arg ? [
+					` as Omit<__VLS_StyleModules, '$style'>[`,
+					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.all),
+					`]`
+				] : [
+					` as __VLS_StyleModules[`,
+					['', scriptSetup.name, define.exp.start, codeFeatures.verification],
+					`'$style'`,
+					['', scriptSetup.name, define.exp.end, codeFeatures.verification],
+					`]`
+				],
+				define.exp.end,
+				define.exp.end
+			]);
 		}
 	}
 	for (const { define } of scriptSetupRanges.templateRefs) {
@@ -258,25 +226,17 @@ function* generateSetupFunction(
 	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
-	if (setupCodeModifies.length) {
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.importSectionEndOffset, setupCodeModifies[0][1], codeFeatures.all);
-		while (setupCodeModifies.length) {
-			const [codes, _start, end] = setupCodeModifies.shift()!;
-			for (const code of codes) {
-				yield code;
-			}
-			if (setupCodeModifies.length) {
-				const nextStart = setupCodeModifies[0][1];
-				yield generateSfcBlockSection(scriptSetup, end, nextStart, codeFeatures.all);
-			}
-			else {
-				yield generateSfcBlockSection(scriptSetup, end, scriptSetup.content.length, codeFeatures.all);
-			}
+	let nextStart = scriptSetupRanges.importSectionEndOffset;
+	for (const [codes, start, end] of setupCodeModifies) {
+		yield generateSfcBlockSection(scriptSetup, nextStart, start, codeFeatures.all);
+		for (const code of codes) {
+			yield code;
 		}
+		nextStart = end;
 	}
-	else {
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.importSectionEndOffset, scriptSetup.content.length, codeFeatures.all);
-	}
+	yield generateSfcBlockSection(scriptSetup, nextStart, scriptSetup.content.length, codeFeatures.all);
+
+	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
 
 	if (scriptSetupRanges.props.define?.typeArg && scriptSetupRanges.props.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
@@ -286,9 +246,9 @@ function* generateSetupFunction(
 	}
 
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
-	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
+	yield* generateModelEmit(scriptSetup, scriptSetupRanges);
 	yield `function __VLS_template() {${newLine}`;
-	const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
+	const templateCodegenCtx = yield* generateTemplate(options, ctx);
 	yield `}${endOfLine}`;
 	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	yield `type __VLS_TemplateResult = ReturnType<typeof __VLS_template>${endOfLine}`;
@@ -309,6 +269,54 @@ function* generateSetupFunction(
 	}
 }
 
+function* generateDefineWithType(
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	name: string | undefined,
+	define: {
+		statement: TextRange,
+		typeArg?: TextRange;
+	},
+	expression: TextRange,
+	defaultName: string,
+	typeName: string
+): Generator<[Code[], number, number]> {
+	const { statement, typeArg } = define;
+	if (typeArg) {
+		yield [[
+			`type ${typeName} = `,
+			generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
+			endOfLine,
+		], statement.start, statement.start];
+		yield [[typeName], typeArg.start, typeArg.end];
+	}
+	if (!name) {
+		if (statement.start === expression.start && statement.end === expression.end) {
+			yield [[`const ${defaultName} = `], expression.start, expression.start];
+		}
+		else if (typeArg) {
+			yield [[
+				`const ${defaultName} = `,
+				generateSfcBlockSection(scriptSetup, expression.start, typeArg.start, codeFeatures.all)
+			], statement.start, typeArg.start];
+			yield [[
+				generateSfcBlockSection(scriptSetup, typeArg.end, expression.end, codeFeatures.all),
+				endOfLine,
+				generateSfcBlockSection(scriptSetup, statement.start, expression.start, codeFeatures.all),
+				defaultName
+			], typeArg.end, expression.end];
+		}
+		else {
+			yield [[
+				`const ${defaultName} = `,
+				generateSfcBlockSection(scriptSetup, expression.start, expression.end, codeFeatures.all),
+				endOfLine,
+				generateSfcBlockSection(scriptSetup, statement.start, expression.start, codeFeatures.all),
+				defaultName
+			], statement.start, expression.end];
+		}
+	}
+}
+
 function* generateComponentProps(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
@@ -324,7 +332,7 @@ function* generateComponentProps(
 		yield `,${newLine}`;
 	}
 
-	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
+	yield* generateEmitsOption(options, scriptSetupRanges);
 
 	yield `})${endOfLine}`;
 
@@ -420,7 +428,7 @@ function* generateComponentProps(
 			yield ` & `;
 		}
 		ctx.generatedPropsType = true;
-		yield `typeof __VLS_typeProps`;
+		yield `__VLS_Props`;
 	}
 	if (!ctx.generatedPropsType) {
 		yield `{}`;
@@ -428,32 +436,21 @@ function* generateComponentProps(
 	yield endOfLine;
 }
 
-function* generateModelEmits(
-	options: ScriptCodegenOptions,
+function* generateModelEmit(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	const defineModels = scriptSetupRanges.defineProp.filter(p => p.isModel);
 	if (defineModels.length) {
-		const generateDefineModels = function* () {
-			for (const defineModel of defineModels) {
-				const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
-				yield `'update:${propName}': [${propName}:`;
-				yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
-				yield `]${endOfLine}`;
-			}
-		};
-		if (options.vueCompilerOptions.target >= 3.5) {
-			yield `type __VLS_ModelEmitsType = {${newLine}`;
-			yield* generateDefineModels();
-			yield `}${endOfLine}`;
+		yield `type __VLS_ModelEmit = {${newLine}`;
+		for (const defineModel of defineModels) {
+			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
+			yield `'update:${propName}': [${propName}:`;
+			yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
+			yield `]${endOfLine}`;
 		}
-		else {
-			yield `const __VLS_modelEmitsType = (await import('${options.vueCompilerOptions.lib}')).defineEmits<{${newLine}`;
-			yield* generateDefineModels();
-			yield `}>()${endOfLine}`;
-			yield `type __VLS_ModelEmitsType = typeof __VLS_modelEmitsType${endOfLine}`;
-		}
+		yield `}${endOfLine}`;
+		yield `const __VLS_modelEmit = defineEmits<__VLS_ModelEmit>()${endOfLine}`;
 	}
 }
 
