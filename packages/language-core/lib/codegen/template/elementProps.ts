@@ -123,7 +123,7 @@ export function* generateElementProps(
 							prop.arg.loc.start.offset,
 							{
 								...codeInfo,
-								verification: options.vueCompilerOptions.strictTemplates
+								verification: options.vueCompilerOptions.strictAttributes
 									? codeInfo.verification
 									: {
 										shouldReport(_source, code) {
@@ -209,7 +209,7 @@ export function* generateElementProps(
 				: {
 					...ctx.codeFeatures.withoutHighlightAndCompletion,
 				};
-			if (!options.vueCompilerOptions.strictTemplates) {
+			if (!options.vueCompilerOptions.strictAttributes) {
 				const verification = codeInfo.verification;
 				codeInfo.verification = {
 					shouldReport(_source, code) {
