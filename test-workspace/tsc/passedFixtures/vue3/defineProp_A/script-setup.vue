@@ -12,7 +12,7 @@ const bar = defineProp<string>('bar', {
 });
 const baz = defineProp<string | number>('baz', {
     required: true,
-    default: () => [1, 2, 3],
+    default: () => 1,
 });
 defineProp<Qux>('qux')
 defineProp<boolean>('quux', { default: true })

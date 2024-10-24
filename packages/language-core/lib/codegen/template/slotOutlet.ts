@@ -6,6 +6,7 @@ import { generateElementChildren } from './elementChildren';
 import { generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 
 export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,
@@ -80,6 +81,10 @@ export function* generateSlotOutlet(
 			nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
+			const isShortHand = nameProp.arg?.loc.start.offset === nameProp.exp.loc.start.offset;
+			if (isShortHand) {
+				ctx.inlayHints.push(createVBindShorthandInlayHintInfo(nameProp.exp.loc, 'name'));
+			}
 			const slotExpVar = ctx.getInternalVariable();
 			yield `var ${slotExpVar} = `;
 			yield* generateInterpolation(

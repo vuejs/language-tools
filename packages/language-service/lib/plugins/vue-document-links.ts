@@ -20,8 +20,8 @@ export function create(): LanguageServicePlugin {
 					if (sourceScript?.generated?.root instanceof VueVirtualCode && virtualCode?.id === 'template') {
 
 						const result: vscode.DocumentLink[] = [];
-						const codegen = tsCodegen.get(sourceScript.generated.root.sfc);
-						const scopedClasses = codegen?.generatedTemplate()?.scopedClasses ?? [];
+						const codegen = tsCodegen.get(sourceScript.generated.root._sfc);
+						const scopedClasses = codegen?.generatedTemplate.get()?.scopedClasses ?? [];
 						const styleClasses = new Map<string, {
 							index: number;
 							style: Sfc['styles'][number];
@@ -29,8 +29,8 @@ export function create(): LanguageServicePlugin {
 						}[]>();
 						const option = sourceScript.generated.root.vueCompilerOptions.experimentalResolveStyleCssClasses;
 
-						for (let i = 0; i < sourceScript.generated.root.sfc.styles.length; i++) {
-							const style = sourceScript.generated.root.sfc.styles[i];
+						for (let i = 0; i < sourceScript.generated.root._sfc.styles.length; i++) {
+							const style = sourceScript.generated.root._sfc.styles[i];
 							if (option === 'always' || (option === 'scoped' && style.scoped)) {
 								for (const className of style.classNames) {
 									if (!styleClasses.has(className.text.substring(1))) {
