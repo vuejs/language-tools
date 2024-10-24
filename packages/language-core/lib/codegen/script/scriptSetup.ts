@@ -309,6 +309,9 @@ function* generateDefineWithType(
 		yield [[typeName], typeArg.start, typeArg.end];
 	}
 	if (!name) {
+		// workaround for #4811
+		const defaultExpression = `{} as typeof ${defaultName}`;
+
 		if (statement.start === expression.start && statement.end === expression.end) {
 			yield [[`const ${defaultName} = `], expression.start, expression.start];
 		}
@@ -321,7 +324,7 @@ function* generateDefineWithType(
 				generateSfcBlockSection(scriptSetup, typeArg.end, expression.end, codeFeatures.all),
 				endOfLine,
 				generateSfcBlockSection(scriptSetup, statement.start, expression.start, codeFeatures.all),
-				defaultName
+				defaultExpression
 			], typeArg.end, expression.end];
 		}
 		else {
@@ -330,7 +333,7 @@ function* generateDefineWithType(
 				generateSfcBlockSection(scriptSetup, expression.start, expression.end, codeFeatures.all),
 				endOfLine,
 				generateSfcBlockSection(scriptSetup, statement.start, expression.start, codeFeatures.all),
-				defaultName
+				defaultExpression
 			], statement.start, expression.end];
 		}
 	}
