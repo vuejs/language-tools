@@ -30,7 +30,7 @@ export function* generateComponent(
 	yield `}${endOfLine}`;
 	yield `},${newLine}`;
 	if (!ctx.bypassDefineComponent) {
-		const emitOptionCodes = [...generateEmitsOption(options, scriptSetup, scriptSetupRanges)];
+		const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
 		for (const code of emitOptionCodes) {
 			yield code;
 		}
@@ -64,7 +64,6 @@ export function* generateComponentSetupReturns(scriptSetupRanges: ScriptSetupRan
 
 export function* generateEmitsOption(
 	options: ScriptCodegenOptions,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	const codes: {
@@ -75,8 +74,8 @@ export function* generateEmitsOption(
 	}[] = [];
 	if (scriptSetupRanges.defineProp.some(p => p.isModel)) {
 		codes.push({
-			optionExp: `{} as __VLS_NormalizeEmits<__VLS_ModelEmitsType>`,
-			typeOptionType: `__VLS_ModelEmitsType`,
+			optionExp: `{} as __VLS_NormalizeEmits<typeof __VLS_modelEmit>`,
+			typeOptionType: `__VLS_ModelEmit`,
 		});
 	}
 	if (scriptSetupRanges.emits.define) {
@@ -84,7 +83,7 @@ export function* generateEmitsOption(
 		codes.push({
 			optionExp: `{} as __VLS_NormalizeEmits<typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'}>`,
 			typeOptionType: typeArg && !hasUnionTypeArg
-				? scriptSetup.content.slice(typeArg.start, typeArg.end)
+				? `__VLS_Emit`
 				: undefined,
 		});
 	}
