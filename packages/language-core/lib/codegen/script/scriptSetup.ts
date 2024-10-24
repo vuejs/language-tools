@@ -234,9 +234,9 @@ function* generateSetupFunction(
 				define.start
 			], [
 				[
-					` as __VLS_TemplateResult['refs'][`,
+					` as Readonly<import("${options.vueCompilerOptions.lib}").ShallowRef<__VLS_TemplateResult['refs'][`,
 					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
-					`])`
+					`] | null>>)`
 				],
 				define.end,
 				define.end
