@@ -193,21 +193,21 @@ function* generateSetupFunction(
 		}
 	}
 	if (scriptSetupRanges.cssModules.length) {
-		for (const { define } of scriptSetupRanges.cssModules) {
+		for (const { define: { arg, exp } } of scriptSetupRanges.cssModules) {
 			setupCodeModifies.push([
-				define.arg ? [
+				arg ? [
 					` as Omit<__VLS_StyleModules, '$style'>[`,
-					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.all),
+					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
 					`]`
 				] : [
 					` as __VLS_StyleModules[`,
-					['', scriptSetup.name, define.exp.start, codeFeatures.verification],
+					['', scriptSetup.name, exp.start, codeFeatures.verification],
 					`'$style'`,
-					['', scriptSetup.name, define.exp.end, codeFeatures.verification],
+					['', scriptSetup.name, exp.end, codeFeatures.verification],
 					`]`
 				],
-				define.exp.end,
-				define.exp.end
+				exp.end,
+				exp.end
 			]);
 		}
 	}
