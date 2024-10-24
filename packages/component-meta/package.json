@@ -6,6 +6,7 @@
 		"**/*.js",
 		"**/*.d.ts"
 	],
+	"sideEffects": false,
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",

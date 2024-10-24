@@ -2,9 +2,9 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateComponent, generateEmitsOption } from './component';
-import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures } from './index';
 import { generateComponentSelf } from './componentSelf';
+import type { ScriptCodegenContext } from './context';
+import { ScriptCodegenOptions, codeFeatures, generateScriptSectionPartiallyEnding } from './index';
 import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
@@ -236,6 +236,8 @@ function* generateSetupFunction(
 	}
 	yield generateSfcBlockSection(scriptSetup, nextStart, scriptSetup.content.length, codeFeatures.all);
 
+	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
+
 	if (scriptSetupRanges.props.define?.typeArg && scriptSetupRanges.props.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
 		yield `const __VLS_withDefaultsArg = (function <T>(t: T) { return t })(`;
@@ -246,7 +248,7 @@ function* generateSetupFunction(
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
 	yield* generateModelEmit(scriptSetup, scriptSetupRanges);
 	yield `function __VLS_template() {${newLine}`;
-	const templateCodegenCtx = yield* generateTemplate(options, ctx, false);
+	const templateCodegenCtx = yield* generateTemplate(options, ctx);
 	yield `}${endOfLine}`;
 	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	yield `type __VLS_TemplateResult = ReturnType<typeof __VLS_template>${endOfLine}`;
