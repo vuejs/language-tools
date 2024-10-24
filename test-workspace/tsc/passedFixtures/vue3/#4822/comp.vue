@@ -1,8 +1,6 @@
 <script setup lang="ts" generic="T">
 defineModel<T>();
 defineEmits<{
-    (event: 'foo', arg: T): any;
+	(event: 'foo', arg: T): any;
 }>();
 </script>
-
-<template></template>

@@ -4,9 +4,9 @@ import { exactType } from '../../shared';
 import Comp from './comp.vue';
 
 export default defineComponent({
-    components: {
-        Comp
-    }
+	components: {
+		Comp
+	}
 });
 </script>
 
@@ -15,5 +15,5 @@ let foo!: number;
 </script>
 
 <template>
-    <Comp @foo="(arg) => exactType(arg, {} as number)" v-model="foo"></Comp>
+	<Comp @foo="(arg) => exactType(arg, {} as number)" v-model="foo"></Comp>
 </template>
