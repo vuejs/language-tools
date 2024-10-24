@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { exactType } from 'tsc/passedFixtures/shared';
+import { exactType } from '../../shared';
 import { useTemplateRef } from 'vue';
 
 const ref1 = useTemplateRef('input');
