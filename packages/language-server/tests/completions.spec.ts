@@ -456,6 +456,20 @@ describe('Completions', async () => {
 		`);
 	});
 
+	// FIXME:
+	it.skip('Auto insert defines', async () => {
+		expect(
+			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
+				<script lang="ts" setup>
+				defineProps<{
+					foo: string;
+				}>();
+				props|
+				</script>
+			`, 'props'))
+		).toMatchInlineSnapshot(``)
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {
