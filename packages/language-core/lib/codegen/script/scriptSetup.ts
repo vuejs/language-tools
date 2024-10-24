@@ -273,7 +273,7 @@ function* generateDefineWithType(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	name: string | undefined,
 	define: {
-		statement: TextRange,
+		statement: TextRange;
 		typeArg?: TextRange;
 	},
 	expression: TextRange,
