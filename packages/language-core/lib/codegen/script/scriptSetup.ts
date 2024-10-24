@@ -234,7 +234,7 @@ function* generateSetupFunction(
 				define.start
 			], [
 				[
-					`as __VLS_TemplateResult['refs'][`,
+					` as __VLS_TemplateResult['refs'][`,
 					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
 					`])`
 				],
