@@ -244,19 +244,35 @@ function* generateSetupFunction(
 		}
 	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
-	if (isTs) {
-		for (const { define } of scriptSetupRanges.templateRefs) {
-			if (define?.arg) {
-				setupCodeModifies.push([
-					[
-						`<__VLS_TemplateResult['refs'][`,
-						generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
-						`], keyof __VLS_TemplateResult['refs']>`
-					],
-					define.arg.start - 1,
-					define.arg.start - 1
-				]);
-			}
+	for (const { define } of scriptSetupRanges.templateRefs) {
+		if (!define?.arg) {
+			continue;
+		}
+		if (isTs) {
+			setupCodeModifies.push([
+				[
+					`<__VLS_TemplateResult['refs'][`,
+					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
+					`], keyof __VLS_TemplateResult['refs']>`
+				],
+				define.arg.start - 1,
+				define.arg.start - 1
+			]);
+		}
+		else {
+			setupCodeModifies.push([
+				[`(`],
+				define.start,
+				define.start
+			], [
+				[
+					`as __VLS_TemplateResult['refs'][`,
+					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
+					`])`
+				],
+				define.end,
+				define.end
+			]);
 		}
 	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);

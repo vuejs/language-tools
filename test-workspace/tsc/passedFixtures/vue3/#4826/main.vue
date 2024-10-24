@@ -4,7 +4,7 @@ import { exactType } from '../../shared';
 import Child from './child.vue';
 
 const child = useTemplateRef('child');
-exactType(child.value?.a, {} as unknown);
+exactType(child.value?.a, {} as HTMLAnchorElement | undefined);
 </script>
 
 <template>
