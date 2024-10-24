@@ -17,7 +17,7 @@ export function* parseCssVars(css: string) {
 
 export function fillBlank(css: string, ...regs: RegExp[]) {
 	for (const reg of regs) {
-		css = css.replace(reg, (match) => ' '.repeat(match.length));
+		css = css.replace(reg, match => ' '.repeat(match.length));
 	}
 	return css;
 }
