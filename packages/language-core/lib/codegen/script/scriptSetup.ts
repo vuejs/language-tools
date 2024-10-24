@@ -211,8 +211,12 @@ function* generateSetupFunction(
 			]);
 		}
 	}
+	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
 	for (const { define } of scriptSetupRanges.templateRefs) {
-		if (define?.arg) {
+		if (!define?.arg) {
+			continue;
+		}
+		if (isTs) {
 			setupCodeModifies.push([
 				[
 					`<__VLS_TemplateResult['refs'][`,
@@ -221,6 +225,21 @@ function* generateSetupFunction(
 				],
 				define.exp.end,
 				define.exp.end
+			]);
+		}
+		else {
+			setupCodeModifies.push([
+				[`(`],
+				define.start,
+				define.start
+			], [
+				[
+					` as __VLS_UseTemplateRef<__VLS_TemplateResult['refs'][`,
+					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
+					`]>)`
+				],
+				define.end,
+				define.end
 			]);
 		}
 	}
