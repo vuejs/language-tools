@@ -193,7 +193,7 @@ function* generateSetupFunction(
 		}
 	}
 	if (scriptSetupRanges.cssModules.length) {
-		for (const { exp, arg } of scriptSetupRanges.cssModules) {
+		for (const { define: { arg, exp } } of scriptSetupRanges.cssModules) {
 			setupCodeModifies.push([
 				arg ? [
 					` as Omit<__VLS_StyleModules, '$style'>[`,
@@ -219,8 +219,8 @@ function* generateSetupFunction(
 					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
 					`], keyof __VLS_TemplateResult['refs']>`
 				],
-				define.arg.start - 1,
-				define.arg.start - 1
+				define.exp.end,
+				define.exp.end
 			]);
 		}
 	}
@@ -273,8 +273,8 @@ function* generateDefineWithType(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	name: string | undefined,
 	define: {
-		statement: TextRange,
-		typeArg?: TextRange
+		statement: TextRange;
+		typeArg?: TextRange;
 	},
 	expression: TextRange,
 	defaultName: string,
