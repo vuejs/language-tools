@@ -215,30 +215,32 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	for (const { exp, arg } of scriptSetupRanges.cssModules) {
-		if (arg) {
-			setupCodeModifies.push([
-				[
-					` as Omit<__VLS_StyleModules, '$style'>[`,
-					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
-					`]`
-				],
-				exp.end,
-				exp.end
-			]);
-		}
-		else {
-			setupCodeModifies.push([
-				[
-					` as __VLS_StyleModules[`,
-					['', scriptSetup.name, exp.start, codeFeatures.verification],
-					`'$style'`,
-					['', scriptSetup.name, exp.end, codeFeatures.verification],
-					`]`
-				],
-				exp.end,
-				exp.end
-			]);
+	if (scriptSetupRanges.cssModules.length) {
+		for (const { exp, arg } of scriptSetupRanges.cssModules) {
+			if (arg) {
+				setupCodeModifies.push([
+					[
+						` as Omit<__VLS_StyleModules, '$style'>[`,
+						generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+						`]`
+					],
+					exp.end,
+					exp.end
+				]);
+			}
+			else {
+				setupCodeModifies.push([
+					[
+						` as __VLS_StyleModules[`,
+						['', scriptSetup.name, exp.start, codeFeatures.verification],
+						`'$style'`,
+						['', scriptSetup.name, exp.end, codeFeatures.verification],
+						`]`
+					],
+					exp.end,
+					exp.end
+				]);
+			}
 		}
 	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
