@@ -43,7 +43,6 @@ export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	sfc: Sfc;
 	lang: string;
-	isTs: boolean;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[]; } | undefined;

@@ -215,7 +215,8 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	if (options.isTs) {
+	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
+	if (isTs) {
 		for (const { exp, arg } of scriptSetupRanges.cssModules) {
 			if (arg) {
 				setupCodeModifies.push([
