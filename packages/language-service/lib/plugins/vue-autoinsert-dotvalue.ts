@@ -113,7 +113,7 @@ function sleep(ms: number) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function isTsDocument(document: TextDocument) {
+export function isTsDocument(document: TextDocument) {
 	return document.languageId === 'javascript' ||
 		document.languageId === 'typescript' ||
 		document.languageId === 'javascriptreact' ||

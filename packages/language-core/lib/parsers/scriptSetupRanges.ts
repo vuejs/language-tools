@@ -27,7 +27,9 @@ export function parseScriptSetupRanges(
 	const slots: {
 		name?: string;
 		isObjectBindingPattern?: boolean;
-		define?: ReturnType<typeof parseDefineFunction>;
+		define?: ReturnType<typeof parseDefineFunction> & {
+			statement: TextRange;
+		};
 	} = {};
 	const emits: {
 		name?: string;
@@ -281,7 +283,10 @@ export function parseScriptSetupRanges(
 				});
 			}
 			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
-				slots.define = parseDefineFunction(node);
+				slots.define = {
+					...parseDefineFunction(node),
+					statement: getStatementRange(ts, parents, node, ast)
+				};
 				if (ts.isVariableDeclaration(parent)) {
 					if (ts.isIdentifier(parent.name)) {
 						slots.name = getNodeText(ts, parent.name, ast);
