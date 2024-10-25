@@ -46,7 +46,10 @@ export function create(): LanguageServicePlugin {
 
 					const mappings = [...context.language.maps.forEach(virtualCode)];
 
-					addDefineCompletionItem(scriptSetupRanges.props.define, 'props');
+					addDefineCompletionItem(scriptSetupRanges.props.define && {
+						exp: scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define.exp,
+						statement: scriptSetupRanges.props.define.statement
+					}, 'props');
 					addDefineCompletionItem(scriptSetupRanges.emits.define, 'emit');
 					addDefineCompletionItem(scriptSetupRanges.slots.define, 'slots');
 
