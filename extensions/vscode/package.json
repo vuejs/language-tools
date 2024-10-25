@@ -561,5 +561,8 @@
 		"esbuild-visualizer": "latest",
 		"semver": "^7.5.4",
 		"vscode-tmlanguage-snapshot": "latest"
+	},
+	"dependencies": {
+		"reactive-vscode": "0.2.6-beta.1"
 	}
 }
