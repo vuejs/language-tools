@@ -56,7 +56,13 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	const ctx = createScriptCodegenContext(options);
 
 	if (options.vueCompilerOptions.__setupedGlobalTypes) {
-		yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+		const globalTypes = options.vueCompilerOptions.__setupedGlobalTypes;
+		if (typeof globalTypes === 'object') {
+			yield `/// <reference types="${globalTypes.absolutePath}" />${newLine}`;
+		}
+		else {
+			yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+		}
 	}
 	else {
 		yield `/* placeholder */`;
