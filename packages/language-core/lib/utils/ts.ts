@@ -281,7 +281,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions, host: {
 	fileExists(path: string): boolean;
 	writeFile?(path: string, data: string): void;
-}): { absolutePath: string; } | undefined {
+}): VueCompilerOptions['__setupedGlobalTypes'] {
 	if (!host.writeFile) {
 		return;
 	}
