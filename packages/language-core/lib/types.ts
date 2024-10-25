@@ -28,9 +28,10 @@ export interface VueCompilerOptions {
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
 	jsxSlots: boolean;
-	strictTemplates: boolean;
-	strictAttributes: boolean;
-	strictComponents: boolean;
+	strictTemplates: {
+		attributes: boolean;
+		components: boolean;
+	};
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
 	dataAttributes: string[];

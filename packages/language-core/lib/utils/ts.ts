@@ -223,7 +223,13 @@ function getPartialVueCompilerOptions(
 export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3.3;
 	const lib = vueOptions.lib ?? 'vue';
-	const strictTemplates = vueOptions.strictTemplates ?? false;
+	const strictTemplates = typeof vueOptions.strictTemplates === 'boolean' ? {
+		attributes: vueOptions.strictTemplates,
+		components: vueOptions.strictTemplates
+	} : vueOptions.strictTemplates ?? {
+		attributes: false,
+		components: false
+	}
 	return {
 		...vueOptions,
 		target,
@@ -233,8 +239,6 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		lib,
 		jsxSlots: vueOptions.jsxSlots ?? false,
 		strictTemplates,
-		strictAttributes: vueOptions.strictAttributes ?? strictTemplates,
-		strictComponents: vueOptions.strictComponents ?? strictTemplates,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
 		fallthroughAttributes: vueOptions.fallthroughAttributes ?? false,
 		dataAttributes: vueOptions.dataAttributes ?? [],

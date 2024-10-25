@@ -41,19 +41,12 @@
 					"markdownDescription": "Generate slots type for `JSX.ElementChildrenAttribute`."
 				},
 				"strictTemplates": {
-					"type": "boolean",
-					"default": false,
+					"type": ["boolean", "object"],
+					"default": {
+						"attributes": false,
+						"components": false
+					},
 					"markdownDescription": "Strict props(attrs), component type-checking in templates."
-				},
-				"strictAttributes": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Strict props(attrs) type-checking in templates."
-				},
-				"strictComponents": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "Strict component type-checking in templates."
 				},
 				"skipTemplateCodegen": {
 					"type": "boolean",
