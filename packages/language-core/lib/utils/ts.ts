@@ -36,13 +36,10 @@ export function createParsedCommandLineByJson(
 
 	const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
 	if (skipGlobalTypesSetup) {
-		resolvedVueOptions.__setupedGlobalTypes = {};
+		resolvedVueOptions.__setupedGlobalTypes = true;
 	}
 	else {
-		const absolutePath = setupGlobalTypes(rootDir, resolvedVueOptions, parseConfigHost);
-		if (absolutePath) {
-			resolvedVueOptions.__setupedGlobalTypes = { absolutePath };
-		}
+		resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(rootDir, resolvedVueOptions, parseConfigHost);
 	}
 	const parsed = ts.parseJsonConfigFileContent(
 		json,
@@ -94,13 +91,10 @@ export function createParsedCommandLine(
 
 		const resolvedVueOptions = resolveVueCompilerOptions(vueOptions);
 		if (skipGlobalTypesSetup) {
-			resolvedVueOptions.__setupedGlobalTypes = {};
+			resolvedVueOptions.__setupedGlobalTypes = true;
 		}
 		else {
-			const absolutePath = setupGlobalTypes(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost);
-			if (absolutePath) {
-				resolvedVueOptions.__setupedGlobalTypes = { absolutePath };
-			}
+			resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost);
 		}
 		const parsed = ts.parseJsonSourceFileConfigFileContent(
 			config,
@@ -287,7 +281,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions, host: {
 	fileExists(path: string): boolean;
 	writeFile?(path: string, data: string): void;
-}) {
+}): { absolutePath: string; } | undefined {
 	if (!host.writeFile) {
 		return;
 	}
@@ -303,6 +297,6 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', `${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
 		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
 		host.writeFile(globalTypesPath, globalTypesContents);
-		return globalTypesPath;
+		return { absolutePath: globalTypesPath };
 	} catch { }
 }

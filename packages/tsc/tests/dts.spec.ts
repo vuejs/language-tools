@@ -33,10 +33,7 @@ describe('vue-tsc-dts', () => {
 		}
 		else {
 			vueOptions = vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
-			const absolutePath = vue.setupGlobalTypes(workspace.replace(windowsPathReg, '/'), vueOptions, ts.sys);
-			if (absolutePath) {
-				vueOptions.__setupedGlobalTypes = { absolutePath };
-			}
+			vueOptions.__setupedGlobalTypes = vue.setupGlobalTypes(workspace.replace(windowsPathReg, '/'), vueOptions, ts.sys);
 		}
 		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
