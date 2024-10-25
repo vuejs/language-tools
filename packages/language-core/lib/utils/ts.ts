@@ -229,7 +229,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 	} : vueOptions.strictTemplates ?? {
 		attributes: false,
 		components: false
-	}
+	};
 	return {
 		...vueOptions,
 		target,
