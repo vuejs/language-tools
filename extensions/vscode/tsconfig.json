@@ -3,8 +3,8 @@
 	"compilerOptions": {
 		"outDir": "out",
 		"rootDir": "src",
-		"module": "ESNext",
-		"moduleResolution": "Bundler"
+		"module": "CommonJS",
+		"moduleResolution": "Node"
 	},
 	"include": [ "src" ],
 	"references": [
