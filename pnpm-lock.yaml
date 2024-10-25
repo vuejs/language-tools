@@ -75,7 +75,7 @@ importers:
   packages/component-meta:
     dependencies:
       '@volar/typescript':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       '@vue/language-core':
         specifier: 2.1.6
@@ -102,7 +102,7 @@ importers:
   packages/language-core:
     dependencies:
       '@volar/language-core':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       '@vue/compiler-dom':
         specifier: ^3.5.0
@@ -139,7 +139,7 @@ importers:
         specifier: ^1.0.1
         version: 1.0.3
       '@volar/typescript':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       '@vue/compiler-sfc':
         specifier: ^3.5.0
@@ -148,7 +148,7 @@ importers:
   packages/language-plugin-pug:
     dependencies:
       '@volar/source-map':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       volar-service-pug:
         specifier: 0.0.62
@@ -164,14 +164,14 @@ importers:
   packages/language-server:
     dependencies:
       '@volar/language-core':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       '@volar/language-server':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       '@volar/test-utils':
-        specifier: ~2.4.1
-        version: 2.4.6
+        specifier: ~2.4.7
+        version: 2.4.7
       '@vue/language-core':
         specifier: 2.1.6
         version: link:../language-core
@@ -191,13 +191,13 @@ importers:
   packages/language-service:
     dependencies:
       '@volar/language-core':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       '@volar/language-service':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       '@volar/typescript':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       '@vue/compiler-dom':
         specifier: ^3.5.0
@@ -258,8 +258,8 @@ importers:
         specifier: latest
         version: 1.0.3
       '@volar/kit':
-        specifier: ~2.4.1
-        version: 2.4.6(typescript@5.7.0-dev.20241025)
+        specifier: ~2.4.7
+        version: 2.4.7(typescript@5.7.0-dev.20241025)
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
@@ -267,7 +267,7 @@ importers:
   packages/tsc:
     dependencies:
       '@volar/typescript':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       '@vue/language-core':
         specifier: 2.1.6
@@ -286,7 +286,7 @@ importers:
   packages/typescript-plugin:
     dependencies:
       '@volar/typescript':
-        specifier: ~2.4.1
+        specifier: ~2.4.7
         version: 2.4.7
       '@vue/language-core':
         specifier: 2.1.6
@@ -1109,8 +1109,8 @@ packages:
   '@vitest/utils@2.1.3':
     resolution: {integrity: sha512-xpiVfDSg1RrYT0tX6czgerkpcKFmFOF/gCr30+Mve5V2kewCy4Prn1/NDMSRwaSmT7PRaOF83wu+bEtsY1wrvA==}
 
-  '@volar/kit@2.4.6':
-    resolution: {integrity: sha512-OaMtpmLns6IYD1nOSd0NdG/F5KzJ7Jr4B7TLeb4byPzu+ExuuRVeO56Dn1C7Frnw6bGudUQd90cpQAmxdB+RlQ==}
+  '@volar/kit@2.4.7':
+    resolution: {integrity: sha512-x8hr9YwHVl2qV7oNEBgcEe4EE6bP5EzD+cFgccUp0NLU6tVALBNcVA5b1LATDW/36JGRg3VFHDmUbJ1q++JzMg==}
     peerDependencies:
       typescript: '*'
 
@@ -1138,8 +1138,8 @@ packages:
   '@volar/source-map@2.4.7':
     resolution: {integrity: sha512-c+7IJrD4mht1s8FLlCf6dAUC1aTUY9leKeLosfUiuMxavcG/sY3IPBiD1rdLL5qrhzYVmUWRGxhWvJeyYa/bsQ==}
 
-  '@volar/test-utils@2.4.6':
-    resolution: {integrity: sha512-QIW5BeYvsY4QPRCaRp6ewb/L9i+NZFJTY1fYsbQe4Hi4k7Zqs+Mu4Hz21nbGWTWIF2wHeX6gGMWfJjhR7jFtvw==}
+  '@volar/test-utils@2.4.7':
+    resolution: {integrity: sha512-wSW38mtu8+dtFxpAPDmN+rYfijjkf41CmEEJqGJgm0mHvzxK32rCCxA0OryavoP4mLzaE7DhsIOIGIV4iqC4cw==}
 
   '@volar/typescript@2.4.6':
     resolution: {integrity: sha512-NMIrA7y5OOqddL9VtngPWYmdQU03htNKFtAYidbYfWA0TOhyGVd9tfcP4TsLWQ+RBWDZCbBqsr8xzU0ZOxYTCQ==}
@@ -4343,10 +4343,10 @@ snapshots:
       loupe: 3.1.2
       tinyrainbow: 1.2.0
 
-  '@volar/kit@2.4.6(typescript@5.7.0-dev.20241025)':
+  '@volar/kit@2.4.7(typescript@5.7.0-dev.20241025)':
     dependencies:
-      '@volar/language-service': 2.4.6
-      '@volar/typescript': 2.4.6
+      '@volar/language-service': 2.4.7
+      '@volar/typescript': 2.4.7
       typesafe-path: 0.2.2
       typescript: 5.7.0-dev.20241025
       vscode-languageserver-textdocument: 1.0.12
@@ -4402,10 +4402,10 @@ snapshots:
 
   '@volar/source-map@2.4.7': {}
 
-  '@volar/test-utils@2.4.6':
+  '@volar/test-utils@2.4.7':
     dependencies:
-      '@volar/language-core': 2.4.6
-      '@volar/language-server': 2.4.6
+      '@volar/language-core': 2.4.7
+      '@volar/language-server': 2.4.7
       vscode-languageserver-textdocument: 1.0.12
       vscode-uri: 3.0.8
 
