@@ -19,9 +19,13 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const uri = URI.parse(document.uri);
+					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.defines') ?? true;
+					if (!enabled) {
+						return;
+					}
+
 					const result: vscode.CompletionItem[] = [];
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
+					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!sourceScript || !virtualCode) {
@@ -58,7 +62,7 @@ export function create(): LanguageServicePlugin {
 						} | undefined,
 						name: string
 					) {
-						if (!define || define.exp.start !== define.statement?.start) {
+						if (!define || define.exp.start !== define.statement.start) {
 							return;
 						}
 
