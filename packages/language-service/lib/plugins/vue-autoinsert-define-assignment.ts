@@ -81,6 +81,7 @@ export function create(): LanguageServicePlugin {
 						result.push({
 							label: name,
 							kind: vscode.CompletionItemKind.Variable,
+							commitCharacters: ['.', ',', ';'],
 							additionalTextEdits: [{
 								newText: `const ${name} = `,
 								range: {
