@@ -2,7 +2,8 @@
 	"compilerOptions": {
 		"target": "ES2021",
 		"lib": [ "ES2021" ],
-		"module": "Node16",
+		"module": "ESNext",
+		"moduleResolution": "Node",
 		"sourceMap": true,
 		"composite": true,
 		"strict": true,
