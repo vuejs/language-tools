@@ -42,7 +42,7 @@ export function create(
 						return;
 					}
 
-					const { sfc } = sourceScript.generated.root;
+					const { _sfc: sfc } = sourceScript.generated.root;
 					const script = sfc.scriptSetup ?? sfc.script;
 
 					if (!sfc.template || !script) {
@@ -81,7 +81,7 @@ export function create(
 
 					const document = context.documents.get(parsedUri, virtualCode.languageId, virtualCode.snapshot);
 					const sfcDocument = context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
-					const { sfc } = sourceScript.generated.root;
+					const { _sfc: sfc } = sourceScript.generated.root;
 					const script = sfc.scriptSetup ?? sfc.script;
 
 					if (!sfc.template || !script) {

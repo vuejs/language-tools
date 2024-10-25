@@ -55,7 +55,7 @@ export function create(
 					baseName = baseName.substring(0, baseName.lastIndexOf('.'));
 
 					const newName = capitalize(camelize(baseName));
-					const { sfc } = vueVirtualCode;
+					const { _sfc: sfc } = vueVirtualCode;
 					const script = sfc.scriptSetup ?? sfc.script;
 
 					if (!script) {

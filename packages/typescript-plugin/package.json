@@ -6,6 +6,7 @@
 		"**/*.js",
 		"**/*.d.ts"
 	],
+	"sideEffects": false,
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -14,7 +15,7 @@
 	"dependencies": {
 		"@volar/typescript": "~2.4.1",
 		"@vue/language-core": "2.1.6",
-		"@vue/shared": "^3.4.0"
+		"@vue/shared": "^3.5.0"
 	},
 	"devDependencies": {
 		"@types/node": "latest"

@@ -18,11 +18,6 @@ export function* generateInterpolation(
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
-	const vars: {
-		text: string,
-		isShorthand: boolean,
-		offset: number,
-	}[] = [];
 	for (let [section, offset, type] of forEachInterpolationSegment(
 		options.ts,
 		options.destructuredPropNames,
@@ -68,11 +63,6 @@ export function* generateInterpolation(
 				}
 			}
 			yield addSuffix;
-		}
-	}
-	if (start !== undefined) {
-		for (const v of vars) {
-			v.offset = start + v.offset - prefix.length;
 		}
 	}
 }

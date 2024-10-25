@@ -339,7 +339,7 @@ export function create(
 					}
 
 					const templateErrors: vscode.Diagnostic[] = [];
-					const { template } = code.sfc;
+					const { template } = code._sfc;
 
 					if (template) {
 
@@ -395,11 +395,11 @@ export function create(
 					if (
 						!sourceScript
 						|| !(sourceScript.generated?.root instanceof VueVirtualCode)
-						|| !sourceScript.generated.root.sfc.template
+						|| !sourceScript.generated.root._sfc.template
 					) {
 						return [];
 					}
-					const { template } = sourceScript.generated.root.sfc;
+					const { template } = sourceScript.generated.root._sfc;
 					const spans = getComponentSpans.call(
 						{
 							files: context.language.scripts,
@@ -485,8 +485,8 @@ export function create(
 								})());
 								return [];
 							}
-							const scriptSetupRanges = vueCode.sfc.scriptSetup
-								? parseScriptSetupRanges(ts, vueCode.sfc.scriptSetup.ast, vueCompilerOptions)
+							const scriptSetupRanges = vueCode._sfc.scriptSetup
+								? parseScriptSetupRanges(ts, vueCode._sfc.scriptSetup.ast, vueCompilerOptions)
 								: undefined;
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
@@ -501,7 +501,7 @@ export function create(
 							}
 
 							for (const binding of scriptSetupRanges?.bindings ?? []) {
-								const name = vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end);
+								const name = vueCode._sfc.scriptSetup!.content.substring(binding.start, binding.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}
@@ -542,7 +542,7 @@ export function create(
 							const { attrs, propsInfo, events } = tagInfo;
 							const props = propsInfo.map(prop => prop.name);
 							const attributes: html.IAttributeData[] = [];
-							const _tsCodegen = tsCodegen.get(vueCode.sfc);
+							const _tsCodegen = tsCodegen.get(vueCode._sfc);
 
 							if (_tsCodegen) {
 								if (!templateContextProps) {
@@ -553,8 +553,8 @@ export function create(
 									return [];
 								}
 								let ctxVars = [
-									..._tsCodegen.scriptRanges()?.bindings.map(binding => vueCode.sfc.script!.content.substring(binding.start, binding.end)) ?? [],
-									..._tsCodegen.scriptSetupRanges()?.bindings.map(binding => vueCode.sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
+									..._tsCodegen.scriptRanges.get()?.bindings.map(binding => vueCode._sfc.script!.content.substring(binding.start, binding.end)) ?? [],
+									..._tsCodegen.scriptSetupRanges.get()?.bindings.map(binding => vueCode._sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
 									...templateContextProps,
 								];
 								ctxVars = [...new Set(ctxVars)];
@@ -761,7 +761,7 @@ export function create(
 					}
 				}
 
-				completionList.items = completionList.items.filter(item => !specialTags.has(item.label));
+				completionList.items = completionList.items.filter(item => !specialTags.has(parseLabel(item.label).name));
 
 				const htmlDocumentations = new Map<string, string>();
 
@@ -773,12 +773,11 @@ export function create(
 				}
 
 				for (const item of completionList.items) {
-
 					const resolvedLabelKey = resolveItemKey(item.label);
 
 					if (resolvedLabelKey) {
 						const name = resolvedLabelKey.tag;
-						item.label = name;
+						item.label = resolvedLabelKey.leadingSlash ? '/' + name : name;
 						if (item.textEdit) {
 							item.textEdit.newText = name;
 						};
@@ -838,6 +837,7 @@ export function create(
 								type: 'componentProp',
 								tag: '^',
 								prop: propName,
+								leadingSlash: false
 							};
 						}
 
@@ -988,6 +988,15 @@ export function create(
 	}
 };
 
+function parseLabel(label: string) {
+	const leadingSlash = label.startsWith('/');
+	const name = label.slice(leadingSlash ? 1 : 0);
+	return {
+		name,
+		leadingSlash
+	}
+}
+
 function parseItemKey(type: InternalItemId, tag: string, prop: string) {
 	return '__VLS_data=' + type + ',' + tag + ',' + prop;
 }
@@ -997,12 +1006,14 @@ function isItemKey(key: string) {
 }
 
 function resolveItemKey(key: string) {
-	if (isItemKey(key)) {
-		const strs = key.slice('__VLS_data='.length).split(',');
+	const { leadingSlash, name } = parseLabel(key);
+	if (isItemKey(name)) {
+		const strs = name.slice('__VLS_data='.length).split(',');
 		return {
 			type: strs[0] as InternalItemId,
 			tag: strs[1],
 			prop: strs[2],
+			leadingSlash
 		};
 	}
 }
