@@ -55,8 +55,9 @@ export interface VueCompilerOptions {
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 
 	// internal
-	__setupedGlobalTypes?: boolean;
-	__setupedGlobalTypesAbsolutePath?: string;
+	__setupedGlobalTypes?: {
+		absolutePath?: string;
+	};
 	__test?: boolean;
 }
 
