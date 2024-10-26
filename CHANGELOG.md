@@ -40,6 +40,9 @@
 
 ### Other Changes
 
+- Upgraded Volar from `v2.4.1` to `v2.4.8`:
+  - Changing vue files causes internal state to desync in Sublime Text (#4909) - Thanks to @rchl!
+  - The syntax highlighting is not applied when destructuring props (#4811)
 - chore: fix nvim config snippet in README (#4881) - Thanks to @LiamEderzeel!
 - chore: remove side effects (#4871) - Thanks to @vikingair!
 - chore: remove `importsNotUsedAsValues` (#4897) - Thanks to @KazariEX!
