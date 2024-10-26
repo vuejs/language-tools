@@ -1,4 +1,4 @@
-import { InlayHintInfo } from '../types';
+import { InlayHintInfo } from '../inlayHints';
 import { getLocalTypesGenerator } from '../localTypes';
 import type { ScriptCodegenOptions } from './index';
 

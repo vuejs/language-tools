@@ -11,6 +11,7 @@ import { generateEventArg, generateEventExpression } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
+import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 
 export function* generateElementProps(
 	options: TemplateCodegenOptions,
@@ -24,8 +25,7 @@ export function* generateElementProps(
 		suffix: string;
 	}[]
 ): Generator<Code> {
-	const isIntrinsicElement = node.tagType === CompilerDOM.ElementTypes.ELEMENT || node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
-	const canCamelize = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
+	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
 	for (const prop of props) {
 		if (
@@ -37,7 +37,7 @@ export function* generateElementProps(
 				&& !prop.arg.loc.source.startsWith('[')
 				&& !prop.arg.loc.source.endsWith(']')
 			) {
-				if (isIntrinsicElement) {
+				if (!isComponent) {
 					yield `...{ `;
 					yield* generateEventArg(ctx, prop.arg, true);
 					yield `: `;
@@ -101,7 +101,7 @@ export function* generateElementProps(
 			}
 
 			const shouldSpread = propName === 'style' || propName === 'class';
-			const shouldCamelize = canCamelize
+			const shouldCamelize = isComponent
 				&& (!prop.arg || (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)) // isStatic
 				&& hyphenateAttr(propName) === propName
 				&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(propName, pattern));
@@ -189,7 +189,7 @@ export function* generateElementProps(
 			}
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
-			const shouldCamelize = canCamelize
+			const shouldCamelize = isComponent
 				&& hyphenateAttr(prop.name) === prop.name
 				&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(prop.name, pattern));
 
@@ -334,17 +334,7 @@ function* generatePropExp(
 					features
 				);
 				if (enableCodeFeatures) {
-					ctx.inlayHints.push({
-						blockName: 'template',
-						offset: prop.loc.end.offset,
-						setting: 'vue.inlayHints.vBindShorthand',
-						label: `="${propVariableName}"`,
-						tooltip: [
-							`This is a shorthand for \`${prop.loc.source}="${propVariableName}"\`.`,
-							'To hide this hint, set `vue.inlayHints.vBindShorthand` to `false` in IDE settings.',
-							'[More info](https://github.com/vuejs/core/pull/9451)',
-						].join('\n\n'),
-					});
+					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 				}
 			}
 		}
