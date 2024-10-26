@@ -124,7 +124,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				yield `__VLS_template = () => {${newLine}`;
 				const templateCodegenCtx = yield* generateTemplate(options, ctx);
 				yield* generateComponentSelf(options, ctx, templateCodegenCtx);
-				yield `},${newLine}`;
+				yield `}${endOfLine}`;
 				yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
 			}
 		}
