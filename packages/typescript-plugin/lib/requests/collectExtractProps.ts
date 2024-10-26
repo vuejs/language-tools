@@ -23,7 +23,7 @@ export function collectExtractProps(
 	const checker = program.getTypeChecker();
 	const script = volarFile.generated?.languagePlugin.typescript?.getServiceScript(volarFile.generated.root);
 	const maps = script ? [...language.maps.forEach(script.code)].map(([_sourceScript, map]) => map) : [];
-	const sfc = volarFile.generated.root.sfc;
+	const sfc = volarFile.generated.root._sfc;
 
 	sourceFile.forEachChild(function visit(node) {
 		if (

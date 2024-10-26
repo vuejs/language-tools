@@ -31,7 +31,8 @@ export function* generateTemplateChild(
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
 	prevNode: CompilerDOM.TemplateChildNode | undefined,
-	componentCtxVar: string | undefined
+	componentCtxVar: string | undefined,
+	isVForChild: boolean = false
 ): Generator<Code> {
 	if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
 		const commentText = prevNode.content.trim().split(' ')[0];
@@ -82,7 +83,7 @@ export function* generateTemplateChild(
 				node.tagType === CompilerDOM.ElementTypes.ELEMENT
 				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
 			) {
-				yield* generateElement(options, ctx, node, currentComponent, componentCtxVar);
+				yield* generateElement(options, ctx, node, currentComponent, componentCtxVar, isVForChild);
 			}
 			else {
 				yield* generateComponent(options, ctx, node, currentComponent);

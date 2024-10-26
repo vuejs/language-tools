@@ -15,6 +15,7 @@ import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateTemplateChild } from './templateChild';
 import { generateObjectProperty } from './objectProperty';
+import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
 
 const colonReg = /:/g;
@@ -48,16 +49,24 @@ export function* generateComponent(
 
 	let props = node.props;
 	let dynamicTagInfo: {
-		exp: string;
+		tag: string;
 		offsets: [number, number | undefined];
-		astHolder: any;
+		astHolder: CompilerDOM.SourceLocation;
 	} | undefined;
 
 	if (isComponentTag) {
 		for (const prop of node.props) {
-			if (prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.arg?.loc.source === 'is' && prop.exp) {
+			if (
+				prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& prop.name === 'bind'
+				&& prop.arg?.loc.source === 'is'
+				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				if (prop.arg.loc.end.offset === prop.exp.loc.end.offset) {
+					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.exp.loc, 'is'));
+				}
 				dynamicTagInfo = {
-					exp: prop.exp.loc.source,
+					tag: prop.exp.content,
 					offsets: [prop.exp.loc.start.offset, undefined],
 					astHolder: prop.exp.loc,
 				};
@@ -69,9 +78,9 @@ export function* generateComponent(
 	else if (node.tag.includes('.')) {
 		// namespace tag
 		dynamicTagInfo = {
-			exp: node.tag,
-			astHolder: node.loc,
+			tag: node.tag,
 			offsets: [startTagOffset, endTagOffset],
+			astHolder: node.loc,
 		};
 	}
 
@@ -110,7 +119,7 @@ export function* generateComponent(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			dynamicTagInfo.exp,
+			dynamicTagInfo.tag,
 			dynamicTagInfo.astHolder,
 			dynamicTagInfo.offsets[0],
 			ctx.codeFeatures.all,
@@ -122,7 +131,7 @@ export function* generateComponent(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				dynamicTagInfo.exp,
+				dynamicTagInfo.tag,
 				dynamicTagInfo.astHolder,
 				dynamicTagInfo.offsets[1],
 				{
@@ -284,7 +293,8 @@ export function* generateElement(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined
+	componentCtxVar: string | undefined,
+	isVForChild: boolean
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
@@ -341,7 +351,11 @@ export function* generateElement(
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
-		ctx.templateRefs.set(refName, [`__VLS_nativeElements['${node.tag}']`, offset!]);
+		let refValue = `__VLS_nativeElements['${node.tag}']`;
+		if (isVForChild) {
+			refValue = `[${refValue}]`;
+		}
+		ctx.templateRefs.set(refName, [refValue, offset!]);
 	}
 	if (ctx.singleRootNode === node) {
 		ctx.singleRootElType = `typeof __VLS_nativeElements['${node.tag}']`;

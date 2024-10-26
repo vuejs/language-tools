@@ -86,7 +86,7 @@ export function* generateVFor(
 	}
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
+		yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar, true);
 		prev = childNode;
 	}
 	for (const varName of forBlockVars) {
