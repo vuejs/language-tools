@@ -3,8 +3,9 @@ import * as protocol from '@vue/language-server/protocol';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as lsp from '@volar/vscode/node';
-import { defineExtension, executeCommand, onActivate, onDeactivate } from 'reactive-vscode';
-import { activate as commonActivate, deactivate as commonDeactivate, enabledHybridMode, enabledTypeScriptPlugin } from './common';
+import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
+import { enabledHybridMode, enabledTypeScriptPlugin } from './hybridMode';
+import { activate as commonActivate, deactivate as commonDeactivate } from './common';
 import { config } from './config';
 import { middleware } from './middleware';
 
@@ -39,16 +40,11 @@ export const { activate, deactivate } = defineExtension(async () => {
 		});
 	}
 
-	onActivate((context) => {
-		commonActivate(context, (
-			id,
-			name,
-			documentSelector,
-			initOptions,
-			port,
-			outputChannel
-		) => {
-
+	// 下个小版本就不需要这行了，我晚点发布
+	const context = extensionContext.value!;
+	commonActivate(
+		context,
+		(id, name, documentSelector, initOptions, port, outputChannel) => {
 			class _LanguageClient extends lsp.LanguageClient {
 				fillInitializeParams(params: lsp.InitializeParams) {
 					// fix https://github.com/vuejs/language-tools/issues/1959
@@ -61,9 +57,13 @@ export const { activate, deactivate } = defineExtension(async () => {
 			const runOptions: lsp.ForkOptions = {};
 			if (config.server.value.maxOldSpaceSize) {
 				runOptions.execArgv ??= [];
-				runOptions.execArgv.push("--max-old-space-size=" + config.server.value.maxOldSpaceSize);
+				runOptions.execArgv.push(
+					'--max-old-space-size=' + config.server.value.maxOldSpaceSize
+				);
 			}
-			const debugOptions: lsp.ForkOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
+			const debugOptions: lsp.ForkOptions = {
+				execArgv: ['--nolazy', '--inspect=' + port]
+			};
 			const serverOptions: lsp.ServerOptions = {
 				run: {
 					module: serverModule.fsPath,
@@ -74,7 +74,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 					module: serverModule.fsPath,
 					transport: lsp.TransportKind.ipc,
 					options: debugOptions
-				},
+				}
 			};
 			const clientOptions: lsp.LanguageClientOptions = {
 				middleware,
@@ -82,15 +82,15 @@ export const { activate, deactivate } = defineExtension(async () => {
 				initializationOptions: initOptions,
 				markdown: {
 					isTrusted: true,
-					supportHtml: true,
+					supportHtml: true
 				},
-				outputChannel,
+				outputChannel
 			};
 			const client = new _LanguageClient(
 				id,
 				name,
 				serverOptions,
-				clientOptions,
+				clientOptions
 			);
 			client.start();
 
@@ -99,8 +99,8 @@ export const { activate, deactivate } = defineExtension(async () => {
 			updateProviders(client);
 
 			return client;
-		});
-	});
+		}
+	);
 
 	onDeactivate(() => {
 		commonDeactivate();
@@ -110,11 +110,11 @@ export const { activate, deactivate } = defineExtension(async () => {
 });
 
 function updateProviders(client: lsp.LanguageClient) {
-
 	const initializeFeatures = (client as any).initializeFeatures;
 
 	(client as any).initializeFeatures = (...args: any) => {
-		const capabilities = (client as any)._capabilities as lsp.ServerCapabilities;
+		const capabilities = (client as any)
+			._capabilities as lsp.ServerCapabilities;
 
 		if (!config.codeActions.value.enabled) {
 			capabilities.codeActionProvider = undefined;
@@ -122,7 +122,10 @@ function updateProviders(client: lsp.LanguageClient) {
 		if (!config.codeLens.value.enabled) {
 			capabilities.codeLensProvider = undefined;
 		}
-		if (!config.updateImportsOnFileMove.value.enabled && capabilities.workspace?.fileOperations?.willRename) {
+		if (
+			!config.updateImportsOnFileMove.value.enabled &&
+			capabilities.workspace?.fileOperations?.willRename
+		) {
 			capabilities.workspace.fileOperations.willRename = undefined;
 		}
 
@@ -131,9 +134,13 @@ function updateProviders(client: lsp.LanguageClient) {
 }
 
 try {
-	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
+	const tsExtension = vscode.extensions.getExtension(
+		'vscode.typescript-language-features'
+	)!;
 	const readFileSync = fs.readFileSync;
-	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
+	const extensionJsPath = require.resolve('./dist/extension.js', {
+		paths: [tsExtension.extensionPath],
+	});
 
 	// @ts-expect-error
 	fs.readFileSync = (...args) => {
@@ -144,27 +151,40 @@ try {
 			if (!enabledTypeScriptPlugin.value) {
 				text = text.replace(
 					'for(const e of n.contributes.typescriptServerPlugins',
-					s => s + `.filter(p=>p.name!=='typescript-vue-plugin-bundle')`
+					(s) => s + `.filter(p=>p.name!=='typescript-vue-plugin-bundle')`
 				);
-			}
-			else if (enabledHybridMode.value) {
+			} else if (enabledHybridMode.value) {
 				// patch readPlugins
 				text = text.replace(
 					'languages:Array.isArray(e.languages)',
 					[
 						'languages:',
-						`e.name==='typescript-vue-plugin-bundle'?[${config.server.value.includeLanguages.map(lang => `"${lang}"`).join(',')}]`,
-						':Array.isArray(e.languages)',
+						`e.name==='typescript-vue-plugin-bundle'?[${config.server.value.includeLanguages
+							.map((lang) => `'${lang}'`)
+							.join(',')}]`,
+						':Array.isArray(e.languages)'
 					].join('')
 				);
 
 				// VSCode < 1.87.0
-				text = text.replace('t.$u=[t.$r,t.$s,t.$p,t.$q]', s => s + '.concat("vue")'); // patch jsTsLanguageModes
-				text = text.replace('.languages.match([t.$p,t.$q,t.$r,t.$s]', s => s + '.concat("vue")'); // patch isSupportedLanguageMode
+				text = text.replace(
+					't.$u=[t.$r,t.$s,t.$p,t.$q]',
+					(s) => s + '.concat("vue")'
+				); // patch jsTsLanguageModes
+				text = text.replace(
+					'.languages.match([t.$p,t.$q,t.$r,t.$s]',
+					(s) => s + '.concat("vue")'
+				); // patch isSupportedLanguageMode
 
 				// VSCode >= 1.87.0
-				text = text.replace('t.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]', s => s + '.concat("vue")'); // patch jsTsLanguageModes
-				text = text.replace('.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]', s => s + '.concat("vue")'); // patch isSupportedLanguageMode
+				text = text.replace(
+					't.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]',
+					(s) => s + '.concat("vue")'
+				); // patch jsTsLanguageModes
+				text = text.replace(
+					'.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]',
+					(s) => s + '.concat("vue")'
+				); // patch isSupportedLanguageMode
 			}
 
 			return text;

@@ -1,9 +1,9 @@
 import { BaseLanguageClient, ExecuteCommandParams, ExecuteCommandRequest, TextEdit } from '@volar/vscode';
 import { quickPick } from '@volar/vscode/lib/common';
 import { AttrNameCasing, TagNameCasing, commands } from '@vue/language-server/lib/types';
+import { ref, useActiveTextEditor, useCommand, watch } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from '../config';
-import { ref, useActiveTextEditor, useCommand, watch } from 'reactive-vscode';
 
 export const attrNameCasings = ref(new Map<string, AttrNameCasing>());
 export const tagNameCasings = ref(new Map<string, TagNameCasing>());

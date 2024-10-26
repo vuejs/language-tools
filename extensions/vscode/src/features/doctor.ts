@@ -1,10 +1,10 @@
 import { BaseLanguageClient, ExecuteCommandParams, ExecuteCommandRequest, getTsdk } from '@volar/vscode';
 import type { SFCParseResult } from '@vue/language-server';
 import { commands } from '@vue/language-server/lib/types';
+import { executeCommand, useActiveTextEditor, useCommand, useEventEmitter, useStatusBarItem, watch } from 'reactive-vscode';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { config } from '../config';
-import { executeCommand, useActiveTextEditor, useCommand, useEventEmitter, useStatusBarItem, watch } from 'reactive-vscode';
 
 const scheme = 'vue-doctor';
 const knownValidSyntaxHighlightExtensions = {
@@ -13,7 +13,7 @@ const knownValidSyntaxHighlightExtensions = {
 	sass: ['Syler.sass-indented'],
 };
 
-export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
+export async function activate(context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
 	const item = useStatusBarItem({
 		alignment: vscode.StatusBarAlignment.Right,

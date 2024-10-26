@@ -1,13 +1,13 @@
 import { ExecuteCommandParams, ExecuteCommandRequest, type BaseLanguageClient } from '@volar/vscode';
 import type { SFCParseResult } from '@vue/language-server';
 import { commands } from '@vue/language-server/lib/types';
+import { executeCommand, useActiveTextEditor, useCommand } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from '../config';
-import { executeCommand, useActiveTextEditor, useCommand } from 'reactive-vscode';
 
 type SFCBlock = SFCParseResult['descriptor']['customBlocks'][number];
 
-export function register(client: BaseLanguageClient) {
+export function activate(client: BaseLanguageClient) {
 
 	const activeTextEditor = useActiveTextEditor();
 	const getDocDescriptor = useDocDescriptor(client);
