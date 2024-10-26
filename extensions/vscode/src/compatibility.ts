@@ -16,7 +16,6 @@ export const unknownExtensions = computed(() => {
 		.map((ext) => ext.id);
 });
 
-
 function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 	if (
 		extension.id === 'Vue.volar'

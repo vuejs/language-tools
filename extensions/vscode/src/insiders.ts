@@ -8,19 +8,28 @@ export function useInsidersStatusItem(context: vscode.ExtensionContext) {
 	item.busy = true;
 	let succeed = false;
 
-	Promise.race([
-		"https://raw.githubusercontent.com/vuejs/language-tools/HEAD/insiders.json",
-		"https://cdn.jsdelivr.net/gh/vuejs/language-tools/insiders.json",
-	].map((url) => fetch(url)))
-		.then(async (res) => {
-			onJson(await res.json() as any);
-			item.busy = false;
-			if (!succeed) {
-				item.text = "Failed to Fetch Versions";
-				item.severity = vscode.LanguageStatusSeverity.Error;
+	fetchJson();
+
+	async function fetchJson() {
+		for (const url of [
+			"https://raw.githubusercontent.com/vuejs/language-tools/HEAD/insiders.json",
+			"https://cdn.jsdelivr.net/gh/vuejs/language-tools/insiders.json",
+		]) {
+			try {
+				const res = await fetch(url);
+				onJson(await res.json() as any);
+				succeed = true;
+				break;
 			}
-		})
-		.catch();
+			catch {};
+		}
+
+		item.busy = false;
+		if (!succeed) {
+			item.text = "Failed to Fetch Versions";
+			item.severity = vscode.LanguageStatusSeverity.Error;
+		}
+	}
 
 	function onJson(json: {
 		latest: string;
