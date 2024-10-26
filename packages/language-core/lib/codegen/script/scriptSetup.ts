@@ -464,7 +464,7 @@ function* generateModelEmit(
 		yield `type __VLS_ModelEmit = {${newLine}`;
 		for (const defineModel of defineModels) {
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
-			yield `'update:${propName}': [${propName}:`;
+			yield `'update:${propName}': [value:`;
 			yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
 			yield `]${endOfLine}`;
 		}
