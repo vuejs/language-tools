@@ -435,7 +435,7 @@ describe('Completions', async () => {
 			    "kind": "markdown",
 			    "value": "The message to display",
 			  },
-			  "insertTextFormat": 2,
+			  "insertTextFormat": 1,
 			  "kind": 5,
 			  "label": ":msg",
 			  "sortText": "  :msg",

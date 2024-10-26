@@ -2,7 +2,7 @@
 	"private": true,
 	"version": "2.1.6",
 	"devDependencies": {
-		"typescript-next": "npm:typescript@next",
+		"typescript-next": "npm:typescript@5.7.0-dev.20240926",
 		"typescript-stable": "npm:typescript@latest",
 		"vue": "^3.5.0",
 		"vue-component-type-helpers": "2.1.6",
