@@ -5,7 +5,7 @@ import * as vscode from 'vscode';
 import * as lsp from '@volar/vscode/node';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
 import { enabledHybridMode, enabledTypeScriptPlugin } from './hybridMode';
-import { activate as commonActivate, deactivate as commonDeactivate } from './common';
+import { activate as activateLanguageClient, deactivate as deactivateLanguageClient } from './languageClient';
 import { config } from './config';
 import { middleware } from './middleware';
 
@@ -40,9 +40,8 @@ export const { activate, deactivate } = defineExtension(async () => {
 		});
 	}
 
-	// 下个小版本就不需要这行了，我晚点发布
 	const context = extensionContext.value!;
-	commonActivate(
+	activateLanguageClient(
 		context,
 		(id, name, documentSelector, initOptions, port, outputChannel) => {
 			class _LanguageClient extends lsp.LanguageClient {
@@ -103,7 +102,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 	);
 
 	onDeactivate(() => {
-		commonDeactivate();
+		deactivateLanguageClient();
 	});
 
 	return volarLabs.extensionExports;

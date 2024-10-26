@@ -50,6 +50,10 @@ export function activate(
 	});
 }
 
+export function deactivate(): Thenable<any> | undefined {
+	return client?.stop();
+}
+
 async function activateLc(
 	context: vscode.ExtensionContext,
 	createLc: CreateLanguageClient
@@ -138,10 +142,6 @@ async function activateLc(
 		}
 		executeCommand('workbench.action.reloadWindow');
 	}
-}
-
-export function deactivate(): Thenable<any> | undefined {
-	return client?.stop();
 }
 
 async function getInitializationOptions(
