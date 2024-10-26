@@ -8,7 +8,7 @@ let serverHandle: LanguageServerHandle | undefined;
 
 export const testWorkspacePath = path.resolve(__dirname, '../../../test-workspace');
 
-export async function getLanguageServer() {
+export async function getLanguageServer(): Promise<LanguageServerHandle> {
 	if (!serverHandle) {
 		serverHandle = startLanguageServer(require.resolve('../bin/vue-language-server.js'), testWorkspacePath);
 		serverHandle.connection.onNotification(PublishDiagnosticsNotification.type, () => { });
