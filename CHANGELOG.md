@@ -6,7 +6,7 @@
 
 ### Features
 
-- **vscode:** Reactions visualization now identifies more use cases <sup>Insiders</sup>
+- **vscode:** reactions visualization now identifies more use cases <sup>Insiders</sup>
 - **language-core:** auto infer `$el` type (#4805) - Thanks to @KazariEX!
 - **language-core:** typed directive arg and modifiers (#4813) - Thanks to @KazariEX!
 
