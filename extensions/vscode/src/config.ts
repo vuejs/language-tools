@@ -1,49 +1,35 @@
-import * as vscode from 'vscode';
+import { defineConfigs } from 'reactive-vscode';
 
-const _config = () => vscode.workspace.getConfiguration('vue');
-
-export const config = {
-	update: (section: string, value: any) => _config().update(section, value),
-	get splitEditors(): Readonly<{
+export const config = defineConfigs('vue', {
+	splitEditors: {} as {
 		icon: boolean;
-		layout: { left: string[], right: string[]; };
-	}> {
-		return _config().get('splitEditors')!;
+		layout: {
+			left: string[];
+			right: string[];
+		}
 	},
-	get doctor(): Readonly<{
+	doctor: {} as {
 		status: boolean;
-	}> {
-		return _config().get('doctor')!;
 	},
-	get server(): Readonly<{
+	server: {} as {
 		includeLanguages: string[];
 		hybridMode: 'auto' | 'typeScriptPluginOnly' | boolean;
 		maxOldSpaceSize: number;
-	}> {
-		return _config().get('server')!;
 	},
-	get updateImportsOnFileMove(): Readonly<{
+	updateImportsOnFileMove: {} as {
 		enabled: boolean;
-	}> {
-		return _config().get('updateImportsOnFileMove')!;
 	},
-	get codeActions(): Readonly<{
+	codeActions: {} as {
 		enabled: boolean;
 		askNewComponentName: boolean;
-	}> {
-		return _config().get('codeActions')!;
 	},
-	get codeLens(): Readonly<{
+	codeLens: {} as {
 		enabled: boolean;
-	}> {
-		return _config().get('codeLens')!;
 	},
-	get complete(): Readonly<{
+	complete: {} as {
 		casing: {
 			props: 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
 			tags: 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
 		};
-	}> {
-		return _config().get('complete')!;
-	},
-};
+	}
+});

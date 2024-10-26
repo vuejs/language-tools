@@ -4,6 +4,7 @@ import { commands } from '@vue/language-server/lib/types';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { config } from '../config';
+import { executeCommand, useActiveTextEditor, useCommand, useEventEmitter, useStatusBarItem, watch } from 'reactive-vscode';
 
 const scheme = 'vue-doctor';
 const knownValidSyntaxHighlightExtensions = {
@@ -14,15 +15,32 @@ const knownValidSyntaxHighlightExtensions = {
 
 export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
 
-	const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-	item.command = 'vue.action.doctor';
+	const item = useStatusBarItem({
+		alignment: vscode.StatusBarAlignment.Right,
+		backgroundColor: new vscode.ThemeColor('statusBarItem.warningBackground'),
+		command: 'vue.action.doctor'
+	});
 
-	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
+	const activeTextEditor = useActiveTextEditor();
+	const docChangeEvent = useEventEmitter<vscode.Uri>();
 
-	updateStatusBar(vscode.window.activeTextEditor);
+	watch(activeTextEditor, () => {
+		updateStatusBar(activeTextEditor.value);
+	}, {
+		immediate: true
+	});
 
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updateStatusBar));
+	useCommand('vue.action.doctor', () => {
+		const doc = activeTextEditor.value?.document;
+		if (
+			doc
+			&& (doc.languageId === 'vue' || doc.uri.toString().endsWith('.vue'))
+			&& doc.uri.scheme === 'file'
+		) {
+			executeCommand('markdown.showPreviewToSide', getDoctorUri(doc.uri));
+		}
+	});
+
 	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(
 		scheme,
 		{
@@ -49,16 +67,6 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 		}
 	));
-	context.subscriptions.push(vscode.commands.registerCommand('vue.action.doctor', () => {
-		const doc = vscode.window.activeTextEditor?.document;
-		if (
-			doc
-			&& (doc.languageId === 'vue' || doc.uri.toString().endsWith('.vue'))
-			&& doc.uri.scheme === 'file'
-		) {
-			vscode.commands.executeCommand('markdown.showPreviewToSide', getDoctorUri(doc.uri));
-		}
-	}));
 
 	function getDoctorUri(fileUri: vscode.Uri) {
 		return fileUri.with({ scheme, path: fileUri.path + '/Doctor.md' });
@@ -66,7 +74,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 
 	async function updateStatusBar(editor: vscode.TextEditor | undefined) {
 		if (
-			config.doctor.status
+			config.doctor.value.status
 			&& editor
 			&& (editor.document.languageId === 'vue' || editor.document.uri.toString().endsWith('.vue'))
 			&& editor.document.uri.scheme === 'file'

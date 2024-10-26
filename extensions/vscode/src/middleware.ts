@@ -7,7 +7,7 @@ import { config } from './config';
 export const middleware: lsp.Middleware = {
 	...lsp.middleware,
 	async resolveCodeAction(item, token, next) {
-		if (item.kind?.value === 'refactor.move.newFile.dumb' && config.codeActions.askNewComponentName) {
+		if (item.kind?.value === 'refactor.move.newFile.dumb' && config.codeActions.value.askNewComponentName) {
 			const inputName = await vscode.window.showInputBox({ value: (item as any).data.original.data.newName });
 			if (!inputName) {
 				return item; // cancel
@@ -22,7 +22,7 @@ export const middleware: lsp.Middleware = {
 				return params.items.map(item => {
 					if (item.scopeUri) {
 						if (item.section === 'vue.complete.casing.tags') {
-							const tagNameCasing = tagNameCasings.get(item.scopeUri);
+							const tagNameCasing = tagNameCasings.value.get(item.scopeUri);
 							if (tagNameCasing === TagNameCasing.Kebab) {
 								return 'kebab';
 							}
@@ -31,7 +31,7 @@ export const middleware: lsp.Middleware = {
 							}
 						}
 						else if (item.section === 'vue.complete.casing.props') {
-							const attrCase = attrNameCasings.get(item.scopeUri);
+							const attrCase = attrNameCasings.value.get(item.scopeUri);
 							if (attrCase === AttrNameCasing.Kebab) {
 								return 'kebab';
 							}

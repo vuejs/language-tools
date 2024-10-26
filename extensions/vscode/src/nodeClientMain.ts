@@ -3,74 +3,13 @@ import * as protocol from '@vue/language-server/protocol';
 import * as fs from 'fs';
 import * as vscode from 'vscode';
 import * as lsp from '@volar/vscode/node';
+import { defineExtension, executeCommand, onActivate, onDeactivate } from 'reactive-vscode';
 import { activate as commonActivate, deactivate as commonDeactivate, enabledHybridMode, enabledTypeScriptPlugin } from './common';
 import { config } from './config';
 import { middleware } from './middleware';
 
-export async function activate(context: vscode.ExtensionContext) {
-
+export const { activate, deactivate } = defineExtension(async () => {
 	const volarLabs = createLabsInfo(protocol);
-
-	await commonActivate(context, (
-		id,
-		name,
-		documentSelector,
-		initOptions,
-		port,
-		outputChannel
-	) => {
-
-		class _LanguageClient extends lsp.LanguageClient {
-			fillInitializeParams(params: lsp.InitializeParams) {
-				// fix https://github.com/vuejs/language-tools/issues/1959
-				params.locale = vscode.env.language;
-			}
-		}
-
-		let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
-
-		const runOptions: lsp.ForkOptions = {};
-		if (config.server.maxOldSpaceSize) {
-			runOptions.execArgv ??= [];
-			runOptions.execArgv.push("--max-old-space-size=" + config.server.maxOldSpaceSize);
-		}
-		const debugOptions: lsp.ForkOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
-		const serverOptions: lsp.ServerOptions = {
-			run: {
-				module: serverModule.fsPath,
-				transport: lsp.TransportKind.ipc,
-				options: runOptions
-			},
-			debug: {
-				module: serverModule.fsPath,
-				transport: lsp.TransportKind.ipc,
-				options: debugOptions
-			},
-		};
-		const clientOptions: lsp.LanguageClientOptions = {
-			middleware,
-			documentSelector: documentSelector,
-			initializationOptions: initOptions,
-			markdown: {
-				isTrusted: true,
-				supportHtml: true,
-			},
-			outputChannel,
-		};
-		const client = new _LanguageClient(
-			id,
-			name,
-			serverOptions,
-			clientOptions,
-		);
-		client.start();
-
-		volarLabs.addLanguageClient(client);
-
-		updateProviders(client);
-
-		return client;
-	});
 
 	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features');
 	const vueTsPluginExtension = vscode.extensions.getExtension('Vue.vscode-typescript-vue-plugin');
@@ -82,9 +21,9 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.window.showWarningMessage(
 			'Takeover mode is no longer needed since v2. Please enable the "TypeScript and JavaScript Language Features" extension.',
 			'Show Extension'
-		).then(selected => {
+		).then((selected) => {
 			if (selected) {
-				vscode.commands.executeCommand('workbench.extensions.search', '@builtin typescript-language-features');
+				executeCommand('workbench.extensions.search', '@builtin typescript-language-features');
 			}
 		});
 	}
@@ -93,19 +32,82 @@ export async function activate(context: vscode.ExtensionContext) {
 		vscode.window.showWarningMessage(
 			`The "${vueTsPluginExtension.packageJSON.displayName}" extension is no longer needed since v2. Please uninstall it.`,
 			'Show Extension'
-		).then(selected => {
+		).then((selected) => {
 			if (selected) {
-				vscode.commands.executeCommand('workbench.extensions.search', vueTsPluginExtension.id);
+				executeCommand('workbench.extensions.search', vueTsPluginExtension.id);
 			}
 		});
 	}
 
-	return volarLabs.extensionExports;
-}
+	onActivate((context) => {
+		commonActivate(context, (
+			id,
+			name,
+			documentSelector,
+			initOptions,
+			port,
+			outputChannel
+		) => {
 
-export function deactivate(): Thenable<any> | undefined {
-	return commonDeactivate();
-}
+			class _LanguageClient extends lsp.LanguageClient {
+				fillInitializeParams(params: lsp.InitializeParams) {
+					// fix https://github.com/vuejs/language-tools/issues/1959
+					params.locale = vscode.env.language;
+				}
+			}
+
+			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
+
+			const runOptions: lsp.ForkOptions = {};
+			if (config.server.value.maxOldSpaceSize) {
+				runOptions.execArgv ??= [];
+				runOptions.execArgv.push("--max-old-space-size=" + config.server.value.maxOldSpaceSize);
+			}
+			const debugOptions: lsp.ForkOptions = { execArgv: ['--nolazy', '--inspect=' + port] };
+			const serverOptions: lsp.ServerOptions = {
+				run: {
+					module: serverModule.fsPath,
+					transport: lsp.TransportKind.ipc,
+					options: runOptions
+				},
+				debug: {
+					module: serverModule.fsPath,
+					transport: lsp.TransportKind.ipc,
+					options: debugOptions
+				},
+			};
+			const clientOptions: lsp.LanguageClientOptions = {
+				middleware,
+				documentSelector: documentSelector,
+				initializationOptions: initOptions,
+				markdown: {
+					isTrusted: true,
+					supportHtml: true,
+				},
+				outputChannel,
+			};
+			const client = new _LanguageClient(
+				id,
+				name,
+				serverOptions,
+				clientOptions,
+			);
+			client.start();
+
+			volarLabs.addLanguageClient(client);
+
+			updateProviders(client);
+
+			return client;
+		});
+	});
+
+	onDeactivate(() => {
+		commonDeactivate();
+	});
+
+	return volarLabs.extensionExports;
+});
 
 function updateProviders(client: lsp.LanguageClient) {
 
@@ -114,13 +116,13 @@ function updateProviders(client: lsp.LanguageClient) {
 	(client as any).initializeFeatures = (...args: any) => {
 		const capabilities = (client as any)._capabilities as lsp.ServerCapabilities;
 
-		if (!config.codeActions.enabled) {
+		if (!config.codeActions.value.enabled) {
 			capabilities.codeActionProvider = undefined;
 		}
-		if (!config.codeLens.enabled) {
+		if (!config.codeLens.value.enabled) {
 			capabilities.codeLensProvider = undefined;
 		}
-		if (!config.updateImportsOnFileMove.enabled && capabilities.workspace?.fileOperations?.willRename) {
+		if (!config.updateImportsOnFileMove.value.enabled && capabilities.workspace?.fileOperations?.willRename) {
 			capabilities.workspace.fileOperations.willRename = undefined;
 		}
 
@@ -139,19 +141,19 @@ try {
 			// @ts-expect-error
 			let text = readFileSync(...args) as string;
 
-			if (!enabledTypeScriptPlugin) {
+			if (!enabledTypeScriptPlugin.value) {
 				text = text.replace(
 					'for(const e of n.contributes.typescriptServerPlugins',
 					s => s + `.filter(p=>p.name!=='typescript-vue-plugin-bundle')`
 				);
 			}
-			else if (enabledHybridMode) {
+			else if (enabledHybridMode.value) {
 				// patch readPlugins
 				text = text.replace(
 					'languages:Array.isArray(e.languages)',
 					[
 						'languages:',
-						`e.name==='typescript-vue-plugin-bundle'?[${config.server.includeLanguages.map(lang => `"${lang}"`).join(',')}]`,
+						`e.name==='typescript-vue-plugin-bundle'?[${config.server.value.includeLanguages.map(lang => `"${lang}"`).join(',')}]`,
 						':Array.isArray(e.languages)',
 					].join('')
 				);
