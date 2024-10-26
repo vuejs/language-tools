@@ -19,4 +19,4 @@ const props = withDefaults(defineProps<{
 	<div v-for="item of $props.list">
 		{{ exactType(item.foo, {} as number) }}
 	</div>
-</templat>
+</template>
