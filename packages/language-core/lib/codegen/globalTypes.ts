@@ -92,11 +92,7 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 	function __VLS_getVForSourceType(source: number): [number, number, number][];
 	function __VLS_getVForSourceType(source: string): [string, number, number][];
 	function __VLS_getVForSourceType<T extends any[]>(source: T): [
-		item: ${(
-			target >= 3 ? `import('${lib}').Reactive<T[number]>` :
-				target >= 2.7 ? `import('${lib}').UnwrapNestedRefs<T[number]>` :
-					`T[number]`
-		)},
+		item: T[number],
 		key: number,
 		index: number,
 	][];
