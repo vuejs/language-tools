@@ -60,7 +60,7 @@ lspconfig.tsserver.setup {
 lspconfig.volar.setup {}
 ```
 
-### None-Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
+### Non-Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
 
 Note: If `hybridMode` is set to `false` `Volar` will run embedded `tsserver` therefore there is no need to run it separately.
 
