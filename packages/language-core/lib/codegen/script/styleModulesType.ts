@@ -9,7 +9,7 @@ export function* generateStyleModulesType(
 	ctx: ScriptCodegenContext
 ): Generator<Code> {
 	const styles = options.sfc.styles.map((style, i) => [style, i] as const).filter(([style]) => style.module);
-	if (!styles.length) {
+	if (!styles.length && !options.scriptSetupRanges?.cssModules.length) {
 		return;
 	}
 	yield `type __VLS_StyleModules = {${newLine}`;
