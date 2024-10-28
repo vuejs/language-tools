@@ -193,27 +193,31 @@ function* generateSetupFunction(
 		}
 	}
 	if (scriptSetupRanges.cssModules.length) {
-		for (const { define: { arg, exp } } of scriptSetupRanges.cssModules) {
+		for (const { define } of scriptSetupRanges.cssModules) {
 			setupCodeModifies.push([
-				arg ? [
+				[`(`],
+				define.start,
+				define.start
+			], [
+				define.arg ? [
 					` as Omit<__VLS_StyleModules, '$style'>[`,
-					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
-					`]`
+					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.all),
+					`])`
 				] : [
 					` as __VLS_StyleModules[`,
-					['', scriptSetup.name, exp.start, codeFeatures.verification],
+					['', scriptSetup.name, define.exp.start, codeFeatures.verification],
 					`'$style'`,
-					['', scriptSetup.name, exp.end, codeFeatures.verification],
-					`]`
+					['', scriptSetup.name, define.exp.end, codeFeatures.verification],
+					`])`
 				],
-				exp.end,
-				exp.end
+				define.end,
+				define.end
 			]);
 		}
 	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
 	for (const { define } of scriptSetupRanges.templateRefs) {
-		if (!define?.arg) {
+		if (!define.arg) {
 			continue;
 		}
 		if (isTs) {
