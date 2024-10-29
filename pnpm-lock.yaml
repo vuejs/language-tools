@@ -16,10 +16,10 @@ importers:
         version: 3.10.0(@types/node@22.8.2)(typescript@5.6.3)
       '@tsslint/cli':
         specifier: latest
-        version: 1.0.19(typescript@5.6.3)
+        version: 1.0.20(typescript@5.6.3)
       '@tsslint/config':
         specifier: latest
-        version: 1.0.19
+        version: 1.0.20
       typescript:
         specifier: latest
         version: 5.6.3
@@ -1035,20 +1035,20 @@ packages:
     resolution: {integrity: sha512-8iKx79/F73DKbGfRf7+t4dqrc0bRr0thdPrxAtCKWRm/F0tG71i6O1rvlnScncJLLBZHn3h8M3c1BSUAb9yu8g==}
     engines: {node: ^16.14.0 || >=18.0.0}
 
-  '@tsslint/cli@1.0.19':
-    resolution: {integrity: sha512-5ANmbTf97enbYdRcDxB9JNdZQU1ZvtSfY2i9mGeILMQ8ty1Pv06zVxJBOhMtEwjR/Xy778wvZXzBPzkOoGy1uQ==}
+  '@tsslint/cli@1.0.20':
+    resolution: {integrity: sha512-pXsjia1GsYXyxQI7yaSHyTcRo5bOP4thVvZsFZ813Od1NRshWLOfOu+VOxNjxvQJcXdmSZNWLWeod0kdTAy3wA==}
     hasBin: true
     peerDependencies:
       typescript: '*'
 
-  '@tsslint/config@1.0.19':
-    resolution: {integrity: sha512-wc70NtnvftPq9kXyR70pqKS3G/SHmD3iXFpQTX996WTslDITL00sDRBQ/kcoNoxDD+XGItKVchzJpBgrkU8Xrw==}
+  '@tsslint/config@1.0.20':
+    resolution: {integrity: sha512-bMkSokaF8QnKXClmuI9v2e9RooFlQuIYIS0feGETz4EYgM0UDBhBbjYY94uZzQ3duS08hg1MoouH3pYljjsgDg==}
 
-  '@tsslint/core@1.0.19':
-    resolution: {integrity: sha512-nfSRzNoFZsZAI3TtW5ucljJs7lDWv59lw/6Io4ksexUB9rGPbeaTpkw3fB1V48QatI4yAER60pTJOEBB27X4Yg==}
+  '@tsslint/core@1.0.20':
+    resolution: {integrity: sha512-PF5jEDh9tfGGzPihZ09Wf4r35mql9MpcCXm82zRIwVdHmBH0H2TBcH5K/NavHlEag3RodEBl3IcBAEOH+gPVsg==}
 
-  '@tsslint/types@1.0.19':
-    resolution: {integrity: sha512-92cmluq0KZizeIMHHi0fE1TJYm2skfRF56JAgGz25h5qOi+WvGnp204wZ7xXY+J/ibn6JeTmG/Z69IJtefbBUQ==}
+  '@tsslint/types@1.0.20':
+    resolution: {integrity: sha512-koi8F0hrzlRDoFI3jPjqxvTzjlU21X3EImRctOkxaGZm0b1FKWAkyU6kuEiY1TalAkpeWnJegpSlQsCMJ3cGnA==}
 
   '@tufjs/canonical-json@2.0.0':
     resolution: {integrity: sha512-yVtV8zsdo8qFHe+/3kw81dSLyF7D576A5cCFCi4X7B39tWT7SekaEFUnvnWJHz+9qO7qJTah1JbrDjWKqFtdWA==}
@@ -4243,27 +4243,27 @@ snapshots:
       '@sigstore/core': 1.1.0
       '@sigstore/protobuf-specs': 0.3.2
 
-  '@tsslint/cli@1.0.19(typescript@5.6.3)':
+  '@tsslint/cli@1.0.20(typescript@5.6.3)':
     dependencies:
       '@clack/prompts': 0.7.0
-      '@tsslint/config': 1.0.19
-      '@tsslint/core': 1.0.19
+      '@tsslint/config': 1.0.20
+      '@tsslint/core': 1.0.20
       glob: 10.4.5
       typescript: 5.6.3
 
-  '@tsslint/config@1.0.19':
+  '@tsslint/config@1.0.20':
     dependencies:
-      '@tsslint/types': 1.0.19
+      '@tsslint/types': 1.0.20
 
-  '@tsslint/core@1.0.19':
+  '@tsslint/core@1.0.20':
     dependencies:
-      '@tsslint/types': 1.0.19
+      '@tsslint/types': 1.0.20
       error-stack-parser: 2.1.4
       esbuild: 0.23.1
       minimatch: 10.0.1
       source-map-support: 0.5.21
 
-  '@tsslint/types@1.0.19': {}
+  '@tsslint/types@1.0.20': {}
 
   '@tufjs/canonical-json@2.0.0': {}
 
