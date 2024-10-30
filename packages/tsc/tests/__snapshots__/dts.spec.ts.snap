@@ -13,7 +13,7 @@ declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<t
     attrs: any;
     slots: {
         default?(_: {
-            row: import("vue").Reactive<Row>;
+            row: Row;
         }): any;
     };
     emit: {};
