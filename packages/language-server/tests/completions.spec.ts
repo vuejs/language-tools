@@ -456,6 +456,44 @@ describe('Completions', async () => {
 		`);
 	});
 
+	it('Auto insert defines', async () => {
+		expect(
+			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
+				<script lang="ts" setup>
+				defineProps<{
+					foo: string;
+				}>();
+				props|
+				</script>
+			`, 'props'))
+		).toMatchInlineSnapshot(`
+			{
+			  "additionalTextEdits": [
+			    {
+			      "newText": "const props = ",
+			      "range": {
+			        "end": {
+			          "character": 4,
+			          "line": 2,
+			        },
+			        "start": {
+			          "character": 4,
+			          "line": 2,
+			        },
+			      },
+			    },
+			  ],
+			  "commitCharacters": [
+			    ".",
+			    ",",
+			    ";",
+			  ],
+			  "kind": 6,
+			  "label": "props",
+			}
+		`);
+	});
+
 	const openedDocuments: TextDocument[] = [];
 
 	afterEach(async () => {

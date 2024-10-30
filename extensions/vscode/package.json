@@ -376,6 +376,11 @@
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
 				},
+				"vue.complete.defineAssignment": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto add `const props = ` before `defineProps` when selecting the completion item `props`. (also `emit` and `slots`)"
+				},
 				"vue.autoInsert.dotValue": {
 					"type": "boolean",
 					"default": false,
