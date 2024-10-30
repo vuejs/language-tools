@@ -15,7 +15,7 @@ export function computedSfc(
 ): Sfc {
 
 	const untrackedSnapshot = () => {
-		const prevTrackId = System.activeTrackId = 0;
+		const prevTrackId = System.activeTrackId;
 		System.activeTrackId = 0;
 		const res = snapshot.get();
 		System.activeTrackId = prevTrackId;
