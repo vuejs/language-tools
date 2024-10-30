@@ -8,9 +8,7 @@ export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-complete-define-assignment',
 		capabilities: {
-			completionProvider: {
-				triggerCharacters: ['\\w']
-			}
+			completionProvider: {},
 		},
 		create(context): LanguageServicePluginInstance {
 			return {
