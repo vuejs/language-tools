@@ -6,6 +6,7 @@ node_modules
 .vscode-test-web
 extensions/*/meta.json
 extensions/*/stats.html
+extensions/vscode/src/generated-meta.ts
 
 packages/*/*.d.ts
 packages/*/*.js

@@ -1,35 +1,7 @@
-import { defineConfigs } from 'reactive-vscode';
+import { defineConfigObject } from 'reactive-vscode';
+import { NestedScopedConfigs, scopedConfigs } from './generated-meta';
 
-export const config = defineConfigs('vue', {
-	splitEditors: {} as {
-		icon: boolean;
-		layout: {
-			left: string[];
-			right: string[];
-		}
-	},
-	doctor: {} as {
-		status: boolean;
-	},
-	server: {} as {
-		includeLanguages: string[];
-		hybridMode: 'auto' | 'typeScriptPluginOnly' | boolean;
-		maxOldSpaceSize: number;
-	},
-	updateImportsOnFileMove: {} as {
-		enabled: boolean;
-	},
-	codeActions: {} as {
-		enabled: boolean;
-		askNewComponentName: boolean;
-	},
-	codeLens: {} as {
-		enabled: boolean;
-	},
-	complete: {} as {
-		casing: {
-			props: 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
-			tags: 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
-		};
-	}
-});
+export const config = defineConfigObject<NestedScopedConfigs>(
+	scopedConfigs.scope,
+	scopedConfigs.defaults
+);
