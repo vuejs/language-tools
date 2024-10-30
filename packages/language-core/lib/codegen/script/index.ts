@@ -59,7 +59,11 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	if (options.vueCompilerOptions.__setupedGlobalTypes) {
 		const globalTypes = options.vueCompilerOptions.__setupedGlobalTypes;
 		if (typeof globalTypes === 'object') {
-			yield `/// <reference types="${path.relative(path.dirname(options.fileName), globalTypes.absolutePath)}" />${newLine}`;
+			let relativePath = path.relative(path.dirname(options.fileName), globalTypes.absolutePath);
+			if (relativePath !== globalTypes.absolutePath && !relativePath.startsWith('./') && !relativePath.startsWith('../')) {
+				relativePath = './' + relativePath;
+			}
+			yield `/// <reference types="${relativePath}" />${newLine}`;
 		}
 		else {
 			yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
