@@ -6,7 +6,7 @@ import { isTsDocument } from './vue-autoinsert-dotvalue';
 
 export function create(): LanguageServicePlugin {
 	return {
-		name: 'vue-autoinsert-define-assignment',
+		name: 'vue-complete-define-assignment',
 		capabilities: {
 			completionProvider: {
 				triggerCharacters: ['\\w']
@@ -19,7 +19,7 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.defineAssignment') ?? true;
+					const enabled = await context.env.getConfiguration?.<boolean>('vue.complete.defineAssignment') ?? true;
 					if (!enabled) {
 						return;
 					}
