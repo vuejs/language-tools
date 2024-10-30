@@ -39,7 +39,7 @@ export function activate(
 	useHybridModeTips();
 
 	const { stop } = watch(activeTextEditor, () => {
-		if (visibleTextEditors.value.some((editor) => config.server.includeLanguages.includes(editor.document.languageId))) {
+		if (visibleTextEditors.value.some(editor => config.server.includeLanguages.includes(editor.document.languageId))) {
 			activateLc(context, createLc);
 			nextTick(() => {
 				stop();
@@ -117,7 +117,7 @@ async function activateLc(
 
 	if (!enabledHybridMode.value) {
 		lsp.activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);
-		lsp.activateTsVersionStatusItem(selectors, 'vue.tsversion', context, (text) => 'TS ' + text);
+		lsp.activateTsVersionStatusItem(selectors, 'vue.tsversion', context, text => 'TS ' + text);
 		lsp.activateFindFileReferences('vue.findAllFileReferences', client);
 	}
 

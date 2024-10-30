@@ -71,7 +71,7 @@ export function useHybridModeTips() {
 							"Open Settings",
 							"Report a false positive"
 						)
-						.then((value) => {
+						.then(value => {
 							if (value === "Open Settings") {
 								executeCommand(
 									"workbench.action.openSettings",
@@ -99,7 +99,7 @@ export function useHybridModeTips() {
 					msg += `).`;
 					vscode.window
 						.showInformationMessage(msg, "Open Settings")
-						.then((value) => {
+						.then(value => {
 							if (value === "Open Settings") {
 								executeCommand(
 									"workbench.action.openSettings",
@@ -126,7 +126,7 @@ export function useHybridModeTips() {
 							"Open Settings",
 							"Report a false positive"
 						)
-						.then((value) => {
+						.then(value => {
 							if (value === "Open Settings") {
 								executeCommand(
 									"workbench.action.openSettings",

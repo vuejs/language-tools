@@ -11,7 +11,7 @@ export function activate(client: BaseLanguageClient) {
 
 	const activeTextEditor = useActiveTextEditor();
 	const getDocDescriptor = useDocDescriptor(client);
-	
+
 	useCommand('vue.action.splitEditors', async () => {
 		const editor = activeTextEditor.value;
 		if (!editor) {

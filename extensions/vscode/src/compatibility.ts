@@ -6,14 +6,14 @@ const extensions = useAllExtensions();
 
 export const incompatibleExtensions = computed(() => {
 	return extensions.value
-		.filter((ext) => isExtensionCompatibleWithHybridMode(ext) === false)
-		.map((ext) => ext.id);
+		.filter(ext => isExtensionCompatibleWithHybridMode(ext) === false)
+		.map(ext => ext.id);
 });
 
 export const unknownExtensions = computed(() => {
 	return extensions.value
-		.filter((ext) => isExtensionCompatibleWithHybridMode(ext) === undefined && !!ext.packageJSON?.contributes?.typescriptServerPlugins)
-		.map((ext) => ext.id);
+		.filter(ext => isExtensionCompatibleWithHybridMode(ext) === undefined && !!ext.packageJSON?.contributes?.typescriptServerPlugins)
+		.map(ext => ext.id);
 });
 
 function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {

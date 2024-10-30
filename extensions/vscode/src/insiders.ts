@@ -21,7 +21,7 @@ export function useInsidersStatusItem(context: vscode.ExtensionContext) {
 				succeed = true;
 				break;
 			}
-			catch {};
+			catch { };
 		}
 
 		item.busy = false;
@@ -49,7 +49,7 @@ export function useInsidersStatusItem(context: vscode.ExtensionContext) {
 		};
 		if (
 			json.versions.some(
-				(version) => version.version === context.extension.packageJSON.version
+				version => version.version === context.extension.packageJSON.version
 			)
 		) {
 			item.text = "🚀 Insiders Edition";
@@ -60,7 +60,7 @@ export function useInsidersStatusItem(context: vscode.ExtensionContext) {
 				item.severity = vscode.LanguageStatusSeverity.Warning;
 				vscode.window
 					.showInformationMessage("New Insiders Version Available!", "Download")
-					.then((download) => {
+					.then(download => {
 						if (download) {
 							executeCommand("vue-insiders.update");
 						}
@@ -114,7 +114,7 @@ export function useInsidersStatusItem(context: vscode.ExtensionContext) {
 				);
 			} else {
 				const downloads = json.versions.find(
-					(v) => v.version === version
+					v => v.version === version
 				)?.downloads;
 				if (downloads) {
 					const quickPickItems: { [key: string]: vscode.QuickPickItem; } = {
