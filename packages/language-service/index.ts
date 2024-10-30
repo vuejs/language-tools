@@ -16,7 +16,7 @@ import { create as createTypeScriptTwoslashQueriesPlugin } from 'volar-service-t
 import { create as createTypeScriptDocCommentTemplatePlugin } from 'volar-service-typescript/lib/plugins/docCommentTemplate';
 import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescript/lib/plugins/syntactic';
 import { create as createCssPlugin } from './lib/plugins/css';
-import { create as createVueAutoDefineAssignmentPlugin } from './lib/plugins/vue-autoinsert-define-assignment';
+import { create as createVueAutoDefineAssignmentPlugin } from './lib/plugins/vue-complete-define-assignment';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoinsert-space';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
