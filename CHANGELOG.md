@@ -2,6 +2,24 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.1.10 <sup>official</sup>, 2.1.11 <sup>insiders</sup> (2024-10-31)
+
+### Features
+
+- **language-service:** auto insert `const props =` with `props` completion (#4942) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- **language-core:** revert #4902
+- **language-core:** inject `as` assertion of `useCssModule` into correct location (#4952) - Thanks to @KazariEX!
+- **language-core:** hold prev track id correctly (#4961) - Thanks to @KazariEX!
+- **language-core:** generate style modules type as needed (#4953) - Thanks to @KazariEX!
+- **language-core:** reference global types file with relative path (#4966)
+
+### Refactors
+
+- **vscode:** rewrite with [Reactive VSCode](https://kermanx.github.io/reactive-vscode/) (#4945) - Thanks to @KazariEX, @KermanX!
+
 ## 2.1.8 <sup>official</sup>, 2.1.9 <sup>insiders</sup> (2024-10-26)
 
 ### Features
