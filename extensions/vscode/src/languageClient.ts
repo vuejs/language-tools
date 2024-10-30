@@ -39,7 +39,7 @@ export function activate(
 	useHybridModeTips();
 
 	const { stop } = watch(activeTextEditor, () => {
-		if (visibleTextEditors.value.some((editor) => config.server.value.includeLanguages.includes(editor.document.languageId))) {
+		if (visibleTextEditors.value.some((editor) => config.server.includeLanguages.includes(editor.document.languageId))) {
 			activateLc(context, createLc);
 			nextTick(() => {
 				stop();
@@ -60,7 +60,7 @@ async function activateLc(
 ) {
 	useVscodeContext('vue.activated', true);
 	const outputChannel = useOutputChannel('Vue Language Server');
-	const selectors = config.server.value.includeLanguages;
+	const selectors = config.server.includeLanguages;
 
 	client = createLc(
 		'vue',
@@ -74,20 +74,16 @@ async function activateLc(
 	watch([enabledHybridMode, enabledTypeScriptPlugin], (newValues, oldValues) => {
 		if (newValues[0] !== oldValues[0]) {
 			requestReloadVscode(
-				newValues[0]
-					? 'Please reload VSCode to enable Hybrid Mode.'
-					: 'Please reload VSCode to disable Hybrid Mode.'
+				`Please reload VSCode to ${newValues[0] ? 'enable' : 'disable'} Hybrid Mode.`
 			);
 		} else if (newValues[1] !== oldValues[1]) {
 			requestReloadVscode(
-				newValues[1]
-					? 'Please reload VSCode to enable Vue TypeScript Plugin.'
-					: 'Please reload VSCode to disable Vue TypeScript Plugin.'
+				`Please reload VSCode to ${newValues[1] ? 'enable' : 'disable'} Vue TypeScript Plugin.`
 			);
 		}
 	});
 
-	watch(() => config.server.value.includeLanguages, () => {
+	watch(() => config.server.includeLanguages, () => {
 		if (enabledHybridMode.value) {
 			requestReloadVscode(
 				'Please reload VSCode to apply the new language settings.'
@@ -99,11 +95,7 @@ async function activateLc(
 		if (!enabledHybridMode.value) {
 			executeCommand('vue.action.restartServer', false);
 		}
-	});
-
-	watch(Object.values(config).filter((conf) => conf !== config.server), () => {
-		executeCommand('vue.action.restartServer', false);
-	});
+	}, { deep: true });
 
 	useCommand('vue.action.restartServer', async (restartTsServer: boolean = true) => {
 		if (restartTsServer) {
@@ -115,7 +107,7 @@ async function activateLc(
 		await client.start();
 	});
 
-	activateDoctor(context, client);
+	activateDoctor(client);
 	activateNameCasing(client, selectors);
 	activateSplitEditors(client);
 
@@ -137,10 +129,9 @@ async function activateLc(
 			msg,
 			'Reload Window'
 		);
-		if (reload === undefined) {
-			return; // cancel
+		if (reload) {
+			executeCommand('workbench.action.reloadWindow');
 		}
-		executeCommand('workbench.action.reloadWindow');
 	}
 }
 

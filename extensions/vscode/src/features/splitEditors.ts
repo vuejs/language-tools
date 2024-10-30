@@ -18,7 +18,7 @@ export function activate(client: BaseLanguageClient) {
 			return;
 		}
 
-		const layout = config.splitEditors.value.layout;
+		const layout = config.splitEditors.layout;
 		const doc = editor.document;
 		const descriptor = (await getDocDescriptor(doc.getText()))?.descriptor;
 		if (!descriptor) {

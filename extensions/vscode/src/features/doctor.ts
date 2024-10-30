@@ -1,7 +1,7 @@
 import { BaseLanguageClient, ExecuteCommandParams, ExecuteCommandRequest, getTsdk } from '@volar/vscode';
 import type { SFCParseResult } from '@vue/language-server';
 import { commands } from '@vue/language-server/lib/types';
-import { executeCommand, useActiveTextEditor, useCommand, useEventEmitter, useStatusBarItem, watch } from 'reactive-vscode';
+import { executeCommand, extensionContext, useActiveTextEditor, useCommand, useDisposable, useEventEmitter, useStatusBarItem, watchEffect } from 'reactive-vscode';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { config } from '../config';
@@ -13,8 +13,7 @@ const knownValidSyntaxHighlightExtensions = {
 	sass: ['Syler.sass-indented'],
 };
 
-export async function activate(context: vscode.ExtensionContext, client: BaseLanguageClient) {
-
+export async function activate(client: BaseLanguageClient) {
 	const item = useStatusBarItem({
 		alignment: vscode.StatusBarAlignment.Right,
 		backgroundColor: new vscode.ThemeColor('statusBarItem.warningBackground'),
@@ -24,11 +23,7 @@ export async function activate(context: vscode.ExtensionContext, client: BaseLan
 	const activeTextEditor = useActiveTextEditor();
 	const docChangeEvent = useEventEmitter<vscode.Uri>();
 
-	watch(activeTextEditor, () => {
-		updateStatusBar(activeTextEditor.value);
-	}, {
-		immediate: true
-	});
+	watchEffect(updateStatusBar);
 
 	useCommand('vue.action.doctor', () => {
 		const doc = activeTextEditor.value?.document;
@@ -41,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext, client: BaseLan
 		}
 	});
 
-	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(
+	useDisposable(vscode.workspace.registerTextDocumentContentProvider(
 		scheme,
 		{
 			onDidChange: docChangeEvent.event,
@@ -72,9 +67,10 @@ export async function activate(context: vscode.ExtensionContext, client: BaseLan
 		return fileUri.with({ scheme, path: fileUri.path + '/Doctor.md' });
 	}
 
-	async function updateStatusBar(editor: vscode.TextEditor | undefined) {
+	async function updateStatusBar() {
+		const editor = activeTextEditor.value;
 		if (
-			config.doctor.value.status
+			config.doctor.status
 			&& editor
 			&& (editor.document.languageId === 'vue' || editor.document.uri.toString().endsWith('.vue'))
 			&& editor.document.uri.scheme === 'file'
@@ -234,7 +230,7 @@ export async function activate(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check tsdk version should be higher than 5.0.0
-		const tsdk = (await getTsdk(context))!;
+		const tsdk = (await getTsdk(extensionContext.value!))!;
 		if (tsdk.version && !semver.gte(tsdk.version, '5.0.0')) {
 			problems.push({
 				title: 'Requires TSDK 5.0 or higher',

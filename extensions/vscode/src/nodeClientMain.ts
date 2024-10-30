@@ -54,10 +54,10 @@ export const { activate, deactivate } = defineExtension(async () => {
 			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 
 			const runOptions: lsp.ForkOptions = {};
-			if (config.server.value.maxOldSpaceSize) {
+			if (config.server.maxOldSpaceSize) {
 				runOptions.execArgv ??= [];
 				runOptions.execArgv.push(
-					'--max-old-space-size=' + config.server.value.maxOldSpaceSize
+					'--max-old-space-size=' + config.server.maxOldSpaceSize
 				);
 			}
 			const debugOptions: lsp.ForkOptions = {
@@ -115,14 +115,14 @@ function updateProviders(client: lsp.LanguageClient) {
 		const capabilities = (client as any)
 			._capabilities as lsp.ServerCapabilities;
 
-		if (!config.codeActions.value.enabled) {
+		if (!config.codeActions.enabled) {
 			capabilities.codeActionProvider = undefined;
 		}
-		if (!config.codeLens.value.enabled) {
+		if (!config.codeLens.enabled) {
 			capabilities.codeLensProvider = undefined;
 		}
 		if (
-			!config.updateImportsOnFileMove.value.enabled &&
+			!config.updateImportsOnFileMove.enabled &&
 			capabilities.workspace?.fileOperations?.willRename
 		) {
 			capabilities.workspace.fileOperations.willRename = undefined;
@@ -158,7 +158,7 @@ try {
 					'languages:Array.isArray(e.languages)',
 					[
 						'languages:',
-						`e.name==='typescript-vue-plugin-bundle'?[${config.server.value.includeLanguages
+						`e.name==='typescript-vue-plugin-bundle'?[${config.server.includeLanguages
 							.map((lang) => `'${lang}'`)
 							.join(',')}]`,
 						':Array.isArray(e.languages)'

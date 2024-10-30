@@ -1,12 +1,12 @@
 import { BaseLanguageClient, ExecuteCommandParams, ExecuteCommandRequest, TextEdit } from '@volar/vscode';
 import { quickPick } from '@volar/vscode/lib/common';
 import { AttrNameCasing, TagNameCasing, commands } from '@vue/language-server/lib/types';
-import { ref, useActiveTextEditor, useCommand, watch } from 'reactive-vscode';
+import { reactive, useActiveTextEditor, useCommand, useDisposable, watch, watchEffect } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from '../config';
 
-export const attrNameCasings = ref(new Map<string, AttrNameCasing>());
-export const tagNameCasings = ref(new Map<string, TagNameCasing>());
+export const attrNameCasings = reactive(new Map<string, AttrNameCasing>());
+export const tagNameCasings = reactive(new Map<string, TagNameCasing>());
 
 export async function activate(client: BaseLanguageClient, selector: vscode.DocumentSelector) {
 
@@ -14,20 +14,20 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 
 	const activeTextEditor = useActiveTextEditor();
 
-	const statusBar = vscode.languages.createLanguageStatusItem('vue-name-casing', selector);
+	const statusBar = useDisposable(vscode.languages.createLanguageStatusItem('vue-name-casing', selector));
 	statusBar.command = {
 		title: 'Open Menu',
 		command: 'vue.action.nameCasing',
 	};
 
-	watch([attrNameCasings, tagNameCasings], () => {
+	watchEffect(() => {
 		const document = activeTextEditor.value?.document;
 		if (!document) {
 			return '';
 		}
 
-		const attrNameCasing = attrNameCasings.value.get(document.uri.toString());
-		const tagNameCasing = tagNameCasings.value.get(document.uri.toString());
+		const attrNameCasing = attrNameCasings.get(document.uri.toString());
+		const tagNameCasing = tagNameCasings.get(document.uri.toString());
 
 		let text = `<`;
 		if (tagNameCasing === TagNameCasing.Kebab) {
@@ -50,8 +50,6 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 		}
 		text += ' />';
 		statusBar.text = text;
-	}, {
-		deep: true
 	});
 
 	watch(activeTextEditor, () => {
@@ -61,15 +59,15 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 	});
 
 	watch(config.complete, () => {
-		attrNameCasings.value.clear();
-		tagNameCasings.value.clear();
+		attrNameCasings.clear();
+		tagNameCasings.clear();
 		initialize(activeTextEditor.value?.document);
-	});
+	}, { deep: true });
 
-	vscode.workspace.onDidCloseTextDocument(doc => {
-		attrNameCasings.value.delete(doc.uri.toString());
-		tagNameCasings.value.delete(doc.uri.toString());
-	})
+	useDisposable(vscode.workspace.onDidCloseTextDocument(doc => {
+		attrNameCasings.delete(doc.uri.toString());
+		tagNameCasings.delete(doc.uri.toString());
+	}));
 
 	useCommand('vue.action.nameCasing', async () => {
 		if (!activeTextEditor.value?.document) {
@@ -77,8 +75,8 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 		}
 
 		const document = activeTextEditor.value.document;
-		const currentAttrNameCasing = attrNameCasings.value.get(document.uri.toString());
-		const currentTagNameCasing = tagNameCasings.value.get(document.uri.toString());
+		const currentAttrNameCasing = attrNameCasings.get(document.uri.toString());
+		const currentTagNameCasing = tagNameCasings.get(document.uri.toString());
 		const select = await quickPick([
 			{
 				'1': { label: (currentTagNameCasing === TagNameCasing.Kebab ? '• ' : '') + 'Component Name Using kebab-case' },
@@ -99,10 +97,10 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 		}
 		// tag
 		if (select === '1') {
-			tagNameCasings.value.set(document.uri.toString(), TagNameCasing.Kebab);
+			tagNameCasings.set(document.uri.toString(), TagNameCasing.Kebab);
 		}
 		if (select === '2') {
-			tagNameCasings.value.set(document.uri.toString(), TagNameCasing.Pascal);
+			tagNameCasings.set(document.uri.toString(), TagNameCasing.Pascal);
 		}
 		if (select === '3') {
 			await convertTag(activeTextEditor.value, TagNameCasing.Kebab);
@@ -112,10 +110,10 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 		}
 		// attr
 		if (select === '5') {
-			attrNameCasings.value.set(document.uri.toString(), AttrNameCasing.Kebab);
+			attrNameCasings.set(document.uri.toString(), AttrNameCasing.Kebab);
 		}
 		if (select === '6') {
-			attrNameCasings.value.set(document.uri.toString(), AttrNameCasing.Camel);
+			attrNameCasings.set(document.uri.toString(), AttrNameCasing.Camel);
 		}
 		if (select === '7') {
 			await convertAttr(activeTextEditor.value, AttrNameCasing.Kebab);
@@ -131,11 +129,11 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 		}
 
 		let detected: Awaited<ReturnType<typeof detect>> | undefined;
-		let attrNameCasing = attrNameCasings.value.get(document.uri.toString());
-		let tagNameCasing = tagNameCasings.value.get(document.uri.toString());
+		let attrNameCasing = attrNameCasings.get(document.uri.toString());
+		let tagNameCasing = tagNameCasings.get(document.uri.toString());
 
 		if (!attrNameCasing) {
-			const attrNameCasingSetting = config.complete.value.casing.props;
+			const attrNameCasingSetting = config.complete.casing.props;
 			if (attrNameCasingSetting === 'kebab') {
 				attrNameCasing = AttrNameCasing.Kebab;
 			}
@@ -154,11 +152,11 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 					attrNameCasing = AttrNameCasing.Kebab;
 				}
 			}
-			attrNameCasings.value.set(document.uri.toString(), attrNameCasing);
+			attrNameCasings.set(document.uri.toString(), attrNameCasing);
 		}
 
 		if (!tagNameCasing) {
-			const tagMode = config.complete.value.casing.tags;
+			const tagMode = config.complete.casing.tags;
 			if (tagMode === 'kebab') {
 				tagNameCasing = TagNameCasing.Kebab;
 			}
@@ -174,7 +172,7 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 					tagNameCasing = TagNameCasing.Pascal;
 				}
 			}
-			tagNameCasings.value.set(document.uri.toString(), tagNameCasing);
+			tagNameCasings.set(document.uri.toString(), tagNameCasing);
 		}
 	}
 
@@ -197,11 +195,10 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 			});
 		}
 
-		tagNameCasings.value.set(editor.document.uri.toString(), casing);
+		tagNameCasings.set(editor.document.uri.toString(), casing);
 	}
 
 	async function convertAttr(editor: vscode.TextEditor, casing: AttrNameCasing) {
-
 		const response: TextEdit[] = await client.sendRequest(ExecuteCommandRequest.type, {
 			command: casing === AttrNameCasing.Kebab
 				? commands.convertPropsToKebabCase
@@ -219,7 +216,7 @@ export async function activate(client: BaseLanguageClient, selector: vscode.Docu
 			});
 		}
 
-		attrNameCasings.value.set(editor.document.uri.toString(), casing);
+		attrNameCasings.set(editor.document.uri.toString(), casing);
 	}
 
 	function detect(document: vscode.TextDocument): Promise<{

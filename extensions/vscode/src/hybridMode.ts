@@ -13,7 +13,7 @@ export const enabledHybridMode = ref<boolean>(true);
 export const enabledTypeScriptPlugin = computed(() => {
 	return (
 		enabledHybridMode.value ||
-		config.server.value.hybridMode === "typeScriptPluginOnly"
+		config.server.hybridMode === "typeScriptPluginOnly"
 	);
 });
 
@@ -52,7 +52,7 @@ export function useHybridModeTips() {
 	useVscodeContext("vueHybridMode", enabledHybridMode);
 
 	watchEffect(() => {
-		switch (config.server.value.hybridMode) {
+		switch (config.server.hybridMode) {
 			case "typeScriptPluginOnly": {
 				enabledHybridMode.value = false;
 				break;
@@ -115,7 +115,7 @@ export function useHybridModeTips() {
 			}
 			default: {
 				if (
-					config.server.value.hybridMode &&
+					config.server.hybridMode &&
 					incompatibleExtensions.value.length
 				) {
 					vscode.window
@@ -141,7 +141,7 @@ export function useHybridModeTips() {
 							}
 						});
 				}
-				enabledHybridMode.value = config.server.value.hybridMode;
+				enabledHybridMode.value = config.server.hybridMode;
 			}
 		}
 	});
@@ -150,13 +150,13 @@ export function useHybridModeTips() {
 export function useHybridModeStatusItem() {
 	const item = vscode.languages.createLanguageStatusItem(
 		"vue-hybrid-mode",
-		config.server.value.includeLanguages
+		config.server.includeLanguages
 	);
 
 	item.text = "Hybrid Mode";
 	item.detail =
 		(enabledHybridMode.value ? "Enabled" : "Disabled") +
-		(config.server.value.hybridMode === "auto" ? " (Auto)" : "");
+		(config.server.hybridMode === "auto" ? " (Auto)" : "");
 	item.command = {
 		title: "Open Setting",
 		command: "workbench.action.openSettings",
