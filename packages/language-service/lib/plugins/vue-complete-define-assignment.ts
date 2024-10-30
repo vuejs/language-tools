@@ -14,6 +14,7 @@ export function create(): LanguageServicePlugin {
 		},
 		create(context): LanguageServicePluginInstance {
 			return {
+				isAdditionalCompletion: true,
 				async provideCompletionItems(document) {
 					if (!isTsDocument(document)) {
 						return;
