@@ -1,7 +1,7 @@
 import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
-import * as vscode from 'vscode-languageserver-protocol';
-import { URI } from 'vscode-uri';
 import { TextRange, tsCodegen, VueVirtualCode } from '@vue/language-core';
+import type * as vscode from 'vscode-languageserver-protocol';
+import { URI } from 'vscode-uri';
 import { isTsDocument } from './vue-autoinsert-dotvalue';
 
 export function create(): LanguageServicePlugin {
@@ -61,7 +61,7 @@ export function create(): LanguageServicePlugin {
 					function addDefineCompletionItem(
 						define: {
 							exp: TextRange,
-							statement: TextRange
+							statement: TextRange;
 						} | undefined,
 						name: string
 					) {
@@ -83,7 +83,7 @@ export function create(): LanguageServicePlugin {
 						const pos = document.positionAt(offset);
 						result.push({
 							label: name,
-							kind: vscode.CompletionItemKind.Variable,
+							kind: 6 satisfies typeof vscode.CompletionItemKind.Variable,
 							commitCharacters: ['.', ',', ';'],
 							additionalTextEdits: [{
 								newText: `const ${name} = `,
