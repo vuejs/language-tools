@@ -1,3 +1,4 @@
+import * as path from 'path-browserify';
 import type { Code } from '../../types';
 import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import type { TemplateCodegenContext } from '../template/context';
@@ -61,7 +62,7 @@ export function* generateComponentSelf(
 		yield `})${endOfLine}`; // defineComponent {
 	}
 	else if (options.sfc.script) {
-		yield `let __VLS_self!: typeof import('./${options.fileBaseName}').default${endOfLine}`;
+		yield `let __VLS_self!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
 	}
 	else {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
