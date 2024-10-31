@@ -33,7 +33,11 @@ export function* generateElementEvents(
 				propsVar = ctx.getInternalVariable();
 				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>${endOfLine}`;
 			}
-			const originalPropName = camelize('on-' + prop.arg.loc.source);
+			const isVNodeEvent = prop.arg.loc.source.startsWith('vue:');
+			const name = isVNodeEvent
+				? 'vnode-' + prop.arg.loc.source.slice('vue:'.length)
+				: prop.arg.loc.source;
+			const originalPropName = camelize('on-' + name);
 			const originalPropNameObjectKey = variableNameRegex.test(originalPropName)
 				? originalPropName
 				: `'${originalPropName}'`;
@@ -44,21 +48,21 @@ export function* generateElementEvents(
 			yield `(${newLine}`;
 			yield `__VLS_IsFunction<typeof ${propsVar}, '${originalPropName}'> extends true${newLine}`;
 			yield `? typeof ${propsVar}${newLine}`;
-			yield `: __VLS_IsFunction<typeof ${eventsVar}, '${prop.arg.loc.source}'> extends true${newLine}`;
+			yield `: __VLS_IsFunction<typeof ${eventsVar}, '${name}'> extends true${newLine}`;
 			yield `? {${newLine}`;
-			yield `/**__VLS_emit,${emitVar},${prop.arg.loc.source}*/${newLine}`;
-			yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${prop.arg.loc.source}']${newLine}`;
+			yield `/**__VLS_emit,${emitVar},${name}*/${newLine}`;
+			yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${name}']${newLine}`;
 			yield `}${newLine}`;
-			if (prop.arg.loc.source !== camelize(prop.arg.loc.source)) {
-				yield `: __VLS_IsFunction<typeof ${eventsVar}, '${camelize(prop.arg.loc.source)}'> extends true${newLine}`;
+			if (name !== camelize(name)) {
+				yield `: __VLS_IsFunction<typeof ${eventsVar}, '${camelize(name)}'> extends true${newLine}`;
 				yield `? {${newLine}`;
-				yield `/**__VLS_emit,${emitVar},${camelize(prop.arg.loc.source)}*/${newLine}`;
-				yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']${newLine}`;
+				yield `/**__VLS_emit,${emitVar},${camelize(name)}*/${newLine}`;
+				yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${camelize(name)}']${newLine}`;
 				yield `}${newLine}`;
 			}
 			yield `: typeof ${propsVar}${newLine}`;
 			yield `) = {${newLine}`;
-			yield* generateEventArg(ctx, prop.arg, true);
+			yield* generateEventArg(ctx, prop.arg, name, isVNodeEvent);
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
 			yield `}${endOfLine}`;
@@ -87,19 +91,32 @@ const eventArgFeatures: VueCodeInformation = {
 export function* generateEventArg(
 	ctx: TemplateCodegenContext,
 	arg: CompilerDOM.SimpleExpressionNode,
-	enableHover: boolean
+	name: string,
+	isVNodeEvent: boolean = false
 ): Generator<Code> {
-	const features = enableHover
-		? {
+	if (isVNodeEvent) {
+		yield ['', 'template', arg.loc.start.offset, {
 			...ctx.codeFeatures.withoutHighlightAndCompletion,
-			...eventArgFeatures,
-		}
-		: eventArgFeatures;
-	if (variableNameRegex.test(camelize(arg.loc.source))) {
+			...ctx.codeFeatures.navigationWithoutRename
+		}];
+		yield `onVnode`;
+		yield* generateCamelized(
+			capitalize(name.slice('vnode-'.length)),
+			arg.loc.start.offset + 'vue:'.length,
+			combineLastMapping
+		);
+		return;
+	}
+
+	const features = {
+		...ctx.codeFeatures.withoutHighlightAndCompletion,
+		...eventArgFeatures,
+	};
+	if (variableNameRegex.test(camelize(name))) {
 		yield ['', 'template', arg.loc.start.offset, features];
 		yield `on`;
 		yield* generateCamelized(
-			capitalize(arg.loc.source),
+			capitalize(name),
 			arg.loc.start.offset,
 			combineLastMapping
 		);
@@ -113,7 +130,7 @@ export function* generateEventArg(
 			['', 'template', arg.loc.start.offset, combineLastMapping],
 			'on',
 			...generateCamelized(
-				capitalize(arg.loc.source),
+				capitalize(name),
 				arg.loc.start.offset,
 				combineLastMapping
 			),

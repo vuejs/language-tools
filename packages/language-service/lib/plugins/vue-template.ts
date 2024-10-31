@@ -540,7 +540,11 @@ export function create(
 							}
 
 							const { attrs, propsInfo, events } = tagInfo;
-							const props = propsInfo.map(prop => prop.name);
+							const props = propsInfo.map(prop =>
+								hyphenateTag(prop.name).startsWith('on-vnode-')
+									? 'onVue:' + prop.name.slice('onVnode'.length)
+									: prop.name
+							);
 							const attributes: html.IAttributeData[] = [];
 							const _tsCodegen = tsCodegen.get(vueCode._sfc);
 
@@ -871,7 +875,7 @@ export function create(
 						}
 						else if (isEvent) {
 							item.kind = 23 satisfies typeof vscode.CompletionItemKind.Event;
-							if (propName.startsWith('vnode-')) {
+							if (propName.startsWith('vue:')) {
 								tokens.push('\u0004');
 							}
 						}
