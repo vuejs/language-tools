@@ -472,6 +472,7 @@ function* generateComponentGeneric(
 			]
 		}
 		yield `>`;
+		break;
 	}
 }
 
