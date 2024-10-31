@@ -91,7 +91,7 @@ const eventArgFeatures: VueCodeInformation = {
 export function* generateEventArg(
 	ctx: TemplateCodegenContext,
 	arg: CompilerDOM.SimpleExpressionNode,
-	name: string,
+	name: string = arg.loc.source,
 	isVNodeEvent: boolean = false
 ): Generator<Code> {
 	if (isVNodeEvent) {
