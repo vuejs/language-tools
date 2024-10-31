@@ -205,7 +205,9 @@ export function* generateComponent(
 	yield* generateElementProps(options, ctx, node, props, false);
 	yield `}))${endOfLine}`;
 
-	yield `const ${var_componentInstance} = ${var_functionalComponent}(`;
+	yield `const ${var_componentInstance} = ${var_functionalComponent}`;
+	yield* generateComponentGeneric(ctx, props);
+	yield `(`;
 	yield* wrapWith(
 		startTagOffset,
 		startTagOffset + node.tag.length,
@@ -449,6 +451,27 @@ function* generateCanonicalComponentName(tagText: string, offset: number, featur
 			offset,
 			features
 		);
+	}
+}
+
+function* generateComponentGeneric(
+	ctx: TemplateCodegenContext,
+	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[]
+): Generator<Code> {
+	for (const prop of props) {
+		if (prop.type !== CompilerDOM.NodeTypes.DIRECTIVE || prop.name !== 'generic') {
+			continue;
+		}
+		yield `<`;
+		if (prop.exp) {
+			yield [
+				prop.exp.loc.source,
+				'template',
+				prop.exp.loc.start.offset,
+				ctx.codeFeatures.all
+			]
+		}
+		yield `>`;
 	}
 }
 

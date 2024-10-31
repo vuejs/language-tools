@@ -977,10 +977,10 @@
 					"include": "#vue-directives-style-attr"
 				},
 				{
-					"include": "#vue-directives-original"
+					"include": "#vue-directives-generic-attr"
 				},
 				{
-					"include": "#vue-directives-generic-attr"
+					"include": "#vue-directives-original"
 				}
 			]
 		},
@@ -1199,7 +1199,7 @@
 			]
 		},
 		"vue-directives-generic-attr": {
-			"begin": "\\b(generic)\\s*(=)",
+			"begin": "\\b((?:v-)?generic)\\s*(=)",
 			"captures": {
 				"1": {
 					"name": "entity.other.attribute-name.html.vue"
