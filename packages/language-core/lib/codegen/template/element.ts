@@ -459,19 +459,22 @@ function* generateComponentGeneric(
 	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[]
 ): Generator<Code> {
 	for (const prop of props) {
-		if (prop.type !== CompilerDOM.NodeTypes.DIRECTIVE || prop.name !== 'generic') {
+		if (prop.type !== CompilerDOM.NodeTypes.DIRECTIVE || prop.name !== 'generic' || !prop.exp) {
 			continue;
 		}
-		yield `<`;
-		if (prop.exp) {
-			yield [
+		yield* wrapWith(
+			prop.exp.loc.start.offset,
+			prop.exp.loc.end.offset,
+			ctx.codeFeatures.verification,
+			`<`,
+			[
 				prop.exp.loc.source,
 				'template',
 				prop.exp.loc.start.offset,
 				ctx.codeFeatures.all
-			]
-		}
-		yield `>`;
+			],
+			`>`
+		);
 		break;
 	}
 }
