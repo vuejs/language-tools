@@ -12,6 +12,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
+import { generateUnicode } from '../utils/unicode';
 
 export interface FailedPropExpression {
 	node: CompilerDOM.SimpleExpressionNode;
@@ -331,45 +332,19 @@ function* generatePropExp(
 }
 
 function* generateAttrValue(attrNode: CompilerDOM.TextNode, features: VueCodeInformation): Generator<Code> {
-	const char = attrNode.loc.source.startsWith("'") ? "'" : '"';
-	yield char;
+	const quote = attrNode.loc.source.startsWith("'") ? "'" : '"';
+	yield quote;
 	let start = attrNode.loc.start.offset;
-	let end = attrNode.loc.end.offset;
 	let content = attrNode.loc.source;
 	if (
 		(content.startsWith('"') && content.endsWith('"'))
 		|| (content.startsWith("'") && content.endsWith("'"))
 	) {
 		start++;
-		end--;
 		content = content.slice(1, -1);
 	}
-	if (needToUnicode(content)) {
-		yield* wrapWith(
-			start,
-			end,
-			features,
-			toUnicode(content)
-		);
-	}
-	else {
-		yield [content, 'template', start, features];
-	}
-	yield char;
-}
-
-function needToUnicode(str: string) {
-	return str.includes('\\') || str.includes('\n');
-}
-
-function toUnicode(str: string) {
-	return str.split('').map(value => {
-		const temp = value.charCodeAt(0).toString(16).padStart(4, '0');
-		if (temp.length > 2) {
-			return '\\u' + temp;
-		}
-		return value;
-	}).join('');
+	yield* generateUnicode(content, start, features);
+	yield quote;
 }
 
 function getModelValuePropName(node: CompilerDOM.ElementNode, vueVersion: number, vueCompilerOptions: VueCompilerOptions) {
