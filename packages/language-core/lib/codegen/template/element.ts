@@ -83,8 +83,9 @@ export function* generateComponent(
 	if (matchImportName) {
 		// hover, renaming / find references support
 		yield `// @ts-ignore${newLine}`; // #2304
-		yield `[`;
+		yield `/** @type { [`;
 		for (const tagOffset of tagOffsets) {
+			yield `typeof `
 			if (var_originalComponent === node.tag) {
 				yield [
 					var_originalComponent,
@@ -106,9 +107,9 @@ export function* generateComponent(
 					}
 				);
 			}
-			yield `,`;
+			yield `, `;
 		}
-		yield `]${endOfLine}`;
+		yield `] } */${endOfLine}`;
 	}
 	else if (dynamicTagInfo) {
 		yield `const ${var_originalComponent} = (`;
@@ -174,7 +175,7 @@ export function* generateComponent(
 					yield `, `;
 				}
 			}
-			yield `] } */${newLine}`;
+			yield `] } */${endOfLine}`;
 			// auto import support
 			if (options.edited) {
 				yield `// @ts-ignore${newLine}`; // #2304
@@ -563,7 +564,7 @@ function* generateReferencesForElements(
 			const [content, startOffset] = normalizeAttributeValue(prop.value);
 
 			yield `// @ts-ignore navigation for \`const ${content} = ref()\`${newLine}`;
-			yield `__VLS_ctx`;
+			yield `/** @type { typeof __VLS_ctx`;
 			yield* generatePropertyAccess(
 				options,
 				ctx,
@@ -572,7 +573,7 @@ function* generateReferencesForElements(
 				ctx.codeFeatures.navigation,
 				prop.value.loc
 			);
-			yield endOfLine;
+			yield ` } */${endOfLine}`;
 
 			if (variableNameRegex.test(content)) {
 				ctx.accessExternalVariable(content, startOffset);
