@@ -13,17 +13,19 @@ import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 
+export interface FailedPropExpression {
+	node: CompilerDOM.SimpleExpressionNode;
+	prefix: string;
+	suffix: string;
+}
+
 export function* generateElementProps(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
 	enableCodeFeatures: boolean,
-	propsFailedExps?: {
-		node: CompilerDOM.SimpleExpressionNode;
-		prefix: string;
-		suffix: string;
-	}[]
+	failedPropExps?: FailedPropExpression[]
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -54,14 +56,14 @@ export function* generateElementProps(
 				&& prop.arg.loc.source.startsWith('[')
 				&& prop.arg.loc.source.endsWith(']')
 			) {
-				propsFailedExps?.push({ node: prop.arg, prefix: '(', suffix: ')' });
-				propsFailedExps?.push({ node: prop.exp, prefix: '() => {', suffix: '}' });
+				failedPropExps?.push({ node: prop.arg, prefix: '(', suffix: ')' });
+				failedPropExps?.push({ node: prop.exp, prefix: '() => {', suffix: '}' });
 			}
 			else if (
 				!prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				propsFailedExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
+				failedPropExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
 			}
 		}
 	}
@@ -91,7 +93,7 @@ export function* generateElementProps(
 				|| options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(propName!, pattern))
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					propsFailedExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
+					failedPropExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
 				}
 				continue;
 			}

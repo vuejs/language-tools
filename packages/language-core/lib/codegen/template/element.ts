@@ -9,7 +9,7 @@ import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
-import { generateElementProps } from './elementProps';
+import { type FailedPropExpression, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
@@ -32,11 +32,7 @@ export function* generateComponent(
 		endTagOffset !== undefined && endTagOffset > startTagOffset
 			? [startTagOffset, endTagOffset]
 			: [startTagOffset];
-	const propsFailedExps: {
-		node: CompilerDOM.SimpleExpressionNode;
-		prefix: string;
-		suffix: string;
-	}[] = [];
+	const failedPropExps: FailedPropExpression[] = [];
 	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
 	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
 	const var_originalComponent = matchImportName ?? ctx.getInternalVariable();
@@ -211,26 +207,14 @@ export function* generateComponent(
 		startTagOffset + node.tag.length,
 		ctx.codeFeatures.verification,
 		`{`,
-		...generateElementProps(options, ctx, node, props, true, propsFailedExps),
+		...generateElementProps(options, ctx, node, props, true, failedPropExps),
 		`}`
 	);
 	yield `, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
 
 	currentComponent = node;
 
-	for (const failedExp of propsFailedExps) {
-		yield* generateInterpolation(
-			options,
-			ctx,
-			failedExp.node.loc.source,
-			failedExp.node.loc,
-			failedExp.node.loc.start.offset,
-			ctx.codeFeatures.all,
-			failedExp.prefix,
-			failedExp.suffix
-		);
-		yield endOfLine;
-	}
+	yield* generateFailedPropExps(options, ctx, failedPropExps);
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, props);
 	const isRootNode = node === ctx.singleRootNode;
@@ -300,11 +284,7 @@ export function* generateElement(
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
 		? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)
 		: undefined;
-	const propsFailedExps: {
-		node: CompilerDOM.SimpleExpressionNode;
-		prefix: string;
-		suffix: string;
-	}[] = [];
+	const failedPropExps: FailedPropExpression[] = [];
 
 	yield `__VLS_elementAsFunction(__VLS_intrinsicElements`;
 	yield* generatePropertyAccess(
@@ -330,24 +310,12 @@ export function* generateElement(
 		startTagOffset + node.tag.length,
 		ctx.codeFeatures.verification,
 		`{`,
-		...generateElementProps(options, ctx, node, node.props, true, propsFailedExps),
+		...generateElementProps(options, ctx, node, node.props, true, failedPropExps),
 		`}`
 	);
 	yield `)${endOfLine}`;
 
-	for (const failedExp of propsFailedExps) {
-		yield* generateInterpolation(
-			options,
-			ctx,
-			failedExp.node.loc.source,
-			failedExp.node.loc,
-			failedExp.node.loc.start.offset,
-			ctx.codeFeatures.all,
-			failedExp.prefix,
-			failedExp.suffix
-		);
-		yield endOfLine;
-	}
+	yield* generateFailedPropExps(options, ctx, failedPropExps);
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
@@ -377,6 +345,26 @@ export function* generateElement(
 		)
 	) {
 		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
+	}
+}
+
+function* generateFailedPropExps(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	failedPropExps: FailedPropExpression[]
+): Generator<Code> {
+	for (const failedExp of failedPropExps) {
+		yield* generateInterpolation(
+			options,
+			ctx,
+			failedExp.node.loc.source,
+			failedExp.node.loc,
+			failedExp.node.loc.start.offset,
+			ctx.codeFeatures.all,
+			failedExp.prefix,
+			failedExp.suffix
+		);
+		yield endOfLine;
 	}
 }
 
