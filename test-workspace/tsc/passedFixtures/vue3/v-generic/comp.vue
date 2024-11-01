@@ -1,5 +1,5 @@
-<script setup lang="ts" generic="T extends string | number">
+<script setup lang="ts" generic="T extends string | number, K = any">
 defineEmits<{
-    foo: [val: T]
+    foo: [bar: T, baz: K]
 }>();
 </script>
