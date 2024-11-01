@@ -2,7 +2,7 @@ import { isGloballyWhitelisted } from '@vue/shared';
 import type * as ts from 'typescript';
 import { getNodeText, getStartEnd } from '../../parsers/scriptSetupRanges';
 import type { Code, VueCodeInformation } from '../../types';
-import { collectVars, createTsAst } from '../common';
+import { collectVars, createTsAst } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 

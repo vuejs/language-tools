@@ -1,6 +1,6 @@
 import { capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
-import { combineLastMapping } from '../common';
+import { combineLastMapping } from '.';
 
 export function* generateCamelized(code: string, offset: number, info: VueCodeInformation): Generator<Code> {
 	const parts = code.split('-');

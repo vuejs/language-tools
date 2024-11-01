@@ -1,6 +1,6 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
-import { endOfLine, newLine, wrapWith } from '../common';
+import { endOfLine, newLine, wrapWith } from '../utils';
 import type { TemplateCodegenOptions } from './index';
 import { InlayHintInfo } from '../inlayHints';
 

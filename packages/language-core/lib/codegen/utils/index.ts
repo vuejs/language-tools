@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
-import { getNodeText } from '../parsers/scriptSetupRanges';
-import type { Code, SfcBlock, VueCodeInformation } from '../types';
+import { getNodeText } from '../../parsers/scriptSetupRanges';
+import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 
 export const newLine = '\n';
 export const endOfLine = `;${newLine}`;

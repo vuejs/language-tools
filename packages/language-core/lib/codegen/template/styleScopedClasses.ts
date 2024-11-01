@@ -1,6 +1,6 @@
 import type { Code } from '../../types';
 import type { TemplateCodegenContext } from './context';
-import { endOfLine, newLine } from '../common';
+import { endOfLine, newLine } from '../utils';
 
 export function* generateStyleScopedClasses(
 	ctx: TemplateCodegenContext,

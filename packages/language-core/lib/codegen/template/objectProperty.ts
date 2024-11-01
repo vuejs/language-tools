@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
-import { combineLastMapping, variableNameRegex, wrapWith } from '../common';
-import { generateCamelized } from './camelized';
+import { combineLastMapping, variableNameRegex, wrapWith } from '../utils';
+import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';

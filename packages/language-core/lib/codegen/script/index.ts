@@ -4,7 +4,7 @@ import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { endOfLine, generateSfcBlockSection, newLine } from '../common';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateGlobalTypes } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
 import { generateComponentSelf } from './componentSelf';

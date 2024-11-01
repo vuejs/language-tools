@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { endOfLine, newLine, wrapWith } from '../common';
+import { endOfLine, newLine, wrapWith } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import { generateElementProps } from './elementProps';

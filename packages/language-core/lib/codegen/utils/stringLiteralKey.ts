@@ -1,5 +1,5 @@
 import type { Code, VueCodeInformation } from '../../types';
-import { combineLastMapping, wrapWith } from '../common';
+import { combineLastMapping, wrapWith } from '.';
 
 export function* generateStringLiteralKey(code: string, offset?: number, info?: VueCodeInformation): Generator<Code> {
 	if (offset === undefined || !info) {
