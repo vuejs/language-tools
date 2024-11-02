@@ -628,11 +628,11 @@ exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slo
 "declare function __VLS_template(): {
     attrs: Partial<{}>;
     slots: {
-        "no-bind"?(_: {}): any;
+        'no-bind'?(_: {}): any;
         default?(_: {
             num: number;
         }): any;
-        "named-slot"?(_: {
+        'named-slot'?(_: {
             str: string;
         }): any;
         vbind?(_: {
@@ -730,11 +730,11 @@ exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: te
 "declare function __VLS_template(): {
     attrs: Partial<{}>;
     slots: {
-        "no-bind"?(_: {}): any;
+        'no-bind'?(_: {}): any;
         default?(_: {
             num: number;
         }): any;
-        "named-slot"?(_: {
+        'named-slot'?(_: {
             str: string;
         }): any;
         vbind?(_: {
