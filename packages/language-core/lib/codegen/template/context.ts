@@ -63,6 +63,10 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		errors: number;
 		node: CompilerDOM.CommentNode;
 	} | undefined;
+	let lastGenericComment: {
+		content: string;
+		offset: number;
+	} | undefined;
 	let variableId = 0;
 
 	const codeFeatures = new Proxy(_codeFeatures, {
@@ -123,6 +127,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		dynamicSlots,
 		codeFeatures,
 		accessExternalVariables,
+		lastGenericComment,
 		hasSlotElements,
 		blockConditions,
 		usedComponentCtxVars,

@@ -4,11 +4,14 @@ import Comp from './comp.vue';
 </script>
 
 <template>
-    <Comp v-generic="string" @foo="(bar) => exactType(bar, {} as string)"/>
-    <Comp v-generic="number, boolean" @foo="(bar, baz) => (
-        exactType(bar, {} as number),
-        exactType(baz, {} as boolean)
-    )"/>
-    <!-- @vue-expect-error -->
-    <Comp v-generic="boolean" />
+	<!-- @vue-generic {string} -->
+	<Comp @foo="(bar) => exactType(bar, {} as string)" />
+	<!-- @vue-generic {number, boolean} -->
+	<Comp @foo="(bar, baz) => (
+		exactType(bar, {} as number),
+		exactType(baz, {} as boolean)
+	)" />
+	<!-- @vue-expect-error -->
+	<!-- @vue-generic {boolean} -->
+	<Comp />
 </template>

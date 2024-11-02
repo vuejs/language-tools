@@ -206,7 +206,7 @@ export function* generateComponent(
 	yield `}))${endOfLine}`;
 
 	yield `const ${var_componentInstance} = ${var_functionalComponent}`;
-	yield* generateComponentGeneric(ctx, props);
+	yield* generateComponentGeneric(ctx);
 	yield `(`;
 	yield* wrapWith(
 		startTagOffset,
@@ -455,28 +455,25 @@ function* generateCanonicalComponentName(tagText: string, offset: number, featur
 }
 
 function* generateComponentGeneric(
-	ctx: TemplateCodegenContext,
-	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[]
+	ctx: TemplateCodegenContext
 ): Generator<Code> {
-	for (const prop of props) {
-		if (prop.type !== CompilerDOM.NodeTypes.DIRECTIVE || prop.name !== 'generic' || !prop.exp) {
-			continue;
-		}
+	if (ctx.lastGenericComment) {
+		const { content, offset } = ctx.lastGenericComment;
 		yield* wrapWith(
-			prop.exp.loc.start.offset,
-			prop.exp.loc.end.offset,
+			offset,
+			offset + content.length,
 			ctx.codeFeatures.verification,
 			`<`,
 			[
-				prop.exp.loc.source,
+				content,
 				'template',
-				prop.exp.loc.start.offset,
+				offset,
 				ctx.codeFeatures.all
 			],
 			`>`
 		);
-		break;
 	}
+	ctx.lastGenericComment = undefined;
 }
 
 function* generateComponentSlot(
