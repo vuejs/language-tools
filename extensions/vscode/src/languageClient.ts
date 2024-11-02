@@ -4,9 +4,9 @@ import {
 	executeCommand,
 	nextTick,
 	useActiveTextEditor,
-	useVisibleTextEditors,
-	useOutputChannel,
 	useCommand,
+	useOutputChannel,
+	useVisibleTextEditors,
 	useVscodeContext,
 	watch,
 } from 'reactive-vscode';

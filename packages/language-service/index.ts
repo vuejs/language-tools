@@ -16,17 +16,17 @@ import { create as createTypeScriptTwoslashQueriesPlugin } from 'volar-service-t
 import { create as createTypeScriptDocCommentTemplatePlugin } from 'volar-service-typescript/lib/plugins/docCommentTemplate';
 import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescript/lib/plugins/syntactic';
 import { create as createCssPlugin } from './lib/plugins/css';
-import { create as createVueAutoDefineAssignmentPlugin } from './lib/plugins/vue-complete-define-assignment';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoinsert-space';
+import { create as createVueCompleteDefineAssignmentPlugin } from './lib/plugins/vue-complete-define-assignment';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
 import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-document-links';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
+import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
-import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 
 import { parse, VueCompilerOptions } from '@vue/language-core';
 import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
@@ -198,7 +198,7 @@ function getCommonLanguageServicePlugins(
 		createVueTwoslashQueriesPlugin(getTsPluginClient),
 		createVueDocumentLinksPlugin(),
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
-		createVueAutoDefineAssignmentPlugin(),
+		createVueCompleteDefineAssignmentPlugin(),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueAutoAddSpacePlugin(),
 		createVueInlayHintsPlugin(ts),

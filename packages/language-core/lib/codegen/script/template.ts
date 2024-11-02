@@ -2,10 +2,10 @@ import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
-import { endOfLine, newLine } from '../common';
 import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { forEachInterpolationSegment } from '../template/interpolation';
 import { generateStyleScopedClasses } from '../template/styleScopedClasses';
+import { endOfLine, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 
@@ -60,12 +60,11 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		nameType = `'${options.scriptSetupRanges?.options.name ?? baseName.substring(0, baseName.lastIndexOf('.'))}'`;
 	}
 	if (nameType) {
-		exps.push(`{} as {
-			[K in ${nameType}]: typeof __VLS_self
-				& (new () => {
-					${getSlotsPropertyName(options.vueCompilerOptions.target)}: typeof ${options.scriptSetupRanges?.slots?.name ?? '__VLS_slots'}
-				})
-		}`);
+		exps.push(
+			`{} as { [K in ${nameType}]: typeof __VLS_self & (new () => { `
+			+ getSlotsPropertyName(options.vueCompilerOptions.target)
+			+ ` : typeof ${options.scriptSetupRanges?.slots.name ?? `__VLS_slots`} }) }`
+		);
 	}
 
 	exps.push(`{} as NonNullable<typeof __VLS_self extends { components: infer C } ? C : {}>`);

@@ -1,6 +1,6 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
-import { endOfLine, generateSfcBlockSection, newLine } from '../common';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
 import { ScriptCodegenOptions, codeFeatures } from './index';
 

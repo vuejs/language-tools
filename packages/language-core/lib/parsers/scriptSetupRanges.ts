@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
-import type { VueCompilerOptions, TextRange } from '../types';
-import { collectIdentifiers } from '../codegen/common';
+import { collectIdentifiers } from '../codegen/utils';
+import type { TextRange, VueCompilerOptions } from '../types';
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 

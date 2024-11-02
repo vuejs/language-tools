@@ -1,8 +1,8 @@
-import * as path from 'node:path';
 import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { computed, executeCommand, ref, useAllExtensions, useVscodeContext, watchEffect } from "reactive-vscode";
 import * as semver from 'semver';
 import * as vscode from 'vscode';
-import { computed, executeCommand, ref, useAllExtensions, useVscodeContext, watchEffect } from "reactive-vscode";
 import { incompatibleExtensions, unknownExtensions } from './compatibility';
 import { config } from './config';
 

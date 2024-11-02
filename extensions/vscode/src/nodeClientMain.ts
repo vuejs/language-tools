@@ -1,12 +1,12 @@
 import { createLabsInfo } from '@volar/vscode';
+import * as lsp from '@volar/vscode/node';
 import * as protocol from '@vue/language-server/protocol';
 import * as fs from 'fs';
-import * as vscode from 'vscode';
-import * as lsp from '@volar/vscode/node';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
+import * as vscode from 'vscode';
+import { config } from './config';
 import { enabledHybridMode, enabledTypeScriptPlugin } from './hybridMode';
 import { activate as activateLanguageClient, deactivate as deactivateLanguageClient } from './languageClient';
-import { config } from './config';
 import { middleware } from './middleware';
 
 export const { activate, deactivate } = defineExtension(async () => {

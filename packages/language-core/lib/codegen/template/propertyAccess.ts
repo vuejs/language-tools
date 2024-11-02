@@ -1,9 +1,9 @@
 import type { Code, VueCodeInformation } from '../../types';
-import { variableNameRegex } from '../common';
+import { variableNameRegex } from '../utils';
+import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateStringLiteralKey } from './stringLiteralKey';
 
 export function* generatePropertyAccess(
 	options: TemplateCodegenOptions,

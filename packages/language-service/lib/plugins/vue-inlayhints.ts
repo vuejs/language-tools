@@ -1,10 +1,10 @@
 import type { LanguageServicePluginInstance } from '@volar/language-service';
 import { tsCodegen, VueVirtualCode } from '@vue/language-core';
+import { collectIdentifiers } from '@vue/language-core/lib/codegen/utils/index';
+import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import type { LanguageServicePlugin } from '../types';
-import type * as ts from 'typescript';
-import { collectIdentifiers } from '@vue/language-core/lib/codegen/common';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
