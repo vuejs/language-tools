@@ -3,7 +3,7 @@ import type * as ts from 'typescript';
 import { posix as path } from 'path-browserify';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { getAllExtensions } from '../languagePlugin';
-import { generateGlobalTypes } from '../codegen/globalTypes';
+import { generateGlobalTypes, resolveGlobalTypesName } from '../codegen/globalTypes';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -223,6 +223,13 @@ function getPartialVueCompilerOptions(
 export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3.3;
 	const lib = vueOptions.lib ?? 'vue';
+	const strictTemplates = typeof vueOptions.strictTemplates === 'boolean' ? {
+		attributes: vueOptions.strictTemplates,
+		components: vueOptions.strictTemplates
+	} : vueOptions.strictTemplates ?? {
+		attributes: false,
+		components: false
+	};
 	return {
 		...vueOptions,
 		target,
@@ -231,7 +238,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		petiteVueExtensions: vueOptions.petiteVueExtensions ?? [],
 		lib,
 		jsxSlots: vueOptions.jsxSlots ?? false,
-		strictTemplates: vueOptions.strictTemplates ?? false,
+		strictTemplates,
 		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
 		fallthroughAttributes: vueOptions.fallthroughAttributes ?? false,
 		dataAttributes: vueOptions.dataAttributes ?? [],
@@ -294,8 +301,8 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 			}
 			dir = parentDir;
 		}
-		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', `${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
-		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
+		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', resolveGlobalTypesName(vueOptions));
+		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions);
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return { absolutePath: globalTypesPath };
 	} catch { }
