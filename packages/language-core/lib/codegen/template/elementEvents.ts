@@ -17,7 +17,7 @@ export function* generateElementEvents(
 	componentInstanceVar: string,
 	emitVar: string,
 	eventsVar: string
-): Generator<Code> {
+): Generator<Code, boolean> {
 	let usedComponentEventsVar = false;
 	let propsVar: string | undefined;
 	for (const prop of node.props) {
