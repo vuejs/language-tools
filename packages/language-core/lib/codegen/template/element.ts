@@ -685,11 +685,16 @@ function* generateReferencesForScopedCssClasses(
 			});
 
 			for (const literal of literals) {
-				const classes = collectClasses(
-					literal.text,
-					literal.end - literal.text.length - 1 + startOffset
-				);
-				ctx.scopedClasses.push(...classes);
+				if (literal.text) {
+					const classes = collectClasses(
+						literal.text,
+						literal.end - literal.text.length - 1 + startOffset
+					);
+					ctx.scopedClasses.push(...classes);
+				}
+				else {
+					ctx.emptyClassOffsets.push(literal.end - 1 + startOffset);
+				}
 			}
 
 			function walkArrayLiteral(node: ts.ArrayLiteralExpression) {
