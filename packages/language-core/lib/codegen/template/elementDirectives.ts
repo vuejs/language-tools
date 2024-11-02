@@ -24,6 +24,7 @@ export function* generateElementDirectives(
 			|| prop.name === 'bind'
 			|| prop.name === 'scope'
 			|| prop.name === 'data'
+			|| prop.name === 'generic'
 		) {
 			continue;
 		}

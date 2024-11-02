@@ -205,7 +205,9 @@ export function* generateComponent(
 	yield* generateElementProps(options, ctx, node, props, false);
 	yield `}))${endOfLine}`;
 
-	yield `const ${var_componentInstance} = ${var_functionalComponent}(`;
+	yield `const ${var_componentInstance} = ${var_functionalComponent}`;
+	yield* generateComponentGeneric(ctx);
+	yield `(`;
 	yield* wrapWith(
 		startTagOffset,
 		startTagOffset + node.tag.length,
@@ -450,6 +452,28 @@ function* generateCanonicalComponentName(tagText: string, offset: number, featur
 			features
 		);
 	}
+}
+
+function* generateComponentGeneric(
+	ctx: TemplateCodegenContext
+): Generator<Code> {
+	if (ctx.lastGenericComment) {
+		const { content, offset } = ctx.lastGenericComment;
+		yield* wrapWith(
+			offset,
+			offset + content.length,
+			ctx.codeFeatures.verification,
+			`<`,
+			[
+				content,
+				'template',
+				offset,
+				ctx.codeFeatures.all
+			],
+			`>`
+		);
+	}
+	ctx.lastGenericComment = undefined;
 }
 
 function* generateComponentSlot(
