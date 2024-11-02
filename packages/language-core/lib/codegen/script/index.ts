@@ -1,4 +1,5 @@
 import type { Mapping } from '@volar/language-core';
+import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
@@ -37,7 +38,7 @@ export const codeFeatures = {
 };
 
 export interface ScriptCodegenOptions {
-	fileBaseName: string;
+	fileName: string;
 	ts: typeof ts;
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
@@ -56,7 +57,17 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	const ctx = createScriptCodegenContext(options);
 
 	if (options.vueCompilerOptions.__setupedGlobalTypes) {
-		yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+		const globalTypes = options.vueCompilerOptions.__setupedGlobalTypes;
+		if (typeof globalTypes === 'object') {
+			let relativePath = path.relative(path.dirname(options.fileName), globalTypes.absolutePath);
+			if (relativePath !== globalTypes.absolutePath && !relativePath.startsWith('./') && !relativePath.startsWith('../')) {
+				relativePath = './' + relativePath;
+			}
+			yield `/// <reference types="${relativePath}" />${newLine}`;
+		}
+		else {
+			yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+		}
 	}
 	else {
 		yield `/* placeholder */`;
@@ -118,7 +129,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				yield `__VLS_template = () => {${newLine}`;
 				const templateCodegenCtx = yield* generateTemplate(options, ctx);
 				yield* generateComponentSelf(options, ctx, templateCodegenCtx);
-				yield `},${newLine}`;
+				yield `}${endOfLine}`;
 				yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
 			}
 		}

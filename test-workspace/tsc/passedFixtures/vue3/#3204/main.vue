@@ -1,4 +1,4 @@
-<script setup lang="ts" generic="T">
+<script setup lang="ts" generic="T extends { foo: number }">
 import { exactType } from '../../shared';
 
 const props = withDefaults(defineProps<{
@@ -11,12 +11,12 @@ const props = withDefaults(defineProps<{
 
 <template>
 	<div v-for="item of list">
-		{{ exactType(item, {} as T) }}
+		{{ exactType(item.foo, {} as number) }}
 	</div>
 	<div v-for="item of props.list">
-		{{ exactType(item, {} as T) }}
+		{{ exactType(item.foo, {} as number) }}
 	</div>
 	<div v-for="item of $props.list">
-		{{ exactType(item, {} as T) }}
+		{{ exactType(item.foo, {} as number) }}
 	</div>
-</templat>
+</template>

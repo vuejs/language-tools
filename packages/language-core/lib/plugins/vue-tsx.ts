@@ -1,6 +1,5 @@
 import type { Mapping } from '@volar/language-core';
 import { computed } from 'alien-signals';
-import { posix as path } from 'path-browserify';
 import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
@@ -180,7 +179,7 @@ function createTsx(
 		let generatedLength = 0;
 		const codegen = generateScript({
 			ts,
-			fileBaseName: path.basename(fileName),
+			fileName,
 			sfc: _sfc,
 			lang: lang.get(),
 			scriptRanges: scriptRanges.get(),

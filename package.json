@@ -7,7 +7,6 @@
 		"watch:base": "tsc -b -w",
 		"watch:vue": "cd ./extensions/vscode && pnpm run watch",
 		"prerelease": "pnpm run build && pnpm run test",
-		"version": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
 		"release": "pnpm run release:base && pnpm run release:vue",
 		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock --no-git-tag-version",
 		"release:vue": "cd ./extensions/vscode && pnpm run release",
@@ -25,7 +24,6 @@
 		"@lerna-lite/publish": "latest",
 		"@tsslint/cli": "latest",
 		"@tsslint/config": "latest",
-		"@volar/language-service": "~2.4.1",
 		"typescript": "latest",
 		"vite": "latest",
 		"vitest": "latest"

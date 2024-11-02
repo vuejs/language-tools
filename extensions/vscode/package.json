@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "2.1.6",
+	"version": "2.1.10",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -376,6 +376,11 @@
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
 				},
+				"vue.complete.defineAssignment": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto add `const props = ` before `defineProps` when selecting the completion item `props`. (also `emit` and `slots`)"
+				},
 				"vue.autoInsert.dotValue": {
 					"type": "boolean",
 					"default": false,
@@ -538,7 +543,7 @@
 		]
 	},
 	"scripts": {
-		"prebuild": "cd ../.. && pnpm run build",
+		"prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
 		"build": "node scripts/build",
 		"build:minify": "pnpm run build -- --minify",
 		"watch": "pnpm run build -- --watch",
@@ -546,20 +551,23 @@
 		"pack:next": "pnpm run build && vsce package",
 		"release": "pnpm run build:minify && vsce publish",
 		"release:next": "pnpm run build && vsce publish --pre-release",
-		"size": "pnpm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
+		"size": "pnpm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html",
+		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.4.1",
+		"@volar/vscode": "~2.4.8",
 		"@vscode/vsce": "latest",
-		"@vue/language-core": "2.1.6",
-		"@vue/language-server": "2.1.6",
-		"@vue/typescript-plugin": "2.1.6",
+		"@vue/language-core": "2.1.10",
+		"@vue/language-server": "2.1.10",
+		"@vue/typescript-plugin": "2.1.10",
 		"esbuild": "~0.21.0",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
+		"reactive-vscode": "0.2.7-beta.1",
 		"semver": "^7.5.4",
+		"vscode-ext-gen": "^0.5.0",
 		"vscode-tmlanguage-snapshot": "latest"
 	}
 }
