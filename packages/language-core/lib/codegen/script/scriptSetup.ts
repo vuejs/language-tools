@@ -67,14 +67,14 @@ export function* generateScriptSetup(
 			emitTypes.push(`typeof __VLS_modelEmit`);
 		}
 
-		yield `		return {} as {${newLine}`
-			+ `			props: ${ctx.localTypes.PrettifyLocal}<typeof __VLS_functionalComponentProps & __VLS_TemplateResult['attrs'] & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
-			+ `			expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
-			+ `			attrs: any,${newLine}`
-			+ `			slots: __VLS_TemplateResult['slots'],${newLine}`
-			+ `			emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
-			+ `		}${endOfLine}`;
-		yield `	})(),${newLine}`; // __VLS_setup = (async () => {
+		yield `return {} as {${newLine}`
+			+ `	props: ${ctx.localTypes.PrettifyLocal}<typeof __VLS_functionalComponentProps & __VLS_TemplateResult['attrs'] & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
+			+ `	expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
+			+ `	attrs: any,${newLine}`
+			+ `	slots: __VLS_TemplateResult['slots'],${newLine}`
+			+ `	emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
+			+ `}${endOfLine}`;
+		yield `})(),${newLine}`; // __VLS_setup = (async () => {
 		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))`;
 	}
 	else if (!options.sfc.script) {
@@ -360,12 +360,12 @@ function* generateComponentProps(
 	yield `})${endOfLine}`;
 
 	yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
-		? `import('${options.vueCompilerOptions.lib}').PublicProps;`
+		? `import('${options.vueCompilerOptions.lib}').PublicProps`
 		: options.vueCompilerOptions.target >= 3.0
-			? `import('${options.vueCompilerOptions.lib}').VNodeProps
-					& import('${options.vueCompilerOptions.lib}').AllowedComponentProps
-					& import('${options.vueCompilerOptions.lib}').ComponentCustomProps;`
-			: `globalThis.JSX.IntrinsicAttributes;`
+			? `import('${options.vueCompilerOptions.lib}').VNodeProps`
+			+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
+			+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
+			: `globalThis.JSX.IntrinsicAttributes`
 		}`;
 	yield endOfLine;
 
@@ -468,7 +468,7 @@ function* generateModelEmit(
 		yield `type __VLS_ModelEmit = {${newLine}`;
 		for (const defineModel of defineModels) {
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
-			yield `'update:${propName}': [value:`;
+			yield `'update:${propName}': [value: `;
 			yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
 			yield `]${endOfLine}`;
 		}

@@ -60,12 +60,11 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		nameType = `'${options.scriptSetupRanges?.options.name ?? baseName.substring(0, baseName.lastIndexOf('.'))}'`;
 	}
 	if (nameType) {
-		exps.push(`{} as {
-			[K in ${nameType}]: typeof __VLS_self
-				& (new () => {
-					${getSlotsPropertyName(options.vueCompilerOptions.target)}: typeof ${options.scriptSetupRanges?.slots?.name ?? '__VLS_slots'}
-				})
-		}`);
+		exps.push(
+			`{} as { [K in ${nameType}]: typeof __VLS_self & (new () => { `
+			+ getSlotsPropertyName(options.vueCompilerOptions.target)
+			+ ` : typeof ${options.scriptSetupRanges?.slots.name ?? `__VLS_slots`} }) }`
+		);
 	}
 
 	exps.push(`{} as NonNullable<typeof __VLS_self extends { components: infer C } ? C : {}>`);
