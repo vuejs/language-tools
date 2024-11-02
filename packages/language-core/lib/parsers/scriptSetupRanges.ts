@@ -113,7 +113,7 @@ export function parseScriptSetupRanges(
 
 	const templateRefNames = new Set(templateRefs.map(ref => ref.name));
 	bindings = bindings.filter(range => {
-		const name = text.substring(range.start, range.end);
+		const name = text.slice(range.start, range.end);
 		return !templateRefNames.has(name);
 	});
 
@@ -512,7 +512,7 @@ export function getNodeText(
 	sourceFile: ts.SourceFile
 ) {
 	const { start, end } = getStartEnd(ts, node, sourceFile);
-	return sourceFile.text.substring(start, end);
+	return sourceFile.text.slice(start, end);
 }
 
 function getStatementRange(

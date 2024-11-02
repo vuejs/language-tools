@@ -43,7 +43,7 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
 		const { componentsOption } = options.scriptRanges.exportDefault;
 		exps.push([
-			options.sfc.script.content.substring(componentsOption.start, componentsOption.end),
+			options.sfc.script.content.slice(componentsOption.start, componentsOption.end),
 			'script',
 			componentsOption.start,
 			codeFeatures.navigation,
@@ -53,11 +53,11 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 	let nameType: Code | undefined;
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.nameOption) {
 		const { nameOption } = options.scriptRanges.exportDefault;
-		nameType = options.sfc.script.content.substring(nameOption.start, nameOption.end);
+		nameType = options.sfc.script.content.slice(nameOption.start, nameOption.end);
 	}
 	else if (options.sfc.scriptSetup) {
 		const baseName = path.basename(options.fileName);
-		nameType = `'${options.scriptSetupRanges?.options.name ?? baseName.substring(0, baseName.lastIndexOf('.'))}'`;
+		nameType = `'${options.scriptSetupRanges?.options.name ?? baseName.slice(0, baseName.lastIndexOf('.'))}'`;
 	}
 	if (nameType) {
 		exps.push(
@@ -87,7 +87,7 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
 		const { directivesOption } = options.scriptRanges.exportDefault;
 		exps.push([
-			options.sfc.script.content.substring(directivesOption.start, directivesOption.end),
+			options.sfc.script.content.slice(directivesOption.start, directivesOption.end),
 			'script',
 			directivesOption.start,
 			codeFeatures.navigation,
@@ -198,7 +198,7 @@ export function* generateCssClassProperty(
 	];
 	yield `'`;
 	yield [
-		classNameWithDot.substring(1),
+		classNameWithDot.slice(1),
 		'style_' + styleIndex,
 		offset + 1,
 		codeFeatures.navigation,

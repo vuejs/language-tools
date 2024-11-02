@@ -48,7 +48,7 @@ function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Co
 				const endCrt = prop.arg.loc.source[prop.arg.loc.source.length - 1]; // " | '
 				const start = prop.arg.loc.source.indexOf(endCrt) + 1;
 				const end = prop.arg.loc.source.lastIndexOf(endCrt);
-				const content = prop.arg.loc.source.substring(start, end);
+				const content = prop.arg.loc.source.slice(start, end);
 
 				yield `x { `;
 				yield [

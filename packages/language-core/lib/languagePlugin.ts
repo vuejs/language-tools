@@ -119,7 +119,7 @@ export function createVueLanguagePlugin<T>(
 			getServiceScript(root) {
 				for (const code of forEachEmbeddedCode(root)) {
 					if (/script_(js|jsx|ts|tsx)/.test(code.id)) {
-						const lang = code.id.substring('script_'.length);
+						const lang = code.id.slice('script_'.length);
 						return {
 							code,
 							extension: '.' + lang,

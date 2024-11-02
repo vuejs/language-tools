@@ -44,7 +44,7 @@ export async function activate(client: BaseLanguageClient) {
 
 				const fileUri = doctorUri.with({
 					scheme: 'file',
-					path: doctorUri.path.substring(0, doctorUri.path.length - '/Doctor.md'.length),
+					path: doctorUri.path.slice(0, -'/Doctor.md'.length),
 				});
 				const problems = await getProblems(fileUri);
 

@@ -51,7 +51,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					const matchText = match[0];
 					codes.push([matchText, undefined, match.index]);
 					codes.push('\n\n');
-					content = content.substring(0, match.index) + ' '.repeat(matchText.length) + content.substring(match.index + matchText.length);
+					content = content.slice(0, match.index) + ' '.repeat(matchText.length) + content.slice(match.index + matchText.length);
 				}
 			}
 

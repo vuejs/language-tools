@@ -91,7 +91,7 @@ export function createTsAst(ts: typeof import('typescript'), astHolder: any, tex
 
 export function generateSfcBlockSection(block: SfcBlock, start: number, end: number, features: VueCodeInformation): Code {
 	return [
-		block.content.substring(start, end),
+		block.content.slice(start, end),
 		block.name,
 		start,
 		features,

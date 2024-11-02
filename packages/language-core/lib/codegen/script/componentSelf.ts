@@ -28,7 +28,7 @@ export function* generateComponentSelf(
 				: ['', []] as const,
 		]) {
 			for (const expose of bindings) {
-				const varName = content.substring(expose.start, expose.end);
+				const varName = content.slice(expose.start, expose.end);
 				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
 					continue;
 				}

@@ -149,7 +149,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					const start = leftExpressionRange.start;
 					const end = source.loc.start.offset + source.content.length;
 					addFormatCodes(
-						templateContent.substring(start, end),
+						templateContent.slice(start, end),
 						start,
 						formatBrackets.for
 					);

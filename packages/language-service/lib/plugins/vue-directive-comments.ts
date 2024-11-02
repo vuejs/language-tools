@@ -33,7 +33,7 @@ export function create(): LanguageServicePlugin {
 					}
 
 					const startIndex = cmdStart.index! + cmdStart[0].length;
-					const remainText = line.substring(startIndex);
+					const remainText = line.slice(startIndex);
 					const result: CompletionItem[] = [];
 
 					for (const [label, text = label] of cmds) {

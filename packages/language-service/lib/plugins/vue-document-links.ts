@@ -33,10 +33,10 @@ export function create(): LanguageServicePlugin {
 							const style = sourceScript.generated.root._sfc.styles[i];
 							if (option === 'always' || (option === 'scoped' && style.scoped)) {
 								for (const className of style.classNames) {
-									if (!styleClasses.has(className.text.substring(1))) {
-										styleClasses.set(className.text.substring(1), []);
+									if (!styleClasses.has(className.text.slice(1))) {
+										styleClasses.set(className.text.slice(1), []);
 									}
-									styleClasses.get(className.text.substring(1))!.push({
+									styleClasses.get(className.text.slice(1))!.push({
 										index: i,
 										style,
 										classOffset: className.offset,

@@ -42,7 +42,7 @@ const plugin: VueLanguagePlugin = () => {
 						undefined,
 						block.startTagEnd,
 						block.endTagStart,
-						sfc.content.substring(
+						sfc.content.slice(
 							block.startTagEnd,
 							block.startTagEnd + offset
 						),
@@ -52,7 +52,7 @@ const plugin: VueLanguagePlugin = () => {
 							block.startTagEnd + offset,
 							{ structure: true },
 						],
-						sfc.content.substring(
+						sfc.content.slice(
 							block.startTagEnd + offset,
 							block.endTagStart
 						)

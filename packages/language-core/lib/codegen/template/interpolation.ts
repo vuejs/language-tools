@@ -35,12 +35,12 @@ export function* generateInterpolation(
 			let addSuffix = '';
 			const overLength = offset + section.length - _code.length;
 			if (overLength > 0) {
-				addSuffix = section.substring(section.length - overLength);
-				section = section.substring(0, section.length - overLength);
+				addSuffix = section.slice(section.length - overLength);
+				section = section.slice(0, -overLength);
 			}
 			if (offset < 0) {
-				yield section.substring(0, -offset);
-				section = section.substring(-offset);
+				yield section.slice(0, -offset);
+				section = section.slice(-offset);
 				offset = 0;
 			}
 			const shouldSkip = section.length === 0 && (type === 'startText' || type === 'endText');
@@ -117,11 +117,11 @@ export function* forEachInterpolationSegment(
 	if (ctxVars.length) {
 
 		if (ctxVars[0].isShorthand) {
-			yield [code.substring(0, ctxVars[0].offset + ctxVars[0].text.length), 0];
+			yield [code.slice(0, ctxVars[0].offset + ctxVars[0].text.length), 0];
 			yield [': ', undefined];
 		}
 		else if (ctxVars[0].offset > 0) {
-			yield [code.substring(0, ctxVars[0].offset), 0, 'startText'];
+			yield [code.slice(0, ctxVars[0].offset), 0, 'startText'];
 		}
 
 		for (let i = 0; i < ctxVars.length - 1; i++) {
@@ -131,18 +131,18 @@ export function* forEachInterpolationSegment(
 			yield* generateVar(code, destructuredPropNames, templateRefNames, curVar, nextVar);
 
 			if (nextVar.isShorthand) {
-				yield [code.substring(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
+				yield [code.slice(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
 				yield [': ', undefined];
 			}
 			else {
-				yield [code.substring(curVar.offset + curVar.text.length, nextVar.offset), curVar.offset + curVar.text.length];
+				yield [code.slice(curVar.offset + curVar.text.length, nextVar.offset), curVar.offset + curVar.text.length];
 			}
 		}
 
 		const lastVar = ctxVars.at(-1)!;
 		yield* generateVar(code, destructuredPropNames, templateRefNames, lastVar);
 		if (lastVar.offset + lastVar.text.length < code.length) {
-			yield [code.substring(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length, 'endText'];
+			yield [code.slice(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length, 'endText'];
 		}
 	}
 	else {
@@ -173,14 +173,14 @@ function* generateVar(
 	const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
 	if (isTemplateRef) {
 		yield [`__VLS_unref(`, undefined];
-		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
+		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 		yield [`)`, undefined];
 	}
 	else {
 		if (!isDestructuredProp) {
 			yield [`__VLS_ctx.`, undefined];
 		}
-		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
+		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 	}
 }
 

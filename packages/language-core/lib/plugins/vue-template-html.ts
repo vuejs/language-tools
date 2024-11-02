@@ -202,9 +202,9 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 				if (withinChangeRange(loc)) {
 					loc.source =
-						loc.source.substring(0, change.start - loc.start.offset)
+						loc.source.slice(0, change.start - loc.start.offset)
 						+ change.newText
-						+ loc.source.substring(change.end - loc.start.offset);
+						+ loc.source.slice(change.end - loc.start.offset);
 					(loc as any).__endOffset = loc.end.offset;
 					loc.end.offset += lengthDiff;
 					return true;

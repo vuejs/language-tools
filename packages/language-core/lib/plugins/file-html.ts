@@ -81,7 +81,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					};
 				}
 
-				templateContent = templateContent.substring(0, match.index) + ' '.repeat(matchText.length) + templateContent.substring(match.index + matchText.length);
+				templateContent = templateContent.slice(0, match.index) + ' '.repeat(matchText.length) + templateContent.slice(match.index + matchText.length);
 			}
 
 			sfc.descriptor.template = {

@@ -105,7 +105,7 @@ export function parseVForNode(node: CompilerDOM.ForNode) {
 		}
 		: undefined;
 	const leftExpressionText = leftExpressionRange
-		? node.loc.source.substring(
+		? node.loc.source.slice(
 			leftExpressionRange.start - node.loc.start.offset,
 			leftExpressionRange.end - node.loc.start.offset
 		)

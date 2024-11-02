@@ -15,7 +15,7 @@ export function* generateSlotOutlet(
 	currentComponent: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string | undefined
 ): Generator<Code> {
-	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
+	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
 	const varSlot = ctx.getInternalVariable();
 	const nameProp = node.props.find(prop => {
 		if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {

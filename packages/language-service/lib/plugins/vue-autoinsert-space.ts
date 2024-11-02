@@ -22,7 +22,7 @@ export function create(): LanguageServicePlugin {
 
 						if (
 							change.text === '{}'
-							&& document.getText().substring(change.rangeOffset - 1, change.rangeOffset + 3) === '{{}}'
+							&& document.getText().slice(change.rangeOffset - 1, change.rangeOffset + 3) === '{{}}'
 							&& document.offsetAt(selection) === change.rangeOffset + 1
 						) {
 							return ` $0 `;

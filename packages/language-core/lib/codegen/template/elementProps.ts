@@ -100,7 +100,7 @@ export function* generateElementProps(
 			}
 
 			if (prop.modifiers.some(m => m.content === 'prop' || m.content === 'attr')) {
-				propName = propName.substring(1);
+				propName = propName.slice(1);
 			}
 
 			const shouldSpread = propName === 'style' || propName === 'class';

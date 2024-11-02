@@ -129,7 +129,7 @@ function createTsx(
 		const bindings = scriptSetupRanges.get()?.bindings;
 		if (_sfc.scriptSetup && bindings) {
 			for (const binding of bindings) {
-				newNames.add(_sfc.scriptSetup?.content.substring(binding.start, binding.end));
+				newNames.add(_sfc.scriptSetup?.content.slice(binding.start, binding.end));
 			}
 		}
 		if (newNames && oldNames && twoSetsEqual(newNames, oldNames)) {

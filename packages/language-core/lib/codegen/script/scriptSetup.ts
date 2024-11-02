@@ -12,7 +12,7 @@ export function* generateScriptSetupImports(
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	yield [
-		scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
+		scriptSetup.content.slice(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
 		'scriptSetup',
 		0,
 		codeFeatures.all,
@@ -524,5 +524,5 @@ function getRangeName(
 	unwrap = false
 ) {
 	const offset = unwrap ? 1 : 0;
-	return scriptSetup.content.substring(range.start + offset, range.end - offset);
+	return scriptSetup.content.slice(range.start + offset, range.end - offset);
 }

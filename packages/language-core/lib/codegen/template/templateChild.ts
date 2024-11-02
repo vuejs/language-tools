@@ -194,11 +194,11 @@ export function parseInterpolationNode(node: CompilerDOM.InterpolationNode, temp
 	let rightCharacter: string;
 
 	// fix https://github.com/vuejs/language-tools/issues/1787
-	while ((leftCharacter = template.substring(start - 1, start)).trim() === '' && leftCharacter.length) {
+	while ((leftCharacter = template.slice(start - 1, start)).trim() === '' && leftCharacter.length) {
 		start--;
 		content = leftCharacter + content;
 	}
-	while ((rightCharacter = template.substring(start + content.length, start + content.length + 1)).trim() === '' && rightCharacter.length) {
+	while ((rightCharacter = template.slice(start + content.length, start + content.length + 1)).trim() === '' && rightCharacter.length) {
 		content = content + rightCharacter;
 	}
 

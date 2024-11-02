@@ -26,7 +26,7 @@ export function* generateComponent(
 	node: CompilerDOM.ElementNode,
 	currentComponent: CompilerDOM.ElementNode | undefined
 ): Generator<Code> {
-	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
+	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
 	const tagOffsets =
 		endTagOffset !== undefined && endTagOffset > startTagOffset
@@ -283,7 +283,7 @@ export function* generateElement(
 	componentCtxVar: string | undefined,
 	isVForChild: boolean
 ): Generator<Code> {
-	const startTagOffset = node.loc.start.offset + options.template.content.substring(node.loc.start.offset).indexOf(node.tag);
+	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
 		? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)
 		: undefined;

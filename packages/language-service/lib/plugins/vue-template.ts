@@ -106,7 +106,7 @@ export function create(
 					.split('\n- ')[4]
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
-					text = text.substring('  - `.'.length);
+					text = text.slice('  - `.'.length);
 					const [name, disc] = text.split('` - ');
 					eventModifiers[name] = disc;
 				}
@@ -117,7 +117,7 @@ export function create(
 					.split('\n- ')[4]
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
-					text = text.substring('  - `.'.length);
+					text = text.slice('  - `.'.length);
 					const [name, disc] = text.split('` - ');
 					propModifiers[name] = disc;
 				}
@@ -252,19 +252,19 @@ export function create(
 										}
 										// normalize
 										if (attrText.startsWith('v-bind:')) {
-											attrText = attrText.substring('v-bind:'.length);
+											attrText = attrText.slice('v-bind:'.length);
 										}
 										else if (attrText.startsWith(':')) {
-											attrText = attrText.substring(':'.length);
+											attrText = attrText.slice(':'.length);
 										}
 										else if (attrText.startsWith('v-model:')) {
-											attrText = attrText.substring('v-model:'.length);
+											attrText = attrText.slice('v-model:'.length);
 										}
 										else if (attrText === 'v-model') {
 											attrText = vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
 										}
 										else if (attrText.startsWith('@')) {
-											attrText = 'on-' + hyphenateAttr(attrText.substring('@'.length));
+											attrText = 'on-' + hyphenateAttr(attrText.slice('@'.length));
 										}
 
 										current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
@@ -501,7 +501,7 @@ export function create(
 							}
 
 							for (const binding of scriptSetupRanges?.bindings ?? []) {
-								const name = vueCode._sfc.scriptSetup!.content.substring(binding.start, binding.end);
+								const name = vueCode._sfc.scriptSetup!.content.slice(binding.start, binding.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}
@@ -553,8 +553,8 @@ export function create(
 									return [];
 								}
 								let ctxVars = [
-									..._tsCodegen.scriptRanges.get()?.bindings.map(binding => vueCode._sfc.script!.content.substring(binding.start, binding.end)) ?? [],
-									..._tsCodegen.scriptSetupRanges.get()?.bindings.map(binding => vueCode._sfc.scriptSetup!.content.substring(binding.start, binding.end)) ?? [],
+									..._tsCodegen.scriptRanges.get()?.bindings.map(binding => vueCode._sfc.script!.content.slice(binding.start, binding.end)) ?? [],
+									..._tsCodegen.scriptSetupRanges.get()?.bindings.map(binding => vueCode._sfc.scriptSetup!.content.slice(binding.start, binding.end)) ?? [],
 									...templateContextProps,
 								];
 								ctxVars = [...new Set(ctxVars)];
@@ -647,12 +647,12 @@ export function create(
 							for (const prop of [...props, ...attrs]) {
 								if (prop.startsWith('onUpdate:')) {
 									const isGlobal = !propsSet.has(prop);
-									models.push([isGlobal, prop.substring('onUpdate:'.length)]);
+									models.push([isGlobal, prop.slice('onUpdate:'.length)]);
 								}
 							}
 							for (const event of events) {
 								if (event.startsWith('update:')) {
-									models.push([false, event.substring('update:'.length)]);
+									models.push([false, event.slice('update:'.length)]);
 								}
 							}
 

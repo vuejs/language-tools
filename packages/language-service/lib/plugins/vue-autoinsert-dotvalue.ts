@@ -124,7 +124,7 @@ const charReg = /\w/;
 
 export function isCharacterTyping(document: TextDocument, change: { text: string; rangeOffset: number; rangeLength: number; }) {
 	const lastCharacter = change.text[change.text.length - 1];
-	const nextCharacter = document.getText().substring(
+	const nextCharacter = document.getText().slice(
 		change.rangeOffset + change.text.length,
 		change.rangeOffset + change.text.length + 1
 	);
