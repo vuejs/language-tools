@@ -3,16 +3,16 @@ import { combineLastMapping, wrapWith } from '.';
 
 export function* generateStringLiteralKey(code: string, offset?: number, info?: VueCodeInformation): Generator<Code> {
 	if (offset === undefined || !info) {
-		yield `"${code}"`;
+		yield `'${code}'`;
 	}
 	else {
 		yield* wrapWith(
 			offset,
 			offset + code.length,
 			info,
-			`"`,
+			`'`,
 			[code, 'template', offset, combineLastMapping],
-			`"`
+			`'`
 		);
 	}
 }

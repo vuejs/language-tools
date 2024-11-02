@@ -161,7 +161,7 @@ export function* generateElementProps(
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
 			if (
 				options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(prop.name, pattern))
-				// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom always adds it (#3881)
+				// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom` always adds it (#3881)
 				|| (
 					options.vueCompilerOptions.target < 3
 					&& prop.name === 'persisted'
@@ -243,10 +243,6 @@ export function* generateElementProps(
 				yield* codes;
 			}
 			yield `, `;
-		}
-		else {
-			// comment this line to avoid affecting comments in prop expressions
-			// tsCodeGen.addText("/* " + [prop.type, prop.name, prop.arg?.loc.source, prop.exp?.loc.source, prop.loc.source].join(", ") + " */ ");
 		}
 	}
 }

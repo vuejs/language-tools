@@ -2,7 +2,7 @@ import type * as ts from 'typescript';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 
-export const newLine = '\n';
+export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineLastMapping: true };
 export const variableNameRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;

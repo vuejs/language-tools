@@ -43,9 +43,9 @@ export function* generateObjectProperty(
 				offset,
 				offset + code.length,
 				features,
-				`"`,
+				`'`,
 				...generateCamelized(code, offset, combineLastMapping),
-				`"`
+				`'`
 			);
 		}
 	}
