@@ -23,12 +23,11 @@ export function* generatePropertyAccess(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			code,
-			astHolder,
-			offset,
+			'template',
 			features,
-			'',
-			''
+			code,
+			offset,
+			astHolder
 		);
 	}
 	else {

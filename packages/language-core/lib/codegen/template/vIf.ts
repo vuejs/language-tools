@@ -38,10 +38,11 @@ export function* generateVIf(
 				...generateInterpolation(
 					options,
 					ctx,
-					branch.condition.content,
-					branch.condition.loc,
-					branch.condition.loc.start.offset,
+					'template',
 					ctx.codeFeatures.all,
+					branch.condition.content,
+					branch.condition.loc.start.offset,
+					branch.condition.loc,
 					'(',
 					')'
 				),

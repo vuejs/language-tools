@@ -22,16 +22,25 @@ export function* generateObjectProperty(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				code.slice(1, -1),
-				astHolder,
-				offset + 1,
+				'template',
 				features,
+				code.slice(1, -1),
+				offset + 1,
+				astHolder,
 				`[__VLS_tryAsConstant(`,
 				`)]`
 			);
 		}
 		else {
-			yield* generateInterpolation(options, ctx, code, astHolder, offset, features, '', '');
+			yield* generateInterpolation(
+				options,
+				ctx,
+				'template',
+				features,
+				code,
+				offset,
+				astHolder
+			);
 		}
 	}
 	else if (shouldCamelize) {

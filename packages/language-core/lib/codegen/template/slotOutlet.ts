@@ -90,10 +90,11 @@ export function* generateSlotOutlet(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				nameProp.exp.content,
-				nameProp.exp,
-				nameProp.exp.loc.start.offset,
+				'template',
 				ctx.codeFeatures.all,
+				nameProp.exp.content,
+				nameProp.exp.loc.start.offset,
+				nameProp.exp,
 				'(',
 				')'
 			);

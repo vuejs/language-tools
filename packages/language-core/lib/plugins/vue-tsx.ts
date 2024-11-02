@@ -88,42 +88,6 @@ function createTsx(
 			? parseScriptSetupRanges(ts, _sfc.scriptSetup.ast, ctx.vueCompilerOptions)
 			: undefined
 	);
-	const generatedTemplate = computed(() => {
-
-		if (ctx.vueCompilerOptions.skipTemplateCodegen || !_sfc.template) {
-			return;
-		}
-
-		const codes: Code[] = [];
-		const codegen = generateTemplate({
-			ts,
-			compilerOptions: ctx.compilerOptions,
-			vueCompilerOptions: ctx.vueCompilerOptions,
-			template: _sfc.template,
-			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
-			scriptSetupBindingNames: scriptSetupBindingNames.get(),
-			scriptSetupImportComponentNames: scriptSetupImportComponentNames.get(),
-			destructuredPropNames: destructuredPropNames.get(),
-			templateRefNames: templateRefNames.get(),
-			hasDefineSlots: hasDefineSlots.get(),
-			slotsAssignName: slotsAssignName.get(),
-			propsAssignName: propsAssignName.get(),
-			inheritAttrs: inheritAttrs.get(),
-		});
-
-		let current = codegen.next();
-
-		while (!current.done) {
-			const code = current.value;
-			codes.push(code);
-			current = codegen.next();
-		}
-
-		return {
-			...current.value,
-			codes: codes,
-		};
-	});
 	const scriptSetupBindingNames = Unstable.computedSet(
 		computed(() => {
 			const newNames = new Set<string>();
@@ -169,21 +133,59 @@ function createTsx(
 		const value = scriptSetupRanges.get()?.options.inheritAttrs ?? scriptRanges.get()?.exportDefault?.inheritAttrsOption;
 		return value !== 'false';
 	});
+	const generatedTemplate = computed(() => {
+
+		if (ctx.vueCompilerOptions.skipTemplateCodegen || !_sfc.template) {
+			return;
+		}
+
+		const codes: Code[] = [];
+		const codegen = generateTemplate({
+			ts,
+			compilerOptions: ctx.compilerOptions,
+			vueCompilerOptions: ctx.vueCompilerOptions,
+			template: _sfc.template,
+			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
+			scriptSetupBindingNames: scriptSetupBindingNames.get(),
+			scriptSetupImportComponentNames: scriptSetupImportComponentNames.get(),
+			destructuredPropNames: destructuredPropNames.get(),
+			templateRefNames: templateRefNames.get(),
+			hasDefineSlots: hasDefineSlots.get(),
+			slotsAssignName: slotsAssignName.get(),
+			propsAssignName: propsAssignName.get(),
+			inheritAttrs: inheritAttrs.get(),
+		});
+
+		let current = codegen.next();
+
+		while (!current.done) {
+			const code = current.value;
+			codes.push(code);
+			current = codegen.next();
+		}
+
+		return {
+			...current.value,
+			codes: codes,
+		};
+	});
 	const generatedScript = computed(() => {
 		const codes: Code[] = [];
 		const linkedCodeMappings: Mapping[] = [];
 		let generatedLength = 0;
 		const codegen = generateScript({
 			ts,
-			fileName,
+			compilerOptions: ctx.compilerOptions,
+			vueCompilerOptions: ctx.vueCompilerOptions,
 			sfc: _sfc,
+			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
+			fileName,
 			lang: lang.get(),
 			scriptRanges: scriptRanges.get(),
 			scriptSetupRanges: scriptSetupRanges.get(),
 			templateCodegen: generatedTemplate.get(),
-			compilerOptions: ctx.compilerOptions,
-			vueCompilerOptions: ctx.vueCompilerOptions,
-			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
+			destructuredPropNames: destructuredPropNames.get(),
+			templateRefNames: templateRefNames.get(),
 			getGeneratedLength: () => generatedLength,
 			linkedCodeMappings,
 			appendGlobalTypes,

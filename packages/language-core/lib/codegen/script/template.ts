@@ -1,9 +1,8 @@
 import * as path from 'path-browserify';
-import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
 import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
-import { forEachInterpolationSegment } from '../template/interpolation';
+import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClasses } from '../template/styleScopedClasses';
 import { endOfLine, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
@@ -221,29 +220,14 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 	yield `// CSS variable injection ${newLine}`;
 	for (const style of options.sfc.styles) {
 		for (const cssBind of style.cssVars) {
-			for (const [segment, offset, onlyError] of forEachInterpolationSegment(
-				options.ts,
-				undefined,
-				undefined,
+			yield* generateInterpolation(
+				options,
 				ctx,
+				style.name,
+				codeFeatures.all,
 				cssBind.text,
-				cssBind.offset,
-				options.ts.createSourceFile('/a.txt', cssBind.text, 99 satisfies ts.ScriptTarget.ESNext)
-			)) {
-				if (offset === undefined) {
-					yield segment;
-				}
-				else {
-					yield [
-						segment,
-						style.name,
-						cssBind.offset + offset,
-						onlyError
-							? codeFeatures.navigation
-							: codeFeatures.all,
-					];
-				}
-			}
+				cssBind.offset
+			);
 			yield endOfLine;
 		}
 	}

@@ -105,10 +105,11 @@ function* generateArg(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			arg.content,
-			arg.loc,
-			startOffset,
+			'template',
 			ctx.codeFeatures.all,
+			arg.content,
+			startOffset,
+			arg.loc,
 			'(',
 			')'
 		);
@@ -162,10 +163,11 @@ function* generateValue(
 		...generateInterpolation(
 			options,
 			ctx,
-			prop.exp.content,
-			prop.exp.loc,
-			prop.exp.loc.start.offset,
+			'template',
 			ctx.codeFeatures.all,
+			prop.exp.content,
+			prop.exp.loc.start.offset,
+			prop.exp.loc,
 			'(',
 			')'
 		)

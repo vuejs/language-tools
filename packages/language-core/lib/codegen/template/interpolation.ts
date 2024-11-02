@@ -4,17 +4,21 @@ import { getNodeText, getStartEnd } from '../../parsers/scriptSetupRanges';
 import type { Code, VueCodeInformation } from '../../types';
 import { collectVars, createTsAst } from '../utils';
 import type { TemplateCodegenContext } from './context';
-import type { TemplateCodegenOptions } from './index';
 
 export function* generateInterpolation(
-	options: TemplateCodegenOptions,
+	options: {
+		ts: typeof import('typescript'),
+		destructuredPropNames: Set<string> | undefined,
+		templateRefNames: Set<string> | undefined
+	},
 	ctx: TemplateCodegenContext,
-	_code: string,
-	astHolder: any,
-	start: number | undefined,
+	source: string,
 	data: VueCodeInformation | ((offset: number) => VueCodeInformation) | undefined,
-	prefix: string,
-	suffix: string
+	_code: string,
+	start: number | undefined,
+	astHolder: any = {},
+	prefix: string = '',
+	suffix: string = ''
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
@@ -51,7 +55,7 @@ export function* generateInterpolation(
 				) {
 					yield [
 						section,
-						'template',
+						source,
 						start + offset,
 						type === 'errorMappingOnly'
 							? ctx.codeFeatures.verification
@@ -67,7 +71,7 @@ export function* generateInterpolation(
 	}
 }
 
-export function* forEachInterpolationSegment(
+function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,

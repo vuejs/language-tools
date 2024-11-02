@@ -228,10 +228,11 @@ export function* generateElementProps(
 				...generateInterpolation(
 					options,
 					ctx,
-					prop.exp.content,
-					prop.exp.loc,
-					prop.exp.loc.start.offset,
+					'template',
 					ctx.codeFeatures.all,
+					prop.exp.content,
+					prop.exp.loc.start.offset,
+					prop.exp.loc,
 					'(',
 					')'
 				)
@@ -296,10 +297,11 @@ function* generatePropExp(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				exp.loc.source,
-				exp.loc,
-				exp.loc.start.offset,
+				'template',
 				features,
+				exp.loc.source,
+				exp.loc.start.offset,
+				exp.loc,
 				'(',
 				')'
 			);

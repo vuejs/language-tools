@@ -118,10 +118,11 @@ export function* generateTemplateChild(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			content,
-			node.content.loc,
-			start,
+			'template',
 			ctx.codeFeatures.all,
+			content,
+			start,
+			node.content.loc,
 			`(`,
 			`)${endOfLine}`
 		);

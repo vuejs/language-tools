@@ -116,10 +116,11 @@ export function* generateComponent(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			dynamicTagInfo.tag,
-			dynamicTagInfo.astHolder,
-			dynamicTagInfo.offsets[0],
+			'template',
 			ctx.codeFeatures.all,
+			dynamicTagInfo.tag,
+			dynamicTagInfo.offsets[0],
+			dynamicTagInfo.astHolder,
 			'(',
 			')'
 		);
@@ -128,13 +129,14 @@ export function* generateComponent(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				dynamicTagInfo.tag,
-				dynamicTagInfo.astHolder,
-				dynamicTagInfo.offsets[1],
+				'template',
 				{
 					...ctx.codeFeatures.all,
 					completion: false,
 				},
+				dynamicTagInfo.tag,
+				dynamicTagInfo.offsets[1],
+				dynamicTagInfo.astHolder,
 				'(',
 				')'
 			);
@@ -360,10 +362,11 @@ function* generateFailedPropExps(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			failedExp.node.loc.source,
-			failedExp.node.loc,
-			failedExp.node.loc.start.offset,
+			'template',
 			ctx.codeFeatures.all,
+			failedExp.node.loc.source,
+			failedExp.node.loc.start.offset,
+			failedExp.node.loc,
 			failedExp.prefix,
 			failedExp.suffix
 		);

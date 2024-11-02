@@ -148,9 +148,7 @@ export function* generateEventExpression(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			prop.exp.content,
-			prop.exp.loc,
-			prop.exp.loc.start.offset,
+			'template',
 			offset => {
 				if (_isCompoundExpression && isFirstMapping) {
 					isFirstMapping = false;
@@ -169,6 +167,9 @@ export function* generateEventExpression(
 				}
 				return ctx.codeFeatures.all;
 			},
+			prop.exp.content,
+			prop.exp.loc.start.offset,
+			prop.exp.loc,
 			prefix,
 			suffix
 		);

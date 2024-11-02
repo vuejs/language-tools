@@ -38,19 +38,21 @@ export const codeFeatures = {
 };
 
 export interface ScriptCodegenOptions {
-	fileName: string;
 	ts: typeof ts;
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	sfc: Sfc;
+	edited: boolean;
+	fileName: string;
 	lang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[]; } | undefined;
-	edited: boolean;
-	appendGlobalTypes: boolean;
+	destructuredPropNames: Set<string>;
+	templateRefNames: Set<string>;
 	getGeneratedLength: () => number;
 	linkedCodeMappings: Mapping[];
+	appendGlobalTypes: boolean;
 }
 
 export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
