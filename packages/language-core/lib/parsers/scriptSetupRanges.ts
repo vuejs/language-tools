@@ -71,8 +71,8 @@ export function parseScriptSetupRanges(
 	const importComponentNames = new Set<string>();
 
 	const leadingCommentRanges = ts.getLeadingCommentRanges(text, 0)?.reverse() ?? [];
-	const leadingCommentEndOffset = leadingCommentRanges.find(range =>
-		range.kind === ts.SyntaxKind.MultiLineCommentTrivia || tsCheckReg.test(text.slice(range.pos, range.end))
+	const leadingCommentEndOffset = leadingCommentRanges.find(
+		range => tsCheckReg.test(text.slice(range.pos, range.end))
 	)?.end ?? 0;
 
 	let bindings = parseBindingRanges(ts, ast);
