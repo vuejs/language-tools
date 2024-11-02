@@ -2,6 +2,8 @@ import type * as ts from 'typescript';
 import { collectIdentifiers } from '../codegen/utils';
 import type { TextRange, VueCompilerOptions } from '../types';
 
+const tsCheckReg = /^\/\/\s*@ts-(?:no)?check($|\s)/;
+
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
 export function parseScriptSetupRanges(
@@ -66,8 +68,12 @@ export function parseScriptSetupRanges(
 		isModel?: boolean;
 	}[] = [];
 	const text = ast.text;
-	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
 	const importComponentNames = new Set<string>();
+
+	const leadingCommentRanges = ts.getLeadingCommentRanges(text, 0)?.reverse() ?? [];
+	const leadingCommentEndOffset = leadingCommentRanges.find(
+		range => tsCheckReg.test(text.slice(range.pos, range.end))
+	)?.end ?? 0;
 
 	let bindings = parseBindingRanges(ts, ast);
 

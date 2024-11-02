@@ -249,7 +249,7 @@ function* generateSetupFunction(
 	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
-	let nextStart = scriptSetupRanges.importSectionEndOffset;
+	let nextStart = Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset);
 	for (const [codes, start, end] of setupCodeModifies) {
 		yield generateSfcBlockSection(scriptSetup, nextStart, start, codeFeatures.all);
 		for (const code of codes) {
