@@ -1,5 +1,5 @@
-import * as path from 'path';
 import * as fs from 'fs';
+import * as path from 'path';
 import { describe, expect, it } from 'vitest';
 import { createGrammarSnapshot } from 'vscode-tmlanguage-snapshot';
 

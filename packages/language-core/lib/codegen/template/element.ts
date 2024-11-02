@@ -1,8 +1,10 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import type * as ts from 'typescript';
 import { camelize, capitalize } from '@vue/shared';
+import type * as ts from 'typescript';
+import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code, VueCodeInformation } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
+import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { collectVars, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -12,11 +14,9 @@ import { generateElementEvents } from './elementEvents';
 import { type FailedPropExpression, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generateObjectProperty } from './objectProperty';
 import { generatePropertyAccess } from './propertyAccess';
 import { generateTemplateChild } from './templateChild';
-import { generateObjectProperty } from './objectProperty';
-import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import { getNodeText } from '../../parsers/scriptSetupRanges';
 
 const colonReg = /:/g;
 

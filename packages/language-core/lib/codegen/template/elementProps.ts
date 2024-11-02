@@ -4,15 +4,15 @@ import { minimatch } from 'minimatch';
 import { toString } from 'muggle-string';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
+import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { conditionWrapWith, variableNameRegex, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
+import { generateUnicode } from '../utils/unicode';
 import type { TemplateCodegenContext } from './context';
 import { generateEventArg, generateEventExpression } from './elementEvents';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
-import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import { generateUnicode } from '../utils/unicode';
 
 export interface FailedPropExpression {
 	node: CompilerDOM.SimpleExpressionNode;

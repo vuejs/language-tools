@@ -1,9 +1,9 @@
 import { camelize } from '@vue/shared';
-import type * as ts from 'typescript';
 import { posix as path } from 'path-browserify';
-import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
-import { getAllExtensions } from '../languagePlugin';
+import type * as ts from 'typescript';
 import { generateGlobalTypes } from '../codegen/globalTypes';
+import { getAllExtensions } from '../languagePlugin';
+import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;

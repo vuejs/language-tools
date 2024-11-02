@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
-import * as semver from 'semver';
 import { computed, useAllExtensions } from 'reactive-vscode';
+import * as semver from 'semver';
+import * as vscode from 'vscode';
 
 const extensions = useAllExtensions();
 

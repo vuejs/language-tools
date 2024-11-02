@@ -1,7 +1,7 @@
 import * as path from 'path-browserify';
 import type { Code } from '../../types';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import type { TemplateCodegenContext } from '../template/context';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSetupReturns, generateEmitsOption, generatePropsOption } from './component';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';

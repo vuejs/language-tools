@@ -1,12 +1,12 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
+import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine, wrapWith } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import { generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 
 export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,

@@ -1,10 +1,10 @@
 import type { CodeInformation } from '@volar/language-core';
-import { createTsAst } from '../codegen/utils';
+import * as CompilerDOM from '@vue/compiler-dom';
 import { isCompoundExpression } from '../codegen/template/elementEvents';
 import { parseInterpolationNode } from '../codegen/template/templateChild';
 import { parseVForNode } from '../codegen/template/vFor';
+import { createTsAst } from '../codegen/utils';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
-import * as CompilerDOM from '@vue/compiler-dom';
 
 const codeFeatures: CodeInformation = {
 	format: true,
