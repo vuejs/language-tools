@@ -2,12 +2,12 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { endOfLine, newLine, wrapWith } from '../utils';
+import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
-import { generateStringLiteralKey } from './stringLiteralKey';
-import { generateTemplateChild, getVForNode } from './templateChild';
 import { generateStyleScopedClasses } from './styleScopedClasses';
+import { generateTemplateChild, getVForNode } from './templateChild';
 
 export interface TemplateCodegenOptions {
 	ts: typeof ts;

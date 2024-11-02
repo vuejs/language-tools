@@ -4,11 +4,11 @@ import type { Code } from '../../types';
 import { hyphenateAttr } from '../../utils/shared';
 import { endOfLine, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
+import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
-import { generateStringLiteralKey } from './stringLiteralKey';
 
 export function* generateElementDirectives(
 	options: TemplateCodegenOptions,
