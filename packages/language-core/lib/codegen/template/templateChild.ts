@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { endOfLine, newLine } from '../common';
+import { endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
 import type { TemplateCodegenOptions } from './index';
@@ -31,19 +31,30 @@ export function* generateTemplateChild(
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
 	currentComponent: CompilerDOM.ElementNode | undefined,
 	prevNode: CompilerDOM.TemplateChildNode | undefined,
-	componentCtxVar: string | undefined
+	componentCtxVar: string | undefined,
+	isVForChild: boolean = false
 ): Generator<Code> {
 	if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
 		const commentText = prevNode.content.trim().split(' ')[0];
-		if (commentText.match(/^@vue-skip\b[\s\S]*/)) {
+		if (/^@vue-skip\b[\s\S]*/.test(commentText)) {
 			yield `// @vue-skip${newLine}`;
 			return;
 		}
-		else if (commentText.match(/^@vue-ignore\b[\s\S]*/)) {
+		else if (/^@vue-ignore\b[\s\S]*/.test(commentText)) {
 			yield* ctx.ignoreError();
 		}
-		else if (commentText.match(/^@vue-expect-error\b[\s\S]*/)) {
+		else if (/^@vue-expect-error\b[\s\S]*/.test(commentText)) {
 			yield* ctx.expectError(prevNode);
+		}
+		else {
+			const match = prevNode.loc.source.match(/^<!--\s*@vue-generic\b\s*\{(?<content>[^}]*)\}/);
+			if (match) {
+				const { content } = match.groups ?? {};
+				ctx.lastGenericComment = {
+					content,
+					offset: prevNode.loc.start.offset + match[0].indexOf(content)
+				};
+			}
 		}
 	}
 
@@ -82,7 +93,7 @@ export function* generateTemplateChild(
 				node.tagType === CompilerDOM.ElementTypes.ELEMENT
 				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
 			) {
-				yield* generateElement(options, ctx, node, currentComponent, componentCtxVar);
+				yield* generateElement(options, ctx, node, currentComponent, componentCtxVar, isVForChild);
 			}
 			else {
 				yield* generateComponent(options, ctx, node, currentComponent);

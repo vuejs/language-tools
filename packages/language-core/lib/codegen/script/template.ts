@@ -1,10 +1,11 @@
+import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
-import { endOfLine, newLine } from '../common';
 import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { forEachInterpolationSegment } from '../template/interpolation';
 import { generateStyleScopedClasses } from '../template/styleScopedClasses';
+import { endOfLine, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
 
@@ -13,7 +14,7 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 
 	exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
 
-	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
+	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
 		exps.push(`globalThis`);
 	}
 	if (options.sfc.styles.some(style => style.module)) {
@@ -55,15 +56,15 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		nameType = options.sfc.script.content.substring(nameOption.start, nameOption.end);
 	}
 	else if (options.sfc.scriptSetup) {
-		nameType = `'${options.scriptSetupRanges?.options.name ?? options.fileBaseName.substring(0, options.fileBaseName.lastIndexOf('.'))}'`;
+		const baseName = path.basename(options.fileName);
+		nameType = `'${options.scriptSetupRanges?.options.name ?? baseName.substring(0, baseName.lastIndexOf('.'))}'`;
 	}
 	if (nameType) {
-		exps.push(`{} as {
-			[K in ${nameType}]: typeof __VLS_self
-				& (new () => {
-					${getSlotsPropertyName(options.vueCompilerOptions.target)}: typeof ${options.scriptSetupRanges?.slots?.name ?? '__VLS_slots'}
-				})
-		}`);
+		exps.push(
+			`{} as { [K in ${nameType}]: typeof __VLS_self & (new () => { `
+			+ getSlotsPropertyName(options.vueCompilerOptions.target)
+			+ ` : typeof ${options.scriptSetupRanges?.slots.name ?? `__VLS_slots`} }) }`
+		);
 	}
 
 	exps.push(`{} as NonNullable<typeof __VLS_self extends { components: infer C } ? C : {}>`);

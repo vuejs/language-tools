@@ -1,13 +1,14 @@
 import type { Mapping } from '@volar/language-core';
+import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { endOfLine, generateSfcBlockSection, newLine } from '../common';
 import { generateGlobalTypes } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
-import { createScriptCodegenContext, ScriptCodegenContext } from './context';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
+import { createScriptCodegenContext, ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateStyleModulesType } from './styleModulesType';
@@ -37,7 +38,7 @@ export const codeFeatures = {
 };
 
 export interface ScriptCodegenOptions {
-	fileBaseName: string;
+	fileName: string;
 	ts: typeof ts;
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
@@ -56,7 +57,17 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	const ctx = createScriptCodegenContext(options);
 
 	if (options.vueCompilerOptions.__setupedGlobalTypes) {
-		yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+		const globalTypes = options.vueCompilerOptions.__setupedGlobalTypes;
+		if (typeof globalTypes === 'object') {
+			let relativePath = path.relative(path.dirname(options.fileName), globalTypes.absolutePath);
+			if (relativePath !== globalTypes.absolutePath && !relativePath.startsWith('./') && !relativePath.startsWith('../')) {
+				relativePath = './' + relativePath;
+			}
+			yield `/// <reference types="${relativePath}" />${newLine}`;
+		}
+		else {
+			yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+		}
 	}
 	else {
 		yield `/* placeholder */`;
@@ -79,6 +90,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			}
 			else {
 				yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
+				yield* generateScriptSectionPartiallyEnding(options.sfc.script.name, options.sfc.script.content.length, '#3632/both.vue');
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 			}
 		}
@@ -117,7 +129,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				yield `__VLS_template = () => {${newLine}`;
 				const templateCodegenCtx = yield* generateTemplate(options, ctx);
 				yield* generateComponentSelf(options, ctx, templateCodegenCtx);
-				yield `},${newLine}`;
+				yield `}${endOfLine}`;
 				yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
 			}
 		}
@@ -131,12 +143,12 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 
-	yield `;`;
-	if (options.sfc.scriptSetup) {
-		// #4569
-		yield ['', 'scriptSetup', options.sfc.scriptSetup.content.length, codeFeatures.verification];
+	if (options.sfc.script) {
+		yield* generateScriptSectionPartiallyEnding(options.sfc.script.name, options.sfc.script.content.length, '#3632/script.vue');
 	}
-	yield newLine;
+	if (options.sfc.scriptSetup) {
+		yield* generateScriptSectionPartiallyEnding(options.sfc.scriptSetup.name, options.sfc.scriptSetup.content.length, '#4569/main.vue');
+	}
 
 	if (!ctx.generatedTemplate) {
 		yield `function __VLS_template() {${newLine}`;
@@ -161,6 +173,12 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 
 	return ctx;
+}
+
+export function* generateScriptSectionPartiallyEnding(source: string, end: number, mark: string): Generator<Code> {
+	yield `;`;
+	yield ['', source, end, codeFeatures.verification];
+	yield `/* PartiallyEnd: ${mark} */${newLine}`;
 }
 
 function* generateDefineProp(

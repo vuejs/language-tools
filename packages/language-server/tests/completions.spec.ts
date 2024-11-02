@@ -200,6 +200,28 @@ describe('Completions', async () => {
 		await requestCompletionItem('fixture.vue', 'vue', `<template><div v-p|></div></template>`, 'v-pre');
 	});
 
+	// FIXME:
+	it.skip('Directive Modifiers', async () => {
+		expect(
+			(await requestCompletionList('fixture.vue', 'vue', `
+				<template>
+					<div v-foo.|></div>
+				</template>
+
+				<script setup lang="ts">
+				import type { FunctionDirective } from 'vue';
+
+				let vFoo!: FunctionDirective<any, any, 'attr' | 'prop'>;
+				</script>
+			`)).items.map(item => item.label)
+		).toMatchInlineSnapshot(`
+			[
+			  "attr",
+			  "prop"
+			]
+		`);
+	});
+
 	it('$event argument', async () => {
 		await requestCompletionItem('fixture.vue', 'vue', `<template><div @click="console.log($eve|)"></div></template>`, 'event');
 	});
@@ -413,7 +435,7 @@ describe('Completions', async () => {
 			    "kind": "markdown",
 			    "value": "The message to display",
 			  },
-			  "insertTextFormat": 2,
+			  "insertTextFormat": 1,
 			  "kind": 5,
 			  "label": ":msg",
 			  "sortText": "  :msg",
@@ -430,6 +452,44 @@ describe('Completions', async () => {
 			      },
 			    },
 			  },
+			}
+		`);
+	});
+
+	it('Auto insert defines', async () => {
+		expect(
+			(await requestCompletionItem('tsconfigProject/fixture.vue', 'vue', `
+				<script lang="ts" setup>
+				defineProps<{
+					foo: string;
+				}>();
+				props|
+				</script>
+			`, 'props'))
+		).toMatchInlineSnapshot(`
+			{
+			  "additionalTextEdits": [
+			    {
+			      "newText": "const props = ",
+			      "range": {
+			        "end": {
+			          "character": 4,
+			          "line": 2,
+			        },
+			        "start": {
+			          "character": 4,
+			          "line": 2,
+			        },
+			      },
+			    },
+			  ],
+			  "commitCharacters": [
+			    ".",
+			    ",",
+			    ";",
+			  ],
+			  "kind": 6,
+			  "label": "props",
 			}
 		`);
 	});

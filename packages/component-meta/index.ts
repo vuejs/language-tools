@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { createCheckerByJsonConfigBase, createCheckerBase } from './lib/base';
+import { createCheckerBase, createCheckerByJsonConfigBase } from './lib/base';
 import type { MetaCheckerOptions } from './lib/types';
 
 export * from './lib/types';

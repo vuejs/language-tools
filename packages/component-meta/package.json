@@ -1,21 +1,22 @@
 {
 	"name": "vue-component-meta",
-	"version": "2.1.6",
+	"version": "2.1.10",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
 		"**/*.d.ts"
 	],
+	"sideEffects": false,
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/component-meta"
 	},
 	"dependencies": {
-		"@volar/typescript": "~2.4.1",
-		"@vue/language-core": "2.1.6",
+		"@volar/typescript": "~2.4.8",
+		"@vue/language-core": "2.1.10",
 		"path-browserify": "^1.0.1",
-		"vue-component-type-helpers": "2.1.6"
+		"vue-component-type-helpers": "2.1.10"
 	},
 	"peerDependencies": {
 		"typescript": "*"

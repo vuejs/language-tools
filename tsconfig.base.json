@@ -11,8 +11,6 @@
 		"noUnusedParameters": true,
 		"esModuleInterop": false,
 		"forceConsistentCasingInFileNames": true,
-		"ignoreDeprecations": "5.0",
-		"importsNotUsedAsValues": "error",
 	},
 	"include": [ ],
 }

@@ -3,8 +3,8 @@ import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { hyphenateAttr } from '../../utils/shared';
-import { combineLastMapping, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../common';
-import { generateCamelized } from './camelized';
+import { combineLastMapping, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../utils';
+import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -17,7 +17,7 @@ export function* generateElementEvents(
 	componentInstanceVar: string,
 	emitVar: string,
 	eventsVar: string
-): Generator<Code> {
+): Generator<Code, boolean> {
 	let usedComponentEventsVar = false;
 	let propsVar: string | undefined;
 	for (const prop of node.props) {

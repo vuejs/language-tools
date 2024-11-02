@@ -254,3 +254,52 @@ Finally you need to make VS Code recognize your new extension and automatically 
 - [angular](https://github.com/angular/angular) shows how TS server plugin working with language service.
 - Syntax highlight is rewritten base on [vue-syntax-highlight](https://github.com/vuejs/vue-syntax-highlight).
 - [vscode-fenced-code-block-grammar-injection-example](https://github.com/mjbvz/vscode-fenced-code-block-grammar-injection-example) shows how to inject vue syntax highlight to markdown.
+
+## Commands
+
+<!-- commands -->
+
+| Command                        | Title                                             |
+| ------------------------------ | ------------------------------------------------- |
+| `vue.action.restartServer`     | Vue: Restart Vue and TS servers                   |
+| `vue.action.doctor`            | Vue: Doctor                                       |
+| `vue.action.writeVirtualFiles` | Vue (Debug): Write Virtual Files                  |
+| `vue.action.splitEditors`      | Vue: Split <script>, <template>, <style> Editors  |
+| `vue.findAllFileReferences`    | Vue: Find File References via Vue Language Server |
+
+<!-- commands -->
+
+## Configs
+
+<!-- configs -->
+
+| Key                                   | Description                                                                                                                                                        | Type             | Default                             |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | ----------------------------------- |
+| `vue.trace.server`                    | Traces the communication between VS Code and the language server.                                                                                                  | `string`         | `"off"`                             |
+| `vue.server.hybridMode`               | Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin.                                         | `boolean,string` | `"auto"`                            |
+| `vue.server.includeLanguages`         |                                                                                                                                                                    | `array`          | `["vue"]`                           |
+| `vue.server.maxOldSpaceSize`          | Set --max-old-space-size option on server process. If you have problem on frequently "Request textDocument/** failed." error, try setting higher memory(MB) on it. | `number,null`    | `null`                              |
+| `vue.doctor.status`                   | Show known problems in status bar.                                                                                                                                 | `boolean`        | `true`                              |
+| `vue.splitEditors.icon`               | Show split editor icon in title area of editor.                                                                                                                    | `boolean`        | `false`                             |
+| `vue.splitEditors.layout.left`        |                                                                                                                                                                    | `array`          | `["script","scriptSetup","styles"]` |
+| `vue.splitEditors.layout.right`       |                                                                                                                                                                    | `array`          | `["template","customBlocks"]`       |
+| `vue.updateImportsOnFileMove.enabled` | Enabled update imports on file move.                                                                                                                               | `boolean`        | `true`                              |
+| `vue.codeActions.enabled`             | Enabled code actions.                                                                                                                                              | `boolean`        | `true`                              |
+| `vue.codeActions.askNewComponentName` | Ask for new component name when extract component.                                                                                                                 | `boolean`        | `true`                              |
+| `vue.codeLens.enabled`                | Enabled code lens.                                                                                                                                                 | `boolean`        | `true`                              |
+| `vue.complete.casing.tags`            | Preferred tag name case.                                                                                                                                           | `string`         | `"autoPascal"`                      |
+| `vue.complete.casing.props`           | Preferred attr name case.                                                                                                                                          | `string`         | `"autoKebab"`                       |
+| `vue.complete.defineAssignment`       | Auto add `const props = ` before `defineProps` when selecting the completion item `props`. (also `emit` and `slots`)                                               | `boolean`        | `true`                              |
+| `vue.autoInsert.dotValue`             | Auto-complete Ref value with `.value`.                                                                                                                             | `boolean`        | `false`                             |
+| `vue.autoInsert.bracketSpacing`       | Auto add space between double curly brackets: {{|}} -> {{ | }}                                                                                                     | `boolean`        | `true`                              |
+| `vue.inlayHints.destructuredProps`    | Show inlay hints for destructured props.                                                                                                                           | `boolean`        | `false`                             |
+| `vue.inlayHints.missingProps`         | Show inlay hints for missing required props.                                                                                                                       | `boolean`        | `false`                             |
+| `vue.inlayHints.inlineHandlerLeading` | Show inlay hints for event argument in inline handlers.                                                                                                            | `boolean`        | `false`                             |
+| `vue.inlayHints.optionsWrapper`       | Show inlay hints for component options wrapper for type support.                                                                                                   | `boolean`        | `false`                             |
+| `vue.inlayHints.vBindShorthand`       | Show inlay hints for v-bind shorthand.                                                                                                                             | `boolean`        | `false`                             |
+| `vue.format.template.initialIndent`   |                                                                                                                                                                    | `boolean`        | `true`                              |
+| `vue.format.style.initialIndent`      |                                                                                                                                                                    | `boolean`        | `false`                             |
+| `vue.format.script.initialIndent`     |                                                                                                                                                                    | `boolean`        | `false`                             |
+| `vue.format.wrapAttributes`           |                                                                                                                                                                    | `string`         | `"auto"`                            |
+
+<!-- configs -->

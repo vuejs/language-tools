@@ -1,9 +1,9 @@
 import { camelize } from '@vue/shared';
-import type * as ts from 'typescript';
 import { posix as path } from 'path-browserify';
-import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
-import { getAllExtensions } from '../languagePlugin';
+import type * as ts from 'typescript';
 import { generateGlobalTypes } from '../codegen/globalTypes';
+import { getAllExtensions } from '../languagePlugin';
+import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -281,9 +281,9 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions, host: {
 	fileExists(path: string): boolean;
 	writeFile?(path: string, data: string): void;
-}) {
+}): VueCompilerOptions['__setupedGlobalTypes'] {
 	if (!host.writeFile) {
-		return false;
+		return;
 	}
 	try {
 		let dir = rootDir;
@@ -297,8 +297,6 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', `${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
 		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
 		host.writeFile(globalTypesPath, globalTypesContents);
-		return true;
-	} catch {
-		return false;
-	}
+		return { absolutePath: globalTypesPath };
+	} catch { }
 }

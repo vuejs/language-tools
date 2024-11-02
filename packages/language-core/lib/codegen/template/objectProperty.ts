@@ -1,11 +1,11 @@
 import { camelize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
-import { combineLastMapping, variableNameRegex, wrapWith } from '../common';
-import { generateCamelized } from './camelized';
+import { combineLastMapping, variableNameRegex, wrapWith } from '../utils';
+import { generateCamelized } from '../utils/camelized';
+import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateStringLiteralKey } from './stringLiteralKey';
 
 export function* generateObjectProperty(
 	options: TemplateCodegenOptions,
@@ -43,9 +43,9 @@ export function* generateObjectProperty(
 				offset,
 				offset + code.length,
 				features,
-				`"`,
+				`'`,
 				...generateCamelized(code, offset, combineLastMapping),
-				`"`
+				`'`
 			);
 		}
 	}

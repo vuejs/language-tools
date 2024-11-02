@@ -1,20 +1,19 @@
 import type { Code } from '../../types';
+import { endOfLine, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
 import { ScriptCodegenOptions, codeFeatures } from './index';
 import { generateCssClassProperty } from './template';
-import { endOfLine, newLine } from '../common';
 
 export function* generateStyleModulesType(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext
 ): Generator<Code> {
-	const styles = options.sfc.styles.filter(style => style.module);
-	if (!styles.length) {
+	const styles = options.sfc.styles.map((style, i) => [style, i] as const).filter(([style]) => style.module);
+	if (!styles.length && !options.scriptSetupRanges?.cssModules.length) {
 		return;
 	}
 	yield `type __VLS_StyleModules = {${newLine}`;
-	for (let i = 0; i < styles.length; i++) {
-		const style = styles[i];
+	for (const [style, i] of styles) {
 		const { name, offset } = style.module!;
 		if (offset) {
 			yield [
@@ -39,6 +38,5 @@ export function* generateStyleModulesType(
 		}
 		yield `>${endOfLine}`;
 	}
-	yield `}`;
-	yield endOfLine;
+	yield `}${endOfLine}`;
 }

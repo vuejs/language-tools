@@ -1,5 +1,5 @@
 import type { Code, Sfc } from '../../types';
-import { endOfLine } from '../common';
+import { endOfLine } from '../utils';
 import { codeFeatures } from './index';
 
 export function* generateSrc(

@@ -1,11 +1,11 @@
-import type { LanguageServicePlugin, LanguageServicePluginInstance, LanguageServiceContext } from '@volar/language-service';
+import type { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
-import { loadLanguageBlocks } from './data';
 import { URI } from 'vscode-uri';
+import { loadLanguageBlocks } from './data';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
@@ -23,7 +23,7 @@ export function create(): LanguageServicePlugin {
 				const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
 				const blockTypes = ['template', 'script', 'style'];
 
-				for (const customBlock of vueCode.sfc.customBlocks) {
+				for (const customBlock of vueCode._sfc.customBlocks) {
 					blockTypes.push(customBlock.type);
 				}
 
@@ -77,7 +77,7 @@ export function create(): LanguageServicePlugin {
 					return worker(document, context, vueSourceFile => {
 
 						const result: vscode.DocumentSymbol[] = [];
-						const descriptor = vueSourceFile.sfc;
+						const descriptor = vueSourceFile._sfc;
 
 						if (descriptor.template) {
 							result.push({

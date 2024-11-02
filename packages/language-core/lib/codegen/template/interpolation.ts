@@ -1,8 +1,8 @@
-import { isGloballyWhitelisted } from '@vue/shared';
+import { isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 import { getNodeText, getStartEnd } from '../../parsers/scriptSetupRanges';
 import type { Code, VueCodeInformation } from '../../types';
-import { collectVars, createTsAst } from '../common';
+import { collectVars, createTsAst } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 
@@ -18,11 +18,6 @@ export function* generateInterpolation(
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
-	const vars: {
-		text: string,
-		isShorthand: boolean,
-		offset: number,
-	}[] = [];
 	for (let [section, offset, type] of forEachInterpolationSegment(
 		options.ts,
 		options.destructuredPropNames,
@@ -70,11 +65,6 @@ export function* generateInterpolation(
 			yield addSuffix;
 		}
 	}
-	if (start !== undefined) {
-		for (const v of vars) {
-			v.offset = start + v.offset - prefix.length;
-		}
-	}
 }
 
 export function* forEachInterpolationSegment(
@@ -97,7 +87,7 @@ export function* forEachInterpolationSegment(
 		if (
 			ctx.hasLocalVariable(text) ||
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
-			isGloballyWhitelisted(text) ||
+			isGloballyAllowed(text) ||
 			text === 'require' ||
 			text.startsWith('__VLS_')
 		) {
