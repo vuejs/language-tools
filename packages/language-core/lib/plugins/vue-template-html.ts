@@ -181,6 +181,10 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							if (node.isStatic) {
 								return false;
 							}
+							else if (!node.loc.source) {
+								// :class="..." -> :class=""
+								return false;
+							}
 							else {
 								node.content = node.loc.source;
 							}
