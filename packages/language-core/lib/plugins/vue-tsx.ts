@@ -1,5 +1,5 @@
 import type { Mapping } from '@volar/language-core';
-import { computed } from 'alien-signals';
+import { computed, Unstable } from 'alien-signals';
 import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
@@ -124,48 +124,44 @@ function createTsx(
 			codes: codes,
 		};
 	});
-	const scriptSetupBindingNames = computed<Set<string>>(oldNames => {
-		const newNames = new Set<string>();
-		const bindings = scriptSetupRanges.get()?.bindings;
-		if (_sfc.scriptSetup && bindings) {
-			for (const binding of bindings) {
-				newNames.add(_sfc.scriptSetup?.content.slice(binding.start, binding.end));
+	const scriptSetupBindingNames = Unstable.computedSet(
+		computed(() => {
+			const newNames = new Set<string>();
+			const bindings = scriptSetupRanges.get()?.bindings;
+			if (_sfc.scriptSetup && bindings) {
+				for (const binding of bindings) {
+					newNames.add(_sfc.scriptSetup?.content.slice(binding.start, binding.end));
+				}
 			}
-		}
-		if (newNames && oldNames && twoSetsEqual(newNames, oldNames)) {
-			return oldNames;
-		}
-		return newNames;
-	});
-	const scriptSetupImportComponentNames = computed<Set<string>>(oldNames => {
-		const newNames = scriptSetupRanges.get()?.importComponentNames ?? new Set();
-		if (oldNames && twoSetsEqual(newNames, oldNames)) {
-			return oldNames;
-		}
-		return newNames;
-	});
-	const destructuredPropNames = computed<Set<string>>(oldNames => {
-		const newNames = new Set(scriptSetupRanges.get()?.props.destructured);
-		const rest = scriptSetupRanges.get()?.props.destructuredRest;
-		if (rest) {
-			newNames.add(rest);
-		}
-		if (oldNames && twoSetsEqual(newNames, oldNames)) {
-			return oldNames;
-		}
-		return newNames;
-	});
-	const templateRefNames = computed<Set<string>>(oldNames => {
-		const newNames = new Set(
-			scriptSetupRanges.get()?.templateRefs
-				.map(({ name }) => name)
-				.filter(name => name !== undefined)
-		);
-		if (oldNames && twoSetsEqual(newNames, oldNames)) {
-			return oldNames;
-		}
-		return newNames;
-	});
+			return newNames;
+		})
+	);
+	const scriptSetupImportComponentNames = Unstable.computedSet(
+		computed(() => {
+			const newNames = scriptSetupRanges.get()?.importComponentNames ?? new Set();
+			return newNames;
+		})
+	);
+	const destructuredPropNames = Unstable.computedSet(
+		computed(() => {
+			const newNames = new Set(scriptSetupRanges.get()?.props.destructured);
+			const rest = scriptSetupRanges.get()?.props.destructuredRest;
+			if (rest) {
+				newNames.add(rest);
+			}
+			return newNames;
+		})
+	);
+	const templateRefNames = Unstable.computedSet(
+		computed(() => {
+			const newNames = new Set(
+				scriptSetupRanges.get()?.templateRefs
+					.map(({ name }) => name)
+					.filter(name => name !== undefined)
+			);
+			return newNames;
+		})
+	);
 	const hasDefineSlots = computed(() => !!scriptSetupRanges.get()?.slots.define);
 	const slotsAssignName = computed(() => scriptSetupRanges.get()?.slots.name);
 	const propsAssignName = computed(() => scriptSetupRanges.get()?.props.name);
@@ -219,16 +215,4 @@ function createTsx(
 		generatedScript,
 		generatedTemplate,
 	};
-}
-
-function twoSetsEqual(a: Set<string>, b: Set<string>) {
-	if (a.size !== b.size) {
-		return false;
-	}
-	for (const file of a) {
-		if (!b.has(file)) {
-			return false;
-		}
-	}
-	return true;
 }
