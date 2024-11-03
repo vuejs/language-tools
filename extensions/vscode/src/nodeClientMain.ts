@@ -1,7 +1,7 @@
 import { createLabsInfo } from '@volar/vscode';
 import * as lsp from '@volar/vscode/node';
 import * as protocol from '@vue/language-server/protocol';
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';

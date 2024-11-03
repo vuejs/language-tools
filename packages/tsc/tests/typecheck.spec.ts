@@ -1,4 +1,4 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
 import { run } from '..';
 

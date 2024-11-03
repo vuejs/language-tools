@@ -1,7 +1,7 @@
-import * as fs from 'fs';
-import * as net from 'net';
-import * as os from 'os';
-import * as path from 'path';
+import * as fs from 'node:fs';
+import * as net from 'node:net';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import type * as ts from 'typescript';
 import type { ProjectInfo, Request } from './server';
 
