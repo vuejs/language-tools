@@ -16,7 +16,7 @@ export function createHybridModeProject(
 			project: ProjectContext;
 		}): void;
 	}>
-): LanguageServerProject {
+) {
 	let simpleLs: Promise<LanguageService> | undefined;
 	let server: LanguageServer;
 

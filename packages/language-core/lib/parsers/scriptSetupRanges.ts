@@ -136,11 +136,7 @@ export function parseScriptSetupRanges(
 		return getStartEnd(ts, node, ast);
 	}
 
-	function parseDefineFunction(node: ts.CallExpression): TextRange & {
-		exp: TextRange;
-		arg?: TextRange;
-		typeArg?: TextRange;
-	} {
+	function parseDefineFunction(node: ts.CallExpression) {
 		return {
 			..._getStartEnd(node),
 			exp: _getStartEnd(node.expression),
@@ -499,7 +495,7 @@ export function getStartEnd(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	sourceFile: ts.SourceFile
-) {
+): TextRange {
 	return {
 		start: (ts as any).getTokenPosOfNode(node, sourceFile) as number,
 		end: node.end,

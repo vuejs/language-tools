@@ -40,7 +40,7 @@ export async function activate(client: BaseLanguageClient) {
 		scheme,
 		{
 			onDidChange: docChangeEvent.event,
-			async provideTextDocumentContent(doctorUri: vscode.Uri): Promise<string | undefined> {
+			async provideTextDocumentContent(doctorUri: vscode.Uri) {
 
 				const fileUri = doctorUri.with({
 					scheme: 'file',
@@ -260,12 +260,12 @@ export async function activate(client: BaseLanguageClient) {
 	}
 }
 
-function getPackageJsonOfWorkspacePackage(folder: string, pkg: string): { path: string, json: { version: string; }; } | undefined {
+function getPackageJsonOfWorkspacePackage(folder: string, pkg: string) {
 	try {
 		const path = require.resolve(pkg + '/package.json', { paths: [folder] });
 		return {
 			path,
-			json: require(path),
+			json: require(path) as { version: string },
 		};
 	} catch { }
 }

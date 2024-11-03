@@ -666,11 +666,11 @@ function createSchemaResolvers(
 
 		return type;
 	}
-	function getDeclarations(declaration: ts.Declaration[]): Declaration[] {
+	function getDeclarations(declaration: ts.Declaration[]) {
 		if (noDeclarations) {
 			return [];
 		}
-		return declaration.map(getDeclaration).filter(d => !!d) as Declaration[];
+		return declaration.map(getDeclaration).filter(d => !!d);
 	}
 	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
 		const fileName = declaration.getSourceFile().fileName;

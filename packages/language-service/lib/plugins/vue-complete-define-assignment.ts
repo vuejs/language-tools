@@ -1,4 +1,4 @@
-import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 import { TextRange, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
@@ -10,7 +10,7 @@ export function create(): LanguageServicePlugin {
 		capabilities: {
 			completionProvider: {},
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			return {
 				isAdditionalCompletion: true,
 				async provideCompletionItems(document) {

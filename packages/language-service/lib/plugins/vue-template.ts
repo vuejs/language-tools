@@ -86,7 +86,7 @@ export function create(
 				},
 			}
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			const baseServiceInstance = baseService.create(context);
 
@@ -1032,7 +1032,7 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 
 function getPropName(
 	itemKey: ReturnType<typeof resolveItemKey> & {}
-): { isEvent: boolean, propName: string; } {
+) {
 	const name = hyphenateAttr(itemKey.prop);
 	if (name.startsWith('on-')) {
 		return { isEvent: true, propName: name.slice('on-'.length) };

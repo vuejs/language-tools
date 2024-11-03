@@ -42,8 +42,7 @@ const plugin: VueLanguagePlugin = ctx => {
 			if (/script_(js|jsx|ts|tsx)/.test(embeddedFile.id)) {
 				const tsx = _tsx.generatedScript.get();
 				if (tsx) {
-					const content: Code[] = [...tsx.codes];
-					embeddedFile.content = content;
+					embeddedFile.content = [...tsx.codes];
 					embeddedFile.linkedCodeMappings = [...tsx.linkedCodeMappings];
 				}
 			}

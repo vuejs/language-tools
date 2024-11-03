@@ -5,7 +5,7 @@ import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUser
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance, TagNameCasing } from '../types';
+import { LanguageServiceContext, LanguageServicePlugin, TagNameCasing } from '../types';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -16,7 +16,7 @@ export function create(
 		capabilities: {
 			documentDropEditsProvider: true,
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			if (!context.project.vue) {
 				return {};
 			}

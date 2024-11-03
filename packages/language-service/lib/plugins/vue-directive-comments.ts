@@ -1,4 +1,4 @@
-import type { CompletionItem, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { CompletionItem, LanguageServicePlugin } from '@volar/language-service';
 import type * as vscode from 'vscode-languageserver-protocol';
 
 const cmds = [
@@ -18,7 +18,7 @@ export function create(): LanguageServicePlugin {
 				triggerCharacters: ['@'],
 			},
 		},
-		create(): LanguageServicePluginInstance {
+		create() {
 			return {
 				provideCompletionItems(document, position) {
 

@@ -77,7 +77,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 					return createProxyObject(completed);
 
-					function createProxyObject(target: any): any {
+					function createProxyObject(target: any) {
 						const proxys = new WeakMap();
 						return new Proxy(target, {
 							get(target, prop, receiver) {

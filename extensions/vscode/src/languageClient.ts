@@ -50,7 +50,7 @@ export function activate(
 	});
 }
 
-export function deactivate(): Thenable<any> | undefined {
+export function deactivate() {
 	return client?.stop();
 }
 

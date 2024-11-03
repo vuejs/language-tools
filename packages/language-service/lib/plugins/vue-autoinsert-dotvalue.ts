@@ -1,4 +1,4 @@
-import type { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -27,7 +27,7 @@ export function create(
 				configurationSections: ['vue.autoInsert.dotValue'],
 			},
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			let currentReq = 0;
 			return {

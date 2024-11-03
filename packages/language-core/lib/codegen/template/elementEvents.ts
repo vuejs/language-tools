@@ -211,7 +211,7 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 	return result;
 }
 
-function isPropertyAccessOrId(ts: typeof import('typescript'), node: ts.Node): boolean {
+function isPropertyAccessOrId(ts: typeof import('typescript'), node: ts.Node) {
 	if (ts.isIdentifier(node)) {
 		return true;
 	}

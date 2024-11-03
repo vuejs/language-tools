@@ -49,7 +49,7 @@ declare module '@volar/language-service' {
 export function getFullLanguageServicePlugins(
 	ts: typeof import('typescript'),
 	{ disableAutoImportCache }: { disableAutoImportCache?: boolean; } = {}
-): LanguageServicePlugin[] {
+) {
 	const plugins: LanguageServicePlugin[] = [
 		...createTypeScriptPlugins(ts, { disableAutoImportCache }),
 		...getCommonLanguageServicePlugins(
@@ -170,7 +170,7 @@ export function getFullLanguageServicePlugins(
 export function getHybridModeLanguageServicePlugins(
 	ts: typeof import('typescript'),
 	getTsPluginClient: typeof import("@vue/typescript-plugin/lib/client")
-): LanguageServicePlugin[] {
+) {
 	const plugins = [
 		createTypeScriptSyntacticPlugin(ts),
 		createTypeScriptDocCommentTemplatePlugin(ts),

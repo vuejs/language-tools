@@ -156,7 +156,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 function getPartialVueCompilerOptions(
 	ts: typeof import('typescript'),
 	tsConfigSourceFile: ts.TsConfigSourceFile
-): Partial<VueCompilerOptions> {
+) {
 
 	const folder = path.dirname(tsConfigSourceFile.fileName);
 	const obj = ts.convertToObject(tsConfigSourceFile, []);
@@ -205,7 +205,7 @@ function getPartialVueCompilerOptions(
 
 	return result;
 
-	function resolvePath(scriptPath: string): string | undefined {
+	function resolvePath(scriptPath: string) {
 		try {
 			if (require?.resolve) {
 				return require.resolve(scriptPath, { paths: [folder] });

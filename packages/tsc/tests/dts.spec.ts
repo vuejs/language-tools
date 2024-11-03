@@ -88,7 +88,7 @@ function readFilesRecursive(dir: string) {
 	return result;
 }
 
-function shortenPath(path: string): string {
+function shortenPath(path: string) {
 	path = normalizePath(path);
 	const segments = path.split('/');
 	return segments.slice(-2).join('/');

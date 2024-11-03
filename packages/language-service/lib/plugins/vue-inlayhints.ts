@@ -1,4 +1,3 @@
-import type { LanguageServicePluginInstance } from '@volar/language-service';
 import { tsCodegen, VueVirtualCode } from '@vue/language-core';
 import { collectIdentifiers } from '@vue/language-core/lib/codegen/utils/index';
 import type * as ts from 'typescript';
@@ -12,7 +11,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 		capabilities: {
 			inlayHintProvider: {},
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			return {
 				async provideInlayHints(document, range) {
 

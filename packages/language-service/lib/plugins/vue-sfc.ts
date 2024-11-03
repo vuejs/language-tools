@@ -1,4 +1,4 @@
-import type { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
 import * as vue from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
@@ -43,7 +43,7 @@ export function create(): LanguageServicePlugin {
 	return {
 		...htmlPlugin,
 		name: 'vue-sfc',
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			const htmlPluginInstance = htmlPlugin.create(context);
 
 			return {
