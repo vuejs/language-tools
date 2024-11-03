@@ -83,8 +83,8 @@ export type VueLanguagePluginReturn = {
 
 export type VueLanguagePlugin = (ctx: {
 	modules: {
-		typescript: typeof import('typescript');
-		'@vue/compiler-dom': typeof import('@vue/compiler-dom');
+		typescript: typeof ts;
+		'@vue/compiler-dom': typeof CompilerDOM;
 	};
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;

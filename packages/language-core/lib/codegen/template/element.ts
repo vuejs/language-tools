@@ -661,7 +661,7 @@ function* generateReferencesForScopedCssClasses(
 			const startOffset = prop.exp.loc.start.offset - 3;
 
 			const { ts } = options;
-			const ast = ts.createSourceFile('', content, 99 satisfies typeof ts.ScriptTarget.Latest);
+			const ast = ts.createSourceFile('', content, 99 satisfies ts.ScriptTarget.Latest);
 			const literals: ts.StringLiteralLike[] = [];
 
 			ts.forEachChild(ast, node => {

@@ -138,14 +138,14 @@ export async function searchNamedPipeServerForFile(fileName: string) {
 			}
 
 			// Find servers containing the current file
-			const containsFile = await sendRequestWorker<boolean>({ type: 'containsFile' satisfies Request['type'], args: [fileName] }, socket);
+			const containsFile = await sendRequestWorker<boolean>({ type: 'containsFile', args: [fileName] }, socket);
 			if (!containsFile) {
 				socket.end();
 				return;
 			}
 
 			// Get project info for each server
-			const projectInfo = await sendRequestWorker<ProjectInfo>({ type: 'projectInfo' satisfies Request['type'], args: [fileName] }, socket);
+			const projectInfo = await sendRequestWorker<ProjectInfo>({ type: 'projectInfo', args: [fileName] }, socket);
 			if (!projectInfo) {
 				socket.end();
 				return;
@@ -179,7 +179,7 @@ export async function searchNamedPipeServerForFile(fileName: string) {
 			}
 
 			// Get project info for each server
-			const projectInfo = await sendRequestWorker<ProjectInfo>({ type: 'projectInfo' satisfies Request['type'], args: [fileName] }, socket);
+			const projectInfo = await sendRequestWorker<ProjectInfo>({ type: 'projectInfo', args: [fileName] }, socket);
 			if (!projectInfo) {
 				socket.end();
 				return;

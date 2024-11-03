@@ -7,7 +7,7 @@ import type { TemplateCodegenContext } from './context';
 
 export function* generateInterpolation(
 	options: {
-		ts: typeof import('typescript'),
+		ts: typeof ts,
 		destructuredPropNames: Set<string> | undefined,
 		templateRefNames: Set<string> | undefined
 	},
