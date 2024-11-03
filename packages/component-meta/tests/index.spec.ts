@@ -39,6 +39,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(bar).toBeDefined();
 		expect(qux).toBeDefined();
 		expect(quxModifiers).toBeDefined();
+		// @todo: order vary depending on withTsconfig option
+		expect(quxModifiers?.type).toMatch(/Partial<Record<(?:"lazy" \| "trim"|"trim" \| "lazy"), true>> \| undefined/);
 		expect(onUpdateFoo).toBeDefined();
 		expect(onUpdateBar).toBeDefined();
 		expect(onUpdateQux).toBeDefined();
