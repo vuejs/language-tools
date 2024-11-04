@@ -72,7 +72,7 @@ declare const ScriptSetupGenericExact: <T, >(
 		props: {
 			readonly onBar?: ((data: T) => any) | undefined;
 			foo: T;
-		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
+		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps & Record<string, unknown>,
 		attrs: any,
 		slots: Readonly<{ default?(data: T): any; }> & { default?(data: T): any; },
 		emit: { (e: 'bar', data: T): void; },
