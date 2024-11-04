@@ -55,14 +55,14 @@ export function* generateSlotOutlet(
 			startTagOffset + node.tag.length,
 			ctx.codeFeatures.verification,
 			`{${newLine}`,
-			...generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), true),
+			...generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), true, true),
 			`}`
 		);
 		yield `)${endOfLine}`;
 	}
 	else {
 		yield `var ${varSlot} = {${newLine}`;
-		yield* generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), true);
+		yield* generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), options.vueCompilerOptions.strictTemplates, true);
 		yield `}${endOfLine}`;
 
 		if (
