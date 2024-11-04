@@ -8,7 +8,7 @@ declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<t
     props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, never> & Partial<{}> & {
         nonGeneric: string;
         rows: Row[];
-    }> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    }> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps) & Record<string, unknown>;
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {
@@ -71,7 +71,7 @@ exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/compo
 "declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
     props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
         readonly onFoo?: (value: string) => any;
-    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onFoo"> & Partial<{}> & {}> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onFoo"> & Partial<{}> & {}> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps) & Record<string, unknown>;
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {};
@@ -97,7 +97,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         title?: string;
     } & {
         foo: number;
-    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps) & Record<string, unknown>;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
@@ -133,7 +133,7 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
         title?: string;
     } & {
         foo: number;
-    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    })> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps) & Record<string, unknown>;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
