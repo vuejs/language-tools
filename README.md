@@ -34,6 +34,9 @@
 
 Note: The "Take Over" mode has been discontinued. Instead, a new "Hybrid" mode has been introduced. In this mode, the Vue Language Server exclusively manages the CSS/HTML sections. As a result, you must run `@vue/language-server` in conjunction with a TypeScript server that employs `@vue/typescript-plugin`. Below is a streamlined configuration for Neovim's LSP, updated to accommodate the language server following the upgrade to version `2.0.0`.
 
+> [!NOTE]
+> For nvim-lspconfig versions below [v1.0.0](https://newreleases.io/project/github/neovim/nvim-lspconfig/release/v1.0.0) use tsserver instead of ts_ls, e.g. `lspconfig.ts_ls.setup`
+
 ```lua
 -- If you are using mason.nvim, you can get the ts_plugin_path like this
 -- local mason_registry = require('mason-registry')
@@ -43,7 +46,7 @@ local vue_language_server_path = '/path/to/@vue/language-server'
 
 local lspconfig = require('lspconfig')
 
-lspconfig.tsserver.setup {
+lspconfig.ts_ls.setup {
   init_options = {
     plugins = {
       {
@@ -62,7 +65,7 @@ lspconfig.volar.setup {}
 
 ### Non-Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
 
-Note: If `hybridMode` is set to `false` `Volar` will run embedded `tsserver` therefore there is no need to run it separately.
+Note: If `hybridMode` is set to `false` `Volar` will run embedded `ts_ls` therefore there is no need to run it separately.
 
 For more information see [#4119](https://github.com/vuejs/language-tools/pull/4119)
 
@@ -72,7 +75,7 @@ Use volar for all `.{vue,js,ts,tsx,jsx}` files.
 ```lua
 local lspconfig = require('lspconfig')
 
--- lspconfig.tsserver.setup {} 
+-- lspconfig.ts_ls.setup {} 
 lspconfig.volar.setup {
   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
   init_options = {
@@ -83,11 +86,11 @@ lspconfig.volar.setup {
 }
 ```
 
-Use `volar` for only `.vue` files and `tsserver` for `.ts` and `.js` files.
+Use `volar` for only `.vue` files and `ts_ls` for `.ts` and `.js` files.
 ```lua
 local lspconfig = require('lspconfig')
 
-lspconfig.tsserver.setup {
+lspconfig.ts_ls.setup {
   init_options = {
     plugins = {
       {
