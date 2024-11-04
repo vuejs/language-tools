@@ -212,7 +212,7 @@ export function* generateComponent(
 		startTagOffset + node.tag.length,
 		ctx.codeFeatures.verification,
 		`{`,
-		...generateElementProps(options, ctx, node, props, true, failedPropExps),
+		...generateElementProps(options, ctx, node, props, true, false, failedPropExps),
 		`}`
 	);
 	yield `, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
@@ -315,7 +315,7 @@ export function* generateElement(
 		startTagOffset + node.tag.length,
 		ctx.codeFeatures.verification,
 		`{`,
-		...generateElementProps(options, ctx, node, node.props, true, failedPropExps),
+		...generateElementProps(options, ctx, node, node.props, true, false, failedPropExps),
 		`}`
 	);
 	yield `)${endOfLine}`;

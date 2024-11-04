@@ -55,7 +55,7 @@ export function* generateSlotOutlet(
 			startTagOffset + node.tag.length,
 			ctx.codeFeatures.verification,
 			`{${newLine}`,
-			...generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), true),
+			...generateElementProps(options, ctx, node, node.props.filter(prop => prop !== nameProp), true, true),
 			`}`
 		);
 		yield `)${endOfLine}`;
