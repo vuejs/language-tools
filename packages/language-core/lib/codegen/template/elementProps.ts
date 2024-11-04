@@ -25,8 +25,8 @@ export function* generateElementProps(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
+	strictPropsCheck: boolean,
 	enableCodeFeatures: boolean,
-	alwaysReport: boolean = false,
 	failedPropExps?: FailedPropExpression[]
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
@@ -113,7 +113,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codeInfo = getPropsCodeInfo(options, ctx, alwaysReport, shouldCamelize);
+			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck, shouldCamelize);
 			const codes = wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
@@ -180,7 +180,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codeInfo = getPropsCodeInfo(options, ctx, alwaysReport, true);
+			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck, true);
 			const codes = conditionWrapWith(
 				enableCodeFeatures,
 				prop.loc.start.offset,
@@ -250,9 +250,8 @@ export function* generateElementProps(
 }
 
 function getPropsCodeInfo(
-	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	alwaysReport: boolean,
+	strictPropsCheck: boolean,
 	shouldCamelize: boolean
 ): VueCodeInformation {
 	const codeInfo = ctx.codeFeatures.withoutHighlightAndCompletion;
@@ -264,7 +263,7 @@ function getPropsCodeInfo(
 				resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
 			}
 			: false,
-		verification: options.vueCompilerOptions.strictTemplates || alwaysReport
+		verification: strictPropsCheck
 			? codeInfo.verification
 			: {
 				shouldReport(_source, code) {
