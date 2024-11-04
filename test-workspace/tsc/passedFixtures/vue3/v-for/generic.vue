@@ -1,7 +1,7 @@
 <template>
 	<div v-for="(val, key) in ({} as T)">
 		{{ exactType(val, {} as T[keyof T]) }}
-		{{ exactType(key, {} as keyof T) }}
+		{{ exactType(key, {} as keyof T & string) }}
 	</div>
 </template>
 
