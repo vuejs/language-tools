@@ -34,7 +34,6 @@
 
 Note: The "Take Over" mode has been discontinued. Instead, a new "Hybrid" mode has been introduced. In this mode, the Vue Language Server exclusively manages the CSS/HTML sections. As a result, you must run `@vue/language-server` in conjunction with a TypeScript server that employs `@vue/typescript-plugin`. Below is a streamlined configuration for Neovim's LSP, updated to accommodate the language server following the upgrade to version `2.0.0`.
 
-> [!NOTE]
 > For nvim-lspconfig versions below [v1.0.0](https://newreleases.io/project/github/neovim/nvim-lspconfig/release/v1.0.0) use tsserver instead of ts_ls, e.g. `lspconfig.ts_ls.setup`
 
 ```lua
