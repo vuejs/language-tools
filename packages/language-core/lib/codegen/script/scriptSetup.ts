@@ -441,7 +441,7 @@ function* generateComponentProps(
 				}
 				const modifierType = getRangeName(scriptSetup, defineProp.modifierType);
 				definePropMirrors.set(propModifierName, options.getGeneratedLength());
-				yield `${propModifierName}?: Record<${modifierType}, true>,${endOfLine}`;
+				yield `${propModifierName}?: Partial<Record<${modifierType}, true>>,${endOfLine}`;
 			}
 		}
 		yield `}`;
