@@ -1,7 +1,9 @@
 import * as ts from 'typescript';
-import { Sfc, VueCompilerOptions } from '../types';
+import type { Sfc, VueCompilerOptions } from '../types';
 
-export function parseCompilerOptions(
+const syntaxReg = /^\/\*\*\s*@vue\$(?<key>.+) (?<value>.+)\s*\*\/$/;
+
+export function parseVueCompilerOptions(
 	ts: typeof import('typescript'),
 	sfc: Sfc
 ): Partial<VueCompilerOptions> | undefined {
@@ -29,7 +31,7 @@ export function parseCompilerOptions(
 			.map(range => {
 				try {
 					const text = ast.text.slice(range.pos, range.end)
-					const match = text.match(/^\/\*\*\s*@vue\$(?<key>.+) (?<value>.+)\s*\*\/$/);
+					const match = text.match(syntaxReg);
 					if (match) {
 						const { key, value } = match.groups ?? {};
 						return [key, JSON.parse(value)] as const;

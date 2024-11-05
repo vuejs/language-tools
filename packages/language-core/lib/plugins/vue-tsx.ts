@@ -4,7 +4,7 @@ import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
-import { parseCompilerOptions } from '../parsers/vueCompilerOptions';
+import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
 import { resolveVueCompilerOptions } from '../utils/ts';
 
@@ -80,7 +80,7 @@ function createTsx(
 					: 'js';
 	});
 	const vueCompilerOptions = computed(() => {
-		const options = parseCompilerOptions(ts, _sfc);
+		const options = parseVueCompilerOptions(ts, _sfc);
 		return options
 			? resolveVueCompilerOptions(options, ctx.vueCompilerOptions)
 			: ctx.vueCompilerOptions;
