@@ -33,7 +33,7 @@ const plugin = createLanguageServicePlugin(
 				const timer = setInterval(() => {
 					if (info.project['program']) {
 						clearInterval(timer);
-						(info.project['program'] as any).__vue__ = { language };
+						info.project['program'].__vue__ = { language };
 					}
 				}, 50);
 			}

@@ -372,7 +372,7 @@ export function parseScriptSetupRanges(
 						}
 					});
 					for (const prop of node.arguments[0].properties) {
-						if ((ts.isPropertyAssignment(prop)) && getNodeText(ts, prop.name, ast) === 'name' && ts.isStringLiteral(prop.initializer)) {
+						if (ts.isPropertyAssignment(prop) && getNodeText(ts, prop.name, ast) === 'name' && ts.isStringLiteral(prop.initializer)) {
 							options.name = prop.initializer.text;
 						}
 					}
