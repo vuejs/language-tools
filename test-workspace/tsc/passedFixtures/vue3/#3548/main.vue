@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T">
-// @experimentalDefinePropProposal=johnsonEdition
+/** @vue$experimentalDefinePropProposal "johnsonEdition" */
 
 defineProp<T>();
 </script>

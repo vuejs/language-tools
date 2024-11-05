@@ -55,8 +55,8 @@ export function parseScriptSetupRanges(
 		name?: string;
 		define: ReturnType<typeof parseDefineFunction>;
 	}[] = [];
-	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
-	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
+	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition'
 	const defineProp: {
 		localName: TextRange | undefined;
 		name: TextRange | undefined;

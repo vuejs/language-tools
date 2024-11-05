@@ -1,5 +1,5 @@
 <script setup lang="ts">
-// @experimentalDefinePropProposal=johnsonEdition
+/** @vue$experimentalDefinePropProposal "johnsonEdition" */
 import { exactType } from '../../shared';
 
 const a = defineProp<string>();

@@ -84,7 +84,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			&& options.sfc.script.content[exportDefault.expression.start] === '{';
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 			yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
-			yield* generateDefineProp(options, options.sfc.scriptSetup);
+			yield* generateDefineProp(options);
 			if (exportDefault) {
 				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
@@ -141,7 +141,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 	else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
-		yield* generateDefineProp(options, options.sfc.scriptSetup);
+		yield* generateDefineProp(options);
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 
@@ -183,12 +183,9 @@ export function* generateScriptSectionPartiallyEnding(source: string, end: numbe
 	yield `/* PartiallyEnd: ${mark} */${newLine}`;
 }
 
-function* generateDefineProp(
-	options: ScriptCodegenOptions,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>
-): Generator<Code> {
-	const definePropProposalA = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
-	const definePropProposalB = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
+function* generateDefineProp(options: ScriptCodegenOptions): Generator<Code> {
+	const definePropProposalA = options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+	const definePropProposalB = options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 	if (definePropProposalA || definePropProposalB) {
 		yield `type __VLS_PropOptions<T> = Exclude<import('${options.vueCompilerOptions.lib}').Prop<T>, import('${options.vueCompilerOptions.lib}').PropType<T>>${endOfLine}`;

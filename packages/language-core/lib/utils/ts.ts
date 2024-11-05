@@ -220,27 +220,24 @@ function getPartialVueCompilerOptions(
 	}
 }
 
-export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
-	const target = vueOptions.target ?? 3.3;
-	const lib = vueOptions.lib ?? 'vue';
+function getDefaultOptions(options: Partial<VueCompilerOptions>): VueCompilerOptions {
+	const target = options.target ?? 3.3;
+	const lib = options.lib ?? 'vue';
 	return {
-		...vueOptions,
 		target,
-		extensions: vueOptions.extensions ?? ['.vue'],
-		vitePressExtensions: vueOptions.vitePressExtensions ?? [],
-		petiteVueExtensions: vueOptions.petiteVueExtensions ?? [],
 		lib,
-		jsxSlots: vueOptions.jsxSlots ?? false,
-		strictTemplates: vueOptions.strictTemplates ?? false,
-		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
-		fallthroughAttributes: vueOptions.fallthroughAttributes ?? false,
-		dataAttributes: vueOptions.dataAttributes ?? [],
-		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
-		optionsWrapper: vueOptions.optionsWrapper ?? (
-			target >= 2.7
-				? [`(await import('${lib}')).defineComponent(`, `)`]
-				: [`(await import('${lib}')).default.extend(`, `)`]
-		),
+		extensions: ['.vue'],
+		vitePressExtensions: [],
+		petiteVueExtensions: [],
+		jsxSlots: false,
+		strictTemplates: false,
+		skipTemplateCodegen: false,
+		fallthroughAttributes: false,
+		dataAttributes: [],
+		htmlAttributes: ['aria-*'],
+		optionsWrapper: target >= 2.7
+			? [`(await import('${lib}')).defineComponent(`, `)`]
+			: [`(await import('${lib}')).default.extend(`, `)`],
 		macros: {
 			defineProps: ['defineProps'],
 			defineSlots: ['defineSlots'],
@@ -249,22 +246,38 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			defineModel: ['defineModel'],
 			defineOptions: ['defineOptions'],
 			withDefaults: ['withDefaults'],
-			...vueOptions.macros,
 		},
 		composibles: {
 			useCssModule: ['useCssModule'],
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
-			...vueOptions.composibles,
 		},
-		plugins: vueOptions.plugins ?? [],
+		plugins: [],
+		experimentalDefinePropProposal: false,
+		experimentalResolveStyleCssClasses: 'scoped',
+		experimentalModelPropName: null!
+	}
+};
 
-		// experimental
-		experimentalDefinePropProposal: vueOptions.experimentalDefinePropProposal ?? false,
-		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
+export function resolveVueCompilerOptions(
+	options: Partial<VueCompilerOptions>,
+	defaults: VueCompilerOptions = getDefaultOptions(options)
+): VueCompilerOptions {
+	return {
+		...defaults,
+		...options,
+		macros: {
+			...defaults.macros,
+			...options.macros,
+		},
+		composibles: {
+			...defaults.composibles,
+			...options.composibles,
+		},
+
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 		// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 		experimentalModelPropName: Object.fromEntries(Object.entries(
-			vueOptions.experimentalModelPropName ?? {
+			options.experimentalModelPropName ?? defaults.experimentalModelPropName ?? {
 				'': {
 					input: true
 				},
@@ -299,4 +312,24 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return { absolutePath: globalTypesPath };
 	} catch { }
+}
+
+// isTrueLiteral is missing in tsc
+export function isTrueLiteral(node: ts.Node): node is ts.TrueLiteral {
+	return node.kind === 112 satisfies ts.SyntaxKind.TrueKeyword;
+}
+
+// isFalseLiteral is missing in tsc
+export function isFalseLiteral(node: ts.Node): node is ts.FalseLiteral {
+	return node.kind === 97 satisfies ts.SyntaxKind.FalseKeyword;
+}
+
+// isTemplateExpression is missing in tsc
+export function isTemplateExpression(node: ts.Node): node is ts.TemplateExpression {
+	return node.kind === 228 satisfies ts.SyntaxKind.TemplateExpression;
+}
+
+// isAsExpression is missing in tsc
+export function isAsExpression(node: ts.Node): node is ts.AsExpression {
+	return node.kind === 234 satisfies ts.SyntaxKind.AsExpression;
 }
