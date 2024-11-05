@@ -562,7 +562,7 @@
 		"@vue/language-core": "2.1.10",
 		"@vue/language-server": "2.1.10",
 		"@vue/typescript-plugin": "2.1.10",
-		"esbuild": "~0.21.0",
+		"esbuild": "latest",
 		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"reactive-vscode": "0.2.7-beta.1",
