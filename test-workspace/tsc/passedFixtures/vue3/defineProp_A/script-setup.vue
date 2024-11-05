@@ -1,5 +1,6 @@
+<!-- @experimentalDefinePropProposal "kevinEdition" -->
+
 <script setup lang="ts">
-/** @vue$experimentalDefinePropProposal "kevinEdition" */
 import { exactType } from '../../shared';
 
 interface Qux { qux: true };
