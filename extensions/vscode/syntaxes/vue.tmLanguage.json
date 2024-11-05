@@ -1290,7 +1290,7 @@
 			]
 		},
 		"vue-comments-key-value": {
-			"begin": "(<!--)\\s*(@)([a-zA-Z_$]+)(?=\\s)",
+			"begin": "(<!--)\\s*(@)([\\w$]+)(?=\\s)",
 			"beginCaptures": {
 				"1": {
 					"name": "punctuation.definition.comment.vue"
