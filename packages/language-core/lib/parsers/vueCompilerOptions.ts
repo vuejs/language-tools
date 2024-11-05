@@ -1,7 +1,7 @@
 import * as ts from 'typescript';
 import type { Sfc, VueCompilerOptions } from '../types';
 
-const syntaxReg = /^\/\*\*\s*@vue\$(?<key>.+) (?<value>.+)\s*\*\/$/;
+const syntaxReg = /^\/\*\*\s*@vue\$(?<key>.+?) (?<value>.+?)\s*\*\/$/;
 
 export function parseVueCompilerOptions(
 	ts: typeof import('typescript'),
