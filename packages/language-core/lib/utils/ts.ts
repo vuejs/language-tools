@@ -313,23 +313,3 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 		return { absolutePath: globalTypesPath };
 	} catch { }
 }
-
-// isTrueLiteral is missing in tsc
-export function isTrueLiteral(node: ts.Node): node is ts.TrueLiteral {
-	return node.kind === 112 satisfies ts.SyntaxKind.TrueKeyword;
-}
-
-// isFalseLiteral is missing in tsc
-export function isFalseLiteral(node: ts.Node): node is ts.FalseLiteral {
-	return node.kind === 97 satisfies ts.SyntaxKind.FalseKeyword;
-}
-
-// isTemplateExpression is missing in tsc
-export function isTemplateExpression(node: ts.Node): node is ts.TemplateExpression {
-	return node.kind === 228 satisfies ts.SyntaxKind.TemplateExpression;
-}
-
-// isAsExpression is missing in tsc
-export function isAsExpression(node: ts.Node): node is ts.AsExpression {
-	return node.kind === 234 satisfies ts.SyntaxKind.AsExpression;
-}
