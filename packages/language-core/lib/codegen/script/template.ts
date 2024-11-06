@@ -94,7 +94,7 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 	}
 
 	exps.push(`{} as NonNullable<typeof __VLS_self extends { directives: infer D } ? D : {}>`);
-	exps.push(`__VLS_ctx`);
+	exps.push(`{} as __VLS_PickDirectives<typeof __VLS_ctx>`);
 
 	yield `const __VLS_localDirectives = {${newLine}`;
 	for (const type of exps) {
