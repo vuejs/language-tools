@@ -22,12 +22,23 @@ require('esbuild').context({
 		{
 			name: 'umd2esm',
 			setup(build) {
-				build.onResolve({ filter: /^(vscode-.*-languageservice|jsonc-parser)/ }, args => {
+				build.onResolve({ filter: /^(vscode-.*-languageservice|vscode-languageserver-types|jsonc-parser)$/ }, args => {
 					const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] });
 					// Call twice the replace is to solve the problem of the path in Windows
 					const pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\');
 					return { path: pathEsm };
-				})
+				});
+				build.onResolve({ filter: /^vscode-uri$/ }, args => {
+					const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] });
+					// v3
+					let pathEsm = pathUmdMay.replace('/umd/index.js', '/esm/index.mjs').replace('\\umd\\index.js', '\\esm\\index.mjs');
+					if (pathEsm !== pathUmdMay && fs.existsSync(pathEsm)) {
+						return { path: pathEsm };
+					}
+					// v2
+					pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\');
+					return { path: pathEsm };
+				});
 			},
 		},
 		{
