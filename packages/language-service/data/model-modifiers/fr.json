@@ -5,7 +5,7 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\nPar défaut, `v-model` synchronise l'entrée avec les données après chaque événement `input` (à l'exception de la composition IME comme [indiqué ci-dessus](#vmodel-ime-tip)). Vous pouvez ajouter le modificateur `lazy` pour enclencher la synchronisation après les événements `change` :\n\n```html\n<!-- synchronisé après \"change\" au lieu de \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "Par défaut, `v-model` synchronise l'entrée avec les données après chaque événement `input` (à l'exception de la composition IME comme [indiqué ci-dessus](#vmodel-ime-tip)). Vous pouvez ajouter le modificateur `lazy` pour enclencher la synchronisation après les événements `change` :\n\n```html\n<!-- synchronisé après \"change\" au lieu de \"input\" -->\n<input v-model.lazy=\"msg\" />\n```"
       },
       "references": [
         {
@@ -66,7 +66,7 @@
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "\nSi vous voulez que l'entrée de l'utilisateur soit automatiquement typée comme un nombre, vous pouvez ajouter le modificateur `number` à vos entrées gérées par `v-model` :\n\n```html\n<input v-model.number=\"age\" />\n```\n\nSi la valeur ne peut pas être analysée avec `parseFloat()`, alors la valeur originale est utilisée à la place.\n\nLe modificateur `number` est appliqué automatiquement si l'entrée possède `type=\"number\"`.\n"
+        "value": "Si vous voulez que l'entrée de l'utilisateur soit automatiquement typée comme un nombre, vous pouvez ajouter le modificateur `number` à vos entrées gérées par `v-model` :\n\n```html\n<input v-model.number=\"age\" />\n```\n\nSi la valeur ne peut pas être analysée avec `parseFloat()`, alors la valeur originale (chaîne) est utilisée à la place. En particulier, si l'entrée est vide (par exemple après que l'utilisateur ait effacé le champ de saisie), une chaîne vide est renvoyée. Ce comportement diffère de la [propriété DOM `valueAsNumber`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement#valueasnumber).\n\nLe modificateur `number` est appliqué automatiquement si l'entrée possède `type=\"number\"`."
       },
       "references": [
         {
@@ -127,7 +127,7 @@
       "name": "trim",
       "description": {
         "kind": "markdown",
-        "value": "\nSi vous voulez que les espaces blancs des entrées utilisateur soient automatiquement supprimés, vous pouvez ajouter le modificateur `trim` à vos entrées gérées par `v-model` :\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+        "value": "Si vous voulez que les espaces blancs des entrées utilisateur soient automatiquement supprimés, vous pouvez ajouter le modificateur `trim` à vos entrées gérées par `v-model` :\n\n```html\n<input v-model.trim=\"msg\" />\n```"
       },
       "references": [
         {

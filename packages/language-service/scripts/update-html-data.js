@@ -102,7 +102,7 @@ async function sfcWorker(lang) {
 		name: 'lang',
 		description: {
 			kind: 'markdown',
-			value: sfcDoc.split('\n## ')[4].split('\n').slice(1).join('\n'),
+			value: sfcDoc.split('\n## ')[4].split('\n').slice(1).join('\n').trim(),
 		},
 		values: [
 			// // custom block
@@ -127,7 +127,7 @@ async function sfcWorker(lang) {
 		name: 'src',
 		description: {
 			kind: 'markdown',
-			value: sfcDoc.split('\n## ')[5].split('\n').slice(1).join('\n'),
+			value: sfcDoc.split('\n## ')[5].split('\n').slice(1).join('\n').trim(),
 		},
 		references: langs.map(lang => ({
 			name: lang.name,
@@ -194,7 +194,7 @@ async function sfcWorker(lang) {
 					valueSet: 'v',
 					description: {
 						kind: 'markdown',
-						value: cssFeaturesDoc.split('\n## ')[1].split('\n').slice(1).join('\n'),
+						value: cssFeaturesDoc.split('\n## ')[1].split('\n').slice(1).join('\n').trim(),
 					},
 					references: langs.map(lang => ({
 						name: lang.name,
@@ -206,7 +206,7 @@ async function sfcWorker(lang) {
 					valueSet: 'v',
 					description: {
 						kind: 'markdown',
-						value: cssFeaturesDoc.split('\n## ')[2].split('\n').slice(1).join('\n'),
+						value: cssFeaturesDoc.split('\n## ')[2].split('\n').slice(1).join('\n').trim(),
 					},
 					references: langs.map(lang => ({
 						name: lang.name,
@@ -263,7 +263,7 @@ async function modelWorker(lang) {
 				name,
 				description: {
 					kind: 'markdown',
-					value: lines.slice(1).join('\n'),
+					value: lines.slice(1).join('\n').trim(),
 				},
 				references: langs.map(lang => ({
 					name: lang.name,
@@ -312,7 +312,7 @@ async function templateWorker(lang) {
 					? 'v' : undefined,
 				description: {
 					kind: 'markdown',
-					value: lines.slice(1).join('\n'),
+					value: lines.slice(1).join('\n').trim(),
 				},
 				references: langs.map(lang => ({
 					name: lang.name,
@@ -334,7 +334,7 @@ async function templateWorker(lang) {
 				name,
 				description: {
 					kind: 'markdown',
-					value: lines.slice(1).join('\n'),
+					value: lines.slice(1).join('\n').trim(),
 				},
 				references: langs.map(lang => ({
 					name: lang.name,
