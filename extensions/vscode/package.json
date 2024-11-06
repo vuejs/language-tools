@@ -571,7 +571,6 @@
 		"@vue/language-server": "2.1.10",
 		"@vue/typescript-plugin": "2.1.10",
 		"esbuild": "latest",
-		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"reactive-vscode": "0.2.7-beta.1",
 		"semver": "^7.5.4",
