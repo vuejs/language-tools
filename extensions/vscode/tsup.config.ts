@@ -1,6 +1,6 @@
-import fs from 'node:fs';
+import * as fs from 'node:fs';
 import { createRequire } from 'node:module';
-import path from 'path';
+import * as path from 'node:path';
 import { defineConfig } from 'tsup';
 
 const require = createRequire(import.meta.url);
@@ -28,7 +28,7 @@ export default defineConfig([
 					build.onResolve({ filter: /^(vscode-.*-languageservice|jsonc-parser)/ }, args => {
 						const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] });
 						// Call twice the replace is to solve the problem of the path in Windows
-						const pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\');
+						const pathEsm = pathUmdMay.replace('\\', '/').replace('/umd/', '/esm/');
 						return { path: pathEsm };
 					});
 				},
