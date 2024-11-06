@@ -88,7 +88,7 @@
 		],
 		"typescriptServerPlugins": [
 			{
-				"name": "typescript-vue-plugin-pack",
+				"name": "vue-typescript-plugin-pack",
 				"enableForWorkspaceTypeScriptVersions": true,
 				"configNamespace": "typescript"
 			}

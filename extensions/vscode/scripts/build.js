@@ -7,7 +7,7 @@ require('esbuild').context({
 		'dist/client': './out/nodeClientMain.js',
 		'dist/server': './node_modules/@vue/language-server/bin/vue-language-server.js',
 		'node_modules/vue-language-core-pack/index': './node_modules/@vue/language-core/index.js',
-		'node_modules/typescript-vue-plugin-pack/index': './node_modules/@vue/typescript-plugin/index.js',
+		'node_modules/vue-typescript-plugin-pack/index': './node_modules/@vue/typescript-plugin/index.js',
 	},
 	bundle: true,
 	metafile: process.argv.includes('--metafile'),
