@@ -544,7 +544,7 @@
 	},
 	"scripts": {
 		"prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
-		"build": "node scripts/build",
+		"build": "tsup",
 		"build:minify": "pnpm run build -- --minify",
 		"watch": "pnpm run build -- --watch",
 		"pack": "pnpm run build:minify && vsce package",
@@ -553,6 +553,14 @@
 		"release:next": "pnpm run build && vsce publish --pre-release",
 		"size": "pnpm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html",
 		"postinstall": "vscode-ext-gen --scope vue"
+	},
+	"peerDependencies": {
+		"@volar/vscode": "~2.4.8",
+		"@vue/language-core": "2.1.10",
+		"@vue/language-server": "2.1.10",
+		"reactive-vscode": "0.2.7-beta.1",
+		"semver": "^7.5.4",
+		"vscode-uri": "^3.0.8"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
@@ -568,6 +576,7 @@
 		"reactive-vscode": "0.2.7-beta.1",
 		"semver": "^7.5.4",
 		"vscode-ext-gen": "^0.5.0",
-		"vscode-tmlanguage-snapshot": "latest"
+		"vscode-tmlanguage-snapshot": "latest",
+		"vscode-uri": "^3.0.8"
 	}
 }
