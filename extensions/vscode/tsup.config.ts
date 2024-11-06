@@ -36,12 +36,10 @@ export default defineConfig([
 				name: 'schemas',
 				setup(build) {
 					build.onEnd(() => {
-						if (!fs.existsSync(path.resolve(__dirname, './dist/schemas'))) {
-							fs.mkdirSync(path.resolve(__dirname, './dist/schemas'), { recursive: true });
-						}
 						fs.cpSync(
 							path.resolve(__dirname, './node_modules/@vue/language-core/schemas/vue-tsconfig.schema.json'),
 							path.resolve(__dirname, './dist/schemas/vue-tsconfig.schema.json'),
+							{ recursive: true },
 						);
 					});
 				},
