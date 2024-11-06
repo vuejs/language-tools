@@ -6,7 +6,8 @@ require('esbuild').context({
 	entryPoints: {
 		'dist/client': './out/nodeClientMain.js',
 		'dist/server': './node_modules/@vue/language-server/bin/vue-language-server.js',
-		'node_modules/typescript-vue-plugin-bundle/index': './node_modules/@vue/typescript-plugin/index.js',
+		'node_modules/vue-language-core-pack/index': './node_modules/@vue/language-core/index.js',
+		'node_modules/typescript-vue-plugin-pack/index': './node_modules/@vue/typescript-plugin/index.js',
 	},
 	bundle: true,
 	metafile: process.argv.includes('--metafile'),
@@ -22,11 +23,22 @@ require('esbuild').context({
 			name: 'umd2esm',
 			setup(build) {
 				build.onResolve({ filter: /^(vscode-.*-languageservice|jsonc-parser)/ }, args => {
-					const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
+					const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] });
 					// Call twice the replace is to solve the problem of the path in Windows
-					const pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\')
-					return { path: pathEsm }
+					const pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\');
+					return { path: pathEsm };
 				})
+			},
+		},
+		{
+			name: 'resolve-share-module',
+			setup(build) {
+				build.onResolve({ filter: /^@vue\/language-core$/ }, () => {
+					return {
+						path: 'vue-language-core-pack',
+						external: true,
+					};
+				});
 			},
 		},
 		{

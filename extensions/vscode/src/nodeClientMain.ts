@@ -150,7 +150,7 @@ try {
 			if (!enabledTypeScriptPlugin.value) {
 				text = text.replace(
 					'for(const e of n.contributes.typescriptServerPlugins',
-					s => s + `.filter(p=>p.name!=='typescript-vue-plugin-bundle')`
+					s => s + `.filter(p=>p.name!=='typescript-vue-plugin-pack')`
 				);
 			} else if (enabledHybridMode.value) {
 				// patch readPlugins
@@ -158,7 +158,7 @@ try {
 					'languages:Array.isArray(e.languages)',
 					[
 						'languages:',
-						`e.name==='typescript-vue-plugin-bundle'?[${config.server.includeLanguages
+						`e.name==='typescript-vue-plugin-pack'?[${config.server.includeLanguages
 							.map(lang => `'${lang}'`)
 							.join(',')}]`,
 						':Array.isArray(e.languages)'
