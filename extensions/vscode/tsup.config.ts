@@ -9,8 +9,7 @@ export default defineConfig([
 	{
 		entry: {
 			'dist/client': './out/nodeClientMain.js',
-			'dist/server':
-				'./node_modules/@vue/language-server/bin/vue-language-server.js',
+			'dist/server': './node_modules/@vue/language-server/bin/vue-language-server.js',
 			'./node_modules/typescript-vue-plugin-bundle/index.js': './node_modules/@vue/typescript-plugin/index.js'
 		},
 		bundle: true,
