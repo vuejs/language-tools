@@ -1,6 +1,7 @@
 // @ts-check
 const path = require('path');
 const fs = require('fs');
+const treeShake = require('@kermanx/tree-shaker').treeShake;
 
 require('esbuild').context({
 	entryPoints: {
@@ -17,7 +18,6 @@ require('esbuild').context({
 	platform: 'node',
 	tsconfig: './tsconfig.json',
 	define: { 'process.env.NODE_ENV': '"production"' },
-	minify: process.argv.includes('--minify'),
 	plugins: [
 		{
 			name: 'umd2esm',
@@ -79,15 +79,36 @@ require('esbuild').context({
 				});
 			},
 		},
+		{
+			name: 'tree-shaking',
+			setup(build) {
+				build.onEnd(() => {
+					for (const file of [
+						'../dist/client.js',
+						'../dist/server.js',
+						'../node_modules/vue-language-core-pack/index.js',
+						'../node_modules/vue-typescript-plugin-pack/index.js',
+					]) {
+						console.time('tree-shaking ' + file);
+						const filePath = path.resolve(__dirname, file);
+						const soruce = fs.readFileSync(filePath, 'utf-8');
+						const { output } = treeShake(soruce, 'recommended', process.argv.includes('--minify'));
+						fs.writeFileSync(filePath, output);
+						console.timeEnd('tree-shaking ' + file);
+					}
+				});
+			},
+		},
 	],
 }).then(async ctx => {
-	console.log('building...');
+	console.time('build');
 	if (process.argv.includes('--watch')) {
 		await ctx.watch();
+		console.timeEnd('build');
 		console.log('watching...');
 	} else {
 		await ctx.rebuild();
 		await ctx.dispose();
-		console.log('finished.');
+		console.timeEnd('build');
 	}
 });
