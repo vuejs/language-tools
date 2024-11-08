@@ -545,7 +545,7 @@
 	"scripts": {
 		"__prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
 		"build": "unbuild",
-		"build:minify": "pnpm run build -- --minify",
+		"build:minify": "pnpm run build --minify",
 		"dev": "unbuild --stub",
 		"pack": "pnpm run build:minify && vsce package",
 		"pack:next": "pnpm run build && vsce package",
@@ -555,6 +555,7 @@
 		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {
+		"@types/node": "latest",
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
 		"@volar/vscode": "~2.4.8",

@@ -2,6 +2,7 @@ import { createLabsInfo } from '@volar/vscode';
 import * as lsp from '@volar/vscode/node';
 import * as protocol from '@vue/language-server/protocol';
 import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
@@ -137,12 +138,10 @@ try {
 		'vscode.typescript-language-features'
 	)!;
 	const readFileSync = fs.readFileSync;
-	const extensionJsPath = require.resolve('./dist/extension.js', {
-		paths: [tsExtension.extensionPath],
-	});
+	const extensionJsPath = path.join(tsExtension.extensionPath, './dist/extension.js');
 
 	// @ts-expect-error
-	(globalThis.__VOLAR_DEV_FS__ || fs).readFileSync = (...args) => {
+	(globalThis.__VOLAR_DEV_FS__ || require('fs')).readFileSync = (...args) => {
 		if (args[0] === extensionJsPath) {
 			// @ts-expect-error
 			let text = readFileSync(...args) as string;
