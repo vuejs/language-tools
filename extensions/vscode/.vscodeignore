@@ -1,9 +1,10 @@
 out
-scripts
 src
 tests
 tsconfig.*
+build.config.ts
+vscode.js
 meta.json
 stats.html
-dist/*.mjs
-dist/*.d.ts
+dist/**/*.mjs
+dist/**/*.d.ts
