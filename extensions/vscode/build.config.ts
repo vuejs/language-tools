@@ -1,8 +1,10 @@
 import { defineBuildConfig } from "unbuild";
 import { fileURLToPath } from "url";
 import { join } from "path";
+import { builtinModules } from "node:module";
 import { readFileSync, writeFileSync } from "fs";
 
+const nodeBuiltins = new Set(builtinModules);
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export default defineBuildConfig([
@@ -19,23 +21,23 @@ export default defineBuildConfig([
 				name: "server",
 			},
 			{
-				builder: 'copy',
-				input: './node_modules/@vue/language-core/schemas',
-				outDir: './dist/schemas',
-			}
+				builder: "copy",
+				input: "./node_modules/@vue/language-core/schemas",
+				outDir: "./dist/schemas",
+			},
 		],
 
 		failOnWarn: false,
 
 		alias: {
 			// https://github.com/microsoft/vscode-emmet-helper/issues/79
-			"@vscode/emmet-helper": "@vscode/emmet-helper/lib/cjs/emmetHelper.js"
+			"@vscode/emmet-helper": "@vscode/emmet-helper/lib/cjs/emmetHelper.js",
 		},
 
 		rollup: {
 			emitCJS: true,
 			esbuild: {
-				target: 'ES2021'
+				target: "ES2021",
 			},
 			commonjs: {
 				transformMixedEsModules: true,
@@ -62,6 +64,14 @@ export default defineBuildConfig([
 		},
 
 		hooks: {
+			"rollup:options"(_ctx, options) {
+				if (!Array.isArray(options.output)) throw "Unreachable";
+				options.output = options.output.filter(
+					(option) => option.format === "cjs"
+				);
+				if (options.output.length !== 1) throw "Unreachable";
+			},
+
 			"build:done"(ctx) {
 				if (ctx.options.stub) {
 					// Patch the stub file
@@ -79,7 +89,7 @@ export default defineBuildConfig([
 
 		replace: {
 			"globalThis.__VOLAR_DEV_FS__": "undefined",
-			"process.env.NODE_ENV": "'production'"
-		}
-	}
+			"process.env.NODE_ENV": "'production'",
+		},
+	},
 ]);
