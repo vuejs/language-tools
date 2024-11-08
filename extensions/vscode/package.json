@@ -88,7 +88,7 @@
 		],
 		"typescriptServerPlugins": [
 			{
-				"name": "typescript-vue-plugin-bundle",
+				"name": "vue-typescript-plugin-pack",
 				"enableForWorkspaceTypeScriptVersions": true,
 				"configNamespace": "typescript"
 			}
@@ -558,13 +558,12 @@
 		"@types/node": "latest",
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.4.8",
+		"@volar/vscode": "~2.4.9",
 		"@vscode/vsce": "latest",
 		"@vue/language-core": "2.1.10",
 		"@vue/language-server": "2.1.10",
 		"@vue/typescript-plugin": "2.1.10",
 		"esbuild": "latest",
-		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
 		"reactive-vscode": "0.2.7-beta.1",
 		"semver": "^7.5.4",
