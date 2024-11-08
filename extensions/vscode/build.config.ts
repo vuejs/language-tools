@@ -1,11 +1,10 @@
 import { defineBuildConfig } from "unbuild";
 import { fileURLToPath } from "url";
 import { join } from "path";
-import { builtinModules } from "node:module";
 import { readFileSync, writeFileSync } from "fs";
 
-const nodeBuiltins = new Set(builtinModules);
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const languageServiceDataRE = /\/language-service\/data\/.*\.json$/;
 
 export default defineBuildConfig([
 	{
@@ -46,6 +45,7 @@ export default defineBuildConfig([
 			json: {
 				compact: true,
 				preferConst: true,
+				exclude: languageServiceDataRE,
 			},
 			inlineDependencies: true,
 		},
@@ -65,6 +65,28 @@ export default defineBuildConfig([
 
 		hooks: {
 			"rollup:options"(_ctx, options) {
+				// Load language-service data as `JSON.parse(serialized)`
+				// See https://v8.dev/blog/cost-of-javascript-2019#:~:text=A%20good%20rule%20of%20thumb%20is%20to%20apply%20this%20technique%20for%20objects%20of%2010%20kB%20or%20larger
+				options.plugins = [
+					{
+						name: 'language-service-data',
+						transform: {
+							order: "pre",
+							handler(code: string, id: string) {
+								if (languageServiceDataRE.test(id.replaceAll('\\', '/'))) {
+									const serialized = JSON.stringify(JSON.parse(code)).replaceAll('\\', '\\\\').replaceAll('`', '\\`');
+									return {
+										code: `export default JSON.parse(\`${serialized}\`)`,
+										map: { mappings: '' },
+									};
+								}
+							}
+						}
+					},
+					...options.plugins,
+				];
+
+				// Only emit CJS
 				if (!Array.isArray(options.output)) throw "Unreachable";
 				options.output = options.output.filter(
 					(option) => option.format === "cjs"
