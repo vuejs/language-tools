@@ -51,7 +51,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 				}
 			}
 
-			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
+			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist/server.cjs');
 
 			const runOptions: lsp.ForkOptions = {};
 			if (config.server.maxOldSpaceSize) {
@@ -142,7 +142,7 @@ try {
 	});
 
 	// @ts-expect-error
-	fs.readFileSync = (...args) => {
+	(globalThis.__VOLAR_DEV_FS__ || fs).readFileSync = (...args) => {
 		if (args[0] === extensionJsPath) {
 			// @ts-expect-error
 			let text = readFileSync(...args) as string;
