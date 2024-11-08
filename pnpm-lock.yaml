@@ -32,6 +32,9 @@ importers:
 
   extensions/vscode:
     devDependencies:
+      '@kermanx/tree-shaker':
+        specifier: https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker@67a133e
+        version: https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker@67a133e
       '@types/semver':
         specifier: ^7.5.3
         version: 7.5.8
@@ -746,6 +749,34 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.0':
     resolution: {integrity: sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ==}
+
+  '@kermanx/tree-shaker-darwin-arm64@https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-darwin-arm64@67a133e':
+    resolution: {tarball: https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-darwin-arm64@67a133e}
+    version: 0.0.0
+    engines: {node: '>= 10'}
+    os: [darwin]
+
+  '@kermanx/tree-shaker-darwin-x64@https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-darwin-x64@67a133e':
+    resolution: {tarball: https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-darwin-x64@67a133e}
+    version: 0.0.0
+    engines: {node: '>= 10'}
+    os: [darwin]
+
+  '@kermanx/tree-shaker-linux-x64-gnu@https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-linux-x64-gnu@67a133e':
+    resolution: {tarball: https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-linux-x64-gnu@67a133e}
+    version: 0.0.0
+    engines: {node: '>= 10'}
+    os: [linux]
+
+  '@kermanx/tree-shaker-win32-x64-msvc@https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-win32-x64-msvc@67a133e':
+    resolution: {tarball: https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-win32-x64-msvc@67a133e}
+    version: 0.0.0
+    engines: {node: '>= 10'}
+    os: [win32]
+
+  '@kermanx/tree-shaker@https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker@67a133e':
+    resolution: {tarball: https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker@67a133e}
+    version: 0.0.0
 
   '@lerna-lite/cli@3.10.0':
     resolution: {integrity: sha512-D0QS8vw1lz9LWDlKax1nXQPbA4qokT/yXsi36hFmnNATVViJL1TRqbsz5lpFEW8WNlz42/r+Uftt/jW+DtIymA==}
@@ -3674,6 +3705,25 @@ snapshots:
   '@johnsoncodehk/pug-beautify@0.2.2': {}
 
   '@jridgewell/sourcemap-codec@1.5.0': {}
+
+  '@kermanx/tree-shaker-darwin-arm64@https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-darwin-arm64@67a133e':
+    optional: true
+
+  '@kermanx/tree-shaker-darwin-x64@https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-darwin-x64@67a133e':
+    optional: true
+
+  '@kermanx/tree-shaker-linux-x64-gnu@https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-linux-x64-gnu@67a133e':
+    optional: true
+
+  '@kermanx/tree-shaker-win32-x64-msvc@https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-win32-x64-msvc@67a133e':
+    optional: true
+
+  '@kermanx/tree-shaker@https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker@67a133e':
+    optionalDependencies:
+      '@kermanx/tree-shaker-darwin-arm64': https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-darwin-arm64@67a133e
+      '@kermanx/tree-shaker-darwin-x64': https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-darwin-x64@67a133e
+      '@kermanx/tree-shaker-linux-x64-gnu': https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-linux-x64-gnu@67a133e
+      '@kermanx/tree-shaker-win32-x64-msvc': https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker-win32-x64-msvc@67a133e
 
   '@lerna-lite/cli@3.10.0(@lerna-lite/publish@3.10.0(@types/node@22.9.0)(typescript@5.6.3))(@lerna-lite/version@3.10.0(@lerna-lite/publish@3.10.0(@types/node@22.9.0)(typescript@5.6.3))(@types/node@22.9.0)(typescript@5.6.3))(@types/node@22.9.0)(typescript@5.6.3)':
     dependencies:
