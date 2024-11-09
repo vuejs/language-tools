@@ -8,3 +8,4 @@ meta.json
 stats.html
 dist/**/*.mjs
 dist/**/*.d.ts
+dist/**/*.map
