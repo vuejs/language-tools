@@ -1,7 +1,12 @@
 out
-scripts
 src
 tests
 tsconfig.*
+build.config.ts
+vscode.js
 meta.json
 stats.html
+sonda-report.html
+dist/**/*.mjs
+dist/**/*.d.ts
+dist/**/*.map

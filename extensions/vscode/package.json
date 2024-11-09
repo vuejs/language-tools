@@ -26,7 +26,7 @@
 		"onLanguage:markdown",
 		"onLanguage:html"
 	],
-	"main": "./client.js",
+	"main": "./dist/client.cjs",
 	"browser": "./web.js",
 	"capabilities": {
 		"virtualWorkspaces": {
@@ -543,10 +543,10 @@
 		]
 	},
 	"scripts": {
-		"prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
-		"build": "node scripts/build",
-		"build:minify": "pnpm run build -- --minify",
-		"watch": "pnpm run build -- --watch",
+		"__prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
+		"build": "unbuild",
+		"build:minify": "pnpm run build --minify",
+		"dev": "unbuild --stub",
 		"pack": "pnpm run build:minify && vsce package",
 		"pack:next": "pnpm run build && vsce package",
 		"release": "pnpm run build:minify && vsce publish",
@@ -555,6 +555,7 @@
 		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {
+		"@types/node": "latest",
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
 		"@volar/vscode": "~2.4.9",
@@ -566,6 +567,8 @@
 		"esbuild-visualizer": "latest",
 		"reactive-vscode": "0.2.7",
 		"semver": "^7.5.4",
+		"sonda": "^0.4.1",
+		"unbuild": "^3.0.0-rc.11",
 		"vscode-ext-gen": "^0.5.0",
 		"vscode-tmlanguage-snapshot": "latest"
 	}
