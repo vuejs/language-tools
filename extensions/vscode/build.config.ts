@@ -26,14 +26,17 @@ export default defineBuildConfig([
 				outDir: "./dist/schemas",
 			},
 		],
-
 		failOnWarn: false,
-
 		alias: {
 			// https://github.com/microsoft/vscode-emmet-helper/issues/79
 			"@vscode/emmet-helper": "@vscode/emmet-helper/lib/cjs/emmetHelper.js",
 		},
-
+		outDir: "dist",
+		externals: ["vscode"],
+		replace: {
+			"globalThis.__VOLAR_DEV_FS__": "undefined",
+			"process.env.NODE_ENV": "'production'",
+		},
 		rollup: {
 			emitCJS: true,
 			esbuild: {
@@ -50,11 +53,6 @@ export default defineBuildConfig([
 			},
 			inlineDependencies: true,
 		},
-
-		outDir: "dist",
-
-		externals: ["vscode"],
-
 		stubOptions: {
 			jiti: {
 				alias: {
@@ -63,7 +61,6 @@ export default defineBuildConfig([
 				sourceMaps: true,
 			},
 		},
-
 		hooks: {
 			"rollup:options"(_ctx, options) {
 				options.plugins = [
@@ -110,11 +107,6 @@ export default defineBuildConfig([
 					writeFileSync(stubFilePath, newStub);
 				}
 			},
-		},
-
-		replace: {
-			"globalThis.__VOLAR_DEV_FS__": "undefined",
-			"process.env.NODE_ENV": "'production'",
 		},
 	},
 ]);
