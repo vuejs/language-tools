@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import { type AnchorHTMLAttributes, type ReservedProps, useAttrs } from 'vue';
 import { exactType } from '../../shared';
 
@@ -7,5 +7,5 @@ exactType(attrs, {} as Partial<AnchorHTMLAttributes & ReservedProps> & Record<st
 </script>
 
 <template>
-  <a></a>
+	<a></a>
 </template>
