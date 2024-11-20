@@ -779,7 +779,7 @@ export function create(
 						const name = resolvedLabelKey.tag;
 						item.label = resolvedLabelKey.leadingSlash ? '/' + name : name;
 						if (item.textEdit) {
-							item.textEdit.newText = name;
+							item.textEdit.newText = resolvedLabelKey.leadingSlash ? `/${name}>` : name;
 						};
 						if (item.insertText) {
 							item.insertText = name;
