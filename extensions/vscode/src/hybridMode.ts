@@ -48,101 +48,113 @@ const workspaceTsdkVersion = computed(() => {
 	}
 });
 
+
+watchEffect(() => {
+	switch (config.server.hybridMode) {
+		case "typeScriptPluginOnly": {
+			enabledHybridMode.value = false;
+			break;
+		}
+		case "auto": {
+			if (
+				incompatibleExtensions.value.length ||
+				unknownExtensions.value.length
+			) {
+				enabledHybridMode.value = false;
+			}
+			else if (
+				(vscodeTsdkVersion.value && !semver.gte(vscodeTsdkVersion.value, "5.3.0")) ||
+				(workspaceTsdkVersion.value && !semver.gte(workspaceTsdkVersion.value, "5.3.0"))
+			) {
+				enabledHybridMode.value = false;
+			} else {
+				enabledHybridMode.value = true;
+			}
+			break;
+		}
+		default: {
+			enabledHybridMode.value = config.server.hybridMode;
+		}
+	}
+})
+
 export function useHybridModeTips() {
 	useVscodeContext("vueHybridMode", enabledHybridMode);
 
 	watchEffect(() => {
-		switch (config.server.hybridMode) {
-			case "typeScriptPluginOnly": {
-				enabledHybridMode.value = false;
-				break;
+		if (config.server.hybridMode === 'auto') {
+			if (
+				incompatibleExtensions.value.length ||
+				unknownExtensions.value.length
+			) {
+				vscode.window
+					.showInformationMessage(
+						`Hybrid Mode is disabled automatically because there is a potentially incompatible ${[
+							...incompatibleExtensions.value,
+							...unknownExtensions.value,
+						].join(", ")} TypeScript plugin installed.`,
+						"Open Settings",
+						"Report a false positive"
+					)
+					.then(value => {
+						if (value === "Open Settings") {
+							executeCommand(
+								"workbench.action.openSettings",
+								"vue.server.hybridMode"
+							);
+						}
+						else if (value == "Report a false positive") {
+							vscode.env.openExternal(
+								vscode.Uri.parse(
+									"https://github.com/vuejs/language-tools/pull/4206"
+								)
+							);
+						}
+					});
 			}
-			case "auto": {
-				if (
-					incompatibleExtensions.value.length ||
-					unknownExtensions.value.length
-				) {
-					vscode.window
-						.showInformationMessage(
-							`Hybrid Mode is disabled automatically because there is a potentially incompatible ${[
-								...incompatibleExtensions.value,
-								...unknownExtensions.value,
-							].join(", ")} TypeScript plugin installed.`,
-							"Open Settings",
-							"Report a false positive"
-						)
-						.then(value => {
-							if (value === "Open Settings") {
-								executeCommand(
-									"workbench.action.openSettings",
-									"vue.server.hybridMode"
-								);
-							}
-							else if (value == "Report a false positive") {
-								vscode.env.openExternal(
-									vscode.Uri.parse(
-										"https://github.com/vuejs/language-tools/pull/4206"
-									)
-								);
-							}
-						});
-					enabledHybridMode.value = false;
+			else if (
+				(vscodeTsdkVersion.value && !semver.gte(vscodeTsdkVersion.value, "5.3.0")) ||
+				(workspaceTsdkVersion.value && !semver.gte(workspaceTsdkVersion.value, "5.3.0"))
+			) {
+				let msg = `Hybrid Mode is disabled automatically because TSDK >= 5.3.0 is required (VSCode TSDK: ${vscodeTsdkVersion.value}`;
+				if (workspaceTsdkVersion.value) {
+					msg += `, Workspace TSDK: ${workspaceTsdkVersion.value}`;
 				}
-				else if (
-					(vscodeTsdkVersion.value && !semver.gte(vscodeTsdkVersion.value, "5.3.0")) ||
-					(workspaceTsdkVersion.value && !semver.gte(workspaceTsdkVersion.value, "5.3.0"))
-				) {
-					let msg = `Hybrid Mode is disabled automatically because TSDK >= 5.3.0 is required (VSCode TSDK: ${vscodeTsdkVersion.value}`;
-					if (workspaceTsdkVersion.value) {
-						msg += `, Workspace TSDK: ${workspaceTsdkVersion.value}`;
+				msg += `).`;
+				vscode.window
+					.showInformationMessage(msg, "Open Settings")
+					.then(value => {
+						if (value === "Open Settings") {
+							executeCommand(
+								"workbench.action.openSettings",
+								"vue.server.hybridMode"
+							);
+						}
+					});
+			}
+		} else if (config.server.hybridMode && incompatibleExtensions.value.length) {
+			vscode.window
+				.showWarningMessage(
+					`You have explicitly enabled Hybrid Mode, but you have installed known incompatible extensions: ${incompatibleExtensions.value.join(
+						", "
+					)}. You may want to change vue.server.hybridMode to "auto" to avoid compatibility issues.`,
+					"Open Settings",
+					"Report a false positive"
+				)
+				.then(value => {
+					if (value === "Open Settings") {
+						executeCommand(
+							"workbench.action.openSettings",
+							"vue.server.hybridMode"
+						);
+					} else if (value == "Report a false positive") {
+						vscode.env.openExternal(
+							vscode.Uri.parse(
+								"https://github.com/vuejs/language-tools/pull/4206"
+							)
+						);
 					}
-					msg += `).`;
-					vscode.window
-						.showInformationMessage(msg, "Open Settings")
-						.then(value => {
-							if (value === "Open Settings") {
-								executeCommand(
-									"workbench.action.openSettings",
-									"vue.server.hybridMode"
-								);
-							}
-						});
-					enabledHybridMode.value = false;
-				} else {
-					enabledHybridMode.value = true;
-				}
-				break;
-			}
-			default: {
-				if (
-					config.server.hybridMode &&
-					incompatibleExtensions.value.length
-				) {
-					vscode.window
-						.showWarningMessage(
-							`You have explicitly enabled Hybrid Mode, but you have installed known incompatible extensions: ${incompatibleExtensions.value.join(
-								", "
-							)}. You may want to change vue.server.hybridMode to "auto" to avoid compatibility issues.`,
-							"Open Settings",
-							"Report a false positive"
-						)
-						.then(value => {
-							if (value === "Open Settings") {
-								executeCommand(
-									"workbench.action.openSettings",
-									"vue.server.hybridMode"
-								);
-							} else if (value == "Report a false positive") {
-								vscode.env.openExternal(
-									vscode.Uri.parse(
-										"https://github.com/vuejs/language-tools/pull/4206"
-									)
-								);
-							}
-						});
-				}
-				enabledHybridMode.value = config.server.hybridMode;
-			}
+				});
 		}
 	});
 }
