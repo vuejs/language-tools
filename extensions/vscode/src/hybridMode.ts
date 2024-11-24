@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { computed, executeCommand, ref, useAllExtensions, useVscodeContext, watchEffect } from "reactive-vscode";
+import { computed, executeCommand, useAllExtensions, useVscodeContext, watchEffect } from "reactive-vscode";
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { incompatibleExtensions, unknownExtensions } from './compatibility';
@@ -8,7 +8,26 @@ import { config } from './config';
 
 const extensions = useAllExtensions();
 
-export const enabledHybridMode = ref<boolean>(true);
+export const enabledHybridMode = computed(() => {
+	if (config.server.hybridMode === 'typeScriptPluginOnly') {
+		return false;
+	} else if (config.server.hybridMode === 'auto') {
+		if (
+			incompatibleExtensions.value.length ||
+			unknownExtensions.value.length
+		) {
+			return false;
+		}
+		else if (
+			(vscodeTsdkVersion.value && !semver.gte(vscodeTsdkVersion.value, "5.3.0")) ||
+			(workspaceTsdkVersion.value && !semver.gte(workspaceTsdkVersion.value, "5.3.0"))
+		) {
+			return false;
+		}
+		return true;
+	}
+	return config.server.hybridMode;
+})
 
 export const enabledTypeScriptPlugin = computed(() => {
 	return (
@@ -48,35 +67,6 @@ const workspaceTsdkVersion = computed(() => {
 	}
 });
 
-
-watchEffect(() => {
-	switch (config.server.hybridMode) {
-		case "typeScriptPluginOnly": {
-			enabledHybridMode.value = false;
-			break;
-		}
-		case "auto": {
-			if (
-				incompatibleExtensions.value.length ||
-				unknownExtensions.value.length
-			) {
-				enabledHybridMode.value = false;
-			}
-			else if (
-				(vscodeTsdkVersion.value && !semver.gte(vscodeTsdkVersion.value, "5.3.0")) ||
-				(workspaceTsdkVersion.value && !semver.gte(workspaceTsdkVersion.value, "5.3.0"))
-			) {
-				enabledHybridMode.value = false;
-			} else {
-				enabledHybridMode.value = true;
-			}
-			break;
-		}
-		default: {
-			enabledHybridMode.value = config.server.hybridMode;
-		}
-	}
-})
 
 export function useHybridModeTips() {
 	useVscodeContext("vueHybridMode", enabledHybridMode);
