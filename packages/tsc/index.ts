@@ -51,7 +51,7 @@ export function run(tscPath = getTscPath()) {
 function getTscPath() {
 	const version = require('typescript/package.json').version as string;
 
-	if (semver.gte(version, '5.7.2')) {
+	if (semver.gte(version, '5.7')) {
 		return require.resolve('typescript/lib/_tsc');
 	}
 	else {
