@@ -3,7 +3,7 @@ import * as vue from '@vue/language-core';
 
 const windowsPathReg = /\\/g;
 
-export function run(tscPath = require.resolve('typescript/lib/tsc')) {
+export function run(tscPath = require.resolve('typescript/lib/_tsc')) {
 
 	let runExtensions = ['.vue'];
 
