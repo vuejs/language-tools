@@ -305,8 +305,8 @@ importers:
         specifier: npm:typescript@5.7.0-dev.20240926
         version: typescript@5.7.0-dev.20240926
       typescript-stable:
-        specifier: npm:typescript@latest
-        version: typescript@5.7.2
+        specifier: npm:typescript@~5.6.0
+        version: typescript@5.6.3
       vue:
         specifier: ^3.5.0
         version: 3.5.13(typescript@5.7.2)
@@ -2842,6 +2842,11 @@ packages:
 
   typescript-auto-import-cache@0.3.5:
     resolution: {integrity: sha512-fAIveQKsoYj55CozUiBoj4b/7WpN0i4o74wiGY5JVUEoD0XiqDk1tJqTEjgzL2/AizKQrXxyRosSebyDzBZKjw==}
+
+  typescript@5.6.3:
+    resolution: {integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
 
   typescript@5.7.0-dev.20240926:
     resolution: {integrity: sha512-urjGXo3L23oEcK2thBaZ71DdA6My+NeeTuNIUJfYszrplyk//HIgV1yl40S+eQcya4vwmH14dhDDDH4vl4dlng==}
@@ -6069,6 +6074,8 @@ snapshots:
   typescript-auto-import-cache@0.3.5:
     dependencies:
       semver: 7.6.3
+
+  typescript@5.6.3: {}
 
   typescript@5.7.0-dev.20240926: {}
 
