@@ -34,6 +34,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
+	ctx.addLocalVariable("$attrs");
 	ctx.addLocalVariable('$el');
 	ctx.addLocalVariable('$refs');
 
@@ -91,11 +92,12 @@ function* generateSlotsType(options: TemplateCodegenOptions, ctx: TemplateCodege
 }
 
 function* generateInheritedAttrs(ctx: TemplateCodegenContext): Generator<Code> {
-	yield 'var __VLS_inheritedAttrs!: {}';
+	yield 'let __VLS_inheritedAttrs!: {}';
 	for (const varName of ctx.inheritedAttrVars) {
 		yield ` & typeof ${varName}`;
 	}
 	yield endOfLine;
+	yield `var $attrs!: Partial<typeof __VLS_inheritedAttrs> & Record<string, unknown>${endOfLine}`;
 }
 
 function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {
