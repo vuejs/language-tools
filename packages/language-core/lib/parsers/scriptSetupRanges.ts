@@ -306,12 +306,17 @@ export function parseScriptSetupRanges(
 				if (ts.isVariableDeclaration(parent)) {
 					emits.name = getNodeText(ts, parent.name, ast);
 				}
-				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0]) && node.typeArguments[0].members.at(0)) {
+				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0])) {
 					for (const member of node.typeArguments[0].members) {
-						if (ts.isCallSignatureDeclaration(member) && member.parameters[0].type && ts.isUnionTypeNode(member.parameters[0].type)) {
-							emits.define.hasUnionTypeArg = true;
-							return;
+						if (!ts.isCallSignatureDeclaration(member)) {
+							continue;
 						}
+						const type = member.parameters[0]?.type;
+						if (!type || !ts.isUnionTypeNode(type)) {
+							continue;
+						}
+						emits.define.hasUnionTypeArg = true;
+						return;
 					}
 				}
 			}
