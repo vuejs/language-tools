@@ -308,15 +308,13 @@ export function parseScriptSetupRanges(
 				}
 				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0])) {
 					for (const member of node.typeArguments[0].members) {
-						if (!ts.isCallSignatureDeclaration(member)) {
-							continue;
+						if (ts.isCallSignatureDeclaration(member)) {
+							const type = member.parameters[0]?.type;
+							if (type && ts.isUnionTypeNode(type)) {
+								emits.define.hasUnionTypeArg = true;
+								break;
+							}
 						}
-						const type = member.parameters[0]?.type;
-						if (!type || !ts.isUnionTypeNode(type)) {
-							continue;
-						}
-						emits.define.hasUnionTypeArg = true;
-						return;
 					}
 				}
 			}
