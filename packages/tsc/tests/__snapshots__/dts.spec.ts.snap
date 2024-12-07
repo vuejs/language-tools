@@ -17,9 +17,7 @@ declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<t
         }): any;
     };
     emit: {};
-}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
-    [key: string]: any;
-}> & {
+}>) => import("vue").VNode & {
     __ctx?: Awaited<typeof __VLS_setup>;
 };
 export default _default;
@@ -76,9 +74,7 @@ exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/compo
     attrs: any;
     slots: {};
     emit: (evt: "foo", value: string) => void;
-}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
-    [key: string]: any;
-}> & {
+}>) => import("vue").VNode & {
     __ctx?: Awaited<typeof __VLS_setup>;
 };
 export default _default;
@@ -112,9 +108,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         }): any;
     };
     emit: ((e: "bar", data: number) => void) & ((evt: "update:title", value: string) => void);
-}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
-    [key: string]: any;
-}> & {
+}>) => import("vue").VNode & {
     __ctx?: Awaited<typeof __VLS_setup>;
 };
 export default _default;
@@ -148,9 +142,7 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
         }): any;
     };
     emit: ((e: "bar", data: number) => void) & ((evt: "update:title", value: string) => void);
-}>) => import("vue").VNode<import("vue").RendererNode, import("vue").RendererElement, {
-    [key: string]: any;
-}> & {
+}>) => import("vue").VNode & {
     __ctx?: Awaited<typeof __VLS_setup>;
 };
 export default _default;
