@@ -3,6 +3,12 @@ import * as compiler from '@vue/compiler-dom';
 import type { CompilerError, SFCBlock, SFCDescriptor, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 import { SFCStyleOverride } from '../types';
 
+declare module '@vue/compiler-sfc' {
+	interface SFCDescriptor {
+		comments: string[];
+	}
+}
+
 export function parse(source: string): SFCParseResult {
 
 	const errors: CompilerError[] = [];
@@ -20,6 +26,7 @@ export function parse(source: string): SFCParseResult {
 	const descriptor: SFCDescriptor = {
 		filename: 'anonymous.vue',
 		source,
+		comments: [],
 		template: null,
 		script: null,
 		scriptSetup: null,
@@ -30,7 +37,11 @@ export function parse(source: string): SFCParseResult {
 		shouldForceReload: () => false,
 	};
 	ast.children.forEach(node => {
-		if (node.type !== compiler.NodeTypes.ELEMENT) {
+		if (node.type === compiler.NodeTypes.COMMENT) {
+			descriptor.comments.push(node.content);
+			return;
+		}
+		else if (node.type !== compiler.NodeTypes.ELEMENT) {
 			return;
 		}
 		switch (node.tag) {
