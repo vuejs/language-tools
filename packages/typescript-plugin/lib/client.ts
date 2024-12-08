@@ -57,6 +57,15 @@ export function getComponentEvents(
 	});
 }
 
+export function getComponentDirectives(
+	...args: Parameters<typeof import('./requests/componentInfos.js')['getComponentDirectives']>
+) {
+	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentDirectives']>>({
+		type: 'getComponentDirectives',
+		args,
+	});
+}
+
 export function getTemplateContextProps(
 	...args: Parameters<typeof import('./requests/componentInfos.js')['getTemplateContextProps']>
 ) {
