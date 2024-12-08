@@ -381,7 +381,7 @@ export function parseScriptSetupRanges(
 					}
 				}
 			}
-			else if (vueCompilerOptions.composibles.useTemplateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
+			else if (vueCompilerOptions.composables.useTemplateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
 				const define = parseDefineFunction(node);
 				let name;
 				if (ts.isVariableDeclaration(parent)) {
@@ -392,7 +392,7 @@ export function parseScriptSetupRanges(
 					define
 				});
 			}
-			else if (vueCompilerOptions.composibles.useCssModule.includes(callText)) {
+			else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
 				const define = parseDefineFunction(node);
 				cssModules.push({
 					define

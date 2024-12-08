@@ -251,10 +251,10 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			withDefaults: ['withDefaults'],
 			...vueOptions.macros,
 		},
-		composibles: {
+		composables: {
 			useCssModule: ['useCssModule'],
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
-			...vueOptions.composibles,
+			...vueOptions.composables,
 		},
 		plugins: vueOptions.plugins ?? [],
 
