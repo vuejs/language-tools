@@ -93,7 +93,7 @@
 						"withDefaults": [ "withDefaults" ]
 					}
 				},
-				"composibles": {
+				"composables": {
 					"type": "object",
 					"default": {
 						"useCssModule": [ "useCssModule" ],
