@@ -160,6 +160,24 @@ export function getComponentEvents(
 	return [...result];
 }
 
+export function getComponentDirectives(
+	this: RequestContext,
+	fileName: string
+) {
+	const { typescript: ts, language, languageService, getFileId } = this;
+	const volarFile = language.scripts.get(getFileId(fileName));
+	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
+		return;
+	}
+	const vueCode = volarFile.generated.root;
+	const directives = getVariableType(ts, languageService, vueCode, '__VLS_directives');
+	if (!directives) {
+		return [];
+	}
+
+	return directives.type.getProperties().map(({ name }) => name);
+}
+
 export function getTemplateContextProps(
 	this: RequestContext,
 	fileName: string
@@ -225,7 +243,9 @@ export function getElementAttrs(
 
 	if (tsSourceFile = program.getSourceFile(fileName)) {
 
-		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === '__VLS_IntrinsicElementsCompletion');
+		const typeNode = tsSourceFile.statements
+			.filter(ts.isTypeAliasDeclaration)
+			.find(node => node.name.getText() === '__VLS_IntrinsicElementsCompletion');
 		const checker = program.getTypeChecker();
 
 		if (checker && typeNode) {
