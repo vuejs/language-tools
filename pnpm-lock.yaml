@@ -282,6 +282,9 @@ importers:
       '@types/node':
         specifier: latest
         version: 22.10.1
+      '@types/semver':
+        specifier: ^7.5.4
+        version: 7.5.8
 
   packages/typescript-plugin:
     dependencies:

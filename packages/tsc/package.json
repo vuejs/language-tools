@@ -25,6 +25,7 @@
 		"typescript": ">=5.0.0"
 	},
 	"devDependencies": {
-		"@types/node": "latest"
+		"@types/node": "latest",
+		"@types/semver": "^7.5.4"
 	}
 }
