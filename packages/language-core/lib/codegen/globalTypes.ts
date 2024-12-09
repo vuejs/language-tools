@@ -109,7 +109,7 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 	][];
 	function __VLS_getVForSourceType<T>(source: T): [
 		item: T[keyof T],
-		key: keyof T,
+		key: keyof T & string,
 		index: number,
 	][];
 	// @ts-ignore
