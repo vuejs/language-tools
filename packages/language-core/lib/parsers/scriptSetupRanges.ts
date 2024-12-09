@@ -306,11 +306,14 @@ export function parseScriptSetupRanges(
 				if (ts.isVariableDeclaration(parent)) {
 					emits.name = getNodeText(ts, parent.name, ast);
 				}
-				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0]) && node.typeArguments[0].members.at(0)) {
+				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0])) {
 					for (const member of node.typeArguments[0].members) {
-						if (ts.isCallSignatureDeclaration(member) && member.parameters[0].type && ts.isUnionTypeNode(member.parameters[0].type)) {
-							emits.define.hasUnionTypeArg = true;
-							return;
+						if (ts.isCallSignatureDeclaration(member)) {
+							const type = member.parameters[0]?.type;
+							if (type && ts.isUnionTypeNode(type)) {
+								emits.define.hasUnionTypeArg = true;
+								break;
+							}
 						}
 					}
 				}
@@ -377,7 +380,8 @@ export function parseScriptSetupRanges(
 						}
 					}
 				}
-			} else if (vueCompilerOptions.composibles.useTemplateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
+			}
+			else if (vueCompilerOptions.composables.useTemplateRef.includes(callText) && node.arguments.length && !node.typeArguments?.length) {
 				const define = parseDefineFunction(node);
 				let name;
 				if (ts.isVariableDeclaration(parent)) {
@@ -388,7 +392,7 @@ export function parseScriptSetupRanges(
 					define
 				});
 			}
-			else if (vueCompilerOptions.composibles.useCssModule.includes(callText)) {
+			else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
 				const define = parseDefineFunction(node);
 				cssModules.push({
 					define

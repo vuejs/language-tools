@@ -43,7 +43,7 @@ export interface VueCompilerOptions {
 		defineOptions: string[];
 		withDefaults: string[];
 	};
-	composibles: {
+	composables: {
 		useCssModule: string[];
 		useTemplateRef: string[];
 	};

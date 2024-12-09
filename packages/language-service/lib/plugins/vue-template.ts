@@ -778,14 +778,16 @@ export function create(
 					if (resolvedLabelKey) {
 						const name = resolvedLabelKey.tag;
 						item.label = resolvedLabelKey.leadingSlash ? '/' + name : name;
+
+						const text = resolvedLabelKey.leadingSlash ? `/${name}>` : name;
 						if (item.textEdit) {
-							item.textEdit.newText = name;
+							item.textEdit.newText = text;
 						};
 						if (item.insertText) {
-							item.insertText = name;
+							item.insertText = text;
 						}
 						if (item.sortText) {
-							item.sortText = name;
+							item.sortText = text;
 						}
 					}
 
