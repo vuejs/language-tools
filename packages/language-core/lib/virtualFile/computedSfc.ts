@@ -2,7 +2,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, ISignal, Signal, System, Unstable } from 'alien-signals';
 import type * as ts from 'typescript';
-import type { Sfc, SfcBlock, SFCStyleOverride, VueLanguagePluginReturn } from '../types';
+import type { Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 
@@ -118,10 +118,10 @@ export function computedSfc(
 		(block, i) => {
 			const base = computedSfcBlock('style_' + i, 'css', block);
 			const module = computed(() => {
-				const _module = block.get().module as SFCStyleOverride['module'];
-				return _module ? {
-					name: _module.name,
-					offset: _module.offset ? base.start + _module.offset : undefined
+				const { __module } = block.get();
+				return __module ? {
+					name: __module.name,
+					offset: __module.offset ? base.start + __module.offset : undefined
 				} : undefined;
 			});
 			const scoped = computed(() => !!block.get().scoped);
