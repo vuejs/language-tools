@@ -173,20 +173,14 @@ export function* generatePropsOption(
 	const useOption = !useTypeOption || scriptSetupRanges.props.withDefaults;
 
 	if (useTypeOption) {
-		if (codes.length === 1) {
-			yield `__typeProps: `;
-			yield codes[0].typeOptionExp!;
+		// #1232
+		yield `__typeProps: {${newLine}`;
+		for (const { typeOptionExp } of codes) {
+			yield `...`;
+			yield typeOptionExp!;
 			yield `,${newLine}`;
 		}
-		else if (codes.length >= 2) {
-			yield `__typeProps: {${newLine}`;
-			for (const { typeOptionExp } of codes) {
-				yield `...`;
-				yield typeOptionExp!;
-				yield `,${newLine}`;
-			}
-			yield `},${newLine}`;
-		}
+		yield `},${newLine}`;
 	}
 	if (useOption) {
 		if (codes.length === 1) {
