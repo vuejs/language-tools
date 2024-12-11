@@ -198,7 +198,10 @@ export function* generateElementProps(
 				`: (`,
 				...(
 					prop.value
-						? generateAttrValue(prop.value, ctx.codeFeatures.all)
+						? generateAttrValue(prop.value, {
+							...ctx.codeFeatures.all,
+							navigation: false
+						})
 						: [`true`]
 				),
 				`)`
