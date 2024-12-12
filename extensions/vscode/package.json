@@ -564,7 +564,7 @@
 		"@vue/typescript-plugin": "2.1.10",
 		"esbuild": "latest",
 		"esbuild-visualizer": "latest",
-		"reactive-vscode": "0.2.7",
+		"reactive-vscode": "^0.2.9",
 		"semver": "^7.5.4",
 		"vscode-ext-gen": "^0.5.0",
 		"vscode-tmlanguage-snapshot": "latest"
