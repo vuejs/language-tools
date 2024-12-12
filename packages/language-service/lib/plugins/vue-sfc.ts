@@ -51,11 +51,11 @@ export function create(): LanguageServicePlugin {
 			}
 		},
 		create(context) {
-			const htmlPluginInstance = htmlService.create(context);
+			const htmlServiceInstance = htmlService.create(context);
 
 			return {
 
-				...htmlPluginInstance,
+				...htmlServiceInstance,
 
 				provideDocumentLinks: undefined,
 
@@ -87,7 +87,7 @@ export function create(): LanguageServicePlugin {
 							return;
 						}
 
-						const originalResult = await htmlPluginInstance.provideDiagnostics?.(document, token);
+						const originalResult = await htmlServiceInstance.provideDiagnostics?.(document, token);
 						const sfcErrors: vscode.Diagnostic[] = [];
 						const { template } = vueSourceFile._sfc;
 
@@ -211,7 +211,7 @@ export function create(): LanguageServicePlugin {
 				},
 
 				async provideCompletionItems(document, position, context, token) {
-					const result = await htmlPluginInstance.provideCompletionItems?.(document, position, context, token);
+					const result = await htmlServiceInstance.provideCompletionItems?.(document, position, context, token);
 					if (!result) {
 						return;
 					}
