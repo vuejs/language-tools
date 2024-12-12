@@ -10,7 +10,7 @@ import { loadLanguageBlocks } from './data';
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
 export function create(): LanguageServicePlugin {
-	const htmlPlugin = createHtmlService({
+	const htmlService = createHtmlService({
 		documentSelector: ['vue-root-tags'],
 		useDefaultDataProvider: false,
 		getCustomData(context) {
@@ -41,10 +41,17 @@ export function create(): LanguageServicePlugin {
 		},
 	});
 	return {
-		...htmlPlugin,
+		...htmlService,
 		name: 'vue-sfc',
+		capabilities: {
+			...htmlService.capabilities,
+			diagnosticProvider: {
+				interFileDependencies: false,
+				workspaceDiagnostics: false,
+			}
+		},
 		create(context) {
-			const htmlPluginInstance = htmlPlugin.create(context);
+			const htmlPluginInstance = htmlService.create(context);
 
 			return {
 
@@ -71,6 +78,48 @@ export function create(): LanguageServicePlugin {
 						}
 					}
 					return options;
+				},
+
+				provideDiagnostics(document, token) {
+					return worker(document, context, async vueSourceFile => {
+						const vueSfc = vueSourceFile._vueSfc.get();
+						if (!vueSfc) {
+							return;
+						}
+
+						const originalResult = await htmlPluginInstance.provideDiagnostics?.(document, token);
+						const sfcErrors: vscode.Diagnostic[] = [];
+						const { template } = vueSourceFile._sfc;
+
+						const {
+							startTagEnd = Infinity,
+							endTagStart = -Infinity
+						} = template ?? {};
+
+						for (const error of vueSfc.errors) {
+							if ('code' in error) {
+								const start = error.loc?.start.offset ?? 0;
+								const end = error.loc?.end.offset ?? 0;
+								if (end < startTagEnd || start >= endTagStart) {
+									sfcErrors.push({
+										range: {
+											start: document.positionAt(start),
+											end: document.positionAt(end),
+										},
+										severity: 1 satisfies typeof vscode.DiagnosticSeverity.Error,
+										code: error.code,
+										source: 'vue',
+										message: error.message,
+									});
+								}
+							}
+						}
+
+						return [
+							...originalResult ?? [],
+							...sfcErrors
+						];
+					});
 				},
 
 				provideDocumentSymbols(document) {
