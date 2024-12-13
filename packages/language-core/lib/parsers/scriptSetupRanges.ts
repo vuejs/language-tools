@@ -400,6 +400,9 @@ export function parseScriptSetupRanges(
 			}
 		}
 		ts.forEachChild(node, child => {
+			if (ts.isFunctionLike(node)) {
+				return;
+			}
 			parents.push(node);
 			visitNode(child, parents);
 			parents.pop();
