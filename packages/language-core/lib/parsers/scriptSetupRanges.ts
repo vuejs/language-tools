@@ -365,7 +365,7 @@ export function parseScriptSetupRanges(
 				for (const prop of obj.properties) {
 					if (
 						ts.isPropertyAssignment(prop)
-						&& _getNodeText(prop.name) === 'name' && ts.isStringLiteral(prop.initializer)
+						&& _getNodeText(prop.name) === 'name' && ts.isStringLiteralLike(prop.initializer)
 					) {
 						options.name = prop.initializer.text;
 					}

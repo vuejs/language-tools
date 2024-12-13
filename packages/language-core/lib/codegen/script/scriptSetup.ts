@@ -95,7 +95,7 @@ export function* generateScriptSetup(
 			if (!defineProp.localName) {
 				continue;
 			}
-			const [_, localName] = getPropAndLocalName(scriptSetup, defineProp);
+			const { localName } = getPropAndLocalName(scriptSetup, defineProp);
 			const propMirror = definePropMirrors.get(localName!);
 			if (propMirror !== undefined) {
 				options.linkedCodeMappings.push({
@@ -376,22 +376,34 @@ function* generateComponentProps(
 	if (scriptSetupRanges.defineProp.length) {
 		yield `const __VLS_defaults = {${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
-			if (defineProp.defaultValue) {
-				const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
-
-				if (defineProp.name || defineProp.isModel) {
-					yield propName!;
-				}
-				else if (defineProp.localName) {
-					yield localName!;
-				}
-				else {
-					continue;
-				}
-				yield `: `;
-				yield getRangeName(scriptSetup, defineProp.defaultValue);
-				yield `,${newLine}`;
+			if (!defineProp.defaultValue) {
+				continue;
 			}
+
+			const { propName, localName, isTemplateLiteral } = getPropAndLocalName(scriptSetup, defineProp);
+
+			if (defineProp.isModel && !defineProp.name) {
+				yield propName!;
+			}
+			else if (defineProp.name) {
+				if (isTemplateLiteral) {
+					yield `[`;
+				}
+				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.none);
+				if (isTemplateLiteral) {
+					yield `]`;
+				}
+			}
+			else if (defineProp.localName) {
+				yield localName!;
+			}
+			else {
+				continue;
+			}
+
+			yield `: `;
+			yield getRangeName(scriptSetup, defineProp.defaultValue);
+			yield `,${newLine}`;
 		}
 		yield `}${endOfLine}`;
 	}
@@ -411,14 +423,19 @@ function* generateComponentProps(
 		ctx.generatedPropsType = true;
 		yield `{${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
-			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
+			const { propName, localName, isTemplateLiteral } = getPropAndLocalName(scriptSetup, defineProp);
 
 			if (defineProp.isModel && !defineProp.name) {
 				yield propName!;
 			}
 			else if (defineProp.name) {
-				// renaming support
+				if (isTemplateLiteral) {
+					yield `[`;
+				}
 				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.navigation);
+				if (isTemplateLiteral) {
+					yield `]`;
+				}
 			}
 			else if (defineProp.localName) {
 				definePropMirrors.set(localName!, options.getGeneratedLength());
@@ -435,10 +452,7 @@ function* generateComponentProps(
 			yield `,${newLine}`;
 
 			if (defineProp.modifierType) {
-				let propModifierName = 'modelModifiers';
-				if (defineProp.name) {
-					propModifierName = `${getRangeName(scriptSetup, defineProp.name, true)}Modifiers`;
-				}
+				const propModifierName = `${defineProp.name ? propName : 'model'}Modifiers`;
 				const modifierType = getRangeName(scriptSetup, defineProp.modifierType);
 				definePropMirrors.set(propModifierName, options.getGeneratedLength());
 				yield `${propModifierName}?: Partial<Record<${modifierType}, true>>,${endOfLine}`;
@@ -467,7 +481,7 @@ function* generateModelEmit(
 	if (defineModels.length) {
 		yield `type __VLS_ModelEmit = {${newLine}`;
 		for (const defineModel of defineModels) {
-			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
+			const { propName, localName } = getPropAndLocalName(scriptSetup, defineModel);
 			yield `'update:${propName}': [value: `;
 			yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
 			yield `]${endOfLine}`;
@@ -512,17 +526,22 @@ function getPropAndLocalName(
 		: defineProp.isModel
 			? 'modelValue'
 			: localName;
+
+	const isTemplateLiteral = propName?.startsWith('`');
 	if (defineProp.name) {
-		propName = propName!.replace(/['"]+/g, '');
+		propName = propName!.replace(/['"`]+/g, '');
 	}
-	return [propName, localName];
+
+	return {
+		propName,
+		localName,
+		isTemplateLiteral,
+	};
 }
 
 function getRangeName(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	range: TextRange,
-	unwrap = false
+	range: TextRange
 ) {
-	const offset = unwrap ? 1 : 0;
-	return scriptSetup.content.slice(range.start + offset, range.end - offset);
+	return scriptSetup.content.slice(range.start, range.end);
 }
