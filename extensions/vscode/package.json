@@ -274,6 +274,14 @@
 					],
 					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
 				},
+				"vue.server.compatibleExtensions": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "Set compatible extensions to skip automatic detection of Hybrid Mode."
+				},
 				"vue.server.includeLanguages": {
 					"type": "array",
 					"items": {
