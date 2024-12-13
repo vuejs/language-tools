@@ -1,6 +1,7 @@
 import { computed, useAllExtensions } from 'reactive-vscode';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
+import { config } from './config';
 
 const extensions = useAllExtensions();
 
@@ -37,6 +38,9 @@ function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 		|| extension.id === 'ShenQingchuan.vue-vine-extension'
 		|| extension.id === 'ms-dynamics-smb.al'
 	) {
+		return true;
+	}
+	if (config.server.compatibleExtensions.includes(extension.id)) {
 		return true;
 	}
 	if (extension.id === 'denoland.vscode-deno') {
