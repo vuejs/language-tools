@@ -288,11 +288,58 @@ async function modelWorker(lang) {
 
 async function templateWorker(lang) {
 
-	const directivesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-directives.md', lang.url);
-	const attributesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-special-attributes.md', lang.url);
 	const componentsDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-components.md', lang.url);
 	const elementsDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-special-elements.md', lang.url);
+	const directivesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-directives.md', lang.url);
+	const attributesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-special-attributes.md', lang.url);
+	const ssrDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/ssr.md', lang.url);
 
+	const components = componentsDoc
+		.split('\n## ')
+		.slice(1)
+		.map((section) => {
+			const lines = section.split('\n');
+			const name = normalizeTagName(lines[0]);
+			/**
+			 * @type {import('vscode-html-languageservice').ITagData}
+			 */
+			const data = {
+				name,
+				description: {
+					kind: 'markdown',
+					value: lines.slice(1).join('\n'),
+				},
+				attributes: [],
+				references: langs.map(lang => ({
+					name: lang.name,
+					url: `${lang.url}api/built-in-components.html#${normalizeHash(name)}`,
+				})),
+			};
+			return data;
+		});
+	const elements = elementsDoc
+		.split('\n## ')
+		.slice(1)
+		.map((section) => {
+			const lines = section.split('\n');
+			const name = normalizeTagName(lines[0]);
+			/**
+			 * @type {import('vscode-html-languageservice').ITagData}
+			 */
+			const data = {
+				name,
+				description: {
+					kind: 'markdown',
+					value: lines.slice(1).join('\n'),
+				},
+				attributes: [],
+				references: langs.map(lang => ({
+					name: lang.name,
+					url: `${lang.url}api/built-in-special-elements.html#${normalizeHash(name)}`,
+				})),
+			};
+			return data;
+		});
 	const directives = directivesDoc
 		.split('\n## ')
 		.slice(1)
@@ -343,12 +390,12 @@ async function templateWorker(lang) {
 			};
 			return data;
 		});
-	const components = componentsDoc
-		.split('\n## ')
+	const dataAllowMismatch = ssrDoc
+		.split(/## data-allow-mismatch.*\n/)
 		.slice(1)
 		.map((section) => {
 			const lines = section.split('\n');
-			const name = normalizeTagName(lines[0]);
+			const name = 'data-allow-mismatch';
 			/**
 			 * @type {import('vscode-html-languageservice').ITagData}
 			 */
@@ -358,37 +405,17 @@ async function templateWorker(lang) {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n'),
 				},
-				attributes: [],
 				references: langs.map(lang => ({
 					name: lang.name,
-					url: `${lang.url}api/built-in-components.html#${normalizeHash(name)}`,
+					url: `${lang.url}api/ssr.html#${normalizeHash(name)}`,
 				})),
 			};
 			return data;
-		});
-	const elements = elementsDoc
-		.split('\n## ')
-		.slice(1)
-		.map((section) => {
-			const lines = section.split('\n');
-			const name = normalizeTagName(lines[0]);
-			/**
-			 * @type {import('vscode-html-languageservice').ITagData}
-			 */
-			const data = {
-				name,
-				description: {
-					kind: 'markdown',
-					value: lines.slice(1).join('\n'),
-				},
-				attributes: [],
-				references: langs.map(lang => ({
-					name: lang.name,
-					url: `${lang.url}api/built-in-special-elements.html#${normalizeHash(name)}`,
-				})),
-			};
-			return data;
-		});
+		})[0];
+
+	if (dataAllowMismatch) {
+		attributes.push(dataAllowMismatch);
+	}
 
 	/**
 	 * @type {import('vscode-html-languageservice').HTMLDataV1}
@@ -401,7 +428,7 @@ async function templateWorker(lang) {
 		],
 		globalAttributes: [
 			...directives,
-			...attributes
+			...attributes,
 		],
 	};
 

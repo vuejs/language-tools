@@ -1600,6 +1600,67 @@
           "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#is"
         }
       ]
+    },
+    {
+      "name": "data-allow-mismatch",
+      "description": {
+        "kind": "markdown",
+        "value": "A special attribute that can be used to suppress [hydration mismatch](https://fr.vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch) warnings.\n\n- **Example**\n\n  ```html\n  <div data-allow-mismatch=\"text\">{{ data.toLocaleString() }}</div>\n  ```\n\n  The value can limit the allowed mismatch to a specific type. Allowed values are:\n\n  - `text`\n  - `children` (only allows mismatch for direct children)\n  - `class`\n  - `style`\n  - `attribute`\n\n  If no value is provided, all types of mismatches will be allowed.\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/ssr.html#data-allow-mismatch"
+        }
+      ]
     }
   ]
 }
