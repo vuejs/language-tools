@@ -4,30 +4,49 @@ import * as vscode from 'vscode';
 
 export function useInsidersStatusItem(context: vscode.ExtensionContext) {
 	const item = vscode.languages.createLanguageStatusItem('vue-insider', 'vue');
-	item.text = 'Checking for Updates...';
-	item.busy = true;
-	let succeed = false;
+	item.command = {
+		title: 'Fetch Versions',
+		command: 'vue-insiders.fetch',
+	};
+	let status: 'idle' | 'pending' | 'success' = 'idle';
+
+	useCommand('vue-insiders.fetch', () => {
+		if (status === 'idle') {
+			fetchJson();
+		}
+	});
 
 	fetchJson();
 
 	async function fetchJson() {
+		item.busy = true;
+		item.text = 'Checking for Updates...';
+		item.severity = vscode.LanguageStatusSeverity.Information;
+		status = 'pending';
+
 		for (const url of [
 			'https://raw.githubusercontent.com/vuejs/language-tools/HEAD/insiders.json',
 			'https://cdn.jsdelivr.net/gh/vuejs/language-tools/insiders.json',
 		]) {
 			try {
-				const res = await fetch(url);
+				const controller = new AbortController();
+				setTimeout(() => controller.abort(), 15000);
+
+				const res = await fetch(url, {
+					signal: controller.signal,
+				});
 				onJson(await res.json() as any);
-				succeed = true;
+				status = 'success';
 				break;
 			}
 			catch { };
 		}
 
 		item.busy = false;
-		if (!succeed) {
+		if (status !== 'success') {
 			item.text = 'Failed to Fetch Versions';
 			item.severity = vscode.LanguageStatusSeverity.Error;
+			status = 'idle';
 		}
 	}
 
