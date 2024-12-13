@@ -21,7 +21,7 @@ export function useInsidersStatusItem(context: vscode.ExtensionContext) {
 	async function fetchJson() {
 		item.busy = true;
 		item.text = 'Checking for Updates...';
-		item.severity = vscode.LanguageStatusSeverity.Information;
+		item.severity = vscode.LanguageStatusSeverity.Warning;
 		status = 'pending';
 
 		for (const url of [
