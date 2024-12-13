@@ -6,7 +6,7 @@ import TemplateRef from './template-ref.vue';
 function Comp() {
 	const foo = useTemplateRef('templateRef');
 	exactType(foo.value, {} as unknown);
-	return ''
+	return '';
 }
 </script>
 
