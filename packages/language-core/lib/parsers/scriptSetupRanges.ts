@@ -373,7 +373,6 @@ export function parseScriptSetupRanges(
 			}
 			else if (
 				vueCompilerOptions.composables.useTemplateRef.includes(callText)
-				&& node.arguments.length
 				&& !node.typeArguments?.length
 			) {
 				const define = parseDefineFunction(node);
