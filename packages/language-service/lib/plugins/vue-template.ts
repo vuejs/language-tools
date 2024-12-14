@@ -776,8 +776,7 @@ export function create(
 							completionList.items.push(newItem);
 						}
 					}
-
-				} while(0);
+				} while (0);
 
 				completionList.items = completionList.items.filter(item => !specialTags.has(parseLabel(item.label).name));
 
