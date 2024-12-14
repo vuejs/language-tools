@@ -702,22 +702,27 @@ export function create(
 
 			function afterHtmlCompletion(completionList: vscode.CompletionList, document: TextDocument) {
 
-				const replacement = getReplacement(completionList, document);
+				do {
+					const replacement = getReplacement(completionList, document);
+					if (!replacement) {
+						break;
+					}
 
-				if (replacement) {
-
-					const isEvent = replacement.text.startsWith('v-on:') || replacement.text.startsWith('@');
-					const isProp = replacement.text.startsWith('v-bind:') || replacement.text.startsWith(':');
-					const isModel = replacement.text.startsWith('v-model:') || replacement.text.split('.')[0] === 'v-model';
 					const hasModifier = replacement.text.includes('.');
+					if (!hasModifier) {
+						break;
+					}
+
+					const [text, ...modifiers] = replacement.text.split('.');
+					const isEvent = text.startsWith('v-on:') || text === 'v-on' || text.startsWith('@');
+					const isProp = text.startsWith('v-bind:') || text === 'v-bind' || text.startsWith(':');
+					const isModel = text.startsWith('v-model:') || text === 'v-model';
 					const validModifiers =
 						isEvent ? eventModifiers
 							: isProp ? propModifiers
 								: undefined;
-					const modifiers = replacement.text.split('.').slice(1);
-					const textWithoutModifier = replacement.text.split('.')[0];
 
-					if (validModifiers && hasModifier) {
+					if (validModifiers) {
 
 						for (const modifier in validModifiers) {
 
@@ -725,14 +730,14 @@ export function create(
 								continue;
 							}
 
-							const modifierDes = validModifiers[modifier];
-							const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
+							const description = validModifiers[modifier];
+							const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
 							const newItem: html.CompletionItem = {
 								label: modifier,
 								filterText: insertText,
 								documentation: {
 									kind: 'markdown',
-									value: modifierDes,
+									value: description,
 								},
 								textEdit: {
 									range: replacement.textEdit.range,
@@ -744,7 +749,7 @@ export function create(
 							completionList.items.push(newItem);
 						}
 					}
-					else if (hasModifier && isModel) {
+					else if (isModel) {
 
 						for (const modifier of modelData.globalAttributes ?? []) {
 
@@ -752,7 +757,7 @@ export function create(
 								continue;
 							}
 
-							const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier.name;
+							const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier.name;
 							const newItem: html.CompletionItem = {
 								label: modifier.name,
 								filterText: insertText,
@@ -771,7 +776,8 @@ export function create(
 							completionList.items.push(newItem);
 						}
 					}
-				}
+
+				} while(0);
 
 				completionList.items = completionList.items.filter(item => !specialTags.has(parseLabel(item.label).name));
 
