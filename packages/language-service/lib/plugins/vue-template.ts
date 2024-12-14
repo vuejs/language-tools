@@ -894,8 +894,11 @@ export function create(
 							else if (item.label.startsWith('v-bind:')) {
 								tokens.push('\u0003');
 							}
-							else if (item.label.startsWith('v-on:')) {
+							else if (item.label.startsWith('v-model:')) {
 								tokens.push('\u0004');
+							}
+							else if (item.label.startsWith('v-on:')) {
+								tokens.push('\u0005');
 							}
 							else {
 								tokens.push('\u0000');
