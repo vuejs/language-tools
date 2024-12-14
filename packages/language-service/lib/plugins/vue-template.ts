@@ -107,8 +107,8 @@ export function create(
 
 			// https://vuejs.org/api/built-in-directives.html#v-on
 			// https://vuejs.org/api/built-in-directives.html#v-bind
-			const eventModifiers: Record<string, string> = {};
-			const propModifiers: Record<string, string> = {};
+			const vOnModifiers: Record<string, string> = {};
+			const vBindModifiers: Record<string, string> = {};
 			const vOn = builtInData.globalAttributes?.find(x => x.name === 'v-on');
 			const vBind = builtInData.globalAttributes?.find(x => x.name === 'v-bind');
 
@@ -119,8 +119,8 @@ export function create(
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
 					text = text.slice('  - `.'.length);
-					const [name, disc] = text.split('` - ');
-					eventModifiers[name] = disc;
+					const [name, desc] = text.split('` - ');
+					vOnModifiers[name] = desc;
 				}
 			}
 			if (vBind) {
@@ -130,8 +130,8 @@ export function create(
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
 					text = text.slice('  - `.'.length);
-					const [name, disc] = text.split('` - ');
-					propModifiers[name] = disc;
+					const [name, desc] = text.split('` - ');
+					vBindModifiers[name] = desc;
 				}
 			}
 
@@ -714,12 +714,12 @@ export function create(
 					}
 
 					const [text, ...modifiers] = replacement.text.split('.');
-					const isEvent = text.startsWith('v-on:') || text === 'v-on' || text.startsWith('@');
-					const isProp = text.startsWith('v-bind:') || text === 'v-bind' || text.startsWith(':');
-					const isModel = text.startsWith('v-model:') || text === 'v-model';
+					const isVOn = text === 'v-on' || text.startsWith('v-on:') || text.startsWith('@');
+					const isVBind = text === 'v-bind' || text.startsWith('v-bind:') || text.startsWith(':');
+					const isVModel = text === 'v-model' || text.startsWith('v-model:');
 					const validModifiers =
-						isEvent ? eventModifiers
-							: isProp ? propModifiers
+						isVOn ? vOnModifiers
+							: isVBind ? vBindModifiers
 								: undefined;
 
 					if (validModifiers) {
@@ -749,7 +749,7 @@ export function create(
 							completionList.items.push(newItem);
 						}
 					}
-					else if (isModel) {
+					else if (isVModel) {
 
 						for (const modifier of modelData.globalAttributes ?? []) {
 
