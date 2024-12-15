@@ -274,6 +274,14 @@
 					],
 					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
 				},
+				"vue.server.compatibleExtensions": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "Set compatible extensions to skip automatic detection of Hybrid Mode."
+				},
 				"vue.server.includeLanguages": {
 					"type": "array",
 					"items": {
@@ -558,14 +566,14 @@
 		"@types/node": "latest",
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.4.9",
+		"@volar/vscode": "~2.4.11",
 		"@vscode/vsce": "latest",
 		"@vue/language-core": "2.1.10",
 		"@vue/language-server": "2.1.10",
 		"@vue/typescript-plugin": "2.1.10",
 		"esbuild": "latest",
 		"esbuild-visualizer": "latest",
-		"reactive-vscode": "0.2.7-beta.1",
+		"reactive-vscode": "^0.2.9",
 		"semver": "^7.5.4",
 		"sonda": "^0.4.1",
 		"unbuild": "^3.0.0-rc.11",

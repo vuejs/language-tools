@@ -1483,7 +1483,7 @@
       "name": "ref",
       "description": {
         "kind": "markdown",
-        "value": "用于注册[模板引用](https://cn.vuejs.org/guide/essentials/template-refs.html)。\n\n- **预期**：`string | Function`\n\n- **详细信息**\n\n  `ref` 用于注册元素或子组件的引用。\n\n  使用选项式 API，引用将被注册在组件的 `this.$refs` 对象里：\n\n  ```html\n  <!-- 存储为 this.$refs.p -->\n  <p ref=\"p\">hello</p>\n  ```\n\n  使用组合式 API，引用将存储在与名字匹配的 ref 里：\n\n  ```vue\n  <script setup>\n  import { ref } from 'vue'\n\n  const p = ref()\n  </script>\n\n  <template>\n    <p ref=\"p\">hello</p>\n  </template>\n  ```\n\n  如果用于普通 DOM 元素，引用将是元素本身；如果用于子组件，引用将是子组件的实例。\n\n  或者 `ref` 可以接收一个函数值，用于对存储引用位置的完全控制：\n\n  ```html\n  <ChildComponent :ref=\"(el) => child = el\" />\n  ```\n\n  关于 ref 注册时机的重要说明：因为 ref 本身是作为渲染函数的结果来创建的，必须等待组件挂载后才能对它进行访问。\n\n  `this.$refs` 也是非响应式的，因此你不应该尝试在模板中使用它来进行数据绑定。\n\n- **参考**\n  - [指南 - 模板引用](https://cn.vuejs.org/guide/essentials/template-refs.html)\n  - [指南 - 为模板引用标注类型](https://cn.vuejs.org/guide/typescript/composition-api.html#typing-template-refs) <sup class=\"vt-badge ts\" />\n  - [指南 - 为组件模板引用标注类型](https://cn.vuejs.org/guide/typescript/composition-api.html#typing-component-template-refs) <sup class=\"vt-badge ts\" />"
+        "value": "用于注册[模板引用](https://cn.vuejs.org/guide/essentials/template-refs.html)。\n\n- **预期**：`string | Function`\n\n- **详细信息**\n\n  `ref` 用于注册元素或子组件的引用。\n\n  使用选项式 API，引用将被注册在组件的 `this.$refs` 对象里：\n\n  ```html\n  <!-- 存储为 this.$refs.p -->\n  <p ref=\"p\">hello</p>\n  ```\n\n  使用组合式 API，引用将存储在与名字匹配的 ref 里：\n\n  ```vue\n  <script setup>\n  import { useTemplateRef } from 'vue'\n\n  const pRef = useTemplateRef('p')\n  </script>\n\n  <template>\n    <p ref=\"p\">hello</p>\n  </template>\n  ```\n\n  如果用于普通 DOM 元素，引用将是元素本身；如果用于子组件，引用将是子组件的实例。\n\n  或者 `ref` 可以接收一个函数值，用于对存储引用位置的完全控制：\n\n  ```html\n  <ChildComponent :ref=\"(el) => child = el\" />\n  ```\n\n  关于 ref 注册时机的重要说明：因为 ref 本身是作为渲染函数的结果来创建的，必须等待组件挂载后才能对它进行访问。\n\n  `this.$refs` 也是非响应式的，因此你不应该尝试在模板中使用它来进行数据绑定。\n\n- **参考**\n  - [指南 - 模板引用](https://cn.vuejs.org/guide/essentials/template-refs.html)\n  - [指南 - 为模板引用标注类型](https://cn.vuejs.org/guide/typescript/composition-api.html#typing-template-refs) <sup class=\"vt-badge ts\" />\n  - [指南 - 为组件模板引用标注类型](https://cn.vuejs.org/guide/typescript/composition-api.html#typing-component-template-refs) <sup class=\"vt-badge ts\" />"
       },
       "references": [
         {
@@ -1598,6 +1598,67 @@
         {
           "name": "fa",
           "url": "https://fa.vuejs.org/api/built-in-special-attributes.html#is"
+        }
+      ]
+    },
+    {
+      "name": "data-allow-mismatch",
+      "description": {
+        "kind": "markdown",
+        "value": "可以消除[激活不匹配](https://cn.vuejs.org/guide/scaling-up/ssr.html#hydration-mismatch)警告的特殊 attribute。\n\n- **示例**\n\n  ```html\n  <div data-allow-mismatch=\"text\">{{ data.toLocaleString() }}</div>\n  ```\n\n  值可以限制不匹配为特定类型。允许的值有：\n\n  - `text`\n  - `children` (仅允许直接子组件不匹配)\n  - `class`\n  - `style`\n  - `attribute`\n\n  如果没有提供值，则会允许所有类型的不匹配。\n"
+      },
+      "references": [
+        {
+          "name": "en",
+          "url": "https://vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "zh-cn",
+          "url": "https://cn.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "zh-hk",
+          "url": "https://zh-hk.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "ja",
+          "url": "https://ja.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "ua",
+          "url": "https://ua.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "fr",
+          "url": "https://fr.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "ko",
+          "url": "https://ko.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "pt",
+          "url": "https://pt.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "bn",
+          "url": "https://bn.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "it",
+          "url": "https://it.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "cs",
+          "url": "https://cs.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "ru",
+          "url": "https://ru.vuejs.org/api/ssr.html#data-allow-mismatch"
+        },
+        {
+          "name": "fa",
+          "url": "https://fa.vuejs.org/api/ssr.html#data-allow-mismatch"
         }
       ]
     }
