@@ -575,8 +575,8 @@
 		"esbuild-visualizer": "latest",
 		"reactive-vscode": "^0.2.9",
 		"semver": "^7.5.4",
-		"sonda": "^0.4.1",
-		"unbuild": "^3.0.0-rc.11",
+		"sonda": "^0.6.1",
+		"unbuild": "^3.0.1",
 		"vscode-ext-gen": "^0.5.0",
 		"vscode-tmlanguage-snapshot": "latest"
 	}
