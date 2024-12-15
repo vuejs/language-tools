@@ -377,7 +377,7 @@ async function templateWorker(lang) {
 			const lines = section.split('\n');
 			const name = 'data-allow-mismatch';
 			/**
-			 * @type {import('vscode-html-languageservice').ITagData}
+			 * @type {import('vscode-html-languageservice').IAttributeData}
 			 */
 			const data = {
 				name,
