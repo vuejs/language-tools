@@ -192,7 +192,7 @@ export function getComponentNames(
 		?.type
 		?.getProperties()
 		.map(c => c.name)
-		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
+		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];
 }
 
@@ -205,7 +205,7 @@ export function _getComponentNames(
 		?.type
 		?.getProperties()
 		.map(c => c.name)
-		.filter(entry => entry.indexOf('$') === -1 && !entry.startsWith('_'))
+		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];
 }
 
