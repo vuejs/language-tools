@@ -315,7 +315,7 @@ ${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 
 						return resolveNestedProperties(prop);
 					})
-					.filter(prop => !prop.name.match(propEventRegex));
+					.filter(prop => !propEventRegex.test(prop.name));
 			}
 
 			// fill global

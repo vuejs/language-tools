@@ -152,7 +152,8 @@ try {
 					'for(const e of n.contributes.typescriptServerPlugins',
 					s => s + `.filter(p=>p.name!=='vue-typescript-plugin-pack')`
 				);
-			} else if (enabledHybridMode.value) {
+			}
+			else if (enabledHybridMode.value) {
 				// patch readPlugins
 				text = text.replace(
 					'languages:Array.isArray(e.languages)',
