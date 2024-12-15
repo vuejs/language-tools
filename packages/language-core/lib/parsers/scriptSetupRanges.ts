@@ -44,6 +44,9 @@ export function parseScriptSetupRanges(
 		name?: string;
 		inheritAttrs?: string;
 	} = {};
+	const attrs: {
+		define: ReturnType<typeof parseDefineFunction>;
+	}[] = []; 
 	const cssModules: {
 		define: ReturnType<typeof parseDefineFunction>;
 	}[] = [];
@@ -125,6 +128,7 @@ export function parseScriptSetupRanges(
 		emits,
 		expose,
 		options,
+		attrs,
 		cssModules,
 		defineProp,
 		templateRefs,
@@ -371,6 +375,18 @@ export function parseScriptSetupRanges(
 					}
 				}
 			}
+			else if (vueCompilerOptions.composables.useAttrs.includes(callText)) {
+				const define = parseDefineFunction(node);
+				attrs.push({
+					define
+				});
+			}
+			else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
+				const define = parseDefineFunction(node);
+				cssModules.push({
+					define
+				});
+			}
 			else if (
 				vueCompilerOptions.composables.useTemplateRef.includes(callText)
 				&& !node.typeArguments?.length
@@ -379,12 +395,6 @@ export function parseScriptSetupRanges(
 				const name = ts.isVariableDeclaration(parent) ? _getNodeText(parent.name) : undefined;
 				templateRefs.push({
 					name,
-					define
-				});
-			}
-			else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
-				const define = parseDefineFunction(node);
-				cssModules.push({
 					define
 				});
 			}

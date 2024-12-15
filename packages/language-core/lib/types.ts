@@ -44,6 +44,7 @@ export interface VueCompilerOptions {
 		withDefaults: string[];
 	};
 	composables: {
+		useAttrs: string[];
 		useCssModule: string[];
 		useTemplateRef: string[];
 	};

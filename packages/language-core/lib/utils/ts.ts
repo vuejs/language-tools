@@ -252,6 +252,7 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			...vueOptions.macros,
 		},
 		composables: {
+			useAttrs: ['useAttrs'],
 			useCssModule: ['useCssModule'],
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
 			...vueOptions.composables,

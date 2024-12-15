@@ -192,6 +192,19 @@ function* generateSetupFunction(
 			]);
 		}
 	}
+	if (scriptSetupRanges.attrs.length) {
+		for (const { define } of scriptSetupRanges.attrs) {
+			setupCodeModifies.push([
+				[`(`],
+				define.start,
+				define.start
+			], [
+				[` as __VLS_TemplateResult['attrs'] & Record<string, unknown>)`],
+				define.end,
+				define.end
+			])
+		}
+	}
 	for (const { define } of scriptSetupRanges.cssModules) {
 		setupCodeModifies.push([
 			[`(`],
