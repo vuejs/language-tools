@@ -1,5 +1,5 @@
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
-import * as vue from '@vue/language-core';
+import { VueVirtualCode } from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -18,12 +18,12 @@ export function create(): LanguageServicePlugin {
 			return [sfcDataProvider];
 		},
 		async getFormattingOptions(document, options, context) {
-			return await worker(document, context, async vueCode => {
+			return await worker(document, context, async root => {
 
 				const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
 				const blockTypes = ['template', 'script', 'style'];
 
-				for (const customBlock of vueCode._sfc.customBlocks) {
+				for (const customBlock of root._sfc.customBlocks) {
 					blockTypes.push(customBlock.type);
 				}
 
@@ -53,7 +53,7 @@ export function create(): LanguageServicePlugin {
 				provideDocumentLinks: undefined,
 
 				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
-					if (sourceScript.generated?.root instanceof vue.VueVirtualCode) {
+					if (sourceScript.generated?.root instanceof VueVirtualCode) {
 						if (virtualCode.id === 'script_raw' || virtualCode.id === 'scriptsetup_raw') {
 							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
@@ -74,10 +74,10 @@ export function create(): LanguageServicePlugin {
 				},
 
 				provideDocumentSymbols(document) {
-					return worker(document, context, vueSourceFile => {
+					return worker(document, context, root => {
 
 						const result: vscode.DocumentSymbol[] = [];
-						const descriptor = vueSourceFile._sfc;
+						const descriptor = root._sfc;
 
 						if (descriptor.template) {
 							result.push({
@@ -237,14 +237,16 @@ export function create(): LanguageServicePlugin {
 		},
 	};
 
-	function worker<T>(document: TextDocument, context: LanguageServiceContext, callback: (vueSourceFile: vue.VueVirtualCode) => T) {
+	function worker<T>(document: TextDocument, context: LanguageServiceContext, callback: (root: VueVirtualCode) => T) {
 		if (document.languageId !== 'vue-root-tags') {
 			return;
 		}
-		const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+		const uri = URI.parse(document.uri);
+		const decoded = context.decodeEmbeddedDocumentUri(uri);
 		const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-		if (sourceScript?.generated?.root instanceof vue.VueVirtualCode) {
-			return callback(sourceScript.generated.root);
+		const root = sourceScript?.generated?.root;
+		if (root instanceof VueVirtualCode) {
+			return callback(root);
 		}
 	}
 }

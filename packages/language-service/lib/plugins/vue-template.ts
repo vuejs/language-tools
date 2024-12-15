@@ -162,7 +162,8 @@ export function create(
 					let sync: (() => Promise<number>) | undefined;
 					let currentVersion: number | undefined;
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const root = sourceScript?.generated?.root;
 
