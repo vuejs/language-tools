@@ -17,12 +17,12 @@ export default defineBuildConfig([
 			},
 			{
 				builder: 'rollup',
-				input: './node_modules/@vue/language-server/bin/vue-language-server.js',
+				input: './node_modules/@vue/language-server/node.ts',
 				name: 'server',
 			},
 			{
 				builder: 'rollup',
-				input: './node_modules/@vue/typescript-plugin/index.js',
+				input: './node_modules/@vue/typescript-plugin/index.ts',
 				name: 'plugin',
 			},
 			{
