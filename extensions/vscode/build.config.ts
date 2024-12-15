@@ -95,7 +95,7 @@ export default defineBuildConfig([
 			'build:done'(ctx) {
 				if (ctx.options.stub) {
 					// Patch the stub file
-					const stubFilePath = join(__dirname, 'dist/client.js');
+					const stubFilePath = join(__dirname, 'dist/client.cjs');
 					const originalStub = readFileSync(stubFilePath, 'utf-8');
 					const newStub = [
 						`globalThis.__VOLAR_DEV_VSCODE__ = require('vscode');`,
