@@ -66,8 +66,8 @@ importers:
         specifier: ^7.5.4
         version: 7.6.3
       sonda:
-        specifier: ^0.6.1
-        version: 0.6.1
+        specifier: ^0.6.2
+        version: 0.6.2
       unbuild:
         specifier: ^3.0.1
         version: 3.0.1(typescript@5.7.2)(vue@3.5.13(typescript@5.7.2))
@@ -3313,8 +3313,8 @@ packages:
     resolution: {integrity: sha512-l5x7VUUWbjVFbafGLxPWkYsHIhEvmF85tbIeFZWc8ZPtoMyybuEhL7Jye/ooC4/d48FgOjSJXgsF/AJPYCW8Zw==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
-  sonda@0.6.1:
-    resolution: {integrity: sha512-0N32ZDSfN1FSYkoZOF0zshPtYZXloChfVOjGHiZmPhaBbykC8mL8/j861S5GcZXuIqDv0TJH3RHFkHJgBbMCFw==}
+  sonda@0.6.2:
+    resolution: {integrity: sha512-YD+3qKnB6Tov0aHH/pbWFXeppu51Aqg3Ih5t3zambwLhO5kIwb70m7qNcItK1ocfvCdFtb0uPuWczI7c0E3grA==}
 
   sort-keys@5.1.0:
     resolution: {integrity: sha512-aSbHV0DaBcr7u0PVHXzM6NbZNAtrr9sF6+Qfs9UUVG7Ll3jQ6hHi8F/xqIIcn2rvIVbr0v/2zyjSdwSV47AgLQ==}
@@ -7237,7 +7237,7 @@ snapshots:
       ip-address: 9.0.5
       smart-buffer: 4.2.0
 
-  sonda@0.6.1:
+  sonda@0.6.2:
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@jridgewell/sourcemap-codec': 1.5.0
