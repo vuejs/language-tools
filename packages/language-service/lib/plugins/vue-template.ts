@@ -238,7 +238,7 @@ export function create(
 						while ((token = scanner.scan()) !== html.TokenType.EOS) {
 							if (token === html.TokenType.StartTag) {
 								const tagName = scanner.getTokenText();
-								const checkTag = tagName.indexOf('.') >= 0
+								const checkTag = tagName.includes('.')
 									? tagName
 									: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 								if (checkTag) {
@@ -259,7 +259,7 @@ export function create(
 									}
 									else {
 										// remove modifiers
-										if (attrText.indexOf('.') >= 0) {
+										if (attrText.includes('.')) {
 											attrText = attrText.split('.')[0];
 										}
 										// normalize
