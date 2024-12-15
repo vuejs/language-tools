@@ -714,9 +714,9 @@ export function create(
 					}
 
 					const [text, ...modifiers] = replacement.text.split('.');
-					const isVOn = text === 'v-on' || text.startsWith('v-on:') || text.startsWith('@');
-					const isVBind = text === 'v-bind' || text.startsWith('v-bind:') || text.startsWith(':');
-					const isVModel = text === 'v-model' || text.startsWith('v-model:');
+					const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
+					const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
+					const isVModel = text.startsWith('v-model:') || text === 'v-model';
 					const validModifiers =
 						isVOn ? vOnModifiers
 							: isVBind ? vBindModifiers
