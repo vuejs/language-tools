@@ -89,7 +89,6 @@ export default defineBuildConfig([
 				if (!Array.isArray(options.output)) throw new Error('Unreachable');
 				options.output = options.output.filter((option) => option.format === 'cjs');
 				if (options.output.length !== 1) throw new Error('Unreachable');
-				options.output[0].entryFileNames = '[name].cjs';
 			},
 
 			'build:done'(ctx) {
