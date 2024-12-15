@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { SondaRollupPlugin } from 'sonda';
@@ -19,6 +19,11 @@ export default defineBuildConfig([
 				builder: 'rollup',
 				input: './node_modules/@vue/language-server/bin/vue-language-server.js',
 				name: 'server',
+			},
+			{
+				builder: 'rollup',
+				input: './node_modules/@vue/typescript-plugin/index.js',
+				name: 'plugin',
 			},
 			{
 				builder: 'copy',
@@ -70,7 +75,7 @@ export default defineBuildConfig([
 							handler(code: string, id: string) {
 								if (languageServiceDataRE.test(id.replaceAll('\\', '/'))) {
 									const minimal = JSON.stringify(JSON.parse(code));
-									const escaped =	minimal.replaceAll(/[$`\\]/g, c => `\\${c}`);
+									const escaped = minimal.replaceAll(/[$`\\]/g, c => `\\${c}`);
 									return {
 										code: `export default JSON.parse(\`${escaped}\`)`,
 										map: { mappings: '' },
@@ -92,6 +97,12 @@ export default defineBuildConfig([
 			},
 
 			'build:done'(ctx) {
+				// Create the entry point for the TypeScript plugin
+				const typescriptPluginRoot = join(__dirname, 'node_modules/vue-typescript-plugin-pack');
+				mkdirSync(typescriptPluginRoot, { recursive: true });
+				writeFileSync(join(typescriptPluginRoot, 'index.js'), 'module.exports = require("../../dist/plugin.cjs");');
+
+				// Patch the stub files
 				if (ctx.options.stub) {
 					// Patch the stub file
 					const stubFilePath = join(__dirname, 'dist/client.cjs');
