@@ -275,6 +275,9 @@ export function create(
 										else if (attrText === 'v-model') {
 											attrText = vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
 										}
+										else if (attrText.startsWith('v-on:')) {
+											attrText = 'on-' + hyphenateAttr(attrText.slice('v-on:'.length));
+										}
 										else if (attrText.startsWith('@')) {
 											attrText = 'on-' + hyphenateAttr(attrText.slice('@'.length));
 										}
