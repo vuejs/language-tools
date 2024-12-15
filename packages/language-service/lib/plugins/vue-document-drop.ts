@@ -59,7 +59,7 @@ export function create(
 					baseName = baseName.slice(0, baseName.lastIndexOf('.'));
 
 					const newName = capitalize(camelize(baseName));
-					const { _sfc: sfc } = root;
+					const sfc = root._sfc;
 					const script = sfc.scriptSetup ?? sfc.script;
 
 					if (!script) {

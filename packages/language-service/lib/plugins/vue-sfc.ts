@@ -77,51 +77,51 @@ export function create(): LanguageServicePlugin {
 					return worker(document, context, root => {
 
 						const result: vscode.DocumentSymbol[] = [];
-						const descriptor = root._sfc;
+						const sfc = root._sfc;
 
-						if (descriptor.template) {
+						if (sfc.template) {
 							result.push({
 								name: 'template',
 								kind: 2 satisfies typeof vscode.SymbolKind.Module,
 								range: {
-									start: document.positionAt(descriptor.template.start),
-									end: document.positionAt(descriptor.template.end),
+									start: document.positionAt(sfc.template.start),
+									end: document.positionAt(sfc.template.end),
 								},
 								selectionRange: {
-									start: document.positionAt(descriptor.template.start),
-									end: document.positionAt(descriptor.template.startTagEnd),
+									start: document.positionAt(sfc.template.start),
+									end: document.positionAt(sfc.template.startTagEnd),
 								},
 							});
 						}
-						if (descriptor.script) {
+						if (sfc.script) {
 							result.push({
 								name: 'script',
 								kind: 2 satisfies typeof vscode.SymbolKind.Module,
 								range: {
-									start: document.positionAt(descriptor.script.start),
-									end: document.positionAt(descriptor.script.end),
+									start: document.positionAt(sfc.script.start),
+									end: document.positionAt(sfc.script.end),
 								},
 								selectionRange: {
-									start: document.positionAt(descriptor.script.start),
-									end: document.positionAt(descriptor.script.startTagEnd),
+									start: document.positionAt(sfc.script.start),
+									end: document.positionAt(sfc.script.startTagEnd),
 								},
 							});
 						}
-						if (descriptor.scriptSetup) {
+						if (sfc.scriptSetup) {
 							result.push({
 								name: 'script setup',
 								kind: 2 satisfies typeof vscode.SymbolKind.Module,
 								range: {
-									start: document.positionAt(descriptor.scriptSetup.start),
-									end: document.positionAt(descriptor.scriptSetup.end),
+									start: document.positionAt(sfc.scriptSetup.start),
+									end: document.positionAt(sfc.scriptSetup.end),
 								},
 								selectionRange: {
-									start: document.positionAt(descriptor.scriptSetup.start),
-									end: document.positionAt(descriptor.scriptSetup.startTagEnd),
+									start: document.positionAt(sfc.scriptSetup.start),
+									end: document.positionAt(sfc.scriptSetup.startTagEnd),
 								},
 							});
 						}
-						for (const style of descriptor.styles) {
+						for (const style of sfc.styles) {
 							let name = 'style';
 							if (style.scoped) {
 								name += ' scoped';
@@ -142,7 +142,7 @@ export function create(): LanguageServicePlugin {
 								},
 							});
 						}
-						for (const customBlock of descriptor.customBlocks) {
+						for (const customBlock of sfc.customBlocks) {
 							result.push({
 								name: `${customBlock.type}`,
 								kind: 2 satisfies typeof vscode.SymbolKind.Module,
