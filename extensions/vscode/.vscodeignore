@@ -3,7 +3,7 @@ src
 tests
 tsconfig.*
 build.config.ts
-vscode.js
+vscode-dev-shim.js
 meta.json
 stats.html
 sonda-report.html

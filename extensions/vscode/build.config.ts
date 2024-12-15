@@ -53,7 +53,7 @@ export default defineBuildConfig([
 		stubOptions: {
 			jiti: {
 				alias: {
-					vscode: join(__dirname, 'vscode.js'),
+					vscode: join(__dirname, 'vscode-dev-shim.js'),
 				},
 				sourceMaps: true,
 			},
