@@ -1,15 +1,5 @@
 import type * as html from 'vscode-html-languageservice';
 
-declare module 'vscode-html-languageservice' {
-	interface ITagData {
-		__reference?: string;
-	}
-
-	interface IAttributeData {
-		__reference?: string;
-	}
-}
-
 let locale: { name: string, url: string }[];
 
 export function loadTemplateData(lang: string) {
@@ -165,9 +155,10 @@ function resolveReferences(data: html.HTMLDataV1) {
 	locale ??= require('../../data/locale.json');
 
 	for (const item of [...data.globalAttributes ?? [], ...data.tags ?? []]) {
+		const relativeUrl = Reflect.get(item, 'reference') as string;
 		item.references = locale.map(({ name, url }) => ({
 			name,
-			url: url + item.__reference
+			url: url + relativeUrl
 		}));
 	}
 }
