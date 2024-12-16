@@ -122,7 +122,6 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 			? T
 			: __VLS_unknownDirective;
 	function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
-	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 	function __VLS_nonNullable<T>(t: T): T extends null | undefined ? never : T;
 	function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 		T extends new (...args: any) => any

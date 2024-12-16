@@ -52,8 +52,7 @@ export function* generateComponent(
 export function* generateComponentSetupReturns(scriptSetupRanges: ScriptSetupRanges): Generator<Code> {
 	// fill $props
 	if (scriptSetupRanges.props.define) {
-		// NOTE: defineProps is inaccurate for $props
-		yield `$props: __VLS_makeOptional(${scriptSetupRanges.props.name ?? `__VLS_props`}),${newLine}`;
+		yield `$props: ${scriptSetupRanges.props.name ?? `__VLS_props`},${newLine}`;
 		yield `...${scriptSetupRanges.props.name ?? `__VLS_props`},${newLine}`;
 	}
 	// fill $emit
