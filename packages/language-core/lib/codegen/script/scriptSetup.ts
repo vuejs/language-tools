@@ -211,7 +211,7 @@ function* generateSetupFunction(
 			[` as __VLS_TemplateResult['attrs'] & Record<string, unknown>)`],
 			callExp.end,
 			callExp.end
-		])
+		]);
 	}
 	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
 		setupCodeModifies.push([
@@ -230,6 +230,17 @@ function* generateSetupFunction(
 				['', scriptSetup.name, exp.end, codeFeatures.verification],
 				`])`
 			],
+			callExp.end,
+			callExp.end
+		]);
+	}
+	for (const { callExp } of scriptSetupRanges.useSlots) {
+		setupCodeModifies.push([
+			[`(`],
+			callExp.start,
+			callExp.start
+		], [
+			[` as __VLS_TemplateResult['slots'])`],
 			callExp.end,
 			callExp.end
 		]);

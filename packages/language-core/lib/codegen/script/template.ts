@@ -62,7 +62,7 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		exps.push(
 			`{} as { [K in ${nameType}]: typeof __VLS_self & (new () => { `
 			+ getSlotsPropertyName(options.vueCompilerOptions.target)
-			+ ` : typeof ${options.scriptSetupRanges?.defineSlots?.name ?? `__VLS_slots`} }) }`
+			+ `: typeof ${options.scriptSetupRanges?.defineSlots?.name ?? `__VLS_slots`} }) }`
 		);
 	}
 
