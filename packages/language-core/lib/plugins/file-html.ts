@@ -67,8 +67,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					});
 				}
 				// ignore `<script src="...">`
-				else if (tag === 'script' && attrs.indexOf('src=') === -1) {
-					let type: 'script' | 'scriptSetup' = attrs.indexOf('type=') >= 0 ? 'scriptSetup' : 'script';
+				else if (tag === 'script' && !attrs.includes('src=')) {
+					let type: 'script' | 'scriptSetup' = attrs.includes('type=') ? 'scriptSetup' : 'script';
 					sfc.descriptor[type] = {
 						attrs: {},
 						content,

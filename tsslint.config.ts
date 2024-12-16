@@ -1,5 +1,5 @@
 import { defineConfig } from '@tsslint/config';
-import config from 'https://raw.githubusercontent.com/johnsoncodehk/tsslint-config/refs/heads/master/v1.1.cjs';
+import config from 'https://raw.githubusercontent.com/johnsoncodehk/tsslint-config/refs/heads/master/v1.4.cjs';
 
 export default defineConfig({
 	exclude: [

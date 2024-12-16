@@ -56,13 +56,13 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 	}
 	else if (options.sfc.scriptSetup) {
 		const baseName = path.basename(options.fileName);
-		nameType = `'${options.scriptSetupRanges?.options.name ?? baseName.slice(0, baseName.lastIndexOf('.'))}'`;
+		nameType = `'${options.scriptSetupRanges?.defineOptions?.name ?? baseName.slice(0, baseName.lastIndexOf('.'))}'`;
 	}
 	if (nameType) {
 		exps.push(
 			`{} as { [K in ${nameType}]: typeof __VLS_self & (new () => { `
 			+ getSlotsPropertyName(options.vueCompilerOptions.target)
-			+ ` : typeof ${options.scriptSetupRanges?.slots.name ?? `__VLS_slots`} }) }`
+			+ `: typeof ${options.scriptSetupRanges?.defineSlots?.name ?? `__VLS_slots`} }) }`
 		);
 	}
 
@@ -165,7 +165,7 @@ function* generateTemplateBody(
 	}
 	else {
 		yield `// no template${newLine}`;
-		if (!options.scriptSetupRanges?.slots.define) {
+		if (!options.scriptSetupRanges?.defineSlots) {
 			yield `const __VLS_slots = {}${endOfLine}`;
 		}
 		yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
@@ -175,7 +175,7 @@ function* generateTemplateBody(
 
 	yield `return {${newLine}`;
 	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
-	yield `	slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
+	yield `	slots: ${options.scriptSetupRanges?.defineSlots?.name ?? '__VLS_slots'},${newLine}`;
 	yield `	refs: $refs,${newLine}`;
 	yield `	rootEl: $el,${newLine}`;
 	yield `}${endOfLine}`;
@@ -247,7 +247,7 @@ export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptC
 			}
 		}
 		for (const component of components) {
-			if (component.indexOf('.') >= 0) {
+			if (component.includes('.')) {
 				usageVars.add(component.split('.')[0]);
 			}
 		}

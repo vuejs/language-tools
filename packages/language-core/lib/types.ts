@@ -43,8 +43,10 @@ export interface VueCompilerOptions {
 		defineOptions: string[];
 		withDefaults: string[];
 	};
-	composibles: {
+	composables: {
+		useAttrs: string[];
 		useCssModule: string[];
+		useSlots: string[];
 		useTemplateRef: string[];
 	};
 	plugins: VueLanguagePlugin[];
@@ -101,13 +103,6 @@ export interface SfcBlock {
 	attrs: Record<string, string | true>;
 }
 
-export interface SFCStyleOverride {
-	module?: {
-		name: string;
-		offset?: number;
-	};
-}
-
 export interface Sfc {
 	content: string;
 	comments: string[],
@@ -127,8 +122,12 @@ export interface Sfc {
 		genericOffset: number;
 		ast: ts.SourceFile;
 	} | undefined;
-	styles: readonly (SfcBlock & SFCStyleOverride & {
+	styles: readonly (SfcBlock & {
 		scoped: boolean;
+		module?: {
+			name: string;
+			offset?: number;
+		};
 		cssVars: {
 			text: string;
 			offset: number;
@@ -141,6 +140,15 @@ export interface Sfc {
 	customBlocks: readonly (SfcBlock & {
 		type: string;
 	})[];
+}
+
+declare module '@vue/compiler-sfc' {
+	interface SFCStyleBlock {
+		__module?: {
+			name: string;
+			offset?: number;
+		};
+	}
 }
 
 export interface TextRange {

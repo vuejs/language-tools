@@ -131,7 +131,7 @@ export function isCharacterTyping(document: TextDocument, change: { text: string
 	if (lastCharacter === undefined) { // delete text
 		return false;
 	}
-	if (change.text.indexOf('\n') >= 0) { // multi-line change
+	if (change.text.includes('\n')) { // multi-line change
 		return false;
 	}
 	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);

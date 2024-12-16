@@ -247,8 +247,10 @@ function getDefaultOptions(options: Partial<VueCompilerOptions>): VueCompilerOpt
 			defineOptions: ['defineOptions'],
 			withDefaults: ['withDefaults'],
 		},
-		composibles: {
+		composables: {
+			useAttrs: ['useAttrs'],
 			useCssModule: ['useCssModule'],
+			useSlots: ['useSlots'],
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
 		},
 		plugins: [],
@@ -269,9 +271,9 @@ export function resolveVueCompilerOptions(
 			...defaults.macros,
 			...options.macros,
 		},
-		composibles: {
-			...defaults.composibles,
-			...options.composibles,
+		composables: {
+			...defaults.composables,
+			...options.composables,
 		},
 
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
