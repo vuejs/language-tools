@@ -152,7 +152,7 @@ export function computedSfc(
 
 	return {
 		get content() { return content.get(); },
-		get comments() { return comments.get() },
+		get comments() { return comments.get(); },
 		get template() { return template.get(); },
 		get script() { return script.get(); },
 		get scriptSetup() { return scriptSetup.get(); },
