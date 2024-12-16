@@ -181,7 +181,7 @@ function createTsx(
 
 		return {
 			...current.value,
-			codes: codes,
+			codes,
 			linkedCodeMappings,
 		};
 	});
