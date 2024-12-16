@@ -88,7 +88,7 @@
 		],
 		"typescriptServerPlugins": [
 			{
-				"name": "typescript-vue-plugin-bundle",
+				"name": "vue-typescript-plugin-pack",
 				"enableForWorkspaceTypeScriptVersions": true,
 				"configNamespace": "typescript"
 			}
@@ -273,6 +273,14 @@
 						"Disable TypeScript Plugin/Hybrid Mode."
 					],
 					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
+				},
+				"vue.server.compatibleExtensions": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "Set compatible extensions to skip automatic detection of Hybrid Mode."
 				},
 				"vue.server.includeLanguages": {
 					"type": "array",
@@ -557,15 +565,14 @@
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.4.8",
+		"@volar/vscode": "~2.4.11",
 		"@vscode/vsce": "latest",
 		"@vue/language-core": "2.1.10",
 		"@vue/language-server": "2.1.10",
 		"@vue/typescript-plugin": "2.1.10",
 		"esbuild": "latest",
-		"esbuild-plugin-copy": "latest",
 		"esbuild-visualizer": "latest",
-		"reactive-vscode": "0.2.7-beta.1",
+		"reactive-vscode": "^0.2.9",
 		"semver": "^7.5.4",
 		"vscode-ext-gen": "^0.5.0",
 		"vscode-tmlanguage-snapshot": "latest"

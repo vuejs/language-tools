@@ -602,7 +602,7 @@ function* generateReferencesForElements(
 			);
 			yield ` } */${endOfLine}`;
 
-			if (variableNameRegex.test(content)) {
+			if (variableNameRegex.test(content) && !options.templateRefNames.has(content)) {
 				ctx.accessExternalVariable(content, startOffset);
 			}
 

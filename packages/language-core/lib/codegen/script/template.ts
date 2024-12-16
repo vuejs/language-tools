@@ -247,7 +247,7 @@ export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptC
 			}
 		}
 		for (const component of components) {
-			if (component.indexOf('.') >= 0) {
+			if (component.includes('.')) {
 				usageVars.add(component.split('.')[0]);
 			}
 		}

@@ -76,7 +76,8 @@ async function activateLc(
 			requestReloadVscode(
 				`Please reload VSCode to ${newValues[0] ? 'enable' : 'disable'} Hybrid Mode.`
 			);
-		} else if (newValues[1] !== oldValues[1]) {
+		}
+		else if (newValues[1] !== oldValues[1]) {
 			requestReloadVscode(
 				`Please reload VSCode to ${newValues[1] ? 'enable' : 'disable'} Vue TypeScript Plugin.`
 			);

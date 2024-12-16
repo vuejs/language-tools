@@ -102,7 +102,7 @@ async function sfcWorker(lang) {
 		name: 'lang',
 		description: {
 			kind: 'markdown',
-			value: sfcDoc.split('\n## ')[4].split('\n').slice(1).join('\n'),
+			value: sfcDoc.split('\n## ')[4].split('\n').slice(1).join('\n').trim(),
 		},
 		values: [
 			// // custom block
@@ -127,7 +127,7 @@ async function sfcWorker(lang) {
 		name: 'src',
 		description: {
 			kind: 'markdown',
-			value: sfcDoc.split('\n## ')[5].split('\n').slice(1).join('\n'),
+			value: sfcDoc.split('\n## ')[5].split('\n').slice(1).join('\n').trim(),
 		},
 		references: langs.map(lang => ({
 			name: lang.name,
@@ -194,7 +194,7 @@ async function sfcWorker(lang) {
 					valueSet: 'v',
 					description: {
 						kind: 'markdown',
-						value: cssFeaturesDoc.split('\n## ')[1].split('\n').slice(1).join('\n'),
+						value: cssFeaturesDoc.split('\n## ')[1].split('\n').slice(1).join('\n').trim(),
 					},
 					references: langs.map(lang => ({
 						name: lang.name,
@@ -206,7 +206,7 @@ async function sfcWorker(lang) {
 					valueSet: 'v',
 					description: {
 						kind: 'markdown',
-						value: cssFeaturesDoc.split('\n## ')[2].split('\n').slice(1).join('\n'),
+						value: cssFeaturesDoc.split('\n## ')[2].split('\n').slice(1).join('\n').trim(),
 					},
 					references: langs.map(lang => ({
 						name: lang.name,
@@ -263,7 +263,7 @@ async function modelWorker(lang) {
 				name,
 				description: {
 					kind: 'markdown',
-					value: lines.slice(1).join('\n'),
+					value: lines.slice(1).join('\n').trim(),
 				},
 				references: langs.map(lang => ({
 					name: lang.name,
@@ -288,61 +288,12 @@ async function modelWorker(lang) {
 
 async function templateWorker(lang) {
 
-	const directivesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-directives.md', lang.url);
-	const attributesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-special-attributes.md', lang.url);
 	const componentsDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-components.md', lang.url);
 	const elementsDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-special-elements.md', lang.url);
+	const directivesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-directives.md', lang.url);
+	const attributesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-special-attributes.md', lang.url);
+	const ssrDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/ssr.md', lang.url);
 
-	const directives = directivesDoc
-		.split('\n## ')
-		.slice(1)
-		.map((section) => {
-			const lines = section.split('\n');
-			const name = normalizeAttrName(lines[0]);
-			/**
-			 * @type {import('vscode-html-languageservice').IAttributeData}
-			 */
-			const data = {
-				name,
-				valueSet:
-					name === 'v-cloak' ||
-					name === 'v-else' ||
-					name === 'v-once' ||
-					name === 'v-pre'
-					? 'v' : undefined,
-				description: {
-					kind: 'markdown',
-					value: lines.slice(1).join('\n'),
-				},
-				references: langs.map(lang => ({
-					name: lang.name,
-					url: `${lang.url}api/built-in-directives.html#${normalizeHash(name)}`,
-				})),
-			};
-			return data;
-		});
-	const attributes = attributesDoc
-		.split('\n## ')
-		.slice(1)
-		.map((section) => {
-			const lines = section.split('\n');
-			const name = normalizeAttrName(lines[0]);
-			/**
-			 * @type {import('vscode-html-languageservice').IAttributeData}
-			 */
-			const data = {
-				name,
-				description: {
-					kind: 'markdown',
-					value: lines.slice(1).join('\n'),
-				},
-				references: langs.map(lang => ({
-					name: lang.name,
-					url: `${lang.url}api/built-in-special-attributes.html#${normalizeHash(name)}`,
-				})),
-			};
-			return data;
-		});
 	const components = componentsDoc
 		.split('\n## ')
 		.slice(1)
@@ -389,6 +340,82 @@ async function templateWorker(lang) {
 			};
 			return data;
 		});
+	const directives = directivesDoc
+		.split('\n## ')
+		.slice(1)
+		.map((section) => {
+			const lines = section.split('\n');
+			const name = normalizeAttrName(lines[0]);
+			/**
+			 * @type {import('vscode-html-languageservice').IAttributeData}
+			 */
+			const data = {
+				name,
+				valueSet:
+					name === 'v-cloak' ||
+					name === 'v-else' ||
+					name === 'v-once' ||
+					name === 'v-pre'
+					? 'v' : undefined,
+				description: {
+					kind: 'markdown',
+					value: lines.slice(1).join('\n').trim(),
+				},
+				references: langs.map(lang => ({
+					name: lang.name,
+					url: `${lang.url}api/built-in-directives.html#${normalizeHash(name)}`,
+				})),
+			};
+			return data;
+		});
+	const attributes = attributesDoc
+		.split('\n## ')
+		.slice(1)
+		.map((section) => {
+			const lines = section.split('\n');
+			const name = normalizeAttrName(lines[0]);
+			/**
+			 * @type {import('vscode-html-languageservice').IAttributeData}
+			 */
+			const data = {
+				name,
+				description: {
+					kind: 'markdown',
+					value: lines.slice(1).join('\n').trim(),
+				},
+				references: langs.map(lang => ({
+					name: lang.name,
+					url: `${lang.url}api/built-in-special-attributes.html#${normalizeHash(name)}`,
+				})),
+			};
+			return data;
+		});
+	const dataAllowMismatch = ssrDoc
+		.split(/## data-allow-mismatch.*\n/)
+		.slice(1)
+		.map((section) => {
+			const lines = section.split('\n');
+			const name = 'data-allow-mismatch';
+			/**
+			 * @type {import('vscode-html-languageservice').ITagData}
+			 */
+			const data = {
+				name,
+				description: {
+					kind: 'markdown',
+					value: lines.slice(1).join('\n'),
+				},
+				references: langs.map(lang => ({
+					name: lang.name,
+					url: `${lang.url}api/ssr.html#${normalizeHash(name)}`,
+				})),
+			};
+			return data;
+		})[0];
+
+	if (dataAllowMismatch) {
+		attributes.push(dataAllowMismatch);
+	}
 
 	/**
 	 * @type {import('vscode-html-languageservice').HTMLDataV1}
@@ -401,7 +428,7 @@ async function templateWorker(lang) {
 		],
 		globalAttributes: [
 			...directives,
-			...attributes
+			...attributes,
 		],
 	};
 

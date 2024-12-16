@@ -5,7 +5,7 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\nデフォルトでは、 `v-model` は各 `input` イベントの後に、入力とデータを同期します（[上記](#vmodel-ime-tip) の IME による入力は例外とします）。 代わりに `change` イベント後に同期する `lazy` 修飾子を追加することができます。\n\n```html\n<!-- \"input\" の代わりに \"change\" イベント後に同期されます -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "デフォルトでは、 `v-model` は各 `input` イベントの後に、入力とデータを同期します（[上記](#vmodel-ime-tip) の IME による入力は例外とします）。 代わりに `change` イベント後に同期する `lazy` 修飾子を追加することができます。\n\n```html\n<!-- \"input\" の代わりに \"change\" イベント後に同期されます -->\n<input v-model.lazy=\"msg\" />\n```"
       },
       "references": [
         {
@@ -66,7 +66,7 @@
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "\nユーザー入力を自動で数値として型変換したい場合、 `v-model` で管理している入力に `number` 修飾子を追加することができます。\n\n```html\n<input v-model.number=\"age\" />\n```\n\nもし値が `parseFloat()` で解析できない場合は、代わりに元の値が使用されます。\n\ninput が `type=\"number\"` を持つ場合は `number` 修飾子が自動で適用されます。\n"
+        "value": "ユーザー入力を自動で数値として型変換したい場合、 `v-model` で管理している入力に `number` 修飾子を追加することができます。\n\n```html\n<input v-model.number=\"age\" />\n```\n\nもし値が `parseFloat()` で解析できない場合は、代わりに元の（文字列）値が使用されます。特に、入力が空の場合（例えばユーザーが入力フィールドをクリアした後など）、空文字列が返されます。この動作は [DOM プロパティの `valueAsNumber`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement#valueasnumber) とは異なります。\n\ninput が `type=\"number\"` を持つ場合は `number` 修飾子が自動で適用されます。"
       },
       "references": [
         {
@@ -127,7 +127,7 @@
       "name": "trim",
       "description": {
         "kind": "markdown",
-        "value": "\nユーザー入力から自動で空白を取り除きたい場合、 `v-model` で管理している入力に `trim` 修飾子を追加することができます。\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+        "value": "ユーザー入力から自動で空白を取り除きたい場合、 `v-model` で管理している入力に `trim` 修飾子を追加することができます。\n\n```html\n<input v-model.trim=\"msg\" />\n```"
       },
       "references": [
         {

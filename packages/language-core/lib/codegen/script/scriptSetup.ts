@@ -192,40 +192,53 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	if (scriptSetupRanges.cssModules.length) {
-		for (const { define } of scriptSetupRanges.cssModules) {
+	if (scriptSetupRanges.attrs.length) {
+		for (const { define } of scriptSetupRanges.attrs) {
 			setupCodeModifies.push([
 				[`(`],
 				define.start,
 				define.start
 			], [
-				define.arg ? [
-					` as Omit<__VLS_StyleModules, '$style'>[`,
-					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.all),
-					`])`
-				] : [
-					` as __VLS_StyleModules[`,
-					['', scriptSetup.name, define.exp.start, codeFeatures.verification],
-					`'$style'`,
-					['', scriptSetup.name, define.exp.end, codeFeatures.verification],
-					`])`
-				],
+				[` as __VLS_TemplateResult['attrs'] & Record<string, unknown>)`],
 				define.end,
 				define.end
-			]);
+			])
 		}
+	}
+	for (const { define } of scriptSetupRanges.cssModules) {
+		setupCodeModifies.push([
+			[`(`],
+			define.start,
+			define.start
+		], [
+			define.arg ? [
+				` as Omit<__VLS_StyleModules, '$style'>[`,
+				generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.all),
+				`])`
+			] : [
+				` as __VLS_StyleModules[`,
+				['', scriptSetup.name, define.exp.start, codeFeatures.verification],
+				`'$style'`,
+				['', scriptSetup.name, define.exp.end, codeFeatures.verification],
+				`])`
+			],
+			define.end,
+			define.end
+		]);
 	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
 	for (const { define } of scriptSetupRanges.templateRefs) {
-		if (!define.arg) {
-			continue;
-		}
+		const templateRefType = define.arg ? [
+			`__VLS_TemplateResult['refs'][`,
+			generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
+			`]`
+		] : [`unknown`];
 		if (isTs) {
 			setupCodeModifies.push([
 				[
-					`<__VLS_TemplateResult['refs'][`,
-					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
-					`], keyof __VLS_TemplateResult['refs']>`
+					`<`,
+					...templateRefType,
+					`, keyof __VLS_TemplateResult['refs']>`
 				],
 				define.exp.end,
 				define.exp.end
@@ -238,9 +251,9 @@ function* generateSetupFunction(
 				define.start
 			], [
 				[
-					` as __VLS_UseTemplateRef<__VLS_TemplateResult['refs'][`,
-					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
-					`]>)`
+					` as __VLS_UseTemplateRef<`,
+					...templateRefType,
+					`>)`
 				],
 				define.end,
 				define.end
