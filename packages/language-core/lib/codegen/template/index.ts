@@ -47,18 +47,16 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	yield* generateStyleScopedClasses(ctx);
-	yield* generateSlotsType(options, ctx);
-
-	yield* ctx.generateAutoImportCompletion();
-
+	yield* generateSlots(options, ctx);
 	yield* generateInheritedAttrs(ctx);
 	yield* generateRefs(ctx);
 	yield* generateRootEl(ctx);
 
+	yield* ctx.generateAutoImportCompletion();
 	return ctx;
 }
 
-function* generateSlotsType(options: TemplateCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
+function* generateSlots(options: TemplateCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
 	if (!options.hasDefineSlots) {
 		yield `var __VLS_slots!: `;
 		for (const { expVar, varName } of ctx.dynamicSlots) {
