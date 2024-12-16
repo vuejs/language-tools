@@ -54,6 +54,8 @@ type UseAttrs = CallExpressionRange;
 
 type UseCssModule = CallExpressionRange;
 
+type UseSlots = CallExpressionRange;
+
 type UseTemplateRef = CallExpressionRange & {
 	name?: string;
 }
@@ -74,6 +76,7 @@ export function parseScriptSetupRanges(
 	let defineOptions: DefineOptions | undefined;
 	const useAttrs: UseAttrs[] = [];
 	const useCssModule: UseCssModule[] = [];
+	const useSlots: UseSlots[] = [];
 	const useTemplateRef: UseTemplateRef[] = [];
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
@@ -145,6 +148,7 @@ export function parseScriptSetupRanges(
 		defineOptions,
 		useAttrs,
 		useCssModule,
+		useSlots,
 		useTemplateRef,
 	};
 
@@ -389,6 +393,9 @@ export function parseScriptSetupRanges(
 			}
 			else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
 				useCssModule.push(parseCallExpression(node));
+			}
+			else if (vueCompilerOptions.composables.useSlots.includes(callText)) {
+				useSlots.push(parseCallExpression(node));
 			}
 			else if (
 				vueCompilerOptions.composables.useTemplateRef.includes(callText)

@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import { getSlotsPropertyName } from '../../utils/shared';
 import { endOfLine, newLine, wrapWith } from '../utils';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
@@ -34,9 +35,10 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
-	ctx.addLocalVariable("$attrs");
-	ctx.addLocalVariable('$el');
+	ctx.addLocalVariable('$attrs');
+	ctx.addLocalVariable(getSlotsPropertyName(options.vueCompilerOptions.target));
 	ctx.addLocalVariable('$refs');
+	ctx.addLocalVariable('$el');
 
 	yield* generatePreResolveComponents(options);
 
@@ -45,14 +47,10 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	yield* generateStyleScopedClasses(ctx);
-
-	if (!options.hasDefineSlots) {
-		yield `var __VLS_slots!:`;
-		yield* generateSlotsType(options, ctx);
-		yield endOfLine;
-	}
+	yield* generateSlotsType(options, ctx);
 
 	yield* ctx.generateAutoImportCompletion();
+
 	yield* generateInheritedAttrs(ctx);
 	yield* generateRefs(ctx);
 	yield* generateRootEl(ctx);
@@ -61,34 +59,39 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 }
 
 function* generateSlotsType(options: TemplateCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
-	for (const { expVar, varName } of ctx.dynamicSlots) {
-		ctx.hasSlot = true;
-		yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
-	}
-	yield `{${newLine}`;
-	for (const slot of ctx.slots) {
-		ctx.hasSlot = true;
-		if (slot.name && slot.loc !== undefined) {
-			yield* generateObjectProperty(
-				options,
-				ctx,
-				slot.name,
-				slot.loc,
-				ctx.codeFeatures.withoutHighlightAndCompletion,
-				slot.nodeLoc
-			);
+	if (!options.hasDefineSlots) {
+		yield `var __VLS_slots!: `;
+		for (const { expVar, varName } of ctx.dynamicSlots) {
+			ctx.hasSlot = true;
+			yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
 		}
-		else {
-			yield* wrapWith(
-				slot.tagRange[0],
-				slot.tagRange[1],
-				ctx.codeFeatures.withoutHighlightAndCompletion,
-				`default`
-			);
+		yield `{${newLine}`;
+		for (const slot of ctx.slots) {
+			ctx.hasSlot = true;
+			if (slot.name && slot.loc !== undefined) {
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					slot.name,
+					slot.loc,
+					ctx.codeFeatures.withoutHighlightAndCompletion,
+					slot.nodeLoc
+				);
+			}
+			else {
+				yield* wrapWith(
+					slot.tagRange[0],
+					slot.tagRange[1],
+					ctx.codeFeatures.withoutHighlightAndCompletion,
+					`default`
+				);
+			}
+			yield `?(_: typeof ${slot.varName}): any,${newLine}`;
 		}
-		yield `?(_: typeof ${slot.varName}): any,${newLine}`;
+		yield `}${endOfLine}`;
 	}
-	yield `}`;
+	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
+	yield `var ${name}!: typeof ${options.slotsAssignName ?? '__VLS_slots'}${endOfLine}`;
 }
 
 function* generateInheritedAttrs(ctx: TemplateCodegenContext): Generator<Code> {

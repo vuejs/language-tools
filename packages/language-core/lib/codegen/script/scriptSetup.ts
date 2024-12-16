@@ -234,6 +234,17 @@ function* generateSetupFunction(
 			callExp.end
 		]);
 	}
+	for (const { callExp } of scriptSetupRanges.useSlots) {
+		setupCodeModifies.push([
+			[`(`],
+			callExp.start,
+			callExp.start
+		], [
+			[` as __VLS_TemplateResult['slots'])`],
+			callExp.end,
+			callExp.end
+		])
+	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
 	for (const { callExp, exp, arg } of scriptSetupRanges.useTemplateRef) {
 		const templateRefType = arg ? [
