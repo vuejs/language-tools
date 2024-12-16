@@ -1,3 +1,4 @@
+import type { Mapping } from '@volar/language-core';
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
@@ -24,6 +25,8 @@ export interface TemplateCodegenOptions {
 	slotsAssignName?: string;
 	propsAssignName?: string;
 	inheritAttrs: boolean;
+	getGeneratedLength: () => number;
+	linkedCodeMappings: Mapping[];
 }
 
 export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
@@ -48,15 +51,18 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 	yield* generateStyleScopedClasses(ctx);
 	yield* generateSlots(options, ctx);
-	yield* generateInheritedAttrs(ctx);
-	yield* generateRefs(ctx);
-	yield* generateRootEl(ctx);
+	yield* generateInheritedAttrs(options, ctx);
+	yield* generateRefs(options, ctx);
+	yield* generateRootEl(options, ctx);
 
 	yield* ctx.generateAutoImportCompletion();
 	return ctx;
 }
 
-function* generateSlots(options: TemplateCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
+function* generateSlots(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext
+): Generator<Code> {
 	if (!options.hasDefineSlots) {
 		yield `var __VLS_slots!: `;
 		for (const { expVar, varName } of ctx.dynamicSlots) {
@@ -89,19 +95,25 @@ function* generateSlots(options: TemplateCodegenOptions, ctx: TemplateCodegenCon
 		yield `}${endOfLine}`;
 	}
 	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
-	yield `var ${name}!: typeof ${options.slotsAssignName ?? '__VLS_slots'}${endOfLine}`;
+	yield* generateContextVariable(options, name, options.slotsAssignName ?? `__VLS_slots`);
 }
 
-function* generateInheritedAttrs(ctx: TemplateCodegenContext): Generator<Code> {
+function* generateInheritedAttrs(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext
+): Generator<Code> {
 	yield 'let __VLS_inheritedAttrs!: {}';
 	for (const varName of ctx.inheritedAttrVars) {
 		yield ` & typeof ${varName}`;
 	}
 	yield endOfLine;
-	yield `var $attrs!: Partial<typeof __VLS_inheritedAttrs> & Record<string, unknown>${endOfLine}`;
+	yield* generateContextVariable(options, `$attrs`, `Partial<typeof __VLS_inheritedAttrs> & Record<string, unknown>`);
 }
 
-function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {
+function* generateRefs(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext
+): Generator<Code> {
 	yield `const __VLS_refs = {${newLine}`;
 	for (const [name, [varName, offset]] of ctx.templateRefs) {
 		yield* generateStringLiteralKey(
@@ -112,16 +124,34 @@ function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {
 		yield `: ${varName},${newLine}`;
 	}
 	yield `}${endOfLine}`;
-	yield `var $refs!: typeof __VLS_refs${endOfLine}`;
+	yield* generateContextVariable(options, `$refs`, `typeof __VLS_refs`);
 }
 
-function* generateRootEl(ctx: TemplateCodegenContext): Generator<Code> {
-	if (ctx.singleRootElType) {
-		yield `var $el!: ${ctx.singleRootElType}${endOfLine}`;
-	}
-	else {
-		yield `var $el!: any${endOfLine}`;
-	}
+function* generateRootEl(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext
+): Generator<Code> {
+	yield* generateContextVariable(options, `$el`, ctx.singleRootElType ?? `any`);
+}
+
+function* generateContextVariable(
+	options: TemplateCodegenOptions,
+	varName: string,
+	typeExp: string
+): Generator<Code> {
+	yield `/** @type { typeof __VLS_ctx.`;
+	const sourceOffset = options.getGeneratedLength();
+	yield `${varName} } */${endOfLine}`;
+	yield `var `;
+	const generatedOffset = options.getGeneratedLength();
+	yield `${varName}!: ${typeExp}${endOfLine}`;
+
+	options.linkedCodeMappings.push({
+		sourceOffsets: [sourceOffset],
+		generatedOffsets: [generatedOffset],
+		lengths: [varName.length],
+		data: undefined,
+	});
 }
 
 function* generatePreResolveComponents(options: TemplateCodegenOptions): Generator<Code> {
