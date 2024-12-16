@@ -211,7 +211,7 @@ function* generateSetupFunction(
 			[` as __VLS_TemplateResult['attrs'] & Record<string, unknown>)`],
 			callExp.end,
 			callExp.end
-		])
+		]);
 	}
 	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
 		setupCodeModifies.push([
@@ -243,7 +243,7 @@ function* generateSetupFunction(
 			[` as __VLS_TemplateResult['slots'])`],
 			callExp.end,
 			callExp.end
-		])
+		]);
 	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
 	for (const { callExp, exp, arg } of scriptSetupRanges.useTemplateRef) {
