@@ -26,8 +26,6 @@ export function* generateScriptSetup(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	const definePropMirrors = new Map<string, number>();
-
 	if (scriptSetup.generic) {
 		if (!options.scriptRanges?.exportDefault) {
 			if (options.sfc.scriptSetup) {
@@ -56,7 +54,7 @@ export function* generateScriptSetup(
 			+ `	__VLS_ctx?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
 			+ `	__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],${newLine}`
 			+ `	__VLS_setup = (async () => {${newLine}`;
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined, definePropMirrors);
+		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined);
 
 		const emitTypes: string[] = [];
 
@@ -79,33 +77,15 @@ export function* generateScriptSetup(
 	}
 	else if (!options.sfc.script) {
 		// no script block, generate script setup code at root
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default', definePropMirrors);
+		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default');
 	}
 	else {
 		if (!options.scriptRanges?.exportDefault) {
 			yield `export default `;
 		}
 		yield `await (async () => {${newLine}`;
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'return', definePropMirrors);
+		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'return');
 		yield `})()`;
-	}
-
-	if (ctx.scriptSetupGeneratedOffset !== undefined) {
-		for (const defineProp of scriptSetupRanges.defineProp) {
-			if (!defineProp.localName) {
-				continue;
-			}
-			const [_, localName] = getPropAndLocalName(scriptSetup, defineProp);
-			const propMirror = definePropMirrors.get(localName!);
-			if (propMirror !== undefined) {
-				options.linkedCodeMappings.push({
-					sourceOffsets: [defineProp.localName.start + ctx.scriptSetupGeneratedOffset],
-					generatedOffsets: [propMirror],
-					lengths: [defineProp.localName.end - defineProp.localName.start],
-					data: undefined,
-				});
-			}
-		}
 	}
 }
 
@@ -114,8 +94,7 @@ function* generateSetupFunction(
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
-	syntax: 'return' | 'export default' | undefined,
-	definePropMirrors: Map<string, number>
+	syntax: 'return' | 'export default' | undefined
 ): Generator<Code> {
 	if (options.vueCompilerOptions.target >= 3.3) {
 		yield `const { `;
@@ -305,7 +284,7 @@ function* generateSetupFunction(
 		yield `)${endOfLine}`;
 	}
 
-	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
+	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* generateModelEmit(scriptSetup, scriptSetupRanges);
 	yield `function __VLS_template() {${newLine}`;
 	const templateCodegenCtx = yield* generateTemplate(options, ctx);
@@ -378,8 +357,7 @@ function* generateComponentProps(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges,
-	definePropMirrors: Map<string, number>
+	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	yield `const __VLS_fnComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 
@@ -456,12 +434,10 @@ function* generateComponentProps(
 				yield propName!;
 			}
 			else if (defineProp.name) {
-				// renaming support
 				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.navigation);
 			}
 			else if (defineProp.localName) {
-				definePropMirrors.set(localName!, options.getGeneratedLength());
-				yield localName!;
+				yield generateSfcBlockSection(scriptSetup, defineProp.localName.start, defineProp.localName.end, codeFeatures.navigation);
 			}
 			else {
 				continue;
@@ -474,13 +450,12 @@ function* generateComponentProps(
 			yield `,${newLine}`;
 
 			if (defineProp.modifierType) {
-				let propModifierName = 'modelModifiers';
+				let modifierName = `modelModifiers`;
 				if (defineProp.name) {
-					propModifierName = `${getRangeName(scriptSetup, defineProp.name, true)}Modifiers`;
+					modifierName = `${getRangeName(scriptSetup, defineProp.name, true)}Modifiers`;
 				}
 				const modifierType = getRangeName(scriptSetup, defineProp.modifierType);
-				definePropMirrors.set(propModifierName, options.getGeneratedLength());
-				yield `${propModifierName}?: Partial<Record<${modifierType}, true>>,${endOfLine}`;
+				yield `${modifierName}?: Partial<Record<${modifierType}, true>>,${newLine}`;
 			}
 		}
 		yield `}`;
