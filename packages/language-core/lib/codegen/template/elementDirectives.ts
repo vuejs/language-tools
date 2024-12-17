@@ -97,7 +97,7 @@ function* generateArg(
 		yield* generateStringLiteralKey(
 			arg.content,
 			startOffset,
-			ctx.codeFeatures.withoutHighlight
+			ctx.codeFeatures.all
 		);
 	}
 	else {
@@ -143,7 +143,7 @@ export function* generateModifiers(
 			ctx,
 			mod.content,
 			mod.loc.start.offset,
-			ctx.codeFeatures.withoutHighlight
+			ctx.codeFeatures.withoutNavigation
 		);
 		yield `: true, `;
 	}
