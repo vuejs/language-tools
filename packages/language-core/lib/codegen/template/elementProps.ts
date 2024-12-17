@@ -143,7 +143,6 @@ export function* generateElementProps(
 					prop,
 					prop.exp,
 					ctx.codeFeatures.all,
-					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
 					enableCodeFeatures
 				),
 				`)`
@@ -181,7 +180,7 @@ export function* generateElementProps(
 				yield `...{ `;
 			}
 			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck, true);
-			const codes = conditionWrapWith(
+			yield* conditionWrapWith(
 				enableCodeFeatures,
 				prop.loc.start.offset,
 				prop.loc.end.offset,
@@ -203,12 +202,6 @@ export function* generateElementProps(
 				),
 				`)`
 			);
-			if (!enableCodeFeatures) {
-				yield toString([...codes]);
-			}
-			else {
-				yield* codes;
-			}
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -220,30 +213,21 @@ export function* generateElementProps(
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
-			const codes = conditionWrapWith(
+			yield* conditionWrapWith(
 				enableCodeFeatures,
 				prop.exp.loc.start.offset,
 				prop.exp.loc.end.offset,
 				ctx.codeFeatures.verification,
 				`...`,
-				...generateInterpolation(
+				...generatePropExp(
 					options,
 					ctx,
-					'template',
+					prop,
+					prop.exp,
 					ctx.codeFeatures.all,
-					prop.exp.content,
-					prop.exp.loc.start.offset,
-					prop.exp.loc,
-					'(',
-					')'
+					enableCodeFeatures
 				)
 			);
-			if (!enableCodeFeatures) {
-				yield toString([...codes]);
-			}
-			else {
-				yield* codes;
-			}
 			yield `, `;
 		}
 	}
@@ -284,9 +268,10 @@ function* generatePropExp(
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
-	isShorthand: boolean,
 	enableCodeFeatures: boolean
 ): Generator<Code> {
+	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
+
 	if (isShorthand && features.completion) {
 		features = {
 			...features,
@@ -304,7 +289,8 @@ function* generatePropExp(
 				exp.loc.start.offset,
 				exp.loc,
 				'(',
-				')'
+				')',
+				true
 			);
 		} else {
 			const propVariableName = camelize(exp.loc.source);
