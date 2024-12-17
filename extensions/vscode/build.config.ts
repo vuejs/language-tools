@@ -61,6 +61,7 @@ export default defineBuildConfig([
 					vscode: join(__dirname, 'vscode-dev-shim.js'),
 				},
 				sourceMaps: true,
+				fsCache: false,
 			},
 		},
 		hooks: {
