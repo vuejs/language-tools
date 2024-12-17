@@ -245,7 +245,7 @@ export function* generateComponent(
 		}
 	}
 
-	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
+	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEvents);
 	if (usedComponentEventsVar) {
 		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
 		yield `let ${var_componentEmit}!: typeof ${var_defineComponentCtx}.emit${endOfLine}`;
