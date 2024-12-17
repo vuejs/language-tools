@@ -18,8 +18,13 @@ export function* generateInterpolation(
 	start: number | undefined,
 	astHolder: any = {},
 	prefix: string = '',
-	suffix: string = ''
+	suffix: string = '',
+	externalVars: string[] = []
 ): Generator<Code> {
+	for (const name of externalVars) {
+		ctx.removeLocalVariable(name);
+	}
+
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
 	for (let [section, offset, type] of forEachInterpolationSegment(
@@ -69,7 +74,17 @@ export function* generateInterpolation(
 			yield addSuffix;
 		}
 	}
+
+	for (const name of externalVars) {
+		ctx.addLocalVariable(name);
+	}
 }
+
+interface CtxVar {
+	text: string;
+	isShorthand: boolean;
+	offset: number;
+};
 
 function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
@@ -80,20 +95,16 @@ function* forEachInterpolationSegment(
 	offset: number | undefined,
 	ast: ts.SourceFile
 ): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly' | 'startText' | 'endText']> {
-	let ctxVars: {
-		text: string,
-		isShorthand: boolean,
-		offset: number,
-	}[] = [];
+	let ctxVars: CtxVar[] = [];
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		const text = getNodeText(ts, id, ast);
 		if (
-			ctx.hasLocalVariable(text) ||
+			ctx.hasLocalVariable(text)
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
-			isGloballyAllowed(text) ||
-			text === 'require' ||
-			text.startsWith('__VLS_')
+			|| isGloballyAllowed(text)
+			|| text === 'require'
+			|| text.startsWith('__VLS_')
 		) {
 			// localVarOffsets.push(localVar.getStart(ast));
 		}
@@ -158,16 +169,8 @@ function* generateVar(
 	code: string,
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
-	curVar: {
-		text: string,
-		isShorthand: boolean,
-		offset: number,
-	},
-	nextVar: {
-		text: string,
-		isShorthand: boolean,
-		offset: number,
-	} = curVar
+	curVar: CtxVar,
+	nextVar: CtxVar = curVar
 ): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly']> {
 	// fix https://github.com/vuejs/language-tools/issues/1205
 	// fix https://github.com/vuejs/language-tools/issues/1264

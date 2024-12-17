@@ -120,12 +120,13 @@ export function* generateTemplate(
 	yield* generateTemplateCtx(options);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
-	yield* generateTemplateBody(options, templateCodegenCtx);
+	yield* generateTemplateBody(options, ctx, templateCodegenCtx);
 	return templateCodegenCtx;
 }
 
 function* generateTemplateBody(
 	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
 	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
 	const firstClasses = new Set<string>();
@@ -159,6 +160,7 @@ function* generateTemplateBody(
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
+		ctx.templateGeneratedOffset = options.getGeneratedLength();
 		for (const code of options.templateCodegen.codes) {
 			yield code;
 		}

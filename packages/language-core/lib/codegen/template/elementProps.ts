@@ -30,6 +30,7 @@ export function* generateElementProps(
 	failedPropExps?: FailedPropExpression[]
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
+	const hasVBindAttrs = getHasVBindAttrs(options, ctx, node);
 
 	for (const prop of props) {
 		if (
@@ -146,8 +147,8 @@ export function* generateElementProps(
 					prop,
 					prop.exp,
 					ctx.codeFeatures.all,
-					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
-					enableCodeFeatures
+					enableCodeFeatures,
+					hasVBindAttrs
 				),
 				`)`
 			);
@@ -184,7 +185,7 @@ export function* generateElementProps(
 				yield `...{ `;
 			}
 			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck, true);
-			const codes = conditionWrapWith(
+			yield* conditionWrapWith(
 				enableCodeFeatures,
 				prop.loc.start.offset,
 				prop.loc.end.offset,
@@ -206,12 +207,6 @@ export function* generateElementProps(
 				),
 				`)`
 			);
-			if (!enableCodeFeatures) {
-				yield toString([...codes]);
-			}
-			else {
-				yield* codes;
-			}
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -223,33 +218,40 @@ export function* generateElementProps(
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
-			const codes = conditionWrapWith(
+			yield* conditionWrapWith(
 				enableCodeFeatures,
 				prop.exp.loc.start.offset,
 				prop.exp.loc.end.offset,
 				ctx.codeFeatures.verification,
 				`...`,
-				...generateInterpolation(
+				...generatePropExp(
 					options,
 					ctx,
-					'template',
+					prop,
+					prop.exp,
 					ctx.codeFeatures.all,
-					prop.exp.content,
-					prop.exp.loc.start.offset,
-					prop.exp.loc,
-					'(',
-					')'
+					enableCodeFeatures,
+					hasVBindAttrs
 				)
 			);
-			if (!enableCodeFeatures) {
-				yield toString([...codes]);
-			}
-			else {
-				yield* codes;
-			}
 			yield `, `;
 		}
 	}
+}
+
+export function getHasVBindAttrs(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode
+) {
+	return options.vueCompilerOptions.fallthroughAttributes && (
+		node === ctx.singleRootNode ||
+		node.props.some(prop =>
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'bind'
+			&& prop.exp?.loc.source === '$attrs'
+		)
+	);
 }
 
 function getPropsCodeInfo(
@@ -287,9 +289,11 @@ function* generatePropExp(
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
-	isShorthand: boolean,
-	enableCodeFeatures: boolean
+	enableCodeFeatures: boolean,
+	hasVBindAttrs: boolean
 ): Generator<Code> {
+	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
+
 	if (isShorthand && features.completion) {
 		features = {
 			...features,
@@ -307,7 +311,8 @@ function* generatePropExp(
 				exp.loc.start.offset,
 				exp.loc,
 				'(',
-				')'
+				')',
+				hasVBindAttrs ? ['$attrs'] : undefined
 			);
 		} else {
 			const propVariableName = camelize(exp.loc.source);
