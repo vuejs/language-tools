@@ -5,7 +5,7 @@ import { toString } from 'muggle-string';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import { conditionWrapWith, variableNameRegex, wrapWith } from '../utils';
+import { conditionWrapWith, newLine, variableNameRegex, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
 import type { TemplateCodegenContext } from './context';
@@ -47,11 +47,12 @@ export function* generateElementProps(
 					yield* generateEventArg(ctx, prop.arg, true);
 					yield `: `;
 					yield* generateEventExpression(options, ctx, prop);
-					yield `}, `;
+					yield `},`;
 				}
 				else {
-					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': {} as any }, `;
+					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': {} as any },`;
 				}
+				yield newLine;
 			}
 			else if (
 				prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
@@ -159,9 +160,9 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield ` }`;
 			}
-			yield `, `;
+			yield `,${newLine}`;
 
-			if (prop.name === 'model') {
+			if (prop.name === 'model' && prop.modifiers.length) {
 				const propertyName = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					? !prop.arg.isStatic
 						? `[\`$\{${prop.arg.content}\}Modifiers\` as const]`
@@ -179,6 +180,7 @@ export function* generateElementProps(
 				else {
 					yield toString([...codes]);
 				}
+				yield newLine;
 			}
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
@@ -232,7 +234,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield ` }`;
 			}
-			yield `, `;
+			yield `,${newLine}`;
 		}
 		else if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -262,7 +264,7 @@ export function* generateElementProps(
 			else {
 				yield toString([...codes]);
 			}
-			yield `, `;
+			yield `,${newLine}`;
 		}
 	}
 }
