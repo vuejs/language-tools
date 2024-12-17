@@ -164,8 +164,8 @@ export function* generateElementProps(
 			if (prop.name === 'model') {
 				const propertyName = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					? !prop.arg.isStatic
-						? `[${prop.arg.content} + 'Modifiers']`
-						: propName + `Modifiers`
+						? `[\`$\{${prop.arg.content}\}Modifiers\` as const]`
+						: camelize(propName) + `Modifiers`
 					: `modelModifiers`;
 				const codes = generateModifiers(
 					options,
