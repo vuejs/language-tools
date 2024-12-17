@@ -30,6 +30,7 @@ export function* generateElementProps(
 	failedPropExps?: FailedPropExpression[]
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
+	const hasVBindAttrs = getHasVBindAttrs(options, ctx, node);
 
 	for (const prop of props) {
 		if (
@@ -143,7 +144,8 @@ export function* generateElementProps(
 					prop,
 					prop.exp,
 					ctx.codeFeatures.all,
-					enableCodeFeatures
+					enableCodeFeatures,
+					hasVBindAttrs
 				),
 				`)`
 			);
@@ -225,12 +227,28 @@ export function* generateElementProps(
 					prop,
 					prop.exp,
 					ctx.codeFeatures.all,
-					enableCodeFeatures
+					enableCodeFeatures,
+					hasVBindAttrs
 				)
 			);
 			yield `, `;
 		}
 	}
+}
+
+export function getHasVBindAttrs(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode
+) {
+	return options.vueCompilerOptions.fallthroughAttributes && (
+		node === ctx.singleRootNode ||
+		node.props.some(prop =>
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'bind'
+			&& prop.exp?.loc.source === '$attrs'
+		)
+	);
 }
 
 function getPropsCodeInfo(
@@ -268,7 +286,8 @@ function* generatePropExp(
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
-	enableCodeFeatures: boolean
+	enableCodeFeatures: boolean,
+	hasVBindAttrs: boolean
 ): Generator<Code> {
 	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
 
@@ -290,7 +309,7 @@ function* generatePropExp(
 				exp.loc,
 				'(',
 				')',
-				true
+				hasVBindAttrs ? ['$attrs'] : undefined
 			);
 		} else {
 			const propVariableName = camelize(exp.loc.source);

@@ -19,7 +19,7 @@ export function* generateInterpolation(
 	astHolder: any = {},
 	prefix: string = '',
 	suffix: string = '',
-	isPropExp: boolean = false
+	externalVars: string[] = []
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
@@ -31,7 +31,7 @@ export function* generateInterpolation(
 		code,
 		start !== undefined ? start - prefix.length : undefined,
 		ast,
-		isPropExp
+		externalVars
 	)) {
 		if (offset === undefined) {
 			yield section;
@@ -87,14 +87,14 @@ function* forEachInterpolationSegment(
 	code: string,
 	offset: number | undefined,
 	ast: ts.SourceFile,
-	isPropExp: boolean
+	externalVars: string[]
 ): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly' | 'startText' | 'endText']> {
 	let ctxVars: CtxVar[] = [];
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		const text = getNodeText(ts, id, ast);
 		if (
-			ctx.hasLocalVariable(text) && !(isPropExp && text === '$attrs')
+			ctx.hasLocalVariable(text) && !externalVars.includes(text)
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 			|| isGloballyAllowed(text)
 			|| text === 'require'
