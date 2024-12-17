@@ -11,7 +11,6 @@ const ScriptSetupExact = defineComponent({
 		'e': string,
 		'f'?: string,
 		'g'?: string,
-		gModifiers?: Partial<Record<'foo', true>>,
 	},
 	__typeEmits: {} as {
 		'update:modelValue': [modelValue:string];
@@ -30,7 +29,7 @@ exactType(ScriptSetup, ScriptSetupExact);
 </script>
 
 <template>
-	<ScriptSetup 
+	<ScriptSetup
 		:c="0"
 		e=""
 		@update:model-value="(x) => exactType(x, {} as string)"
