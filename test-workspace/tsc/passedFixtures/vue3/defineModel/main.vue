@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { exactType } from '../../shared';
 import { defineComponent } from 'vue';
+import { exactType } from '../../shared';
 import ScriptSetup from './script-setup.vue';
 
 const ScriptSetupExact = defineComponent({
@@ -8,9 +8,10 @@ const ScriptSetupExact = defineComponent({
 		modelValue?: string,
 		'c': number,
 		'd'?: number,
-		'e'?: string,
-		'f': string,
+		'e': string,
+		'f'?: string,
 		'g'?: string,
+		gModifiers?: Partial<Record<'foo', true>>,
 	},
 	__typeEmits: {} as {
 		'update:modelValue': [modelValue:string];
@@ -31,7 +32,7 @@ exactType(ScriptSetup, ScriptSetupExact);
 <template>
 	<ScriptSetup 
 		:c="0"
-		f=""
+		e=""
 		@update:model-value="(x) => exactType(x, {} as string)"
 		@update:c="(x) => exactType(x, {} as number)"
 		@update:d="(x) => exactType(x, {} as number)"
