@@ -21,6 +21,10 @@ export function* generateInterpolation(
 	suffix: string = '',
 	externalVars: string[] = []
 ): Generator<Code> {
+	for (const name of externalVars) {
+		ctx.removeLocalVariable(name);
+	}
+
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
 	for (let [section, offset, type] of forEachInterpolationSegment(
@@ -30,8 +34,7 @@ export function* generateInterpolation(
 		ctx,
 		code,
 		start !== undefined ? start - prefix.length : undefined,
-		ast,
-		externalVars
+		ast
 	)) {
 		if (offset === undefined) {
 			yield section;
@@ -71,6 +74,10 @@ export function* generateInterpolation(
 			yield addSuffix;
 		}
 	}
+
+	for (const name of externalVars) {
+		ctx.addLocalVariable(name);
+	}
 }
 
 interface CtxVar {
@@ -86,15 +93,14 @@ function* forEachInterpolationSegment(
 	ctx: TemplateCodegenContext,
 	code: string,
 	offset: number | undefined,
-	ast: ts.SourceFile,
-	externalVars: string[]
+	ast: ts.SourceFile
 ): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly' | 'startText' | 'endText']> {
 	let ctxVars: CtxVar[] = [];
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		const text = getNodeText(ts, id, ast);
 		if (
-			ctx.hasLocalVariable(text) && !externalVars.includes(text)
+			ctx.hasLocalVariable(text)
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 			|| isGloballyAllowed(text)
 			|| text === 'require'
