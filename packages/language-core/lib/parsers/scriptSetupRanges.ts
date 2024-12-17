@@ -4,6 +4,62 @@ import type { TextRange, VueCompilerOptions } from '../types';
 
 const tsCheckReg = /^\/\/\s*@ts-(?:no)?check($|\s)/;
 
+type CallExpressionRange = {
+	callExp: TextRange;
+	exp: TextRange;
+	arg?: TextRange;
+	typeArg?: TextRange;
+};
+
+type DefineProp = {
+	localName?: TextRange;
+	name?: TextRange;
+	type?: TextRange;
+	modifierType?: TextRange;
+	runtimeType?: TextRange;
+	defaultValue?: TextRange;
+	required?: boolean;
+	isModel?: boolean;
+}
+
+type DefineProps = CallExpressionRange & {
+	name?: string;
+	destructured?: Set<string>;
+	destructuredRest?: string;
+	statement: TextRange;
+}
+
+type WithDefaults = Pick<CallExpressionRange, 'callExp' | 'exp' | 'arg'>;
+
+type DefineEmits = CallExpressionRange & {
+	name?: string;
+	hasUnionTypeArg?: boolean;
+	statement: TextRange;
+}
+
+type DefineSlots = CallExpressionRange & {
+	name?: string;
+	isObjectBindingPattern?: boolean;
+	statement: TextRange;
+}
+
+type DefineExpose = CallExpressionRange;
+
+type DefineOptions = {
+	name?: string;
+	inheritAttrs?: string;
+}
+
+type UseAttrs = CallExpressionRange;
+
+type UseCssModule = CallExpressionRange;
+
+type UseSlots = CallExpressionRange;
+
+type UseTemplateRef = CallExpressionRange & {
+	name?: string;
+}
+
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
 export function parseScriptSetupRanges(
@@ -11,58 +67,19 @@ export function parseScriptSetupRanges(
 	ast: ts.SourceFile,
 	vueCompilerOptions: VueCompilerOptions
 ) {
-	const props: {
-		name?: string;
-		destructured?: Set<string>;
-		destructuredRest?: string;
-		define?: ReturnType<typeof parseDefineFunction> & {
-			statement: TextRange;
-		};
-		withDefaults?: TextRange & {
-			arg?: TextRange;
-		};
-	} = {};
-	const slots: {
-		name?: string;
-		isObjectBindingPattern?: boolean;
-		define?: ReturnType<typeof parseDefineFunction> & {
-			statement: TextRange;
-		};
-	} = {};
-	const emits: {
-		name?: string;
-		define?: ReturnType<typeof parseDefineFunction> & {
-			statement: TextRange;
-			hasUnionTypeArg?: boolean;
-		};
-	} = {};
-	const expose: {
-		name?: string;
-		define?: ReturnType<typeof parseDefineFunction>;
-	} = {};
-	const options: {
-		name?: string;
-		inheritAttrs?: string;
-	} = {};
-	const cssModules: {
-		define: ReturnType<typeof parseDefineFunction>;
-	}[] = [];
-	const templateRefs: {
-		name?: string;
-		define: ReturnType<typeof parseDefineFunction>;
-	}[] = [];
+	const defineProp: DefineProp[] = [];
+	let defineProps: DefineProps | undefined;
+	let withDefaults: WithDefaults | undefined;
+	let defineEmits: DefineEmits | undefined;
+	let defineSlots: DefineSlots | undefined;
+	let defineExpose: DefineExpose | undefined;
+	let defineOptions: DefineOptions | undefined;
+	const useAttrs: UseAttrs[] = [];
+	const useCssModule: UseCssModule[] = [];
+	const useSlots: UseSlots[] = [];
+	const useTemplateRef: UseTemplateRef[] = [];
 	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
 	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
-	const defineProp: {
-		localName: TextRange | undefined;
-		name: TextRange | undefined;
-		type: TextRange | undefined;
-		modifierType?: TextRange | undefined;
-		runtimeType: TextRange | undefined;
-		defaultValue: TextRange | undefined;
-		required: boolean;
-		isModel?: boolean;
-	}[] = [];
 	const text = ast.text;
 	const importComponentNames = new Set<string>();
 
@@ -76,7 +93,9 @@ export function parseScriptSetupRanges(
 	let importSectionEndOffset = 0;
 
 	ts.forEachChild(ast, node => {
-		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
+		const isTypeExport =
+			(ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
+			&& node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
 		if (
 			!foundNonImportExportNode
 			&& !ts.isImportDeclaration(node)
@@ -109,7 +128,7 @@ export function parseScriptSetupRanges(
 	});
 	ts.forEachChild(ast, child => visitNode(child, [ast]));
 
-	const templateRefNames = new Set(templateRefs.map(ref => ref.name));
+	const templateRefNames = new Set(useTemplateRef.map(ref => ref.name));
 	bindings = bindings.filter(range => {
 		const name = text.slice(range.start, range.end);
 		return !templateRefNames.has(name);
@@ -120,14 +139,17 @@ export function parseScriptSetupRanges(
 		importSectionEndOffset,
 		bindings,
 		importComponentNames,
-		props,
-		slots,
-		emits,
-		expose,
-		options,
-		cssModules,
 		defineProp,
-		templateRefs,
+		defineProps,
+		withDefaults,
+		defineEmits,
+		defineSlots,
+		defineExpose,
+		defineOptions,
+		useAttrs,
+		useCssModule,
+		useSlots,
+		useTemplateRef,
 	};
 
 	function visitNode(node: ts.Node, parents: ts.Node[]) {
@@ -269,125 +291,119 @@ export function parseScriptSetupRanges(
 					required,
 				});
 			}
-			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
-				slots.define = {
-					...parseDefineFunction(node),
+			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
+				defineProps = {
+					...parseCallExpression(node),
 					statement: getStatementRange(ts, parents, node, ast)
 				};
 				if (ts.isVariableDeclaration(parent)) {
-					if (ts.isIdentifier(parent.name)) {
-						slots.name = _getNodeText(parent.name);
+					if (ts.isObjectBindingPattern(parent.name)) {
+						defineProps.destructured = new Set();
+						const identifiers = collectIdentifiers(ts, parent.name, []);
+						for (const [id, isRest] of identifiers) {
+							const name = _getNodeText(id);
+							if (isRest) {
+								defineProps.destructuredRest = name;
+							}
+							else {
+								defineProps.destructured.add(name);
+							}
+						}
 					}
 					else {
-						slots.isObjectBindingPattern = ts.isObjectBindingPattern(parent.name);
+						defineProps.name = _getNodeText(parent.name);
+					}
+				}
+				else if (
+					ts.isCallExpression(parent)
+					&& vueCompilerOptions.macros.withDefaults.includes(_getNodeText(parent.expression))
+				) {
+					const grand = parents.at(-2);
+					if (grand && ts.isVariableDeclaration(grand)) {
+						defineProps.name = _getNodeText(grand.name);
 					}
 				}
 			}
+			else if (vueCompilerOptions.macros.withDefaults.includes(callText)) {
+				const [, arg] = node.arguments;
+				withDefaults = {
+					callExp: _getStartEnd(node),
+					exp: _getStartEnd(node.expression),
+					arg: arg ? _getStartEnd(arg) : undefined
+				};
+			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
-				emits.define = {
-					...parseDefineFunction(node),
+				defineEmits = {
+					...parseCallExpression(node),
 					statement: getStatementRange(ts, parents, node, ast)
 				};
 				if (ts.isVariableDeclaration(parent)) {
-					emits.name = _getNodeText(parent.name);
+					defineEmits.name = _getNodeText(parent.name);
 				}
 				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0])) {
 					for (const member of node.typeArguments[0].members) {
 						if (ts.isCallSignatureDeclaration(member)) {
 							const type = member.parameters[0]?.type;
 							if (type && ts.isUnionTypeNode(type)) {
-								emits.define.hasUnionTypeArg = true;
+								defineEmits.hasUnionTypeArg = true;
 								break;
 							}
 						}
 					}
 				}
 			}
-			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
-				expose.define = parseDefineFunction(node);
-			}
-			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
+			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
+				defineSlots = {
+					...parseCallExpression(node),
+					statement: getStatementRange(ts, parents, node, ast)
+				};
 				if (ts.isVariableDeclaration(parent)) {
-					if (ts.isObjectBindingPattern(parent.name)) {
-						props.destructured = new Set();
-						const identifiers = collectIdentifiers(ts, parent.name, []);
-						for (const [id, isRest] of identifiers) {
-							const name = _getNodeText(id);
-							if (isRest) {
-								props.destructuredRest = name;
-							}
-							else {
-								props.destructured.add(name);
-							}
-						}
+					if (ts.isIdentifier(parent.name)) {
+						defineSlots.name = _getNodeText(parent.name);
 					}
 					else {
-						props.name = _getNodeText(parent.name);
+						defineSlots.isObjectBindingPattern = ts.isObjectBindingPattern(parent.name);
 					}
 				}
-
-				props.define = {
-					...parseDefineFunction(node),
-					statement: getStatementRange(ts, parents, node, ast),
-				};
-
-				if (node.arguments.length) {
-					props.define.arg = _getStartEnd(node.arguments[0]);
-				}
-				if (node.typeArguments?.length) {
-					props.define.typeArg = _getStartEnd(node.typeArguments[0]);
-				}
 			}
-			else if (vueCompilerOptions.macros.withDefaults.includes(callText)) {
-				props.withDefaults = _getStartEnd(node);
-				if (node.arguments.length >= 2) {
-					const arg = node.arguments[1];
-					props.withDefaults.arg = _getStartEnd(arg);
-				}
-				if (ts.isVariableDeclaration(parent)) {
-					props.name = _getNodeText(parent.name);
-				}
+			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
+				defineExpose = parseCallExpression(node);
 			}
 			else if (
 				vueCompilerOptions.macros.defineOptions.includes(callText)
 				&& node.arguments.length
 				&& ts.isObjectLiteralExpression(node.arguments[0])
 			) {
+				defineOptions = {};
 				const obj = node.arguments[0];
-				ts.forEachChild(obj, node => {
-					if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
-						const name = _getNodeText(node.name);
-						if (name === 'inheritAttrs') {
-							options.inheritAttrs = _getNodeText(node.initializer);
-						}
-					}
-				});
 				for (const prop of obj.properties) {
-					if (
-						ts.isPropertyAssignment(prop)
-						&& _getNodeText(prop.name) === 'name'
-						&& ts.isStringLiteralLike(prop.initializer)
-					) {
-						options.name = prop.initializer.text;
+					if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+						const name = _getNodeText(prop.name);
+						if (name === 'inheritAttrs') {
+							defineOptions.inheritAttrs = _getNodeText(prop.initializer);
+						}
+						else if (name === 'name' && ts.isStringLiteral(prop.initializer)) {
+							defineOptions.name = prop.initializer.text;
+						}
 					}
 				}
 			}
-			else if (
-				vueCompilerOptions.composables.useTemplateRef.includes(callText)
-				&& node.arguments.length
-				&& !node.typeArguments?.length
-			) {
-				const define = parseDefineFunction(node);
-				const name = ts.isVariableDeclaration(parent) ? _getNodeText(parent.name) : undefined;
-				templateRefs.push({
-					name,
-					define
-				});
+			else if (vueCompilerOptions.composables.useAttrs.includes(callText)) {
+				useAttrs.push(parseCallExpression(node));
 			}
 			else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
-				const define = parseDefineFunction(node);
-				cssModules.push({
-					define
+				useCssModule.push(parseCallExpression(node));
+			}
+			else if (vueCompilerOptions.composables.useSlots.includes(callText)) {
+				useSlots.push(parseCallExpression(node));
+			}
+			else if (
+				vueCompilerOptions.composables.useTemplateRef.includes(callText)
+				&& !node.typeArguments?.length
+			) {
+				useTemplateRef.push({
+					name: ts.isVariableDeclaration(parent) ? _getNodeText(parent.name) : undefined,
+					...parseCallExpression(node)
 				});
 			}
 		}
@@ -399,9 +415,9 @@ export function parseScriptSetupRanges(
 		});
 	}
 
-	function parseDefineFunction(node: ts.CallExpression) {
+	function parseCallExpression(node: ts.CallExpression) {
 		return {
-			..._getStartEnd(node),
+			callExp: _getStartEnd(node),
 			exp: _getStartEnd(node.expression),
 			arg: node.arguments.length ? _getStartEnd(node.arguments[0]) : undefined,
 			typeArg: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,

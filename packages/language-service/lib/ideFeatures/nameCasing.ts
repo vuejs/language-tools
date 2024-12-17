@@ -161,7 +161,7 @@ export async function detect(
 			}
 			for (const [tagName] of attrs) {
 				// attr-name
-				if (tagName.indexOf('-') >= 0) {
+				if (tagName.includes('-')) {
 					result.push(AttrNameCasing.Kebab);
 					break;
 				}
