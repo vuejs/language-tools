@@ -36,10 +36,10 @@ export function* generateElementDirectives(
 			`__VLS_asFunctionalDirective(`,
 			...generateIdentifier(ctx, prop),
 			`)(null!, { ...__VLS_directiveBindingRestFields, `,
-			...generateArg(options, ctx, prop.arg),
-			...generateModifiers(options, ctx, prop.modifiers),
-			...generateValue(options, ctx, prop.exp),
-			`}, null!, null!)`
+			...generateArg(options, ctx, prop),
+			...generateModifiers(options, ctx, prop),
+			...generateValue(options, ctx, prop),
+			` }, null!, null!)`
 		);
 		yield endOfLine;
 	}
@@ -77,8 +77,9 @@ function* generateIdentifier(
 function* generateArg(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	arg: CompilerDOM.ExpressionNode | undefined
+	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
+	const { arg } = prop;
 	if (arg?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		return;
 	}
@@ -118,10 +119,24 @@ function* generateArg(
 export function* generateModifiers(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	modifiers: CompilerDOM.SimpleExpressionNode[],
+	prop: CompilerDOM.DirectiveNode,
 	propertyName: string = 'modifiers'
 ): Generator<Code> {
-	yield `${propertyName}: { `;
+	const { modifiers } = prop;
+	if (!modifiers.length) {
+		return;
+	}
+
+	const startOffset = modifiers[0].loc.start.offset - 1;
+	const endOffset = modifiers.at(-1)!.loc.end.offset;
+
+	yield* wrapWith(
+		startOffset,
+		endOffset,
+		ctx.codeFeatures.verification,
+		propertyName
+	);
+	yield `: { `;
 	for (const mod of modifiers) {
 		yield* generateObjectProperty(
 			options,
@@ -138,9 +153,11 @@ export function* generateModifiers(
 function* generateValue(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	exp: CompilerDOM.ExpressionNode | undefined
+	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
+	const { exp } = prop;
 	if (exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+		yield `value: undefined`
 		return;
 	}
 

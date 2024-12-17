@@ -1,4 +1,3 @@
-import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
@@ -19,7 +18,7 @@ export function* conditionWrapWith(
 		yield* wrapWith(startOffset, endOffset, features, ...wrapCodes);
 	}
 	else {
-		yield* toString(wrapCodes);
+		yield* wrapCodes;
 	}
 }
 

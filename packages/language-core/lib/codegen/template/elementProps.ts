@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import { minimatch } from 'minimatch';
+import { toString } from 'muggle-string';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
@@ -19,12 +20,6 @@ export interface FailedPropExpression {
 	prefix: string;
 	suffix: string;
 }
-
-const builtInModelModifiers = new Set([
-	'lazy',
-	'number',
-	'trim'
-]);
 
 export function* generateElementProps(
 	options: TemplateCodegenOptions,
@@ -120,7 +115,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			yield* conditionWrapWith(
+			const codes = conditionWrapWith(
 				enableCodeFeatures,
 				prop.loc.start.offset,
 				prop.loc.end.offset,
@@ -155,20 +150,34 @@ export function* generateElementProps(
 				),
 				`)`
 			);
+			if (enableCodeFeatures) {
+				yield* codes;
+			}
+			else {
+				yield toString([...codes]);
+			}
 			if (shouldSpread) {
 				yield ` }`;
 			}
 			yield `, `;
 
 			if (prop.name === 'model') {
-				const modifiers = prop.modifiers.filter(mod => !builtInModelModifiers.has(mod.content));
-				if (modifiers.length) {
-					yield* generateModifiers(
-						options,
-						ctx,
-						modifiers,
-						`${prop.arg ? propName : 'model'}Modifiers`
-					);
+				const propertyName = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					? !prop.arg.isStatic
+						? `[${prop.arg.content} + 'Modifiers']`
+						: propName + `Modifiers`
+					: `modelModifiers`;
+				const codes = generateModifiers(
+					options,
+					ctx,
+					prop,
+					propertyName
+				);
+				if (enableCodeFeatures) {
+					yield* codes;
+				}
+				else {
+					yield toString([...codes]);
 				}
 			}
 		}
@@ -192,7 +201,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			yield* conditionWrapWith(
+			const codes = conditionWrapWith(
 				enableCodeFeatures,
 				prop.loc.start.offset,
 				prop.loc.end.offset,
@@ -214,6 +223,12 @@ export function* generateElementProps(
 				),
 				`)`
 			);
+			if (enableCodeFeatures) {
+				yield* codes;
+			}
+			else {
+				yield toString([...codes]);
+			}
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -225,7 +240,7 @@ export function* generateElementProps(
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
-			yield* conditionWrapWith(
+			const codes = conditionWrapWith(
 				enableCodeFeatures,
 				prop.exp.loc.start.offset,
 				prop.exp.loc.end.offset,
@@ -241,6 +256,12 @@ export function* generateElementProps(
 					enableCodeFeatures
 				)
 			);
+			if (enableCodeFeatures) {
+				yield* codes;
+			}
+			else {
+				yield toString([...codes]);
+			}
 			yield `, `;
 		}
 	}
