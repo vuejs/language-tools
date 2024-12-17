@@ -157,7 +157,6 @@ function* generateValue(
 ): Generator<Code> {
 	const { exp } = prop;
 	if (exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `value: undefined`
 		return;
 	}
 
