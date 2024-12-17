@@ -36,9 +36,9 @@ export function* generateElementDirectives(
 			`__VLS_asFunctionalDirective(`,
 			...generateIdentifier(ctx, prop),
 			`)(null!, { ...__VLS_directiveBindingRestFields, `,
-			...generateArg(options, ctx, prop),
-			...generateModifiers(options, ctx, prop),
-			...generateValue(options, ctx, prop),
+			...generateArg(options, ctx, prop.arg),
+			...generateModifiers(options, ctx, prop.modifiers),
+			...generateValue(options, ctx, prop.exp),
 			`}, null!, null!)`
 		);
 		yield endOfLine;
@@ -77,9 +77,8 @@ function* generateIdentifier(
 function* generateArg(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	arg: CompilerDOM.ExpressionNode | undefined
 ): Generator<Code> {
-	const { arg } = prop;
 	if (arg?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		return;
 	}
@@ -90,9 +89,9 @@ function* generateArg(
 		startOffset,
 		startOffset + arg.content.length,
 		ctx.codeFeatures.verification,
-		'arg'
+		`arg`
 	);
-	yield ': ';
+	yield `: `;
 	if (arg.isStatic) {
 		yield* generateStringLiteralKey(
 			arg.content,
@@ -109,24 +108,21 @@ function* generateArg(
 			arg.content,
 			startOffset,
 			arg.loc,
-			'(',
-			')'
+			`(`,
+			`)`
 		);
 	}
-	yield ', ';
+	yield `, `;
 }
 
-function* generateModifiers(
+export function* generateModifiers(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	modifiers: CompilerDOM.SimpleExpressionNode[],
+	propertyName: string = 'modifiers'
 ): Generator<Code> {
-	if (options.vueCompilerOptions.target < 3.5) {
-		return;
-	}
-
-	yield 'modifiers: { ';
-	for (const mod of prop.modifiers) {
+	yield `${propertyName}: { `;
+	for (const mod of modifiers) {
 		yield* generateObjectProperty(
 			options,
 			ctx,
@@ -134,41 +130,41 @@ function* generateModifiers(
 			mod.loc.start.offset,
 			ctx.codeFeatures.withoutHighlight
 		);
-		yield ': true, ';
+		yield `: true, `;
 	}
-	yield '}, ';
+	yield `}, `;
 }
 
 function* generateValue(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	exp: CompilerDOM.ExpressionNode | undefined
 ): Generator<Code> {
-	if (prop.exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+	if (exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		return;
 	}
 
 	yield* wrapWith(
-		prop.exp.loc.start.offset,
-		prop.exp.loc.end.offset,
+		exp.loc.start.offset,
+		exp.loc.end.offset,
 		ctx.codeFeatures.verification,
-		'value'
+		`value`
 	);
-	yield ': ';
+	yield `: `;
 	yield* wrapWith(
-		prop.exp.loc.start.offset,
-		prop.exp.loc.end.offset,
+		exp.loc.start.offset,
+		exp.loc.end.offset,
 		ctx.codeFeatures.verification,
 		...generateInterpolation(
 			options,
 			ctx,
 			'template',
 			ctx.codeFeatures.all,
-			prop.exp.content,
-			prop.exp.loc.start.offset,
-			prop.exp.loc,
-			'(',
-			')'
+			exp.content,
+			exp.loc.start.offset,
+			exp.loc,
+			`(`,
+			`)`
 		)
 	);
 }
