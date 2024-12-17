@@ -107,8 +107,8 @@ function createTsx(
 	);
 	const destructuredPropNames = Unstable.computedSet(
 		computed(() => {
-			const newNames = new Set(scriptSetupRanges.get()?.props.destructured);
-			const rest = scriptSetupRanges.get()?.props.destructuredRest;
+			const newNames = new Set(scriptSetupRanges.get()?.defineProps?.destructured);
+			const rest = scriptSetupRanges.get()?.defineProps?.destructuredRest;
 			if (rest) {
 				newNames.add(rest);
 			}
@@ -118,18 +118,18 @@ function createTsx(
 	const templateRefNames = Unstable.computedSet(
 		computed(() => {
 			const newNames = new Set(
-				scriptSetupRanges.get()?.templateRefs
+				scriptSetupRanges.get()?.useTemplateRef
 					.map(({ name }) => name)
 					.filter(name => name !== undefined)
 			);
 			return newNames;
 		})
 	);
-	const hasDefineSlots = computed(() => !!scriptSetupRanges.get()?.slots.define);
-	const slotsAssignName = computed(() => scriptSetupRanges.get()?.slots.name);
-	const propsAssignName = computed(() => scriptSetupRanges.get()?.props.name);
+	const hasDefineSlots = computed(() => !!scriptSetupRanges.get()?.defineSlots);
+	const slotsAssignName = computed(() => scriptSetupRanges.get()?.defineSlots?.name);
+	const propsAssignName = computed(() => scriptSetupRanges.get()?.defineProps?.name);
 	const inheritAttrs = computed(() => {
-		const value = scriptSetupRanges.get()?.options.inheritAttrs ?? scriptRanges.get()?.exportDefault?.inheritAttrsOption;
+		const value = scriptSetupRanges.get()?.defineOptions?.inheritAttrs ?? scriptRanges.get()?.exportDefault?.inheritAttrsOption;
 		return value !== 'false';
 	});
 	const generatedTemplate = computed(() => {

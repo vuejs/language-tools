@@ -100,7 +100,10 @@ export function* generateElementProps(
 				continue;
 			}
 
-			if (prop.modifiers.some(m => m.content === 'prop' || m.content === 'attr')) {
+			if (
+				prop.name === 'bind'
+				&& prop.modifiers.some(m => m.content === 'prop' || m.content === 'attr')
+			) {
 				propName = propName.slice(1);
 			}
 
