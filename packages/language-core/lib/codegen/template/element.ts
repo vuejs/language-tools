@@ -95,8 +95,9 @@ export function* generateComponent(
 				];
 			}
 			else {
+				const shouldCapitalize = matchImportName[0].toUpperCase() === matchImportName[0];
 				yield* generateCamelized(
-					capitalize(node.tag),
+					shouldCapitalize ? capitalize(node.tag) : node.tag,
 					tagOffset,
 					{
 						...ctx.codeFeatures.withoutHighlightAndCompletion,
@@ -144,15 +145,16 @@ export function* generateComponent(
 		yield `)${endOfLine}`;
 	}
 	else if (!isComponentTag) {
-		yield `const ${var_originalComponent} = __VLS_resolvedLocalAndGlobalComponents.`;
+		yield `const ${var_originalComponent} = ({} as __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+		yield getPossibleOriginalComponentNames(node.tag, false)
+			.map(name => `'${name}'`)
+			.join(', ');
+		yield `>).`;
 		yield* generateCanonicalComponentName(
 			node.tag,
 			startTagOffset,
-			{
-				// with hover support
-				...ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
-				...ctx.codeFeatures.verification,
-			}
+			// with hover support
+			ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation
 		);
 		yield `${endOfLine}`;
 
@@ -419,11 +421,14 @@ export function getCanonicalComponentName(tagText: string) {
 		: capitalize(camelize(tagText.replace(colonReg, '-')));
 }
 
-export function getPossibleOriginalComponentNames(tagText: string, deduplicate: boolean) {
-	const name1 = capitalize(camelize(tagText));
-	const name2 = camelize(tagText);
-	const name3 = tagText;
-	const names: string[] = [name1];
+export function getPossibleOriginalComponentNames(tagText: string, deduplicate: boolean, strict: boolean = false) {
+	const name1 = capitalize(camelize(tagText)); // PascalCase | PascalCase | PascalCase
+	const name2 = camelize(tagText);             // camelCase  | camelCase  | PascalCase
+	const name3 = tagText;                       // kebab-case | camelCase  | PascalCase
+	const names: string[] = [];
+	if (!strict || name1[0] === name2[0]) {
+		names.push(name1);
+	}
 	if (!deduplicate || name2 !== name1) {
 		names.push(name2);
 	}
