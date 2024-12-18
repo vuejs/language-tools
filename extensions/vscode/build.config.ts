@@ -1,8 +1,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SondaRollupPlugin } from 'sonda';
 import { defineBuildConfig } from 'unbuild';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const languageServiceDataRE = /\/language-service\/data\/.*\.json$/;
@@ -86,7 +86,7 @@ export default defineBuildConfig([
 						}
 					},
 
-					SondaRollupPlugin(),
+					visualizer(),
 
 					...options.plugins,
 				];

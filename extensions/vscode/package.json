@@ -574,8 +574,8 @@
 		"esbuild": "latest",
 		"esbuild-visualizer": "latest",
 		"reactive-vscode": "^0.2.9",
+		"rollup-plugin-visualizer": "^5.12.0",
 		"semver": "^7.5.4",
-		"sonda": "^0.6.2",
 		"unbuild": "^3.0.1",
 		"vscode-ext-gen": "^0.5.0",
 		"vscode-tmlanguage-snapshot": "latest"

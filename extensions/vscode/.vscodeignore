@@ -6,7 +6,6 @@ build.config.ts
 vscode-dev-shim.js
 meta.json
 stats.html
-sonda-report.html
 dist/**/*.mjs
 dist/**/*.d.ts
 dist/**/*.map
