@@ -155,10 +155,12 @@ function resolveReferences(data: html.HTMLDataV1) {
 	locale ??= require('../../data/locale.json');
 
 	for (const item of [...data.globalAttributes ?? [], ...data.tags ?? []]) {
-		const relativeUrl = Reflect.get(item, 'reference') as string;
-		item.references = locale.map(({ name, url }) => ({
-			name,
-			url: url + relativeUrl
-		}));
+		if (typeof item.references === 'string') {
+			const relativeUrl = item.references as string;
+			item.references = locale.map(({ name, url }) => ({
+				name,
+				url: url + relativeUrl
+			}));
+		}
 	}
 }
