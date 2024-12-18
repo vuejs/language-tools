@@ -16,10 +16,10 @@ importers:
         version: 3.10.1(@types/node@22.10.1)(typescript@5.7.2)
       '@tsslint/cli':
         specifier: latest
-        version: 1.2.2(typescript@5.7.2)
+        version: 1.4.6(typescript@5.7.2)
       '@tsslint/config':
         specifier: latest
-        version: 1.2.2
+        version: 1.4.6(typescript@5.7.2)
       typescript:
         specifier: latest
         version: 5.7.2
@@ -390,10 +390,8 @@ packages:
   '@clack/core@0.3.5':
     resolution: {integrity: sha512-5cfhQNH+1VQ2xLQlmzXMqUoiaH0lRBq9/CLW9lTyMbuKLC3+xEK01tHVvyut++mLOn5urSHmkm6I0Lg9MaJSTQ==}
 
-  '@clack/prompts@0.7.0':
-    resolution: {integrity: sha512-0MhX9/B4iL6Re04jPrttDm+BsP8y6mS7byuv0BvXgdXhbV5PdlsHt55dvNsuBCPZ7xq1oTAOOuotR9NFbQyMSA==}
-    bundledDependencies:
-      - is-unicode-supported
+  '@clack/prompts@0.8.2':
+    resolution: {integrity: sha512-6b9Ab2UiZwJYA9iMyboYyW9yJvAO9V753ZhS+DHKEjZRKAxPPOb7MXXu84lsPFG+vZt6FRFniZ8rXi+zCIw4yQ==}
 
   '@emmetio/abbreviation@2.3.3':
     resolution: {integrity: sha512-mgv58UrU3rh4YgbE/TzgLQwJ3pFsHHhCLqY20aJq+9comytTXUDNGG/SMtSeMJdkpxgXSXunBGLD8Boka3JyVA==}
@@ -891,20 +889,20 @@ packages:
     resolution: {integrity: sha512-8iKx79/F73DKbGfRf7+t4dqrc0bRr0thdPrxAtCKWRm/F0tG71i6O1rvlnScncJLLBZHn3h8M3c1BSUAb9yu8g==}
     engines: {node: ^16.14.0 || >=18.0.0}
 
-  '@tsslint/cli@1.2.2':
-    resolution: {integrity: sha512-rOvYy38cl8e9uJ3+cCIYNfukBSDwMj/z5YI5A4jdJMJ95UBUWIXxtQMuSnSHmjd5xRRKsXQLjkHKCNbfccxJaA==}
+  '@tsslint/cli@1.4.6':
+    resolution: {integrity: sha512-UIBHL+5ZFiPeLBO3k8g/GhEO+1E134v6pRioS/NuXUc1Lr1jQ9Qs9UwllNI4aT5Hol4KF0Hu1kj+PoJGk8+8vQ==}
     hasBin: true
     peerDependencies:
       typescript: '*'
 
-  '@tsslint/config@1.2.2':
-    resolution: {integrity: sha512-53t2SRf8UiWnJUnlmuBhAJVqypTtKEGMAt9F1QkYBZNi0acJZQDbgAhf839v2TYj/ykQhMKgioD+qvWRVAKwrw==}
+  '@tsslint/config@1.4.6':
+    resolution: {integrity: sha512-viB0/KhCnALQFDbYguvIlLgUdo0TH6LoUsafrA0sC/mXuccaNj3Xji/MjzAD83iWODCysB7+gPME0r3NF4CijQ==}
 
-  '@tsslint/core@1.2.2':
-    resolution: {integrity: sha512-BhOiWZSf2D7Y2MipdzMeLNp9tse/FczhFdivRUhUh22qoqyxjANvSRpWjIvqz6RpSb49Q2fW9LCPmvNeN6l6hQ==}
+  '@tsslint/core@1.4.6':
+    resolution: {integrity: sha512-GNB4MEQaAFBA/9wefdqqSqwROM1+UqSB1JlmdAsel3+z10S0jZRDLWzKQRI2jZNE8xPG4sqR+nk9wVir7VE/mQ==}
 
-  '@tsslint/types@1.2.2':
-    resolution: {integrity: sha512-0ZY/nRXC7dCz4T1Ar0uB7gGwldBZ52sIgnLsRuG35N6q/w/hVSn8nGl9RxE/xyGSA4uMb2+8zmi8m5Sn3xDMZA==}
+  '@tsslint/types@1.4.6':
+    resolution: {integrity: sha512-l7EwsIl1kaVBjtPQRzeQYfmdHJPxCWCN4i9Y/XKM788xRrIaPdVN1uezZjEPilySrl2OgTv98jwDYgGk2utg3w==}
 
   '@tufjs/canonical-json@2.0.0':
     resolution: {integrity: sha512-yVtV8zsdo8qFHe+/3kw81dSLyF7D576A5cCFCi4X7B39tWT7SekaEFUnvnWJHz+9qO7qJTah1JbrDjWKqFtdWA==}
@@ -1224,9 +1222,6 @@ packages:
 
   buffer-equal-constant-time@1.0.1:
     resolution: {integrity: sha512-zRpUiDwd/xk6ADqPMATG8vc9VPrkck7T07OIx0gnjmJAnHnTVXNQG3vfvWNuiZIkwu9KrKdA1iJKfsfTVxE6NA==}
-
-  buffer-from@1.1.2:
-    resolution: {integrity: sha512-E+XQCRwSbaaiChtv6k6Dwgc+bx+Bs6vuKJHHl5kox/BaKbhiXzqQOwK4cO22yElGp2OCmjwVhT3HmxgyPGnJfQ==}
 
   buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
@@ -2662,9 +2657,6 @@ packages:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
     engines: {node: '>=0.10.0'}
 
-  source-map-support@0.5.21:
-    resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==}
-
   source-map@0.6.1:
     resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
@@ -2803,6 +2795,12 @@ packages:
   treeverse@3.0.0:
     resolution: {integrity: sha512-gcANaAnd2QDZFmHFEOF4k7uc1J/6a6z3DJMd/QwEyxLoKGiptJRwid582r7QIsFlFMIZ3SnxfS52S4hm2DHkuQ==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
+
+  ts-api-utils@2.0.0:
+    resolution: {integrity: sha512-xCt/TOAc+EOHS1XPnijD3/yzpH6qg2xppZO1YDqGoVsNXfQfzHpOdNuXwrwOU8u4ITXJyDCTyt8w5g1sZv9ynQ==}
+    engines: {node: '>=18.12'}
+    peerDependencies:
+      typescript: '>=4.8.4'
 
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
@@ -3322,7 +3320,7 @@ snapshots:
       picocolors: 1.1.1
       sisteransi: 1.0.5
 
-  '@clack/prompts@0.7.0':
+  '@clack/prompts@0.8.2':
     dependencies:
       '@clack/core': 0.3.5
       picocolors: 1.1.1
@@ -3935,27 +3933,31 @@ snapshots:
       '@sigstore/core': 1.1.0
       '@sigstore/protobuf-specs': 0.3.2
 
-  '@tsslint/cli@1.2.2(typescript@5.7.2)':
+  '@tsslint/cli@1.4.6(typescript@5.7.2)':
     dependencies:
-      '@clack/prompts': 0.7.0
-      '@tsslint/config': 1.2.2
-      '@tsslint/core': 1.2.2
+      '@clack/prompts': 0.8.2
+      '@tsslint/config': 1.4.6(typescript@5.7.2)
+      '@tsslint/core': 1.4.6
+      '@volar/language-core': 2.4.11
+      '@volar/typescript': 2.4.11
       glob: 10.4.5
       typescript: 5.7.2
 
-  '@tsslint/config@1.2.2':
+  '@tsslint/config@1.4.6(typescript@5.7.2)':
     dependencies:
-      '@tsslint/types': 1.2.2
+      '@tsslint/types': 1.4.6
+      ts-api-utils: 2.0.0(typescript@5.7.2)
+    transitivePeerDependencies:
+      - typescript
 
-  '@tsslint/core@1.2.2':
+  '@tsslint/core@1.4.6':
     dependencies:
-      '@tsslint/types': 1.2.2
+      '@tsslint/types': 1.4.6
       error-stack-parser: 2.1.4
       esbuild: 0.24.0
       minimatch: 10.0.1
-      source-map-support: 0.5.21
 
-  '@tsslint/types@1.2.2': {}
+  '@tsslint/types@1.4.6': {}
 
   '@tufjs/canonical-json@2.0.0': {}
 
@@ -4373,8 +4375,6 @@ snapshots:
   buffer-crc32@0.2.13: {}
 
   buffer-equal-constant-time@1.0.1: {}
-
-  buffer-from@1.1.2: {}
 
   buffer@5.7.1:
     dependencies:
@@ -5898,11 +5898,6 @@ snapshots:
 
   source-map-js@1.2.1: {}
 
-  source-map-support@0.5.21:
-    dependencies:
-      buffer-from: 1.1.2
-      source-map: 0.6.1
-
   source-map@0.6.1: {}
 
   spdx-correct@3.2.0:
@@ -6037,6 +6032,10 @@ snapshots:
   token-stream@1.0.0: {}
 
   treeverse@3.0.0: {}
+
+  ts-api-utils@2.0.0(typescript@5.7.2):
+    dependencies:
+      typescript: 5.7.2
 
   tslib@2.8.1: {}
 

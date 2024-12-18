@@ -432,7 +432,7 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 		if (ts.isVariableStatement(node)) {
 			for (const decl of node.declarationList.declarations) {
 				const vars = _findBindingVars(decl.name);
-				bindings.push(...vars.map((range) => ({ range })));
+				bindings.push(...vars.map(range => ({ range })));
 			}
 		}
 		else if (ts.isFunctionDeclaration(node)) {
