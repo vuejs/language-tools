@@ -5,7 +5,7 @@ import { toString } from 'muggle-string';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import { conditionWrapWith, newLine, variableNameRegex, wrapWith } from '../utils';
+import { newLine, variableNameRegex, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
 import type { TemplateCodegenContext } from './context';
@@ -116,8 +116,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codes = conditionWrapWith(
-				enableCodeFeatures,
+			const codes = wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
@@ -203,8 +202,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codes = conditionWrapWith(
-				enableCodeFeatures,
+			const codes = wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
@@ -242,8 +240,7 @@ export function* generateElementProps(
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
-			const codes = conditionWrapWith(
-				enableCodeFeatures,
+			const codes = wrapWith(
 				prop.exp.loc.start.offset,
 				prop.exp.loc.end.offset,
 				ctx.codeFeatures.verification,
