@@ -393,22 +393,25 @@ function* generateComponentProps(
 	if (scriptSetupRanges.defineProp.length) {
 		yield `const __VLS_defaults = {${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
-			if (defineProp.defaultValue) {
-				const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
-
-				if (defineProp.name || defineProp.isModel) {
-					yield propName!;
-				}
-				else if (defineProp.localName) {
-					yield localName!;
-				}
-				else {
-					continue;
-				}
-				yield `: `;
-				yield getRangeName(scriptSetup, defineProp.defaultValue);
-				yield `,${newLine}`;
+			if (!defineProp.defaultValue) {
+				continue;
 			}
+
+			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
+
+			if (defineProp.name || defineProp.isModel) {
+				yield `'${propName}'`;
+			}
+			else if (defineProp.localName) {
+				yield localName!;
+			}
+			else {
+				continue;
+			}
+
+			yield `: `;
+			yield getRangeName(scriptSetup, defineProp.defaultValue);
+			yield `,${newLine}`;
 		}
 		yield `}${endOfLine}`;
 	}
@@ -450,12 +453,9 @@ function* generateComponentProps(
 			yield `,${newLine}`;
 
 			if (defineProp.modifierType) {
-				let modifierName = `modelModifiers`;
-				if (defineProp.name) {
-					modifierName = `${getRangeName(scriptSetup, defineProp.name, true)}Modifiers`;
-				}
+				const modifierName = `${defineProp.name ? propName : 'model'}Modifiers`;
 				const modifierType = getRangeName(scriptSetup, defineProp.modifierType);
-				yield `${modifierName}?: Partial<Record<${modifierType}, true>>,${newLine}`;
+				yield `'${modifierName}'?: Partial<Record<${modifierType}, true>>,${newLine}`;
 			}
 		}
 		yield `}`;
@@ -529,14 +529,12 @@ function getPropAndLocalName(
 	if (defineProp.name) {
 		propName = propName!.replace(/['"]+/g, '');
 	}
-	return [propName, localName];
+	return [propName, localName] as const;
 }
 
 function getRangeName(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	range: TextRange,
-	unwrap = false
+	range: TextRange
 ) {
-	const offset = unwrap ? 1 : 0;
-	return scriptSetup.content.slice(range.start + offset, range.end - offset);
+	return scriptSetup.content.slice(range.start, range.end);
 }
