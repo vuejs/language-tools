@@ -226,17 +226,19 @@ function* generateSetupFunction(
 	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
 	for (const { callExp, exp, arg } of scriptSetupRanges.useTemplateRef) {
-		const templateRefType = arg ? [
-			`__VLS_TemplateResult['refs'][`,
-			generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation),
-			`]`
-		] : [`unknown`];
+		const templateRefType = arg
+			? [
+				`__VLS_TemplateResult['refs'][`,
+				generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+				`]`
+			]
+			: [`unknown`];
 		if (isTs) {
 			setupCodeModifies.push([
 				[
 					`<`,
 					...templateRefType,
-					`, keyof __VLS_TemplateResult['refs']>`
+					`>`
 				],
 				exp.end,
 				exp.end
@@ -255,6 +257,13 @@ function* generateSetupFunction(
 				],
 				callExp.end,
 				callExp.end
+			]);
+		}
+		if (arg) {
+			setupCodeModifies.push([
+				[`(__VLS_placeholder)`],
+				arg.start,
+				arg.end
 			]);
 		}
 	}
