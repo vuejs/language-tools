@@ -310,7 +310,7 @@ exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: refere
     "foo"?: number;
     "bar"?: string[];
     "qux"?: string;
-    quxModifiers?: Partial<Record<'lazy' | 'trim', true>>;
+    'quxModifiers'?: Partial<Record<'lazy' | 'trim', true>>;
 };
 declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<__VLS_PublicProps>>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
     "update:foo": (value: number) => void;

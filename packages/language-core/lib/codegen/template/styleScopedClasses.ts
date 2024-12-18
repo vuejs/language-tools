@@ -1,23 +1,27 @@
 import type { Code } from '../../types';
-import { endOfLine, newLine } from '../utils';
+import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 
-export function* generateStyleScopedClasses(
+export function* generateStyleScopedClassReferences(
 	ctx: TemplateCodegenContext,
 	withDot = false
 ): Generator<Code> {
+	if (!ctx.emptyClassOffsets.length && !ctx.scopedClasses.length) {
+		return;
+	}
+
+	yield `[`;
 	for (const offset of ctx.emptyClassOffsets) {
-		yield `__VLS_styleScopedClasses['`;
+		yield `'`;
 		yield [
 			'',
 			'template',
 			offset,
 			ctx.codeFeatures.additionalCompletion,
 		];
-		yield `']${endOfLine}`;
+		yield `', `;
 	}
 	for (const { source, className, offset } of ctx.scopedClasses) {
-		yield `__VLS_styleScopedClasses[`;
 		yield [
 			'',
 			source,
@@ -35,9 +39,9 @@ export function* generateStyleScopedClasses(
 			offset + className.length,
 			ctx.codeFeatures.navigationWithoutRename,
 		];
-		yield `]${endOfLine}`;
+		yield `, `;
 	}
-	yield newLine;
+	yield `] as (keyof __VLS_StyleScopedClasses)[]${endOfLine}`;
 
 	function* escapeString(source: string, className: string, offset: number, escapeTargets: string[]): Generator<Code> {
 		let count = 0;
