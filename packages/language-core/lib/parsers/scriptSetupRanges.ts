@@ -117,12 +117,22 @@ export function parseScriptSetupRanges(
 
 		if (
 			ts.isImportDeclaration(node)
-			&& node.importClause?.name
+			&& node.importClause
 			&& !node.importClause.isTypeOnly
 		) {
 			const moduleName = _getNodeText(node.moduleSpecifier).slice(1, -1);
 			if (vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
-				importComponentNames.add(_getNodeText(node.importClause.name));
+				const { name, namedBindings } = node.importClause;
+				if (name) {
+					importComponentNames.add(_getNodeText(name));
+				}
+				if (namedBindings && ts.isNamedImports(namedBindings)) {
+					for (const element of namedBindings.elements) {
+						if (element.propertyName?.text === 'default') {
+							importComponentNames.add(_getNodeText(element.name));
+						}
+					}
+				}
 			}
 		}
 	});
