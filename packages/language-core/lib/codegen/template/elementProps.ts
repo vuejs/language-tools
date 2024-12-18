@@ -218,10 +218,7 @@ export function* generateElementProps(
 				`: (`,
 				...(
 					prop.value
-						? generateAttrValue(prop.value, {
-							...ctx.codeFeatures.all,
-							navigation: false
-						})
+						? generateAttrValue(prop.value, ctx.codeFeatures.withoutNavigation)
 						: [`true`]
 				),
 				`)`
