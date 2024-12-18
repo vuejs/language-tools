@@ -47,7 +47,7 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		N1 extends keyof __VLS_GlobalComponents ? N1 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N1] } :
 		N2 extends keyof __VLS_GlobalComponents ? N2 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N2] } :
 		N3 extends keyof __VLS_GlobalComponents ? N3 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N3] } :
-		${strictTemplates ? '{}' : '{ [K in N0]: unknown }'}
+		${strictTemplates ? '{}' : '{ [K in N0]: unknown }'};
 	type __VLS_FunctionalComponentProps<T, K> =
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P :
@@ -59,6 +59,15 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		: true
 		: false
 		: false;
+	type __VLS_NormalizeComponentEvent<Props, Events, onEvent extends keyof Props, Event extends keyof Events, CamelizedEvent extends keyof Events> = (
+		__VLS_IsFunction<Props, onEvent> extends true
+			? Props
+			: __VLS_IsFunction<Events, Event> extends true
+				? { [K in onEvent]?: Events[Event] }
+				: __VLS_IsFunction<Events, CamelizedEvent> extends true
+					? { [K in onEvent]?: Events[CamelizedEvent] }
+					: Props
+	)${strictTemplates ? '' : ' & Record<string, unknown>'};
 	// fix https://github.com/vuejs/language-tools/issues/926
 	type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
 	type __VLS_OverloadUnionInner<T, U = unknown> = U & T extends (...args: infer A) => infer R

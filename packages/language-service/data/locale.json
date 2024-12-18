@@ -1,0 +1,54 @@
+[
+  {
+    "name": "en",
+    "url": "https://vuejs.org/"
+  },
+  {
+    "name": "zh-cn",
+    "url": "https://cn.vuejs.org/"
+  },
+  {
+    "name": "zh-hk",
+    "url": "https://zh-hk.vuejs.org/"
+  },
+  {
+    "name": "ja",
+    "url": "https://ja.vuejs.org/"
+  },
+  {
+    "name": "ua",
+    "url": "https://ua.vuejs.org/"
+  },
+  {
+    "name": "fr",
+    "url": "https://fr.vuejs.org/"
+  },
+  {
+    "name": "ko",
+    "url": "https://ko.vuejs.org/"
+  },
+  {
+    "name": "pt",
+    "url": "https://pt.vuejs.org/"
+  },
+  {
+    "name": "bn",
+    "url": "https://bn.vuejs.org/"
+  },
+  {
+    "name": "it",
+    "url": "https://it.vuejs.org/"
+  },
+  {
+    "name": "cs",
+    "url": "https://cs.vuejs.org/"
+  },
+  {
+    "name": "ru",
+    "url": "https://ru.vuejs.org/"
+  },
+  {
+    "name": "fa",
+    "url": "https://fa.vuejs.org/"
+  }
+]

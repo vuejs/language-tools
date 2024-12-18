@@ -47,7 +47,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 			// #3449
 			const endTagRegex = new RegExp(`</\\s*${hitBlock.type}\\s*>`);
-			const insertedEndTag = !!oldContent.match(endTagRegex) !== !!newContent.match(endTagRegex);
+			const insertedEndTag = endTagRegex.test(oldContent) !== endTagRegex.test(newContent);
 			if (insertedEndTag) {
 				return;
 			}

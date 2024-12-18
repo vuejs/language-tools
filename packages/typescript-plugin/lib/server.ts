@@ -139,7 +139,7 @@ function tryListen(server: net.Server, namedPipePath: string) {
 			resolve(true);
 		};
 		const onError = (err: any) => {
-			if ((err as any).code === 'ECONNREFUSED') {
+			if (err.code === 'ECONNREFUSED') {
 				try {
 					console.log('[Vue Named Pipe Client] Deleting:', namedPipePath);
 					fs.promises.unlink(namedPipePath);

@@ -18,9 +18,7 @@ export function* conditionWrapWith(
 		yield* wrapWith(startOffset, endOffset, features, ...wrapCodes);
 	}
 	else {
-		for (const wrapCode of wrapCodes) {
-			yield wrapCode;
-		}
+		yield* wrapCodes;
 	}
 }
 

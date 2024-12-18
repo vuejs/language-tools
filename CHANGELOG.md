@@ -97,7 +97,7 @@
 
 - **language-core:** split `__VLS_templateResult` (#4781) - Thanks to @KazariEX!
 - **language-core:** wrap template virtual code into a function (#4784)
-- **language-core:** move `templateRef` into `composibles` (#4791) - Thanks to @KazariEX!
+- **language-core:** move `templateRef` into `composables` (#4791) - Thanks to @KazariEX!
 - **language-core:** generate global types for the first parsed Vue component if cannot write global types file
 
 ### Tests

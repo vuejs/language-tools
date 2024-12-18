@@ -5,184 +5,25 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\n기본적으로 `v-model`은 각 `input` 이벤트 이후 데이터와 입력을 동기화합니다([위에 언급된 IME 구성 제외](#vmodel-ime-tip)).\n대신 `change` 이벤트 이후에 동기화하기 위해 `.lazy` 수식어를 추가할 수 있습니다.\n\n```html\n<!-- \"input\" 대신 \"change\" 이벤트 후에 동기화됨 -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "기본적으로 `v-model`은 각 `input` 이벤트 이후 데이터와 입력을 동기화합니다([위에 언급된 IME 구성 제외](#vmodel-ime-tip)).\n대신 `change` 이벤트 이후에 동기화하기 위해 `.lazy` 수식어를 추가할 수 있습니다.\n\n```html\n<!-- \"input\" 대신 \"change\" 이벤트 후에 동기화됨 -->\n<input v-model.lazy=\"msg\" />\n```"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/guide/essentials/forms.html#lazy"
-        }
-      ]
+      "references": "guide/essentials/forms.html#lazy"
     },
     {
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "\n사용자 입력이 자동으로 숫자로 유형 변환되도록 하려면, `v-model` 수식어로 `.number`를 추가하면 됩니다:\n\n```html\n<input v-model.number=\"age\" />\n```\n\n값을 `parseFloat()`로 파싱할 수 없으면 원래 값이 대신 사용됩니다.\n\n인풋에 `type=\"number\"`가 있으면 `.number` 수식어가 자동으로 적용됩니다.\n"
+        "value": "사용자 입력이 자동으로 숫자로 유형 변환되도록 하려면, `v-model` 수식어로 `.number`를 추가하면 됩니다:\n\n```html\n<input v-model.number=\"age\" />\n```\n\n값을 `parseFloat()`로 파싱할 수 없으면 원래 값이 대신 사용됩니다.\n\n인풋에 `type=\"number\"`가 있으면 `.number` 수식어가 자동으로 적용됩니다."
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/guide/essentials/forms.html#number"
-        }
-      ]
+      "references": "guide/essentials/forms.html#number"
     },
     {
       "name": "trim",
       "description": {
         "kind": "markdown",
-        "value": "\n사용자 입력의 공백이 자동으로 트리밍되도록 하려면 `v-model` 수식어로 `.trim`을 추가하면 됩니다:\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+        "value": "사용자 입력의 공백이 자동으로 트리밍되도록 하려면 `v-model` 수식어로 `.trim`을 추가하면 됩니다:\n\n```html\n<input v-model.trim=\"msg\" />\n```"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/guide/essentials/forms.html#trim"
-        }
-      ]
+      "references": "guide/essentials/forms.html#trim"
     }
   ]
 }
