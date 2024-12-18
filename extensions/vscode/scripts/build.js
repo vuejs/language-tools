@@ -1,7 +1,18 @@
-// @ts-check
 const path = require('path');
 const fs = require('fs');
 const treeShake = require('@kermanx/tree-shaker').treeShake;
+const minify = process.argv.includes('--minify');
+const shakeFailPaths = [
+	'/request-light/lib/node/main.js',
+	'/@vue/compiler-core/dist/compiler-core.cjs.prod.js',
+	'/packages/typescript-plugin/lib/requests/componentInfos.js',
+	'/volar-service-typescript/lib/plugins/docCommentTemplate.js',
+	'/@volar/language-service/lib/features/provideHover.js',
+	'/volar-service-typescript/lib/utils/previewer.js',
+	'/@babel/parser/lib/index.js',
+	'/@vscode/emmet-helper/lib/cjs/emmetHelper.js',
+	'/vscode-json-languageservice/lib/esm/services/jsonHover.js',
+];
 
 require('esbuild').context({
 	entryPoints: {
@@ -18,6 +29,7 @@ require('esbuild').context({
 	platform: 'node',
 	tsconfig: './tsconfig.json',
 	define: { 'process.env.NODE_ENV': '"production"' },
+	minify: minify,
 	plugins: [
 		{
 			name: 'umd2esm',
@@ -82,19 +94,20 @@ require('esbuild').context({
 		{
 			name: 'tree-shaking',
 			setup(build) {
-				build.onEnd(() => {
-					for (const file of [
-						'../dist/client.js',
-						'../dist/server.js',
-						'../node_modules/vue-language-core-pack/index.js',
-						'../node_modules/vue-typescript-plugin-pack/index.js',
-					]) {
-						console.time('tree-shaking ' + file);
-						const filePath = path.resolve(__dirname, file);
-						const soruce = fs.readFileSync(filePath, 'utf-8');
-						const { output } = treeShake(soruce, 'recommended', process.argv.includes('--minify'));
-						fs.writeFileSync(filePath, output);
-						console.timeEnd('tree-shaking ' + file);
+				if (!minify) {
+					return;
+				}
+				build.onLoad({ filter: /\.js/ }, ({ path }) => {
+					if (shakeFailPaths.some(name => path.endsWith(name))) {
+						return;
+					}
+					const soruce = fs.readFileSync(path, 'utf-8');
+					const { output, diagnostics } = treeShake(soruce, 'recommended', false);
+					if (!diagnostics.length) {
+						return {
+							contents: output,
+							loader: 'js',
+						}
 					}
 				});
 			},
