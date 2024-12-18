@@ -223,7 +223,7 @@ async function sfcWorker(lang) {
 		name: 'setup',
 		valueSet: 'v',
 		description: scriptSetupBlock.description,
-		reference: scriptSetupBlock.reference,
+		references: scriptSetupBlock.references,
 	});
 
 	/**
