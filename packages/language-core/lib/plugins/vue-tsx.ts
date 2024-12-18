@@ -92,8 +92,8 @@ function createTsx(
 			const newNames = new Set<string>();
 			const bindings = scriptSetupRanges.get()?.bindings;
 			if (_sfc.scriptSetup && bindings) {
-				for (const binding of bindings) {
-					newNames.add(_sfc.scriptSetup?.content.slice(binding.start, binding.end));
+				for (const { range } of bindings) {
+					newNames.add(_sfc.scriptSetup.content.slice(range.start, range.end));
 				}
 			}
 			return newNames;
@@ -101,7 +101,20 @@ function createTsx(
 	);
 	const scriptSetupImportComponentNames = Unstable.computedSet(
 		computed(() => {
-			const newNames = scriptSetupRanges.get()?.importComponentNames ?? new Set();
+			const newNames = new Set<string>();
+			const bindings = scriptSetupRanges.get()?.bindings;
+			if (_sfc.scriptSetup && bindings) {
+				for (const { range, moduleName, isDefaultImport, isNamespace } of bindings) {
+					if (
+						moduleName
+						&& isDefaultImport
+						&& !isNamespace
+						&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
+					) {
+						newNames.add(_sfc.scriptSetup.content.slice(range.start, range.end));
+					}
+				}
+			}
 			return newNames;
 		})
 	);
