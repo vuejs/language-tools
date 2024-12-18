@@ -154,7 +154,10 @@ export function loadModelModifiersData(lang: string): html.HTMLDataV1 {
 function resolveReferences(data: html.HTMLDataV1) {
 	locale ??= require('../../data/locale.json');
 
-	for (const item of [...data.globalAttributes ?? [], ...data.tags ?? []]) {
+	for (const item of [
+		...data.globalAttributes ?? [],
+		...data.tags?.flatMap((tag) => [tag, ...tag.attributes]) ?? [],
+	]) {
 		if (typeof item.references === 'string') {
 			const relativeUrl = item.references as string;
 			item.references = locale.map(({ name, url }) => ({
