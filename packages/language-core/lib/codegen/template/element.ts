@@ -148,7 +148,7 @@ export function* generateComponent(
 		yield `const ${var_originalComponent} = ({} as __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
 		yield getPossibleOriginalComponentNames(node.tag, false)
 			.map(name => `'${name}'`)
-			.join(', ');
+			.join(`, `);
 		yield `>).`;
 		yield* generateCanonicalComponentName(
 			node.tag,
@@ -415,13 +415,13 @@ function* generateVScope(
 	return [refName, offset];
 }
 
-export function getCanonicalComponentName(tagText: string) {
+function getCanonicalComponentName(tagText: string) {
 	return variableNameRegex.test(tagText)
 		? tagText
 		: capitalize(camelize(tagText.replace(colonReg, '-')));
 }
 
-export function getPossibleOriginalComponentNames(tagText: string, deduplicate: boolean) {
+function getPossibleOriginalComponentNames(tagText: string, deduplicate: boolean) {
 	const name1 = capitalize(camelize(tagText));
 	const name2 = camelize(tagText);
 	const name3 = tagText;
