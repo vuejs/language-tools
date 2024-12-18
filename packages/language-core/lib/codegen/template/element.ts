@@ -421,14 +421,11 @@ export function getCanonicalComponentName(tagText: string) {
 		: capitalize(camelize(tagText.replace(colonReg, '-')));
 }
 
-export function getPossibleOriginalComponentNames(tagText: string, deduplicate: boolean, strict: boolean = false) {
-	const name1 = capitalize(camelize(tagText)); // PascalCase | PascalCase | PascalCase
-	const name2 = camelize(tagText);             // camelCase  | camelCase  | PascalCase
-	const name3 = tagText;                       // kebab-case | camelCase  | PascalCase
-	const names: string[] = [];
-	if (!strict || name1[0] === name2[0]) {
-		names.push(name1);
-	}
+export function getPossibleOriginalComponentNames(tagText: string, deduplicate: boolean) {
+	const name1 = capitalize(camelize(tagText));
+	const name2 = camelize(tagText);
+	const name3 = tagText;
+	const names: string[] = [name1];
 	if (!deduplicate || name2 !== name1) {
 		names.push(name2);
 	}
