@@ -156,7 +156,7 @@ function resolveReferences(data: html.HTMLDataV1) {
 
 	for (const item of [
 		...data.globalAttributes ?? [],
-		...data.tags?.flatMap((tag) => [tag, ...tag.attributes]) ?? [],
+		...data.tags?.flatMap(tag => [tag, ...tag.attributes]) ?? [],
 	]) {
 		if (typeof item.references === 'string') {
 			const relativeUrl = item.references as string;
