@@ -17,7 +17,7 @@
 		"@vue/language-core": "2.1.10"
 	},
 	"dependencies": {
-		"@volar/source-map": "~2.4.9",
+		"@volar/source-map": "~2.4.11",
 		"volar-service-pug": "0.0.62"
 	}
 }

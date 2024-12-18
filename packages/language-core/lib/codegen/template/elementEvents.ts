@@ -15,7 +15,6 @@ export function* generateElementEvents(
 	node: CompilerDOM.ElementNode,
 	componentVar: string,
 	componentInstanceVar: string,
-	emitVar: string,
 	eventsVar: string
 ): Generator<Code, boolean> {
 	let usedComponentEventsVar = false;
@@ -34,30 +33,7 @@ export function* generateElementEvents(
 				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>${endOfLine}`;
 			}
 			const originalPropName = camelize('on-' + prop.arg.loc.source);
-			const originalPropNameObjectKey = variableNameRegex.test(originalPropName)
-				? originalPropName
-				: `'${originalPropName}'`;
-			yield `const ${ctx.getInternalVariable()}: `;
-			if (!options.vueCompilerOptions.strictTemplates) {
-				yield `Record<string, unknown> & `;
-			}
-			yield `(${newLine}`;
-			yield `__VLS_IsFunction<typeof ${propsVar}, '${originalPropName}'> extends true${newLine}`;
-			yield `? typeof ${propsVar}${newLine}`;
-			yield `: __VLS_IsFunction<typeof ${eventsVar}, '${prop.arg.loc.source}'> extends true${newLine}`;
-			yield `? {${newLine}`;
-			yield `/**__VLS_emit,${emitVar},${prop.arg.loc.source}*/${newLine}`;
-			yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${prop.arg.loc.source}']${newLine}`;
-			yield `}${newLine}`;
-			if (prop.arg.loc.source !== camelize(prop.arg.loc.source)) {
-				yield `: __VLS_IsFunction<typeof ${eventsVar}, '${camelize(prop.arg.loc.source)}'> extends true${newLine}`;
-				yield `? {${newLine}`;
-				yield `/**__VLS_emit,${emitVar},${camelize(prop.arg.loc.source)}*/${newLine}`;
-				yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${camelize(prop.arg.loc.source)}']${newLine}`;
-				yield `}${newLine}`;
-			}
-			yield `: typeof ${propsVar}${newLine}`;
-			yield `) = {${newLine}`;
+			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${originalPropName}', '${prop.arg.loc.source}', '${camelize(prop.arg.loc.source)}'> = {${newLine}`;
 			yield* generateEventArg(ctx, prop.arg, true);
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
