@@ -128,7 +128,10 @@ export function parseScriptSetupRanges(
 				}
 				if (namedBindings && ts.isNamedImports(namedBindings)) {
 					for (const element of namedBindings.elements) {
-						if (element.propertyName?.text === 'default') {
+						if (
+							!element.isTypeOnly
+							&& element.propertyName?.text === 'default'
+						) {
 							importComponentNames.add(_getNodeText(element.name));
 						}
 					}
