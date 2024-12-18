@@ -7,7 +7,7 @@
         "kind": "markdown",
         "value": "Ve výchozím nastavení `v-model` synchronizuje vstup s daty po každé události `input` (s&nbsp;výjimkou IME kompozice, jak je [uvedeno výše](#vmodel-ime-tip)). Místo toho můžete přidat modifikátor `lazy` k synchronizaci po události `change`:\n\n```html\n<!-- synchronizuje se po „change“ místo „input“ -->\n<input v-model.lazy=\"msg\" />\n```"
       },
-      "reference": "guide/essentials/forms.html#lazy"
+      "references": "guide/essentials/forms.html#lazy"
     },
     {
       "name": "number",
@@ -15,7 +15,7 @@
         "kind": "markdown",
         "value": "Pokud chcete, aby byl uživatelský vstup automaticky přetypován jako číslo, můžete do vašich vstupů spravovaných přes `v-model` přidat modifikátor `number`:\n\n```html\n<input v-model.number=\"age\" />\n```\n\nPokud hodnotu nelze přetypovat pomocí `parseFloat()`, bude místo toho použita původní hodnota (string). V případě, že je vstup prázdný (například poté, co uživatel pole vyčistí), bude vrácen prázdný string. Toto chování se liší od [vlastnosti DOM `valueAsNumber`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement#valueasnumber). \n\nModifikátor `number` se aplikuje automaticky, pokud má vstupní pole atribut `type=\"number\"`."
       },
-      "reference": "guide/essentials/forms.html#number"
+      "references": "guide/essentials/forms.html#number"
     },
     {
       "name": "trim",
@@ -23,7 +23,7 @@
         "kind": "markdown",
         "value": "Pokud chcete z uživatelského vstupu automaticky odstranit bílé znaky (whitespace), můžete do vašich vstupů spravovaných přes `v-model` přidat modifikátor `trim`:\n\n```html\n<input v-model.trim=\"msg\" />\n```"
       },
-      "reference": "guide/essentials/forms.html#trim"
+      "references": "guide/essentials/forms.html#trim"
     }
   ]
 }
