@@ -125,7 +125,7 @@ async function sfcWorker(lang) {
 			// { name: 'gql' },
 			// { name: 'graphql' },
 		],
-		reference: 'api/sfc-spec.html#pre-processors',
+		references: 'api/sfc-spec.html#pre-processors',
 	};
 	/**
 	 * @type {import('vscode-html-languageservice').IAttributeData}
@@ -136,7 +136,7 @@ async function sfcWorker(lang) {
 			kind: 'markdown',
 			value: sfcDoc.split('\n## ')[5].split('\n').slice(1).join('\n').trim(),
 		},
-		reference: 'api/sfc-spec.html#src-imports',
+		references: 'api/sfc-spec.html#src-imports',
 	};
 	const languageBlocks = sfcDoc
 		.split('\n## ')[2]
@@ -155,7 +155,7 @@ async function sfcWorker(lang) {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n'),
 				},
-				reference: `api/sfc-spec.html#${normalizeHash(name)}`,
+				references: `api/sfc-spec.html#${normalizeHash(name)}`,
 			};
 			if (name === 'template') {
 				data.attributes.push({
@@ -197,7 +197,7 @@ async function sfcWorker(lang) {
 						kind: 'markdown',
 						value: cssFeaturesDoc.split('\n## ')[1].split('\n').slice(1).join('\n').trim(),
 					},
-					reference: 'api/sfc-css-features.html#scoped-css',
+					references: 'api/sfc-css-features.html#scoped-css',
 				});
 				data.attributes.push({
 					name: 'module',
@@ -206,7 +206,7 @@ async function sfcWorker(lang) {
 						kind: 'markdown',
 						value: cssFeaturesDoc.split('\n## ')[2].split('\n').slice(1).join('\n').trim(),
 					},
-					reference: 'api/sfc-css-features.html#css-modules',
+					references: 'api/sfc-css-features.html#css-modules',
 				});
 			}
 			return data;
@@ -260,7 +260,7 @@ async function modelWorker(lang) {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n').trim(),
 				},
-				reference: `guide/essentials/forms.html#${normalizeHash(name)}`,
+				references: `guide/essentials/forms.html#${normalizeHash(name)}`,
 			};
 			return data;
 		});
@@ -302,7 +302,7 @@ async function templateWorker(lang) {
 					value: lines.slice(1).join('\n'),
 				},
 				attributes: [],
-				reference: `api/built-in-components.html#${normalizeHash(name)}`,
+				references: `api/built-in-components.html#${normalizeHash(name)}`,
 			};
 			return data;
 		});
@@ -322,7 +322,7 @@ async function templateWorker(lang) {
 					value: lines.slice(1).join('\n'),
 				},
 				attributes: [],
-				reference: `api/built-in-special-elements.html#${normalizeHash(name)}`,
+				references: `api/built-in-special-elements.html#${normalizeHash(name)}`,
 			};
 			return data;
 		});
@@ -347,7 +347,7 @@ async function templateWorker(lang) {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n').trim(),
 				},
-				reference: `api/built-in-directives.html#${normalizeHash(name)}`,
+				references: `api/built-in-directives.html#${normalizeHash(name)}`,
 			};
 			return data;
 		});
@@ -366,7 +366,7 @@ async function templateWorker(lang) {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n').trim(),
 				},
-				reference: `api/built-in-special-attributes.html#${normalizeHash(name)}`,
+				references: `api/built-in-special-attributes.html#${normalizeHash(name)}`,
 			};
 			return data;
 		});
@@ -385,7 +385,7 @@ async function templateWorker(lang) {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n'),
 				},
-				reference: `api/ssr.html#${normalizeHash(name)}`,
+				references: `api/ssr.html#${normalizeHash(name)}`,
 			};
 			return data;
 		})[0];

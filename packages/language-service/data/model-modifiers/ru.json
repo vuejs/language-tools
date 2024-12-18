@@ -7,7 +7,7 @@
         "kind": "markdown",
         "value": "По умолчанию `v-model` синхронизирует поле ввода с данными по событию `input` (кроме [вышеупомянутых исключений](#vmodel-ime-tip) для композиции IME). Можно воспользоваться модификатором `lazy`, чтобы синхронизация происходила по событию `change`:\n\n```html\n<!-- синхронизация после события \"change\" вместо \"input\" -->\n<input v-model.lazy=\"msg\" />\n```"
       },
-      "reference": "guide/essentials/forms.html#lazy"
+      "references": "guide/essentials/forms.html#lazy"
     },
     {
       "name": "number",
@@ -15,7 +15,7 @@
         "kind": "markdown",
         "value": "Для автоматического приведения введённого пользователем к числу можно добавить модификатор `number`:\n\n```html\n<input v-model.number=\"age\" />\n```\n\nЕсли значение не получится привести к числу с помощью `parseFloat()`, то будет возвращено исходное значение. В частности, если поле ввода пустое (например, после того, как пользователь очистил поле ввода), возвращается пустая строка. Это поведение отличается от свойства [DOM `valueAsNumber`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement#valueasnumber).\n\nМодификатор `number` автоматически применяется к полям `type=\"number\"`."
       },
-      "reference": "guide/essentials/forms.html#number"
+      "references": "guide/essentials/forms.html#number"
     },
     {
       "name": "trim",
@@ -23,7 +23,7 @@
         "kind": "markdown",
         "value": "Если необходимо автоматически удалять пробельные символы в начале и в конце строки, можно добавить модификатор `trim`:\n\n```html\n<input v-model.trim=\"msg\" />\n```"
       },
-      "reference": "guide/essentials/forms.html#trim"
+      "references": "guide/essentials/forms.html#trim"
     }
   ]
 }

@@ -1,6 +1,6 @@
 import type * as html from 'vscode-html-languageservice';
 
-let locale: { name: string, url: string }[];
+let locale: { name: string, url: string; }[];
 
 export function loadTemplateData(lang: string) {
 
@@ -142,7 +142,7 @@ export function loadModelModifiersData(lang: string): html.HTMLDataV1 {
 	else if (lang === 'ru') {
 		data = require('../../data/model-modifiers/ru.json');
 	}
-	else {	
+	else {
 		data = require('../../data/model-modifiers/en.json');
 	}
 
