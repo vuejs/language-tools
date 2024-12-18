@@ -98,6 +98,7 @@ require('esbuild').context({
 					return;
 				}
 				build.onLoad({ filter: /\.js/ }, ({ path }) => {
+					path = path.replace(/\\/g, '/');
 					if (shakeFailPaths.some(name => path.endsWith(name))) {
 						return;
 					}
