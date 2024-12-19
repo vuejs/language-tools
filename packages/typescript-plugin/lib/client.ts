@@ -66,13 +66,12 @@ export function getTemplateContextProps(
 	);
 }
 
-export function getComponentNames(
-	...args: Parameters<typeof import('./requests/componentInfos.js')['getComponentNames']>
-) {
-	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentNames']>>(
-		'getComponentNames',
-		...args
-	);
+export async function getComponentNames(fileName: string) {
+	const server = await getBestServer(fileName);
+	if (!server) {
+		return;
+	}
+	return server.getComponentNames(fileName);
 }
 
 export function getElementAttrs(
@@ -85,7 +84,7 @@ export function getElementAttrs(
 }
 
 async function sendRequest<T>(requestType: RequestData[1], fileName: string, ...rest: any[]) {
-	const server = (await getBestServer(fileName));
+	const server = await getBestServer(fileName);
 	if (!server) {
 		return;
 	}

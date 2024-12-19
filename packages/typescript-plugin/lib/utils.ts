@@ -3,7 +3,7 @@ import * as net from 'node:net';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type * as ts from 'typescript';
-import type { ProjectInfo, RequestData, ResponseData } from './server';
+import type { NotificationData, ProjectInfo, RequestData, ResponseData } from './server';
 
 export { TypeScriptProjectHost } from '@volar/typescript';
 
@@ -28,7 +28,8 @@ class NamedPipeServer {
 	path: string;
 	connecting = false;
 	projectInfo?: ProjectInfo;
-	containsFileRequests = new Map<string, Promise<boolean | undefined | null>>();
+	containsFileCache = new Map<string, Promise<boolean | undefined | null>>();
+	componentNamesCache = new Map<string, string[] | undefined | null | Promise<string[] | undefined | null>>();
 
 	constructor(kind: ts.server.ProjectKind, id: number) {
 		this.path = getServerPath(kind, id);
@@ -36,16 +37,33 @@ class NamedPipeServer {
 
 	containsFile(fileName: string) {
 		if (this.projectInfo) {
-			const containsFile = this.containsFileRequests.get(fileName)
-				?? (async () => {
+			if (!this.containsFileCache.has(fileName)) {
+				this.containsFileCache.set(fileName, (async () => {
 					const res = await this.request<boolean>('containsFile', fileName);
 					if (typeof res !== 'boolean') {
-						this.containsFileRequests.delete(fileName);
+						// If the request fails, delete the cache
+						this.containsFileCache.delete(fileName);
 					}
 					return res;
-				})();
-			this.containsFileRequests.set(fileName, containsFile);
-			return containsFile;
+				})());
+			}
+			return this.containsFileCache.get(fileName);
+		}
+	}
+
+	getComponentNames(fileName: string) {
+		if (this.projectInfo) {
+			if (!this.componentNamesCache.has(fileName)) {
+				this.componentNamesCache.set(fileName, (async () => {
+					const res = await this.request<string[]>('subscribeComponentNames', fileName);
+					if (!res) {
+						// If the request fails, delete the cache
+						this.componentNamesCache.delete(fileName);
+					}
+					return res;
+				})());
+			}
+			return this.componentNamesCache.get(fileName);
 		}
 	}
 
@@ -64,7 +82,7 @@ class NamedPipeServer {
 			if (projectInfo) {
 				console.log('TSServer project ready:', projectInfo.name);
 				this.projectInfo = projectInfo;
-				this.containsFileRequests.clear();
+				this.containsFileCache.clear();
 				onServerReady.forEach(cb => cb());
 			} else {
 				this.close();
@@ -108,12 +126,25 @@ class NamedPipeServer {
 					continue;
 				}
 				try {
-					const [seq, res]: ResponseData = JSON.parse(result.trim());
-					this.requestHandlers.get(seq)?.(res);
+					const data: ResponseData | NotificationData = JSON.parse(result.trim());
+					if (typeof data[0] === 'number') {
+						const [seq, res] = data;
+						this.requestHandlers.get(seq)?.(res);
+					} else {
+						const [type, fileName, res] = data;
+						this.onNotification(type, fileName, res);
+					}
 				} catch (e) {
 					console.error('JSON parse error:', e);
 				}
 			}
+		}
+	}
+
+	onNotification(type: string, fileName: string, data: any) {
+		// console.log(`[${type}] ${fileName} ${JSON.stringify(data)}`);
+		if (type === 'componentNamesUpdated') {
+			this.componentNamesCache.set(fileName, data);
 		}
 	}
 
