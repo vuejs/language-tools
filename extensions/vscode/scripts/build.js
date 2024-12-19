@@ -2,17 +2,6 @@ const path = require('path');
 const fs = require('fs');
 const treeShake = require('@kermanx/tree-shaker').treeShake;
 const minify = process.argv.includes('--minify');
-const shakeFailPaths = [
-	'/request-light/lib/node/main.js',
-	'/@vue/compiler-core/dist/compiler-core.cjs.prod.js',
-	'/packages/typescript-plugin/lib/requests/componentInfos.js',
-	'/volar-service-typescript/lib/plugins/docCommentTemplate.js',
-	'/@volar/language-service/lib/features/provideHover.js',
-	'/volar-service-typescript/lib/utils/previewer.js',
-	'/@babel/parser/lib/index.js',
-	'/@vscode/emmet-helper/lib/cjs/emmetHelper.js',
-	'/vscode-json-languageservice/lib/esm/services/jsonHover.js',
-];
 
 require('esbuild').context({
 	entryPoints: {
@@ -99,9 +88,6 @@ require('esbuild').context({
 				}
 				build.onLoad({ filter: /\.js/ }, ({ path }) => {
 					path = path.replace(/\\/g, '/');
-					if (shakeFailPaths.some(name => path.endsWith(name))) {
-						return;
-					}
 					const soruce = fs.readFileSync(path, 'utf-8');
 					const { output, diagnostics } = treeShake(soruce, 'recommended', false);
 					if (!diagnostics.length) {
