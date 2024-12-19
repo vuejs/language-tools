@@ -63,7 +63,6 @@ export async function startNamedPipeServer(
 					kind: info.project.projectKind,
 					currentDirectory: info.project.getCurrentDirectory(),
 				} satisfies ProjectInfo);
-				return;
 			}
 			else if (requestType === 'containsFile') {
 				sendResponse(
