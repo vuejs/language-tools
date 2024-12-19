@@ -64,6 +64,7 @@ class NamedPipeServer {
 				console.log('TSServer project ready:', projectInfo.name);
 				this.projectInfo = projectInfo;
 				this.containsFileRequests.clear();
+				onServerReady.forEach(cb => cb());
 			} else {
 				this.close();
 			}
@@ -128,13 +129,12 @@ class NamedPipeServer {
 
 export const configuredServers: NamedPipeServer[] = [];
 export const inferredServers: NamedPipeServer[] = [];
+export const onServerReady: (() => void)[] = [];
 
 for (let i = 0; i < 10; i++) {
 	configuredServers.push(new NamedPipeServer(1 satisfies ts.server.ProjectKind.Configured, i));
 	inferredServers.push(new NamedPipeServer(0 satisfies ts.server.ProjectKind.Inferred, i));
 }
-
-export const onSomePipeReadyCallbacks: (() => void)[] = [];
 
 export async function getBestServer(fileName: string) {
 	for (const server of configuredServers) {

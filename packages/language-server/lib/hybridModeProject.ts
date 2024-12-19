@@ -2,7 +2,7 @@ import type { Language, LanguagePlugin, LanguageServer, LanguageServerProject, P
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createLanguage } from '@vue/language-core';
 import { createLanguageService, createUriMap, LanguageService } from '@vue/language-service';
-import { configuredServers, getBestServer, inferredServers, onSomePipeReadyCallbacks } from '@vue/typescript-plugin/lib/utils';
+import { configuredServers, getBestServer, inferredServers, onServerReady } from '@vue/typescript-plugin/lib/utils';
 import { URI } from 'vscode-uri';
 
 export function createHybridModeProject(
@@ -24,7 +24,7 @@ export function createHybridModeProject(
 	const project: LanguageServerProject = {
 		setup(_server) {
 			server = _server;
-			onSomePipeReadyCallbacks.push(() => {
+			onServerReady.push(() => {
 				server.languageFeatures.requestRefresh(false);
 			});
 			server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
