@@ -13,22 +13,14 @@ if (version === '2.1.10') {
 }
 const platform = os.platform();
 const pipeDir = platform === 'win32'
-	? `\\\\.\\pipe`
-	: `/tmp`;
-const toFullPath = (file: string) => {
-	if (platform === 'win32') {
-		return pipeDir + '\\' + file;
-	}
-	else {
-		return pipeDir + '/' + file;
-	}
-};
+	? `\\\\.\\pipe\\`
+	: `/tmp/`;
 
 export function getServerPath(kind: ts.server.ProjectKind, id: number) {
 	if (kind === 1 satisfies ts.server.ProjectKind.Configured) {
-		return toFullPath(`vue-named-pipe-${version}-configured-${id}`);
+		return `${pipeDir}vue-named-pipe-${version}-configured-${id}`;
 	} else {
-		return toFullPath(`vue-named-pipe-${version}-inferred-${id}`);
+		return `${pipeDir}vue-named-pipe-${version}-inferred-${id}`;
 	}
 }
 
