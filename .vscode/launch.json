@@ -15,10 +15,6 @@
 			"outFiles": [
 				"${workspaceRoot}/**/*.js"
 			],
-			"preLaunchTask": {
-				"type": "npm",
-				"script": "watch"
-			}
 		},
 		{
 			"name": "Launch Web Client",
@@ -33,10 +29,6 @@
 			"outFiles": [
 				"${workspaceRoot}/**/*.js"
 			],
-			"preLaunchTask": {
-				"type": "npm",
-				"script": "watch"
-			}
 		},
 		{
 			"name": "Attach to Language Server",
