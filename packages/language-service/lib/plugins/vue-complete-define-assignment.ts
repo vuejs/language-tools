@@ -23,15 +23,15 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const result: vscode.CompletionItem[] = [];
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript || !virtualCode) {
+					if (!sourceScript?.generated || !virtualCode) {
 						return;
 					}
 
-					const root = sourceScript?.generated?.root;
+					const root = sourceScript.generated.root;
 					if (!(root instanceof VueVirtualCode)) {
 						return;
 					}
@@ -43,6 +43,7 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
+					const result: vscode.CompletionItem[] = [];
 					const mappings = [...context.language.maps.forEach(virtualCode)];
 
 					addDefineCompletionItem(
