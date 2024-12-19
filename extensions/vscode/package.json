@@ -563,7 +563,7 @@
 		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {
-		"@kermanx/tree-shaker": "https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker@e12c045",
+		"@kermanx/tree-shaker": "https://pkg.pr.new/KermanX/tree-shaker/@kermanx/tree-shaker@182c8ed",
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
 		"@volar/vscode": "~2.4.11",
