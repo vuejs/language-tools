@@ -45,11 +45,13 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				+ change.newText
 				+ hitBlock.content.slice(change.end - hitBlock.loc.start.offset);
 
-			// #3449
-			const endTagRegex = new RegExp(`</\\s*${hitBlock.type}\\s*>`);
-			const insertedEndTag = endTagRegex.test(oldContent) !== endTagRegex.test(newContent);
-			if (insertedEndTag) {
-				return;
+			if (hitBlock.type !== "template") {
+				// #3449
+				const endTagRegex = new RegExp(`</\\s*${hitBlock.type}\\s*>`);
+				const insertedEndTag = endTagRegex.test(oldContent) !== endTagRegex.test(newContent);
+				if (insertedEndTag) {
+					return;
+				}
 			}
 
 			const lengthDiff = change.newText.length - (change.end - change.start);
