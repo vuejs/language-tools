@@ -17,7 +17,6 @@ export function* generateScriptSetupImports(
 		0,
 		codeFeatures.all,
 	];
-	yield newLine;
 }
 
 export function* generateScriptSetup(
@@ -96,16 +95,6 @@ function* generateSetupFunction(
 	scriptSetupRanges: ScriptSetupRanges,
 	syntax: 'return' | 'export default' | undefined
 ): Generator<Code> {
-	if (options.vueCompilerOptions.target >= 3.3) {
-		yield `const { `;
-		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!ctx.bindingNames.has(macro) && macro !== 'templateRef') {
-				yield macro + `, `;
-			}
-		}
-		yield `} = await import('${options.vueCompilerOptions.lib}')${endOfLine}`;
-	}
-
 	ctx.scriptSetupGeneratedOffset = options.getGeneratedLength() - scriptSetupRanges.importSectionEndOffset;
 
 	let setupCodeModifies: [Code[], number, number][] = [];
@@ -280,6 +269,8 @@ function* generateSetupFunction(
 	yield generateSfcBlockSection(scriptSetup, nextStart, scriptSetup.content.length, codeFeatures.all);
 
 	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
+	yield* generateMacros(options, ctx);
+	yield* generateDefineProp(options, scriptSetup);
 
 	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
@@ -313,6 +304,42 @@ function* generateSetupFunction(
 			yield `${syntax} `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
+		}
+	}
+}
+
+function* generateMacros(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext
+): Generator<Code> {
+	if (options.vueCompilerOptions.target >= 3.3) {
+		yield `declare const { `;
+		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
+			if (!ctx.bindingNames.has(macro) && macro !== 'templateRef') {
+				yield macro + `, `;
+			}
+		}
+		yield `}: typeof import('${options.vueCompilerOptions.lib}')${endOfLine}`;
+	}
+}
+
+function* generateDefineProp(
+	options: ScriptCodegenOptions,
+	scriptSetup: NonNullable<Sfc['scriptSetup']>
+): Generator<Code> {
+	const definePropProposalA = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+	const definePropProposalB = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
+
+	if (definePropProposalA || definePropProposalB) {
+		yield `type __VLS_PropOptions<T> = Exclude<import('${options.vueCompilerOptions.lib}').Prop<T>, import('${options.vueCompilerOptions.lib}').PropType<T>>${endOfLine}`;
+		if (definePropProposalA) {
+			yield `declare function defineProp<T>(name: string, options: ({ required: true } | { default: T }) & __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
+			yield `declare function defineProp<T>(name?: string, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
+		}
+		if (definePropProposalB) {
+			yield `declare function defineProp<T>(value: T | (() => T), required?: boolean, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
+			yield `declare function defineProp<T>(value: T | (() => T) | undefined, required: true, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
+			yield `declare function defineProp<T>(value?: T | (() => T), required?: boolean, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
 		}
 	}
 }
