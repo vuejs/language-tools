@@ -2,7 +2,7 @@ import type { Language, LanguagePlugin, LanguageServer, LanguageServerProject, P
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createLanguage } from '@vue/language-core';
 import { createLanguageService, createUriMap, LanguageService } from '@vue/language-service';
-import { getReadyNamedPipePaths, onSomePipeReadyCallbacks, searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
+import { configuredServers, getBestServer, inferredServers, onSomePipeReadyCallbacks } from '@vue/typescript-plugin/lib/utils';
 import { URI } from 'vscode-uri';
 
 export function createHybridModeProject(
@@ -38,16 +38,20 @@ export function createHybridModeProject(
 			});
 			const end = Date.now() + 60000;
 			const pipeWatcher = setInterval(() => {
-				getReadyNamedPipePaths();
+				for (const server of configuredServers) {
+					server.update();
+				}
+				for (const server of inferredServers) {
+					server.update();
+				}
 				if (Date.now() > end) {
 					clearInterval(pipeWatcher);
 				}
-			}, 1000);
+			}, 2500);
 		},
 		async getLanguageService(uri) {
 			const fileName = asFileName(uri);
-			const namedPipeServer = (await searchNamedPipeServerForFile(fileName));
-			namedPipeServer?.socket.end();
+			const namedPipeServer = await getBestServer(fileName);
 			if (namedPipeServer?.projectInfo?.kind === 1) {
 				const tsconfig = namedPipeServer.projectInfo.name;
 				const tsconfigUri = URI.file(tsconfig);

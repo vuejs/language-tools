@@ -8,9 +8,10 @@ import { getImportPathForFile } from './requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
 import type { RequestContext } from './requests/types';
-import { connect, getNamedPipePath } from './utils';
+import { getServerPath } from './utils';
 
-export interface Request {
+export type RequestData = [
+	seq: number,
 	type: 'containsFile'
 	| 'projectInfo'
 	| 'collectExtractProps'
@@ -22,9 +23,15 @@ export interface Request {
 	| 'getComponentEvents'
 	| 'getTemplateContextProps'
 	| 'getComponentNames'
-	| 'getElementAttrs';
-	args: [fileName: string, ...rest: any];
-}
+	| 'getElementAttrs',
+	fileName: string,
+	...args: any[],
+];
+
+export type ResponseData = [
+	seq: number,
+	data: any,
+];
 
 export interface ProjectInfo {
 	name: string;
@@ -39,14 +46,9 @@ export async function startNamedPipeServer(
 	projectKind: ts.server.ProjectKind.Inferred | ts.server.ProjectKind.Configured
 ) {
 	const server = net.createServer(connection => {
-		connection.on('data', data => {
-			const text = data.toString();
-			if (text === 'ping') {
-				connection.write('pong');
-				return;
-			}
-			const request: Request = JSON.parse(text);
-			const fileName = request.args[0];
+		connection.on('data', text => {
+			const json = text.toString();
+			const [seq, requestType, ...args]: RequestData = JSON.parse(json);
 			const requestContext: RequestContext = {
 				typescript: ts,
 				languageService: info.languageService,
@@ -55,68 +57,70 @@ export async function startNamedPipeServer(
 				isTsPlugin: true,
 				getFileId: (fileName: string) => fileName,
 			};
-			if (request.type === 'containsFile') {
-				sendResponse(
-					info.project.containsFile(ts.server.toNormalizedPath(fileName))
-				);
-			}
-			else if (request.type === 'projectInfo') {
+			if (requestType === 'projectInfo') {
 				sendResponse({
 					name: info.project.getProjectName(),
 					kind: info.project.projectKind,
 					currentDirectory: info.project.getCurrentDirectory(),
 				} satisfies ProjectInfo);
+				return;
 			}
-			else if (request.type === 'collectExtractProps') {
-				const result = collectExtractProps.apply(requestContext, request.args as any);
+			else if (requestType === 'containsFile') {
+				sendResponse(
+					info.project.containsFile(ts.server.toNormalizedPath(args[0]))
+				);
+			}
+			else if (requestType === 'collectExtractProps') {
+				const result = collectExtractProps.apply(requestContext, args as any);
 				sendResponse(result);
 			}
-			else if (request.type === 'getImportPathForFile') {
-				const result = getImportPathForFile.apply(requestContext, request.args as any);
+			else if (requestType === 'getImportPathForFile') {
+				const result = getImportPathForFile.apply(requestContext, args as any);
 				sendResponse(result);
 			}
-			else if (request.type === 'getPropertiesAtLocation') {
-				const result = getPropertiesAtLocation.apply(requestContext, request.args as any);
+			else if (requestType === 'getPropertiesAtLocation') {
+				const result = getPropertiesAtLocation.apply(requestContext, args as any);
 				sendResponse(result);
 			}
-			else if (request.type === 'getQuickInfoAtPosition') {
-				const result = getQuickInfoAtPosition.apply(requestContext, request.args as any);
+			else if (requestType === 'getQuickInfoAtPosition') {
+				const result = getQuickInfoAtPosition.apply(requestContext, args as any);
 				sendResponse(result);
 			}
 			// Component Infos
-			else if (request.type === 'getComponentProps') {
-				const result = getComponentProps.apply(requestContext, request.args as any);
+			else if (requestType === 'getComponentProps') {
+				const result = getComponentProps.apply(requestContext, args as any);
 				sendResponse(result);
 			}
-			else if (request.type === 'getComponentEvents') {
-				const result = getComponentEvents.apply(requestContext, request.args as any);
+			else if (requestType === 'getComponentEvents') {
+				const result = getComponentEvents.apply(requestContext, args as any);
 				sendResponse(result);
 			}
-			else if (request.type === 'getTemplateContextProps') {
-				const result = getTemplateContextProps.apply(requestContext, request.args as any);
+			else if (requestType === 'getTemplateContextProps') {
+				const result = getTemplateContextProps.apply(requestContext, args as any);
 				sendResponse(result);
 			}
-			else if (request.type === 'getComponentNames') {
-				const result = getComponentNames.apply(requestContext, request.args as any);
+			else if (requestType === 'getComponentNames') {
+				const result = getComponentNames.apply(requestContext, args as any);
 				sendResponse(result);
 			}
-			else if (request.type === 'getElementAttrs') {
-				const result = getElementAttrs.apply(requestContext, request.args as any);
+			else if (requestType === 'getElementAttrs') {
+				const result = getElementAttrs.apply(requestContext, args as any);
 				sendResponse(result);
 			}
 			else {
-				console.warn('[Vue Named Pipe Server] Unknown request type:', request.type);
+				console.warn('[Vue Named Pipe Server] Unknown request:', json);
+				debugger;
+			}
+
+			function sendResponse(data: any | undefined) {
+				connection.write(JSON.stringify([seq, data ?? null]) + '\n\n');
 			}
 		});
 		connection.on('error', err => console.error('[Vue Named Pipe Server]', err.message));
-
-		function sendResponse(data: any | undefined) {
-			connection.write(JSON.stringify(data ?? null) + '\n\n');
-		}
 	});
 
-	for (let i = 0; i < 20; i++) {
-		const path = getNamedPipePath(projectKind, i);
+	for (let i = 0; i < 10; i++) {
+		const path = getServerPath(projectKind, i);
 		const socket = await connect(path, 100);
 		if (typeof socket === 'object') {
 			socket.end();
@@ -130,6 +134,43 @@ export async function startNamedPipeServer(
 			break;
 		}
 	}
+}
+
+function connect(namedPipePath: string, timeout?: number) {
+	return new Promise<net.Socket | 'error' | 'timeout'>(resolve => {
+		const socket = net.connect(namedPipePath);
+		if (timeout) {
+			socket.setTimeout(timeout);
+		}
+		const onConnect = () => {
+			cleanup();
+			resolve(socket);
+		};
+		const onError = (err: any) => {
+			if (err.code === 'ECONNREFUSED') {
+				try {
+					console.log('[Vue Named Pipe Client] Deleting:', namedPipePath);
+					fs.promises.unlink(namedPipePath);
+				} catch { }
+			}
+			cleanup();
+			resolve('error');
+			socket.end();
+		};
+		const onTimeout = () => {
+			cleanup();
+			resolve('timeout');
+			socket.end();
+		};
+		const cleanup = () => {
+			socket.off('connect', onConnect);
+			socket.off('error', onError);
+			socket.off('timeout', onTimeout);
+		};
+		socket.on('connect', onConnect);
+		socket.on('error', onError);
+		socket.on('timeout', onTimeout);
+	});
 }
 
 function tryListen(server: net.Server, namedPipePath: string) {
