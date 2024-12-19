@@ -1,5 +1,7 @@
 import type * as html from 'vscode-html-languageservice';
 
+let locale: { name: string, url: string; }[];
+
 export function loadTemplateData(lang: string) {
 
 	lang = lang.toLowerCase();
@@ -37,6 +39,8 @@ export function loadTemplateData(lang: string) {
 		data = require('../../data/template/en.json');
 	}
 
+	resolveReferences(data);
+
 	for (const attr of [...data.globalAttributes ?? []]) {
 		if (!attr.name.startsWith('v-')) {
 			data.globalAttributes?.push(
@@ -67,68 +71,99 @@ export function loadLanguageBlocks(lang: string): html.HTMLDataV1 {
 
 	lang = lang.toLowerCase();
 
+	let data: html.HTMLDataV1;
+
 	if (lang === 'ja') {
-		return require('../../data/language-blocks/ja.json');
+		data = require('../../data/language-blocks/ja.json');
 	}
 	else if (lang === 'fr') {
-		return require('../../data/language-blocks/fr.json');
+		data = require('../../data/language-blocks/fr.json');
 	}
 	else if (lang === 'ko') {
-		return require('../../data/language-blocks/ko.json');
+		data = require('../../data/language-blocks/ko.json');
 	}
 	else if (lang === 'pt-br') {
-		return require('../../data/language-blocks/pt.json');
+		data = require('../../data/language-blocks/pt.json');
 	}
 	else if (lang === 'zh-cn') {
-		return require('../../data/language-blocks/zh-cn.json');
+		data = require('../../data/language-blocks/zh-cn.json');
 	}
 	else if (lang === 'zh-tw') {
-		return require('../../data/language-blocks/zh-hk.json');
+		data = require('../../data/language-blocks/zh-hk.json');
 	}
 	else if (lang === 'it') {
-		return require('../../data/language-blocks/it.json');
+		data = require('../../data/language-blocks/it.json');
 	}
 	else if (lang === 'cs') {
-		return require('../../data/language-blocks/cs.json');
+		data = require('../../data/language-blocks/cs.json');
 	}
 	else if (lang === 'ru') {
-		return require('../../data/language-blocks/ru.json');
+		data = require('../../data/language-blocks/ru.json');
+	}
+	else {
+		data = require('../../data/language-blocks/en.json');
 	}
 
-	return require('../../data/language-blocks/en.json');
+	resolveReferences(data);
+
+	return data;
 }
 
 export function loadModelModifiersData(lang: string): html.HTMLDataV1 {
 
 	lang = lang.toLowerCase();
 
+	let data: html.HTMLDataV1;
+
 	if (lang === 'ja') {
-		return require('../../data/model-modifiers/ja.json');
+		data = require('../../data/model-modifiers/ja.json');
 	}
 	else if (lang === 'fr') {
-		return require('../../data/model-modifiers/fr.json');
+		data = require('../../data/model-modifiers/fr.json');
 	}
 	else if (lang === 'ko') {
-		return require('../../data/model-modifiers/ko.json');
+		data = require('../../data/model-modifiers/ko.json');
 	}
 	else if (lang === 'pt-br') {
-		return require('../../data/model-modifiers/pt.json');
+		data = require('../../data/model-modifiers/pt.json');
 	}
 	else if (lang === 'zh-cn') {
-		return require('../../data/model-modifiers/zh-cn.json');
+		data = require('../../data/model-modifiers/zh-cn.json');
 	}
 	else if (lang === 'zh-tw') {
-		return require('../../data/model-modifiers/zh-hk.json');
+		data = require('../../data/model-modifiers/zh-hk.json');
 	}
 	else if (lang === 'it') {
-		return require('../../data/model-modifiers/it.json');
+		data = require('../../data/model-modifiers/it.json');
 	}
 	else if (lang === 'cs') {
-		return require('../../data/model-modifiers/cs.json');
+		data = require('../../data/model-modifiers/cs.json');
 	}
 	else if (lang === 'ru') {
-		return require('../../data/model-modifiers/ru.json');
+		data = require('../../data/model-modifiers/ru.json');
+	}
+	else {
+		data = require('../../data/model-modifiers/en.json');
 	}
 
-	return require('../../data/model-modifiers/en.json');
+	resolveReferences(data);
+
+	return data;
+}
+
+function resolveReferences(data: html.HTMLDataV1) {
+	locale ??= require('../../data/locale.json');
+
+	for (const item of [
+		...data.globalAttributes ?? [],
+		...data.tags?.flatMap(tag => [tag, ...tag.attributes]) ?? [],
+	]) {
+		if (typeof item.references === 'string') {
+			const relativeUrl = item.references as string;
+			item.references = locale.map(({ name, url }) => ({
+				name,
+				url: url + relativeUrl
+			}));
+		}
+	}
 }

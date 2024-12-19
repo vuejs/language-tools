@@ -939,12 +939,12 @@ describe('Renaming', async () => {
 			        "newText": "bar",
 			        "range": {
 			          "end": {
-			            "character": 34,
-			            "line": 7,
+			            "character": 16,
+			            "line": 2,
 			          },
 			          "start": {
-			            "character": 31,
-			            "line": 7,
+			            "character": 13,
+			            "line": 2,
 			          },
 			        },
 			      },
@@ -952,12 +952,12 @@ describe('Renaming', async () => {
 			        "newText": "bar",
 			        "range": {
 			          "end": {
-			            "character": 16,
-			            "line": 2,
+			            "character": 34,
+			            "line": 7,
 			          },
 			          "start": {
-			            "character": 13,
-			            "line": 2,
+			            "character": 31,
+			            "line": 7,
 			          },
 			        },
 			      },

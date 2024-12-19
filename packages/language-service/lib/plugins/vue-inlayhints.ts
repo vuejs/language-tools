@@ -33,12 +33,16 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					];
 					const scriptSetupRanges = codegen?.scriptSetupRanges.get();
 
-					if (scriptSetupRanges?.props.destructured && virtualCode._sfc.scriptSetup?.ast) {
+					if (scriptSetupRanges?.defineProps?.destructured && virtualCode._sfc.scriptSetup?.ast) {
 						const setting = 'vue.inlayHints.destructuredProps';
 						settings[setting] ??= await context.env.getConfiguration?.<boolean>(setting) ?? false;
 
 						if (settings[setting]) {
-							for (const [prop, isShorthand] of findDestructuredProps(ts, virtualCode._sfc.scriptSetup.ast, scriptSetupRanges.props.destructured)) {
+							for (const [prop, isShorthand] of findDestructuredProps(
+									ts,
+									virtualCode._sfc.scriptSetup.ast,
+									scriptSetupRanges.defineProps.destructured
+								)) {
 								const name = prop.text;
 								const end = prop.getEnd();
 								const pos = isShorthand ? end : end - name.length;
@@ -62,30 +66,32 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					const end = document.offsetAt(range.end);
 
 					for (const hint of inlayHints) {
-
 						const block = blocks.find(block => block?.name === hint.blockName);
-						const hintOffset = (block?.startTagEnd ?? 0) + hint.offset;
-
-						if (hintOffset >= start && hintOffset <= end) {
-
-							settings[hint.setting] ??= await context.env.getConfiguration?.<boolean>(hint.setting) ?? false;
-
-							if (!settings[hint.setting]) {
-								continue;
-							}
-
-							result.push({
-								label: hint.label,
-								paddingRight: hint.paddingRight,
-								paddingLeft: hint.paddingLeft,
-								position: document.positionAt(hintOffset),
-								kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
-								tooltip: hint.tooltip ? {
-									kind: 'markdown',
-									value: hint.tooltip,
-								} : undefined,
-							});
+						if (!block) {
+							continue;
 						}
+
+						const hintOffset = block.startTagEnd + hint.offset;
+						if (hintOffset < start || hintOffset >= end) {
+							continue;
+						}
+
+						settings[hint.setting] ??= await context.env.getConfiguration?.<boolean>(hint.setting) ?? false;
+						if (!settings[hint.setting]) {
+							continue;
+						}
+
+						result.push({
+							label: hint.label,
+							paddingRight: hint.paddingRight,
+							paddingLeft: hint.paddingLeft,
+							position: document.positionAt(hintOffset),
+							kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
+							tooltip: hint.tooltip ? {
+								kind: 'markdown',
+								value: hint.tooltip,
+							} : undefined,
+						});
 					}
 
 					return result;
