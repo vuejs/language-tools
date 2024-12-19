@@ -66,7 +66,7 @@ export function* generateScriptSetup(
 		}
 
 		yield `return {} as {${newLine}`
-			+ `	props: ${ctx.localTypes.PrettifyLocal}<typeof __VLS_functionalComponentProps & __VLS_TemplateResult['attrs'] & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
+			+ `	props: ${ctx.localTypes.PrettifyLocal}<__VLS_OwnProps & __VLS_PublicProps & __VLS_TemplateResult['attrs']> & __VLS_BuiltInPublicProps,${newLine}`
 			+ `	expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.defineExpose ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
 			+ `	attrs: any,${newLine}`
 			+ `	slots: __VLS_TemplateResult['slots'],${newLine}`
@@ -368,36 +368,38 @@ function* generateComponentProps(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	yield `const __VLS_fnComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
+	if (scriptSetup.generic) {
+		yield `const __VLS_fnComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 
-	if (scriptSetupRanges.defineProps?.arg) {
-		yield `props: `;
-		yield generateSfcBlockSection(
-			scriptSetup,
-			scriptSetupRanges.defineProps.arg.start,
-			scriptSetupRanges.defineProps.arg.end,
-			codeFeatures.navigation
-		);
-		yield `,${newLine}`;
+		if (scriptSetupRanges.defineProps?.arg) {
+			yield `props: `;
+			yield generateSfcBlockSection(
+				scriptSetup,
+				scriptSetupRanges.defineProps.arg.start,
+				scriptSetupRanges.defineProps.arg.end,
+				codeFeatures.navigation
+			);
+			yield `,${newLine}`;
+		}
+
+		yield* generateEmitsOption(options, scriptSetupRanges);
+
+		yield `})${endOfLine}`;
+
+		yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
+			? `import('${options.vueCompilerOptions.lib}').PublicProps`
+			: options.vueCompilerOptions.target >= 3.0
+				? `import('${options.vueCompilerOptions.lib}').VNodeProps`
+				+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
+				+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
+				: `globalThis.JSX.IntrinsicAttributes`
+			}`;
+		yield endOfLine;
+
+		yield `type __VLS_OwnProps = `;
+		yield `${ctx.localTypes.OmitKeepDiscriminatedUnion}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
+		yield endOfLine;
 	}
-
-	yield* generateEmitsOption(options, scriptSetupRanges);
-
-	yield `})${endOfLine}`;
-
-	yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
-		? `import('${options.vueCompilerOptions.lib}').PublicProps`
-		: options.vueCompilerOptions.target >= 3.0
-			? `import('${options.vueCompilerOptions.lib}').VNodeProps`
-			+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
-			+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
-			: `globalThis.JSX.IntrinsicAttributes`
-		}`;
-	yield endOfLine;
-
-	yield `let __VLS_functionalComponentProps!: `;
-	yield `${ctx.localTypes.OmitKeepDiscriminatedUnion}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
-	yield endOfLine;
 
 	if (scriptSetupRanges.defineProp.length) {
 		yield `const __VLS_defaults = {${newLine}`;
