@@ -20,7 +20,6 @@ export type RequestType = 'containsFile'
 	| 'getComponentProps'
 	| 'getComponentEvents'
 	| 'getTemplateContextProps'
-	// | 'getComponentNames'
 	| 'getElementAttrs'
 	| 'subscribeAllComponentAndProps';
 
