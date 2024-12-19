@@ -45,74 +45,90 @@ export async function startNamedPipeServer(
 	language: Language<string>,
 	projectKind: ts.server.ProjectKind.Inferred | ts.server.ProjectKind.Configured
 ) {
+	const dataChunks: Buffer[] = [];
 	const server = net.createServer(connection => {
-		connection.on('data', text => {
-			const json = text.toString();
-			const [seq, requestType, ...args]: RequestData = JSON.parse(json);
-			const requestContext: RequestContext = {
-				typescript: ts,
-				languageService: info.languageService,
-				languageServiceHost: info.languageServiceHost,
-				language: language,
-				isTsPlugin: true,
-				getFileId: (fileName: string) => fileName,
-			};
-			if (requestType === 'projectInfo') {
-				sendResponse({
-					name: info.project.getProjectName(),
-					kind: info.project.projectKind,
-					currentDirectory: info.project.getCurrentDirectory(),
-				} satisfies ProjectInfo);
-			}
-			else if (requestType === 'containsFile') {
-				sendResponse(
-					info.project.containsFile(ts.server.toNormalizedPath(args[0]))
-				);
-			}
-			else if (requestType === 'collectExtractProps') {
-				const result = collectExtractProps.apply(requestContext, args as any);
-				sendResponse(result);
-			}
-			else if (requestType === 'getImportPathForFile') {
-				const result = getImportPathForFile.apply(requestContext, args as any);
-				sendResponse(result);
-			}
-			else if (requestType === 'getPropertiesAtLocation') {
-				const result = getPropertiesAtLocation.apply(requestContext, args as any);
-				sendResponse(result);
-			}
-			else if (requestType === 'getQuickInfoAtPosition') {
-				const result = getQuickInfoAtPosition.apply(requestContext, args as any);
-				sendResponse(result);
-			}
-			// Component Infos
-			else if (requestType === 'getComponentProps') {
-				const result = getComponentProps.apply(requestContext, args as any);
-				sendResponse(result);
-			}
-			else if (requestType === 'getComponentEvents') {
-				const result = getComponentEvents.apply(requestContext, args as any);
-				sendResponse(result);
-			}
-			else if (requestType === 'getTemplateContextProps') {
-				const result = getTemplateContextProps.apply(requestContext, args as any);
-				sendResponse(result);
-			}
-			else if (requestType === 'getComponentNames') {
-				const result = getComponentNames.apply(requestContext, args as any);
-				sendResponse(result);
-			}
-			else if (requestType === 'getElementAttrs') {
-				const result = getElementAttrs.apply(requestContext, args as any);
-				sendResponse(result);
-			}
-			else {
-				console.warn('[Vue Named Pipe Server] Unknown request:', json);
-				debugger;
-			}
+		connection.on('data', buffer => {
+			dataChunks.push(buffer);
+			const text = dataChunks.toString();
+			if (text.endsWith('\n\n')) {
+				dataChunks.length = 0;
+				const requests = text.split('\n\n');
+				for (let json of requests) {
+					json = json.trim();
+					if (!json) {
+						continue;
+					}
+					try {
+						const [seq, requestType, ...args]: RequestData = JSON.parse(json);
+						const requestContext: RequestContext = {
+							typescript: ts,
+							languageService: info.languageService,
+							languageServiceHost: info.languageServiceHost,
+							language: language,
+							isTsPlugin: true,
+							getFileId: (fileName: string) => fileName,
+						};
+						if (requestType === 'projectInfo') {
+							sendResponse({
+								name: info.project.getProjectName(),
+								kind: info.project.projectKind,
+								currentDirectory: info.project.getCurrentDirectory(),
+							} satisfies ProjectInfo);
+						}
+						else if (requestType === 'containsFile') {
+							sendResponse(
+								info.project.containsFile(ts.server.toNormalizedPath(args[0]))
+							);
+						}
+						else if (requestType === 'collectExtractProps') {
+							const result = collectExtractProps.apply(requestContext, args as any);
+							sendResponse(result);
+						}
+						else if (requestType === 'getImportPathForFile') {
+							const result = getImportPathForFile.apply(requestContext, args as any);
+							sendResponse(result);
+						}
+						else if (requestType === 'getPropertiesAtLocation') {
+							const result = getPropertiesAtLocation.apply(requestContext, args as any);
+							sendResponse(result);
+						}
+						else if (requestType === 'getQuickInfoAtPosition') {
+							const result = getQuickInfoAtPosition.apply(requestContext, args as any);
+							sendResponse(result);
+						}
+						// Component Infos
+						else if (requestType === 'getComponentProps') {
+							const result = getComponentProps.apply(requestContext, args as any);
+							sendResponse(result);
+						}
+						else if (requestType === 'getComponentEvents') {
+							const result = getComponentEvents.apply(requestContext, args as any);
+							sendResponse(result);
+						}
+						else if (requestType === 'getTemplateContextProps') {
+							const result = getTemplateContextProps.apply(requestContext, args as any);
+							sendResponse(result);
+						}
+						else if (requestType === 'getComponentNames') {
+							const result = getComponentNames.apply(requestContext, args as any);
+							sendResponse(result);
+						}
+						else if (requestType === 'getElementAttrs') {
+							const result = getElementAttrs.apply(requestContext, args as any);
+							sendResponse(result);
+						}
+						else {
+							console.warn('[Vue Named Pipe Server] Unknown request:', json);
+							debugger;
+						}
 
-			function sendResponse(data: any | undefined) {
-				connection.write(JSON.stringify([seq, data ?? null]) + '\n\n');
+						function sendResponse(data: any | undefined) {
+							connection.write(JSON.stringify([seq, data ?? null]) + '\n\n');
+						}
+					} catch (e) {
+						console.error('[Vue Named Pipe Server] JSON parse error:', e);
+					}
+				}
 			}
 		});
 		connection.on('error', err => console.error('[Vue Named Pipe Server]', err.message));

@@ -44,8 +44,14 @@ class NamedPipeServer {
 
 	containsFile(fileName: string) {
 		if (this.projectInfo) {
-			const containsFile = this.request<boolean>('containsFile', fileName)
-				?? this.request<boolean>('containsFile', fileName);
+			const containsFile = this.containsFileRequests.get(fileName)
+				?? (async () => {
+					const res = await this.request<boolean>('containsFile', fileName);
+					if (typeof res !== 'boolean') {
+						this.containsFileRequests.delete(fileName);
+					}
+					return res;
+				})();
 			this.containsFileRequests.set(fileName, containsFile);
 			return containsFile;
 		}
@@ -102,6 +108,7 @@ class NamedPipeServer {
 		const data = Buffer.concat(this.dataChunks);
 		const text = data.toString();
 		if (text.endsWith('\n\n')) {
+			this.dataChunks.length = 0;
 			const results = text.split('\n\n');
 			for (let result of results) {
 				result = result.trim();
@@ -119,12 +126,21 @@ class NamedPipeServer {
 	}
 
 	request<T>(requestType: RequestData[1], fileName: string, ...args: any[]) {
-		return new Promise<T>(resolve => {
+		return new Promise<T | undefined | null>(resolve => {
 			const seq = this.seq++;
+			// console.time(`[${seq}] ${requestType} ${fileName}`);
 			this.requestHandlers.set(seq, data => {
+				// console.timeEnd(`[${seq}] ${requestType} ${fileName}`);
 				this.requestHandlers.delete(seq);
 				resolve(data);
 			});
+			setTimeout(() => {
+				if (this.requestHandlers.has(seq)) {
+					console.error(`[${seq}] ${requestType} ${fileName} timeout`);
+					this.requestHandlers.delete(seq);
+					resolve(undefined);
+				}
+			}, 5000);
 			this.socket!.write(JSON.stringify([seq, requestType, fileName, ...args] satisfies RequestData) + '\n\n');
 		});
 	}
