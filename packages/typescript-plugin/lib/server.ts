@@ -122,25 +122,27 @@ export async function startNamedPipeServer(
 
 		for (const [fileName, [oldData, subscriptions]] of componentNamesSubscriptions) {
 			const connections = [...subscriptions].filter(connection => !connection.destroyed);
-			if (connections.length) {
-				const script = info.project.getScriptInfo(fileName);
-				if (script?.isScriptOpen()) {
-					await sleep(0);
-					if (token?.isCancellationRequested()) {
-						return;
-					}
-					const newData = await getComponentAndProps.apply(requestContext, [fileName, token]);
-					if (token?.isCancellationRequested()) {
-						return;
-					}
-					if (JSON.stringify(oldData) !== JSON.stringify(newData)) {
-						// Update cache
-						componentNamesSubscriptions.set(fileName, [newData, subscriptions]);
-						// Notify
-						for (const connection of connections) {
-							notify(connection, 'componentAndPropsUpdated', fileName, newData);
-						}
-					}
+			if (!connections.length) {
+				continue;
+			}
+			const script = info.project.getScriptInfo(fileName);
+			if (!script?.isScriptOpen()) {
+				continue;
+			}
+			await sleep(0);
+			if (token?.isCancellationRequested()) {
+				return;
+			}
+			const newData = await getComponentAndProps.apply(requestContext, [fileName, token]);
+			if (token?.isCancellationRequested()) {
+				return;
+			}
+			if (JSON.stringify(oldData) !== JSON.stringify(newData)) {
+				// Update cache
+				componentNamesSubscriptions.set(fileName, [newData, subscriptions]);
+				// Notify
+				for (const connection of connections) {
+					notify(connection, 'componentAndPropsUpdated', fileName, newData);
 				}
 			}
 		}
