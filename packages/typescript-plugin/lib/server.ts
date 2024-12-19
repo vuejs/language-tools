@@ -65,7 +65,7 @@ export async function startNamedPipeServer(
 		getFileId: (fileName: string) => fileName,
 	};
 	const dataChunks: Buffer[] = [];
-	const componentNamesSubscriptions = new Map<string, [Awaited<ReturnType<typeof getComponentAndProps>>, Set<net.Socket>]>();
+	const componentNamesSubscriptions = new Map<string, [ReturnType<typeof getComponentAndProps> | Awaited<ReturnType<typeof getComponentAndProps>>, Set<net.Socket>]>();
 	const server = net.createServer(connection => {
 		connection.on('data', buffer => {
 			dataChunks.push(buffer);
@@ -203,12 +203,12 @@ export async function startNamedPipeServer(
 		else if (requestType === 'subscribeAllComponentAndProps') {
 			let subscriptions = componentNamesSubscriptions.get(args[0]);
 			if (!subscriptions) {
-				const result = await getComponentAndProps.apply(requestContext, args as any);
+				const result = getComponentAndProps.apply(requestContext, args as any);
 				subscriptions = [result, new Set()];
 				componentNamesSubscriptions.set(args[0], subscriptions);
 			}
 			subscriptions[1].add(connection);
-			sendResponse(subscriptions[0]);
+			sendResponse(await subscriptions[0]);
 		}
 		else {
 			console.warn('[Vue Named Pipe Server] Unknown request:', requestType);
