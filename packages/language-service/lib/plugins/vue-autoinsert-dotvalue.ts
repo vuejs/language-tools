@@ -57,7 +57,8 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!sourceScript) {

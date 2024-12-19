@@ -194,13 +194,14 @@ function getEncodedSemanticClassifications<T>(
 	return (filePath, span, format) => {
 		const fileName = filePath.replace(windowsPathReg, '/');
 		const result = getEncodedSemanticClassifications(fileName, span, format);
-		const file = language.scripts.get(asScriptId(fileName));
-		if (file?.generated?.root instanceof VueVirtualCode) {
-			const { template } = file.generated.root._sfc;
+		const sourceScript = language.scripts.get(asScriptId(fileName));
+		const root = sourceScript?.generated?.root;
+		if (root instanceof VueVirtualCode) {
+			const { template } = root._sfc;
 			if (template) {
 				for (const componentSpan of getComponentSpans.call(
 					{ typescript: ts, languageService },
-					file.generated.root,
+					root,
 					template,
 					{
 						start: span.start - template.startTagEnd,

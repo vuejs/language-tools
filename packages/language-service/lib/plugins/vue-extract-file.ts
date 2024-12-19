@@ -35,16 +35,21 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(sourceScript?.generated?.root instanceof VueVirtualCode) || virtualCode?.id !== 'template') {
+					if (!sourceScript?.generated || virtualCode?.id !== 'template') {
 						return;
 					}
 
-					const { _sfc: sfc } = sourceScript.generated.root;
-					const script = sfc.scriptSetup ?? sfc.script;
+					const root = sourceScript.generated.root;
+					if (!(root instanceof VueVirtualCode)) {
+						return;
+					}
 
+					const sfc = root._sfc;
+					const script = sfc.scriptSetup ?? sfc.script;
 					if (!sfc.template || !script) {
 						return;
 					}
@@ -71,19 +76,22 @@ export function create(
 
 					const { uri, range, newName } = codeAction.data as ActionData;
 					const [startOffset, endOffset]: [number, number] = range;
+
 					const parsedUri = URI.parse(uri);
 					const decoded = context.decodeEmbeddedDocumentUri(parsedUri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(sourceScript?.generated?.root instanceof VueVirtualCode) || virtualCode?.id !== 'template') {
+					if (!sourceScript?.generated || virtualCode?.id !== 'template') {
 						return codeAction;
 					}
 
-					const document = context.documents.get(parsedUri, virtualCode.languageId, virtualCode.snapshot);
-					const sfcDocument = context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
-					const { _sfc: sfc } = sourceScript.generated.root;
-					const script = sfc.scriptSetup ?? sfc.script;
+					const root = sourceScript.generated.root;
+					if (!(root instanceof VueVirtualCode)) {
+						return codeAction;
+					}
 
+					const sfc = root._sfc;
+					const script = sfc.scriptSetup ?? sfc.script;
 					if (!sfc.template || !script) {
 						return codeAction;
 					}
@@ -93,13 +101,16 @@ export function create(
 						return codeAction;
 					}
 
-					const toExtract = await tsPluginClient?.collectExtractProps(sourceScript.generated.root.fileName, templateCodeRange) ?? [];
+					const toExtract = await tsPluginClient?.collectExtractProps(root.fileName, templateCodeRange) ?? [];
 					if (!toExtract) {
 						return codeAction;
 					}
 
 					const templateInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
 					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.script.initialIndent') ?? false;
+
+					const document = context.documents.get(parsedUri, virtualCode.languageId, virtualCode.snapshot);
+					const sfcDocument = context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
 					const newUri = sfcDocument.uri.slice(0, sfcDocument.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 
