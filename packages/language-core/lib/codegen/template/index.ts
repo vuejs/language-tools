@@ -7,7 +7,7 @@ import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
-import { generateStyleScopedClasses } from './styleScopedClasses';
+import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild, getVForNode } from './templateChild';
 
 export interface TemplateCodegenOptions {
@@ -46,7 +46,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		yield* generateTemplateChild(options, ctx, options.template.ast, undefined, undefined, undefined);
 	}
 
-	yield* generateStyleScopedClasses(ctx);
+	yield* generateStyleScopedClassReferences(ctx);
 	yield* generateSlots(options, ctx);
 	yield* generateInheritedAttrs(ctx);
 	yield* generateRefs(ctx);
