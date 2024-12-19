@@ -24,6 +24,10 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					}
 
 					const settings: Record<string, boolean> = {};
+					async function getSettingEnabled(key: string) {
+						return settings[key] ??= await context.env.getConfiguration?.<boolean>(key) ?? false;
+					}
+
 					const result: vscode.InlayHint[] = [];
 
 					const codegen = tsCodegen.get(virtualCode._sfc);
@@ -35,9 +39,9 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 
 					if (scriptSetupRanges?.defineProps?.destructured && virtualCode._sfc.scriptSetup?.ast) {
 						const setting = 'vue.inlayHints.destructuredProps';
-						settings[setting] ??= await context.env.getConfiguration?.<boolean>(setting) ?? false;
+						const enabled = await getSettingEnabled(setting);
 
-						if (settings[setting]) {
+						if (enabled) {
 							for (const [prop, isShorthand] of findDestructuredProps(
 									ts,
 									virtualCode._sfc.scriptSetup.ast,
@@ -76,8 +80,8 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 							continue;
 						}
 
-						settings[hint.setting] ??= await context.env.getConfiguration?.<boolean>(hint.setting) ?? false;
-						if (!settings[hint.setting]) {
+						const enabled = await getSettingEnabled(hint.setting);
+						if (!enabled) {
 							continue;
 						}
 
