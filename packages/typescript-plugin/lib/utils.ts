@@ -161,13 +161,6 @@ class NamedPipeServer {
 				this.requestHandlers.delete(seq);
 				resolve(data);
 			});
-			// setTimeout(() => {
-			// 	if (this.requestHandlers.has(seq)) {
-			// 		console.error(`[${seq}] ${requestType} ${fileName} timeout`);
-			// 		this.requestHandlers.delete(seq);
-			// 		resolve(undefined);
-			// 	}
-			// }, 5000);
 			this.socket!.write(JSON.stringify([seq, requestType, fileName, ...args] satisfies RequestData) + '\n\n');
 		});
 	}
