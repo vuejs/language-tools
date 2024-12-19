@@ -370,7 +370,7 @@ function* generateComponentProps(
 ): Generator<Code> {
 	if (scriptSetup.generic) {
 		yield `const __VLS_fnComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
-	
+
 		if (scriptSetupRanges.defineProps?.arg) {
 			yield `props: `;
 			yield generateSfcBlockSection(
@@ -381,11 +381,11 @@ function* generateComponentProps(
 			);
 			yield `,${newLine}`;
 		}
-	
+
 		yield* generateEmitsOption(options, scriptSetupRanges);
-	
+
 		yield `})${endOfLine}`;
-	
+
 		yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
 			? `import('${options.vueCompilerOptions.lib}').PublicProps`
 			: options.vueCompilerOptions.target >= 3.0
@@ -395,7 +395,7 @@ function* generateComponentProps(
 				: `globalThis.JSX.IntrinsicAttributes`
 			}`;
 		yield endOfLine;
-	
+
 		yield `type __VLS_OwnProps = `;
 		yield `${ctx.localTypes.OmitKeepDiscriminatedUnion}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
 		yield endOfLine;
