@@ -65,7 +65,7 @@ export async function startNamedPipeServer(
 		getFileId: (fileName: string) => fileName,
 	};
 	const dataChunks: Buffer[] = [];
-	const componentNamesSubscriptions = new Map<string, [ReturnType<typeof getComponentAndProps>, Set<net.Socket>]>();
+	const componentNamesSubscriptions = new Map<string, [Awaited<ReturnType<typeof getComponentAndProps>>, Set<net.Socket>]>();
 	const server = net.createServer(connection => {
 		connection.on('data', buffer => {
 			dataChunks.push(buffer);
@@ -105,21 +105,35 @@ export async function startNamedPipeServer(
 		}
 	}
 
-	setInterval(() => {
-		const projectVersion = info.project.getProjectVersion();
-		if (lastProjectVersion !== projectVersion) {
-			lastProjectVersion = projectVersion;
-			onProjectUpdate();
-		}
-	}, 500);
+	updateWhile();
 
-	function onProjectUpdate() {
+	async function updateWhile() {
+		while (true) {
+			const projectVersion = info.project.getProjectVersion();
+			if (lastProjectVersion !== projectVersion) {
+				lastProjectVersion = projectVersion;
+				await onProjectUpdate();
+			}
+			await sleep(500);
+		}
+	}
+
+	async function onProjectUpdate() {
+		const token = info.languageServiceHost.getCancellationToken?.();
+
 		for (const [fileName, [oldData, subscriptions]] of componentNamesSubscriptions) {
 			const connections = [...subscriptions].filter(connection => !connection.destroyed);
 			if (connections.length) {
 				const script = info.project.getScriptInfo(fileName);
 				if (script?.isScriptOpen()) {
-					const newData = getComponentAndProps.apply(requestContext, [fileName]);
+					await sleep(0);
+					if (token?.isCancellationRequested()) {
+						return;
+					}
+					const newData = await getComponentAndProps.apply(requestContext, [fileName, token]);
+					if (token?.isCancellationRequested()) {
+						return;
+					}
 					if (JSON.stringify(oldData) !== JSON.stringify(newData)) {
 						// Update cache
 						componentNamesSubscriptions.set(fileName, [newData, subscriptions]);
@@ -133,11 +147,15 @@ export async function startNamedPipeServer(
 		}
 	}
 
+	function sleep(ms: number) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	}
+
 	function notify(connection: net.Socket, type: NotificationData[0], fileName: string, data: any) {
 		connection.write(JSON.stringify([type, fileName, data] satisfies NotificationData) + '\n\n');
 	}
 
-	function onRequest(connection: net.Socket, [seq, requestType, ...args]: RequestData) {
+	async function onRequest(connection: net.Socket, [seq, requestType, ...args]: RequestData) {
 		if (requestType === 'projectInfo') {
 			sendResponse({
 				name: info.project.getProjectName(),
@@ -185,7 +203,7 @@ export async function startNamedPipeServer(
 		else if (requestType === 'subscribeAllComponentAndProps') {
 			let subscriptions = componentNamesSubscriptions.get(args[0]);
 			if (!subscriptions) {
-				const result = getComponentAndProps.apply(requestContext, args as any);
+				const result = await getComponentAndProps.apply(requestContext, args as any);
 				subscriptions = [result, new Set()];
 				componentNamesSubscriptions.set(args[0], subscriptions);
 			}
@@ -202,13 +220,17 @@ export async function startNamedPipeServer(
 		}
 	}
 
-	function getComponentAndProps(fileName: string) {
+	async function getComponentAndProps(fileName: string, token?: ts.HostCancellationToken) {
 		const result: Record<string, {
 			name: string;
 			required?: true;
 			commentMarkdown?: string;
 		}[]> = {};
 		for (const component of getComponentNames.apply(requestContext, [fileName]) ?? []) {
+			await sleep(0);
+			if (token?.isCancellationRequested()) {
+				return;
+			}
 			const props = getComponentProps.apply(requestContext, [fileName, component]);
 			if (props) {
 				result[component] = props;
