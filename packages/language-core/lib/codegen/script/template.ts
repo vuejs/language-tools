@@ -3,10 +3,27 @@ import type { Code } from '../../types';
 import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
 import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
-import { generateStyleScopedClasses } from '../template/styleScopedClasses';
+import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
 import { endOfLine, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
 import { codeFeatures, type ScriptCodegenOptions } from './index';
+
+export function* generateTemplate(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext
+): Generator<Code, TemplateCodegenContext> {
+	ctx.generatedTemplate = true;
+
+	const templateCodegenCtx = createTemplateCodegenContext({
+		scriptSetupBindingNames: new Set(),
+		edited: options.edited,
+	});
+	yield* generateTemplateCtx(options);
+	yield* generateTemplateComponents(options);
+	yield* generateTemplateDirectives(options);
+	yield* generateTemplateBody(options, templateCodegenCtx);
+	return templateCodegenCtx;
+}
 
 function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 	const exps = [];
@@ -107,55 +124,12 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 	yield `let __VLS_directives!: typeof __VLS_localDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
-export function* generateTemplate(
-	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext
-): Generator<Code, TemplateCodegenContext> {
-	ctx.generatedTemplate = true;
-
-	const templateCodegenCtx = createTemplateCodegenContext({
-		scriptSetupBindingNames: new Set(),
-		edited: options.edited,
-	});
-	yield* generateTemplateCtx(options);
-	yield* generateTemplateComponents(options);
-	yield* generateTemplateDirectives(options);
-	yield* generateTemplateBody(options, templateCodegenCtx);
-	return templateCodegenCtx;
-}
-
 function* generateTemplateBody(
 	options: ScriptCodegenOptions,
 	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
-	const firstClasses = new Set<string>();
-	yield `let __VLS_styleScopedClasses!: {}`;
-	for (let i = 0; i < options.sfc.styles.length; i++) {
-		const style = options.sfc.styles[i];
-		const option = options.vueCompilerOptions.experimentalResolveStyleCssClasses;
-		if (option === 'always' || (option === 'scoped' && style.scoped)) {
-			for (const className of style.classNames) {
-				if (firstClasses.has(className.text)) {
-					templateCodegenCtx.scopedClasses.push({
-						source: 'style_' + i,
-						className: className.text.slice(1),
-						offset: className.offset + 1
-					});
-					continue;
-				}
-				firstClasses.add(className.text);
-				yield* generateCssClassProperty(
-					i,
-					className.text,
-					className.offset,
-					'boolean',
-					true
-				);
-			}
-		}
-	}
-	yield endOfLine;
-	yield* generateStyleScopedClasses(templateCodegenCtx, true);
+	yield* generateStyleScopedClasses(options, templateCodegenCtx);
+	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
@@ -179,6 +153,39 @@ function* generateTemplateBody(
 	yield `	refs: $refs,${newLine}`;
 	yield `	rootEl: $el,${newLine}`;
 	yield `}${endOfLine}`;
+}
+
+function* generateStyleScopedClasses(
+	options: ScriptCodegenOptions,
+	ctx: TemplateCodegenContext
+): Generator<Code> {
+	const firstClasses = new Set<string>();
+	yield `type __VLS_StyleScopedClasses = {}`;
+	for (let i = 0; i < options.sfc.styles.length; i++) {
+		const style = options.sfc.styles[i];
+		const option = options.vueCompilerOptions.experimentalResolveStyleCssClasses;
+		if (option === 'always' || (option === 'scoped' && style.scoped)) {
+			for (const className of style.classNames) {
+				if (firstClasses.has(className.text)) {
+					ctx.scopedClasses.push({
+						source: 'style_' + i,
+						className: className.text.slice(1),
+						offset: className.offset + 1
+					});
+					continue;
+				}
+				firstClasses.add(className.text);
+				yield* generateCssClassProperty(
+					i,
+					className.text,
+					className.offset,
+					'boolean',
+					true
+				);
+			}
+		}
+	}
+	yield endOfLine;
 }
 
 export function* generateCssClassProperty(
