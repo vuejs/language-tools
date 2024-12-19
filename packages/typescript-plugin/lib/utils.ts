@@ -29,7 +29,7 @@ class NamedPipeServer {
 	connecting = false;
 	projectInfo?: ProjectInfo;
 	containsFileCache = new Map<string, Promise<boolean | undefined | null>>();
-	componentNamesCache = new Map<string, string[] | undefined | null | Promise<string[] | undefined | null>>();
+	componentNamesCache = new Map<string, any>();
 
 	constructor(kind: ts.server.ProjectKind, id: number) {
 		this.path = getServerPath(kind, id);
@@ -51,11 +51,11 @@ class NamedPipeServer {
 		}
 	}
 
-	getComponentNames(fileName: string) {
+	getAllComponentAndProps(fileName: string) {
 		if (this.projectInfo) {
 			if (!this.componentNamesCache.has(fileName)) {
 				this.componentNamesCache.set(fileName, (async () => {
-					const res = await this.request<string[]>('subscribeComponentNames', fileName);
+					const res = await this.request('subscribeAllComponentAndProps', fileName);
 					if (!res) {
 						// If the request fails, delete the cache
 						this.componentNamesCache.delete(fileName);
@@ -63,7 +63,11 @@ class NamedPipeServer {
 					return res;
 				})());
 			}
-			return this.componentNamesCache.get(fileName);
+			return this.componentNamesCache.get(fileName) as Promise<Record<string, {
+				name: string;
+				required?: true;
+				commentMarkdown?: string;
+			}[]>>;
 		}
 	}
 
@@ -141,9 +145,9 @@ class NamedPipeServer {
 		}
 	}
 
-	onNotification(type: string, fileName: string, data: any) {
+	onNotification(type: NotificationData[0], fileName: string, data: any) {
 		// console.log(`[${type}] ${fileName} ${JSON.stringify(data)}`);
-		if (type === 'componentNamesUpdated') {
+		if (type === 'componentAndPropsUpdated') {
 			this.componentNamesCache.set(fileName, data);
 		}
 	}

@@ -39,13 +39,16 @@ export function getQuickInfoAtPosition(
 
 // Component Infos
 
-export function getComponentProps(
-	...args: Parameters<typeof import('./requests/componentInfos.js')['getComponentProps']>
-) {
-	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentProps']>>(
-		'getComponentProps',
-		...args
-	);
+export async function getComponentProps(fileName: string, componentName: string) {
+	const server = await getBestServer(fileName);
+	if (!server) {
+		return;
+	}
+	const componentAndProps = await server.getAllComponentAndProps(fileName);
+	if (!componentAndProps) {
+		return;
+	}
+	return componentAndProps[componentName];
 }
 
 export function getComponentEvents(
@@ -71,7 +74,11 @@ export async function getComponentNames(fileName: string) {
 	if (!server) {
 		return;
 	}
-	return server.getComponentNames(fileName);
+	const componentAndProps = await server.getAllComponentAndProps(fileName);
+	if (!componentAndProps) {
+		return;
+	}
+	return Object.keys(componentAndProps);
 }
 
 export function getElementAttrs(

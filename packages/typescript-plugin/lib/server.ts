@@ -22,7 +22,7 @@ export type RequestType = 'containsFile'
 	| 'getTemplateContextProps'
 	// | 'getComponentNames'
 	| 'getElementAttrs'
-	| 'subscribeComponentNames';
+	| 'subscribeAllComponentAndProps';
 
 export type RequestData = [
 	seq: number,
@@ -37,7 +37,7 @@ export type ResponseData = [
 ];
 
 export type NotificationData = [
-	type: 'componentNamesUpdated',
+	type: 'componentAndPropsUpdated',
 	fileName: string,
 	data: any,
 ];
@@ -65,7 +65,7 @@ export async function startNamedPipeServer(
 		getFileId: (fileName: string) => fileName,
 	};
 	const dataChunks: Buffer[] = [];
-	const componentNamesSubscriptions = new Map<string, [ReturnType<typeof getComponentNames>, Set<net.Socket>]>();
+	const componentNamesSubscriptions = new Map<string, [ReturnType<typeof getComponentAndProps>, Set<net.Socket>]>();
 	const server = net.createServer(connection => {
 		connection.on('data', buffer => {
 			dataChunks.push(buffer);
@@ -114,18 +114,18 @@ export async function startNamedPipeServer(
 	}, 500);
 
 	function onProjectUpdate() {
-		for (const [fileName, [oldComponentNames, subscriptions]] of componentNamesSubscriptions) {
+		for (const [fileName, [oldData, subscriptions]] of componentNamesSubscriptions) {
 			const connections = [...subscriptions].filter(connection => !connection.destroyed);
 			if (connections.length) {
 				const script = info.project.getScriptInfo(fileName);
 				if (script?.isScriptOpen()) {
-					const newComponentNames = getComponentNames.apply(requestContext, [fileName]);
-					if (JSON.stringify(oldComponentNames) !== JSON.stringify(newComponentNames)) {
+					const newData = getComponentAndProps.apply(requestContext, [fileName]);
+					if (JSON.stringify(oldData) !== JSON.stringify(newData)) {
 						// Update cache
-						componentNamesSubscriptions.set(fileName, [newComponentNames, subscriptions]);
+						componentNamesSubscriptions.set(fileName, [newData, subscriptions]);
 						// Notify
 						for (const connection of connections) {
-							notify(connection, 'componentNamesUpdated', fileName, newComponentNames);
+							notify(connection, 'componentAndPropsUpdated', fileName, newData);
 						}
 					}
 				}
@@ -182,10 +182,10 @@ export async function startNamedPipeServer(
 			const result = getElementAttrs.apply(requestContext, args as any);
 			sendResponse(result);
 		}
-		else if (requestType === 'subscribeComponentNames') {
+		else if (requestType === 'subscribeAllComponentAndProps') {
 			let subscriptions = componentNamesSubscriptions.get(args[0]);
 			if (!subscriptions) {
-				const result = getComponentNames.apply(requestContext, args as any);
+				const result = getComponentAndProps.apply(requestContext, args as any);
 				subscriptions = [result, new Set()];
 				componentNamesSubscriptions.set(args[0], subscriptions);
 			}
@@ -200,6 +200,21 @@ export async function startNamedPipeServer(
 		function sendResponse(data: any | undefined) {
 			connection.write(JSON.stringify([seq, data ?? null]) + '\n\n');
 		}
+	}
+
+	function getComponentAndProps(fileName: string) {
+		const result: Record<string, {
+			name: string;
+			required?: true;
+			commentMarkdown?: string;
+		}[]> = {};
+		for (const component of getComponentNames.apply(requestContext, [fileName]) ?? []) {
+			const props = getComponentProps.apply(requestContext, [fileName, component]);
+			if (props) {
+				result[component] = props;
+			}
+		}
+		return result;
 	}
 }
 
