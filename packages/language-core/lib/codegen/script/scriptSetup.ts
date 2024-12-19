@@ -315,8 +315,8 @@ function* generateMacros(
 	if (options.vueCompilerOptions.target >= 3.3) {
 		yield `declare const { `;
 		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!ctx.bindingNames.has(macro) && macro !== 'templateRef') {
-				yield macro + `, `;
+			if (!ctx.bindingNames.has(macro)) {
+				yield `${macro}, `;
 			}
 		}
 		yield `}: typeof import('${options.vueCompilerOptions.lib}')${endOfLine}`;
