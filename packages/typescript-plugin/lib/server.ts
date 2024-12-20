@@ -182,7 +182,7 @@ export async function startNamedPipeServer(
 		connection.write(JSON.stringify([type, fileName, data] satisfies NotificationData) + '\n\n');
 	}
 
-	async function onRequest(connection: net.Socket, [seq, requestType, ...args]: RequestData) {
+	 function onRequest(connection: net.Socket, [seq, requestType, ...args]: RequestData) {
 		if (requestType === 'projectInfo') {
 			sendResponse({
 				name: info.project.getProjectName(),
