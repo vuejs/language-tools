@@ -1,7 +1,12 @@
 import type { ElementNode, SourceLocation } from '@vue/compiler-dom';
 import * as compiler from '@vue/compiler-dom';
 import type { CompilerError, SFCBlock, SFCDescriptor, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
-import { SFCStyleOverride } from '../types';
+
+declare module '@vue/compiler-sfc' {
+	interface SFCDescriptor {
+		comments: string[];
+	}
+}
 
 export function parse(source: string): SFCParseResult {
 
@@ -20,6 +25,7 @@ export function parse(source: string): SFCParseResult {
 	const descriptor: SFCDescriptor = {
 		filename: 'anonymous.vue',
 		source,
+		comments: [],
 		template: null,
 		script: null,
 		scriptSetup: null,
@@ -30,7 +36,11 @@ export function parse(source: string): SFCParseResult {
 		shouldForceReload: () => false,
 	};
 	ast.children.forEach(node => {
-		if (node.type !== compiler.NodeTypes.ELEMENT) {
+		if (node.type === compiler.NodeTypes.COMMENT) {
+			descriptor.comments.push(node.content);
+			return;
+		}
+		else if (node.type !== compiler.NodeTypes.ELEMENT) {
 			return;
 		}
 		switch (node.tag) {
@@ -92,8 +102,7 @@ function createBlock(node: ElementNode, source: string) {
 	};
 	const attrs: Record<string, any> = {};
 	const block: SFCBlock
-		& Pick<SFCStyleBlock, 'scoped'>
-		& Pick<SFCStyleOverride, 'module'>
+		& Pick<SFCStyleBlock, 'scoped' | '__module'>
 		& Pick<SFCScriptBlock, 'setup'> = {
 		type,
 		content,
@@ -114,7 +123,7 @@ function createBlock(node: ElementNode, source: string) {
 					block.scoped = true;
 				}
 				else if (p.name === 'module') {
-					block.module = {
+					block.__module = {
 						name: p.value?.content ?? '$style',
 						offset: p.value?.content ? p.value?.loc.start.offset - node.loc.start.offset : undefined
 					};

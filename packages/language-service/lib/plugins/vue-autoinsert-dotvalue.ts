@@ -57,7 +57,8 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!sourceScript) {
@@ -131,7 +132,7 @@ export function isCharacterTyping(document: TextDocument, change: { text: string
 	if (lastCharacter === undefined) { // delete text
 		return false;
 	}
-	if (change.text.indexOf('\n') >= 0) { // multi-line change
+	if (change.text.includes('\n')) { // multi-line change
 		return false;
 	}
 	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);

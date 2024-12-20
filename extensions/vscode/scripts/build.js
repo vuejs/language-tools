@@ -4,12 +4,14 @@ const fs = require('fs');
 
 require('esbuild').context({
 	entryPoints: {
-		client: './out/nodeClientMain.js',
-		server: './node_modules/@vue/language-server/bin/vue-language-server.js',
+		'dist/client': './out/nodeClientMain.js',
+		'dist/server': './node_modules/@vue/language-server/bin/vue-language-server.js',
+		'node_modules/vue-language-core-pack/index': './node_modules/@vue/language-core/index.js',
+		'node_modules/vue-typescript-plugin-pack/index': './node_modules/@vue/typescript-plugin/index.js',
 	},
 	bundle: true,
 	metafile: process.argv.includes('--metafile'),
-	outdir: './dist',
+	outdir: '.',
 	external: ['vscode'],
 	format: 'cjs',
 	platform: 'node',
@@ -20,23 +22,50 @@ require('esbuild').context({
 		{
 			name: 'umd2esm',
 			setup(build) {
-				build.onResolve({ filter: /^(vscode-.*-languageservice|jsonc-parser)/ }, args => {
-					const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
+				build.onResolve({ filter: /^(vscode-.*-languageservice|vscode-languageserver-types|jsonc-parser)$/ }, args => {
+					const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] });
 					// Call twice the replace is to solve the problem of the path in Windows
-					const pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\')
-					return { path: pathEsm }
-				})
+					const pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\');
+					return { path: pathEsm };
+				});
+				build.onResolve({ filter: /^vscode-uri$/ }, args => {
+					const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] });
+					// v3
+					let pathEsm = pathUmdMay.replace('/umd/index.js', '/esm/index.mjs').replace('\\umd\\index.js', '\\esm\\index.mjs');
+					if (pathEsm !== pathUmdMay && fs.existsSync(pathEsm)) {
+						return { path: pathEsm };
+					}
+					// v2
+					pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\');
+					return { path: pathEsm };
+				});
 			},
 		},
-		require('esbuild-plugin-copy').copy({
-			resolveFrom: 'cwd',
-			assets: {
-				from: ['./node_modules/@vue/language-core/schemas/**/*'],
-				to: ['./dist/schemas'],
+		{
+			name: 'resolve-share-module',
+			setup(build) {
+				build.onResolve({ filter: /^@vue\/language-core$/ }, () => {
+					return {
+						path: 'vue-language-core-pack',
+						external: true,
+					};
+				});
 			},
-			// @ts-expect-error
-			keepStructure: true,
-		}),
+		},
+		{
+			name: 'schemas',
+			setup(build) {
+				build.onEnd(() => {
+					if (!fs.existsSync(path.resolve(__dirname, '../dist/schemas'))) {
+						fs.mkdirSync(path.resolve(__dirname, '../dist/schemas'));
+					}
+					fs.cpSync(
+						path.resolve(__dirname, '../node_modules/@vue/language-core/schemas/vue-tsconfig.schema.json'),
+						path.resolve(__dirname, '../dist/schemas/vue-tsconfig.schema.json'),
+					);
+				});
+			},
+		},
 		{
 			name: 'meta',
 			setup(build) {
@@ -61,35 +90,4 @@ require('esbuild').context({
 		await ctx.dispose();
 		console.log('finished.');
 	}
-})
-
-require('esbuild').context({
-	entryPoints: ['./node_modules/@vue/typescript-plugin/index.js'],
-	bundle: true,
-	outfile: './node_modules/typescript-vue-plugin-bundle/index.js',
-	external: ['vscode'],
-	format: 'cjs',
-	platform: 'node',
-	tsconfig: './tsconfig.json',
-	minify: process.argv.includes('--minify'),
-	plugins: [{
-		name: 'umd2esm',
-		setup(build) {
-			build.onResolve({ filter: /^(vscode-.*-languageservice|jsonc-parser)/ }, args => {
-				const pathUmdMay = require.resolve(args.path, { paths: [args.resolveDir] })
-				const pathEsm = pathUmdMay.replace('/umd/', '/esm/')
-				return { path: pathEsm }
-			})
-		},
-	}],
-}).then(async ctx => {
-	console.log('building...');
-	if (process.argv.includes('--watch')) {
-		await ctx.watch();
-		console.log('watching...');
-	} else {
-		await ctx.rebuild();
-		await ctx.dispose();
-		console.log('finished.');
-	}
-})
+});
