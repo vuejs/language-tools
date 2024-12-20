@@ -15,6 +15,7 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 	const __VLS_intrinsicElements: __VLS_IntrinsicElements;
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 	const __VLS_unref: typeof import('${lib}').unref;
+	const __VLS_placeholder: any;
 
 	const __VLS_nativeElements = {
 		...{} as SVGElementTagNameMap,
@@ -67,7 +68,7 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 				: __VLS_IsFunction<Events, CamelizedEvent> extends true
 					? { [K in onEvent]?: Events[CamelizedEvent] }
 					: Props
-	)${ strictTemplates ? '' : ' & Record<string, unknown>' };
+	)${strictTemplates ? '' : ' & Record<string, unknown>'};
 	// fix https://github.com/vuejs/language-tools/issues/926
 	type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
 	type __VLS_OverloadUnionInner<T, U = unknown> = U & T extends (...args: infer A) => infer R
