@@ -170,17 +170,18 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	for (const { callExp } of scriptSetupRanges.useAttrs) {
-		setupCodeModifies.push([
-			[`(`],
-			callExp.start,
-			callExp.start
-		], [
-			[` as __VLS_TemplateResult['attrs'] & Record<string, unknown>)`],
-			callExp.end,
-			callExp.end
-		]);
-	}
+	// TODO: circular reference
+	// for (const { callExp } of scriptSetupRanges.useAttrs) {
+	// 	setupCodeModifies.push([
+	// 		[`(`],
+	// 		callExp.start,
+	// 		callExp.start
+	// 	], [
+	// 		[` as __VLS_TemplateResult['attrs'] & Record<string, unknown>)`],
+	// 		callExp.end,
+	// 		callExp.end
+	// 	]);
+	// }
 	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
 		setupCodeModifies.push([
 			[`(`],
