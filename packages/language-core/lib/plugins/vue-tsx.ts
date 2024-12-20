@@ -80,7 +80,7 @@ function createTsx(
 					: 'js';
 	});
 	const vueCompilerOptions = computed(() => {
-		const options = parseVueCompilerOptions(_sfc);
+		const options = parseVueCompilerOptions(_sfc.comments);
 		return options
 			? resolveVueCompilerOptions(options, ctx.vueCompilerOptions)
 			: ctx.vueCompilerOptions;

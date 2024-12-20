@@ -1,9 +1,9 @@
-import type { Sfc, VueCompilerOptions } from '../types';
+import type { VueCompilerOptions } from '../types';
 
 const syntaxReg = /^\s*@(?<key>.+?)\s+(?<value>.+?)\s*$/m;
 
-export function parseVueCompilerOptions(sfc: Sfc): Partial<VueCompilerOptions> | undefined {
-	const entries = sfc.comments
+export function parseVueCompilerOptions(comments: string[]): Partial<VueCompilerOptions> | undefined {
+	const entries = comments
 		.map(text => {
 			try {
 				const match = text.match(syntaxReg);
