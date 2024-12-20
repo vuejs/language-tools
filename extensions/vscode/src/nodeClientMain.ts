@@ -2,6 +2,7 @@ import { createLabsInfo } from '@volar/vscode';
 import * as lsp from '@volar/vscode/node';
 import * as protocol from '@vue/language-server/protocol';
 import * as fs from 'node:fs';
+import * as path from 'node:path';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
@@ -51,7 +52,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 				}
 			}
 
-			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
+			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist/server.cjs');
 
 			const runOptions: lsp.ForkOptions = {};
 			if (config.server.maxOldSpaceSize) {
@@ -137,12 +138,10 @@ try {
 		'vscode.typescript-language-features'
 	)!;
 	const readFileSync = fs.readFileSync;
-	const extensionJsPath = require.resolve('./dist/extension.js', {
-		paths: [tsExtension.extensionPath],
-	});
+	const extensionJsPath = path.join(tsExtension.extensionPath, './dist/extension.js');
 
 	// @ts-expect-error
-	fs.readFileSync = (...args) => {
+	(globalThis.__VOLAR_DEV_FS__ || require('fs')).readFileSync = (...args) => {
 		if (args[0] === extensionJsPath) {
 			// @ts-expect-error
 			let text = readFileSync(...args) as string;
