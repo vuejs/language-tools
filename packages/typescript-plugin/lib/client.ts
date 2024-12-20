@@ -19,9 +19,17 @@ export const getQuickInfoAtPosition = createRequest<
 
 // Component Infos
 
-export const getComponentProps = createRequest<
-	typeof import('./requests/componentInfos.js')['getComponentProps']
->('getComponentProps');
+export async function getComponentProps(fileName: string, componentName: string) {
+	const server = await getBestServer(fileName);
+	if (!server) {
+		return;
+	}
+	const componentAndProps = server.componentNamesAndProps.get(fileName);
+	if (!componentAndProps) {
+		return;
+	}
+	return componentAndProps[componentName];
+}
 
 export const getComponentEvents = createRequest<
 	typeof import('./requests/componentInfos.js')['getComponentEvents']
@@ -52,11 +60,11 @@ export const getElementAttrs = createRequest<
 >('getElementAttrs');
 
 function createRequest<T extends (...args: any) => any>(requestType: RequestData[1]) {
-	return async function(...[fileName, ...rest]: Parameters<T>) {
+	return async function (...[fileName, ...rest]: Parameters<T>) {
 		const server = await getBestServer(fileName);
 		if (!server) {
 			return;
 		}
 		return server.request<ReturnType<T>>(requestType, fileName, ...rest);
-	}
+	};
 }
