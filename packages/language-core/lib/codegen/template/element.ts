@@ -200,7 +200,7 @@ export function* generateComponent(
 	}
 
 	yield `// @ts-ignore${newLine}`;
-	yield `const ${var_functionalComponent} = __VLS_asFunctionalComponent(${var_originalComponent}, new ${var_originalComponent}({`;
+	yield `const ${var_functionalComponent} = __VLS_asFunctionalComponent(${var_originalComponent}, new ${var_originalComponent}({${newLine}`;
 	yield* generateElementProps(options, ctx, node, props, options.vueCompilerOptions.strictTemplates, false);
 	yield `}))${endOfLine}`;
 
@@ -211,7 +211,7 @@ export function* generateComponent(
 		startTagOffset,
 		startTagOffset + node.tag.length,
 		ctx.codeFeatures.verification,
-		`{`,
+		`{${newLine}`,
 		...generateElementProps(options, ctx, node, props, options.vueCompilerOptions.strictTemplates, true, failedPropExps),
 		`}`
 	);
@@ -245,7 +245,7 @@ export function* generateComponent(
 		}
 	}
 
-	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEmit, var_componentEvents);
+	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEvents);
 	if (usedComponentEventsVar) {
 		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
 		yield `let ${var_componentEmit}!: typeof ${var_defineComponentCtx}.emit${endOfLine}`;
@@ -314,7 +314,7 @@ export function* generateElement(
 		startTagOffset,
 		startTagOffset + node.tag.length,
 		ctx.codeFeatures.verification,
-		`{`,
+		`{${newLine}`,
 		...generateElementProps(options, ctx, node, node.props, options.vueCompilerOptions.strictTemplates, true, failedPropExps),
 		`}`
 	);
