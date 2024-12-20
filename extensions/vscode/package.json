@@ -412,7 +412,7 @@
 				"vue.inlayHints.inlineHandlerLeading": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Show inlay hints for event argument in inline handlers:\n\n```html\n<Comp @foo=\"/* $event => */console.log($event)\">\n```"
+					"markdownDescription": "Show inlay hints for event argument in inline handlers:\n\n```html\n<Comp @foo=\"/* $event => */console.log($event)\" />\n```"
 				},
 				"vue.inlayHints.optionsWrapper": {
 					"type": "boolean",
