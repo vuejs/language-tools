@@ -1,82 +1,39 @@
 import type { RequestData } from './server';
 import { getBestServer } from './utils';
 
-export function collectExtractProps(
-	...args: Parameters<typeof import('./requests/collectExtractProps.js')['collectExtractProps']>
-) {
-	return sendRequest<ReturnType<typeof import('./requests/collectExtractProps')['collectExtractProps']>>(
-		'collectExtractProps',
-		...args
-	);
-}
+export const collectExtractProps = createRequest<
+	typeof import('./requests/collectExtractProps.js')['collectExtractProps']
+>('collectExtractProps');
 
-export async function getImportPathForFile(
-	...args: Parameters<typeof import('./requests/getImportPathForFile.js')['getImportPathForFile']>
-) {
-	return await sendRequest<ReturnType<typeof import('./requests/getImportPathForFile')['getImportPathForFile']>>(
-		'getImportPathForFile',
-		...args
-	);
-}
+export const getImportPathForFile = createRequest<
+	typeof import('./requests/getImportPathForFile.js')['getImportPathForFile']
+>('getImportPathForFile');
 
-export async function getPropertiesAtLocation(
-	...args: Parameters<typeof import('./requests/getPropertiesAtLocation.js')['getPropertiesAtLocation']>
-) {
-	return await sendRequest<ReturnType<typeof import('./requests/getPropertiesAtLocation')['getPropertiesAtLocation']>>(
-		'getPropertiesAtLocation',
-		...args
-	);
-}
+export const getPropertiesAtLocation = createRequest<
+	typeof import('./requests/getPropertiesAtLocation.js')['getPropertiesAtLocation']
+>('getPropertiesAtLocation');
 
-export function getQuickInfoAtPosition(
-	...args: Parameters<typeof import('./requests/getQuickInfoAtPosition.js')['getQuickInfoAtPosition']>
-) {
-	return sendRequest<ReturnType<typeof import('./requests/getQuickInfoAtPosition')['getQuickInfoAtPosition']>>(
-		'getQuickInfoAtPosition',
-		...args
-	);
-}
+export const getQuickInfoAtPosition = createRequest<
+	typeof import('./requests/getQuickInfoAtPosition.js')['getQuickInfoAtPosition']
+>('getQuickInfoAtPosition');
 
 // Component Infos
 
-export async function getComponentProps(fileName: string, componentName: string) {
-	const server = await getBestServer(fileName);
-	if (!server) {
-		return;
-	}
-	const componentAndProps = await server.componentNamesAndProps.get(fileName);
-	if (!componentAndProps) {
-		return;
-	}
-	return componentAndProps[componentName];
-}
+export const getComponentProps = createRequest<
+	typeof import('./requests/componentInfos.js')['getComponentProps']
+>('getComponentProps');
 
-export function getComponentEvents(
-	...args: Parameters<typeof import('./requests/componentInfos.js')['getComponentEvents']>
-) {
-	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentEvents']>>(
-		'getComponentEvents',
-		...args
-	);
-}
+export const getComponentEvents = createRequest<
+	typeof import('./requests/componentInfos.js')['getComponentEvents']
+>('getComponentEvents');
 
-export function getComponentDirectives(
-	...args: Parameters<typeof import('./requests/componentInfos.js')['getComponentDirectives']>
-) {
-	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentDirectives']>>(
-		'getComponentDirectives',
-		...args
-	);
-}
+export const getComponentDirectives = createRequest<
+	typeof import('./requests/componentInfos.js')['getComponentDirectives']
+>('getComponentDirectives');
 
-export function getTemplateContextProps(
-	...args: Parameters<typeof import('./requests/componentInfos.js')['getTemplateContextProps']>
-) {
-	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getTemplateContextProps']>>(
-		'getTemplateContextProps',
-		...args
-	);
-}
+export const getTemplateContextProps = createRequest<
+	typeof import('./requests/componentInfos.js')['getTemplateContextProps']
+>('getTemplateContextProps');
 
 export async function getComponentNames(fileName: string) {
 	const server = await getBestServer(fileName);
@@ -90,19 +47,16 @@ export async function getComponentNames(fileName: string) {
 	return Object.keys(componentAndProps);
 }
 
-export function getElementAttrs(
-	...args: Parameters<typeof import('./requests/componentInfos.js')['getElementAttrs']>
-) {
-	return sendRequest<ReturnType<typeof import('./requests/componentInfos')['getElementAttrs']>>(
-		'getElementAttrs',
-		...args
-	);
-}
+export const getElementAttrs = createRequest<
+	typeof import('./requests/componentInfos.js')['getElementAttrs']
+>('getElementAttrs');
 
-async function sendRequest<T>(requestType: RequestData[1], fileName: string, ...rest: any[]) {
-	const server = await getBestServer(fileName);
-	if (!server) {
-		return;
+function createRequest<T extends (...args: any) => any>(requestType: RequestData[1]) {
+	return async function(...[fileName, ...rest]: Parameters<T>) {
+		const server = await getBestServer(fileName);
+		if (!server) {
+			return;
+		}
+		return server.request<ReturnType<T>>(requestType, fileName, ...rest);
 	}
-	return server.request<T>(requestType, fileName, ...rest);
 }

@@ -107,31 +107,31 @@ export function getFullLanguageServicePlugins(
 		};
 		return {
 			async collectExtractProps(...args) {
-				return await collectExtractProps.apply(requestContext, args);
+				return collectExtractProps.apply(requestContext, args);
 			},
 			async getPropertiesAtLocation(...args) {
-				return await getPropertiesAtLocation.apply(requestContext, args);
+				return getPropertiesAtLocation.apply(requestContext, args);
 			},
 			async getImportPathForFile(...args) {
-				return await getImportPathForFile.apply(requestContext, args);
+				return getImportPathForFile.apply(requestContext, args);
 			},
 			async getComponentEvents(...args) {
-				return await getComponentEvents.apply(requestContext, args);
+				return getComponentEvents.apply(requestContext, args);
 			},
 			async getComponentDirectives(...args) {
-				return await getComponentDirectives.apply(requestContext, args);
+				return getComponentDirectives.apply(requestContext, args);
 			},
 			async getComponentNames(...args) {
-				return await getComponentNames.apply(requestContext, args);
+				return getComponentNames.apply(requestContext, args);
 			},
 			async getComponentProps(...args) {
-				return await getComponentProps.apply(requestContext, args);
+				return getComponentProps.apply(requestContext, args);
 			},
 			async getElementAttrs(...args) {
-				return await getElementAttrs.apply(requestContext, args);
+				return getElementAttrs.apply(requestContext, args);
 			},
 			async getTemplateContextProps(...args) {
-				return await getTemplateContextProps.apply(requestContext, args);
+				return getTemplateContextProps.apply(requestContext, args);
 			},
 			async getQuickInfoAtPosition(fileName, position) {
 				const languageService = context.getLanguageService();
