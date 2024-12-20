@@ -145,7 +145,7 @@ export function* generateComponent(
 		yield `)${endOfLine}`;
 	}
 	else if (!isComponentTag) {
-		yield `const ${var_originalComponent} = ({} as __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+		yield `const ${var_originalComponent} = ({} as __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', __VLS_LocalComponents, `;
 		yield getPossibleOriginalComponentNames(node.tag, false)
 			.map(name => `'${name}'`)
 			.join(`, `);
