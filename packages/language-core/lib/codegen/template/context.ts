@@ -125,6 +125,8 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	}[] = [];
 	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
+	const bindingAttrLocs: CompilerDOM.SourceLocation[] = [];
+	const inheritedAttrVars = new Set<string>();
 	const templateRefs = new Map<string, [varName: string, offset: number]>();
 
 	return {
@@ -140,7 +142,8 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		emptyClassOffsets,
 		inlayHints,
 		hasSlot: false,
-		inheritedAttrVars: new Set(),
+		bindingAttrLocs,
+		inheritedAttrVars,
 		templateRefs,
 		singleRootElType: undefined as string | undefined,
 		singleRootNode: undefined as CompilerDOM.ElementNode | undefined,
