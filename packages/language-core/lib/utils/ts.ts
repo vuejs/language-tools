@@ -257,7 +257,7 @@ function getDefaultOptions(options: Partial<VueCompilerOptions>): VueCompilerOpt
 		experimentalDefinePropProposal: false,
 		experimentalResolveStyleCssClasses: 'scoped',
 		experimentalModelPropName: null!
-	}
+	};
 };
 
 export function resolveVueCompilerOptions(
