@@ -46,6 +46,7 @@ export interface VueCompilerOptions {
 	composables: {
 		useAttrs: string[];
 		useCssModule: string[];
+		useSlots: string[];
 		useTemplateRef: string[];
 	};
 	plugins: VueLanguagePlugin[];
