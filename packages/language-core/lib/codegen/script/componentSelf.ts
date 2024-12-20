@@ -27,8 +27,8 @@ export function* generateComponentSelf(
 				? [options.sfc.script.content, options.scriptRanges.bindings] as const
 				: ['', []] as const,
 		]) {
-			for (const expose of bindings) {
-				const varName = content.slice(expose.start, expose.end);
+			for (const { range } of bindings) {
+				const varName = content.slice(range.start, range.end);
 				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
 					continue;
 				}

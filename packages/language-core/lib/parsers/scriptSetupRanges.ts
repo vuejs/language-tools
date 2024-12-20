@@ -78,10 +78,9 @@ export function parseScriptSetupRanges(
 	const useCssModule: UseCssModule[] = [];
 	const useSlots: UseSlots[] = [];
 	const useTemplateRef: UseTemplateRef[] = [];
-	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
-	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
+	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 	const text = ast.text;
-	const importComponentNames = new Set<string>();
 
 	const leadingCommentRanges = ts.getLeadingCommentRanges(text, 0)?.reverse() ?? [];
 	const leadingCommentEndOffset = leadingCommentRanges.find(
@@ -114,22 +113,11 @@ export function parseScriptSetupRanges(
 			}
 			foundNonImportExportNode = true;
 		}
-
-		if (
-			ts.isImportDeclaration(node)
-			&& node.importClause?.name
-			&& !node.importClause.isTypeOnly
-		) {
-			const moduleName = _getNodeText(node.moduleSpecifier).slice(1, -1);
-			if (vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
-				importComponentNames.add(_getNodeText(node.importClause.name));
-			}
-		}
 	});
-	ts.forEachChild(ast, child => visitNode(child, [ast]));
+	ts.forEachChild(ast, node => visitNode(node, [ast]));
 
 	const templateRefNames = new Set(useTemplateRef.map(ref => ref.name));
-	bindings = bindings.filter(range => {
+	bindings = bindings.filter(({ range }) => {
 		const name = text.slice(range.start, range.end);
 		return !templateRefNames.has(name);
 	});
@@ -138,7 +126,6 @@ export function parseScriptSetupRanges(
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		bindings,
-		importComponentNames,
 		defineProp,
 		defineProps,
 		withDefaults,
@@ -409,6 +396,9 @@ export function parseScriptSetupRanges(
 		}
 
 		ts.forEachChild(node, child => {
+			if (ts.isFunctionLike(node)) {
+				return;
+			}
 			parents.push(node);
 			visitNode(child, parents);
 			parents.pop();
@@ -433,72 +423,105 @@ export function parseScriptSetupRanges(
 	}
 }
 
-export function parseBindingRanges(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
-	const bindings: TextRange[] = [];
-	ts.forEachChild(sourceFile, node => {
+export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.SourceFile) {
+	const bindings: {
+		range: TextRange;
+		moduleName?: string;
+		isDefaultImport?: boolean;
+		isNamespace?: boolean;
+	}[] = [];
+
+	ts.forEachChild(ast, node => {
 		if (ts.isVariableStatement(node)) {
 			for (const decl of node.declarationList.declarations) {
 				const vars = _findBindingVars(decl.name);
-				bindings.push(...vars);
+				bindings.push(...vars.map(range => ({ range })));
 			}
 		}
 		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && ts.isIdentifier(node.name)) {
-				bindings.push(_getStartEnd(node.name));
+				bindings.push({
+					range: _getStartEnd(node.name)
+				});
 			}
 		}
 		else if (ts.isClassDeclaration(node)) {
 			if (node.name) {
-				bindings.push(_getStartEnd(node.name));
+				bindings.push({
+					range: _getStartEnd(node.name)
+				});
 			}
 		}
 		else if (ts.isEnumDeclaration(node)) {
-			bindings.push(_getStartEnd(node.name));
+			bindings.push({
+				range: _getStartEnd(node.name)
+			});
 		}
 
 		if (ts.isImportDeclaration(node)) {
+			const moduleName = _getNodeText(node.moduleSpecifier).slice(1, -1);
+
 			if (node.importClause && !node.importClause.isTypeOnly) {
-				if (node.importClause.name) {
-					bindings.push(_getStartEnd(node.importClause.name));
+				const { name, namedBindings } = node.importClause;
+
+				if (name) {
+					bindings.push({
+						range: _getStartEnd(name),
+						moduleName,
+						isDefaultImport: true
+					});
 				}
-				if (node.importClause.namedBindings) {
-					if (ts.isNamedImports(node.importClause.namedBindings)) {
-						for (const element of node.importClause.namedBindings.elements) {
+				if (namedBindings) {
+					if (ts.isNamedImports(namedBindings)) {
+						for (const element of namedBindings.elements) {
 							if (element.isTypeOnly) {
 								continue;
 							}
-							bindings.push(_getStartEnd(element.name));
+							bindings.push({
+								range: _getStartEnd(element.name),
+								moduleName,
+								isDefaultImport: element.propertyName?.text === 'default'
+							});
 						}
 					}
-					else if (ts.isNamespaceImport(node.importClause.namedBindings)) {
-						bindings.push(_getStartEnd(node.importClause.namedBindings.name));
+					else {
+						bindings.push({
+							range: _getStartEnd(namedBindings.name),
+							moduleName,
+							isNamespace: true
+						});
 					}
 				}
 			}
 		}
 	});
+
 	return bindings;
 
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(ts, node, sourceFile);
+		return getStartEnd(ts, node, ast);
+	}
+
+	function _getNodeText(node: ts.Node) {
+		return getNodeText(ts, node, ast);
 	}
 
 	function _findBindingVars(left: ts.BindingName) {
-		return findBindingVars(ts, left, sourceFile);
+		return findBindingVars(ts, left, ast);
 	}
 }
 
 export function findBindingVars(
 	ts: typeof import('typescript'),
 	left: ts.BindingName,
-	sourceFile: ts.SourceFile
+	ast: ts.SourceFile
 ) {
 	const vars: TextRange[] = [];
 	worker(left);
 	return vars;
 	function worker(node: ts.Node) {
 		if (ts.isIdentifier(node)) {
-			vars.push(getStartEnd(ts, node, sourceFile));
+			vars.push(getStartEnd(ts, node, ast));
 		}
 		// { ? } = ...
 		// [ ? ] = ...
@@ -515,7 +538,7 @@ export function findBindingVars(
 		}
 		// { foo } = ...
 		else if (ts.isShorthandPropertyAssignment(node)) {
-			vars.push(getStartEnd(ts, node.name, sourceFile));
+			vars.push(getStartEnd(ts, node.name, ast));
 		}
 		// { ...? } = ...
 		// [ ...? ] = ...
@@ -528,10 +551,10 @@ export function findBindingVars(
 export function getStartEnd(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	sourceFile: ts.SourceFile
+	ast: ts.SourceFile
 ): TextRange {
 	return {
-		start: (ts as any).getTokenPosOfNode(node, sourceFile) as number,
+		start: (ts as any).getTokenPosOfNode(node, ast) as number,
 		end: node.end,
 	};
 }
@@ -539,24 +562,24 @@ export function getStartEnd(
 export function getNodeText(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	sourceFile: ts.SourceFile
+	ast: ts.SourceFile
 ) {
-	const { start, end } = getStartEnd(ts, node, sourceFile);
-	return sourceFile.text.slice(start, end);
+	const { start, end } = getStartEnd(ts, node, ast);
+	return ast.text.slice(start, end);
 }
 
 function getStatementRange(
 	ts: typeof import('typescript'),
 	parents: ts.Node[],
 	node: ts.Node,
-	sourceFile: ts.SourceFile
+	ast: ts.SourceFile
 ) {
 	let statementRange: TextRange | undefined;
 	for (let i = parents.length - 1; i >= 0; i--) {
 		if (ts.isStatement(parents[i])) {
 			const statement = parents[i];
 			ts.forEachChild(statement, child => {
-				const range = getStartEnd(ts, child, sourceFile);
+				const range = getStartEnd(ts, child, ast);
 				statementRange ??= range;
 				statementRange.end = range.end;
 			});
@@ -564,7 +587,7 @@ function getStatementRange(
 		}
 	}
 	if (!statementRange) {
-		statementRange = getStartEnd(ts, node, sourceFile);
+		statementRange = getStartEnd(ts, node, ast);
 	}
 	return statementRange;
 }

@@ -1,4 +1,3 @@
-import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
@@ -7,21 +6,6 @@ export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineLastMapping: true };
 export const variableNameRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
-
-export function* conditionWrapWith(
-	condition: boolean,
-	startOffset: number,
-	endOffset: number,
-	features: VueCodeInformation,
-	...wrapCodes: Code[]
-): Generator<Code> {
-	if (condition) {
-		yield* wrapWith(startOffset, endOffset, features, ...wrapCodes);
-	}
-	else {
-		yield toString([...wrapCodes]);
-	}
-}
 
 export function* wrapWith(
 	startOffset: number,
