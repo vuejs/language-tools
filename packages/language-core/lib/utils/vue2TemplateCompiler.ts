@@ -72,7 +72,7 @@ export const compile: typeof CompilerDOM.compile = (template, options = {}) => {
 function baseCompile(
 	template: string,
 	options: CompilerDOM.CompilerOptions = {}
-): CompilerDOM.CodegenResult {
+) {
 
 	const onError = options.onError || (error => { throw error; });
 	const isModuleMode = options.mode === 'module';

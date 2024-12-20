@@ -1,6 +1,29 @@
-import * as vscode from 'vscode';
-import * as semver from 'semver';
 import { computed, useAllExtensions } from 'reactive-vscode';
+import * as semver from 'semver';
+import * as vscode from 'vscode';
+import { config } from './config';
+
+const defaultCompatibleExtensions = new Set([
+	'astro-build.astro-vscode',
+	'bierner.lit-html',
+	'Divlo.vscode-styled-jsx-languageserver',
+	'GitHub.copilot-chat',
+	'ije.esm-vscode',
+	'jenkey2011.string-highlight',
+	'johnsoncodehk.vscode-tsslint',
+	'kimuson.ts-type-expand',
+	'miaonster.vscode-tsx-arrow-definition',
+	'ms-dynamics-smb.al',
+	'mxsdev.typescript-explorer',
+	'nrwl.angular-console',
+	'p42ai.refactor',
+	'runem.lit-plugin',
+	'ShenQingchuan.vue-vine-extension',
+	'styled-components.vscode-styled-components',
+	'unifiedjs.vscode-mdx',
+	'VisualStudioExptTeam.vscodeintellicode',
+	'Vue.volar',
+]);
 
 const extensions = useAllExtensions();
 
@@ -18,24 +41,8 @@ export const unknownExtensions = computed(() => {
 
 function isExtensionCompatibleWithHybridMode(extension: vscode.Extension<any>) {
 	if (
-		extension.id === 'Vue.volar'
-		|| extension.id === 'unifiedjs.vscode-mdx'
-		|| extension.id === 'astro-build.astro-vscode'
-		|| extension.id === 'ije.esm-vscode'
-		|| extension.id === 'johnsoncodehk.vscode-tsslint'
-		|| extension.id === 'VisualStudioExptTeam.vscodeintellicode'
-		|| extension.id === 'bierner.lit-html'
-		|| extension.id === 'jenkey2011.string-highlight'
-		|| extension.id === 'mxsdev.typescript-explorer'
-		|| extension.id === 'miaonster.vscode-tsx-arrow-definition'
-		|| extension.id === 'runem.lit-plugin'
-		|| extension.id === 'kimuson.ts-type-expand'
-		|| extension.id === 'p42ai.refactor'
-		|| extension.id === 'styled-components.vscode-styled-components'
-		|| extension.id === 'Divlo.vscode-styled-jsx-languageserver'
-		|| extension.id === 'nrwl.angular-console'
-		|| extension.id === 'ShenQingchuan.vue-vine-extension'
-		|| extension.id === 'ms-dynamics-smb.al'
+		defaultCompatibleExtensions.has(extension.id) ||
+		config.server.compatibleExtensions.includes(extension.id)
 	) {
 		return true;
 	}

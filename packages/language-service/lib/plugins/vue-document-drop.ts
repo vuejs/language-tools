@@ -5,7 +5,7 @@ import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUser
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance, TagNameCasing } from '../types';
+import { LanguageServiceContext, LanguageServicePlugin, TagNameCasing } from '../types';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -16,7 +16,7 @@ export function create(
 		capabilities: {
 			documentDropEditsProvider: true,
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			if (!context.project.vue) {
 				return {};
 			}
@@ -51,8 +51,8 @@ export function create(
 						return;
 					}
 
-					let baseName = importUri.substring(importUri.lastIndexOf('/') + 1);
-					baseName = baseName.substring(0, baseName.lastIndexOf('.'));
+					let baseName = importUri.slice(importUri.lastIndexOf('/') + 1);
+					baseName = baseName.slice(0, baseName.lastIndexOf('.'));
 
 					const newName = capitalize(camelize(baseName));
 					const { _sfc: sfc } = vueVirtualCode;
@@ -83,7 +83,7 @@ export function create(
 
 					if (!importPath) {
 						importPath = path.relative(path.dirname(vueVirtualCode.fileName), incomingFileName)
-							|| importUri.substring(importUri.lastIndexOf('/') + 1);
+							|| importUri.slice(importUri.lastIndexOf('/') + 1);
 
 						if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
 							importPath = './' + importPath;

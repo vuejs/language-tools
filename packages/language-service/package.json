@@ -17,14 +17,14 @@
 		"update-html-data": "node ./scripts/update-html-data.js"
 	},
 	"dependencies": {
-		"@volar/language-core": "~2.4.8",
-		"@volar/language-service": "~2.4.8",
-		"@volar/typescript": "~2.4.8",
+		"@volar/language-core": "~2.4.11",
+		"@volar/language-service": "~2.4.11",
+		"@volar/typescript": "~2.4.11",
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/language-core": "2.1.10",
 		"@vue/shared": "^3.5.0",
 		"@vue/typescript-plugin": "2.1.10",
-		"alien-signals": "^0.2.0",
+		"alien-signals": "^0.4.4",
 		"path-browserify": "^1.0.1",
 		"volar-service-css": "0.0.62",
 		"volar-service-emmet": "0.0.62",
@@ -41,7 +41,7 @@
 	"devDependencies": {
 		"@types/node": "latest",
 		"@types/path-browserify": "latest",
-		"@volar/kit": "~2.4.8",
+		"@volar/kit": "~2.4.11",
 		"vscode-languageserver-protocol": "^3.17.5"
 	}
 }

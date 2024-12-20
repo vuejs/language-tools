@@ -1,7 +1,6 @@
-import type { CompilerError, SFCDescriptor, SFCBlock, SFCStyleBlock, SFCScriptBlock, SFCTemplateBlock, SFCParseResult } from '@vue/compiler-sfc';
 import type { ElementNode, SourceLocation } from '@vue/compiler-dom';
 import * as compiler from '@vue/compiler-dom';
-import { SFCStyleOverride } from '../types';
+import type { CompilerError, SFCBlock, SFCDescriptor, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 
 export function parse(source: string): SFCParseResult {
 
@@ -92,8 +91,7 @@ function createBlock(node: ElementNode, source: string) {
 	};
 	const attrs: Record<string, any> = {};
 	const block: SFCBlock
-		& Pick<SFCStyleBlock, 'scoped'>
-		& Pick<SFCStyleOverride, 'module'>
+		& Pick<SFCStyleBlock, 'scoped' | '__module'>
 		& Pick<SFCScriptBlock, 'setup'> = {
 		type,
 		content,
@@ -114,7 +112,7 @@ function createBlock(node: ElementNode, source: string) {
 					block.scoped = true;
 				}
 				else if (p.name === 'module') {
-					block.module = {
+					block.__module = {
 						name: p.value?.content ?? '$style',
 						offset: p.value?.content ? p.value?.loc.start.offset - node.loc.start.offset : undefined
 					};

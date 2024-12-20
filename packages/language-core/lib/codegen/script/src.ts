@@ -1,5 +1,5 @@
 import type { Code, Sfc } from '../../types';
-import { endOfLine } from '../common';
+import { endOfLine } from '../utils';
 import { codeFeatures } from './index';
 
 export function* generateSrc(
@@ -7,13 +7,13 @@ export function* generateSrc(
 	src: string
 ): Generator<Code> {
 	if (src.endsWith('.d.ts')) {
-		src = src.substring(0, src.length - '.d.ts'.length);
+		src = src.slice(0, -'.d.ts'.length);
 	}
 	else if (src.endsWith('.ts')) {
-		src = src.substring(0, src.length - '.ts'.length);
+		src = src.slice(0, -'.ts'.length);
 	}
 	else if (src.endsWith('.tsx')) {
-		src = src.substring(0, src.length - '.tsx'.length) + '.jsx';
+		src = src.slice(0, -'.tsx'.length) + '.jsx';
 	}
 
 	if (!src.endsWith('.js') && !src.endsWith('.jsx')) {

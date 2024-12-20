@@ -1,6 +1,6 @@
+import { SourceMap } from '@volar/source-map';
 import type { VueLanguagePlugin } from '@vue/language-core';
 import * as pug from 'volar-service-pug/lib/languageService';
-import { SourceMap } from '@volar/source-map';
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
 
@@ -77,7 +77,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 					return createProxyObject(completed);
 
-					function createProxyObject(target: any): any {
+					function createProxyObject(target: any) {
 						const proxys = new WeakMap();
 						return new Proxy(target, {
 							get(target, prop, receiver) {

@@ -3,8 +3,8 @@ import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { hyphenateAttr } from '../../utils/shared';
-import { combineLastMapping, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../common';
-import { generateCamelized } from './camelized';
+import { combineLastMapping, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../utils';
+import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -15,9 +15,8 @@ export function* generateElementEvents(
 	node: CompilerDOM.ElementNode,
 	componentVar: string,
 	componentInstanceVar: string,
-	emitVar: string,
 	eventsVar: string
-): Generator<Code> {
+): Generator<Code, boolean> {
 	let usedComponentEventsVar = false;
 	let propsVar: string | undefined;
 	for (const prop of node.props) {
@@ -37,32 +36,9 @@ export function* generateElementEvents(
 			const name = isVNodeEvent
 				? 'vnode-' + prop.arg.loc.source.slice('vue:'.length)
 				: prop.arg.loc.source;
-			const originalPropName = camelize('on-' + name);
-			const originalPropNameObjectKey = variableNameRegex.test(originalPropName)
-				? originalPropName
-				: `'${originalPropName}'`;
-			yield `const ${ctx.getInternalVariable()}: `;
-			if (!options.vueCompilerOptions.strictTemplates) {
-				yield `Record<string, unknown> & `;
-			}
-			yield `(${newLine}`;
-			yield `__VLS_IsFunction<typeof ${propsVar}, '${originalPropName}'> extends true${newLine}`;
-			yield `? typeof ${propsVar}${newLine}`;
-			yield `: __VLS_IsFunction<typeof ${eventsVar}, '${name}'> extends true${newLine}`;
-			yield `? {${newLine}`;
-			yield `/**__VLS_emit,${emitVar},${name}*/${newLine}`;
-			yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${name}']${newLine}`;
-			yield `}${newLine}`;
-			if (name !== camelize(name)) {
-				yield `: __VLS_IsFunction<typeof ${eventsVar}, '${camelize(name)}'> extends true${newLine}`;
-				yield `? {${newLine}`;
-				yield `/**__VLS_emit,${emitVar},${camelize(name)}*/${newLine}`;
-				yield `${originalPropNameObjectKey}?: typeof ${eventsVar}['${camelize(name)}']${newLine}`;
-				yield `}${newLine}`;
-			}
-			yield `: typeof ${propsVar}${newLine}`;
-			yield `) = {${newLine}`;
-			yield* generateEventArg(ctx, prop.arg, name, isVNodeEvent);
+			const originalPropName = camelize('on-' + prop.arg.loc.source);
+			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${originalPropName}', '${name}', '${camelize(name)}'> = {${newLine}`;
+			yield* generateEventArg(ctx, prop.arg, name, true);
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
 			yield `}${endOfLine}`;
@@ -165,9 +141,7 @@ export function* generateEventExpression(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			prop.exp.content,
-			prop.exp.loc,
-			prop.exp.loc.start.offset,
+			'template',
 			offset => {
 				if (_isCompoundExpression && isFirstMapping) {
 					isFirstMapping = false;
@@ -186,6 +160,9 @@ export function* generateEventExpression(
 				}
 				return ctx.codeFeatures.all;
 			},
+			prop.exp.content,
+			prop.exp.loc.start.offset,
+			prop.exp.loc,
 			prefix,
 			suffix
 		);
@@ -227,7 +204,7 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 	return result;
 }
 
-function isPropertyAccessOrId(ts: typeof import('typescript'), node: ts.Node): boolean {
+function isPropertyAccessOrId(ts: typeof import('typescript'), node: ts.Node) {
 	if (ts.isIdentifier(node)) {
 		return true;
 	}

@@ -100,13 +100,13 @@ export function create(
 
 					const templateInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
 					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.script.initialIndent') ?? false;
-					const newUri = sfcDocument.uri.substring(0, sfcDocument.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
+					const newUri = sfcDocument.uri.slice(0, sfcDocument.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 
 					let newFileTags = [];
 
 					newFileTags.push(
-						constructTag('template', [], templateInitialIndent, sfc.template.content.substring(templateCodeRange[0], templateCodeRange[1]))
+						constructTag('template', [], templateInitialIndent, sfc.template.content.slice(templateCodeRange[0], templateCodeRange[1]))
 					);
 
 					if (toExtract.length) {

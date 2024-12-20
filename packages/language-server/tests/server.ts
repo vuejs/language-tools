@@ -1,7 +1,7 @@
 import { ConfigurationRequest, PublishDiagnosticsNotification } from '@volar/language-server';
 import type { LanguageServerHandle } from '@volar/test-utils';
 import { startLanguageServer } from '@volar/test-utils';
-import * as path from 'path';
+import * as path from 'node:path';
 import { URI } from 'vscode-uri';
 
 let serverHandle: LanguageServerHandle | undefined;
