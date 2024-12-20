@@ -294,19 +294,37 @@ function* generatePropExp(
 				'(',
 				')'
 			);
-		} else {
+		}
+		else {
 			const propVariableName = camelize(exp.loc.source);
 
 			if (variableNameRegex.test(propVariableName)) {
-				if (!ctx.hasLocalVariable(propVariableName)) {
-					ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
-					yield `__VLS_ctx.`;
-				}
-				yield* generateCamelized(
+				const isDestructuredProp = options.destructuredPropNames?.has(propVariableName) ?? false;
+				const isTemplateRef = options.templateRefNames?.has(propVariableName) ?? false;
+
+				const codes = generateCamelized(
 					exp.loc.source,
 					exp.loc.start.offset,
 					features
 				);
+
+				if (ctx.hasLocalVariable(propVariableName) || isDestructuredProp) {
+					yield* codes;
+				}
+				else {
+					ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
+
+					if (isTemplateRef) {
+						yield `__VLS_unref(`;
+						yield* codes;
+						yield `)`;
+					}
+					else {
+						yield `__VLS_ctx.`;
+						yield* codes;
+					}
+				}
+
 				if (enableCodeFeatures) {
 					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 				}
