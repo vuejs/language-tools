@@ -34,7 +34,8 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
-	ctx.addLocalVariable('$attrs');
+	// TODO: circular reference
+	// ctx.addLocalVariable('$attrs');
 	ctx.addLocalVariable(getSlotsPropertyName(options.vueCompilerOptions.target));
 	ctx.addLocalVariable('$refs');
 	ctx.addLocalVariable('$el');
