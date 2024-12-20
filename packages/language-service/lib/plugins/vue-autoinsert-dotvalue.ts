@@ -1,4 +1,4 @@
-import type { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -27,7 +27,7 @@ export function create(
 				configurationSections: ['vue.autoInsert.dotValue'],
 			},
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			let currentReq = 0;
 			return {
@@ -124,14 +124,14 @@ const charReg = /\w/;
 
 export function isCharacterTyping(document: TextDocument, change: { text: string; rangeOffset: number; rangeLength: number; }) {
 	const lastCharacter = change.text[change.text.length - 1];
-	const nextCharacter = document.getText().substring(
+	const nextCharacter = document.getText().slice(
 		change.rangeOffset + change.text.length,
 		change.rangeOffset + change.text.length + 1
 	);
 	if (lastCharacter === undefined) { // delete text
 		return false;
 	}
-	if (change.text.indexOf('\n') >= 0) { // multi-line change
+	if (change.text.includes('\n')) { // multi-line change
 		return false;
 	}
 	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);

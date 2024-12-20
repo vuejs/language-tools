@@ -1,5 +1,5 @@
-import type { TextRange } from '../types';
 import type * as ts from 'typescript';
+import type { TextRange } from '../types';
 import { getNodeText, getStartEnd, parseBindingRanges } from './scriptSetupRanges';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }

@@ -40,11 +40,11 @@ export async function activate(client: BaseLanguageClient) {
 		scheme,
 		{
 			onDidChange: docChangeEvent.event,
-			async provideTextDocumentContent(doctorUri: vscode.Uri): Promise<string | undefined> {
+			async provideTextDocumentContent(doctorUri: vscode.Uri) {
 
 				const fileUri = doctorUri.with({
 					scheme: 'file',
-					path: doctorUri.path.substring(0, doctorUri.path.length - '/Doctor.md'.length),
+					path: doctorUri.path.slice(0, -'/Doctor.md'.length),
 				});
 				const problems = await getProblems(fileUri);
 
@@ -157,12 +157,12 @@ export async function activate(client: BaseLanguageClient) {
 					'',
 					'- package.json',
 					'```json',
-					JSON.stringify({ devDependencies: { "@vue/language-plugin-pug": "latest" } }, undefined, 2),
+					JSON.stringify({ devDependencies: { '@vue/language-plugin-pug': 'latest' } }, undefined, 2),
 					'```',
 					'',
 					'- tsconfig.json / jsconfig.json',
 					'```jsonc',
-					JSON.stringify({ vueCompilerOptions: { plugins: ["@vue/language-plugin-pug"] } }, undefined, 2),
+					JSON.stringify({ vueCompilerOptions: { plugins: ['@vue/language-plugin-pug'] } }, undefined, 2),
 					'```',
 				].join('\n'),
 			});
@@ -260,12 +260,12 @@ export async function activate(client: BaseLanguageClient) {
 	}
 }
 
-function getPackageJsonOfWorkspacePackage(folder: string, pkg: string): { path: string, json: { version: string; }; } | undefined {
+function getPackageJsonOfWorkspacePackage(folder: string, pkg: string) {
 	try {
 		const path = require.resolve(pkg + '/package.json', { paths: [folder] });
 		return {
 			path,
-			json: require(path),
+			json: require(path) as { version: string },
 		};
 	} catch { }
 }

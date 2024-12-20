@@ -1,7 +1,7 @@
 import type * as ts from 'typescript';
 import { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
-import { endOfLine } from './common';
+import { endOfLine } from './utils';
 
 export function getLocalTypesGenerator(compilerOptions: ts.CompilerOptions, vueCompilerOptions: VueCompilerOptions) {
 	const used = new Set<string>();

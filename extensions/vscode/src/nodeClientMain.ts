@@ -1,12 +1,12 @@
 import { createLabsInfo } from '@volar/vscode';
-import * as protocol from '@vue/language-server/protocol';
-import * as fs from 'fs';
-import * as vscode from 'vscode';
 import * as lsp from '@volar/vscode/node';
+import * as protocol from '@vue/language-server/protocol';
+import * as fs from 'node:fs';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
+import * as vscode from 'vscode';
+import { config } from './config';
 import { enabledHybridMode, enabledTypeScriptPlugin } from './hybridMode';
 import { activate as activateLanguageClient, deactivate as deactivateLanguageClient } from './languageClient';
-import { config } from './config';
 import { middleware } from './middleware';
 
 export const { activate, deactivate } = defineExtension(async () => {
@@ -150,15 +150,16 @@ try {
 			if (!enabledTypeScriptPlugin.value) {
 				text = text.replace(
 					'for(const e of n.contributes.typescriptServerPlugins',
-					s => s + `.filter(p=>p.name!=='typescript-vue-plugin-bundle')`
+					s => s + `.filter(p=>p.name!=='vue-typescript-plugin-pack')`
 				);
-			} else if (enabledHybridMode.value) {
+			}
+			else if (enabledHybridMode.value) {
 				// patch readPlugins
 				text = text.replace(
 					'languages:Array.isArray(e.languages)',
 					[
 						'languages:',
-						`e.name==='typescript-vue-plugin-bundle'?[${config.server.includeLanguages
+						`e.name==='vue-typescript-plugin-pack'?[${config.server.includeLanguages
 							.map(lang => `'${lang}'`)
 							.join(',')}]`,
 						':Array.isArray(e.languages)'

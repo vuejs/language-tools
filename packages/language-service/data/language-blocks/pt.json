@@ -8,68 +8,15 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nSe preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "Se preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```"
           },
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "zh-hk",
-              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ko",
-              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "pt",
-              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "bn",
-              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "it",
-              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "cs",
-              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ru",
-              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "fa",
-              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
-            }
-          ]
+          "references": "api/sfc-spec.html#src-imports"
         },
         {
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\nOs blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "Os blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)"
           },
           "values": [
             {
@@ -79,120 +26,14 @@
               "name": "pug"
             }
           ],
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "zh-hk",
-              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ko",
-              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "pt",
-              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "bn",
-              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "it",
-              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "cs",
-              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ru",
-              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "fa",
-              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
-            }
-          ]
+          "references": "api/sfc-spec.html#pre-processors"
         }
       ],
       "description": {
         "kind": "markdown",
         "value": "\n- Cada ficheiro `*.vue` pode conter no máximo um bloco `<template>` de alto nível.\n\n- O conteúdo será extraído e passado ao `@vuw/compiler-dom`, pré-compilado dentro de funções de interpretação de JavaScript, e anexado ao componente exportado como sua opção `render`.\n"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/api/sfc-spec.html#template"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/api/sfc-spec.html#template"
-        }
-      ]
+      "references": "api/sfc-spec.html#template"
     },
     {
       "name": "script",
@@ -201,68 +42,15 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nSe preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "Se preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```"
           },
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "zh-hk",
-              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ko",
-              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "pt",
-              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "bn",
-              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "it",
-              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "cs",
-              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ru",
-              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "fa",
-              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
-            }
-          ]
+          "references": "api/sfc-spec.html#src-imports"
         },
         {
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\nOs blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "Os blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)"
           },
           "values": [
             {
@@ -278,60 +66,7 @@
               "name": "jsx"
             }
           ],
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "zh-hk",
-              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ko",
-              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "pt",
-              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "bn",
-              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "it",
-              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "cs",
-              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ru",
-              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "fa",
-              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
-            }
-          ]
+          "references": "api/sfc-spec.html#pre-processors"
         },
         {
           "name": "generic"
@@ -343,120 +78,14 @@
             "kind": "markdown",
             "value": "\n- Cada ficheiro `*.vue` pode conter no máximo um bloco `<script setup>` (excluindo o `<script>` normal).\n\n- O programa é pré-processado e usado como a função `setup()` do componente, o que significa que será executado **para cada instância do componente**. Os vínculos de alto nível no `<script setup>` são automaticamente expostos ao modelo de marcação. Para mais detalhes, consulte a [documentação dedicada ao `<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html).\n"
           },
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "zh-hk",
-              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "ko",
-              "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "pt",
-              "url": "https://pt.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "bn",
-              "url": "https://bn.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "it",
-              "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "cs",
-              "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "ru",
-              "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
-            },
-            {
-              "name": "fa",
-              "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
-            }
-          ]
+          "references": "api/sfc-spec.html#script-setup"
         }
       ],
       "description": {
         "kind": "markdown",
         "value": "\n- Cada ficheiro `*.vue` poder conter no máximo um bloco `<script>` de alto nível (excluindo [`<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html)).\n\n- O programa é executado como um módulo de ECMAScript.\n\n- A **exportação padrão** deve ser um objeto de opções de componente da Vue, ou como um objeto simples ou como valor de retorno da [`defineComponent`](https://pt.vuejs.org/api/general.html#definecomponent).\n"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/api/sfc-spec.html#script"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/api/sfc-spec.html#script"
-        }
-      ]
+      "references": "api/sfc-spec.html#script"
     },
     {
       "name": "script setup",
@@ -465,60 +94,7 @@
         "kind": "markdown",
         "value": "\n- Cada ficheiro `*.vue` pode conter no máximo um bloco `<script setup>` (excluindo o `<script>` normal).\n\n- O programa é pré-processado e usado como a função `setup()` do componente, o que significa que será executado **para cada instância do componente**. Os vínculos de alto nível no `<script setup>` são automaticamente expostos ao modelo de marcação. Para mais detalhes, consulte a [documentação dedicada ao `<script setup>`](https://pt.vuejs.org/api/sfc-script-setup.html).\n"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/api/sfc-spec.html#script-setup"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/api/sfc-spec.html#script-setup"
-        }
-      ]
+      "references": "api/sfc-spec.html#script-setup"
     },
     {
       "name": "style",
@@ -527,68 +103,15 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nSe preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "Se preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```"
           },
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "zh-hk",
-              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ko",
-              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "pt",
-              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "bn",
-              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "it",
-              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "cs",
-              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ru",
-              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "fa",
-              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
-            }
-          ]
+          "references": "api/sfc-spec.html#src-imports"
         },
         {
           "name": "lang",
           "description": {
             "kind": "markdown",
-            "value": "\nOs blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+            "value": "Os blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)"
           },
           "values": [
             {
@@ -610,244 +133,32 @@
               "name": "sass"
             }
           ],
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "zh-hk",
-              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ko",
-              "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "pt",
-              "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "bn",
-              "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "it",
-              "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "cs",
-              "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "ru",
-              "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
-            },
-            {
-              "name": "fa",
-              "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
-            }
-          ]
+          "references": "api/sfc-spec.html#pre-processors"
         },
         {
           "name": "scoped",
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\nQuando um marcador `<style>` tiver o atributo `scoped`, o seu CSS apenas aplicar-se-á aos elementos do componente atual. Isto é semelhante ao encapsulamento de estilo encontrado no DOM de Sombra. Ele vem com algumas advertências, mas não exige quaisquer preenchimento de funcionalidade. Ele é alcançado usando PostCSS para transformar o seguinte:\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">hi</div>\n</template>\n```\n\nNo seguinte:\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>hi</div>\n</template>\n```\n\n### Elementos de Raiz do Componente Filho \n\nCom `scoped`, os estilos do componente pai não passarão para os componentes filhos. No entanto, um nó de raiz do componente filho será afetado por ambas CSS isolada do pai e a CSS isolada do filho. Isto é de propósito para que o pai possa estilizar o elemento de raiz filho para fins de disposição.\n\n### Seletores Profundos \n\nSe quisermos que um seletor nos estilos `scoped` torne-se \"profundo\", ou seja, afete componentes filho, podemos usar a pseudo-classe `:deep()`:\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\nO código acima será compilado para:\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip DICA\nOs conteúdos do DOM criados com `v-html` não são afetados pelos estilos isolados, mas ainda podemos estilizá-los usando seletores profundos.\n:::\n\n### Seletores Inseridos \n\nPor padrão, os estilos isolados não afetam os conteúdos interpretados pelo `<slot/>`, uma vez que são considerados ser propriedade do componente pai que está a passá-los. Para explicitamente atingir o conteúdo da ranhura, usamos a pseudo-classe `:slotted`:\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### Seletores Globais \n\nSe quisermos que apenas uma regra aplique-se globalmente, podemos usar a pseudo-classe `:global` ao invés de criar um outro `<style>` (consulte o exemplo abaixo):\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### Misturando Estilos Locais e Globais \n\nNós também podemos incluir ambos estilos isolados e não isolados no mesmo componente:\n\n```vue\n<style>\n/* estilos globais */\n</style>\n\n<style scoped>\n/* estilos locais */\n</style>\n```\n\n### Dicas de Estilo Isolado \n\n- **Os estilos isolados não eliminam a necessidade de classes**. Por causa da maneira que os navegadores interpretam os vários seletores de CSS, `p { color: red }` será muitas vezes mais lento quando isolado (ou seja, quando combinado com um seletor de atributo). Se usarmos as classes (por exemplo, `.class-name`) ou identificadores (por exemplo, `#id-name`), tal como em `.example { color: red }`, então eliminamos virtualmente este impacto de desempenho.\n\n- **Temos que ter cuidado com os seletores de descendentes nos componentes recursivos!** Para um regara de CSS com o seletor `.a .b`, se o elemento que corresponde `.a` contiver um componente filho recursivo, então todos os `.b` neste componente filho serão correspondidos pela regra.\n"
+            "value": "Quando um marcador `<style>` tiver o atributo `scoped`, o seu CSS apenas aplicar-se-á aos elementos do componente atual. Isto é semelhante ao encapsulamento de estilo encontrado no DOM de Sombra. Ele vem com algumas advertências, mas não exige quaisquer preenchimento de funcionalidade. Ele é alcançado usando PostCSS para transformar o seguinte:\n\n```vue\n<style scoped>\n.example {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\">hi</div>\n</template>\n```\n\nNo seguinte:\n\n```vue\n<style>\n.example[data-v-f3f3eg9] {\n  color: red;\n}\n</style>\n\n<template>\n  <div class=\"example\" data-v-f3f3eg9>hi</div>\n</template>\n```\n\n### Elementos de Raiz do Componente Filho \n\nCom `scoped`, os estilos do componente pai não passarão para os componentes filhos. No entanto, um nó de raiz do componente filho será afetado por ambas CSS isolada do pai e a CSS isolada do filho. Isto é de propósito para que o pai possa estilizar o elemento de raiz filho para fins de disposição.\n\n### Seletores Profundos \n\nSe quisermos que um seletor nos estilos `scoped` torne-se \"profundo\", ou seja, afete componentes filho, podemos usar a pseudo-classe `:deep()`:\n\n```vue\n<style scoped>\n.a :deep(.b) {\n  /* ... */\n}\n</style>\n```\n\nO código acima será compilado para:\n\n```css\n.a[data-v-f3f3eg9] .b {\n  /* ... */\n}\n```\n\n:::tip DICA\nOs conteúdos do DOM criados com `v-html` não são afetados pelos estilos isolados, mas ainda podemos estilizá-los usando seletores profundos.\n:::\n\n### Seletores Inseridos \n\nPor padrão, os estilos isolados não afetam os conteúdos interpretados pelo `<slot/>`, uma vez que são considerados ser propriedade do componente pai que está a passá-los. Para explicitamente atingir o conteúdo da ranhura, usamos a pseudo-classe `:slotted`:\n\n```vue\n<style scoped>\n:slotted(div) {\n  color: red;\n}\n</style>\n```\n\n### Seletores Globais \n\nSe quisermos que apenas uma regra aplique-se globalmente, podemos usar a pseudo-classe `:global` ao invés de criar um outro `<style>` (consulte o exemplo abaixo):\n\n```vue\n<style scoped>\n:global(.red) {\n  color: red;\n}\n</style>\n```\n\n### Misturando Estilos Locais e Globais \n\nNós também podemos incluir ambos estilos isolados e não isolados no mesmo componente:\n\n```vue\n<style>\n/* estilos globais */\n</style>\n\n<style scoped>\n/* estilos locais */\n</style>\n```\n\n### Dicas de Estilo Isolado \n\n- **Os estilos isolados não eliminam a necessidade de classes**. Por causa da maneira que os navegadores interpretam os vários seletores de CSS, `p { color: red }` será muitas vezes mais lento quando isolado (ou seja, quando combinado com um seletor de atributo). Se usarmos as classes (por exemplo, `.class-name`) ou identificadores (por exemplo, `#id-name`), tal como em `.example { color: red }`, então eliminamos virtualmente este impacto de desempenho.\n\n- **Temos que ter cuidado com os seletores de descendentes nos componentes recursivos!** Para um regara de CSS com o seletor `.a .b`, se o elemento que corresponde `.a` contiver um componente filho recursivo, então todos os `.b` neste componente filho serão correspondidos pela regra."
           },
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "zh-hk",
-              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "ko",
-              "url": "https://ko.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "pt",
-              "url": "https://pt.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "bn",
-              "url": "https://bn.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "it",
-              "url": "https://it.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "cs",
-              "url": "https://cs.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "ru",
-              "url": "https://ru.vuejs.org/api/sfc-css-features.html#scoped-css"
-            },
-            {
-              "name": "fa",
-              "url": "https://fa.vuejs.org/api/sfc-css-features.html#scoped-css"
-            }
-          ]
+          "references": "api/sfc-css-features.html#scoped-css"
         },
         {
           "name": "module",
           "valueSet": "v",
           "description": {
             "kind": "markdown",
-            "value": "\nUm marcador `<style module>` é compilado como [Módulos de CSS](https://github.com/css-modules/css-modules) e expõe as classes de CSS resultantes ao componente como um objeto sob a chave de `$style`:\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\nAs classes resultantes têm o seu nome gerados com caracteres embaralhados para evitar colisões, alcançando o mesmo efeito de isolar o CSS apenas ao componente atual.\n\nConsulte a [especificação dos Módulos de CSS](https://github.com/css-modules/css-modules) por mais detalhes, tais como [exceções globais](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#exceptions) e [composição](https://github.com/css-modules/css-modules#composition).\n\n### Nome de Injeção Personalizado \n\nNós podemos personalizar a chave da propriedade do objeto de classes injetadas dando ao atributo `module` um valor:\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Uso com API de Composição \n\nAs classes injetadas podem ser acessadas na `setup()` e no `<script setup>` através da API `useCssModule`. Para os blocos `<style module>` com nomes de injeção personalizados, `useCssModule` aceita o valor do atributo `module` correspondente como primeiro argumento:\n\n```js\nimport { useCssModule } from 'vue'\n\n// dentro do âmbito de setup()...\n// padrão, retorna as classes do marcador `<style module>`\nuseCssModule()\n\n// personalizado, retorna as classes do marcador `<style module=\"classes\">`\nuseCssModule('classes')\n```\n"
+            "value": "Um marcador `<style module>` é compilado como [Módulos de CSS](https://github.com/css-modules/css-modules) e expõe as classes de CSS resultantes ao componente como um objeto sob a chave de `$style`:\n\n```vue\n<template>\n  <p :class=\"$style.red\">This should be red</p>\n</template>\n\n<style module>\n.red {\n  color: red;\n}\n</style>\n```\n\nAs classes resultantes têm o seu nome gerados com caracteres embaralhados para evitar colisões, alcançando o mesmo efeito de isolar o CSS apenas ao componente atual.\n\nConsulte a [especificação dos Módulos de CSS](https://github.com/css-modules/css-modules) por mais detalhes, tais como [exceções globais](https://github.com/css-modules/css-modules/blob/master/docs/composition.md#exceptions) e [composição](https://github.com/css-modules/css-modules#composition).\n\n### Nome de Injeção Personalizado \n\nNós podemos personalizar a chave da propriedade do objeto de classes injetadas dando ao atributo `module` um valor:\n\n```vue\n<template>\n  <p :class=\"classes.red\">red</p>\n</template>\n\n<style module=\"classes\">\n.red {\n  color: red;\n}\n</style>\n```\n\n### Uso com API de Composição \n\nAs classes injetadas podem ser acessadas na `setup()` e no `<script setup>` através da API `useCssModule`. Para os blocos `<style module>` com nomes de injeção personalizados, `useCssModule` aceita o valor do atributo `module` correspondente como primeiro argumento:\n\n```js\nimport { useCssModule } from 'vue'\n\n// dentro do âmbito de setup()...\n// padrão, retorna as classes do marcador `<style module>`\nuseCssModule()\n\n// personalizado, retorna as classes do marcador `<style module=\"classes\">`\nuseCssModule('classes')\n```"
           },
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "zh-hk",
-              "url": "https://zh-hk.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "ko",
-              "url": "https://ko.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "pt",
-              "url": "https://pt.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "bn",
-              "url": "https://bn.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "it",
-              "url": "https://it.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "cs",
-              "url": "https://cs.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "ru",
-              "url": "https://ru.vuejs.org/api/sfc-css-features.html#css-modules"
-            },
-            {
-              "name": "fa",
-              "url": "https://fa.vuejs.org/api/sfc-css-features.html#css-modules"
-            }
-          ]
+          "references": "api/sfc-css-features.html#css-modules"
         }
       ],
       "description": {
         "kind": "markdown",
         "value": "\n- Um único ficheiro `*.vue` pode conter vários marcadores de `<style>`.\n\n- Um marcador `<style>` pode ter os atributos `scoped` ou `module` (consulte [Funcionalidades de Estilo do Componente de Ficheiro Único](https://pt.vuejs.org/api/sfc-css-features.html) por mais detalhes) para ajudar a encapsular os estilos ao componente atual. Vários marcadores de `<style>` com diferentes modos de encapsulamento podem ser misturados no mesmo componente.\n"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/api/sfc-spec.html#style"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/api/sfc-spec.html#style"
-        }
-      ]
+      "references": "api/sfc-spec.html#style"
     },
     {
       "name": "Blocos Personalizados",
@@ -856,122 +167,16 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "\nSe preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+            "value": "Se preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```"
           },
-          "references": [
-            {
-              "name": "en",
-              "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "zh-cn",
-              "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "zh-hk",
-              "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ja",
-              "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ua",
-              "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "fr",
-              "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ko",
-              "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "pt",
-              "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "bn",
-              "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "it",
-              "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "cs",
-              "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "ru",
-              "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
-            },
-            {
-              "name": "fa",
-              "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
-            }
-          ]
+          "references": "api/sfc-spec.html#src-imports"
         }
       ],
       "description": {
         "kind": "markdown",
         "value": "\nOs blocos personalizados podem ser incluídos num ficheiro `*.vue` por qualquer necessidade específica do projeto, por exemplo um bloco `<docs>`. Alguns exemplos do mundo real de blocos personalizados incluem:\n\n- [Gridsome: `<page-query>`](https://gridsome.org/docs/querying-data/)\n- [vite-plugin-vue-gql: `<gql>`](https://github.com/wheatjs/vite-plugin-vue-gql)\n- [vue-i18n: `<i18n>`](https://github.com/intlify/bundle-tools/tree/main/packages/vite-plugin-vue-i18n#i18n-custom-block)\n\nA manipulação dos blocos personalizados dependerá do ferramental - se quisermos construir as nossas próprias integrações de bloco personalizado, podemos consultar a [seção de ferramental de integrações de bloco personalizado do Componente de Ficheiro Único](https://pt.vuejs.org/guide/scaling-up/tooling.html#sfc-custom-block-integrations) por mais detalhes.\n"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/api/sfc-spec.html#blocos-personalizados"
-        }
-      ]
+      "references": "api/sfc-spec.html#blocos-personalizados"
     }
   ],
   "globalAttributes": [
@@ -979,124 +184,18 @@
       "name": "lang",
       "description": {
         "kind": "markdown",
-        "value": "\nOs blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)\n"
+        "value": "Os blocos podem declarar linguagens pré-processadoras usando o atributo `lang`. O caso mais comum é usar TypeScript para o bloco `<script>`:\n\n\n```html\n<script lang=\"ts\">\n  // usar TypeScript\n</script>\n```\n\n`lang` pode ser aplicado à qualquer bloco - por exemplo, podemos usar o `<style>` com  a [Sass](https://sass-docs-pt.netlify.app/) e o `<template>` com a [Pug](https://pugjs.org/api/getting-started.html):\n\n```html\n<template lang=\"pug\">\np {{ msg }}\n</template>\n\n<style lang=\"scss\">\n  $primary-color: #333;\n  body {\n    color: $primary-color;\n  }\n</style>\n```\n\nNota que a integração com os vários pré-processadores pode diferir conforme a cadeia de ferramenta. Consulte a respetiva documentação por exemplos:\n\n- [Vite](https://pt.vitejs.dev/guide/features#css-pre-processors)\n- [Vue CLI](https://cli.vuejs.org/guide/css.html#pre-processors)\n- [webpack + vue-loader](https://vue-loader.vuejs.org/guide/pre-processors.html#using-pre-processors)"
       },
       "values": [],
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/api/sfc-spec.html#pre-processors"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/api/sfc-spec.html#pre-processors"
-        }
-      ]
+      "references": "api/sfc-spec.html#pre-processors"
     },
     {
       "name": "src",
       "description": {
         "kind": "markdown",
-        "value": "\nSe preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n"
+        "value": "Se preferirmos separar os nossos componentes `*.vue` em vários ficheiros, podemos usar o atributo `src` para importar um ficheiro externo para um bloco de linguagem:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\nDevemos estar ciente de que as importações de `src` seguem as mesmas regras de resolução de caminho que as requisições de módulo da Webpack, o que significa que:\n\n- Os caminhos relativos precisam começar com `./`\n- Nós podemos importar recursos a partir das dependências do npm:\n\n```vue\n<!-- importar um ficheiro dum pacote \"todomvc-app-css\" instalado -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\nAs importações de `src` também funcionam com os blocos personalizados, por exemplo:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/api/sfc-spec.html#src-imports"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/api/sfc-spec.html#src-imports"
-        }
-      ]
+      "references": "api/sfc-spec.html#src-imports"
     }
   ]
 }

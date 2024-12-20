@@ -2,13 +2,13 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import type { Code } from '../../types';
 import { hyphenateAttr } from '../../utils/shared';
-import { endOfLine, wrapWith } from '../common';
-import { generateCamelized } from './camelized';
+import { endOfLine, wrapWith } from '../utils';
+import { generateCamelized } from '../utils/camelized';
+import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
-import { generateStringLiteralKey } from './stringLiteralKey';
 
 export function* generateElementDirectives(
 	options: TemplateCodegenOptions,
@@ -39,7 +39,7 @@ export function* generateElementDirectives(
 			...generateArg(options, ctx, prop),
 			...generateModifiers(options, ctx, prop),
 			...generateValue(options, ctx, prop),
-			`}, null!, null!)`
+			` }, null!, null!)`
 		);
 		yield endOfLine;
 	}
@@ -90,52 +90,64 @@ function* generateArg(
 		startOffset,
 		startOffset + arg.content.length,
 		ctx.codeFeatures.verification,
-		'arg'
+		`arg`
 	);
-	yield ': ';
+	yield `: `;
 	if (arg.isStatic) {
 		yield* generateStringLiteralKey(
 			arg.content,
 			startOffset,
-			ctx.codeFeatures.withoutHighlight
+			ctx.codeFeatures.all
 		);
 	}
 	else {
 		yield* generateInterpolation(
 			options,
 			ctx,
-			arg.content,
-			arg.loc,
-			startOffset,
+			'template',
 			ctx.codeFeatures.all,
-			'(',
-			')'
+			arg.content,
+			startOffset,
+			arg.loc,
+			`(`,
+			`)`
 		);
 	}
-	yield ', ';
+	yield `, `;
 }
 
-function* generateModifiers(
+export function* generateModifiers(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	prop: CompilerDOM.DirectiveNode,
+	propertyName: string = 'modifiers'
 ): Generator<Code> {
-	if (options.vueCompilerOptions.target < 3.5) {
+	const { modifiers } = prop;
+	if (!modifiers.length) {
 		return;
 	}
 
-	yield 'modifiers: { ';
-	for (const mod of prop.modifiers) {
+	const startOffset = modifiers[0].loc.start.offset - 1;
+	const endOffset = modifiers.at(-1)!.loc.end.offset;
+
+	yield* wrapWith(
+		startOffset,
+		endOffset,
+		ctx.codeFeatures.verification,
+		propertyName
+	);
+	yield `: { `;
+	for (const mod of modifiers) {
 		yield* generateObjectProperty(
 			options,
 			ctx,
 			mod.content,
 			mod.loc.start.offset,
-			ctx.codeFeatures.withoutHighlight
+			ctx.codeFeatures.withoutNavigation
 		);
-		yield ': true, ';
+		yield `: true, `;
 	}
-	yield '}, ';
+	yield `}, `;
 }
 
 function* generateValue(
@@ -143,30 +155,32 @@ function* generateValue(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
-	if (prop.exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+	const { exp } = prop;
+	if (exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		return;
 	}
 
 	yield* wrapWith(
-		prop.exp.loc.start.offset,
-		prop.exp.loc.end.offset,
+		exp.loc.start.offset,
+		exp.loc.end.offset,
 		ctx.codeFeatures.verification,
-		'value'
+		`value`
 	);
-	yield ': ';
+	yield `: `;
 	yield* wrapWith(
-		prop.exp.loc.start.offset,
-		prop.exp.loc.end.offset,
+		exp.loc.start.offset,
+		exp.loc.end.offset,
 		ctx.codeFeatures.verification,
 		...generateInterpolation(
 			options,
 			ctx,
-			prop.exp.content,
-			prop.exp.loc,
-			prop.exp.loc.start.offset,
+			'template',
 			ctx.codeFeatures.all,
-			'(',
-			')'
+			exp.content,
+			exp.loc.start.offset,
+			exp.loc,
+			`(`,
+			`)`
 		)
 	);
 }

@@ -1,10 +1,10 @@
 import type { CodeInformation } from '@volar/language-core';
-import { createTsAst } from '../codegen/common';
+import * as CompilerDOM from '@vue/compiler-dom';
 import { isCompoundExpression } from '../codegen/template/elementEvents';
 import { parseInterpolationNode } from '../codegen/template/templateChild';
 import { parseVForNode } from '../codegen/template/vFor';
+import { createTsAst } from '../codegen/utils';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
-import * as CompilerDOM from '@vue/compiler-dom';
 
 const codeFeatures: CodeInformation = {
 	format: true,
@@ -19,6 +19,7 @@ const formatBrackets = {
 	// fix https://github.com/vuejs/language-tools/issues/2305
 	curly: ['0 +', '+ 0;'] as [string, string],
 	event: ['() => ', ';'] as [string, string],
+	generic: ['<', '>() => {};'] as [string, string],
 };
 
 const plugin: VueLanguagePlugin = ctx => {
@@ -71,7 +72,18 @@ const plugin: VueLanguagePlugin = ctx => {
 		return data;
 
 		function visit(node: CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode) {
-			if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
+			if (node.type === CompilerDOM.NodeTypes.COMMENT) {
+				const match = node.loc.source.match(/^<!--\s*@vue-generic\b\s*\{(?<content>[^}]*)\}/);
+				if (match) {
+					const { content } = match.groups ?? {};
+					addFormatCodes(
+						content,
+						node.loc.start.offset + match[0].indexOf(content),
+						formatBrackets.generic
+					);
+				}
+			}
+			else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 				for (const prop of node.props) {
 					if (prop.type !== CompilerDOM.NodeTypes.DIRECTIVE) {
 						continue;
@@ -137,7 +149,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					const start = leftExpressionRange.start;
 					const end = source.loc.start.offset + source.content.length;
 					addFormatCodes(
-						templateContent.substring(start, end),
+						templateContent.slice(start, end),
 						start,
 						formatBrackets.for
 					);

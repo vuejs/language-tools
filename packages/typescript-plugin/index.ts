@@ -1,8 +1,8 @@
 import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
+import type * as ts from 'typescript';
 import { proxyLanguageServiceForVue } from './lib/common';
 import { startNamedPipeServer } from './lib/server';
-import type * as ts from 'typescript';
 
 const windowsPathReg = /\\/g;
 const vueCompilerOptions = new WeakMap<ts.server.Project, vue.VueCompilerOptions>();
@@ -33,7 +33,7 @@ const plugin = createLanguageServicePlugin(
 				const timer = setInterval(() => {
 					if (info.project['program']) {
 						clearInterval(timer);
-						(info.project['program'] as any).__vue__ = { language };
+						info.project['program'].__vue__ = { language };
 					}
 				}, 50);
 			}

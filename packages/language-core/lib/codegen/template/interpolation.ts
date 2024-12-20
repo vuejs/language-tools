@@ -1,20 +1,24 @@
-import { isGloballyWhitelisted } from '@vue/shared';
+import { isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 import { getNodeText, getStartEnd } from '../../parsers/scriptSetupRanges';
 import type { Code, VueCodeInformation } from '../../types';
-import { collectVars, createTsAst } from '../common';
+import { collectVars, createTsAst } from '../utils';
 import type { TemplateCodegenContext } from './context';
-import type { TemplateCodegenOptions } from './index';
 
 export function* generateInterpolation(
-	options: TemplateCodegenOptions,
+	options: {
+		ts: typeof ts,
+		destructuredPropNames: Set<string> | undefined,
+		templateRefNames: Set<string> | undefined
+	},
 	ctx: TemplateCodegenContext,
-	_code: string,
-	astHolder: any,
-	start: number | undefined,
+	source: string,
 	data: VueCodeInformation | ((offset: number) => VueCodeInformation) | undefined,
-	prefix: string,
-	suffix: string
+	_code: string,
+	start: number | undefined,
+	astHolder: any = {},
+	prefix: string = '',
+	suffix: string = ''
 ): Generator<Code> {
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
@@ -35,12 +39,12 @@ export function* generateInterpolation(
 			let addSuffix = '';
 			const overLength = offset + section.length - _code.length;
 			if (overLength > 0) {
-				addSuffix = section.substring(section.length - overLength);
-				section = section.substring(0, section.length - overLength);
+				addSuffix = section.slice(section.length - overLength);
+				section = section.slice(0, -overLength);
 			}
 			if (offset < 0) {
-				yield section.substring(0, -offset);
-				section = section.substring(-offset);
+				yield section.slice(0, -offset);
+				section = section.slice(-offset);
 				offset = 0;
 			}
 			const shouldSkip = section.length === 0 && (type === 'startText' || type === 'endText');
@@ -51,7 +55,7 @@ export function* generateInterpolation(
 				) {
 					yield [
 						section,
-						'template',
+						source,
 						start + offset,
 						type === 'errorMappingOnly'
 							? ctx.codeFeatures.verification
@@ -67,7 +71,7 @@ export function* generateInterpolation(
 	}
 }
 
-export function* forEachInterpolationSegment(
+function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
@@ -87,7 +91,7 @@ export function* forEachInterpolationSegment(
 		if (
 			ctx.hasLocalVariable(text) ||
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
-			isGloballyWhitelisted(text) ||
+			isGloballyAllowed(text) ||
 			text === 'require' ||
 			text.startsWith('__VLS_')
 		) {
@@ -117,11 +121,11 @@ export function* forEachInterpolationSegment(
 	if (ctxVars.length) {
 
 		if (ctxVars[0].isShorthand) {
-			yield [code.substring(0, ctxVars[0].offset + ctxVars[0].text.length), 0];
+			yield [code.slice(0, ctxVars[0].offset + ctxVars[0].text.length), 0];
 			yield [': ', undefined];
 		}
 		else if (ctxVars[0].offset > 0) {
-			yield [code.substring(0, ctxVars[0].offset), 0, 'startText'];
+			yield [code.slice(0, ctxVars[0].offset), 0, 'startText'];
 		}
 
 		for (let i = 0; i < ctxVars.length - 1; i++) {
@@ -131,18 +135,18 @@ export function* forEachInterpolationSegment(
 			yield* generateVar(code, destructuredPropNames, templateRefNames, curVar, nextVar);
 
 			if (nextVar.isShorthand) {
-				yield [code.substring(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
+				yield [code.slice(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
 				yield [': ', undefined];
 			}
 			else {
-				yield [code.substring(curVar.offset + curVar.text.length, nextVar.offset), curVar.offset + curVar.text.length];
+				yield [code.slice(curVar.offset + curVar.text.length, nextVar.offset), curVar.offset + curVar.text.length];
 			}
 		}
 
 		const lastVar = ctxVars.at(-1)!;
 		yield* generateVar(code, destructuredPropNames, templateRefNames, lastVar);
 		if (lastVar.offset + lastVar.text.length < code.length) {
-			yield [code.substring(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length, 'endText'];
+			yield [code.slice(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length, 'endText'];
 		}
 	}
 	else {
@@ -173,14 +177,14 @@ function* generateVar(
 	const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
 	if (isTemplateRef) {
 		yield [`__VLS_unref(`, undefined];
-		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
+		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 		yield [`)`, undefined];
 	}
 	else {
 		if (!isDestructuredProp) {
 			yield [`__VLS_ctx.`, undefined];
 		}
-		yield [code.substring(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
+		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 	}
 }
 

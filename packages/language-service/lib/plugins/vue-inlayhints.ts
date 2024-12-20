@@ -1,10 +1,9 @@
-import type { LanguageServicePluginInstance } from '@volar/language-service';
 import { tsCodegen, VueVirtualCode } from '@vue/language-core';
+import { collectIdentifiers } from '@vue/language-core/lib/codegen/utils/index';
+import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import type { LanguageServicePlugin } from '../types';
-import type * as ts from 'typescript';
-import { collectIdentifiers } from '@vue/language-core/lib/codegen/common';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
@@ -12,7 +11,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 		capabilities: {
 			inlayHintProvider: {},
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			return {
 				async provideInlayHints(document, range) {
 
@@ -31,12 +30,16 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						];
 						const scriptSetupRanges = codegen?.scriptSetupRanges.get();
 
-						if (scriptSetupRanges?.props.destructured && virtualCode._sfc.scriptSetup?.ast) {
+						if (scriptSetupRanges?.defineProps?.destructured && virtualCode._sfc.scriptSetup?.ast) {
 							const setting = 'vue.inlayHints.destructuredProps';
 							settings[setting] ??= await context.env.getConfiguration?.<boolean>(setting) ?? false;
 
 							if (settings[setting]) {
-								for (const [prop, isShorthand] of findDestructuredProps(ts, virtualCode._sfc.scriptSetup.ast, scriptSetupRanges.props.destructured)) {
+								for (const [prop, isShorthand] of findDestructuredProps(
+									ts,
+									virtualCode._sfc.scriptSetup.ast,
+									scriptSetupRanges.defineProps.destructured
+								)) {
 									const name = prop.text;
 									const end = prop.getEnd();
 									const pos = isShorthand ? end : end - name.length;
