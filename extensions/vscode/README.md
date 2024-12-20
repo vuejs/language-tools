@@ -259,13 +259,13 @@ Finally you need to make VS Code recognize your new extension and automatically 
 
 <!-- commands -->
 
-| Command                        | Title                                                   |
-| ------------------------------ | ------------------------------------------------------- |
-| `vue.action.restartServer`     | Vue: Restart Vue and TS servers                         |
-| `vue.action.doctor`            | Vue: Doctor                                             |
-| `vue.action.writeVirtualFiles` | Vue (Debug): Write Virtual Files                        |
-| `vue.action.splitEditors`      | Vue: Split `<script>`, `<template>`, `<style>` Editors  |
-| `vue.findAllFileReferences`    | Vue: Find File References via Vue Language Server       |
+| Command                        | Title                                                  |
+| ------------------------------ | ------------------------------------------------------ |
+| `vue.action.restartServer`     | Vue: Restart Vue and TS servers                        |
+| `vue.action.doctor`            | Vue: Doctor                                            |
+| `vue.action.writeVirtualFiles` | Vue (Debug): Write Virtual Files                       |
+| `vue.action.splitEditors`      | Vue: Split &lt;script&gt;, <template>, <style> Editors |
+| `vue.findAllFileReferences`    | Vue: Find File References via Vue Language Server      |
 
 <!-- commands -->
 
@@ -292,7 +292,7 @@ Finally you need to make VS Code recognize your new extension and automatically 
 | `vue.complete.casing.props`           | Preferred attr name case.                                                                                                                                          | `string`         | `"autoKebab"`                       |
 | `vue.complete.defineAssignment`       | Auto add `const props = ` before `defineProps` when selecting the completion item `props`. (also `emit` and `slots`)                                               | `boolean`        | `true`                              |
 | `vue.autoInsert.dotValue`             | Auto-complete Ref value with `.value`.                                                                                                                             | `boolean`        | `false`                             |
-| `vue.autoInsert.bracketSpacing`       | Auto add space between double curly brackets: <code>{{&vert;}}</code> -> <code>{{ &vert; }}</code>                                                                 | `boolean`        | `true`                              |
+| `vue.autoInsert.bracketSpacing`       | Auto add space between double curly brackets: {{&vert;}} -&gt; {{ | }}                                                                                             | `boolean`        | `true`                              |
 | `vue.inlayHints.destructuredProps`    | Show inlay hints for destructured props.                                                                                                                           | `boolean`        | `false`                             |
 | `vue.inlayHints.missingProps`         | Show inlay hints for missing required props.                                                                                                                       | `boolean`        | `false`                             |
 | `vue.inlayHints.inlineHandlerLeading` | Show inlay hints for event argument in inline handlers.                                                                                                            | `boolean`        | `false`                             |
