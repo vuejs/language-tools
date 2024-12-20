@@ -252,7 +252,9 @@ export function create(
 								? tagName
 								: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 							if (checkTag) {
-								componentProps[checkTag] ??= (await tsPluginClient?.getComponentProps(root.fileName, checkTag, true) ?? []).map(prop => prop.name);
+								componentProps[checkTag] ??= (await tsPluginClient?.getComponentProps(root.fileName, checkTag) ?? [])
+									.filter(prop => prop.required)
+									.map(prop => prop.name);
 								current = {
 									unburnedRequiredProps: [...componentProps[checkTag]],
 									labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -487,7 +489,7 @@ export function create(
 				const promises: Promise<void>[] = [];
 				const tagInfos = new Map<string, {
 					attrs: string[];
-					propsInfo: { name: string, commentMarkdown: string; }[];
+					propsInfo: { name: string, commentMarkdown?: string; }[];
 					events: string[];
 				}>();
 
@@ -1028,7 +1030,7 @@ function parseLabel(label: string) {
 	return {
 		name,
 		leadingSlash
-	}
+	};
 }
 
 function generateItemKey(type: InternalItemId, tag: string, prop: string) {

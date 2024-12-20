@@ -35,7 +35,8 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
-	ctx.addLocalVariable('$attrs');
+	// TODO: circular reference
+	// ctx.addLocalVariable('$attrs');
 	ctx.addLocalVariable(getSlotsPropertyName(options.vueCompilerOptions.target));
 	ctx.addLocalVariable('$refs');
 	ctx.addLocalVariable('$el');
@@ -139,7 +140,7 @@ function* generatePreResolveComponents(options: TemplateCodegenOptions): Generat
 				}
 				components.add(node.tag);
 				yield newLine;
-				yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+				yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', __VLS_LocalComponents, `;
 				yield getPossibleOriginalComponentNames(node.tag, false)
 					.map(name => `'${name}'`)
 					.join(', ');
