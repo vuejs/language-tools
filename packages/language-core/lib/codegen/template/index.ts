@@ -7,7 +7,7 @@ import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
 import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
-import { generateStyleScopedClasses } from './styleScopedClasses';
+import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild, getVForNode } from './templateChild';
 
 export interface TemplateCodegenOptions {
@@ -35,7 +35,8 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
-	ctx.addLocalVariable('$attrs');
+	// TODO: circular reference
+	// ctx.addLocalVariable('$attrs');
 	ctx.addLocalVariable(getSlotsPropertyName(options.vueCompilerOptions.target));
 	ctx.addLocalVariable('$refs');
 	ctx.addLocalVariable('$el');
@@ -46,7 +47,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		yield* generateTemplateChild(options, ctx, options.template.ast, undefined, undefined, undefined);
 	}
 
-	yield* generateStyleScopedClasses(ctx);
+	yield* generateStyleScopedClassReferences(ctx);
 	yield* generateSlots(options, ctx);
 	yield* generateInheritedAttrs(ctx);
 	yield* generateRefs(ctx);
@@ -139,7 +140,7 @@ function* generatePreResolveComponents(options: TemplateCodegenOptions): Generat
 				}
 				components.add(node.tag);
 				yield newLine;
-				yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+				yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', __VLS_LocalComponents, `;
 				yield getPossibleOriginalComponentNames(node.tag, false)
 					.map(name => `'${name}'`)
 					.join(', ');

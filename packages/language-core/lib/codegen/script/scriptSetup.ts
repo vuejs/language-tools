@@ -17,7 +17,6 @@ export function* generateScriptSetupImports(
 		0,
 		codeFeatures.all,
 	];
-	yield newLine;
 }
 
 export function* generateScriptSetup(
@@ -26,8 +25,6 @@ export function* generateScriptSetup(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	const definePropMirrors = new Map<string, number>();
-
 	if (scriptSetup.generic) {
 		if (!options.scriptRanges?.exportDefault) {
 			if (options.sfc.scriptSetup) {
@@ -56,7 +53,7 @@ export function* generateScriptSetup(
 			+ `	__VLS_ctx?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
 			+ `	__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],${newLine}`
 			+ `	__VLS_setup = (async () => {${newLine}`;
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined, definePropMirrors);
+		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined);
 
 		const emitTypes: string[] = [];
 
@@ -68,7 +65,7 @@ export function* generateScriptSetup(
 		}
 
 		yield `return {} as {${newLine}`
-			+ `	props: ${ctx.localTypes.PrettifyLocal}<typeof __VLS_functionalComponentProps & __VLS_TemplateResult['attrs'] & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
+			+ `	props: ${ctx.localTypes.PrettifyLocal}<__VLS_OwnProps & __VLS_PublicProps & __VLS_TemplateResult['attrs']> & __VLS_BuiltInPublicProps,${newLine}`
 			+ `	expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.defineExpose ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
 			+ `	attrs: any,${newLine}`
 			+ `	slots: __VLS_TemplateResult['slots'],${newLine}`
@@ -79,33 +76,15 @@ export function* generateScriptSetup(
 	}
 	else if (!options.sfc.script) {
 		// no script block, generate script setup code at root
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default', definePropMirrors);
+		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default');
 	}
 	else {
 		if (!options.scriptRanges?.exportDefault) {
 			yield `export default `;
 		}
 		yield `await (async () => {${newLine}`;
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'return', definePropMirrors);
+		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'return');
 		yield `})()`;
-	}
-
-	if (ctx.scriptSetupGeneratedOffset !== undefined) {
-		for (const defineProp of scriptSetupRanges.defineProp) {
-			if (!defineProp.localName) {
-				continue;
-			}
-			const [_, localName] = getPropAndLocalName(scriptSetup, defineProp);
-			const propMirror = definePropMirrors.get(localName!);
-			if (propMirror !== undefined) {
-				options.linkedCodeMappings.push({
-					sourceOffsets: [defineProp.localName.start + ctx.scriptSetupGeneratedOffset],
-					generatedOffsets: [propMirror],
-					lengths: [defineProp.localName.end - defineProp.localName.start],
-					data: undefined,
-				});
-			}
-		}
 	}
 }
 
@@ -114,19 +93,8 @@ function* generateSetupFunction(
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
-	syntax: 'return' | 'export default' | undefined,
-	definePropMirrors: Map<string, number>
+	syntax: 'return' | 'export default' | undefined
 ): Generator<Code> {
-	if (options.vueCompilerOptions.target >= 3.3) {
-		yield `const { `;
-		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!ctx.bindingNames.has(macro) && macro !== 'templateRef') {
-				yield macro + `, `;
-			}
-		}
-		yield `} = await import('${options.vueCompilerOptions.lib}')${endOfLine}`;
-	}
-
 	ctx.scriptSetupGeneratedOffset = options.getGeneratedLength() - scriptSetupRanges.importSectionEndOffset;
 
 	let setupCodeModifies: [Code[], number, number][] = [];
@@ -202,17 +170,18 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	for (const { callExp } of scriptSetupRanges.useAttrs) {
-		setupCodeModifies.push([
-			[`(`],
-			callExp.start,
-			callExp.start
-		], [
-			[` as __VLS_TemplateResult['attrs'] & Record<string, unknown>)`],
-			callExp.end,
-			callExp.end
-		]);
-	}
+	// TODO: circular reference
+	// for (const { callExp } of scriptSetupRanges.useAttrs) {
+	// 	setupCodeModifies.push([
+	// 		[`(`],
+	// 		callExp.start,
+	// 		callExp.start
+	// 	], [
+	// 		[` as __VLS_TemplateResult['attrs'] & Record<string, unknown>)`],
+	// 		callExp.end,
+	// 		callExp.end
+	// 	]);
+	// }
 	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
 		setupCodeModifies.push([
 			[`(`],
@@ -247,17 +216,19 @@ function* generateSetupFunction(
 	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
 	for (const { callExp, exp, arg } of scriptSetupRanges.useTemplateRef) {
-		const templateRefType = arg ? [
-			`__VLS_TemplateResult['refs'][`,
-			generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation),
-			`]`
-		] : [`unknown`];
+		const templateRefType = arg
+			? [
+				`__VLS_TemplateResult['refs'][`,
+				generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+				`]`
+			]
+			: [`unknown`];
 		if (isTs) {
 			setupCodeModifies.push([
 				[
 					`<`,
 					...templateRefType,
-					`, keyof __VLS_TemplateResult['refs']>`
+					`>`
 				],
 				exp.end,
 				exp.end
@@ -278,6 +249,13 @@ function* generateSetupFunction(
 				callExp.end
 			]);
 		}
+		if (arg) {
+			setupCodeModifies.push([
+				[`(__VLS_placeholder)`],
+				arg.start,
+				arg.end
+			]);
+		}
 	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
@@ -292,6 +270,8 @@ function* generateSetupFunction(
 	yield generateSfcBlockSection(scriptSetup, nextStart, scriptSetup.content.length, codeFeatures.all);
 
 	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
+	yield* generateMacros(options, ctx);
+	yield* generateDefineProp(options);
 
 	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
@@ -305,7 +285,7 @@ function* generateSetupFunction(
 		yield `)${endOfLine}`;
 	}
 
-	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
+	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* generateModelEmit(scriptSetup, scriptSetupRanges);
 	yield `function __VLS_template() {${newLine}`;
 	const templateCodegenCtx = yield* generateTemplate(options, ctx);
@@ -325,6 +305,39 @@ function* generateSetupFunction(
 			yield `${syntax} `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
+		}
+	}
+}
+
+function* generateMacros(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext
+): Generator<Code> {
+	if (options.vueCompilerOptions.target >= 3.3) {
+		yield `declare const { `;
+		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
+			if (!ctx.bindingNames.has(macro)) {
+				yield `${macro}, `;
+			}
+		}
+		yield `}: typeof import('${options.vueCompilerOptions.lib}')${endOfLine}`;
+	}
+}
+
+function* generateDefineProp(options: ScriptCodegenOptions): Generator<Code> {
+	const definePropProposalA = options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+	const definePropProposalB = options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
+
+	if (definePropProposalA || definePropProposalB) {
+		yield `type __VLS_PropOptions<T> = Exclude<import('${options.vueCompilerOptions.lib}').Prop<T>, import('${options.vueCompilerOptions.lib}').PropType<T>>${endOfLine}`;
+		if (definePropProposalA) {
+			yield `declare function defineProp<T>(name: string, options: ({ required: true } | { default: T }) & __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
+			yield `declare function defineProp<T>(name?: string, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
+		}
+		if (definePropProposalB) {
+			yield `declare function defineProp<T>(value: T | (() => T), required?: boolean, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
+			yield `declare function defineProp<T>(value: T | (() => T) | undefined, required: true, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
+			yield `declare function defineProp<T>(value?: T | (() => T), required?: boolean, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
 		}
 	}
 }
@@ -378,59 +391,63 @@ function* generateComponentProps(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges,
-	definePropMirrors: Map<string, number>
+	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	yield `const __VLS_fnComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
+	if (scriptSetup.generic) {
+		yield `const __VLS_fnComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 
-	if (scriptSetupRanges.defineProps?.arg) {
-		yield `props: `;
-		yield generateSfcBlockSection(
-			scriptSetup,
-			scriptSetupRanges.defineProps.arg.start,
-			scriptSetupRanges.defineProps.arg.end,
-			codeFeatures.navigation
-		);
-		yield `,${newLine}`;
+		if (scriptSetupRanges.defineProps?.arg) {
+			yield `props: `;
+			yield generateSfcBlockSection(
+				scriptSetup,
+				scriptSetupRanges.defineProps.arg.start,
+				scriptSetupRanges.defineProps.arg.end,
+				codeFeatures.navigation
+			);
+			yield `,${newLine}`;
+		}
+
+		yield* generateEmitsOption(options, scriptSetupRanges);
+
+		yield `})${endOfLine}`;
+
+		yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
+			? `import('${options.vueCompilerOptions.lib}').PublicProps`
+			: options.vueCompilerOptions.target >= 3.0
+				? `import('${options.vueCompilerOptions.lib}').VNodeProps`
+				+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
+				+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
+				: `globalThis.JSX.IntrinsicAttributes`
+			}`;
+		yield endOfLine;
+
+		yield `type __VLS_OwnProps = `;
+		yield `${ctx.localTypes.OmitKeepDiscriminatedUnion}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
+		yield endOfLine;
 	}
-
-	yield* generateEmitsOption(options, scriptSetupRanges);
-
-	yield `})${endOfLine}`;
-
-	yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
-		? `import('${options.vueCompilerOptions.lib}').PublicProps`
-		: options.vueCompilerOptions.target >= 3.0
-			? `import('${options.vueCompilerOptions.lib}').VNodeProps`
-			+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
-			+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
-			: `globalThis.JSX.IntrinsicAttributes`
-		}`;
-	yield endOfLine;
-
-	yield `let __VLS_functionalComponentProps!: `;
-	yield `${ctx.localTypes.OmitKeepDiscriminatedUnion}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
-	yield endOfLine;
 
 	if (scriptSetupRanges.defineProp.length) {
 		yield `const __VLS_defaults = {${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
-			if (defineProp.defaultValue) {
-				const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
-
-				if (defineProp.name || defineProp.isModel) {
-					yield propName!;
-				}
-				else if (defineProp.localName) {
-					yield localName!;
-				}
-				else {
-					continue;
-				}
-				yield `: `;
-				yield getRangeName(scriptSetup, defineProp.defaultValue);
-				yield `,${newLine}`;
+			if (!defineProp.defaultValue) {
+				continue;
 			}
+
+			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
+
+			if (defineProp.name || defineProp.isModel) {
+				yield `'${propName}'`;
+			}
+			else if (defineProp.localName) {
+				yield localName!;
+			}
+			else {
+				continue;
+			}
+
+			yield `: `;
+			yield getRangeName(scriptSetup, defineProp.defaultValue);
+			yield `,${newLine}`;
 		}
 		yield `}${endOfLine}`;
 	}
@@ -456,12 +473,10 @@ function* generateComponentProps(
 				yield propName!;
 			}
 			else if (defineProp.name) {
-				// renaming support
 				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.navigation);
 			}
 			else if (defineProp.localName) {
-				definePropMirrors.set(localName!, options.getGeneratedLength());
-				yield localName!;
+				yield generateSfcBlockSection(scriptSetup, defineProp.localName.start, defineProp.localName.end, codeFeatures.navigation);
 			}
 			else {
 				continue;
@@ -474,13 +489,9 @@ function* generateComponentProps(
 			yield `,${newLine}`;
 
 			if (defineProp.modifierType) {
-				let propModifierName = 'modelModifiers';
-				if (defineProp.name) {
-					propModifierName = `${getRangeName(scriptSetup, defineProp.name, true)}Modifiers`;
-				}
+				const modifierName = `${defineProp.name ? propName : 'model'}Modifiers`;
 				const modifierType = getRangeName(scriptSetup, defineProp.modifierType);
-				definePropMirrors.set(propModifierName, options.getGeneratedLength());
-				yield `${propModifierName}?: Partial<Record<${modifierType}, true>>,${endOfLine}`;
+				yield `'${modifierName}'?: Partial<Record<${modifierType}, true>>,${newLine}`;
 			}
 		}
 		yield `}`;
@@ -554,14 +565,12 @@ function getPropAndLocalName(
 	if (defineProp.name) {
 		propName = propName!.replace(/['"]+/g, '');
 	}
-	return [propName, localName];
+	return [propName, localName] as const;
 }
 
 function getRangeName(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	range: TextRange,
-	unwrap = false
+	range: TextRange
 ) {
-	const offset = unwrap ? 1 : 0;
-	return scriptSetup.content.slice(range.start + offset, range.end - offset);
+	return scriptSetup.content.slice(range.start, range.end);
 }

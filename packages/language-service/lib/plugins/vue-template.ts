@@ -242,7 +242,9 @@ export function create(
 									? tagName
 									: components.find(component => component === tagName || hyphenateTag(component) === tagName);
 								if (checkTag) {
-									componentProps[checkTag] ??= (await tsPluginClient?.getComponentProps(code.fileName, checkTag, true) ?? []).map(prop => prop.name);
+									componentProps[checkTag] ??= (await tsPluginClient?.getComponentProps(code.fileName, checkTag) ?? [])
+										.filter(prop => prop.required)
+										.map(prop => prop.name);
 									current = {
 										unburnedRequiredProps: [...componentProps[checkTag]],
 										labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
@@ -469,7 +471,7 @@ export function create(
 				const promises: Promise<void>[] = [];
 				const tagInfos = new Map<string, {
 					attrs: string[];
-					propsInfo: { name: string, commentMarkdown: string; }[];
+					propsInfo: { name: string, commentMarkdown?: string; }[];
 					events: string[];
 				}>();
 
@@ -516,7 +518,7 @@ export function create(
 							}
 
 							for (const binding of scriptSetupRanges?.bindings ?? []) {
-								const name = vueCode._sfc.scriptSetup!.content.slice(binding.start, binding.end);
+								const name = vueCode._sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}
@@ -568,8 +570,12 @@ export function create(
 									return [];
 								}
 								let ctxVars = [
-									..._tsCodegen.scriptRanges.get()?.bindings.map(binding => vueCode._sfc.script!.content.slice(binding.start, binding.end)) ?? [],
-									..._tsCodegen.scriptSetupRanges.get()?.bindings.map(binding => vueCode._sfc.scriptSetup!.content.slice(binding.start, binding.end)) ?? [],
+									..._tsCodegen.scriptRanges.get()?.bindings.map(
+										({ range }) => vueCode._sfc.script!.content.slice(range.start, range.end)
+									) ?? [],
+									..._tsCodegen.scriptSetupRanges.get()?.bindings.map(
+										({ range }) => vueCode._sfc.scriptSetup!.content.slice(range.start, range.end)
+									) ?? [],
 									...templateContextProps,
 								];
 								ctxVars = [...new Set(ctxVars)];
@@ -1006,7 +1012,7 @@ function parseLabel(label: string) {
 	return {
 		name,
 		leadingSlash
-	}
+	};
 }
 
 function generateItemKey(type: InternalItemId, tag: string, prop: string) {
