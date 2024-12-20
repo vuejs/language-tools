@@ -44,7 +44,7 @@ export async function getComponentProps(fileName: string, componentName: string)
 	if (!server) {
 		return;
 	}
-	const componentAndProps = await server.getAllComponentAndProps(fileName);
+	const componentAndProps = await server.componentNamesAndProps.get(fileName);
 	if (!componentAndProps) {
 		return;
 	}
@@ -74,7 +74,7 @@ export async function getComponentNames(fileName: string) {
 	if (!server) {
 		return;
 	}
-	const componentAndProps = await server.getAllComponentAndProps(fileName);
+	const componentAndProps = server.componentNamesAndProps.get(fileName);
 	if (!componentAndProps) {
 		return;
 	}

@@ -29,7 +29,11 @@ class NamedPipeServer {
 	connecting = false;
 	projectInfo?: ProjectInfo;
 	containsFileCache = new Map<string, Promise<boolean | undefined | null>>();
-	componentNamesCache = new Map<string, any>();
+	componentNamesAndProps = new Map<string, Record<string, {
+		name: string;
+		required?: true;
+		commentMarkdown?: string;
+	}[]>>();
 
 	constructor(kind: ts.server.ProjectKind, id: number) {
 		this.path = getServerPath(kind, id);
@@ -48,26 +52,6 @@ class NamedPipeServer {
 				})());
 			}
 			return this.containsFileCache.get(fileName);
-		}
-	}
-
-	getAllComponentAndProps(fileName: string) {
-		if (this.projectInfo) {
-			if (!this.componentNamesCache.has(fileName)) {
-				this.componentNamesCache.set(fileName, (async () => {
-					const res = await this.request('subscribeAllComponentAndProps', fileName);
-					if (!res) {
-						// If the request fails, delete the cache
-						this.componentNamesCache.delete(fileName);
-					}
-					return res;
-				})());
-			}
-			return this.componentNamesCache.get(fileName) as Promise<Record<string, {
-				name: string;
-				required?: true;
-				commentMarkdown?: string;
-			}[]>>;
 		}
 	}
 
@@ -148,7 +132,7 @@ class NamedPipeServer {
 	onNotification(type: NotificationData[0], fileName: string, data: any) {
 		// console.log(`[${type}] ${fileName} ${JSON.stringify(data)}`);
 		if (type === 'componentAndPropsUpdated') {
-			this.componentNamesCache.set(fileName, data);
+			this.componentNamesAndProps.set(fileName, data);
 		}
 	}
 

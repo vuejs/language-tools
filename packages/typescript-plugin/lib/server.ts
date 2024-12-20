@@ -20,8 +20,7 @@ export type RequestType = 'containsFile'
 	| 'getComponentProps'
 	| 'getComponentEvents'
 	| 'getTemplateContextProps'
-	| 'getElementAttrs'
-	| 'subscribeAllComponentAndProps';
+	| 'getElementAttrs';
 
 export type RequestData = [
 	seq: number,
@@ -53,7 +52,7 @@ export async function startNamedPipeServer(
 	language: Language<string>,
 	projectKind: ts.server.ProjectKind.Inferred | ts.server.ProjectKind.Configured
 ) {
-	let lastProjectVersion = info.project.getProjectVersion();
+	let lastProjectVersion: string | undefined;
 
 	const requestContext: RequestContext = {
 		typescript: ts,
@@ -64,8 +63,14 @@ export async function startNamedPipeServer(
 		getFileId: (fileName: string) => fileName,
 	};
 	const dataChunks: Buffer[] = [];
-	const componentNamesSubscriptions = new Map<string, [ReturnType<typeof getComponentAndProps> | Awaited<ReturnType<typeof getComponentAndProps>>, Set<net.Socket>]>();
+	const componentNamesAndProps = new Map<string, string>();
+	const allConnections = new Set<net.Socket>();
 	const server = net.createServer(connection => {
+		allConnections.add(connection);
+
+		connection.on('end', () => {
+			allConnections.delete(connection);
+		});
 		connection.on('data', buffer => {
 			dataChunks.push(buffer);
 			const text = dataChunks.toString();
@@ -86,6 +91,10 @@ export async function startNamedPipeServer(
 			}
 		});
 		connection.on('error', err => console.error('[Vue Named Pipe Server]', err.message));
+
+		for (const [fileName, data] of componentNamesAndProps) {
+			notify(connection, 'componentAndPropsUpdated', fileName, data);
+		}
 	});
 
 	for (let i = 0; i < 10; i++) {
@@ -108,43 +117,60 @@ export async function startNamedPipeServer(
 
 	async function updateWhile() {
 		while (true) {
-			const projectVersion = info.project.getProjectVersion();
-			if (lastProjectVersion !== projectVersion) {
-				lastProjectVersion = projectVersion;
-				await onProjectUpdate();
-			}
 			await sleep(500);
-		}
-	}
-
-	async function onProjectUpdate() {
-		const token = info.languageServiceHost.getCancellationToken?.();
-
-		for (const [fileName, [oldData, subscriptions]] of componentNamesSubscriptions) {
-			const connections = [...subscriptions].filter(connection => !connection.destroyed);
+			const projectVersion = info.project.getProjectVersion();
+			if (lastProjectVersion === projectVersion) {
+				continue;
+			}
+			const connections = [...allConnections].filter(c => !c.destroyed);
 			if (!connections.length) {
 				continue;
 			}
-			const script = info.project.getScriptInfo(fileName);
-			if (!script?.isScriptOpen()) {
+			const token = info.languageServiceHost.getCancellationToken?.();
+			const openedScriptInfos = info.project.getRootScriptInfos().filter(info => info.isScriptOpen());
+			if (!openedScriptInfos.length) {
 				continue;
 			}
-			await sleep(10);
-			if (token?.isCancellationRequested()) {
-				return;
-			}
-			const newData = await getComponentAndProps.apply(requestContext, [fileName, token]);
-			if (token?.isCancellationRequested()) {
-				return;
-			}
-			if (JSON.stringify(oldData) !== JSON.stringify(newData)) {
-				// Update cache
-				componentNamesSubscriptions.set(fileName, [newData, subscriptions]);
-				// Notify
-				for (const connection of connections) {
-					notify(connection, 'componentAndPropsUpdated', fileName, newData);
+			for (const scriptInfo of openedScriptInfos) {
+				await sleep(10);
+				if (token?.isCancellationRequested()) {
+					break;
+				}
+				let newData: Record<string, {
+					name: string;
+					required?: true;
+					commentMarkdown?: string;
+				}[]> | undefined = {};
+				const componentNames = getComponentNames.apply(requestContext, [scriptInfo.fileName]);
+				// const testProps = getComponentProps.apply(requestContext, [scriptInfo.fileName, 'HelloWorld']);
+				// debugger;
+				for (const component of componentNames ?? []) {
+					await sleep(10);
+					if (token?.isCancellationRequested()) {
+						newData = undefined;
+						break;
+					}
+					const props = getComponentProps.apply(requestContext, [scriptInfo.fileName, component]);
+					if (props) {
+						newData[component] = props;
+					}
+				}
+				if (!newData) {
+					// Canceled
+					break;
+				}
+				const oldDataJson = componentNamesAndProps.get(scriptInfo.fileName);
+				const newDataJson = JSON.stringify(newData);
+				if (oldDataJson !== newDataJson) {
+					// Update cache
+					componentNamesAndProps.set(scriptInfo.fileName, newDataJson);
+					// Notify
+					for (const connection of connections) {
+						notify(connection, 'componentAndPropsUpdated', scriptInfo.fileName, newData);
+					}
 				}
 			}
+			lastProjectVersion = projectVersion;
 		}
 	}
 
@@ -201,16 +227,6 @@ export async function startNamedPipeServer(
 			const result = getElementAttrs.apply(requestContext, args as any);
 			sendResponse(result);
 		}
-		else if (requestType === 'subscribeAllComponentAndProps') {
-			let subscriptions = componentNamesSubscriptions.get(args[0]);
-			if (!subscriptions) {
-				const result = getComponentAndProps.apply(requestContext, args as any);
-				subscriptions = [result, new Set()];
-				componentNamesSubscriptions.set(args[0], subscriptions);
-			}
-			subscriptions[1].add(connection);
-			sendResponse(await subscriptions[0]);
-		}
 		else {
 			console.warn('[Vue Named Pipe Server] Unknown request:', requestType);
 			debugger;
@@ -219,25 +235,6 @@ export async function startNamedPipeServer(
 		function sendResponse(data: any | undefined) {
 			connection.write(JSON.stringify([seq, data ?? null]) + '\n\n');
 		}
-	}
-
-	async function getComponentAndProps(fileName: string, token?: ts.HostCancellationToken) {
-		const result: Record<string, {
-			name: string;
-			required?: true;
-			commentMarkdown?: string;
-		}[]> = {};
-		for (const component of getComponentNames.apply(requestContext, [fileName]) ?? []) {
-			await sleep(10);
-			if (token?.isCancellationRequested()) {
-				return;
-			}
-			const props = getComponentProps.apply(requestContext, [fileName, component]);
-			if (props) {
-				result[component] = props;
-			}
-		}
-		return result;
 	}
 }
 
