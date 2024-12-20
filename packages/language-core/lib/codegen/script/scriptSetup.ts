@@ -271,7 +271,7 @@ function* generateSetupFunction(
 
 	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
 	yield* generateMacros(options, ctx);
-	yield* generateDefineProp(options, scriptSetup);
+	yield* generateDefineProp(options);
 
 	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
@@ -324,12 +324,9 @@ function* generateMacros(
 	}
 }
 
-function* generateDefineProp(
-	options: ScriptCodegenOptions,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>
-): Generator<Code> {
-	const definePropProposalA = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
-	const definePropProposalB = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
+function* generateDefineProp(options: ScriptCodegenOptions): Generator<Code> {
+	const definePropProposalA = options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+	const definePropProposalB = options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 
 	if (definePropProposalA || definePropProposalB) {
 		yield `type __VLS_PropOptions<T> = Exclude<import('${options.vueCompilerOptions.lib}').Prop<T>, import('${options.vueCompilerOptions.lib}').PropType<T>>${endOfLine}`;

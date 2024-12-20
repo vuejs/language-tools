@@ -107,8 +107,8 @@ export function create(
 
 			// https://vuejs.org/api/built-in-directives.html#v-on
 			// https://vuejs.org/api/built-in-directives.html#v-bind
-			const eventModifiers: Record<string, string> = {};
-			const propModifiers: Record<string, string> = {};
+			const vOnModifiers: Record<string, string> = {};
+			const vBindModifiers: Record<string, string> = {};
 			const vOn = builtInData.globalAttributes?.find(x => x.name === 'v-on');
 			const vBind = builtInData.globalAttributes?.find(x => x.name === 'v-bind');
 
@@ -119,8 +119,8 @@ export function create(
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
 					text = text.slice('  - `.'.length);
-					const [name, disc] = text.split('` - ');
-					eventModifiers[name] = disc;
+					const [name, desc] = text.split('` - ');
+					vOnModifiers[name] = desc;
 				}
 			}
 			if (vBind) {
@@ -130,8 +130,8 @@ export function create(
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
 					text = text.slice('  - `.'.length);
-					const [name, disc] = text.split('` - ');
-					propModifiers[name] = disc;
+					const [name, desc] = text.split('` - ');
+					vBindModifiers[name] = desc;
 				}
 			}
 
@@ -715,22 +715,27 @@ export function create(
 
 			function afterHtmlCompletion(completionList: vscode.CompletionList, document: TextDocument) {
 
-				const replacement = getReplacement(completionList, document);
+				do {
+					const replacement = getReplacement(completionList, document);
+					if (!replacement) {
+						break;
+					}
 
-				if (replacement) {
-
-					const isEvent = replacement.text.startsWith('v-on:') || replacement.text.startsWith('@');
-					const isProp = replacement.text.startsWith('v-bind:') || replacement.text.startsWith(':');
-					const isModel = replacement.text.startsWith('v-model:') || replacement.text.split('.')[0] === 'v-model';
 					const hasModifier = replacement.text.includes('.');
-					const validModifiers =
-						isEvent ? eventModifiers
-							: isProp ? propModifiers
-								: undefined;
-					const modifiers = replacement.text.split('.').slice(1);
-					const textWithoutModifier = replacement.text.split('.')[0];
+					if (!hasModifier) {
+						break;
+					}
 
-					if (validModifiers && hasModifier) {
+					const [text, ...modifiers] = replacement.text.split('.');
+					const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
+					const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
+					const isVModel = text.startsWith('v-model:') || text === 'v-model';
+					const validModifiers =
+						isVOn ? vOnModifiers
+							: isVBind ? vBindModifiers
+								: undefined;
+
+					if (validModifiers) {
 
 						for (const modifier in validModifiers) {
 
@@ -738,14 +743,14 @@ export function create(
 								continue;
 							}
 
-							const modifierDes = validModifiers[modifier];
-							const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
+							const description = validModifiers[modifier];
+							const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
 							const newItem: html.CompletionItem = {
 								label: modifier,
 								filterText: insertText,
 								documentation: {
 									kind: 'markdown',
-									value: modifierDes,
+									value: description,
 								},
 								textEdit: {
 									range: replacement.textEdit.range,
@@ -757,7 +762,7 @@ export function create(
 							completionList.items.push(newItem);
 						}
 					}
-					else if (hasModifier && isModel) {
+					else if (isVModel) {
 
 						for (const modifier of modelData.globalAttributes ?? []) {
 
@@ -765,7 +770,7 @@ export function create(
 								continue;
 							}
 
-							const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier.name;
+							const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier.name;
 							const newItem: html.CompletionItem = {
 								label: modifier.name,
 								filterText: insertText,
@@ -784,7 +789,7 @@ export function create(
 							completionList.items.push(newItem);
 						}
 					}
-				}
+				} while (0);
 
 				completionList.items = completionList.items.filter(item => !specialTags.has(parseLabel(item.label).name));
 

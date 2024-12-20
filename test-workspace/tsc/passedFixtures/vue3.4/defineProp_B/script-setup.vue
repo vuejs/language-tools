@@ -1,5 +1,6 @@
+<!-- @experimentalDefinePropProposal "johnsonEdition" -->
+
 <script setup lang="ts">
-// @experimentalDefinePropProposal=johnsonEdition
 import { exactType } from '../../shared';
 
 const a = defineProp<string>();
