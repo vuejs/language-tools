@@ -78,8 +78,8 @@ export function parseScriptSetupRanges(
 	const useCssModule: UseCssModule[] = [];
 	const useSlots: UseSlots[] = [];
 	const useTemplateRef: UseTemplateRef[] = [];
-	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
-	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
+	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 	const text = ast.text;
 
 	const leadingCommentRanges = ts.getLeadingCommentRanges(text, 0)?.reverse() ?? [];
@@ -396,6 +396,9 @@ export function parseScriptSetupRanges(
 		}
 
 		ts.forEachChild(node, child => {
+			if (ts.isFunctionLike(node)) {
+				return;
+			}
 			parents.push(node);
 			visitNode(child, parents);
 			parents.pop();

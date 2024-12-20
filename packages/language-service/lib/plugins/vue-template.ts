@@ -107,8 +107,8 @@ export function create(
 
 			// https://vuejs.org/api/built-in-directives.html#v-on
 			// https://vuejs.org/api/built-in-directives.html#v-bind
-			const eventModifiers: Record<string, string> = {};
-			const propModifiers: Record<string, string> = {};
+			const vOnModifiers: Record<string, string> = {};
+			const vBindModifiers: Record<string, string> = {};
 			const vOn = builtInData.globalAttributes?.find(x => x.name === 'v-on');
 			const vBind = builtInData.globalAttributes?.find(x => x.name === 'v-bind');
 
@@ -119,8 +119,8 @@ export function create(
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
 					text = text.slice('  - `.'.length);
-					const [name, disc] = text.split('` - ');
-					eventModifiers[name] = disc;
+					const [name, desc] = text.split('` - ');
+					vOnModifiers[name] = desc;
 				}
 			}
 			if (vBind) {
@@ -130,8 +130,8 @@ export function create(
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
 					text = text.slice('  - `.'.length);
-					const [name, disc] = text.split('` - ');
-					propModifiers[name] = disc;
+					const [name, desc] = text.split('` - ');
+					vBindModifiers[name] = desc;
 				}
 			}
 
@@ -162,14 +162,17 @@ export function create(
 					let sync: (() => Promise<number>) | undefined;
 					let currentVersion: number | undefined;
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					if (sourceScript?.generated?.root instanceof VueVirtualCode) {
+					const root = sourceScript?.generated?.root;
+
+					if (root instanceof VueVirtualCode) {
 
 						// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
 						baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
 
-						sync = (await provideHtmlData(vueCompilerOptions, sourceScript.id, sourceScript.generated.root)).sync;
+						sync = (await provideHtmlData(vueCompilerOptions, sourceScript!.id, root)).sync;
 						currentVersion = await sync();
 					}
 
@@ -211,7 +214,6 @@ export function create(
 						return;
 					}
 
-					const result: vscode.InlayHint[] = [];
 					const uri = URI.parse(document.uri);
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
@@ -220,101 +222,108 @@ export function create(
 						return;
 					}
 
-					const code = context.language.scripts.get(decoded[0])?.generated?.root;
+					const root = sourceScript?.generated?.root;
+					if (!(root instanceof VueVirtualCode)) {
+						return;
+					}
+
 					const scanner = getScanner(baseServiceInstance, document);
+					if (!scanner) {
+						return;
+					}
 
-					if (code instanceof VueVirtualCode && scanner) {
+					const result: vscode.InlayHint[] = [];
 
-						// visualize missing required props
-						const casing = await getNameCasing(context, decoded[0]);
-						const components = await tsPluginClient?.getComponentNames(code.fileName) ?? [];
-						const componentProps: Record<string, string[]> = {};
-						let token: html.TokenType;
-						let current: {
-							unburnedRequiredProps: string[];
-							labelOffset: number;
-							insertOffset: number;
-						} | undefined;
-						while ((token = scanner.scan()) !== html.TokenType.EOS) {
-							if (token === html.TokenType.StartTag) {
-								const tagName = scanner.getTokenText();
-								const checkTag = tagName.includes('.')
-									? tagName
-									: components.find(component => component === tagName || hyphenateTag(component) === tagName);
-								if (checkTag) {
-									componentProps[checkTag] ??= (await tsPluginClient?.getComponentProps(code.fileName, checkTag) ?? [])
-										.filter(prop => prop.required)
-										.map(prop => prop.name);
-									current = {
-										unburnedRequiredProps: [...componentProps[checkTag]],
-										labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
-										insertOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
-									};
+					// visualize missing required props
+					const casing = await getNameCasing(context, decoded[0]);
+					const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+					const componentProps: Record<string, string[]> = {};
+					let token: html.TokenType;
+					let current: {
+						unburnedRequiredProps: string[];
+						labelOffset: number;
+						insertOffset: number;
+					} | undefined;
+
+					while ((token = scanner.scan()) !== html.TokenType.EOS) {
+						if (token === html.TokenType.StartTag) {
+							const tagName = scanner.getTokenText();
+							const checkTag = tagName.includes('.')
+								? tagName
+								: components.find(component => component === tagName || hyphenateTag(component) === tagName);
+							if (checkTag) {
+								componentProps[checkTag] ??= (await tsPluginClient?.getComponentProps(root.fileName, checkTag) ?? [])
+									.filter(prop => prop.required)
+									.map(prop => prop.name);
+								current = {
+									unburnedRequiredProps: [...componentProps[checkTag]],
+									labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
+									insertOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
+								};
+							}
+						}
+						else if (token === html.TokenType.AttributeName) {
+							if (current) {
+								let attrText = scanner.getTokenText();
+
+								if (attrText === 'v-bind') {
+									current.unburnedRequiredProps = [];
+								}
+								else {
+									// remove modifiers
+									if (attrText.includes('.')) {
+										attrText = attrText.split('.')[0];
+									}
+									// normalize
+									if (attrText.startsWith('v-bind:')) {
+										attrText = attrText.slice('v-bind:'.length);
+									}
+									else if (attrText.startsWith(':')) {
+										attrText = attrText.slice(':'.length);
+									}
+									else if (attrText.startsWith('v-model:')) {
+										attrText = attrText.slice('v-model:'.length);
+									}
+									else if (attrText === 'v-model') {
+										attrText = vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
+									}
+									else if (attrText.startsWith('v-on:')) {
+										attrText = 'on-' + hyphenateAttr(attrText.slice('v-on:'.length));
+									}
+									else if (attrText.startsWith('@')) {
+										attrText = 'on-' + hyphenateAttr(attrText.slice('@'.length));
+									}
+
+									current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
+										return attrText !== propName
+											&& attrText !== hyphenateAttr(propName);
+									});
 								}
 							}
-							else if (token === html.TokenType.AttributeName) {
-								if (current) {
-									let attrText = scanner.getTokenText();
-
-									if (attrText === 'v-bind') {
-										current.unburnedRequiredProps = [];
-									}
-									else {
-										// remove modifiers
-										if (attrText.includes('.')) {
-											attrText = attrText.split('.')[0];
-										}
-										// normalize
-										if (attrText.startsWith('v-bind:')) {
-											attrText = attrText.slice('v-bind:'.length);
-										}
-										else if (attrText.startsWith(':')) {
-											attrText = attrText.slice(':'.length);
-										}
-										else if (attrText.startsWith('v-model:')) {
-											attrText = attrText.slice('v-model:'.length);
-										}
-										else if (attrText === 'v-model') {
-											attrText = vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
-										}
-										else if (attrText.startsWith('v-on:')) {
-											attrText = 'on-' + hyphenateAttr(attrText.slice('v-on:'.length));
-										}
-										else if (attrText.startsWith('@')) {
-											attrText = 'on-' + hyphenateAttr(attrText.slice('@'.length));
-										}
-
-										current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
-											return attrText !== propName
-												&& attrText !== hyphenateAttr(propName);
-										});
-									}
+						}
+						else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
+							if (current) {
+								for (const requiredProp of current.unburnedRequiredProps) {
+									result.push({
+										label: `${requiredProp}!`,
+										paddingLeft: true,
+										position: document.positionAt(current.labelOffset),
+										kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
+										textEdits: [{
+											range: {
+												start: document.positionAt(current.insertOffset),
+												end: document.positionAt(current.insertOffset),
+											},
+											newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp}=`,
+										}],
+									});
 								}
+								current = undefined;
 							}
-							else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
-								if (current) {
-									for (const requiredProp of current.unburnedRequiredProps) {
-										result.push({
-											label: `${requiredProp}!`,
-											paddingLeft: true,
-											position: document.positionAt(current.labelOffset),
-											kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
-											textEdits: [{
-												range: {
-													start: document.positionAt(current.insertOffset),
-													end: document.positionAt(current.insertOffset),
-												},
-												newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp}=`,
-											}],
-										});
-									}
-									current = undefined;
-								}
-							}
-							if (token === html.TokenType.AttributeName || token === html.TokenType.AttributeValue) {
-								if (current) {
-									current.insertOffset = scanner.getTokenOffset() + scanner.getTokenLength();
-								}
+						}
+						if (token === html.TokenType.AttributeName || token === html.TokenType.AttributeValue) {
+							if (current) {
+								current.insertOffset = scanner.getTokenOffset() + scanner.getTokenLength();
 							}
 						}
 					}
@@ -341,7 +350,6 @@ export function create(
 						return;
 					}
 
-					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
 					const uri = URI.parse(document.uri);
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
@@ -350,13 +358,14 @@ export function create(
 						return;
 					}
 
-					const code = context.language.scripts.get(decoded[0])?.generated?.root;
-					if (!(code instanceof VueVirtualCode)) {
+					const root = sourceScript?.generated?.root;
+					if (!(root instanceof VueVirtualCode)) {
 						return;
 					}
 
+					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
 					const templateErrors: vscode.Diagnostic[] = [];
-					const { template } = code._sfc;
+					const { template } = root._sfc;
 
 					if (template) {
 
@@ -396,27 +405,34 @@ export function create(
 				},
 
 				provideDocumentSemanticTokens(document, range, legend) {
+
 					if (!isSupportedDocument(document)) {
 						return;
 					}
+
 					if (!context.project.vue) {
 						return;
 					}
 					const vueCompilerOptions = context.project.vue.compilerOptions;
+
 					const languageService = context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService');
 					if (!languageService) {
 						return;
 					}
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					if (
-						!sourceScript
-						|| !(sourceScript.generated?.root instanceof VueVirtualCode)
-						|| !sourceScript.generated.root._sfc.template
-					) {
-						return [];
+					const root = sourceScript?.generated?.root;
+					if (!(root instanceof VueVirtualCode)) {
+						return;
 					}
-					const { template } = sourceScript.generated.root._sfc;
+
+					const { template } = root._sfc;
+					if (!template) {
+						return;
+					}
+
 					const spans = getComponentSpans.call(
 						{
 							files: context.language.scripts,
@@ -424,13 +440,15 @@ export function create(
 							typescript: ts,
 							vueOptions: vueCompilerOptions,
 						},
-						sourceScript.generated.root,
+						root,
 						template,
 						{
 							start: document.offsetAt(range.start),
 							length: document.offsetAt(range.end) - document.offsetAt(range.start),
-						});
+						}
+					);
 					const classTokenIndex = legend.tokenTypes.indexOf('class');
+
 					return spans.map(span => {
 						const start = document.positionAt(span.start);
 						return [
@@ -557,7 +575,11 @@ export function create(
 							}
 
 							const { attrs, propsInfo, events } = tagInfo;
-							const props = propsInfo.map(prop => prop.name);
+							const props = propsInfo.map(prop =>
+								hyphenateTag(prop.name).startsWith('on-vnode-')
+									? 'onVue:' + prop.name.slice('onVnode'.length)
+									: prop.name
+							);
 							const attributes: html.IAttributeData[] = [];
 							const _tsCodegen = tsCodegen.get(vueCode._sfc);
 
@@ -711,22 +733,27 @@ export function create(
 
 			function afterHtmlCompletion(completionList: vscode.CompletionList, document: TextDocument) {
 
-				const replacement = getReplacement(completionList, document);
+				do {
+					const replacement = getReplacement(completionList, document);
+					if (!replacement) {
+						break;
+					}
 
-				if (replacement) {
-
-					const isEvent = replacement.text.startsWith('v-on:') || replacement.text.startsWith('@');
-					const isProp = replacement.text.startsWith('v-bind:') || replacement.text.startsWith(':');
-					const isModel = replacement.text.startsWith('v-model:') || replacement.text.split('.')[0] === 'v-model';
 					const hasModifier = replacement.text.includes('.');
-					const validModifiers =
-						isEvent ? eventModifiers
-							: isProp ? propModifiers
-								: undefined;
-					const modifiers = replacement.text.split('.').slice(1);
-					const textWithoutModifier = replacement.text.split('.')[0];
+					if (!hasModifier) {
+						break;
+					}
 
-					if (validModifiers && hasModifier) {
+					const [text, ...modifiers] = replacement.text.split('.');
+					const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
+					const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
+					const isVModel = text.startsWith('v-model:') || text === 'v-model';
+					const validModifiers =
+						isVOn ? vOnModifiers
+							: isVBind ? vBindModifiers
+								: undefined;
+
+					if (validModifiers) {
 
 						for (const modifier in validModifiers) {
 
@@ -734,14 +761,14 @@ export function create(
 								continue;
 							}
 
-							const modifierDes = validModifiers[modifier];
-							const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
+							const description = validModifiers[modifier];
+							const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
 							const newItem: html.CompletionItem = {
 								label: modifier,
 								filterText: insertText,
 								documentation: {
 									kind: 'markdown',
-									value: modifierDes,
+									value: description,
 								},
 								textEdit: {
 									range: replacement.textEdit.range,
@@ -753,7 +780,7 @@ export function create(
 							completionList.items.push(newItem);
 						}
 					}
-					else if (hasModifier && isModel) {
+					else if (isVModel) {
 
 						for (const modifier of modelData.globalAttributes ?? []) {
 
@@ -761,7 +788,7 @@ export function create(
 								continue;
 							}
 
-							const insertText = textWithoutModifier + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier.name;
+							const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier.name;
 							const newItem: html.CompletionItem = {
 								label: modifier.name,
 								filterText: insertText,
@@ -780,7 +807,7 @@ export function create(
 							completionList.items.push(newItem);
 						}
 					}
-				}
+				} while (0);
 
 				completionList.items = completionList.items.filter(item => !specialTags.has(parseLabel(item.label).name));
 
@@ -894,7 +921,7 @@ export function create(
 						}
 						else if (isEvent) {
 							item.kind = 23 satisfies typeof vscode.CompletionItemKind.Event;
-							if (propName.startsWith('vnode-')) {
+							if (propName.startsWith('vue:')) {
 								tokens.push('\u0004');
 							}
 						}

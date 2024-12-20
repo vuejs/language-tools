@@ -34,9 +34,8 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
-	// TODO: circular reference
-	// ctx.addLocalVariable('$attrs');
 	ctx.addLocalVariable(getSlotsPropertyName(options.vueCompilerOptions.target));
+	ctx.addLocalVariable('$attrs');
 	ctx.addLocalVariable('$refs');
 	ctx.addLocalVariable('$el');
 
@@ -97,6 +96,20 @@ function* generateInheritedAttrs(ctx: TemplateCodegenContext): Generator<Code> {
 	}
 	yield endOfLine;
 	yield `var $attrs!: Partial<typeof __VLS_inheritedAttrs> & Record<string, unknown>${endOfLine}`;
+
+	if (ctx.bindingAttrLocs.length) {
+		yield `[`;
+		for (const loc of ctx.bindingAttrLocs) {
+			yield [
+				loc.source,
+				'template',
+				loc.start.offset,
+				ctx.codeFeatures.all
+			];
+			yield `,`;
+		}
+		yield `]${endOfLine}`;
+	}
 }
 
 function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {

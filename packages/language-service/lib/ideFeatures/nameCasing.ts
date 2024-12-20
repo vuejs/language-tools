@@ -19,21 +19,20 @@ export async function convertTagName(
 		return;
 	}
 
-	const rootCode = sourceFile?.generated?.root;
-	if (!(rootCode instanceof VueVirtualCode)) {
+	const root = sourceFile?.generated?.root;
+	if (!(root instanceof VueVirtualCode)) {
 		return;
 	}
 
-	const desc = rootCode._sfc;
-	if (!desc.template) {
+	const { template } = root._sfc;
+	if (!template) {
 		return;
 	}
 
-	const template = desc.template;
 	const document = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient?.getComponentNames(rootCode.fileName) ?? [];
-	const tags = getTemplateTagsAndAttrs(rootCode);
+	const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+	const tags = getTemplateTagsAndAttrs(root);
 
 	for (const [tagName, { offsets }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
@@ -67,26 +66,25 @@ export async function convertAttrName(
 		return;
 	}
 
-	const rootCode = sourceFile?.generated?.root;
-	if (!(rootCode instanceof VueVirtualCode)) {
+	const root = sourceFile?.generated?.root;
+	if (!(root instanceof VueVirtualCode)) {
 		return;
 	}
 
-	const desc = rootCode._sfc;
-	if (!desc.template) {
+	const { template } = root._sfc;
+	if (!template) {
 		return;
 	}
 
-	const template = desc.template;
 	const document = context.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient?.getComponentNames(rootCode.fileName) ?? [];
-	const tags = getTemplateTagsAndAttrs(rootCode);
+	const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+	const tags = getTemplateTagsAndAttrs(root);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
 		if (componentName) {
-			const props = (await tsPluginClient?.getComponentProps(rootCode.fileName, componentName) ?? []).map(prop => prop.name);
+			const props = (await tsPluginClient?.getComponentProps(root.fileName, componentName) ?? []).map(prop => prop.name);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenateAttr(prop) === attrName);
 				if (propName) {

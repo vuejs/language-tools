@@ -29,6 +29,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				descriptor: {
 					filename: fileName,
 					source: content,
+					comments: [],
 					template: null,
 					script: null,
 					scriptSetup: null,

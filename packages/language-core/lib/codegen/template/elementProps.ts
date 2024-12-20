@@ -44,7 +44,7 @@ export function* generateElementProps(
 			) {
 				if (!isComponent) {
 					yield `...{ `;
-					yield* generateEventArg(ctx, prop.arg, true);
+					yield* generateEventArg(ctx, prop.arg.loc.source, prop.arg.loc.start.offset);
 					yield `: `;
 					yield* generateEventExpression(options, ctx, prop);
 					yield `},`;
@@ -240,28 +240,35 @@ export function* generateElementProps(
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
-			const codes = wrapWith(
-				prop.exp.loc.start.offset,
-				prop.exp.loc.end.offset,
-				ctx.codeFeatures.verification,
-				`...`,
-				...generatePropExp(
-					options,
-					ctx,
-					prop,
-					prop.exp,
-					ctx.codeFeatures.all,
-					false,
-					enableCodeFeatures
-				)
-			);
-			if (enableCodeFeatures) {
-				yield* codes;
+			if (prop.exp.loc.source === '$attrs') {
+				if (enableCodeFeatures) {
+					ctx.bindingAttrLocs.push(prop.exp.loc);
+				}
 			}
 			else {
-				yield toString([...codes]);
+				const codes = wrapWith(
+					prop.exp.loc.start.offset,
+					prop.exp.loc.end.offset,
+					ctx.codeFeatures.verification,
+					`...`,
+					...generatePropExp(
+						options,
+						ctx,
+						prop,
+						prop.exp,
+						ctx.codeFeatures.all,
+						false,
+						enableCodeFeatures
+					)
+				);
+				if (enableCodeFeatures) {
+					yield* codes;
+				}
+				else {
+					yield toString([...codes]);
+				}
+				yield `,${newLine}`;
 			}
-			yield `,${newLine}`;
 		}
 	}
 }
@@ -294,19 +301,37 @@ function* generatePropExp(
 				'(',
 				')'
 			);
-		} else {
+		}
+		else {
 			const propVariableName = camelize(exp.loc.source);
 
 			if (variableNameRegex.test(propVariableName)) {
-				if (!ctx.hasLocalVariable(propVariableName)) {
-					ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
-					yield `__VLS_ctx.`;
-				}
-				yield* generateCamelized(
+				const isDestructuredProp = options.destructuredPropNames?.has(propVariableName) ?? false;
+				const isTemplateRef = options.templateRefNames?.has(propVariableName) ?? false;
+
+				const codes = generateCamelized(
 					exp.loc.source,
 					exp.loc.start.offset,
 					features
 				);
+
+				if (ctx.hasLocalVariable(propVariableName) || isDestructuredProp) {
+					yield* codes;
+				}
+				else {
+					ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
+
+					if (isTemplateRef) {
+						yield `__VLS_unref(`;
+						yield* codes;
+						yield `)`;
+					}
+					else {
+						yield `__VLS_ctx.`;
+						yield* codes;
+					}
+				}
+
 				if (enableCodeFeatures) {
 					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 				}

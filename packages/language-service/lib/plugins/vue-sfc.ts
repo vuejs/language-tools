@@ -1,5 +1,5 @@
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
-import * as vue from '@vue/language-core';
+import { VueVirtualCode } from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
@@ -18,12 +18,12 @@ export function create(): LanguageServicePlugin {
 			return [sfcDataProvider];
 		},
 		async getFormattingOptions(document, options, context) {
-			return await worker(document, context, async vueCode => {
+			return await worker(document, context, async root => {
 
 				const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
 				const blockTypes = ['template', 'script', 'style'];
 
-				for (const customBlock of vueCode._sfc.customBlocks) {
+				for (const customBlock of root._sfc.customBlocks) {
 					blockTypes.push(customBlock.type);
 				}
 
@@ -53,7 +53,7 @@ export function create(): LanguageServicePlugin {
 				provideDocumentLinks: undefined,
 
 				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
-					if (sourceScript.generated?.root instanceof vue.VueVirtualCode) {
+					if (sourceScript.generated?.root instanceof VueVirtualCode) {
 						if (virtualCode.id === 'script_raw' || virtualCode.id === 'scriptsetup_raw') {
 							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
@@ -74,54 +74,54 @@ export function create(): LanguageServicePlugin {
 				},
 
 				provideDocumentSymbols(document) {
-					return worker(document, context, vueSourceFile => {
+					return worker(document, context, root => {
 
 						const result: vscode.DocumentSymbol[] = [];
-						const descriptor = vueSourceFile._sfc;
+						const sfc = root._sfc;
 
-						if (descriptor.template) {
+						if (sfc.template) {
 							result.push({
 								name: 'template',
 								kind: 2 satisfies typeof vscode.SymbolKind.Module,
 								range: {
-									start: document.positionAt(descriptor.template.start),
-									end: document.positionAt(descriptor.template.end),
+									start: document.positionAt(sfc.template.start),
+									end: document.positionAt(sfc.template.end),
 								},
 								selectionRange: {
-									start: document.positionAt(descriptor.template.start),
-									end: document.positionAt(descriptor.template.startTagEnd),
+									start: document.positionAt(sfc.template.start),
+									end: document.positionAt(sfc.template.startTagEnd),
 								},
 							});
 						}
-						if (descriptor.script) {
+						if (sfc.script) {
 							result.push({
 								name: 'script',
 								kind: 2 satisfies typeof vscode.SymbolKind.Module,
 								range: {
-									start: document.positionAt(descriptor.script.start),
-									end: document.positionAt(descriptor.script.end),
+									start: document.positionAt(sfc.script.start),
+									end: document.positionAt(sfc.script.end),
 								},
 								selectionRange: {
-									start: document.positionAt(descriptor.script.start),
-									end: document.positionAt(descriptor.script.startTagEnd),
+									start: document.positionAt(sfc.script.start),
+									end: document.positionAt(sfc.script.startTagEnd),
 								},
 							});
 						}
-						if (descriptor.scriptSetup) {
+						if (sfc.scriptSetup) {
 							result.push({
 								name: 'script setup',
 								kind: 2 satisfies typeof vscode.SymbolKind.Module,
 								range: {
-									start: document.positionAt(descriptor.scriptSetup.start),
-									end: document.positionAt(descriptor.scriptSetup.end),
+									start: document.positionAt(sfc.scriptSetup.start),
+									end: document.positionAt(sfc.scriptSetup.end),
 								},
 								selectionRange: {
-									start: document.positionAt(descriptor.scriptSetup.start),
-									end: document.positionAt(descriptor.scriptSetup.startTagEnd),
+									start: document.positionAt(sfc.scriptSetup.start),
+									end: document.positionAt(sfc.scriptSetup.startTagEnd),
 								},
 							});
 						}
-						for (const style of descriptor.styles) {
+						for (const style of sfc.styles) {
 							let name = 'style';
 							if (style.scoped) {
 								name += ' scoped';
@@ -142,7 +142,7 @@ export function create(): LanguageServicePlugin {
 								},
 							});
 						}
-						for (const customBlock of descriptor.customBlocks) {
+						for (const customBlock of sfc.customBlocks) {
 							result.push({
 								name: `${customBlock.type}`,
 								kind: 2 satisfies typeof vscode.SymbolKind.Module,
@@ -237,14 +237,16 @@ export function create(): LanguageServicePlugin {
 		},
 	};
 
-	function worker<T>(document: TextDocument, context: LanguageServiceContext, callback: (vueSourceFile: vue.VueVirtualCode) => T) {
+	function worker<T>(document: TextDocument, context: LanguageServiceContext, callback: (root: VueVirtualCode) => T) {
 		if (document.languageId !== 'vue-root-tags') {
 			return;
 		}
-		const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+		const uri = URI.parse(document.uri);
+		const decoded = context.decodeEmbeddedDocumentUri(uri);
 		const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-		if (sourceScript?.generated?.root instanceof vue.VueVirtualCode) {
-			return callback(sourceScript.generated.root);
+		const root = sourceScript?.generated?.root;
+		if (root instanceof VueVirtualCode) {
+			return callback(root);
 		}
 	}
 }
