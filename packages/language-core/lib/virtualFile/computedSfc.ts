@@ -25,8 +25,15 @@ export function computedSfc(
 	const content = computed(() => {
 		return snapshot.get().getText(0, snapshot.get().getLength());
 	});
-	const comments = computed(() => {
-		return parsed.get()?.descriptor.comments ?? [];
+	const comments = computed<string[]>(oldValue => {
+		const newValue = parsed.get()?.descriptor.comments ?? [];
+		if (
+			oldValue?.length === newValue.length
+			&& oldValue.every((v, i) => v === newValue[i])
+		) {
+			return oldValue;
+		}
+		return newValue;
 	});
 	const template = computedNullableSfcBlock(
 		'template',
