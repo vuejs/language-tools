@@ -129,7 +129,7 @@ export async function startNamedPipeServer(
 			if (!script?.isScriptOpen()) {
 				continue;
 			}
-			await sleep(0);
+			await sleep(10);
 			if (token?.isCancellationRequested()) {
 				return;
 			}
@@ -228,7 +228,7 @@ export async function startNamedPipeServer(
 			commentMarkdown?: string;
 		}[]> = {};
 		for (const component of getComponentNames.apply(requestContext, [fileName]) ?? []) {
-			await sleep(0);
+			await sleep(10);
 			if (token?.isCancellationRequested()) {
 				return;
 			}
