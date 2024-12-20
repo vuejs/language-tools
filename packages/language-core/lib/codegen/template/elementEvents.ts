@@ -1,8 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Code, VueCodeInformation } from '../../types';
-import { hyphenateAttr } from '../../utils/shared';
+import type { Code } from '../../types';
 import { combineLastMapping, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -32,13 +31,18 @@ export function* generateElementEvents(
 				propsVar = ctx.getInternalVariable();
 				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>${endOfLine}`;
 			}
-			const isVNodeEvent = prop.arg.loc.source.startsWith('vue:');
-			const name = isVNodeEvent
-				? 'vnode-' + prop.arg.loc.source.slice('vue:'.length)
-				: prop.arg.loc.source;
-			const originalPropName = camelize('on-' + name);
-			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${originalPropName}', '${name}', '${camelize(name)}'> = {${newLine}`;
-			yield* generateEventArg(ctx, prop.arg, name, isVNodeEvent);
+			let source = prop.arg.loc.source;
+			let start = prop.arg.loc.start.offset;
+			let propPrefix = 'on';
+			let emitPrefix = '';
+			if (source.startsWith('vue:')) {
+				source = source.slice('vue:'.length);
+				start = start + 'vue:'.length;
+				propPrefix = 'onVnode';
+				emitPrefix = 'vnode-';
+			}
+			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${camelize(propPrefix + '-' + source)}', '${emitPrefix}${source}', '${camelize(emitPrefix + source)}'> = {${newLine}`;
+			yield* generateEventArg(ctx, source, start, propPrefix);
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
 			yield `}${endOfLine}`;
@@ -47,67 +51,36 @@ export function* generateElementEvents(
 	return usedComponentEventsVar;
 }
 
-const eventArgFeatures: VueCodeInformation = {
-	navigation: {
-		// @click-outside -> onClickOutside
-		resolveRenameNewName(newName) {
-			return camelize('on-' + newName);
-		},
-		// onClickOutside -> @click-outside
-		resolveRenameEditText(newName) {
-			const hName = hyphenateAttr(newName);
-			if (hyphenateAttr(newName).startsWith('on-')) {
-				return camelize(hName.slice('on-'.length));
-			}
-			return newName;
-		},
-	},
-};
-
 export function* generateEventArg(
 	ctx: TemplateCodegenContext,
-	arg: CompilerDOM.SimpleExpressionNode,
-	name: string = arg.loc.source,
-	isVNodeEvent: boolean = false
+	name: string,
+	start: number,
+	directive = 'on'
 ): Generator<Code> {
-	if (isVNodeEvent) {
-		yield ['', 'template', arg.loc.start.offset, {
-			...ctx.codeFeatures.withoutHighlightAndCompletion,
-			...ctx.codeFeatures.navigationWithoutRename
-		}];
-		yield `onVnode`;
-		yield* generateCamelized(
-			capitalize(name.slice('vnode-'.length)),
-			arg.loc.start.offset + 'vue:'.length,
-			combineLastMapping
-		);
-		return;
-	}
-
 	const features = {
 		...ctx.codeFeatures.withoutHighlightAndCompletion,
-		...eventArgFeatures,
+		...ctx.codeFeatures.navigationWithoutRename,
 	};
 	if (variableNameRegex.test(camelize(name))) {
-		yield ['', 'template', arg.loc.start.offset, features];
-		yield `on`;
+		yield ['', 'template', start, features];
+		yield directive;
 		yield* generateCamelized(
 			capitalize(name),
-			arg.loc.start.offset,
+			start,
 			combineLastMapping
 		);
 	}
 	else {
 		yield* wrapWith(
-			arg.loc.start.offset,
-			arg.loc.end.offset,
+			start,
+			start + name.length,
 			features,
 			`'`,
-			['', 'template', arg.loc.start.offset, combineLastMapping],
-			'on',
+			['', 'template', start, combineLastMapping],
+			directive,
 			...generateCamelized(
 				capitalize(name),
-				arg.loc.start.offset,
+				start,
 				combineLastMapping
 			),
 			`'`

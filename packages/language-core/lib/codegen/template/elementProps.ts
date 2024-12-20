@@ -44,7 +44,7 @@ export function* generateElementProps(
 			) {
 				if (!isComponent) {
 					yield `...{ `;
-					yield* generateEventArg(ctx, prop.arg);
+					yield* generateEventArg(ctx, prop.arg.loc.source, prop.arg.loc.start.offset);
 					yield `: `;
 					yield* generateEventExpression(options, ctx, prop);
 					yield `},`;
