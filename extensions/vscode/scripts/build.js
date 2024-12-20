@@ -1,9 +1,11 @@
+// @ts-check
 const path = require('path');
 const fs = require('fs');
-const treeShake = require('@kermanx/tree-shaker').treeShake;
+const esbuild = require('esbuild');
+const { treeShake } = require('@kermanx/tree-shaker');
 const minify = process.argv.includes('--minify');
 
-require('esbuild').context({
+esbuild.context({
 	entryPoints: {
 		'dist/client': './out/nodeClientMain.js',
 		'dist/server': './node_modules/@vue/language-server/bin/vue-language-server.js',
