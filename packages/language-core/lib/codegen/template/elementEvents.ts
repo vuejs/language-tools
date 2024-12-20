@@ -38,7 +38,7 @@ export function* generateElementEvents(
 				: prop.arg.loc.source;
 			const originalPropName = camelize('on-' + prop.arg.loc.source);
 			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${originalPropName}', '${name}', '${camelize(name)}'> = {${newLine}`;
-			yield* generateEventArg(ctx, prop.arg, name, true);
+			yield* generateEventArg(ctx, prop.arg, name, isVNodeEvent);
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
 			yield `}${endOfLine}`;
