@@ -3,6 +3,7 @@
 	"references": [
 		{ "path": "./failureFixtures/#3632" },
 		// { "path": "./failureFixtures/#4569" }, // TODO: not working with --build flag
+		{ "path": "./failureFixtures/#5071" },
 		{ "path": "./failureFixtures/directives" },
 
 		{ "path": "./passedFixtures/#1886" },

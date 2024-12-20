@@ -5,4 +5,5 @@
 		"strictTemplates": true,
 	},
 	"include": [ "**/*" ],
+	"exclude": [ "useAttrs/main.vue" ],
 }
