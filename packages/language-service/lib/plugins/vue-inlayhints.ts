@@ -43,10 +43,10 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 
 						if (enabled) {
 							for (const [prop, isShorthand] of findDestructuredProps(
-									ts,
-									virtualCode._sfc.scriptSetup.ast,
-									scriptSetupRanges.defineProps.destructured
-								)) {
+								ts,
+								virtualCode._sfc.scriptSetup.ast,
+								scriptSetupRanges.defineProps.destructured
+							)) {
 								const name = prop.text;
 								const end = prop.getEnd();
 								const pos = isShorthand ? end : end - name.length;
