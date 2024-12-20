@@ -36,7 +36,7 @@ export function* generateElementEvents(
 			const name = isVNodeEvent
 				? 'vnode-' + prop.arg.loc.source.slice('vue:'.length)
 				: prop.arg.loc.source;
-			const originalPropName = camelize('on-' + prop.arg.loc.source);
+			const originalPropName = camelize('on-' + name);
 			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${originalPropName}', '${name}', '${camelize(name)}'> = {${newLine}`;
 			yield* generateEventArg(ctx, prop.arg, name, isVNodeEvent);
 			yield `: `;
