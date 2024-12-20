@@ -139,7 +139,7 @@ function* generatePreResolveComponents(options: TemplateCodegenOptions): Generat
 				}
 				components.add(node.tag);
 				yield newLine;
-				yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
+				yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', __VLS_LocalComponents, `;
 				yield getPossibleOriginalComponentNames(node.tag, false)
 					.map(name => `'${name}'`)
 					.join(', ');
