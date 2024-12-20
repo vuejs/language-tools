@@ -44,7 +44,9 @@ export interface VueCompilerOptions {
 		withDefaults: string[];
 	};
 	composables: {
+		useAttrs: string[];
 		useCssModule: string[];
+		useSlots: string[];
 		useTemplateRef: string[];
 	};
 	plugins: VueLanguagePlugin[];
@@ -103,6 +105,7 @@ export interface SfcBlock {
 
 export interface Sfc {
 	content: string;
+	comments: string[];
 	template: SfcBlock & {
 		ast: CompilerDOM.RootNode | undefined;
 		errors: CompilerDOM.CompilerError[];
