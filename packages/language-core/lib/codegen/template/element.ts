@@ -95,8 +95,9 @@ export function* generateComponent(
 				];
 			}
 			else {
+				const shouldCapitalize = matchImportName[0].toUpperCase() === matchImportName[0];
 				yield* generateCamelized(
-					capitalize(node.tag),
+					shouldCapitalize ? capitalize(node.tag) : node.tag,
 					tagOffset,
 					{
 						...ctx.codeFeatures.withoutHighlightAndCompletion,
@@ -144,15 +145,15 @@ export function* generateComponent(
 		yield `)${endOfLine}`;
 	}
 	else if (!isComponentTag) {
-		yield `const ${var_originalComponent} = __VLS_resolvedLocalAndGlobalComponents.`;
+		yield `const ${var_originalComponent} = ({} as __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', __VLS_LocalComponents, `;
+		yield getPossibleOriginalComponentNames(node.tag, false)
+			.map(name => `'${name}'`)
+			.join(`, `);
+		yield `>).`;
 		yield* generateCanonicalComponentName(
 			node.tag,
 			startTagOffset,
-			{
-				// with hover support
-				...ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
-				...ctx.codeFeatures.verification,
-			}
+			ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation
 		);
 		yield `${endOfLine}`;
 
@@ -401,13 +402,13 @@ function* generateVScope(
 	return [refName, offset];
 }
 
-export function getCanonicalComponentName(tagText: string) {
+function getCanonicalComponentName(tagText: string) {
 	return variableNameRegex.test(tagText)
 		? tagText
 		: capitalize(camelize(tagText.replace(colonReg, '-')));
 }
 
-export function getPossibleOriginalComponentNames(tagText: string, deduplicate: boolean) {
+function getPossibleOriginalComponentNames(tagText: string, deduplicate: boolean) {
 	const name1 = capitalize(camelize(tagText));
 	const name2 = camelize(tagText);
 	const name3 = tagText;
