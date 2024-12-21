@@ -162,7 +162,7 @@ function* generateStyleScopedClasses(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
 	const firstClasses = new Set<string>();
-	yield `type __VLS_StyleScopedClasses = {}`;
+	yield `let __VLS_styleScopedClasses!: {}`;
 	for (let i = 0; i < options.sfc.styles.length; i++) {
 		const style = options.sfc.styles[i];
 		const option = options.vueCompilerOptions.experimentalResolveStyleCssClasses;
