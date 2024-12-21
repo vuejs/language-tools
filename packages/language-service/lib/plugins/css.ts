@@ -1,12 +1,9 @@
-import type { LanguageServicePlugin } from '@volar/language-service';
+import type { LanguageServicePlugin, VirtualCode } from '@volar/language-service';
 import { VueVirtualCode } from '@vue/language-core';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import * as css from 'vscode-css-languageservice';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-
-const cssClassNameReg = /(?=(\.[a-z_][-\w]*)[\s.,+~>:#[{])/gi;
-const vBindCssVarReg = /\bv-bind\(\s*(?:'([^']+)'|"([^"]+)"|([a-z_]\w*))\s*\)/gi;
 
 export function create(): LanguageServicePlugin {
 	const base = baseCreate({ scssDocumentSelector: ['scss', 'postcss'] });
@@ -31,48 +28,58 @@ export function create(): LanguageServicePlugin {
 					return diagnostics;
 				},
 				provideRenameRange(document, position) {
+					do {
+						const uri = URI.parse(document.uri);
+						const decoded = context.decodeEmbeddedDocumentUri(uri);
+						const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+						const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+						if (!sourceScript?.generated || !virtualCode?.id.startsWith('style_')) {
+							break;
+						}
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+						const root = sourceScript.generated.root;
+						if (!(root instanceof VueVirtualCode)) {
+							break;
+						}
 
-					const regexps: RegExp[] = [];
-
-					if (virtualCode?.id.startsWith('style_')) {
-						const i = Number(virtualCode.id.slice('style_'.length));
-						if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-							const style = sourceScript.generated.root._sfc.styles[i];
-							const option = sourceScript.generated.root.vueCompilerOptions.experimentalResolveStyleCssClasses;
-							if (option === 'always' || (option === 'scoped' && style.scoped) || style.module) {
-								regexps.push(cssClassNameReg);
+						const block = root._sfc.styles.find((style) => style.name === decoded![1]);
+						if (!block) {
+							break;
+						}
+	
+						let script: VirtualCode | undefined;
+						for (const [key, value] of sourceScript.generated.embeddedCodes) {
+							if (key.startsWith('script_')) {
+								script = value;
+								break;
 							}
 						}
-					}
-					regexps.push(vBindCssVarReg);
+						if (!script) {
+							break;
+						}
 
-					return worker(document, (stylesheet, cssLs) => {
-						const text = document.getText();
-						const offset = document.offsetAt(position);
+						const offset = document.offsetAt(position) + block.startTagEnd;
+						for (const { sourceOffsets, lengths, data } of script.mappings) {
+							if (
+								!sourceOffsets.length
+								|| !data.navigation
+								|| typeof data.navigation === 'object' && !data.navigation.shouldRename
+							) {
+								continue;
+							}
 
-						for (const [start, end] of forEachRegExp()) {
+							const length = lengths.reduce((res, val) => res + val, 0);
+							const start = sourceOffsets[0];
+							const end = sourceOffsets.at(-1)! + length;
+
 							if (offset >= start && offset <= end) {
 								return;
 							}
 						}
-						return cssLs.prepareRename(document, position, stylesheet);
+					} while (0);
 
-						function* forEachRegExp() {
-							for (const reg of regexps) {
-								for (const match of text.matchAll(reg)) {
-									const matchText = match.slice(1).find(t => t);
-									if (matchText) {
-										const start = match.index + text.slice(match.index).indexOf(matchText)
-										const end = start + matchText.length;
-										yield [start, end];
-									}
-								}
-							}
-						}
+					return worker(document, (stylesheet, cssLs) => {
+						return cssLs.prepareRename(document, position, stylesheet);
 					});
 				}
 			};
