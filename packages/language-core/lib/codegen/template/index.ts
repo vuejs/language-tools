@@ -142,7 +142,10 @@ function* generateRootEl(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
-	yield* generateContextVariable(options, `$el`, ctx.singleRootElType ?? `any`);
+	yield `let __VLS_rootEl!: `;
+	yield ctx.singleRootElType ?? `any`;
+	yield endOfLine;
+	yield* generateContextVariable(options, `$el`, `typeof __VLS_rootEl`);
 }
 
 function* generateContextVariable(
