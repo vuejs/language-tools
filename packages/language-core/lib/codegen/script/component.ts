@@ -40,7 +40,7 @@ export function* generateComponent(
 		const { args } = options.scriptRanges.exportDefault;
 		yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
 	}
-	if (options.vueCompilerOptions.target >= 3.5 && scriptSetupRanges.useTemplateRef.length) {
+	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.templateRefs.size) {
 		yield `__typeRefs: {} as __VLS_TemplateResult['refs'],${newLine}`;
 	}
 	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.singleRootElType) {
