@@ -238,6 +238,9 @@ importers:
       volar-service-typescript-twoslash-queries:
         specifier: 0.0.62
         version: 0.0.62(@volar/language-service@2.4.11)
+      vscode-css-languageservice:
+        specifier: ^6.3.1
+        version: 6.3.2
       vscode-html-languageservice:
         specifier: ^5.2.0
         version: 5.3.1
@@ -968,6 +971,7 @@ packages:
     resolution: {integrity: sha512-vPul4uodvWvLhRco2w0GcyZcdyBfpfDRgNKU+p35AWEbJ/HPs1tOUrkSueVbBS0RQHAf/A+nNtDpvw95PeVKOA==}
     cpu: [loong64]
     os: [linux]
+    libc: [glibc]
 
   '@rollup/rollup-linux-powerpc64le-gnu@4.28.1':
     resolution: {integrity: sha512-pTnTdBuC2+pt1Rmm2SV7JWRqzhYpEILML4PKODqLz+C7Ou2apEV52h19CR7es+u04KlqplggmN9sqZlekg3R1A==}
