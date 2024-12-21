@@ -1,4 +1,4 @@
-import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 import { TextRange, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
@@ -10,7 +10,7 @@ export function create(): LanguageServicePlugin {
 		capabilities: {
 			completionProvider: {},
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			return {
 				isAdditionalCompletion: true,
 				async provideCompletionItems(document) {
@@ -23,15 +23,15 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const result: vscode.CompletionItem[] = [];
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript || !virtualCode) {
+					if (!sourceScript?.generated || !virtualCode) {
 						return;
 					}
 
-					const root = sourceScript?.generated?.root;
+					const root = sourceScript.generated.root;
 					if (!(root instanceof VueVirtualCode)) {
 						return;
 					}
@@ -43,14 +43,24 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
+					const result: vscode.CompletionItem[] = [];
 					const mappings = [...context.language.maps.forEach(virtualCode)];
 
-					addDefineCompletionItem(scriptSetupRanges.props.define && {
-						exp: scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define.exp,
-						statement: scriptSetupRanges.props.define.statement
-					}, 'props');
-					addDefineCompletionItem(scriptSetupRanges.emits.define, 'emit');
-					addDefineCompletionItem(scriptSetupRanges.slots.define, 'slots');
+					addDefineCompletionItem(
+						scriptSetupRanges.defineProps?.statement,
+						scriptSetupRanges.withDefaults?.exp ?? scriptSetupRanges.defineProps?.exp,
+						'props'
+					);
+					addDefineCompletionItem(
+						scriptSetupRanges.defineEmits?.statement,
+						scriptSetupRanges.defineEmits?.exp,
+						'emit'
+					);
+					addDefineCompletionItem(
+						scriptSetupRanges.defineSlots?.statement,
+						scriptSetupRanges.defineSlots?.exp,
+						'slots'
+					);
 
 					return {
 						isIncomplete: false,
@@ -58,19 +68,17 @@ export function create(): LanguageServicePlugin {
 					};
 
 					function addDefineCompletionItem(
-						define: {
-							exp: TextRange,
-							statement: TextRange;
-						} | undefined,
+						statement: TextRange | undefined,
+						exp: TextRange | undefined,
 						name: string
 					) {
-						if (!define || define.exp.start !== define.statement.start) {
+						if (!exp || exp.start !== statement?.start) {
 							return;
 						}
 
 						let offset;
 						for (const [, map] of mappings) {
-							for (const [generatedOffset] of map.toGeneratedLocation(scriptSetup!.startTagEnd + define.exp.start)) {
+							for (const [generatedOffset] of map.toGeneratedLocation(scriptSetup!.startTagEnd + exp.start)) {
 								offset = generatedOffset;
 								break;
 							}

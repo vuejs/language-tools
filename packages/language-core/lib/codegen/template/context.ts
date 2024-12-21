@@ -1,8 +1,8 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
-import { endOfLine, newLine, wrapWith } from '../common';
-import type { TemplateCodegenOptions } from './index';
 import { InlayHintInfo } from '../inlayHints';
+import { endOfLine, newLine, wrapWith } from '../utils';
+import type { TemplateCodegenOptions } from './index';
 
 const _codeFeatures = {
 	all: {
@@ -38,6 +38,11 @@ const _codeFeatures = {
 		navigation: true,
 		completion: { isAdditional: true },
 	} as VueCodeInformation,
+	withoutNavigation: {
+		verification: true,
+		completion: true,
+		semantic: true,
+	} as VueCodeInformation,
 	withoutHighlight: {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
@@ -62,6 +67,10 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	let expectErrorToken: {
 		errors: number;
 		node: CompilerDOM.CommentNode;
+	} | undefined;
+	let lastGenericComment: {
+		content: string;
+		offset: number;
 	} | undefined;
 	let variableId = 0;
 
@@ -116,6 +125,8 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	}[] = [];
 	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
+	const bindingAttrLocs: CompilerDOM.SourceLocation[] = [];
+	const inheritedAttrVars = new Set<string>();
 	const templateRefs = new Map<string, [varName: string, offset: number]>();
 
 	return {
@@ -123,6 +134,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		dynamicSlots,
 		codeFeatures,
 		accessExternalVariables,
+		lastGenericComment,
 		hasSlotElements,
 		blockConditions,
 		usedComponentCtxVars,
@@ -130,7 +142,8 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		emptyClassOffsets,
 		inlayHints,
 		hasSlot: false,
-		inheritedAttrVars: new Set(),
+		bindingAttrLocs,
+		inheritedAttrVars,
 		templateRefs,
 		singleRootElType: undefined as string | undefined,
 		singleRootNode: undefined as CompilerDOM.ElementNode | undefined,

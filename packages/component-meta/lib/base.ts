@@ -141,7 +141,7 @@ export function baseCreate(
 	const globalTypesName = `${commandLine.vueOptions.lib}_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
 	const globalTypesContents = `// @ts-nocheck\nexport {};\n` + vue.generateGlobalTypes(commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
 	const globalTypesSnapshot: ts.IScriptSnapshot = {
-		getText: (start, end) => globalTypesContents.substring(start, end),
+		getText: (start, end) => globalTypesContents.slice(start, end),
 		getLength: () => globalTypesContents.length,
 		getChangeRange: () => undefined,
 	};
@@ -219,13 +219,13 @@ export function baseCreate(
 		return (
 			commandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))
 				? fileName
-				: fileName.substring(0, fileName.lastIndexOf('.'))
+				: fileName.slice(0, fileName.lastIndexOf('.'))
 		) + '.meta.ts';
 	}
 
 	function getMetaScriptContent(fileName: string) {
 		let code = `
-import * as Components from '${fileName.substring(0, fileName.length - '.meta.ts'.length)}';
+import * as Components from '${fileName.slice(0, -'.meta.ts'.length)}';
 export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
 
 interface ComponentMeta<T> {
@@ -315,7 +315,7 @@ ${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 
 						return resolveNestedProperties(prop);
 					})
-					.filter(prop => !prop.name.match(propEventRegex));
+					.filter(prop => !propEventRegex.test(prop.name));
 			}
 
 			// fill global
@@ -335,7 +335,7 @@ ${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts, commandLine.vueOptions) : {})
 				: {};
 			const tsDefaults = !vueFile ? readTsComponentDefaultProps(
-				componentPath.substring(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
+				componentPath.slice(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
 				snapshot.getText(0, snapshot.getLength()),
 				exportName,
 				printer,
@@ -666,11 +666,11 @@ function createSchemaResolvers(
 
 		return type;
 	}
-	function getDeclarations(declaration: ts.Declaration[]): Declaration[] {
+	function getDeclarations(declaration: ts.Declaration[]) {
 		if (noDeclarations) {
 			return [];
 		}
-		return declaration.map(getDeclaration).filter(d => !!d) as Declaration[];
+		return declaration.map(getDeclaration).filter(d => !!d);
 	}
 	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
 		const fileName = declaration.getSourceFile().fileName;
@@ -724,9 +724,9 @@ function readVueComponentDefaultProps(
 		const descriptor = vueSourceFile._sfc;
 		const scriptSetupRanges = descriptor.scriptSetup ? vue.parseScriptSetupRanges(ts, descriptor.scriptSetup.ast, vueCompilerOptions) : undefined;
 
-		if (descriptor.scriptSetup && scriptSetupRanges?.props.withDefaults?.arg) {
+		if (descriptor.scriptSetup && scriptSetupRanges?.withDefaults?.arg) {
 
-			const defaultsText = descriptor.scriptSetup.content.substring(scriptSetupRanges.props.withDefaults.arg.start, scriptSetupRanges.props.withDefaults.arg.end);
+			const defaultsText = descriptor.scriptSetup.content.slice(scriptSetupRanges.withDefaults.arg.start, scriptSetupRanges.withDefaults.arg.end);
 			const ast = ts.createSourceFile('/tmp.' + descriptor.scriptSetup.lang, '(' + defaultsText + ')', ts.ScriptTarget.Latest);
 			const obj = findObjectLiteralExpression(ast);
 
@@ -743,8 +743,8 @@ function readVueComponentDefaultProps(
 					}
 				}
 			}
-		} else if (descriptor.scriptSetup && scriptSetupRanges?.props.define?.arg) {
-			const defaultsText = descriptor.scriptSetup.content.substring(scriptSetupRanges.props.define.arg.start, scriptSetupRanges.props.define.arg.end);
+		} else if (descriptor.scriptSetup && scriptSetupRanges?.defineProps?.arg) {
+			const defaultsText = descriptor.scriptSetup.content.slice(scriptSetupRanges.defineProps.arg.start, scriptSetupRanges.defineProps.arg.end);
 			const ast = ts.createSourceFile('/tmp.' + descriptor.scriptSetup.lang, '(' + defaultsText + ')', ts.ScriptTarget.Latest);
 			const obj = findObjectLiteralExpression(ast);
 

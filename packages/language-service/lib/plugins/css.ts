@@ -1,8 +1,8 @@
-import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
+import type { LanguageServicePlugin } from '@volar/language-service';
 import { VueVirtualCode } from '@vue/language-core';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import * as css from 'vscode-css-languageservice';
+import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 
 const cssClassNameReg = /(?=(\.[a-z_][-\w]*)[\s.,+~>:#[{])/gi;
@@ -12,7 +12,7 @@ export function create(): LanguageServicePlugin {
 	const base = baseCreate({ scssDocumentSelector: ['scss', 'postcss'] });
 	return {
 		...base,
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			const baseInstance = base.create(context);
 			const {
 				'css/languageService': getCssLs,

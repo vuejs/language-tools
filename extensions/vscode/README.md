@@ -257,26 +257,21 @@ Finally you need to make VS Code recognize your new extension and automatically 
 
 ## Commands
 
-<!-- commands -->
-
-| Command                        | Title                                             |
-| ------------------------------ | ------------------------------------------------- |
-| `vue.action.restartServer`     | Vue: Restart Vue and TS servers                   |
-| `vue.action.doctor`            | Vue: Doctor                                       |
-| `vue.action.writeVirtualFiles` | Vue (Debug): Write Virtual Files                  |
-| `vue.action.splitEditors`      | Vue: Split <script>, <template>, <style> Editors  |
-| `vue.findAllFileReferences`    | Vue: Find File References via Vue Language Server |
-
-<!-- commands -->
+| Command                        | Title                                                   |
+| ------------------------------ | ------------------------------------------------------- |
+| `vue.action.restartServer`     | Vue: Restart Vue and TS servers                         |
+| `vue.action.doctor`            | Vue: Doctor                                             |
+| `vue.action.writeVirtualFiles` | Vue (Debug): Write Virtual Files                        |
+| `vue.action.splitEditors`      | Vue: Split `<script>`, `<template>`, `<style>` Editors  |
+| `vue.findAllFileReferences`    | Vue: Find File References via Vue Language Server       |
 
 ## Configs
-
-<!-- configs -->
 
 | Key                                   | Description                                                                                                                                                        | Type             | Default                             |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------- | ----------------------------------- |
 | `vue.trace.server`                    | Traces the communication between VS Code and the language server.                                                                                                  | `string`         | `"off"`                             |
 | `vue.server.hybridMode`               | Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin.                                         | `boolean,string` | `"auto"`                            |
+| `vue.server.compatibleExtensions`     | Set compatible extensions to skip automatic detection of Hybrid Mode.                                                                                              | `array`          | `[]`                                |
 | `vue.server.includeLanguages`         |                                                                                                                                                                    | `array`          | `["vue"]`                           |
 | `vue.server.maxOldSpaceSize`          | Set --max-old-space-size option on server process. If you have problem on frequently "Request textDocument/** failed." error, try setting higher memory(MB) on it. | `number,null`    | `null`                              |
 | `vue.doctor.status`                   | Show known problems in status bar.                                                                                                                                 | `boolean`        | `true`                              |
@@ -291,7 +286,7 @@ Finally you need to make VS Code recognize your new extension and automatically 
 | `vue.complete.casing.props`           | Preferred attr name case.                                                                                                                                          | `string`         | `"autoKebab"`                       |
 | `vue.complete.defineAssignment`       | Auto add `const props = ` before `defineProps` when selecting the completion item `props`. (also `emit` and `slots`)                                               | `boolean`        | `true`                              |
 | `vue.autoInsert.dotValue`             | Auto-complete Ref value with `.value`.                                                                                                                             | `boolean`        | `false`                             |
-| `vue.autoInsert.bracketSpacing`       | Auto add space between double curly brackets: {{|}} -> {{ | }}                                                                                                     | `boolean`        | `true`                              |
+| `vue.autoInsert.bracketSpacing`       | Auto add space between double curly brackets: <code>{{&vert;}}</code> -> <code>{{ &vert; }}</code>                                                                 | `boolean`        | `true`                              |
 | `vue.inlayHints.destructuredProps`    | Show inlay hints for destructured props.                                                                                                                           | `boolean`        | `false`                             |
 | `vue.inlayHints.missingProps`         | Show inlay hints for missing required props.                                                                                                                       | `boolean`        | `false`                             |
 | `vue.inlayHints.inlineHandlerLeading` | Show inlay hints for event argument in inline handlers.                                                                                                            | `boolean`        | `false`                             |
@@ -301,5 +296,3 @@ Finally you need to make VS Code recognize your new extension and automatically 
 | `vue.format.style.initialIndent`      |                                                                                                                                                                    | `boolean`        | `false`                             |
 | `vue.format.script.initialIndent`     |                                                                                                                                                                    | `boolean`        | `false`                             |
 | `vue.format.wrapAttributes`           |                                                                                                                                                                    | `string`         | `"auto"`                            |
-
-<!-- configs -->

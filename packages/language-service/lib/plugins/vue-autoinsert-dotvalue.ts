@@ -1,4 +1,4 @@
-import type { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
@@ -27,7 +27,7 @@ export function create(
 				configurationSections: ['vue.autoInsert.dotValue'],
 			},
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			let currentReq = 0;
 			return {
@@ -57,7 +57,8 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
 					if (!sourceScript) {
@@ -124,14 +125,14 @@ const charReg = /\w/;
 
 export function isCharacterTyping(document: TextDocument, change: { text: string; rangeOffset: number; rangeLength: number; }) {
 	const lastCharacter = change.text[change.text.length - 1];
-	const nextCharacter = document.getText().substring(
+	const nextCharacter = document.getText().slice(
 		change.rangeOffset + change.text.length,
 		change.rangeOffset + change.text.length + 1
 	);
 	if (lastCharacter === undefined) { // delete text
 		return false;
 	}
-	if (change.text.indexOf('\n') >= 0) { // multi-line change
+	if (change.text.includes('\n')) { // multi-line change
 		return false;
 	}
 	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);

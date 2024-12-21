@@ -29,6 +29,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				descriptor: {
 					filename: fileName,
 					source: content,
+					comments: [],
 					template: null,
 					script: null,
 					scriptSetup: null,
@@ -66,8 +67,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					});
 				}
 				// ignore `<script src="...">`
-				else if (tag === 'script' && attrs.indexOf('src=') === -1) {
-					let type: 'script' | 'scriptSetup' = attrs.indexOf('type=') >= 0 ? 'scriptSetup' : 'script';
+				else if (tag === 'script' && !attrs.includes('src=')) {
+					let type: 'script' | 'scriptSetup' = attrs.includes('type=') ? 'scriptSetup' : 'script';
 					sfc.descriptor[type] = {
 						attrs: {},
 						content,
@@ -81,7 +82,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					};
 				}
 
-				templateContent = templateContent.substring(0, match.index) + ' '.repeat(matchText.length) + templateContent.substring(match.index + matchText.length);
+				templateContent = templateContent.slice(0, match.index) + ' '.repeat(matchText.length) + templateContent.slice(match.index + matchText.length);
 			}
 
 			sfc.descriptor.template = {

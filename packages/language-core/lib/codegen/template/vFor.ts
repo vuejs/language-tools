@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { collectVars, createTsAst, endOfLine, newLine } from '../common';
+import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -34,10 +34,11 @@ export function* generateVFor(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			source.content,
-			source.loc,
-			source.loc.start.offset,
+			'template',
 			ctx.codeFeatures.all,
+			source.content,
+			source.loc.start.offset,
+			source.loc,
 			'(',
 			')'
 		);
@@ -69,10 +70,11 @@ export function* generateVFor(
 					yield* generateInterpolation(
 						options,
 						ctx,
-						prop.value.content,
-						prop.value.loc,
-						prop.value.loc.start.offset,
+						'template',
 						ctx.codeFeatures.all,
+						prop.value.content,
+						prop.value.loc.start.offset,
+						prop.value.loc,
 						'(',
 						')'
 					);
@@ -105,7 +107,7 @@ export function parseVForNode(node: CompilerDOM.ForNode) {
 		}
 		: undefined;
 	const leftExpressionText = leftExpressionRange
-		? node.loc.source.substring(
+		? node.loc.source.slice(
 			leftExpressionRange.start - node.loc.start.offset,
 			leftExpressionRange.end - node.loc.start.offset
 		)

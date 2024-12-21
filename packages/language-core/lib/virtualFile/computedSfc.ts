@@ -1,8 +1,8 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
-import { computed, ISignal, Signal, System, Unstable } from 'alien-signals';
+import { activeSub, activeTrackId, computed, ISignal, setActiveSub, Signal, Unstable } from 'alien-signals';
 import type * as ts from 'typescript';
-import type { Sfc, SfcBlock, SFCStyleOverride, VueLanguagePluginReturn } from '../types';
+import type { Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 
@@ -15,14 +15,25 @@ export function computedSfc(
 ): Sfc {
 
 	const untrackedSnapshot = () => {
-		const prevTrackId = System.activeTrackId;
-		System.activeTrackId = 0;
+		const prevSub = activeSub;
+		const prevTrackId = activeTrackId;
+		setActiveSub(undefined, 0);
 		const res = snapshot.get();
-		System.activeTrackId = prevTrackId;
+		setActiveSub(prevSub, prevTrackId);
 		return res;
 	};
 	const content = computed(() => {
 		return snapshot.get().getText(0, snapshot.get().getLength());
+	});
+	const comments = computed<string[]>(oldValue => {
+		const newValue = parsed.get()?.descriptor.comments ?? [];
+		if (
+			oldValue?.length === newValue.length
+			&& oldValue.every((v, i) => v === newValue[i])
+		) {
+			return oldValue;
+		}
+		return newValue;
 	});
 	const template = computedNullableSfcBlock(
 		'template',
@@ -118,10 +129,10 @@ export function computedSfc(
 		(block, i) => {
 			const base = computedSfcBlock('style_' + i, 'css', block);
 			const module = computed(() => {
-				const _module = block.get().module as SFCStyleOverride['module'];
-				return _module ? {
-					name: _module.name,
-					offset: _module.offset ? base.start + _module.offset : undefined
+				const { __module } = block.get();
+				return __module ? {
+					name: __module.name,
+					offset: __module.offset ? base.start + __module.offset : undefined
 				} : undefined;
 			});
 			const scoped = computed(() => !!block.get().scoped);
@@ -148,6 +159,7 @@ export function computedSfc(
 
 	return {
 		get content() { return content.get(); },
+		get comments() { return comments.get(); },
 		get template() { return template.get(); },
 		get script() { return script.get(); },
 		get scriptSetup() { return scriptSetup.get(); },
@@ -180,10 +192,11 @@ export function computedSfc(
 				const change = untrackedSnapshot().getChangeRange(cache.snapshot);
 				if (change) {
 
-					const prevTrackId = System.activeTrackId;
-					System.activeTrackId = 0;
+					const prevSub = activeSub;
+					const prevTrackId = activeTrackId;
+					setActiveSub(undefined, 0);
 					const templateOffset = base.startTagEnd;
-					System.activeTrackId = prevTrackId;
+					setActiveSub(prevSub, prevTrackId);
 
 					const newText = untrackedSnapshot().getText(change.span.start, change.span.start + change.newLength);
 					const newResult = cache.plugin.updateSFCTemplate(cache.result, {
