@@ -68,9 +68,8 @@ export function create(): LanguageServicePlugin {
 								continue;
 							}
 
-							const length = lengths.reduce((res, val) => res + val, 0);
 							const start = sourceOffsets[0];
-							const end = sourceOffsets.at(-1)! + length;
+							const end = sourceOffsets.at(-1)! + lengths.at(-1)!;
 
 							if (offset >= start && offset <= end) {
 								return;
