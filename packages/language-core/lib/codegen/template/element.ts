@@ -153,7 +153,6 @@ export function* generateComponent(
 		yield* generateCanonicalComponentName(
 			node.tag,
 			startTagOffset,
-			// with hover support
 			ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation
 		);
 		yield `${endOfLine}`;
