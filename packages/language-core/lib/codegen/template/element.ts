@@ -11,7 +11,7 @@ import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
-import { type FailedPropExpression, generateElementProps, getHasVBindAttrs } from './elementProps';
+import { type FailedPropExpression, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
@@ -252,7 +252,7 @@ export function* generateComponent(
 		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
 	}
 
-	if (getHasVBindAttrs(options, ctx, node)) {
+	if (hasVBindAttrs(options, ctx, node)) {
 		const attrsVar = ctx.getInternalVariable();
 		ctx.inheritedAttrVars.add(attrsVar);
 		yield `let ${attrsVar}!: Parameters<typeof ${var_functionalComponent}>[0];\n`;
@@ -336,7 +336,7 @@ export function* generateElement(
 		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
 	}
 
-	if (getHasVBindAttrs(options, ctx, node)) {
+	if (hasVBindAttrs(options, ctx, node)) {
 		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
 	}
 }
@@ -734,6 +734,21 @@ function* generateReferencesForScopedCssClasses(
 			}
 		}
 	}
+}
+
+function hasVBindAttrs(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode
+) {
+	return options.vueCompilerOptions.fallthroughAttributes && (
+		node === ctx.singleRootNode ||
+		node.props.some(prop =>
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'bind'
+			&& prop.exp?.loc.source === '$attrs'
+		)
+	);
 }
 
 function camelizeComponentName(newName: string) {

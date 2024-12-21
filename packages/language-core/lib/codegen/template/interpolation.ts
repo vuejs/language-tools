@@ -18,13 +18,8 @@ export function* generateInterpolation(
 	start: number | undefined,
 	astHolder: any = {},
 	prefix: string = '',
-	suffix: string = '',
-	externalVars: string[] = []
+	suffix: string = ''
 ): Generator<Code> {
-	for (const name of externalVars) {
-		ctx.removeLocalVariable(name);
-	}
-
 	const code = prefix + _code + suffix;
 	const ast = createTsAst(options.ts, astHolder, code);
 	for (let [section, offset, type] of forEachInterpolationSegment(
@@ -73,10 +68,6 @@ export function* generateInterpolation(
 			}
 			yield addSuffix;
 		}
-	}
-
-	for (const name of externalVars) {
-		ctx.addLocalVariable(name);
 	}
 }
 
