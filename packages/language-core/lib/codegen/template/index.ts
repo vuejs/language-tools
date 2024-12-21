@@ -92,7 +92,7 @@ function* generateSlots(
 		yield `}${endOfLine}`;
 	}
 	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
-	yield* generateContextVariable(options, name, options.slotsAssignName ?? `__VLS_slots`);
+	yield* generateContextVariable(options, name, `typeof ${options.slotsAssignName ?? `__VLS_slots`}`);
 }
 
 function* generateInheritedAttrs(
