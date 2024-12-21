@@ -42,11 +42,11 @@ export function create(): LanguageServicePlugin {
 							break;
 						}
 
-						const block = root._sfc.styles.find((style) => style.name === decoded![1]);
+						const block = root._sfc.styles.find(style => style.name === decoded![1]);
 						if (!block) {
 							break;
 						}
-	
+
 						let script: VirtualCode | undefined;
 						for (const [key, value] of sourceScript.generated.embeddedCodes) {
 							if (key.startsWith('script_')) {
@@ -84,7 +84,7 @@ export function create(): LanguageServicePlugin {
 				}
 			};
 
-			async function worker<T>(document: TextDocument, callback: (stylesheet: css.Stylesheet, cssLs: css.LanguageService) => T) {
+			function worker<T>(document: TextDocument, callback: (stylesheet: css.Stylesheet, cssLs: css.LanguageService) => T) {
 				const cssLs = getCssLs(document);
 				if (!cssLs) {
 					return;
