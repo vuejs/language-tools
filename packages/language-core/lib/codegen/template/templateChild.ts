@@ -98,7 +98,7 @@ export function* generateTemplateChild(
 			) {
 				yield* generateTemplateSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
 			}
-			if (
+			else if (
 				node.tagType === CompilerDOM.ElementTypes.ELEMENT
 				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
 			) {
