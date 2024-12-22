@@ -5,7 +5,7 @@ import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code, VueCodeInformation } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import { collectVars, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../utils';
+import { endOfLine, newLine, variableNameRegex, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
@@ -14,9 +14,8 @@ import { generateElementEvents } from './elementEvents';
 import { type FailedPropExpression, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateObjectProperty } from './objectProperty';
 import { generatePropertyAccess } from './propertyAccess';
-import { generateTemplateChild } from './templateChild';
+import { generateTemplateSlot } from './templateSlot';
 
 const colonReg = /:/g;
 
@@ -267,7 +266,7 @@ export function* generateComponent(
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir) {
-		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, var_defineComponentCtx);
+		yield* generateTemplateSlot(options, ctx, node, slotDir, currentComponent, var_defineComponentCtx);
 	}
 	else {
 		yield* generateElementChildren(options, ctx, node, currentComponent, var_defineComponentCtx);
@@ -292,7 +291,7 @@ export function* generateElement(
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
 
-	yield `__VLS_elementAsFunction(__VLS_intrinsicElements`;
+	yield `__VLS_asFunctionalElement(__VLS_intrinsicElements`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
@@ -335,14 +334,6 @@ export function* generateElement(
 		ctx.singleRootElType = `typeof __VLS_nativeElements['${node.tag}']`;
 	}
 
-	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
-	if (slotDir && componentCtxVar) {
-		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
-	}
-	else {
-		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
-	}
-
 	if (
 		options.vueCompilerOptions.fallthroughAttributes
 		&& (
@@ -352,6 +343,8 @@ export function* generateElement(
 	) {
 		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
 	}
+
+	yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
 }
 
 function* generateFailedPropExps(
@@ -467,115 +460,6 @@ function* generateComponentGeneric(
 		);
 	}
 	ctx.lastGenericComment = undefined;
-}
-
-function* generateComponentSlot(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-	slotDir: CompilerDOM.DirectiveNode,
-	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string
-): Generator<Code> {
-	yield `{${newLine}`;
-	ctx.usedComponentCtxVars.add(componentCtxVar);
-	if (currentComponent) {
-		ctx.hasSlotElements.add(currentComponent);
-	}
-	const slotBlockVars: string[] = [];
-	yield `const {`;
-	if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
-		yield* generateObjectProperty(
-			options,
-			ctx,
-			slotDir.arg.loc.source,
-			slotDir.arg.loc.start.offset,
-			slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
-			slotDir.arg.loc,
-			false,
-			true
-		);
-		yield ': __VLS_thisSlot';
-	}
-	else {
-		yield `default: `;
-		yield* wrapWith(
-			slotDir.loc.start.offset,
-			slotDir.loc.start.offset + (
-				slotDir.loc.source.startsWith('#')
-					? '#'.length
-					: slotDir.loc.source.startsWith('v-slot:')
-						? 'v-slot:'.length
-						: 0
-			),
-			ctx.codeFeatures.withoutHighlightAndCompletion,
-			`__VLS_thisSlot`
-		);
-	}
-	yield `} = ${componentCtxVar}.slots!${endOfLine}`;
-
-	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
-		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
-		if (!slotDir.exp.content.includes(':')) {
-			yield `const [`;
-			yield [
-				slotDir.exp.content,
-				'template',
-				slotDir.exp.loc.start.offset,
-				ctx.codeFeatures.all,
-			];
-			yield `] = __VLS_getSlotParams(__VLS_thisSlot)${endOfLine}`;
-		}
-		else {
-			yield `const `;
-			yield [
-				slotDir.exp.content,
-				'template',
-				slotDir.exp.loc.start.offset,
-				ctx.codeFeatures.all,
-			];
-			yield ` = __VLS_getSlotParam(__VLS_thisSlot)${endOfLine}`;
-		}
-	}
-
-	for (const varName of slotBlockVars) {
-		ctx.addLocalVariable(varName);
-	}
-
-	yield* ctx.resetDirectiveComments('end of slot children start');
-
-	let prev: CompilerDOM.TemplateChildNode | undefined;
-	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
-		prev = childNode;
-	}
-
-	for (const varName of slotBlockVars) {
-		ctx.removeLocalVariable(varName);
-	}
-	let isStatic = true;
-	if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		isStatic = slotDir.arg.isStatic;
-	}
-	if (isStatic && slotDir && !slotDir.arg) {
-		yield `${componentCtxVar}.slots!['`;
-		yield [
-			'',
-			'template',
-			slotDir.loc.start.offset + (
-				slotDir.loc.source.startsWith('#')
-					? '#'.length : slotDir.loc.source.startsWith('v-slot:')
-						? 'v-slot:'.length
-						: 0
-			),
-			ctx.codeFeatures.completion,
-		];
-		yield `'/* empty slot name completion */]${newLine}`;
-	}
-
-	yield* ctx.generateAutoImportCompletion();
-	yield `}${newLine}`;
 }
 
 function* generateReferencesForElements(

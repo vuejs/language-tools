@@ -6,6 +6,7 @@ import { generateComponent, generateElement } from './element';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
+import { generateTemplateSlot } from './templateSlot';
 import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 
@@ -85,11 +86,19 @@ export function* generateTemplateChild(
 		else if (vIfNode) {
 			yield* generateVIf(options, ctx, vIfNode, currentComponent, componentCtxVar);
 		}
+		else if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
+			yield* generateSlotOutlet(options, ctx, node, currentComponent, componentCtxVar);
+		}
 		else {
-			if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
-				yield* generateSlotOutlet(options, ctx, node, currentComponent, componentCtxVar);
+			const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
+			if (
+				node.tagType === CompilerDOM.ElementTypes.TEMPLATE
+				&& componentCtxVar
+				&& slotDir
+			) {
+				yield* generateTemplateSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
 			}
-			else if (
+			if (
 				node.tagType === CompilerDOM.ElementTypes.ELEMENT
 				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
 			) {
