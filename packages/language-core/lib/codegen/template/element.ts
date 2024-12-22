@@ -512,7 +512,7 @@ function* generateComponentSlot(
 			`__VLS_thisSlot`
 		);
 	}
-	yield `} = __VLS_nonNullable(${componentCtxVar}.slots)${endOfLine}`;
+	yield `} = ${componentCtxVar}.slots!${endOfLine}`;
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
@@ -559,7 +559,7 @@ function* generateComponentSlot(
 		isStatic = slotDir.arg.isStatic;
 	}
 	if (isStatic && slotDir && !slotDir.arg) {
-		yield `__VLS_nonNullable(${componentCtxVar}.slots)['`;
+		yield `${componentCtxVar}.slots!['`;
 		yield [
 			'',
 			'template',
