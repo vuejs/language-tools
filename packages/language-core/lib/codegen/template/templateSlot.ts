@@ -14,14 +14,15 @@ export function* generateTemplateSlot(
 	currentComponent: CompilerDOM.ElementNode | undefined,
 	componentCtxVar: string
 ): Generator<Code> {
-	yield `{${newLine}`;
+	const slotBlockVars: string[] = [];
 	ctx.usedComponentCtxVars.add(componentCtxVar);
 	if (currentComponent) {
 		ctx.hasSlotElements.add(currentComponent);
 	}
-	const slotBlockVars: string[] = [];
+	yield `{${newLine}`;
+
 	yield `const { `;
-	if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
+	if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
 		yield* generateObjectProperty(
 			options,
 			ctx,
@@ -43,7 +44,7 @@ export function* generateTemplateSlot(
 	}
 	yield `: __VLS_thisSlot } = ${componentCtxVar}.slots!${endOfLine}`;
 
-	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+	if (slotDir.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
 		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
 		if (!slotDir.exp.content.includes(':')) {
@@ -83,18 +84,20 @@ export function* generateTemplateSlot(
 	for (const varName of slotBlockVars) {
 		ctx.removeLocalVariable(varName);
 	}
+
 	let isStatic = true;
-	if (slotDir?.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+	if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		isStatic = slotDir.arg.isStatic;
 	}
-	if (isStatic && slotDir && !slotDir.arg) {
+	if (isStatic && !slotDir.arg) {
 		yield `${componentCtxVar}.slots!['`;
 		yield [
 			'',
 			'template',
 			slotDir.loc.start.offset + (
 				slotDir.loc.source.startsWith('#')
-					? '#'.length : slotDir.loc.source.startsWith('v-slot:')
+					? '#'.length
+					: slotDir.loc.source.startsWith('v-slot:')
 						? 'v-slot:'.length
 						: 0
 			),
