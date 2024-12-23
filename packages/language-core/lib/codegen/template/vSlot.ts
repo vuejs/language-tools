@@ -15,10 +15,8 @@ export function* generateVSlot(
 	if (!ctx.currentComponent) {
 		return;
 	}
-
-	const slotBlockVars: string[] = [];
 	ctx.currentComponent.used = true;
-	ctx.hasSlotElements.add(ctx.currentComponent.node);
+	const slotBlockVars: string[] = [];
 	yield `{${newLine}`;
 
 	yield `const { `;

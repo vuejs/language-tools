@@ -285,7 +285,7 @@ export function* generateComponent(
 		yield* generateVSlot(options, ctx, node, slotDir);
 	}
 	else {
-		yield* generateElementChildren(options, ctx, node);
+		yield* generateElementChildren(options, ctx, node, true);
 	}
 
 	if (ctx.currentComponent.used) {
