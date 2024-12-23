@@ -6,9 +6,9 @@ import { generateComponent, generateElement } from './element';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
-import { generateTemplateSlot } from './templateSlot';
 import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
+import { generateVSlot } from './vSlot';
 
 // @ts-ignore
 const transformContext: CompilerDOM.TransformContext = {
@@ -96,7 +96,7 @@ export function* generateTemplateChild(
 				&& componentCtxVar
 				&& slotDir
 			) {
-				yield* generateTemplateSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
+				yield* generateVSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
 			}
 			else if (
 				node.tagType === CompilerDOM.ElementTypes.ELEMENT

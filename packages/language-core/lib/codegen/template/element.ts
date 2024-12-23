@@ -15,7 +15,7 @@ import { type FailedPropExpression, generateElementProps } from './elementProps'
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
-import { generateTemplateSlot } from './templateSlot';
+import { generateVSlot } from './vSlot';
 
 const colonReg = /:/g;
 
@@ -266,7 +266,7 @@ export function* generateComponent(
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir) {
-		yield* generateTemplateSlot(options, ctx, node, slotDir, currentComponent, var_defineComponentCtx);
+		yield* generateVSlot(options, ctx, node, slotDir, currentComponent, var_defineComponentCtx);
 	}
 	else {
 		yield* generateElementChildren(options, ctx, node, currentComponent, var_defineComponentCtx);

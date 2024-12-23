@@ -6,7 +6,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateObjectProperty } from './objectProperty';
 import { generateTemplateChild } from './templateChild';
 
-export function* generateTemplateSlot(
+export function* generateVSlot(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
