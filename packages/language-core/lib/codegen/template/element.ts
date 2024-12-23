@@ -495,24 +495,16 @@ function* generateComponentSlot(
 			false,
 			true
 		);
-		yield ': __VLS_thisSlot';
 	}
 	else {
-		yield `default: `;
 		yield* wrapWith(
 			slotDir.loc.start.offset,
-			slotDir.loc.start.offset + (
-				slotDir.loc.source.startsWith('#')
-					? '#'.length
-					: slotDir.loc.source.startsWith('v-slot:')
-						? 'v-slot:'.length
-						: 0
-			),
+			slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
 			ctx.codeFeatures.withoutHighlightAndCompletion,
-			`__VLS_thisSlot`
+			`default`
 		);
 	}
-	yield `} = ${componentCtxVar}.slots!${endOfLine}`;
+	yield `: __VLS_thisSlot } = ${componentCtxVar}.slots!${endOfLine}`;
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
