@@ -23,7 +23,6 @@
 
 ### Bug Fixes
 
-- fix(language-core): generate empty scoped classname for `:class` - Thanks to @KazariEX!
 - fix(language-core): generate script setup starting from last leading comment without `@ts-check` - Thanks to @KazariEX!
 - fix(language-core): make model modifiers optional (#4978) - Thanks to @stafyniaksacha!
 - fix(language-core): always report missing props on `<slot>` (#4982) - Thanks to @KazariEX!
