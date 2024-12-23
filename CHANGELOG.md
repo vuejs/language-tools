@@ -9,14 +9,13 @@
 - feat(language-core): support `@vue-generic` (#4971) - Thanks to @KazariEX!
 - feat(vscode): add configuration for skipping automatic detection of Hybrid Mode (#5046) - Thanks to @KazariEX!
 - feat(language-service): crawl html data of `data-allow-mismatch` - Thanks to @KazariEX!
-- feat(language-core): type support for `useAttrs` and `$attrs` (#5011) - Thanks to @KazariEX!
+- feat(language-core): type support of `$attrs` (#5076) - Thanks to @KazariEX!
 - feat(language-core): type support of `useSlots` and `$slots` (#5055) - Thanks to @KazariEX!
 - feat(language-core): type support of `v-model` modifiers (#5061) - Thanks to @KazariEX!
 - feat(language-service): process references data at runtime to reduce bundle size (#5054) - Thanks to @KazariEX!
 - feat(language-core): support the use of sfc root comment to configure `vueCompilerOptions` (#4987) - Thanks to @KazariEX!
 - feat(vscode): add timeout logic for insiders fetching (#5048) - Thanks to @KazariEX!
 - feat(vscode): add examples to inlay hints configuration (#5068) - Thanks to @KazariEX!
-- feat(language-core): type support of `$attrs` (#5076) - Thanks to @KazariEX!
 
 ### Performance
 
@@ -25,21 +24,21 @@
 ### Bug Fixes
 
 - fix(language-core): generate script setup starting from last leading comment without `@ts-check` - Thanks to @KazariEX!
-- fix(language-core): make model modifiers optional (#4978) - Thanks to @KazariEX!
+- fix(language-core): make model modifiers optional (#4978) - Thanks to @stafyniaksacha!
 - fix(language-core): always report missing props on `<slot>` (#4982) - Thanks to @KazariEX!
 - fix(language-core): avoid unchecked index access when parsing `defineEmits` (#5028) - Thanks to @KazariEX!
 - fix(language-service): handle text edit of special closing tags completion correctly (#5016) - Thanks to @KazariEX!
 - fix(language-core): don't generate variable access of template refs using `useTemplateRef` (#5032) - Thanks to @KazariEX!
-- fix(vscode): update `enabledHybridMode` before activate extension (#5019) - Thanks to @KazariEX!
+- fix(vscode): update `enabledHybridMode` before activate extension (#5019) - Thanks to @nieyuyao!
 - fix(tsc): point to shimmed tsc entry point to support ts 5.7 (#5020) - Thanks to @davidmatter!
 - fix(vscode): add `GitHub.copilot-chat` to hybrid mode compatible list (#5047) - Thanks to @KazariEX!
 - fix(language-core): generate generics normally when `useTemplateRef` has no parameters (#5051) - Thanks to @KazariEX!
 - fix(language-core): handle named default import of components correctly (#5066) - Thanks to @KazariEX!
 - fix(language-core): disable navigation feature on non-binding prop values (#5040) - Thanks to @KazariEX!
-- fix(language-core): do not generate useTemplateRef parameter repeatedly (#5009)
+- fix(language-core): do not generate `useTemplateRef` parameter repeatedly (#5009)
 - fix(language-core): generate macros after script setup content (#5071) - Thanks to @KazariEX!
 - fix(language-core): correct type and completion support of `vue:` event (#4969) - Thanks to @KazariEX!
-- fix(language-core): prevent visiting functional components for parseScriptSetupRanges (#5049) - Thanks to @zhiyuanzmj!
+- fix(language-core): prevent visiting functional components for `parseScriptSetupRanges` (#5049) - Thanks to @zhiyuanzmj!
 - fix(language-service): don't provide modifier completion for `@` and `:` (#5052) - Thanks to @KazariEX!
 - fix(language-core): consistent interpolation behavior of shorthand binding (#4975) - Thanks to @KazariEX!
 - fix(language-core): resolve components with various name cases correctly (#5067) - Thanks to @KazariEX!
