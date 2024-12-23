@@ -21,7 +21,7 @@ export function* generateTemplate(
 	yield* generateTemplateCtx(options);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
-	yield* generateTemplateBody(options, templateCodegenCtx);
+	yield* generateTemplateBody(options, ctx, templateCodegenCtx);
 	return templateCodegenCtx;
 }
 
@@ -128,6 +128,7 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 
 function* generateTemplateBody(
 	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
 	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
 	yield* generateStyleScopedClasses(options, templateCodegenCtx);
@@ -135,6 +136,7 @@ function* generateTemplateBody(
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
+		ctx.templateGeneratedOffset = options.getGeneratedLength();
 		for (const code of options.templateCodegen.codes) {
 			yield code;
 		}
@@ -145,15 +147,15 @@ function* generateTemplateBody(
 			yield `const __VLS_slots = {}${endOfLine}`;
 		}
 		yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
-		yield `const $refs = {}${endOfLine}`;
-		yield `const $el = {} as any${endOfLine}`;
+		yield `const __VLS_refs = {}${endOfLine}`;
+		yield `const __VLS_rootEl = {} as any${endOfLine}`;
 	}
 
 	yield `return {${newLine}`;
 	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `	slots: ${options.scriptSetupRanges?.defineSlots?.name ?? '__VLS_slots'},${newLine}`;
-	yield `	refs: $refs,${newLine}`;
-	yield `	rootEl: $el,${newLine}`;
+	yield `	refs: __VLS_refs,${newLine}`;
+	yield `	rootEl: __VLS_rootEl,${newLine}`;
 	yield `}${endOfLine}`;
 }
 
