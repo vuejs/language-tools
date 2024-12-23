@@ -65,6 +65,7 @@ export async function startNamedPipeServer(
 	const dataChunks: Buffer[] = [];
 	const componentNamesAndProps = new Map<string, string>();
 	const allConnections = new Set<net.Socket>();
+	const pendingRequests = new Set<number>();
 	const server = net.createServer(connection => {
 		allConnections.add(connection);
 
@@ -183,58 +184,64 @@ export async function startNamedPipeServer(
 	}
 
 	function onRequest(connection: net.Socket, [seq, requestType, ...args]: RequestData) {
+		if (pendingRequests.has(seq)) {
+			return;
+		}
+		setTimeout(() => pendingRequests.delete(seq), 500);
+		pendingRequests.add(seq);
+
+		let data: any;
+		try {
+			data = handleRequest(requestType, ...args);
+		} catch {
+			data = null;
+		}
+
+		if (requestType === 'getComponentEvents' && Math.random() < 0.9) {
+			return;
+		}
+		connection.write(JSON.stringify([seq, data ?? null]) + '\n\n');
+	}
+
+	function handleRequest(requestType: RequestType, ...args: any[]) {
 		if (requestType === 'projectInfo') {
-			sendResponse({
+			return {
 				name: info.project.getProjectName(),
 				kind: info.project.projectKind,
 				currentDirectory: info.project.getCurrentDirectory(),
-			} satisfies ProjectInfo);
+			} satisfies ProjectInfo;
 		}
 		else if (requestType === 'containsFile') {
-			sendResponse(
-				info.project.containsFile(ts.server.toNormalizedPath(args[0]))
-			);
+			return info.project.containsFile(ts.server.toNormalizedPath(args[0]));
 		}
 		else if (requestType === 'collectExtractProps') {
-			const result = collectExtractProps.apply(requestContext, args as any);
-			sendResponse(result);
+			return collectExtractProps.apply(requestContext, args as any);
 		}
 		else if (requestType === 'getImportPathForFile') {
-			const result = getImportPathForFile.apply(requestContext, args as any);
-			sendResponse(result);
+			return getImportPathForFile.apply(requestContext, args as any);
 		}
 		else if (requestType === 'getPropertiesAtLocation') {
-			const result = getPropertiesAtLocation.apply(requestContext, args as any);
-			sendResponse(result);
+			return getPropertiesAtLocation.apply(requestContext, args as any);
 		}
 		else if (requestType === 'getQuickInfoAtPosition') {
-			const result = getQuickInfoAtPosition.apply(requestContext, args as any);
-			sendResponse(result);
+			return getQuickInfoAtPosition.apply(requestContext, args as any);
 		}
 		else if (requestType === 'getComponentProps') {
-			const result = getComponentProps.apply(requestContext, args as any);
-			sendResponse(result);
+			return getComponentProps.apply(requestContext, args as any);
 		}
 		else if (requestType === 'getComponentEvents') {
-			const result = getComponentEvents.apply(requestContext, args as any);
-			sendResponse(result);
+			return getComponentEvents.apply(requestContext, args as any);
 		}
 		else if (requestType === 'getTemplateContextProps') {
-			const result = getTemplateContextProps.apply(requestContext, args as any);
-			sendResponse(result);
+			return getTemplateContextProps.apply(requestContext, args as any);
 		}
 		else if (requestType === 'getElementAttrs') {
-			const result = getElementAttrs.apply(requestContext, args as any);
-			sendResponse(result);
-		}
-		else {
-			console.warn('[Vue Named Pipe Server] Unknown request:', requestType);
-			debugger;
+			return getElementAttrs.apply(requestContext, args as any);
 		}
 
-		function sendResponse(data: any | undefined) {
-			connection.write(JSON.stringify([seq, data ?? null]) + '\n\n');
-		}
+		console.warn('[Vue Named Pipe Server] Unknown request:', requestType);
+		debugger;
+		return undefined;
 	}
 }
 

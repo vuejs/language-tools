@@ -43,7 +43,7 @@ class NamedPipeServer {
 		if (this.projectInfo) {
 			if (!this.containsFileCache.has(fileName)) {
 				this.containsFileCache.set(fileName, (async () => {
-					const res = await this.request<boolean>('containsFile', fileName);
+					const res = await this.sendRequest<boolean>('containsFile', fileName);
 					if (typeof res !== 'boolean') {
 						// If the request fails, delete the cache
 						this.containsFileCache.delete(fileName);
@@ -66,7 +66,7 @@ class NamedPipeServer {
 		this.socket = net.connect(this.path);
 		this.socket.on('data', this.onData.bind(this));
 		this.socket.on('connect', async () => {
-			const projectInfo = await this.request<ProjectInfo>('projectInfo', '');
+			const projectInfo = await this.sendRequest<ProjectInfo>('projectInfo', '');
 			if (projectInfo) {
 				console.log('TSServer project ready:', projectInfo.name);
 				this.projectInfo = projectInfo;
@@ -136,7 +136,7 @@ class NamedPipeServer {
 		}
 	}
 
-	request<T>(requestType: RequestData[1], fileName: string, ...args: any[]) {
+	sendRequest<T>(requestType: RequestData[1], fileName: string, ...args: any[]) {
 		return new Promise<T | undefined | null>(resolve => {
 			const seq = this.seq++;
 			// console.time(`[${seq}] ${requestType} ${fileName}`);
@@ -144,8 +144,14 @@ class NamedPipeServer {
 				// console.timeEnd(`[${seq}] ${requestType} ${fileName}`);
 				this.requestHandlers.delete(seq);
 				resolve(data);
+				clearInterval(retryTimer);
 			});
-			this.socket!.write(JSON.stringify([seq, requestType, fileName, ...args] satisfies RequestData) + '\n\n');
+			const retry = () => {
+				const data: RequestData = [seq, requestType, fileName, ...args];
+				this.socket!.write(JSON.stringify(data) + '\n\n');
+			};
+			retry();
+			const retryTimer = setInterval(retry, 1000);
 		});
 	}
 }

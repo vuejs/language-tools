@@ -95,5 +95,5 @@ async function sendRequest<T>(requestType: RequestData[1], fileName: string, ...
 	if (!server) {
 		return;
 	}
-	return server.request<T>(requestType, fileName, ...rest);
+	return server.sendRequest<T>(requestType, fileName, ...rest);
 }
