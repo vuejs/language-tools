@@ -23,8 +23,7 @@ const colonReg = /:/g;
 export function* generateComponent(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-	currentComponent: CompilerDOM.ElementNode | undefined
+	node: CompilerDOM.ElementNode
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
@@ -42,6 +41,12 @@ export function* generateComponent(
 	const var_componentEvents = ctx.getInternalVariable();
 	const var_defineComponentCtx = ctx.getInternalVariable();
 	const isComponentTag = node.tag.toLowerCase() === 'component';
+
+	ctx.currentComponent = {
+		node,
+		ctxVar: var_defineComponentCtx,
+		used: false
+	};
 
 	let props = node.props;
 	let dynamicTagInfo: {
@@ -231,8 +236,6 @@ export function* generateComponent(
 	);
 	yield `, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
 
-	currentComponent = node;
-
 	yield* generateFailedPropExps(options, ctx, failedPropExps);
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, props);
@@ -240,7 +243,7 @@ export function* generateComponent(
 
 	if (refName || isRootNode) {
 		const varName = ctx.getInternalVariable();
-		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
+		ctx.currentComponent.used = true;
 
 		yield `var ${varName} = {} as (Parameters<NonNullable<typeof ${var_defineComponentCtx}['expose']>>[0] | null)`;
 		if (node.codegenNode?.type === CompilerDOM.NodeTypes.VNODE_CALL
@@ -261,7 +264,7 @@ export function* generateComponent(
 
 	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEvents);
 	if (usedComponentEventsVar) {
-		ctx.usedComponentCtxVars.add(var_defineComponentCtx);
+		ctx.currentComponent.used = true;
 		yield `let ${var_componentEmit}!: typeof ${var_defineComponentCtx}.emit${endOfLine}`;
 		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
 	}
@@ -280,13 +283,13 @@ export function* generateComponent(
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir) {
-		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, var_defineComponentCtx);
+		yield* generateComponentSlot(options, ctx, node, slotDir);
 	}
 	else {
-		yield* generateElementChildren(options, ctx, node, currentComponent, var_defineComponentCtx);
+		yield* generateElementChildren(options, ctx, node);
 	}
 
-	if (ctx.usedComponentCtxVars.has(var_defineComponentCtx)) {
+	if (ctx.currentComponent.used) {
 		yield `var ${var_defineComponentCtx}!: __VLS_PickFunctionalComponentCtx<typeof ${var_originalComponent}, typeof ${var_componentInstance}>${endOfLine}`;
 	}
 }
@@ -295,8 +298,6 @@ export function* generateElement(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined,
 	isVForChild: boolean
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
@@ -349,11 +350,11 @@ export function* generateElement(
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
-	if (slotDir && componentCtxVar) {
-		yield* generateComponentSlot(options, ctx, node, slotDir, currentComponent, componentCtxVar);
+	if (slotDir && ctx.currentComponent) {
+		yield* generateComponentSlot(options, ctx, node, slotDir);
 	}
 	else {
-		yield* generateElementChildren(options, ctx, node, currentComponent, componentCtxVar);
+		yield* generateElementChildren(options, ctx, node);
 	}
 
 	if (
@@ -486,14 +487,12 @@ function* generateComponentSlot(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	slotDir: CompilerDOM.DirectiveNode,
-	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string
+	slotDir: CompilerDOM.DirectiveNode
 ): Generator<Code> {
 	yield `{${newLine}`;
-	ctx.usedComponentCtxVars.add(componentCtxVar);
-	if (currentComponent) {
-		ctx.hasSlotElements.add(currentComponent);
+	if (ctx.currentComponent) {
+		ctx.currentComponent.used = true;
+		ctx.hasSlotElements.add(ctx.currentComponent.node);
 	}
 	const slotBlockVars: string[] = [];
 	yield `const {`;
@@ -517,7 +516,7 @@ function* generateComponentSlot(
 			`default`
 		);
 	}
-	yield `: __VLS_thisSlot } = ${componentCtxVar}.slots!${endOfLine}`;
+	yield `: __VLS_thisSlot } = ${ctx.currentComponent!.ctxVar}.slots!${endOfLine}`;
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
@@ -552,7 +551,7 @@ function* generateComponentSlot(
 
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
+		yield* generateTemplateChild(options, ctx, childNode, prev);
 		prev = childNode;
 	}
 
@@ -564,7 +563,7 @@ function* generateComponentSlot(
 		isStatic = slotDir.arg.isStatic;
 	}
 	if (isStatic && slotDir && !slotDir.arg) {
-		yield `${componentCtxVar}.slots!['`;
+		yield `${ctx.currentComponent!.ctxVar}.slots!['`;
 		yield [
 			'',
 			'template',

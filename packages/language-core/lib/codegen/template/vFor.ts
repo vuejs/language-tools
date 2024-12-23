@@ -9,9 +9,7 @@ import { generateTemplateChild } from './templateChild';
 export function* generateVFor(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ForNode,
-	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined
+	node: CompilerDOM.ForNode
 ): Generator<Code> {
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
@@ -88,7 +86,7 @@ export function* generateVFor(
 	}
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar, true);
+		yield* generateTemplateChild(options, ctx, childNode, prev, true);
 		prev = childNode;
 	}
 	for (const varName of forBlockVars) {
