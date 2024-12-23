@@ -2,6 +2,7 @@ import type { Language } from '@vue/language-core';
 import * as fs from 'node:fs';
 import * as net from 'node:net';
 import type * as ts from 'typescript';
+import { getComponentDirectives } from './client';
 import { collectExtractProps } from './requests/collectExtractProps';
 import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from './requests/componentInfos';
 import { getImportPathForFile } from './requests/getImportPathForFile';
@@ -19,6 +20,7 @@ export type RequestType = 'containsFile'
 	// Component Infos
 	| 'getComponentProps'
 	| 'getComponentEvents'
+	| 'getComponentDirectives'
 	| 'getTemplateContextProps'
 	| 'getElementAttrs';
 
@@ -217,6 +219,10 @@ export async function startNamedPipeServer(
 		}
 		else if (requestType === 'getComponentEvents') {
 			const result = getComponentEvents.apply(requestContext, args as any);
+			sendResponse(result);
+		}
+		else if (requestType === 'getComponentDirectives') {
+			const result = getComponentDirectives.apply(requestContext, args as any);
 			sendResponse(result);
 		}
 		else if (requestType === 'getTemplateContextProps') {
