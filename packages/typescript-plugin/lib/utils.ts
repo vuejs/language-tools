@@ -1,3 +1,4 @@
+import { camelize, capitalize } from '@vue/shared';
 import * as fs from 'node:fs';
 import * as net from 'node:net';
 import * as os from 'node:os';
@@ -29,11 +30,14 @@ class NamedPipeServer {
 	connecting = false;
 	projectInfo?: ProjectInfo;
 	containsFileCache = new Map<string, Promise<boolean | undefined | null>>();
-	componentNamesAndProps = new Map<string, Record<string, {
-		name: string;
-		required?: true;
-		commentMarkdown?: string;
-	}[]>>();
+	componentNamesAndProps = new Map<
+		string,
+		Record<string, null | {
+			name: string;
+			required?: true;
+			commentMarkdown?: string;
+		}[]>
+	>();
 
 	constructor(kind: ts.server.ProjectKind, id: number) {
 		this.path = getServerPath(kind, id);
@@ -53,6 +57,20 @@ class NamedPipeServer {
 			}
 			return this.containsFileCache.get(fileName);
 		}
+	}
+
+	async getComponentProps(fileName: string, tag: string) {
+		const componentAndProps = this.componentNamesAndProps.get(fileName);
+		if (!componentAndProps) {
+			return;
+		}
+		const props = componentAndProps[tag]
+			?? componentAndProps[camelize(tag)]
+			?? componentAndProps[capitalize(camelize(tag))];
+		if (props) {
+			return props;
+		}
+		return await this.sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentProps']>>('subscribeComponentProps', fileName, tag);
 	}
 
 	update() {
@@ -131,8 +149,41 @@ class NamedPipeServer {
 
 	onNotification(type: NotificationData[0], fileName: string, data: any) {
 		// console.log(`[${type}] ${fileName} ${JSON.stringify(data)}`);
-		if (type === 'componentAndPropsUpdated') {
-			this.componentNamesAndProps.set(fileName, data);
+
+		if (type === 'componentNamesUpdated') {
+			let components = this.componentNamesAndProps.get(fileName);
+			if (!components) {
+				components = {};
+				this.componentNamesAndProps.set(fileName, components);
+			}
+			const newNames: string[] = data;
+			const newNameSet = new Set(newNames);
+			for (const name in components) {
+				if (!newNameSet.has(name)) {
+					delete components[name];
+				}
+			}
+			for (const name of newNames) {
+				if (!components[name]) {
+					components[name] = null;
+				}
+			}
+		}
+		else if (type === 'componentPropsUpdated') {
+			const components = this.componentNamesAndProps.get(fileName) ?? {};
+			const [name, props]: [
+				name: string,
+				props: {
+					name: string;
+					required?: true;
+					commentMarkdown?: string;
+				}[],
+			] = data;
+			components[name] = props;
+		}
+		else {
+			console.error('Unknown notification type:', type);
+			debugger;
 		}
 	}
 

@@ -1,4 +1,3 @@
-import { camelize, capitalize } from '@vue/shared';
 import type { RequestData } from './server';
 import { getBestServer } from './utils';
 
@@ -45,13 +44,7 @@ export async function getComponentProps(fileName: string, componentName: string)
 	if (!server) {
 		return;
 	}
-	const componentAndProps = await server.componentNamesAndProps.get(fileName);
-	if (!componentAndProps) {
-		return;
-	}
-	return componentAndProps[componentName]
-		?? componentAndProps[camelize(componentName)]
-		?? componentAndProps[capitalize(camelize(componentName))];
+	return await server.getComponentProps(fileName, componentName);
 }
 
 export function getComponentEvents(
