@@ -197,9 +197,6 @@ export async function startNamedPipeServer(
 			data = null;
 		}
 
-		if (requestType === 'getComponentEvents' && Math.random() < 0.9) {
-			return;
-		}
 		connection.write(JSON.stringify([seq, data ?? null]) + '\n\n');
 	}
 
