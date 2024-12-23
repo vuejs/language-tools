@@ -1,3 +1,4 @@
+import { FileMap } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import * as fs from 'node:fs';
 import * as net from 'node:net';
@@ -30,14 +31,13 @@ class NamedPipeServer {
 	connecting = false;
 	projectInfo?: ProjectInfo;
 	containsFileCache = new Map<string, Promise<boolean | undefined | null>>();
-	componentNamesAndProps = new Map<
-		string,
+	componentNamesAndProps = new FileMap<
 		Record<string, null | {
 			name: string;
 			required?: true;
 			commentMarkdown?: string;
 		}[]>
-	>();
+	>(false);
 
 	constructor(kind: ts.server.ProjectKind, id: number) {
 		this.path = getServerPath(kind, id);

@@ -1,4 +1,4 @@
-import type { Language } from '@vue/language-core';
+import { FileMap, Language } from '@vue/language-core';
 import * as fs from 'node:fs';
 import * as net from 'node:net';
 import type * as ts from 'typescript';
@@ -68,20 +68,14 @@ export async function startNamedPipeServer(
 		getFileId: (fileName: string) => fileName,
 	};
 	const dataChunks: Buffer[] = [];
-	const currentData = new Map<
-		string,
-		[
-			componentNames: string[],
-			Record<
-				string,
-				{
-					name: string;
-					required?: true;
-					commentMarkdown?: string;
-				}[]
-			>,
-		]
-	>();
+	const currentData = new FileMap<[
+		componentNames: string[],
+		Record<string, {
+			name: string;
+			required?: true;
+			commentMarkdown?: string;
+		}[]>,
+	]>(false);
 	const allConnections = new Set<net.Socket>();
 	const pendingRequests = new Set<number>();
 	const server = net.createServer(connection => {
