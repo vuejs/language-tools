@@ -23,12 +23,9 @@ export function getComponentProps(
 
 	const name = tag.split('.');
 
-	let componentSymbol = components.type.getProperty(name[0]);
-
-	if (!componentSymbol) {
-		componentSymbol = components.type.getProperty(camelize(name[0]))
-			?? components.type.getProperty(capitalize(camelize(name[0])));
-	}
+	let componentSymbol = components.type.getProperty(name[0])
+		?? components.type.getProperty(camelize(name[0]))
+		?? components.type.getProperty(capitalize(camelize(name[0])));
 
 	if (!componentSymbol) {
 		return [];
