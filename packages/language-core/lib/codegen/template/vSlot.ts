@@ -10,15 +10,15 @@ export function* generateVSlot(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	slotDir: CompilerDOM.DirectiveNode,
-	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string
+	slotDir: CompilerDOM.DirectiveNode
 ): Generator<Code> {
-	const slotBlockVars: string[] = [];
-	ctx.usedComponentCtxVars.add(componentCtxVar);
-	if (currentComponent) {
-		ctx.hasSlotElements.add(currentComponent);
+	if (!ctx.currentComponent) {
+		return;
 	}
+
+	const slotBlockVars: string[] = [];
+	ctx.currentComponent.used = true;
+	ctx.hasSlotElements.add(ctx.currentComponent.node);
 	yield `{${newLine}`;
 
 	yield `const { `;
@@ -42,7 +42,7 @@ export function* generateVSlot(
 			`default`
 		);
 	}
-	yield `: __VLS_thisSlot } = ${componentCtxVar}.slots!${endOfLine}`;
+	yield `: __VLS_thisSlot } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
 
 	if (slotDir.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
@@ -77,7 +77,7 @@ export function* generateVSlot(
 
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
+		yield* generateTemplateChild(options, ctx, childNode, prev);
 		prev = childNode;
 	}
 
@@ -90,7 +90,7 @@ export function* generateVSlot(
 		isStatic = slotDir.arg.isStatic;
 	}
 	if (isStatic && !slotDir.arg) {
-		yield `${componentCtxVar}.slots!['`;
+		yield `${ctx.currentComponent.ctxVar}.slots!['`;
 		yield [
 			'',
 			'template',
