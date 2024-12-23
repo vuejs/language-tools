@@ -25,12 +25,13 @@ export function* generateComponent(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode
 ): Generator<Code> {
-	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
-	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html' ? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag) : undefined;
-	const tagOffsets =
-		endTagOffset !== undefined && endTagOffset > startTagOffset
-			? [startTagOffset, endTagOffset]
-			: [startTagOffset];
+	const tagOffsets = [node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag)];
+	if (!node.isSelfClosing && options.template.lang === 'html') {
+		const endTagOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
+		if (endTagOffset > tagOffsets[0]) {
+			tagOffsets.push(endTagOffset);
+		}
+	}
 	const failedPropExps: FailedPropExpression[] = [];
 	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
 	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
@@ -51,7 +52,7 @@ export function* generateComponent(
 	let props = node.props;
 	let dynamicTagInfo: {
 		tag: string;
-		offsets: [number, number | undefined];
+		offsets: number[];
 		astHolder: CompilerDOM.SourceLocation;
 	} | undefined;
 
@@ -68,7 +69,7 @@ export function* generateComponent(
 				}
 				dynamicTagInfo = {
 					tag: prop.exp.content,
-					offsets: [prop.exp.loc.start.offset, undefined],
+					offsets: [prop.exp.loc.start.offset],
 					astHolder: prop.exp.loc,
 				};
 				props = props.filter(p => p !== prop);
@@ -80,7 +81,7 @@ export function* generateComponent(
 		// namespace tag
 		dynamicTagInfo = {
 			tag: node.tag,
-			offsets: [startTagOffset, endTagOffset],
+			offsets: tagOffsets,
 			astHolder: node.loc,
 		};
 	}
@@ -157,7 +158,7 @@ export function* generateComponent(
 		yield `>).`;
 		yield* generateCanonicalComponentName(
 			node.tag,
-			startTagOffset,
+			tagOffsets[0],
 			ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation
 		);
 		yield `${endOfLine}`;
@@ -189,7 +190,7 @@ export function* generateComponent(
 				yield `// @ts-ignore${newLine}`; // #2304
 				yield* generateCamelized(
 					capitalize(node.tag),
-					startTagOffset,
+					tagOffsets[0],
 					{
 						completion: {
 							isAdditional: true,
@@ -227,8 +228,8 @@ export function* generateComponent(
 	yield* generateComponentGeneric(ctx);
 	yield `(`;
 	yield* wrapWith(
-		startTagOffset,
-		startTagOffset + node.tag.length,
+		tagOffsets[0],
+		tagOffsets[0] + node.tag.length,
 		ctx.codeFeatures.verification,
 		`{${newLine}`,
 		...generateElementProps(options, ctx, node, props, options.vueCompilerOptions.strictTemplates, true, failedPropExps),
