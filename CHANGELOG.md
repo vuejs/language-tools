@@ -23,6 +23,7 @@
 
 ### Bug Fixes
 
+- fix(language-core): generate empty scoped classname for `:class` - Thanks to @KazariEX!
 - fix(language-core): generate script setup starting from last leading comment without `@ts-check` - Thanks to @KazariEX!
 - fix(language-core): make model modifiers optional (#4978) - Thanks to @stafyniaksacha!
 - fix(language-core): always report missing props on `<slot>` (#4982) - Thanks to @KazariEX!
@@ -33,6 +34,7 @@
 - fix(tsc): point to shimmed tsc entry point to support ts 5.7 (#5020) - Thanks to @davidmatter!
 - fix(vscode): add `GitHub.copilot-chat` to hybrid mode compatible list (#5047) - Thanks to @KazariEX!
 - fix(language-core): generate generics normally when `useTemplateRef` has no parameters (#5051) - Thanks to @KazariEX!
+- fix(language-core): avoid clipping prop name using `.prop` or `.attr` on `v-model` - Thanks to @KazariEX!
 - fix(language-core): handle named default import of components correctly (#5066) - Thanks to @KazariEX!
 - fix(language-core): disable navigation feature on non-binding prop values (#5040) - Thanks to @KazariEX!
 - fix(language-core): do not generate `useTemplateRef` parameter repeatedly (#5009)
@@ -42,6 +44,8 @@
 - fix(language-service): don't provide modifier completion for `@` and `:` (#5052) - Thanks to @KazariEX!
 - fix(language-core): consistent interpolation behavior of shorthand binding (#4975) - Thanks to @KazariEX!
 - fix(language-core): resolve components with various name cases correctly (#5067) - Thanks to @KazariEX!
+- fix(language-core): map `v-slot` correctly to report error when missing default slot - Thanks to @KazariEX!
+- fix(language-core): map component loc to instance variable for verification - Thanks to @KazariEX!
 
 ### Other Changes
 
