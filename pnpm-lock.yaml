@@ -269,9 +269,6 @@ importers:
       '@vue/language-core':
         specifier: 2.1.10
         version: link:../language-core
-      semver:
-        specifier: ^7.5.4
-        version: 7.6.3
       typescript:
         specifier: '>=5.0.0'
         version: 5.7.2
@@ -279,9 +276,6 @@ importers:
       '@types/node':
         specifier: latest
         version: 22.10.2
-      '@types/semver':
-        specifier: ^7.5.4
-        version: 7.5.8
 
   packages/typescript-plugin:
     dependencies:
