@@ -205,7 +205,20 @@ export function* generateComponent(
 	yield* generateElementProps(options, ctx, node, props, options.vueCompilerOptions.strictTemplates, false);
 	yield `}))${endOfLine}`;
 
-	yield `const ${var_componentInstance} = ${var_functionalComponent}`;
+	yield `const `;
+	yield* wrapWith(
+		node.loc.start.offset,
+		node.loc.end.offset,
+		{
+			verification: {
+				shouldReport(_source, code) {
+					return String(code) !== '6133';
+				},
+			}
+		},
+		var_componentInstance
+	);
+	yield ` = ${var_functionalComponent}`;
 	yield* generateComponentGeneric(ctx);
 	yield `(`;
 	yield* wrapWith(
