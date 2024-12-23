@@ -142,7 +142,6 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		inheritedAttrVars,
 		templateRefs,
 		currentComponent: undefined as {
-			node: CompilerDOM.ElementNode;
 			ctxVar: string;
 			used: boolean;
 		} | undefined,

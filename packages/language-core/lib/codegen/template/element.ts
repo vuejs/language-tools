@@ -42,7 +42,6 @@ export function* generateComponent(
 	const isComponentTag = node.tag.toLowerCase() === 'component';
 
 	ctx.currentComponent = {
-		node,
 		ctxVar: var_defineComponentCtx,
 		used: false
 	};
