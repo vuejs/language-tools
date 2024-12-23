@@ -9,10 +9,7 @@ import type { NotificationData, ProjectInfo, RequestData, ResponseData } from '.
 
 export { TypeScriptProjectHost } from '@volar/typescript';
 
-let { version } = require('../package.json');
-if (version === '2.1.10') {
-	version += '-dev';
-}
+const { version } = require('../package.json');
 const platform = os.platform();
 const pipeDir = platform === 'win32'
 	? `\\\\.\\pipe\\`
