@@ -1,6 +1,6 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
-import { activeSub, activeTrackId, computed, ISignal, setActiveSub, Signal, Unstable } from 'alien-signals';
+import { activeSub, activeTrackId, computed, ISignal, setActiveSub, Signal, unstable } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
@@ -124,7 +124,7 @@ export function computedSfc(
 		}
 		return scriptSetupOriginal.get();
 	});
-	const styles = Unstable.computedArray(
+	const styles = unstable.computedArray(
 		computed(() => parsed.get()?.descriptor.styles ?? []),
 		(block, i) => {
 			const base = computedSfcBlock('style_' + i, 'css', block);
@@ -146,7 +146,7 @@ export function computedSfc(
 			}) satisfies Sfc['styles'][number];
 		}
 	);
-	const customBlocks = Unstable.computedArray(
+	const customBlocks = unstable.computedArray(
 		computed(() => parsed.get()?.descriptor.customBlocks ?? []),
 		(block, i) => {
 			const base = computedSfcBlock('custom_block_' + i, 'txt', block);
