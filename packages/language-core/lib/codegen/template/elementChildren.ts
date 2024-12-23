@@ -8,7 +8,8 @@ import { generateTemplateChild } from './templateChild';
 export function* generateElementChildren(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
+	node: CompilerDOM.ElementNode,
+	isDefaultSlot: boolean = false
 ): Generator<Code> {
 	yield* ctx.resetDirectiveComments('end of element children start');
 	let prev: CompilerDOM.TemplateChildNode | undefined;
@@ -21,10 +22,9 @@ export function* generateElementChildren(
 	// fix https://github.com/vuejs/language-tools/issues/932
 	if (
 		ctx.currentComponent
-		&& !ctx.hasSlotElements.has(node)
+		&& isDefaultSlot
 		&& node.children.length
-		&& node.tagType !== CompilerDOM.ElementTypes.ELEMENT
-		&& node.tagType !== CompilerDOM.ElementTypes.TEMPLATE
+		&& node.tagType === CompilerDOM.ElementTypes.COMPONENT
 	) {
 		ctx.currentComponent.used = true;
 		yield `${ctx.currentComponent.ctxVar}.slots!.`;

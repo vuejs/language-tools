@@ -115,7 +115,6 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		expVar: string;
 		varName: string;
 	}[] = [];
-	const hasSlotElements = new Set<CompilerDOM.ElementNode>();;
 	const blockConditions: string[] = [];
 	const scopedClasses: {
 		source: string;
@@ -134,7 +133,6 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		codeFeatures,
 		accessExternalVariables,
 		lastGenericComment,
-		hasSlotElements,
 		blockConditions,
 		scopedClasses,
 		emptyClassOffsets,
@@ -144,7 +142,6 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		inheritedAttrVars,
 		templateRefs,
 		currentComponent: undefined as {
-			node: CompilerDOM.ElementNode;
 			ctxVar: string;
 			used: boolean;
 		} | undefined,
