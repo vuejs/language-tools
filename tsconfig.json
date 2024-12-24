@@ -1,9 +1,13 @@
 {
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
+		"allowJs": true,
 		"noEmit": true,
 	},
-	"include": [ "packages/*/tests" ],
+	"include": [
+		"packages/*/tests",
+		"extensions/vscode/scripts/build.js",
+	],
 	"references": [
 		{ "path": "./extensions/vscode/tsconfig.json" },
 		{ "path": "./packages/language-plugin-pug/tsconfig.json" },
