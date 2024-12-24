@@ -54,8 +54,10 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 }
 
 function* generateSlots(options: TemplateCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
+	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
+
 	if (!options.hasDefineSlots) {
-		yield `var __VLS_slots!: `;
+		yield `var __VLS_slots!: typeof __VLS_ctx.${name} & `;
 		for (const { expVar, varName } of ctx.dynamicSlots) {
 			ctx.hasSlot = true;
 			yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
@@ -85,8 +87,7 @@ function* generateSlots(options: TemplateCodegenOptions, ctx: TemplateCodegenCon
 		}
 		yield `}${endOfLine}`;
 	}
-	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
-	yield `var ${name}!: typeof __VLS_ctx.${name} & typeof ${options.slotsAssignName ?? '__VLS_slots'}${endOfLine}`;
+	yield `var ${name}!: typeof ${options.slotsAssignName ?? '__VLS_slots'}${endOfLine}`;
 }
 
 function* generateInheritedAttrs(ctx: TemplateCodegenContext): Generator<Code> {

@@ -1,7 +1,4 @@
 <template>
-	<!-- $slots type -->
-	{{ exactType($slots.foo, {} as Slot<{} | undefined> | undefined) }}
-
 	<!-- component slots type -->
 	<Comp value="1">
 		<template #foo="bindings">{{ exactType(bindings, {} as string) }}</template>
@@ -31,7 +28,7 @@
 <script lang="ts">
 export default {
 	name: 'Self',
-	slots: Object as SlotsType<{ foo?: {} }>
+	slots: Object as SlotsType<{ foo?: (_: any) => any }>
 };
 
 declare const Comp: new <T>(props: { value: T; }) => {
@@ -43,13 +40,15 @@ declare const Comp: new <T>(props: { value: T; }) => {
 </script>
 
 <script lang="ts" setup>
-import { ref, type Slot, type SlotsType, useSlots, type VNode } from 'vue';
+import { ref, type SlotsType, useSlots, type VNode } from 'vue';
 import { exactType } from '../../shared';
 
 const baz = ref('baz' as const);
 
 const slots = useSlots();
-exactType(slots, {} as {
+exactType(slots, {} as Readonly<{
+	foo?(_: any): any
+}> & {
 	bar?(_: { str: string; num: number; }): any;
 } & {
 	baz?(_: { str: string; num: number; }): any;
