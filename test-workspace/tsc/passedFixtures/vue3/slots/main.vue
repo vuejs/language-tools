@@ -28,7 +28,7 @@
 <script lang="ts">
 export default {
 	name: 'Self',
-	slots: Object as SlotsType<{ foo?: (_: any) => any }>
+	slots: Object as SlotsType<{ foo?: (_: any) => any }>,
 };
 
 declare const Comp: new <T>(props: { value: T; }) => {
@@ -47,7 +47,7 @@ const baz = ref('baz' as const);
 
 const slots = useSlots();
 exactType(slots, {} as Readonly<{
-	foo?(_: any): any
+	foo?(_: any): any;
 }> & {
 	bar?(_: { str: string; num: number; }): any;
 } & {
