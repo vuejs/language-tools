@@ -14,7 +14,7 @@ declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<t
     slots: __VLS_OmitStringIndex<Readonly<{
         [name: string]: import("vue").Slot<any>;
     }>> & {
-        default?(_: {
+        default?(props: {
             row: Row;
         }): any;
     };
@@ -624,14 +624,14 @@ exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slo
     slots: __VLS_OmitStringIndex<Readonly<{
         [name: string]: import("vue").Slot<any>;
     }>> & {
-        'no-bind'?(_: {}): any;
-        default?(_: {
+        'no-bind'?(props: {}): any;
+        default?(props: {
             num: number;
         }): any;
-        'named-slot'?(_: {
+        'named-slot'?(props: {
             str: string;
         }): any;
-        vbind?(_: {
+        vbind?(props: {
             num: number;
             str: string;
         }): any;
@@ -728,14 +728,14 @@ exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: te
     slots: __VLS_OmitStringIndex<Readonly<{
         [name: string]: import("vue").Slot<any>;
     }>> & {
-        'no-bind'?(_: {}): any;
-        default?(_: {
+        'no-bind'?(props: {}): any;
+        default?(props: {
             num: number;
         }): any;
-        'named-slot'?(_: {
+        'named-slot'?(props: {
             str: string;
         }): any;
-        vbind?(_: {
+        vbind?(props: {
             num: number;
             str: string;
         }): any;
