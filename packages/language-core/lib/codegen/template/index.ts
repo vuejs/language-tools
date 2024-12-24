@@ -57,7 +57,7 @@ function* generateSlots(options: TemplateCodegenOptions, ctx: TemplateCodegenCon
 	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
 
 	if (!options.hasDefineSlots) {
-		yield `var __VLS_slots!: typeof __VLS_ctx.${name} & `;
+		yield `var __VLS_slots!: __VLS_OmitStringIndex<typeof __VLS_ctx.${name}> & `;
 		for (const { expVar, varName } of ctx.dynamicSlots) {
 			ctx.hasSlot = true;
 			yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
