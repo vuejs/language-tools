@@ -86,7 +86,7 @@ function* generateSlots(options: TemplateCodegenOptions, ctx: TemplateCodegenCon
 		yield `}${endOfLine}`;
 	}
 	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
-	yield `var ${name}!: typeof ${options.slotsAssignName ?? '__VLS_slots'}${endOfLine}`;
+	yield `var ${name}!: typeof __VLS_ctx.${name} & typeof ${options.slotsAssignName ?? '__VLS_slots'}${endOfLine}`;
 }
 
 function* generateInheritedAttrs(ctx: TemplateCodegenContext): Generator<Code> {
