@@ -97,6 +97,9 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
 		, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 	>>;
+	type __VLS_OmitStringIndex<T> = {
+		[K in keyof T as string extends K ? never : K]: T[K];
+	};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
 
 	function __VLS_getVForSourceType(source: number): [number, number, number][];

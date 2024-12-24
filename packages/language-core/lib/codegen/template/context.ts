@@ -106,14 +106,14 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	const accessExternalVariables = new Map<string, Set<number>>();
 	const slots: {
 		name: string;
-		loc?: number;
+		offset?: number;
 		tagRange: [number, number];
-		varName: string;
 		nodeLoc: any;
+		propsVar: string;
 	}[] = [];
 	const dynamicSlots: {
 		expVar: string;
-		varName: string;
+		propsVar: string;
 	}[] = [];
 	const hasSlotElements = new Set<CompilerDOM.ElementNode>();;
 	const blockConditions: string[] = [];
