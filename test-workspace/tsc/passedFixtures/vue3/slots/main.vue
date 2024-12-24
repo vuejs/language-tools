@@ -1,5 +1,8 @@
 <template>
 	<!-- $slots type -->
+	{{ exactType($slots.foo, {} as Slot<{} | undefined> | undefined) }}
+
+	<!-- component slots type -->
 	<Comp value="1">
 		<template #foo="bindings">{{ exactType(bindings, {} as string) }}</template>
 	</Comp>
@@ -26,7 +29,10 @@
 </template>
 
 <script lang="ts">
-export default { name: 'Self' };
+export default {
+	name: 'Self',
+	slots: Object as SlotsType<{ foo?: {} }>
+};
 
 declare const Comp: new <T>(props: { value: T; }) => {
 	$props: typeof props;
@@ -37,7 +43,7 @@ declare const Comp: new <T>(props: { value: T; }) => {
 </script>
 
 <script lang="ts" setup>
-import { ref, useSlots, VNode } from 'vue';
+import { ref, type Slot, type SlotsType, useSlots, type VNode } from 'vue';
 import { exactType } from '../../shared';
 
 const baz = ref('baz' as const);
