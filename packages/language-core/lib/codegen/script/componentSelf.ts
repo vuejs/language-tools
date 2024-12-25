@@ -1,4 +1,4 @@
-import * as path from 'path-browserify';
+import path from 'pathe';
 import type { Code } from '../../types';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';

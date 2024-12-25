@@ -1,6 +1,6 @@
 import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import { posix as path } from 'path-browserify';
+import path from 'pathe';
 import type * as ts from 'typescript';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
@@ -18,15 +18,13 @@ import type {
 
 export * from './types';
 
-const windowsPathReg = /\\/g;
-
 export function createCheckerByJsonConfigBase(
 	ts: typeof import('typescript'),
 	rootDir: string,
 	json: any,
 	checkerOptions: MetaCheckerOptions = {}
 ) {
-	rootDir = rootDir.replace(windowsPathReg, '/');
+	rootDir = path.normalize(rootDir);
 	return baseCreate(
 		ts,
 		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json, undefined, true),
@@ -41,7 +39,7 @@ export function createCheckerBase(
 	tsconfig: string,
 	checkerOptions: MetaCheckerOptions = {}
 ) {
-	tsconfig = tsconfig.replace(windowsPathReg, '/');
+	tsconfig = path.normalize(tsconfig);
 	return baseCreate(
 		ts,
 		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig, true),
@@ -59,7 +57,7 @@ export function baseCreate(
 	globalComponentName: string
 ) {
 	let commandLine = getCommandLine();
-	let fileNames = commandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
+	let fileNames = commandLine.fileNames.map(path.normalize);
 	let projectVersion = 0;
 
 	const projectHost: TypeScriptProjectHost = {
@@ -188,18 +186,18 @@ export function baseCreate(
 		getExportNames,
 		getComponentMeta,
 		updateFile(fileName: string, text: string) {
-			fileName = fileName.replace(windowsPathReg, '/');
+			fileName = path.normalize(fileName);
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
 			projectVersion++;
 		},
 		deleteFile(fileName: string) {
-			fileName = fileName.replace(windowsPathReg, '/');
+			fileName = path.normalize(fileName);
 			fileNames = fileNames.filter(f => f !== fileName);
 			projectVersion++;
 		},
 		reload() {
 			commandLine = getCommandLine();
-			fileNames = commandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
+			fileNames = commandLine.fileNames.map(path.normalize);
 			this.clearCache();
 		},
 		clearCache() {

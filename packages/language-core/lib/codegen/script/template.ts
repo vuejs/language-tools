@@ -1,4 +1,4 @@
-import * as path from 'path-browserify';
+import path from 'pathe';
 import type { Code } from '../../types';
 import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
 import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';

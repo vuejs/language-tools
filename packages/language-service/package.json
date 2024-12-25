@@ -25,7 +25,7 @@
 		"@vue/shared": "^3.5.0",
 		"@vue/typescript-plugin": "2.2.0",
 		"alien-signals": "^0.4.9",
-		"path-browserify": "^1.0.1",
+		"pathe": "^1.1.2",
 		"volar-service-css": "0.0.62",
 		"volar-service-emmet": "0.0.62",
 		"volar-service-html": "0.0.62",
@@ -40,7 +40,6 @@
 	},
 	"devDependencies": {
 		"@types/node": "latest",
-		"@types/path-browserify": "latest",
 		"@volar/kit": "~2.4.11",
 		"vscode-languageserver-protocol": "^3.17.5"
 	}

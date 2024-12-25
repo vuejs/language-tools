@@ -15,7 +15,7 @@
 	"dependencies": {
 		"@volar/typescript": "~2.4.11",
 		"@vue/language-core": "2.2.0",
-		"path-browserify": "^1.0.1",
+		"pathe": "^1.1.2",
 		"vue-component-type-helpers": "2.2.0"
 	},
 	"peerDependencies": {
@@ -27,7 +27,6 @@
 		}
 	},
 	"devDependencies": {
-		"@types/node": "latest",
-		"@types/path-browserify": "latest"
+		"@types/node": "latest"
 	}
 }

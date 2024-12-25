@@ -20,12 +20,11 @@
 		"alien-signals": "^0.4.9",
 		"minimatch": "^9.0.3",
 		"muggle-string": "^0.4.1",
-		"path-browserify": "^1.0.1"
+		"pathe": "^1.1.2"
 	},
 	"devDependencies": {
 		"@types/minimatch": "^5.1.2",
 		"@types/node": "latest",
-		"@types/path-browserify": "^1.0.1",
 		"@volar/typescript": "~2.4.11",
 		"@vue/compiler-sfc": "^3.5.0"
 	},
