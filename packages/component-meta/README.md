@@ -7,8 +7,8 @@
 First of all, you need to create a component meta checker using `createChecker`:
 
 ```ts
-import * as url from 'url'
-import path from 'path'
+import * as path from 'node:path'
+import * as url from 'node:url'
 
 import type { MetaCheckerOptions } from 'vue-component-meta'
 import { createChecker } from 'vue-component-meta'
@@ -31,8 +31,8 @@ const tsconfigChecker = createChecker(
 Now, you can extract the component meta using `getComponentMeta` method of checker:
 
 ```ts
-import * as url from 'url'
-import path from 'path'
+import * as path from 'node:path'
+import * as url from 'node:url'
 
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url))
 
