@@ -26,5 +26,10 @@
 		"@tsslint/config": "latest",
 		"typescript": "latest",
 		"vitest": "latest"
+	},
+	"pnpm": {
+		"patchedDependencies": {
+			"pathe": "patches/pathe.patch"
+		}
 	}
 }

@@ -2,8 +2,7 @@
 	"compilerOptions": {
 		"target": "ES2021",
 		"lib": [ "ES2021" ],
-		"module": "Preserve",
-		"moduleResolution": "bundler",
+		"module": "Node16",
 		"sourceMap": true,
 		"composite": true,
 		"strict": true,

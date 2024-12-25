@@ -1,0 +1,10 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 531b6906507206b4594ff0ff830d605c4cf6a16a..a7419c0c83af0880c6a41180f46581c5922bc947 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -1,4 +1,4 @@
+-import path$1 from 'node:path';
++import * as path$1 from 'node:path';
+ 
+ declare const sep = "/";
+ declare const delimiter = ":";

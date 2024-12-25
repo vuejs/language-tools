@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  pathe:
+    hash: tzb4ikqzvp65igqqf3ehxc5e4q
+    path: patches/pathe.patch
+
 importers:
 
   .:
@@ -79,7 +84,7 @@ importers:
         version: link:../language-core
       pathe:
         specifier: ^1.1.2
-        version: 1.1.2
+        version: 1.1.2(patch_hash=tzb4ikqzvp65igqqf3ehxc5e4q)
       typescript:
         specifier: '*'
         version: 5.7.2
@@ -118,7 +123,7 @@ importers:
         version: 0.4.1
       pathe:
         specifier: ^1.1.2
-        version: 1.1.2
+        version: 1.1.2(patch_hash=tzb4ikqzvp65igqqf3ehxc5e4q)
       typescript:
         specifier: '*'
         version: 5.7.2
@@ -174,7 +179,7 @@ importers:
         version: link:../typescript-plugin
       pathe:
         specifier: ^1.1.2
-        version: 1.1.2
+        version: 1.1.2(patch_hash=tzb4ikqzvp65igqqf3ehxc5e4q)
       vscode-languageserver-protocol:
         specifier: ^3.17.5
         version: 3.17.5
@@ -210,7 +215,7 @@ importers:
         version: 0.4.9
       pathe:
         specifier: ^1.1.2
-        version: 1.1.2
+        version: 1.1.2(patch_hash=tzb4ikqzvp65igqqf3ehxc5e4q)
       volar-service-css:
         specifier: 0.0.62
         version: 0.0.62(@volar/language-service@2.4.11)
@@ -4238,13 +4243,13 @@ snapshots:
   '@vitest/runner@2.1.8':
     dependencies:
       '@vitest/utils': 2.1.8
-      pathe: 1.1.2
+      pathe: 1.1.2(patch_hash=tzb4ikqzvp65igqqf3ehxc5e4q)
 
   '@vitest/snapshot@2.1.8':
     dependencies:
       '@vitest/pretty-format': 2.1.8
       magic-string: 0.30.17
-      pathe: 1.1.2
+      pathe: 1.1.2(patch_hash=tzb4ikqzvp65igqqf3ehxc5e4q)
 
   '@vitest/spy@2.1.8':
     dependencies:
@@ -5882,7 +5887,7 @@ snapshots:
       lru-cache: 11.0.2
       minipass: 7.1.2
 
-  pathe@1.1.2: {}
+  pathe@1.1.2(patch_hash=tzb4ikqzvp65igqqf3ehxc5e4q): {}
 
   pathval@2.0.0: {}
 
@@ -6394,7 +6399,7 @@ snapshots:
       cac: 6.7.14
       debug: 4.4.0
       es-module-lexer: 1.5.4
-      pathe: 1.1.2
+      pathe: 1.1.2(patch_hash=tzb4ikqzvp65igqqf3ehxc5e4q)
       vite: 5.4.11(@types/node@22.10.2)
     transitivePeerDependencies:
       - '@types/node'
@@ -6429,7 +6434,7 @@ snapshots:
       debug: 4.4.0
       expect-type: 1.1.0
       magic-string: 0.30.17
-      pathe: 1.1.2
+      pathe: 1.1.2(patch_hash=tzb4ikqzvp65igqqf3ehxc5e4q)
       std-env: 3.8.0
       tinybench: 2.9.0
       tinyexec: 0.3.1
