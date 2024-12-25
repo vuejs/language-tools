@@ -1,6 +1,6 @@
 import type { CreateFile, LanguageServiceContext, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import { Sfc, VueVirtualCode, scriptRanges } from '@vue/language-core';
+import { Sfc, VueVirtualCode, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
@@ -153,7 +153,7 @@ export function create(
 					];
 
 					if (sfc.script) {
-						const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
+						const edit = createAddComponentToOptionEdit(ts, sfc, sfc.script.ast, newName);
 						if (edit) {
 							sfcEdits.push({
 								range: {
@@ -299,12 +299,13 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 	return lastImportNode;
 }
 
-export function createAddComponentToOptionEdit(ts: typeof import('typescript'), ast: ts.SourceFile, componentName: string) {
+export function createAddComponentToOptionEdit(ts: typeof import('typescript'), sfc: Sfc, ast: ts.SourceFile, componentName: string) {
 
-	const exportDefault = scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault;
-	if (!exportDefault) {
+	const scriptRanges = tsCodegen.get(sfc)?.scriptRanges.get();
+	if (!scriptRanges?.exportDefault) {
 		return;
 	}
+	const { exportDefault } = scriptRanges;
 
 	// https://github.com/microsoft/TypeScript/issues/36174
 	const printer = ts.createPrinter();
