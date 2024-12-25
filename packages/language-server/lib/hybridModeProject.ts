@@ -3,6 +3,7 @@ import { createLanguageServiceEnvironment } from '@volar/language-server/lib/pro
 import { createLanguage } from '@vue/language-core';
 import { createLanguageService, createUriMap, LanguageService } from '@vue/language-service';
 import { configuredServers, getBestServer, inferredServers, onServerReady } from '@vue/typescript-plugin/lib/utils';
+import path from 'pathe';
 import { URI } from 'vscode-uri';
 
 export function createHybridModeProject(
@@ -86,7 +87,7 @@ export function createHybridModeProject(
 	return project;
 
 	function asFileName(uri: URI) {
-		return uri.fsPath.replace(/\\/g, '/');
+		return path.normalize(uri.fsPath);
 	}
 
 	async function createLs(server: LanguageServer, tsconfig: string | undefined) {

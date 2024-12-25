@@ -1,5 +1,6 @@
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
+import path from 'pathe';
 import type * as ts from 'typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
@@ -69,7 +70,7 @@ export function create(
 					let sourceCodeOffset = document.offsetAt(selection);
 
 					const fileName = context.project.typescript?.uriConverter.asFileName(sourceScript.id)
-						?? sourceScript.id.fsPath.replace(/\\/g, '/');
+						?? path.normalize(sourceScript.id.fsPath);
 
 					if (sourceScript.generated) {
 						const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(sourceScript.generated.root);

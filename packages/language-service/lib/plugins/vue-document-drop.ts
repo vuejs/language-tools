@@ -70,7 +70,7 @@ export function create(
 					const code = [...forEachEmbeddedCode(root)].find(code => code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw'))!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 					const incomingFileName = context.project.typescript?.uriConverter.asFileName(URI.parse(importUri))
-						?? URI.parse(importUri).fsPath.replace(/\\/g, '/');
+						?? path.normalize(URI.parse(importUri).fsPath);
 
 					let importPath: string | undefined;
 
