@@ -88,10 +88,10 @@ esbuild.context({
 				if (!minify) {
 					return;
 				}
-				build.onLoad({ filter: /\.js/ }, ({ path }) => {
+				build.onLoad({ filter: /\.js$/ }, ({ path }) => {
 					path = path.replace(/\\/g, '/');
-					const soruce = fs.readFileSync(path, 'utf-8');
-					const { output, diagnostics } = treeShake(soruce, 'recommended', false);
+					const source = fs.readFileSync(path, 'utf-8');
+					const { output, diagnostics } = treeShake(source, 'recommended', false);
 					if (!diagnostics.length) {
 						return {
 							contents: output,
