@@ -1,3 +1,4 @@
+import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
@@ -62,6 +63,19 @@ export function collectIdentifiers(
 		ts.forEachChild(node, node => collectIdentifiers(ts, node, results, false));
 	}
 	return results;
+}
+
+export function normalizeAttributeValue(node: CompilerDOM.TextNode): [string, number] {
+	let offset = node.loc.start.offset;
+	let content = node.loc.source;
+	if (
+		(content.startsWith(`'`) && content.endsWith(`'`))
+		|| (content.startsWith(`"`) && content.endsWith(`"`))
+	) {
+		offset++;
+		content = content.slice(1, -1);
+	}
+	return [content, offset];
 }
 
 export function createTsAst(ts: typeof import('typescript'), astHolder: any, text: string) {

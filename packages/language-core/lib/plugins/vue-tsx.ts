@@ -1,10 +1,12 @@
 import type { Mapping } from '@volar/language-core';
-import { computed, Unstable } from 'alien-signals';
+import { computed, unstable } from 'alien-signals';
 import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
+import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
+import { resolveVueCompilerOptions } from '../utils/ts';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 
@@ -77,6 +79,12 @@ function createTsx(
 				: _sfc.script && _sfc.script.lang !== 'js' ? _sfc.script.lang
 					: 'js';
 	});
+	const vueCompilerOptions = computed(() => {
+		const options = parseVueCompilerOptions(_sfc.comments);
+		return options
+			? resolveVueCompilerOptions(options, ctx.vueCompilerOptions)
+			: ctx.vueCompilerOptions;
+	});
 	const scriptRanges = computed(() =>
 		_sfc.script
 			? parseScriptRanges(ts, _sfc.script.ast, !!_sfc.scriptSetup, false)
@@ -84,10 +92,10 @@ function createTsx(
 	);
 	const scriptSetupRanges = computed(() =>
 		_sfc.scriptSetup
-			? parseScriptSetupRanges(ts, _sfc.scriptSetup.ast, ctx.vueCompilerOptions)
+			? parseScriptSetupRanges(ts, _sfc.scriptSetup.ast, vueCompilerOptions.get())
 			: undefined
 	);
-	const scriptSetupBindingNames = Unstable.computedSet(
+	const scriptSetupBindingNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set<string>();
 			const bindings = scriptSetupRanges.get()?.bindings;
@@ -99,7 +107,7 @@ function createTsx(
 			return newNames;
 		})
 	);
-	const scriptSetupImportComponentNames = Unstable.computedSet(
+	const scriptSetupImportComponentNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set<string>();
 			const bindings = scriptSetupRanges.get()?.bindings;
@@ -118,7 +126,7 @@ function createTsx(
 			return newNames;
 		})
 	);
-	const destructuredPropNames = Unstable.computedSet(
+	const destructuredPropNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set(scriptSetupRanges.get()?.defineProps?.destructured);
 			const rest = scriptSetupRanges.get()?.defineProps?.destructuredRest;
@@ -128,7 +136,7 @@ function createTsx(
 			return newNames;
 		})
 	);
-	const templateRefNames = Unstable.computedSet(
+	const templateRefNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set(
 				scriptSetupRanges.get()?.useTemplateRef
@@ -147,7 +155,7 @@ function createTsx(
 	});
 	const generatedTemplate = computed(() => {
 
-		if (ctx.vueCompilerOptions.skipTemplateCodegen || !_sfc.template) {
+		if (vueCompilerOptions.get().skipTemplateCodegen || !_sfc.template) {
 			return;
 		}
 
@@ -155,9 +163,9 @@ function createTsx(
 		const codegen = generateTemplate({
 			ts,
 			compilerOptions: ctx.compilerOptions,
-			vueCompilerOptions: ctx.vueCompilerOptions,
+			vueCompilerOptions: vueCompilerOptions.get(),
 			template: _sfc.template,
-			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
+			edited: vueCompilerOptions.get().__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			scriptSetupBindingNames: scriptSetupBindingNames.get(),
 			scriptSetupImportComponentNames: scriptSetupImportComponentNames.get(),
 			destructuredPropNames: destructuredPropNames.get(),
@@ -188,9 +196,9 @@ function createTsx(
 		const codegen = generateScript({
 			ts,
 			compilerOptions: ctx.compilerOptions,
-			vueCompilerOptions: ctx.vueCompilerOptions,
+			vueCompilerOptions: vueCompilerOptions.get(),
 			sfc: _sfc,
-			edited: ctx.vueCompilerOptions.__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
+			edited: vueCompilerOptions.get().__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			fileName,
 			lang: lang.get(),
 			scriptRanges: scriptRanges.get(),
