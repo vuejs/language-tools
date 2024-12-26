@@ -54,16 +54,19 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 }
 
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
-	const exps: Code[] = [];
+	const types: Code[] = [];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
 		const { componentsOption } = options.scriptRanges.exportDefault;
-		exps.push([
+		yield `const __VLS_componentsOption = `
+		yield [
 			options.sfc.script.content.slice(componentsOption.start, componentsOption.end),
 			'script',
 			componentsOption.start,
 			codeFeatures.navigation,
-		]);
+		];
+		yield endOfLine;
+		types.push(`typeof __VLS_componentsOption`);
 	}
 
 	let nameType: Code | undefined;
@@ -76,52 +79,51 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		nameType = `'${options.scriptSetupRanges?.defineOptions?.name ?? baseName.slice(0, baseName.lastIndexOf('.'))}'`;
 	}
 	if (nameType) {
-		exps.push(
-			`{} as { [K in ${nameType}]: typeof __VLS_self & (new () => { `
+		types.push(
+			`{ [K in ${nameType}]: typeof __VLS_self & (new () => { `
 			+ getSlotsPropertyName(options.vueCompilerOptions.target)
 			+ `: typeof ${options.scriptSetupRanges?.defineSlots?.name ?? `__VLS_slots`} }) }`
 		);
 	}
 
-	exps.push(`{} as NonNullable<typeof __VLS_self extends { components: infer C } ? C : {}>`);
-	exps.push(`__VLS_ctx`);
+	types.push(`typeof __VLS_ctx`);
 
-	yield `const __VLS_localComponents = {${newLine}`;
-	for (const type of exps) {
-		yield `...`;
+	yield `type __VLS_LocalComponents =`;
+	for (const type of types) {
+		yield ` & `;
 		yield type;
-		yield `,${newLine}`;
 	}
-	yield `}${endOfLine}`;
+	yield endOfLine;
 
-	yield `let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents${endOfLine}`;
+	yield `let __VLS_components!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
 export function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
-	const exps: Code[] = [];
+	const types: Code[] = [];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
 		const { directivesOption } = options.scriptRanges.exportDefault;
-		exps.push([
+		yield `const __VLS_directivesOption = `;
+		yield [
 			options.sfc.script.content.slice(directivesOption.start, directivesOption.end),
 			'script',
 			directivesOption.start,
 			codeFeatures.navigation,
-		]);
+		];
+		yield endOfLine;
+		types.push(`typeof __VLS_directivesOption`);
 	}
 
-	exps.push(`{} as NonNullable<typeof __VLS_self extends { directives: infer D } ? D : {}>`);
-	exps.push(`__VLS_ctx`);
+	types.push(`typeof __VLS_ctx`);
 
-	yield `const __VLS_localDirectives = {${newLine}`;
-	for (const type of exps) {
-		yield `...`;
+	yield `type __VLS_LocalDirectives =`;
+	for (const type of types) {
+		yield ` & `;
 		yield type;
-		yield `,${newLine}`;
 	}
-	yield `}${endOfLine}`;
+	yield endOfLine;
 
-	yield `let __VLS_directives!: typeof __VLS_localDirectives & __VLS_GlobalDirectives${endOfLine}`;
+	yield `let __VLS_directives!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
 function* generateTemplateBody(

@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "2.1.10",
+	"version": "2.2.0",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -402,27 +402,27 @@
 				"vue.inlayHints.destructuredProps": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for destructured props."
+					"markdownDescription": "Show inlay hints for destructured props:\n\n```ts\nwatch(() => /* props. */foo, () => { ... });\n```"
 				},
 				"vue.inlayHints.missingProps": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for missing required props."
+					"markdownDescription": "Show inlay hints for missing required props:\n\n```html\n<Comp />\n<!-- ^ foo! -->\n```"
 				},
 				"vue.inlayHints.inlineHandlerLeading": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for event argument in inline handlers."
+					"markdownDescription": "Show inlay hints for event argument in inline handlers:\n\n```html\n<Comp @foo=\"/* $event => */console.log($event)\" />\n```"
 				},
 				"vue.inlayHints.optionsWrapper": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for component options wrapper for type support."
+					"markdownDescription": "Show inlay hints for component options wrapper for type support:\n\n```vue\n<script lang=\"ts\">\nexport default /* (await import('vue')).defineComponent( */{}/* ) */;\n</script>\n```"
 				},
 				"vue.inlayHints.vBindShorthand": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for v-bind shorthand."
+					"markdownDescription": "Show inlay hints for v-bind shorthand:\n\n```html\n<Comp :foo />\n     <!-- ^ =\"foo\" -->\n```"
 				},
 				"vue.format.template.initialIndent": {
 					"type": "boolean",
@@ -568,9 +568,9 @@
 		"@types/vscode": "^1.82.0",
 		"@volar/vscode": "~2.4.11",
 		"@vscode/vsce": "latest",
-		"@vue/language-core": "2.1.10",
-		"@vue/language-server": "2.1.10",
-		"@vue/typescript-plugin": "2.1.10",
+		"@vue/language-core": "2.2.0",
+		"@vue/language-server": "2.2.0",
+		"@vue/typescript-plugin": "2.2.0",
 		"esbuild": "latest",
 		"esbuild-visualizer": "latest",
 		"reactive-vscode": "^0.2.9",

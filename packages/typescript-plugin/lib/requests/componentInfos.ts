@@ -6,8 +6,7 @@ import type { RequestContext } from './types';
 export function getComponentProps(
 	this: RequestContext,
 	fileName: string,
-	tag: string,
-	requiredOnly = false
+	tag: string
 ) {
 	const { typescript: ts, language, languageService, getFileId } = this;
 	const volarFile = language.scripts.get(getFileId(fileName));
@@ -24,12 +23,9 @@ export function getComponentProps(
 
 	const name = tag.split('.');
 
-	let componentSymbol = components.type.getProperty(name[0]);
-
-	if (!componentSymbol) {
-		componentSymbol = components.type.getProperty(camelize(name[0]))
-			?? components.type.getProperty(capitalize(camelize(name[0])));
-	}
+	let componentSymbol = components.type.getProperty(name[0])
+		?? components.type.getProperty(camelize(name[0]))
+		?? components.type.getProperty(capitalize(camelize(name[0])));
 
 	if (!componentSymbol) {
 		return [];
@@ -47,7 +43,11 @@ export function getComponentProps(
 		}
 	}
 
-	const result = new Map<string, { name: string, commentMarkdown: string; }>();
+	const result = new Map<string, {
+		name: string;
+		required?: true;
+		commentMarkdown?: string;
+	}>();
 
 	for (const sig of componentType.getCallSignatures()) {
 		const propParam = sig.parameters[0];
@@ -55,12 +55,11 @@ export function getComponentProps(
 			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.node);
 			const props = propsType.getProperties();
 			for (const prop of props) {
-				if (!requiredOnly || !(prop.flags & ts.SymbolFlags.Optional)) {
-					const name = prop.name;
-					const commentMarkdown = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
+				const name = prop.name;
+				const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
+				const commentMarkdown = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags()) || undefined;
 
-					result.set(name, { name, commentMarkdown });
-				}
+				result.set(name, { name, required, commentMarkdown });
 			}
 		}
 	}
@@ -75,12 +74,11 @@ export function getComponentProps(
 				if (prop.flags & ts.SymbolFlags.Method) { // #2443
 					continue;
 				}
-				if (!requiredOnly || !(prop.flags & ts.SymbolFlags.Optional)) {
-					const name = prop.name;
-					const commentMarkdown = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
+				const name = prop.name;
+				const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
+				const commentMarkdown = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags()) || undefined;
 
-					result.set(name, { name, commentMarkdown });
-				}
+				result.set(name, { name, required, commentMarkdown });
 			}
 		}
 	}

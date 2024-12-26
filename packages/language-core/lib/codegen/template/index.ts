@@ -5,7 +5,6 @@ import { getSlotsPropertyName } from '../../utils/shared';
 import { endOfLine, newLine, wrapWith } from '../utils';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
-import { getCanonicalComponentName, getPossibleOriginalComponentNames } from './element';
 import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild, getVForNode } from './templateChild';
@@ -35,15 +34,13 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
-	ctx.addLocalVariable('$attrs');
 	ctx.addLocalVariable(getSlotsPropertyName(options.vueCompilerOptions.target));
+	ctx.addLocalVariable('$attrs');
 	ctx.addLocalVariable('$refs');
 	ctx.addLocalVariable('$el');
 
-	yield* generatePreResolveComponents(options);
-
 	if (options.template.ast) {
-		yield* generateTemplateChild(options, ctx, options.template.ast, undefined, undefined, undefined);
+		yield* generateTemplateChild(options, ctx, options.template.ast, undefined);
 	}
 
 	yield* generateStyleScopedClassReferences(ctx);
@@ -99,6 +96,20 @@ function* generateInheritedAttrs(ctx: TemplateCodegenContext): Generator<Code> {
 	}
 	yield endOfLine;
 	yield `var $attrs!: Partial<typeof __VLS_inheritedAttrs> & Record<string, unknown>${endOfLine}`;
+
+	if (ctx.bindingAttrLocs.length) {
+		yield `[`;
+		for (const loc of ctx.bindingAttrLocs) {
+			yield [
+				loc.source,
+				'template',
+				loc.start.offset,
+				ctx.codeFeatures.all
+			];
+			yield `,`;
+		}
+		yield `]${endOfLine}`;
+	}
 }
 
 function* generateRefs(ctx: TemplateCodegenContext): Generator<Code> {
@@ -122,32 +133,6 @@ function* generateRootEl(ctx: TemplateCodegenContext): Generator<Code> {
 	else {
 		yield `var $el!: any${endOfLine}`;
 	}
-}
-
-function* generatePreResolveComponents(options: TemplateCodegenOptions): Generator<Code> {
-	yield `let __VLS_resolvedLocalAndGlobalComponents!: Required<{}`;
-	if (options.template.ast) {
-		const components = new Set<string>();
-		for (const node of forEachElementNode(options.template.ast)) {
-			if (
-				node.tagType === CompilerDOM.ElementTypes.COMPONENT
-				&& node.tag.toLowerCase() !== 'component'
-				&& !node.tag.includes('.') // namespace tag 
-			) {
-				if (components.has(node.tag)) {
-					continue;
-				}
-				components.add(node.tag);
-				yield newLine;
-				yield ` & __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', typeof __VLS_localComponents, `;
-				yield getPossibleOriginalComponentNames(node.tag, false)
-					.map(name => `'${name}'`)
-					.join(', ');
-				yield `>`;
-			}
-		}
-	}
-	yield `>${endOfLine}`;
 }
 
 export function* forEachElementNode(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode): Generator<CompilerDOM.ElementNode> {
