@@ -21,13 +21,14 @@ export function create(
 		name: 'vue-extract-file',
 		capabilities: {
 			codeActionProvider: {
+				codeActionKinds: ['refactor'],
 				resolveProvider: true,
 			},
 		},
 		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			return {
-				provideCodeActions(document, range, _context) {
+				provideCodeActions(document, range) {
 
 					const startOffset = document.offsetAt(range.start);
 					const endOffset = document.offsetAt(range.end);
