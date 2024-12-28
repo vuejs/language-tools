@@ -44,11 +44,7 @@ export async function getComponentProps(fileName: string, componentName: string)
 	if (!server) {
 		return;
 	}
-	const componentAndProps = await server.componentNamesAndProps.get(fileName);
-	if (!componentAndProps) {
-		return;
-	}
-	return componentAndProps[componentName];
+	return await server.getComponentProps(fileName, componentName);
 }
 
 export function getComponentEvents(
@@ -95,5 +91,5 @@ async function sendRequest<T>(requestType: RequestData[1], fileName: string, ...
 	if (!server) {
 		return;
 	}
-	return server.request<T>(requestType, fileName, ...rest);
+	return server.sendRequest<T>(requestType, fileName, ...rest);
 }

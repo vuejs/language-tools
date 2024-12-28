@@ -1,5 +1,5 @@
 import type { Mapping } from '@volar/language-core';
-import { computed, Unstable } from 'alien-signals';
+import { computed, unstable } from 'alien-signals';
 import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
@@ -95,7 +95,7 @@ function createTsx(
 			? parseScriptSetupRanges(ts, _sfc.scriptSetup.ast, vueCompilerOptions.get())
 			: undefined
 	);
-	const scriptSetupBindingNames = Unstable.computedSet(
+	const scriptSetupBindingNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set<string>();
 			const bindings = scriptSetupRanges.get()?.bindings;
@@ -107,7 +107,7 @@ function createTsx(
 			return newNames;
 		})
 	);
-	const scriptSetupImportComponentNames = Unstable.computedSet(
+	const scriptSetupImportComponentNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set<string>();
 			const bindings = scriptSetupRanges.get()?.bindings;
@@ -126,7 +126,7 @@ function createTsx(
 			return newNames;
 		})
 	);
-	const destructuredPropNames = Unstable.computedSet(
+	const destructuredPropNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set(scriptSetupRanges.get()?.defineProps?.destructured);
 			const rest = scriptSetupRanges.get()?.defineProps?.destructuredRest;
@@ -136,7 +136,7 @@ function createTsx(
 			return newNames;
 		})
 	);
-	const templateRefNames = Unstable.computedSet(
+	const templateRefNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set(
 				scriptSetupRanges.get()?.useTemplateRef

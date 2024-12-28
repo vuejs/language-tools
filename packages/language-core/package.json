@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-core",
-	"version": "2.1.10",
+	"version": "2.2.0",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -17,7 +17,7 @@
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/compiler-vue2": "^2.7.16",
 		"@vue/shared": "^3.5.0",
-		"alien-signals": "^0.4.4",
+		"alien-signals": "^0.4.9",
 		"minimatch": "^9.0.3",
 		"muggle-string": "^0.4.1",
 		"path-browserify": "^1.0.1"
