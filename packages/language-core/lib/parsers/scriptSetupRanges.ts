@@ -24,7 +24,7 @@ type DefineProp = {
 
 type DefineProps = CallExpressionRange & {
 	name?: string;
-	destructured?: Set<string>;
+	destructured?: Map<string, ts.Expression | undefined>;
 	destructuredRest?: string;
 	statement: TextRange;
 }
@@ -285,15 +285,15 @@ export function parseScriptSetupRanges(
 				};
 				if (ts.isVariableDeclaration(parent)) {
 					if (ts.isObjectBindingPattern(parent.name)) {
-						defineProps.destructured = new Set();
+						defineProps.destructured = new Map();
 						const identifiers = collectIdentifiers(ts, parent.name, []);
-						for (const [id, isRest] of identifiers) {
+						for (const [id, isRest, initializer] of identifiers) {
 							const name = _getNodeText(id);
 							if (isRest) {
 								defineProps.destructuredRest = name;
 							}
 							else {
-								defineProps.destructured.add(name);
+								defineProps.destructured.set(name, initializer);
 							}
 						}
 					}

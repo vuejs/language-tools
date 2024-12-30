@@ -128,7 +128,7 @@ function createTsx(
 	);
 	const destructuredPropNames = unstable.computedSet(
 		computed(() => {
-			const newNames = new Set(scriptSetupRanges.get()?.defineProps?.destructured);
+			const newNames = new Set(scriptSetupRanges.get()?.defineProps?.destructured?.keys());
 			const rest = scriptSetupRanges.get()?.defineProps?.destructuredRest;
 			if (rest) {
 				newNames.add(rest);

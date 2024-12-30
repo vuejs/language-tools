@@ -45,7 +45,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 							for (const [prop, isShorthand] of findDestructuredProps(
 								ts,
 								virtualCode._sfc.scriptSetup.ast,
-								scriptSetupRanges.defineProps.destructured
+								scriptSetupRanges.defineProps.destructured.keys()
 							)) {
 								const name = prop.text;
 								const end = prop.getEnd();
@@ -117,7 +117,7 @@ type Scope = Record<string, boolean>;
 export function findDestructuredProps(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
-	props: Set<string>
+	props: MapIterator<string>
 ) {
 	const rootScope: Scope = Object.create(null);
 	const scopeStack: Scope[] = [rootScope];

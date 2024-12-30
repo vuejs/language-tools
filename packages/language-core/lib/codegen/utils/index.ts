@@ -41,15 +41,16 @@ export function collectVars(
 export function collectIdentifiers(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	results: [id: ts.Identifier, isRest: boolean][] = [],
-	isRest = false
+	results: [id: ts.Identifier, isRest: boolean, initializer: ts.Expression | undefined][] = [],
+	isRest = false,
+	initializer: ts.Expression | undefined = undefined,
 ) {
 	if (ts.isIdentifier(node)) {
-		results.push([node, isRest]);
+		results.push([node, isRest, initializer]);
 	}
 	else if (ts.isObjectBindingPattern(node)) {
 		for (const el of node.elements) {
-			collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken);
+			collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken, el.initializer);
 		}
 	}
 	else if (ts.isArrayBindingPattern(node)) {
