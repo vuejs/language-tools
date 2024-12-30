@@ -372,9 +372,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(meta.type).toEqual(TypeMeta.Class);
 
 		const text = meta.props.find(prop => prop.name === 'text');
-		console.log(text)
 
-		expect(text?.default).toEqual('"foobar"')
+		expect(text?.default).toEqual('"foobar"');
 	})
 
 	test('reference-type-props-js', () => {

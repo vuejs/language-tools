@@ -43,7 +43,7 @@ export function collectIdentifiers(
 	node: ts.Node,
 	results: [id: ts.Identifier, isRest: boolean, initializer: ts.Expression | undefined][] = [],
 	isRest = false,
-	initializer: ts.Expression | undefined = undefined,
+	initializer: ts.Expression | undefined = undefined
 ) {
 	if (ts.isIdentifier(node)) {
 		results.push([node, isRest, initializer]);
