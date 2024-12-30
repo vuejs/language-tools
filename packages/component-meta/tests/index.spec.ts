@@ -365,7 +365,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		});
 	});
 
-	test('reference-type-props', () => {
+	test('reference-type-props-destructured', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-props/component-destructure.vue');
 		const meta = checker.getComponentMeta(componentPath);
 
