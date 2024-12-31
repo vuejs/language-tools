@@ -41,22 +41,13 @@ const plugin: VueLanguagePlugin = ctx => {
 
 		resolveEmbeddedCode(fileName, sfc, embeddedFile) {
 
-			const tsx = useTsx(fileName, sfc);
+			const _tsx = useTsx(fileName, sfc);
 
 			if (/script_(js|jsx|ts|tsx)/.test(embeddedFile.id)) {
-				const script = tsx.generatedScript.get();
-				const template = tsx.generatedTemplate.get();
-				if (script) {
-					const linkedCodeMappings = [
-						...script.linkedCodeMappings,
-						...template?.linkedCodeMappings.map(mapping => ({
-							...mapping,
-							sourceOffsets: mapping.sourceOffsets.map(offset => offset + script.templateGeneratedOffset!),
-							generatedOffsets: mapping.generatedOffsets.map(offset => offset + script.templateGeneratedOffset!),
-						})) ?? []
-					];
-					embeddedFile.content = [...script.codes];
-					embeddedFile.linkedCodeMappings = linkedCodeMappings;
+				const tsx = _tsx.generatedScript.get();
+				if (tsx) {
+					embeddedFile.content = [...tsx.codes];
+					embeddedFile.linkedCodeMappings = [...tsx.linkedCodeMappings];
 				}
 			}
 		},
@@ -184,8 +175,6 @@ function createTsx(
 		}
 
 		const codes: Code[] = [];
-		const linkedCodeMappings: Mapping[] = [];
-		let generatedLength = 0;
 		const codegen = generateTemplate({
 			ts,
 			compilerOptions: ctx.compilerOptions,
@@ -201,8 +190,6 @@ function createTsx(
 			propsAssignName: propsAssignName.get(),
 			inheritAttrs: inheritAttrs.get(),
 			selfComponentName: selfComponentName.get(),
-			getGeneratedLength: () => generatedLength,
-			linkedCodeMappings,
 		});
 
 		let current = codegen.next();
@@ -210,16 +197,12 @@ function createTsx(
 		while (!current.done) {
 			const code = current.value;
 			codes.push(code);
-			generatedLength += typeof code === 'string'
-				? code.length
-				: code[0].length;
 			current = codegen.next();
 		}
 
 		return {
 			...current.value,
 			codes,
-			linkedCodeMappings,
 		};
 	});
 	const generatedScript = computed(() => {

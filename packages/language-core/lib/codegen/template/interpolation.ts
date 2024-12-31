@@ -134,7 +134,7 @@ function* forEachInterpolationSegment(
 			const curVar = ctxVars[i];
 			const nextVar = ctxVars[i + 1];
 
-			yield* generateVar(code, destructuredPropNames, templateRefNames, curVar, nextVar);
+			yield* generateVar(code, ctx.specialVars, destructuredPropNames, templateRefNames, curVar, nextVar);
 
 			if (nextVar.isShorthand) {
 				yield [code.slice(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
@@ -146,7 +146,7 @@ function* forEachInterpolationSegment(
 		}
 
 		const lastVar = ctxVars.at(-1)!;
-		yield* generateVar(code, destructuredPropNames, templateRefNames, lastVar);
+		yield* generateVar(code, ctx.specialVars, destructuredPropNames, templateRefNames, lastVar);
 		if (lastVar.offset + lastVar.text.length < code.length) {
 			yield [code.slice(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length, 'endText'];
 		}
@@ -158,6 +158,7 @@ function* forEachInterpolationSegment(
 
 function* generateVar(
 	code: string,
+	specialVars: Set<string>,
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
 	curVar: CtxVar,
@@ -175,7 +176,10 @@ function* generateVar(
 		yield [`)`, undefined];
 	}
 	else {
-		if (!isDestructuredProp) {
+		if (specialVars.has(curVar.text)) {
+			yield [`__VLS_special.`, undefined];
+		}
+		else if (!isDestructuredProp) {
 			yield [`__VLS_ctx.`, undefined];
 		}
 		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
