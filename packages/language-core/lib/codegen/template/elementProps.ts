@@ -145,7 +145,6 @@ export function* generateElementProps(
 					prop,
 					prop.exp,
 					ctx.codeFeatures.all,
-					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
 					enableCodeFeatures
 				),
 				`)`
@@ -240,28 +239,34 @@ export function* generateElementProps(
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
-			const codes = wrapWith(
-				prop.exp.loc.start.offset,
-				prop.exp.loc.end.offset,
-				ctx.codeFeatures.verification,
-				`...`,
-				...generatePropExp(
-					options,
-					ctx,
-					prop,
-					prop.exp,
-					ctx.codeFeatures.all,
-					false,
-					enableCodeFeatures
-				)
-			);
-			if (enableCodeFeatures) {
-				yield* codes;
+			if (prop.exp.loc.source === '$attrs') {
+				if (enableCodeFeatures) {
+					ctx.bindingAttrLocs.push(prop.exp.loc);
+				}
 			}
 			else {
-				yield toString([...codes]);
+				const codes = wrapWith(
+					prop.exp.loc.start.offset,
+					prop.exp.loc.end.offset,
+					ctx.codeFeatures.verification,
+					`...`,
+					...generatePropExp(
+						options,
+						ctx,
+						prop,
+						prop.exp,
+						ctx.codeFeatures.all,
+						enableCodeFeatures
+					)
+				);
+				if (enableCodeFeatures) {
+					yield* codes;
+				}
+				else {
+					yield toString([...codes]);
+				}
+				yield `,${newLine}`;
 			}
-			yield `,${newLine}`;
 		}
 	}
 }
@@ -272,9 +277,10 @@ function* generatePropExp(
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
-	isShorthand: boolean,
 	enableCodeFeatures: boolean
 ): Generator<Code> {
+	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
+
 	if (isShorthand && features.completion) {
 		features = {
 			...features,

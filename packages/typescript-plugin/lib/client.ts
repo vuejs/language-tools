@@ -65,6 +65,6 @@ function createRequest<T extends (...args: any) => any>(requestType: RequestData
 		if (!server) {
 			return;
 		}
-		return server.request<ReturnType<T>>(requestType, fileName, ...rest);
+		return server.sendRequest<ReturnType<T>>(requestType, fileName, ...rest);
 	};
 }

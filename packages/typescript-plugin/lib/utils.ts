@@ -1,3 +1,5 @@
+import { FileMap } from '@vue/language-core';
+import { camelize, capitalize } from '@vue/shared';
 import * as fs from 'node:fs';
 import * as net from 'node:net';
 import * as os from 'node:os';
@@ -7,10 +9,7 @@ import type { NotificationData, ProjectInfo, RequestData, ResponseData } from '.
 
 export { TypeScriptProjectHost } from '@volar/typescript';
 
-let { version } = require('../package.json');
-if (version === '2.1.10') {
-	version += '-dev';
-}
+const { version } = require('../package.json');
 const platform = os.platform();
 const pipeDir = platform === 'win32'
 	? `\\\\.\\pipe\\`
@@ -29,11 +28,13 @@ class NamedPipeServer {
 	connecting = false;
 	projectInfo?: ProjectInfo;
 	containsFileCache = new Map<string, Promise<boolean | undefined | null>>();
-	componentNamesAndProps = new Map<string, Record<string, {
-		name: string;
-		required?: true;
-		commentMarkdown?: string;
-	}[]>>();
+	componentNamesAndProps = new FileMap<
+		Record<string, null | {
+			name: string;
+			required?: true;
+			commentMarkdown?: string;
+		}[]>
+	>(false);
 
 	constructor(kind: ts.server.ProjectKind, id: number) {
 		this.path = getServerPath(kind, id);
@@ -43,7 +44,7 @@ class NamedPipeServer {
 		if (this.projectInfo) {
 			if (!this.containsFileCache.has(fileName)) {
 				this.containsFileCache.set(fileName, (async () => {
-					const res = await this.request<boolean>('containsFile', fileName);
+					const res = await this.sendRequest<boolean>('containsFile', fileName);
 					if (typeof res !== 'boolean') {
 						// If the request fails, delete the cache
 						this.containsFileCache.delete(fileName);
@@ -53,6 +54,20 @@ class NamedPipeServer {
 			}
 			return this.containsFileCache.get(fileName);
 		}
+	}
+
+	async getComponentProps(fileName: string, tag: string) {
+		const componentAndProps = this.componentNamesAndProps.get(fileName);
+		if (!componentAndProps) {
+			return;
+		}
+		const props = componentAndProps[tag]
+			?? componentAndProps[camelize(tag)]
+			?? componentAndProps[capitalize(camelize(tag))];
+		if (props) {
+			return props;
+		}
+		return await this.sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentProps']>>('subscribeComponentProps', fileName, tag);
 	}
 
 	update() {
@@ -66,7 +81,7 @@ class NamedPipeServer {
 		this.socket = net.connect(this.path);
 		this.socket.on('data', this.onData.bind(this));
 		this.socket.on('connect', async () => {
-			const projectInfo = await this.request<ProjectInfo>('projectInfo', '');
+			const projectInfo = await this.sendRequest<ProjectInfo>('projectInfo', '');
 			if (projectInfo) {
 				console.log('TSServer project ready:', projectInfo.name);
 				this.projectInfo = projectInfo;
@@ -131,12 +146,45 @@ class NamedPipeServer {
 
 	onNotification(type: NotificationData[0], fileName: string, data: any) {
 		// console.log(`[${type}] ${fileName} ${JSON.stringify(data)}`);
-		if (type === 'componentAndPropsUpdated') {
-			this.componentNamesAndProps.set(fileName, data);
+
+		if (type === 'componentNamesUpdated') {
+			let components = this.componentNamesAndProps.get(fileName);
+			if (!components) {
+				components = {};
+				this.componentNamesAndProps.set(fileName, components);
+			}
+			const newNames: string[] = data;
+			const newNameSet = new Set(newNames);
+			for (const name in components) {
+				if (!newNameSet.has(name)) {
+					delete components[name];
+				}
+			}
+			for (const name of newNames) {
+				if (!components[name]) {
+					components[name] = null;
+				}
+			}
+		}
+		else if (type === 'componentPropsUpdated') {
+			const components = this.componentNamesAndProps.get(fileName) ?? {};
+			const [name, props]: [
+				name: string,
+				props: {
+					name: string;
+					required?: true;
+					commentMarkdown?: string;
+				}[],
+			] = data;
+			components[name] = props;
+		}
+		else {
+			console.error('Unknown notification type:', type);
+			debugger;
 		}
 	}
 
-	request<T>(requestType: RequestData[1], fileName: string, ...args: any[]) {
+	sendRequest<T>(requestType: RequestData[1], fileName: string, ...args: any[]) {
 		return new Promise<T | undefined | null>(resolve => {
 			const seq = this.seq++;
 			// console.time(`[${seq}] ${requestType} ${fileName}`);
@@ -144,8 +192,14 @@ class NamedPipeServer {
 				// console.timeEnd(`[${seq}] ${requestType} ${fileName}`);
 				this.requestHandlers.delete(seq);
 				resolve(data);
+				clearInterval(retryTimer);
 			});
-			this.socket!.write(JSON.stringify([seq, requestType, fileName, ...args] satisfies RequestData) + '\n\n');
+			const retry = () => {
+				const data: RequestData = [seq, requestType, fileName, ...args];
+				this.socket!.write(JSON.stringify(data) + '\n\n');
+			};
+			retry();
+			const retryTimer = setInterval(retry, 1000);
 		});
 	}
 }

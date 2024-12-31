@@ -187,8 +187,8 @@ describe('Completions', async () => {
 			  "component",
 			  "slot",
 			  "template",
-			  "fixture",
 			  "BaseTransition",
+			  "Fixture",
 			]
 		`);
 	});

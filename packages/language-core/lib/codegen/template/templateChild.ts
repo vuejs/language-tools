@@ -8,6 +8,7 @@ import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
 import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
+import { generateVSlot } from './vSlot';
 
 // @ts-ignore
 const transformContext: CompilerDOM.TransformContext = {
@@ -29,9 +30,7 @@ export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
-	currentComponent: CompilerDOM.ElementNode | undefined,
 	prevNode: CompilerDOM.TemplateChildNode | undefined,
-	componentCtxVar: string | undefined,
 	isVForChild: boolean = false
 ): Generator<Code> {
 	if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
@@ -71,7 +70,7 @@ export function* generateTemplateChild(
 			ctx.singleRootNode = node.children[0];
 		}
 		for (const childNode of node.children) {
-			yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
+			yield* generateTemplateChild(options, ctx, childNode, prev);
 			prev = childNode;
 		}
 		yield* ctx.resetDirectiveComments('end of root');
@@ -80,35 +79,45 @@ export function* generateTemplateChild(
 		const vForNode = getVForNode(node);
 		const vIfNode = getVIfNode(node);
 		if (vForNode) {
-			yield* generateVFor(options, ctx, vForNode, currentComponent, componentCtxVar);
+			yield* generateVFor(options, ctx, vForNode);
 		}
 		else if (vIfNode) {
-			yield* generateVIf(options, ctx, vIfNode, currentComponent, componentCtxVar);
+			yield* generateVIf(options, ctx, vIfNode);
+		}
+		else if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
+			yield* generateSlotOutlet(options, ctx, node);
 		}
 		else {
-			if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
-				yield* generateSlotOutlet(options, ctx, node, currentComponent, componentCtxVar);
+			const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
+			if (
+				node.tagType === CompilerDOM.ElementTypes.TEMPLATE
+				&& ctx.currentComponent
+				&& slotDir
+			) {
+				yield* generateVSlot(options, ctx, node, slotDir);
 			}
 			else if (
 				node.tagType === CompilerDOM.ElementTypes.ELEMENT
 				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
 			) {
-				yield* generateElement(options, ctx, node, currentComponent, componentCtxVar, isVForChild);
+				yield* generateElement(options, ctx, node, isVForChild);
 			}
 			else {
-				yield* generateComponent(options, ctx, node, currentComponent);
+				const { currentComponent } = ctx;
+				yield* generateComponent(options, ctx, node);
+				ctx.currentComponent = currentComponent;
 			}
 		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 		// {{ var }}
-		yield* generateTemplateChild(options, ctx, node.content, currentComponent, undefined, componentCtxVar);
+		yield* generateTemplateChild(options, ctx, node.content, undefined);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		// {{ ... }} {{ ... }}
 		for (const childNode of node.children) {
 			if (typeof childNode === 'object') {
-				yield* generateTemplateChild(options, ctx, childNode, currentComponent, undefined, componentCtxVar);
+				yield* generateTemplateChild(options, ctx, childNode, undefined);
 			}
 		}
 	}
@@ -130,11 +139,11 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.IF) {
 		// v-if / v-else-if / v-else
-		yield* generateVIf(options, ctx, node, currentComponent, componentCtxVar);
+		yield* generateVIf(options, ctx, node);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.FOR) {
 		// v-for
-		yield* generateVFor(options, ctx, node, currentComponent, componentCtxVar);
+		yield* generateVFor(options, ctx, node);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 		// not needed progress
