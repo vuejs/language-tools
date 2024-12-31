@@ -1,6 +1,5 @@
-import * as path from 'path-browserify';
 import type { Code } from '../../types';
-import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
+import { hyphenateTag } from '../../utils/shared';
 import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
@@ -69,23 +68,6 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		types.push(`typeof __VLS_componentsOption`);
 	}
 
-	let nameType: Code | undefined;
-	if (options.sfc.script && options.scriptRanges?.exportDefault?.nameOption) {
-		const { nameOption } = options.scriptRanges.exportDefault;
-		nameType = options.sfc.script.content.slice(nameOption.start, nameOption.end);
-	}
-	else if (options.sfc.scriptSetup) {
-		const baseName = path.basename(options.fileName);
-		nameType = `'${options.scriptSetupRanges?.defineOptions?.name ?? baseName.slice(0, baseName.lastIndexOf('.'))}'`;
-	}
-	if (nameType) {
-		types.push(
-			`{ [K in ${nameType}]: typeof __VLS_self & (new () => { `
-			+ getSlotsPropertyName(options.vueCompilerOptions.target)
-			+ `: typeof ${options.scriptSetupRanges?.defineSlots?.name ?? `__VLS_slots`} }) }`
-		);
-	}
-
 	types.push(`typeof __VLS_ctx`);
 
 	yield `type __VLS_LocalComponents =`;
@@ -145,15 +127,15 @@ function* generateTemplateBody(
 			yield `const __VLS_slots = {}${endOfLine}`;
 		}
 		yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
-		yield `const $refs = {}${endOfLine}`;
-		yield `const $el = {} as any${endOfLine}`;
+		yield `const __VLS_refs = {}${endOfLine}`;
+		yield `const __VLS_rootEl = {} as any${endOfLine}`;
 	}
 
 	yield `return {${newLine}`;
 	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
 	yield `	slots: ${options.scriptSetupRanges?.defineSlots?.name ?? '__VLS_slots'},${newLine}`;
-	yield `	refs: $refs,${newLine}`;
-	yield `	rootEl: $el,${newLine}`;
+	yield `	refs: __VLS_refs,${newLine}`;
+	yield `	rootEl: __VLS_rootEl,${newLine}`;
 	yield `}${endOfLine}`;
 }
 

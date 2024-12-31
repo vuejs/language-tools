@@ -103,6 +103,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		},
 	});
 	const localVars = new Map<string, number>();
+	const specialVars = new Set<string>();
 	const accessExternalVariables = new Map<string, Set<number>>();
 	const slots: {
 		name: string;
@@ -131,6 +132,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		slots,
 		dynamicSlots,
 		codeFeatures,
+		specialVars,
 		accessExternalVariables,
 		lastGenericComment,
 		blockConditions,

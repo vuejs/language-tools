@@ -321,6 +321,7 @@ function* generateMacros(
 	ctx: ScriptCodegenContext
 ): Generator<Code> {
 	if (options.vueCompilerOptions.target >= 3.3) {
+		yield `// @ts-ignore${newLine}`;
 		yield `declare const { `;
 		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
 			if (!ctx.bindingNames.has(macro)) {

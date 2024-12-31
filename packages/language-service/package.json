@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-service",
-	"version": "2.1.10",
+	"version": "2.2.0",
 	"license": "MIT",
 	"files": [
 		"data",
@@ -21,10 +21,10 @@
 		"@volar/language-service": "~2.4.11",
 		"@volar/typescript": "~2.4.11",
 		"@vue/compiler-dom": "^3.5.0",
-		"@vue/language-core": "2.1.10",
+		"@vue/language-core": "2.2.0",
 		"@vue/shared": "^3.5.0",
-		"@vue/typescript-plugin": "2.1.10",
-		"alien-signals": "^0.4.4",
+		"@vue/typescript-plugin": "2.2.0",
+		"alien-signals": "^0.4.9",
 		"path-browserify": "^1.0.1",
 		"volar-service-css": "0.0.62",
 		"volar-service-emmet": "0.0.62",
