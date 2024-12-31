@@ -24,11 +24,7 @@ export async function getComponentProps(fileName: string, componentName: string)
 	if (!server) {
 		return;
 	}
-	const componentAndProps = server.componentNamesAndProps.get(fileName);
-	if (!componentAndProps) {
-		return;
-	}
-	return componentAndProps[componentName];
+	return await server.getComponentProps(fileName, componentName);
 }
 
 export const getComponentEvents = createRequest<
