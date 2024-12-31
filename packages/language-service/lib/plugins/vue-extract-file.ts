@@ -28,7 +28,11 @@ export function create(
 		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			return {
-				provideCodeActions(document, range) {
+				provideCodeActions(document, range, ctx) {
+
+					if (ctx.only && !ctx.only.includes('refactor')) {
+						return;
+					}
 
 					const startOffset = document.offsetAt(range.start);
 					const endOffset = document.offsetAt(range.end);
