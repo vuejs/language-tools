@@ -35,10 +35,6 @@ export const getComponentDirectives = createRequest<
 	typeof import('./requests/componentInfos.js')['getComponentDirectives']
 >('getComponentDirectives');
 
-export const getTemplateContextProps = createRequest<
-	typeof import('./requests/componentInfos.js')['getTemplateContextProps']
->('getTemplateContextProps');
-
 export async function getComponentNames(fileName: string) {
 	const server = await getBestServer(fileName);
 	if (!server) {

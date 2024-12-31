@@ -4,7 +4,7 @@ import * as net from 'node:net';
 import type * as ts from 'typescript';
 import { getComponentDirectives } from './client';
 import { collectExtractProps } from './requests/collectExtractProps';
-import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from './requests/componentInfos';
+import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs } from './requests/componentInfos';
 import { getImportPathForFile } from './requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
@@ -22,7 +22,6 @@ export type RequestType =
 	| 'subscribeComponentProps'
 	| 'getComponentEvents'
 	| 'getComponentDirectives'
-	| 'getTemplateContextProps'
 	| 'getElementAttrs';
 
 export type NotificationType =
@@ -255,11 +254,7 @@ export async function startNamedPipeServer(
 			return getComponentEvents.apply(requestContext, args as any);
 		}
 		else if (requestType === 'getComponentDirectives') {
-			const result = getComponentDirectives.apply(requestContext, args as any);
-			sendResponse(result);
-		}
-		else if (requestType === 'getTemplateContextProps') {
-			return getTemplateContextProps.apply(requestContext, args as any);
+			return getComponentDirectives.apply(requestContext, args as any);
 		}
 		else if (requestType === 'getElementAttrs') {
 			return getElementAttrs.apply(requestContext, args as any);

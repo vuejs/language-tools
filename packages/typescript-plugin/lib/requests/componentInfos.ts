@@ -140,23 +140,6 @@ export function getComponentDirectives(
 	return directives.type.getProperties().map(({ name }) => name);
 }
 
-export function getTemplateContextProps(
-	this: RequestContext,
-	fileName: string
-) {
-	const { typescript: ts, language, languageService, getFileId } = this;
-	const volarFile = language.scripts.get(getFileId(fileName));
-	if (!(volarFile?.generated?.root instanceof vue.VueVirtualCode)) {
-		return;
-	}
-	const vueCode = volarFile.generated.root;
-
-	return getVariableType(ts, languageService, vueCode, '__VLS_ctx')
-		?.type
-		?.getProperties()
-		.map(c => c.name);
-}
-
 export function getComponentNames(
 	this: RequestContext,
 	fileName: string

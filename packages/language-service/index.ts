@@ -31,7 +31,7 @@ import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twos
 import { parse, VueCompilerOptions } from '@vue/language-core';
 import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
-import { getComponentDirectives, getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from '@vue/typescript-plugin/lib/requests/componentInfos';
+import { getComponentDirectives, getComponentEvents, getComponentNames, getComponentProps, getElementAttrs } from '@vue/typescript-plugin/lib/requests/componentInfos';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
@@ -107,31 +107,28 @@ export function getFullLanguageServicePlugins(
 		};
 		return {
 			async collectExtractProps(...args) {
-				return collectExtractProps.apply(requestContext, args);
+				return await collectExtractProps.apply(requestContext, args);
 			},
 			async getPropertiesAtLocation(...args) {
-				return getPropertiesAtLocation.apply(requestContext, args);
+				return await getPropertiesAtLocation.apply(requestContext, args);
 			},
 			async getImportPathForFile(...args) {
-				return getImportPathForFile.apply(requestContext, args);
+				return await getImportPathForFile.apply(requestContext, args);
 			},
 			async getComponentEvents(...args) {
-				return getComponentEvents.apply(requestContext, args);
+				return await getComponentEvents.apply(requestContext, args);
 			},
 			async getComponentDirectives(...args) {
-				return getComponentDirectives.apply(requestContext, args);
+				return await getComponentDirectives.apply(requestContext, args);
 			},
 			async getComponentNames(...args) {
-				return getComponentNames.apply(requestContext, args);
+				return await getComponentNames.apply(requestContext, args);
 			},
 			async getComponentProps(...args) {
-				return getComponentProps.apply(requestContext, args);
+				return await getComponentProps.apply(requestContext, args);
 			},
 			async getElementAttrs(...args) {
-				return getElementAttrs.apply(requestContext, args);
-			},
-			async getTemplateContextProps(...args) {
-				return getTemplateContextProps.apply(requestContext, args);
+				return await getElementAttrs.apply(requestContext, args);
 			},
 			async getQuickInfoAtPosition(fileName, position) {
 				const languageService = context.getLanguageService();
