@@ -23,6 +23,7 @@ export interface TemplateCodegenOptions {
 	slotsAssignName?: string;
 	propsAssignName?: string;
 	inheritAttrs: boolean;
+	selfComponentName?: string;
 }
 
 export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
