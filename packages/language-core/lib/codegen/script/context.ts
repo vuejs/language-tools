@@ -18,7 +18,6 @@ export function createScriptCodegenContext(options: ScriptCodegenOptions) {
 	return {
 		generatedTemplate: false,
 		generatedPropsType: false,
-		templateGeneratedOffset: undefined as number | undefined,
 		scriptSetupGeneratedOffset: undefined as number | undefined,
 		bypassDefineComponent: options.lang === 'js' || options.lang === 'jsx',
 		bindingNames: new Set([
