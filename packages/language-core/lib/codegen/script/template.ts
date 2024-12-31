@@ -96,7 +96,7 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 		types.push(`typeof __VLS_directivesOption`);
 	}
 
-	types.push(`__VLS_PickDirectives<typeof __VLS_ctx>`);
+	types.push(`typeof __VLS_ctx`);
 
 	yield `type __VLS_LocalDirectives =`;
 	for (const type of types) {

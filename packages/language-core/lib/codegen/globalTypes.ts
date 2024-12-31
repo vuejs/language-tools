@@ -94,9 +94,6 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		>
 	>;
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
-	type __VLS_PickDirectives<T> = {
-		[K in keyof T as K extends \`v\${infer N}\` ? N extends Capitalize<N> ? K : never : never]: T[K];
-	};
 	type __VLS_PickFunctionalComponentCtx<T, K> = NonNullable<__VLS_PickNotAny<
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
 		, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any

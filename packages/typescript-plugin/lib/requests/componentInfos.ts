@@ -137,7 +137,9 @@ export function getComponentDirectives(
 		return [];
 	}
 
-	return directives.type.getProperties().map(({ name }) => name);
+	return directives.type.getProperties()
+		.map(({ name }) => name)
+		.filter(name => name.startsWith('v') && name.length >= 2 && name[1] === name[1].toUpperCase());
 }
 
 export function getComponentNames(
