@@ -1,6 +1,5 @@
-import * as path from 'path-browserify';
 import type { Code } from '../../types';
-import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
+import { hyphenateTag } from '../../utils/shared';
 import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
@@ -67,23 +66,6 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		];
 		yield endOfLine;
 		types.push(`typeof __VLS_componentsOption`);
-	}
-
-	let nameType: Code | undefined;
-	if (options.sfc.script && options.scriptRanges?.exportDefault?.nameOption) {
-		const { nameOption } = options.scriptRanges.exportDefault;
-		nameType = options.sfc.script.content.slice(nameOption.start, nameOption.end);
-	}
-	else if (options.sfc.scriptSetup) {
-		const baseName = path.basename(options.fileName);
-		nameType = `'${options.scriptSetupRanges?.defineOptions?.name ?? baseName.slice(0, baseName.lastIndexOf('.'))}'`;
-	}
-	if (nameType) {
-		types.push(
-			`{ [K in ${nameType}]: typeof __VLS_self & (new () => { `
-			+ getSlotsPropertyName(options.vueCompilerOptions.target)
-			+ `: typeof ${options.scriptSetupRanges?.defineSlots?.name ?? `__VLS_slots`} }) }`
-		);
 	}
 
 	types.push(`typeof __VLS_ctx`);

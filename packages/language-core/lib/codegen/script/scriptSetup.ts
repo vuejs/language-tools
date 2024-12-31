@@ -1,6 +1,6 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { combineLastMapping, endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponent, generateEmitsOption } from './component';
 import { generateComponentSelf } from './componentSelf';
 import type { ScriptCodegenContext } from './context';
@@ -196,12 +196,19 @@ function* generateSetupFunction(
 				` as __VLS_StyleModules[`,
 				['', scriptSetup.name, exp.start, codeFeatures.verification],
 				`'$style'`,
-				['', scriptSetup.name, exp.end, codeFeatures.verification],
+				['', scriptSetup.name, exp.end, combineLastMapping],
 				`])`
 			],
 			callExp.end,
 			callExp.end
 		]);
+		if (arg) {
+			setupCodeModifies.push([
+				[`(__VLS_placeholder)`],
+				arg.start,
+				arg.end
+			]);
+		}
 	}
 	for (const { callExp } of scriptSetupRanges.useSlots) {
 		setupCodeModifies.push([
@@ -314,6 +321,7 @@ function* generateMacros(
 	ctx: ScriptCodegenContext
 ): Generator<Code> {
 	if (options.vueCompilerOptions.target >= 3.3) {
+		yield `// @ts-ignore${newLine}`;
 		yield `declare const { `;
 		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
 			if (!ctx.bindingNames.has(macro)) {

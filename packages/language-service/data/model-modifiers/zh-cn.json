@@ -13,7 +13,7 @@
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "如果你想让用户输入自动转换为数字，你可以在 `v-model` 后添加 `.number` 修饰符来管理输入：\n\n```html\n<input v-model.number=\"age\" />\n```\n\n如果该值无法被 `parseFloat()` 处理，那么将返回原始值。\n\n`number` 修饰符会在输入框有 `type=\"number\"` 时自动启用。"
+        "value": "如果你想让用户输入自动转换为数字，你可以在 `v-model` 后添加 `.number` 修饰符来管理输入：\n\n```html\n<input v-model.number=\"age\" />\n```\n\n如果该值无法被 `parseFloat()` 处理，那么将返回原始值。特别是当输入为空时 (例如用户清空输入字段之后)，会返回一个空字符串。这种行为与 [DOM 属性 valueAsNumber](https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLInputElement#valueasnumber) 有所不同。\n\n`number` 修饰符会在输入框有 `type=\"number\"` 时自动启用。"
       },
       "references": "guide/essentials/forms.html#number"
     },

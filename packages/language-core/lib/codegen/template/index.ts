@@ -24,6 +24,7 @@ export interface TemplateCodegenOptions {
 	slotsAssignName?: string;
 	propsAssignName?: string;
 	inheritAttrs: boolean;
+	selfComponentName?: string;
 	getGeneratedLength: () => number;
 	linkedCodeMappings: Mapping[];
 }
@@ -43,7 +44,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	ctx.addLocalVariable('$el');
 
 	if (options.template.ast) {
-		yield* generateTemplateChild(options, ctx, options.template.ast, undefined, undefined, undefined);
+		yield* generateTemplateChild(options, ctx, options.template.ast, undefined);
 	}
 
 	yield* generateStyleScopedClassReferences(ctx);

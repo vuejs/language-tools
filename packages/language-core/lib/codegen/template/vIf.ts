@@ -10,9 +10,7 @@ import { generateTemplateChild } from './templateChild';
 export function* generateVIf(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.IfNode,
-	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined
+	node: CompilerDOM.IfNode
 ): Generator<Code> {
 
 	let originalBlockConditionsLength = ctx.blockConditions.length;
@@ -61,7 +59,7 @@ export function* generateVIf(
 		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of branch.children) {
-			yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
+			yield* generateTemplateChild(options, ctx, childNode, prev);
 			prev = childNode;
 		}
 		yield* ctx.generateAutoImportCompletion();

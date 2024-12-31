@@ -1,5 +1,7 @@
 import type { Mapping } from '@volar/language-core';
-import { computed, Unstable } from 'alien-signals';
+import { camelize, capitalize } from '@vue/shared';
+import { computed, unstable } from 'alien-signals';
+import * as path from 'path-browserify';
 import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
@@ -104,7 +106,7 @@ function createTsx(
 			? parseScriptSetupRanges(ts, _sfc.scriptSetup.ast, vueCompilerOptions.get())
 			: undefined
 	);
-	const scriptSetupBindingNames = Unstable.computedSet(
+	const scriptSetupBindingNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set<string>();
 			const bindings = scriptSetupRanges.get()?.bindings;
@@ -116,7 +118,7 @@ function createTsx(
 			return newNames;
 		})
 	);
-	const scriptSetupImportComponentNames = Unstable.computedSet(
+	const scriptSetupImportComponentNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set<string>();
 			const bindings = scriptSetupRanges.get()?.bindings;
@@ -135,7 +137,7 @@ function createTsx(
 			return newNames;
 		})
 	);
-	const destructuredPropNames = Unstable.computedSet(
+	const destructuredPropNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set(scriptSetupRanges.get()?.defineProps?.destructured);
 			const rest = scriptSetupRanges.get()?.defineProps?.destructuredRest;
@@ -145,7 +147,7 @@ function createTsx(
 			return newNames;
 		})
 	);
-	const templateRefNames = Unstable.computedSet(
+	const templateRefNames = unstable.computedSet(
 		computed(() => {
 			const newNames = new Set(
 				scriptSetupRanges.get()?.useTemplateRef
@@ -161,6 +163,19 @@ function createTsx(
 	const inheritAttrs = computed(() => {
 		const value = scriptSetupRanges.get()?.defineOptions?.inheritAttrs ?? scriptRanges.get()?.exportDefault?.inheritAttrsOption;
 		return value !== 'false';
+	});
+	const selfComponentName = computed(() => {
+		const { exportDefault } = scriptRanges.get() ?? {};
+		if (_sfc.script && exportDefault?.nameOption) {
+			const { nameOption } = exportDefault;
+			return _sfc.script.content.slice(nameOption.start + 1, nameOption.end - 1);
+		}
+		const { defineOptions } = scriptSetupRanges.get() ?? {};
+		if (_sfc.scriptSetup && defineOptions?.name) {
+			return defineOptions.name;
+		}
+		const baseName = path.basename(fileName);
+		return capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
 	});
 	const generatedTemplate = computed(() => {
 
@@ -185,6 +200,7 @@ function createTsx(
 			slotsAssignName: slotsAssignName.get(),
 			propsAssignName: propsAssignName.get(),
 			inheritAttrs: inheritAttrs.get(),
+			selfComponentName: selfComponentName.get(),
 			getGeneratedLength: () => generatedLength,
 			linkedCodeMappings,
 		});
