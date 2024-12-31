@@ -55,21 +55,23 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 }
 
 function* generateSlots(options: TemplateCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
+	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
+
 	if (!options.hasDefineSlots) {
-		yield `var __VLS_slots!: `;
-		for (const { expVar, varName } of ctx.dynamicSlots) {
+		yield `var __VLS_slots!: __VLS_OmitStringIndex<typeof __VLS_ctx.${name}> & `;
+		for (const { expVar, propsVar } of ctx.dynamicSlots) {
 			ctx.hasSlot = true;
-			yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
+			yield `Partial<Record<NonNullable<typeof ${expVar}>, (props: typeof ${propsVar}) => any>> &${newLine}`;
 		}
 		yield `{${newLine}`;
 		for (const slot of ctx.slots) {
 			ctx.hasSlot = true;
-			if (slot.name && slot.loc !== undefined) {
+			if (slot.name && slot.offset !== undefined) {
 				yield* generateObjectProperty(
 					options,
 					ctx,
 					slot.name,
-					slot.loc,
+					slot.offset,
 					ctx.codeFeatures.withoutHighlightAndCompletion,
 					slot.nodeLoc
 				);
@@ -82,11 +84,10 @@ function* generateSlots(options: TemplateCodegenOptions, ctx: TemplateCodegenCon
 					`default`
 				);
 			}
-			yield `?(_: typeof ${slot.varName}): any,${newLine}`;
+			yield `?(props: typeof ${slot.propsVar}): any,${newLine}`;
 		}
 		yield `}${endOfLine}`;
 	}
-	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
 	yield `var ${name}!: typeof ${options.slotsAssignName ?? '__VLS_slots'}${endOfLine}`;
 }
 
