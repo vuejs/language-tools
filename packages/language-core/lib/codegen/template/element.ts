@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
-import { hyphenateTag } from '../../utils/shared';
+import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { collectVars, createTsAst, endOfLine, newLine, normalizeAttributeValue, variableNameRegex, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -151,6 +151,14 @@ export function* generateComponent(
 	}
 	else if (!isComponentTag) {
 		yield `const ${var_originalComponent} = ({} as __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', __VLS_LocalComponents, `;
+		if (options.selfComponentName && possibleOriginalNames.includes(options.selfComponentName)) {
+			yield `typeof __VLS_self & (new () => { `
+				+ getSlotsPropertyName(options.vueCompilerOptions.target)
+				+ `: typeof ${options.slotsAssignName ?? `__VLS_slots`} }), `;
+		}
+		else {
+			yield `void, `;
+		}
 		yield getPossibleOriginalComponentNames(node.tag, false)
 			.map(name => `'${name}'`)
 			.join(`, `);

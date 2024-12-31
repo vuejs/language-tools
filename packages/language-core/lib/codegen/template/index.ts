@@ -19,10 +19,11 @@ export interface TemplateCodegenOptions {
 	scriptSetupImportComponentNames: Set<string>;
 	destructuredPropNames: Set<string>;
 	templateRefNames: Set<string>;
-	hasDefineSlots?: boolean;
-	slotsAssignName?: string;
-	propsAssignName?: string;
+	hasDefineSlots: boolean;
+	slotsAssignName: string | undefined;
+	propsAssignName: string | undefined;
 	inheritAttrs: boolean;
+	selfComponentName: string | undefined;
 }
 
 export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
