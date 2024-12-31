@@ -569,9 +569,7 @@ export function create(
 											!prop.name.startsWith('ref_')
 										),
 										events,
-										directives: directives.filter(name =>
-											!['vBind', 'vIf', 'vOn', 'VOnce', 'vShow', 'VSlot'].includes(name)
-										),
+										directives,
 									});
 									version++;
 								})());
