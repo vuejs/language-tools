@@ -1,5 +1,5 @@
 import type { Disposable, LanguageServiceContext, LanguageServicePluginInstance } from '@volar/language-service';
-import { VueCompilerOptions, VueVirtualCode, hyphenateAttr, hyphenateTag, parseScriptSetupRanges } from '@vue/language-core';
+import { VueVirtualCode, hyphenateAttr, hyphenateTag, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
 import { create as createHtmlService } from 'volar-service-html';
@@ -157,7 +157,6 @@ export function create(
 					if (!context.project.vue) {
 						return;
 					}
-					const vueCompilerOptions = context.project.vue.compilerOptions;
 
 					let sync: (() => Promise<number>) | undefined;
 					let currentVersion: number | undefined;
@@ -172,7 +171,7 @@ export function create(
 						// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
 						baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
 
-						sync = (await provideHtmlData(vueCompilerOptions, sourceScript!.id, root)).sync;
+						sync = (await provideHtmlData(sourceScript!.id, root)).sync;
 						currentVersion = await sync();
 					}
 
@@ -462,7 +461,7 @@ export function create(
 				},
 			};
 
-			async function provideHtmlData(vueCompilerOptions: VueCompilerOptions, sourceDocumentUri: URI, vueCode: VueVirtualCode) {
+			async function provideHtmlData(sourceDocumentUri: URI, vueCode: VueVirtualCode) {
 
 				await (initializing ??= initialize());
 
@@ -520,9 +519,7 @@ export function create(
 								})());
 								return [];
 							}
-							const scriptSetupRanges = vueCode._sfc.scriptSetup
-								? parseScriptSetupRanges(ts, vueCode._sfc.scriptSetup.ast, vueCompilerOptions)
-								: undefined;
+							const scriptSetupRanges = tsCodegen.get(vueCode._sfc)?.scriptSetupRanges.get();
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
 
