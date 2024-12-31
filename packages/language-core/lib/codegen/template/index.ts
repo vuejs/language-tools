@@ -113,6 +113,7 @@ function* generateInheritedAttrs(
 	if (ctx.bindingAttrLocs.length) {
 		yield `[`;
 		for (const loc of ctx.bindingAttrLocs) {
+			yield `__VLS_special.`;
 			yield [
 				loc.source,
 				'template',
