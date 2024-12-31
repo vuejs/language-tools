@@ -189,7 +189,7 @@ function createTsx(
 			slotsAssignName: slotsAssignName.get(),
 			propsAssignName: propsAssignName.get(),
 			inheritAttrs: inheritAttrs.get(),
-			selfComponentName: selfComponentName.get()
+			selfComponentName: selfComponentName.get(),
 		});
 
 		let current = codegen.next();
@@ -202,7 +202,7 @@ function createTsx(
 
 		return {
 			...current.value,
-			codes: codes,
+			codes,
 		};
 	});
 	const generatedScript = computed(() => {

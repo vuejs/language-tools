@@ -145,7 +145,6 @@ export function* generateElementProps(
 					prop,
 					prop.exp,
 					ctx.codeFeatures.all,
-					prop.arg?.loc.start.offset === prop.exp?.loc.start.offset,
 					enableCodeFeatures
 				),
 				`)`
@@ -257,7 +256,6 @@ export function* generateElementProps(
 						prop,
 						prop.exp,
 						ctx.codeFeatures.all,
-						false,
 						enableCodeFeatures
 					)
 				);
@@ -279,9 +277,10 @@ function* generatePropExp(
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
-	isShorthand: boolean,
 	enableCodeFeatures: boolean
 ): Generator<Code> {
+	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
+
 	if (isShorthand && features.completion) {
 		features = {
 			...features,

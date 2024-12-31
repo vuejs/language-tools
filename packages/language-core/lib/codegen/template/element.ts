@@ -277,16 +277,10 @@ export function* generateComponent(
 		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
 	}
 
-	if (
-		options.vueCompilerOptions.fallthroughAttributes
-		&& (
-			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
-			|| node === ctx.singleRootNode
-		)
-	) {
-		const varAttrs = ctx.getInternalVariable();
-		ctx.inheritedAttrVars.add(varAttrs);
-		yield `var ${varAttrs}!: Parameters<typeof ${var_functionalComponent}>[0];\n`;
+	if (hasVBindAttrs(options, ctx, node)) {
+		const attrsVar = ctx.getInternalVariable();
+		ctx.inheritedAttrVars.add(attrsVar);
+		yield `let ${attrsVar}!: Parameters<typeof ${var_functionalComponent}>[0];\n`;
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
@@ -365,13 +359,7 @@ export function* generateElement(
 		yield* generateElementChildren(options, ctx, node);
 	}
 
-	if (
-		options.vueCompilerOptions.fallthroughAttributes
-		&& (
-			node.props.some(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && prop.name === 'bind' && prop.exp?.loc.source === '$attrs')
-			|| node === ctx.singleRootNode
-		)
-	) {
+	if (hasVBindAttrs(options, ctx, node)) {
 		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
 	}
 }
@@ -623,6 +611,21 @@ function* generateReferencesForElements(
 		}
 	}
 	return [];
+}
+
+function hasVBindAttrs(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode
+) {
+	return options.vueCompilerOptions.fallthroughAttributes && (
+		node === ctx.singleRootNode ||
+		node.props.some(prop =>
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.name === 'bind'
+			&& prop.exp?.loc.source === '$attrs'
+		)
+	);
 }
 
 function camelizeComponentName(newName: string) {
