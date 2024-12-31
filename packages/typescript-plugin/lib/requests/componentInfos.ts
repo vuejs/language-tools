@@ -122,7 +122,7 @@ export function getComponentEvents(
 	return [...result];
 }
 
-export function getTemplateContextProps(
+export function getComponentDirectives(
 	this: RequestContext,
 	fileName: string
 ) {
@@ -132,11 +132,15 @@ export function getTemplateContextProps(
 		return;
 	}
 	const vueCode = volarFile.generated.root;
+	const directives = getVariableType(ts, languageService, vueCode, '__VLS_directives');
+	if (!directives) {
+		return [];
+	}
 
-	return getVariableType(ts, languageService, vueCode, '__VLS_ctx')
-		?.type
-		?.getProperties()
-		.map(c => c.name);
+	return directives.type.getProperties()
+		.map(({ name }) => name)
+		.filter(name => name.startsWith('v') && name.length >= 2 && name[1] === name[1].toUpperCase())
+		.filter(name => !['vBind', 'vIf', 'vOn', 'VOnce', 'vShow', 'VSlot'].includes(name));
 }
 
 export function getComponentNames(
@@ -184,7 +188,9 @@ export function getElementAttrs(
 
 	if (tsSourceFile = program.getSourceFile(fileName)) {
 
-		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === '__VLS_IntrinsicElementsCompletion');
+		const typeNode = tsSourceFile.statements
+			.filter(ts.isTypeAliasDeclaration)
+			.find(node => node.name.getText() === '__VLS_IntrinsicElementsCompletion');
 		const checker = program.getTypeChecker();
 
 		if (checker && typeNode) {
