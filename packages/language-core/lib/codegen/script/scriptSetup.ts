@@ -65,10 +65,10 @@ export function* generateScriptSetup(
 		}
 
 		yield `return {} as {${newLine}`
-			+ `	props: ${ctx.localTypes.PrettifyLocal}<__VLS_OwnProps & __VLS_PublicProps & __VLS_TemplateResult['attrs']> & __VLS_BuiltInPublicProps,${newLine}`
+			+ `	props: ${ctx.localTypes.PrettifyLocal}<__VLS_OwnProps & __VLS_PublicProps & __VLS_TemplateAttrs> & __VLS_BuiltInPublicProps,${newLine}`
 			+ `	expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.defineExpose ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
 			+ `	attrs: any,${newLine}`
-			+ `	slots: __VLS_TemplateResult['slots'],${newLine}`
+			+ `	slots: __VLS_TemplateSlots,${newLine}`
 			+ `	emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
 			+ `}${endOfLine}`;
 		yield `})(),${newLine}`; // __VLS_setup = (async () => {
@@ -170,18 +170,17 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	// TODO: circular reference
-	// for (const { callExp } of scriptSetupRanges.useAttrs) {
-	// 	setupCodeModifies.push([
-	// 		[`(`],
-	// 		callExp.start,
-	// 		callExp.start
-	// 	], [
-	// 		[` as __VLS_TemplateResult['attrs'] & Record<string, unknown>)`],
-	// 		callExp.end,
-	// 		callExp.end
-	// 	]);
-	// }
+	for (const { callExp } of scriptSetupRanges.useAttrs) {
+		setupCodeModifies.push([
+			[`(`],
+			callExp.start,
+			callExp.start
+		], [
+			[` as __VLS_TemplateAttrs & Record<string, unknown>)`],
+			callExp.end,
+			callExp.end
+		]);
+	}
 	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
 		setupCodeModifies.push([
 			[`(`],
@@ -216,7 +215,7 @@ function* generateSetupFunction(
 			callExp.start,
 			callExp.start
 		], [
-			[` as __VLS_TemplateResult['slots'])`],
+			[` as __VLS_TemplateSlots)`],
 			callExp.end,
 			callExp.end
 		]);
@@ -225,7 +224,7 @@ function* generateSetupFunction(
 	for (const { callExp, exp, arg } of scriptSetupRanges.useTemplateRef) {
 		const templateRefType = arg
 			? [
-				`__VLS_TemplateResult['refs'][`,
+				`__VLS_TemplateRefs[`,
 				generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
 				`]`
 			]
@@ -294,11 +293,8 @@ function* generateSetupFunction(
 
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* generateModelEmit(scriptSetup, scriptSetupRanges);
-	yield `function __VLS_template() {${newLine}`;
 	const templateCodegenCtx = yield* generateTemplate(options, ctx);
-	yield `}${endOfLine}`;
 	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
-	yield `type __VLS_TemplateResult = ReturnType<typeof __VLS_template>${endOfLine}`;
 
 	if (syntax) {
 		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges.defineSlots)) {
@@ -306,7 +302,7 @@ function* generateSetupFunction(
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield `${syntax} `;
-			yield `{} as ${ctx.localTypes.WithTemplateSlots}<typeof __VLS_component, __VLS_TemplateResult['slots']>${endOfLine}`;
+			yield `{} as ${ctx.localTypes.WithTemplateSlots}<typeof __VLS_component, __VLS_TemplateSlots>${endOfLine}`;
 		}
 		else {
 			yield `${syntax} `;

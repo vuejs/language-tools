@@ -41,10 +41,10 @@ export function* generateComponent(
 		yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
 	}
 	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.templateRefs.size) {
-		yield `__typeRefs: {} as __VLS_TemplateResult['refs'],${newLine}`;
+		yield `__typeRefs: {} as __VLS_TemplateRefs,${newLine}`;
 	}
 	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.singleRootElType) {
-		yield `__typeEl: {} as __VLS_TemplateResult['rootEl'],${newLine}`;
+		yield `__typeEl: {} as __VLS_TemplateEl,${newLine}`;
 	}
 	yield `})`;
 }
@@ -154,7 +154,7 @@ export function* generatePropsOption(
 		});
 	}
 	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
-		let attrsType = `__VLS_TemplateResult['attrs']`;
+		let attrsType = `__VLS_TemplateAttrs`;
 		if (hasEmitsOption) {
 			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
 		}
