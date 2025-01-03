@@ -186,15 +186,35 @@ const plugin: VueLanguagePlugin = ctx => {
 			else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 				// {{ ... }}
 				const [content, start] = parseInterpolationNode(node, templateContent);
-				const lines = content.split('\n');
-				addFormatCodes(
-					content,
-					start,
-					lines.length <= 1 ? formatBrackets.curly : [
-						lines[0].trim() === '' ? '(' : formatBrackets.curly[0],
-						lines[lines.length - 1].trim() === '' ? ');' : formatBrackets.curly[1],
-					]
-				);
+				if (content.includes('=>')) { // arrow function
+					addFormatCodes(
+						content,
+						start,
+						formatBrackets.normal
+					);
+				}
+				else {
+					const lines = content.split('\n');
+					const firstLineEmpty = lines[0].trim() === '';
+					const lastLineEmpty = lines[lines.length - 1].trim() === '';
+					if (lines.length <= 1 || (!firstLineEmpty && !lastLineEmpty)) {
+						addFormatCodes(
+							content,
+							start,
+							formatBrackets.curly
+						);
+					}
+					else {
+						addFormatCodes(
+							content,
+							start,
+							[
+								firstLineEmpty ? '(' : '(0 +',
+								lastLineEmpty ? ');' : '+ 0);'
+							]
+						);
+					}
+				}
 			}
 		}
 
