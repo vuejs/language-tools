@@ -94,7 +94,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					}
 					if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && !prop.arg.isStatic) {
 						addFormatCodes(
-							prop.arg.content,
+							prop.arg.loc.source,
 							prop.arg.loc.start.offset,
 							formatBrackets.normal
 						);
@@ -107,7 +107,7 @@ const plugin: VueLanguagePlugin = ctx => {
 							const ast = createTsAst(ctx.modules.typescript, prop.exp, prop.exp.content);
 							if (isCompoundExpression(ctx.modules.typescript, ast)) {
 								addFormatCodes(
-									prop.exp.content,
+									prop.exp.loc.source,
 									prop.exp.loc.start.offset,
 									formatBrackets.event
 								);
@@ -118,14 +118,14 @@ const plugin: VueLanguagePlugin = ctx => {
 								const lastLineEmpty = lines[lines.length - 1].trim() === '';
 								if (lines.length <= 1 || (!firstLineEmpty && !lastLineEmpty)) {
 									addFormatCodes(
-										prop.exp.content,
+										prop.exp.loc.source,
 										prop.exp.loc.start.offset,
 										formatBrackets.normal
 									);
 								}
 								else {
 									addFormatCodes(
-										prop.exp.content,
+										prop.exp.loc.source,
 										prop.exp.loc.start.offset,
 										['(', ');']
 									);
@@ -134,14 +134,22 @@ const plugin: VueLanguagePlugin = ctx => {
 						}
 						else if (prop.name === 'slot') {
 							addFormatCodes(
-								prop.exp.content,
+								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
 								formatBrackets.params
 							);
 						}
+						else if (prop.rawName === 'v-for') {
+							// #2586
+							addFormatCodes(
+								prop.exp.loc.source,
+								prop.exp.loc.start.offset,
+								formatBrackets.for
+							);
+						}
 						else {
 							addFormatCodes(
-								prop.exp.content,
+								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
 								formatBrackets.normal
 							);
@@ -157,7 +165,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					const branch = node.branches[i];
 					if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 						addFormatCodes(
-							branch.condition.content,
+							branch.condition.loc.source,
 							branch.condition.loc.start.offset,
 							formatBrackets.if
 						);
