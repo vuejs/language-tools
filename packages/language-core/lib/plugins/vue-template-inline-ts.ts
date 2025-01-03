@@ -113,6 +113,13 @@ const plugin: VueLanguagePlugin = ctx => {
 									: formatBrackets.normal
 							);
 						}
+						else if (prop.name === 'slot') {
+							addFormatCodes(
+								prop.exp.content,
+								prop.exp.loc.start.offset,
+								formatBrackets.params
+							);
+						}
 						else {
 							addFormatCodes(
 								prop.exp.content,
@@ -149,11 +156,11 @@ const plugin: VueLanguagePlugin = ctx => {
 					let start = leftExpressionRange.start;
 					let end = source.loc.start.offset + source.content.length;
 					while (templateContent[start - 1] === ' ' || templateContent[start - 1] === '(') {
- start--;
-}
+						start--;
+					}
 					while (templateContent[end] === ' ' || templateContent[end] === ')') {
- end++;
-}
+						end++;
+					}
 					addFormatCodes(
 						templateContent.slice(start, end),
 						start,
