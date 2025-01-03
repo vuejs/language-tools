@@ -28,7 +28,7 @@ export const enabledHybridMode = computed(() => {
 		return true;
 	}
 	return config.server.hybridMode;
-})
+});
 
 export const enabledTypeScriptPlugin = computed(() => {
 	return (
