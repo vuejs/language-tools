@@ -105,13 +105,32 @@ const plugin: VueLanguagePlugin = ctx => {
 					) {
 						if (prop.name === 'on' && prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 							const ast = createTsAst(ctx.modules.typescript, prop.exp, prop.exp.content);
-							addFormatCodes(
-								prop.exp.content,
-								prop.exp.loc.start.offset,
-								isCompoundExpression(ctx.modules.typescript, ast)
-									? formatBrackets.event
-									: formatBrackets.normal
-							);
+							if (isCompoundExpression(ctx.modules.typescript, ast)) {
+								addFormatCodes(
+									prop.exp.content,
+									prop.exp.loc.start.offset,
+									formatBrackets.event
+								);
+							}
+							else {
+								const lines = prop.exp.content.split('\n');
+								const firstLineEmpty = lines[0].trim() === '';
+								const lastLineEmpty = lines[lines.length - 1].trim() === '';
+								if (lines.length <= 1 || (!firstLineEmpty && !lastLineEmpty)) {
+									addFormatCodes(
+										prop.exp.content,
+										prop.exp.loc.start.offset,
+										formatBrackets.normal
+									);
+								}
+								else {
+									addFormatCodes(
+										prop.exp.content,
+										prop.exp.loc.start.offset,
+										['(', ');']
+									);
+								}
+							}
 						}
 						else if (prop.name === 'slot') {
 							addFormatCodes(
@@ -186,17 +205,27 @@ const plugin: VueLanguagePlugin = ctx => {
 			else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 				// {{ ... }}
 				const [content, start] = parseInterpolationNode(node, templateContent);
+				const lines = content.split('\n');
+				const firstLineEmpty = lines[0].trim() === '';
+				const lastLineEmpty = lines[lines.length - 1].trim() === '';
+
 				if (content.includes('=>')) { // arrow function
-					addFormatCodes(
-						content,
-						start,
-						formatBrackets.normal
-					);
+					if (lines.length <= 1 || (!firstLineEmpty && !lastLineEmpty)) {
+						addFormatCodes(
+							content,
+							start,
+							formatBrackets.normal
+						);
+					}
+					else {
+						addFormatCodes(
+							content,
+							start,
+							['(', ');']
+						);
+					}
 				}
 				else {
-					const lines = content.split('\n');
-					const firstLineEmpty = lines[0].trim() === '';
-					const lastLineEmpty = lines[lines.length - 1].trim() === '';
 					if (lines.length <= 1 || (!firstLineEmpty && !lastLineEmpty)) {
 						addFormatCodes(
 							content,
