@@ -754,6 +754,14 @@ function readVueComponentDefaultProps(
 					...resolvePropsOption(ast, obj, printer, ts),
 				};
 			}
+		} else if (descriptor.scriptSetup && scriptSetupRanges?.defineProps?.destructured) {
+			const ast = descriptor.scriptSetup.ast;
+			for (const [prop, initializer] of scriptSetupRanges.defineProps.destructured) {
+				if (initializer) {
+					const expText = printer?.printNode(ts.EmitHint.Expression, initializer, ast) ?? initializer.getText(ast);
+					result[prop] = { default: expText };
+				}
+			}
 		}
 
 		function findObjectLiteralExpression(node: ts.Node) {
