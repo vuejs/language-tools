@@ -131,12 +131,10 @@ function* generateTemplateBody(
 		yield `const __VLS_rootEl = {} as any${endOfLine}`;
 	}
 
-	yield `return {${newLine}`;
-	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
-	yield `	slots: ${options.scriptSetupRanges?.defineSlots?.name ?? '__VLS_slots'},${newLine}`;
-	yield `	refs: __VLS_refs,${newLine}`;
-	yield `	rootEl: __VLS_rootEl,${newLine}`;
-	yield `}${endOfLine}`;
+	yield `type __VLS_TemplateAttrs = Partial<typeof __VLS_inheritedAttrs>${endOfLine}`;
+	yield `type __VLS_TemplateSlots = typeof ${options.scriptSetupRanges?.defineSlots?.name ?? '__VLS_slots'}${endOfLine}`;
+	yield `type __VLS_TemplateRefs = typeof __VLS_refs${endOfLine}`;
+	yield `type __VLS_TemplateEl = typeof __VLS_rootEl${endOfLine}`;
 }
 
 function* generateStyleScopedClasses(
