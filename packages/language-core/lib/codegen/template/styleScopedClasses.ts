@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code } from '../../types';
-import { endOfLine, normalizeAttributeValue } from '../utils';
+import { endOfLine, newLine, normalizeAttributeValue } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 
@@ -10,22 +10,18 @@ export function* generateStyleScopedClassReferences(
 	ctx: TemplateCodegenContext,
 	withDot = false
 ): Generator<Code> {
-	if (!ctx.emptyClassOffsets.length && !ctx.scopedClasses.length) {
-		return;
-	}
-
-	yield `[`;
 	for (const offset of ctx.emptyClassOffsets) {
-		yield `'`;
+		yield `__VLS_styleScopedClasses['`;
 		yield [
 			'',
 			'template',
 			offset,
 			ctx.codeFeatures.additionalCompletion,
 		];
-		yield `', `;
+		yield `']${endOfLine}`;
 	}
 	for (const { source, className, offset } of ctx.scopedClasses) {
+		yield `__VLS_styleScopedClasses[`;
 		yield [
 			'',
 			source,
@@ -43,9 +39,9 @@ export function* generateStyleScopedClassReferences(
 			offset + className.length,
 			ctx.codeFeatures.navigationWithoutRename,
 		];
-		yield `, `;
+		yield `]${endOfLine}`;
 	}
-	yield `] as (keyof __VLS_StyleScopedClasses)[]${endOfLine}`;
+	yield newLine;
 
 	function* escapeString(source: string, className: string, offset: number, escapeTargets: string[]): Generator<Code> {
 		let count = 0;
