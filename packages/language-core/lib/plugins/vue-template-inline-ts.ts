@@ -148,8 +148,12 @@ const plugin: VueLanguagePlugin = ctx => {
 				if (leftExpressionRange && leftExpressionText && source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					let start = leftExpressionRange.start;
 					let end = source.loc.start.offset + source.content.length;
-					while (templateContent[start - 1] === ' ' || templateContent[start - 1] === '(') start--;
-					while (templateContent[end] === ' ' || templateContent[end] === ')') end++;
+					while (templateContent[start - 1] === ' ' || templateContent[start - 1] === '(') {
+ start--;
+}
+					while (templateContent[end] === ' ' || templateContent[end] === ')') {
+ end++;
+}
 					addFormatCodes(
 						templateContent.slice(start, end),
 						start,
