@@ -124,7 +124,7 @@ function* generateInheritedAttrs(
 		}
 		yield `]${endOfLine}`;
 	}
-	return `Partial<typeof __VLS_inheritedAttrs> & Record<string, unknown>`;
+	return `typeof __VLS_ctx.$attrs & Partial<typeof __VLS_inheritedAttrs>`;
 }
 
 function* generateRefs(
