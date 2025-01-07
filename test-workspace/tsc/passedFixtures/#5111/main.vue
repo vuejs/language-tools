@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { exactType } from '../../shared';
+import { exactType } from '../shared';
 
 declare module 'vue' {
     interface ComponentCustomProperties {
