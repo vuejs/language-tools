@@ -1,4 +1,4 @@
-<script lang="ts" setup>
+<script setup lang="ts">
 import { exactType } from '../shared';
 
 declare module 'vue' {
