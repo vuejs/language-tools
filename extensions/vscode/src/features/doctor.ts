@@ -265,7 +265,7 @@ function getPackageJsonOfWorkspacePackage(folder: string, pkg: string) {
 		const path = require.resolve(pkg + '/package.json', { paths: [folder] });
 		return {
 			path,
-			json: require(path) as { version: string },
+			json: require(path) as { version: string; },
 		};
 	} catch { }
 }
