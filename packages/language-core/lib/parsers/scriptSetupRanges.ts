@@ -20,14 +20,14 @@ type DefineProp = {
 	defaultValue?: TextRange;
 	required?: boolean;
 	isModel?: boolean;
-}
+};
 
 type DefineProps = CallExpressionRange & {
 	name?: string;
 	destructured?: Set<string>;
 	destructuredRest?: string;
 	statement: TextRange;
-}
+};
 
 type WithDefaults = Pick<CallExpressionRange, 'callExp' | 'exp' | 'arg'>;
 
@@ -35,20 +35,20 @@ type DefineEmits = CallExpressionRange & {
 	name?: string;
 	hasUnionTypeArg?: boolean;
 	statement: TextRange;
-}
+};
 
 type DefineSlots = CallExpressionRange & {
 	name?: string;
 	isObjectBindingPattern?: boolean;
 	statement: TextRange;
-}
+};
 
 type DefineExpose = CallExpressionRange;
 
 type DefineOptions = {
 	name?: string;
 	inheritAttrs?: string;
-}
+};
 
 type UseAttrs = CallExpressionRange;
 
@@ -58,7 +58,7 @@ type UseSlots = CallExpressionRange;
 
 type UseTemplateRef = CallExpressionRange & {
 	name?: string;
-}
+};
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 

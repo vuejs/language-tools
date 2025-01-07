@@ -9,7 +9,7 @@ export function* generateInterpolation(
 	options: {
 		ts: typeof ts,
 		destructuredPropNames: Set<string> | undefined,
-		templateRefNames: Set<string> | undefined
+		templateRefNames: Set<string> | undefined;
 	},
 	ctx: TemplateCodegenContext,
 	source: string,

@@ -57,7 +57,7 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
 		const { componentsOption } = options.scriptRanges.exportDefault;
-		yield `const __VLS_componentsOption = `
+		yield `const __VLS_componentsOption = `;
 		yield [
 			options.sfc.script.content.slice(componentsOption.start, componentsOption.end),
 			'script',
