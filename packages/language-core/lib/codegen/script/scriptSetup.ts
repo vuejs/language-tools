@@ -176,7 +176,7 @@ function* generateSetupFunction(
 			callExp.start,
 			callExp.start
 		], [
-			[` as __VLS_TemplateAttrs & Record<string, unknown>)`],
+			[` as typeof __VLS_special.$attrs)`],
 			callExp.end,
 			callExp.end
 		]);
@@ -215,7 +215,7 @@ function* generateSetupFunction(
 			callExp.start,
 			callExp.start
 		], [
-			[` as __VLS_TemplateSlots)`],
+			[` as typeof __VLS_special.$slots)`],
 			callExp.end,
 			callExp.end
 		]);
