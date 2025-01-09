@@ -160,7 +160,7 @@ export function* generateElementProps(
 			}
 			yield `,${newLine}`;
 
-			if (prop.name === 'model' && prop.modifiers.length) {
+			if (isComponent && prop.name === 'model' && prop.modifiers.length) {
 				const propertyName = prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 					? !prop.arg.isStatic
 						? `[__VLS_tryAsConstant(\`$\{${prop.arg.content}\}Modifiers\`)]`
