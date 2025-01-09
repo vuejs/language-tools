@@ -2,6 +2,7 @@ import { getSlotsPropertyName } from '../utils/shared';
 
 export function generateGlobalTypes(lib: string, target: number, strictTemplates: boolean) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${strictTemplates ? '' : ' & Record<string, unknown>'}`;
+	const fnEmitType = `K extends { $emit: infer Emit } ? ${strictTemplates ? 'Emit extends (event: infer E, ...args: any[]) => void ? __VLS_IsEqualStrict<E, string> extends true ? {} : Emit : any' : 'Emit'} : any`;
 	let text = ``;
 	if (target < 3.5) {
 		text += `
@@ -40,6 +41,7 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 	type __VLS_GlobalDirectives = import('${lib}').GlobalDirectives;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
+	type __VLS_IsEqualStrict<A, B> = A extends B ? B extends A ? true : false : false;
 	type __VLS_unknownDirective = (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
 	type __VLS_WithComponent<N0 extends string, LocalComponents, Self, N1 extends string, N2 extends string, N3 extends string> =
 		N1 extends keyof LocalComponents ? N1 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N1] } :
@@ -139,7 +141,7 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		? (props: ${fnPropsType}, ctx?: any) => __VLS_Element & { __ctx?: {
 			attrs?: any,
 			slots?: K extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : any,
-			emit?: K extends { $emit: infer Emit } ? Emit : any
+			emit?: ${fnEmitType}
 		} & { props?: ${fnPropsType}; expose?(exposed: K): void; } }
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
