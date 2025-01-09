@@ -151,9 +151,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 
 	if (!ctx.generatedTemplate) {
-		yield `function __VLS_template() {${newLine}`;
 		const templateCodegenCtx = yield* generateTemplate(options, ctx);
-		yield `}${endOfLine}`;
 		yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	}
 
