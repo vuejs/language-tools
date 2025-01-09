@@ -1,65 +1,53 @@
 <template>
   <!-- number -->
-  <div v-for="(val, key) in 10">
+  <div v-for="(val, index) in 10">
     {{ exactType(val, {} as number) }}
-    {{ isNotAnyOrUndefined(val) }}
-    {{ exactType(key, {} as number) }}
-    {{ isNotAnyOrUndefined(key) }}
+    {{ exactType(index, {} as number) }}
   </div>
   <!-- string -->
-  <div v-for="(val, key) in 'foo'">
+  <div v-for="(val, index) in 'foo'">
     {{ exactType(val, {} as string) }}
-    {{ isNotAnyOrUndefined(val) }}
-    {{ exactType(key, {} as number) }}
-    {{ isNotAnyOrUndefined(key) }}
+    {{ exactType(index, {} as number) }}
   </div>
   <!-- array -->
-  <div v-for="(val, key) in arr">
+  <div v-for="(val, index) in arr">
     {{ exactType(val, {} as 'a' | 'b') }}
-    {{ isNotAnyOrUndefined(val) }}
-    {{ exactType(key, {} as number) }}
-    {{ isNotAnyOrUndefined(key) }}
+    {{ exactType(index, {} as number) }}
   </div>
   <!-- map -->
-  <div v-for="(val, key) in map">
+  <div v-for="(val, index) in map">
     {{ exactType(val, {} as [string, number]) }}
-    {{ isNotAnyOrUndefined(val) }}
-    {{ exactType(key, {} as number) }}
-    {{ isNotAnyOrUndefined(key) }}
+    {{ exactType(index, {} as number) }}
   </div>
   <!-- obj -->
-  <div v-for="(val, key) in obj">
+  <div v-for="(val, key, index) in obj">
     {{ exactType(val, {} as string | number) }}
-    {{ isNotAnyOrUndefined(val) }}
     {{ exactType(key, {} as 'a' | 'b') }}
-    {{ isNotAnyOrUndefined(key) }}
+    {{ exactType(index, {} as number) }}
   </div>
   <!-- objUnion -->
-  <div v-for="(val, key) in objUnion">
+  <div v-for="(val, key, index) in objUnion">
     <!-- {{ exactType(val, {} as string | number) }} -->
     {{ exactType(val, {} as string) }}
-    {{ isNotAnyOrUndefined(val) }}
     <!-- {{ exactType(key, {} as 'a' | 'b') }} -->
     {{ exactType(key, {} as 'a') }}
-    {{ isNotAnyOrUndefined(key) }}
+    {{ exactType(index, {} as number) }}
   </div>
   <!-- record -->
-  <div v-for="(val, key) in record">
+  <div v-for="(val, key, index) in record">
     {{ exactType(val, {} as string) }}
-    {{ isNotAnyOrUndefined(val) }}
     {{ exactType(key, {} as string) }}
-    {{ isNotAnyOrUndefined(key) }}
+    {{ exactType(index, {} as number) }}
   </div>
   <!-- any -->
-  <div v-for="(val, key) in _any">
+  <div v-for="(val, index) in _any">
     {{ exactType(val, {} as any) }}
-    {{ exactType(key, {} as number) }}
-    {{ isNotAnyOrUndefined(key) }}
+    {{ exactType(index, {} as number) }}
   </div>
 </template>
 
 <script setup lang="ts">
-import { exactType, isNotAnyOrUndefined } from '../../shared';
+import { exactType } from '../../shared';
 
 const arr = ['a', 'b'] as const;
 const map = new Map<string, number>();
