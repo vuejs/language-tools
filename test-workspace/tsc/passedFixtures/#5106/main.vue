@@ -17,5 +17,5 @@ exactType(attrs, {} as AttrsExact);
 </script>
 
 <template>
-	{{ () => exactType($attrs, {} as AttrsExact) }}
+	{{ exactType($attrs, {} as AttrsExact) }}
 </template>
