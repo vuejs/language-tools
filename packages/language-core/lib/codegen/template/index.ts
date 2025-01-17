@@ -48,7 +48,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	yield* generateStyleScopedClassReferences(ctx);
 	const speicalTypes = [
 		[slotsPropertyName, yield* generateSlots(options, ctx)],
-		['$attrs', yield* generateInheritedAttrs(ctx)],
+		['$attrs', yield* generateInheritedAttrs(options, ctx)],
 		['$refs', yield* generateRefs(ctx)],
 		['$el', yield* generateRootEl(ctx)]
 	];
@@ -103,6 +103,7 @@ function* generateSlots(
 }
 
 function* generateInheritedAttrs(
+	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
 	yield 'let __VLS_inheritedAttrs!: {}';
@@ -125,7 +126,7 @@ function* generateInheritedAttrs(
 		}
 		yield `]${endOfLine}`;
 	}
-	return `typeof __VLS_ctx.$attrs & Partial<typeof __VLS_inheritedAttrs>`;
+	return `import('${options.vueCompilerOptions.lib}').ComponentPublicInstance['$attrs'] & Partial<typeof __VLS_inheritedAttrs>`;
 }
 
 function* generateRefs(
