@@ -5,6 +5,7 @@ import * as net from 'node:net';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type * as ts from 'typescript';
+import type { ComponentPropInfo } from './requests/componentInfos';
 import type { NotificationData, ProjectInfo, RequestData, ResponseData } from './server';
 
 export { TypeScriptProjectHost } from '@volar/typescript';
@@ -29,11 +30,7 @@ class NamedPipeServer {
 	projectInfo?: ProjectInfo;
 	containsFileCache = new Map<string, Promise<boolean | undefined | null>>();
 	componentNamesAndProps = new FileMap<
-		Record<string, null | {
-			name: string;
-			required?: true;
-			commentMarkdown?: string;
-		}[]>
+		Record<string, null | ComponentPropInfo[]>
 	>(false);
 
 	constructor(kind: ts.server.ProjectKind, id: number) {
@@ -170,11 +167,7 @@ class NamedPipeServer {
 			const components = this.componentNamesAndProps.get(fileName) ?? {};
 			const [name, props]: [
 				name: string,
-				props: {
-					name: string;
-					required?: true;
-					commentMarkdown?: string;
-				}[],
+				props: ComponentPropInfo[],
 			] = data;
 			components[name] = props;
 		}

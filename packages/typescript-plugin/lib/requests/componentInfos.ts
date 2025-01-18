@@ -4,6 +4,13 @@ import * as path from 'node:path';
 import type * as ts from 'typescript';
 import type { RequestContext } from './types';
 
+export interface ComponentPropInfo {
+	name: string;
+	required?: boolean;
+	deprecated?: boolean;
+	commentMarkdown?: string;
+}
+
 export function getComponentProps(
 	this: RequestContext,
 	fileName: string,
@@ -27,11 +34,7 @@ export function getComponentProps(
 		return [];
 	}
 
-	const result = new Map<string, {
-		name: string;
-		required?: true;
-		commentMarkdown?: string;
-	}>();
+	const result = new Map<string, ComponentPropInfo>();
 
 	for (const sig of componentType.getCallSignatures()) {
 		const propParam = sig.parameters[0];
@@ -41,9 +44,17 @@ export function getComponentProps(
 			for (const prop of props) {
 				const name = prop.name;
 				const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
-				const commentMarkdown = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags()) || undefined;
+				const {
+					content: commentMarkdown,
+					deprecated
+				} = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
 
-				result.set(name, { name, required, commentMarkdown });
+				result.set(name, {
+					name,
+					required,
+					deprecated,
+					commentMarkdown
+				});
 			}
 		}
 	}
@@ -60,9 +71,17 @@ export function getComponentProps(
 				}
 				const name = prop.name;
 				const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
-				const commentMarkdown = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags()) || undefined;
+				const {
+					content: commentMarkdown,
+					deprecated
+				} = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
 
-				result.set(name, { name, required, commentMarkdown });
+				result.set(name, {
+					name,
+					required,
+					deprecated,
+					commentMarkdown
+				});
 			}
 		}
 	}
@@ -302,8 +321,12 @@ function searchVariableDeclarationNode(
 function generateCommentMarkdown(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JSDocTagInfo[]) {
 	const parsedComment = _symbolDisplayPartsToMarkdown(parts);
 	const parsedJsDoc = _jsDocTagInfoToMarkdown(jsDocTags);
-	let result = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
-	return result;
+	const content = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
+	const deprecated = jsDocTags.some((tag) => tag.name === 'deprecated');
+	return {
+		content,
+		deprecated
+	};
 }
 
 function _symbolDisplayPartsToMarkdown(parts: ts.SymbolDisplayPart[]) {

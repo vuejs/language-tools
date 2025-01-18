@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as net from 'node:net';
 import type * as ts from 'typescript';
 import { collectExtractProps } from './requests/collectExtractProps';
-import { getComponentDirectives, getComponentEvents, getComponentNames, getComponentProps, getElementAttrs } from './requests/componentInfos';
+import { type ComponentPropInfo, getComponentDirectives, getComponentEvents, getComponentNames, getComponentProps, getElementAttrs } from './requests/componentInfos';
 import { getImportPathForFile } from './requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
@@ -70,11 +70,7 @@ export async function startNamedPipeServer(
 	const dataChunks: Buffer[] = [];
 	const currentData = new FileMap<[
 		componentNames: string[],
-		Record<string, {
-			name: string;
-			required?: true;
-			commentMarkdown?: string;
-		}[]>,
+		Record<string, ComponentPropInfo[]>,
 	]>(false);
 	const allConnections = new Set<net.Socket>();
 	const pendingRequests = new Set<number>();
