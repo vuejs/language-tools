@@ -119,7 +119,7 @@
 					"default": {
 						"self": true
 					},
-					"markdownDescription": "`self` to control the type inference of `$attrs` in the template and the return type of `useAttrs`."
+					"markdownDescription": "\"self\" to control the type inference of `$attrs` in the template and the return type of `useAttrs`."
 				},
 				"typedDollarEl": {
 					"type": ["boolean", "object"],
@@ -127,7 +127,7 @@
 						"self": true,
 						"expose": false
 					},
-					"markdownDescription": "`self` to control the type inference of `$el` in the template, `expose` to control the type inference of `$el` on the component instance."
+					"markdownDescription": "\"self\" to control the type inference of `$el` in the template, \"expose\" to control the type inference of `$el` on the component instance."
 				},
 				"typedDollarRefs": {
 					"type": ["boolean", "object"],
@@ -135,14 +135,14 @@
 						"self": true,
 						"expose": false
 					},
-					"markdownDescription": "`self` to control the type inference of `$refs` in the template, `expose` to control the type inference of `$refs` on the component instance."
+					"markdownDescription": "\"self\" to control the type inference of `$refs` in the template, \"expose\" to control the type inference of `$refs` on the component instance."
 				},
 				"typedDollarSlots": {
 					"type": ["boolean", "object"],
 					"default": {
 						"self": true
 					},
-					"markdownDescription": "`self` to control the type inference of `$slots` in the template and the return type of `useSlots`."
+					"markdownDescription": "\"self\" to control the type inference of `$slots` in the template and the return type of `useSlots`."
 				},
 				"plugins": {
 					"type": "array",
