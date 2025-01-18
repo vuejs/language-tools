@@ -120,7 +120,7 @@
 				"typedDollarSlots": {
 					"type": ["boolean", "object"],
 					"default": {
-						"self": false
+						"self": true
 					},
 					"markdownDescription": "`self` to control the type inference of `$slots` in the template and the return type of `useSlots`."
 				},
