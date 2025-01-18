@@ -253,6 +253,20 @@ function getDefaultOptions(options: Partial<VueCompilerOptions>): VueCompilerOpt
 			useSlots: ['useSlots'],
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
 		},
+		typedDollarAttrs: {
+			self: true
+		},
+		typedDollarEl: {
+			self: true,
+			expose: false
+		},
+		typedDollarRefs: {
+			self: true,
+			expose: false
+		},
+		typedDollarSlots: {
+			self: true
+		},
 		plugins: [],
 		experimentalDefinePropProposal: false,
 		experimentalResolveStyleCssClasses: 'scoped',
@@ -275,6 +289,22 @@ export function resolveVueCompilerOptions(
 			...defaults.composables,
 			...options.composables,
 		},
+		typedDollarAttrs: mergeTypedDollar(
+			options.typedDollarAttrs,
+			defaults.typedDollarAttrs
+		),
+		typedDollarEl: mergeTypedDollar(
+			options.typedDollarEl,
+			defaults.typedDollarEl
+		),
+		typedDollarRefs: mergeTypedDollar(
+			options.typedDollarRefs,
+			defaults.typedDollarRefs
+		),
+		typedDollarSlots: mergeTypedDollar(
+			options.typedDollarSlots,
+			defaults.typedDollarSlots
+		),
 
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 		// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
@@ -314,4 +344,17 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return { absolutePath: globalTypesPath };
 	} catch { }
+}
+
+function mergeTypedDollar<T>(
+	value: T | undefined,
+	defaults: { self: boolean; expose?: boolean; }
+) {
+	return (typeof value === "boolean" ? {
+		self: value,
+		expose: value
+	} : {
+		...defaults,
+		...value
+	}) as T;
 }

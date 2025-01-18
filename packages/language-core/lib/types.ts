@@ -49,6 +49,20 @@ export interface VueCompilerOptions {
 		useSlots: string[];
 		useTemplateRef: string[];
 	};
+	typedDollarAttrs: {
+		self: boolean;
+	},
+	typedDollarEl: {
+		self: boolean;
+		expose: boolean;
+	},
+	typedDollarRefs: {
+		self: boolean;
+		expose: boolean;
+	},
+	typedDollarSlots: {
+		self: boolean;
+	},
 	plugins: VueLanguagePlugin[];
 
 	// experimental

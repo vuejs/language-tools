@@ -40,10 +40,18 @@ export function* generateComponent(
 		const { args } = options.scriptRanges.exportDefault;
 		yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
 	}
-	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.templateRefs.size) {
+	if (
+		options.vueCompilerOptions.target >= 3.5
+		&& options.vueCompilerOptions.typedDollarRefs.expose
+		&& options.templateCodegen?.templateRefs.size
+	) {
 		yield `__typeRefs: {} as __VLS_TemplateRefs,${newLine}`;
 	}
-	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.singleRootElType) {
+	if (
+		options.vueCompilerOptions.target >= 3.5
+		&& options.vueCompilerOptions.typedDollarEl.expose
+		&& options.templateCodegen?.singleRootElType
+	) {
 		yield `__typeEl: {} as __VLS_TemplateEl,${newLine}`;
 	}
 	yield `})`;
