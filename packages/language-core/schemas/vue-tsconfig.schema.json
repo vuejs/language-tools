@@ -85,11 +85,6 @@
 					"default": [ "aria-*" ],
 					"markdownDescription": "A glob matcher array that should always be recognizing as HTML Attributes rather than Component props. Attribute name will never convert to camelize case."
 				},
-				"plugins": {
-					"type": "array",
-					"default": [ ],
-					"markdownDescription": "Plugins to be used in the SFC compiler."
-				},
 				"optionsWrapper": {
 					"type": "array",
 					"default": [
@@ -118,6 +113,39 @@
 						"useSlots": [ "useSlots" ],
 						"useTemplateRef": [ "useTemplateRef", "templateRef" ]
 					}
+				},
+				"typedDollarAttrs": {
+					"type": ["boolean", "object"],
+					"default": {
+						"self": true,
+						"expose": false
+					}
+				},
+				"typedDollarEl": {
+					"type": ["boolean", "object"],
+					"default": {
+						"self": true,
+						"expose": false
+					}
+				},
+				"typedDollarRefs": {
+					"type": ["boolean", "object"],
+					"default": {
+						"self": true,
+						"expose": false
+					}
+				},
+				"typedDollarSlots": {
+					"type": ["boolean", "object"],
+					"default": {
+						"self": false,
+						"expose": true
+					}
+				},
+				"plugins": {
+					"type": "array",
+					"default": [ ],
+					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [

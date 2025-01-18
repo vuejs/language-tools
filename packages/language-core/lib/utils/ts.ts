@@ -288,6 +288,20 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 			useSlots: ['useSlots'],
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
 		},
+		typedDollarAttrs: {
+			self: true
+		},
+		typedDollarEl: {
+			self: true,
+			expose: false
+		},
+		typedDollarRefs: {
+			self: true,
+			expose: false
+		},
+		typedDollarSlots: {
+			self: true
+		},
 		plugins: [],
 		experimentalDefinePropProposal: false,
 		experimentalResolveStyleCssClasses: 'scoped',
