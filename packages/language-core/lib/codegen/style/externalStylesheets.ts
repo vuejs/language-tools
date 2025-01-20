@@ -1,13 +1,17 @@
+import { CodeInformation } from '@volar/language-core';
 import { Code, Sfc } from '../../types';
-import { codeFeatures } from '../script';
 import { generateSfcBlockAttrValue, newLine } from '../utils';
 
 export function* generateExternalStylesheets(
 	style: Sfc['styles'][number],
 ): Generator<Code> {
+	const features: CodeInformation = {
+		navigation: true,
+		verification: true
+	};
 	if (typeof style.src === 'object') {
 		yield `${newLine} & typeof import(`;
-		yield* generateSfcBlockAttrValue(style.src, style.src.text, codeFeatures.navigation);
+		yield* generateSfcBlockAttrValue(style.src, style.src.text, features);
 		yield `).default`;
 	}
 	for (const { text, offset } of style.imports) {
@@ -16,7 +20,7 @@ export function* generateExternalStylesheets(
 			text,
 			style.name,
 			offset,
-			codeFeatures.navigation
+			features
 		];
 		yield `').default`;
 	}
