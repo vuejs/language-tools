@@ -3,7 +3,7 @@ import type { ScriptCodegenOptions } from '../script';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine } from '../utils';
 import { generateClassProperty } from './classProperty';
-import { generateExternalStylesheets } from './externalStylesheet';
+import { generateExternalStylesheets } from './externalStylesheets';
 
 export function* generateStyleScopedClasses(
 	options: ScriptCodegenOptions,

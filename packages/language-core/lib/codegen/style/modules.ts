@@ -3,7 +3,7 @@ import type { ScriptCodegenContext } from '../script/context';
 import { ScriptCodegenOptions, codeFeatures } from '../script/index';
 import { endOfLine, newLine } from '../utils';
 import { generateClassProperty } from './classProperty';
-import { generateExternalStylesheets } from './externalStylesheet';
+import { generateExternalStylesheets } from './externalStylesheets';
 
 export function* generateStyleModules(
 	options: ScriptCodegenOptions,
