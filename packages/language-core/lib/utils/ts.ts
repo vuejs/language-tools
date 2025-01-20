@@ -256,6 +256,7 @@ function getDefaultOptions(options: Partial<VueCompilerOptions>): VueCompilerOpt
 		plugins: [],
 		experimentalDefinePropProposal: false,
 		experimentalResolveStyleCssClasses: 'scoped',
+		experimentalResolveExternalStylesheets: false,
 		experimentalModelPropName: null!
 	};
 };

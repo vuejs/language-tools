@@ -54,6 +54,7 @@ export interface VueCompilerOptions {
 	// experimental
 	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
+	experimentalResolveExternalStylesheets: boolean;
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 
 	// internal
@@ -103,6 +104,12 @@ export interface SfcBlock {
 	attrs: Record<string, string | true>;
 }
 
+export type SfcBlockAttr = true | {
+	text: string;
+	offset: number;
+	quotes: boolean;
+};
+
 export interface Sfc {
 	content: string;
 	comments: string[];
@@ -112,22 +119,22 @@ export interface Sfc {
 		warnings: CompilerDOM.CompilerError[];
 	} | undefined;
 	script: (SfcBlock & {
-		src: string | undefined;
-		srcOffset: number;
+		src: SfcBlockAttr | undefined;
 		ast: ts.SourceFile;
 	}) | undefined;
 	scriptSetup: SfcBlock & {
 		// https://github.com/vuejs/rfcs/discussions/436
-		generic: string | undefined;
-		genericOffset: number;
+		generic: SfcBlockAttr | undefined;
 		ast: ts.SourceFile;
 	} | undefined;
 	styles: readonly (SfcBlock & {
+		src: SfcBlockAttr | undefined;
 		scoped: boolean;
-		module?: {
-			name: string;
-			offset?: number;
-		};
+		module: SfcBlockAttr | undefined;
+		imports: {
+			text: string;
+			offset: number;
+		}[],
 		cssVars: {
 			text: string;
 			offset: number;
@@ -143,11 +150,16 @@ export interface Sfc {
 }
 
 declare module '@vue/compiler-sfc' {
+	interface SFCBlock {
+		__src?: SfcBlockAttr;
+	}
+
+	interface SFCScriptBlock {
+		__generic?: SfcBlockAttr;
+	}
+
 	interface SFCStyleBlock {
-		__module?: {
-			name: string;
-			offset?: number;
-		};
+		__module?: SfcBlockAttr;
 	}
 }
 

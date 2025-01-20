@@ -107,6 +107,10 @@
 					],
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1038, https://github.com/vuejs/language-tools/issues/1121"
 				},
+				"experimentalResolveExternalStylesheets": {
+					"type": "boolean",
+					"default": false
+				},
 				"experimentalModelPropName": {
 					"type": "object",
 					"default": {
