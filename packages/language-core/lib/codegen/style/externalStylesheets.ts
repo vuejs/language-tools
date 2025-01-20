@@ -1,11 +1,10 @@
-import { CodeInformation } from '@volar/language-core';
-import { Code, Sfc } from '../../types';
+import type { Code, Sfc, VueCodeInformation } from '../../types';
 import { generateSfcBlockAttrValue, newLine } from '../utils';
 
 export function* generateExternalStylesheets(
 	style: Sfc['styles'][number],
 ): Generator<Code> {
-	const features: CodeInformation = {
+	const features: VueCodeInformation = {
 		navigation: true,
 		verification: true
 	};
