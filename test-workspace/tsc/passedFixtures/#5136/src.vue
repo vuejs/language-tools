@@ -4,13 +4,13 @@ import { exactType } from '../shared';
 
 const $src = useCssModule("$src");
 exactType($src, {} as Record<string, string> & {
-    foo: string;
+	foo: string;
 });
 
 const $import = useCssModule("$import");
 exactType($import, {} as Record<string, string> & {
-    foo: string;
-    bar: string;
+	foo: string;
+	bar: string;
 });
 </script>
 
