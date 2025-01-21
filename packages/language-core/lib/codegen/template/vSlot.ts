@@ -45,7 +45,12 @@ export function* generateVSlot(
 			}
 		}
 		else {
-			yield `default`;
+			yield* wrapWith(
+				node.children[0].loc.start.offset,
+				node.children.at(-1)!.loc.end.offset,
+				ctx.codeFeatures.navigation,
+				`default`
+			);
 		}
 		yield `: ${var_slot} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
 	}
