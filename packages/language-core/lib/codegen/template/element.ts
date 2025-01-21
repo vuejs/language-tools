@@ -35,15 +35,21 @@ export function* generateComponent(
 	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
 	const var_originalComponent = matchImportName ?? ctx.getInternalVariable();
 	const var_functionalComponent = ctx.getInternalVariable();
-	const var_componentInstance = ctx.getInternalVariable();
+	const var_componentVnode = ctx.getInternalVariable();
 	const var_componentEmit = ctx.getInternalVariable();
 	const var_componentEvents = ctx.getInternalVariable();
 	const var_defineComponentCtx = ctx.getInternalVariable();
 	const isComponentTag = node.tag.toLowerCase() === 'component';
 
+	ctx.currentComponent?.childNodes.push({
+		name: var_componentVnode,
+		start: node.loc.start.offset,
+		end: node.loc.end.offset
+	});
 	ctx.currentComponent = {
 		ctxVar: var_defineComponentCtx,
-		used: false
+		used: false,
+		childNodes: []
 	};
 
 	let props = node.props;
@@ -227,7 +233,7 @@ export function* generateComponent(
 				},
 			}
 		},
-		var_componentInstance
+		var_componentVnode
 	);
 	yield ` = ${var_functionalComponent}`;
 	yield* generateComponentGeneric(ctx);
@@ -268,7 +274,7 @@ export function* generateComponent(
 		}
 	}
 
-	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEvents);
+	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentVnode, var_componentEvents);
 	if (usedComponentEventsVar) {
 		ctx.currentComponent.used = true;
 		yield `let ${var_componentEmit}!: typeof ${var_defineComponentCtx}.emit${endOfLine}`;
@@ -282,15 +288,10 @@ export function* generateComponent(
 	}
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
-	if (slotDir) {
-		yield* generateVSlot(options, ctx, node, slotDir);
-	}
-	else {
-		yield* generateElementChildren(options, ctx, node, true);
-	}
+	yield* generateVSlot(options, ctx, node, slotDir);
 
 	if (ctx.currentComponent.used) {
-		yield `var ${var_defineComponentCtx}!: __VLS_PickFunctionalComponentCtx<typeof ${var_originalComponent}, typeof ${var_componentInstance}>${endOfLine}`;
+		yield `var ${var_defineComponentCtx}!: __VLS_FunctionalComponentCtx<typeof ${var_originalComponent}, typeof ${var_componentVnode}>${endOfLine}`;
 	}
 }
 
