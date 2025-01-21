@@ -307,6 +307,12 @@ export function* generateElement(
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
 
+	ctx.currentComponent?.childNodes.push({
+		name: `__VLS_nativeElements.${node.tag}`,
+		start: node.loc.start.offset,
+		end: node.loc.end.offset
+	});
+
 	yield `__VLS_asFunctionalElement(__VLS_intrinsicElements`;
 	yield* generatePropertyAccess(
 		options,

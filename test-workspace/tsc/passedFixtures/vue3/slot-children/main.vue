@@ -11,5 +11,9 @@ const foo = {} as 'a' | 'b';
 		<Child :foo="(`b` as const)" />
 		<!-- @vue-expect-error -->
 		<Child :foo="(`c` as const)" /> 
+
+		<a></a>
+		<!-- @vue-expect-error -->
+		<img />
 	</Parent>
 </template>

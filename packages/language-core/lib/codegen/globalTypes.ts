@@ -57,6 +57,22 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P
 		: {};
+	type __VLS_FunctionalGeneralComponent<T> = (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
+		__ctx?: {
+			attrs?: any,
+			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : any,
+			emit?: T extends { $emit: infer Emit } ? Emit : any,
+			props?: ${fnPropsType},
+			expose?(exposed: T): void,
+		}
+	};
+	type __VLS_NormalizeSlotReturns<S, R = ReturnType<NonNullable<S>>> = R extends any[] ? {
+		[K in keyof R]: R[K] extends infer V
+			? V extends { __ctx?: any } ? V
+			: V extends import('${lib}').VNode<infer E> ? E 
+			: ReturnType<__VLS_FunctionalGeneralComponent<V>>
+			: never
+	} : R;
 	type __VLS_IsFunction<T, K> = K extends keyof T
 		? __VLS_IsAny<T[K]> extends false
 		? unknown extends T[K]
@@ -98,19 +114,6 @@ export function generateGlobalTypes(lib: string, target: number, strictTemplates
 	>;
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
-
-	type __VLS_FunctionalGeneralComponent<T> = (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
-		__ctx?: {
-			attrs?: any,
-			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : any,
-			emit?: T extends { $emit: infer Emit } ? Emit : any,
-			props?: ${fnPropsType},
-			expose?(exposed: T): void,
-		}
-	};
-	type __VLS_NormalizeSlotReturns<S, R = ReturnType<NonNullable<S>>> = R extends any[] ? {
-		[K in keyof R]: R[K] extends { __ctx?: any } ? R[K] : ReturnType<__VLS_FunctionalGeneralComponent<R[K]>>
-	} : R;
 
 	function __VLS_getVForSourceType(source: number): [number, number, number][];
 	function __VLS_getVForSourceType(source: string): [string, number, number][];
