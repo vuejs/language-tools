@@ -20,14 +20,14 @@ type DefineProp = {
 	defaultValue?: TextRange;
 	required?: boolean;
 	isModel?: boolean;
-}
+};
 
 type DefineProps = CallExpressionRange & {
 	name?: string;
-	destructured?: Set<string>;
+	destructured?: Map<string, ts.Expression | undefined>;
 	destructuredRest?: string;
 	statement: TextRange;
-}
+};
 
 type WithDefaults = Pick<CallExpressionRange, 'callExp' | 'exp' | 'arg'>;
 
@@ -35,20 +35,20 @@ type DefineEmits = CallExpressionRange & {
 	name?: string;
 	hasUnionTypeArg?: boolean;
 	statement: TextRange;
-}
+};
 
 type DefineSlots = CallExpressionRange & {
 	name?: string;
 	isObjectBindingPattern?: boolean;
 	statement: TextRange;
-}
+};
 
 type DefineExpose = CallExpressionRange;
 
 type DefineOptions = {
 	name?: string;
 	inheritAttrs?: string;
-}
+};
 
 type UseAttrs = CallExpressionRange;
 
@@ -58,7 +58,7 @@ type UseSlots = CallExpressionRange;
 
 type UseTemplateRef = CallExpressionRange & {
 	name?: string;
-}
+};
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
@@ -285,15 +285,15 @@ export function parseScriptSetupRanges(
 				};
 				if (ts.isVariableDeclaration(parent)) {
 					if (ts.isObjectBindingPattern(parent.name)) {
-						defineProps.destructured = new Set();
+						defineProps.destructured = new Map();
 						const identifiers = collectIdentifiers(ts, parent.name, []);
-						for (const [id, isRest] of identifiers) {
+						for (const { id, isRest, initializer } of identifiers) {
 							const name = _getNodeText(id);
 							if (isRest) {
 								defineProps.destructuredRest = name;
 							}
 							else {
-								defineProps.destructured.add(name);
+								defineProps.destructured.set(name, initializer);
 							}
 						}
 					}

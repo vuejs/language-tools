@@ -94,7 +94,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					}
 					if (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && !prop.arg.isStatic) {
 						addFormatCodes(
-							prop.arg.content,
+							prop.arg.loc.source,
 							prop.arg.loc.start.offset,
 							formatBrackets.normal
 						);
@@ -105,17 +105,51 @@ const plugin: VueLanguagePlugin = ctx => {
 					) {
 						if (prop.name === 'on' && prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 							const ast = createTsAst(ctx.modules.typescript, prop.exp, prop.exp.content);
+							if (isCompoundExpression(ctx.modules.typescript, ast)) {
+								addFormatCodes(
+									prop.exp.loc.source,
+									prop.exp.loc.start.offset,
+									formatBrackets.event
+								);
+							}
+							else {
+								const lines = prop.exp.content.split('\n');
+								const firstLineEmpty = lines[0].trim() === '';
+								const lastLineEmpty = lines[lines.length - 1].trim() === '';
+								if (lines.length <= 1 || (!firstLineEmpty && !lastLineEmpty)) {
+									addFormatCodes(
+										prop.exp.loc.source,
+										prop.exp.loc.start.offset,
+										formatBrackets.normal
+									);
+								}
+								else {
+									addFormatCodes(
+										prop.exp.loc.source,
+										prop.exp.loc.start.offset,
+										['(', ');']
+									);
+								}
+							}
+						}
+						else if (prop.name === 'slot') {
 							addFormatCodes(
-								prop.exp.content,
+								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
-								isCompoundExpression(ctx.modules.typescript, ast)
-									? formatBrackets.event
-									: formatBrackets.normal
+								formatBrackets.params
+							);
+						}
+						else if (prop.rawName === 'v-for') {
+							// #2586
+							addFormatCodes(
+								prop.exp.loc.source,
+								prop.exp.loc.start.offset,
+								formatBrackets.for
 							);
 						}
 						else {
 							addFormatCodes(
-								prop.exp.content,
+								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
 								formatBrackets.normal
 							);
@@ -131,7 +165,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					const branch = node.branches[i];
 					if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 						addFormatCodes(
-							branch.condition.content,
+							branch.condition.loc.source,
 							branch.condition.loc.start.offset,
 							formatBrackets.if
 						);
@@ -146,8 +180,14 @@ const plugin: VueLanguagePlugin = ctx => {
 				const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
 				const { source } = node.parseResult;
 				if (leftExpressionRange && leftExpressionText && source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-					const start = leftExpressionRange.start;
-					const end = source.loc.start.offset + source.content.length;
+					let start = leftExpressionRange.start;
+					let end = source.loc.start.offset + source.content.length;
+					while (templateContent[start - 1] === ' ' || templateContent[start - 1] === '(') {
+						start--;
+					}
+					while (templateContent[end] === ' ' || templateContent[end] === ')') {
+						end++;
+					}
 					addFormatCodes(
 						templateContent.slice(start, end),
 						start,
@@ -174,14 +214,44 @@ const plugin: VueLanguagePlugin = ctx => {
 				// {{ ... }}
 				const [content, start] = parseInterpolationNode(node, templateContent);
 				const lines = content.split('\n');
-				addFormatCodes(
-					content,
-					start,
-					lines.length <= 1 ? formatBrackets.curly : [
-						lines[0].trim() === '' ? '(' : formatBrackets.curly[0],
-						lines[lines.length - 1].trim() === '' ? ');' : formatBrackets.curly[1],
-					]
-				);
+				const firstLineEmpty = lines[0].trim() === '';
+				const lastLineEmpty = lines[lines.length - 1].trim() === '';
+
+				if (content.includes('=>')) { // arrow function
+					if (lines.length <= 1 || (!firstLineEmpty && !lastLineEmpty)) {
+						addFormatCodes(
+							content,
+							start,
+							formatBrackets.normal
+						);
+					}
+					else {
+						addFormatCodes(
+							content,
+							start,
+							['(', ');']
+						);
+					}
+				}
+				else {
+					if (lines.length <= 1 || (!firstLineEmpty && !lastLineEmpty)) {
+						addFormatCodes(
+							content,
+							start,
+							formatBrackets.curly
+						);
+					}
+					else {
+						addFormatCodes(
+							content,
+							start,
+							[
+								firstLineEmpty ? '(' : '(0 +',
+								lastLineEmpty ? ');' : '+ 0);'
+							]
+						);
+					}
+				}
 			}
 		}
 

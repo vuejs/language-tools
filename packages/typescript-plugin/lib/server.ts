@@ -3,7 +3,7 @@ import * as fs from 'node:fs';
 import * as net from 'node:net';
 import type * as ts from 'typescript';
 import { collectExtractProps } from './requests/collectExtractProps';
-import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from './requests/componentInfos';
+import { type ComponentPropInfo, getComponentDirectives, getComponentEvents, getComponentNames, getComponentProps, getElementAttrs } from './requests/componentInfos';
 import { getImportPathForFile } from './requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './requests/getQuickInfoAtPosition';
@@ -20,7 +20,7 @@ export type RequestType =
 	// Component Infos
 	| 'subscribeComponentProps'
 	| 'getComponentEvents'
-	| 'getTemplateContextProps'
+	| 'getComponentDirectives'
 	| 'getElementAttrs';
 
 export type NotificationType =
@@ -70,11 +70,7 @@ export async function startNamedPipeServer(
 	const dataChunks: Buffer[] = [];
 	const currentData = new FileMap<[
 		componentNames: string[],
-		Record<string, {
-			name: string;
-			required?: true;
-			commentMarkdown?: string;
-		}[]>,
+		Record<string, ComponentPropInfo[]>,
 	]>(false);
 	const allConnections = new Set<net.Socket>();
 	const pendingRequests = new Set<number>();
@@ -252,8 +248,8 @@ export async function startNamedPipeServer(
 		else if (requestType === 'getComponentEvents') {
 			return getComponentEvents.apply(requestContext, args as any);
 		}
-		else if (requestType === 'getTemplateContextProps') {
-			return getTemplateContextProps.apply(requestContext, args as any);
+		else if (requestType === 'getComponentDirectives') {
+			return getComponentDirectives.apply(requestContext, args as any);
 		}
 		else if (requestType === 'getElementAttrs') {
 			return getElementAttrs.apply(requestContext, args as any);

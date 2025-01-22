@@ -8,6 +8,7 @@ import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
 import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
+import { generateVSlot } from './vSlot';
 
 // @ts-ignore
 const transformContext: CompilerDOM.TransformContext = {
@@ -83,9 +84,17 @@ export function* generateTemplateChild(
 		else if (vIfNode) {
 			yield* generateVIf(options, ctx, vIfNode);
 		}
+		else if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
+			yield* generateSlotOutlet(options, ctx, node);
+		}
 		else {
-			if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
-				yield* generateSlotOutlet(options, ctx, node);
+			const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
+			if (
+				node.tagType === CompilerDOM.ElementTypes.TEMPLATE
+				&& ctx.currentComponent
+				&& slotDir
+			) {
+				yield* generateVSlot(options, ctx, node, slotDir);
 			}
 			else if (
 				node.tagType === CompilerDOM.ElementTypes.ELEMENT
