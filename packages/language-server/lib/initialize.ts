@@ -1,6 +1,6 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createTypeScriptProject } from '@volar/language-server/node';
-import { createParsedCommandLine, createVueLanguagePlugin, generateGlobalTypes, getAllExtensions, getGlobalTypesFileName, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
+import { createParsedCommandLine, createVueLanguagePlugin, generateGlobalTypes, getAllExtensions, getDefaultCompilerOptions, getGlobalTypesFileName, VueCompilerOptions } from '@vue/language-core';
 import { Disposable, getFullLanguageServicePlugins, InitializeParams } from '@vue/language-service';
 import type * as ts from 'typescript';
 
@@ -35,7 +35,7 @@ export function initialize(
 				}
 				else {
 					compilerOptions = ts.getDefaultCompilerOptions();
-					vueCompilerOptions = resolveVueCompilerOptions({});
+					vueCompilerOptions = getDefaultCompilerOptions();
 				}
 				vueCompilerOptions.__test = params.initializationOptions.typescript.disableAutoImportCache;
 				updateFileWatcher(vueCompilerOptions);
