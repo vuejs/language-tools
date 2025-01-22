@@ -1,9 +1,9 @@
 import { camelize } from '@vue/shared';
-import type * as ts from 'typescript';
 import { posix as path } from 'path-browserify';
-import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
-import { getAllExtensions } from '../languagePlugin';
+import type * as ts from 'typescript';
 import { generateGlobalTypes, resolveGlobalTypesName } from '../codegen/globalTypes';
+import { getAllExtensions } from '../languagePlugin';
+import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -156,7 +156,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 function getPartialVueCompilerOptions(
 	ts: typeof import('typescript'),
 	tsConfigSourceFile: ts.TsConfigSourceFile
-): Partial<VueCompilerOptions> {
+) {
 
 	const folder = path.dirname(tsConfigSourceFile.fileName);
 	const obj = ts.convertToObject(tsConfigSourceFile, []);
@@ -205,7 +205,7 @@ function getPartialVueCompilerOptions(
 
 	return result;
 
-	function resolvePath(scriptPath: string): string | undefined {
+	function resolvePath(scriptPath: string) {
 		try {
 			if (require?.resolve) {
 				return require.resolve(scriptPath, { paths: [folder] });
@@ -220,7 +220,7 @@ function getPartialVueCompilerOptions(
 	}
 }
 
-export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
+export function getDefaultOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3.3;
 	const lib = vueOptions.lib ?? 'vue';
 	const strictTemplates = typeof vueOptions.strictTemplates === 'boolean' ? {
@@ -231,23 +231,20 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 		components: false
 	};
 	return {
-		...vueOptions,
 		target,
-		extensions: vueOptions.extensions ?? ['.vue'],
-		vitePressExtensions: vueOptions.vitePressExtensions ?? [],
-		petiteVueExtensions: vueOptions.petiteVueExtensions ?? [],
 		lib,
-		jsxSlots: vueOptions.jsxSlots ?? false,
+		extensions: ['.vue'],
+		vitePressExtensions: [],
+		petiteVueExtensions: [],
+		jsxSlots: false,
 		strictTemplates,
-		skipTemplateCodegen: vueOptions.skipTemplateCodegen ?? false,
-		fallthroughAttributes: vueOptions.fallthroughAttributes ?? false,
-		dataAttributes: vueOptions.dataAttributes ?? [],
-		htmlAttributes: vueOptions.htmlAttributes ?? ['aria-*'],
-		optionsWrapper: vueOptions.optionsWrapper ?? (
-			target >= 2.7
-				? [`(await import('${lib}')).defineComponent(`, `)`]
-				: [`(await import('${lib}')).default.extend(`, `)`]
-		),
+		skipTemplateCodegen: false,
+		fallthroughAttributes: false,
+		dataAttributes: [],
+		htmlAttributes: ['aria-*'],
+		optionsWrapper: target >= 2.7
+			? [`(await import('${lib}')).defineComponent(`, `)`]
+			: [`(await import('${lib}')).default.extend(`, `)`],
 		macros: {
 			defineProps: ['defineProps'],
 			defineSlots: ['defineSlots'],
@@ -256,22 +253,40 @@ export function resolveVueCompilerOptions(vueOptions: Partial<VueCompilerOptions
 			defineModel: ['defineModel'],
 			defineOptions: ['defineOptions'],
 			withDefaults: ['withDefaults'],
-			...vueOptions.macros,
 		},
-		composibles: {
+		composables: {
+			useAttrs: ['useAttrs'],
 			useCssModule: ['useCssModule'],
+			useSlots: ['useSlots'],
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
-			...vueOptions.composibles,
 		},
-		plugins: vueOptions.plugins ?? [],
+		plugins: [],
+		experimentalDefinePropProposal: false,
+		experimentalResolveStyleCssClasses: 'scoped',
+		experimentalModelPropName: null!
+	};
+};
 
-		// experimental
-		experimentalDefinePropProposal: vueOptions.experimentalDefinePropProposal ?? false,
-		experimentalResolveStyleCssClasses: vueOptions.experimentalResolveStyleCssClasses ?? 'scoped',
+export function resolveVueCompilerOptions(
+	options: Partial<VueCompilerOptions>,
+	defaults: VueCompilerOptions = getDefaultOptions(options)
+): VueCompilerOptions {
+	return {
+		...defaults,
+		...options,
+		macros: {
+			...defaults.macros,
+			...options.macros,
+		},
+		composables: {
+			...defaults.composables,
+			...options.composables,
+		},
+
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 		// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 		experimentalModelPropName: Object.fromEntries(Object.entries(
-			vueOptions.experimentalModelPropName ?? {
+			options.experimentalModelPropName ?? defaults.experimentalModelPropName ?? {
 				'': {
 					input: true
 				},

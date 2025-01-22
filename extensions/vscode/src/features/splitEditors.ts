@@ -1,20 +1,19 @@
 import { ExecuteCommandParams, ExecuteCommandRequest, type BaseLanguageClient } from '@volar/vscode';
 import type { SFCParseResult } from '@vue/language-server';
 import { commands } from '@vue/language-server/lib/types';
+import { executeCommand, useActiveTextEditor, useCommand } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from '../config';
 
 type SFCBlock = SFCParseResult['descriptor']['customBlocks'][number];
 
-export function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
+export function activate(client: BaseLanguageClient) {
 
+	const activeTextEditor = useActiveTextEditor();
 	const getDocDescriptor = useDocDescriptor(client);
 
-	context.subscriptions.push(vscode.commands.registerCommand('vue.action.splitEditors', onSplit));
-
-	async function onSplit() {
-
-		const editor = vscode.window.activeTextEditor;
+	useCommand('vue.action.splitEditors', async () => {
+		const editor = activeTextEditor.value;
 		if (!editor) {
 			return;
 		}
@@ -25,6 +24,7 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 		if (!descriptor) {
 			return;
 		}
+
 		let leftBlocks: SFCBlock[] = [];
 		let rightBlocks: SFCBlock[] = [];
 
@@ -65,20 +65,20 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 			rightBlocks = rightBlocks.concat(descriptor.customBlocks);
 		}
 
-		await vscode.commands.executeCommand('workbench.action.joinEditorInGroup');
+		await executeCommand('workbench.action.joinEditorInGroup');
 
-		if (vscode.window.activeTextEditor === editor) {
+		if (activeTextEditor.value === editor) {
 			await foldingBlocks(leftBlocks);
-			await vscode.commands.executeCommand('workbench.action.toggleSplitEditorInGroup');
+			await executeCommand('workbench.action.toggleSplitEditorInGroup');
 			await foldingBlocks(rightBlocks);
 		}
 		else {
-			await vscode.commands.executeCommand('editor.unfoldAll');
+			await executeCommand('editor.unfoldAll');
 		}
 
 		async function foldingBlocks(blocks: SFCBlock[]) {
 
-			const editor = vscode.window.activeTextEditor;
+			const editor = activeTextEditor.value;
 			if (!editor) {
 				return;
 			}
@@ -87,15 +87,15 @@ export function register(context: vscode.ExtensionContext, client: BaseLanguageC
 				? blocks.map(block => new vscode.Selection(doc.positionAt(block.loc.start.offset), doc.positionAt(block.loc.start.offset)))
 				: [new vscode.Selection(doc.positionAt(doc.getText().length), doc.positionAt(doc.getText().length))];
 
-			await vscode.commands.executeCommand('editor.unfoldAll');
-			await vscode.commands.executeCommand('editor.foldLevel1');
+			await executeCommand('editor.unfoldAll');
+			await executeCommand('editor.foldLevel1');
 
 			const firstBlock = blocks.sort((a, b) => a.loc.start.offset - b.loc.start.offset)[0];
 			if (firstBlock) {
 				editor.revealRange(new vscode.Range(doc.positionAt(firstBlock.loc.start.offset), new vscode.Position(editor.document.lineCount, 0)), vscode.TextEditorRevealType.AtTop);
 			}
 		}
-	}
+	});
 }
 
 export function useDocDescriptor(client: BaseLanguageClient) {

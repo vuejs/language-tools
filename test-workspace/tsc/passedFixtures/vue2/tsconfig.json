@@ -41,5 +41,6 @@
 		"../vue3/slots",
 		"../vue3/templateRef",
 		"../vue3/templateRef_native",
+		"../vue3/v-generic"
 	]
 }

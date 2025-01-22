@@ -32,7 +32,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				sfc.descriptor.scriptSetup,
 				...sfc.descriptor.styles,
 				...sfc.descriptor.customBlocks,
-			].filter((block): block is NonNullable<typeof block> => !!block);
+			].filter(block => !!block);
 
 			const hitBlock = blocks.find(block => change.start >= block.loc.start.offset && change.end <= block.loc.end.offset);
 			if (!hitBlock) {
@@ -41,13 +41,13 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 			const oldContent = hitBlock.content;
 			const newContent = hitBlock.content =
-				hitBlock.content.substring(0, change.start - hitBlock.loc.start.offset)
+				hitBlock.content.slice(0, change.start - hitBlock.loc.start.offset)
 				+ change.newText
-				+ hitBlock.content.substring(change.end - hitBlock.loc.start.offset);
+				+ hitBlock.content.slice(change.end - hitBlock.loc.start.offset);
 
 			// #3449
 			const endTagRegex = new RegExp(`</\\s*${hitBlock.type}\\s*>`);
-			const insertedEndTag = !!oldContent.match(endTagRegex) !== !!newContent.match(endTagRegex);
+			const insertedEndTag = endTagRegex.test(oldContent) !== endTagRegex.test(newContent);
 			if (insertedEndTag) {
 				return;
 			}

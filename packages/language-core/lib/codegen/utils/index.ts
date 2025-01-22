@@ -1,28 +1,12 @@
+import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
-import { getNodeText } from '../parsers/scriptSetupRanges';
-import type { Code, SfcBlock, VueCodeInformation } from '../types';
+import { getNodeText } from '../../parsers/scriptSetupRanges';
+import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 
-export const newLine = '\n';
+export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineLastMapping: true };
 export const variableNameRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
-
-export function* conditionWrapWith(
-	condition: boolean,
-	startOffset: number,
-	endOffset: number,
-	features: VueCodeInformation,
-	...wrapCodes: Code[]
-): Generator<Code> {
-	if (condition) {
-		yield* wrapWith(startOffset, endOffset, features, ...wrapCodes);
-	}
-	else {
-		for (const wrapCode of wrapCodes) {
-			yield wrapCode;
-		}
-	}
-}
 
 export function* wrapWith(
 	startOffset: number,
@@ -81,6 +65,19 @@ export function collectIdentifiers(
 	return results;
 }
 
+export function normalizeAttributeValue(node: CompilerDOM.TextNode): [string, number] {
+	let offset = node.loc.start.offset;
+	let content = node.loc.source;
+	if (
+		(content.startsWith(`'`) && content.endsWith(`'`))
+		|| (content.startsWith(`"`) && content.endsWith(`"`))
+	) {
+		offset++;
+		content = content.slice(1, -1);
+	}
+	return [content, offset];
+}
+
 export function createTsAst(ts: typeof import('typescript'), astHolder: any, text: string) {
 	if (astHolder.__volar_ast_text !== text) {
 		astHolder.__volar_ast_text = text;
@@ -91,7 +88,7 @@ export function createTsAst(ts: typeof import('typescript'), astHolder: any, tex
 
 export function generateSfcBlockSection(block: SfcBlock, start: number, end: number, features: VueCodeInformation): Code {
 	return [
-		block.content.substring(start, end),
+		block.content.slice(start, end),
 		block.name,
 		start,
 		features,

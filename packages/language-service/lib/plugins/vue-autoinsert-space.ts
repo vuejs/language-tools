@@ -1,4 +1,4 @@
-import type { LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -9,7 +9,7 @@ export function create(): LanguageServicePlugin {
 				configurationSections: ['vue.autoInsert.bracketSpacing'],
 			},
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			return {
 				async provideAutoInsertSnippet(document, selection, change) {
 
@@ -22,7 +22,7 @@ export function create(): LanguageServicePlugin {
 
 						if (
 							change.text === '{}'
-							&& document.getText().substring(change.rangeOffset - 1, change.rangeOffset + 3) === '{{}}'
+							&& document.getText().slice(change.rangeOffset - 1, change.rangeOffset + 3) === '{{}}'
 							&& document.offsetAt(selection) === change.rangeOffset + 1
 						) {
 							return ` $0 `;

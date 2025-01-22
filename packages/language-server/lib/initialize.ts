@@ -58,7 +58,7 @@ export function initialize(
 							const globalTypesName = resolveGlobalTypesName(vueCompilerOptions);
 							const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueCompilerOptions);
 							const globalTypesSnapshot: ts.IScriptSnapshot = {
-								getText: (start, end) => globalTypesContents.substring(start, end),
+								getText: (start, end) => globalTypesContents.slice(start, end),
 								getLength: () => globalTypesContents.length,
 								getChangeRange: () => undefined,
 							};

@@ -1,8 +1,8 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
-import { endOfLine, newLine, wrapWith } from '../common';
-import type { TemplateCodegenOptions } from './index';
 import { InlayHintInfo } from '../inlayHints';
+import { endOfLine, newLine, wrapWith } from '../utils';
+import type { TemplateCodegenOptions } from './index';
 
 const _codeFeatures = {
 	all: {
@@ -38,6 +38,11 @@ const _codeFeatures = {
 		navigation: true,
 		completion: { isAdditional: true },
 	} as VueCodeInformation,
+	withoutNavigation: {
+		verification: true,
+		completion: true,
+		semantic: true,
+	} as VueCodeInformation,
 	withoutHighlight: {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
@@ -62,6 +67,10 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	let expectErrorToken: {
 		errors: number;
 		node: CompilerDOM.CommentNode;
+	} | undefined;
+	let lastGenericComment: {
+		content: string;
+		offset: number;
 	} | undefined;
 	let variableId = 0;
 
@@ -94,6 +103,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		},
 	});
 	const localVars = new Map<string, number>();
+	const specialVars = new Set<string>();
 	const accessExternalVariables = new Map<string, Set<number>>();
 	const slots: {
 		name: string;
@@ -106,9 +116,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		expVar: string;
 		varName: string;
 	}[] = [];
-	const hasSlotElements = new Set<CompilerDOM.ElementNode>();;
 	const blockConditions: string[] = [];
-	const usedComponentCtxVars = new Set<string>();
 	const scopedClasses: {
 		source: string;
 		className: string;
@@ -116,22 +124,29 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	}[] = [];
 	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
+	const bindingAttrLocs: CompilerDOM.SourceLocation[] = [];
+	const inheritedAttrVars = new Set<string>();
 	const templateRefs = new Map<string, [varName: string, offset: number]>();
 
 	return {
 		slots,
 		dynamicSlots,
 		codeFeatures,
+		specialVars,
 		accessExternalVariables,
-		hasSlotElements,
+		lastGenericComment,
 		blockConditions,
-		usedComponentCtxVars,
 		scopedClasses,
 		emptyClassOffsets,
 		inlayHints,
 		hasSlot: false,
-		inheritedAttrVars: new Set(),
+		bindingAttrLocs,
+		inheritedAttrVars,
 		templateRefs,
+		currentComponent: undefined as {
+			ctxVar: string;
+			used: boolean;
+		} | undefined,
 		singleRootElType: undefined as string | undefined,
 		singleRootNode: undefined as CompilerDOM.ElementNode | undefined,
 		accessExternalVariable(name: string, offset?: number) {

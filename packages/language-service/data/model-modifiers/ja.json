@@ -5,184 +5,25 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\nデフォルトでは、 `v-model` は各 `input` イベントの後に、入力とデータを同期します（[上記](#vmodel-ime-tip) の IME による入力は例外とします）。 代わりに `change` イベント後に同期する `lazy` 修飾子を追加することができます。\n\n```html\n<!-- \"input\" の代わりに \"change\" イベント後に同期されます -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "デフォルトでは、 `v-model` は各 `input` イベントの後に、入力とデータを同期します（[上記](#vmodel-ime-tip) の IME による入力は例外とします）。 代わりに `change` イベント後に同期する `lazy` 修飾子を追加することができます。\n\n```html\n<!-- \"input\" の代わりに \"change\" イベント後に同期されます -->\n<input v-model.lazy=\"msg\" />\n```"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/guide/essentials/forms.html#lazy"
-        }
-      ]
+      "references": "guide/essentials/forms.html#lazy"
     },
     {
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "\nユーザー入力を自動で数値として型変換したい場合、 `v-model` で管理している入力に `number` 修飾子を追加することができます。\n\n```html\n<input v-model.number=\"age\" />\n```\n\nもし値が `parseFloat()` で解析できない場合は、代わりに元の値が使用されます。\n\ninput が `type=\"number\"` を持つ場合は `number` 修飾子が自動で適用されます。\n"
+        "value": "ユーザー入力を自動で数値として型変換したい場合、 `v-model` で管理している入力に `number` 修飾子を追加することができます。\n\n```html\n<input v-model.number=\"age\" />\n```\n\nもし値が `parseFloat()` で解析できない場合は、代わりに元の（文字列）値が使用されます。特に、入力が空の場合（例えばユーザーが入力フィールドをクリアした後など）、空文字列が返されます。この動作は [DOM プロパティの `valueAsNumber`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement#valueasnumber) とは異なります。\n\ninput が `type=\"number\"` を持つ場合は `number` 修飾子が自動で適用されます。"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/guide/essentials/forms.html#number"
-        }
-      ]
+      "references": "guide/essentials/forms.html#number"
     },
     {
       "name": "trim",
       "description": {
         "kind": "markdown",
-        "value": "\nユーザー入力から自動で空白を取り除きたい場合、 `v-model` で管理している入力に `trim` 修飾子を追加することができます。\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+        "value": "ユーザー入力から自動で空白を取り除きたい場合、 `v-model` で管理している入力に `trim` 修飾子を追加することができます。\n\n```html\n<input v-model.trim=\"msg\" />\n```"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/guide/essentials/forms.html#trim"
-        }
-      ]
+      "references": "guide/essentials/forms.html#trim"
     }
   ]
 }

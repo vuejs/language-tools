@@ -1,14 +1,14 @@
 import { ConfigurationRequest, PublishDiagnosticsNotification } from '@volar/language-server';
 import type { LanguageServerHandle } from '@volar/test-utils';
 import { startLanguageServer } from '@volar/test-utils';
-import * as path from 'path';
+import * as path from 'node:path';
 import { URI } from 'vscode-uri';
 
 let serverHandle: LanguageServerHandle | undefined;
 
 export const testWorkspacePath = path.resolve(__dirname, '../../../test-workspace');
 
-export async function getLanguageServer() {
+export async function getLanguageServer(): Promise<LanguageServerHandle> {
 	if (!serverHandle) {
 		serverHandle = startLanguageServer(require.resolve('../bin/vue-language-server.js'), testWorkspacePath);
 		serverHandle.connection.onNotification(PublishDiagnosticsNotification.type, () => { });

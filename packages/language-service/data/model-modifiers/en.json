@@ -5,184 +5,25 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "\nBy default, `v-model` syncs the input with the data after each `input` event (with the exception of IME composition as [stated above](#vmodel-ime-tip)). You can add the `lazy` modifier to instead sync after `change` events:\n\n```html\n<!-- synced after \"change\" instead of \"input\" -->\n<input v-model.lazy=\"msg\" />\n```\n"
+        "value": "By default, `v-model` syncs the input with the data after each `input` event (with the exception of IME composition as [stated above](#vmodel-ime-tip)). You can add the `lazy` modifier to instead sync after `change` events:\n\n```html\n<!-- synced after \"change\" instead of \"input\" -->\n<input v-model.lazy=\"msg\" />\n```"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/guide/essentials/forms.html#lazy"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/guide/essentials/forms.html#lazy"
-        }
-      ]
+      "references": "guide/essentials/forms.html#lazy"
     },
     {
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "\nIf you want user input to be automatically typecast as a number, you can add the `number` modifier to your `v-model` managed inputs:\n\n```html\n<input v-model.number=\"age\" />\n```\n\nIf the value cannot be parsed with `parseFloat()`, then the original value is used instead.\n\nThe `number` modifier is applied automatically if the input has `type=\"number\"`.\n"
+        "value": "If you want user input to be automatically typecast as a number, you can add the `number` modifier to your `v-model` managed inputs:\n\n```html\n<input v-model.number=\"age\" />\n```\n\nIf the value cannot be parsed with `parseFloat()`, then the original (string) value is used instead. In particular, if the input is empty (for instance after the user clearing the input field), an empty string is returned. This behavior differs from the [DOM property `valueAsNumber`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement#valueasnumber). \n\nThe `number` modifier is applied automatically if the input has `type=\"number\"`."
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/guide/essentials/forms.html#number"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/guide/essentials/forms.html#number"
-        }
-      ]
+      "references": "guide/essentials/forms.html#number"
     },
     {
       "name": "trim",
       "description": {
         "kind": "markdown",
-        "value": "\nIf you want whitespace from user input to be trimmed automatically, you can add the `trim` modifier to your `v-model`-managed inputs:\n\n```html\n<input v-model.trim=\"msg\" />\n```\n"
+        "value": "If you want whitespace from user input to be trimmed automatically, you can add the `trim` modifier to your `v-model`-managed inputs:\n\n```html\n<input v-model.trim=\"msg\" />\n```"
       },
-      "references": [
-        {
-          "name": "en",
-          "url": "https://vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "zh-cn",
-          "url": "https://cn.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "zh-hk",
-          "url": "https://zh-hk.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ja",
-          "url": "https://ja.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ua",
-          "url": "https://ua.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "fr",
-          "url": "https://fr.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ko",
-          "url": "https://ko.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "pt",
-          "url": "https://pt.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "bn",
-          "url": "https://bn.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "it",
-          "url": "https://it.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "cs",
-          "url": "https://cs.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "ru",
-          "url": "https://ru.vuejs.org/guide/essentials/forms.html#trim"
-        },
-        {
-          "name": "fa",
-          "url": "https://fa.vuejs.org/guide/essentials/forms.html#trim"
-        }
-      ]
+      "references": "guide/essentials/forms.html#trim"
     }
   ]
 }

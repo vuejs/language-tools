@@ -2,6 +2,135 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.2.0 <sup>official</sup>, 2.2.1 <sup>insiders</sup> (2024-12-24)
+
+### Features
+
+- feat(language-core): support `@vue-generic` (#4971) - Thanks to @KazariEX!
+- feat(vscode): add configuration for skipping automatic detection of Hybrid Mode (#5046) - Thanks to @KazariEX!
+- feat(language-service): crawl html data of `data-allow-mismatch` - Thanks to @KazariEX!
+- feat(language-core): type support of `$attrs` (#5076) - Thanks to @KazariEX!
+- feat(language-core): type support of `useSlots` and `$slots` (#5055) - Thanks to @KazariEX!
+- feat(language-core): type support of `v-model` modifiers (#5061) - Thanks to @KazariEX!
+- feat(language-service): process references data at runtime to reduce bundle size (#5054) - Thanks to @KazariEX!
+- feat(language-core): support the use of sfc root comment to configure `vueCompilerOptions` (#4987) - Thanks to @KazariEX!
+- feat(vscode): add timeout logic for insiders fetching (#5048) - Thanks to @KazariEX!
+- feat(vscode): add examples to inlay hints configuration (#5068) - Thanks to @KazariEX!
+
+### Performance
+
+- perf(typescript-plugin): use named pipe servers more efficiently (#5070)
+
+### Bug Fixes
+
+- fix(language-core): generate script setup starting from last leading comment without `@ts-check` - Thanks to @KazariEX!
+- fix(language-core): make model modifiers optional (#4978) - Thanks to @stafyniaksacha!
+- fix(language-core): always report missing props on `<slot>` (#4982) - Thanks to @KazariEX!
+- fix(language-core): avoid unchecked index access when parsing `defineEmits` (#5028) - Thanks to @KazariEX!
+- fix(language-service): handle text edit of special closing tags completion correctly (#5016) - Thanks to @KazariEX!
+- fix(language-core): don't generate variable access of template refs using `useTemplateRef` (#5032) - Thanks to @KazariEX!
+- fix(vscode): update `enabledHybridMode` before activate extension (#5019) - Thanks to @nieyuyao!
+- fix(tsc): point to shimmed tsc entry point to support ts 5.7 (#5020) - Thanks to @davidmatter!
+- fix(vscode): add `GitHub.copilot-chat` to hybrid mode compatible list (#5047) - Thanks to @KazariEX!
+- fix(language-core): generate generics normally when `useTemplateRef` has no parameters (#5051) - Thanks to @KazariEX!
+- fix(language-core): avoid clipping prop name using `.prop` or `.attr` on `v-model` - Thanks to @KazariEX!
+- fix(language-core): handle named default import of components correctly (#5066) - Thanks to @KazariEX!
+- fix(language-core): disable navigation feature on non-binding prop values (#5040) - Thanks to @KazariEX!
+- fix(language-core): do not generate `useTemplateRef` parameter repeatedly (#5009)
+- fix(language-core): generate macros after script setup content (#5071) - Thanks to @KazariEX!
+- fix(language-core): correct type and completion support of `vue:` event (#4969) - Thanks to @KazariEX!
+- fix(language-core): prevent visiting functional components for `parseScriptSetupRanges` (#5049) - Thanks to @zhiyuanzmj!
+- fix(language-service): don't provide modifier completion for `@` and `:` (#5052) - Thanks to @KazariEX!
+- fix(language-core): consistent interpolation behavior of shorthand binding (#4975) - Thanks to @KazariEX!
+- fix(language-core): resolve components with various name cases correctly (#5067) - Thanks to @KazariEX!
+- fix(language-core): map `v-slot` correctly to report error when missing default slot - Thanks to @KazariEX!
+- fix(language-core): map component loc to instance variable for verification - Thanks to @KazariEX!
+
+### Other Changes
+
+- refactor: improve code consistency (#4976) - Thanks to @KazariEX!
+- docs: update nvim guide (#4984) - Thanks to @zeromask1337!
+- docs: fix broken marketplace page (#5004) - Thanks to @rioj7!
+- chore: upgrade `reactive-vscode` to v0.2.7 (#4997) - Thanks to @KermanX!
+- refactor(language-service): consistent style of source and virtual code operation (#5053) - Thanks to @KazariEX!
+- refactor(language-core): remove unnecessary linked code mappings of `defineProp` (#5058) - Thanks to @KazariEX!
+- refactor(language-core): simplify current component info passing (#5078) - Thanks to @KazariEX!
+- Upgraded Volar from `v2.4.8` to `v2.4.11`:
+  - fix(typescript): avoid crash when converting relatedInformation from overly large files
+  - fix(typescript): fix interactive refactors (https://github.com/volarjs/volar.js/pull/244) - Thanks to @andrewbranch!
+  - fix(typescript): should not suppressing getLanguageId crashes (https://github.com/volarjs/volar.js/issues/253)
+  - fix(typescript): force update the opened script snapshot after the language plugin is ready (https://github.com/volarjs/volar.js/issues/254)
+  - feat(typescript): add typescriptObject option to runTsc (https://github.com/volarjs/volar.js/pull/245) - Thanks to @zhiyuanzmj!
+  - fix(typescript): fix issue with transpiled TypeScript files not being registered with a project at all (https://github.com/volarjs/volar.js/pull/250) - Thanks to @piotrtomiak!
+  - docs(source-map): updated API section based on #207 (https://github.com/volarjs/volar.js/pull/248) - Thanks to @alamhubb!
+  - fix(typescript): resolve the shim used for tsc in Typescript v5.7 and up (#252) - Thanks to @kitsune7!
+
+## 2.1.10 <sup>official</sup>, 2.1.11 <sup>insiders</sup> (2024-10-31)
+
+### Features
+
+- **language-service:** auto insert `const props =` with `props` completion (#4942) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- **language-core:** revert #4902
+- **language-core:** inject `as` assertion of `useCssModule` into correct location (#4952) - Thanks to @KazariEX!
+- **language-core:** hold prev track id correctly (#4961) - Thanks to @KazariEX!
+- **language-core:** generate style modules type as needed (#4953) - Thanks to @KazariEX!
+- **language-core:** reference global types file with relative path (#4966)
+
+### Refactors
+
+- **vscode:** rewrite with [Reactive VSCode](https://kermanx.github.io/reactive-vscode/) (#4945) - Thanks to @KazariEX, @KermanX!
+
+## 2.1.8 <sup>official</sup>, 2.1.9 <sup>insiders</sup> (2024-10-26)
+
+### Features
+
+- **vscode:** reactions visualization now identifies more use cases <sup>Insiders</sup>
+- **language-core:** auto infer `$el` type (#4805) - Thanks to @KazariEX!
+- **language-core:** typed directive arg and modifiers (#4813) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- **language-core:** avoid generic type loss due to destructured props (#4821) - Thanks to @KazariEX!
+- **language-core:** handle `v-for` with `v-once` correctly (#4830) - Thanks to @KazariEX!
+- **language-core:** avoid generating zero-length mappings for interpolation edges
+- **language-core:** don't assign `this` to `__VLS_ctx` (#4845) - Thanks to @KazariEX!
+- **language-service:** initialize scope with null prototype object (#4855) - Thanks to @KazariEX!
+- **language-core:** inlay hints for `<component :is>` and `<slot :name>` (#4661) - Thanks to @KazariEX, @so1ve!
+- **language-core:** should error when invalid syntax at script end (#4692) - Thanks to @KazariEX!
+- **language-core:** correct type inference of `defineModel` & `defineEmits` in generic (#4823) - Thanks to @KazariEX!
+- **language-core:** inject generics of `useTemplateRef` into correct location (#4829) - Thanks to @KazariEX!
+- **language-core:** prevent the generation of generics in JS (#4836) - Thanks to @KazariEX, @zhiyuanzmj!
+- **language-core:** generate correct reference for `v-on` on `<slot>` (#4864) - Thanks to @KazariEX!
+- **language-core:** match classname before `)` (#4887) - Thanks to @KazariEX!
+- **language-service:** handle internal item key with leading slash correctly (#4894) - Thanks to @KazariEX!
+- **language-core:** correctly obtain the index of style modules (#4907) - Thanks to @KazariEX!
+- **language-core:** refer absolute path of global types file (#4924) - Thanks to @depressedX!
+- **component-meta:** error when signatures is undefined (#4930) - Thanks to @Hannesrasmussen!
+- **language-core:** intersect props of generic component with attrs (#4886) - Thanks to @KazariEX!
+- **language-core:** fix incorrect syntax for class component virtual code
+- **language-core:** generate `value` instead of model name into tuple (#4892) - Thanks to @KazariEX!
+- **language-core:** infer template ref's type of native elements with `v-for` correctly (#4933) - Thanks to @KazariEX!
+- **language-core:** should wrap item with `Reactive` on `v-for` (#4902) - Thanks to @KazariEX!
+
+### Performance
+
+- **language-service:** find destructured props only with enabled setting (#4815) - Thanks to @KazariEX!
+
+### Other Changes
+
+- Upgraded Volar from `v2.4.1` to `v2.4.8`:
+  - Changing vue files causes internal state to desync in Sublime Text (#4909) - Thanks to @rchl!
+  - The syntax highlighting is not applied when destructuring props (#4811)
+- chore: fix nvim config snippet in README (#4881) - Thanks to @LiamEderzeel!
+- chore: remove side effects (#4871) - Thanks to @vikingair!
+- chore: remove `importsNotUsedAsValues` (#4897) - Thanks to @KazariEX!
+- chore(vscode): switch to `"module": "CommonJS"` (#4944) - Thanks to @KazariEX!
+- test: fix incorrect default value (#4934) - Thanks to @jh-leong!
+- test(tsc): add a test case for class component
+
 ## 2.1.6 <sup>official</sup>, 2.1.7 <sup>insiders</sup> (2024-09-05)
 
 ### Features
@@ -31,7 +160,7 @@
 
 - **language-core:** split `__VLS_templateResult` (#4781) - Thanks to @KazariEX!
 - **language-core:** wrap template virtual code into a function (#4784)
-- **language-core:** move `templateRef` into `composibles` (#4791) - Thanks to @KazariEX!
+- **language-core:** move `templateRef` into `composables` (#4791) - Thanks to @KazariEX!
 - **language-core:** generate global types for the first parsed Vue component if cannot write global types file
 
 ### Tests

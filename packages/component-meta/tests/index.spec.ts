@@ -1,6 +1,6 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { createChecker, createCheckerByJson, MetaCheckerOptions, ComponentMetaChecker, TypeMeta } from '..';
+import { ComponentMetaChecker, createChecker, createCheckerByJson, MetaCheckerOptions, TypeMeta } from '..';
 
 const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
