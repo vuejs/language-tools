@@ -41,12 +41,24 @@
 					"markdownDescription": "Generate slots type for `JSX.ElementChildrenAttribute`."
 				},
 				"strictTemplates": {
-					"type": ["boolean", "object"],
-					"default": {
-						"attributes": false,
-						"components": false
-					},
-					"markdownDescription": "Strict props(attrs), component type-checking in templates."
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Strict props, component type-checking in templates."
+				},
+				"checkUnknownProps": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Check unknown props. If not set, uses the 'strictTemplates' value."
+				},
+				"checkUnknownEvents": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Check unknown events. If not set, uses the 'strictTemplates' value."
+				},
+				"checkUnknownComponents": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Check unknown components. If not set, uses the 'strictTemplates' value."
 				},
 				"skipTemplateCodegen": {
 					"type": "boolean",
