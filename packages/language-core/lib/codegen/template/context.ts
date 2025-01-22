@@ -38,6 +38,10 @@ const _codeFeatures = {
 		navigation: true,
 		completion: { isAdditional: true },
 	} as VueCodeInformation,
+	navigationAndVerification: {
+		navigation: true,
+		verification: true,
+	} as VueCodeInformation,
 	withoutNavigation: {
 		verification: true,
 		completion: true,
