@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
-import { generateGlobalTypes } from '../codegen/globalTypes';
+import { generateGlobalTypes, getGlobalTypesFileName } from '../codegen/globalTypes';
 import { getAllExtensions } from '../languagePlugin';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
@@ -206,7 +206,7 @@ export class CompilerOptionsResolver {
 
 	build(defaults?: VueCompilerOptions): VueCompilerOptions {
 		const target = this.target ?? this.fallbackTarget;
-		defaults ??= getDefaultCompilerOptions(target, this.options.lib);
+		defaults ??= getDefaultCompilerOptions(target, this.options.lib, this.options.strictTemplates);
 		return {
 			...defaults,
 			...this.options,
@@ -222,16 +222,7 @@ export class CompilerOptionsResolver {
 			// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 			experimentalModelPropName: Object.fromEntries(Object.entries(
-				this.options.experimentalModelPropName ?? defaults.experimentalModelPropName ?? {
-					'': {
-						input: true
-					},
-					value: {
-						input: { type: 'text' },
-						textarea: true,
-						select: true
-					}
-				}
+				this.options.experimentalModelPropName ?? defaults.experimentalModelPropName
 			).map(([k, v]) => [camelize(k), v])),
 		};
 	}
@@ -263,7 +254,7 @@ function resolvePath(scriptPath: string, root: string) {
 	}
 }
 
-export function getDefaultCompilerOptions(target = 99, lib = 'vue'): VueCompilerOptions {
+export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTemplates = false): VueCompilerOptions {
 	return {
 		target,
 		lib,
@@ -271,7 +262,9 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue'): VueCompiler
 		vitePressExtensions: [],
 		petiteVueExtensions: [],
 		jsxSlots: false,
-		strictTemplates: false,
+		checkUnknownProps: strictTemplates,
+		checkUnknownEvents: strictTemplates,
+		checkUnknownComponents: strictTemplates,
 		skipTemplateCodegen: false,
 		fallthroughAttributes: false,
 		dataAttributes: [],
@@ -297,7 +290,16 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue'): VueCompiler
 		plugins: [],
 		experimentalDefinePropProposal: false,
 		experimentalResolveStyleCssClasses: 'scoped',
-		experimentalModelPropName: null!
+		experimentalModelPropName: {
+			'': {
+				input: true
+			},
+			value: {
+				input: { type: 'text' },
+				textarea: true,
+				select: true
+			}
+		},
 	};
 }
 
@@ -327,8 +329,8 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 			}
 			dir = parentDir;
 		}
-		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', `${vueOptions.lib}_${vueOptions.target}_${vueOptions.strictTemplates}.d.ts`);
-		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions.lib, vueOptions.target, vueOptions.strictTemplates);
+		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', getGlobalTypesFileName(vueOptions));
+		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions);
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return { absolutePath: globalTypesPath };
 	} catch { }
