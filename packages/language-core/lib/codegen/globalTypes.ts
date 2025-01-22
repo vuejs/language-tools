@@ -2,8 +2,13 @@ import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 
 export function getGlobalTypesFileName(options: VueCompilerOptions) {
-	const { lib, target, checkUnknownProps, checkUnknownEvents, checkUnknownComponents } = options;
-	return `${lib}_${target}_${checkUnknownProps}_${checkUnknownEvents}_${checkUnknownComponents}.d.ts`;
+	return [
+		options.lib,
+		options.target,
+		options.checkUnknownProps,
+		options.checkUnknownEvents,
+		options.checkUnknownComponents,
+	].join('_') + '.d.ts';
 }
 
 export function generateGlobalTypes(options: VueCompilerOptions) {
