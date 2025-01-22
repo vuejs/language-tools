@@ -335,6 +335,15 @@ export default _default;
 "
 `;
 
+exports[`vue-tsc-dts > Input: reference-type-props/component-destructure.vue, Output: reference-type-props/component-destructure.vue.d.ts 1`] = `
+"type __VLS_Props = {
+    text: string;
+};
+declare const _default: import("vue").DefineComponent<__VLS_Props, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<__VLS_Props> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, HTMLDivElement>;
+export default _default;
+"
+`;
+
 exports[`vue-tsc-dts > Input: reference-type-props/component-js.vue, Output: reference-type-props/component-js.vue.d.ts 1`] = `
 "declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
     foo: {
