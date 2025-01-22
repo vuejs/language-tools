@@ -1,64 +1,9 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine, wrapWith } from '../utils';
 import type { TemplateCodegenOptions } from './index';
-
-const _codeFeatures = {
-	all: {
-		verification: true,
-		completion: true,
-		semantic: true,
-		navigation: true,
-	} as VueCodeInformation,
-	verification: {
-		verification: true,
-	} as VueCodeInformation,
-	completion: {
-		completion: true,
-	} as VueCodeInformation,
-	additionalCompletion: {
-		completion: { isAdditional: true },
-	} as VueCodeInformation,
-	navigation: {
-		navigation: true,
-	} as VueCodeInformation,
-	navigationWithoutRename: {
-		navigation: {
-			shouldRename() {
-				return false;
-			},
-		},
-	} as VueCodeInformation,
-	navigationAndCompletion: {
-		navigation: true,
-		completion: true,
-	} as VueCodeInformation,
-	navigationAndAdditionalCompletion: {
-		navigation: true,
-		completion: { isAdditional: true },
-	} as VueCodeInformation,
-	withoutNavigation: {
-		verification: true,
-		completion: true,
-		semantic: true,
-	} as VueCodeInformation,
-	withoutHighlight: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		navigation: true,
-		completion: true,
-	} as VueCodeInformation,
-	withoutHighlightAndCompletion: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		navigation: true,
-	} as VueCodeInformation,
-	withoutHighlightAndCompletionAndNavigation: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-	} as VueCodeInformation,
-};
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
@@ -74,34 +19,30 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	} | undefined;
 	let variableId = 0;
 
-	const codeFeatures = new Proxy(_codeFeatures, {
-		get(target, key: keyof typeof _codeFeatures) {
-			const data = target[key];
-			if (data.verification) {
-				if (ignoredError) {
-					return {
-						...data,
-						verification: false,
-					};
-				}
-				if (expectErrorToken) {
-					const token = expectErrorToken;
-					if (typeof data.verification !== 'object' || !data.verification.shouldReport) {
-						return {
-							...data,
-							verification: {
-								shouldReport: () => {
-									token.errors++;
-									return false;
-								},
-							},
-						};
-					}
-				}
+	function resolveCodeFeatures(features: VueCodeInformation) {
+		if (features.verification) {
+			if (ignoredError) {
+				return {
+					...features,
+					verification: false,
+				};
 			}
-			return data;
-		},
-	});
+			if (expectErrorToken) {
+				const token = expectErrorToken;
+				return {
+					...features,
+					verification: {
+						shouldReport: () => {
+							token.errors++;
+							return false;
+						},
+					},
+				};
+			}
+		}
+		return features;
+	}
+
 	const localVars = new Map<string, number>();
 	const specialVars = new Set<string>();
 	const accessExternalVariables = new Map<string, Set<number>>();
@@ -129,9 +70,15 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	const templateRefs = new Map<string, [varName: string, offset: number]>();
 
 	return {
+		codeFeatures: new Proxy(codeFeatures, {
+			get(target, key: keyof typeof codeFeatures) {
+				const data = target[key];
+				return resolveCodeFeatures(data);
+			},
+		}),
+		resolveCodeFeatures,
 		slots,
 		dynamicSlots,
-		codeFeatures,
 		specialVars,
 		accessExternalVariables,
 		lastGenericComment,

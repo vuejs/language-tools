@@ -1,10 +1,11 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { combineLastMapping, endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponent, generateEmitsOption } from './component';
 import { generateComponentSelf } from './componentSelf';
 import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures, generateScriptSectionPartiallyEnding } from './index';
+import { type ScriptCodegenOptions, generateScriptSectionPartiallyEnding } from './index';
 import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
