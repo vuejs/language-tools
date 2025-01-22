@@ -2,6 +2,7 @@ import type { Disposable, LanguageServiceContext, LanguageServicePluginInstance 
 import { VueVirtualCode, hyphenateAttr, hyphenateTag, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
+import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/componentInfos';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
@@ -44,7 +45,7 @@ export function create(
 	let extraCustomData: html.IHTMLDataProvider[] = [];
 	let lastCompletionComponentNames = new Set<string>();
 
-	const tsDocumentations = new Map<string, string>();
+	const cachedPropInfos = new Map<string, ComponentPropInfo>();
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
 		onDidChangeCustomDataListeners.add(listener);
@@ -488,7 +489,7 @@ export function create(
 				const promises: Promise<void>[] = [];
 				const tagInfos = new Map<string, {
 					attrs: string[];
-					propsInfo: { name: string, commentMarkdown?: string; }[];
+					propInfos: ComponentPropInfo[];
 					events: string[];
 					directives: string[];
 				}>();
@@ -496,7 +497,7 @@ export function create(
 				let version = 0;
 				let components: string[] | undefined;
 
-				tsDocumentations.clear();
+				cachedPropInfos.clear();
 
 				updateExtraCustomData([
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
@@ -557,12 +558,12 @@ export function create(
 							if (!tagInfo) {
 								promises.push((async () => {
 									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
-									const propsInfo = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
+									const propInfos = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
 									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
 									const directives = await tsPluginClient?.getComponentDirectives(vueCode.fileName) ?? [];
 									tagInfos.set(tag, {
 										attrs,
-										propsInfo: propsInfo.filter(prop =>
+										propInfos: propInfos.filter(prop =>
 											!prop.name.startsWith('ref_')
 										),
 										events,
@@ -573,8 +574,8 @@ export function create(
 								return [];
 							}
 
-							const { attrs, propsInfo, events, directives } = tagInfo;
-							const props = propsInfo.map(prop =>
+							const { attrs, propInfos, events, directives } = tagInfo;
+							const props = propInfos.map(prop =>
 								hyphenateTag(prop.name).startsWith('on-vnode-')
 									? 'onVue:' + prop.name.slice('onVnode'.length)
 									: prop.name
@@ -611,14 +612,14 @@ export function create(
 								else {
 
 									const propName = name;
-									const propKey = generateItemKey('componentProp', isGlobal ? '*' : tag, propName);
-									const propDescription = propsInfo.find(prop => {
+									const propInfo = propInfos.find(prop => {
 										const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === propName;
-									})?.commentMarkdown;
+									});
+									const propKey = generateItemKey('componentProp', isGlobal ? '*' : tag, propName, propInfo?.deprecated);
 
-									if (propDescription) {
-										tsDocumentations.set(propName, propDescription);
+									if (propInfo) {
+										cachedPropInfos.set(propName, propInfo);
 									}
 
 									attributes.push(
@@ -792,7 +793,7 @@ export function create(
 
 				for (const item of completionList.items) {
 					const documentation = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
-					if (documentation && !isItemKey(documentation) && item.documentation) {
+					if (documentation && !isItemKey(documentation)) {
 						htmlDocumentations.set(item.label, documentation);
 					}
 				}
@@ -819,11 +820,14 @@ export function create(
 					const itemKeyStr = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
 
 					let parsedItemKey = itemKeyStr ? parseItemKey(itemKeyStr) : undefined;
+					let propInfo: ComponentPropInfo | undefined;
+
 					if (parsedItemKey) {
 						const documentations: string[] = [];
 
-						if (tsDocumentations.has(parsedItemKey.prop)) {
-							documentations.push(tsDocumentations.get(parsedItemKey.prop)!);
+						propInfo = cachedPropInfos.get(parsedItemKey.prop);
+						if (propInfo?.commentMarkdown) {
+							documentations.push(propInfo.commentMarkdown);
 						}
 
 						let { isEvent, propName } = getPropName(parsedItemKey);
@@ -861,20 +865,26 @@ export function create(
 								type: 'componentProp',
 								tag: '^',
 								prop: propName,
+								deprecated: false,
 								leadingSlash: false
 							};
 						}
 
-						if (tsDocumentations.has(propName)) {
+						propInfo = cachedPropInfos.get(propName);
+						if (propInfo?.commentMarkdown) {
 							const originalDocumentation = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
 							item.documentation = {
 								kind: 'markdown',
 								value: [
-									tsDocumentations.get(propName)!,
+									propInfo.commentMarkdown,
 									originalDocumentation,
 								].filter(str => !!str).join('\n\n'),
 							};
 						}
+					}
+
+					if (propInfo?.deprecated) {
+						item.tags = [1 satisfies typeof vscode.CompletionItemTag.Deprecated];
 					}
 
 					const tokens: string[] = [];
@@ -1019,8 +1029,8 @@ function parseLabel(label: string) {
 	};
 }
 
-function generateItemKey(type: InternalItemId, tag: string, prop: string) {
-	return '__VLS_data=' + type + ',' + tag + ',' + prop;
+function generateItemKey(type: InternalItemId, tag: string, prop: string, deprecated?: boolean) {
+	return `__VLS_data=${type},${tag},${prop},${Number(deprecated)}`;
 }
 
 function isItemKey(key: string) {
@@ -1035,6 +1045,7 @@ function parseItemKey(key: string) {
 			type: strs[0] as InternalItemId,
 			tag: strs[1],
 			prop: strs[2],
+			deprecated: strs[3] === '1',
 			leadingSlash
 		};
 	}
