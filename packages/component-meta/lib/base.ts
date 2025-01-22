@@ -138,8 +138,8 @@ export function baseCreate(
 	const directoryExists = languageServiceHost.directoryExists?.bind(languageServiceHost);
 	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
 	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
-	const globalTypesName = `${commandLine.vueOptions.lib}_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
-	const globalTypesContents = `// @ts-nocheck\nexport {};\n` + vue.generateGlobalTypes(commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
+	const globalTypesName = vue.getGlobalTypesFileName(commandLine.vueOptions);
+	const globalTypesContents = `// @ts-nocheck\nexport {};\n` + vue.generateGlobalTypes(commandLine.vueOptions);
 	const globalTypesSnapshot: ts.IScriptSnapshot = {
 		getText: (start, end) => globalTypesContents.slice(start, end),
 		getLength: () => globalTypesContents.length,
@@ -753,6 +753,14 @@ function readVueComponentDefaultProps(
 					...result,
 					...resolvePropsOption(ast, obj, printer, ts),
 				};
+			}
+		} else if (descriptor.scriptSetup && scriptSetupRanges?.defineProps?.destructured) {
+			const ast = descriptor.scriptSetup.ast;
+			for (const [prop, initializer] of scriptSetupRanges.defineProps.destructured) {
+				if (initializer) {
+					const expText = printer?.printNode(ts.EmitHint.Expression, initializer, ast) ?? initializer.getText(ast);
+					result[prop] = { default: expText };
+				}
 			}
 		}
 

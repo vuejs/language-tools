@@ -8,7 +8,7 @@ import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
-import { resolveVueCompilerOptions } from '../utils/ts';
+import { CompilerOptionsResolver } from '../utils/ts';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 
@@ -83,9 +83,12 @@ function createTsx(
 	});
 	const vueCompilerOptions = computed(() => {
 		const options = parseVueCompilerOptions(_sfc.comments);
-		return options
-			? resolveVueCompilerOptions(options, ctx.vueCompilerOptions)
-			: ctx.vueCompilerOptions;
+		if (options) {
+			const resolver = new CompilerOptionsResolver();
+			resolver.addConfig(options, path.dirname(fileName));
+			return resolver.build(ctx.vueCompilerOptions);
+		}
+		return ctx.vueCompilerOptions;
 	});
 	const scriptRanges = computed(() =>
 		_sfc.script
@@ -130,7 +133,7 @@ function createTsx(
 	);
 	const destructuredPropNames = unstable.computedSet(
 		computed(() => {
-			const newNames = new Set(scriptSetupRanges.get()?.defineProps?.destructured);
+			const newNames = new Set(scriptSetupRanges.get()?.defineProps?.destructured?.keys());
 			const rest = scriptSetupRanges.get()?.defineProps?.destructuredRest;
 			if (rest) {
 				newNames.add(rest);
