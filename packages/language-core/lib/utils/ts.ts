@@ -259,7 +259,16 @@ function getDefaultOptions(options: Partial<VueCompilerOptions>): VueCompilerOpt
 		plugins: [],
 		experimentalDefinePropProposal: false,
 		experimentalResolveStyleCssClasses: 'scoped',
-		experimentalModelPropName: null!
+		experimentalModelPropName: {
+			'': {
+				input: true
+			},
+			value: {
+				input: { type: 'text' },
+				textarea: true,
+				select: true
+			}
+		}
 	};
 };
 
@@ -288,16 +297,7 @@ export function resolveVueCompilerOptions(
 		// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 		// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 		experimentalModelPropName: Object.fromEntries(Object.entries(
-			options.experimentalModelPropName ?? defaults.experimentalModelPropName ?? {
-				'': {
-					input: true
-				},
-				value: {
-					input: { type: 'text' },
-					textarea: true,
-					select: true
-				}
-			}
+			options.experimentalModelPropName ?? defaults.experimentalModelPropName
 		).map(([k, v]) => [camelize(k), v])),
 	};
 }
