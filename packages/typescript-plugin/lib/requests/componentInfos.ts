@@ -1,5 +1,6 @@
 import * as vue from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
+import * as path from 'node:path';
 import type * as ts from 'typescript';
 import type { RequestContext } from './types';
 
@@ -21,26 +22,9 @@ export function getComponentProps(
 		return [];
 	}
 
-	const name = tag.split('.');
-
-	let componentSymbol = components.type.getProperty(name[0])
-		?? components.type.getProperty(camelize(name[0]))
-		?? components.type.getProperty(capitalize(camelize(name[0])));
-
-	if (!componentSymbol) {
+	const componentType = getComponentType(ts, languageService, vueCode, components, fileName, tag);
+	if (!componentType) {
 		return [];
-	}
-
-	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
-
-	for (let i = 1; i < name.length; i++) {
-		componentSymbol = componentType.getProperty(name[i]);
-		if (componentSymbol) {
-			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
-		}
-		else {
-			return [];
-		}
 	}
 
 	const result = new Map<string, {
@@ -104,29 +88,9 @@ export function getComponentEvents(
 		return [];
 	}
 
-	const name = tag.split('.');
-
-	let componentSymbol = components.type.getProperty(name[0]);
-
-	if (!componentSymbol) {
-		componentSymbol = components.type.getProperty(camelize(name[0]))
-			?? components.type.getProperty(capitalize(camelize(name[0])));
-	}
-
-	if (!componentSymbol) {
+	const componentType = getComponentType(ts, languageService, vueCode, components, fileName, tag);
+	if (!componentType) {
 		return [];
-	}
-
-	let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
-
-	for (let i = 1; i < name.length; i++) {
-		componentSymbol = componentType.getProperty(name[i]);
-		if (componentSymbol) {
-			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
-		}
-		else {
-			return [];
-		}
 	}
 
 	const result = new Set<string>();
@@ -158,7 +122,7 @@ export function getComponentEvents(
 	return [...result];
 }
 
-export function getTemplateContextProps(
+export function getComponentDirectives(
 	this: RequestContext,
 	fileName: string
 ) {
@@ -168,11 +132,15 @@ export function getTemplateContextProps(
 		return;
 	}
 	const vueCode = volarFile.generated.root;
+	const directives = getVariableType(ts, languageService, vueCode, '__VLS_directives');
+	if (!directives) {
+		return [];
+	}
 
-	return getVariableType(ts, languageService, vueCode, '__VLS_ctx')
-		?.type
-		?.getProperties()
-		.map(c => c.name);
+	return directives.type.getProperties()
+		.map(({ name }) => name)
+		.filter(name => name.startsWith('v') && name.length >= 2 && name[1] === name[1].toUpperCase())
+		.filter(name => !['vBind', 'vIf', 'vOn', 'VOnce', 'vShow', 'VSlot'].includes(name));
 }
 
 export function getComponentNames(
@@ -185,13 +153,7 @@ export function getComponentNames(
 		return;
 	}
 	const vueCode = volarFile.generated.root;
-
-	return getVariableType(ts, languageService, vueCode, '__VLS_components')
-		?.type
-		?.getProperties()
-		.map(c => c.name)
-		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
-		?? [];
+	return _getComponentNames(ts, languageService, vueCode);
 }
 
 export function _getComponentNames(
@@ -199,12 +161,15 @@ export function _getComponentNames(
 	tsLs: ts.LanguageService,
 	vueCode: vue.VueVirtualCode
 ) {
-	return getVariableType(ts, tsLs, vueCode, '__VLS_components')
+	const names = getVariableType(ts, tsLs, vueCode, '__VLS_components')
 		?.type
 		?.getProperties()
 		.map(c => c.name)
 		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];
+
+	names.push(getSelfComponentName(vueCode.fileName));
+	return names;
 }
 
 export function getElementAttrs(
@@ -223,7 +188,9 @@ export function getElementAttrs(
 
 	if (tsSourceFile = program.getSourceFile(fileName)) {
 
-		const typeNode = tsSourceFile.statements.find((node): node is ts.TypeAliasDeclaration => ts.isTypeAliasDeclaration(node) && node.name.getText() === '__VLS_IntrinsicElementsCompletion');
+		const typeNode = tsSourceFile.statements
+			.filter(ts.isTypeAliasDeclaration)
+			.find(node => node.name.getText() === '__VLS_IntrinsicElementsCompletion');
 		const checker = program.getTypeChecker();
 
 		if (checker && typeNode) {
@@ -240,6 +207,42 @@ export function getElementAttrs(
 	}
 
 	return [];
+}
+
+function getComponentType(
+	ts: typeof import('typescript'),
+	languageService: ts.LanguageService,
+	vueCode: vue.VueVirtualCode,
+	components: NonNullable<ReturnType<typeof getVariableType>>,
+	fileName: string,
+	tag: string
+) {
+	const program = languageService.getProgram()!;
+	const checker = program.getTypeChecker();
+	const name = tag.split('.');
+
+	let componentSymbol = components.type.getProperty(name[0])
+		?? components.type.getProperty(camelize(name[0]))
+		?? components.type.getProperty(capitalize(camelize(name[0])));
+	let componentType: ts.Type | undefined;
+
+	if (!componentSymbol) {
+		const name = getSelfComponentName(fileName);
+		if (name === capitalize(camelize(tag))) {
+			componentType = getVariableType(ts, languageService, vueCode, '__VLS_self')?.type;
+		}
+	}
+	else {
+		componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
+		for (let i = 1; i < name.length; i++) {
+			componentSymbol = componentType.getProperty(name[i]);
+			if (componentSymbol) {
+				componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
+			}
+		}
+	}
+
+	return componentType;
 }
 
 function getVariableType(
@@ -264,6 +267,11 @@ function getVariableType(
 			};
 		}
 	}
+}
+
+function getSelfComponentName(fileName: string) {
+	const baseName = path.basename(fileName);
+	return capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
 }
 
 function searchVariableDeclarationNode(
@@ -298,7 +306,6 @@ function generateCommentMarkdown(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JS
 	return result;
 }
 
-
 function _symbolDisplayPartsToMarkdown(parts: ts.SymbolDisplayPart[]) {
 	return parts.map(part => {
 		switch (part.kind) {
@@ -311,7 +318,6 @@ function _symbolDisplayPartsToMarkdown(parts: ts.SymbolDisplayPart[]) {
 		}
 	}).join('');
 }
-
 
 function _jsDocTagInfoToMarkdown(jsDocTags: ts.JSDocTagInfo[]) {
 	return jsDocTags.map(tag => {

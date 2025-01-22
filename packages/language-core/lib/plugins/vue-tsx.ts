@@ -1,12 +1,14 @@
 import type { Mapping } from '@volar/language-core';
+import { camelize, capitalize } from '@vue/shared';
 import { computed, unstable } from 'alien-signals';
+import * as path from 'path-browserify';
 import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
-import { resolveVueCompilerOptions } from '../utils/ts';
+import { CompilerOptionsResolver } from '../utils/ts';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 
@@ -81,9 +83,12 @@ function createTsx(
 	});
 	const vueCompilerOptions = computed(() => {
 		const options = parseVueCompilerOptions(_sfc.comments);
-		return options
-			? resolveVueCompilerOptions(options, ctx.vueCompilerOptions)
-			: ctx.vueCompilerOptions;
+		if (options) {
+			const resolver = new CompilerOptionsResolver();
+			resolver.addConfig(options, path.dirname(fileName));
+			return resolver.build(ctx.vueCompilerOptions);
+		}
+		return ctx.vueCompilerOptions;
 	});
 	const scriptRanges = computed(() =>
 		_sfc.script
@@ -153,6 +158,19 @@ function createTsx(
 		const value = scriptSetupRanges.get()?.defineOptions?.inheritAttrs ?? scriptRanges.get()?.exportDefault?.inheritAttrsOption;
 		return value !== 'false';
 	});
+	const selfComponentName = computed(() => {
+		const { exportDefault } = scriptRanges.get() ?? {};
+		if (_sfc.script && exportDefault?.nameOption) {
+			const { nameOption } = exportDefault;
+			return _sfc.script.content.slice(nameOption.start + 1, nameOption.end - 1);
+		}
+		const { defineOptions } = scriptSetupRanges.get() ?? {};
+		if (_sfc.scriptSetup && defineOptions?.name) {
+			return defineOptions.name;
+		}
+		const baseName = path.basename(fileName);
+		return capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
+	});
 	const generatedTemplate = computed(() => {
 
 		if (vueCompilerOptions.get().skipTemplateCodegen || !_sfc.template) {
@@ -174,6 +192,7 @@ function createTsx(
 			slotsAssignName: slotsAssignName.get(),
 			propsAssignName: propsAssignName.get(),
 			inheritAttrs: inheritAttrs.get(),
+			selfComponentName: selfComponentName.get(),
 		});
 
 		let current = codegen.next();
@@ -186,7 +205,7 @@ function createTsx(
 
 		return {
 			...current.value,
-			codes: codes,
+			codes,
 		};
 	});
 	const generatedScript = computed(() => {

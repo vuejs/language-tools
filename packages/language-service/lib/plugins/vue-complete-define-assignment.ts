@@ -2,7 +2,7 @@ import type { LanguageServicePlugin } from '@volar/language-service';
 import { TextRange, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
-import { isTsDocument } from './vue-autoinsert-dotvalue';
+import { isTsDocument } from './utils';
 
 export function create(): LanguageServicePlugin {
 	return {

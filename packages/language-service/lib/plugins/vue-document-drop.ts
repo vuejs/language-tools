@@ -111,7 +111,7 @@ export function create(
 					});
 
 					if (sfc.script) {
-						const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
+						const edit = createAddComponentToOptionEdit(ts, sfc, sfc.script.ast, newName);
 						if (edit) {
 							additionalEdit.changes[embeddedDocumentUriStr].push({
 								range: {
