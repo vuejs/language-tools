@@ -1,7 +1,7 @@
 import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 
-export function resolveGlobalTypesName(options: VueCompilerOptions) {
+export function getGlobalTypesFileName(options: VueCompilerOptions) {
 	const { lib, target, strictTemplates } = options;
 	return `${lib}_${target}_${strictTemplates.attributes}_${strictTemplates.components}.d.ts`;
 }

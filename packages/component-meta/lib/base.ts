@@ -138,7 +138,7 @@ export function baseCreate(
 	const directoryExists = languageServiceHost.directoryExists?.bind(languageServiceHost);
 	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
 	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
-	const globalTypesName = vue.resolveGlobalTypesName(commandLine.vueOptions);
+	const globalTypesName = vue.getGlobalTypesFileName(commandLine.vueOptions);
 	const globalTypesContents = `// @ts-nocheck\nexport {};\n` + vue.generateGlobalTypes(commandLine.vueOptions);
 	const globalTypesSnapshot: ts.IScriptSnapshot = {
 		getText: (start, end) => globalTypesContents.slice(start, end),
