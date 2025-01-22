@@ -1,6 +1,6 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createTypeScriptProject } from '@volar/language-server/node';
-import { createParsedCommandLine, createVueLanguagePlugin, generateGlobalTypes, getAllExtensions, resolveGlobalTypesName, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
+import { createParsedCommandLine, createVueLanguagePlugin, generateGlobalTypes, getAllExtensions, getGlobalTypesFileName, resolveVueCompilerOptions, VueCompilerOptions } from '@vue/language-core';
 import { Disposable, getFullLanguageServicePlugins, InitializeParams } from '@vue/language-service';
 import type * as ts from 'typescript';
 
@@ -55,7 +55,7 @@ export function initialize(
 							const directoryExists = project.typescript.languageServiceHost.directoryExists?.bind(project.typescript.languageServiceHost);
 							const fileExists = project.typescript.languageServiceHost.fileExists.bind(project.typescript.languageServiceHost);
 							const getScriptSnapshot = project.typescript.languageServiceHost.getScriptSnapshot.bind(project.typescript.languageServiceHost);
-							const globalTypesName = resolveGlobalTypesName(vueCompilerOptions);
+							const globalTypesName = getGlobalTypesFileName(vueCompilerOptions);
 							const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueCompilerOptions);
 							const globalTypesSnapshot: ts.IScriptSnapshot = {
 								getText: (start, end) => globalTypesContents.slice(start, end),

@@ -4,7 +4,7 @@ import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { generateGlobalTypes, resolveGlobalTypesName } from '../globalTypes';
+import { generateGlobalTypes, getGlobalTypesFileName } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
@@ -68,7 +68,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			yield `/// <reference types="${relativePath}" />${newLine}`;
 		}
 		else {
-			yield `/// <reference types=".vue-global-types/${resolveGlobalTypesName(options.vueCompilerOptions)}" />${newLine}`;
+			yield `/// <reference types=".vue-global-types/${getGlobalTypesFileName(options.vueCompilerOptions)}" />${newLine}`;
 		}
 	}
 	else {

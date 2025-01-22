@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
-import { generateGlobalTypes, resolveGlobalTypesName } from '../codegen/globalTypes';
+import { generateGlobalTypes, getGlobalTypesFileName } from '../codegen/globalTypes';
 import { getAllExtensions } from '../languagePlugin';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 
@@ -318,7 +318,7 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 			}
 			dir = parentDir;
 		}
-		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', resolveGlobalTypesName(vueOptions));
+		const globalTypesPath = path.join(dir, 'node_modules', '.vue-global-types', getGlobalTypesFileName(vueOptions));
 		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions);
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return { absolutePath: globalTypesPath };
