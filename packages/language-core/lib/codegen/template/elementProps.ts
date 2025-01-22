@@ -138,7 +138,7 @@ export function* generateElementProps(
 							propName
 						)
 				),
-				`: (`,
+				`: `,
 				...generatePropExp(
 					options,
 					ctx,
@@ -146,8 +146,7 @@ export function* generateElementProps(
 					prop.exp,
 					ctx.codeFeatures.all,
 					enableCodeFeatures
-				),
-				`)`
+				)
 			);
 			if (enableCodeFeatures) {
 				yield* codes;

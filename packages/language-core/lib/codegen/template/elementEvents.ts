@@ -13,7 +13,7 @@ export function* generateElementEvents(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	componentVar: string,
-	componentInstanceVar: string,
+	componentVnodeVar: string,
 	eventsVar: string
 ): Generator<Code, boolean> {
 	let usedComponentEventsVar = false;
@@ -29,7 +29,7 @@ export function* generateElementEvents(
 			usedComponentEventsVar = true;
 			if (!propsVar) {
 				propsVar = ctx.getInternalVariable();
-				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>${endOfLine}`;
+				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentVnodeVar}>${endOfLine}`;
 			}
 			let source = prop.arg.loc.source;
 			let start = prop.arg.loc.start.offset;
@@ -41,11 +41,11 @@ export function* generateElementEvents(
 				propPrefix = 'onVnode';
 				emitPrefix = 'vnode-';
 			}
-			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${camelize(propPrefix + '-' + source)}', '${emitPrefix}${source}', '${camelize(emitPrefix + source)}'> = {${newLine}`;
+			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${camelize(propPrefix + '-' + source)}', '${emitPrefix}${source}', '${camelize(emitPrefix + source)}'> => ({${newLine}`;
 			yield* generateEventArg(ctx, source, start, propPrefix);
 			yield `: `;
 			yield* generateEventExpression(options, ctx, prop);
-			yield `}${endOfLine}`;
+			yield `})${endOfLine}`;
 		}
 	}
 	return usedComponentEventsVar;
