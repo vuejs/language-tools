@@ -218,7 +218,7 @@ export function* generateComponent(
 		ctx,
 		node,
 		props,
-		options.vueCompilerOptions.strictTemplates.attributes,
+		options.vueCompilerOptions.checkUnknownProps,
 		false
 	);
 	yield `}))${endOfLine}`;
@@ -249,7 +249,7 @@ export function* generateComponent(
 			ctx,
 			node,
 			props,
-			options.vueCompilerOptions.strictTemplates.attributes,
+			options.vueCompilerOptions.checkUnknownProps,
 			true,
 			failedPropExps
 		),
@@ -350,7 +350,7 @@ export function* generateElement(
 			ctx,
 			node,
 			node.props,
-			options.vueCompilerOptions.strictTemplates.attributes,
+			options.vueCompilerOptions.checkUnknownProps,
 			true,
 			failedPropExps
 		),

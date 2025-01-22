@@ -72,7 +72,7 @@ export function* generateSlotOutlet(
 			ctx,
 			node,
 			node.props.filter(prop => prop !== nameProp),
-			options.vueCompilerOptions.strictTemplates.attributes,
+			options.vueCompilerOptions.checkUnknownProps,
 			true
 		);
 		yield `}${endOfLine}`;

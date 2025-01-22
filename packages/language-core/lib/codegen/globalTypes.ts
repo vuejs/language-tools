@@ -2,13 +2,13 @@ import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 
 export function getGlobalTypesFileName(options: VueCompilerOptions) {
-	const { lib, target, strictTemplates } = options;
-	return `${lib}_${target}_${strictTemplates.attributes}_${strictTemplates.components}.d.ts`;
+	const { lib, target, checkUnknownProps, checkUnknownEvents, checkUnknownComponents } = options;
+	return `${lib}_${target}_${checkUnknownProps}_${checkUnknownEvents}_${checkUnknownComponents}.d.ts`;
 }
 
 export function generateGlobalTypes(options: VueCompilerOptions) {
-	const { lib, target, strictTemplates } = options;
-	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${strictTemplates.attributes ? '' : ' & Record<string, unknown>'}`;
+	const { lib, target, checkUnknownProps, checkUnknownEvents, checkUnknownComponents } = options;
+	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${checkUnknownProps ? '' : ' & Record<string, unknown>'}`;
 	let text = ``;
 	if (target < 3.5) {
 		text += `
@@ -56,7 +56,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		N1 extends keyof __VLS_GlobalComponents ? N1 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N1] } :
 		N2 extends keyof __VLS_GlobalComponents ? N2 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N2] } :
 		N3 extends keyof __VLS_GlobalComponents ? N3 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N3] } :
-		${strictTemplates.components ? '{}' : '{ [K in N0]: unknown }'};
+		${checkUnknownComponents ? '{}' : '{ [K in N0]: unknown }'};
 	type __VLS_FunctionalComponentProps<T, K> =
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P :
@@ -76,7 +76,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 				: __VLS_IsFunction<Events, CamelizedEvent> extends true
 					? { [K in onEvent]?: Events[CamelizedEvent] }
 					: Props
-	)${strictTemplates.attributes ? '' : ' & Record<string, unknown>'};
+	)${checkUnknownEvents ? '' : ' & Record<string, unknown>'};
 	// fix https://github.com/vuejs/language-tools/issues/926
 	type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
 	type __VLS_OverloadUnionInner<T, U = unknown> = U & T extends (...args: infer A) => infer R
@@ -150,8 +150,8 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		} & { props?: ${fnPropsType}; expose?(exposed: K): void; } }
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
-		: (_: {}${strictTemplates.attributes ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${strictTemplates.attributes ? '' : ' & Record<string, unknown>'} } };
-	function __VLS_asFunctionalElement<T>(tag: T, endTag?: T): (_: T${strictTemplates.components ? '' : ' & Record<string, unknown>'}) => void;
+		: (_: {}${checkUnknownProps ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${checkUnknownProps ? '' : ' & Record<string, unknown>'} } };
+	function __VLS_asFunctionalElement<T>(tag: T, endTag?: T): (_: T${checkUnknownComponents ? '' : ' & Record<string, unknown>'}) => void;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
 	function __VLS_normalizeSlot<S>(s: S): S extends () => infer R ? (props: {}) => R : S;
 	function __VLS_tryAsConstant<const T>(t: T): T;

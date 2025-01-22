@@ -10,6 +10,7 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 export { VueEmbeddedCode };
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
+	strictTemplates?: boolean;
 	target?: 'auto' | 2 | 2.7 | 3 | 3.3 | 3.5 | 99 | number;
 	plugins?: string[];
 };
@@ -28,10 +29,9 @@ export interface VueCompilerOptions {
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
 	jsxSlots: boolean;
-	strictTemplates: {
-		attributes: boolean;
-		components: boolean;
-	};
+	checkUnknownProps: boolean;
+	checkUnknownEvents: boolean;
+	checkUnknownComponents: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
 	dataAttributes: string[];

@@ -206,15 +206,10 @@ export class CompilerOptionsResolver {
 
 	build(defaults?: VueCompilerOptions): VueCompilerOptions {
 		const target = this.target ?? this.fallbackTarget;
-		defaults ??= getDefaultCompilerOptions(target, this.options.lib);
-		const strictTemplates = typeof this.options.strictTemplates === 'boolean' ? {
-			attributes: this.options.strictTemplates,
-			components: this.options.strictTemplates
-		} : this.options.strictTemplates ?? defaults.strictTemplates;
+		defaults ??= getDefaultCompilerOptions(target, this.options.lib, this.options.strictTemplates);
 		return {
 			...defaults,
 			...this.options,
-			strictTemplates,
 			plugins: this.plugins,
 			macros: {
 				...defaults.macros,
@@ -259,7 +254,7 @@ function resolvePath(scriptPath: string, root: string) {
 	}
 }
 
-export function getDefaultCompilerOptions(target = 99, lib = 'vue'): VueCompilerOptions {
+export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTemplates = false): VueCompilerOptions {
 	return {
 		target,
 		lib,
@@ -267,10 +262,9 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue'): VueCompiler
 		vitePressExtensions: [],
 		petiteVueExtensions: [],
 		jsxSlots: false,
-		strictTemplates: {
-			attributes: false,
-			components: false
-		},
+		checkUnknownProps: strictTemplates,
+		checkUnknownEvents: strictTemplates,
+		checkUnknownComponents: strictTemplates,
 		skipTemplateCodegen: false,
 		fallthroughAttributes: false,
 		dataAttributes: [],
