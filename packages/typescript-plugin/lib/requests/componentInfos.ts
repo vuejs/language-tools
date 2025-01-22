@@ -322,7 +322,7 @@ function generateCommentMarkdown(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JS
 	const parsedComment = _symbolDisplayPartsToMarkdown(parts);
 	const parsedJsDoc = _jsDocTagInfoToMarkdown(jsDocTags);
 	const content = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
-	const deprecated = jsDocTags.some((tag) => tag.name === 'deprecated');
+	const deprecated = jsDocTags.some(tag => tag.name === 'deprecated');
 	return {
 		content,
 		deprecated
