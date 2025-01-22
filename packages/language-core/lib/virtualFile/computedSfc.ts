@@ -2,8 +2,9 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { activeSub, activeTrackId, computed, ISignal, setActiveSub, Signal, unstable } from 'alien-signals';
 import type * as ts from 'typescript';
-import type { Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
+import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
+import { parseCssImports } from '../utils/parseCssImports';
 import { parseCssVars } from '../utils/parseCssVars';
 
 export function computedSfc(
@@ -53,11 +54,7 @@ export function computedSfc(
 		'js',
 		computed(() => parsed.get()?.descriptor.script ?? undefined),
 		(block, base): NonNullable<Sfc['script']> => {
-			const src = computed(() => block.get().src);
-			const srcOffset = computed(() => {
-				const _src = src.get();
-				return _src ? untrackedSnapshot().getText(0, base.startTagEnd).lastIndexOf(_src) - base.startTagEnd : -1;
-			});
+			const src = computedAttrValue('__src', base, block);
 			const ast = computed(() => {
 				for (const plugin of plugins) {
 					const ast = plugin.compileSFCScript?.(base.lang, base.content);
@@ -69,7 +66,6 @@ export function computedSfc(
 			});
 			return mergeObject(base, {
 				get src() { return src.get(); },
-				get srcOffset() { return srcOffset.get(); },
 				get ast() { return ast.get(); },
 			});
 		}
@@ -79,14 +75,7 @@ export function computedSfc(
 		'js',
 		computed(() => parsed.get()?.descriptor.scriptSetup ?? undefined),
 		(block, base): NonNullable<Sfc['scriptSetup']> => {
-			const generic = computed(() => {
-				const _block = block.get();
-				return typeof _block.attrs.generic === 'string' ? _block.attrs.generic : undefined;
-			});
-			const genericOffset = computed(() => {
-				const _generic = generic.get();
-				return _generic !== undefined ? untrackedSnapshot().getText(0, base.startTagEnd).lastIndexOf(_generic) - base.startTagEnd : -1;
-			});
+			const generic = computedAttrValue('__generic', base, block);
 			const ast = computed(() => {
 				for (const plugin of plugins) {
 					const ast = plugin.compileSFCScript?.(base.lang, base.content);
@@ -98,7 +87,6 @@ export function computedSfc(
 			});
 			return mergeObject(base, {
 				get generic() { return generic.get(); },
-				get genericOffset() { return genericOffset.get(); },
 				get ast() { return ast.get(); },
 			});
 		}
@@ -128,19 +116,17 @@ export function computedSfc(
 		computed(() => parsed.get()?.descriptor.styles ?? []),
 		(block, i) => {
 			const base = computedSfcBlock('style_' + i, 'css', block);
-			const module = computed(() => {
-				const { __module } = block.get();
-				return __module ? {
-					name: __module.name,
-					offset: __module.offset ? base.start + __module.offset : undefined
-				} : undefined;
-			});
+			const src = computedAttrValue('__src', base, block);
+			const module = computedAttrValue('__module', base, block);
 			const scoped = computed(() => !!block.get().scoped);
+			const imports = computed(() => [...parseCssImports(base.content)]);
 			const cssVars = computed(() => [...parseCssVars(base.content)]);
 			const classNames = computed(() => [...parseCssClassNames(base.content)]);
 			return () => mergeObject(base, {
+				get src() { return src.get(); },
 				get module() { return module.get(); },
 				get scoped() { return scoped.get(); },
+				get imports() { return imports.get(); },
 				get cssVars() { return cssVars.get(); },
 				get classNames() { return classNames.get(); },
 			}) satisfies Sfc['styles'][number];
@@ -311,6 +297,20 @@ export function computedSfc(
 			get start() { return start.get(); },
 			get end() { return end.get(); },
 		};
+	}
+
+	function computedAttrValue<T extends SFCBlock>(
+		key: keyof T & string,
+		base: ReturnType<typeof computedSfcBlock>,
+		block: ISignal<T>
+	) {
+		return computed(() => {
+			const val = block.get()[key] as SfcBlockAttr | undefined;
+			if (typeof val === 'object') {
+				val.offset = base.start + val.offset;
+			}
+			return val;
+		});
 	}
 }
 
