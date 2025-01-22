@@ -10,7 +10,7 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 export { VueEmbeddedCode };
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
-	target?: 'auto' | 2 | 2.7 | 3 | 3.3;
+	target?: 'auto' | 2 | 2.7 | 3 | 3.3 | 3.5 | 99 | number;
 	plugins?: string[];
 };
 

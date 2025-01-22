@@ -1,5 +1,5 @@
 import { createConnection, createServer, loadTsdkByPath } from '@volar/language-server/node';
-import { createParsedCommandLine, createVueLanguagePlugin, resolveVueCompilerOptions } from '@vue/language-core';
+import { createParsedCommandLine, createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
 import { getHybridModeLanguageServicePlugins } from '@vue/language-service';
 import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
 import { createHybridModeProject } from './lib/hybridModeProject';
@@ -23,7 +23,7 @@ connection.onInitialize(params => {
 					const commandLine = configFileName
 						? createParsedCommandLine(ts, ts.sys, configFileName)
 						: {
-							vueOptions: resolveVueCompilerOptions({}),
+							vueOptions: getDefaultCompilerOptions(),
 							options: ts.getDefaultCompilerOptions(),
 						};
 					commandLine.vueOptions.__test = params.initializationOptions.typescript.disableAutoImportCache;
