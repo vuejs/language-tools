@@ -8,7 +8,12 @@ export function getGlobalTypesFileName(options: VueCompilerOptions) {
 		options.checkUnknownProps,
 		options.checkUnknownEvents,
 		options.checkUnknownComponents,
-	].join('_') + '.d.ts';
+	].map(v => {
+		if (typeof v === 'boolean') {
+			return v ? 1 : 0;
+		}
+		return v;
+	}).join('_') + '.d.ts';
 }
 
 export function generateGlobalTypes(options: VueCompilerOptions) {
