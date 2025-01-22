@@ -220,7 +220,7 @@ function getPartialVueCompilerOptions(
 	}
 }
 
-export function getDefaultOptions(options: Partial<VueCompilerOptions>): VueCompilerOptions {
+function getDefaultOptions(options: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = options.target ?? 3.3;
 	const lib = options.lib ?? 'vue';
 	return {
