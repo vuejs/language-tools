@@ -223,13 +223,6 @@ function getPartialVueCompilerOptions(
 export function getDefaultOptions(vueOptions: Partial<VueCompilerOptions>): VueCompilerOptions {
 	const target = vueOptions.target ?? 3.3;
 	const lib = vueOptions.lib ?? 'vue';
-	const strictTemplates = typeof vueOptions.strictTemplates === 'boolean' ? {
-		attributes: vueOptions.strictTemplates,
-		components: vueOptions.strictTemplates
-	} : vueOptions.strictTemplates ?? {
-		attributes: false,
-		components: false
-	};
 	return {
 		target,
 		lib,
@@ -237,7 +230,10 @@ export function getDefaultOptions(vueOptions: Partial<VueCompilerOptions>): VueC
 		vitePressExtensions: [],
 		petiteVueExtensions: [],
 		jsxSlots: false,
-		strictTemplates,
+		strictTemplates: {
+			attributes: false,
+			components: false
+		},
 		skipTemplateCodegen: false,
 		fallthroughAttributes: false,
 		dataAttributes: [],
@@ -271,9 +267,15 @@ export function resolveVueCompilerOptions(
 	options: Partial<VueCompilerOptions>,
 	defaults: VueCompilerOptions = getDefaultOptions(options)
 ): VueCompilerOptions {
+	const strictTemplates = typeof options.strictTemplates === 'boolean' ? {
+		attributes: options.strictTemplates,
+		components: options.strictTemplates
+	} : options.strictTemplates ?? defaults.strictTemplates;
+
 	return {
 		...defaults,
 		...options,
+		strictTemplates,
 		macros: {
 			...defaults.macros,
 			...options.macros,
