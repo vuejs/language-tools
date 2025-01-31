@@ -1,13 +1,19 @@
 import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 
-export function getGlobalTypesFileName(options: VueCompilerOptions) {
+export function getGlobalTypesFileName({
+	lib,
+	target,
+	checkUnknownProps,
+	checkUnknownEvents,
+	checkUnknownComponents,
+}: VueCompilerOptions) {
 	return [
-		options.lib,
-		options.target,
-		options.checkUnknownProps,
-		options.checkUnknownEvents,
-		options.checkUnknownComponents,
+		lib,
+		target,
+		checkUnknownProps,
+		checkUnknownEvents,
+		checkUnknownComponents,
 	].map(v => {
 		if (typeof v === 'boolean') {
 			return v ? 1 : 0;
@@ -16,8 +22,13 @@ export function getGlobalTypesFileName(options: VueCompilerOptions) {
 	}).join('_') + '.d.ts';
 }
 
-export function generateGlobalTypes(options: VueCompilerOptions) {
-	const { lib, target, checkUnknownProps, checkUnknownEvents, checkUnknownComponents } = options;
+export function generateGlobalTypes({
+	lib,
+	target,
+	checkUnknownProps,
+	checkUnknownEvents,
+	checkUnknownComponents,
+}: VueCompilerOptions) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${checkUnknownProps ? '' : ' & Record<string, unknown>'}`;
 	let text = ``;
 	if (target < 3.5) {
