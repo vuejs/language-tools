@@ -1,3 +1,5 @@
+<!-- @typedDollarEl true -->
+
 <script setup lang="ts">
 import { exactType } from '../../shared';
 </script>

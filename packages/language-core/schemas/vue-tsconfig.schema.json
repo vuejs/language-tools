@@ -80,11 +80,6 @@
 					"default": [ "aria-*" ],
 					"markdownDescription": "A glob matcher array that should always be recognizing as HTML Attributes rather than Component props. Attribute name will never convert to camelize case."
 				},
-				"plugins": {
-					"type": "array",
-					"default": [ ],
-					"markdownDescription": "Plugins to be used in the SFC compiler."
-				},
 				"optionsWrapper": {
 					"type": "array",
 					"default": [
@@ -113,6 +108,41 @@
 						"useSlots": [ "useSlots" ],
 						"useTemplateRef": [ "useTemplateRef", "templateRef" ]
 					}
+				},
+				"typedDollarAttrs": {
+					"type": ["boolean", "object"],
+					"default": {
+						"self": true
+					},
+					"markdownDescription": "\"self\" to control the type inference of `$attrs` in the template and the return type of `useAttrs`."
+				},
+				"typedDollarEl": {
+					"type": ["boolean", "object"],
+					"default": {
+						"self": true,
+						"expose": false
+					},
+					"markdownDescription": "\"self\" to control the type inference of `$el` in the template, \"expose\" to control the type inference of `$el` on the component instance."
+				},
+				"typedDollarRefs": {
+					"type": ["boolean", "object"],
+					"default": {
+						"self": true,
+						"expose": false
+					},
+					"markdownDescription": "\"self\" to control the type inference of `$refs` in the template, \"expose\" to control the type inference of `$refs` on the component instance."
+				},
+				"typedDollarSlots": {
+					"type": ["boolean", "object"],
+					"default": {
+						"self": true
+					},
+					"markdownDescription": "\"self\" to control the type inference of `$slots` in the template and the return type of `useSlots`."
+				},
+				"plugins": {
+					"type": "array",
+					"default": [ ],
+					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [
