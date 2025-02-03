@@ -131,7 +131,7 @@ async function activateLc(
 			'Reload Window'
 		);
 		if (reload) {
-			executeCommand('workbench.action.reloadWindow');
+			executeCommand('workbench.action.restartExtensionHost');
 		}
 	}
 }
