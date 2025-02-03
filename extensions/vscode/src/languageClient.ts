@@ -73,21 +73,21 @@ async function activateLc(
 
 	watch([enabledHybridMode, enabledTypeScriptPlugin], (newValues, oldValues) => {
 		if (newValues[0] !== oldValues[0]) {
-			requestReloadVscode(
-				`Please reload VSCode to ${newValues[0] ? 'enable' : 'disable'} Hybrid Mode.`
+			requestRestartExtensionHost(
+				`Please restart extension host to ${newValues[0] ? 'enable' : 'disable'} Hybrid Mode.`
 			);
 		}
 		else if (newValues[1] !== oldValues[1]) {
-			requestReloadVscode(
-				`Please reload VSCode to ${newValues[1] ? 'enable' : 'disable'} Vue TypeScript Plugin.`
+			requestRestartExtensionHost(
+				`Please restart extension host to ${newValues[1] ? 'enable' : 'disable'} Vue TypeScript Plugin.`
 			);
 		}
 	});
 
 	watch(() => config.server.includeLanguages, () => {
 		if (enabledHybridMode.value) {
-			requestReloadVscode(
-				'Please reload VSCode to apply the new language settings.'
+			requestRestartExtensionHost(
+				'Please restart extension host to apply the new language settings.'
 			);
 		}
 	});
@@ -125,10 +125,10 @@ async function activateLc(
 	useHybridModeStatusItem();
 	useInsidersStatusItem(context);
 
-	async function requestReloadVscode(msg: string) {
+	async function requestRestartExtensionHost(msg: string) {
 		const reload = await vscode.window.showInformationMessage(
 			msg,
-			'Reload Window'
+			'Restart Extension Host'
 		);
 		if (reload) {
 			executeCommand('workbench.action.restartExtensionHost');
