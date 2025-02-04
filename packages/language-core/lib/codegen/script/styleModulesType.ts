@@ -20,13 +20,17 @@ export function* generateStyleModulesType(
 				name,
 				'main',
 				offset + 1,
-				codeFeatures.all
+				codeFeatures.navigation
 			];
 		}
 		else {
 			yield name;
 		}
-		yield `: Record<string, string> & ${ctx.localTypes.PrettifyLocal}<{}`;
+		yield `: `;
+		if (!options.vueCompilerOptions.strictCssModules) {
+			yield `Record<string, string> & `;
+		}
+		yield `${ctx.localTypes.PrettifyLocal}<{}`;
 		for (const className of style.classNames) {
 			yield* generateCssClassProperty(
 				i,
