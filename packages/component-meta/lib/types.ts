@@ -13,6 +13,7 @@ export interface ComponentMeta {
 	events: EventMeta[];
 	slots: SlotMeta[];
 	exposed: ExposeMeta[];
+	[key: string]: any
 }
 
 export enum TypeMeta {

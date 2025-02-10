@@ -266,8 +266,9 @@ ${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 		let _events: ReturnType<typeof getEvents> | undefined;
 		let _slots: ReturnType<typeof getSlots> | undefined;
 		let _exposed: ReturnType<typeof getExposed> | undefined;
+		let _extended_meta: ReturnType<typeof getExtendedMeta> | undefined;
 
-		return {
+		const meta = {
 			get type() {
 				return _type ?? (_type = getType());
 			},
@@ -282,8 +283,16 @@ ${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			},
 			get exposed() {
 				return _exposed ?? (_exposed = getExposed());
-			},
-		};
+			}
+		}
+
+		return new Proxy(meta, {
+			get(target, prop) {
+				if (prop in target) return target[prop as keyof typeof target]
+				const extendedMeta = _extended_meta ?? (_extended_meta = getExtendedMeta())
+				return extendedMeta?.[prop as string]
+			}
+		})
 
 		function getType() {
 
@@ -295,6 +304,36 @@ ${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 			}
 
 			return 0;
+		}
+
+
+		function getExtendedMeta() {
+			let meta: Record<string, any> = {};
+			const snapshot = language.scripts.get(componentPath)?.snapshot!;
+			const fileText = snapshot.getText(0, snapshot.getLength());
+			const ast = ts.createSourceFile('/temp', fileText, ts.ScriptTarget.Latest, true);
+			const identifier = 'defineComponentMeta'
+			const printer = ts.createPrinter(checkerOptions.printer);
+
+			if (!ast.identifiers.get(identifier)) return
+
+			function traverse(node: ts.Node): void {
+				if (ts.isIdentifier(node) && node.text === identifier) {
+					const argument = node.parent.arguments[0];
+					if (ts.isObjectLiteralExpression(argument)) {
+						argument.properties.forEach(property => {
+							if (!ts.isPropertyAssignment(property)) return
+							const key = property.name.getText();
+							const valueNode = resolveDefaultOptionExpression(property.initializer, ts);
+							meta[key] = printer?.printNode(ts.EmitHint.Expression, valueNode, ast) ?? valueNode.getText(ast)
+						});
+					}
+				}
+				return ts.forEachChild(node, traverse)
+			}
+
+			traverse(ast);
+			return meta;
 		}
 
 		function getProps() {
