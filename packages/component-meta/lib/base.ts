@@ -336,8 +336,11 @@ ${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts) : {})
 				: {};
 			const tsDefaults = !vueFile ? readTsComponentDefaultProps(
-				componentPath.slice(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
-				snapshot.getText(0, snapshot.getLength()),
+				ts.createSourceFile(
+					'/tmp.' + componentPath.slice(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
+					snapshot.getText(0, snapshot.getLength()),
+					ts.ScriptTarget.Latest
+				),
 				exportName,
 				printer,
 				ts
@@ -785,7 +788,7 @@ function readVueComponentDefaultProps(
 		const sfc = root._sfc;
 
 		if (sfc.script) {
-			const scriptResult = readTsComponentDefaultProps(sfc.script.lang, sfc.script.content, 'default', printer, ts);
+			const scriptResult = readTsComponentDefaultProps(sfc.script.ast, 'default', printer, ts);
 			for (const [key, value] of Object.entries(scriptResult)) {
 				result[key] = value;
 			}
@@ -794,14 +797,11 @@ function readVueComponentDefaultProps(
 }
 
 function readTsComponentDefaultProps(
-	lang: string,
-	tsFileText: string,
+	ast: ts.SourceFile,
 	exportName: string,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript')
 ) {
-
-	const ast = ts.createSourceFile('/tmp.' + lang, tsFileText, ts.ScriptTarget.Latest);
 	const props = getPropsNode();
 
 	if (props) {
