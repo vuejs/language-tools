@@ -13,12 +13,12 @@ const ScriptSetupExact = defineComponent({
 		g: PropType<string>;
 	},
 	emits: {} as {
-		"update:modelValue": (_:string) => void
-		"update:c": (_:number) => void
-		"update:d": (_:number) => void
-		"update:e": (_:string) => void
-		"update:f": (_:string) => void
-		"update:g": (_:string) => void
+		"update:modelValue": (_: string | undefined) => void
+		"update:c": (_: number) => void
+		"update:d": (_: number | undefined) => void
+		"update:e": (_: string | undefined) => void
+		"update:f": (_: string) => void
+		"update:g": (_: string | undefined) => void
 	},
 	setup() {
 		return {};
@@ -32,11 +32,11 @@ exactType(ScriptSetup, ScriptSetupExact);
 	<ScriptSetup 
 		:c="0"
 		f=""
-		@update:model-value="(x) => exactType(x, {} as string)"
+		@update:model-value="(x) => exactType(x, {} as string | undefined)"
 		@update:c="(x) => exactType(x, {} as number)"
-		@update:d="(x) => exactType(x, {} as number)"
-		@update:e="(x) => exactType(x, {} as string)"
+		@update:d="(x) => exactType(x, {} as number | undefined)"
+		@update:e="(x) => exactType(x, {} as string | undefined)"
 		@update:f="(x) => exactType(x, {} as string)"
-		@update:g="(x) => exactType(x, {} as string)"
+		@update:g="(x) => exactType(x, {} as string | undefined)"
 	/>
 </template>
