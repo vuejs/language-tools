@@ -524,6 +524,9 @@ function* generateModelEmit(
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
 			yield `'update:${propName}': [value: `;
 			yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
+			if (!defineModel.required) {
+				yield ` | undefined`;
+			}
 			yield `]${endOfLine}`;
 		}
 		yield `}${endOfLine}`;
