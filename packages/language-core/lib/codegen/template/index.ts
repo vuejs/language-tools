@@ -69,10 +69,10 @@ function* generateSlots(
 ): Generator<Code> {
 	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
 	if (!options.hasDefineSlots) {
-		yield `var __VLS_slots!: __VLS_OmitStringIndex<typeof __VLS_ctx.${name}> & `;
+		yield `var __VLS_slots!: __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.${name}> & Readonly<${newLine}`;
 		for (const { expVar, propsVar } of ctx.dynamicSlots) {
 			ctx.hasSlot = true;
-			yield `Partial<Record<NonNullable<typeof ${expVar}>, (props: typeof ${propsVar}) => any>> &${newLine}`;
+			yield `{ [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any } &${newLine}`;
 		}
 		yield `{${newLine}`;
 		for (const slot of ctx.slots) {
@@ -97,7 +97,7 @@ function* generateSlots(
 			}
 			yield `?(props: typeof ${slot.propsVar}): any,${newLine}`;
 		}
-		yield `}${endOfLine}`;
+		yield `}>>${endOfLine}`;
 	}
 	return `typeof ${options.slotsAssignName ?? `__VLS_slots`}`;
 }
