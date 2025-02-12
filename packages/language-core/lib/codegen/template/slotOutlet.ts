@@ -14,7 +14,7 @@ export function* generateSlotOutlet(
 	node: CompilerDOM.SlotOutletNode
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
-	const varSlot = ctx.getInternalVariable();
+	const propsVar = ctx.getInternalVariable();
 	const nameProp = node.props.find(prop => {
 		if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
 			return prop.name === 'name';
@@ -43,7 +43,7 @@ export function* generateSlotOutlet(
 					? `'${nameProp.value.content}'`
 					: nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE && nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 						? nameProp.exp.content
-						: `('default' as const)`
+						: `'default'`
 			),
 			`]`
 		);
@@ -66,7 +66,7 @@ export function* generateSlotOutlet(
 		yield `)${endOfLine}`;
 	}
 	else {
-		yield `var ${varSlot} = {${newLine}`;
+		yield `var ${propsVar} = {${newLine}`;
 		yield* generateElementProps(
 			options,
 			ctx,
@@ -83,10 +83,10 @@ export function* generateSlotOutlet(
 		) {
 			ctx.slots.push({
 				name: nameProp.value.content,
-				loc: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
+				offset: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
 				tagRange: [startTagOffset, startTagOffset + node.tag.length],
-				varName: varSlot,
 				nodeLoc: node.loc,
+				propsVar,
 			});
 		}
 		else if (
@@ -97,8 +97,8 @@ export function* generateSlotOutlet(
 			if (isShortHand) {
 				ctx.inlayHints.push(createVBindShorthandInlayHintInfo(nameProp.exp.loc, 'name'));
 			}
-			const slotExpVar = ctx.getInternalVariable();
-			yield `var ${slotExpVar} = `;
+			const expVar = ctx.getInternalVariable();
+			yield `var ${expVar} = __VLS_tryAsConstant(`;
 			yield* generateInterpolation(
 				options,
 				ctx,
@@ -106,22 +106,20 @@ export function* generateSlotOutlet(
 				ctx.codeFeatures.all,
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,
-				nameProp.exp,
-				'(',
-				')'
+				nameProp.exp
 			);
-			yield ` as const${endOfLine}`;
+			yield `)${endOfLine}`;
 			ctx.dynamicSlots.push({
-				expVar: slotExpVar,
-				varName: varSlot,
+				expVar,
+				propsVar,
 			});
 		}
 		else {
 			ctx.slots.push({
 				name: 'default',
 				tagRange: [startTagOffset, startTagOffset + node.tag.length],
-				varName: varSlot,
 				nodeLoc: node.loc,
+				propsVar,
 			});
 		}
 	}
