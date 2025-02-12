@@ -138,8 +138,8 @@ export function baseCreate(
 	const directoryExists = languageServiceHost.directoryExists?.bind(languageServiceHost);
 	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
 	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
-	const globalTypesName = `${commandLine.vueOptions.lib}_${commandLine.vueOptions.target}_${commandLine.vueOptions.strictTemplates}.d.ts`;
-	const globalTypesContents = `// @ts-nocheck\nexport {};\n` + vue.generateGlobalTypes(commandLine.vueOptions.lib, commandLine.vueOptions.target, commandLine.vueOptions.strictTemplates);
+	const globalTypesName = vue.getGlobalTypesFileName(commandLine.vueOptions);
+	const globalTypesContents = `// @ts-nocheck\nexport {};\n` + vue.generateGlobalTypes(commandLine.vueOptions);
 	const globalTypesSnapshot: ts.IScriptSnapshot = {
 		getText: (start, end) => globalTypesContents.slice(start, end),
 		getLength: () => globalTypesContents.length,
@@ -328,15 +328,19 @@ ${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 
 			// fill defaults
 			const printer = ts.createPrinter(checkerOptions.printer);
-			const snapshot = language.scripts.get(componentPath)?.snapshot!;
+			const sourceScript = language.scripts.get(componentPath)!;
+			const { snapshot } = sourceScript;
 
-			const vueFile = language.scripts.get(componentPath)?.generated?.root;
+			const vueFile = sourceScript.generated?.root;
 			const vueDefaults = vueFile && exportName === 'default'
-				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts, commandLine.vueOptions) : {})
+				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts) : {})
 				: {};
 			const tsDefaults = !vueFile ? readTsComponentDefaultProps(
-				componentPath.slice(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
-				snapshot.getText(0, snapshot.getLength()),
+				ts.createSourceFile(
+					'/tmp.' + componentPath.slice(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
+					snapshot.getText(0, snapshot.getLength()),
+					ts.ScriptTarget.Latest
+				),
 				exportName,
 				printer,
 				ts
@@ -674,9 +678,9 @@ function createSchemaResolvers(
 	}
 	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
 		const fileName = declaration.getSourceFile().fileName;
-		const sourceFile = language.scripts.get(fileName);
-		if (sourceFile?.generated) {
-			const script = sourceFile.generated.languagePlugin.typescript?.getServiceScript(sourceFile.generated.root);
+		const sourceScript = language.scripts.get(fileName);
+		if (sourceScript?.generated) {
+			const script = sourceScript.generated.languagePlugin.typescript?.getServiceScript(sourceScript.generated.root);
 			if (script) {
 				for (const [sourceScript, map] of language.maps.forEach(script.code)) {
 					for (const [start] of map.toSourceLocation(declaration.getStart())) {
@@ -707,12 +711,14 @@ function createSchemaResolvers(
 }
 
 function readVueComponentDefaultProps(
-	vueSourceFile: vue.VueVirtualCode,
+	root: vue.VueVirtualCode,
 	printer: ts.Printer | undefined,
-	ts: typeof import('typescript'),
-	vueCompilerOptions: vue.VueCompilerOptions
+	ts: typeof import('typescript')
 ) {
-	let result: Record<string, { default?: string, required?: boolean; }> = {};
+	let result: Record<string, {
+		default?: string;
+		required?: boolean;
+	}> = {};
 
 	scriptSetupWorker();
 	scriptWorker();
@@ -721,15 +727,16 @@ function readVueComponentDefaultProps(
 
 	function scriptSetupWorker() {
 
-		const descriptor = vueSourceFile._sfc;
-		const scriptSetupRanges = descriptor.scriptSetup ? vue.parseScriptSetupRanges(ts, descriptor.scriptSetup.ast, vueCompilerOptions) : undefined;
+		const ast = root._sfc.scriptSetup?.ast;
+		if (!ast) {
+			return;
+		}
 
-		if (descriptor.scriptSetup && scriptSetupRanges?.withDefaults?.arg) {
+		const codegen = vue.tsCodegen.get(root._sfc);
+		const scriptSetupRanges = codegen?.scriptSetupRanges.get();
 
-			const defaultsText = descriptor.scriptSetup.content.slice(scriptSetupRanges.withDefaults.arg.start, scriptSetupRanges.withDefaults.arg.end);
-			const ast = ts.createSourceFile('/tmp.' + descriptor.scriptSetup.lang, '(' + defaultsText + ')', ts.ScriptTarget.Latest);
-			const obj = findObjectLiteralExpression(ast);
-
+		if (scriptSetupRanges?.withDefaults?.argNode) {
+			const obj = findObjectLiteralExpression(scriptSetupRanges.withDefaults.argNode);
 			if (obj) {
 				for (const prop of obj.properties) {
 					if (ts.isPropertyAssignment(prop)) {
@@ -743,16 +750,22 @@ function readVueComponentDefaultProps(
 					}
 				}
 			}
-		} else if (descriptor.scriptSetup && scriptSetupRanges?.defineProps?.arg) {
-			const defaultsText = descriptor.scriptSetup.content.slice(scriptSetupRanges.defineProps.arg.start, scriptSetupRanges.defineProps.arg.end);
-			const ast = ts.createSourceFile('/tmp.' + descriptor.scriptSetup.lang, '(' + defaultsText + ')', ts.ScriptTarget.Latest);
-			const obj = findObjectLiteralExpression(ast);
-
+		}
+		else if (scriptSetupRanges?.defineProps?.argNode) {
+			const obj = findObjectLiteralExpression(scriptSetupRanges.defineProps.argNode);
 			if (obj) {
 				result = {
 					...result,
 					...resolvePropsOption(ast, obj, printer, ts),
 				};
+			}
+		}
+		else if (scriptSetupRanges?.defineProps?.destructured) {
+			for (const [prop, initializer] of scriptSetupRanges.defineProps.destructured) {
+				if (initializer) {
+					const expText = printer?.printNode(ts.EmitHint.Expression, initializer, ast) ?? initializer.getText(ast);
+					result[prop] = { default: expText };
+				}
 			}
 		}
 
@@ -772,10 +785,10 @@ function readVueComponentDefaultProps(
 
 	function scriptWorker() {
 
-		const descriptor = vueSourceFile._sfc;
+		const sfc = root._sfc;
 
-		if (descriptor.script) {
-			const scriptResult = readTsComponentDefaultProps(descriptor.script.lang, descriptor.script.content, 'default', printer, ts);
+		if (sfc.script) {
+			const scriptResult = readTsComponentDefaultProps(sfc.script.ast, 'default', printer, ts);
 			for (const [key, value] of Object.entries(scriptResult)) {
 				result[key] = value;
 			}
@@ -784,14 +797,11 @@ function readVueComponentDefaultProps(
 }
 
 function readTsComponentDefaultProps(
-	lang: string,
-	tsFileText: string,
+	ast: ts.SourceFile,
 	exportName: string,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript')
 ) {
-
-	const ast = ts.createSourceFile('/tmp.' + lang, tsFileText, ts.ScriptTarget.Latest);
 	const props = getPropsNode();
 
 	if (props) {

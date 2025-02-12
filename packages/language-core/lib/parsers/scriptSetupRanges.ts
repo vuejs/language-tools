@@ -24,12 +24,17 @@ type DefineProp = {
 
 type DefineProps = CallExpressionRange & {
 	name?: string;
-	destructured?: Set<string>;
+	destructured?: Map<string, ts.Expression | undefined>;
 	destructuredRest?: string;
 	statement: TextRange;
+	// used by component-meta
+	argNode?: ts.Expression;
 };
 
-type WithDefaults = Pick<CallExpressionRange, 'callExp' | 'exp' | 'arg'>;
+type WithDefaults = Omit<CallExpressionRange, 'typeArg'> & {
+	// used by component-meta
+	argNode?: ts.Expression;
+};
 
 type DefineEmits = CallExpressionRange & {
 	name?: string;
@@ -281,19 +286,20 @@ export function parseScriptSetupRanges(
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 				defineProps = {
 					...parseCallExpression(node),
-					statement: getStatementRange(ts, parents, node, ast)
+					statement: getStatementRange(ts, parents, node, ast),
+					argNode: node.arguments[0]
 				};
 				if (ts.isVariableDeclaration(parent)) {
 					if (ts.isObjectBindingPattern(parent.name)) {
-						defineProps.destructured = new Set();
+						defineProps.destructured = new Map();
 						const identifiers = collectIdentifiers(ts, parent.name, []);
-						for (const [id, isRest] of identifiers) {
+						for (const { id, isRest, initializer } of identifiers) {
 							const name = _getNodeText(id);
 							if (isRest) {
 								defineProps.destructuredRest = name;
 							}
 							else {
-								defineProps.destructured.add(name);
+								defineProps.destructured.set(name, initializer);
 							}
 						}
 					}
@@ -316,7 +322,8 @@ export function parseScriptSetupRanges(
 				withDefaults = {
 					callExp: _getStartEnd(node),
 					exp: _getStartEnd(node.expression),
-					arg: arg ? _getStartEnd(arg) : undefined
+					arg: arg ? _getStartEnd(arg) : undefined,
+					argNode: arg
 				};
 			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {

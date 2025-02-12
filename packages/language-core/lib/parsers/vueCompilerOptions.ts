@@ -1,8 +1,8 @@
-import type { VueCompilerOptions } from '../types';
+import type { RawVueCompilerOptions } from '../types';
 
 const syntaxReg = /^\s*@(?<key>.+?)\s+(?<value>.+?)\s*$/m;
 
-export function parseVueCompilerOptions(comments: string[]): Partial<VueCompilerOptions> | undefined {
+export function parseVueCompilerOptions(comments: string[]): RawVueCompilerOptions | undefined {
 	const entries = comments
 		.map(text => {
 			try {

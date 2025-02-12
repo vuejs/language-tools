@@ -34,7 +34,7 @@ export default {
 declare const Comp: new <T>(props: { value: T; }) => {
 	$props: typeof props;
 	$slots: {
-		foo: (_: T) => VNode[];
+		foo: (props: T) => VNode[];
 	},
 };
 </script>
@@ -47,10 +47,8 @@ const baz = ref('baz' as const);
 
 const slots = useSlots();
 exactType(slots, {} as Readonly<{
-	foo?(_: any): any;
-}> & {
-	bar?(_: { str: string; num: number; }): any;
-} & {
-	baz?(_: { str: string; num: number; }): any;
-});
+	foo?: (props: any) => any;
+	bar?: (props: { str: string; num: number; }) => any;
+	baz?: (props: { str: string; num: number; }) => any;
+}>);
 </script>
