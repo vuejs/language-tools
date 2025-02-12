@@ -31,7 +31,7 @@ export default { name: 'Self' };
 declare const Comp: new <T>(props: { value: T; }) => {
 	$props: typeof props;
 	$slots: {
-		foo: (_: T) => VNode[];
+		foo: (props: T) => VNode[];
 	},
 };
 </script>
@@ -44,8 +44,7 @@ const baz = ref('baz' as const);
 
 const slots = useSlots();
 exactType(slots, {} as {
-	bar?(_: { str: string; num: number; }): any;
-} & {
-	baz?(_: { str: string; num: number; }): any;
+	bar?: (props: { str: string; num: number; }) => any;
+	baz?: (props: { str: string; num: number; }) => any;
 });
 </script>
