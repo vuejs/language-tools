@@ -67,36 +67,41 @@ function* generateSlots(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
+	const name = getSlotsPropertyName(options.vueCompilerOptions.target);
 	if (!options.hasDefineSlots) {
-		yield `var __VLS_slots!: `;
-		for (const { expVar, varName } of ctx.dynamicSlots) {
-			ctx.hasSlot = true;
-			yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
-		}
-		yield `{${newLine}`;
-		for (const slot of ctx.slots) {
-			ctx.hasSlot = true;
-			if (slot.name && slot.loc !== undefined) {
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					slot.name,
-					slot.loc,
-					ctx.codeFeatures.withoutHighlightAndCompletion,
-					slot.nodeLoc
-				);
+		yield `var __VLS_slots!: __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.${name}>`;
+		if (ctx.dynamicSlots.length || ctx.slots.length) {
+			yield ` & Readonly<`;
+			for (const { expVar, propsVar } of ctx.dynamicSlots) {
+				ctx.hasSlot = true;
+				yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
 			}
-			else {
-				yield* wrapWith(
-					slot.tagRange[0],
-					slot.tagRange[1],
-					ctx.codeFeatures.withoutHighlightAndCompletion,
-					`default`
-				);
+			for (const slot of ctx.slots) {
+				yield `${newLine}& { `;
+				ctx.hasSlot = true;
+				if (slot.name && slot.offset !== undefined) {
+					yield* generateObjectProperty(
+						options,
+						ctx,
+						slot.name,
+						slot.offset,
+						ctx.codeFeatures.withoutHighlightAndCompletion,
+						slot.nodeLoc
+					);
+				}
+				else {
+					yield* wrapWith(
+						slot.tagRange[0],
+						slot.tagRange[1],
+						ctx.codeFeatures.withoutHighlightAndCompletion,
+						`default`
+					);
+				}
+				yield `?: (props: typeof ${slot.propsVar}) => any }`;
 			}
-			yield `?(_: typeof ${slot.varName}): any,${newLine}`;
+			yield `${newLine}>`;
 		}
-		yield `}${endOfLine}`;
+		yield `>${endOfLine}`;
 	}
 	return `typeof ${options.slotsAssignName ?? `__VLS_slots`}`;
 }

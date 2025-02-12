@@ -1,13 +1,19 @@
 import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 
-export function getGlobalTypesFileName(options: VueCompilerOptions) {
+export function getGlobalTypesFileName({
+	lib,
+	target,
+	checkUnknownProps,
+	checkUnknownEvents,
+	checkUnknownComponents,
+}: VueCompilerOptions) {
 	return [
-		options.lib,
-		options.target,
-		options.checkUnknownProps,
-		options.checkUnknownEvents,
-		options.checkUnknownComponents,
+		lib,
+		target,
+		checkUnknownProps,
+		checkUnknownEvents,
+		checkUnknownComponents,
 	].map(v => {
 		if (typeof v === 'boolean') {
 			return v ? 1 : 0;
@@ -16,8 +22,13 @@ export function getGlobalTypesFileName(options: VueCompilerOptions) {
 	}).join('_') + '.d.ts';
 }
 
-export function generateGlobalTypes(options: VueCompilerOptions) {
-	const { lib, target, checkUnknownProps, checkUnknownEvents, checkUnknownComponents } = options;
+export function generateGlobalTypes({
+	lib,
+	target,
+	checkUnknownProps,
+	checkUnknownEvents,
+	checkUnknownComponents,
+}: VueCompilerOptions) {
 	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${checkUnknownProps ? '' : ' & Record<string, unknown>'}`;
 	let text = ``;
 	if (target < 3.5) {
@@ -115,6 +126,9 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		'__ctx' extends keyof __VLS_PickNotAny<K, {}> ? K extends { __ctx?: infer Ctx } ? Ctx : never : any
 		, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
 	>>;
+	type __VLS_OmitStringIndex<T> = {
+		[K in keyof T as string extends K ? never : K]: T[K];
+	};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
 
 	function __VLS_getVForSourceType(source: number): [number, number][];
