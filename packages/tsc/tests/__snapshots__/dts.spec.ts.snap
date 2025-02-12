@@ -11,10 +11,8 @@ declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<t
     } & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
-    slots: __VLS_OmitStringIndex<Readonly<{
-        [name: string]: import("vue").Slot<any>;
-    }>> & {
-        default?(props: {
+    slots: {
+        readonly default?: (props: {
             row: Row;
         }) => any;
     };
@@ -608,12 +606,15 @@ declare var __VLS_3: {
     num: number;
     str: string;
 };
-declare var __VLS_slots: __VLS_OmitStringIndex<typeof __VLS_ctx.$slots> & {
-    'no-bind'?(props: typeof __VLS_0): any;
-    default?(props: typeof __VLS_1): any;
-    'named-slot'?(props: typeof __VLS_2): any;
-    vbind?(props: typeof __VLS_3): any;
-};
+declare var __VLS_slots: __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.$slots> & Readonly<{
+    'no-bind'?: (props: typeof __VLS_0) => any;
+} & {
+    default?: (props: typeof __VLS_1) => any;
+} & {
+    'named-slot'?: (props: typeof __VLS_2) => any;
+} & {
+    vbind?: (props: typeof __VLS_3) => any;
+}>>;
 type __VLS_TemplateSlots = typeof __VLS_slots;
 declare const __VLS_self: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
@@ -701,12 +702,15 @@ declare var __VLS_3: {
     num: number;
     str: string;
 };
-declare var __VLS_slots: __VLS_OmitStringIndex<typeof __VLS_ctx.$slots> & {
-    'no-bind'?(props: typeof __VLS_0): any;
-    default?(props: typeof __VLS_1): any;
-    'named-slot'?(props: typeof __VLS_2): any;
-    vbind?(props: typeof __VLS_3): any;
-};
+declare var __VLS_slots: __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.$slots> & Readonly<{
+    'no-bind'?: (props: typeof __VLS_0) => any;
+} & {
+    default?: (props: typeof __VLS_1) => any;
+} & {
+    'named-slot'?: (props: typeof __VLS_2) => any;
+} & {
+    vbind?: (props: typeof __VLS_3) => any;
+}>>;
 type __VLS_TemplateSlots = typeof __VLS_slots;
 declare const __VLS_self: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
