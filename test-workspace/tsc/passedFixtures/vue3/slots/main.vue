@@ -45,7 +45,6 @@ const baz = ref('baz' as const);
 const slots = useSlots();
 exactType(slots, {} as {
 	bar?: (props: { str: string; num: number; }) => any;
-} & {
 	baz?: (props: { str: string; num: number; }) => any;
 });
 </script>
