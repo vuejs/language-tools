@@ -46,9 +46,9 @@ import { exactType } from '../../shared';
 const baz = ref('baz' as const);
 
 const slots = useSlots();
-exactType(slots, {} as Readonly<{
-	foo?: (props: any) => any;
+exactType(slots, {} as {
+	readonly foo?: (props: any) => any;
 	bar?: (props: { str: string; num: number; }) => any;
 	baz?: (props: { str: string; num: number; }) => any;
-}>);
+});
 </script>
