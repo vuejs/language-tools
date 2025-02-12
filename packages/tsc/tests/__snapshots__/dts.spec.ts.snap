@@ -605,12 +605,15 @@ declare var __VLS_3: {
     num: number;
     str: string;
 };
-declare var __VLS_slots: {
+declare var __VLS_slots: __VLS_PrettifyGlobal<{} & {
     'no-bind'?: (props: typeof __VLS_0) => any;
+} & {
     default?: (props: typeof __VLS_1) => any;
+} & {
     'named-slot'?: (props: typeof __VLS_2) => any;
+} & {
     vbind?: (props: typeof __VLS_3) => any;
-};
+}>;
 type __VLS_TemplateSlots = typeof __VLS_slots;
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, __VLS_TemplateSlots>;
@@ -696,12 +699,15 @@ declare var __VLS_3: {
     num: number;
     str: string;
 };
-declare var __VLS_slots: {
+declare var __VLS_slots: __VLS_PrettifyGlobal<{} & {
     'no-bind'?: (props: typeof __VLS_0) => any;
+} & {
     default?: (props: typeof __VLS_1) => any;
+} & {
     'named-slot'?: (props: typeof __VLS_2) => any;
+} & {
     vbind?: (props: typeof __VLS_3) => any;
-};
+}>;
 type __VLS_TemplateSlots = typeof __VLS_slots;
 declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
 declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, __VLS_TemplateSlots>;
