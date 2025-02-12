@@ -271,7 +271,7 @@ export function* generateElementProps(
 	}
 }
 
-function* generatePropExp(
+export function* generatePropExp(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,

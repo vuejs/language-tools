@@ -4,9 +4,10 @@ import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine, wrapWith } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
-import { generateElementProps } from './elementProps';
+import { generateElementProps, generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generatePropertyAccess } from './propertyAccess';
 
 export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,
@@ -30,23 +31,59 @@ export function* generateSlotOutlet(
 
 	if (options.hasDefineSlots) {
 		yield `__VLS_normalizeSlot(`;
-		yield* wrapWith(
-			node.loc.start.offset,
-			node.loc.end.offset,
-			ctx.codeFeatures.verification,
-			`${options.slotsAssignName ?? '__VLS_slots'}[`,
-			...wrapWith(
+		if (nameProp) {
+			let codes: Generator<Code> | Code[];
+			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
+				let { source, start: { offset } } = nameProp.value.loc;
+				if (source.startsWith('"') || source.startsWith("'")) {
+					source = source.slice(1, -1);
+					offset++;
+				}
+				codes = generatePropertyAccess(
+					options,
+					ctx,
+					source,
+					offset,
+					ctx.codeFeatures.navigationAndVerification
+				);
+			}
+			else if (
+				nameProp.type === CompilerDOM.NodeTypes.DIRECTIVE
+				&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			) {
+				codes = [
+					`[`,
+					...generatePropExp(
+						options,
+						ctx,
+						nameProp,
+						nameProp.exp,
+						ctx.codeFeatures.all,
+						true
+					),
+					`]`
+				];
+			}
+			else {
+				codes = [`['default']`];
+			}
+
+			yield* wrapWith(
+				nameProp.loc.start.offset,
+				nameProp.loc.end.offset,
+				ctx.codeFeatures.verification,
+				`${options.slotsAssignName ?? '__VLS_slots'}`,
+				...codes
+			);
+		}
+		else {
+			yield* wrapWith(
 				node.loc.start.offset,
 				node.loc.end.offset,
 				ctx.codeFeatures.verification,
-				nameProp?.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value
-					? `'${nameProp.value.content}'`
-					: nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE && nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-						? nameProp.exp.content
-						: `'default'`
-			),
-			`]`
-		);
+				`${options.slotsAssignName ?? '__VLS_slots'}['default']`
+			);
+		}
 		yield `)?.(`;
 		yield* wrapWith(
 			startTagOffset,
