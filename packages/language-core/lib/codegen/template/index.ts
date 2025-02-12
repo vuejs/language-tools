@@ -71,7 +71,7 @@ function* generateSlots(
 		yield `var __VLS_slots!: `;
 		for (const { expVar, varName } of ctx.dynamicSlots) {
 			ctx.hasSlot = true;
-			yield `Partial<Record<NonNullable<typeof ${expVar}>, (_: typeof ${varName}) => any>> &${newLine}`;
+			yield `{ [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${varName}) => any } &${newLine}`;
 		}
 		yield `{${newLine}`;
 		for (const slot of ctx.slots) {
@@ -94,7 +94,7 @@ function* generateSlots(
 					`default`
 				);
 			}
-			yield `?(_: typeof ${slot.varName}): any,${newLine}`;
+			yield `?: (props: typeof ${slot.varName}) => any,${newLine}`;
 		}
 		yield `}${endOfLine}`;
 	}

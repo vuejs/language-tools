@@ -6,7 +6,7 @@ const vTest: ObjectDirective<HTMLElement, any | undefined> = {
 };
 
 defineSlots<{
-	default(): any;
+	default: () => any;
 }>();
 </script>
 
