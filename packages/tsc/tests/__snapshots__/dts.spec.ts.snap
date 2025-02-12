@@ -99,11 +99,11 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
     }>): void;
     attrs: any;
     slots: Readonly<{
-        default?: (data: {
+        default?: (props: {
             foo: number;
         }) => any;
     }> & {
-        default?: (data: {
+        default?: (props: {
             foo: number;
         }) => any;
     };
@@ -133,11 +133,11 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
     }>): void;
     attrs: any;
     slots: Readonly<{
-        default?: (data: {
+        default?: (props: {
             foo: number;
         }) => any;
     }> & {
-        default?: (data: {
+        default?: (props: {
             foo: number;
         }) => any;
     };
