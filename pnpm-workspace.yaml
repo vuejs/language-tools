@@ -32,7 +32,7 @@ catalog:
   "@vue/shared": *vue3
   "@vue/typescript-plugin": *vls
   alien-signals: ^0.4.9
-  esbuild: ^0.24.2
+  esbuild: ^0.25.0
   esbuild-visualizer: ^0.7.0
   minimatch: ^9.0.3
   muggle-string: ^0.4.1
@@ -42,7 +42,7 @@ catalog:
   typescript: ^5.7.2
   typescript-next: npm:typescript@5.7.0-dev.20240926
   typescript-stable: npm:typescript@~5.6.0
-  vitest: ^2.1.8
+  vitest: ^2.1.9
   volar-service-css: &volar-service 0.0.62
   volar-service-emmet: *volar-service
   volar-service-html: *volar-service
