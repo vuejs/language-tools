@@ -18,6 +18,6 @@
 		"@vue/shared": "^3.5.0"
 	},
 	"devDependencies": {
-		"@types/node": "latest"
+		"@types/node": "^22.10.4"
 	}
 }

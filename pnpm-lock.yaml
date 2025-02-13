@@ -9,31 +9,31 @@ importers:
   .:
     devDependencies:
       '@lerna-lite/cli':
-        specifier: latest
+        specifier: ^3.11.0
         version: 3.11.0(@lerna-lite/publish@3.11.0(@types/node@22.10.4)(typescript@5.7.2))(@lerna-lite/version@3.11.0(@lerna-lite/publish@3.11.0(@types/node@22.10.4)(typescript@5.7.2))(@types/node@22.10.4)(typescript@5.7.2))(@types/node@22.10.4)(typescript@5.7.2)
       '@lerna-lite/publish':
-        specifier: latest
+        specifier: ^3.11.0
         version: 3.11.0(@types/node@22.10.4)(typescript@5.7.2)
       '@tsslint/cli':
-        specifier: latest
+        specifier: ^1.5.0
         version: 1.5.0(typescript@5.7.2)
       '@tsslint/config':
-        specifier: latest
+        specifier: ^1.5.0
         version: 1.5.0(typescript@5.7.2)
       '@tsslint/eslint':
-        specifier: latest
+        specifier: ^1.5.0
         version: 1.5.0(typescript@5.7.2)
       '@typescript-eslint/eslint-plugin':
-        specifier: latest
+        specifier: ^8.19.0
         version: 8.19.0(@typescript-eslint/parser@8.19.0(eslint@9.17.0)(typescript@5.7.2))(eslint@9.17.0)(typescript@5.7.2)
       '@vue/language-core':
         specifier: 2.2.0
         version: link:packages/language-core
       typescript:
-        specifier: latest
+        specifier: ^5.7.2
         version: 5.7.2
       vitest:
-        specifier: latest
+        specifier: ^2.1.8
         version: 2.1.8(@types/node@22.10.4)
 
   extensions/vscode:
@@ -48,7 +48,7 @@ importers:
         specifier: ~2.4.11
         version: 2.4.11
       '@vscode/vsce':
-        specifier: latest
+        specifier: ^3.2.1
         version: 3.2.1
       '@vue/language-core':
         specifier: 2.2.0
@@ -60,10 +60,10 @@ importers:
         specifier: 2.2.0
         version: link:../../packages/typescript-plugin
       esbuild:
-        specifier: latest
+        specifier: ^0.24.2
         version: 0.24.2
       esbuild-visualizer:
-        specifier: latest
+        specifier: ^0.7.0
         version: 0.7.0
       reactive-vscode:
         specifier: ^0.2.9
@@ -75,7 +75,7 @@ importers:
         specifier: ^0.5.0
         version: 0.5.5
       vscode-tmlanguage-snapshot:
-        specifier: latest
+        specifier: ^0.1.3
         version: 0.1.3
 
   packages/component-meta:
@@ -97,10 +97,10 @@ importers:
         version: link:../component-type-helpers
     devDependencies:
       '@types/node':
-        specifier: latest
+        specifier: ^22.10.4
         version: 22.10.4
       '@types/path-browserify':
-        specifier: latest
+        specifier: ^1.0.1
         version: 1.0.3
 
   packages/component-type-helpers: {}
@@ -139,7 +139,7 @@ importers:
         specifier: ^5.1.2
         version: 5.1.2
       '@types/node':
-        specifier: latest
+        specifier: ^22.10.4
         version: 22.10.4
       '@types/path-browserify':
         specifier: ^1.0.1
@@ -161,7 +161,7 @@ importers:
         version: 0.0.62
     devDependencies:
       '@types/node':
-        specifier: latest
+        specifier: ^22.10.4
         version: 22.10.4
       '@vue/language-core':
         specifier: 2.2.0
@@ -258,10 +258,10 @@ importers:
         version: 3.0.8
     devDependencies:
       '@types/node':
-        specifier: latest
+        specifier: ^22.10.4
         version: 22.10.4
       '@types/path-browserify':
-        specifier: latest
+        specifier: ^1.0.1
         version: 1.0.3
       '@volar/kit':
         specifier: ~2.4.11
@@ -283,7 +283,7 @@ importers:
         version: 5.7.2
     devDependencies:
       '@types/node':
-        specifier: latest
+        specifier: ^22.10.4
         version: 22.10.4
 
   packages/typescript-plugin:
@@ -299,7 +299,7 @@ importers:
         version: 3.5.13
     devDependencies:
       '@types/node':
-        specifier: latest
+        specifier: ^22.10.4
         version: 22.10.4
 
   test-workspace:
