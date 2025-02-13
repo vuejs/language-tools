@@ -28,7 +28,7 @@
 <script lang="ts">
 export default {
 	name: 'Self',
-	slots: Object as SlotsType<{ foo?: (_: any) => any }>,
+	slots: Object as SlotsType<{ foo?: (props: any) => any }>,
 };
 
 declare const Comp: new <T>(props: { value: T; }) => {
