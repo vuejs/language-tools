@@ -70,9 +70,9 @@ function* generateIdentifier(
 			rawName,
 			prop.loc.start.offset,
 			ctx.resolveCodeFeatures({
+				...codeFeatures.withoutHighlight,
 				// fix https://github.com/vuejs/language-tools/issues/1905
 				...codeFeatures.additionalCompletion,
-				...codeFeatures.withoutHighlight,
 				verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
 				navigation: {
 					resolveRenameNewName: camelize,

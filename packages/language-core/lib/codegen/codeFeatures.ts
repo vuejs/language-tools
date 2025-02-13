@@ -51,6 +51,7 @@ export const codeFeatures = {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
 		navigation: true,
+		completion: true
 	} as VueCodeInformation,
 	withoutHighlightAndCompletion: {
 		semantic: { shouldHighlight: () => false },
