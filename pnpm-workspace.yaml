@@ -1,4 +1,63 @@
 packages:
-  - 'extensions/*'
-  - 'packages/*'
-  - 'test-workspace'
+  - extensions/*
+  - packages/*
+  - test-workspace
+catalog:
+  "@lerna-lite/cli": &lerna ^3.11.0
+  "@lerna-lite/publish": *lerna
+  "@tsslint/cli": &tsslint ^1.5.0
+  "@tsslint/config": *tsslint
+  "@tsslint/eslint": *tsslint
+  "@types/minimatch": ^5.1.2
+  "@types/node": ^22.10.4
+  "@types/path-browserify": ^1.0.1
+  "@types/semver": ^7.5.3
+  "@types/vscode": ^1.82.0
+  "@typescript-eslint/eslint-plugin": ^8.19.0
+  "@volar/kit": &volar ~2.4.11
+  "@volar/language-core": *volar
+  "@volar/language-server": *volar
+  "@volar/language-service": *volar
+  "@volar/source-map": *volar
+  "@volar/test-utils": *volar
+  "@volar/typescript": *volar
+  "@volar/vscode": *volar
+  "@vscode/vsce": ^3.2.1
+  "@vue/compiler-dom": &vue3 ^3.5.0
+  "@vue/compiler-sfc": *vue3
+  "@vue/compiler-vue2": ^2.7.16
+  "@vue/language-core": &vls 2.2.0
+  "@vue/language-server": *vls
+  "@vue/language-service": *vls
+  "@vue/shared": *vue3
+  "@vue/typescript-plugin": *vls
+  alien-signals: ^0.4.9
+  esbuild: ^0.24.2
+  esbuild-visualizer: ^0.7.0
+  minimatch: ^9.0.3
+  muggle-string: ^0.4.1
+  path-browserify: ^1.0.1
+  reactive-vscode: ^0.2.9
+  semver: ^7.5.4
+  typescript: ^5.7.2
+  typescript-next: npm:typescript@5.7.0-dev.20240926
+  typescript-stable: npm:typescript@~5.6.0
+  vitest: ^2.1.8
+  volar-service-css: &volar-service 0.0.62
+  volar-service-emmet: *volar-service
+  volar-service-html: *volar-service
+  volar-service-json: *volar-service
+  volar-service-pug: *volar-service
+  volar-service-pug-beautify: *volar-service
+  volar-service-typescript: *volar-service
+  volar-service-typescript-twoslash-queries: *volar-service
+  vscode-ext-gen: ^0.5.0
+  vscode-html-languageservice: ^5.2.0
+  vscode-languageserver-protocol: ^3.17.5
+  vscode-languageserver-textdocument: ^1.0.11
+  vscode-tmlanguage-snapshot: ^0.1.3
+  vscode-uri: ^3.0.8
+  vue: *vue3
+  vue-component-type-helpers: *vls
+  vue2: npm:vue@2.7.16
+  vue3.4: npm:vue@3.4.38

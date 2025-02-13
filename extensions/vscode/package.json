@@ -563,18 +563,18 @@
 		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {
-		"@types/semver": "^7.5.3",
-		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.4.11",
-		"@vscode/vsce": "latest",
-		"@vue/language-core": "2.2.0",
-		"@vue/language-server": "2.2.0",
-		"@vue/typescript-plugin": "2.2.0",
-		"esbuild": "latest",
-		"esbuild-visualizer": "latest",
-		"reactive-vscode": "^0.2.9",
-		"semver": "^7.5.4",
-		"vscode-ext-gen": "^0.5.0",
-		"vscode-tmlanguage-snapshot": "latest"
+		"@types/semver": "catalog:",
+		"@types/vscode": "catalog:",
+		"@volar/vscode": "catalog:",
+		"@vscode/vsce": "catalog:",
+		"@vue/language-core": "catalog:",
+		"@vue/language-server": "catalog:",
+		"@vue/typescript-plugin": "catalog:",
+		"esbuild": "catalog:",
+		"esbuild-visualizer": "catalog:",
+		"reactive-vscode": "catalog:",
+		"semver": "catalog:",
+		"vscode-ext-gen": "catalog:",
+		"vscode-tmlanguage-snapshot": "catalog:"
 	}
 }

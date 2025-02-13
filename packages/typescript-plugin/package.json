@@ -13,11 +13,11 @@
 		"directory": "packages/typescript-plugin"
 	},
 	"dependencies": {
-		"@volar/typescript": "~2.4.11",
-		"@vue/language-core": "2.2.0",
-		"@vue/shared": "^3.5.0"
+		"@volar/typescript": "catalog:",
+		"@vue/language-core": "catalog:",
+		"@vue/shared": "catalog:"
 	},
 	"devDependencies": {
-		"@types/node": "latest"
+		"@types/node": "catalog:"
 	}
 }

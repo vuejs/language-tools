@@ -27,7 +27,7 @@
 		}
 	},
 	"devDependencies": {
-		"@types/node": "latest",
-		"@types/path-browserify": "latest"
+		"@types/node": "catalog:",
+		"@types/path-browserify": "catalog:"
 	}
 }

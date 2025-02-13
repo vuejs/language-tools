@@ -17,13 +17,13 @@
 		"vue-tsc": "./bin/vue-tsc.js"
 	},
 	"dependencies": {
-		"@volar/typescript": "~2.4.11",
-		"@vue/language-core": "2.2.0"
+		"@volar/typescript": "catalog:",
+		"@vue/language-core": "catalog:"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:"
 	},
 	"peerDependencies": {
 		"typescript": ">=5.0.0"
-	},
-	"devDependencies": {
-		"@types/node": "latest"
 	}
 }

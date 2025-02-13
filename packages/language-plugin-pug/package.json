@@ -13,11 +13,11 @@
 		"directory": "packages/language-plugin-pug"
 	},
 	"devDependencies": {
-		"@types/node": "latest",
-		"@vue/language-core": "2.2.0"
+		"@types/node": "catalog:",
+		"@vue/language-core": "catalog:"
 	},
 	"dependencies": {
-		"@volar/source-map": "~2.4.11",
-		"volar-service-pug": "0.0.62"
+		"@volar/source-map": "catalog:",
+		"volar-service-pug": "catalog:"
 	}
 }

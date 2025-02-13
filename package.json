@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"packageManager": "pnpm@9.4.0",
+	"packageManager": "pnpm@9.6.0",
 	"scripts": {
 		"build": "tsc -b",
 		"watch": "pnpm run build && pnpm run \"/^watch:.*/\"",
@@ -20,14 +20,14 @@
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
-		"@lerna-lite/cli": "latest",
-		"@lerna-lite/publish": "latest",
-		"@tsslint/cli": "latest",
-		"@tsslint/config": "latest",
-		"@tsslint/eslint": "latest",
-		"@typescript-eslint/eslint-plugin": "latest",
-		"@vue/language-core": "2.2.0",
-		"typescript": "latest",
-		"vitest": "latest"
+		"@lerna-lite/cli": "catalog:",
+		"@lerna-lite/publish": "catalog:",
+		"@tsslint/cli": "catalog:",
+		"@tsslint/config": "catalog:",
+		"@tsslint/eslint": "catalog:",
+		"@typescript-eslint/eslint-plugin": "catalog:",
+		"@vue/language-core": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "catalog:"
 	}
 }
