@@ -65,10 +65,10 @@ export function* generateScriptSetup(
 		}
 
 		yield `return {} as {${newLine}`
-			+ `	props: ${ctx.localTypes.PrettifyLocal}<__VLS_OwnProps & __VLS_PublicProps & __VLS_TemplateAttrs> & __VLS_BuiltInPublicProps,${newLine}`
+			+ `	props: ${ctx.localTypes.PrettifyLocal}<__VLS_OwnProps & __VLS_PublicProps & Partial<__VLS_InheritedAttrs>> & __VLS_BuiltInPublicProps,${newLine}`
 			+ `	expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.defineExpose ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
 			+ `	attrs: any,${newLine}`
-			+ `	slots: __VLS_TemplateSlots,${newLine}`
+			+ `	slots: __VLS_Slots,${newLine}`
 			+ `	emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
 			+ `}${endOfLine}`;
 		yield `})(),${newLine}`; // __VLS_setup = (async () => {
@@ -106,8 +106,8 @@ function* generateSetupFunction(
 			scriptSetupRanges.withDefaults?.callExp ?? callExp,
 			typeArg,
 			name,
-			'__VLS_props',
-			'__VLS_Props'
+			`__VLS_props`,
+			`__VLS_Props`
 		));
 	}
 	if (scriptSetupRanges.defineEmits) {
@@ -118,25 +118,21 @@ function* generateSetupFunction(
 			callExp,
 			typeArg,
 			name,
-			'__VLS_emit',
-			'__VLS_Emit'
+			`__VLS_emit`,
+			`__VLS_Emit`
 		));
 	}
 	if (scriptSetupRanges.defineSlots) {
-		const { name, callExp, isObjectBindingPattern } = scriptSetupRanges.defineSlots;
-		if (isObjectBindingPattern) {
-			setupCodeModifies.push([
-				[`__VLS_slots;\nconst __VLS_slots = `],
-				callExp.start,
-				callExp.start,
-			]);
-		} else if (!name) {
-			setupCodeModifies.push([
-				[`const __VLS_slots = `],
-				callExp.start,
-				callExp.start
-			]);
-		}
+		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineSlots;
+		setupCodeModifies.push(...generateDefineWithType(
+			scriptSetup,
+			statement,
+			callExp,
+			typeArg,
+			name,
+			`__VLS_slots`,
+			`__VLS_Slots`
+		));
 	}
 	if (scriptSetupRanges.defineExpose) {
 		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
@@ -302,7 +298,7 @@ function* generateSetupFunction(
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield `${syntax} `;
-			yield `{} as ${ctx.localTypes.WithTemplateSlots}<typeof __VLS_component, __VLS_TemplateSlots>${endOfLine}`;
+			yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_component, __VLS_Slots>${endOfLine}`;
 		}
 		else {
 			yield `${syntax} `;
@@ -462,7 +458,7 @@ function* generateComponentProps(
 			yield ` & `;
 		}
 		ctx.generatedPropsType = true;
-		yield `${ctx.localTypes.PropsChildren}<typeof __VLS_slots>`;
+		yield `${ctx.localTypes.PropsChildren}<__VLS_Slots>`;
 	}
 	if (scriptSetupRanges.defineProp.length) {
 		if (ctx.generatedPropsType) {

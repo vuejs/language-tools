@@ -44,7 +44,6 @@ type DefineEmits = CallExpressionRange & {
 
 type DefineSlots = CallExpressionRange & {
 	name?: string;
-	isObjectBindingPattern?: boolean;
 	statement: TextRange;
 };
 
@@ -352,12 +351,7 @@ export function parseScriptSetupRanges(
 					statement: getStatementRange(ts, parents, node, ast)
 				};
 				if (ts.isVariableDeclaration(parent)) {
-					if (ts.isIdentifier(parent.name)) {
-						defineSlots.name = _getNodeText(parent.name);
-					}
-					else {
-						defineSlots.isObjectBindingPattern = ts.isObjectBindingPattern(parent.name);
-					}
+					defineSlots.name = _getNodeText(parent.name);
 				}
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {

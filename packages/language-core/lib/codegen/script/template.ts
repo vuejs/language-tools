@@ -124,17 +124,12 @@ function* generateTemplateBody(
 	else {
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.defineSlots) {
-			yield `const __VLS_slots = {}${endOfLine}`;
+			yield `type __VLS_Slots = {}${endOfLine}`;
 		}
-		yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
-		yield `const __VLS_refs = {}${endOfLine}`;
-		yield `const __VLS_rootEl = {} as any${endOfLine}`;
+		yield `type __VLS_InheritedAttrs = {}${endOfLine}`;
+		yield `type __VLS_TemplateRefs = {}${endOfLine}`;
+		yield `type __VLS_RootEl = any${endOfLine}`;
 	}
-
-	yield `type __VLS_TemplateAttrs = Partial<typeof __VLS_inheritedAttrs>${endOfLine}`;
-	yield `type __VLS_TemplateSlots = typeof ${options.scriptSetupRanges?.defineSlots?.name ?? '__VLS_slots'}${endOfLine}`;
-	yield `type __VLS_TemplateRefs = typeof __VLS_refs${endOfLine}`;
-	yield `type __VLS_TemplateEl = typeof __VLS_rootEl${endOfLine}`;
 }
 
 function* generateStyleScopedClasses(
