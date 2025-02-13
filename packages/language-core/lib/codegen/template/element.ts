@@ -230,6 +230,7 @@ export function* generateComponent(
 		{
 			verification: {
 				shouldReport(_source, code) {
+					// TS6133: 'VARIABLE' is declared but its value is never read.
 					return String(code) !== '6133';
 				},
 			}
