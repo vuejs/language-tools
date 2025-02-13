@@ -10,6 +10,10 @@ const cmds = [
 
 const directiveCommentReg = /<!--\s*@/;
 
+/**
+ * A language service plugin that provides completion for Vue directive comments,
+ * e.g. if user is writing `<!-- |` in they'll be provided completions for `@vue-expect-error`, `@vue-generic`, etc.
+ */
 export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-directive-comments',
