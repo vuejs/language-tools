@@ -16,14 +16,14 @@
 	"bin": {
 		"vue-tsc": "./bin/vue-tsc.js"
 	},
+	"peerDependencies": {
+		"typescript": ">=5.0.0"
+	},
 	"dependencies": {
 		"@volar/typescript": "catalog:",
 		"@vue/language-core": "catalog:"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:"
-	},
-	"peerDependencies": {
-		"typescript": ">=5.0.0"
 	}
 }

@@ -12,12 +12,12 @@
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/language-plugin-pug"
 	},
-	"devDependencies": {
-		"@types/node": "catalog:",
-		"@vue/language-core": "catalog:"
-	},
 	"dependencies": {
 		"@volar/source-map": "catalog:",
 		"volar-service-pug": "catalog:"
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"@vue/language-core": "catalog:"
 	}
 }

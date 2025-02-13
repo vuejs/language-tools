@@ -28,15 +28,15 @@ type __VLS_PrettifyLocal<T> = {
 `;
 
 exports[`vue-tsc-dts > Input: class-slots/component.vue, Output: class-slots/component.vue.d.ts 1`] = `
-"import { VNode } from 'vue';
+"import type { VNode } from 'vue';
 declare const _default: new () => {
     $slots: {
-        default(_: {
+        default: (props: {
             num: number;
-        }): VNode[];
-        foo(_: {
+        }) => VNode[];
+        foo: (props: {
             str: string;
-        }): VNode[];
+        }) => VNode[];
     };
 };
 export default _default;
