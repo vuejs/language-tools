@@ -3,7 +3,8 @@ import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
+import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { generateGlobalTypes, getGlobalTypesFileName } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
@@ -13,29 +14,6 @@ import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateStyleModulesType } from './styleModulesType';
 import { generateTemplate } from './template';
-
-export const codeFeatures = {
-	all: {
-		verification: true,
-		completion: true,
-		semantic: true,
-		navigation: true,
-	} as VueCodeInformation,
-	none: {} as VueCodeInformation,
-	verification: {
-		verification: true,
-	} as VueCodeInformation,
-	navigation: {
-		navigation: true,
-	} as VueCodeInformation,
-	navigationWithoutRename: {
-		navigation: {
-			shouldRename() {
-				return false;
-			},
-		},
-	} as VueCodeInformation,
-};
 
 export interface ScriptCodegenOptions {
 	ts: typeof ts;

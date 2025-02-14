@@ -1,11 +1,12 @@
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
 import { endOfLine, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
-import { codeFeatures, type ScriptCodegenOptions } from './index';
+import type { ScriptCodegenOptions } from './index';
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,

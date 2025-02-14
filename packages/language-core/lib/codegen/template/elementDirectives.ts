@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import type { Code } from '../../types';
 import { hyphenateAttr } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { endOfLine, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -59,12 +60,10 @@ function* generateIdentifier(
 			rawName,
 			prop.loc.start.offset,
 			{
-				...ctx.codeFeatures.all,
 				verification: false,
-				completion: {
-					// fix https://github.com/vuejs/language-tools/issues/1905
-					isAdditional: true,
-				},
+				// fix https://github.com/vuejs/language-tools/issues/1905
+				...codeFeatures.additionalCompletion,
+				semantic: true,
 				navigation: {
 					resolveRenameNewName: camelize,
 					resolveRenameEditText: getPropRenameApply(prop.name),

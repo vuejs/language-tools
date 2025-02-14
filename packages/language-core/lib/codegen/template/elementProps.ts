@@ -4,6 +4,7 @@ import { minimatch } from 'minimatch';
 import { toString } from 'muggle-string';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { newLine, variableNameRegex, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -380,28 +381,21 @@ function getPropsCodeInfo(
 	strictPropsCheck: boolean,
 	shouldCamelize: boolean
 ): VueCodeInformation {
-	const codeInfo = ctx.codeFeatures.withoutHighlightAndCompletion;
-	return {
-		...codeInfo,
-		navigation: codeInfo.navigation
-			? {
-				resolveRenameNewName: camelize,
-				resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
-			}
-			: false,
-		verification: strictPropsCheck
-			? codeInfo.verification
-			: {
-				shouldReport(_source, code) {
-					if (String(code) === '2353' || String(code) === '2561') {
-						return false;
-					}
-					return typeof codeInfo.verification === 'object'
-						? codeInfo.verification.shouldReport?.(_source, code) ?? true
-						: true;
-				},
-			}
-	};
+	return ctx.resolveCodeFeatures({
+		...codeFeatures.withoutHighlightAndCompletion,
+		verification: strictPropsCheck || {
+			shouldReport(_source, code) {
+				if (String(code) === '2353' || String(code) === '2561') {
+					return false;
+				}
+				return true;
+			},
+		},
+		navigation: {
+			resolveRenameNewName: camelize,
+			resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
+		},
+	});
 }
 
 function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: VueCompilerOptions) {

@@ -1,6 +1,6 @@
 import type { Code, Sfc } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { endOfLine } from '../utils';
-import { codeFeatures } from './index';
 
 export function* generateSrc(
 	script: NonNullable<Sfc['script']>,
