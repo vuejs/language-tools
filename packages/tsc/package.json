@@ -20,10 +20,10 @@
 		"typescript": ">=5.0.0"
 	},
 	"dependencies": {
-		"@volar/typescript": "~2.4.11",
-		"@vue/language-core": "2.2.0"
+		"@volar/typescript": "catalog:",
+		"@vue/language-core": "catalog:"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4"
+		"@types/node": "catalog:"
 	}
 }
