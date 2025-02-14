@@ -36,7 +36,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 							token.errors++;
 							return false;
 						}
- 					},
+					},
 				};
 			}
 		}
