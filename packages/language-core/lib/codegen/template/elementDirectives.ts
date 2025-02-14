@@ -59,9 +59,10 @@ function* generateIdentifier(
 			rawName,
 			prop.loc.start.offset,
 			{
+				...ctx.codeFeatures.withoutHighlight,
 				// fix https://github.com/vuejs/language-tools/issues/1905
 				...ctx.codeFeatures.additionalCompletion,
-				semantic: true,
+				verification: false,
 				navigation: {
 					resolveRenameNewName: camelize,
 					resolveRenameEditText: getPropRenameApply(prop.name),
@@ -140,7 +141,7 @@ export function* generateModifiers(
 			ctx,
 			mod.content,
 			mod.loc.start.offset,
-			ctx.codeFeatures.withoutNavigation
+			ctx.codeFeatures.withoutHighlightAndNavigation
 		);
 		yield `: true, `;
 	}
