@@ -41,7 +41,11 @@ export function collectVars(
 export function collectIdentifiers(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	results: Array<{ id: ts.Identifier, isRest: boolean, initializer: ts.Expression | undefined; }> = [],
+	results: {
+		id: ts.Identifier,
+		isRest: boolean,
+		initializer: ts.Expression | undefined;
+	}[] = [],
 	isRest = false,
 	initializer: ts.Expression | undefined = undefined
 ) {

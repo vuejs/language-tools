@@ -13,7 +13,7 @@
 		"directory": "packages/language-plugin-pug"
 	},
 	"devDependencies": {
-		"@types/node": "latest",
+		"@types/node": "^22.10.4",
 		"@vue/language-core": "2.2.0"
 	},
 	"dependencies": {

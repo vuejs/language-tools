@@ -24,7 +24,7 @@
 	},
 	"devDependencies": {
 		"@types/minimatch": "^5.1.2",
-		"@types/node": "latest",
+		"@types/node": "^22.10.4",
 		"@types/path-browserify": "^1.0.1",
 		"@volar/typescript": "~2.4.11",
 		"@vue/compiler-sfc": "^3.5.0"

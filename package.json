@@ -20,14 +20,14 @@
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
-		"@lerna-lite/cli": "latest",
-		"@lerna-lite/publish": "latest",
-		"@tsslint/cli": "latest",
-		"@tsslint/config": "latest",
-		"@tsslint/eslint": "latest",
-		"@typescript-eslint/eslint-plugin": "latest",
+		"@lerna-lite/cli": "^3.11.0",
+		"@lerna-lite/publish": "^3.11.0",
+		"@tsslint/cli": "^1.5.0",
+		"@tsslint/config": "^1.5.0",
+		"@tsslint/eslint": "^1.5.0",
+		"@typescript-eslint/eslint-plugin": "^8.19.0",
 		"@vue/language-core": "2.2.0",
-		"typescript": "latest",
-		"vitest": "latest"
+		"typescript": "^5.7.2",
+		"vitest": "^2.1.8"
 	}
 }

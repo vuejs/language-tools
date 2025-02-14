@@ -134,7 +134,7 @@ function* forEachInterpolationSegment(
 			const curVar = ctxVars[i];
 			const nextVar = ctxVars[i + 1];
 
-			yield* generateVar(code, ctx.specialVars, destructuredPropNames, templateRefNames, curVar, nextVar);
+			yield* generateVar(code, ctx.specialVars, destructuredPropNames, templateRefNames, curVar);
 
 			if (nextVar.isShorthand) {
 				yield [code.slice(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
@@ -161,12 +161,11 @@ function* generateVar(
 	specialVars: Set<string>,
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
-	curVar: CtxVar,
-	nextVar: CtxVar = curVar
+	curVar: CtxVar
 ): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly']> {
 	// fix https://github.com/vuejs/language-tools/issues/1205
 	// fix https://github.com/vuejs/language-tools/issues/1264
-	yield ['', nextVar.offset, 'errorMappingOnly'];
+	yield ['', curVar.offset, 'errorMappingOnly'];
 
 	const isDestructuredProp = destructuredPropNames?.has(curVar.text) ?? false;
 	const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;

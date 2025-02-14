@@ -1,70 +1,72 @@
 import type { VueCodeInformation } from '../types';
 
-export const codeFeatures = {
+const raw = {
 	all: {
 		verification: true,
 		completion: true,
 		semantic: true,
 		navigation: true,
-	} as VueCodeInformation,
-	none: {} as VueCodeInformation,
-
+	},
+	none: {},
 	verification: {
 		verification: true,
-	} as VueCodeInformation,
-
+	},
 	completion: {
 		completion: true,
-	} as VueCodeInformation,
+	},
 	additionalCompletion: {
 		completion: { isAdditional: true },
-	} as VueCodeInformation,
-
+	},
 	withoutCompletion: {
 		verification: true,
 		semantic: true,
 		navigation: true,
-	} as VueCodeInformation,
-
+	},
 	navigation: {
 		navigation: true,
-	} as VueCodeInformation,
+	},
 	navigationWithoutRename: {
 		navigation: { shouldRename: () => false },
-	} as VueCodeInformation,
+	},
 	navigationAndCompletion: {
 		navigation: true,
 		completion: true,
-	} as VueCodeInformation,
+	},
 	navigationAndAdditionalCompletion: {
 		navigation: true,
 		completion: { isAdditional: true },
-	} as VueCodeInformation,
-
+	},
+	navigationAndVerification: {
+		navigation: true,
+		verification: true,
+	},
 	withoutNavigation: {
 		verification: true,
 		completion: true,
 		semantic: true,
-	} as VueCodeInformation,
-
+	},
 	withoutHighlight: {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
 		navigation: true,
-		completion: true
-	} as VueCodeInformation,
-	withoutHighlightAndCompletion: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		navigation: true,
-	} as VueCodeInformation,
+		completion: true,
+	},
 	withoutHighlightAndNavigation: {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
 		completion: true,
-	} as VueCodeInformation,
+	},
+	withoutHighlightAndCompletion: {
+		semantic: { shouldHighlight: () => false },
+		verification: true,
+		navigation: true,
+	},
 	withoutHighlightAndCompletionAndNavigation: {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
-	} as VueCodeInformation,
+	},
+} satisfies Record<string, VueCodeInformation>;
+
+export const codeFeatures = raw as {
+	[K in keyof typeof raw]: VueCodeInformation;
 };

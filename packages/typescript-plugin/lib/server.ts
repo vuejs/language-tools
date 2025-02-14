@@ -102,7 +102,7 @@ export async function startNamedPipeServer(
 		connection.on('error', err => console.error('[Vue Named Pipe Server]', err.message));
 
 		for (const [fileName, [componentNames, componentProps]] of currentData) {
-			notify(connection, 'componentNamesUpdated', fileName, Object.keys(componentNames));
+			notify(connection, 'componentNamesUpdated', fileName, componentNames);
 
 			for (const [name, props] of Object.entries(componentProps)) {
 				notify(connection, 'componentPropsUpdated', fileName, [name, props]);

@@ -75,7 +75,7 @@ declare const ScriptSetupGenericExact: <T, >(
 			foo: T;
 		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
 		attrs: any,
-		slots: Readonly<{ default?(data: T): any; }> & { default?(data: T): any; },
+		slots: { default?: (props: T) => any; },
 		emit: { (e: 'bar', data: T): void; },
 		expose(_exposed: import('vue').ShallowUnwrapRef<{ baz: T; buz: import('vue').Ref<1>; }>): void,
 	}>

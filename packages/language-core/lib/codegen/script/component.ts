@@ -45,7 +45,7 @@ export function* generateComponent(
 		yield `__typeRefs: {} as __VLS_TemplateRefs,${newLine}`;
 	}
 	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.singleRootElType) {
-		yield `__typeEl: {} as __VLS_TemplateEl,${newLine}`;
+		yield `__typeEl: {} as __VLS_RootEl,${newLine}`;
 	}
 	yield `})`;
 }
@@ -155,7 +155,7 @@ export function* generatePropsOption(
 		});
 	}
 	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
-		let attrsType = `__VLS_TemplateAttrs`;
+		let attrsType = `Partial<__VLS_InheritedAttrs>`;
 		if (hasEmitsOption) {
 			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
 		}

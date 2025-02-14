@@ -149,7 +149,7 @@ export function* generateComponent(
 		if (options.selfComponentName && possibleOriginalNames.includes(options.selfComponentName)) {
 			yield `typeof __VLS_self & (new () => { `
 				+ getSlotsPropertyName(options.vueCompilerOptions.target)
-				+ `: typeof ${options.slotsAssignName ?? `__VLS_slots`} }), `;
+				+ `: __VLS_Slots }), `;
 		}
 		else {
 			yield `void, `;
