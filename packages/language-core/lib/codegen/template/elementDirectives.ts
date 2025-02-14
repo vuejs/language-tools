@@ -59,7 +59,7 @@ function* generateIdentifier(
 			rawName,
 			prop.loc.start.offset,
 			{
-				...ctx.codeFeatures.all,
+				...ctx.codeFeatures.withoutHighlight,
 				verification: false,
 				completion: {
 					// fix https://github.com/vuejs/language-tools/issues/1905
@@ -143,7 +143,7 @@ export function* generateModifiers(
 			ctx,
 			mod.content,
 			mod.loc.start.offset,
-			ctx.codeFeatures.withoutNavigation
+			ctx.codeFeatures.withoutHighlightAndNavigation
 		);
 		yield `: true, `;
 	}

@@ -53,6 +53,11 @@ const _codeFeatures = {
 		navigation: true,
 		completion: true,
 	} as VueCodeInformation,
+	withoutHighlightAndNavigation: {
+		semantic: { shouldHighlight: () => false },
+		verification: true,
+		completion: true,
+	} as VueCodeInformation,
 	withoutHighlightAndCompletion: {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
