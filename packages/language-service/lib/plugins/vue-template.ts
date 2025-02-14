@@ -2,7 +2,7 @@ import type { Disposable, LanguageServiceContext, LanguageServicePluginInstance 
 import { VueVirtualCode, hyphenateAttr, hyphenateTag, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
-import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/componentInfos';
+import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';

@@ -1,7 +1,7 @@
 import { forEachElementNode, hyphenateTag, Language, VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import { _getComponentNames } from './requests/componentInfos';
+import { _getComponentNames } from './requests/getComponentNames';
 import type { RequestContext } from './requests/types';
 
 const windowsPathReg = /\\/g;
