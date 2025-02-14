@@ -2,7 +2,6 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
-import { codeFeatures } from '../codeFeatures';
 import { combineLastMapping, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -58,10 +57,10 @@ export function* generateEventArg(
 	start: number,
 	directive = 'on'
 ): Generator<Code> {
-	const features = ctx.resolveCodeFeatures({
-		...codeFeatures.withoutHighlightAndCompletion,
-		...codeFeatures.navigationWithoutRename,
-	});
+	const features = {
+		...ctx.codeFeatures.withoutHighlightAndCompletion,
+		...ctx.codeFeatures.navigationWithoutRename,
+	};
 	if (variableNameRegex.test(camelize(name))) {
 		yield ['', 'template', start, features];
 		yield directive;
