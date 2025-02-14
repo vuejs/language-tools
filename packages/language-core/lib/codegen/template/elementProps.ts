@@ -383,6 +383,10 @@ function getPropsCodeInfo(
 ): VueCodeInformation {
 	return ctx.resolveCodeFeatures({
 		...codeFeatures.withoutHighlightAndCompletion,
+		navigation: {
+			resolveRenameNewName: camelize,
+			resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
+		},
 		verification: strictPropsCheck || {
 			shouldReport(_source, code) {
 				if (String(code) === '2353' || String(code) === '2561') {
@@ -390,10 +394,6 @@ function getPropsCodeInfo(
 				}
 				return true;
 			},
-		},
-		navigation: {
-			resolveRenameNewName: camelize,
-			resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
 		},
 	});
 }
