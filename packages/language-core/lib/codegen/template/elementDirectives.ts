@@ -60,11 +60,9 @@ function* generateIdentifier(
 			prop.loc.start.offset,
 			{
 				...ctx.codeFeatures.withoutHighlight,
+				// fix https://github.com/vuejs/language-tools/issues/1905
+				...ctx.codeFeatures.additionalCompletion,
 				verification: false,
-				completion: {
-					// fix https://github.com/vuejs/language-tools/issues/1905
-					isAdditional: true,
-				},
 				navigation: {
 					resolveRenameNewName: camelize,
 					resolveRenameEditText: getPropRenameApply(prop.name),

@@ -1,10 +1,11 @@
 import * as path from 'path-browserify';
 import type { Code } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSetupReturns, generateEmitsOption, generatePropsOption } from './component';
 import type { ScriptCodegenContext } from './context';
-import { codeFeatures, type ScriptCodegenOptions } from './index';
+import type { ScriptCodegenOptions } from './index';
 import { getTemplateUsageVars } from './template';
 
 export function* generateComponentSelf(
