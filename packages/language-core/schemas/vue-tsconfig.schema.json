@@ -55,6 +55,11 @@
 					"default": false,
 					"markdownDescription": "Check unknown events. If not set, uses the 'strictTemplates' value."
 				},
+				"checkUnknownDirectives": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Check unknown directives. If not set, uses the 'strictTemplates' value."
+				},
 				"checkUnknownComponents": {
 					"type": "boolean",
 					"default": false,
