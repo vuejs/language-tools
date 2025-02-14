@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import type { Code } from '../../types';
 import { hyphenateAttr } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { endOfLine, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
@@ -9,6 +10,15 @@ import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
+
+const builtInDirectives = new Set([
+	'cloak',
+	'html',
+	'memo',
+	'once',
+	'show',
+	'text',
+]);
 
 export function* generateElementDirectives(
 	options: TemplateCodegenOptions,
@@ -34,7 +44,7 @@ export function* generateElementDirectives(
 			prop.loc.end.offset,
 			ctx.codeFeatures.verification,
 			`__VLS_asFunctionalDirective(`,
-			...generateIdentifier(ctx, prop),
+			...generateIdentifier(options, ctx, prop),
 			`)(null!, { ...__VLS_directiveBindingRestFields, `,
 			...generateArg(options, ctx, prop),
 			...generateModifiers(options, ctx, prop),
@@ -46,6 +56,7 @@ export function* generateElementDirectives(
 }
 
 function* generateIdentifier(
+	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
@@ -58,16 +69,16 @@ function* generateIdentifier(
 		...generateCamelized(
 			rawName,
 			prop.loc.start.offset,
-			{
-				...ctx.codeFeatures.withoutHighlight,
+			ctx.resolveCodeFeatures({
+				...codeFeatures.withoutHighlight,
 				// fix https://github.com/vuejs/language-tools/issues/1905
-				...ctx.codeFeatures.additionalCompletion,
-				verification: false,
+				...codeFeatures.additionalCompletion,
+				verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
 				navigation: {
 					resolveRenameNewName: camelize,
 					resolveRenameEditText: getPropRenameApply(prop.name),
 				},
-			}
+			})
 		)
 	);
 }

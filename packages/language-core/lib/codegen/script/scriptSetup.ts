@@ -5,7 +5,7 @@ import { combineLastMapping, endOfLine, generateSfcBlockSection, newLine } from 
 import { generateComponent, generateEmitsOption } from './component';
 import { generateComponentSelf } from './componentSelf';
 import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, generateScriptSectionPartiallyEnding } from './index';
+import { type ScriptCodegenOptions, generateScriptSectionPartiallyEnding } from './index';
 import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(

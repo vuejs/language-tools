@@ -35,7 +35,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 						shouldReport: () => {
 							token.errors++;
 							return false;
-						}
+						},
 					},
 				};
 			}
