@@ -125,33 +125,33 @@ export function computedSfc(
 	});
 	const styles = computedArray(
 		computed(() => getParseResult()?.descriptor.styles ?? []),
-		(block, i) => {
-			const base = computedSfcBlock('style_' + i, 'css', block);
-			const module = computed(() => {
-				const { __module } = block();
+		(getBlock, i) => {
+			const base = computedSfcBlock('style_' + i, 'css', getBlock);
+			const getModule = computed(() => {
+				const { __module } = getBlock();
 				return __module ? {
 					name: __module.name,
 					offset: __module.offset ? base.start + __module.offset : undefined
 				} : undefined;
 			});
-			const scoped = computed(() => !!block().scoped);
-			const cssVars = computed(() => [...parseCssVars(base.content)]);
-			const classNames = computed(() => [...parseCssClassNames(base.content)]);
+			const getScoped = computed(() => !!getBlock().scoped);
+			const getCssVars = computed(() => [...parseCssVars(base.content)]);
+			const getClassNames = computed(() => [...parseCssClassNames(base.content)]);
 			return () => mergeObject(base, {
-				get module() { return module(); },
-				get scoped() { return scoped(); },
-				get cssVars() { return cssVars(); },
-				get classNames() { return classNames(); },
+				get module() { return getModule(); },
+				get scoped() { return getScoped(); },
+				get cssVars() { return getCssVars(); },
+				get classNames() { return getClassNames(); },
 			}) satisfies Sfc['styles'][number];
 		}
 	);
 	const customBlocks = computedArray(
 		computed(() => getParseResult()?.descriptor.customBlocks ?? []),
-		(block, i) => {
-			const base = computedSfcBlock('custom_block_' + i, 'txt', block);
-			const type = computed(() => block().type);
+		(getBlock, i) => {
+			const base = computedSfcBlock('custom_block_' + i, 'txt', getBlock);
+			const getType = computed(() => getBlock().type);
 			return () => mergeObject(base, {
-				get type() { return type(); },
+				get type() { return getType(); },
 			}) satisfies Sfc['customBlocks'][number];
 		}
 	);
