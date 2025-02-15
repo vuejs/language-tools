@@ -84,9 +84,8 @@ export function* generateComponent(
 	}
 
 	if (matchImportName) {
-		// hover, renaming / find references support
-		yield `// @ts-ignore${newLine}`; // #2304
-		yield `/** @type { [`;
+		// navigation support
+		yield `/** @type {[`;
 		for (const tagOffset of tagOffsets) {
 			yield `typeof `;
 			if (var_originalComponent === node.tag) {
@@ -113,7 +112,7 @@ export function* generateComponent(
 			}
 			yield `, `;
 		}
-		yield `] } */${endOfLine}`;
+		yield `]} */${endOfLine}`;
 	}
 	else if (dynamicTagInfo) {
 		yield `const ${var_originalComponent} = (`;
@@ -167,8 +166,8 @@ export function* generateComponent(
 
 		const camelizedTag = camelize(node.tag);
 		if (variableNameRegex.test(camelizedTag)) {
-			// renaming / find references support
-			yield `/** @type { [`;
+			// navigation support
+			yield `/** @type {[`;
 			for (const tagOffset of tagOffsets) {
 				for (const shouldCapitalize of (node.tag[0] === node.tag[0].toUpperCase() ? [false] : [true, false])) {
 					const expectName = shouldCapitalize ? capitalize(camelizedTag) : camelizedTag;
@@ -186,7 +185,7 @@ export function* generateComponent(
 					yield `, `;
 				}
 			}
-			yield `] } */${endOfLine}`;
+			yield `]} */${endOfLine}`;
 			// auto import support
 			if (options.edited) {
 				yield `// @ts-ignore${newLine}`; // #2304
@@ -504,8 +503,8 @@ function* generateReferencesForElements(
 		) {
 			const [content, startOffset] = normalizeAttributeValue(prop.value);
 
-			yield `// @ts-ignore navigation for \`const ${content} = ref()\`${newLine}`;
-			yield `/** @type { typeof __VLS_ctx`;
+			// navigation support for `const foo = ref()`
+			yield `/** @type {typeof __VLS_ctx`;
 			yield* generatePropertyAccess(
 				options,
 				ctx,
@@ -514,7 +513,7 @@ function* generateReferencesForElements(
 				ctx.codeFeatures.navigation,
 				prop.value.loc
 			);
-			yield ` } */${endOfLine}`;
+			yield `} */${endOfLine}`;
 
 			if (variableNameRegex.test(content) && !options.templateRefNames.has(content)) {
 				ctx.accessExternalVariable(content, startOffset);

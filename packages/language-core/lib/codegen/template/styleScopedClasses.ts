@@ -10,22 +10,18 @@ export function* generateStyleScopedClassReferences(
 	ctx: TemplateCodegenContext,
 	withDot = false
 ): Generator<Code> {
-	if (!ctx.emptyClassOffsets.length && !ctx.scopedClasses.length) {
-		return;
-	}
-
-	yield `[`;
 	for (const offset of ctx.emptyClassOffsets) {
-		yield `'`;
+		yield `/** @type {__VLS_StyleScopedClasses['`;
 		yield [
 			'',
 			'template',
 			offset,
 			ctx.codeFeatures.additionalCompletion,
 		];
-		yield `', `;
+		yield `']} */${endOfLine}`;
 	}
 	for (const { source, className, offset } of ctx.scopedClasses) {
+		yield `/** @type {__VLS_StyleScopedClasses[`;
 		yield [
 			'',
 			source,
@@ -43,9 +39,8 @@ export function* generateStyleScopedClassReferences(
 			offset + className.length,
 			ctx.codeFeatures.navigationWithoutRename,
 		];
-		yield `, `;
+		yield `]} */${endOfLine}`;
 	}
-	yield `] as (keyof __VLS_StyleScopedClasses)[]${endOfLine}`;
 
 	function* escapeString(source: string, className: string, offset: number, escapeTargets: string[]): Generator<Code> {
 		let count = 0;
