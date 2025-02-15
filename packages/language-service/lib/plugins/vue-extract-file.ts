@@ -306,7 +306,7 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 
 export function createAddComponentToOptionEdit(ts: typeof import('typescript'), sfc: Sfc, ast: ts.SourceFile, componentName: string) {
 
-	const scriptRanges = tsCodegen.get(sfc)?.scriptRanges.get();
+	const scriptRanges = tsCodegen.get(sfc)?.scriptRanges();
 	if (!scriptRanges?.exportDefault) {
 		return;
 	}

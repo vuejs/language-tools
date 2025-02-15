@@ -1,35 +1,34 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
-import { activeSub, activeTrackId, computed, ISignal, setActiveSub, Signal, unstable } from 'alien-signals';
+import { computed, pauseTracking, resumeTracking } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
+import { computedArray, type Signal, type WriteableSignal } from '../utils/signals';
 
 export function computedSfc(
 	ts: typeof import('typescript'),
 	plugins: VueLanguagePluginReturn[],
 	fileName: string,
-	snapshot: Signal<ts.IScriptSnapshot>,
-	parsed: ISignal<SFCParseResult | undefined>
+	snapshot: WriteableSignal<ts.IScriptSnapshot>,
+	parsed: Signal<SFCParseResult | undefined>
 ): Sfc {
 
 	const untrackedSnapshot = () => {
-		const prevSub = activeSub;
-		const prevTrackId = activeTrackId;
-		setActiveSub(undefined, 0);
-		const res = snapshot.get();
-		setActiveSub(prevSub, prevTrackId);
+		pauseTracking();
+		const res = snapshot();
+		resumeTracking();
 		return res;
 	};
 	const content = computed(() => {
-		return snapshot.get().getText(0, snapshot.get().getLength());
+		return snapshot().getText(0, snapshot().getLength());
 	});
 	const comments = computed<string[]>(oldValue => {
-		const newValue = parsed.get()?.descriptor.comments ?? [];
+		const newValue = parsed()?.descriptor.comments ?? [];
 		if (
 			oldValue?.length === newValue.length
-			&& oldValue.every((v, i) => v === newValue[i])
+			&& oldValue?.every((v, i) => v === newValue[i])
 		) {
 			return oldValue;
 		}
@@ -38,24 +37,24 @@ export function computedSfc(
 	const template = computedNullableSfcBlock(
 		'template',
 		'html',
-		computed(() => parsed.get()?.descriptor.template ?? undefined),
+		computed(() => parsed()?.descriptor.template ?? undefined),
 		(_block, base): NonNullable<Sfc['template']> => {
 			const compiledAst = computedTemplateAst(base);
 			return mergeObject(base, {
-				get ast() { return compiledAst.get()?.ast; },
-				get errors() { return compiledAst.get()?.errors; },
-				get warnings() { return compiledAst.get()?.warnings; },
+				get ast() { return compiledAst()?.ast; },
+				get errors() { return compiledAst()?.errors; },
+				get warnings() { return compiledAst()?.warnings; },
 			});
 		}
 	);
 	const script = computedNullableSfcBlock(
 		'script',
 		'js',
-		computed(() => parsed.get()?.descriptor.script ?? undefined),
+		computed(() => parsed()?.descriptor.script ?? undefined),
 		(block, base): NonNullable<Sfc['script']> => {
-			const src = computed(() => block.get().src);
+			const src = computed(() => block().src);
 			const srcOffset = computed(() => {
-				const _src = src.get();
+				const _src = src();
 				return _src ? untrackedSnapshot().getText(0, base.startTagEnd).lastIndexOf(_src) - base.startTagEnd : -1;
 			});
 			const ast = computed(() => {
@@ -68,23 +67,23 @@ export function computedSfc(
 				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
 			});
 			return mergeObject(base, {
-				get src() { return src.get(); },
-				get srcOffset() { return srcOffset.get(); },
-				get ast() { return ast.get(); },
+				get src() { return src(); },
+				get srcOffset() { return srcOffset(); },
+				get ast() { return ast(); },
 			});
 		}
 	);
 	const scriptSetupOriginal = computedNullableSfcBlock(
 		'scriptSetup',
 		'js',
-		computed(() => parsed.get()?.descriptor.scriptSetup ?? undefined),
+		computed(() => parsed()?.descriptor.scriptSetup ?? undefined),
 		(block, base): NonNullable<Sfc['scriptSetup']> => {
 			const generic = computed(() => {
-				const _block = block.get();
+				const _block = block();
 				return typeof _block.attrs.generic === 'string' ? _block.attrs.generic : undefined;
 			});
 			const genericOffset = computed(() => {
-				const _generic = generic.get();
+				const _generic = generic();
 				return _generic !== undefined ? untrackedSnapshot().getText(0, base.startTagEnd).lastIndexOf(_generic) - base.startTagEnd : -1;
 			});
 			const ast = computed(() => {
@@ -97,16 +96,16 @@ export function computedSfc(
 				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
 			});
 			return mergeObject(base, {
-				get generic() { return generic.get(); },
-				get genericOffset() { return genericOffset.get(); },
-				get ast() { return ast.get(); },
+				get generic() { return generic(); },
+				get genericOffset() { return genericOffset(); },
+				get ast() { return ast(); },
 			});
 		}
 	);
-	const hasScript = computed(() => !!parsed.get()?.descriptor.script);
-	const hasScriptSetup = computed(() => !!parsed.get()?.descriptor.scriptSetup);
+	const hasScript = computed(() => !!parsed()?.descriptor.script);
+	const hasScriptSetup = computed(() => !!parsed()?.descriptor.scriptSetup);
 	const scriptSetup = computed(() => {
-		if (!hasScript.get() && !hasScriptSetup.get()) {
+		if (!hasScript() && !hasScriptSetup()) {
 			//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
 			return {
 				content: '',
@@ -122,47 +121,47 @@ export function computedSfc(
 				ast: ts.createSourceFile('', '', 99 satisfies ts.ScriptTarget.Latest, false, ts.ScriptKind.TS),
 			};
 		}
-		return scriptSetupOriginal.get();
+		return scriptSetupOriginal();
 	});
-	const styles = unstable.computedArray(
-		computed(() => parsed.get()?.descriptor.styles ?? []),
+	const styles = computedArray(
+		computed(() => parsed()?.descriptor.styles ?? []),
 		(block, i) => {
 			const base = computedSfcBlock('style_' + i, 'css', block);
 			const module = computed(() => {
-				const { __module } = block.get();
+				const { __module } = block();
 				return __module ? {
 					name: __module.name,
 					offset: __module.offset ? base.start + __module.offset : undefined
 				} : undefined;
 			});
-			const scoped = computed(() => !!block.get().scoped);
+			const scoped = computed(() => !!block().scoped);
 			const cssVars = computed(() => [...parseCssVars(base.content)]);
 			const classNames = computed(() => [...parseCssClassNames(base.content)]);
 			return () => mergeObject(base, {
-				get module() { return module.get(); },
-				get scoped() { return scoped.get(); },
-				get cssVars() { return cssVars.get(); },
-				get classNames() { return classNames.get(); },
+				get module() { return module(); },
+				get scoped() { return scoped(); },
+				get cssVars() { return cssVars(); },
+				get classNames() { return classNames(); },
 			}) satisfies Sfc['styles'][number];
 		}
 	);
-	const customBlocks = unstable.computedArray(
-		computed(() => parsed.get()?.descriptor.customBlocks ?? []),
+	const customBlocks = computedArray(
+		computed(() => parsed()?.descriptor.customBlocks ?? []),
 		(block, i) => {
 			const base = computedSfcBlock('custom_block_' + i, 'txt', block);
-			const type = computed(() => block.get().type);
+			const type = computed(() => block().type);
 			return () => mergeObject(base, {
-				get type() { return type.get(); },
+				get type() { return type(); },
 			}) satisfies Sfc['customBlocks'][number];
 		}
 	);
 
 	return {
-		get content() { return content.get(); },
-		get comments() { return comments.get(); },
-		get template() { return template.get(); },
-		get script() { return script.get(); },
-		get scriptSetup() { return scriptSetup.get(); },
+		get content() { return content(); },
+		get comments() { return comments(); },
+		get template() { return template(); },
+		get script() { return script(); },
+		get scriptSetup() { return scriptSetup(); },
 		get styles() { return styles; },
 		get customBlocks() { return customBlocks; },
 	};
@@ -192,11 +191,9 @@ export function computedSfc(
 				const change = untrackedSnapshot().getChangeRange(cache.snapshot);
 				if (change) {
 
-					const prevSub = activeSub;
-					const prevTrackId = activeTrackId;
-					setActiveSub(undefined, 0);
+					pauseTracking();
 					const templateOffset = base.startTagEnd;
-					setActiveSub(prevSub, prevTrackId);
+					resumeTracking();
 
 					const newText = untrackedSnapshot().getText(change.span.start, change.span.start + change.newLength);
 					const newResult = cache.plugin.updateSFCTemplate(cache.result, {
@@ -276,15 +273,15 @@ export function computedSfc(
 	function computedNullableSfcBlock<T extends SFCBlock, K extends SfcBlock>(
 		name: string,
 		defaultLang: string,
-		block: ISignal<T | undefined>,
-		resolve: (block: ISignal<T>, base: SfcBlock) => K
+		block: Signal<T | undefined>,
+		resolve: (block: Signal<T>, base: SfcBlock) => K
 	) {
-		const hasBlock = computed(() => !!block.get());
+		const hasBlock = computed(() => !!block());
 		return computed<K | undefined>(() => {
-			if (!hasBlock.get()) {
+			if (!hasBlock()) {
 				return;
 			}
-			const _block = computed(() => block.get()!);
+			const _block = computed(() => block()!);
 			return resolve(_block, computedSfcBlock(name, defaultLang, _block));
 		});
 	}
@@ -292,24 +289,24 @@ export function computedSfc(
 	function computedSfcBlock<T extends SFCBlock>(
 		name: string,
 		defaultLang: string,
-		block: ISignal<T>
+		block: Signal<T>
 	) {
-		const lang = computed(() => block.get().lang ?? defaultLang);
-		const attrs = computed(() => block.get().attrs); // TODO: computed it
-		const content = computed(() => block.get().content);
-		const startTagEnd = computed(() => block.get().loc.start.offset);
-		const endTagStart = computed(() => block.get().loc.end.offset);
-		const start = computed(() => untrackedSnapshot().getText(0, startTagEnd.get()).lastIndexOf('<' + block.get().type));
-		const end = computed(() => endTagStart.get() + untrackedSnapshot().getText(endTagStart.get(), untrackedSnapshot().getLength()).indexOf('>') + 1);
+		const lang = computed(() => block().lang ?? defaultLang);
+		const attrs = computed(() => block().attrs); // TODO: computed it
+		const content = computed(() => block().content);
+		const startTagEnd = computed(() => block().loc.start.offset);
+		const endTagStart = computed(() => block().loc.end.offset);
+		const start = computed(() => untrackedSnapshot().getText(0, startTagEnd()).lastIndexOf('<' + block().type));
+		const end = computed(() => endTagStart() + untrackedSnapshot().getText(endTagStart(), untrackedSnapshot().getLength()).indexOf('>') + 1);
 		return {
 			name,
-			get lang() { return lang.get(); },
-			get attrs() { return attrs.get(); },
-			get content() { return content.get(); },
-			get startTagEnd() { return startTagEnd.get(); },
-			get endTagStart() { return endTagStart.get(); },
-			get start() { return start.get(); },
-			get end() { return end.get(); },
+			get lang() { return lang(); },
+			get attrs() { return attrs(); },
+			get content() { return content(); },
+			get startTagEnd() { return startTagEnd(); },
+			get endTagStart() { return endTagStart(); },
+			get start() { return start(); },
+			get end() { return end(); },
 		};
 	}
 }

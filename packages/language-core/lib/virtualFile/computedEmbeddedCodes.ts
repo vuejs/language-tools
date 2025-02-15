@@ -1,9 +1,10 @@
 import type { VirtualCode } from '@volar/language-core';
-import { computed, ISignal } from 'alien-signals';
+import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code, Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { buildMappings } from '../utils/buildMappings';
+import type { Signal } from '../utils/signals';
 import { VueEmbeddedCode } from './embeddedFile';
 
 export function computedEmbeddedCodes(
@@ -32,12 +33,12 @@ export function computedEmbeddedCodes(
 		return blocks;
 	});
 	const pluginsResult = plugins.map(plugin => computedPluginEmbeddedCodes(plugins, plugin, fileName, sfc, nameToBlock));
-	const flatResult = computed(() => pluginsResult.map(r => r.get()).flat());
+	const flatResult = computed(() => pluginsResult.map(r => r()).flat());
 	const structuredResult = computed(() => {
 
 		const embeddedCodes: VirtualCode[] = [];
 
-		let remain = [...flatResult.get()];
+		let remain = [...flatResult()];
 
 		while (remain.length) {
 			const beforeLength = remain.length;
@@ -105,9 +106,9 @@ function computedPluginEmbeddedCodes(
 	plugin: VueLanguagePluginReturn,
 	fileName: string,
 	sfc: Sfc,
-	nameToBlock: ISignal<Record<string, SfcBlock>>
+	nameToBlock: Signal<Record<string, SfcBlock>>
 ) {
-	const computeds = new Map<string, ISignal<{ code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>>();
+	const computeds = new Map<string, Signal<{ code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>>();
 	const getComputedKey = (code: {
 		id: string;
 		lang: string;
@@ -171,8 +172,8 @@ function computedPluginEmbeddedCodes(
 	});
 
 	return computed(() => {
-		return codes.get().map(_file => {
-			const { code, snapshot } = _file.get();
+		return codes().map(_file => {
+			const { code, snapshot } = _file();
 			const mappings = buildMappings(code.content.map<Code>(segment => {
 				if (typeof segment === 'string') {
 					return segment;
@@ -181,7 +182,7 @@ function computedPluginEmbeddedCodes(
 				if (source === undefined) {
 					return segment;
 				}
-				const block = nameToBlock.get()[source];
+				const block = nameToBlock()[source];
 				if (!block) {
 					// console.warn('Unable to find block: ' + source);
 					return segment;

@@ -520,7 +520,7 @@ export function create(
 								})());
 								return [];
 							}
-							const scriptSetupRanges = tsCodegen.get(vueCode._sfc)?.scriptSetupRanges.get();
+							const scriptSetupRanges = tsCodegen.get(vueCode._sfc)?.scriptSetupRanges();
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
 

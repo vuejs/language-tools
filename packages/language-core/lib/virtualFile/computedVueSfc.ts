@@ -1,7 +1,8 @@
 import type { SFCParseResult } from '@vue/compiler-sfc';
-import { computed, Signal } from 'alien-signals';
+import { computed } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { VueLanguagePluginReturn } from '../types';
+import type { Signal } from '../utils/signals';
 
 export function computedVueSfc(
 	plugins: VueLanguagePluginReturn[],
@@ -19,15 +20,15 @@ export function computedVueSfc(
 
 		// incremental update
 		if (cache?.plugin.updateSFC) {
-			const change = snapshot.get().getChangeRange(cache.snapshot);
+			const change = snapshot().getChangeRange(cache.snapshot);
 			if (change) {
 				const newSfc = cache.plugin.updateSFC(cache.sfc, {
 					start: change.span.start,
 					end: change.span.start + change.span.length,
-					newText: snapshot.get().getText(change.span.start, change.span.start + change.newLength),
+					newText: snapshot().getText(change.span.start, change.span.start + change.newLength),
 				});
 				if (newSfc) {
-					cache.snapshot = snapshot.get();
+					cache.snapshot = snapshot();
 					// force dirty
 					cache.sfc = JSON.parse(JSON.stringify(newSfc));
 					return cache.sfc;
@@ -36,12 +37,12 @@ export function computedVueSfc(
 		}
 
 		for (const plugin of plugins) {
-			const sfc = plugin.parseSFC?.(fileName, snapshot.get().getText(0, snapshot.get().getLength()))
-				?? plugin.parseSFC2?.(fileName, languageId, snapshot.get().getText(0, snapshot.get().getLength()));
+			const sfc = plugin.parseSFC?.(fileName, snapshot().getText(0, snapshot().getLength()))
+				?? plugin.parseSFC2?.(fileName, languageId, snapshot().getText(0, snapshot().getLength()));
 			if (sfc) {
 				if (!sfc.errors.length) {
 					cache = {
-						snapshot: snapshot.get(),
+						snapshot: snapshot(),
 						sfc,
 						plugin,
 					};

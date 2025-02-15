@@ -28,7 +28,7 @@ export function create(): LanguageServicePlugin {
 
 					const result: vscode.DocumentLink[] = [];
 					const codegen = tsCodegen.get(root._sfc);
-					const scopedClasses = codegen?.generatedTemplate.get()?.scopedClasses ?? [];
+					const scopedClasses = codegen?.generatedTemplate()?.scopedClasses ?? [];
 					const styleClasses = new Map<string, {
 						index: number;
 						style: Sfc['styles'][number];
