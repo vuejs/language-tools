@@ -365,6 +365,17 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		});
 	});
 
+	test('reference-type-props-destructured', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-props/component-destructure.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
+
+		const text = meta.props.find(prop => prop.name === 'text');
+
+		expect(text?.default).toEqual('"foobar"');
+	});
+
 	test('reference-type-props-js', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-props/component-js.vue');
 		const meta = checker.getComponentMeta(componentPath);

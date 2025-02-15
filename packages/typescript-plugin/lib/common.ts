@@ -1,7 +1,7 @@
 import { forEachElementNode, hyphenateTag, Language, VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import { _getComponentNames } from './requests/componentInfos';
+import { _getComponentNames } from './requests/getComponentNames';
 import type { RequestContext } from './requests/types';
 
 const windowsPathReg = /\\/g;
@@ -51,8 +51,8 @@ function getCompletionsAtPosition(vueOptions: VueCompilerOptions, getCompletions
 		if (result) {
 			// filter __VLS_
 			result.entries = result.entries.filter(
-				entry => entry.name.indexOf('__VLS_') === -1
-					&& (!entry.labelDetails?.description || entry.labelDetails.description.indexOf('__VLS_') === -1)
+				entry => !entry.name.includes('__VLS_')
+					&& !entry.labelDetails?.description?.includes('__VLS_')
 			);
 			// modify label
 			for (const item of result.entries) {
@@ -113,7 +113,7 @@ function getCompletionEntryDetails<T>(language: Language<T>, asScriptId: (fileNa
 			const { fileName } = args[6]?.__isAutoImport;
 			const sourceScript = language.scripts.get(asScriptId(fileName));
 			if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-				const sfc = sourceScript.generated.root._vueSfc.get();
+				const sfc = sourceScript.generated.root._vueSfc();
 				if (!sfc?.descriptor.script && !sfc?.descriptor.scriptSetup) {
 					for (const codeAction of details?.codeActions ?? []) {
 						for (const change of codeAction.changes) {
@@ -136,7 +136,7 @@ function getCodeFixesAtPosition(getCodeFixesAtPosition: ts.LanguageService['getC
 	return (...args) => {
 		let result = getCodeFixesAtPosition(...args);
 		// filter __VLS_
-		result = result.filter(entry => entry.description.indexOf('__VLS_') === -1);
+		result = result.filter(entry => !entry.description.includes('__VLS_'));
 		return result;
 	};
 }
@@ -194,13 +194,14 @@ function getEncodedSemanticClassifications<T>(
 	return (filePath, span, format) => {
 		const fileName = filePath.replace(windowsPathReg, '/');
 		const result = getEncodedSemanticClassifications(fileName, span, format);
-		const file = language.scripts.get(asScriptId(fileName));
-		if (file?.generated?.root instanceof VueVirtualCode) {
-			const { template } = file.generated.root._sfc;
+		const sourceScript = language.scripts.get(asScriptId(fileName));
+		const root = sourceScript?.generated?.root;
+		if (root instanceof VueVirtualCode) {
+			const { template } = root._sfc;
 			if (template) {
 				for (const componentSpan of getComponentSpans.call(
 					{ typescript: ts, languageService },
-					file.generated.root,
+					root,
 					template,
 					{
 						start: span.start - template.startTagEnd,

@@ -10,7 +10,8 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 export { VueEmbeddedCode };
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
-	target?: 'auto' | 2 | 2.7 | 3 | 3.3;
+	strictTemplates?: boolean;
+	target?: 'auto' | 2 | 2.7 | 3 | 3.3 | 3.5 | 99 | number;
 	plugins?: string[];
 };
 
@@ -28,7 +29,10 @@ export interface VueCompilerOptions {
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
 	jsxSlots: boolean;
-	strictTemplates: boolean;
+	checkUnknownProps: boolean;
+	checkUnknownEvents: boolean;
+	checkUnknownDirectives: boolean;
+	checkUnknownComponents: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
 	dataAttributes: string[];
@@ -44,7 +48,9 @@ export interface VueCompilerOptions {
 		withDefaults: string[];
 	};
 	composables: {
+		useAttrs: string[];
 		useCssModule: string[];
+		useSlots: string[];
 		useTemplateRef: string[];
 	};
 	plugins: VueLanguagePlugin[];
@@ -101,30 +107,32 @@ export interface SfcBlock {
 	attrs: Record<string, string | true>;
 }
 
+export type SfcBlockAttr = true | {
+	text: string;
+	offset: number;
+	quotes: boolean;
+};
+
 export interface Sfc {
 	content: string;
+	comments: string[];
 	template: SfcBlock & {
 		ast: CompilerDOM.RootNode | undefined;
 		errors: CompilerDOM.CompilerError[];
 		warnings: CompilerDOM.CompilerError[];
 	} | undefined;
 	script: (SfcBlock & {
-		src: string | undefined;
-		srcOffset: number;
+		src: SfcBlockAttr | undefined;
 		ast: ts.SourceFile;
 	}) | undefined;
 	scriptSetup: SfcBlock & {
 		// https://github.com/vuejs/rfcs/discussions/436
-		generic: string | undefined;
-		genericOffset: number;
+		generic: SfcBlockAttr | undefined;
 		ast: ts.SourceFile;
 	} | undefined;
 	styles: readonly (SfcBlock & {
 		scoped: boolean;
-		module?: {
-			name: string;
-			offset?: number;
-		};
+		module?: SfcBlockAttr | undefined;
 		cssVars: {
 			text: string;
 			offset: number;
@@ -140,11 +148,16 @@ export interface Sfc {
 }
 
 declare module '@vue/compiler-sfc' {
+	interface SFCBlock {
+		__src?: SfcBlockAttr;
+	}
+
+	interface SFCScriptBlock {
+		__generic?: SfcBlockAttr;
+	}
+
 	interface SFCStyleBlock {
-		__module?: {
-			name: string;
-			offset?: number;
-		};
+		__module?: SfcBlockAttr;
 	}
 }
 

@@ -9,7 +9,7 @@ export function* generateInterpolation(
 	options: {
 		ts: typeof ts,
 		destructuredPropNames: Set<string> | undefined,
-		templateRefNames: Set<string> | undefined
+		templateRefNames: Set<string> | undefined;
 	},
 	ctx: TemplateCodegenContext,
 	source: string,
@@ -71,6 +71,12 @@ export function* generateInterpolation(
 	}
 }
 
+interface CtxVar {
+	text: string;
+	isShorthand: boolean;
+	offset: number;
+};
+
 function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
 	destructuredPropNames: Set<string> | undefined,
@@ -80,20 +86,16 @@ function* forEachInterpolationSegment(
 	offset: number | undefined,
 	ast: ts.SourceFile
 ): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly' | 'startText' | 'endText']> {
-	let ctxVars: {
-		text: string,
-		isShorthand: boolean,
-		offset: number,
-	}[] = [];
+	let ctxVars: CtxVar[] = [];
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		const text = getNodeText(ts, id, ast);
 		if (
-			ctx.hasLocalVariable(text) ||
+			ctx.hasLocalVariable(text)
 			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
-			isGloballyAllowed(text) ||
-			text === 'require' ||
-			text.startsWith('__VLS_')
+			|| isGloballyAllowed(text)
+			|| text === 'require'
+			|| text.startsWith('__VLS_')
 		) {
 			// localVarOffsets.push(localVar.getStart(ast));
 		}
@@ -132,7 +134,7 @@ function* forEachInterpolationSegment(
 			const curVar = ctxVars[i];
 			const nextVar = ctxVars[i + 1];
 
-			yield* generateVar(code, destructuredPropNames, templateRefNames, curVar, nextVar);
+			yield* generateVar(code, ctx.specialVars, destructuredPropNames, templateRefNames, curVar);
 
 			if (nextVar.isShorthand) {
 				yield [code.slice(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
@@ -144,7 +146,7 @@ function* forEachInterpolationSegment(
 		}
 
 		const lastVar = ctxVars.at(-1)!;
-		yield* generateVar(code, destructuredPropNames, templateRefNames, lastVar);
+		yield* generateVar(code, ctx.specialVars, destructuredPropNames, templateRefNames, lastVar);
 		if (lastVar.offset + lastVar.text.length < code.length) {
 			yield [code.slice(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length, 'endText'];
 		}
@@ -156,22 +158,14 @@ function* forEachInterpolationSegment(
 
 function* generateVar(
 	code: string,
+	specialVars: Set<string>,
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
-	curVar: {
-		text: string,
-		isShorthand: boolean,
-		offset: number,
-	},
-	nextVar: {
-		text: string,
-		isShorthand: boolean,
-		offset: number,
-	} = curVar
+	curVar: CtxVar
 ): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly']> {
 	// fix https://github.com/vuejs/language-tools/issues/1205
 	// fix https://github.com/vuejs/language-tools/issues/1264
-	yield ['', nextVar.offset, 'errorMappingOnly'];
+	yield ['', curVar.offset, 'errorMappingOnly'];
 
 	const isDestructuredProp = destructuredPropNames?.has(curVar.text) ?? false;
 	const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
@@ -181,7 +175,10 @@ function* generateVar(
 		yield [`)`, undefined];
 	}
 	else {
-		if (!isDestructuredProp) {
+		if (specialVars.has(curVar.text)) {
+			yield [`__VLS_special.`, undefined];
+		}
+		else if (!isDestructuredProp) {
 			yield [`__VLS_ctx.`, undefined];
 		}
 		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];

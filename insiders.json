@@ -1,6 +1,22 @@
 {
-	"latest": "2.1.11",
+	"latest": "2.2.3",
 	"versions": [
+		{
+			"version": "2.2.3",
+			"date": "2025-02-15",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.2.3",
+				"AFDIAN": "https://ifdian.net/p/6fa17e40ebc111ef849e52540025c377"
+			}
+		},
+		{
+			"version": "2.2.1",
+			"date": "2024-12-24",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.2.1",
+				"AFDIAN": "https://afdian.com/p/0b679fe4c16a11ef98065254001e7c00"
+			}
+		},
 		{
 			"version": "2.1.11",
 			"date": "2024-10-31",

@@ -2,9 +2,9 @@ import * as kit from '@volar/kit';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import type { URI } from 'vscode-uri';
-import { createVueLanguagePlugin, getFullLanguageServicePlugins, resolveVueCompilerOptions } from '../..';
+import { createVueLanguagePlugin, getDefaultCompilerOptions, getFullLanguageServicePlugins } from '../..';
 
-const resolvedVueOptions = resolveVueCompilerOptions({});
+const resolvedVueOptions = getDefaultCompilerOptions();
 const vueLanguagePlugin = createVueLanguagePlugin<URI>(
 	ts,
 	{},

@@ -31,7 +31,11 @@ import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twos
 import { parse, VueCompilerOptions } from '@vue/language-core';
 import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
-import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from '@vue/typescript-plugin/lib/requests/componentInfos';
+import { getComponentDirectives } from '@vue/typescript-plugin/lib/requests/getComponentDirectives';
+import { getComponentEvents } from '@vue/typescript-plugin/lib/requests/getComponentEvents';
+import { getComponentNames } from '@vue/typescript-plugin/lib/requests/getComponentNames';
+import { getComponentProps } from '@vue/typescript-plugin/lib/requests/getComponentProps';
+import { getElementAttrs } from '@vue/typescript-plugin/lib/requests/getElementAttrs';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
@@ -118,6 +122,9 @@ export function getFullLanguageServicePlugins(
 			async getComponentEvents(...args) {
 				return await getComponentEvents.apply(requestContext, args);
 			},
+			async getComponentDirectives(...args) {
+				return await getComponentDirectives.apply(requestContext, args);
+			},
 			async getComponentNames(...args) {
 				return await getComponentNames.apply(requestContext, args);
 			},
@@ -126,9 +133,6 @@ export function getFullLanguageServicePlugins(
 			},
 			async getElementAttrs(...args) {
 				return await getElementAttrs.apply(requestContext, args);
-			},
-			async getTemplateContextProps(...args) {
-				return await getTemplateContextProps.apply(requestContext, args);
 			},
 			async getQuickInfoAtPosition(fileName, position) {
 				const languageService = context.getLanguageService();

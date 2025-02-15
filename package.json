@@ -16,16 +16,17 @@
 		"test": "vitest run",
 		"test:update": "vitest run --update",
 		"lint": "tsslint --projects {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
-		"lint:fix": "pnpm run lint -- --fix",
+		"lint:fix": "pnpm run lint -- --fix --vscode-settings .vscode/settings.json",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
-		"@lerna-lite/cli": "latest",
-		"@lerna-lite/publish": "latest",
-		"@tsslint/cli": "latest",
-		"@tsslint/config": "latest",
-		"typescript": "latest",
-		"vite": "latest",
-		"vitest": "latest"
+		"@lerna-lite/cli": "^3.11.0",
+		"@lerna-lite/publish": "^3.11.0",
+		"@tsslint/cli": "^1.5.0",
+		"@tsslint/config": "^1.5.0",
+		"@tsslint/eslint": "^1.5.0",
+		"@typescript-eslint/eslint-plugin": "^8.19.0",
+		"typescript": "^5.7.2",
+		"vitest": "^2.1.8"
 	}
 }

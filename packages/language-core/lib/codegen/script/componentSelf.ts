@@ -1,10 +1,11 @@
 import * as path from 'path-browserify';
 import type { Code } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSetupReturns, generateEmitsOption, generatePropsOption } from './component';
 import type { ScriptCodegenContext } from './context';
-import { codeFeatures, type ScriptCodegenOptions } from './index';
+import type { ScriptCodegenOptions } from './index';
 import { getTemplateUsageVars } from './template';
 
 export function* generateComponentSelf(
@@ -27,8 +28,8 @@ export function* generateComponentSelf(
 				? [options.sfc.script.content, options.scriptRanges.bindings] as const
 				: ['', []] as const,
 		]) {
-			for (const expose of bindings) {
-				const varName = content.slice(expose.start, expose.end);
+			for (const { range } of bindings) {
+				const varName = content.slice(range.start, range.end);
 				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
 					continue;
 				}
