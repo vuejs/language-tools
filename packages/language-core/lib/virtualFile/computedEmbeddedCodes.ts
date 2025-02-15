@@ -4,7 +4,6 @@ import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code, Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { buildMappings } from '../utils/buildMappings';
-import type { Signal } from '../utils/signals';
 import { VueEmbeddedCode } from './embeddedFile';
 
 export function computedEmbeddedCodes(
@@ -13,7 +12,7 @@ export function computedEmbeddedCodes(
 	sfc: Sfc
 ) {
 
-	const nameToBlock = computed(() => {
+	const nameToBlockMap = computed(() => {
 		const blocks: Record<string, SfcBlock> = {};
 		if (sfc.template) {
 			blocks[sfc.template.name] = sfc.template;
@@ -32,7 +31,7 @@ export function computedEmbeddedCodes(
 		}
 		return blocks;
 	});
-	const pluginsResult = plugins.map(plugin => computedPluginEmbeddedCodes(plugins, plugin, fileName, sfc, nameToBlock));
+	const pluginsResult = plugins.map(plugin => computedPluginEmbeddedCodes(plugins, plugin, fileName, sfc, nameToBlockMap));
 	const flatResult = computed(() => pluginsResult.map(r => r()).flat());
 	const structuredResult = computed(() => {
 
@@ -106,9 +105,9 @@ function computedPluginEmbeddedCodes(
 	plugin: VueLanguagePluginReturn,
 	fileName: string,
 	sfc: Sfc,
-	nameToBlock: Signal<Record<string, SfcBlock>>
+	getNameToBlockMap: () => Record<string, SfcBlock>
 ) {
-	const computeds = new Map<string, Signal<{ code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>>();
+	const computeds = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>();
 	const getComputedKey = (code: {
 		id: string;
 		lang: string;
@@ -182,7 +181,7 @@ function computedPluginEmbeddedCodes(
 				if (source === undefined) {
 					return segment;
 				}
-				const block = nameToBlock()[source];
+				const block = getNameToBlockMap()[source];
 				if (!block) {
 					// console.warn('Unable to find block: ' + source);
 					return segment;

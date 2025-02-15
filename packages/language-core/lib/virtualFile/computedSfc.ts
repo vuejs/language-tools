@@ -5,27 +5,27 @@ import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
-import { computedArray, type Signal, type WriteableSignal } from '../utils/signals';
+import { computedArray } from '../utils/signals';
 
 export function computedSfc(
 	ts: typeof import('typescript'),
 	plugins: VueLanguagePluginReturn[],
 	fileName: string,
-	snapshot: WriteableSignal<ts.IScriptSnapshot>,
-	parsed: Signal<SFCParseResult | undefined>
+	getSnapshot: () => ts.IScriptSnapshot,
+	getParseResult: () => SFCParseResult | undefined
 ): Sfc {
 
 	const untrackedSnapshot = () => {
 		pauseTracking();
-		const res = snapshot();
+		const res = getSnapshot();
 		resumeTracking();
 		return res;
 	};
 	const content = computed(() => {
-		return snapshot().getText(0, snapshot().getLength());
+		return getSnapshot().getText(0, getSnapshot().getLength());
 	});
 	const comments = computed<string[]>(oldValue => {
-		const newValue = parsed()?.descriptor.comments ?? [];
+		const newValue = getParseResult()?.descriptor.comments ?? [];
 		if (
 			oldValue?.length === newValue.length
 			&& oldValue?.every((v, i) => v === newValue[i])
@@ -37,7 +37,7 @@ export function computedSfc(
 	const template = computedNullableSfcBlock(
 		'template',
 		'html',
-		computed(() => parsed()?.descriptor.template ?? undefined),
+		computed(() => getParseResult()?.descriptor.template ?? undefined),
 		(_block, base): NonNullable<Sfc['template']> => {
 			const compiledAst = computedTemplateAst(base);
 			return mergeObject(base, {
@@ -50,7 +50,7 @@ export function computedSfc(
 	const script = computedNullableSfcBlock(
 		'script',
 		'js',
-		computed(() => parsed()?.descriptor.script ?? undefined),
+		computed(() => getParseResult()?.descriptor.script ?? undefined),
 		(block, base): NonNullable<Sfc['script']> => {
 			const src = computed(() => block().src);
 			const srcOffset = computed(() => {
@@ -76,7 +76,7 @@ export function computedSfc(
 	const scriptSetupOriginal = computedNullableSfcBlock(
 		'scriptSetup',
 		'js',
-		computed(() => parsed()?.descriptor.scriptSetup ?? undefined),
+		computed(() => getParseResult()?.descriptor.scriptSetup ?? undefined),
 		(block, base): NonNullable<Sfc['scriptSetup']> => {
 			const generic = computed(() => {
 				const _block = block();
@@ -102,8 +102,8 @@ export function computedSfc(
 			});
 		}
 	);
-	const hasScript = computed(() => !!parsed()?.descriptor.script);
-	const hasScriptSetup = computed(() => !!parsed()?.descriptor.scriptSetup);
+	const hasScript = computed(() => !!getParseResult()?.descriptor.script);
+	const hasScriptSetup = computed(() => !!getParseResult()?.descriptor.scriptSetup);
 	const scriptSetup = computed(() => {
 		if (!hasScript() && !hasScriptSetup()) {
 			//#region monkey fix: https://github.com/vuejs/language-tools/pull/2113
@@ -124,7 +124,7 @@ export function computedSfc(
 		return scriptSetupOriginal();
 	});
 	const styles = computedArray(
-		computed(() => parsed()?.descriptor.styles ?? []),
+		computed(() => getParseResult()?.descriptor.styles ?? []),
 		(block, i) => {
 			const base = computedSfcBlock('style_' + i, 'css', block);
 			const module = computed(() => {
@@ -146,7 +146,7 @@ export function computedSfc(
 		}
 	);
 	const customBlocks = computedArray(
-		computed(() => parsed()?.descriptor.customBlocks ?? []),
+		computed(() => getParseResult()?.descriptor.customBlocks ?? []),
 		(block, i) => {
 			const base = computedSfcBlock('custom_block_' + i, 'txt', block);
 			const type = computed(() => block().type);
@@ -273,15 +273,15 @@ export function computedSfc(
 	function computedNullableSfcBlock<T extends SFCBlock, K extends SfcBlock>(
 		name: string,
 		defaultLang: string,
-		block: Signal<T | undefined>,
-		resolve: (block: Signal<T>, base: SfcBlock) => K
+		getBlock: () => T | undefined,
+		resolve: (block: () => T, base: SfcBlock) => K
 	) {
-		const hasBlock = computed(() => !!block());
+		const hasBlock = computed(() => !!getBlock());
 		return computed<K | undefined>(() => {
 			if (!hasBlock()) {
 				return;
 			}
-			const _block = computed(() => block()!);
+			const _block = computed(() => getBlock()!);
 			return resolve(_block, computedSfcBlock(name, defaultLang, _block));
 		});
 	}
@@ -289,14 +289,14 @@ export function computedSfc(
 	function computedSfcBlock<T extends SFCBlock>(
 		name: string,
 		defaultLang: string,
-		block: Signal<T>
+		getBlock: () => T
 	) {
-		const lang = computed(() => block().lang ?? defaultLang);
-		const attrs = computed(() => block().attrs); // TODO: computed it
-		const content = computed(() => block().content);
-		const startTagEnd = computed(() => block().loc.start.offset);
-		const endTagStart = computed(() => block().loc.end.offset);
-		const start = computed(() => untrackedSnapshot().getText(0, startTagEnd()).lastIndexOf('<' + block().type));
+		const lang = computed(() => getBlock().lang ?? defaultLang);
+		const attrs = computed(() => getBlock().attrs); // TODO: computed it
+		const content = computed(() => getBlock().content);
+		const startTagEnd = computed(() => getBlock().loc.start.offset);
+		const endTagStart = computed(() => getBlock().loc.end.offset);
+		const start = computed(() => untrackedSnapshot().getText(0, startTagEnd()).lastIndexOf('<' + getBlock().type));
 		const end = computed(() => endTagStart() + untrackedSnapshot().getText(endTagStart(), untrackedSnapshot().getLength()).indexOf('>') + 1);
 		return {
 			name,

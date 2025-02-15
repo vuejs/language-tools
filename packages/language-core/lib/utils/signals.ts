@@ -1,13 +1,5 @@
 import { computed } from 'alien-signals';
 
-export interface Signal<T> {
-	(): T;
-}
-
-export interface WriteableSignal<T> extends Signal<T> {
-	(value: T): void;
-}
-
 export function computedArray<I, O>(
 	arr: () => I[],
 	getGetter: (item: () => I, index: number) => () => O
@@ -23,7 +15,7 @@ export function computedArray<I, O>(
 		}
 	);
 	const items = computed<(() => O)[]>(
-		(array) => {
+		array => {
 			array ??= [];
 			while (array.length < length()) {
 				const index = array.length;
@@ -58,7 +50,7 @@ export function computedArray<I, O>(
 
 export function computedSet<T>(source: () => Set<T>): () => Set<T> {
 	return computed<Set<T>>(
-		(oldValue) => {
+		oldValue => {
 			const newValue = source();
 			if (oldValue?.size === newValue.size && [...oldValue].every(c => newValue.has(c))) {
 				return oldValue;

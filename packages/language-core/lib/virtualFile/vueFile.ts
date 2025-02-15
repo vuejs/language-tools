@@ -3,7 +3,6 @@ import { computed, signal } from 'alien-signals';
 import type * as ts from 'typescript';
 import { allCodeFeatures } from '../plugins';
 import type { VueCompilerOptions, VueLanguagePluginReturn } from '../types';
-import type { WriteableSignal } from '../utils/signals';
 import { computedEmbeddedCodes } from './computedEmbeddedCodes';
 import { computedSfc } from './computedSfc';
 import { computedVueSfc } from './computedVueSfc';
@@ -14,7 +13,7 @@ export class VueVirtualCode implements VirtualCode {
 
 	id = 'main';
 
-	_snapshot = signal(undefined!) as WriteableSignal<ts.IScriptSnapshot>;
+	private _snapshot = signal<ts.IScriptSnapshot>(undefined!);
 
 	// computeds
 
