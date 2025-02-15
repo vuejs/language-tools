@@ -11,7 +11,6 @@ export function computedEmbeddedCodes(
 	fileName: string,
 	sfc: Sfc
 ) {
-
 	const nameToBlockMap = computed(() => {
 		const blocks: Record<string, SfcBlock> = {};
 		if (sfc.template) {
@@ -31,7 +30,15 @@ export function computedEmbeddedCodes(
 		}
 		return blocks;
 	});
-	const pluginsResult = plugins.map(plugin => computedPluginEmbeddedCodes(plugins, plugin, fileName, sfc, nameToBlockMap));
+	const pluginsResult = plugins.map(plugin =>
+		computedPluginEmbeddedCodes(
+			plugins,
+			plugin,
+			fileName,
+			sfc,
+			name => nameToBlockMap()[name]
+		)
+	);
 	const flatResult = computed(() => pluginsResult.map(r => r()).flat());
 	const structuredResult = computed(() => {
 
@@ -105,7 +112,7 @@ function computedPluginEmbeddedCodes(
 	plugin: VueLanguagePluginReturn,
 	fileName: string,
 	sfc: Sfc,
-	getNameToBlockMap: () => Record<string, SfcBlock>
+	getBlockByName: (name: string) => SfcBlock | undefined
 ) {
 	const computeds = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>();
 	const getComputedKey = (code: {
@@ -181,7 +188,7 @@ function computedPluginEmbeddedCodes(
 				if (source === undefined) {
 					return segment;
 				}
-				const block = getNameToBlockMap()[source];
+				const block = getBlockByName(source);
 				if (!block) {
 					// console.warn('Unable to find block: ' + source);
 					return segment;
