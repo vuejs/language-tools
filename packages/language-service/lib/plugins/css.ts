@@ -13,7 +13,7 @@ export function create(): LanguageServicePlugin {
 			const baseInstance = base.create(context);
 			const {
 				'css/languageService': getCssLs,
-				'css/stylesheet': getStylesheet
+				'css/stylesheet': getStylesheet,
 			} = baseInstance.provide as Provide;
 
 			return {
