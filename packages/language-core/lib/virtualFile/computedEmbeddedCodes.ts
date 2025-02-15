@@ -11,7 +11,7 @@ export function computedEmbeddedCodes(
 	fileName: string,
 	sfc: Sfc
 ) {
-	const nameToBlockMap = computed(() => {
+	const getNameToBlockMap = computed(() => {
 		const blocks: Record<string, SfcBlock> = {};
 		if (sfc.template) {
 			blocks[sfc.template.name] = sfc.template;
@@ -30,21 +30,21 @@ export function computedEmbeddedCodes(
 		}
 		return blocks;
 	});
-	const pluginsResult = plugins.map(plugin =>
+	const getPluginsResult = plugins.map(plugin =>
 		computedPluginEmbeddedCodes(
 			plugins,
 			plugin,
 			fileName,
 			sfc,
-			name => nameToBlockMap()[name]
+			name => getNameToBlockMap()[name]
 		)
 	);
-	const flatResult = computed(() => pluginsResult.map(r => r()).flat());
-	const structuredResult = computed(() => {
+	const getFlatResult = computed(() => getPluginsResult.map(r => r()).flat());
+	const getStructuredResult = computed(() => {
 
 		const embeddedCodes: VirtualCode[] = [];
 
-		let remain = [...flatResult()];
+		let remain = [...getFlatResult()];
 
 		while (remain.length) {
 			const beforeLength = remain.length;
@@ -104,7 +104,7 @@ export function computedEmbeddedCodes(
 		}
 	});
 
-	return structuredResult;
+	return getStructuredResult;
 }
 
 function computedPluginEmbeddedCodes(
