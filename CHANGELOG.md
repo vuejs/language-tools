@@ -2,6 +2,53 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.2.2 <sup>official</sup>, 2.2.3 <sup>insiders</sup> (2025-02-15)
+
+### Features
+
+- feat(language-core): navigation support for `$attrs`, `$slots`, `$refs` and `$el` in the template (#5056) - Thanks to @KazariEX!
+- feat(language-service): support global directives completion (#4989) - Thanks to @KazariEX!
+- feat(language-core): type support of `useAttrs` (#5106) - Thanks to @KazariEX!
+- feat(language-core): add options for fine-grained configuration of `strictTemplates` (#5138)
+- feat(language-service): display deprecated info of props in completion (#5134) - Thanks to @KazariEX!
+- feat(component-meta): collect destructured props defaults (#5101) - Thanks to @Akryum!
+- feat(language-core): add `checkUnknownDirectives` option (#5141) - Thanks to @KazariEX!
+- feat(language-core): support `<script vapor>` - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(language-core): ignore ts errors in function-scoped declare expressions (#5090) - Thanks to @zhiyuanzmj!
+- fix(language-core, typescript-plugin): handle self-reference component correctly (#5102) - Thanks to @KazariEX!
+- fix(language-core): do not generate element for `<template>` with `v-slot` (#5077) - Thanks to @KazariEX!
+- fix(language-service): set code action kinds to avoid warning (#5096) - Thanks to @KazariEX!
+- fix(language-core): handle parentheses in v-for exp
+- fix(language-core): slot exp formatting virtual code syntax incorrect
+- fix(language-core): arrow function formatting virtual code syntax incorrect in interpolation
+- fix(language-core): improve multiple lines event formatting result
+- fix(language-core): prefer `loc.source` instead of node content
+- fix(language-core): intersect local `$attrs` with `__VLS_ctx.$attrs` (#5113) - Thanks to @KazariEX!
+- fix(language-core): only generate model modifiers for components - Thanks to @KazariEX!
+- fix(language-plugin-pug): ignore duplicate attribute error of `class` (#5100) - Thanks to @KazariEX!
+- fix(language-core): align types of `v-for` with core (#5084) - Thanks to @KazariEX!
+- fix(language-core): map interpolation error with multiple variables correctly (#5158) - Thanks to @KazariEX!
+- fix(vscode): ask user to reload extension host when configuration changes (#5160) - Thanks to @typed-sigterm!
+- fix(typescript-plugin): update component names correctly for the first time - Thanks to @KazariEX!
+- fix(language-core): add `undefined` to first param type of optional model emits (#5171) - Thanks to @KazariEX!
+- fix(language-core): intersect `__VLS_slots` with `__VLS_ctx.$slots` (#5083) - Thanks to @KazariEX!
+- fix(language-core): complete codegen of slot name prop (#5139) - Thanks to @KazariEX!
+
+### Other Changes
+
+- refactor(language-service): read ast from codegen instead of parsing it repeatedly (#5086) - Thanks to @KazariEX!
+- refactor(language-core): rewrite `vueCompilerOptions` resolution logic
+- refactor(component-meta): read `scriptSetupRanges` from codegen - Thanks to @KazariEX!
+- refactor(component-meta): read node directly instead of creating sub ast - Thanks to @KazariEX!
+- refactor(component-meta): read ast from `sfc.script` - Thanks to @KazariEX!
+- refactor(language-core): generate the type of slots with function property (#5173) - Thanks to @KazariEX!
+- refactor(language-core): reduce codegen size of template returns - Thanks to @KazariEX!
+- refactor(language-core): remove semantic highlight of directives - Thanks to @KazariEX!
+- refactor: update alien-signals to 1.0.3 (#5181) - Thanks to @KazariEX!
+
 ## 2.2.0 <sup>official</sup>, 2.2.1 <sup>insiders</sup> (2024-12-24)
 
 ### Features

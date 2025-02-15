@@ -13,14 +13,14 @@ export class VueVirtualCode implements VirtualCode {
 
 	id = 'main';
 
-	_snapshot = signal<ts.IScriptSnapshot>(undefined!);
+	private _snapshot = signal<ts.IScriptSnapshot>(undefined!);
 
 	// computeds
 
 	_vueSfc = computedVueSfc(this.plugins, this.fileName, this.languageId, this._snapshot);
 	_sfc = computedSfc(this.ts, this.plugins, this.fileName, this._snapshot, this._vueSfc);
 	_mappings = computed(() => {
-		const snapshot = this._snapshot.get();
+		const snapshot = this._snapshot();
 		return [{
 			sourceOffsets: [0],
 			generatedOffsets: [0],
@@ -33,13 +33,13 @@ export class VueVirtualCode implements VirtualCode {
 	// others
 
 	get embeddedCodes() {
-		return this._embeddedCodes.get();
+		return this._embeddedCodes();
 	}
 	get snapshot() {
-		return this._snapshot.get();
+		return this._snapshot();
 	}
 	get mappings() {
-		return this._mappings.get();
+		return this._mappings();
 	}
 
 	constructor(
@@ -50,10 +50,10 @@ export class VueVirtualCode implements VirtualCode {
 		public plugins: VueLanguagePluginReturn[],
 		public ts: typeof import('typescript'),
 	) {
-		this._snapshot.set(initSnapshot);
+		this._snapshot(initSnapshot);
 	}
 
 	update(newSnapshot: ts.IScriptSnapshot) {
-		this._snapshot.set(newSnapshot);
+		this._snapshot(newSnapshot);
 	}
 }

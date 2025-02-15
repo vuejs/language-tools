@@ -38,7 +38,7 @@ export function create(): LanguageServicePlugin {
 
 					const codegen = tsCodegen.get(root._sfc);
 					const scriptSetup = root._sfc.scriptSetup;
-					const scriptSetupRanges = codegen?.scriptSetupRanges.get();
+					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 					if (!scriptSetup || !scriptSetupRanges) {
 						return;
 					}

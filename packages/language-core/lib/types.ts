@@ -31,6 +31,7 @@ export interface VueCompilerOptions {
 	jsxSlots: boolean;
 	checkUnknownProps: boolean;
 	checkUnknownEvents: boolean;
+	checkUnknownDirectives: boolean;
 	checkUnknownComponents: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;

@@ -1,7 +1,7 @@
 import { forEachElementNode, hyphenateTag, Language, VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import { _getComponentNames } from './requests/componentInfos';
+import { _getComponentNames } from './requests/getComponentNames';
 import type { RequestContext } from './requests/types';
 
 const windowsPathReg = /\\/g;
@@ -113,7 +113,7 @@ function getCompletionEntryDetails<T>(language: Language<T>, asScriptId: (fileNa
 			const { fileName } = args[6]?.__isAutoImport;
 			const sourceScript = language.scripts.get(asScriptId(fileName));
 			if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-				const sfc = sourceScript.generated.root._vueSfc.get();
+				const sfc = sourceScript.generated.root._vueSfc();
 				if (!sfc?.descriptor.script && !sfc?.descriptor.scriptSetup) {
 					for (const codeAction of details?.codeActions ?? []) {
 						for (const change of codeAction.changes) {

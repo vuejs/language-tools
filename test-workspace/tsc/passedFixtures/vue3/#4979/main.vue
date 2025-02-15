@@ -1,6 +1,6 @@
 <script setup lang="ts">
 defineSlots<{
-	default(props: { foo: string }): any;
+	default: (props: { foo: string }) => any;
 }>();
 </script>
 

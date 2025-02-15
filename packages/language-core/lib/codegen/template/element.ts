@@ -134,10 +134,7 @@ export function* generateComponent(
 				options,
 				ctx,
 				'template',
-				{
-					...ctx.codeFeatures.all,
-					completion: false,
-				},
+				ctx.codeFeatures.withoutCompletion,
 				dynamicTagInfo.tag,
 				dynamicTagInfo.offsets[1],
 				dynamicTagInfo.astHolder,
@@ -152,7 +149,7 @@ export function* generateComponent(
 		if (options.selfComponentName && possibleOriginalNames.includes(options.selfComponentName)) {
 			yield `typeof __VLS_self & (new () => { `
 				+ getSlotsPropertyName(options.vueCompilerOptions.target)
-				+ `: typeof ${options.slotsAssignName ?? `__VLS_slots`} }), `;
+				+ `: __VLS_Slots }), `;
 		}
 		else {
 			yield `void, `;
@@ -227,13 +224,13 @@ export function* generateComponent(
 	yield* wrapWith(
 		node.loc.start.offset,
 		node.loc.end.offset,
-		{
+		ctx.resolveCodeFeatures({
 			verification: {
 				shouldReport(_source, code) {
 					return String(code) !== '6133';
 				},
 			}
-		},
+		}),
 		var_componentInstance
 	);
 	yield ` = ${var_functionalComponent}`;

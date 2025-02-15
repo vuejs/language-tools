@@ -2,7 +2,7 @@ import type { LanguageServiceContext, ProviderResult, VirtualCode } from '@volar
 import type { CompilerDOM } from '@vue/language-core';
 import * as vue from '@vue/language-core';
 import { hyphenateAttr, hyphenateTag, VueVirtualCode } from '@vue/language-core';
-import { computed, ISignal } from 'alien-signals';
+import { computed } from 'alien-signals';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { URI } from 'vscode-uri';
 import { AttrNameCasing, TagNameCasing } from '../types';
@@ -199,7 +199,7 @@ type Tags = Map<string, {
 	}>,
 }>;
 
-const map = new WeakMap<VirtualCode, ISignal<Tags | undefined>>();
+const map = new WeakMap<VirtualCode, () => Tags | undefined>();
 
 function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 
@@ -260,5 +260,5 @@ function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 		map.set(sourceFile, getter);
 	}
 
-	return map.get(sourceFile)!.get() ?? new Map();
+	return map.get(sourceFile)!() ?? new Map();
 }

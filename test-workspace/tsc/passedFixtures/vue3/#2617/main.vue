@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 let UntypedComponent: new () => {
 	$slots: {
-		default: (_: any) => any
+		default: (props: any) => any
 	}
 } = {} as any;
 </script>

@@ -1,7 +1,8 @@
 import type { Code } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { endOfLine, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures } from './index';
+import type { ScriptCodegenOptions } from './index';
 import { generateCssClassProperty } from './template';
 
 export function* generateStyleModulesType(
