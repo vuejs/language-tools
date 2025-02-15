@@ -119,7 +119,7 @@ function computedPluginEmbeddedCodes(
 		id: string;
 		lang: string;
 	}) => code.id + '__' + code.lang;
-	const codes = computed(() => {
+	const getCodes = computed(() => {
 		try {
 			if (!plugin.getEmbeddedCodes) {
 				return [...computeds.values()];
@@ -178,7 +178,7 @@ function computedPluginEmbeddedCodes(
 	});
 
 	return computed(() => {
-		return codes().map(_file => {
+		return getCodes().map(_file => {
 			const { code, snapshot } = _file();
 			const mappings = buildMappings(code.content.map<Code>(segment => {
 				if (typeof segment === 'string') {
