@@ -53,7 +53,7 @@ export function create(
 						return;
 					}
 
-					const sfc = root._sfc;
+					const { sfc } = root;
 					const script = sfc.scriptSetup ?? sfc.script;
 					if (!sfc.template || !script) {
 						return;
@@ -95,7 +95,7 @@ export function create(
 						return codeAction;
 					}
 
-					const sfc = root._sfc;
+					const { sfc } = root;
 					const script = sfc.scriptSetup ?? sfc.script;
 					if (!sfc.template || !script) {
 						return codeAction;

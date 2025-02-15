@@ -60,10 +60,8 @@ export function create(
 						return;
 					}
 
-					const blocks = [
-						root._sfc.script,
-						root._sfc.scriptSetup,
-					].filter(block => !!block);
+					const { sfc } = root;
+					const blocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);
 					if (!blocks.length) {
 						return;
 					}

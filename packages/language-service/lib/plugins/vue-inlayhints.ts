@@ -30,21 +30,21 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 
 					const result: vscode.InlayHint[] = [];
 
-					const codegen = tsCodegen.get(virtualCode._sfc);
+					const codegen = tsCodegen.get(virtualCode.sfc);
 					const inlayHints = [
 						...codegen?.getGeneratedTemplate()?.inlayHints ?? [],
 						...codegen?.getGeneratedScript()?.inlayHints ?? [],
 					];
 					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 
-					if (scriptSetupRanges?.defineProps?.destructured && virtualCode._sfc.scriptSetup?.ast) {
+					if (scriptSetupRanges?.defineProps?.destructured && virtualCode.sfc.scriptSetup?.ast) {
 						const setting = 'vue.inlayHints.destructuredProps';
 						const enabled = await getSettingEnabled(setting);
 
 						if (enabled) {
 							for (const [prop, isShorthand] of findDestructuredProps(
 								ts,
-								virtualCode._sfc.scriptSetup.ast,
+								virtualCode.sfc.scriptSetup.ast,
 								scriptSetupRanges.defineProps.destructured.keys()
 							)) {
 								const name = prop.text;
@@ -62,9 +62,9 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					}
 
 					const blocks = [
-						virtualCode._sfc.template,
-						virtualCode._sfc.script,
-						virtualCode._sfc.scriptSetup,
+						virtualCode.sfc.template,
+						virtualCode.sfc.script,
+						virtualCode.sfc.scriptSetup,
 					];
 					const start = document.offsetAt(range.start);
 					const end = document.offsetAt(range.end);

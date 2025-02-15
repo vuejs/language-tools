@@ -23,7 +23,7 @@ export function create(): LanguageServicePlugin {
 				const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
 				const blockTypes = ['template', 'script', 'style'];
 
-				for (const customBlock of root._sfc.customBlocks) {
+				for (const customBlock of root.sfc.customBlocks) {
 					blockTypes.push(customBlock.type);
 				}
 
@@ -81,15 +81,15 @@ export function create(): LanguageServicePlugin {
 				},
 
 				provideDiagnostics(document, token) {
-					return worker(document, context, async vueSourceFile => {
-						const vueSfc = vueSourceFile._vueSfc.get();
+					return worker(document, context, async root => {
+						const { vueSfc, sfc } = root;
 						if (!vueSfc) {
 							return;
 						}
 
 						const originalResult = await htmlServiceInstance.provideDiagnostics?.(document, token);
 						const sfcErrors: vscode.Diagnostic[] = [];
-						const { template } = vueSourceFile._sfc;
+						const { template } = sfc;
 
 						const {
 							startTagEnd = Infinity,
@@ -126,7 +126,7 @@ export function create(): LanguageServicePlugin {
 					return worker(document, context, root => {
 
 						const result: vscode.DocumentSymbol[] = [];
-						const sfc = root._sfc;
+						const { sfc } = root;
 
 						if (sfc.template) {
 							result.push({

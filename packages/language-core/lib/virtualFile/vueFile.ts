@@ -17,9 +17,10 @@ export class VueVirtualCode implements VirtualCode {
 
 	// computeds
 
-	_vueSfc = computedVueSfc(this.plugins, this.fileName, this.languageId, this._snapshot);
-	_sfc = computedSfc(this.ts, this.plugins, this.fileName, this._snapshot, this._vueSfc);
-	_mappings = computed(() => {
+	private _vueSfc = computedVueSfc(this.plugins, this.fileName, this.languageId, this._snapshot);
+	private _sfc = computedSfc(this.ts, this.plugins, this.fileName, this._snapshot, this._vueSfc);
+	private _embeddedCodes = computedEmbeddedCodes(this.plugins, this.fileName, this._sfc);
+	private _mappings = computed(() => {
 		const snapshot = this._snapshot();
 		return [{
 			sourceOffsets: [0],
@@ -28,15 +29,20 @@ export class VueVirtualCode implements VirtualCode {
 			data: allCodeFeatures,
 		}];
 	});
-	_embeddedCodes = computedEmbeddedCodes(this.plugins, this.fileName, this._sfc);
 
 	// others
 
-	get embeddedCodes() {
-		return this._embeddedCodes();
-	}
 	get snapshot() {
 		return this._snapshot();
+	}
+	get vueSfc() {
+		return this._vueSfc();
+	}
+	get sfc() {
+		return this._sfc;
+	}
+	get embeddedCodes() {
+		return this._embeddedCodes();
 	}
 	get mappings() {
 		return this._mappings();
