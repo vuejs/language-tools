@@ -120,8 +120,8 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       alien-signals:
-        specifier: ^0.4.9
-        version: 0.4.12
+        specifier: ^1.0.3
+        version: 1.0.3
       minimatch:
         specifier: ^9.0.3
         version: 9.0.5
@@ -218,8 +218,8 @@ importers:
         specifier: 2.2.0
         version: link:../typescript-plugin
       alien-signals:
-        specifier: ^0.4.9
-        version: 0.4.12
+        specifier: ^1.0.3
+        version: 1.0.3
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -1422,8 +1422,8 @@ packages:
   ajv@6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
 
-  alien-signals@0.4.12:
-    resolution: {integrity: sha512-Og0PgAihxlp1R22bsoBsyhhMG4+qhU+fkkLPoGBQkYVc3qt9rYnrwYTf+M6kqUqUZpf3rXDnpL90iKa0QcSVVg==}
+  alien-signals@1.0.3:
+    resolution: {integrity: sha512-zQOh3wAYK5ujENxvBBR3CFGF/b6afaSzZ/c9yNhJ1ENrGHETvpUuKQsa93Qrclp0+PzTF93MaZ7scVp1uUozhA==}
 
   ansi-escapes@4.3.2:
     resolution: {integrity: sha512-gKXj5ALrKWQLsYG9jlTRmR/xKluxHV+Z9QEwNIgCfM1/uwPMCuzVVnh5mwTd+OuBZcwSIMbqssNWRm1lE51QaQ==}
@@ -5066,7 +5066,7 @@ snapshots:
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
 
-  alien-signals@0.4.12: {}
+  alien-signals@1.0.3: {}
 
   ansi-escapes@4.3.2:
     dependencies:

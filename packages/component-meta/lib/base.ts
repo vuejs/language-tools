@@ -733,7 +733,7 @@ function readVueComponentDefaultProps(
 		}
 
 		const codegen = vue.tsCodegen.get(root._sfc);
-		const scriptSetupRanges = codegen?.scriptSetupRanges.get();
+		const scriptSetupRanges = codegen?.getScriptSetupRanges();
 
 		if (scriptSetupRanges?.withDefaults?.argNode) {
 			const obj = findObjectLiteralExpression(scriptSetupRanges.withDefaults.argNode);

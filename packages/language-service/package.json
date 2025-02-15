@@ -24,7 +24,7 @@
 		"@vue/language-core": "2.2.0",
 		"@vue/shared": "^3.5.0",
 		"@vue/typescript-plugin": "2.2.0",
-		"alien-signals": "^0.4.9",
+		"alien-signals": "^1.0.3",
 		"path-browserify": "^1.0.1",
 		"volar-service-css": "0.0.62",
 		"volar-service-emmet": "0.0.62",
