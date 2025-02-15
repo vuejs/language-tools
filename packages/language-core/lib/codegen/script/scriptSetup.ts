@@ -44,7 +44,7 @@ export function* generateScriptSetup(
 			yield `<`;
 			yield [
 				scriptSetup.generic.text,
-				scriptSetup.name,
+				'main',
 				scriptSetup.generic.offset,
 				codeFeatures.all,
 			];
