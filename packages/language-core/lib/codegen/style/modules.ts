@@ -1,11 +1,11 @@
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
+import type { ScriptCodegenOptions } from '../script';
+import type { ScriptCodegenContext } from '../script/context';
 import { endOfLine, newLine } from '../utils';
-import type { ScriptCodegenContext } from './context';
-import type { ScriptCodegenOptions } from './index';
-import { generateCssClassProperty } from './template';
+import { generateClassProperty } from './classProperty';
 
-export function* generateStyleModulesType(
+export function* generateStyleModules(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext
 ): Generator<Code> {
@@ -29,7 +29,7 @@ export function* generateStyleModulesType(
 		}
 		yield `: Record<string, string> & ${ctx.localTypes.PrettifyLocal}<{}`;
 		for (const className of style.classNames) {
-			yield* generateCssClassProperty(
+			yield* generateClassProperty(
 				i,
 				className.text,
 				className.offset,

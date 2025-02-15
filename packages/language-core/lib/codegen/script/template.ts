@@ -1,7 +1,8 @@
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
-import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
+import { generateStyleScopedClasses } from '../style/scopedClasses';
+import { type TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
 import { endOfLine, newLine } from '../utils';
@@ -131,71 +132,6 @@ function* generateTemplateBody(
 		yield `type __VLS_TemplateRefs = {}${endOfLine}`;
 		yield `type __VLS_RootEl = any${endOfLine}`;
 	}
-}
-
-function* generateStyleScopedClasses(
-	options: ScriptCodegenOptions,
-	ctx: TemplateCodegenContext
-): Generator<Code> {
-	const firstClasses = new Set<string>();
-	yield `type __VLS_StyleScopedClasses = {}`;
-	for (let i = 0; i < options.sfc.styles.length; i++) {
-		const style = options.sfc.styles[i];
-		const option = options.vueCompilerOptions.experimentalResolveStyleCssClasses;
-		if (option === 'always' || (option === 'scoped' && style.scoped)) {
-			for (const className of style.classNames) {
-				if (firstClasses.has(className.text)) {
-					ctx.scopedClasses.push({
-						source: 'style_' + i,
-						className: className.text.slice(1),
-						offset: className.offset + 1
-					});
-					continue;
-				}
-				firstClasses.add(className.text);
-				yield* generateCssClassProperty(
-					i,
-					className.text,
-					className.offset,
-					'boolean',
-					true
-				);
-			}
-		}
-	}
-	yield endOfLine;
-}
-
-export function* generateCssClassProperty(
-	styleIndex: number,
-	classNameWithDot: string,
-	offset: number,
-	propertyType: string,
-	optional: boolean
-): Generator<Code> {
-	yield `${newLine} & { `;
-	yield [
-		'',
-		'style_' + styleIndex,
-		offset,
-		codeFeatures.navigation,
-	];
-	yield `'`;
-	yield [
-		classNameWithDot.slice(1),
-		'style_' + styleIndex,
-		offset + 1,
-		codeFeatures.navigation,
-	];
-	yield `'`;
-	yield [
-		'',
-		'style_' + styleIndex,
-		offset + classNameWithDot.length,
-		codeFeatures.navigationWithoutRename,
-	];
-	yield `${optional ? '?' : ''}: ${propertyType}`;
-	yield ` }`;
 }
 
 function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {

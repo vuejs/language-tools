@@ -6,13 +6,13 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { generateGlobalTypes, getGlobalTypesFileName } from '../globalTypes';
+import { generateStyleModules } from '../style/modules';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
 import { createScriptCodegenContext, ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
-import { generateStyleModulesType } from './styleModulesType';
 import { generateTemplate } from './template';
 
 export interface ScriptCodegenOptions {
@@ -135,7 +135,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 
 	// #4788
-	yield* generateStyleModulesType(options, ctx);
+	yield* generateStyleModules(options, ctx);
 
 	if (options.edited) {
 		yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;

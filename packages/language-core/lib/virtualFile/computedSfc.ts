@@ -73,7 +73,7 @@ export function computedSfc(
 		'js',
 		computed(() => getParseResult()?.descriptor.scriptSetup ?? undefined),
 		(block, base): NonNullable<Sfc['scriptSetup']> => {
-			const getGeneric = computedAttrValue("__generic", base, block);
+			const getGeneric = computedAttrValue('__generic', base, block);
 			const getAst = computed(() => {
 				for (const plugin of plugins) {
 					const ast = plugin.compileSFCScript?.(base.lang, base.content);
