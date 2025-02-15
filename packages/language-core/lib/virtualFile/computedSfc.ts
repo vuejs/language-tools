@@ -2,7 +2,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, pauseTracking, resumeTracking } from 'alien-signals';
 import type * as ts from 'typescript';
-import type { Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
+import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 import { computedArray } from '../utils/signals';
@@ -52,12 +52,8 @@ export function computedSfc(
 		'js',
 		computed(() => getParseResult()?.descriptor.script ?? undefined),
 		(block, base): NonNullable<Sfc['script']> => {
-			const src = computed(() => block().src);
-			const srcOffset = computed(() => {
-				const _src = src();
-				return _src ? getUntrackedSnapshot().getText(0, base.startTagEnd).lastIndexOf(_src) - base.startTagEnd : -1;
-			});
-			const ast = computed(() => {
+			const getSrc = computedAttrValue('__src', base, block);
+			const getAst = computed(() => {
 				for (const plugin of plugins) {
 					const ast = plugin.compileSFCScript?.(base.lang, base.content);
 					if (ast) {
@@ -67,9 +63,8 @@ export function computedSfc(
 				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
 			});
 			return mergeObject(base, {
-				get src() { return src(); },
-				get srcOffset() { return srcOffset(); },
-				get ast() { return ast(); },
+				get src() { return getSrc(); },
+				get ast() { return getAst(); },
 			});
 		}
 	);
@@ -78,15 +73,8 @@ export function computedSfc(
 		'js',
 		computed(() => getParseResult()?.descriptor.scriptSetup ?? undefined),
 		(block, base): NonNullable<Sfc['scriptSetup']> => {
-			const generic = computed(() => {
-				const _block = block();
-				return typeof _block.attrs.generic === 'string' ? _block.attrs.generic : undefined;
-			});
-			const genericOffset = computed(() => {
-				const _generic = generic();
-				return _generic !== undefined ? getUntrackedSnapshot().getText(0, base.startTagEnd).lastIndexOf(_generic) - base.startTagEnd : -1;
-			});
-			const ast = computed(() => {
+			const getGeneric = computedAttrValue('__generic', base, block);
+			const getAst = computed(() => {
 				for (const plugin of plugins) {
 					const ast = plugin.compileSFCScript?.(base.lang, base.content);
 					if (ast) {
@@ -96,9 +84,8 @@ export function computedSfc(
 				return ts.createSourceFile(fileName + '.' + base.lang, '', 99 satisfies ts.ScriptTarget.Latest);
 			});
 			return mergeObject(base, {
-				get generic() { return generic(); },
-				get genericOffset() { return genericOffset(); },
-				get ast() { return ast(); },
+				get generic() { return getGeneric(); },
+				get ast() { return getAst(); },
 			});
 		}
 	);
@@ -127,13 +114,7 @@ export function computedSfc(
 		computed(() => getParseResult()?.descriptor.styles ?? []),
 		(getBlock, i) => {
 			const base = computedSfcBlock('style_' + i, 'css', getBlock);
-			const getModule = computed(() => {
-				const { __module } = getBlock();
-				return __module ? {
-					name: __module.name,
-					offset: __module.offset ? base.start + __module.offset : undefined
-				} : undefined;
-			});
+			const getModule = computedAttrValue('__module', base, getBlock);
 			const getScoped = computed(() => !!getBlock().scoped);
 			const getCssVars = computed(() => [...parseCssVars(base.content)]);
 			const getClassNames = computed(() => [...parseCssClassNames(base.content)]);
@@ -308,6 +289,20 @@ export function computedSfc(
 			get start() { return getStart(); },
 			get end() { return getEnd(); },
 		};
+	}
+
+	function computedAttrValue<T extends SFCBlock>(
+		key: keyof T & string,
+		base: ReturnType<typeof computedSfcBlock>,
+		getBlock: () => T
+	) {
+		return computed(() => {
+			const val = getBlock()[key] as SfcBlockAttr | undefined;
+			if (typeof val === 'object') {
+				val.offset = base.start + val.offset;
+			}
+			return val;
+		});
 	}
 }
 

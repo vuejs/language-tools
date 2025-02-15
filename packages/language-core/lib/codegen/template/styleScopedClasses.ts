@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code } from '../../types';
-import { endOfLine, newLine, normalizeAttributeValue } from '../utils';
+import { endOfLine, normalizeAttributeValue } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 
@@ -11,17 +11,17 @@ export function* generateStyleScopedClassReferences(
 	withDot = false
 ): Generator<Code> {
 	for (const offset of ctx.emptyClassOffsets) {
-		yield `__VLS_styleScopedClasses['`;
+		yield `/** @type {__VLS_StyleScopedClasses['`;
 		yield [
 			'',
 			'template',
 			offset,
 			ctx.codeFeatures.additionalCompletion,
 		];
-		yield `']${endOfLine}`;
+		yield `']} */${endOfLine}`;
 	}
 	for (const { source, className, offset } of ctx.scopedClasses) {
-		yield `__VLS_styleScopedClasses[`;
+		yield `/** @type {__VLS_StyleScopedClasses[`;
 		yield [
 			'',
 			source,
@@ -39,9 +39,8 @@ export function* generateStyleScopedClassReferences(
 			offset + className.length,
 			ctx.codeFeatures.navigationWithoutRename,
 		];
-		yield `]${endOfLine}`;
+		yield `]} */${endOfLine}`;
 	}
-	yield newLine;
 
 	function* escapeString(source: string, className: string, offset: number, escapeTargets: string[]): Generator<Code> {
 		let count = 0;
