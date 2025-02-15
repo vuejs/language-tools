@@ -33,6 +33,7 @@ export interface VueCompilerOptions {
 	checkUnknownEvents: boolean;
 	checkUnknownDirectives: boolean;
 	checkUnknownComponents: boolean;
+	strictCssModules: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
 	dataAttributes: string[];

@@ -266,6 +266,7 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		checkUnknownEvents: strictTemplates,
 		checkUnknownDirectives: strictTemplates,
 		checkUnknownComponents: strictTemplates,
+		strictCssModules: false,
 		skipTemplateCodegen: false,
 		fallthroughAttributes: false,
 		dataAttributes: [],
