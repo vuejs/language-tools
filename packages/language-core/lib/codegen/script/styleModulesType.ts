@@ -15,17 +15,17 @@ export function* generateStyleModulesType(
 	}
 	yield `type __VLS_StyleModules = {${newLine}`;
 	for (const [style, i] of styles) {
-		const { name, offset } = style.module!;
-		if (offset) {
-			yield [
-				name,
-				'main',
-				offset + 1,
-				codeFeatures.all
-			];
+		if (style.module === true) {
+			yield `$style`;
 		}
 		else {
-			yield name;
+			const { text, offset } = style.module!;
+			yield [
+				text,
+				'main',
+				offset,
+				codeFeatures.all
+			];
 		}
 		yield `: Record<string, string> & ${ctx.localTypes.PrettifyLocal}<{}`;
 		for (const className of style.classNames) {
