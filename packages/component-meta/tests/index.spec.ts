@@ -859,6 +859,27 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		expect(a).toBeDefined();
 		expect(b).toBeDefined();
 	});
+
+	test('component-define-meta', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/define-meta/component-define-meta.vue');
+		const meta = checker.getComponentMeta(componentPath);
+		expect(meta.foo).toMatch('bar')
+		expect(meta.nested).toMatch(`{ foo: 'baz', arr: [1, 2] }`)
+	});
+
+	test('component-define-meta.ts', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/define-meta/component-define-meta.ts');
+		const meta = checker.getComponentMeta(componentPath);
+		expect(meta.foo).toMatch('bar')
+		expect(meta.nested).toMatch(`{ foo: 'baz', arr: [1, 2] }`)
+	});
+
+	test('component-define-meta.tsx', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/define-meta/component-define-meta.tsx');
+		const meta = checker.getComponentMeta(componentPath);
+		expect(meta.foo).toMatch('bar')
+		expect(meta.nested).toMatch(`{ foo: 'baz', arr: [1, 2] }`)
+	});
 });
 
 const checkerOptions: MetaCheckerOptions = {
