@@ -7,6 +7,7 @@ import { parse } from '../utils/parseSfc';
 
 const codeblockReg = /(`{3,})[\s\S]+?\1/g;
 const inlineCodeblockReg = /`[^\n`]+?`/g;
+const latexBlockReg = /(\${2,})[\s\S]+?\1/g;
 const scriptSetupReg = /\\\<[\s\S]+?\>\n?/g;
 const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 const angleBracketReg = /\<\S*\:\S*\>/g;
@@ -39,6 +40,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				.replace(codeblockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
 				// inline code block
 				.replace(inlineCodeblockReg, match => `\`${' '.repeat(match.length - 2)}\``)
+				// latex block
+				.replace(latexBlockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
 				// # \<script setup>
 				.replace(scriptSetupReg, match => ' '.repeat(match.length))
 				// <<< https://vitepress.dev/guide/markdown#import-code-snippets
