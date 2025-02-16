@@ -16,8 +16,7 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 };
 
 export interface VueCodeInformation extends CodeInformation {
-	__combineLastMapping?: boolean;
-	__combineOffsetMapping?: number;
+	__combineOffset?: number;
 }
 
 export type Code = Segment<VueCodeInformation>;

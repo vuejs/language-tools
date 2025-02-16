@@ -5,7 +5,7 @@ import type { Code, SfcBlock, SfcBlockAttr, VueCodeInformation } from '../../typ
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
-export const combineLastMapping: VueCodeInformation = { __combineLastMapping: true };
+export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
 export const variableNameRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
 export function* wrapWith(
@@ -22,7 +22,7 @@ export function* wrapWith(
 		}
 		yield wrapCode;
 	}
-	yield ['', 'template', endOffset, { __combineOffsetMapping: offset }];
+	yield ['', 'template', endOffset, { __combineOffset: offset }];
 }
 
 export function collectVars(
@@ -116,6 +116,6 @@ export function* generateSfcBlockAttrValue(
 		features
 	];
 	if (!quotes) {
-		yield [``, 'main', offset + text.length, { __combineOffsetMapping: 2 }];
+		yield [``, 'main', offset + text.length, { __combineOffset: 2 }];
 	}
 }
