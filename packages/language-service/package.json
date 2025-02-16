@@ -34,6 +34,7 @@
 		"volar-service-pug-beautify": "0.0.62",
 		"volar-service-typescript": "0.0.62",
 		"volar-service-typescript-twoslash-queries": "0.0.62",
+		"vscode-css-languageservice": "^6.3.1",
 		"vscode-html-languageservice": "^5.2.0",
 		"vscode-languageserver-textdocument": "^1.0.11",
 		"vscode-uri": "^3.0.8"
