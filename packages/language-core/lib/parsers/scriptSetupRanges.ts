@@ -54,11 +54,15 @@ type DefineOptions = {
 	inheritAttrs?: string;
 };
 
-type UseAttrs = CallExpressionRange;
+type UseAttrs = CallExpressionRange & {
+	name?: string;
+};
 
 type UseCssModule = CallExpressionRange;
 
-type UseSlots = CallExpressionRange;
+type UseSlots = CallExpressionRange & {
+	name?: string;
+};
 
 type UseTemplateRef = CallExpressionRange & {
 	name?: string;
@@ -284,26 +288,21 @@ export function parseScriptSetupRanges(
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 				defineProps = {
-					...parseCallExpression(node),
+					...parseCallExpressionAssignment(node, parent),
 					statement: getStatementRange(ts, parents, node, ast),
 					argNode: node.arguments[0]
 				};
-				if (ts.isVariableDeclaration(parent)) {
-					if (ts.isObjectBindingPattern(parent.name)) {
-						defineProps.destructured = new Map();
-						const identifiers = collectIdentifiers(ts, parent.name, []);
-						for (const { id, isRest, initializer } of identifiers) {
-							const name = _getNodeText(id);
-							if (isRest) {
-								defineProps.destructuredRest = name;
-							}
-							else {
-								defineProps.destructured.set(name, initializer);
-							}
+				if (ts.isVariableDeclaration(parent) && ts.isObjectBindingPattern(parent.name)) {
+					defineProps.destructured = new Map();
+					const identifiers = collectIdentifiers(ts, parent.name, []);
+					for (const { id, isRest, initializer } of identifiers) {
+						const name = _getNodeText(id);
+						if (isRest) {
+							defineProps.destructuredRest = name;
 						}
-					}
-					else {
-						defineProps.name = _getNodeText(parent.name);
+						else {
+							defineProps.destructured.set(name, initializer);
+						}
 					}
 				}
 				else if (
@@ -327,12 +326,9 @@ export function parseScriptSetupRanges(
 			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
 				defineEmits = {
-					...parseCallExpression(node),
+					...parseCallExpressionAssignment(node, parent),
 					statement: getStatementRange(ts, parents, node, ast)
 				};
-				if (ts.isVariableDeclaration(parent)) {
-					defineEmits.name = _getNodeText(parent.name);
-				}
 				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0])) {
 					for (const member of node.typeArguments[0].members) {
 						if (ts.isCallSignatureDeclaration(member)) {
@@ -347,12 +343,9 @@ export function parseScriptSetupRanges(
 			}
 			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
 				defineSlots = {
-					...parseCallExpression(node),
+					...parseCallExpressionAssignment(node, parent),
 					statement: getStatementRange(ts, parents, node, ast)
 				};
-				if (ts.isVariableDeclaration(parent)) {
-					defineSlots.name = _getNodeText(parent.name);
-				}
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
 				defineExpose = parseCallExpression(node);
@@ -377,22 +370,19 @@ export function parseScriptSetupRanges(
 				}
 			}
 			else if (vueCompilerOptions.composables.useAttrs.includes(callText)) {
-				useAttrs.push(parseCallExpression(node));
+				useAttrs.push(parseCallExpressionAssignment(node, parent));
 			}
 			else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
 				useCssModule.push(parseCallExpression(node));
 			}
 			else if (vueCompilerOptions.composables.useSlots.includes(callText)) {
-				useSlots.push(parseCallExpression(node));
+				useSlots.push(parseCallExpressionAssignment(node, parent));
 			}
 			else if (
 				vueCompilerOptions.composables.useTemplateRef.includes(callText)
 				&& !node.typeArguments?.length
 			) {
-				useTemplateRef.push({
-					name: ts.isVariableDeclaration(parent) ? _getNodeText(parent.name) : undefined,
-					...parseCallExpression(node)
-				});
+				useTemplateRef.push(parseCallExpressionAssignment(node, parent));
 			}
 		}
 
@@ -412,6 +402,13 @@ export function parseScriptSetupRanges(
 			exp: _getStartEnd(node.expression),
 			arg: node.arguments.length ? _getStartEnd(node.arguments[0]) : undefined,
 			typeArg: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
+		};
+	}
+
+	function parseCallExpressionAssignment(node: ts.CallExpression, parent: ts.Node) {
+		return {
+			name: ts.isVariableDeclaration(parent) ? _getNodeText(parent.name) : undefined,
+			...parseCallExpression(node),
 		};
 	}
 
