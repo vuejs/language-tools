@@ -54,15 +54,11 @@ type DefineOptions = {
 	inheritAttrs?: string;
 };
 
-type UseAttrs = CallExpressionRange & {
-	name?: string;
-};
+type UseAttrs = CallExpressionRange;
 
 type UseCssModule = CallExpressionRange;
 
-type UseSlots = CallExpressionRange & {
-	name?: string;
-};
+type UseSlots = CallExpressionRange;
 
 type UseTemplateRef = CallExpressionRange & {
 	name?: string;
@@ -370,13 +366,13 @@ export function parseScriptSetupRanges(
 				}
 			}
 			else if (vueCompilerOptions.composables.useAttrs.includes(callText)) {
-				useAttrs.push(parseCallExpressionAssignment(node, parent));
+				useAttrs.push(parseCallExpression(node));
 			}
 			else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
 				useCssModule.push(parseCallExpression(node));
 			}
 			else if (vueCompilerOptions.composables.useSlots.includes(callText)) {
-				useSlots.push(parseCallExpressionAssignment(node, parent));
+				useSlots.push(parseCallExpression(node));
 			}
 			else if (
 				vueCompilerOptions.composables.useTemplateRef.includes(callText)

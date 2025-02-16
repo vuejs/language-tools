@@ -80,12 +80,12 @@ export function* generateSlotOutlet(
 		else {
 			yield* wrapWith(
 				startTagOffset,
-				startTagEndOffset, 
+				startTagEndOffset,
 				ctx.codeFeatures.verification,
 				`${options.slotsAssignName ?? '__VLS_slots'}[`,
 				...wrapWith(
 					startTagOffset,
-					startTagEndOffset, 
+					startTagEndOffset,
 					ctx.codeFeatures.verification,
 					`'default'`
 				),

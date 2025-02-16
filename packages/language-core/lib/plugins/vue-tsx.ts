@@ -170,24 +170,6 @@ function createTsx(
 		return value !== 'false';
 	});
 
-	const getSetupSlotsReferenceName = computedSet(
-		computed(() => {
-			const newNames = new Set(
-				getScriptSetupRanges()?.useSlots.map(({ name }) => name).filter(name => name !== undefined)
-			);
-			return newNames;
-		})
-	);
-
-	const getSetupAttrsReferenceName = computedSet(
-		computed(() => {
-			const newNames = new Set(
-				getScriptSetupRanges()?.useAttrs.map(({ name }) => name).filter(name => name !== undefined)
-			);
-			return newNames;
-		})
-	);
-
 	const getComponentSelfName = computed(() => {
 		const { exportDefault } = getScriptRanges() ?? {};
 		if (sfc.script && exportDefault?.nameOption) {
@@ -221,8 +203,6 @@ function createTsx(
 			hasDefineSlots: setupHasDefineSlots(),
 			slotsAssignName: getSetupSlotsAssignName(),
 			propsAssignName: getSetupPropsAssignName(),
-			slotsReferenceNames: getSetupSlotsReferenceName(),
-			attrsReferenceNames: getSetupAttrsReferenceName(),
 			inheritAttrs: getSetupInheritAttrs(),
 			selfComponentName: getComponentSelfName(),
 		});

@@ -21,8 +21,6 @@ export interface TemplateCodegenOptions {
 	hasDefineSlots?: boolean;
 	slotsAssignName?: string;
 	propsAssignName?: string;
-	slotsReferenceNames: Set<string>;
-	attrsReferenceNames: Set<string>;
 	inheritAttrs: boolean;
 	selfComponentName?: string;
 }
@@ -35,12 +33,6 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
-	}
-	for (const name of options.slotsReferenceNames) {
-		ctx.addLocalVariable(name);
-	}
-	for (const name of options.attrsReferenceNames) {
-		ctx.addLocalVariable(name);
 	}
 	const slotsPropertyName = getSlotsPropertyName(options.vueCompilerOptions.target);
 	ctx.specialVars.add(slotsPropertyName);
@@ -64,7 +56,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	for (const [name, type] of speicalTypes) {
 		yield `${name}: ${type}${endOfLine}`;
 	}
-	yield `} & { [K in keyof typeof __VLS_ctx]: unknown }${endOfLine}`;
+	yield `} & { [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 
 	yield* ctx.generateAutoImportCompletion();
 	return ctx;
