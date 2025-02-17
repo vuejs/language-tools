@@ -86,7 +86,6 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		scopedClasses,
 		emptyClassOffsets,
 		inlayHints,
-		hasSlot: false,
 		bindingAttrLocs,
 		inheritedAttrVars,
 		templateRefs,

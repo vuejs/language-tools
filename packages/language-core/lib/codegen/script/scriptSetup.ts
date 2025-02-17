@@ -298,7 +298,14 @@ function* generateSetupFunction(
 	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 
 	if (syntax) {
-		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges.defineSlots)) {
+		if (
+			!options.vueCompilerOptions.skipTemplateCodegen
+			&& (
+				scriptSetupRanges.defineSlots
+				|| options.templateCodegen?.slots.length
+				|| options.templateCodegen?.dynamicSlots.length
+			)
+		) {
 			yield `const __VLS_component = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
