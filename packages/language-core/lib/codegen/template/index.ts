@@ -67,15 +67,27 @@ function* generateSlots(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
 	if (!options.hasDefineSlots) {
+		const hoistVars = new Map<string, string>();
+
+		// trick to avoid TS 4081 (#5186)
+		for (const slot of ctx.dynamicSlots) {
+			hoistVars.set(slot.expVar, slot.expVar = ctx.getInternalVariable());
+			hoistVars.set(slot.propsVar, slot.propsVar = ctx.getInternalVariable());
+		}
+		for (const slot of ctx.slots) {
+			hoistVars.set(slot.propsVar, slot.propsVar = ctx.getInternalVariable());
+		}
+		for (const [originalVar, hoistVar] of hoistVars) {
+			yield `var ${hoistVar} = ${originalVar}${endOfLine}`;
+		}
+
 		const name = getSlotsPropertyName(options.vueCompilerOptions.target);
 		yield `type __VLS_Slots = __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.${name}>`;
 		for (const { expVar, propsVar } of ctx.dynamicSlots) {
-			ctx.hasSlot = true;
 			yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
 		}
 		for (const slot of ctx.slots) {
 			yield `${newLine}& { `;
-			ctx.hasSlot = true;
 			if (slot.name && slot.offset !== undefined) {
 				yield* generateObjectProperty(
 					options,
