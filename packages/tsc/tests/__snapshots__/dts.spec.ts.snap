@@ -587,11 +587,11 @@ export {};
 
 exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slots/component.vue.d.ts 1`] = `
 "declare const __VLS_ctx: InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>;
-declare var __VLS_4: {};
-declare var __VLS_5: {
+declare var __VLS_1: {};
+declare var __VLS_3: {
     num: number;
 };
-declare var __VLS_6: {
+declare var __VLS_5: {
     str: string;
 };
 declare var __VLS_7: {
@@ -599,11 +599,11 @@ declare var __VLS_7: {
     str: string;
 };
 type __VLS_Slots = __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.$slots> & {
-    'no-bind'?: (props: typeof __VLS_4) => any;
+    'no-bind'?: (props: typeof __VLS_1) => any;
 } & {
-    default?: (props: typeof __VLS_5) => any;
+    default?: (props: typeof __VLS_3) => any;
 } & {
-    'named-slot'?: (props: typeof __VLS_6) => any;
+    'named-slot'?: (props: typeof __VLS_5) => any;
 } & {
     vbind?: (props: typeof __VLS_7) => any;
 }>;
@@ -664,11 +664,11 @@ type __VLS_WithSlots<T, S> = T & {
 
 exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: template-slots/component-no-script.vue.d.ts 1`] = `
 "declare const __VLS_ctx: InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>;
-declare var __VLS_4: {};
-declare var __VLS_5: {
+declare var __VLS_1: {};
+declare var __VLS_3: {
     num: number;
 };
-declare var __VLS_6: {
+declare var __VLS_5: {
     str: string;
 };
 declare var __VLS_7: {
@@ -676,11 +676,11 @@ declare var __VLS_7: {
     str: string;
 };
 type __VLS_Slots = __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.$slots> & {
-    'no-bind'?: (props: typeof __VLS_4) => any;
+    'no-bind'?: (props: typeof __VLS_1) => any;
 } & {
-    default?: (props: typeof __VLS_5) => any;
+    default?: (props: typeof __VLS_3) => any;
 } & {
-    'named-slot'?: (props: typeof __VLS_6) => any;
+    'named-slot'?: (props: typeof __VLS_5) => any;
 } & {
     vbind?: (props: typeof __VLS_7) => any;
 }>;
