@@ -131,7 +131,7 @@ export function* generateSlotOutlet(
 				offset: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
 				tagRange: [startTagOffset, startTagOffset + node.tag.length],
 				nodeLoc: node.loc,
-				propsVar,
+				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}
 		else if (
@@ -155,8 +155,8 @@ export function* generateSlotOutlet(
 			);
 			yield `)${endOfLine}`;
 			ctx.dynamicSlots.push({
-				expVar,
-				propsVar,
+				expVar: ctx.getHoistVariable(expVar),
+				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}
 		else {
@@ -164,7 +164,7 @@ export function* generateSlotOutlet(
 				name: 'default',
 				tagRange: [startTagOffset, startTagEndOffset],
 				nodeLoc: node.loc,
-				propsVar,
+				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}
 	}

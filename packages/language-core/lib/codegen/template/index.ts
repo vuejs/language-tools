@@ -45,6 +45,9 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	yield* generateStyleScopedClassReferences(ctx);
+	yield* ctx.generateAutoImportCompletion();
+	yield* ctx.generateHoistVariables();
+
 	const speicalTypes = [
 		[slotsPropertyName, yield* generateSlots(options, ctx)],
 		['$attrs', yield* generateInheritedAttrs(options, ctx)],
@@ -58,7 +61,6 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 	yield `} & { [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 
-	yield* ctx.generateAutoImportCompletion();
 	return ctx;
 }
 
@@ -67,20 +69,6 @@ function* generateSlots(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
 	if (!options.hasDefineSlots) {
-		const hoistVars = new Map<string, string>();
-
-		// trick to avoid TS 4081 (#5186)
-		for (const slot of ctx.dynamicSlots) {
-			hoistVars.set(slot.expVar, slot.expVar = ctx.getInternalVariable());
-			hoistVars.set(slot.propsVar, slot.propsVar = ctx.getInternalVariable());
-		}
-		for (const slot of ctx.slots) {
-			hoistVars.set(slot.propsVar, slot.propsVar = ctx.getInternalVariable());
-		}
-		for (const [originalVar, hoistVar] of hoistVars) {
-			yield `var ${hoistVar} = ${originalVar}${endOfLine}`;
-		}
-
 		const name = getSlotsPropertyName(options.vueCompilerOptions.target);
 		yield `type __VLS_Slots = __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.${name}>`;
 		for (const { expVar, propsVar } of ctx.dynamicSlots) {
@@ -145,7 +133,7 @@ function* generateTemplateRefs(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
 	yield `type __VLS_TemplateRefs = {${newLine}`;
-	for (const [name, [varName, offset]] of ctx.templateRefs) {
+	for (const [name, { varName, offset }] of ctx.templateRefs) {
 		yield* generateObjectProperty(
 			options,
 			ctx,
