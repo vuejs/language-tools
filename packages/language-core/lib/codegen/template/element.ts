@@ -272,7 +272,10 @@ export function* generateComponent(
 		yield `${endOfLine}`;
 
 		if (refName) {
-			ctx.templateRefs.set(refName, [varName, offset!]);
+			ctx.templateRefs.set(refName, {
+				varName: ctx.getHoistVariable(varName),
+				offset: offset!
+			});
 		}
 		if (isRootNode) {
 			ctx.singleRootElType = `NonNullable<typeof ${varName}>['$el']`;
@@ -358,11 +361,14 @@ export function* generateElement(
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
-		let refValue = `__VLS_nativeElements['${node.tag}']`;
+		let element = `__VLS_nativeElements['${node.tag}']`;
 		if (isVForChild) {
-			refValue = `[${refValue}]`;
+			element = `[${element}]`;
 		}
-		ctx.templateRefs.set(refName, [refValue, offset!]);
+		ctx.templateRefs.set(refName, {
+			varName: element,
+			offset: offset!
+		});
 	}
 	if (ctx.singleRootNode === node) {
 		ctx.singleRootElType = `typeof __VLS_nativeElements['${node.tag}']`;
