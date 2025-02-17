@@ -123,21 +123,18 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	function resolveCodeFeatures(features: VueCodeInformation) {
 		if (features.verification) {
 			if (ignoredError) {
-				// This mapping is covered by a @vue-ignore directive, so disable
-				// any diagnostics from being reported by ensuring `verification` is false.
+				// We are currently in a region of code covered by a @vue-ignore directive, so don't
+				// even bother performing any type-checking: set verification to false.
 				return {
 					...features,
 					verification: false,
 				};
 			}
 			if (expectErrorToken) {
-				// This mapping is covered by a @vue-expect-error directive, so, similar to
-				// the @vue-ignore case, we want to disable verification (unless `shouldReport`
-				// is already defined) by defining a `shouldReport` that:
-				// 1. returns false
-				// 2. also keeps track that an error/warning/diagnostic was encountered within
-				//    the node covered by `@vue-expect-error`. This will be used at a later point
-				//    (see `resetDirectiveComments`) to make sure we don't report an "unused ts-expect-error" diagnostic.
+				// We are currently in a region of code covered by a @vue-expect-error directive. We need to
+				// keep track of the number of errors encountered within this region so that we can know whether
+				// we will need to propagate an "unused ts-expect-error" diagnostic back to the original
+				// .vue file or not.
 				const token = expectErrorToken;
 				return {
 					...features,
