@@ -68,23 +68,25 @@ function* generateSlots(
 ): Generator<Code> {
 	if (!options.hasDefineSlots) {
 		const hoistVars = new Map<string, string>();
-		const name = getSlotsPropertyName(options.vueCompilerOptions.target);
 
-		yield `type __VLS_Slots = __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.${name}>`;
-
-		for (const { expVar, propsVar } of ctx.dynamicSlots) {
-			const expVar2 = ctx.getInternalVariable();
-			const propsVar2 = ctx.getInternalVariable();
-			hoistVars.set(expVar, expVar2);
-			hoistVars.set(propsVar, propsVar2);
-
-			yield `${newLine}& { [K in NonNullable<typeof ${expVar2}>]?: (props: typeof ${propsVar2}) => any }`;
+		// trick to avoid TS 4081 (#5186)
+		for (const slot of ctx.dynamicSlots) {
+			hoistVars.set(slot.expVar, slot.expVar = ctx.getInternalVariable());
+			hoistVars.set(slot.propsVar, slot.propsVar = ctx.getInternalVariable());
+		}
+		for (const slot of ctx.slots) {
+			hoistVars.set(slot.propsVar, slot.propsVar = ctx.getInternalVariable());
+		}
+		for (const [originalVar, hoistVar] of hoistVars) {
+			yield `var ${hoistVar} = ${originalVar}${endOfLine}`;
 		}
 
+		const name = getSlotsPropertyName(options.vueCompilerOptions.target);
+		yield `type __VLS_Slots = __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.${name}>`;
+		for (const { expVar, propsVar } of ctx.dynamicSlots) {
+			yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
+		}
 		for (const slot of ctx.slots) {
-			const propsVar2 = ctx.getInternalVariable();
-			hoistVars.set(slot.propsVar, propsVar2);
-
 			yield `${newLine}& { `;
 			if (slot.name && slot.offset !== undefined) {
 				yield* generateObjectProperty(
@@ -104,14 +106,9 @@ function* generateSlots(
 					`default`
 				);
 			}
-			yield `?: (props: typeof ${propsVar2}) => any }`;
+			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}
 		yield `>${endOfLine}`;
-
-		// trick to avoid TS 4081 (#5186)
-		for (const [varName, varName2] of hoistVars) {
-			yield `var ${varName2} = ${varName}${endOfLine}`;
-		}
 	}
 	return `__VLS_Slots`;
 }
