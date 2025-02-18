@@ -131,19 +131,12 @@ export function generateGlobalTypes({
 	};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
 
-	function __VLS_getVForSourceType(source: number): [number, number][];
-	function __VLS_getVForSourceType(source: string): [string, number][];
-	function __VLS_getVForSourceType<T extends any[]>(source: T): [
-		item: T[number],
-		index: number,
-	][];
-	function __VLS_getVForSourceType<T extends { [Symbol.iterator](): Iterator<any> }>(source: T): [
-		item: T extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never, 
-		index: number,
-	][];
-	// #3845
-	function __VLS_getVForSourceType<T extends number | { [Symbol.iterator](): Iterator<any> }>(source: T): [
-		item: number | (Exclude<T, number> extends { [Symbol.iterator](): Iterator<infer T1> } ? T1 : never), 
+	function __VLS_getVForSourceType<T extends number | string | any[] | Iterable<any>>(source: T): [
+		item: T extends number ? number
+			: T extends string ? string
+			: T extends any[] ? T[number]
+			: T extends Iterable<infer T1> ? T1
+			: any,
 		index: number,
 	][];
 	function __VLS_getVForSourceType<T>(source: T): [
