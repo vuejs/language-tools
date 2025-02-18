@@ -10,6 +10,7 @@
 		"noUnusedParameters": true,
 		"skipLibCheck": true,
 		"allowJs": true,
+		"declaration": true,
 		"noEmit": true,
 		"jsx": "preserve",
 		"baseUrl": ".",
