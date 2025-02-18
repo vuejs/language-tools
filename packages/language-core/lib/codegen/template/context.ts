@@ -129,8 +129,13 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		},
 		generateHoistVariables: function* () {
 			// trick to avoid TS 4081 (#5186)
-			for (const [originalVar, hoistVar] of hoistVars) {
-				yield `var ${hoistVar} = ${originalVar}${endOfLine}`;
+			if (hoistVars.size) {
+				yield `// @ts-ignore${newLine}`;
+				yield `var `
+				for (const [originalVar, hoistVar] of hoistVars) {
+					yield `${hoistVar} = ${originalVar}, `;
+				}
+				yield endOfLine;
 			}
 		},
 		ignoreError: function* (): Generator<Code> {

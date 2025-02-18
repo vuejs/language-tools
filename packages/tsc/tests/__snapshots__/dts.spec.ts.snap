@@ -587,14 +587,11 @@ export {};
 
 exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slots/component.vue.d.ts 1`] = `
 "declare const __VLS_ctx: InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>;
-declare var __VLS_1: {};
-declare var __VLS_3: {
+declare var __VLS_1: {}, __VLS_3: {
     num: number;
-};
-declare var __VLS_5: {
+}, __VLS_5: {
     str: string;
-};
-declare var __VLS_7: {
+}, __VLS_7: {
     num: number;
     str: string;
 };
@@ -664,14 +661,11 @@ type __VLS_WithSlots<T, S> = T & {
 
 exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: template-slots/component-no-script.vue.d.ts 1`] = `
 "declare const __VLS_ctx: InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>;
-declare var __VLS_1: {};
-declare var __VLS_3: {
+declare var __VLS_1: {}, __VLS_3: {
     num: number;
-};
-declare var __VLS_5: {
+}, __VLS_5: {
     str: string;
-};
-declare var __VLS_7: {
+}, __VLS_7: {
     num: number;
     str: string;
 };
