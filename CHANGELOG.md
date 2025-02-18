@@ -2,6 +2,29 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.2.4 <sup>official</sup>, 2.2.5 <sup>insiders</sup> (2025-XX-XX)
+
+### Features
+
+- feat(language-service): map sfc compiler errors outside the template inner content (#5045) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(language-core): move `generateSfcBlockSection` to the end to fix missing comma errors (#5184) - Thanks to @zhiyuanzmj!
+- fix(language-core): handle edge case of default slot name mismatch - Thanks to @KazariEX!
+- fix(language-core): combine dollar variable keys from the upper level interface - Thanks to @KazariEX!
+- fix(language-core): hoist the variables that may cause `TS4081` (#5192) - Thanks to @KazariEX!
+- fix(language-core): adjust regex match for `@vue-generic` to improve offset calculation (#5193) - Thanks to @Gehbt!
+- fix(language-core): correct codegen of native element refs - Thanks to @KazariEX!
+- fix(language-core): do not emit `undefined` for model with default value - Thanks to @RylanBueckert-Broadsign!
+- fix(language-core): ignore latex block content (#5151) - Thanks to @KazariEX!
+
+### Other Changes
+
+- refactor(language-core): drop invalid `v-scope` implemention - Thanks to @KazariEX!
+- refactor(language-core): improve type declaration of `v-for` - Thanks to @KazariEX!
+- test: enable `declaration` to track more errors - Thanks to @KazariEX!
+
 ## 2.2.2 <sup>official</sup>, 2.2.3 <sup>insiders</sup> (2025-02-15)
 
 ### Features
