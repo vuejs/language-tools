@@ -10,6 +10,8 @@ import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 import { generateVSlot } from './vSlot';
 
+const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
+
 // @ts-ignore
 const transformContext: CompilerDOM.TransformContext = {
 	onError: () => { },
@@ -34,25 +36,32 @@ export function* generateTemplateChild(
 	isVForChild: boolean = false
 ): Generator<Code> {
 	if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
-		const commentText = prevNode.content.trim().split(' ')[0];
-		if (/^@vue-skip\b[\s\S]*/.test(commentText)) {
-			yield `// @vue-skip${newLine}`;
-			return;
-		}
-		else if (/^@vue-ignore\b[\s\S]*/.test(commentText)) {
-			yield* ctx.ignoreError();
-		}
-		else if (/^@vue-expect-error\b[\s\S]*/.test(commentText)) {
-			yield* ctx.expectError(prevNode);
-		}
-		else {
-			const match = prevNode.loc.source.match(/(^<!--\s*@vue-generic\b\s*\{)(?<content>[\s\S]*)(?=\}[\s\S]*-->$)/);
-			if (match) {
-				const { content } = match.groups ?? {};
-				ctx.lastGenericComment = {
-					content,
-					offset: prevNode.loc.start.offset + match[1].length
-				};
+		const match = prevNode.loc.source.match(commentDirectiveRegex);
+		if (match) {
+			const { name, content } = match.groups!;
+			switch (name) {
+				case 'skip': {
+					yield `// @vue-skip${newLine}`;
+					return;
+				}
+				case 'ignore': {
+					yield* ctx.ignoreError();
+					break;
+				}
+				case 'expect-error': {
+					yield* ctx.expectError(prevNode);
+					break;
+				}
+				case 'generic': {
+					const text = content.trim();
+					if (text.startsWith('{') && text.endsWith('}')) {
+						ctx.lastGenericComment = {
+							content: text.slice(1, -1),
+							offset: prevNode.loc.start.offset + prevNode.loc.source.indexOf('{') + 1,
+						};
+					}
+					break;
+				}
 			}
 		}
 	}
