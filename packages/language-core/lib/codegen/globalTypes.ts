@@ -160,15 +160,18 @@ export function generateGlobalTypes({
 		: T extends (...args: any) => any
 			? T
 			: __VLS_unknownDirective;
-	function __VLS_withScope<T, K>(ctx: T, scope: K): ctx is T & K;
 	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 	function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 		T extends new (...args: any) => any
-		? (props: ${fnPropsType}, ctx?: any) => __VLS_Element & { __ctx?: {
-			attrs?: any,
-			slots?: K extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : any,
-			emit?: K extends { $emit: infer Emit } ? Emit : any
-		} & { props?: ${fnPropsType}; expose?(exposed: K): void; } }
+		? (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
+			__ctx?: {
+				attrs?: any;
+				slots?: K extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : any;
+				emit?: K extends { $emit: infer Emit } ? Emit : any;
+				expose?(exposed: K): void;
+				props?: ${fnPropsType};
+			}
+		}
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: (_: {}${checkUnknownProps ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${checkUnknownProps ? '' : ' & Record<string, unknown>'} } };

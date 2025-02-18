@@ -183,14 +183,14 @@ export function getVForNode(node: CompilerDOM.ElementNode) {
 }
 
 function getVIfNode(node: CompilerDOM.ElementNode) {
-	const forDirective = node.props.find(
+	const ifDirective = node.props.find(
 		(prop): prop is CompilerDOM.DirectiveNode =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'if'
 	);
-	if (forDirective) {
+	if (ifDirective) {
 		let ifNode: CompilerDOM.IfNode | undefined;
-		CompilerDOM.processIf(node, forDirective, transformContext, _ifNode => {
+		CompilerDOM.processIf(node, ifDirective, transformContext, _ifNode => {
 			ifNode = { ..._ifNode };
 			return undefined;
 		});
@@ -198,7 +198,7 @@ function getVIfNode(node: CompilerDOM.ElementNode) {
 			for (const branch of ifNode.branches) {
 				branch.children = [{
 					...node,
-					props: node.props.filter(prop => prop !== forDirective),
+					props: node.props.filter(prop => prop !== ifDirective),
 				}];
 			}
 			return ifNode;
