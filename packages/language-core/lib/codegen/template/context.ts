@@ -69,7 +69,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	const bindingAttrLocs: CompilerDOM.SourceLocation[] = [];
 	const inheritedAttrVars = new Set<string>();
 	const templateRefs = new Map<string, {
-		varName: string;
+		typeExp: string;
 		offset: number;
 	}>();
 

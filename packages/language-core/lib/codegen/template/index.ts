@@ -133,7 +133,7 @@ function* generateTemplateRefs(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
 	yield `type __VLS_TemplateRefs = {${newLine}`;
-	for (const [name, { varName, offset }] of ctx.templateRefs) {
+	for (const [name, { typeExp, offset }] of ctx.templateRefs) {
 		yield* generateObjectProperty(
 			options,
 			ctx,
@@ -141,7 +141,7 @@ function* generateTemplateRefs(
 			offset,
 			ctx.codeFeatures.navigationAndCompletion
 		);
-		yield `: typeof ${varName},${newLine}`;
+		yield `: ${typeExp},${newLine}`;
 	}
 	yield `}${endOfLine}`;
 	return `__VLS_TemplateRefs`;

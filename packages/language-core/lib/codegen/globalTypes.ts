@@ -45,11 +45,7 @@ export function generateGlobalTypes({
 	const __VLS_unref: typeof import('${lib}').unref;
 	const __VLS_placeholder: any;
 
-	const __VLS_nativeElements = {
-		...{} as SVGElementTagNameMap,
-		...{} as HTMLElementTagNameMap,
-	};
-
+	type __VLS_NativeElements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_IntrinsicElements = ${(
 			target >= 3.3
 				? `import('${lib}/jsx-runtime').JSX.IntrinsicElements;`
@@ -68,7 +64,7 @@ export function generateGlobalTypes({
 	type __VLS_GlobalDirectives = import('${lib}').GlobalDirectives;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
-	type __VLS_unknownDirective = (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
+	type __VLS_SpreadMerge<A, B> = Omit<A, keyof B> & B;
 	type __VLS_WithComponent<N0 extends string, LocalComponents, Self, N1 extends string, N2 extends string, N3 extends string> =
 		N1 extends keyof LocalComponents ? N1 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N1] } :
 		N2 extends keyof LocalComponents ? N2 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N2] } :
@@ -152,7 +148,7 @@ export function generateGlobalTypes({
 		? NonNullable<T['created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted']>
 		: T extends (...args: any) => any
 			? T
-			: __VLS_unknownDirective;
+			: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
 	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 	function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 		T extends new (...args: any) => any

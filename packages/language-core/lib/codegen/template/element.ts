@@ -21,7 +21,8 @@ const colonReg = /:/g;
 export function* generateComponent(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
+	node: CompilerDOM.ElementNode,
+	isVForChild: boolean
 ): Generator<Code> {
 	const tagOffsets = [node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag)];
 	if (!node.isSelfClosing && options.template.lang === 'html') {
@@ -255,12 +256,6 @@ export function* generateComponent(
 	yield* generateElementEvents(options, ctx, node, componentFunctionalVar, componentVNodeVar, componentCtxVar);
 	yield* generateElementDirectives(options, ctx, node);
 
-	if (hasVBindAttrs(options, ctx, node)) {
-		const attrsVar = ctx.getInternalVariable();
-		ctx.inheritedAttrVars.add(attrsVar);
-		yield `let ${attrsVar}!: Parameters<typeof ${componentFunctionalVar}>[0];\n`;
-	}
-
 	const [refName, offset] = yield* generateElementReference(options, ctx, node);
 	const isRootNode = node === ctx.singleRootNode;
 
@@ -269,23 +264,26 @@ export function* generateComponent(
 		ctx.currentComponent.used = true;
 
 		yield `var ${componentInstanceVar} = {} as (Parameters<NonNullable<typeof ${componentCtxVar}['expose']>>[0] | null)`;
-		if (node.codegenNode?.type === CompilerDOM.NodeTypes.VNODE_CALL
-			&& node.codegenNode.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
-			&& node.codegenNode.props.properties.some(({ key }) => key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && key.content === 'ref_for')
-		) {
+		if (isVForChild) {
 			yield `[]`;
 		}
 		yield `${endOfLine}`;
 
-		if (refName) {
+		if (refName && offset) {
 			ctx.templateRefs.set(refName, {
-				varName: ctx.getHoistVariable(componentInstanceVar),
-				offset: offset!
+				typeExp: `typeof ${ctx.getHoistVariable(componentInstanceVar)}`,
+				offset
 			});
 		}
 		if (isRootNode) {
 			ctx.singleRootElType = `NonNullable<typeof ${componentInstanceVar}>['$el']`;
 		}
+	}
+
+	if (hasVBindAttrs(options, ctx, node)) {
+		const attrsVar = ctx.getInternalVariable();
+		ctx.inheritedAttrVars.add(attrsVar);
+		yield `let ${attrsVar}!: Parameters<typeof ${componentFunctionalVar}>[0]${endOfLine}`;
 	}
 
 	collectStyleScopedClassReferences(options, ctx, node);
@@ -358,18 +356,18 @@ export function* generateElement(
 	yield* generateElementDirectives(options, ctx, node);
 
 	const [refName, offset] = yield* generateElementReference(options, ctx, node);
-	if (refName) {
-		let element = `__VLS_nativeElements['${node.tag}']`;
+	if (refName && offset) {
+		let typeExp = `__VLS_NativeElements['${node.tag}']`;
 		if (isVForChild) {
-			element = `[${element}]`;
+			typeExp += `[]`;
 		}
 		ctx.templateRefs.set(refName, {
-			varName: element,
-			offset: offset!
+			typeExp,
+			offset
 		});
 	}
 	if (ctx.singleRootNode === node) {
-		ctx.singleRootElType = `typeof __VLS_nativeElements['${node.tag}']`;
+		ctx.singleRootElType = `__VLS_NativeElements['${node.tag}']`;
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {

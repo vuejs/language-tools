@@ -113,7 +113,7 @@ export function* generateTemplateChild(
 			}
 			else {
 				const { currentComponent } = ctx;
-				yield* generateComponent(options, ctx, node);
+				yield* generateComponent(options, ctx, node, isVForChild);
 				ctx.currentComponent = currentComponent;
 			}
 		}
