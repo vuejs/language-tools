@@ -46,12 +46,12 @@ export function* generateTemplateChild(
 			yield* ctx.expectError(prevNode);
 		}
 		else {
-			const match = prevNode.loc.source.match(/^<!--\s*@vue-generic\b\s*\{(?<content>[^}]*)\}/);
+			const match = prevNode.loc.source.match(/(^<!--\s*@vue-generic\b\s*\{)(?<content>[\s\S]*)(?=\}[\s\S]*-->$)/);
 			if (match) {
 				const { content } = match.groups ?? {};
 				ctx.lastGenericComment = {
 					content,
-					offset: prevNode.loc.start.offset + match[0].indexOf(content)
+					offset: prevNode.loc.start.offset + match[1].length
 				};
 			}
 		}

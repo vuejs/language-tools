@@ -73,12 +73,12 @@ const plugin: VueLanguagePlugin = ctx => {
 
 		function visit(node: CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode) {
 			if (node.type === CompilerDOM.NodeTypes.COMMENT) {
-				const match = node.loc.source.match(/^<!--\s*@vue-generic\b\s*\{(?<content>[^}]*)\}/);
+				const match = node.loc.source.match(/(^<!--\s*@vue-generic\b\s*\{)(?<content>[\s\S]*)(?=\}[\s\S]*-->$)/);
 				if (match) {
 					const { content } = match.groups ?? {};
 					addFormatCodes(
 						content,
-						node.loc.start.offset + match[0].indexOf(content),
+						node.loc.start.offset + match[1].length,
 						formatBrackets.generic
 					);
 				}
