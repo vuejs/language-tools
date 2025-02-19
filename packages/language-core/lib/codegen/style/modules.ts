@@ -24,7 +24,7 @@ export function* generateStyleModules(
 				text,
 				'main',
 				offset,
-				codeFeatures.all
+				codeFeatures.withoutHighlight
 			];
 		}
 		yield `: Record<string, string> & ${ctx.localTypes.PrettifyLocal}<{}`;
