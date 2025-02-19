@@ -24,26 +24,23 @@ export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenCont
  * 
  * ```vue
  *   <script setup lang="ts">
- *     defineProps<{
- *       knownProp1: string,
- *       knownProp2: string,
- *       knownProp3: string,
- *       knownProp4: string,
- *       knownProp5_will_trigger_unused_expect_error: string,
- *       knownProp6: string,
- *     }>()
+ *   defineProps<{
+ *     knownProp1: string;
+ *     knownProp2: string;
+ *     knownProp3: string;
+ *     knownProp4_will_trigger_unused_expect_error: string;
+ *   }>();
  *   </script>
  *   
  *   <template>
- *     {{knownProp1}}
- *     {{error_unknownProp}} <!-- ERROR: Property 'error_unknownProp' does not exist on type [...] -->
- *     {{knownProp2}}
- *     <!-- @vue-expect-error this suppresses an Unknown Property Error -->
+ *     {{ knownProp1 }}
+ *     {{ error_unknownProp }} <!-- ERROR: Property 'error_unknownProp' does not exist on type [...] -->
+ *     {{ knownProp2 }}
+ *     <!-- @vue-expect-error This suppresses an Unknown Property Error -->
  *     {{ suppressed_error_unknownProp }}
- *     {{knownProp4}}
+ *     {{ knownProp3 }}
  *     <!-- @vue-expect-error This will trigger Unused '@ts-expect-error' directive.ts(2578) -->
- *     {{ knownProp5_will_trigger_unused_expect_error }}
- *     {{knownProp6}}
+ *     {{ knownProp4_will_trigger_unused_expect_error }}
  *   </template>
  * ```
  * 
@@ -58,21 +55,20 @@ export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenCont
  * to prevent VSCode syntax double-greying out double-commented code).
  * 
  * ```ts
-          (__VLS_ctx.knownProp1);
-          (__VLS_ctx.error_unknownProp); // ERROR: Property 'error_unknownProp' does not exist on type [...]
-          (__VLS_ctx.knownProp2);
-          // @vue-expect-error start
-          ( __VLS_ctx.suppressed_error_unknownProp );
-          // @ts-expect-error __VLS_TS_EXPECT_ERROR
-          ;
-          // @vue-expect-error end of INTERPOLATION
-          (__VLS_ctx.knownProp4);
-          // @vue-expect-error start
-          ( __VLS_ctx.knownProp5_will_trigger_unused_expect_error );
-          // @ts-expect-error __VLS_TS_EXPECT_ERROR
-          ;
-          // @vue-expect-error end of INTERPOLATION
-          (__VLS_ctx.knownProp6);
+ *   ( __VLS_ctx.knownProp1 );
+ *   ( __VLS_ctx.error_unknownProp ); // ERROR: Property 'error_unknownProp' does not exist on type [...]
+ *   ( __VLS_ctx.knownProp2 );
+ *   // @vue-expect-error start
+ *   ( __VLS_ctx.suppressed_error_unknownProp );
+ *   // @ts-expect-error __VLS_TS_EXPECT_ERROR
+ *   ;
+ *   // @vue-expect-error end of INTERPOLATION
+ *   ( __VLS_ctx.knownProp3 );
+ *   // @vue-expect-error start
+ *   ( __VLS_ctx.knownProp4_will_trigger_unused_expect_error );
+ *   // @ts-expect-error __VLS_TS_EXPECT_ERROR
+ *   ;
+ *   // @vue-expect-error end of INTERPOLATION
  * ```
  *
  * In the generated code, there are actually 3 diagnostic errors that'll be raised in the first
@@ -85,7 +81,7 @@ export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenCont
  * 
  * Be sure to pay careful attention to the mixture of `@vue-expect-error` and `@ts-expect-error`;
  * Within the TS file, the only "real" directives recognized by TS are going to be prefixed with `@ts-`;
- * any `@vue-`-prefixed directives in the comments are only for debugging purposes.
+ * any `@vue-` prefixed directives in the comments are only for debugging purposes.
  *
  * As mentioned above, there are 3 diagnostics errors that'll be generated for the above code, but
  * only 2 should be propagated back to the original .vue file.
