@@ -1,77 +1,68 @@
 import type { Mapping } from '@volar/language-core';
+import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { endOfLine, generateSfcBlockSection, newLine } from '../common';
-import { generateGlobalTypes } from '../globalTypes';
+import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import { codeFeatures } from '../codeFeatures';
+import { generateGlobalTypes, getGlobalTypesFileName } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
 import { createScriptCodegenContext, ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
-import { generateStyleModulesType } from './styleModulesType';
 import { generateTemplate } from './template';
 
-export const codeFeatures = {
-	all: {
-		verification: true,
-		completion: true,
-		semantic: true,
-		navigation: true,
-	} as VueCodeInformation,
-	none: {} as VueCodeInformation,
-	verification: {
-		verification: true,
-	} as VueCodeInformation,
-	navigation: {
-		navigation: true,
-	} as VueCodeInformation,
-	navigationWithoutRename: {
-		navigation: {
-			shouldRename() {
-				return false;
-			},
-		},
-	} as VueCodeInformation,
-};
-
 export interface ScriptCodegenOptions {
-	fileBaseName: string;
 	ts: typeof ts;
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	sfc: Sfc;
+	edited: boolean;
+	fileName: string;
 	lang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[]; } | undefined;
-	edited: boolean;
-	appendGlobalTypes: boolean;
+	destructuredPropNames: Set<string>;
+	templateRefNames: Set<string>;
 	getGeneratedLength: () => number;
 	linkedCodeMappings: Mapping[];
+	appendGlobalTypes: boolean;
 }
 
 export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
 	const ctx = createScriptCodegenContext(options);
 
 	if (options.vueCompilerOptions.__setupedGlobalTypes) {
-		yield `/// <reference types=".vue-global-types/${options.vueCompilerOptions.lib}_${options.vueCompilerOptions.target}_${options.vueCompilerOptions.strictTemplates}.d.ts" />${newLine}`;
+		const globalTypes = options.vueCompilerOptions.__setupedGlobalTypes;
+		if (typeof globalTypes === 'object') {
+			let relativePath = path.relative(path.dirname(options.fileName), globalTypes.absolutePath);
+			if (relativePath !== globalTypes.absolutePath && !relativePath.startsWith('./') && !relativePath.startsWith('../')) {
+				relativePath = './' + relativePath;
+			}
+			yield `/// <reference types="${relativePath}" />${newLine}`;
+		}
+		else {
+			yield `/// <reference types=".vue-global-types/${getGlobalTypesFileName(options.vueCompilerOptions)}" />${newLine}`;
+		}
 	}
 	else {
 		yield `/* placeholder */`;
 	}
 
 	if (options.sfc.script?.src) {
-		yield* generateSrc(options.sfc.script, options.sfc.script.src);
+		yield* generateSrc(options.sfc.script.src);
+	}
+	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
+		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 	if (options.sfc.script && options.scriptRanges) {
 		const { exportDefault, classBlockEnd } = options.scriptRanges;
 		const isExportRawObject = exportDefault
 			&& options.sfc.script.content[exportDefault.expression.start] === '{';
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
-			yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
-			yield* generateDefineProp(options, options.sfc.scriptSetup);
 			if (exportDefault) {
 				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
@@ -118,7 +109,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				yield `__VLS_template = () => {${newLine}`;
 				const templateCodegenCtx = yield* generateTemplate(options, ctx);
 				yield* generateComponentSelf(options, ctx, templateCodegenCtx);
-				yield `},${newLine}`;
+				yield `}${endOfLine}`;
 				yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
 			}
 		}
@@ -127,8 +118,6 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		}
 	}
 	else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
-		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
-		yield* generateDefineProp(options, options.sfc.scriptSetup);
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 
@@ -140,21 +129,16 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 
 	if (!ctx.generatedTemplate) {
-		yield `function __VLS_template() {${newLine}`;
 		const templateCodegenCtx = yield* generateTemplate(options, ctx);
-		yield `}${endOfLine}`;
 		yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	}
-
-	// #4788
-	yield* generateStyleModulesType(options, ctx);
 
 	if (options.edited) {
 		yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
 	}
 	yield* ctx.localTypes.generate([...ctx.localTypes.getUsedNames()]);
 	if (options.appendGlobalTypes) {
-		yield generateGlobalTypes(options.vueCompilerOptions.lib, options.vueCompilerOptions.target, options.vueCompilerOptions.strictTemplates);
+		yield generateGlobalTypes(options.vueCompilerOptions);
 	}
 
 	if (options.sfc.scriptSetup) {
@@ -168,25 +152,4 @@ export function* generateScriptSectionPartiallyEnding(source: string, end: numbe
 	yield `;`;
 	yield ['', source, end, codeFeatures.verification];
 	yield `/* PartiallyEnd: ${mark} */${newLine}`;
-}
-
-function* generateDefineProp(
-	options: ScriptCodegenOptions,
-	scriptSetup: NonNullable<Sfc['scriptSetup']>
-): Generator<Code> {
-	const definePropProposalA = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
-	const definePropProposalB = scriptSetup.content.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition') || options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
-
-	if (definePropProposalA || definePropProposalB) {
-		yield `type __VLS_PropOptions<T> = Exclude<import('${options.vueCompilerOptions.lib}').Prop<T>, import('${options.vueCompilerOptions.lib}').PropType<T>>${endOfLine}`;
-		if (definePropProposalA) {
-			yield `declare function defineProp<T>(name: string, options: ({ required: true } | { default: T }) & __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
-			yield `declare function defineProp<T>(name?: string, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
-		}
-		if (definePropProposalB) {
-			yield `declare function defineProp<T>(value: T | (() => T), required?: boolean, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
-			yield `declare function defineProp<T>(value: T | (() => T) | undefined, required: true, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
-			yield `declare function defineProp<T>(value?: T | (() => T), required?: boolean, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
-		}
-	}
 }

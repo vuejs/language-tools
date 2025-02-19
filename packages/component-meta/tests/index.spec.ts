@@ -1,6 +1,6 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { createChecker, createCheckerByJson, MetaCheckerOptions, ComponentMetaChecker, TypeMeta } from '..';
+import { ComponentMetaChecker, createChecker, createCheckerByJson, MetaCheckerOptions, TypeMeta } from '..';
 
 const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
@@ -363,6 +363,17 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 				}
 			}
 		});
+	});
+
+	test('reference-type-props-destructured', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-props/component-destructure.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
+
+		const text = meta.props.find(prop => prop.name === 'text');
+
+		expect(text?.default).toEqual('"foobar"');
 	});
 
 	test('reference-type-props-js', () => {

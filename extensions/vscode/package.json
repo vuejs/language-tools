@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "2.1.6",
+	"version": "2.2.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -88,7 +88,7 @@
 		],
 		"typescriptServerPlugins": [
 			{
-				"name": "typescript-vue-plugin-bundle",
+				"name": "vue-typescript-plugin-pack",
 				"enableForWorkspaceTypeScriptVersions": true,
 				"configNamespace": "typescript"
 			}
@@ -274,6 +274,14 @@
 					],
 					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
 				},
+				"vue.server.compatibleExtensions": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "Set compatible extensions to skip automatic detection of Hybrid Mode."
+				},
 				"vue.server.includeLanguages": {
 					"type": "array",
 					"items": {
@@ -376,6 +384,11 @@
 					"default": "autoKebab",
 					"description": "Preferred attr name case."
 				},
+				"vue.complete.defineAssignment": {
+					"type": "boolean",
+					"default": true,
+					"description": "Auto add `const props = ` before `defineProps` when selecting the completion item `props`. (also `emit` and `slots`)"
+				},
 				"vue.autoInsert.dotValue": {
 					"type": "boolean",
 					"default": false,
@@ -389,27 +402,27 @@
 				"vue.inlayHints.destructuredProps": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for destructured props."
+					"markdownDescription": "Show inlay hints for destructured props:\n\n```ts\nwatch(() => /* props. */foo, () => { ... });\n```"
 				},
 				"vue.inlayHints.missingProps": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for missing required props."
+					"markdownDescription": "Show inlay hints for missing required props:\n\n```html\n<Comp />\n<!-- ^ foo! -->\n```"
 				},
 				"vue.inlayHints.inlineHandlerLeading": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for event argument in inline handlers."
+					"markdownDescription": "Show inlay hints for event argument in inline handlers:\n\n```html\n<Comp @foo=\"/* $event => */console.log($event)\" />\n```"
 				},
 				"vue.inlayHints.optionsWrapper": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for component options wrapper for type support."
+					"markdownDescription": "Show inlay hints for component options wrapper for type support:\n\n```vue\n<script lang=\"ts\">\nexport default /* (await import('vue')).defineComponent( */{}/* ) */;\n</script>\n```"
 				},
 				"vue.inlayHints.vBindShorthand": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for v-bind shorthand."
+					"markdownDescription": "Show inlay hints for v-bind shorthand:\n\n```html\n<Comp :foo />\n     <!-- ^ =\"foo\" -->\n```"
 				},
 				"vue.format.template.initialIndent": {
 					"type": "boolean",
@@ -538,7 +551,7 @@
 		]
 	},
 	"scripts": {
-		"prebuild": "cd ../.. && pnpm run build",
+		"prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
 		"build": "node scripts/build",
 		"build:minify": "pnpm run build -- --minify",
 		"watch": "pnpm run build -- --watch",
@@ -546,20 +559,22 @@
 		"pack:next": "pnpm run build && vsce package",
 		"release": "pnpm run build:minify && vsce publish",
 		"release:next": "pnpm run build && vsce publish --pre-release",
-		"size": "pnpm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html"
+		"size": "pnpm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html",
+		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.4.1",
-		"@vscode/vsce": "latest",
-		"@vue/language-core": "2.1.6",
-		"@vue/language-server": "2.1.6",
-		"@vue/typescript-plugin": "2.1.6",
-		"esbuild": "~0.21.0",
-		"esbuild-plugin-copy": "latest",
-		"esbuild-visualizer": "latest",
+		"@volar/vscode": "~2.4.11",
+		"@vscode/vsce": "^3.2.1",
+		"@vue/language-core": "2.2.2",
+		"@vue/language-server": "2.2.2",
+		"@vue/typescript-plugin": "2.2.2",
+		"esbuild": "^0.25.0",
+		"esbuild-visualizer": "^0.7.0",
+		"reactive-vscode": "^0.2.9",
 		"semver": "^7.5.4",
-		"vscode-tmlanguage-snapshot": "latest"
+		"vscode-ext-gen": "^0.5.0",
+		"vscode-tmlanguage-snapshot": "^0.1.3"
 	}
 }

@@ -1,8 +1,8 @@
+import * as lsp from '@volar/vscode';
 import { AttrNameCasing, TagNameCasing } from '@vue/language-server/lib/types';
 import * as vscode from 'vscode';
-import * as lsp from '@volar/vscode';
-import { attrNameCasings, tagNameCasings } from './features/nameCasing';
 import { config } from './config';
+import { attrNameCasings, tagNameCasings } from './features/nameCasing';
 
 export const middleware: lsp.Middleware = {
 	...lsp.middleware,

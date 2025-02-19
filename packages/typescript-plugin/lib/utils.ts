@@ -1,213 +1,265 @@
-import * as fs from 'fs';
-import * as net from 'net';
-import * as os from 'os';
-import * as path from 'path';
+import { FileMap } from '@vue/language-core';
+import { camelize, capitalize } from '@vue/shared';
+import * as fs from 'node:fs';
+import * as net from 'node:net';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import type * as ts from 'typescript';
-import type { ProjectInfo, Request } from './server';
+import type { ComponentPropInfo } from './requests/getComponentProps';
+import type { NotificationData, ProjectInfo, RequestData, ResponseData } from './server';
 
 export { TypeScriptProjectHost } from '@volar/typescript';
 
 const { version } = require('../package.json');
 const platform = os.platform();
 const pipeDir = platform === 'win32'
-	? `\\\\.\\pipe`
-	: `/tmp`;
-const toFullPath = (file: string) => {
-	if (platform === 'win32') {
-		return pipeDir + '\\' + file;
-	}
-	else {
-		return pipeDir + '/' + file;
-	}
-};
-const configuredNamedPipePathPrefix = toFullPath(`vue-named-pipe-${version}-configured-`);
-const inferredNamedPipePathPrefix = toFullPath(`vue-named-pipe-${version}-inferred-`);
-const pipes = new Map<string, 'unknown' | 'ready'>();
+	? `\\\\.\\pipe\\`
+	: `/tmp/`;
 
-export const onSomePipeReadyCallbacks: (() => void)[] = [];
-
-function waitingForNamedPipeServerReady(namedPipePath: string) {
-	const socket = net.connect(namedPipePath);
-	const start = Date.now();
-	socket.on('connect', () => {
-		console.log('[Vue Named Pipe Client] Connected:', namedPipePath, 'in', (Date.now() - start) + 'ms');
-		socket.write('ping');
-	});
-	socket.on('data', () => {
-		console.log('[Vue Named Pipe Client] Ready:', namedPipePath, 'in', (Date.now() - start) + 'ms');
-		pipes.set(namedPipePath, 'ready');
-		socket.end();
-		onSomePipeReadyCallbacks.forEach(cb => cb());
-	});
-	socket.on('error', err => {
-		if ((err as any).code === 'ECONNREFUSED') {
-			try {
-				console.log('[Vue Named Pipe Client] Deleting:', namedPipePath);
-				fs.promises.unlink(namedPipePath);
-			} catch { }
-		}
-		pipes.delete(namedPipePath);
-		socket.end();
-	});
-	socket.on('timeout', () => {
-		pipes.delete(namedPipePath);
-		socket.end();
-	});
+export function getServerPath(kind: ts.server.ProjectKind, id: number) {
+	if (kind === 1 satisfies ts.server.ProjectKind.Configured) {
+		return `${pipeDir}vue-named-pipe-${version}-configured-${id}`;
+	} else {
+		return `${pipeDir}vue-named-pipe-${version}-inferred-${id}`;
+	}
 }
 
-export function getNamedPipePath(projectKind: ts.server.ProjectKind.Configured | ts.server.ProjectKind.Inferred, key: number) {
-	return projectKind === 1 satisfies ts.server.ProjectKind.Configured
-		? `${configuredNamedPipePathPrefix}${key}`
-		: `${inferredNamedPipePathPrefix}${key}`;
-}
+class NamedPipeServer {
+	path: string;
+	connecting = false;
+	projectInfo?: ProjectInfo;
+	containsFileCache = new Map<string, Promise<boolean | undefined | null>>();
+	componentNamesAndProps = new FileMap<
+		Record<string, null | ComponentPropInfo[]>
+	>(false);
 
-export function getReadyNamedPipePaths() {
-	const configuredPipes: string[] = [];
-	const inferredPipes: string[] = [];
-	for (let i = 0; i < 20; i++) {
-		const configuredPipe = getNamedPipePath(1 satisfies ts.server.ProjectKind.Configured, i);
-		const inferredPipe = getNamedPipePath(0 satisfies ts.server.ProjectKind.Inferred, i);
-		if (pipes.get(configuredPipe) === 'ready') {
-			configuredPipes.push(configuredPipe);
-		}
-		else if (!pipes.has(configuredPipe)) {
-			pipes.set(configuredPipe, 'unknown');
-			waitingForNamedPipeServerReady(configuredPipe);
-		}
-		if (pipes.get(inferredPipe) === 'ready') {
-			inferredPipes.push(inferredPipe);
-		}
-		else if (!pipes.has(inferredPipe)) {
-			pipes.set(inferredPipe, 'unknown');
-			waitingForNamedPipeServerReady(inferredPipe);
+	constructor(kind: ts.server.ProjectKind, id: number) {
+		this.path = getServerPath(kind, id);
+	}
+
+	containsFile(fileName: string) {
+		if (this.projectInfo) {
+			if (!this.containsFileCache.has(fileName)) {
+				this.containsFileCache.set(fileName, (async () => {
+					const res = await this.sendRequest<boolean>('containsFile', fileName);
+					if (typeof res !== 'boolean') {
+						// If the request fails, delete the cache
+						this.containsFileCache.delete(fileName);
+					}
+					return res;
+				})());
+			}
+			return this.containsFileCache.get(fileName);
 		}
 	}
-	return {
-		configured: configuredPipes,
-		inferred: inferredPipes,
-	};
-}
 
-export function connect(namedPipePath: string, timeout?: number) {
-	return new Promise<net.Socket | 'error' | 'timeout'>(resolve => {
-		const socket = net.connect(namedPipePath);
-		if (timeout) {
-			socket.setTimeout(timeout);
+	async getComponentProps(fileName: string, tag: string) {
+		const componentAndProps = this.componentNamesAndProps.get(fileName);
+		if (!componentAndProps) {
+			return;
 		}
-		const onConnect = () => {
-			cleanup();
-			resolve(socket);
-		};
-		const onError = (err: any) => {
+		const props = componentAndProps[tag]
+			?? componentAndProps[camelize(tag)]
+			?? componentAndProps[capitalize(camelize(tag))];
+		if (props) {
+			return props;
+		}
+		return await this.sendRequest<ComponentPropInfo[]>('subscribeComponentProps', fileName, tag);
+	}
+
+	update() {
+		if (!this.connecting && !this.projectInfo) {
+			this.connecting = true;
+			this.connect();
+		}
+	}
+
+	connect() {
+		this.socket = net.connect(this.path);
+		this.socket.on('data', this.onData.bind(this));
+		this.socket.on('connect', async () => {
+			const projectInfo = await this.sendRequest<ProjectInfo>('projectInfo', '');
+			if (projectInfo) {
+				console.log('TSServer project ready:', projectInfo.name);
+				this.projectInfo = projectInfo;
+				this.containsFileCache.clear();
+				onServerReady.forEach(cb => cb());
+			} else {
+				this.close();
+			}
+		});
+		this.socket.on('error', err => {
 			if ((err as any).code === 'ECONNREFUSED') {
 				try {
-					console.log('[Vue Named Pipe Client] Deleting:', namedPipePath);
-					fs.promises.unlink(namedPipePath);
+					console.log('Deleteing invalid named pipe file:', this.path);
+					fs.promises.unlink(this.path);
 				} catch { }
 			}
-			pipes.delete(namedPipePath);
-			cleanup();
-			resolve('error');
-			socket.end();
-		};
-		const onTimeout = () => {
-			cleanup();
-			resolve('timeout');
-			socket.end();
-		};
-		const cleanup = () => {
-			socket.off('connect', onConnect);
-			socket.off('error', onError);
-			socket.off('timeout', onTimeout);
-		};
-		socket.on('connect', onConnect);
-		socket.on('error', onError);
-		socket.on('timeout', onTimeout);
-	});
+			this.close();
+		});
+		this.socket.on('timeout', () => {
+			this.close();
+		});
+	}
+
+	close() {
+		this.connecting = false;
+		this.projectInfo = undefined;
+		this.socket?.end();
+	}
+
+	socket?: net.Socket;
+	seq = 0;
+	dataChunks: Buffer[] = [];
+	requestHandlers: Map<number, (res: any) => void> = new Map();
+
+	onData(chunk: Buffer) {
+		this.dataChunks.push(chunk);
+		const data = Buffer.concat(this.dataChunks);
+		const text = data.toString();
+		if (text.endsWith('\n\n')) {
+			this.dataChunks.length = 0;
+			const results = text.split('\n\n');
+			for (let result of results) {
+				result = result.trim();
+				if (!result) {
+					continue;
+				}
+				try {
+					const data: ResponseData | NotificationData = JSON.parse(result.trim());
+					if (typeof data[0] === 'number') {
+						const [seq, res] = data;
+						this.requestHandlers.get(seq)?.(res);
+					} else {
+						const [type, fileName, res] = data;
+						this.onNotification(type, fileName, res);
+					}
+				} catch (e) {
+					console.error('JSON parse error:', e);
+				}
+			}
+		}
+	}
+
+	onNotification(type: NotificationData[0], fileName: string, data: any) {
+		// console.log(`[${type}] ${fileName} ${JSON.stringify(data)}`);
+
+		if (type === 'componentNamesUpdated') {
+			let components = this.componentNamesAndProps.get(fileName);
+			if (!components) {
+				components = {};
+				this.componentNamesAndProps.set(fileName, components);
+			}
+			const newNames: string[] = data;
+			const newNameSet = new Set(newNames);
+			for (const name in components) {
+				if (!newNameSet.has(name)) {
+					delete components[name];
+				}
+			}
+			for (const name of newNames) {
+				if (!components[name]) {
+					components[name] = null;
+				}
+			}
+		}
+		else if (type === 'componentPropsUpdated') {
+			const components = this.componentNamesAndProps.get(fileName) ?? {};
+			const [name, props]: [
+				name: string,
+				props: ComponentPropInfo[],
+			] = data;
+			components[name] = props;
+		}
+		else {
+			console.error('Unknown notification type:', type);
+			debugger;
+		}
+	}
+
+	sendRequest<T>(requestType: RequestData[1], fileName: string, ...args: any[]) {
+		return new Promise<T | undefined | null>(resolve => {
+			const seq = this.seq++;
+			// console.time(`[${seq}] ${requestType} ${fileName}`);
+			this.requestHandlers.set(seq, data => {
+				// console.timeEnd(`[${seq}] ${requestType} ${fileName}`);
+				this.requestHandlers.delete(seq);
+				resolve(data);
+				clearInterval(retryTimer);
+			});
+			const retry = () => {
+				const data: RequestData = [seq, requestType, fileName, ...args];
+				this.socket!.write(JSON.stringify(data) + '\n\n');
+			};
+			retry();
+			const retryTimer = setInterval(retry, 1000);
+		});
+	}
 }
 
-export async function searchNamedPipeServerForFile(fileName: string) {
-	const paths = await getReadyNamedPipePaths();
+export const configuredServers: NamedPipeServer[] = [];
+export const inferredServers: NamedPipeServer[] = [];
+export const onServerReady: (() => void)[] = [];
 
-	const configuredServers = (await Promise.all(
-		paths.configured.map(async path => {
-			// Find existing servers
-			const socket = await connect(path);
-			if (typeof socket !== 'object') {
-				return;
-			}
+for (let i = 0; i < 10; i++) {
+	configuredServers.push(new NamedPipeServer(1 satisfies ts.server.ProjectKind.Configured, i));
+	inferredServers.push(new NamedPipeServer(0 satisfies ts.server.ProjectKind.Inferred, i));
+}
 
-			// Find servers containing the current file
-			const containsFile = await sendRequestWorker<boolean>({ type: 'containsFile' satisfies Request['type'], args: [fileName] }, socket);
-			if (!containsFile) {
-				socket.end();
-				return;
-			}
+export async function getBestServer(fileName: string) {
+	for (const server of configuredServers) {
+		server.update();
+	}
 
-			// Get project info for each server
-			const projectInfo = await sendRequestWorker<ProjectInfo>({ type: 'projectInfo' satisfies Request['type'], args: [fileName] }, socket);
+	let servers = (await Promise.all(
+		configuredServers.map(async server => {
+			const projectInfo = server.projectInfo;
 			if (!projectInfo) {
-				socket.end();
 				return;
 			}
-
-			return {
-				socket,
-				projectInfo,
-			};
+			const containsFile = await server.containsFile(fileName);
+			if (!containsFile) {
+				return;
+			}
+			return server;
 		})
 	)).filter(server => !!server);
 
 	// Sort servers by tsconfig
-	configuredServers.sort((a, b) => sortTSConfigs(fileName, a.projectInfo.name, b.projectInfo.name));
+	servers.sort((a, b) => sortTSConfigs(fileName, a.projectInfo!.name, b.projectInfo!.name));
 
-	if (configuredServers.length) {
-		// Close all but the first server
-		for (let i = 1; i < configuredServers.length; i++) {
-			configuredServers[i].socket.end();
-		}
+	if (servers.length) {
 		// Return the first server
-		return configuredServers[0];
+		return servers[0];
 	}
 
-	const inferredServers = (await Promise.all(
-		paths.inferred.map(async namedPipePath => {
-			// Find existing servers
-			const socket = await connect(namedPipePath);
-			if (typeof socket !== 'object') {
-				return;
-			}
+	for (const server of inferredServers) {
+		server.update();
+	}
 
-			// Get project info for each server
-			const projectInfo = await sendRequestWorker<ProjectInfo>({ type: 'projectInfo' satisfies Request['type'], args: [fileName] }, socket);
+	servers = (await Promise.all(
+		inferredServers.map(server => {
+			const projectInfo = server.projectInfo;
 			if (!projectInfo) {
-				socket.end();
 				return;
 			}
-
 			// Check if the file is in the project's directory
-			if (!path.relative(projectInfo.currentDirectory, fileName).startsWith('..')) {
-				return {
-					socket,
-					projectInfo,
-				};
+			if (path.relative(projectInfo.currentDirectory, fileName).startsWith('..')) {
+				return;
 			}
+			return server;
 		})
 	)).filter(server => !!server);
 
 	// Sort servers by directory
-	inferredServers.sort((a, b) =>
-		b.projectInfo.currentDirectory.replace(/\\/g, '/').split('/').length
-		- a.projectInfo.currentDirectory.replace(/\\/g, '/').split('/').length
+	servers.sort((a, b) =>
+		b.projectInfo!.currentDirectory.replace(/\\/g, '/').split('/').length
+		- a.projectInfo!.currentDirectory.replace(/\\/g, '/').split('/').length
 	);
 
-	if (inferredServers.length) {
-		// Close all but the first server
-		for (let i = 1; i < inferredServers.length; i++) {
-			inferredServers[i].socket.end();
-		}
+	if (servers.length) {
 		// Return the first server
-		return inferredServers[0];
+		return servers[0];
 	}
 }
 
@@ -231,37 +283,4 @@ function sortTSConfigs(file: string, a: string, b: string) {
 function isFileInDir(fileName: string, dir: string) {
 	const relative = path.relative(dir, fileName);
 	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
-}
-
-export function sendRequestWorker<T>(request: Request, socket: net.Socket) {
-	return new Promise<T | undefined | null>(resolve => {
-		let dataChunks: Buffer[] = [];
-		const onData = (chunk: Buffer) => {
-			dataChunks.push(chunk);
-			const data = Buffer.concat(dataChunks);
-			const text = data.toString();
-			if (text.endsWith('\n\n')) {
-				let json = null;
-				try {
-					json = JSON.parse(text);
-				} catch (e) {
-					console.error('[Vue Named Pipe Client] Failed to parse response:', text);
-				}
-				cleanup();
-				resolve(json);
-			}
-		};
-		const onError = (err: any) => {
-			console.error('[Vue Named Pipe Client] Error:', err.message);
-			cleanup();
-			resolve(undefined);
-		};
-		const cleanup = () => {
-			socket.off('data', onData);
-			socket.off('error', onError);
-		};
-		socket.on('data', onData);
-		socket.on('error', onError);
-		socket.write(JSON.stringify(request));
-	});
 }

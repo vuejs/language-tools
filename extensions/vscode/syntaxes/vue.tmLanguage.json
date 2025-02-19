@@ -4,6 +4,9 @@
 	"scopeName": "source.vue",
 	"patterns": [
 		{
+			"include": "#vue-comments"
+		},
+		{
 			"include": "text.html.basic#comment"
 		},
 		{
@@ -1276,6 +1279,39 @@
 							]
 						}
 					]
+				}
+			]
+		},
+		"vue-comments": {
+			"patterns": [
+				{
+					"include": "#vue-comments-key-value"
+				}
+			]
+		},
+		"vue-comments-key-value": {
+			"begin": "(<!--)\\s*(@)([\\w$]+)(?=\\s)",
+			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.comment.vue"
+				},
+				"2": {
+					"name": "punctuation.definition.block.tag.comment.vue"
+				},
+				"3": {
+					"name": "storage.type.class.comment.vue"
+				}
+			},
+			"end": "(-->)",
+			"endCaptures": {
+				"1": {
+					"name": "punctuation.definition.comment.vue"
+				}
+			},
+			"name": "comment.block.vue",
+			"patterns": [
+				{
+					"include": "source.json#value"
 				}
 			]
 		}

@@ -1,9 +1,9 @@
-import * as path from 'path';
-import * as fs from 'fs';
-import * as ts from 'typescript';
-import { describe, expect, it } from 'vitest';
 import { proxyCreateProgram } from '@volar/typescript';
 import * as vue from '@vue/language-core';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as ts from 'typescript';
+import { describe, expect, it } from 'vitest';
 
 const workspace = path.resolve(__dirname, '../../../test-workspace/component-meta');
 const normalizePath = (filename: string) => filename.replace(/\\/g, '/');
@@ -32,7 +32,8 @@ describe('vue-tsc-dts', () => {
 			vueOptions = vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
 		}
 		else {
-			vueOptions = vue.resolveVueCompilerOptions({ extensions: ['.vue', '.cext'] });
+			vueOptions = vue.getDefaultCompilerOptions();
+			vueOptions.extensions = ['.vue', '.cext'];
 			vueOptions.__setupedGlobalTypes = vue.setupGlobalTypes(workspace.replace(windowsPathReg, '/'), vueOptions, ts.sys);
 		}
 		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
@@ -88,7 +89,7 @@ function readFilesRecursive(dir: string) {
 	return result;
 }
 
-function shortenPath(path: string): string {
+function shortenPath(path: string) {
 	path = normalizePath(path);
 	const segments = path.split('/');
 	return segments.slice(-2).join('/');

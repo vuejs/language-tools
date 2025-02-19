@@ -1,10 +1,11 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
-import { endOfLine, generateSfcBlockSection, newLine } from '../common';
+import { codeFeatures } from '../codeFeatures';
+import { combineLastMapping, endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponent, generateEmitsOption } from './component';
 import { generateComponentSelf } from './componentSelf';
 import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures, generateScriptSectionPartiallyEnding } from './index';
+import { type ScriptCodegenOptions, generateScriptSectionPartiallyEnding } from './index';
 import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
@@ -12,12 +13,11 @@ export function* generateScriptSetupImports(
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	yield [
-		scriptSetup.content.substring(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
+		scriptSetup.content.slice(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
 		'scriptSetup',
 		0,
 		codeFeatures.all,
 	];
-	yield newLine;
 }
 
 export function* generateScriptSetup(
@@ -26,8 +26,6 @@ export function* generateScriptSetup(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	const definePropMirrors = new Map<string, number>();
-
 	if (scriptSetup.generic) {
 		if (!options.scriptRanges?.exportDefault) {
 			if (options.sfc.scriptSetup) {
@@ -41,71 +39,57 @@ export function* generateScriptSetup(
 			}
 			yield `export default `;
 		}
-		yield `(<`;
-		yield [
-			scriptSetup.generic,
-			scriptSetup.name,
-			scriptSetup.genericOffset,
-			codeFeatures.all,
-		];
-		if (!scriptSetup.generic.endsWith(`,`)) {
-			yield `,`;
+		yield `(`;
+		if (typeof scriptSetup.generic === 'object') {
+			yield `<`;
+			yield [
+				scriptSetup.generic.text,
+				'main',
+				scriptSetup.generic.offset,
+				codeFeatures.all,
+			];
+			if (!scriptSetup.generic.text.endsWith(`,`)) {
+				yield `,`;
+			}
+			yield `>`;
 		}
-		yield `>(${newLine}`
+		yield `(${newLine}`
 			+ `	__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'],${newLine}`
 			+ `	__VLS_ctx?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
 			+ `	__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],${newLine}`
 			+ `	__VLS_setup = (async () => {${newLine}`;
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined, definePropMirrors);
+		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined);
 
 		const emitTypes: string[] = [];
 
-		if (scriptSetupRanges.emits.define) {
-			emitTypes.push(`typeof ${scriptSetupRanges.emits.name ?? '__VLS_emit'}`);
+		if (scriptSetupRanges.defineEmits) {
+			emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? '__VLS_emit'}`);
 		}
 		if (scriptSetupRanges.defineProp.some(p => p.isModel)) {
-			emitTypes.push(`__VLS_ModelEmitsType`);
+			emitTypes.push(`typeof __VLS_modelEmit`);
 		}
 
-		yield `		return {} as {${newLine}`
-			+ `			props: ${ctx.localTypes.PrettifyLocal}<typeof __VLS_functionalComponentProps & __VLS_PublicProps> & __VLS_BuiltInPublicProps,${newLine}`
-			+ `			expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.expose.define ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
-			+ `			attrs: any,${newLine}`
-			+ `			slots: __VLS_TemplateResult['slots'],${newLine}`
-			+ `			emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
-			+ `		}${endOfLine}`;
-		yield `	})(),${newLine}`; // __VLS_setup = (async () => {
+		yield `return {} as {${newLine}`
+			+ `	props: ${ctx.localTypes.PrettifyLocal}<__VLS_OwnProps & __VLS_PublicProps & Partial<__VLS_InheritedAttrs>> & __VLS_BuiltInPublicProps,${newLine}`
+			+ `	expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${scriptSetupRanges.defineExpose ? 'typeof __VLS_exposed' : '{}'}>): void,${newLine}`
+			+ `	attrs: any,${newLine}`
+			+ `	slots: __VLS_Slots,${newLine}`
+			+ `	emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
+			+ `}${endOfLine}`;
+		yield `})(),${newLine}`; // __VLS_setup = (async () => {
 		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))`;
 	}
 	else if (!options.sfc.script) {
 		// no script block, generate script setup code at root
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default', definePropMirrors);
+		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default');
 	}
 	else {
 		if (!options.scriptRanges?.exportDefault) {
 			yield `export default `;
 		}
 		yield `await (async () => {${newLine}`;
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'return', definePropMirrors);
+		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'return');
 		yield `})()`;
-	}
-
-	if (ctx.scriptSetupGeneratedOffset !== undefined) {
-		for (const defineProp of scriptSetupRanges.defineProp) {
-			if (!defineProp.localName) {
-				continue;
-			}
-			const [_, localName] = getPropAndLocalName(scriptSetup, defineProp);
-			const propMirror = definePropMirrors.get(localName!);
-			if (propMirror !== undefined) {
-				options.linkedCodeMappings.push({
-					sourceOffsets: [defineProp.localName.start + ctx.scriptSetupGeneratedOffset],
-					generatedOffsets: [propMirror],
-					lengths: [defineProp.localName.end - defineProp.localName.start],
-					data: undefined,
-				});
-			}
-		}
 	}
 }
 
@@ -114,194 +98,223 @@ function* generateSetupFunction(
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
-	syntax: 'return' | 'export default' | undefined,
-	definePropMirrors: Map<string, number>
+	syntax: 'return' | 'export default' | undefined
 ): Generator<Code> {
-	if (options.vueCompilerOptions.target >= 3.3) {
-		yield `const { `;
-		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!ctx.bindingNames.has(macro) && macro !== 'templateRef') {
-				yield macro + `, `;
-			}
-		}
-		yield `} = await import('${options.vueCompilerOptions.lib}')${endOfLine}`;
-	}
-
 	ctx.scriptSetupGeneratedOffset = options.getGeneratedLength() - scriptSetupRanges.importSectionEndOffset;
 
 	let setupCodeModifies: [Code[], number, number][] = [];
-	const propsRange = scriptSetupRanges.props.withDefaults ?? scriptSetupRanges.props.define;
-	if (propsRange && scriptSetupRanges.props.define) {
-		const statement = scriptSetupRanges.props.define.statement;
-		if (scriptSetupRanges.props.define.typeArg) {
-			setupCodeModifies.push([[
-				`let __VLS_typeProps!: `,
-				generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.typeArg.start, scriptSetupRanges.props.define.typeArg.end, codeFeatures.all),
-				endOfLine,
-			], statement.start, statement.start]);
-			setupCodeModifies.push([[`typeof __VLS_typeProps`], scriptSetupRanges.props.define.typeArg.start, scriptSetupRanges.props.define.typeArg.end]);
-		}
-		if (!scriptSetupRanges.props.name) {
-			if (statement.start === propsRange.start && statement.end === propsRange.end) {
-				setupCodeModifies.push([[`const __VLS_props = `], propsRange.start, propsRange.start]);
-			}
-			else {
-				if (scriptSetupRanges.props.define.typeArg) {
-					setupCodeModifies.push([[
-						`const __VLS_props = `,
-						generateSfcBlockSection(scriptSetup, propsRange.start, scriptSetupRanges.props.define.typeArg.start, codeFeatures.all),
-					], statement.start, scriptSetupRanges.props.define.typeArg.start]);
-					setupCodeModifies.push([[
-						generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.typeArg.end, propsRange.end, codeFeatures.all),
-						`${endOfLine}`,
-						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
-						`__VLS_props`,
-					], scriptSetupRanges.props.define.typeArg.end, propsRange.end]);
-				}
-				else {
-					setupCodeModifies.push([[
-						`const __VLS_props = `,
-						generateSfcBlockSection(scriptSetup, propsRange.start, propsRange.end, codeFeatures.all),
-						`${endOfLine}`,
-						generateSfcBlockSection(scriptSetup, statement.start, propsRange.start, codeFeatures.all),
-						`__VLS_props`,
-					], statement.start, propsRange.end]);
-				}
-			}
-		}
+	if (scriptSetupRanges.defineProps) {
+		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
+		setupCodeModifies.push(...generateDefineWithType(
+			scriptSetup,
+			statement,
+			scriptSetupRanges.withDefaults?.callExp ?? callExp,
+			typeArg,
+			name,
+			`__VLS_props`,
+			`__VLS_Props`
+		));
 	}
-	if (scriptSetupRanges.slots.define) {
-		if (scriptSetupRanges.slots.isObjectBindingPattern) {
-			setupCodeModifies.push([
-				[`__VLS_slots;\nconst __VLS_slots = `],
-				scriptSetupRanges.slots.define.start,
-				scriptSetupRanges.slots.define.start,
-			]);
-		} else if (!scriptSetupRanges.slots.name) {
-			setupCodeModifies.push([[`const __VLS_slots = `], scriptSetupRanges.slots.define.start, scriptSetupRanges.slots.define.start]);
-		}
+	if (scriptSetupRanges.defineEmits) {
+		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineEmits;
+		setupCodeModifies.push(...generateDefineWithType(
+			scriptSetup,
+			statement,
+			callExp,
+			typeArg,
+			name,
+			`__VLS_emit`,
+			`__VLS_Emit`
+		));
 	}
-	if (scriptSetupRanges.emits.define && !scriptSetupRanges.emits.name) {
-		setupCodeModifies.push([[`const __VLS_emit = `], scriptSetupRanges.emits.define.start, scriptSetupRanges.emits.define.start]);
+	if (scriptSetupRanges.defineSlots) {
+		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineSlots;
+		setupCodeModifies.push(...generateDefineWithType(
+			scriptSetup,
+			statement,
+			callExp,
+			typeArg,
+			name,
+			`__VLS_slots`,
+			`__VLS_Slots`
+		));
 	}
-	if (scriptSetupRanges.expose.define) {
-		if (scriptSetupRanges.expose.define?.typeArg) {
+	if (scriptSetupRanges.defineExpose) {
+		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
+		if (typeArg) {
 			setupCodeModifies.push([
 				[
 					`let __VLS_exposed!: `,
-					generateSfcBlockSection(scriptSetup, scriptSetupRanges.expose.define.typeArg.start, scriptSetupRanges.expose.define.typeArg.end, codeFeatures.navigation),
+					generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.navigation),
 					`${endOfLine}`,
 				],
-				scriptSetupRanges.expose.define.start,
-				scriptSetupRanges.expose.define.start,
+				callExp.start,
+				callExp.start,
 			]);
 		}
-		else if (scriptSetupRanges.expose.define?.arg) {
+		else if (arg) {
 			setupCodeModifies.push([
 				[
 					`const __VLS_exposed = `,
-					generateSfcBlockSection(scriptSetup, scriptSetupRanges.expose.define.arg.start, scriptSetupRanges.expose.define.arg.end, codeFeatures.navigation),
+					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation),
 					`${endOfLine}`,
 				],
-				scriptSetupRanges.expose.define.start,
-				scriptSetupRanges.expose.define.start,
+				callExp.start,
+				callExp.start,
 			]);
 		}
 		else {
 			setupCodeModifies.push([
 				[`const __VLS_exposed = {}${endOfLine}`],
-				scriptSetupRanges.expose.define.start,
-				scriptSetupRanges.expose.define.start,
+				callExp.start,
+				callExp.start,
 			]);
 		}
 	}
-	if (scriptSetupRanges.cssModules.length) {
-		for (const { exp, arg } of scriptSetupRanges.cssModules) {
-			if (arg) {
-				setupCodeModifies.push([
-					[
-						` as Omit<__VLS_StyleModules, '$style'>[`,
-						generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
-						`]`
-					],
-					exp.end,
-					exp.end
-				]);
-			}
-			else {
-				setupCodeModifies.push([
-					[
-						` as __VLS_StyleModules[`,
-						['', scriptSetup.name, exp.start, codeFeatures.verification],
-						`'$style'`,
-						['', scriptSetup.name, exp.end, codeFeatures.verification],
-						`]`
-					],
-					exp.end,
-					exp.end
-				]);
-			}
+	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
+		for (const { callExp } of scriptSetupRanges.useAttrs) {
+			setupCodeModifies.push([
+				[`(`],
+				callExp.start,
+				callExp.start
+			], [
+				[` as typeof __VLS_dollars.$attrs)`],
+				callExp.end,
+				callExp.end
+			]);
 		}
 	}
-	for (const { define } of scriptSetupRanges.templateRefs) {
-		if (define?.arg) {
+	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
+		setupCodeModifies.push([
+			[`(`],
+			callExp.start,
+			callExp.start
+		], [
+			arg ? [
+				` as Omit<__VLS_StyleModules, '$style'>[`,
+				generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+				`])`
+			] : [
+				` as __VLS_StyleModules[`,
+				['', scriptSetup.name, exp.start, codeFeatures.verification],
+				`'$style'`,
+				['', scriptSetup.name, exp.end, combineLastMapping],
+				`])`
+			],
+			callExp.end,
+			callExp.end
+		]);
+		if (arg) {
+			setupCodeModifies.push([
+				[`(__VLS_placeholder)`],
+				arg.start,
+				arg.end
+			]);
+		}
+	}
+	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
+		for (const { callExp } of scriptSetupRanges.useSlots) {
+			setupCodeModifies.push([
+				[`(`],
+				callExp.start,
+				callExp.start
+			], [
+				[` as typeof __VLS_dollars.$slots)`],
+				callExp.end,
+				callExp.end
+			]);
+		}
+	}
+	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
+	for (const { callExp, exp, arg } of scriptSetupRanges.useTemplateRef) {
+		const templateRefType = arg
+			? [
+				`__VLS_TemplateRefs[`,
+				generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+				`]`
+			]
+			: [`unknown`];
+		if (isTs) {
 			setupCodeModifies.push([
 				[
-					`<__VLS_TemplateResult['refs'][`,
-					generateSfcBlockSection(scriptSetup, define.arg.start, define.arg.end, codeFeatures.navigation),
-					`], keyof __VLS_TemplateResult['refs']>`
+					`<`,
+					...templateRefType,
+					`>`
 				],
-				define.arg.start - 1,
-				define.arg.start - 1
+				exp.end,
+				exp.end
+			]);
+		}
+		else {
+			setupCodeModifies.push([
+				[`(`],
+				callExp.start,
+				callExp.start
+			], [
+				[
+					` as __VLS_UseTemplateRef<`,
+					...templateRefType,
+					`>)`
+				],
+				callExp.end,
+				callExp.end
+			]);
+		}
+		if (arg) {
+			setupCodeModifies.push([
+				[`(__VLS_placeholder)`],
+				arg.start,
+				arg.end
 			]);
 		}
 	}
 	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
-	if (setupCodeModifies.length) {
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.importSectionEndOffset, setupCodeModifies[0][1], codeFeatures.all);
-		while (setupCodeModifies.length) {
-			const [codes, _start, end] = setupCodeModifies.shift()!;
-			for (const code of codes) {
-				yield code;
-			}
-			if (setupCodeModifies.length) {
-				const nextStart = setupCodeModifies[0][1];
-				yield generateSfcBlockSection(scriptSetup, end, nextStart, codeFeatures.all);
-			}
-			else {
-				yield generateSfcBlockSection(scriptSetup, end, scriptSetup.content.length, codeFeatures.all);
-			}
+	let nextStart = Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset);
+	for (const [codes, start, end] of setupCodeModifies) {
+		yield generateSfcBlockSection(scriptSetup, nextStart, start, codeFeatures.all);
+		for (const code of codes) {
+			yield code;
 		}
+		nextStart = end;
 	}
-	else {
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.importSectionEndOffset, scriptSetup.content.length, codeFeatures.all);
-	}
+	yield generateSfcBlockSection(scriptSetup, nextStart, scriptSetup.content.length, codeFeatures.all);
 
 	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
+	yield* generateMacros(options, ctx);
+	yield* generateDefineProp(options);
 
-	if (scriptSetupRanges.props.define?.typeArg && scriptSetupRanges.props.withDefaults?.arg) {
+	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
 		yield `const __VLS_withDefaultsArg = (function <T>(t: T) { return t })(`;
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.withDefaults.arg.start, scriptSetupRanges.props.withDefaults.arg.end, codeFeatures.navigation);
+		yield generateSfcBlockSection(
+			scriptSetup,
+			scriptSetupRanges.withDefaults.arg.start,
+			scriptSetupRanges.withDefaults.arg.end,
+			codeFeatures.navigation
+		);
 		yield `)${endOfLine}`;
 	}
 
-	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, definePropMirrors);
-	yield* generateModelEmits(options, scriptSetup, scriptSetupRanges);
-	yield `function __VLS_template() {${newLine}`;
+	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges);
+	yield* generateModelEmit(scriptSetup, scriptSetupRanges);
 	const templateCodegenCtx = yield* generateTemplate(options, ctx);
-	yield `}${endOfLine}`;
 	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
-	yield `type __VLS_TemplateResult = ReturnType<typeof __VLS_template>${endOfLine}`;
 
 	if (syntax) {
-		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges?.slots.define)) {
+		if (
+			!options.vueCompilerOptions.skipTemplateCodegen
+			&& (
+				scriptSetupRanges.defineSlots
+				|| options.templateCodegen?.slots.length
+				|| options.templateCodegen?.dynamicSlots.length
+			)
+		) {
 			yield `const __VLS_component = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield `${syntax} `;
-			yield `{} as ${ctx.localTypes.WithTemplateSlots}<typeof __VLS_component, __VLS_TemplateResult['slots']>${endOfLine}`;
+			yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_component, __VLS_Slots>${endOfLine}`;
 		}
 		else {
 			yield `${syntax} `;
@@ -311,69 +324,157 @@ function* generateSetupFunction(
 	}
 }
 
+function* generateMacros(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext
+): Generator<Code> {
+	if (options.vueCompilerOptions.target >= 3.3) {
+		yield `// @ts-ignore${newLine}`;
+		yield `declare const { `;
+		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
+			if (!ctx.bindingNames.has(macro)) {
+				yield `${macro}, `;
+			}
+		}
+		yield `}: typeof import('${options.vueCompilerOptions.lib}')${endOfLine}`;
+	}
+}
+
+function* generateDefineProp(options: ScriptCodegenOptions): Generator<Code> {
+	const definePropProposalA = options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+	const definePropProposalB = options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
+
+	if (definePropProposalA || definePropProposalB) {
+		yield `type __VLS_PropOptions<T> = Exclude<import('${options.vueCompilerOptions.lib}').Prop<T>, import('${options.vueCompilerOptions.lib}').PropType<T>>${endOfLine}`;
+		if (definePropProposalA) {
+			yield `declare function defineProp<T>(name: string, options: ({ required: true } | { default: T }) & __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
+			yield `declare function defineProp<T>(name?: string, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
+		}
+		if (definePropProposalB) {
+			yield `declare function defineProp<T>(value: T | (() => T), required?: boolean, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
+			yield `declare function defineProp<T>(value: T | (() => T) | undefined, required: true, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
+			yield `declare function defineProp<T>(value?: T | (() => T), required?: boolean, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
+		}
+	}
+}
+
+function* generateDefineWithType(
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	statement: TextRange,
+	callExp: TextRange,
+	typeArg: TextRange | undefined,
+	name: string | undefined,
+	defaultName: string,
+	typeName: string
+): Generator<[Code[], number, number]> {
+	if (typeArg) {
+		yield [[
+			`type ${typeName} = `,
+			generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
+			endOfLine,
+		], statement.start, statement.start];
+		yield [[typeName], typeArg.start, typeArg.end];
+	}
+	if (!name) {
+		if (statement.start === callExp.start && statement.end === callExp.end) {
+			yield [[`const ${defaultName} = `], callExp.start, callExp.start];
+		}
+		else if (typeArg) {
+			yield [[
+				`const ${defaultName} = `,
+				generateSfcBlockSection(scriptSetup, callExp.start, typeArg.start, codeFeatures.all)
+			], statement.start, typeArg.start];
+			yield [[
+				generateSfcBlockSection(scriptSetup, typeArg.end, callExp.end, codeFeatures.all),
+				endOfLine,
+				generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
+				defaultName
+			], typeArg.end, callExp.end];
+		}
+		else {
+			yield [[
+				`const ${defaultName} = `,
+				generateSfcBlockSection(scriptSetup, callExp.start, callExp.end, codeFeatures.all),
+				endOfLine,
+				generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
+				defaultName
+			], statement.start, callExp.end];
+		}
+	}
+}
+
 function* generateComponentProps(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges,
-	definePropMirrors: Map<string, number>
+	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	yield `const __VLS_fnComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
+	if (scriptSetup.generic) {
+		yield `const __VLS_fnComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 
-	if (scriptSetupRanges.props.define?.arg) {
-		yield `props: `;
-		yield generateSfcBlockSection(scriptSetup, scriptSetupRanges.props.define.arg.start, scriptSetupRanges.props.define.arg.end, codeFeatures.navigation);
-		yield `,${newLine}`;
+		if (scriptSetupRanges.defineProps?.arg) {
+			yield `props: `;
+			yield generateSfcBlockSection(
+				scriptSetup,
+				scriptSetupRanges.defineProps.arg.start,
+				scriptSetupRanges.defineProps.arg.end,
+				codeFeatures.navigation
+			);
+			yield `,${newLine}`;
+		}
+
+		yield* generateEmitsOption(options, scriptSetupRanges);
+
+		yield `})${endOfLine}`;
+
+		yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
+			? `import('${options.vueCompilerOptions.lib}').PublicProps`
+			: options.vueCompilerOptions.target >= 3.0
+				? `import('${options.vueCompilerOptions.lib}').VNodeProps`
+				+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
+				+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
+				: `globalThis.JSX.IntrinsicAttributes`
+			}`;
+		yield endOfLine;
+
+		yield `type __VLS_OwnProps = `;
+		yield `${ctx.localTypes.OmitKeepDiscriminatedUnion}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
+		yield endOfLine;
 	}
-
-	yield* generateEmitsOption(options, scriptSetup, scriptSetupRanges);
-
-	yield `})${endOfLine}`;
-
-	yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
-		? `import('${options.vueCompilerOptions.lib}').PublicProps;`
-		: options.vueCompilerOptions.target >= 3.0
-			? `import('${options.vueCompilerOptions.lib}').VNodeProps
-					& import('${options.vueCompilerOptions.lib}').AllowedComponentProps
-					& import('${options.vueCompilerOptions.lib}').ComponentCustomProps;`
-			: `globalThis.JSX.IntrinsicAttributes;`
-		}`;
-	yield endOfLine;
-
-	yield `let __VLS_functionalComponentProps!: `;
-	yield `${ctx.localTypes.OmitKeepDiscriminatedUnion}<InstanceType<typeof __VLS_fnComponent>['$props'], keyof __VLS_BuiltInPublicProps>`;
-	yield endOfLine;
 
 	if (scriptSetupRanges.defineProp.length) {
 		yield `const __VLS_defaults = {${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
-			if (defineProp.defaultValue) {
-				const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
-
-				if (defineProp.name || defineProp.isModel) {
-					yield propName!;
-				}
-				else if (defineProp.localName) {
-					yield localName!;
-				}
-				else {
-					continue;
-				}
-				yield `: `;
-				yield getRangeName(scriptSetup, defineProp.defaultValue);
-				yield `,${newLine}`;
+			if (!defineProp.defaultValue) {
+				continue;
 			}
+
+			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
+
+			if (defineProp.name || defineProp.isModel) {
+				yield `'${propName}'`;
+			}
+			else if (defineProp.localName) {
+				yield localName!;
+			}
+			else {
+				continue;
+			}
+
+			yield `: `;
+			yield getRangeName(scriptSetup, defineProp.defaultValue);
+			yield `,${newLine}`;
 		}
 		yield `}${endOfLine}`;
 	}
 
 	yield `type __VLS_PublicProps = `;
-	if (scriptSetupRanges.slots.define && options.vueCompilerOptions.jsxSlots) {
+	if (scriptSetupRanges.defineSlots && options.vueCompilerOptions.jsxSlots) {
 		if (ctx.generatedPropsType) {
 			yield ` & `;
 		}
 		ctx.generatedPropsType = true;
-		yield `${ctx.localTypes.PropsChildren}<typeof __VLS_slots>`;
+		yield `${ctx.localTypes.PropsChildren}<__VLS_Slots>`;
 	}
 	if (scriptSetupRanges.defineProp.length) {
 		if (ctx.generatedPropsType) {
@@ -388,12 +489,10 @@ function* generateComponentProps(
 				yield propName!;
 			}
 			else if (defineProp.name) {
-				// renaming support
 				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.navigation);
 			}
 			else if (defineProp.localName) {
-				definePropMirrors.set(localName!, options.getGeneratedLength());
-				yield localName!;
+				yield generateSfcBlockSection(scriptSetup, defineProp.localName.start, defineProp.localName.end, codeFeatures.navigation);
 			}
 			else {
 				continue;
@@ -406,23 +505,19 @@ function* generateComponentProps(
 			yield `,${newLine}`;
 
 			if (defineProp.modifierType) {
-				let propModifierName = 'modelModifiers';
-				if (defineProp.name) {
-					propModifierName = `${getRangeName(scriptSetup, defineProp.name, true)}Modifiers`;
-				}
+				const modifierName = `${defineProp.name ? propName : 'model'}Modifiers`;
 				const modifierType = getRangeName(scriptSetup, defineProp.modifierType);
-				definePropMirrors.set(propModifierName, options.getGeneratedLength());
-				yield `${propModifierName}?: Record<${modifierType}, true>,${endOfLine}`;
+				yield `'${modifierName}'?: Partial<Record<${modifierType}, true>>,${newLine}`;
 			}
 		}
 		yield `}`;
 	}
-	if (scriptSetupRanges.props.define?.typeArg) {
+	if (scriptSetupRanges.defineProps?.typeArg) {
 		if (ctx.generatedPropsType) {
 			yield ` & `;
 		}
 		ctx.generatedPropsType = true;
-		yield `typeof __VLS_typeProps`;
+		yield `__VLS_Props`;
 	}
 	if (!ctx.generatedPropsType) {
 		yield `{}`;
@@ -430,32 +525,24 @@ function* generateComponentProps(
 	yield endOfLine;
 }
 
-function* generateModelEmits(
-	options: ScriptCodegenOptions,
+function* generateModelEmit(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
 	const defineModels = scriptSetupRanges.defineProp.filter(p => p.isModel);
 	if (defineModels.length) {
-		const generateDefineModels = function* () {
-			for (const defineModel of defineModels) {
-				const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
-				yield `'update:${propName}': [${propName}:`;
-				yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
-				yield `]${endOfLine}`;
+		yield `type __VLS_ModelEmit = {${newLine}`;
+		for (const defineModel of defineModels) {
+			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
+			yield `'update:${propName}': [value: `;
+			yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
+			if (!defineModel.required && defineModel.defaultValue === undefined) {
+				yield ` | undefined`;
 			}
-		};
-		if (options.vueCompilerOptions.target >= 3.5) {
-			yield `type __VLS_ModelEmitsType = {${newLine}`;
-			yield* generateDefineModels();
-			yield `}${endOfLine}`;
+			yield `]${endOfLine}`;
 		}
-		else {
-			yield `const __VLS_modelEmitsType = (await import('${options.vueCompilerOptions.lib}')).defineEmits<{${newLine}`;
-			yield* generateDefineModels();
-			yield `}>()${endOfLine}`;
-			yield `type __VLS_ModelEmitsType = typeof __VLS_modelEmitsType${endOfLine}`;
-		}
+		yield `}${endOfLine}`;
+		yield `const __VLS_modelEmit = defineEmits<__VLS_ModelEmit>()${endOfLine}`;
 	}
 }
 
@@ -497,14 +584,12 @@ function getPropAndLocalName(
 	if (defineProp.name) {
 		propName = propName!.replace(/['"]+/g, '');
 	}
-	return [propName, localName];
+	return [propName, localName] as const;
 }
 
 function getRangeName(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	range: TextRange,
-	unwrap = false
+	range: TextRange
 ) {
-	const offset = unwrap ? 1 : 0;
-	return scriptSetup.content.substring(range.start + offset, range.end - offset);
+	return scriptSetup.content.slice(range.start, range.end);
 }

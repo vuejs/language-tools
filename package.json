@@ -1,13 +1,12 @@
 {
 	"private": true,
-	"packageManager": "pnpm@9.4.0",
+	"packageManager": "pnpm@10.4.1",
 	"scripts": {
 		"build": "tsc -b",
 		"watch": "pnpm run build && pnpm run \"/^watch:.*/\"",
 		"watch:base": "tsc -b -w",
 		"watch:vue": "cd ./extensions/vscode && pnpm run watch",
 		"prerelease": "pnpm run build && pnpm run test",
-		"version": "lerna version --exact --force-publish --yes --sync-workspace-lock --no-push --no-git-tag-version",
 		"release": "pnpm run release:base && pnpm run release:vue",
 		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock --no-git-tag-version",
 		"release:vue": "cd ./extensions/vscode && pnpm run release",
@@ -17,17 +16,25 @@
 		"test": "vitest run",
 		"test:update": "vitest run --update",
 		"lint": "tsslint --projects {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
-		"lint:fix": "pnpm run lint -- --fix",
+		"lint:fix": "pnpm run lint -- --fix --vscode-settings .vscode/settings.json",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
-		"@lerna-lite/cli": "latest",
-		"@lerna-lite/publish": "latest",
-		"@tsslint/cli": "latest",
-		"@tsslint/config": "latest",
-		"@volar/language-service": "~2.4.1",
-		"typescript": "latest",
-		"vite": "latest",
-		"vitest": "latest"
+		"@lerna-lite/cli": "^3.11.0",
+		"@lerna-lite/publish": "^3.11.0",
+		"@tsslint/cli": "^1.5.0",
+		"@tsslint/config": "^1.5.0",
+		"@tsslint/eslint": "^1.5.0",
+		"@typescript-eslint/eslint-plugin": "^8.19.0",
+		"typescript": "^5.7.2",
+		"vitest": "^2.1.8"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@tsslint/core",
+			"@vscode/vsce-sign",
+			"esbuild",
+			"keytar"
+		]
 	}
 }

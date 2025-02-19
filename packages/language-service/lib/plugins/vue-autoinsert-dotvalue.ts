@@ -1,19 +1,9 @@
-import type { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
-import { hyphenateAttr } from '@vue/language-core';
+import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
+import { hyphenateAttr, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-
-const asts = new WeakMap<ts.IScriptSnapshot, ts.SourceFile>();
-
-function getAst(ts: typeof import('typescript'), fileName: string, snapshot: ts.IScriptSnapshot, scriptKind?: ts.ScriptKind) {
-	let ast = asts.get(snapshot);
-	if (!ast) {
-		ast = ts.createSourceFile(fileName, snapshot.getText(0, snapshot.getLength()), ts.ScriptTarget.Latest, undefined, scriptKind);
-		asts.set(snapshot, ast);
-	}
-	return ast;
-}
+import { isTsDocument, sleep } from './utils';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -27,7 +17,7 @@ export function create(
 				configurationSections: ['vue.autoInsert.dotValue'],
 			},
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			let currentReq = 0;
 			return {
@@ -57,49 +47,51 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript) {
+					if (!sourceScript?.generated || !virtualCode) {
 						return;
 					}
 
-					let ast: ts.SourceFile | undefined;
+					const root = sourceScript.generated.root;
+					if (!(root instanceof VueVirtualCode)) {
+						return;
+					}
+
+					const { sfc } = root;
+					const blocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);
+					if (!blocks.length) {
+						return;
+					}
+
 					let sourceCodeOffset = document.offsetAt(selection);
-
-					const fileName = context.project.typescript?.uriConverter.asFileName(sourceScript.id)
-						?? sourceScript.id.fsPath.replace(/\\/g, '/');
-
-					if (sourceScript.generated) {
-						const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(sourceScript.generated.root);
-						if (!serviceScript || serviceScript?.code !== virtualCode) {
-							return;
+					let mapped = false;
+					for (const [, map] of context.language.maps.forEach(virtualCode)) {
+						for (const [sourceOffset] of map.toSourceLocation(sourceCodeOffset)) {
+							sourceCodeOffset = sourceOffset;
+							mapped = true;
+							break;
 						}
-						ast = getAst(ts, fileName, virtualCode.snapshot, serviceScript.scriptKind);
-						let mapped = false;
-						for (const [_sourceScript, map] of context.language.maps.forEach(virtualCode)) {
-							for (const [sourceOffset] of map.toSourceLocation(document.offsetAt(selection))) {
-								sourceCodeOffset = sourceOffset;
-								mapped = true;
-								break;
-							}
-							if (mapped) {
-								break;
-							}
-						}
-						if (!mapped) {
-							return;
+						if (mapped) {
+							break;
 						}
 					}
-					else {
-						ast = getAst(ts, fileName, sourceScript.snapshot);
-					}
-
-					if (isBlacklistNode(ts, ast, document.offsetAt(selection), false)) {
+					if (!mapped) {
 						return;
 					}
 
-					const props = await tsPluginClient?.getPropertiesAtLocation(fileName, sourceCodeOffset) ?? [];
+					for (const { ast, startTagEnd, endTagStart } of blocks) {
+						if (sourceCodeOffset < startTagEnd || sourceCodeOffset > endTagStart) {
+							continue;
+						}
+						if (isBlacklistNode(ts, ast, sourceCodeOffset - startTagEnd, false)) {
+							return;
+						}
+					}
+
+					const props = await tsPluginClient?.getPropertiesAtLocation(root.fileName, sourceCodeOffset) ?? [];
 					if (props.some(prop => prop === 'value')) {
 						return '${1:.value}';
 					}
@@ -109,35 +101,24 @@ export function create(
 	};
 }
 
-function sleep(ms: number) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function isTsDocument(document: TextDocument) {
-	return document.languageId === 'javascript' ||
-		document.languageId === 'typescript' ||
-		document.languageId === 'javascriptreact' ||
-		document.languageId === 'typescriptreact';
-}
-
 const charReg = /\w/;
 
-export function isCharacterTyping(document: TextDocument, change: { text: string; rangeOffset: number; rangeLength: number; }) {
+function isCharacterTyping(document: TextDocument, change: { text: string; rangeOffset: number; rangeLength: number; }) {
 	const lastCharacter = change.text[change.text.length - 1];
-	const nextCharacter = document.getText().substring(
+	const nextCharacter = document.getText().slice(
 		change.rangeOffset + change.text.length,
 		change.rangeOffset + change.text.length + 1
 	);
 	if (lastCharacter === undefined) { // delete text
 		return false;
 	}
-	if (change.text.indexOf('\n') >= 0) { // multi-line change
+	if (change.text.includes('\n')) { // multi-line change
 		return false;
 	}
 	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);
 }
 
-export function isBlacklistNode(ts: typeof import('typescript'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
+function isBlacklistNode(ts: typeof import('typescript'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
 	if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
 	}

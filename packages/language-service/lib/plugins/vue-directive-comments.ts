@@ -1,9 +1,11 @@
-import type { CompletionItem, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
+import type { CompletionItem, LanguageServicePlugin } from '@volar/language-service';
+import type * as vscode from 'vscode-languageserver-protocol';
 
 const cmds = [
-	'vue-ignore',
-	'vue-skip',
-	'vue-expect-error',
+	['vue-ignore'],
+	['vue-skip'],
+	['vue-expect-error'],
+	['vue-generic', 'vue-generic {$1}'],
 ];
 
 const directiveCommentReg = /<!--\s*@/;
@@ -16,7 +18,7 @@ export function create(): LanguageServicePlugin {
 				triggerCharacters: ['@'],
 			},
 		},
-		create(): LanguageServicePluginInstance {
+		create() {
 			return {
 				provideCompletionItems(document, position) {
 
@@ -31,20 +33,20 @@ export function create(): LanguageServicePlugin {
 					}
 
 					const startIndex = cmdStart.index! + cmdStart[0].length;
-					const remainText = line.substring(startIndex);
+					const remainText = line.slice(startIndex);
 					const result: CompletionItem[] = [];
 
-					for (const cmd of cmds) {
+					for (const [label, text = label] of cmds) {
 						let match = true;
 						for (let i = 0; i < remainText.length; i++) {
-							if (remainText[i] !== cmd[i]) {
+							if (remainText[i] !== label[i]) {
 								match = false;
 								break;
 							}
 						}
 						if (match) {
 							result.push({
-								label: '@' + cmd,
+								label: '@' + label,
 								textEdit: {
 									range: {
 										start: {
@@ -53,8 +55,9 @@ export function create(): LanguageServicePlugin {
 										},
 										end: position,
 									},
-									newText: '@' + cmd,
+									newText: '@' + text,
 								},
+								insertTextFormat: 2 satisfies typeof vscode.InsertTextFormat.Snippet
 							});
 						}
 					}

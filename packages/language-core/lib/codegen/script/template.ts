@@ -1,19 +1,38 @@
-import type * as ts from 'typescript';
 import type { Code } from '../../types';
-import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
-import { endOfLine, newLine } from '../common';
-import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
-import { forEachInterpolationSegment } from '../template/interpolation';
-import { generateStyleScopedClasses } from '../template/styleScopedClasses';
+import { hyphenateTag } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
+import { generateStyleModules } from '../style/modules';
+import { generateStyleScopedClasses } from '../style/scopedClasses';
+import { type TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
+import { generateInterpolation } from '../template/interpolation';
+import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
+import { endOfLine, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
-import { codeFeatures, type ScriptCodegenOptions } from './index';
+import type { ScriptCodegenOptions } from './index';
+
+export function* generateTemplate(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext
+): Generator<Code, TemplateCodegenContext> {
+	ctx.generatedTemplate = true;
+
+	const templateCodegenCtx = createTemplateCodegenContext({
+		scriptSetupBindingNames: new Set(),
+		edited: options.edited,
+	});
+	yield* generateTemplateCtx(options);
+	yield* generateTemplateComponents(options);
+	yield* generateTemplateDirectives(options);
+	yield* generateTemplateBody(options, templateCodegenCtx);
+	return templateCodegenCtx;
+}
 
 function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 	const exps = [];
 
 	exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
 
-	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileBaseName.endsWith(ext))) {
+	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
 		exps.push(`globalThis`);
 	}
 	if (options.sfc.styles.some(style => style.module)) {
@@ -37,125 +56,68 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 }
 
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
-	const exps: Code[] = [];
+	const types: Code[] = [];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
 		const { componentsOption } = options.scriptRanges.exportDefault;
-		exps.push([
-			options.sfc.script.content.substring(componentsOption.start, componentsOption.end),
+		yield `const __VLS_componentsOption = `;
+		yield [
+			options.sfc.script.content.slice(componentsOption.start, componentsOption.end),
 			'script',
 			componentsOption.start,
 			codeFeatures.navigation,
-		]);
+		];
+		yield endOfLine;
+		types.push(`typeof __VLS_componentsOption`);
 	}
 
-	let nameType: Code | undefined;
-	if (options.sfc.script && options.scriptRanges?.exportDefault?.nameOption) {
-		const { nameOption } = options.scriptRanges.exportDefault;
-		nameType = options.sfc.script.content.substring(nameOption.start, nameOption.end);
-	}
-	else if (options.sfc.scriptSetup) {
-		nameType = `'${options.scriptSetupRanges?.options.name ?? options.fileBaseName.substring(0, options.fileBaseName.lastIndexOf('.'))}'`;
-	}
-	if (nameType) {
-		exps.push(`{} as {
-			[K in ${nameType}]: typeof __VLS_self
-				& (new () => {
-					${getSlotsPropertyName(options.vueCompilerOptions.target)}: typeof ${options.scriptSetupRanges?.slots?.name ?? '__VLS_slots'}
-				})
-		}`);
-	}
+	types.push(`typeof __VLS_ctx`);
 
-	exps.push(`{} as NonNullable<typeof __VLS_self extends { components: infer C } ? C : {}>`);
-	exps.push(`__VLS_ctx`);
-
-	yield `const __VLS_localComponents = {${newLine}`;
-	for (const type of exps) {
-		yield `...`;
+	yield `type __VLS_LocalComponents =`;
+	for (const type of types) {
+		yield ` & `;
 		yield type;
-		yield `,${newLine}`;
 	}
-	yield `}${endOfLine}`;
+	yield endOfLine;
 
-	yield `let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents${endOfLine}`;
+	yield `let __VLS_components!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
 export function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
-	const exps: Code[] = [];
+	const types: Code[] = [];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
 		const { directivesOption } = options.scriptRanges.exportDefault;
-		exps.push([
-			options.sfc.script.content.substring(directivesOption.start, directivesOption.end),
+		yield `const __VLS_directivesOption = `;
+		yield [
+			options.sfc.script.content.slice(directivesOption.start, directivesOption.end),
 			'script',
 			directivesOption.start,
 			codeFeatures.navigation,
-		]);
+		];
+		yield endOfLine;
+		types.push(`typeof __VLS_directivesOption`);
 	}
 
-	exps.push(`{} as NonNullable<typeof __VLS_self extends { directives: infer D } ? D : {}>`);
-	exps.push(`__VLS_ctx`);
+	types.push(`typeof __VLS_ctx`);
 
-	yield `const __VLS_localDirectives = {${newLine}`;
-	for (const type of exps) {
-		yield `...`;
+	yield `type __VLS_LocalDirectives =`;
+	for (const type of types) {
+		yield ` & `;
 		yield type;
-		yield `,${newLine}`;
 	}
-	yield `}${endOfLine}`;
+	yield endOfLine;
 
-	yield `let __VLS_directives!: typeof __VLS_localDirectives & __VLS_GlobalDirectives${endOfLine}`;
-}
-
-export function* generateTemplate(
-	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext
-): Generator<Code, TemplateCodegenContext> {
-	ctx.generatedTemplate = true;
-
-	const templateCodegenCtx = createTemplateCodegenContext({
-		scriptSetupBindingNames: new Set(),
-		edited: options.edited,
-	});
-	yield* generateTemplateCtx(options);
-	yield* generateTemplateComponents(options);
-	yield* generateTemplateDirectives(options);
-	yield* generateTemplateBody(options, templateCodegenCtx);
-	return templateCodegenCtx;
+	yield `let __VLS_directives!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
 function* generateTemplateBody(
 	options: ScriptCodegenOptions,
 	templateCodegenCtx: TemplateCodegenContext
 ): Generator<Code> {
-	const firstClasses = new Set<string>();
-	yield `let __VLS_styleScopedClasses!: {}`;
-	for (let i = 0; i < options.sfc.styles.length; i++) {
-		const style = options.sfc.styles[i];
-		const option = options.vueCompilerOptions.experimentalResolveStyleCssClasses;
-		if (option === 'always' || (option === 'scoped' && style.scoped)) {
-			for (const className of style.classNames) {
-				if (firstClasses.has(className.text)) {
-					templateCodegenCtx.scopedClasses.push({
-						source: 'style_' + i,
-						className: className.text.slice(1),
-						offset: className.offset + 1
-					});
-					continue;
-				}
-				firstClasses.add(className.text);
-				yield* generateCssClassProperty(
-					i,
-					className.text,
-					className.offset,
-					'boolean',
-					true
-				);
-			}
-		}
-	}
-	yield endOfLine;
-	yield* generateStyleScopedClasses(templateCodegenCtx, true);
+	yield* generateStyleScopedClasses(options, templateCodegenCtx);
+	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
+	yield* generateStyleModules(options);
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
@@ -165,52 +127,13 @@ function* generateTemplateBody(
 	}
 	else {
 		yield `// no template${newLine}`;
-		if (!options.scriptSetupRanges?.slots.define) {
-			yield `const __VLS_slots = {}${endOfLine}`;
+		if (!options.scriptSetupRanges?.defineSlots) {
+			yield `type __VLS_Slots = {}${endOfLine}`;
 		}
-		yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
-		yield `const $refs = {}${endOfLine}`;
-		yield `const $el = {} as any${endOfLine}`;
+		yield `type __VLS_InheritedAttrs = {}${endOfLine}`;
+		yield `type __VLS_TemplateRefs = {}${endOfLine}`;
+		yield `type __VLS_RootEl = any${endOfLine}`;
 	}
-
-	yield `return {${newLine}`;
-	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
-	yield `	slots: ${options.scriptSetupRanges?.slots.name ?? '__VLS_slots'},${newLine}`;
-	yield `	refs: $refs,${newLine}`;
-	yield `	rootEl: $el,${newLine}`;
-	yield `}${endOfLine}`;
-}
-
-export function* generateCssClassProperty(
-	styleIndex: number,
-	classNameWithDot: string,
-	offset: number,
-	propertyType: string,
-	optional: boolean
-): Generator<Code> {
-	yield `${newLine} & { `;
-	yield [
-		'',
-		'style_' + styleIndex,
-		offset,
-		codeFeatures.navigation,
-	];
-	yield `'`;
-	yield [
-		classNameWithDot.substring(1),
-		'style_' + styleIndex,
-		offset + 1,
-		codeFeatures.navigation,
-	];
-	yield `'`;
-	yield [
-		'',
-		'style_' + styleIndex,
-		offset + classNameWithDot.length,
-		codeFeatures.navigationWithoutRename,
-	];
-	yield `${optional ? '?' : ''}: ${propertyType}`;
-	yield ` }`;
 }
 
 function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
@@ -220,29 +143,14 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 	yield `// CSS variable injection ${newLine}`;
 	for (const style of options.sfc.styles) {
 		for (const cssBind of style.cssVars) {
-			for (const [segment, offset, onlyError] of forEachInterpolationSegment(
-				options.ts,
-				undefined,
-				undefined,
+			yield* generateInterpolation(
+				options,
 				ctx,
+				style.name,
+				codeFeatures.all,
 				cssBind.text,
-				cssBind.offset,
-				options.ts.createSourceFile('/a.txt', cssBind.text, 99 satisfies ts.ScriptTarget.ESNext)
-			)) {
-				if (offset === undefined) {
-					yield segment;
-				}
-				else {
-					yield [
-						segment,
-						style.name,
-						cssBind.offset + offset,
-						onlyError
-							? codeFeatures.navigation
-							: codeFeatures.all,
-					];
-				}
-			}
+				cssBind.offset
+			);
 			yield endOfLine;
 		}
 	}
@@ -262,7 +170,7 @@ export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptC
 			}
 		}
 		for (const component of components) {
-			if (component.indexOf('.') >= 0) {
+			if (component.includes('.')) {
 				usageVars.add(component.split('.')[0]);
 			}
 		}

@@ -1,6 +1,7 @@
 import { BaseLanguageClient, ExecuteCommandParams, ExecuteCommandRequest, getTsdk } from '@volar/vscode';
 import type { SFCParseResult } from '@vue/language-server';
 import { commands } from '@vue/language-server/lib/types';
+import { executeCommand, extensionContext, useActiveTextEditor, useCommand, useDisposable, useEventEmitter, useStatusBarItem, watchEffect } from 'reactive-vscode';
 import * as semver from 'semver';
 import * as vscode from 'vscode';
 import { config } from '../config';
@@ -12,26 +13,38 @@ const knownValidSyntaxHighlightExtensions = {
 	sass: ['Syler.sass-indented'],
 };
 
-export async function register(context: vscode.ExtensionContext, client: BaseLanguageClient) {
+export async function activate(client: BaseLanguageClient) {
+	const item = useStatusBarItem({
+		alignment: vscode.StatusBarAlignment.Right,
+		backgroundColor: new vscode.ThemeColor('statusBarItem.warningBackground'),
+		command: 'vue.action.doctor'
+	});
 
-	const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-	item.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
-	item.command = 'vue.action.doctor';
+	const activeTextEditor = useActiveTextEditor();
+	const docChangeEvent = useEventEmitter<vscode.Uri>();
 
-	const docChangeEvent = new vscode.EventEmitter<vscode.Uri>();
+	watchEffect(updateStatusBar);
 
-	updateStatusBar(vscode.window.activeTextEditor);
+	useCommand('vue.action.doctor', () => {
+		const doc = activeTextEditor.value?.document;
+		if (
+			doc
+			&& (doc.languageId === 'vue' || doc.uri.toString().endsWith('.vue'))
+			&& doc.uri.scheme === 'file'
+		) {
+			executeCommand('markdown.showPreviewToSide', getDoctorUri(doc.uri));
+		}
+	});
 
-	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(updateStatusBar));
-	context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider(
+	useDisposable(vscode.workspace.registerTextDocumentContentProvider(
 		scheme,
 		{
 			onDidChange: docChangeEvent.event,
-			async provideTextDocumentContent(doctorUri: vscode.Uri): Promise<string | undefined> {
+			async provideTextDocumentContent(doctorUri: vscode.Uri) {
 
 				const fileUri = doctorUri.with({
 					scheme: 'file',
-					path: doctorUri.path.substring(0, doctorUri.path.length - '/Doctor.md'.length),
+					path: doctorUri.path.slice(0, -'/Doctor.md'.length),
 				});
 				const problems = await getProblems(fileUri);
 
@@ -49,22 +62,13 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 			}
 		}
 	));
-	context.subscriptions.push(vscode.commands.registerCommand('vue.action.doctor', () => {
-		const doc = vscode.window.activeTextEditor?.document;
-		if (
-			doc
-			&& (doc.languageId === 'vue' || doc.uri.toString().endsWith('.vue'))
-			&& doc.uri.scheme === 'file'
-		) {
-			vscode.commands.executeCommand('markdown.showPreviewToSide', getDoctorUri(doc.uri));
-		}
-	}));
 
 	function getDoctorUri(fileUri: vscode.Uri) {
 		return fileUri.with({ scheme, path: fileUri.path + '/Doctor.md' });
 	}
 
-	async function updateStatusBar(editor: vscode.TextEditor | undefined) {
+	async function updateStatusBar() {
+		const editor = activeTextEditor.value;
 		if (
 			config.doctor.status
 			&& editor
@@ -153,12 +157,12 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 					'',
 					'- package.json',
 					'```json',
-					JSON.stringify({ devDependencies: { "@vue/language-plugin-pug": "latest" } }, undefined, 2),
+					JSON.stringify({ devDependencies: { '@vue/language-plugin-pug': 'latest' } }, undefined, 2),
 					'```',
 					'',
 					'- tsconfig.json / jsconfig.json',
 					'```jsonc',
-					JSON.stringify({ vueCompilerOptions: { plugins: ["@vue/language-plugin-pug"] } }, undefined, 2),
+					JSON.stringify({ vueCompilerOptions: { plugins: ['@vue/language-plugin-pug'] } }, undefined, 2),
 					'```',
 				].join('\n'),
 			});
@@ -226,7 +230,7 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 		}
 
 		// check tsdk version should be higher than 5.0.0
-		const tsdk = (await getTsdk(context))!;
+		const tsdk = (await getTsdk(extensionContext.value!))!;
 		if (tsdk.version && !semver.gte(tsdk.version, '5.0.0')) {
 			problems.push({
 				title: 'Requires TSDK 5.0 or higher',
@@ -256,12 +260,12 @@ export async function register(context: vscode.ExtensionContext, client: BaseLan
 	}
 }
 
-function getPackageJsonOfWorkspacePackage(folder: string, pkg: string): { path: string, json: { version: string; }; } | undefined {
+function getPackageJsonOfWorkspacePackage(folder: string, pkg: string) {
 	try {
 		const path = require.resolve(pkg + '/package.json', { paths: [folder] });
 		return {
 			path,
-			json: require(path),
+			json: require(path) as { version: string; },
 		};
 	} catch { }
 }

@@ -15,7 +15,7 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 			const { configFilePath } = options.options;
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-				: vue.resolveVueCompilerOptions({});
+				: vue.getDefaultCompilerOptions();
 			const allExtensions = vue.getAllExtensions(vueOptions);
 			if (
 				runExtensions.length === allExtensions.length

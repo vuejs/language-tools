@@ -18,19 +18,24 @@ import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescr
 import { create as createCssPlugin } from './lib/plugins/css';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoinsert-space';
+import { create as createVueCompleteDefineAssignmentPlugin } from './lib/plugins/vue-complete-define-assignment';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
 import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-document-links';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
+import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
-import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 
 import { parse, VueCompilerOptions } from '@vue/language-core';
 import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
-import { getComponentEvents, getComponentNames, getComponentProps, getElementAttrs, getTemplateContextProps } from '@vue/typescript-plugin/lib/requests/componentInfos';
+import { getComponentDirectives } from '@vue/typescript-plugin/lib/requests/getComponentDirectives';
+import { getComponentEvents } from '@vue/typescript-plugin/lib/requests/getComponentEvents';
+import { getComponentNames } from '@vue/typescript-plugin/lib/requests/getComponentNames';
+import { getComponentProps } from '@vue/typescript-plugin/lib/requests/getComponentProps';
+import { getElementAttrs } from '@vue/typescript-plugin/lib/requests/getElementAttrs';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
@@ -48,7 +53,7 @@ declare module '@volar/language-service' {
 export function getFullLanguageServicePlugins(
 	ts: typeof import('typescript'),
 	{ disableAutoImportCache }: { disableAutoImportCache?: boolean; } = {}
-): LanguageServicePlugin[] {
+) {
 	const plugins: LanguageServicePlugin[] = [
 		...createTypeScriptPlugins(ts, { disableAutoImportCache }),
 		...getCommonLanguageServicePlugins(
@@ -117,6 +122,9 @@ export function getFullLanguageServicePlugins(
 			async getComponentEvents(...args) {
 				return await getComponentEvents.apply(requestContext, args);
 			},
+			async getComponentDirectives(...args) {
+				return await getComponentDirectives.apply(requestContext, args);
+			},
 			async getComponentNames(...args) {
 				return await getComponentNames.apply(requestContext, args);
 			},
@@ -125,9 +133,6 @@ export function getFullLanguageServicePlugins(
 			},
 			async getElementAttrs(...args) {
 				return await getElementAttrs.apply(requestContext, args);
-			},
-			async getTemplateContextProps(...args) {
-				return await getTemplateContextProps.apply(requestContext, args);
 			},
 			async getQuickInfoAtPosition(fileName, position) {
 				const languageService = context.getLanguageService();
@@ -169,7 +174,7 @@ export function getFullLanguageServicePlugins(
 export function getHybridModeLanguageServicePlugins(
 	ts: typeof import('typescript'),
 	getTsPluginClient: typeof import("@vue/typescript-plugin/lib/client")
-): LanguageServicePlugin[] {
+) {
 	const plugins = [
 		createTypeScriptSyntacticPlugin(ts),
 		createTypeScriptDocCommentTemplatePlugin(ts),
@@ -197,6 +202,7 @@ function getCommonLanguageServicePlugins(
 		createVueTwoslashQueriesPlugin(getTsPluginClient),
 		createVueDocumentLinksPlugin(),
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
+		createVueCompleteDefineAssignmentPlugin(),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueAutoAddSpacePlugin(),
 		createVueInlayHintsPlugin(ts),

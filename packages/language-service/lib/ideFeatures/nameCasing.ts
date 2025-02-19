@@ -2,7 +2,7 @@ import type { LanguageServiceContext, ProviderResult, VirtualCode } from '@volar
 import type { CompilerDOM } from '@vue/language-core';
 import * as vue from '@vue/language-core';
 import { hyphenateAttr, hyphenateTag, VueVirtualCode } from '@vue/language-core';
-import { computed, ISignal } from 'alien-signals';
+import { computed } from 'alien-signals';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { URI } from 'vscode-uri';
 import { AttrNameCasing, TagNameCasing } from '../types';
@@ -19,21 +19,20 @@ export async function convertTagName(
 		return;
 	}
 
-	const rootCode = sourceFile?.generated?.root;
-	if (!(rootCode instanceof VueVirtualCode)) {
+	const root = sourceFile?.generated?.root;
+	if (!(root instanceof VueVirtualCode)) {
 		return;
 	}
 
-	const desc = rootCode._sfc;
-	if (!desc.template) {
+	const { template } = root.sfc;
+	if (!template) {
 		return;
 	}
 
-	const template = desc.template;
 	const document = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient?.getComponentNames(rootCode.fileName) ?? [];
-	const tags = getTemplateTagsAndAttrs(rootCode);
+	const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+	const tags = getTemplateTagsAndAttrs(root);
 
 	for (const [tagName, { offsets }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
@@ -67,26 +66,25 @@ export async function convertAttrName(
 		return;
 	}
 
-	const rootCode = sourceFile?.generated?.root;
-	if (!(rootCode instanceof VueVirtualCode)) {
+	const root = sourceFile?.generated?.root;
+	if (!(root instanceof VueVirtualCode)) {
 		return;
 	}
 
-	const desc = rootCode._sfc;
-	if (!desc.template) {
+	const { template } = root.sfc;
+	if (!template) {
 		return;
 	}
 
-	const template = desc.template;
 	const document = context.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient?.getComponentNames(rootCode.fileName) ?? [];
-	const tags = getTemplateTagsAndAttrs(rootCode);
+	const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+	const tags = getTemplateTagsAndAttrs(root);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
 		if (componentName) {
-			const props = (await tsPluginClient?.getComponentProps(rootCode.fileName, componentName) ?? []).map(prop => prop.name);
+			const props = (await tsPluginClient?.getComponentProps(root.fileName, componentName) ?? []).map(prop => prop.name);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenateAttr(prop) === attrName);
 				if (propName) {
@@ -161,7 +159,7 @@ export async function detect(
 			}
 			for (const [tagName] of attrs) {
 				// attr-name
-				if (tagName.indexOf('-') >= 0) {
+				if (tagName.includes('-')) {
 					result.push(AttrNameCasing.Kebab);
 					break;
 				}
@@ -174,8 +172,8 @@ export async function detect(
 
 		const result = new Set<TagNameCasing>();
 
-		if (file._sfc.template?.ast) {
-			for (const element of vue.forEachElementNode(file._sfc.template.ast)) {
+		if (file.sfc.template?.ast) {
+			for (const element of vue.forEachElementNode(file.sfc.template.ast)) {
 				if (element.tagType === 1 satisfies CompilerDOM.ElementTypes) {
 					if (element.tag !== hyphenateTag(element.tag)) {
 						// TagName
@@ -201,7 +199,7 @@ type Tags = Map<string, {
 	}>,
 }>;
 
-const map = new WeakMap<VirtualCode, ISignal<Tags | undefined>>();
+const map = new WeakMap<VirtualCode, () => Tags | undefined>();
 
 function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 
@@ -210,7 +208,7 @@ function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 			if (!(sourceFile instanceof vue.VueVirtualCode)) {
 				return;
 			}
-			const ast = sourceFile._sfc.template?.ast;
+			const ast = sourceFile.sfc.template?.ast;
 			const tags: Tags = new Map();
 			if (ast) {
 				for (const node of vue.forEachElementNode(ast)) {
@@ -262,5 +260,5 @@ function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 		map.set(sourceFile, getter);
 	}
 
-	return map.get(sourceFile)!.get() ?? new Map();
+	return map.get(sourceFile)!() ?? new Map();
 }

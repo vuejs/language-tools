@@ -1,59 +1,9 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
-import { endOfLine, newLine, wrapWith } from '../common';
-import type { TemplateCodegenOptions } from './index';
+import { codeFeatures } from '../codeFeatures';
 import { InlayHintInfo } from '../inlayHints';
-
-const _codeFeatures = {
-	all: {
-		verification: true,
-		completion: true,
-		semantic: true,
-		navigation: true,
-	} as VueCodeInformation,
-	verification: {
-		verification: true,
-	} as VueCodeInformation,
-	completion: {
-		completion: true,
-	} as VueCodeInformation,
-	additionalCompletion: {
-		completion: { isAdditional: true },
-	} as VueCodeInformation,
-	navigation: {
-		navigation: true,
-	} as VueCodeInformation,
-	navigationWithoutRename: {
-		navigation: {
-			shouldRename() {
-				return false;
-			},
-		},
-	} as VueCodeInformation,
-	navigationAndCompletion: {
-		navigation: true,
-		completion: true,
-	} as VueCodeInformation,
-	navigationAndAdditionalCompletion: {
-		navigation: true,
-		completion: { isAdditional: true },
-	} as VueCodeInformation,
-	withoutHighlight: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		navigation: true,
-		completion: true,
-	} as VueCodeInformation,
-	withoutHighlightAndCompletion: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		navigation: true,
-	} as VueCodeInformation,
-	withoutHighlightAndCompletionAndNavigation: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-	} as VueCodeInformation,
-};
+import { endOfLine, newLine, wrapWith } from '../utils';
+import type { TemplateCodegenOptions } from './index';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
@@ -63,52 +13,52 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		errors: number;
 		node: CompilerDOM.CommentNode;
 	} | undefined;
+	let lastGenericComment: {
+		content: string;
+		offset: number;
+	} | undefined;
 	let variableId = 0;
 
-	const codeFeatures = new Proxy(_codeFeatures, {
-		get(target, key: keyof typeof _codeFeatures) {
-			const data = target[key];
-			if (data.verification) {
-				if (ignoredError) {
-					return {
-						...data,
-						verification: false,
-					};
-				}
-				if (expectErrorToken) {
-					const token = expectErrorToken;
-					if (typeof data.verification !== 'object' || !data.verification.shouldReport) {
-						return {
-							...data,
-							verification: {
-								shouldReport: () => {
-									token.errors++;
-									return false;
-								},
-							},
-						};
-					}
-				}
+	function resolveCodeFeatures(features: VueCodeInformation) {
+		if (features.verification) {
+			if (ignoredError) {
+				return {
+					...features,
+					verification: false,
+				};
 			}
-			return data;
-		},
-	});
+			if (expectErrorToken) {
+				const token = expectErrorToken;
+				return {
+					...features,
+					verification: {
+						shouldReport: () => {
+							token.errors++;
+							return false;
+						},
+					},
+				};
+			}
+		}
+		return features;
+	}
+
+	const hoistVars = new Map<string, string>();
 	const localVars = new Map<string, number>();
+	const dollarVars = new Set<string>();
 	const accessExternalVariables = new Map<string, Set<number>>();
 	const slots: {
 		name: string;
-		loc?: number;
+		offset?: number;
 		tagRange: [number, number];
-		varName: string;
 		nodeLoc: any;
+		propsVar: string;
 	}[] = [];
 	const dynamicSlots: {
 		expVar: string;
-		varName: string;
+		propsVar: string;
 	}[] = [];
-	const hasSlotElements = new Set<CompilerDOM.ElementNode>();;
 	const blockConditions: string[] = [];
-	const usedComponentCtxVars = new Set<string>();
 	const scopedClasses: {
 		source: string;
 		className: string;
@@ -116,22 +66,37 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	}[] = [];
 	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
-	const templateRefs = new Map<string, [varName: string, offset: number]>();
+	const bindingAttrLocs: CompilerDOM.SourceLocation[] = [];
+	const inheritedAttrVars = new Set<string>();
+	const templateRefs = new Map<string, {
+		typeExp: string;
+		offset: number;
+	}>();
 
 	return {
+		codeFeatures: new Proxy(codeFeatures, {
+			get(target, key: keyof typeof codeFeatures) {
+				const data = target[key];
+				return resolveCodeFeatures(data);
+			},
+		}),
+		resolveCodeFeatures,
 		slots,
 		dynamicSlots,
-		codeFeatures,
+		dollarVars,
 		accessExternalVariables,
-		hasSlotElements,
+		lastGenericComment,
 		blockConditions,
-		usedComponentCtxVars,
 		scopedClasses,
 		emptyClassOffsets,
 		inlayHints,
-		hasSlot: false,
-		inheritedAttrVars: new Set<string>(),
+		bindingAttrLocs,
+		inheritedAttrVars,
 		templateRefs,
+		currentComponent: undefined as {
+			ctxVar: string;
+			used: boolean;
+		} | undefined,
 		singleRootElTypes: [] as string[],
 		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
 		accessExternalVariable(name: string, offset?: number) {
@@ -154,6 +119,24 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		},
 		getInternalVariable: () => {
 			return `__VLS_${variableId++}`;
+		},
+		getHoistVariable: (originalVar: string) => {
+			let name = hoistVars.get(originalVar);
+			if (name === undefined) {
+				hoistVars.set(originalVar, name = `__VLS_${variableId++}`);
+			}
+			return name;
+		},
+		generateHoistVariables: function* () {
+			// trick to avoid TS 4081 (#5186)
+			if (hoistVars.size) {
+				yield `// @ts-ignore${newLine}`;
+				yield `var `;
+				for (const [originalVar, hoistVar] of hoistVars) {
+					yield `${hoistVar} = ${originalVar}, `;
+				}
+				yield endOfLine;
+			}
 		},
 		ignoreError: function* (): Generator<Code> {
 			if (!ignoredError) {
