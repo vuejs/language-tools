@@ -497,7 +497,7 @@ function hasVBindAttrs(
 	node: CompilerDOM.ElementNode
 ) {
 	return options.vueCompilerOptions.fallthroughAttributes && (
-		node === ctx.singleRootNode ||
+		ctx.singleRootNodes.has(node) ||
 		node.props.some(prop =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'bind'
