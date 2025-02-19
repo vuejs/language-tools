@@ -160,7 +160,14 @@ function* generateRootEl(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
 	yield `type __VLS_RootEl = `;
-	yield ctx.singleRootElType ?? `any`;
+	if (ctx.singleRootElTypes.length && !ctx.singleRootNodes.has(null)) {
+		for (const type of ctx.singleRootElTypes) {
+			yield `${newLine}| ${type}`;
+		}
+	}
+	else {
+		yield `any`;
+	}
 	yield endOfLine;
 	return `__VLS_RootEl`;
 }

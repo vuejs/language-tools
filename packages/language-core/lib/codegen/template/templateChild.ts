@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
+import { hyphenateTag } from '../../utils/shared';
 import { endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
@@ -66,18 +67,16 @@ export function* generateTemplateChild(
 		}
 	}
 
-	const shouldInheritRootNodeAttrs = options.inheritAttrs;
-
 	const cur = node as CompilerDOM.ElementNode | CompilerDOM.IfNode | CompilerDOM.ForNode;
 	if (cur.codegenNode?.type === CompilerDOM.NodeTypes.JS_CACHE_EXPRESSION) {
 		cur.codegenNode = cur.codegenNode.value as any;
 	}
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
-		let prev: CompilerDOM.TemplateChildNode | undefined;
-		if (shouldInheritRootNodeAttrs && node.children.length === 1 && node.children[0].type === CompilerDOM.NodeTypes.ELEMENT) {
-			ctx.singleRootNode = node.children[0];
+		for (const item of collectSingleRootNodes(options, node.children)) {
+			ctx.singleRootNodes.add(item);
 		}
+		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of node.children) {
 			yield* generateTemplateChild(options, ctx, childNode, prev);
 			prev = childNode;
@@ -156,6 +155,36 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 		// not needed progress
+	}
+}
+
+function* collectSingleRootNodes(
+	options: TemplateCodegenOptions,
+	children: CompilerDOM.TemplateChildNode[]
+): Generator<CompilerDOM.ElementNode | null> {
+	if (children.length !== 1) {
+		// "null" is used to determine whether the component is not always has a single root
+		if (children.length > 1) {
+			yield null;
+		}
+		return;
+	}
+
+	const child = children[0];
+	if (child.type === CompilerDOM.NodeTypes.IF) {
+		for (const branch of child.branches) {
+			yield* collectSingleRootNodes(options, branch.children);
+		}
+		return;
+	}
+	else if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
+		return;
+	}
+	yield child;
+
+	const tag = hyphenateTag(child.tag);
+	if (options.vueCompilerOptions.fallthroughComponentNames.includes(tag)) {
+		yield* collectSingleRootNodes(options, child.children);
 	}
 }
 

@@ -97,8 +97,8 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 			ctxVar: string;
 			used: boolean;
 		} | undefined,
-		singleRootElType: undefined as string | undefined,
-		singleRootNode: undefined as CompilerDOM.ElementNode | undefined,
+		singleRootElTypes: [] as string[],
+		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);
 			if (!arr) {

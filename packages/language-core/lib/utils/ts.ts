@@ -4,6 +4,7 @@ import type * as ts from 'typescript';
 import { generateGlobalTypes, getGlobalTypesFileName } from '../codegen/globalTypes';
 import { getAllExtensions } from '../languagePlugin';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
+import { hyphenateTag } from './shared';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -219,6 +220,10 @@ export class CompilerOptionsResolver {
 				...defaults.composables,
 				...this.options.composables,
 			},
+			fallthroughComponentNames: [
+				...defaults.fallthroughComponentNames,
+				...this.options.fallthroughComponentNames ?? []
+			].map(hyphenateTag),
 			// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 			experimentalModelPropName: Object.fromEntries(Object.entries(
@@ -274,6 +279,12 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		inferTemplateDollarSlots: false,
 		skipTemplateCodegen: false,
 		fallthroughAttributes: false,
+		fallthroughComponentNames: [
+			'Transition',
+			'KeepAlive',
+			'Teleport',
+			'Suspense',
+		],
 		dataAttributes: [],
 		htmlAttributes: ['aria-*'],
 		optionsWrapper: target >= 2.7

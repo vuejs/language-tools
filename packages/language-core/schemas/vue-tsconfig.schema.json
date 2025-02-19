@@ -105,6 +105,16 @@
 					"default": false,
 					"markdownDescription": "Enable to support typed fallthrough attributes. Please note that enabling may significantly slow down type checking."
 				},
+				"fallthroughComponentNames": {
+					"type": "array",
+					"default": [
+						"Transition",
+						"KeepAlive",
+						"Teleport",
+						"Suspense"
+					],
+					"markdownDescription": "Component names that will be transparent when collecting single root child nodes and fallthrough attributes."
+				},
 				"dataAttributes": {
 					"type": "array",
 					"default": [ ],
