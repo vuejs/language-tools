@@ -73,10 +73,8 @@ export function* generateTemplateChild(
 	}
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
-		if (options.inheritAttrs) {
-			for (const item of collectSingleRootNodes(options, node.children)) {
-				ctx.singleRootNodes.add(item);
-			}
+		for (const item of collectSingleRootNodes(options, node.children)) {
+			ctx.singleRootNodes.add(item);
 		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of node.children) {
