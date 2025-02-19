@@ -74,7 +74,9 @@ export function* generateTemplateChild(
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		if (options.inheritAttrs) {
-			ctx.singleRootNodes = new Set(collectSingleRootNodes(options, node.children));
+			for (const item of collectSingleRootNodes(options, node.children)) {
+				ctx.singleRootNodes.add(item);
+			}
 		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of node.children) {
@@ -163,7 +165,7 @@ function* collectSingleRootNodes(
 	children: CompilerDOM.TemplateChildNode[]
 ): Generator<CompilerDOM.ElementNode | null> {
 	if (children.length !== 1) {
-		// used to determine whether the component is always has a single root
+		// "null" is used to determine whether the component is not always has a single root
 		if (children.length > 1) {
 			yield null;
 		}

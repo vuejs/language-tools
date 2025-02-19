@@ -161,9 +161,8 @@ function* generateRootEl(
 ): Generator<Code> {
 	yield `type __VLS_RootEl = `;
 	if (ctx.singleRootElTypes.length && !ctx.singleRootNodes.has(null)) {
-		yield newLine;
 		for (const type of ctx.singleRootElTypes) {
-			yield `| ${type}${newLine}`;
+			yield `${newLine}| ${type}`;
 		}
 	}
 	else {
