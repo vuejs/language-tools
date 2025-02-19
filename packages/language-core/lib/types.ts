@@ -40,7 +40,7 @@ export interface VueCompilerOptions {
 	inferTemplateDollarSlots: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
-	fallthroughComponentTags: string[];
+	fallthroughComponentNames: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];

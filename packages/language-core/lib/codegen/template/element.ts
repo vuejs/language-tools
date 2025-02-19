@@ -258,7 +258,7 @@ export function* generateComponent(
 
 	const [refName, offset] = yield* generateElementReference(options, ctx, node);
 	const tag = hyphenateTag(node.tag);
-	const isRootNode = ctx.singleRootNodes.has(node) && !options.vueCompilerOptions.fallthroughComponentTags.includes(tag);
+	const isRootNode = ctx.singleRootNodes.has(node) && !options.vueCompilerOptions.fallthroughComponentNames.includes(tag);
 
 	if (refName || isRootNode) {
 		const componentInstanceVar = ctx.getInternalVariable();

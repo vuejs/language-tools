@@ -185,7 +185,7 @@ function* collectSingleRootNodes(
 	yield child;
 
 	const tag = hyphenateTag(child.tag);
-	if (options.vueCompilerOptions.fallthroughComponentTags.includes(tag)) {
+	if (options.vueCompilerOptions.fallthroughComponentNames.includes(tag)) {
 		yield* collectSingleRootNodes(options, child.children);
 	}
 }

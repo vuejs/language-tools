@@ -220,9 +220,9 @@ export class CompilerOptionsResolver {
 				...defaults.composables,
 				...this.options.composables,
 			},
-			fallthroughComponentTags: [
-				...defaults.fallthroughComponentTags,
-				...this.options.fallthroughComponentTags ?? []
+			fallthroughComponentNames: [
+				...defaults.fallthroughComponentNames,
+				...this.options.fallthroughComponentNames ?? []
 			].map(hyphenateTag),
 			// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
@@ -279,7 +279,7 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		inferTemplateDollarSlots: false,
 		skipTemplateCodegen: false,
 		fallthroughAttributes: false,
-		fallthroughComponentTags: [
+		fallthroughComponentNames: [
 			'Transition',
 			'KeepAlive',
 			'Teleport',
