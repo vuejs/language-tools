@@ -42,7 +42,7 @@ export function create(): LanguageServicePlugin {
 							break;
 						}
 
-						const block = root._sfc.styles.find(style => style.name === decoded![1]);
+						const block = root.sfc.styles.find(style => style.name === decoded![1]);
 						if (!block) {
 							break;
 						}
