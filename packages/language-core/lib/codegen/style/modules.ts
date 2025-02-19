@@ -1,13 +1,11 @@
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { ScriptCodegenOptions } from '../script';
-import type { ScriptCodegenContext } from '../script/context';
 import { endOfLine, newLine } from '../utils';
 import { generateClassProperty } from './classProperty';
 
 export function* generateStyleModules(
-	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext
+	options: ScriptCodegenOptions
 ): Generator<Code> {
 	const styles = options.sfc.styles.map((style, i) => [style, i] as const).filter(([style]) => style.module);
 	if (!styles.length && !options.scriptSetupRanges?.useCssModule.length) {
@@ -27,14 +25,13 @@ export function* generateStyleModules(
 				codeFeatures.withoutHighlight
 			];
 		}
-		yield `: Record<string, string> & ${ctx.localTypes.PrettifyLocal}<{}`;
+		yield `: Record<string, string> & __VLS_PrettifyGlobal<{}`;
 		for (const className of style.classNames) {
 			yield* generateClassProperty(
 				i,
 				className.text,
 				className.offset,
-				'string',
-				false
+				'string'
 			);
 		}
 		yield `>${endOfLine}`;

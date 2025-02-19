@@ -2,7 +2,7 @@
 
 <template>
 	{{ () => {
-		exactType({} as __VLS_StyleScopedClasses, {} as { 'foo'?: boolean });
+		exactType({} as __VLS_StyleScopedClasses, {} as { 'foo': boolean });
 	} }}
 </template>
 
