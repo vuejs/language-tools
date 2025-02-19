@@ -7,6 +7,6 @@ import Child from './child.vue';
 
 <template>
 	<Child>
-		{{ exactType($el, {} as HTMLAnchorElement) }}
+		{{ exactType($el, {} as HTMLAnchorElement | HTMLImageElement) }}
 	</Child>
 </template>
