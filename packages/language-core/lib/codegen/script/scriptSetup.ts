@@ -171,7 +171,7 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	if (options.vueCompilerOptions.typedDollarAttrs.self) {
+	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
 		for (const { callExp } of scriptSetupRanges.useAttrs) {
 			setupCodeModifies.push([
 				[`(`],
@@ -212,7 +212,7 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	if (options.vueCompilerOptions.typedDollarSlots.self) {
+	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
 		for (const { callExp } of scriptSetupRanges.useSlots) {
 			setupCodeModifies.push([
 				[`(`],

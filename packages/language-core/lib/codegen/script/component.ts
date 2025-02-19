@@ -39,14 +39,14 @@ export function* generateComponent(
 	}
 	if (
 		options.vueCompilerOptions.target >= 3.5
-		&& options.vueCompilerOptions.typedDollarRefs.expose
+		&& options.vueCompilerOptions.inferComponentDollarRefs
 		&& options.templateCodegen?.templateRefs.size
 	) {
 		yield `__typeRefs: {} as __VLS_TemplateRefs,${newLine}`;
 	}
 	if (
 		options.vueCompilerOptions.target >= 3.5
-		&& options.vueCompilerOptions.typedDollarEl.expose
+		&& options.vueCompilerOptions.inferComponentDollarEl
 		&& options.templateCodegen?.singleRootElType
 	) {
 		yield `__typeEl: {} as __VLS_RootEl,${newLine}`;

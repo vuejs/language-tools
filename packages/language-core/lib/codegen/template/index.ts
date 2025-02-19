@@ -36,16 +36,16 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	const slotsPropertyName = getSlotsPropertyName(options.vueCompilerOptions.target);
-	if (options.vueCompilerOptions.typedDollarSlots.self) {
+	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
 		ctx.dollarVars.add(slotsPropertyName);
 	}
-	if (options.vueCompilerOptions.typedDollarAttrs.self) {
+	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
 		ctx.dollarVars.add('$attrs');
 	}
-	if (options.vueCompilerOptions.typedDollarRefs.self) {
+	if (options.vueCompilerOptions.inferTemplateDollarRefs) {
 		ctx.dollarVars.add('$refs');
 	}
-	if (options.vueCompilerOptions.typedDollarEl.self) {
+	if (options.vueCompilerOptions.inferTemplateDollarEl) {
 		ctx.dollarVars.add('$el');
 	}
 

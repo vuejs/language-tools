@@ -32,6 +32,12 @@ export interface VueCompilerOptions {
 	checkUnknownEvents: boolean;
 	checkUnknownDirectives: boolean;
 	checkUnknownComponents: boolean;
+	inferComponentDollarEl: boolean;
+	inferComponentDollarRefs: boolean;
+	inferTemplateDollarAttrs: boolean;
+	inferTemplateDollarEl: boolean;
+	inferTemplateDollarRefs: boolean;
+	inferTemplateDollarSlots: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
 	dataAttributes: string[];
@@ -52,20 +58,6 @@ export interface VueCompilerOptions {
 		useSlots: string[];
 		useTemplateRef: string[];
 	};
-	typedDollarAttrs: {
-		self: boolean;
-	},
-	typedDollarEl: {
-		self: boolean;
-		expose: boolean;
-	},
-	typedDollarRefs: {
-		self: boolean;
-		expose: boolean;
-	},
-	typedDollarSlots: {
-		self: boolean;
-	},
 	plugins: VueLanguagePlugin[];
 
 	// experimental

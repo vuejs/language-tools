@@ -219,22 +219,6 @@ export class CompilerOptionsResolver {
 				...defaults.composables,
 				...this.options.composables,
 			},
-			typedDollarAttrs: mergeTypedDollar(
-				this.options.typedDollarAttrs,
-				defaults.typedDollarAttrs
-			),
-			typedDollarEl: mergeTypedDollar(
-				this.options.typedDollarEl,
-				defaults.typedDollarEl
-			),
-			typedDollarRefs: mergeTypedDollar(
-				this.options.typedDollarRefs,
-				defaults.typedDollarRefs
-			),
-			typedDollarSlots: mergeTypedDollar(
-				this.options.typedDollarSlots,
-				defaults.typedDollarSlots
-			),
 			// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 			experimentalModelPropName: Object.fromEntries(Object.entries(
@@ -282,6 +266,12 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		checkUnknownEvents: strictTemplates,
 		checkUnknownDirectives: strictTemplates,
 		checkUnknownComponents: strictTemplates,
+		inferComponentDollarEl: false,
+		inferComponentDollarRefs: false,
+		inferTemplateDollarAttrs: false,
+		inferTemplateDollarEl: false,
+		inferTemplateDollarRefs: false,
+		inferTemplateDollarSlots: false,
 		skipTemplateCodegen: false,
 		fallthroughAttributes: false,
 		dataAttributes: [],
@@ -303,20 +293,6 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 			useCssModule: ['useCssModule'],
 			useSlots: ['useSlots'],
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
-		},
-		typedDollarAttrs: {
-			self: true
-		},
-		typedDollarEl: {
-			self: true,
-			expose: false
-		},
-		typedDollarRefs: {
-			self: true,
-			expose: false
-		},
-		typedDollarSlots: {
-			self: true
 		},
 		plugins: [],
 		experimentalDefinePropProposal: false,
@@ -365,17 +341,4 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return { absolutePath: globalTypesPath };
 	} catch { }
-}
-
-function mergeTypedDollar<T>(
-	value: T | undefined,
-	defaults: { self: boolean; expose?: boolean; }
-) {
-	return (typeof value === "boolean" ? {
-		self: value,
-		expose: value
-	} : {
-		...defaults,
-		...value
-	}) as T;
 }
