@@ -10,6 +10,8 @@ import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 import { generateVSlot } from './vSlot';
 
+const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
+
 // @ts-ignore
 const transformContext: CompilerDOM.TransformContext = {
 	onError: () => { },
@@ -34,25 +36,32 @@ export function* generateTemplateChild(
 	isVForChild: boolean = false
 ): Generator<Code> {
 	if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
-		const commentText = prevNode.content.trim().split(' ')[0];
-		if (/^@vue-skip\b[\s\S]*/.test(commentText)) {
-			yield `// @vue-skip${newLine}`;
-			return;
-		}
-		else if (/^@vue-ignore\b[\s\S]*/.test(commentText)) {
-			yield* ctx.ignoreError();
-		}
-		else if (/^@vue-expect-error\b[\s\S]*/.test(commentText)) {
-			yield* ctx.expectError(prevNode);
-		}
-		else {
-			const match = prevNode.loc.source.match(/^<!--\s*@vue-generic\b\s*\{(?<content>[^}]*)\}/);
-			if (match) {
-				const { content } = match.groups ?? {};
-				ctx.lastGenericComment = {
-					content,
-					offset: prevNode.loc.start.offset + match[0].indexOf(content)
-				};
+		const match = prevNode.loc.source.match(commentDirectiveRegex);
+		if (match) {
+			const { name, content } = match.groups!;
+			switch (name) {
+				case 'skip': {
+					yield `// @vue-skip${newLine}`;
+					return;
+				}
+				case 'ignore': {
+					yield* ctx.ignoreError();
+					break;
+				}
+				case 'expect-error': {
+					yield* ctx.expectError(prevNode);
+					break;
+				}
+				case 'generic': {
+					const text = content.trim();
+					if (text.startsWith('{') && text.endsWith('}')) {
+						ctx.lastGenericComment = {
+							content: text.slice(1, -1),
+							offset: prevNode.loc.start.offset + prevNode.loc.source.indexOf('{') + 1,
+						};
+					}
+					break;
+				}
 			}
 		}
 	}
@@ -104,7 +113,7 @@ export function* generateTemplateChild(
 			}
 			else {
 				const { currentComponent } = ctx;
-				yield* generateComponent(options, ctx, node);
+				yield* generateComponent(options, ctx, node, isVForChild);
 				ctx.currentComponent = currentComponent;
 			}
 		}
@@ -174,14 +183,14 @@ export function getVForNode(node: CompilerDOM.ElementNode) {
 }
 
 function getVIfNode(node: CompilerDOM.ElementNode) {
-	const forDirective = node.props.find(
+	const ifDirective = node.props.find(
 		(prop): prop is CompilerDOM.DirectiveNode =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'if'
 	);
-	if (forDirective) {
+	if (ifDirective) {
 		let ifNode: CompilerDOM.IfNode | undefined;
-		CompilerDOM.processIf(node, forDirective, transformContext, _ifNode => {
+		CompilerDOM.processIf(node, ifDirective, transformContext, _ifNode => {
 			ifNode = { ..._ifNode };
 			return undefined;
 		});
@@ -189,7 +198,7 @@ function getVIfNode(node: CompilerDOM.ElementNode) {
 			for (const branch of ifNode.branches) {
 				branch.children = [{
 					...node,
-					props: node.props.filter(prop => prop !== forDirective),
+					props: node.props.filter(prop => prop !== ifDirective),
 				}];
 			}
 			return ifNode;

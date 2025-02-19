@@ -37,15 +37,23 @@ export function* generateComponent(
 		}
 		yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length, true);
 	}
+	if (
+		options.vueCompilerOptions.target >= 3.5
+		&& options.vueCompilerOptions.inferComponentDollarRefs
+		&& options.templateCodegen?.templateRefs.size
+	) {
+		yield `__typeRefs: {} as __VLS_TemplateRefs,${newLine}`;
+	}
+	if (
+		options.vueCompilerOptions.target >= 3.5
+		&& options.vueCompilerOptions.inferComponentDollarEl
+		&& options.templateCodegen?.singleRootElType
+	) {
+		yield `__typeEl: {} as __VLS_RootEl,${newLine}`;
+	}
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.args) {
 		const { args } = options.scriptRanges.exportDefault;
 		yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
-	}
-	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.templateRefs.size) {
-		yield `__typeRefs: {} as __VLS_TemplateRefs,${newLine}`;
-	}
-	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.singleRootElType) {
-		yield `__typeEl: {} as __VLS_RootEl,${newLine}`;
 	}
 	yield `})`;
 }

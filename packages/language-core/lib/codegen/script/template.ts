@@ -1,6 +1,7 @@
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
+import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { type TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
@@ -116,6 +117,7 @@ function* generateTemplateBody(
 ): Generator<Code> {
 	yield* generateStyleScopedClasses(options, templateCodegenCtx);
 	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
+	yield* generateStyleModules(options);
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {

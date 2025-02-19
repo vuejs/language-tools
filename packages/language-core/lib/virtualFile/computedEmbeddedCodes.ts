@@ -201,28 +201,18 @@ function computedPluginEmbeddedCodes(
 				];
 			}));
 			const newMappings: typeof mappings = [];
-			let lastValidMapping: typeof mappings[number] | undefined;
 
 			for (let i = 0; i < mappings.length; i++) {
 				const mapping = mappings[i];
-				if (mapping.data.__combineOffsetMapping !== undefined) {
-					const offsetMapping = mappings[i - mapping.data.__combineOffsetMapping];
+				if (mapping.data.__combineOffset !== undefined) {
+					const offsetMapping = mappings[i - mapping.data.__combineOffset];
 					if (typeof offsetMapping === 'string' || !offsetMapping) {
-						throw new Error('Invalid offset mapping, mappings: ' + mappings.length + ', i: ' + i + ', offset: ' + mapping.data.__combineOffsetMapping);
+						throw new Error('Invalid offset mapping, mappings: ' + mappings.length + ', i: ' + i + ', offset: ' + mapping.data.__combineOffset);
 					}
 					offsetMapping.sourceOffsets.push(...mapping.sourceOffsets);
 					offsetMapping.generatedOffsets.push(...mapping.generatedOffsets);
 					offsetMapping.lengths.push(...mapping.lengths);
 					continue;
-				}
-				else if (mapping.data.__combineLastMapping) {
-					lastValidMapping!.sourceOffsets.push(...mapping.sourceOffsets);
-					lastValidMapping!.generatedOffsets.push(...mapping.generatedOffsets);
-					lastValidMapping!.lengths.push(...mapping.lengths);
-					continue;
-				}
-				else {
-					lastValidMapping = mapping;
 				}
 				newMappings.push(mapping);
 			}

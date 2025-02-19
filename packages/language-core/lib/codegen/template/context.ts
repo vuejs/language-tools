@@ -43,8 +43,9 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		return features;
 	}
 
+	const hoistVars = new Map<string, string>();
 	const localVars = new Map<string, number>();
-	const specialVars = new Set<string>();
+	const dollarVars = new Set<string>();
 	const accessExternalVariables = new Map<string, Set<number>>();
 	const slots: {
 		name: string;
@@ -67,7 +68,10 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	const inlayHints: InlayHintInfo[] = [];
 	const bindingAttrLocs: CompilerDOM.SourceLocation[] = [];
 	const inheritedAttrVars = new Set<string>();
-	const templateRefs = new Map<string, [varName: string, offset: number]>();
+	const templateRefs = new Map<string, {
+		typeExp: string;
+		offset: number;
+	}>();
 
 	return {
 		codeFeatures: new Proxy(codeFeatures, {
@@ -79,14 +83,13 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		resolveCodeFeatures,
 		slots,
 		dynamicSlots,
-		specialVars,
+		dollarVars,
 		accessExternalVariables,
 		lastGenericComment,
 		blockConditions,
 		scopedClasses,
 		emptyClassOffsets,
 		inlayHints,
-		hasSlot: false,
 		bindingAttrLocs,
 		inheritedAttrVars,
 		templateRefs,
@@ -116,6 +119,24 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		},
 		getInternalVariable: () => {
 			return `__VLS_${variableId++}`;
+		},
+		getHoistVariable: (originalVar: string) => {
+			let name = hoistVars.get(originalVar);
+			if (name === undefined) {
+				hoistVars.set(originalVar, name = `__VLS_${variableId++}`);
+			}
+			return name;
+		},
+		generateHoistVariables: function* () {
+			// trick to avoid TS 4081 (#5186)
+			if (hoistVars.size) {
+				yield `// @ts-ignore${newLine}`;
+				yield `var `;
+				for (const [originalVar, hoistVar] of hoistVars) {
+					yield `${hoistVar} = ${originalVar}, `;
+				}
+				yield endOfLine;
+			}
 		},
 		ignoreError: function* (): Generator<Code> {
 			if (!ignoredError) {

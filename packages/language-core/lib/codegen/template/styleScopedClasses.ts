@@ -21,25 +21,18 @@ export function* generateStyleScopedClassReferences(
 		yield `']} */${endOfLine}`;
 	}
 	for (const { source, className, offset } of ctx.scopedClasses) {
-		yield `/** @type {__VLS_StyleScopedClasses[`;
-		yield [
-			'',
-			source,
-			offset - (withDot ? 1 : 0),
-			ctx.codeFeatures.navigation,
-		];
-		yield `'`;
-
+		yield `/** @type {__VLS_StyleScopedClasses['`;
+		if (withDot) {
+			yield [
+				'',
+				source,
+				offset - 1,
+				ctx.codeFeatures.navigation,
+			];
+		}
 		// fix https://github.com/vuejs/language-tools/issues/4537
 		yield* escapeString(source, className, offset, ['\\', '\'']);
-		yield `'`;
-		yield [
-			'',
-			source,
-			offset + className.length,
-			ctx.codeFeatures.navigationWithoutRename,
-		];
-		yield `]} */${endOfLine}`;
+		yield `']} */${endOfLine}`;
 	}
 
 	function* escapeString(source: string, className: string, offset: number, escapeTargets: string[]): Generator<Code> {

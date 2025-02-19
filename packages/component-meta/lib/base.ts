@@ -719,6 +719,7 @@ function readVueComponentDefaultProps(
 		default?: string;
 		required?: boolean;
 	}> = {};
+	const { sfc } = root;
 
 	scriptSetupWorker();
 	scriptWorker();
@@ -727,12 +728,12 @@ function readVueComponentDefaultProps(
 
 	function scriptSetupWorker() {
 
-		const ast = root._sfc.scriptSetup?.ast;
+		const ast = sfc.scriptSetup?.ast;
 		if (!ast) {
 			return;
 		}
 
-		const codegen = vue.tsCodegen.get(root._sfc);
+		const codegen = vue.tsCodegen.get(sfc);
 		const scriptSetupRanges = codegen?.getScriptSetupRanges();
 
 		if (scriptSetupRanges?.withDefaults?.argNode) {
@@ -785,13 +786,14 @@ function readVueComponentDefaultProps(
 
 	function scriptWorker() {
 
-		const sfc = root._sfc;
+		const ast = sfc.script?.ast;
+		if (!ast) {
+			return;
+		}
 
-		if (sfc.script) {
-			const scriptResult = readTsComponentDefaultProps(sfc.script.ast, 'default', printer, ts);
-			for (const [key, value] of Object.entries(scriptResult)) {
-				result[key] = value;
-			}
+		const scriptResult = readTsComponentDefaultProps(ast, 'default', printer, ts);
+		for (const [key, value] of Object.entries(scriptResult)) {
+			result[key] = value;
 		}
 	}
 }

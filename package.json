@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"packageManager": "pnpm@9.4.0",
+	"packageManager": "pnpm@10.4.1",
 	"scripts": {
 		"build": "tsc -b",
 		"watch": "pnpm run build && pnpm run \"/^watch:.*/\"",
@@ -28,5 +28,13 @@
 		"@typescript-eslint/eslint-plugin": "^8.19.0",
 		"typescript": "^5.7.2",
 		"vitest": "^2.1.8"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@tsslint/core",
+			"@vscode/vsce-sign",
+			"esbuild",
+			"keytar"
+		]
 	}
 }

@@ -299,7 +299,10 @@ export function computedSfc(
 		return computed(() => {
 			const val = getBlock()[key] as SfcBlockAttr | undefined;
 			if (typeof val === 'object') {
-				val.offset = base.start + val.offset;
+				return {
+					...val,
+					offset: base.start + val.offset,
+				};
 			}
 			return val;
 		});

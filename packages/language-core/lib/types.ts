@@ -16,8 +16,7 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 };
 
 export interface VueCodeInformation extends CodeInformation {
-	__combineLastMapping?: boolean;
-	__combineOffsetMapping?: number;
+	__combineOffset?: number;
 }
 
 export type Code = Segment<VueCodeInformation>;
@@ -33,6 +32,12 @@ export interface VueCompilerOptions {
 	checkUnknownEvents: boolean;
 	checkUnknownDirectives: boolean;
 	checkUnknownComponents: boolean;
+	inferComponentDollarEl: boolean;
+	inferComponentDollarRefs: boolean;
+	inferTemplateDollarAttrs: boolean;
+	inferTemplateDollarEl: boolean;
+	inferTemplateDollarRefs: boolean;
+	inferTemplateDollarSlots: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
 	dataAttributes: string[];

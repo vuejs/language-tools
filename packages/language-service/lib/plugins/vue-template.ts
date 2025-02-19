@@ -365,7 +365,7 @@ export function create(
 
 					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
 					const templateErrors: vscode.Diagnostic[] = [];
-					const { template } = root._sfc;
+					const { template } = root.sfc;
 
 					if (template) {
 
@@ -428,7 +428,7 @@ export function create(
 						return;
 					}
 
-					const { template } = root._sfc;
+					const { template } = root.sfc;
 					if (!template) {
 						return;
 					}
@@ -520,7 +520,7 @@ export function create(
 								})());
 								return [];
 							}
-							const scriptSetupRanges = tsCodegen.get(vueCode._sfc)?.getScriptSetupRanges();
+							const scriptSetupRanges = tsCodegen.get(vueCode.sfc)?.getScriptSetupRanges();
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
 
@@ -534,7 +534,7 @@ export function create(
 							}
 
 							for (const binding of scriptSetupRanges?.bindings ?? []) {
-								const name = vueCode._sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
+								const name = vueCode.sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}

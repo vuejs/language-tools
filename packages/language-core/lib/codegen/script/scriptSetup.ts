@@ -44,7 +44,7 @@ export function* generateScriptSetup(
 			yield `<`;
 			yield [
 				scriptSetup.generic.text,
-				scriptSetup.name,
+				'main',
 				scriptSetup.generic.offset,
 				codeFeatures.all,
 			];
@@ -171,16 +171,18 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	for (const { callExp } of scriptSetupRanges.useAttrs) {
-		setupCodeModifies.push([
-			[`(`],
-			callExp.start,
-			callExp.start
-		], [
-			[` as typeof __VLS_special.$attrs)`],
-			callExp.end,
-			callExp.end
-		]);
+	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
+		for (const { callExp } of scriptSetupRanges.useAttrs) {
+			setupCodeModifies.push([
+				[`(`],
+				callExp.start,
+				callExp.start
+			], [
+				[` as typeof __VLS_dollars.$attrs)`],
+				callExp.end,
+				callExp.end
+			]);
+		}
 	}
 	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
 		setupCodeModifies.push([
@@ -210,16 +212,18 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	for (const { callExp } of scriptSetupRanges.useSlots) {
-		setupCodeModifies.push([
-			[`(`],
-			callExp.start,
-			callExp.start
-		], [
-			[` as typeof __VLS_special.$slots)`],
-			callExp.end,
-			callExp.end
-		]);
+	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
+		for (const { callExp } of scriptSetupRanges.useSlots) {
+			setupCodeModifies.push([
+				[`(`],
+				callExp.start,
+				callExp.start
+			], [
+				[` as typeof __VLS_dollars.$slots)`],
+				callExp.end,
+				callExp.end
+			]);
+		}
 	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
 	for (const { callExp, exp, arg } of scriptSetupRanges.useTemplateRef) {
@@ -298,7 +302,14 @@ function* generateSetupFunction(
 	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 
 	if (syntax) {
-		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges.defineSlots)) {
+		if (
+			!options.vueCompilerOptions.skipTemplateCodegen
+			&& (
+				scriptSetupRanges.defineSlots
+				|| options.templateCodegen?.slots.length
+				|| options.templateCodegen?.dynamicSlots.length
+			)
+		) {
 			yield `const __VLS_component = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
@@ -525,7 +536,7 @@ function* generateModelEmit(
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
 			yield `'update:${propName}': [value: `;
 			yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
-			if (!defineModel.required) {
+			if (!defineModel.required && defineModel.defaultValue === undefined) {
 				yield ` | undefined`;
 			}
 			yield `]${endOfLine}`;

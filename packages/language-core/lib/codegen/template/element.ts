@@ -14,14 +14,15 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { collectStyleScopedClassReferences } from './styleScopedClasses';
-import { generateVSlot } from './vSlot';
+import { generateImplicitDefaultSlot, generateVSlot } from './vSlot';
 
 const colonReg = /:/g;
 
 export function* generateComponent(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
+	node: CompilerDOM.ElementNode,
+	isVForChild: boolean
 ): Generator<Code> {
 	const tagOffsets = [node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag)];
 	if (!node.isSelfClosing && options.template.lang === 'html') {
@@ -33,16 +34,14 @@ export function* generateComponent(
 	const failedPropExps: FailedPropExpression[] = [];
 	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
 	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
-	const var_originalComponent = matchImportName ?? ctx.getInternalVariable();
-	const var_functionalComponent = ctx.getInternalVariable();
-	const var_componentInstance = ctx.getInternalVariable();
-	const var_componentEmit = ctx.getInternalVariable();
-	const var_componentEvents = ctx.getInternalVariable();
-	const var_defineComponentCtx = ctx.getInternalVariable();
+	const componentOriginalVar = matchImportName ?? ctx.getInternalVariable();
+	const componentFunctionalVar = ctx.getInternalVariable();
+	const componentVNodeVar = ctx.getInternalVariable();
+	const componentCtxVar = ctx.getInternalVariable();
 	const isComponentTag = node.tag.toLowerCase() === 'component';
 
 	ctx.currentComponent = {
-		ctxVar: var_defineComponentCtx,
+		ctxVar: componentCtxVar,
 		used: false
 	};
 
@@ -88,9 +87,9 @@ export function* generateComponent(
 		yield `/** @type {[`;
 		for (const tagOffset of tagOffsets) {
 			yield `typeof `;
-			if (var_originalComponent === node.tag) {
+			if (componentOriginalVar === node.tag) {
 				yield [
-					var_originalComponent,
+					componentOriginalVar,
 					'template',
 					tagOffset,
 					ctx.codeFeatures.withoutHighlightAndCompletion,
@@ -115,7 +114,7 @@ export function* generateComponent(
 		yield `]} */${endOfLine}`;
 	}
 	else if (dynamicTagInfo) {
-		yield `const ${var_originalComponent} = (`;
+		yield `const ${componentOriginalVar} = (`;
 		yield* generateInterpolation(
 			options,
 			ctx,
@@ -144,7 +143,7 @@ export function* generateComponent(
 		yield `)${endOfLine}`;
 	}
 	else if (!isComponentTag) {
-		yield `const ${var_originalComponent} = ({} as __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', __VLS_LocalComponents, `;
+		yield `const ${componentOriginalVar} = ({} as __VLS_WithComponent<'${getCanonicalComponentName(node.tag)}', __VLS_LocalComponents, `;
 		if (options.selfComponentName && possibleOriginalNames.includes(options.selfComponentName)) {
 			yield `typeof __VLS_self & (new () => { `
 				+ getSlotsPropertyName(options.vueCompilerOptions.target)
@@ -204,11 +203,11 @@ export function* generateComponent(
 		}
 	}
 	else {
-		yield `const ${var_originalComponent} = {} as any${endOfLine}`;
+		yield `const ${componentOriginalVar} = {} as any${endOfLine}`;
 	}
 
 	yield `// @ts-ignore${newLine}`;
-	yield `const ${var_functionalComponent} = __VLS_asFunctionalComponent(${var_originalComponent}, new ${var_originalComponent}({${newLine}`;
+	yield `const ${componentFunctionalVar} = __VLS_asFunctionalComponent(${componentOriginalVar}, new ${componentOriginalVar}({${newLine}`;
 	yield* generateElementProps(
 		options,
 		ctx,
@@ -230,9 +229,9 @@ export function* generateComponent(
 				},
 			}
 		}),
-		var_componentInstance
+		componentVNodeVar
 	);
-	yield ` = ${var_functionalComponent}`;
+	yield ` = ${componentFunctionalVar}`;
 	yield* generateComponentGeneric(ctx);
 	yield `(`;
 	yield* wrapWith(
@@ -251,57 +250,56 @@ export function* generateComponent(
 		),
 		`}`
 	);
-	yield `, ...__VLS_functionalComponentArgsRest(${var_functionalComponent}))${endOfLine}`;
+	yield `, ...__VLS_functionalComponentArgsRest(${componentFunctionalVar}))${endOfLine}`;
 
 	yield* generateFailedPropExps(options, ctx, failedPropExps);
+	yield* generateElementEvents(options, ctx, node, componentFunctionalVar, componentVNodeVar, componentCtxVar);
+	yield* generateElementDirectives(options, ctx, node);
 
-	const [refName, offset] = yield* generateVScope(options, ctx, node, props);
+	const [refName, offset] = yield* generateElementReference(options, ctx, node);
 	const isRootNode = node === ctx.singleRootNode;
 
 	if (refName || isRootNode) {
-		const varName = ctx.getInternalVariable();
+		const componentInstanceVar = ctx.getInternalVariable();
 		ctx.currentComponent.used = true;
 
-		yield `var ${varName} = {} as (Parameters<NonNullable<typeof ${var_defineComponentCtx}['expose']>>[0] | null)`;
-		if (node.codegenNode?.type === CompilerDOM.NodeTypes.VNODE_CALL
-			&& node.codegenNode.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
-			&& node.codegenNode.props.properties.some(({ key }) => key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && key.content === 'ref_for')
-		) {
+		yield `var ${componentInstanceVar} = {} as (Parameters<NonNullable<typeof ${componentCtxVar}['expose']>>[0] | null)`;
+		if (isVForChild) {
 			yield `[]`;
 		}
 		yield `${endOfLine}`;
 
-		if (refName) {
-			ctx.templateRefs.set(refName, [varName, offset!]);
+		if (refName && offset) {
+			ctx.templateRefs.set(refName, {
+				typeExp: `typeof ${ctx.getHoistVariable(componentInstanceVar)}`,
+				offset
+			});
 		}
 		if (isRootNode) {
-			ctx.singleRootElType = `NonNullable<typeof ${varName}>['$el']`;
+			ctx.singleRootElType = `NonNullable<typeof ${componentInstanceVar}>['$el']`;
 		}
-	}
-
-	const usedComponentEventsVar = yield* generateElementEvents(options, ctx, node, var_functionalComponent, var_componentInstance, var_componentEvents);
-	if (usedComponentEventsVar) {
-		ctx.currentComponent.used = true;
-		yield `let ${var_componentEmit}!: typeof ${var_defineComponentCtx}.emit${endOfLine}`;
-		yield `let ${var_componentEvents}!: __VLS_NormalizeEmits<typeof ${var_componentEmit}>${endOfLine}`;
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
 		const attrsVar = ctx.getInternalVariable();
 		ctx.inheritedAttrVars.add(attrsVar);
-		yield `let ${attrsVar}!: Parameters<typeof ${var_functionalComponent}>[0];\n`;
+		yield `let ${attrsVar}!: Parameters<typeof ${componentFunctionalVar}>[0]${endOfLine}`;
 	}
+
+	collectStyleScopedClassReferences(options, ctx, node);
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
 	if (slotDir) {
 		yield* generateVSlot(options, ctx, node, slotDir);
 	}
 	else {
-		yield* generateElementChildren(options, ctx, node, true);
+		// #932: reference for default slot
+		yield* generateImplicitDefaultSlot(ctx, node);
+		yield* generateElementChildren(options, ctx, node);
 	}
 
 	if (ctx.currentComponent.used) {
-		yield `var ${var_defineComponentCtx}!: __VLS_PickFunctionalComponentCtx<typeof ${var_originalComponent}, typeof ${var_componentInstance}>${endOfLine}`;
+		yield `var ${componentCtxVar}!: __VLS_PickFunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 	}
 }
 
@@ -355,22 +353,28 @@ export function* generateElement(
 	yield `)${endOfLine}`;
 
 	yield* generateFailedPropExps(options, ctx, failedPropExps);
+	yield* generateElementDirectives(options, ctx, node);
 
-	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
-	if (refName) {
-		let refValue = `__VLS_nativeElements['${node.tag}']`;
+	const [refName, offset] = yield* generateElementReference(options, ctx, node);
+	if (refName && offset) {
+		let typeExp = `__VLS_NativeElements['${node.tag}']`;
 		if (isVForChild) {
-			refValue = `[${refValue}]`;
+			typeExp += `[]`;
 		}
-		ctx.templateRefs.set(refName, [refValue, offset!]);
+		ctx.templateRefs.set(refName, {
+			typeExp,
+			offset
+		});
 	}
 	if (ctx.singleRootNode === node) {
-		ctx.singleRootElType = `typeof __VLS_nativeElements['${node.tag}']`;
+		ctx.singleRootElType = `__VLS_NativeElements['${node.tag}']`;
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
 		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
 	}
+
+	collectStyleScopedClassReferences(options, ctx, node);
 
 	yield* generateElementChildren(options, ctx, node);
 }
@@ -394,45 +398,6 @@ function* generateFailedPropExps(
 		);
 		yield endOfLine;
 	}
-}
-
-function* generateVScope(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-	props: (CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode)[]
-): Generator<Code, [refName?: string, offset?: number]> {
-	const vScope = props.find(prop => prop.type === CompilerDOM.NodeTypes.DIRECTIVE && (prop.name === 'scope' || prop.name === 'data'));
-	let inScope = false;
-	let originalConditionsNum = ctx.blockConditions.length;
-
-	if (vScope?.type === CompilerDOM.NodeTypes.DIRECTIVE && vScope.exp) {
-
-		const scopeVar = ctx.getInternalVariable();
-		const condition = `__VLS_withScope(__VLS_ctx, ${scopeVar})`;
-
-		yield `const ${scopeVar} = `;
-		yield [
-			vScope.exp.loc.source,
-			'template',
-			vScope.exp.loc.start.offset,
-			ctx.codeFeatures.all,
-		];
-		yield endOfLine;
-		yield `if (${condition}) {${newLine}`;
-		ctx.blockConditions.push(condition);
-		inScope = true;
-	}
-
-	yield* generateElementDirectives(options, ctx, node);
-	const [refName, offset] = yield* generateReferencesForElements(options, ctx, node); // <el ref="foo" />
-	collectStyleScopedClassReferences(options, ctx, node);
-
-	if (inScope) {
-		yield `}${newLine}`;
-		ctx.blockConditions.length = originalConditionsNum;
-	}
-	return [refName, offset];
 }
 
 function getCanonicalComponentName(tagText: string) {
@@ -490,7 +455,7 @@ function* generateComponentGeneric(
 	ctx.lastGenericComment = undefined;
 }
 
-function* generateReferencesForElements(
+function* generateElementReference(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode

@@ -24,7 +24,7 @@ export async function convertTagName(
 		return;
 	}
 
-	const { template } = root._sfc;
+	const { template } = root.sfc;
 	if (!template) {
 		return;
 	}
@@ -71,7 +71,7 @@ export async function convertAttrName(
 		return;
 	}
 
-	const { template } = root._sfc;
+	const { template } = root.sfc;
 	if (!template) {
 		return;
 	}
@@ -172,8 +172,8 @@ export async function detect(
 
 		const result = new Set<TagNameCasing>();
 
-		if (file._sfc.template?.ast) {
-			for (const element of vue.forEachElementNode(file._sfc.template.ast)) {
+		if (file.sfc.template?.ast) {
+			for (const element of vue.forEachElementNode(file.sfc.template.ast)) {
 				if (element.tagType === 1 satisfies CompilerDOM.ElementTypes) {
 					if (element.tag !== hyphenateTag(element.tag)) {
 						// TagName
@@ -208,7 +208,7 @@ function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 			if (!(sourceFile instanceof vue.VueVirtualCode)) {
 				return;
 			}
-			const ast = sourceFile._sfc.template?.ast;
+			const ast = sourceFile.sfc.template?.ast;
 			const tags: Tags = new Map();
 			if (ast) {
 				for (const node of vue.forEachElementNode(ast)) {
