@@ -1,3 +1,5 @@
+<!-- @inferTemplateDollarRefs true -->
+
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
 import { exactType } from '../../shared';

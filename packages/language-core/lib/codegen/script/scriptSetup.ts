@@ -171,16 +171,18 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	for (const { callExp } of scriptSetupRanges.useAttrs) {
-		setupCodeModifies.push([
-			[`(`],
-			callExp.start,
-			callExp.start
-		], [
-			[` as typeof __VLS_special.$attrs)`],
-			callExp.end,
-			callExp.end
-		]);
+	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
+		for (const { callExp } of scriptSetupRanges.useAttrs) {
+			setupCodeModifies.push([
+				[`(`],
+				callExp.start,
+				callExp.start
+			], [
+				[` as typeof __VLS_dollars.$attrs)`],
+				callExp.end,
+				callExp.end
+			]);
+		}
 	}
 	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
 		setupCodeModifies.push([
@@ -210,16 +212,18 @@ function* generateSetupFunction(
 			]);
 		}
 	}
-	for (const { callExp } of scriptSetupRanges.useSlots) {
-		setupCodeModifies.push([
-			[`(`],
-			callExp.start,
-			callExp.start
-		], [
-			[` as typeof __VLS_special.$slots)`],
-			callExp.end,
-			callExp.end
-		]);
+	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
+		for (const { callExp } of scriptSetupRanges.useSlots) {
+			setupCodeModifies.push([
+				[`(`],
+				callExp.start,
+				callExp.start
+			], [
+				[` as typeof __VLS_dollars.$slots)`],
+				callExp.end,
+				callExp.end
+			]);
+		}
 	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
 	for (const { callExp, exp, arg } of scriptSetupRanges.useTemplateRef) {
