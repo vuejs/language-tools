@@ -27,6 +27,10 @@ export function create(): LanguageServicePlugin {
 					}
 					return diagnostics;
 				},
+				/**
+				 * If the editing position is within the virtual code and navigation is enabled,
+				 * skip the CSS renaming feature.
+				 */
 				provideRenameRange(document, position) {
 					do {
 						const uri = URI.parse(document.uri);
