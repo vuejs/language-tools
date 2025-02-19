@@ -3,39 +3,17 @@ import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
-import type { Code, Sfc, VueCodeInformation, VueCompilerOptions } from '../../types';
+import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { generateGlobalTypes, getGlobalTypesFileName } from '../globalTypes';
+import { generateStyleModules } from '../style/modules';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
 import { createScriptCodegenContext, ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
-import { generateStyleModulesType } from './styleModulesType';
 import { generateTemplate } from './template';
-
-export const codeFeatures = {
-	all: {
-		verification: true,
-		completion: true,
-		semantic: true,
-		navigation: true,
-	} as VueCodeInformation,
-	none: {} as VueCodeInformation,
-	verification: {
-		verification: true,
-	} as VueCodeInformation,
-	navigation: {
-		navigation: true,
-	} as VueCodeInformation,
-	navigationWithoutRename: {
-		navigation: {
-			shouldRename() {
-				return false;
-			},
-		},
-	} as VueCodeInformation,
-};
 
 export interface ScriptCodegenOptions {
 	ts: typeof ts;
@@ -76,14 +54,16 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 
 	if (options.sfc.script?.src) {
-		yield* generateSrc(options.sfc.script, options.sfc.script.src);
+		yield* generateSrc(options.sfc.script.src);
+	}
+	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
+		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 	if (options.sfc.script && options.scriptRanges) {
 		const { exportDefault, classBlockEnd } = options.scriptRanges;
 		const isExportRawObject = exportDefault
 			&& options.sfc.script.content[exportDefault.expression.start] === '{';
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
-			yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 			if (exportDefault) {
 				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
@@ -139,7 +119,6 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		}
 	}
 	else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
-		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 
@@ -156,7 +135,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 
 	// #4788
-	yield* generateStyleModulesType(options, ctx);
+	yield* generateStyleModules(options, ctx);
 
 	if (options.edited) {
 		yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;

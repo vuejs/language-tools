@@ -1,5 +1,5 @@
 import type { ElementNode, SourceLocation } from '@vue/compiler-dom';
-import * as compiler from '@vue/compiler-dom';
+import * as CompilerDOM from '@vue/compiler-dom';
 import type { CompilerError, SFCBlock, SFCDescriptor, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
 
 declare module '@vue/compiler-sfc' {
@@ -11,7 +11,7 @@ declare module '@vue/compiler-sfc' {
 export function parse(source: string): SFCParseResult {
 
 	const errors: CompilerError[] = [];
-	const ast = compiler.parse(source, {
+	const ast = CompilerDOM.parse(source, {
 		// there are no components at SFC parsing level
 		isNativeTag: () => true,
 		// preserve all whitespaces
@@ -36,11 +36,11 @@ export function parse(source: string): SFCParseResult {
 		shouldForceReload: () => false,
 	};
 	ast.children.forEach(node => {
-		if (node.type === compiler.NodeTypes.COMMENT) {
+		if (node.type === CompilerDOM.NodeTypes.COMMENT) {
 			descriptor.comments.push(node.content);
 			return;
 		}
-		else if (node.type !== compiler.NodeTypes.ELEMENT) {
+		else if (node.type !== CompilerDOM.NodeTypes.ELEMENT) {
 			return;
 		}
 		switch (node.tag) {
@@ -49,7 +49,7 @@ export function parse(source: string): SFCParseResult {
 				break;
 			case 'script':
 				const scriptBlock = createBlock(node, source) as SFCScriptBlock;
-				const isSetup = !!scriptBlock.attrs.setup;
+				const isSetup = !!scriptBlock.setup;
 				if (isSetup && !descriptor.scriptSetup) {
 					descriptor.scriptSetup = scriptBlock;
 					break;
@@ -101,38 +101,64 @@ function createBlock(node: ElementNode, source: string) {
 		end
 	};
 	const attrs: Record<string, any> = {};
-	const block: SFCBlock
-		& Pick<SFCStyleBlock, 'scoped' | '__module'>
-		& Pick<SFCScriptBlock, 'setup'> = {
+	const block: SFCBlock = {
 		type,
 		content,
 		loc,
 		attrs
 	};
 	node.props.forEach(p => {
-		if (p.type === compiler.NodeTypes.ATTRIBUTE) {
+		if (p.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
 			attrs[p.name] = p.value ? p.value.content || true : true;
 			if (p.name === 'lang') {
-				block.lang = p.value && p.value.content;
+				block.lang = p.value?.content;
 			}
 			else if (p.name === 'src') {
-				block.src = p.value && p.value.content;
+				block.__src = parseAttr(p, node);
 			}
-			else if (type === 'style') {
+			else if (isScriptBlock(block)) {
+				if (p.name === 'setup' || p.name === 'vapor') {
+					block.setup = attrs[p.name];
+				}
+				else if (p.name === 'generic') {
+					block.__generic = parseAttr(p, node);
+				}
+			}
+			else if (isStyleBlock(block)) {
 				if (p.name === 'scoped') {
 					block.scoped = true;
 				}
 				else if (p.name === 'module') {
-					block.__module = {
-						name: p.value?.content ?? '$style',
-						offset: p.value?.content ? p.value?.loc.start.offset - node.loc.start.offset : undefined
-					};
+					block.__module = parseAttr(p, node);
 				}
-			}
-			else if (type === 'script' && p.name === 'setup') {
-				block.setup = attrs.setup;
 			}
 		}
 	});
 	return block;
+}
+
+function isScriptBlock(block: SFCBlock): block is SFCScriptBlock {
+	return block.type === 'script';
+}
+
+function isStyleBlock(block: SFCBlock): block is SFCStyleBlock {
+	return block.type === 'style';
+}
+
+function parseAttr(p: CompilerDOM.AttributeNode, node: CompilerDOM.ElementNode) {
+	if (!p.value) {
+		return true;
+	}
+	const text = p.value.content;
+	const source = p.value.loc.source;
+	let offset = p.value.loc.start.offset - node.loc.start.offset;
+	const quotes = source.startsWith('"') || source.startsWith("'");
+	if (quotes) {
+		offset++;
+	}
+	return {
+		text,
+		offset,
+		quotes,
+	};
 }

@@ -26,9 +26,6 @@ importers:
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.19.0
         version: 8.19.0(@typescript-eslint/parser@8.19.0(eslint@9.17.0)(typescript@5.7.2))(eslint@9.17.0)(typescript@5.7.2)
-      '@vue/language-core':
-        specifier: 2.2.0
-        version: link:packages/language-core
       typescript:
         specifier: ^5.7.2
         version: 5.7.2
@@ -51,13 +48,13 @@ importers:
         specifier: ^3.2.1
         version: 3.2.1
       '@vue/language-core':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../../packages/language-core
       '@vue/language-server':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../../packages/typescript-plugin
       esbuild:
         specifier: ^0.25.0
@@ -84,7 +81,7 @@ importers:
         specifier: ~2.4.11
         version: 2.4.11
       '@vue/language-core':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
@@ -93,7 +90,7 @@ importers:
         specifier: '*'
         version: 5.7.2
       vue-component-type-helpers:
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../component-type-helpers
     devDependencies:
       '@types/node':
@@ -120,8 +117,8 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       alien-signals:
-        specifier: ^0.4.9
-        version: 0.4.12
+        specifier: ^1.0.3
+        version: 1.0.3
       minimatch:
         specifier: ^9.0.3
         version: 9.0.5
@@ -164,7 +161,7 @@ importers:
         specifier: ^22.10.4
         version: 22.10.4
       '@vue/language-core':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../language-core
 
   packages/language-server:
@@ -179,13 +176,13 @@ importers:
         specifier: ~2.4.11
         version: 2.4.11
       '@vue/language-core':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../language-core
       '@vue/language-service':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../language-service
       '@vue/typescript-plugin':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../typescript-plugin
       vscode-languageserver-protocol:
         specifier: ^3.17.5
@@ -209,17 +206,17 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/language-core':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/typescript-plugin':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../typescript-plugin
       alien-signals:
-        specifier: ^0.4.9
-        version: 0.4.12
+        specifier: ^1.0.3
+        version: 1.0.3
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -276,7 +273,7 @@ importers:
         specifier: ~2.4.11
         version: 2.4.11
       '@vue/language-core':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../language-core
       typescript:
         specifier: '>=5.0.0'
@@ -292,7 +289,7 @@ importers:
         specifier: ~2.4.11
         version: 2.4.11
       '@vue/language-core':
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
@@ -314,7 +311,7 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13(typescript@5.7.2)
       vue-component-type-helpers:
-        specifier: 2.2.0
+        specifier: 2.2.2
         version: link:../packages/component-type-helpers
       vue2:
         specifier: npm:vue@2.7.16
@@ -1422,8 +1419,8 @@ packages:
   ajv@6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
 
-  alien-signals@0.4.12:
-    resolution: {integrity: sha512-Og0PgAihxlp1R22bsoBsyhhMG4+qhU+fkkLPoGBQkYVc3qt9rYnrwYTf+M6kqUqUZpf3rXDnpL90iKa0QcSVVg==}
+  alien-signals@1.0.3:
+    resolution: {integrity: sha512-zQOh3wAYK5ujENxvBBR3CFGF/b6afaSzZ/c9yNhJ1ENrGHETvpUuKQsa93Qrclp0+PzTF93MaZ7scVp1uUozhA==}
 
   ansi-escapes@4.3.2:
     resolution: {integrity: sha512-gKXj5ALrKWQLsYG9jlTRmR/xKluxHV+Z9QEwNIgCfM1/uwPMCuzVVnh5mwTd+OuBZcwSIMbqssNWRm1lE51QaQ==}
@@ -5066,7 +5063,7 @@ snapshots:
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
 
-  alien-signals@0.4.12: {}
+  alien-signals@1.0.3: {}
 
   ansi-escapes@4.3.2:
     dependencies:

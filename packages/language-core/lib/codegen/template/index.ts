@@ -45,6 +45,9 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	yield* generateStyleScopedClassReferences(ctx);
+	yield* ctx.generateAutoImportCompletion();
+	yield* ctx.generateHoistVariables();
+
 	const speicalTypes = [
 		[slotsPropertyName, yield* generateSlots(options, ctx)],
 		['$attrs', yield* generateInheritedAttrs(options, ctx)],
@@ -56,9 +59,8 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	for (const [name, type] of speicalTypes) {
 		yield `${name}: ${type}${endOfLine}`;
 	}
-	yield `} & { [K in keyof typeof __VLS_ctx]: unknown }${endOfLine}`;
+	yield `} & { [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 
-	yield* ctx.generateAutoImportCompletion();
 	return ctx;
 }
 
@@ -70,12 +72,10 @@ function* generateSlots(
 		const name = getSlotsPropertyName(options.vueCompilerOptions.target);
 		yield `type __VLS_Slots = __VLS_PrettifyGlobal<__VLS_OmitStringIndex<typeof __VLS_ctx.${name}>`;
 		for (const { expVar, propsVar } of ctx.dynamicSlots) {
-			ctx.hasSlot = true;
 			yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
 		}
 		for (const slot of ctx.slots) {
 			yield `${newLine}& { `;
-			ctx.hasSlot = true;
 			if (slot.name && slot.offset !== undefined) {
 				yield* generateObjectProperty(
 					options,
@@ -133,7 +133,7 @@ function* generateTemplateRefs(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
 	yield `type __VLS_TemplateRefs = {${newLine}`;
-	for (const [name, [varName, offset]] of ctx.templateRefs) {
+	for (const [name, { varName, offset }] of ctx.templateRefs) {
 		yield* generateObjectProperty(
 			options,
 			ctx,

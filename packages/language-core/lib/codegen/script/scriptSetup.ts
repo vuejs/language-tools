@@ -1,10 +1,11 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { combineLastMapping, endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponent, generateEmitsOption } from './component';
 import { generateComponentSelf } from './componentSelf';
 import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures, generateScriptSectionPartiallyEnding } from './index';
+import { type ScriptCodegenOptions, generateScriptSectionPartiallyEnding } from './index';
 import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
@@ -38,17 +39,21 @@ export function* generateScriptSetup(
 			}
 			yield `export default `;
 		}
-		yield `(<`;
-		yield [
-			scriptSetup.generic,
-			scriptSetup.name,
-			scriptSetup.genericOffset,
-			codeFeatures.all,
-		];
-		if (!scriptSetup.generic.endsWith(`,`)) {
-			yield `,`;
+		yield `(`;
+		if (typeof scriptSetup.generic === 'object') {
+			yield `<`;
+			yield [
+				scriptSetup.generic.text,
+				'main',
+				scriptSetup.generic.offset,
+				codeFeatures.all,
+			];
+			if (!scriptSetup.generic.text.endsWith(`,`)) {
+				yield `,`;
+			}
+			yield `>`;
 		}
-		yield `>(${newLine}`
+		yield `(${newLine}`
 			+ `	__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'],${newLine}`
 			+ `	__VLS_ctx?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
 			+ `	__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],${newLine}`
@@ -293,7 +298,14 @@ function* generateSetupFunction(
 	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 
 	if (syntax) {
-		if (!options.vueCompilerOptions.skipTemplateCodegen && (options.templateCodegen?.hasSlot || scriptSetupRanges.defineSlots)) {
+		if (
+			!options.vueCompilerOptions.skipTemplateCodegen
+			&& (
+				scriptSetupRanges.defineSlots
+				|| options.templateCodegen?.slots.length
+				|| options.templateCodegen?.dynamicSlots.length
+			)
+		) {
 			yield `const __VLS_component = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;

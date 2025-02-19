@@ -28,11 +28,11 @@ export async function getComponentProps(fileName: string, componentName: string)
 }
 
 export const getComponentEvents = createRequest<
-	typeof import('./requests/componentInfos.js')['getComponentEvents']
+	typeof import('./requests/getComponentEvents.js')['getComponentEvents']
 >('getComponentEvents');
 
 export const getComponentDirectives = createRequest<
-	typeof import('./requests/componentInfos.js')['getComponentDirectives']
+	typeof import('./requests/getComponentDirectives.js')['getComponentDirectives']
 >('getComponentDirectives');
 
 export async function getComponentNames(fileName: string) {
@@ -48,7 +48,7 @@ export async function getComponentNames(fileName: string) {
 }
 
 export const getElementAttrs = createRequest<
-	typeof import('./requests/componentInfos.js')['getElementAttrs']
+	typeof import('./requests/getElementAttrs.js')['getElementAttrs']
 >('getElementAttrs');
 
 function createRequest<T extends (...args: any) => any>(requestType: RequestData[1]) {

@@ -84,9 +84,8 @@ export function* generateComponent(
 	}
 
 	if (matchImportName) {
-		// hover, renaming / find references support
-		yield `// @ts-ignore${newLine}`; // #2304
-		yield `/** @type { [`;
+		// navigation support
+		yield `/** @type {[`;
 		for (const tagOffset of tagOffsets) {
 			yield `typeof `;
 			if (var_originalComponent === node.tag) {
@@ -113,7 +112,7 @@ export function* generateComponent(
 			}
 			yield `, `;
 		}
-		yield `] } */${endOfLine}`;
+		yield `]} */${endOfLine}`;
 	}
 	else if (dynamicTagInfo) {
 		yield `const ${var_originalComponent} = (`;
@@ -134,10 +133,7 @@ export function* generateComponent(
 				options,
 				ctx,
 				'template',
-				{
-					...ctx.codeFeatures.all,
-					completion: false,
-				},
+				ctx.codeFeatures.withoutCompletion,
 				dynamicTagInfo.tag,
 				dynamicTagInfo.offsets[1],
 				dynamicTagInfo.astHolder,
@@ -170,8 +166,8 @@ export function* generateComponent(
 
 		const camelizedTag = camelize(node.tag);
 		if (variableNameRegex.test(camelizedTag)) {
-			// renaming / find references support
-			yield `/** @type { [`;
+			// navigation support
+			yield `/** @type {[`;
 			for (const tagOffset of tagOffsets) {
 				for (const shouldCapitalize of (node.tag[0] === node.tag[0].toUpperCase() ? [false] : [true, false])) {
 					const expectName = shouldCapitalize ? capitalize(camelizedTag) : camelizedTag;
@@ -189,7 +185,7 @@ export function* generateComponent(
 					yield `, `;
 				}
 			}
-			yield `] } */${endOfLine}`;
+			yield `]} */${endOfLine}`;
 			// auto import support
 			if (options.edited) {
 				yield `// @ts-ignore${newLine}`; // #2304
@@ -227,14 +223,14 @@ export function* generateComponent(
 	yield* wrapWith(
 		node.loc.start.offset,
 		node.loc.end.offset,
-		{
+		ctx.resolveCodeFeatures({
 			verification: {
 				shouldReport(_source, code) {
 					// TS6133: 'VARIABLE' is declared but its value is never read.
 					return String(code) !== '6133';
 				},
 			}
-		},
+		}),
 		var_componentInstance
 	);
 	yield ` = ${var_functionalComponent}`;
@@ -277,7 +273,10 @@ export function* generateComponent(
 		yield `${endOfLine}`;
 
 		if (refName) {
-			ctx.templateRefs.set(refName, [varName, offset!]);
+			ctx.templateRefs.set(refName, {
+				varName: ctx.getHoistVariable(varName),
+				offset: offset!
+			});
 		}
 		if (isRootNode) {
 			ctx.singleRootElType = `NonNullable<typeof ${varName}>['$el']`;
@@ -363,11 +362,14 @@ export function* generateElement(
 
 	const [refName, offset] = yield* generateVScope(options, ctx, node, node.props);
 	if (refName) {
-		let refValue = `__VLS_nativeElements['${node.tag}']`;
+		let element = `__VLS_nativeElements['${node.tag}']`;
 		if (isVForChild) {
-			refValue = `[${refValue}]`;
+			element = `[${element}]`;
 		}
-		ctx.templateRefs.set(refName, [refValue, offset!]);
+		ctx.templateRefs.set(refName, {
+			varName: element,
+			offset: offset!
+		});
 	}
 	if (ctx.singleRootNode === node) {
 		ctx.singleRootElType = `typeof __VLS_nativeElements['${node.tag}']`;
@@ -508,8 +510,8 @@ function* generateReferencesForElements(
 		) {
 			const [content, startOffset] = normalizeAttributeValue(prop.value);
 
-			yield `// @ts-ignore navigation for \`const ${content} = ref()\`${newLine}`;
-			yield `/** @type { typeof __VLS_ctx`;
+			// navigation support for `const foo = ref()`
+			yield `/** @type {typeof __VLS_ctx`;
 			yield* generatePropertyAccess(
 				options,
 				ctx,
@@ -518,7 +520,7 @@ function* generateReferencesForElements(
 				ctx.codeFeatures.navigation,
 				prop.value.loc
 			);
-			yield ` } */${endOfLine}`;
+			yield `} */${endOfLine}`;
 
 			if (variableNameRegex.test(content) && !options.templateRefNames.has(content)) {
 				ctx.accessExternalVariable(content, startOffset);

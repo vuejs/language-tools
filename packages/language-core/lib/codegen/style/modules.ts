@@ -1,10 +1,11 @@
 import type { Code } from '../../types';
+import { codeFeatures } from '../codeFeatures';
+import type { ScriptCodegenOptions } from '../script';
+import type { ScriptCodegenContext } from '../script/context';
 import { endOfLine, newLine } from '../utils';
-import type { ScriptCodegenContext } from './context';
-import { ScriptCodegenOptions, codeFeatures } from './index';
-import { generateCssClassProperty } from './template';
+import { generateClassProperty } from './classProperty';
 
-export function* generateStyleModulesType(
+export function* generateStyleModules(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext
 ): Generator<Code> {
@@ -14,21 +15,21 @@ export function* generateStyleModulesType(
 	}
 	yield `type __VLS_StyleModules = {${newLine}`;
 	for (const [style, i] of styles) {
-		const { name, offset } = style.module!;
-		if (offset) {
+		if (style.module === true) {
+			yield `$style`;
+		}
+		else {
+			const { text, offset } = style.module!;
 			yield [
-				name,
+				text,
 				'main',
-				offset + 1,
+				offset,
 				codeFeatures.all
 			];
 		}
-		else {
-			yield name;
-		}
 		yield `: Record<string, string> & ${ctx.localTypes.PrettifyLocal}<{}`;
 		for (const className of style.classNames) {
-			yield* generateCssClassProperty(
+			yield* generateClassProperty(
 				i,
 				className.text,
 				className.offset,

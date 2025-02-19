@@ -28,7 +28,7 @@ export function collectExtractProps(
 	const checker = program.getTypeChecker();
 	const script = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(root);
 	const maps = script ? [...language.maps.forEach(script.code)].map(([_sourceScript, map]) => map) : [];
-	const sfc = root._sfc;
+	const { sfc } = root;
 
 	sourceFile.forEachChild(function visit(node) {
 		if (

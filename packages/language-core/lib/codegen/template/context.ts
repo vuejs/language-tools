@@ -1,11 +1,14 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine, wrapWith } from '../utils';
 import type { TemplateCodegenOptions } from './index';
 
+export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
+
 /**
- * This file defines a Context object used for generating type-checkable TS code
+ * Creates and returns a Context object used for generating type-checkable TS code
  * from the template section of a .vue file.
  *
  * ## Implementation Notes for supporting `@vue-ignore`, `@vue-expect-error`, and `@vue-skip` directives.
@@ -105,68 +108,6 @@ import type { TemplateCodegenOptions } from './index';
  * an error/diagnostic was encountered for a region of code covered by a `@vue-expect-error` directive,
  * and additionally how we use that to determine whether to propagate diagnostics back upward.
  */
-const _codeFeatures = {
-	all: {
-		verification: true,
-		completion: true,
-		semantic: true,
-		navigation: true,
-	} as VueCodeInformation,
-	verification: {
-		verification: true,
-	} as VueCodeInformation,
-	completion: {
-		completion: true,
-	} as VueCodeInformation,
-	additionalCompletion: {
-		completion: { isAdditional: true },
-	} as VueCodeInformation,
-	navigation: {
-		navigation: true,
-	} as VueCodeInformation,
-	navigationWithoutRename: {
-		navigation: {
-			shouldRename() {
-				return false;
-			},
-		},
-	} as VueCodeInformation,
-	navigationAndCompletion: {
-		navigation: true,
-		completion: true,
-	} as VueCodeInformation,
-	navigationAndAdditionalCompletion: {
-		navigation: true,
-		completion: { isAdditional: true },
-	} as VueCodeInformation,
-	navigationAndVerification: {
-		navigation: true,
-		verification: true,
-	} as VueCodeInformation,
-	withoutNavigation: {
-		verification: true,
-		completion: true,
-		semantic: true,
-	} as VueCodeInformation,
-	withoutHighlight: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		navigation: true,
-		completion: true,
-	} as VueCodeInformation,
-	withoutHighlightAndCompletion: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		navigation: true,
-	} as VueCodeInformation,
-	withoutHighlightAndCompletionAndNavigation: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-	} as VueCodeInformation,
-};
-
-export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
-
 export function createTemplateCodegenContext(options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames' | 'edited'>) {
 	let ignoredError = false;
 	let expectErrorToken: {
@@ -179,43 +120,37 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	} | undefined;
 	let variableId = 0;
 
-	const codeFeatures = new Proxy(_codeFeatures, {
-		get(target, key: keyof typeof _codeFeatures) {
-			const data = target[key];
-			if (data.verification) {
-				if (ignoredError) {
-					// This mapping is covered by a @vue-ignore directive, so disable
-					// any diagnostics from being reported by ensuring `verification` is false.
-					return {
-						...data,
-						verification: false,
-					};
-				}
-				if (expectErrorToken) {
-					// This mapping is covered by a @vue-expect-error directive, so, similar to
-					// the @vue-ignore case, we want to disable verification (unless `shouldReport`
-					// is already defined) by defining a `shouldReport` that:
-					// 1. returns false
-					// 2. also keeps track that an error/warning/diagnostic was encountered within
-					//    the node covered by `@vue-expect-error`. This will be used at a later point
-					//    (see `resetDirectiveComments`) to make sure we don't report an "unused ts-expect-error" diagnostic.
-					const token = expectErrorToken;
-					if (typeof data.verification !== 'object' || !data.verification.shouldReport) {
-						return {
-							...data,
-							verification: {
-								shouldReport: () => {
-									token.errors++;
-									return false;
-								},
-							},
-						};
-					}
-				}
+	function resolveCodeFeatures(features: VueCodeInformation) {
+		if (features.verification) {
+			if (ignoredError) {
+				// We are currently in a region of code covered by a @vue-ignore directive, so don't
+				// even bother performing any type-checking: set verification to false.
+				return {
+					...features,
+					verification: false,
+				};
 			}
-			return data;
-		},
-	});
+			if (expectErrorToken) {
+				// We are currently in a region of code covered by a @vue-expect-error directive. We need to
+				// keep track of the number of errors encountered within this region so that we can know whether
+				// we will need to propagate an "unused ts-expect-error" diagnostic back to the original
+				// .vue file or not.
+				const token = expectErrorToken;
+				return {
+					...features,
+					verification: {
+						shouldReport: () => {
+							token.errors++;
+							return false;
+						},
+					},
+				};
+			}
+		}
+		return features;
+	}
+
+	const hoistVars = new Map<string, string>();
 	const localVars = new Map<string, number>();
 	const specialVars = new Set<string>();
 	const accessExternalVariables = new Map<string, Set<number>>();
@@ -240,12 +175,21 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	const inlayHints: InlayHintInfo[] = [];
 	const bindingAttrLocs: CompilerDOM.SourceLocation[] = [];
 	const inheritedAttrVars = new Set<string>();
-	const templateRefs = new Map<string, [varName: string, offset: number]>();
+	const templateRefs = new Map<string, {
+		varName: string;
+		offset: number;
+	}>();
 
 	return {
+		codeFeatures: new Proxy(codeFeatures, {
+			get(target, key: keyof typeof codeFeatures) {
+				const data = target[key];
+				return resolveCodeFeatures(data);
+			},
+		}),
+		resolveCodeFeatures,
 		slots,
 		dynamicSlots,
-		codeFeatures,
 		specialVars,
 		accessExternalVariables,
 		lastGenericComment,
@@ -253,7 +197,6 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		scopedClasses,
 		emptyClassOffsets,
 		inlayHints,
-		hasSlot: false,
 		bindingAttrLocs,
 		inheritedAttrVars,
 		templateRefs,
@@ -283,6 +226,19 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		},
 		getInternalVariable: () => {
 			return `__VLS_${variableId++}`;
+		},
+		getHoistVariable: (originalVar: string) => {
+			let name = hoistVars.get(originalVar);
+			if (name === undefined) {
+				hoistVars.set(originalVar, name = `__VLS_${variableId++}`);
+			}
+			return name;
+		},
+		generateHoistVariables: function* () {
+			// trick to avoid TS 4081 (#5186)
+			for (const [originalVar, hoistVar] of hoistVars) {
+				yield `var ${hoistVar} = ${originalVar}${endOfLine}`;
+			}
 		},
 		ignoreError: function* (): Generator<Code> {
 			if (!ignoredError) {
