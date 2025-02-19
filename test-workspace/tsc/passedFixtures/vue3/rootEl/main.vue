@@ -1,3 +1,5 @@
+<!-- @inferTemplateDollarEl true -->
+
 <script setup lang="ts">
 import { exactType } from '../../shared';
 import Child from './child.vue';

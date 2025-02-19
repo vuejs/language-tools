@@ -1,4 +1,5 @@
-<!-- @typedDollarEl true -->
+<!-- @inferComponentDollarEl true -->
+<!-- @inferTemplateDollarEl true -->
 
 <script setup lang="ts">
 import { exactType } from '../../shared';

@@ -1,4 +1,4 @@
-<!-- @typedDollarRefs true -->
+<!-- @inferComponentDollarRefs true -->
 
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
