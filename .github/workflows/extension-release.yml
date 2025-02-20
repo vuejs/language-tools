@@ -1,4 +1,4 @@
-name: release
+name: extension
 
 on:
   workflow_dispatch:
