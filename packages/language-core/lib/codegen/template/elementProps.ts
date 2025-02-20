@@ -389,6 +389,8 @@ function getPropsCodeInfo(
 		},
 		verification: strictPropsCheck || {
 			shouldReport(_source, code) {
+				// https://typescript.tv/errors/#ts2353
+				// https://typescript.tv/errors/#ts2561
 				if (String(code) === '2353' || String(code) === '2561') {
 					return false;
 				}

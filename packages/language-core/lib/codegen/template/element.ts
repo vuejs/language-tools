@@ -225,6 +225,7 @@ export function* generateComponent(
 		ctx.resolveCodeFeatures({
 			verification: {
 				shouldReport(_source, code) {
+					// https://typescript.tv/errors/#ts6133
 					return String(code) !== '6133';
 				},
 			}
