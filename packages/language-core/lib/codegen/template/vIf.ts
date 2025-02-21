@@ -13,7 +13,7 @@ export function* generateVIf(
 	node: CompilerDOM.IfNode
 ): Generator<Code> {
 
-	let originalBlockConditionsLength = ctx.blockConditions.length;
+	const originalBlockConditionsLength = ctx.blockConditions.length;
 
 	for (let i = 0; i < node.branches.length; i++) {
 
@@ -41,8 +41,8 @@ export function* generateVIf(
 					branch.condition.content,
 					branch.condition.loc.start.offset,
 					branch.condition.loc,
-					'(',
-					')'
+					`(`,
+					`)`
 				),
 			];
 			for (const code of codes) {
@@ -66,7 +66,7 @@ export function* generateVIf(
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {
-			ctx.blockConditions[ctx.blockConditions.length - 1] = `!(${ctx.blockConditions[ctx.blockConditions.length - 1]})`;
+			ctx.blockConditions[ctx.blockConditions.length - 1] = `!${ctx.blockConditions[ctx.blockConditions.length - 1]}`;
 		}
 	}
 

@@ -61,14 +61,14 @@ export function* generateElementProps(
 				&& prop.arg.loc.source.startsWith('[')
 				&& prop.arg.loc.source.endsWith(']')
 			) {
-				failedPropExps?.push({ node: prop.arg, prefix: '(', suffix: ')' });
-				failedPropExps?.push({ node: prop.exp, prefix: '() => {', suffix: '}' });
+				failedPropExps?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
+				failedPropExps?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
 			}
 			else if (
 				!prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				failedPropExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
+				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 		}
 	}
@@ -98,7 +98,7 @@ export function* generateElementProps(
 				|| options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(propName!, pattern))
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					failedPropExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
+					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 				}
 				continue;
 			}
@@ -139,7 +139,7 @@ export function* generateElementProps(
 							propName
 						)
 				),
-				`: (`,
+				`: `,
 				...generatePropExp(
 					options,
 					ctx,
@@ -147,8 +147,7 @@ export function* generateElementProps(
 					prop.exp,
 					ctx.codeFeatures.all,
 					enableCodeFeatures
-				),
-				`)`
+				)
 			);
 			if (enableCodeFeatures) {
 				yield* codes;
@@ -215,13 +214,12 @@ export function* generateElementProps(
 					(prop.loc as any).name_1 ??= {},
 					shouldCamelize
 				),
-				`: (`,
+				`: `,
 				...(
 					prop.value
 						? generateAttrValue(prop.value, ctx.codeFeatures.withoutNavigation)
 						: [`true`]
-				),
-				`)`
+				)
 			);
 			if (enableCodeFeatures) {
 				yield* codes;
@@ -278,7 +276,7 @@ export function* generatePropExp(
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
-	enableCodeFeatures: boolean
+	enableCodeFeatures: boolean = true
 ): Generator<Code> {
 	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
 
@@ -298,8 +296,8 @@ export function* generatePropExp(
 				exp.loc.source,
 				exp.loc.start.offset,
 				exp.loc,
-				'(',
-				')'
+				`(`,
+				`)`
 			);
 		}
 		else {

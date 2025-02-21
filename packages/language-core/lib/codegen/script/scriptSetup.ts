@@ -206,7 +206,7 @@ function* generateSetupFunction(
 		]);
 		if (arg) {
 			setupCodeModifies.push([
-				[`(__VLS_placeholder)`],
+				[`__VLS_placeholder`],
 				arg.start,
 				arg.end
 			]);
@@ -262,7 +262,7 @@ function* generateSetupFunction(
 		}
 		if (arg) {
 			setupCodeModifies.push([
-				[`(__VLS_placeholder)`],
+				[`__VLS_placeholder`],
 				arg.start,
 				arg.end
 			]);

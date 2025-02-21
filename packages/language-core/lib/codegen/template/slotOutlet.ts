@@ -59,8 +59,7 @@ export function* generateSlotOutlet(
 						ctx,
 						nameProp,
 						nameProp.exp,
-						ctx.codeFeatures.all,
-						true
+						ctx.codeFeatures.all
 					),
 					`]`
 				];

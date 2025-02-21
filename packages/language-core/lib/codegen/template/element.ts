@@ -123,8 +123,8 @@ export function* generateComponent(
 			dynamicTagInfo.tag,
 			dynamicTagInfo.offsets[0],
 			dynamicTagInfo.astHolder,
-			'(',
-			')'
+			`(`,
+			`)`
 		);
 		if (dynamicTagInfo.offsets[1] !== undefined) {
 			yield `,`;
@@ -136,8 +136,8 @@ export function* generateComponent(
 				dynamicTagInfo.tag,
 				dynamicTagInfo.offsets[1],
 				dynamicTagInfo.astHolder,
-				'(',
-				')'
+				`(`,
+				`)`
 			);
 		}
 		yield `)${endOfLine}`;
