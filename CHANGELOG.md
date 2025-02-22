@@ -2,7 +2,7 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
-## 2.2.4 <sup>official</sup>, 2.2.5 <sup>insiders</sup> (2025-XX-XX)
+## 2.2.4 <sup>official</sup>, 2.2.5 <sup>insiders</sup> (2025-02-22)
 
 ### Features
 
