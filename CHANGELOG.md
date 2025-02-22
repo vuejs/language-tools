@@ -8,6 +8,7 @@
 
 - feat(language-service): map sfc compiler errors outside the template inner content (#5045) - Thanks to @KazariEX!
 - feat(language-core): introduce options to control type inference of `$attrs`, `$el`, `$refs` and `$slots` (#5135) - Thanks to @KazariEX!
+- feat(language-core): enhance single root nodes collection (#4819) - Thanks to @KazariEX!
 
 ### Bug Fixes
 
@@ -20,6 +21,7 @@
 - fix(language-core): ignore latex block content (#5151) - Thanks to @KazariEX!
 - fix(language-core): do not emit `undefined` for model with default value (#5198) - Thanks to @RylanBueckert-Broadsign!
 - fix(language-service): typescript-semantic renaming first in style blocks (#4685) - Thanks to @KazariEX!
+- fix(typescript-plugin): prevent removed components from appearing in the completion list - Thanks to @KazariEX!
 
 ### Other Changes
 
@@ -27,6 +29,8 @@
 - refactor(language-core): improve type declaration of `v-for` - Thanks to @KazariEX!
 - test: enable `declaration` to track more errors - Thanks to @KazariEX!
 - refactor(language-core): remove semantic highlight of style module names - Thanks to @KazariEX!
+- chore(language-core): add docs for `@vue-expect-error` support (#5176) - Thanks to @machty!
+- ci: upload extension as artifact for each commit - Thanks to @KazariEX!
 
 ## 2.2.2 <sup>official</sup>, 2.2.3 <sup>insiders</sup> (2025-02-15)
 
