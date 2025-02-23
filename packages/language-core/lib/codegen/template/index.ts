@@ -34,11 +34,20 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	if (options.propsAssignName) {
 		ctx.addLocalVariable(options.propsAssignName);
 	}
+
 	const slotsPropertyName = getSlotsPropertyName(options.vueCompilerOptions.target);
-	ctx.specialVars.add(slotsPropertyName);
-	ctx.specialVars.add('$attrs');
-	ctx.specialVars.add('$refs');
-	ctx.specialVars.add('$el');
+	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
+		ctx.dollarVars.add(slotsPropertyName);
+	}
+	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
+		ctx.dollarVars.add('$attrs');
+	}
+	if (options.vueCompilerOptions.inferTemplateDollarRefs) {
+		ctx.dollarVars.add('$refs');
+	}
+	if (options.vueCompilerOptions.inferTemplateDollarEl) {
+		ctx.dollarVars.add('$el');
+	}
 
 	if (options.template.ast) {
 		yield* generateTemplateChild(options, ctx, options.template.ast, undefined);
@@ -55,7 +64,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		['$el', yield* generateRootEl(ctx)]
 	];
 
-	yield `var __VLS_special!: {${newLine}`;
+	yield `var __VLS_dollars!: {${newLine}`;
 	for (const [name, type] of speicalTypes) {
 		yield `${name}: ${type}${endOfLine}`;
 	}
@@ -114,7 +123,7 @@ function* generateInheritedAttrs(
 	if (ctx.bindingAttrLocs.length) {
 		yield `[`;
 		for (const loc of ctx.bindingAttrLocs) {
-			yield `__VLS_special.`;
+			yield `__VLS_dollars.`;
 			yield [
 				loc.source,
 				'template',
@@ -151,7 +160,14 @@ function* generateRootEl(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
 	yield `type __VLS_RootEl = `;
-	yield ctx.singleRootElType ?? `any`;
+	if (ctx.singleRootElTypes.length && !ctx.singleRootNodes.has(null)) {
+		for (const type of ctx.singleRootElTypes) {
+			yield `${newLine}| ${type}`;
+		}
+	}
+	else {
+		yield `any`;
+	}
 	yield endOfLine;
 	return `__VLS_RootEl`;
 }

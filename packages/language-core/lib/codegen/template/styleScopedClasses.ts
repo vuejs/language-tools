@@ -37,7 +37,7 @@ export function* generateStyleScopedClassReferences(
 			'',
 			source,
 			offset + className.length,
-			ctx.codeFeatures.navigationWithoutRename,
+			ctx.codeFeatures.navigation,
 		];
 		yield `]} */${endOfLine}`;
 	}

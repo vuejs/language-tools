@@ -7,6 +7,7 @@ import { endOfLine, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
+import { generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
@@ -176,21 +177,12 @@ function* generateValue(
 		`value`
 	);
 	yield `: `;
-	yield* wrapWith(
-		exp.loc.start.offset,
-		exp.loc.end.offset,
-		ctx.codeFeatures.verification,
-		...generateInterpolation(
-			options,
-			ctx,
-			'template',
-			ctx.codeFeatures.all,
-			exp.content,
-			exp.loc.start.offset,
-			exp.loc,
-			`(`,
-			`)`
-		)
+	yield* generatePropExp(
+		options,
+		ctx,
+		prop,
+		exp,
+		ctx.codeFeatures.all
 	);
 }
 

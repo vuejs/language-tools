@@ -65,6 +65,36 @@
 					"default": false,
 					"markdownDescription": "Check unknown components. If not set, uses the 'strictTemplates' value."
 				},
+				"inferComponentDollarEl": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Infer `$el` type on the component instance."
+				},
+				"inferComponentDollarRefs": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Infer `$refs` type on the component instance."
+				},
+				"inferTemplateDollarAttrs": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Infer `$attrs` type in the template and the return type of `useAttrs`."
+				},
+				"inferTemplateDollarEl": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Infer `$el` type in the template."
+				},
+				"inferTemplateDollarRefs": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Infer `$refs` type in the template."
+				},
+				"inferTemplateDollarSlots": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Infer `$slots` type in the template and the return type of `useSlots`."
+				},
 				"skipTemplateCodegen": {
 					"type": "boolean",
 					"default": false,
@@ -75,6 +105,16 @@
 					"default": false,
 					"markdownDescription": "Enable to support typed fallthrough attributes. Please note that enabling may significantly slow down type checking."
 				},
+				"fallthroughComponentNames": {
+					"type": "array",
+					"default": [
+						"Transition",
+						"KeepAlive",
+						"Teleport",
+						"Suspense"
+					],
+					"markdownDescription": "Component names that will be transparent when collecting single root child nodes and fallthrough attributes."
+				},
 				"dataAttributes": {
 					"type": "array",
 					"default": [ ],
@@ -84,11 +124,6 @@
 					"type": "array",
 					"default": [ "aria-*" ],
 					"markdownDescription": "A glob matcher array that should always be recognizing as HTML Attributes rather than Component props. Attribute name will never convert to camelize case."
-				},
-				"plugins": {
-					"type": "array",
-					"default": [ ],
-					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"optionsWrapper": {
 					"type": "array",
@@ -118,6 +153,11 @@
 						"useSlots": [ "useSlots" ],
 						"useTemplateRef": [ "useTemplateRef", "templateRef" ]
 					}
+				},
+				"plugins": {
+					"type": "array",
+					"default": [ ],
+					"markdownDescription": "Plugins to be used in the SFC compiler."
 				},
 				"experimentalResolveStyleCssClasses": {
 					"enum": [

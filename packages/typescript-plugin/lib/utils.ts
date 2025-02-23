@@ -169,7 +169,9 @@ class NamedPipeServer {
 				name: string,
 				props: ComponentPropInfo[],
 			] = data;
-			components[name] = props;
+			if (name in components) {
+				components[name] = props;
+			}
 		}
 		else {
 			console.error('Unknown notification type:', type);

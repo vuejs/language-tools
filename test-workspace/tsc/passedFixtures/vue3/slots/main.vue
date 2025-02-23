@@ -1,3 +1,5 @@
+<!-- @inferTemplateDollarSlots true -->
+
 <template>
 	<!-- component slots type -->
 	<Comp value="1">

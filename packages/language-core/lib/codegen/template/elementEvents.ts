@@ -98,8 +98,8 @@ export function* generateEventExpression(
 	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		let prefix = '(';
-		let suffix = ')';
+		let prefix = `(`;
+		let suffix = `)`;
 		let isFirstMapping = true;
 
 		const ast = createTsAst(options.ts, prop.exp, prop.exp.content);
@@ -108,10 +108,10 @@ export function* generateEventExpression(
 			yield `(...[$event]) => {${newLine}`;
 			ctx.addLocalVariable('$event');
 
-			prefix = '';
-			suffix = '';
+			prefix = ``;
+			suffix = ``;
 			for (const blockCondition of ctx.blockConditions) {
-				prefix += `if (!(${blockCondition})) return${endOfLine}`;
+				prefix += `if (!${blockCondition}) return${endOfLine}`;
 			}
 		}
 

@@ -6,8 +6,7 @@ export function* generateClassProperty(
 	styleIndex: number,
 	classNameWithDot: string,
 	offset: number,
-	propertyType: string,
-	optional: boolean
+	propertyType: string
 ): Generator<Code> {
 	yield `${newLine} & { `;
 	yield [
@@ -28,8 +27,8 @@ export function* generateClassProperty(
 		'',
 		'style_' + styleIndex,
 		offset + classNameWithDot.length,
-		codeFeatures.navigationWithoutRename,
+		codeFeatures.navigation,
 	];
-	yield `${optional ? '?' : ''}: ${propertyType}`;
+	yield `: ${propertyType}`;
 	yield ` }`;
 }

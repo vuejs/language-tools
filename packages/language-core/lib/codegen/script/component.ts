@@ -37,10 +37,18 @@ export function* generateComponent(
 		}
 		yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length, true);
 	}
-	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.templateRefs.size) {
+	if (
+		options.vueCompilerOptions.target >= 3.5
+		&& options.vueCompilerOptions.inferComponentDollarRefs
+		&& options.templateCodegen?.templateRefs.size
+	) {
 		yield `__typeRefs: {} as __VLS_TemplateRefs,${newLine}`;
 	}
-	if (options.vueCompilerOptions.target >= 3.5 && options.templateCodegen?.singleRootElType) {
+	if (
+		options.vueCompilerOptions.target >= 3.5
+		&& options.vueCompilerOptions.inferComponentDollarEl
+		&& options.templateCodegen?.singleRootElTypes.length
+	) {
 		yield `__typeEl: {} as __VLS_RootEl,${newLine}`;
 	}
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.args) {

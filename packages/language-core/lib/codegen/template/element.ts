@@ -123,8 +123,8 @@ export function* generateComponent(
 			dynamicTagInfo.tag,
 			dynamicTagInfo.offsets[0],
 			dynamicTagInfo.astHolder,
-			'(',
-			')'
+			`(`,
+			`)`
 		);
 		if (dynamicTagInfo.offsets[1] !== undefined) {
 			yield `,`;
@@ -136,8 +136,8 @@ export function* generateComponent(
 				dynamicTagInfo.tag,
 				dynamicTagInfo.offsets[1],
 				dynamicTagInfo.astHolder,
-				'(',
-				')'
+				`(`,
+				`)`
 			);
 		}
 		yield `)${endOfLine}`;
@@ -225,6 +225,7 @@ export function* generateComponent(
 		ctx.resolveCodeFeatures({
 			verification: {
 				shouldReport(_source, code) {
+					// https://typescript.tv/errors/#ts6133
 					return String(code) !== '6133';
 				},
 			}
@@ -257,7 +258,8 @@ export function* generateComponent(
 	yield* generateElementDirectives(options, ctx, node);
 
 	const [refName, offset] = yield* generateElementReference(options, ctx, node);
-	const isRootNode = node === ctx.singleRootNode;
+	const tag = hyphenateTag(node.tag);
+	const isRootNode = ctx.singleRootNodes.has(node) && !options.vueCompilerOptions.fallthroughComponentNames.includes(tag);
 
 	if (refName || isRootNode) {
 		const componentInstanceVar = ctx.getInternalVariable();
@@ -276,14 +278,14 @@ export function* generateComponent(
 			});
 		}
 		if (isRootNode) {
-			ctx.singleRootElType = `NonNullable<typeof ${componentInstanceVar}>['$el']`;
+			ctx.singleRootElTypes.push(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
 		}
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
 		const attrsVar = ctx.getInternalVariable();
-		ctx.inheritedAttrVars.add(attrsVar);
 		yield `let ${attrsVar}!: Parameters<typeof ${componentFunctionalVar}>[0]${endOfLine}`;
+		ctx.inheritedAttrVars.add(attrsVar);
 	}
 
 	collectStyleScopedClassReferences(options, ctx, node);
@@ -366,8 +368,8 @@ export function* generateElement(
 			offset
 		});
 	}
-	if (ctx.singleRootNode === node) {
-		ctx.singleRootElType = `__VLS_NativeElements['${node.tag}']`;
+	if (ctx.singleRootNodes.has(node)) {
+		ctx.singleRootElTypes.push(`__VLS_NativeElements['${node.tag}']`);
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
@@ -496,7 +498,7 @@ function hasVBindAttrs(
 	node: CompilerDOM.ElementNode
 ) {
 	return options.vueCompilerOptions.fallthroughAttributes && (
-		node === ctx.singleRootNode ||
+		(options.inheritAttrs && ctx.singleRootNodes.has(node)) ||
 		node.props.some(prop =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'bind'
