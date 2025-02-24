@@ -928,7 +928,7 @@ function resolveModelOption(
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript')
 ) {
-	const result: { default?: string } = {};
+	const result: { default?: string; } = {};
 
 	for (const prop of options.properties) {
 		if (ts.isPropertyAssignment(prop)) {
