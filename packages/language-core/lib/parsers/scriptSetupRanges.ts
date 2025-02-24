@@ -20,6 +20,8 @@ type DefineProp = {
 	defaultValue?: TextRange;
 	required?: boolean;
 	isModel?: boolean;
+	// used by component-meta
+	argNode?: ts.Expression;
 };
 
 type DefineProps = CallExpressionRange & {
@@ -153,7 +155,7 @@ export function parseScriptSetupRanges(
 			if (vueCompilerOptions.macros.defineModel.includes(callText)) {
 				let localName: TextRange | undefined;
 				let propName: TextRange | undefined;
-				let options: ts.Node | undefined;
+				let options: ts.Expression | undefined;
 
 				if (
 					ts.isVariableDeclaration(parent) &&
@@ -204,12 +206,13 @@ export function parseScriptSetupRanges(
 					defaultValue,
 					required,
 					isModel: true,
+					argNode: options,
 				});
 			}
 			else if (callText === 'defineProp') {
 				let localName: TextRange | undefined;
 				let propName: TextRange | undefined;
-				let options: ts.Node | undefined;
+				let options: ts.Expression | undefined;
 
 				if (
 					ts.isVariableDeclaration(parent) &&
@@ -280,6 +283,7 @@ export function parseScriptSetupRanges(
 					runtimeType,
 					defaultValue,
 					required,
+					argNode: options,
 				});
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
