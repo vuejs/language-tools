@@ -299,20 +299,23 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
 "type __VLS_PublicProps = {
-    "foo"?: number;
-    "bar"?: string[];
-    "qux"?: string;
-    'quxModifiers'?: Partial<Record<'lazy' | 'trim', true>>;
+    modelValue?: number;
+    'foo': string[];
+    'bar'?: boolean;
+    'baz'?: string;
+    'bazModifiers'?: Partial<Record<'lazy' | 'trim', true>>;
 };
 declare const _default: import("vue").DefineComponent<__VLS_PublicProps, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    "update:foo": (value: number) => any;
-    "update:bar": (value: string[]) => any;
-    "update:qux": (value: string) => any;
+    "update:modelValue": (value: number) => any;
+    "update:foo": (value: string[]) => any;
+    "update:bar": (value: boolean) => any;
+    "update:baz": (value: string) => any;
 }, string, import("vue").PublicProps, Readonly<__VLS_PublicProps> & Readonly<{
-    "onUpdate:foo"?: (value: number) => any;
-    "onUpdate:bar"?: (value: string[]) => any;
-    "onUpdate:qux"?: (value: string) => any;
-}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+    "onUpdate:modelValue"?: (value: number) => any;
+    "onUpdate:foo"?: (value: string[]) => any;
+    "onUpdate:bar"?: (value: boolean) => any;
+    "onUpdate:baz"?: (value: string) => any;
+}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, false, {}, any>;
 export default _default;
 "
 `;

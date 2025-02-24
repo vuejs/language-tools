@@ -1,5 +1,10 @@
 <script setup lang="ts">
-const bar = defineModel<number>("foo")
-const baz = defineModel<string[]>("bar")
-const [qux, modifiers] = defineModel<string, 'lazy' | 'trim'>("qux")
+defineModel<number>();
+defineModel<string[]>('foo', {
+	required: true,
+});
+defineModel<boolean>('bar', {
+	default: false,
+});
+defineModel<string, 'lazy' | 'trim'>('baz');
 </script>

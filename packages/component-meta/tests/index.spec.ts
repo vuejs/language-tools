@@ -25,23 +25,55 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		// expect(meta.type).toEqual(TypeMeta.Class);
 
+		const modelValue = meta.props.find(prop => prop.name === 'modelValue');
+		const onUpdateModelValue = meta.events.find(event => event.name === 'update:modelValue');
+
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const onUpdateFoo = meta.events.find(event => event.name === 'update:foo');
 
 		const bar = meta.props.find(prop => prop.name === 'bar');
 		const onUpdateBar = meta.events.find(event => event.name === 'update:bar');
 
-		const qux = meta.props.find(prop => prop.name === 'qux');
-		const quxModifiers = meta.props.find(prop => prop.name === 'quxModifiers');
-		const onUpdateQux = meta.events.find(event => event.name === 'update:qux');
+		const baz = meta.props.find(prop => prop.name === 'baz');
+		const bazModifiers = meta.props.find(prop => prop.name === 'bazModifiers');
+		const onUpdateBaz = meta.events.find(event => event.name === 'update:baz');
+
+		expect(modelValue).toBeDefined();
+		expect(modelValue?.default).toBeUndefined();
+		expect(modelValue?.required).toBeFalsy();
+		expect(modelValue?.type).toEqual('number | undefined');
+		expect(modelValue?.schema).toEqual({
+			kind: 'enum',
+			type: 'number | undefined',
+			schema: ['undefined', 'number'],
+		});
+		expect(onUpdateModelValue).toBeDefined();
 
 		expect(foo).toBeDefined();
-		expect(bar).toBeDefined();
-		expect(qux).toBeDefined();
-		expect(quxModifiers).toBeDefined();
+		expect(foo?.default).toBeUndefined();
+		expect(foo?.required).toBeTruthy();
+		expect(foo?.type).toEqual('string[]');
+		expect(foo?.schema).toEqual({
+			kind: 'array',
+			type: 'string[]',
+			schema: ['string'],
+		});
 		expect(onUpdateFoo).toBeDefined();
+
+		expect(bar).toBeDefined();
+		expect(bar?.default).toBe('false');
+		expect(bar?.required).toBeFalsy();
+		expect(bar?.type).toEqual('boolean | undefined');
+		expect(bar?.schema).toEqual({
+			kind: 'enum',
+			type: 'boolean | undefined',
+			schema: ['undefined', 'false', 'true'],
+		});
 		expect(onUpdateBar).toBeDefined();
-		expect(onUpdateQux).toBeDefined();
+
+		expect(baz).toBeDefined();
+		expect(bazModifiers).toBeDefined();
+		expect(onUpdateBaz).toBeDefined();
 	});
 
 	test('reference-type-props', () => {
