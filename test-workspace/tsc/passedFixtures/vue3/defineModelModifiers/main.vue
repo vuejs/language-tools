@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Comp from './comp.vue';
 
-const fooBar = 'fooBar';
+let fooBar!: string;
 </script>
 
 <template>
