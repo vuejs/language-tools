@@ -485,18 +485,27 @@ function* generateComponentProps(
 		yield `}${endOfLine}`;
 	}
 
-	yield `type __VLS_PublicProps =`;
+	yield `type __VLS_PublicProps = `;
 	if (scriptSetupRanges.defineSlots && options.vueCompilerOptions.jsxSlots) {
+		if (ctx.generatedPropsType) {
+			yield ` & `;
+		}
 		ctx.generatedPropsType = true;
-		yield ` & ${ctx.localTypes.PropsChildren}<__VLS_Slots>`;
+		yield `${ctx.localTypes.PropsChildren}<__VLS_Slots>`;
 	}
 	if (scriptSetupRanges.defineProps?.typeArg) {
+		if (ctx.generatedPropsType) {
+			yield ` & `;
+		}
 		ctx.generatedPropsType = true;
-		yield ` & __VLS_Props`;
+		yield `__VLS_Props`;
 	}
 	if (scriptSetupRanges.defineProp.length) {
+		if (ctx.generatedPropsType) {
+			yield ` & `;
+		}
 		ctx.generatedPropsType = true;
-		yield ` & {${newLine}`;
+		yield `{${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
@@ -538,7 +547,7 @@ function* generateComponentProps(
 		yield `}`;
 	}
 	if (!ctx.generatedPropsType) {
-		yield ` {}`;
+		yield `{}`;
 	}
 	yield endOfLine;
 }
