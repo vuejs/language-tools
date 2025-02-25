@@ -1,7 +1,9 @@
+import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { combineLastMapping, endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { combineLastMapping, endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
+import { generateCamelized } from '../utils/camelized';
 import { generateComponent, generateEmitsOption } from './component';
 import { generateComponentSelf } from './componentSelf';
 import type { ScriptCodegenContext } from './context';
@@ -467,7 +469,7 @@ function* generateComponentProps(
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
 			if (defineProp.name || defineProp.isModel) {
-				yield `'${propName}'`;
+				yield getObjectProperty(propName!);
 			}
 			else if (defineProp.localName) {
 				yield localName!;
@@ -477,26 +479,24 @@ function* generateComponentProps(
 			}
 
 			yield `: `;
-			yield getRangeName(scriptSetup, defineProp.defaultValue);
+			yield getRangeText(scriptSetup, defineProp.defaultValue);
 			yield `,${newLine}`;
 		}
 		yield `}${endOfLine}`;
 	}
 
-	yield `type __VLS_PublicProps = `;
+	yield `type __VLS_PublicProps =`;
 	if (scriptSetupRanges.defineSlots && options.vueCompilerOptions.jsxSlots) {
-		if (ctx.generatedPropsType) {
-			yield ` & `;
-		}
 		ctx.generatedPropsType = true;
-		yield `${ctx.localTypes.PropsChildren}<__VLS_Slots>`;
+		yield ` & ${ctx.localTypes.PropsChildren}<__VLS_Slots>`;
+	}
+	if (scriptSetupRanges.defineProps?.typeArg) {
+		ctx.generatedPropsType = true;
+		yield ` & __VLS_Props`;
 	}
 	if (scriptSetupRanges.defineProp.length) {
-		if (ctx.generatedPropsType) {
-			yield ` & `;
-		}
 		ctx.generatedPropsType = true;
-		yield `{${newLine}`;
+		yield ` & {${newLine}`;
 		for (const defineProp of scriptSetupRanges.defineProp) {
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
@@ -504,11 +504,17 @@ function* generateComponentProps(
 				yield generateSfcBlockSection(scriptSetup, defineProp.comments.start, defineProp.comments.end, codeFeatures.all);
 				yield newLine;
 			}
+
 			if (defineProp.isModel && !defineProp.name) {
 				yield propName!;
 			}
 			else if (defineProp.name) {
-				yield generateSfcBlockSection(scriptSetup, defineProp.name.start, defineProp.name.end, codeFeatures.navigation);
+				yield* generateCamelized(
+					getRangeText(scriptSetup, defineProp.name),
+					scriptSetup.name,
+					defineProp.name.start,
+					codeFeatures.navigation
+				);
 			}
 			else if (defineProp.localName) {
 				yield generateSfcBlockSection(scriptSetup, defineProp.localName.start, defineProp.localName.end, codeFeatures.navigation);
@@ -525,21 +531,14 @@ function* generateComponentProps(
 
 			if (defineProp.modifierType) {
 				const modifierName = `${defineProp.name ? propName : 'model'}Modifiers`;
-				const modifierType = getRangeName(scriptSetup, defineProp.modifierType);
-				yield `'${modifierName}'?: Partial<Record<${modifierType}, true>>,${newLine}`;
+				const modifierType = getRangeText(scriptSetup, defineProp.modifierType);
+				yield `${getObjectProperty(modifierName)}?: Partial<Record<${modifierType}, true>>,${newLine}`;
 			}
 		}
 		yield `}`;
 	}
-	if (scriptSetupRanges.defineProps?.typeArg) {
-		if (ctx.generatedPropsType) {
-			yield ` & `;
-		}
-		ctx.generatedPropsType = true;
-		yield `__VLS_Props`;
-	}
 	if (!ctx.generatedPropsType) {
-		yield `{}`;
+		yield ` {}`;
 	}
 	yield endOfLine;
 }
@@ -555,7 +554,7 @@ function* generateModelEmit(
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
 			yield `'update:${propName}': [value: `;
 			yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
-			if (!defineModel.required && defineModel.defaultValue === undefined) {
+			if (!defineModel.required && !defineModel.defaultValue) {
 				yield ` | undefined`;
 			}
 			yield `]${endOfLine}`;
@@ -573,7 +572,7 @@ function* generateDefinePropType(
 ) {
 	if (defineProp.type) {
 		// Infer from defineProp<T>
-		yield getRangeName(scriptSetup, defineProp.type);
+		yield getRangeText(scriptSetup, defineProp.type);
 	}
 	else if (defineProp.runtimeType && localName) {
 		// Infer from actual prop declaration code 
@@ -593,20 +592,26 @@ function getPropAndLocalName(
 	defineProp: ScriptSetupRanges['defineProp'][number]
 ) {
 	const localName = defineProp.localName
-		? getRangeName(scriptSetup, defineProp.localName)
+		? getRangeText(scriptSetup, defineProp.localName)
 		: undefined;
-	let propName = defineProp.name
-		? getRangeName(scriptSetup, defineProp.name)
+	const propName = defineProp.name
+		? camelize(getRangeText(scriptSetup, defineProp.name).slice(1, -1))
 		: defineProp.isModel
 			? 'modelValue'
 			: localName;
-	if (defineProp.name) {
-		propName = propName!.replace(/['"]+/g, '');
-	}
 	return [propName, localName] as const;
 }
 
-function getRangeName(
+function getObjectProperty(text: string) {
+	if (identifierRegex.test(text)) {
+		return text;
+	}
+	else {
+		return `'${text}'`;
+	}
+}
+
+function getRangeText(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	range: TextRange
 ) {

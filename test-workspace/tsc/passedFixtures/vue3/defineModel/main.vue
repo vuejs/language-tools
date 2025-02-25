@@ -10,7 +10,7 @@ const ScriptSetupExact = defineComponent({
 		'd'?: number,
 		'e': string,
 		'f'?: string,
-		'g'?: string,
+		'gG'?: string,
 	},
 	__typeEmits: {} as {
 		'update:modelValue': [modelValue: string | undefined];
@@ -18,7 +18,7 @@ const ScriptSetupExact = defineComponent({
 		'update:d': [d: number | undefined];
 		'update:e': [e: string];
 		'update:f': [f: string | undefined];
-		'update:g': [g: string | undefined];
+		'update:gG': [g: string | undefined];
 	},
 	setup() {
 		return {};
@@ -37,6 +37,6 @@ exactType(ScriptSetup, ScriptSetupExact);
 		@update:d="(x) => exactType(x, {} as number | undefined)"
 		@update:e="(x) => exactType(x, {} as string)"
 		@update:f="(x) => exactType(x, {} as string | undefined)"
-		@update:g="(x) => exactType(x, {} as string | undefined)"
+		@update:g-g="(x) => exactType(x, {} as string | undefined)"
 	/>
 </template>

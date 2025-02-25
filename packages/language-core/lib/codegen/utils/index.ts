@@ -6,7 +6,7 @@ import type { Code, SfcBlock, SfcBlockAttr, VueCodeInformation } from '../../typ
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
-export const variableNameRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
+export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
 export function* wrapWith(
 	startOffset: number,
