@@ -135,7 +135,7 @@ export function* generateElementProps(
 						: wrapWith(
 							prop.loc.start.offset,
 							prop.loc.start.offset + 'v-model'.length,
-							ctx.codeFeatures.verification,
+							ctx.codeFeatures.withoutHighlightAndCompletion,
 							propName
 						)
 				),

@@ -20,6 +20,7 @@ type DefineProp = {
 	defaultValue?: TextRange;
 	required?: boolean;
 	isModel?: boolean;
+	comments?: TextRange;
 	// used by component-meta
 	argNode?: ts.Expression;
 };
@@ -206,6 +207,7 @@ export function parseScriptSetupRanges(
 					defaultValue,
 					required,
 					isModel: true,
+					comments: getCommentsRange(ts, node, parents, ast),
 					argNode: options,
 				});
 			}
@@ -283,6 +285,7 @@ export function parseScriptSetupRanges(
 					runtimeType,
 					defaultValue,
 					required,
+					comments: getCommentsRange(ts, node, parents, ast),
 					argNode: options,
 				});
 			}
@@ -588,4 +591,25 @@ function getStatementRange(
 		statementRange = getStartEnd(ts, node, ast);
 	}
 	return statementRange;
+}
+
+function getCommentsRange(
+	ts: typeof import('typescript'),
+	node: ts.Node,
+	parents: ts.Node[],
+	ast: ts.SourceFile
+) {
+	for (let i = parents.length - 1; i >= 0; i--) {
+		if (ts.isStatement(node)) {
+			break;
+		}
+		node = parents[i];
+	}
+	const comments = ts.getLeadingCommentRanges(ast.text, node.pos);
+	if (comments?.length) {
+		return {
+			start: comments[0].pos,
+			end: comments.at(-1)!.end,
+		};
+	}
 }
