@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
+import { hyphenateTag } from '../../utils/shared';
 import { endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
@@ -9,6 +10,8 @@ import { generateSlotOutlet } from './slotOutlet';
 import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 import { generateVSlot } from './vSlot';
+
+const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
 
 // @ts-ignore
 const transformContext: CompilerDOM.TransformContext = {
@@ -34,30 +37,35 @@ export function* generateTemplateChild(
 	isVForChild: boolean = false
 ): Generator<Code> {
 	if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
-		const commentText = prevNode.content.trim().split(' ')[0];
-		if (/^@vue-skip\b[\s\S]*/.test(commentText)) {
-			yield `// @vue-skip${newLine}`;
-			return;
-		}
-		else if (/^@vue-ignore\b[\s\S]*/.test(commentText)) {
-			yield* ctx.ignoreError();
-		}
-		else if (/^@vue-expect-error\b[\s\S]*/.test(commentText)) {
-			yield* ctx.expectError(prevNode);
-		}
-		else {
-			const match = prevNode.loc.source.match(/^<!--\s*@vue-generic\b\s*\{(?<content>[^}]*)\}/);
-			if (match) {
-				const { content } = match.groups ?? {};
-				ctx.lastGenericComment = {
-					content,
-					offset: prevNode.loc.start.offset + match[0].indexOf(content)
-				};
+		const match = prevNode.loc.source.match(commentDirectiveRegex);
+		if (match) {
+			const { name, content } = match.groups!;
+			switch (name) {
+				case 'skip': {
+					yield `// @vue-skip${newLine}`;
+					return;
+				}
+				case 'ignore': {
+					yield* ctx.ignoreError();
+					break;
+				}
+				case 'expect-error': {
+					yield* ctx.expectError(prevNode);
+					break;
+				}
+				case 'generic': {
+					const text = content.trim();
+					if (text.startsWith('{') && text.endsWith('}')) {
+						ctx.lastGenericComment = {
+							content: text.slice(1, -1),
+							offset: prevNode.loc.start.offset + prevNode.loc.source.indexOf('{') + 1,
+						};
+					}
+					break;
+				}
 			}
 		}
 	}
-
-	const shouldInheritRootNodeAttrs = options.inheritAttrs;
 
 	const cur = node as CompilerDOM.ElementNode | CompilerDOM.IfNode | CompilerDOM.ForNode;
 	if (cur.codegenNode?.type === CompilerDOM.NodeTypes.JS_CACHE_EXPRESSION) {
@@ -65,10 +73,10 @@ export function* generateTemplateChild(
 	}
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
-		let prev: CompilerDOM.TemplateChildNode | undefined;
-		if (shouldInheritRootNodeAttrs && node.children.length === 1 && node.children[0].type === CompilerDOM.NodeTypes.ELEMENT) {
-			ctx.singleRootNode = node.children[0];
+		for (const item of collectSingleRootNodes(options, node.children)) {
+			ctx.singleRootNodes.add(item);
 		}
+		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of node.children) {
 			yield* generateTemplateChild(options, ctx, childNode, prev);
 			prev = childNode;
@@ -104,7 +112,7 @@ export function* generateTemplateChild(
 			}
 			else {
 				const { currentComponent } = ctx;
-				yield* generateComponent(options, ctx, node);
+				yield* generateComponent(options, ctx, node, isVForChild);
 				ctx.currentComponent = currentComponent;
 			}
 		}
@@ -150,6 +158,36 @@ export function* generateTemplateChild(
 	}
 }
 
+function* collectSingleRootNodes(
+	options: TemplateCodegenOptions,
+	children: CompilerDOM.TemplateChildNode[]
+): Generator<CompilerDOM.ElementNode | null> {
+	if (children.length !== 1) {
+		// "null" is used to determine whether the component is not always has a single root
+		if (children.length > 1) {
+			yield null;
+		}
+		return;
+	}
+
+	const child = children[0];
+	if (child.type === CompilerDOM.NodeTypes.IF) {
+		for (const branch of child.branches) {
+			yield* collectSingleRootNodes(options, branch.children);
+		}
+		return;
+	}
+	else if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
+		return;
+	}
+	yield child;
+
+	const tag = hyphenateTag(child.tag);
+	if (options.vueCompilerOptions.fallthroughComponentNames.includes(tag)) {
+		yield* collectSingleRootNodes(options, child.children);
+	}
+}
+
 // TODO: track https://github.com/vuejs/vue-next/issues/3498
 export function getVForNode(node: CompilerDOM.ElementNode) {
 	const forDirective = node.props.find(
@@ -174,14 +212,14 @@ export function getVForNode(node: CompilerDOM.ElementNode) {
 }
 
 function getVIfNode(node: CompilerDOM.ElementNode) {
-	const forDirective = node.props.find(
+	const ifDirective = node.props.find(
 		(prop): prop is CompilerDOM.DirectiveNode =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'if'
 	);
-	if (forDirective) {
+	if (ifDirective) {
 		let ifNode: CompilerDOM.IfNode | undefined;
-		CompilerDOM.processIf(node, forDirective, transformContext, _ifNode => {
+		CompilerDOM.processIf(node, ifDirective, transformContext, _ifNode => {
 			ifNode = { ..._ifNode };
 			return undefined;
 		});
@@ -189,7 +227,7 @@ function getVIfNode(node: CompilerDOM.ElementNode) {
 			for (const branch of ifNode.branches) {
 				branch.children = [{
 					...node,
-					props: node.props.filter(prop => prop !== forDirective),
+					props: node.props.filter(prop => prop !== ifDirective),
 				}];
 			}
 			return ifNode;

@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-service",
-	"version": "2.2.0",
+	"version": "2.2.4",
 	"license": "MIT",
 	"files": [
 		"data",
@@ -34,6 +34,7 @@
 		"volar-service-pug-beautify": "catalog:",
 		"volar-service-typescript": "catalog:",
 		"volar-service-typescript-twoslash-queries": "catalog:",
+		"vscode-css-languageservice": "catalog:",
 		"vscode-html-languageservice": "catalog:",
 		"vscode-languageserver-textdocument": "catalog:",
 		"vscode-uri": "catalog:"

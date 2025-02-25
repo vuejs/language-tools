@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"version": "2.2.0",
+	"version": "2.2.4",
 	"devDependencies": {
 		"typescript-next": "catalog:",
 		"typescript-stable": "catalog:",

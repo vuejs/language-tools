@@ -4,6 +4,7 @@ import { minimatch } from 'minimatch';
 import { toString } from 'muggle-string';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { newLine, variableNameRegex, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -60,14 +61,14 @@ export function* generateElementProps(
 				&& prop.arg.loc.source.startsWith('[')
 				&& prop.arg.loc.source.endsWith(']')
 			) {
-				failedPropExps?.push({ node: prop.arg, prefix: '(', suffix: ')' });
-				failedPropExps?.push({ node: prop.exp, prefix: '() => {', suffix: '}' });
+				failedPropExps?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
+				failedPropExps?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
 			}
 			else if (
 				!prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				failedPropExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
+				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 		}
 	}
@@ -97,7 +98,7 @@ export function* generateElementProps(
 				|| options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(propName!, pattern))
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					failedPropExps?.push({ node: prop.exp, prefix: '(', suffix: ')' });
+					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 				}
 				continue;
 			}
@@ -138,7 +139,7 @@ export function* generateElementProps(
 							propName
 						)
 				),
-				`: (`,
+				`: `,
 				...generatePropExp(
 					options,
 					ctx,
@@ -146,8 +147,7 @@ export function* generateElementProps(
 					prop.exp,
 					ctx.codeFeatures.all,
 					enableCodeFeatures
-				),
-				`)`
+				)
 			);
 			if (enableCodeFeatures) {
 				yield* codes;
@@ -214,13 +214,12 @@ export function* generateElementProps(
 					(prop.loc as any).name_1 ??= {},
 					shouldCamelize
 				),
-				`: (`,
+				`: `,
 				...(
 					prop.value
 						? generateAttrValue(prop.value, ctx.codeFeatures.withoutNavigation)
 						: [`true`]
-				),
-				`)`
+				)
 			);
 			if (enableCodeFeatures) {
 				yield* codes;
@@ -277,7 +276,7 @@ export function* generatePropExp(
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 	features: VueCodeInformation,
-	enableCodeFeatures: boolean
+	enableCodeFeatures: boolean = true
 ): Generator<Code> {
 	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
 
@@ -297,8 +296,8 @@ export function* generatePropExp(
 				exp.loc.source,
 				exp.loc.start.offset,
 				exp.loc,
-				'(',
-				')'
+				`(`,
+				`)`
 			);
 		}
 		else {
@@ -380,28 +379,23 @@ function getPropsCodeInfo(
 	strictPropsCheck: boolean,
 	shouldCamelize: boolean
 ): VueCodeInformation {
-	const codeInfo = ctx.codeFeatures.withoutHighlightAndCompletion;
-	return {
-		...codeInfo,
-		navigation: codeInfo.navigation
-			? {
-				resolveRenameNewName: camelize,
-				resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
-			}
-			: false,
-		verification: strictPropsCheck
-			? codeInfo.verification
-			: {
-				shouldReport(_source, code) {
-					if (String(code) === '2353' || String(code) === '2561') {
-						return false;
-					}
-					return typeof codeInfo.verification === 'object'
-						? codeInfo.verification.shouldReport?.(_source, code) ?? true
-						: true;
-				},
-			}
-	};
+	return ctx.resolveCodeFeatures({
+		...codeFeatures.withoutHighlightAndCompletion,
+		navigation: {
+			resolveRenameNewName: camelize,
+			resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
+		},
+		verification: strictPropsCheck || {
+			shouldReport(_source, code) {
+				// https://typescript.tv/errors/#ts2353
+				// https://typescript.tv/errors/#ts2561
+				if (String(code) === '2353' || String(code) === '2561') {
+					return false;
+				}
+				return true;
+			},
+		},
+	});
 }
 
 function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: VueCompilerOptions) {

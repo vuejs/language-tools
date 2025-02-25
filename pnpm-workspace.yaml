@@ -26,12 +26,12 @@ catalog:
   "@vue/compiler-dom": &vue3 ^3.5.0
   "@vue/compiler-sfc": *vue3
   "@vue/compiler-vue2": ^2.7.16
-  "@vue/language-core": &vls 2.2.0
+  "@vue/language-core": &vls 2.2.4
   "@vue/language-server": *vls
   "@vue/language-service": *vls
   "@vue/shared": *vue3
   "@vue/typescript-plugin": *vls
-  alien-signals: ^0.4.9
+  alien-signals: ^1.0.3
   esbuild: ^0.25.0
   esbuild-visualizer: ^0.7.0
   minimatch: ^9.0.3
@@ -52,6 +52,7 @@ catalog:
   volar-service-typescript: *volar-service
   volar-service-typescript-twoslash-queries: *volar-service
   vscode-ext-gen: ^0.5.0
+  vscode-css-languageservice: ^6.3.1
   vscode-html-languageservice: ^5.2.0
   vscode-languageserver-protocol: ^3.17.5
   vscode-languageserver-textdocument: ^1.0.11

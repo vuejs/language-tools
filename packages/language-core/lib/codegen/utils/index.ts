@@ -1,11 +1,11 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { getNodeText } from '../../parsers/scriptSetupRanges';
-import type { Code, SfcBlock, VueCodeInformation } from '../../types';
+import type { Code, SfcBlock, SfcBlockAttr, VueCodeInformation } from '../../types';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
-export const combineLastMapping: VueCodeInformation = { __combineLastMapping: true };
+export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
 export const variableNameRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
 export function* wrapWith(
@@ -22,7 +22,7 @@ export function* wrapWith(
 		}
 		yield wrapCode;
 	}
-	yield ['', 'template', endOffset, { __combineOffsetMapping: offset }];
+	yield ['', 'template', endOffset, { __combineOffset: offset }];
 }
 
 export function collectVars(
@@ -98,4 +98,24 @@ export function generateSfcBlockSection(block: SfcBlock, start: number, end: num
 		start,
 		features,
 	];
+}
+
+export function* generateSfcBlockAttrValue(
+	src: SfcBlockAttr & object,
+	text: string,
+	features: VueCodeInformation
+): Generator<Code> {
+	const { offset, quotes } = src;
+	if (!quotes) {
+		yield [``, 'main', offset, { verification: true }];
+	}
+	yield [
+		`'${text}'`,
+		'main',
+		quotes ? offset - 1 : offset,
+		features
+	];
+	if (!quotes) {
+		yield [``, 'main', offset + text.length, { __combineOffset: 2 }];
+	}
 }

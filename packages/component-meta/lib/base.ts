@@ -416,7 +416,7 @@ ${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
 				const type = typeChecker.getTypeOfSymbolAtLocation($exposed, symbolNode);
 				const properties = type.getProperties().filter(prop =>
 					// only exposed props will not have a valueDeclaration
-					!(prop as any).valueDeclaration
+					!prop.valueDeclaration
 				);
 
 				return properties.map(prop => {
@@ -719,6 +719,7 @@ function readVueComponentDefaultProps(
 		default?: string;
 		required?: boolean;
 	}> = {};
+	const { sfc } = root;
 
 	scriptSetupWorker();
 	scriptWorker();
@@ -727,13 +728,13 @@ function readVueComponentDefaultProps(
 
 	function scriptSetupWorker() {
 
-		const ast = root._sfc.scriptSetup?.ast;
-		if (!ast) {
+		if (!sfc.scriptSetup) {
 			return;
 		}
+		const { ast } = sfc.scriptSetup;
 
-		const codegen = vue.tsCodegen.get(root._sfc);
-		const scriptSetupRanges = codegen?.scriptSetupRanges.get();
+		const codegen = vue.tsCodegen.get(sfc);
+		const scriptSetupRanges = codegen?.getScriptSetupRanges();
 
 		if (scriptSetupRanges?.withDefaults?.argNode) {
 			const obj = findObjectLiteralExpression(scriptSetupRanges.withDefaults.argNode);
@@ -761,10 +762,22 @@ function readVueComponentDefaultProps(
 			}
 		}
 		else if (scriptSetupRanges?.defineProps?.destructured) {
-			for (const [prop, initializer] of scriptSetupRanges.defineProps.destructured) {
+			for (const [name, initializer] of scriptSetupRanges.defineProps.destructured) {
 				if (initializer) {
 					const expText = printer?.printNode(ts.EmitHint.Expression, initializer, ast) ?? initializer.getText(ast);
-					result[prop] = { default: expText };
+					result[name] = {
+						default: expText
+					};
+				}
+			}
+		}
+
+		if (scriptSetupRanges?.defineProp) {
+			for (const defineProp of scriptSetupRanges.defineProp) {
+				const obj = defineProp.argNode ? findObjectLiteralExpression(defineProp.argNode) : undefined;
+				if (obj) {
+					const name = defineProp.name ? sfc.scriptSetup.content.slice(defineProp.name.start, defineProp.name.end).slice(1, -1) : 'modelValue';
+					result[name] = resolveModelOption(ast, obj, printer, ts);
 				}
 			}
 		}
@@ -785,13 +798,14 @@ function readVueComponentDefaultProps(
 
 	function scriptWorker() {
 
-		const sfc = root._sfc;
+		if (!sfc.script) {
+			return;
+		}
+		const { ast } = sfc.script;
 
-		if (sfc.script) {
-			const scriptResult = readTsComponentDefaultProps(sfc.script.ast, 'default', printer, ts);
-			for (const [key, value] of Object.entries(scriptResult)) {
-				result[key] = value;
-			}
+		const scriptResult = readTsComponentDefaultProps(ast, 'default', printer, ts);
+		for (const [key, value] of Object.entries(scriptResult)) {
+			result[key] = value;
 		}
 	}
 }
@@ -897,10 +911,32 @@ function resolvePropsOption(
 					result[name].required = exp === 'true';
 				}
 				if (defaultProp) {
-					const expNode = resolveDefaultOptionExpression((defaultProp as any).initializer, ts);
+					const expNode = resolveDefaultOptionExpression(defaultProp.initializer, ts);
 					const expText = printer?.printNode(ts.EmitHint.Expression, expNode, ast) ?? expNode.getText(ast);
 					result[name].default = expText;
 				}
+			}
+		}
+	}
+
+	return result;
+}
+
+function resolveModelOption(
+	ast: ts.SourceFile,
+	options: ts.ObjectLiteralExpression,
+	printer: ts.Printer | undefined,
+	ts: typeof import('typescript')
+) {
+	const result: { default?: string; } = {};
+
+	for (const prop of options.properties) {
+		if (ts.isPropertyAssignment(prop)) {
+			const name = prop.name.getText(ast);
+			if (name === 'default') {
+				const expNode = resolveDefaultOptionExpression(prop.initializer, ts);
+				const expText = printer?.printNode(ts.EmitHint.Expression, expNode, ast) ?? expNode.getText(ast);
+				result.default = expText;
 			}
 		}
 	}

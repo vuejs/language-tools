@@ -107,3 +107,23 @@ export function* generateVSlot(
 	yield* ctx.generateAutoImportCompletion();
 	yield `}${newLine}`;
 }
+
+export function* generateImplicitDefaultSlot(
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode
+) {
+	if (!ctx.currentComponent) {
+		return;
+	}
+	if (node.children.length) {
+		ctx.currentComponent.used = true;
+		yield `${ctx.currentComponent.ctxVar}.slots!.`;
+		yield* wrapWith(
+			node.children[0].loc.start.offset,
+			node.children[node.children.length - 1].loc.end.offset,
+			ctx.codeFeatures.navigation,
+			`default`
+		);
+		yield endOfLine;
+	}
+}

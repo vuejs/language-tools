@@ -1,3 +1,5 @@
+<!-- @inferTemplateDollarAttrs true -->
+
 <script setup lang="ts">
 import { type AnchorHTMLAttributes, type ReservedProps, useAttrs } from 'vue';
 import { exactType } from '../../shared';

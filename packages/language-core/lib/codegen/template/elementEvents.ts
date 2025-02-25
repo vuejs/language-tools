@@ -12,11 +12,12 @@ export function* generateElementEvents(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	componentVar: string,
-	componentInstanceVar: string,
-	eventsVar: string
-): Generator<Code, boolean> {
-	let usedComponentEventsVar = false;
+	componentFunctionalVar: string,
+	componentVNodeVar: string,
+	componentCtxVar: string
+): Generator<Code> {
+	let emitVar: string | undefined;
+	let eventsVar: string | undefined;
 	let propsVar: string | undefined;
 	for (const prop of node.props) {
 		if (
@@ -26,10 +27,14 @@ export function* generateElementEvents(
 			&& !prop.arg.loc.source.startsWith('[')
 			&& !prop.arg.loc.source.endsWith(']')
 		) {
-			usedComponentEventsVar = true;
-			if (!propsVar) {
+			ctx.currentComponent!.used = true;
+			if (!emitVar) {
+				emitVar = ctx.getInternalVariable();
+				eventsVar = ctx.getInternalVariable();
 				propsVar = ctx.getInternalVariable();
-				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>${endOfLine}`;
+				yield `let ${emitVar}!: typeof ${componentCtxVar}.emit${endOfLine}`;
+				yield `let ${eventsVar}!: __VLS_NormalizeEmits<typeof ${emitVar}>${endOfLine}`;
+				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentFunctionalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 			}
 			let source = prop.arg.loc.source;
 			let start = prop.arg.loc.start.offset;
@@ -48,7 +53,6 @@ export function* generateElementEvents(
 			yield `}${endOfLine}`;
 		}
 	}
-	return usedComponentEventsVar;
 }
 
 export function* generateEventArg(
@@ -94,8 +98,8 @@ export function* generateEventExpression(
 	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		let prefix = '(';
-		let suffix = ')';
+		let prefix = `(`;
+		let suffix = `)`;
 		let isFirstMapping = true;
 
 		const ast = createTsAst(options.ts, prop.exp, prop.exp.content);
@@ -104,10 +108,10 @@ export function* generateEventExpression(
 			yield `(...[$event]) => {${newLine}`;
 			ctx.addLocalVariable('$event');
 
-			prefix = '';
-			suffix = '';
+			prefix = ``;
+			suffix = ``;
 			for (const blockCondition of ctx.blockConditions) {
-				prefix += `if (!(${blockCondition})) return${endOfLine}`;
+				prefix += `if (!${blockCondition}) return${endOfLine}`;
 			}
 		}
 

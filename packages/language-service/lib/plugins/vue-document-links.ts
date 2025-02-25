@@ -27,8 +27,10 @@ export function create(): LanguageServicePlugin {
 					}
 
 					const result: vscode.DocumentLink[] = [];
-					const codegen = tsCodegen.get(root._sfc);
-					const scopedClasses = codegen?.generatedTemplate.get()?.scopedClasses ?? [];
+
+					const { sfc } = root;
+					const codegen = tsCodegen.get(sfc);
+					const scopedClasses = codegen?.getGeneratedTemplate()?.scopedClasses ?? [];
 					const styleClasses = new Map<string, {
 						index: number;
 						style: Sfc['styles'][number];
@@ -36,8 +38,8 @@ export function create(): LanguageServicePlugin {
 					}[]>();
 					const option = root.vueCompilerOptions.experimentalResolveStyleCssClasses;
 
-					for (let i = 0; i < root._sfc.styles.length; i++) {
-						const style = root._sfc.styles[i];
+					for (let i = 0; i < sfc.styles.length; i++) {
+						const style = sfc.styles[i];
 						if (option === 'always' || (option === 'scoped' && style.scoped)) {
 							for (const className of style.classNames) {
 								if (!styleClasses.has(className.text.slice(1))) {

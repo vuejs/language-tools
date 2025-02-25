@@ -2,7 +2,7 @@ import type { Disposable, LanguageServiceContext, LanguageServicePluginInstance 
 import { VueVirtualCode, hyphenateAttr, hyphenateTag, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
-import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/componentInfos';
+import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
@@ -365,7 +365,7 @@ export function create(
 
 					const originalResult = await baseServiceInstance.provideDiagnostics?.(document, token);
 					const templateErrors: vscode.Diagnostic[] = [];
-					const { template } = root._sfc;
+					const { template } = root.sfc;
 
 					if (template) {
 
@@ -428,7 +428,7 @@ export function create(
 						return;
 					}
 
-					const { template } = root._sfc;
+					const { template } = root.sfc;
 					if (!template) {
 						return;
 					}
@@ -520,7 +520,7 @@ export function create(
 								})());
 								return [];
 							}
-							const scriptSetupRanges = tsCodegen.get(vueCode._sfc)?.scriptSetupRanges.get();
+							const scriptSetupRanges = tsCodegen.get(vueCode.sfc)?.getScriptSetupRanges();
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
 
@@ -534,7 +534,7 @@ export function create(
 							}
 
 							for (const binding of scriptSetupRanges?.bindings ?? []) {
-								const name = vueCode._sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
+								const name = vueCode.sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}

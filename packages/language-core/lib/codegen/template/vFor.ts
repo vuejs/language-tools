@@ -37,8 +37,8 @@ export function* generateVFor(
 			source.content,
 			source.loc.start.offset,
 			source.loc,
-			'(',
-			')'
+			`(`,
+			`)`
 		);
 		yield `!)`; // #3102
 	}
@@ -73,8 +73,8 @@ export function* generateVFor(
 						prop.value.content,
 						prop.value.loc.start.offset,
 						prop.value.loc,
-						'(',
-						')'
+						`(`,
+						`)`
 					);
 					yield endOfLine;
 				}

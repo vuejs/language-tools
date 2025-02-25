@@ -15,6 +15,7 @@ export function* generateSlotOutlet(
 	node: CompilerDOM.SlotOutletNode
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
+	const startTagEndOffset = startTagOffset + node.tag.length;
 	const propsVar = ctx.getInternalVariable();
 	const nameProp = node.props.find(prop => {
 		if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
@@ -30,7 +31,7 @@ export function* generateSlotOutlet(
 	});
 
 	if (options.hasDefineSlots) {
-		yield `__VLS_normalizeSlot(`;
+		yield `__VLS_asFunctionalSlot(`;
 		if (nameProp) {
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
@@ -58,8 +59,7 @@ export function* generateSlotOutlet(
 						ctx,
 						nameProp,
 						nameProp.exp,
-						ctx.codeFeatures.all,
-						true
+						ctx.codeFeatures.all
 					),
 					`]`
 				];
@@ -78,16 +78,23 @@ export function* generateSlotOutlet(
 		}
 		else {
 			yield* wrapWith(
-				node.loc.start.offset,
-				node.loc.end.offset,
+				startTagOffset,
+				startTagEndOffset,
 				ctx.codeFeatures.verification,
-				`${options.slotsAssignName ?? '__VLS_slots'}['default']`
+				`${options.slotsAssignName ?? '__VLS_slots'}[`,
+				...wrapWith(
+					startTagOffset,
+					startTagEndOffset,
+					ctx.codeFeatures.verification,
+					`'default'`
+				),
+				`]`
 			);
 		}
-		yield `)?.(`;
+		yield `)(`;
 		yield* wrapWith(
 			startTagOffset,
-			startTagOffset + node.tag.length,
+			startTagEndOffset,
 			ctx.codeFeatures.verification,
 			`{${newLine}`,
 			...generateElementProps(
@@ -123,7 +130,7 @@ export function* generateSlotOutlet(
 				offset: nameProp.loc.start.offset + nameProp.loc.source.indexOf(nameProp.value.content, nameProp.name.length),
 				tagRange: [startTagOffset, startTagOffset + node.tag.length],
 				nodeLoc: node.loc,
-				propsVar,
+				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}
 		else if (
@@ -147,16 +154,16 @@ export function* generateSlotOutlet(
 			);
 			yield `)${endOfLine}`;
 			ctx.dynamicSlots.push({
-				expVar,
-				propsVar,
+				expVar: ctx.getHoistVariable(expVar),
+				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}
 		else {
 			ctx.slots.push({
 				name: 'default',
-				tagRange: [startTagOffset, startTagOffset + node.tag.length],
+				tagRange: [startTagOffset, startTagEndOffset],
 				nodeLoc: node.loc,
-				propsVar,
+				propsVar: ctx.getHoistVariable(propsVar),
 			});
 		}
 	}

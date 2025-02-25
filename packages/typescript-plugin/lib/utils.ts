@@ -5,7 +5,7 @@ import * as net from 'node:net';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import type * as ts from 'typescript';
-import type { ComponentPropInfo } from './requests/componentInfos';
+import type { ComponentPropInfo } from './requests/getComponentProps';
 import type { NotificationData, ProjectInfo, RequestData, ResponseData } from './server';
 
 export { TypeScriptProjectHost } from '@volar/typescript';
@@ -64,7 +64,7 @@ class NamedPipeServer {
 		if (props) {
 			return props;
 		}
-		return await this.sendRequest<ReturnType<typeof import('./requests/componentInfos')['getComponentProps']>>('subscribeComponentProps', fileName, tag);
+		return await this.sendRequest<ComponentPropInfo[]>('subscribeComponentProps', fileName, tag);
 	}
 
 	update() {
@@ -169,7 +169,9 @@ class NamedPipeServer {
 				name: string,
 				props: ComponentPropInfo[],
 			] = data;
-			components[name] = props;
+			if (name in components) {
+				components[name] = props;
+			}
 		}
 		else {
 			console.error('Unknown notification type:', type);

@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-plugin-pug",
-	"version": "2.2.0",
+	"version": "2.2.4",
 	"license": "MIT",
 	"files": [
 		"**/*.js",

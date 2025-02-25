@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"packageManager": "pnpm@9.6.0",
+	"packageManager": "pnpm@10.4.1",
 	"scripts": {
 		"build": "tsc -b",
 		"watch": "pnpm run build && pnpm run \"/^watch:.*/\"",
@@ -29,5 +29,13 @@
 		"@vue/language-core": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@tsslint/core",
+			"@vscode/vsce-sign",
+			"esbuild",
+			"keytar"
+		]
 	}
 }
