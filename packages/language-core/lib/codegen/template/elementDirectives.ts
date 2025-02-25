@@ -69,6 +69,7 @@ function* generateIdentifier(
 		`__VLS_directives.`,
 		...generateCamelized(
 			rawName,
+			'template',
 			prop.loc.start.offset,
 			ctx.resolveCodeFeatures({
 				...codeFeatures.withoutHighlight,

@@ -6,7 +6,7 @@ import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import { newLine, variableNameRegex, wrapWith } from '../utils';
+import { identifierRegex, newLine, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
 import type { TemplateCodegenContext } from './context';
@@ -303,12 +303,13 @@ export function* generatePropExp(
 		else {
 			const propVariableName = camelize(exp.loc.source);
 
-			if (variableNameRegex.test(propVariableName)) {
+			if (identifierRegex.test(propVariableName)) {
 				const isDestructuredProp = options.destructuredPropNames?.has(propVariableName) ?? false;
 				const isTemplateRef = options.templateRefNames?.has(propVariableName) ?? false;
 
 				const codes = generateCamelized(
 					exp.loc.source,
+					'template',
 					exp.loc.start.offset,
 					features
 				);

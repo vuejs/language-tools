@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
-import { combineLastMapping, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../utils';
+import { combineLastMapping, createTsAst, endOfLine, identifierRegex, newLine, wrapWith } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -65,11 +65,12 @@ export function* generateEventArg(
 		...ctx.codeFeatures.withoutHighlightAndCompletion,
 		...ctx.codeFeatures.navigationWithoutRename,
 	};
-	if (variableNameRegex.test(camelize(name))) {
+	if (identifierRegex.test(camelize(name))) {
 		yield ['', 'template', start, features];
 		yield directive;
 		yield* generateCamelized(
 			capitalize(name),
+			'template',
 			start,
 			combineLastMapping
 		);
@@ -84,6 +85,7 @@ export function* generateEventArg(
 			directive,
 			...generateCamelized(
 				capitalize(name),
+				'template',
 				start,
 				combineLastMapping
 			),

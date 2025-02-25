@@ -1,7 +1,12 @@
 import { capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
 
-export function* generateCamelized(code: string, offset: number, info: VueCodeInformation): Generator<Code> {
+export function* generateCamelized(
+	code: string,
+	source: string,
+	offset: number,
+	info: VueCodeInformation
+): Generator<Code> {
 	const parts = code.split('-');
 	for (let i = 0; i < parts.length; i++) {
 		const part = parts[i];
@@ -9,7 +14,7 @@ export function* generateCamelized(code: string, offset: number, info: VueCodeIn
 			if (i === 0) {
 				yield [
 					part,
-					'template',
+					source,
 					offset,
 					info,
 				];
@@ -17,7 +22,7 @@ export function* generateCamelized(code: string, offset: number, info: VueCodeIn
 			else {
 				yield [
 					capitalize(part),
-					'template',
+					source,
 					offset,
 					{ __combineOffset: i },
 				];

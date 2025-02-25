@@ -90,9 +90,9 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         readonly "onUpdate:title"?: (value: string) => any;
         readonly onBar?: (data: number) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onUpdate:title" | "onBar"> & ({
-        title?: string;
-    } & {
         foo: number;
+    } & {
+        title?: string;
     }) & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
@@ -120,9 +120,9 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
         readonly "onUpdate:title"?: (value: string) => any;
         readonly onBar?: (data: number) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onUpdate:title" | "onBar"> & ({
-        title?: string;
-    } & {
         foo: number;
+    } & {
+        title?: string;
     }) & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
