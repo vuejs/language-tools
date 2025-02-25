@@ -117,7 +117,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codes = wrapWith(
+			const codes = [...wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
@@ -148,12 +148,12 @@ export function* generateElementProps(
 					ctx.codeFeatures.all,
 					enableCodeFeatures
 				)
-			);
+			)];
 			if (enableCodeFeatures) {
 				yield* codes;
 			}
 			else {
-				yield toString([...codes]);
+				yield toString(codes);
 			}
 			if (shouldSpread) {
 				yield ` }`;
@@ -166,17 +166,17 @@ export function* generateElementProps(
 						? `[__VLS_tryAsConstant(\`$\{${prop.arg.content}\}Modifiers\`)]`
 						: camelize(propName) + `Modifiers`
 					: `modelModifiers`;
-				const codes = generateModifiers(
+				const codes = [...generateModifiers(
 					options,
 					ctx,
 					prop,
 					propertyName
-				);
+				)];
 				if (enableCodeFeatures) {
 					yield* codes;
 				}
 				else {
-					yield toString([...codes]);
+					yield toString(codes);
 				}
 				yield newLine;
 			}
@@ -201,7 +201,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codes = wrapWith(
+			const codes = [...wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				ctx.codeFeatures.verification,
@@ -220,12 +220,12 @@ export function* generateElementProps(
 						? generateAttrValue(prop.value, ctx.codeFeatures.withoutNavigation)
 						: [`true`]
 				)
-			);
+			)];
 			if (enableCodeFeatures) {
 				yield* codes;
 			}
 			else {
-				yield toString([...codes]);
+				yield toString(codes);
 			}
 			if (shouldSpread) {
 				yield ` }`;
@@ -244,7 +244,7 @@ export function* generateElementProps(
 				}
 			}
 			else {
-				const codes = wrapWith(
+				const codes = [...wrapWith(
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
 					ctx.codeFeatures.verification,
@@ -257,12 +257,12 @@ export function* generateElementProps(
 						ctx.codeFeatures.all,
 						enableCodeFeatures
 					)
-				);
+				)];
 				if (enableCodeFeatures) {
 					yield* codes;
 				}
 				else {
-					yield toString([...codes]);
+					yield toString(codes);
 				}
 				yield `,${newLine}`;
 			}
