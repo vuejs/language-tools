@@ -2,7 +2,7 @@ import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { combineLastMapping, endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
+import { combineLastMapping, endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateComponent, generateEmitsOption } from './component';
 import { generateComponentSelf } from './componentSelf';
@@ -469,7 +469,7 @@ function* generateComponentProps(
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
 			if (defineProp.name || defineProp.isModel) {
-				yield getObjectProperty(propName!);
+				yield `'${propName}'`;
 			}
 			else if (defineProp.localName) {
 				yield localName!;
@@ -532,7 +532,7 @@ function* generateComponentProps(
 			if (defineProp.modifierType) {
 				const modifierName = `${defineProp.name ? propName : 'model'}Modifiers`;
 				const modifierType = getRangeText(scriptSetup, defineProp.modifierType);
-				yield `${getObjectProperty(modifierName)}?: Partial<Record<${modifierType}, true>>,${newLine}`;
+				yield `'${modifierName}'?: Partial<Record<${modifierType}, true>>,${newLine}`;
 			}
 		}
 		yield `}`;
@@ -600,15 +600,6 @@ function getPropAndLocalName(
 			? 'modelValue'
 			: localName;
 	return [propName, localName] as const;
-}
-
-function getObjectProperty(text: string) {
-	if (identifierRegex.test(text)) {
-		return text;
-	}
-	else {
-		return `'${text}'`;
-	}
 }
 
 function getRangeText(
