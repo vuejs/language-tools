@@ -5,7 +5,7 @@
 		"typescript-next": "catalog:",
 		"typescript-stable": "catalog:",
 		"vue": "catalog:",
-		"vue-component-type-helpers": "catalog:",
+		"vue-component-type-helpers": "workspace:",
 		"vue2": "catalog:",
 		"vue3.4": "catalog:"
 	}

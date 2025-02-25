@@ -12,12 +12,6 @@
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/component-meta"
 	},
-	"dependencies": {
-		"@volar/typescript": "~2.4.11",
-		"@vue/language-core": "2.2.4",
-		"path-browserify": "^1.0.1",
-		"vue-component-type-helpers": "2.2.4"
-	},
 	"peerDependencies": {
 		"typescript": "*"
 	},
@@ -25,6 +19,12 @@
 		"typescript": {
 			"optional": true
 		}
+	},
+	"dependencies": {
+		"@volar/typescript": "catalog:",
+		"@vue/language-core": "workspace:",
+		"path-browserify": "catalog:",
+		"vue-component-type-helpers": "workspace:"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",

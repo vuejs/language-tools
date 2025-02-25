@@ -75,21 +75,9 @@ catalogs:
     '@vue/compiler-vue2':
       specifier: ^2.7.16
       version: 2.7.16
-    '@vue/language-core':
-      specifier: 2.2.4
-      version: 2.2.4
-    '@vue/language-server':
-      specifier: 2.2.4
-      version: 2.2.4
-    '@vue/language-service':
-      specifier: 2.2.4
-      version: 2.2.4
     '@vue/shared':
       specifier: ^3.5.0
       version: 3.5.13
-    '@vue/typescript-plugin':
-      specifier: 2.2.4
-      version: 2.2.4
     alien-signals:
       specifier: ^1.0.3
       version: 1.0.3
@@ -174,9 +162,6 @@ catalogs:
     vue:
       specifier: ^3.5.0
       version: 3.5.13
-    vue-component-type-helpers:
-      specifier: 2.2.4
-      version: 2.2.4
     vue2:
       specifier: npm:vue@2.7.16
       version: 2.7.16
@@ -228,13 +213,13 @@ importers:
         specifier: 'catalog:'
         version: 3.2.1
       '@vue/language-core':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../../packages/language-core
       '@vue/language-server':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../../packages/typescript-plugin
       esbuild:
         specifier: 'catalog:'
@@ -258,19 +243,19 @@ importers:
   packages/component-meta:
     dependencies:
       '@volar/typescript':
-        specifier: ~2.4.11
+        specifier: 'catalog:'
         version: 2.4.11
       '@vue/language-core':
-        specifier: 2.2.4
+        specifier: 'workspace:'
         version: link:../language-core
       path-browserify:
-        specifier: ^1.0.1
+        specifier: 'catalog:'
         version: 1.0.1
       typescript:
         specifier: '*'
         version: 5.7.2
       vue-component-type-helpers:
-        specifier: 2.2.4
+        specifier: 'workspace:'
         version: link:../component-type-helpers
     devDependencies:
       '@types/node':
@@ -341,7 +326,7 @@ importers:
         specifier: 'catalog:'
         version: 22.10.4
       '@vue/language-core':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../language-core
 
   packages/language-server:
@@ -356,13 +341,13 @@ importers:
         specifier: 'catalog:'
         version: 2.4.11
       '@vue/language-core':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../language-core
       '@vue/language-service':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../language-service
       '@vue/typescript-plugin':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../typescript-plugin
       vscode-languageserver-protocol:
         specifier: 'catalog:'
@@ -386,13 +371,13 @@ importers:
         specifier: 'catalog:'
         version: 3.5.13
       '@vue/language-core':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../language-core
       '@vue/shared':
         specifier: 'catalog:'
         version: 3.5.13
       '@vue/typescript-plugin':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../typescript-plugin
       alien-signals:
         specifier: 'catalog:'
@@ -456,7 +441,7 @@ importers:
         specifier: 'catalog:'
         version: 2.4.11
       '@vue/language-core':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../language-core
       typescript:
         specifier: '>=5.0.0'
@@ -472,7 +457,7 @@ importers:
         specifier: 'catalog:'
         version: 2.4.11
       '@vue/language-core':
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../language-core
       '@vue/shared':
         specifier: 'catalog:'
@@ -494,7 +479,7 @@ importers:
         specifier: 'catalog:'
         version: 3.5.13(typescript@5.7.2)
       vue-component-type-helpers:
-        specifier: 'catalog:'
+        specifier: 'workspace:'
         version: link:../packages/component-type-helpers
       vue2:
         specifier: 'catalog:'

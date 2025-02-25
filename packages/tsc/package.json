@@ -21,7 +21,7 @@
 	},
 	"dependencies": {
 		"@volar/typescript": "catalog:",
-		"@vue/language-core": "catalog:"
+		"@vue/language-core": "workspace:"
 	},
 	"devDependencies": {
 		"@types/node": "catalog:"

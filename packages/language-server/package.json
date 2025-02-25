@@ -19,9 +19,9 @@
 		"@volar/language-core": "catalog:",
 		"@volar/language-server": "catalog:",
 		"@volar/test-utils": "catalog:",
-		"@vue/language-core": "catalog:",
-		"@vue/language-service": "catalog:",
-		"@vue/typescript-plugin": "catalog:",
+		"@vue/language-core": "workspace:",
+		"@vue/language-service": "workspace:",
+		"@vue/typescript-plugin": "workspace:",
 		"vscode-languageserver-protocol": "catalog:",
 		"vscode-uri": "catalog:"
 	}
