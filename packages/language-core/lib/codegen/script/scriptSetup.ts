@@ -145,22 +145,30 @@ function* generateSetupFunction(
 			setupCodeModifies.push([
 				[
 					`let __VLS_exposed!: `,
-					generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.navigation),
+					generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
 					`${endOfLine}`,
 				],
 				callExp.start,
 				callExp.start,
+			], [
+				[`typeof __VLS_exposed`],
+				typeArg.start,
+				typeArg.end,
 			]);
 		}
 		else if (arg) {
 			setupCodeModifies.push([
 				[
 					`const __VLS_exposed = `,
-					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation),
+					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
 					`${endOfLine}`,
 				],
 				callExp.start,
 				callExp.start,
+			], [
+				[`__VLS_exposed`],
+				arg.start,
+				arg.end,
 			]);
 		}
 		else {
@@ -273,9 +281,7 @@ function* generateSetupFunction(
 	let nextStart = Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset);
 	for (const [codes, start, end] of setupCodeModifies) {
 		yield generateSfcBlockSection(scriptSetup, nextStart, start, codeFeatures.all);
-		for (const code of codes) {
-			yield code;
-		}
+		yield* codes;
 		nextStart = end;
 	}
 	yield generateSfcBlockSection(scriptSetup, nextStart, scriptSetup.content.length, codeFeatures.all);
