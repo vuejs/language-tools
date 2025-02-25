@@ -40,7 +40,7 @@ export function* generateStyleScopedClassReferences(
 				classNameEscapeRegex
 			),
 			`'`
-		)
+		);
 		yield `]} */${endOfLine}`;
 	}
 }
