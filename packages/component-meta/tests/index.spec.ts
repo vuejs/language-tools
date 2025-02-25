@@ -32,47 +32,41 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const onUpdateFoo = meta.events.find(event => event.name === 'update:foo');
 
 		const bar = meta.props.find(prop => prop.name === 'bar');
-		const onUpdateBar = meta.events.find(event => event.name === 'update:bar');
-
-		const baz = meta.props.find(prop => prop.name === 'baz');
-		const bazModifiers = meta.props.find(prop => prop.name === 'bazModifiers');
-		const onUpdateBaz = meta.events.find(event => event.name === 'update:baz');
+		const barModifiers = meta.props.find(prop => prop.name === 'barModifiers');
+		const onUpdateBaz = meta.events.find(event => event.name === 'update:bar');
 
 		expect(modelValue).toBeDefined();
 		expect(modelValue?.default).toBeUndefined();
-		expect(modelValue?.required).toBeFalsy();
-		expect(modelValue?.type).toEqual('number | undefined');
-		expect(modelValue?.schema).toEqual({
-			kind: 'enum',
-			type: 'number | undefined',
-			schema: ['undefined', 'number'],
-		});
+		expect(modelValue?.required).toBeTruthy();
+		expect(modelValue?.type).toEqual('number');
+		expect(modelValue?.description).toEqual('required number modelValue');
+		expect(modelValue?.schema).toEqual('number');
 		expect(onUpdateModelValue).toBeDefined();
 
 		expect(foo).toBeDefined();
-		expect(foo?.default).toBeUndefined();
-		expect(foo?.required).toBeTruthy();
-		expect(foo?.type).toEqual('string[]');
+		expect(foo?.default).toBe('false');
+		expect(foo?.required).toBeFalsy();
+		expect(foo?.type).toEqual('boolean | undefined');
+		expect(foo?.description).toEqual('optional boolean foo with default false');
 		expect(foo?.schema).toEqual({
-			kind: 'array',
-			type: 'string[]',
-			schema: ['string'],
-		});
-		expect(onUpdateFoo).toBeDefined();
-
-		expect(bar).toBeDefined();
-		expect(bar?.default).toBe('false');
-		expect(bar?.required).toBeFalsy();
-		expect(bar?.type).toEqual('boolean | undefined');
-		expect(bar?.schema).toEqual({
 			kind: 'enum',
 			type: 'boolean | undefined',
 			schema: ['undefined', 'false', 'true'],
 		});
-		expect(onUpdateBar).toBeDefined();
+		expect(onUpdateFoo).toBeDefined();
 
-		expect(baz).toBeDefined();
-		expect(bazModifiers).toBeDefined();
+		expect(bar).toBeDefined();
+		expect(bar?.default).toBeUndefined();
+		expect(bar?.required).toBeFalsy();
+		expect(bar?.type).toEqual('string | undefined');
+		expect(bar?.description).toEqual('optional string bar with lazy and trim modifiers');
+		expect(bar?.schema).toEqual({
+			kind: 'enum',
+			type: 'string | undefined',
+			schema: ['undefined', 'string'],
+		});
+		// TODO: The types of modifiers are inconsistent in the two running results
+		expect(barModifiers).toBeDefined();
 		expect(onUpdateBaz).toBeDefined();
 	});
 

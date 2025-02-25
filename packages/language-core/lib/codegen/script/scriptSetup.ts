@@ -103,6 +103,15 @@ function* generateSetupFunction(
 	ctx.scriptSetupGeneratedOffset = options.getGeneratedLength() - scriptSetupRanges.importSectionEndOffset;
 
 	let setupCodeModifies: [Code[], number, number][] = [];
+	for (const { comments } of scriptSetupRanges.defineProp) {
+		if (comments) {
+			setupCodeModifies.push([
+				[``],
+				comments.start,
+				comments.end,
+			]);
+		}
+	}
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
 		setupCodeModifies.push(...generateDefineWithType(
@@ -491,6 +500,10 @@ function* generateComponentProps(
 		for (const defineProp of scriptSetupRanges.defineProp) {
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
+			if (defineProp.comments) {
+				yield generateSfcBlockSection(scriptSetup, defineProp.comments.start, defineProp.comments.end, codeFeatures.all);
+				yield newLine;
+			}
 			if (defineProp.isModel && !defineProp.name) {
 				yield propName!;
 			}
