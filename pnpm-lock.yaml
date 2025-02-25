@@ -76,23 +76,23 @@ catalogs:
       specifier: ^2.7.16
       version: 2.7.16
     '@vue/language-core':
-      specifier: 2.2.0
-      version: 2.2.0
+      specifier: 2.2.4
+      version: 2.2.4
     '@vue/language-server':
-      specifier: 2.2.0
-      version: 2.2.0
+      specifier: 2.2.4
+      version: 2.2.4
     '@vue/language-service':
-      specifier: 2.2.0
-      version: 2.2.0
+      specifier: 2.2.4
+      version: 2.2.4
     '@vue/shared':
       specifier: ^3.5.0
       version: 3.5.13
     '@vue/typescript-plugin':
-      specifier: 2.2.0
-      version: 2.2.0
+      specifier: 2.2.4
+      version: 2.2.4
     alien-signals:
-      specifier: ^0.4.9
-      version: 0.4.12
+      specifier: ^1.0.3
+      version: 1.0.3
     esbuild:
       specifier: ^0.25.0
       version: 0.25.0
@@ -150,6 +150,9 @@ catalogs:
     volar-service-typescript-twoslash-queries:
       specifier: 0.0.62
       version: 0.0.62
+    vscode-css-languageservice:
+      specifier: ^6.3.1
+      version: 6.3.2
     vscode-ext-gen:
       specifier: ^0.5.0
       version: 0.5.5
@@ -172,8 +175,8 @@ catalogs:
       specifier: ^3.5.0
       version: 3.5.13
     vue-component-type-helpers:
-      specifier: 2.2.0
-      version: 2.2.0
+      specifier: 2.2.4
+      version: 2.2.4
     vue2:
       specifier: npm:vue@2.7.16
       version: 2.7.16
@@ -203,9 +206,6 @@ importers:
       '@typescript-eslint/eslint-plugin':
         specifier: 'catalog:'
         version: 8.19.0(@typescript-eslint/parser@8.19.0(eslint@9.17.0)(typescript@5.7.2))(eslint@9.17.0)(typescript@5.7.2)
-      '@vue/language-core':
-        specifier: 'catalog:'
-        version: link:packages/language-core
       typescript:
         specifier: 'catalog:'
         version: 5.7.2
@@ -425,7 +425,7 @@ importers:
         specifier: 'catalog:'
         version: 0.0.62(@volar/language-service@2.4.11)
       vscode-css-languageservice:
-        specifier: ^6.3.1
+        specifier: 'catalog:'
         version: 6.3.2
       vscode-html-languageservice:
         specifier: 'catalog:'

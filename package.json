@@ -26,7 +26,6 @@
 		"@tsslint/config": "catalog:",
 		"@tsslint/eslint": "catalog:",
 		"@typescript-eslint/eslint-plugin": "catalog:",
-		"@vue/language-core": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "catalog:"
 	},
