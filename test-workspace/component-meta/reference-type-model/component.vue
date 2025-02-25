@@ -1,10 +1,18 @@
 <script setup lang="ts">
-defineModel<number>();
-defineModel<string[]>('foo', {
+/**
+ * required number modelValue
+ */
+defineModel<number>({
 	required: true,
 });
-defineModel<boolean>('bar', {
+/**
+ * optional boolean foo with default false
+ */
+defineModel<boolean>('foo', {
 	default: false,
 });
-defineModel<string, 'lazy' | 'trim'>('baz');
+/**
+ * optional string bar with lazy and trim modifiers
+ */
+defineModel<string, 'lazy' | 'trim'>('bar');
 </script>
