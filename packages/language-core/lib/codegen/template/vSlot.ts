@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { collectVars, createTsAst, endOfLine, newLine, wrapWith } from '../utils';
+import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateObjectProperty } from './objectProperty';

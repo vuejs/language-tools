@@ -5,9 +5,11 @@ export function* generateCamelized(
 	code: string,
 	source: string,
 	offset: number,
-	info: VueCodeInformation
+	features: VueCodeInformation
 ): Generator<Code> {
 	const parts = code.split('-');
+	const startCombineOffset = features.__combineOffset ?? 0;
+
 	for (let i = 0; i < parts.length; i++) {
 		const part = parts[i];
 		if (part !== '') {
@@ -16,7 +18,7 @@ export function* generateCamelized(
 					part,
 					source,
 					offset,
-					info,
+					features,
 				];
 			}
 			else {
@@ -24,7 +26,7 @@ export function* generateCamelized(
 					capitalize(part),
 					source,
 					offset,
-					{ __combineOffset: i },
+					{ __combineOffset: startCombineOffset + i },
 				];
 			}
 		}

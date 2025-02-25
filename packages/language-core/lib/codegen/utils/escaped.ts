@@ -8,6 +8,7 @@ export function* generateEscaped(
 	escapeTarget: RegExp
 ): Generator<Code> {
 	const parts = text.split(escapeTarget);
+	const startCombineOffset = features.__combineOffset ?? 0;
 	let isEscapeTarget = false;
 
 	for (let i = 0; i < parts.length; i++) {
@@ -19,7 +20,7 @@ export function* generateEscaped(
 			part,
 			source,
 			offset,
-			i === 0 ? features : { __combineOffset: i },
+			i === 0 ? features : { __combineOffset: startCombineOffset + i },
 		];
 		offset += part.length;
 		isEscapeTarget = !isEscapeTarget;

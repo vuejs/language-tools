@@ -4,6 +4,7 @@ import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code } from '../../types';
 import { endOfLine, normalizeAttributeValue } from '../utils';
 import { generateEscaped } from '../utils/escaped';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 
@@ -25,29 +26,21 @@ export function* generateStyleScopedClassReferences(
 	}
 	for (const { source, className, offset } of ctx.scopedClasses) {
 		yield `/** @type {__VLS_StyleScopedClasses[`;
-		yield [
-			'',
-			source,
+		yield* wrapWith(
 			offset - (withDot ? 1 : 0),
-			ctx.codeFeatures.navigation,
-		];
-		yield `'`;
-
-		// fix https://github.com/vuejs/language-tools/issues/4537
-		yield* generateEscaped(
-			className,
-			source,
-			offset,
-			ctx.codeFeatures.navigationAndAdditionalCompletion,
-			classNameEscapeRegex
-		);
-		yield `'`;
-		yield [
-			'',
-			source,
 			offset + className.length,
+			source,
 			ctx.codeFeatures.navigation,
-		];
+			`'`,
+			...generateEscaped(
+				className,
+				source,
+				offset,
+				ctx.codeFeatures.navigationAndAdditionalCompletion,
+				classNameEscapeRegex
+			),
+			`'`
+		)
 		yield `]} */${endOfLine}`;
 	}
 }

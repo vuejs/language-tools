@@ -1,7 +1,8 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import { endOfLine, newLine, wrapWith } from '../utils';
+import { endOfLine, newLine } from '../utils';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import { generateElementProps, generatePropExp } from './elementProps';

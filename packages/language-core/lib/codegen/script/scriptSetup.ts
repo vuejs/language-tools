@@ -2,8 +2,9 @@ import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { combineLastMapping, endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
+import { wrapWith } from '../utils/wrapWith';
 import { generateComponent, generateEmitsOption } from './component';
 import { generateComponentSelf } from './componentSelf';
 import type { ScriptCodegenContext } from './context';
@@ -215,9 +216,13 @@ function* generateSetupFunction(
 				`])`
 			] : [
 				` as __VLS_StyleModules[`,
-				['', scriptSetup.name, exp.start, codeFeatures.verification],
-				`'$style'`,
-				['', scriptSetup.name, exp.end, combineLastMapping],
+				...wrapWith(
+					exp.start,
+					exp.end,
+					scriptSetup.name,
+					codeFeatures.verification,
+					`'$style'`
+				),
 				`])`
 			],
 			callExp.end,

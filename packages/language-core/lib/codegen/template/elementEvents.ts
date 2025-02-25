@@ -2,8 +2,9 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
-import { combineLastMapping, createTsAst, endOfLine, identifierRegex, newLine, wrapWith } from '../utils';
+import { combineLastMapping, createTsAst, endOfLine, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -81,7 +82,6 @@ export function* generateEventArg(
 			start + name.length,
 			features,
 			`'`,
-			['', 'template', start, combineLastMapping],
 			directive,
 			...generateCamelized(
 				capitalize(name),
