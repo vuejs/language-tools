@@ -3,7 +3,7 @@ packages:
   - packages/*
   - test-workspace
 catalog:
-  "@lerna-lite/cli": &lerna ^3.11.0
+  "@lerna-lite/cli": &lerna ^3.12.1
   "@lerna-lite/publish": *lerna
   "@tsslint/cli": &tsslint ^1.5.0
   "@tsslint/config": *tsslint
