@@ -45,9 +45,7 @@ export function* generateVIf(
 					`)`
 				),
 			];
-			for (const code of codes) {
-				yield code;
-			}
+			yield* codes;
 			ctx.blockConditions.push(toString(codes));
 			addedBlockCondition = true;
 			yield ` `;

@@ -32,9 +32,7 @@ export function* generateComponent(
 	yield `},${newLine}`;
 	if (!ctx.bypassDefineComponent) {
 		const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
-		for (const code of emitOptionCodes) {
-			yield code;
-		}
+		yield* emitOptionCodes;
 		yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length, true);
 	}
 	if (

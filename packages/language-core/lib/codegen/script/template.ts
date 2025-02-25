@@ -121,9 +121,7 @@ function* generateTemplateBody(
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
-		for (const code of options.templateCodegen.codes) {
-			yield code;
-		}
+		yield* options.templateCodegen.codes;
 	}
 	else {
 		yield `// no template${newLine}`;

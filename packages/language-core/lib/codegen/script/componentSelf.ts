@@ -51,9 +51,7 @@ export function* generateComponentSelf(
 		yield `},${newLine}`; // setup() {
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
 			const emitOptionCodes = [...generateEmitsOption(options, options.scriptSetupRanges)];
-			for (const code of emitOptionCodes) {
-				yield code;
-			}
+			yield* emitOptionCodes;
 			yield* generatePropsOption(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges, !!emitOptionCodes.length, false);
 		}
 		if (options.sfc.script && options.scriptRanges?.exportDefault?.args) {
