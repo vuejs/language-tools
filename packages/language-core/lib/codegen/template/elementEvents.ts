@@ -25,11 +25,8 @@ export function* generateElementEvents(
 		if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& (
-				prop.name === 'model'
-				|| prop.name === 'on'
-				&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-				&& !prop.arg.loc.source.startsWith('[')
-				&& !prop.arg.loc.source.endsWith(']')
+				prop.name === 'on' && (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+				|| prop.name === 'model' && (!prop.arg || prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 			)
 		) {
 			ctx.currentComponent!.used = true;
@@ -190,7 +187,7 @@ export function* generateModelEventExpression(
 			prop.exp.content,
 			prop.exp.loc.start.offset,
 			prop.exp.loc
-		)
+		);
 		yield ` = $event)`;
 	}
 	else {
