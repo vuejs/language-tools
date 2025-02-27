@@ -36,8 +36,8 @@ export function* generateScriptSetup(
 				``,
 				'scriptSetup',
 				0,
-				codeFeatures.verification
-			]
+				codeFeatures.verification,
+			];
 			yield `export default `;
 		}
 		yield `(`;
