@@ -122,6 +122,10 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 
+	if (options.sfc.scriptSetup) {
+		yield* generateScriptSectionPartiallyEnding(options.sfc.scriptSetup.name, options.sfc.scriptSetup.content.length, '#4569/main.vue', ';');
+	}
+
 	if (!ctx.generatedTemplate) {
 		const templateCodegenCtx = yield* generateTemplate(options, ctx);
 		yield* generateComponentSelf(options, ctx, templateCodegenCtx);
@@ -142,8 +146,13 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	return ctx;
 }
 
-export function* generateScriptSectionPartiallyEnding(source: string, end: number, mark: string): Generator<Code> {
-	yield `debugger`;
+export function* generateScriptSectionPartiallyEnding(
+	source: string,
+	end: number,
+	mark: string,
+	delimiter = 'debugger'
+): Generator<Code> {
+	yield delimiter;
 	yield ['', source, end, codeFeatures.verification];
-	yield `/* SCRIPT_PARTIALLY_END: ${mark} */${newLine}`;
+	yield `/* PartiallyEnd: ${mark} */${newLine}`;
 }
