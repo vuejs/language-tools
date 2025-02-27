@@ -31,15 +31,13 @@ export function* generateScriptSetup(
 ): Generator<Code> {
 	if (scriptSetup.generic) {
 		if (!options.scriptRanges?.exportDefault) {
-			if (options.sfc.scriptSetup) {
-				// #4569
-				yield [
-					'',
-					'scriptSetup',
-					options.sfc.scriptSetup.content.length,
-					codeFeatures.verification,
-				];
-			}
+			// #4569
+			yield [
+				'',
+				'scriptSetup',
+				scriptSetup.content.length,
+				codeFeatures.verification,
+			];
 			yield `export default `;
 		}
 		yield `(`;
@@ -80,7 +78,18 @@ export function* generateScriptSetup(
 			+ `	emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
 			+ `}${endOfLine}`;
 		yield `})(),${newLine}`; // __VLS_setup = (async () => {
-		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))`;
+		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }));`;
+		
+		if (!options.scriptRanges?.exportDefault) {
+			// #4569
+			yield [
+				'',
+				'scriptSetup',
+				scriptSetup.content.length,
+				codeFeatures.verification,
+			];
+		}
+		yield newLine;
 	}
 	else if (!options.sfc.script) {
 		// no script block, generate script setup code at root

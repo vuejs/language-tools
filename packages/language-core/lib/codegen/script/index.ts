@@ -124,9 +124,6 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	if (options.sfc.script) {
 		yield* generateScriptSectionPartiallyEnding(options.sfc.script.name, options.sfc.script.content.length, '#3632/script.vue');
 	}
-	if (options.sfc.scriptSetup) {
-		yield* generateScriptSectionPartiallyEnding(options.sfc.scriptSetup.name, options.sfc.scriptSetup.content.length, '#4569/main.vue');
-	}
 
 	if (!ctx.generatedTemplate) {
 		const templateCodegenCtx = yield* generateTemplate(options, ctx);
