@@ -31,13 +31,6 @@ export function* generateScriptSetup(
 ): Generator<Code> {
 	if (scriptSetup.generic) {
 		if (!options.scriptRanges?.exportDefault) {
-			// #4569
-			yield [
-				'',
-				'scriptSetup',
-				scriptSetup.content.length,
-				codeFeatures.verification,
-			];
 			yield `export default `;
 		}
 		yield `(`;
