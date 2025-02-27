@@ -94,7 +94,7 @@ export function* generateScriptSetup(
 		}
 		yield `await (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'return');
-		yield `})()`;
+		yield `})()${endOfLine}`;
 	}
 }
 

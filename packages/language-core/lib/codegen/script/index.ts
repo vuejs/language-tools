@@ -115,14 +115,11 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		}
 		else {
 			yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
+			yield* generateScriptSectionPartiallyEnding(options.sfc.script.name, options.sfc.script.content.length, '#3632/script.vue');
 		}
 	}
 	else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
-	}
-
-	if (options.sfc.script) {
-		yield* generateScriptSectionPartiallyEnding(options.sfc.script.name, options.sfc.script.content.length, '#3632/script.vue');
 	}
 
 	if (!ctx.generatedTemplate) {
