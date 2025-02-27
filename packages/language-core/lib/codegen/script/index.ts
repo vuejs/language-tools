@@ -149,7 +149,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 }
 
 export function* generateScriptSectionPartiallyEnding(source: string, end: number, mark: string): Generator<Code> {
-	yield `;`;
+	yield `debugger`;
 	yield ['', source, end, codeFeatures.verification];
-	yield `/* PartiallyEnd: ${mark} */${newLine}`;
+	yield `/* SCRIPT_PARTIALLY_END:: ${mark} */${newLine}`;
 }
