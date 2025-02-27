@@ -32,12 +32,7 @@ export function* generateScriptSetup(
 	if (scriptSetup.generic) {
 		if (!options.scriptRanges?.exportDefault) {
 			// #4569
-			yield [
-				``,
-				'scriptSetup',
-				0,
-				codeFeatures.verification,
-			];
+			yield ['', 'scriptSetup', 0, codeFeatures.verification];
 			yield `export default `;
 		}
 		yield `(`;
