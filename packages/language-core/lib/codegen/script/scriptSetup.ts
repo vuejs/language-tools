@@ -31,15 +31,8 @@ export function* generateScriptSetup(
 ): Generator<Code> {
 	if (scriptSetup.generic) {
 		if (!options.scriptRanges?.exportDefault) {
-			if (options.sfc.scriptSetup) {
-				// #4569
-				yield [
-					'',
-					'scriptSetup',
-					options.sfc.scriptSetup.content.length,
-					codeFeatures.verification,
-				];
-			}
+			// #4569
+			yield ['', 'scriptSetup', 0, codeFeatures.verification];
 			yield `export default `;
 		}
 		yield `(`;
