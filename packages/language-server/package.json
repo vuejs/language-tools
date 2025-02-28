@@ -16,13 +16,13 @@
 		"directory": "packages/language-server"
 	},
 	"dependencies": {
-		"@volar/language-core": "~2.4.11",
-		"@volar/language-server": "~2.4.11",
-		"@volar/test-utils": "~2.4.11",
-		"@vue/language-core": "2.2.4",
-		"@vue/language-service": "2.2.4",
-		"@vue/typescript-plugin": "2.2.4",
-		"vscode-languageserver-protocol": "^3.17.5",
-		"vscode-uri": "^3.0.8"
+		"@volar/language-core": "catalog:",
+		"@volar/language-server": "catalog:",
+		"@volar/test-utils": "catalog:",
+		"@vue/language-core": "workspace:",
+		"@vue/language-service": "workspace:",
+		"@vue/typescript-plugin": "workspace:",
+		"vscode-languageserver-protocol": "catalog:",
+		"vscode-uri": "catalog:"
 	}
 }
