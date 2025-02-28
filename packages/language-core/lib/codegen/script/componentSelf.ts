@@ -33,18 +33,12 @@ export function* generateComponentSelf(
 				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
 					continue;
 				}
-				const templateOffset = options.getGeneratedLength();
+
+				const token = Symbol(varName.length);
+				yield ['', undefined, 0, { __linkedToken: token }];
 				yield `${varName}: ${varName} as typeof `;
-
-				const scriptOffset = options.getGeneratedLength();
+				yield ['', undefined, 0, { __linkedToken: token }];
 				yield `${varName},${newLine}`;
-
-				options.linkedCodeMappings.push({
-					sourceOffsets: [scriptOffset],
-					generatedOffsets: [templateOffset],
-					lengths: [varName.length],
-					data: undefined,
-				});
 			}
 		}
 		yield `}${endOfLine}`; // return {

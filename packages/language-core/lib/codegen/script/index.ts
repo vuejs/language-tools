@@ -1,4 +1,3 @@
-import type { Mapping } from '@volar/language-core';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
@@ -27,8 +26,6 @@ export interface ScriptCodegenOptions {
 	templateCodegen: TemplateCodegenContext & { codes: Code[]; } | undefined;
 	destructuredPropNames: Set<string>;
 	templateRefNames: Set<string>;
-	getGeneratedLength: () => number;
-	linkedCodeMappings: Mapping[];
 	appendGlobalTypes: boolean;
 }
 

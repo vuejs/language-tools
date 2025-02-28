@@ -1,4 +1,4 @@
-import type { VirtualCode } from '@volar/language-core';
+import type { Mapping, VirtualCode } from '@volar/language-core';
 import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
@@ -201,6 +201,7 @@ function computedPluginEmbeddedCodes(
 				];
 			}));
 			const newMappings: typeof mappings = [];
+			const tokenMappings = new Map<symbol, Mapping>();
 
 			for (let i = 0; i < mappings.length; i++) {
 				const mapping = mappings[i];
@@ -212,6 +213,22 @@ function computedPluginEmbeddedCodes(
 					offsetMapping.sourceOffsets.push(...mapping.sourceOffsets);
 					offsetMapping.generatedOffsets.push(...mapping.generatedOffsets);
 					offsetMapping.lengths.push(...mapping.lengths);
+					continue;
+				}
+				if (mapping.data.__linkedToken !== undefined) {
+					const token = mapping.data.__linkedToken;
+					if (tokenMappings.has(token)) {
+						const prevMapping = tokenMappings.get(token)!;
+						code.linkedCodeMappings.push({
+							sourceOffsets: [prevMapping.generatedOffsets[0]],
+							generatedOffsets: [mapping.generatedOffsets[0]],
+							lengths: [Number(token.description)],
+							data: undefined,
+						});
+					}
+					else {
+						tokenMappings.set(token, mapping);
+					}
 					continue;
 				}
 				newMappings.push(mapping);

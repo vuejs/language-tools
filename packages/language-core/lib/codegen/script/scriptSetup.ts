@@ -96,8 +96,6 @@ function* generateSetupFunction(
 	scriptSetupRanges: ScriptSetupRanges,
 	syntax: 'return' | 'export default' | undefined
 ): Generator<Code> {
-	ctx.scriptSetupGeneratedOffset = options.getGeneratedLength() - scriptSetupRanges.importSectionEndOffset;
-
 	let setupCodeModifies: [Code[], number, number][] = [];
 	for (const { comments } of scriptSetupRanges.defineProp) {
 		if (comments) {

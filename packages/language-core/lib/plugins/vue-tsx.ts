@@ -1,4 +1,3 @@
-import type { Mapping } from '@volar/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
 import * as path from 'path-browserify';
@@ -46,7 +45,6 @@ const plugin: VueLanguagePlugin = ctx => {
 				const tsx = codegen.getGeneratedScript();
 				if (tsx) {
 					embeddedFile.content = [...tsx.codes];
-					embeddedFile.linkedCodeMappings = [...tsx.linkedCodeMappings];
 				}
 			}
 		},
@@ -221,9 +219,6 @@ function createTsx(
 	});
 
 	const getGeneratedScript = computed(() => {
-		const linkedCodeMappings: Mapping[] = [];
-		let generatedLength = 0;
-
 		const codes: Code[] = [];
 		const codegen = generateScript({
 			ts,
@@ -238,8 +233,6 @@ function createTsx(
 			templateCodegen: getGeneratedTemplate(),
 			destructuredPropNames: getSetupDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
-			getGeneratedLength: () => generatedLength,
-			linkedCodeMappings,
 			appendGlobalTypes,
 		});
 		fileEditTimes.set(fileName, (fileEditTimes.get(fileName) ?? 0) + 1);
@@ -248,16 +241,12 @@ function createTsx(
 		while (!current.done) {
 			const code = current.value;
 			codes.push(code);
-			generatedLength += typeof code === 'string'
-				? code.length
-				: code[0].length;
 			current = codegen.next();
 		}
 
 		return {
 			...current.value,
 			codes,
-			linkedCodeMappings,
 		};
 	});
 

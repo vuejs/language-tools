@@ -14,12 +14,7 @@ export function getGlobalTypesFileName({
 		checkUnknownProps,
 		checkUnknownEvents,
 		checkUnknownComponents,
-	].map(v => {
-		if (typeof v === 'boolean') {
-			return v ? 1 : 0;
-		}
-		return v;
-	}).join('_') + '.d.ts';
+	].map(v => (typeof v === 'boolean' ? Number(v) : v)).join('_') + '.d.ts';
 }
 
 export function generateGlobalTypes({
