@@ -1,9 +1,6 @@
 name: auto-fix
 
-on:
-  push:
-    branches:
-      - 'master'
+on: [push, pull_request]
 
 jobs:
   auto-fix:
