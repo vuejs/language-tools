@@ -120,14 +120,11 @@ export function* generateEventExpression(
 		const ast = createTsAst(options.ts, prop.exp, prop.exp.content);
 		const _isCompoundExpression = isCompoundExpression(options.ts, ast);
 		if (_isCompoundExpression) {
-			yield `(...[$event]) => {${newLine}`;
-			ctx.addLocalVariable('$event');
-
 			prefix = ``;
 			suffix = ``;
-			for (const blockCondition of ctx.blockConditions) {
-				prefix += `if (!${blockCondition}) return${endOfLine}`;
-			}
+			yield `(...[$event]) => {${newLine}`;
+			ctx.addLocalVariable('$event');
+			yield* ctx.generateConditionGuards();
 		}
 
 		yield* generateInterpolation(
@@ -178,7 +175,8 @@ export function* generateModelEventExpression(
 	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `(...[$event]) => (`;
+		yield `(...[$event]) => {${newLine}`;
+		yield* ctx.generateConditionGuards();
 		yield* generateInterpolation(
 			options,
 			ctx,
@@ -188,7 +186,8 @@ export function* generateModelEventExpression(
 			prop.exp.loc.start.offset,
 			prop.exp.loc
 		);
-		yield ` = $event)`;
+		yield ` = $event${endOfLine}`;
+		yield `}`;
 	}
 	else {
 		yield `() => {}`;
