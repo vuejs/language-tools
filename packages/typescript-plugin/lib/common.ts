@@ -176,7 +176,7 @@ function getDefinitionAndBoundSpan<T>(
 		if (
 			!root.sfc.template
 			|| position < root.sfc.template.startTagEnd
-			|| position >= root.sfc.template.endTagStart
+			|| position > root.sfc.template.endTagStart
 		) {
 			return result;
 		}
