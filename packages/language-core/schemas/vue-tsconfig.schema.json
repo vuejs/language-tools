@@ -154,6 +154,13 @@
 						"useTemplateRef": [ "useTemplateRef", "templateRef" ]
 					}
 				},
+				"pluginLoader": {
+					"type": "string",
+					"enum": [
+						"jiti"
+					],
+					"markdownDescription": "Package to load plugins. Explicit installation is required."
+				},
 				"plugins": {
 					"type": "array",
 					"default": [ ],
