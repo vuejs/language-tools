@@ -1,4 +1,5 @@
 name: publish-any-commit
+
 on: [push, pull_request]
 
 jobs:
