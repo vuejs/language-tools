@@ -204,10 +204,10 @@ function getDefinitionAndBoundSpan(
 		function proxy(
 			name: ts.PropertyName,
 			type: ts.TypeNode,
-			originalDefinition: ts.DefinitionInfo,
+			definition: ts.DefinitionInfo,
 			sourceFile: ts.SourceFile
 		) {
-			const { textSpan, fileName } = originalDefinition;
+			const { textSpan, fileName } = definition;
 			const start = name.getStart(sourceFile);
 			const end = name.getEnd();
 
@@ -225,7 +225,7 @@ function getDefinitionAndBoundSpan(
 				for (const definition of res.definitions) {
 					definitions.add(definition);
 				}
-				skippedDefinitions.push(originalDefinition);
+				skippedDefinitions.push(definition);
 			}
 		}
 	}
