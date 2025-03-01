@@ -109,12 +109,9 @@ export function* generateEventExpression(
 		if (_isCompoundExpression) {
 			yield `(...[$event]) => {${newLine}`;
 			ctx.addLocalVariable('$event');
-
+			yield* ctx.generateConditionGuards();
 			prefix = ``;
 			suffix = ``;
-			for (const blockCondition of ctx.blockConditions) {
-				prefix += `if (!${blockCondition}) return${endOfLine}`;
-			}
 		}
 
 		yield* generateInterpolation(
