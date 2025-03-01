@@ -249,7 +249,7 @@ function getDefinitionAndBoundSpan<T>(
 				skippedDefinitions.push(definition);
 			}
 		}
-	}
+	};
 }
 
 function getQuickInfoAtPosition(
