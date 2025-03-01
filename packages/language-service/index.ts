@@ -83,6 +83,7 @@ export function getFullLanguageServicePlugins(
 						languageService.getCompletionsAtPosition = proxy.getCompletionsAtPosition;
 						languageService.getCompletionEntryDetails = proxy.getCompletionEntryDetails;
 						languageService.getCodeFixesAtPosition = proxy.getCodeFixesAtPosition;
+						languageService.getDefinitionAndBoundSpan = proxy.getDefinitionAndBoundSpan;
 						languageService.getQuickInfoAtPosition = proxy.getQuickInfoAtPosition;
 					}
 					return created;
