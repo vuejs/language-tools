@@ -1,6 +1,15 @@
 name: auto-fix
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+  pull_request_target:
+    branches:
+      - master
+
+permissions:
+  contents: write
 
 jobs:
   auto-fix:
