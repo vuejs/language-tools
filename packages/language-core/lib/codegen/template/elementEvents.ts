@@ -120,11 +120,11 @@ export function* generateEventExpression(
 		const ast = createTsAst(options.ts, prop.exp, prop.exp.content);
 		const _isCompoundExpression = isCompoundExpression(options.ts, ast);
 		if (_isCompoundExpression) {
-			prefix = ``;
-			suffix = ``;
 			yield `(...[$event]) => {${newLine}`;
 			ctx.addLocalVariable('$event');
 			yield* ctx.generateConditionGuards();
+			prefix = ``;
+			suffix = ``;
 		}
 
 		yield* generateInterpolation(
