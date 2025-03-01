@@ -20,6 +20,7 @@ export function proxyLanguageServiceForVue<T>(
 			case 'getCompletionEntryDetails': return getCompletionEntryDetails(language, asScriptId, target[p]);
 			case 'getCodeFixesAtPosition': return getCodeFixesAtPosition(target[p]);
 			case 'getQuickInfoAtPosition': return getQuickInfoAtPosition(ts, target, target[p]);
+			case 'getDefinitionAndBoundSpan': return getDefinitionAndBoundSpan(ts, languageService, target[p]);
 			// TS plugin only
 			case 'getEncodedSemanticClassifications': return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
 		}
@@ -91,7 +92,11 @@ function getCompletionsAtPosition(vueOptions: VueCompilerOptions, getCompletions
 	};
 }
 
-function getCompletionEntryDetails<T>(language: Language<T>, asScriptId: (fileName: string) => T, getCompletionEntryDetails: ts.LanguageService['getCompletionEntryDetails']): ts.LanguageService['getCompletionEntryDetails'] {
+function getCompletionEntryDetails<T>(
+	language: Language<T>,
+	asScriptId: (fileName: string) => T,
+	getCompletionEntryDetails: ts.LanguageService['getCompletionEntryDetails']
+): ts.LanguageService['getCompletionEntryDetails'] {
 	return (...args) => {
 		const details = getCompletionEntryDetails(...args);
 		// modify import statement
@@ -132,7 +137,9 @@ function getCompletionEntryDetails<T>(language: Language<T>, asScriptId: (fileNa
 	};
 }
 
-function getCodeFixesAtPosition(getCodeFixesAtPosition: ts.LanguageService['getCodeFixesAtPosition']): ts.LanguageService['getCodeFixesAtPosition'] {
+function getCodeFixesAtPosition(
+	getCodeFixesAtPosition: ts.LanguageService['getCodeFixesAtPosition']
+): ts.LanguageService['getCodeFixesAtPosition'] {
 	return (...args) => {
 		let result = getCodeFixesAtPosition(...args);
 		// filter __VLS_
@@ -141,7 +148,93 @@ function getCodeFixesAtPosition(getCodeFixesAtPosition: ts.LanguageService['getC
 	};
 }
 
-function getQuickInfoAtPosition(ts: typeof import('typescript'), languageService: ts.LanguageService, getQuickInfoAtPosition: ts.LanguageService['getQuickInfoAtPosition']): ts.LanguageService['getQuickInfoAtPosition'] {
+function getDefinitionAndBoundSpan(
+	ts: typeof import('typescript'),
+	languageService: ts.LanguageService,
+	getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan']
+): ts.LanguageService['getDefinitionAndBoundSpan'] {
+	return (fileName, position) => {
+		const result = getDefinitionAndBoundSpan(fileName, position);
+		if (!result?.definitions?.length) {
+			return;
+		}
+
+		const program = languageService.getProgram()!;
+		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
+		const skipedDefinitions: ts.DefinitionInfo[] = [];
+
+		for (const definition of result.definitions) {
+			if (!definition.fileName.endsWith('.ts')) {
+				continue;
+			}
+
+			const sourceFile = program.getSourceFile(definition.fileName);
+			if (!sourceFile) {
+				continue;
+			}
+
+			visit(sourceFile, definition, sourceFile);
+		}
+
+		for (const definition of skipedDefinitions) {
+			definitions.delete(definition);
+		}
+
+		return {
+			definitions: [...definitions],
+			textSpan: result.textSpan,
+		};
+
+		function visit(
+			node: ts.Node,
+			definition: ts.DefinitionInfo,
+			sourceFile: ts.SourceFile
+		) {
+			if (ts.isPropertySignature(node)) {
+				proxy(node, definition, sourceFile);
+			}
+			else if (ts.isVariableDeclaration(node) && node.type && !node.initializer) {
+				proxy(node, definition, sourceFile);
+			}
+			else {
+				ts.forEachChild(node, child => visit(child, definition, sourceFile));
+			}
+		}
+
+		function proxy(
+			node: ts.PropertySignature | ts.VariableDeclaration,
+			originalDefinition: ts.DefinitionInfo,
+			sourceFile: ts.SourceFile
+		) {
+			const { textSpan, fileName } = originalDefinition;
+			const start = node.name.getStart(sourceFile);
+			const end = node.name.getEnd();
+
+			if (start !== textSpan.start || end - start !== textSpan.length) {
+				return;
+			}
+
+			if (!node.type || !ts.isIndexedAccessTypeNode(node.type)) {
+				return;
+			}
+
+			const pos = node.type.indexType.getStart(sourceFile);
+			const res = getDefinitionAndBoundSpan(fileName, pos);
+			if (res?.definitions?.length) {
+				for (const definition of res.definitions) {
+					definitions.add(definition);
+				}
+				skipedDefinitions.push(originalDefinition);
+			}
+		}
+	}
+}
+
+function getQuickInfoAtPosition(
+	ts: typeof import('typescript'),
+	languageService: ts.LanguageService,
+	getQuickInfoAtPosition: ts.LanguageService['getQuickInfoAtPosition']
+): ts.LanguageService['getQuickInfoAtPosition'] {
 	return (...args) => {
 		const result = getQuickInfoAtPosition(...args);
 		if (result && result.documentation?.length === 1 && result.documentation[0].text.startsWith('__VLS_emit,')) {
