@@ -19,7 +19,7 @@ export function proxyLanguageServiceForVue<T>(
 			case 'getCompletionsAtPosition': return getCompletionsAtPosition(vueOptions, target[p]);
 			case 'getCompletionEntryDetails': return getCompletionEntryDetails(language, asScriptId, target[p]);
 			case 'getCodeFixesAtPosition': return getCodeFixesAtPosition(target[p]);
-			case 'getDefinitionAndBoundSpan': return getDefinitionAndBoundSpan(ts, languageService, target[p]);
+			case 'getDefinitionAndBoundSpan': return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
 			case 'getQuickInfoAtPosition': return getQuickInfoAtPosition(ts, target, target[p]);
 			// TS plugin only
 			case 'getEncodedSemanticClassifications': return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
@@ -148,9 +148,12 @@ function getCodeFixesAtPosition(
 	};
 }
 
-function getDefinitionAndBoundSpan(
+function getDefinitionAndBoundSpan<T>(
 	ts: typeof import('typescript'),
+	language: Language<T>,
 	languageService: ts.LanguageService,
+	vueOptions: VueCompilerOptions,
+	asScriptId: (fileName: string) => T,
 	getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan']
 ): ts.LanguageService['getDefinitionAndBoundSpan'] {
 	return (fileName, position) => {
@@ -160,11 +163,29 @@ function getDefinitionAndBoundSpan(
 		}
 
 		const program = languageService.getProgram()!;
+		const sourceScript = language.scripts.get(asScriptId(fileName));
+		if (!sourceScript?.generated) {
+			return result;
+		}
+
+		const root = sourceScript.generated.root;
+		if (!(root instanceof VueVirtualCode)) {
+			return result;
+		}
+
+		if (
+			!root.sfc.template
+			|| position < root.sfc.template.startTagEnd
+			|| position >= root.sfc.template.endTagStart
+		) {
+			return result;
+		}
+
 		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
 		const skippedDefinitions: ts.DefinitionInfo[] = [];
 
 		for (const definition of result.definitions) {
-			if (!definition.fileName.endsWith('.ts')) {
+			if (!definition.fileName.endsWith('.ts') && !definition.fileName.endsWith('.tsx')) {
 				continue;
 			}
 
@@ -223,7 +244,9 @@ function getDefinitionAndBoundSpan(
 			const res = getDefinitionAndBoundSpan(fileName, pos);
 			if (res?.definitions?.length) {
 				for (const definition of res.definitions) {
-					definitions.add(definition);
+					if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
+						definitions.add(definition);
+					}
 				}
 				skippedDefinitions.push(definition);
 			}
