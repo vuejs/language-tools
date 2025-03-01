@@ -11,7 +11,8 @@ export { VueEmbeddedCode };
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
 	strictTemplates?: boolean;
-	target?: 'auto' | 2 | 2.7 | 3 | 3.3 | 3.5 | 99 | number;
+	target?: 'auto' | 2 | 2.7 | 3 | 3.3 | 3.5 | 99;
+	pluginLoader?: 'jiti';
 	plugins?: string[];
 };
 

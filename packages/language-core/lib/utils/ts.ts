@@ -160,9 +160,18 @@ export class CompilerOptionsResolver {
 	options: Omit<RawVueCompilerOptions, 'target' | 'plugin'> = {};
 	fallbackTarget: number | undefined;
 	target: number | undefined;
+	pluginLoader: (pluginPath: string) => VueLanguagePlugin = require;
 	plugins: VueLanguagePlugin[] = [];
 
 	addConfig(options: RawVueCompilerOptions, rootDir: string) {
+		switch (options.pluginLoader) {
+			case 'jiti': {
+				const createJiti = require('jiti');
+				this.pluginLoader = createJiti(rootDir);
+				break;
+			}
+		}
+
 		for (const key in options) {
 			switch (key) {
 				case 'target':
@@ -176,11 +185,15 @@ export class CompilerOptionsResolver {
 					break;
 				case 'plugins':
 					this.plugins = (options.plugins ?? [])
-						.map<VueLanguagePlugin>((pluginPath: string) => {
+						.map((pluginPath: string) => {
 							try {
 								const resolvedPath = resolvePath(pluginPath, rootDir);
 								if (resolvedPath) {
-									const plugin = require(resolvedPath);
+									let plugin = this.pluginLoader(resolvedPath);
+									if ('default' in plugin) {
+										plugin = plugin.default as VueLanguagePlugin;
+									}
+									// @ts-ignore
 									plugin.__moduleName = pluginPath;
 									return plugin;
 								}
@@ -191,8 +204,8 @@ export class CompilerOptionsResolver {
 							catch (error) {
 								console.warn('[Vue] Resolve plugin path failed:', pluginPath, error);
 							}
-							return [];
-						});
+						})
+						.filter(plugin => !!plugin);
 					break;
 				default:
 					// @ts-expect-error
