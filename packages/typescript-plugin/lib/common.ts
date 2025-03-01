@@ -185,7 +185,7 @@ function getDefinitionAndBoundSpan<T>(
 		const skippedDefinitions: ts.DefinitionInfo[] = [];
 
 		for (const definition of result.definitions) {
-			if (!definition.fileName.endsWith('.ts') && !definition.fileName.endsWith('.tsx')) {
+			if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
 				continue;
 			}
 
@@ -244,9 +244,7 @@ function getDefinitionAndBoundSpan<T>(
 			const res = getDefinitionAndBoundSpan(fileName, pos);
 			if (res?.definitions?.length) {
 				for (const definition of res.definitions) {
-					if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
-						definitions.add(definition);
-					}
+					definitions.add(definition);
 				}
 				skippedDefinitions.push(definition);
 			}
