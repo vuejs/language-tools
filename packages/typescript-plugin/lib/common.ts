@@ -156,12 +156,12 @@ function getDefinitionAndBoundSpan(
 	return (fileName, position) => {
 		const result = getDefinitionAndBoundSpan(fileName, position);
 		if (!result?.definitions?.length) {
-			return;
+			return result;
 		}
 
 		const program = languageService.getProgram()!;
 		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
-		const skipedDefinitions: ts.DefinitionInfo[] = [];
+		const skippedDefinitions: ts.DefinitionInfo[] = [];
 
 		for (const definition of result.definitions) {
 			if (!definition.fileName.endsWith('.ts')) {
@@ -176,7 +176,7 @@ function getDefinitionAndBoundSpan(
 			visit(sourceFile, definition, sourceFile);
 		}
 
-		for (const definition of skipedDefinitions) {
+		for (const definition of skippedDefinitions) {
 			definitions.delete(definition);
 		}
 
@@ -224,7 +224,7 @@ function getDefinitionAndBoundSpan(
 				for (const definition of res.definitions) {
 					definitions.add(definition);
 				}
-				skipedDefinitions.push(originalDefinition);
+				skippedDefinitions.push(originalDefinition);
 			}
 		}
 	}
