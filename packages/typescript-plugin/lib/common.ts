@@ -190,11 +190,11 @@ function getDefinitionAndBoundSpan(
 			definition: ts.DefinitionInfo,
 			sourceFile: ts.SourceFile
 		) {
-			if (ts.isPropertySignature(node)) {
-				proxy(node, definition, sourceFile);
+			if (ts.isPropertySignature(node) && node.type) {
+				proxy(node.name, node.type, definition, sourceFile);
 			}
-			else if (ts.isVariableDeclaration(node) && node.type && !node.initializer) {
-				proxy(node, definition, sourceFile);
+			else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type && !node.initializer) {
+				proxy(node.name, node.type, definition, sourceFile);
 			}
 			else {
 				ts.forEachChild(node, child => visit(child, definition, sourceFile));
@@ -202,23 +202,24 @@ function getDefinitionAndBoundSpan(
 		}
 
 		function proxy(
-			node: ts.PropertySignature | ts.VariableDeclaration,
+			name: ts.PropertyName,
+			type: ts.TypeNode,
 			originalDefinition: ts.DefinitionInfo,
 			sourceFile: ts.SourceFile
 		) {
 			const { textSpan, fileName } = originalDefinition;
-			const start = node.name.getStart(sourceFile);
-			const end = node.name.getEnd();
+			const start = name.getStart(sourceFile);
+			const end = name.getEnd();
 
 			if (start !== textSpan.start || end - start !== textSpan.length) {
 				return;
 			}
 
-			if (!node.type || !ts.isIndexedAccessTypeNode(node.type)) {
+			if (!ts.isIndexedAccessTypeNode(type)) {
 				return;
 			}
 
-			const pos = node.type.indexType.getStart(sourceFile);
+			const pos = type.indexType.getStart(sourceFile);
 			const res = getDefinitionAndBoundSpan(fileName, pos);
 			if (res?.definitions?.length) {
 				for (const definition of res.definitions) {
