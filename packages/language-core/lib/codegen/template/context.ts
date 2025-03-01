@@ -242,6 +242,11 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 				yield endOfLine;
 			}
 		},
+		generateConditionGuards: function* () {
+			for (const condition of blockConditions) {
+				yield `if (!${condition}) return${endOfLine}`;
+			}
+		},
 		ignoreError: function* (): Generator<Code> {
 			if (!ignoredError) {
 				ignoredError = true;
