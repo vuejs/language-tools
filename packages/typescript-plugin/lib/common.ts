@@ -19,8 +19,8 @@ export function proxyLanguageServiceForVue<T>(
 			case 'getCompletionsAtPosition': return getCompletionsAtPosition(vueOptions, target[p]);
 			case 'getCompletionEntryDetails': return getCompletionEntryDetails(language, asScriptId, target[p]);
 			case 'getCodeFixesAtPosition': return getCodeFixesAtPosition(target[p]);
-			case 'getQuickInfoAtPosition': return getQuickInfoAtPosition(ts, target, target[p]);
 			case 'getDefinitionAndBoundSpan': return getDefinitionAndBoundSpan(ts, languageService, target[p]);
+			case 'getQuickInfoAtPosition': return getQuickInfoAtPosition(ts, target, target[p]);
 			// TS plugin only
 			case 'getEncodedSemanticClassifications': return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
 		}
