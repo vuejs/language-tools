@@ -2,6 +2,26 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.2.6 <sup>official</sup>, 2.2.7 <sup>insiders</sup> (2025-03-01)
+
+### Features
+
+- feat(language-core): infer prop JSDoc from `defineModel`'s leading comments (#5211) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(language-core): map camelized prop name correctly (#5207) - Thanks to @KazariEX!
+- fix(component-meta): resolve `defineModel` options to collect `default` value (#5209) - Thanks to @KazariEX!
+- fix(language-core): avoid duplicate generation of `defineExpose`'s codes - Thanks to @KazariEX!
+- fix(language-core): generate camelized prop name for `defineModel` (#5213) - Thanks to @KazariEX!
+- fix(language-core): validate `v-model` variable against model type (#5214) - Thanks to @KazariEX!
+- fix(language-core): use keywords instead of semicolons to separate script sections (#5217) - Thanks to @KazariEX!
+
+### Other Changes
+
+- ci: auto close issues with `can't reproduce` label - Thanks to @KazariEX!
+- refactor(language-core): defer the calculation of `linkedCodeMappings` offsets (#5220) - Thanks to @KazariEX!
+
 ## 2.2.4 <sup>official</sup>, 2.2.5 <sup>insiders</sup> (2025-02-22)
 
 ### Features
