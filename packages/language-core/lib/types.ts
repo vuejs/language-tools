@@ -29,6 +29,7 @@ export interface VueCompilerOptions {
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
 	jsxSlots: boolean;
+	strictVModel: boolean;
 	checkUnknownProps: boolean;
 	checkUnknownEvents: boolean;
 	checkUnknownDirectives: boolean;

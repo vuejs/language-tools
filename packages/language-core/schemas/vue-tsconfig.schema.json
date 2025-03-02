@@ -45,6 +45,11 @@
 					"default": false,
 					"markdownDescription": "Strict props, component type-checking in templates."
 				},
+				"strictVModel": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Strict `v-model` type-checking. If not set, uses the 'strictTemplates' value."
+				},
 				"checkUnknownProps": {
 					"type": "boolean",
 					"default": false,
