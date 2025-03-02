@@ -41,7 +41,6 @@ export function* generateElementEvents(
 				yield `let ${eventsVar}!: __VLS_NormalizeEmits<typeof ${emitVar}>${endOfLine}`;
 				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentFunctionalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 			}
-
 			let source = prop.arg?.loc.source ?? 'model-value';
 			let start = prop.arg?.loc.start.offset;
 			let propPrefix = 'on-';
@@ -56,7 +55,6 @@ export function* generateElementEvents(
 				propPrefix = 'onVnode-';
 				emitPrefix = 'vnode-';
 			}
-
 			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${camelize(propPrefix + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => ({${newLine}`;
 			if (prop.name === 'on') {
 				yield* generateEventArg(ctx, source, start!, propPrefix.slice(0, -1));

@@ -2,6 +2,12 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.2.8 <sup>official</sup>, 2.2.9 <sup>insiders</sup> (2025-03-02)
+
+### Bug Fixes
+
+- revert "fix(language-core): validate `v-model` variable against model type"
+
 ## 2.2.6 <sup>official</sup>, 2.2.7 <sup>insiders</sup> (2025-03-01)
 
 ### Features
