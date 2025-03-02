@@ -11,7 +11,7 @@ export default defineComponent({
 </script>
 
 <script setup lang="ts">
-let foo!: number | undefined;
+let foo!: number;
 </script>
 
 <template>
