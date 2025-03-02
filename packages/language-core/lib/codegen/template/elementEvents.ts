@@ -25,8 +25,11 @@ export function* generateElementEvents(
 		if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& (
-				prop.name === 'on' && (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
-				|| prop.name === 'model' && (!prop.arg || prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+				prop.name === 'on'
+					&& (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+				|| options.vueCompilerOptions.strictVModel
+					&& prop.name === 'model'
+					&& (!prop.arg || prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 			)
 		) {
 			ctx.currentComponent!.used = true;
