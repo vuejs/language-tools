@@ -1,16 +1,12 @@
 <script setup lang="ts">
 import Comp from './comp.vue';
 
-let foo!: {
-    bar?: number;
-}
+let foo!: number;
+let bar!: number | undefined;
 </script>
 
 <template>
-    <!-- @vue-expect-error -->
-    <Comp v-model:foo="foo.bar" />
-
-    <!-- @vue-expect-error -->
-    <Comp v-model:bar="foo.bar" />
-    <Comp v-if="foo.bar" v-model:bar="foo.bar" />
+	<!-- @vue-expect-error -->
+	<Comp :bar="0" v-model:foo="foo" />
+	<Comp v-if="bar" v-model:bar="bar" />
 </template>
