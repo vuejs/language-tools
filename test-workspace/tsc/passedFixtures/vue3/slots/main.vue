@@ -30,7 +30,6 @@
 <script lang="ts">
 export default {
 	name: 'Self',
-	slots: Object as SlotsType<{ foo?: (props: any) => any }>,
 };
 
 declare const Comp: new <T>(props: { value: T; }) => {
@@ -42,15 +41,15 @@ declare const Comp: new <T>(props: { value: T; }) => {
 </script>
 
 <script lang="ts" setup>
-import { ref, type SlotsType, useSlots, type VNode } from 'vue';
+import { ref, useSlots, type VNode } from 'vue';
 import { exactType } from '../../shared';
 
 const baz = ref('baz' as const);
 
 const slots = useSlots();
 exactType(slots, {} as {
-	readonly foo?: (props: any) => any;
 	bar?: (props: { str: string; num: number; }) => any;
+} & {
 	baz?: (props: { str: string; num: number; }) => any;
 });
 </script>
