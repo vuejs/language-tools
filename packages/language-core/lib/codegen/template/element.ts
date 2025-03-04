@@ -188,22 +188,21 @@ export function* generateComponent(
 				}
 			}
 			yield `]} */${endOfLine}`;
+
 			// auto import support
-			if (options.edited) {
-				yield `// @ts-ignore${newLine}`; // #2304
-				yield* generateCamelized(
-					capitalize(node.tag),
-					'template',
-					tagOffsets[0],
-					{
-						completion: {
-							isAdditional: true,
-							onlyImport: true,
-						},
-					}
-				);
-				yield `${endOfLine}`;
-			}
+			yield `// @ts-ignore${newLine}`; // #2304
+			yield* generateCamelized(
+				capitalize(node.tag),
+				'template',
+				tagOffsets[0],
+				{
+					completion: {
+						isAdditional: true,
+						onlyImport: true,
+					},
+				}
+			);
+			yield `${endOfLine}`;
 		}
 	}
 	else {

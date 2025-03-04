@@ -18,7 +18,6 @@ export interface ScriptCodegenOptions {
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	sfc: Sfc;
-	edited: boolean;
 	fileName: string;
 	lang: string;
 	scriptRanges: ScriptRanges | undefined;
@@ -128,9 +127,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	}
 
-	if (options.edited) {
-		yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
-	}
+	yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
 	yield* ctx.localTypes.generate([...ctx.localTypes.getUsedNames()]);
 	if (options.appendGlobalTypes) {
 		yield generateGlobalTypes(options.vueCompilerOptions);
