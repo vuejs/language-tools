@@ -28,9 +28,6 @@ export async function getLanguageServer(): Promise<LanguageServerHandle> {
 					tsdk: path.dirname(require.resolve('typescript/lib/typescript.js')),
 					disableAutoImportCache: true,
 				},
-				vue: {
-					hybridMode: false,
-				},
 			},
 			{
 				workspace: {

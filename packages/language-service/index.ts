@@ -50,16 +50,10 @@ declare module '@volar/language-service' {
 	}
 }
 
-export function getFullLanguageServicePlugins(
-	ts: typeof import('typescript'),
-	{ disableAutoImportCache }: { disableAutoImportCache?: boolean; } = {}
-) {
+export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 	const plugins: LanguageServicePlugin[] = [
-		...createTypeScriptPlugins(ts, { disableAutoImportCache }),
-		...getCommonLanguageServicePlugins(
-			ts,
-			getTsPluginClientForLSP
-		)
+		...createTypeScriptPlugins(ts),
+		...getCommonLanguageServicePlugins(ts, getTsPluginClientForLSP),
 	];
 	for (let i = 0; i < plugins.length; i++) {
 		const plugin = plugins[i];
