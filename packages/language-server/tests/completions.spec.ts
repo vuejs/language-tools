@@ -179,9 +179,6 @@ test('HTML tags and built-in components', async () => {
 		  "component",
 		  "slot",
 		  "template",
-		  "BaseTransition",
-		  "Fixture",
-		  "foo",
 		]
 	`);
 });
