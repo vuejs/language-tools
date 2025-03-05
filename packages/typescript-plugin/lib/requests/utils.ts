@@ -52,11 +52,11 @@ export function getVariableType(
 ) {
 	const program = languageService.getProgram()!;
 
-	let tsSourceFile: ts.SourceFile | undefined;
-	if (tsSourceFile = program.getSourceFile(vueCode.fileName)) {
+	const tsSourceFile = program.getSourceFile(vueCode.fileName)
+	if (tsSourceFile) {
 		const node = searchVariableDeclarationNode(ts, tsSourceFile, name);
-		const checker = program.getTypeChecker();
-		if (checker && node) {
+		if (node) {
+			const checker = program.getTypeChecker();
 			return {
 				node: node,
 				type: checker.getTypeAtLocation(node),
@@ -70,16 +70,16 @@ function searchVariableDeclarationNode(
 	sourceFile: ts.SourceFile,
 	name: string
 ) {
-	let componentsNode: ts.Node | undefined;
+	let result: ts.Node | undefined;
 	walk(sourceFile);
-	return componentsNode;
+	return result;
 
 	function walk(node: ts.Node) {
-		if (componentsNode) {
+		if (result) {
 			return;
 		}
 		else if (ts.isVariableDeclaration(node) && node.name.getText() === name) {
-			componentsNode = node;
+			result = node;
 		}
 		else {
 			node.forEachChild(walk);
