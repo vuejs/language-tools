@@ -320,7 +320,7 @@ export function* generateElement(
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
 
-	yield `__VLS_asFunctionalElement(__VLS_intrinsicElements`;
+	yield `__VLS_asFunctionalElement(__VLS_elements`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
@@ -329,7 +329,7 @@ export function* generateElement(
 		ctx.codeFeatures.withoutHighlightAndCompletion
 	);
 	if (endTagOffset !== undefined) {
-		yield `, __VLS_intrinsicElements`;
+		yield `, __VLS_elements`;
 		yield* generatePropertyAccess(
 			options,
 			ctx,
@@ -376,7 +376,7 @@ export function* generateElement(
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
-		ctx.inheritedAttrVars.add(`__VLS_intrinsicElements.${node.tag}`);
+		ctx.inheritedAttrVars.add(`__VLS_elements.${node.tag}`);
 	}
 
 	collectStyleScopedClassReferences(options, ctx, node);

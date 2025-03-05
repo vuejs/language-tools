@@ -127,7 +127,6 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 	}
 
-	yield `type __VLS_IntrinsicElementsCompletion = __VLS_IntrinsicElements${endOfLine}`;
 	yield* ctx.localTypes.generate([...ctx.localTypes.getUsedNames()]);
 	if (options.appendGlobalTypes) {
 		yield generateGlobalTypes(options.vueCompilerOptions);
