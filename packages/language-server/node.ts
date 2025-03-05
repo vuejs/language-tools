@@ -37,31 +37,31 @@ connection.onInitialize(params => {
 		),
 		getHybridModeLanguageServicePlugins(ts, {
 			collectExtractProps(...args) {
-				return connection.sendRequest(options.typescript.serverProxy, ['vue:collectExtractProps', args]);
+				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:collectExtractProps', args]);
 			},
 			getComponentDirectives(...args) {
-				return connection.sendRequest(options.typescript.serverProxy, ['vue:getComponentDirectives', args]);
+				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getComponentDirectives', args]);
 			},
 			getComponentEvents(...args) {
-				return connection.sendRequest(options.typescript.serverProxy, ['vue:getComponentEvents', args]);
+				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getComponentEvents', args]);
 			},
 			getComponentsNames(...args) {
-				return connection.sendRequest(options.typescript.serverProxy, ['vue:getComponentsNames', args]);
+				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getComponentsNames', args]);
 			},
 			getComponentProps(...args) {
-				return connection.sendRequest(options.typescript.serverProxy, ['vue:getComponentProps', args]);
+				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getComponentProps', args]);
 			},
 			getElementAttrs(...args) {
-				return connection.sendRequest(options.typescript.serverProxy, ['vue:getElementAttrs', args]);
+				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getElementAttrs', args]);
 			},
 			getImportPathForFile(...args) {
-				return connection.sendRequest(options.typescript.serverProxy, ['vue:getImportPathForFile', args]);
+				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getImportPathForFile', args]);
 			},
 			getPropertiesAtLocation(...args) {
-				return connection.sendRequest(options.typescript.serverProxy, ['vue:getPropertiesAtLocation', args]);
+				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getPropertiesAtLocation', args]);
 			},
 			getQuickInfoAtPosition(...args) {
-				return connection.sendRequest(options.typescript.serverProxy, ['vue:getQuickInfoAtPosition', args]);
+				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getQuickInfoAtPosition', args]);
 			},
 		})
 	);

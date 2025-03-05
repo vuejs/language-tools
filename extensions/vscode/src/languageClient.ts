@@ -109,7 +109,7 @@ async function getInitializationOptions(context: vscode.ExtensionContext): Promi
 	return {
 		typescript: {
 			tsdk: (await lsp.getTsdk(context))!.tsdk,
-			serverProxy: 'tsserverRequest',
+			requestForwardingCommand: 'forwardingTsRequest',
 		},
 	};
 }
