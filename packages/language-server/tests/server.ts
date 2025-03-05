@@ -20,62 +20,18 @@ export async function getLanguageServer(): Promise<{
 }> {
 	if (!serverHandle) {
 		tsserver = launchServer(
-			path.join(__dirname, "..", "..", "..", "node_modules", "typescript", "lib", "tsserver.js"),
-			// Arguments to tsserver.js
+			path.join(__dirname, '..', '..', '..', 'node_modules', 'typescript', 'lib', 'tsserver.js'),
 			[
-				"--globalPlugins", "@vue/typescript-plugin",
+				'--disableAutomaticTypingAcquisition',
+				'--globalPlugins', '@vue/typescript-plugin',
+				'--suppressDiagnosticEvents',
+				// '--logVerbosity', 'verbose',
+				// '--logFile', path.join(__dirname, 'tsserver.log'),
+			]
+		);
 
-				// ATA generates some extra network traffic and isn't usually relevant when profiling
-				"--disableAutomaticTypingAcquisition",
-
-				// Enable this if you're emulating VS
-				"--suppressDiagnosticEvents",
-
-				// // Produce a performance trace
-				// "--traceDirectory", path.join(__dirname, "traces"),
-
-				// // Produce a server log
-				// "--logVerbosity", "verbose",
-				// "--logFile", path.join(__dirname, "tsserver.log"),
-			],
-			// Arguments to node
-			[
-				// Enable this to debug the server process (not the driver process)
-				// "--inspect-brk=9230",
-
-				// Generate time and heap profiles (see https://github.com/jakebailey/pprof-it for config options)
-				// Disable logging if profiling - their cleanup handlers conflict
-				// Disable tracing if profiling - it causes unrealistic slowdowns
-				// `--require=${path.join(__dirname, "node_modules", "pprof-it", "dist", "index.js")}`,
-
-				// Increasing the heap size is just generally a good idea
-				"--max-old-space-size=4096",
-
-				// This will enable some GC output in the server log
-				"--expose-gc"
-			],
-			// Environment variables for server process (mostly useful for pprof-it)
-			{
-				"PPROF_OUT": path.join(__dirname, "profiles")
-			});
-
-		tsserver.on("exit", code => console.log(code ? `Exited with code ${code}` : `Terminated`));
-		tsserver.on("event", e => console.log(e));
-
-		// Always start with a `configure` message (possibly preceded by `status` if emulating VS)
-		await tsserver.message({
-			seq: seq++,
-			type: 'request',
-			command: 'configure',
-			arguments: {
-				preferences: {
-					includePackageJsonAutoImports: 'auto'
-				},
-				watchOptions: {
-					excludeDirectories: ['**/node_modules']
-				}
-			}
-		});
+		tsserver.on('exit', code => console.log(code ? `Exited with code ${code}` : `Terminated`));
+		// tsserver.on('event', e => console.log(e));
 
 		serverHandle = startLanguageServer(require.resolve('../bin/vue-language-server.js'), testWorkspacePath);
 		serverHandle.connection.onNotification(PublishDiagnosticsNotification.type, () => { });
@@ -88,7 +44,6 @@ export async function getLanguageServer(): Promise<{
 			});
 		});
 		serverHandle.connection.onRequest('executeTsserverCommand', (command, args) => {
-			console.log('!!!', command);
 			return tsserver.message({
 				seq: seq++,
 				type: 'request',
@@ -118,19 +73,18 @@ export async function getLanguageServer(): Promise<{
 		nextSeq: () => seq++,
 		open: async (uri: string, languageId: string, content: string) => {
 			const res = await tsserver.message({
-				"seq": seq++,
-				"type": "request",
-				"command": "updateOpen",
-				"arguments": {
-					"changedFiles": [],
-					"closedFiles": [],
-					"openFiles": [
+				seq: seq++,
+				type: 'request',
+				command: 'updateOpen',
+				arguments: {
+					changedFiles: [],
+					closedFiles: [],
+					openFiles: [
 						{
-							"file": URI.parse(uri).fsPath,
-							"fileContent": content,
-							"projectRootPath": path.resolve(testWorkspacePath, './tsconfigProject'),
-							// "scriptKindName": "TS", // It's easy to get this wrong when copy-pasting
-							"plugins": ["@vue/typescript-plugin"],
+							file: URI.parse(uri).fsPath,
+							fileContent: content,
+							projectRootPath: path.resolve(testWorkspacePath, './tsconfigProject'),
+							plugins: ['@vue/typescript-plugin'],
 						}
 					]
 				}
@@ -147,13 +101,13 @@ export async function getLanguageServer(): Promise<{
 		},
 		close: async (uri: string) => {
 			const res = await tsserver.message({
-				"seq": seq++,
-				"type": "request",
-				"command": "updateOpen",
-				"arguments": {
-					"changedFiles": [],
-					"closedFiles": [URI.parse(uri).fsPath],
-					"openFiles": []
+				seq: seq++,
+				type: 'request',
+				command: 'updateOpen',
+				arguments: {
+					changedFiles: [],
+					closedFiles: [URI.parse(uri).fsPath],
+					openFiles: []
 				}
 			});
 			if (!res.success) {
