@@ -43,21 +43,12 @@ export async function getLanguageServer(): Promise<{
 				return null;
 			});
 		});
-		serverHandle.connection.onRequest('executeTsserverCommand', (command, args) => {
-			return tsserver.message({
-				seq: seq++,
-				type: 'request',
-				command: command,
-				arguments: args,
-			});
-		});
 
 		await serverHandle.initialize(
 			URI.file(testWorkspacePath).toString(),
 			{
 				typescript: {
 					tsdk: path.dirname(require.resolve('typescript/lib/typescript.js')),
-					serverProxyCommand: 'executeTsserverCommand',
 				},
 			},
 			{
