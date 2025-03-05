@@ -31,3 +31,15 @@ export function _getComponentNames(
 	names.push(getSelfComponentName(vueCode.fileName));
 	return names;
 }
+
+export function _getElementNames(
+	ts: typeof import('typescript'),
+	tsLs: ts.LanguageService,
+	vueCode: VueVirtualCode
+) {
+	return getVariableType(ts, tsLs, vueCode, '__VLS_elements')
+		?.type
+		?.getProperties()
+		.map(c => c.name)
+		?? [];
+}

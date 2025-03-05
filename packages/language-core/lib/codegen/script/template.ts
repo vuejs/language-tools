@@ -20,6 +20,7 @@ export function* generateTemplate(
 		scriptSetupBindingNames: new Set(),
 	});
 	yield* generateTemplateCtx(options);
+	yield* generateTemplateElements();
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, templateCodegenCtx);
@@ -52,6 +53,10 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 		}
 		yield `}${endOfLine}`;
 	}
+}
+
+function* generateTemplateElements(): Generator<Code> {
+	yield `let __VLS_elements!: __VLS_IntrinsicElements${endOfLine}`;
 }
 
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {

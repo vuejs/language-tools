@@ -1,6 +1,6 @@
 import { VueVirtualCode } from '@vue/language-core';
-import type * as ts from 'typescript';
 import type { RequestContext } from './types';
+import { getVariableType } from './utils';
 
 export function getElementAttrs(
 	this: RequestContext,
@@ -12,46 +12,20 @@ export function getElementAttrs(
 	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
 		return;
 	}
+	const vueCode = volarFile.generated.root;
+
 	const program = languageService.getProgram()!;
-
-	const tsSourceFile = program.getSourceFile(fileName);
-	if (tsSourceFile) {
-		const checker = program.getTypeChecker();
-		const typeNode = tsSourceFile.statements
-			.filter(ts.isTypeAliasDeclaration)
-			.find(node => node.name.getText() === '__VLS_IntrinsicElementsCompletion');
-
-		if (typeNode) {
-			const type = checker.getTypeFromTypeNode(typeNode.type);
-			const el = type.getProperty(tagName);
-
-			if (el) {
-				const attrs = checker.getTypeOfSymbolAtLocation(el, typeNode).getProperties();
-				return attrs.map(c => c.name);
-			}
-		}
+	const checker = program.getTypeChecker();
+	const elements = getVariableType(ts, languageService, vueCode, '__VLS_elements');
+	if (!elements) {
+		return [];
 	}
-	return [];
-}
 
-export function _getElementNames(
-	ts: typeof import('typescript'),
-	tsLs: ts.LanguageService,
-	vueCode: VueVirtualCode
-) {
-	const program = tsLs.getProgram()!;
-
-	const tsSourceFile = program.getSourceFile(vueCode.fileName);
-	if (tsSourceFile) {
-		const checker = program.getTypeChecker();
-		const typeNode = tsSourceFile.statements
-			.filter(ts.isTypeAliasDeclaration)
-			.find(node => node.name.getText() === '__VLS_IntrinsicElementsCompletion');
-
-		if (typeNode) {
-			const type = checker.getTypeFromTypeNode(typeNode.type);
-			return type.getProperties().map(c => c.name);
-		}
+	const elementType = elements.type.getProperty(tagName);
+	if (!elementType) {
+		return [];
 	}
-	return [];
+
+	const attrs = checker.getTypeOfSymbol(elementType).getProperties();
+	return attrs.map(c => c.name);
 }
