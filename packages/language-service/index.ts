@@ -33,8 +33,8 @@ import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
 import { getComponentDirectives } from '@vue/typescript-plugin/lib/requests/getComponentDirectives';
 import { getComponentEvents } from '@vue/typescript-plugin/lib/requests/getComponentEvents';
-import { getComponentNames } from '@vue/typescript-plugin/lib/requests/getComponentNames';
 import { getComponentProps } from '@vue/typescript-plugin/lib/requests/getComponentProps';
+import { getComponentsNames } from '@vue/typescript-plugin/lib/requests/getComponentsNames';
 import { getElementAttrs } from '@vue/typescript-plugin/lib/requests/getElementAttrs';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
@@ -88,7 +88,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 	}
 	return plugins;
 
-	function getTsPluginClientForLSP(context: LanguageServiceContext): typeof import('@vue/typescript-plugin/lib/client') | undefined {
+	function getTsPluginClientForLSP(context: LanguageServiceContext): import('@vue/typescript-plugin/lib/requests').Requests | undefined {
 		if (!context.project.typescript) {
 			return;
 		}
@@ -120,8 +120,8 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 			async getComponentDirectives(...args) {
 				return await getComponentDirectives.apply(requestContext, args);
 			},
-			async getComponentNames(...args) {
-				return await getComponentNames.apply(requestContext, args);
+			async getComponentsNames(...args) {
+				return await getComponentsNames.apply(requestContext, args);
 			},
 			async getComponentProps(...args) {
 				return await getComponentProps.apply(requestContext, args);
@@ -168,7 +168,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 
 export function getHybridModeLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	getTsPluginClient: typeof import("@vue/typescript-plugin/lib/client")
+	getTsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests
 ) {
 	const plugins = [
 		createTypeScriptSyntacticPlugin(ts),
@@ -184,7 +184,7 @@ export function getHybridModeLanguageServicePlugins(
 
 function getCommonLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	getTsPluginClient: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin[] {
 	return [
 		createTypeScriptTwoslashQueriesPlugin(ts),

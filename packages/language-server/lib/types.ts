@@ -1,6 +1,7 @@
 export type VueInitializationOptions = {
 	typescript: {
 		tsdk: string;
+		serverProxy: string;
 	};
 };
 

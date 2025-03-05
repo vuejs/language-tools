@@ -1,7 +1,6 @@
 import { createConnection, createServer, loadTsdkByPath } from '@volar/language-server/node';
-import { createParsedCommandLine, createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
+import { createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
 import { getHybridModeLanguageServicePlugins } from '@vue/language-service';
-import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
 import { createHybridModeProject } from './lib/hybridModeProject';
 import type { VueInitializationOptions } from './lib/types';
 
@@ -16,20 +15,18 @@ connection.onInitialize(params => {
 	return server.initialize(
 		params,
 		createHybridModeProject(
-			({ asFileName, configFileName }) => {
-				const commandLine = configFileName
-					? createParsedCommandLine(ts, ts.sys, configFileName)
-					: {
-						vueOptions: getDefaultCompilerOptions(),
-						options: ts.getDefaultCompilerOptions(),
-					};
+			() => {
+				const commandLine = {
+					vueOptions: getDefaultCompilerOptions(),
+					options: ts.getDefaultCompilerOptions(),
+				};
 				return {
 					languagePlugins: [
 						createVueLanguagePlugin(
 							ts,
 							commandLine.options,
 							commandLine.vueOptions,
-							asFileName
+							uri => uri.fsPath.replace(/\\/g, '/')
 						),
 					],
 					setup({ project }) {
@@ -38,7 +35,35 @@ connection.onInitialize(params => {
 				};
 			}
 		),
-		getHybridModeLanguageServicePlugins(ts, namedPipeClient)
+		getHybridModeLanguageServicePlugins(ts, {
+			collectExtractProps(...args) {
+				return connection.sendRequest(options.typescript.serverProxy, ['vue:collectExtractProps', args]);
+			},
+			getComponentDirectives(...args) {
+				return connection.sendRequest(options.typescript.serverProxy, ['vue:getComponentDirectives', args]);
+			},
+			getComponentEvents(...args) {
+				return connection.sendRequest(options.typescript.serverProxy, ['vue:getComponentEvents', args]);
+			},
+			getComponentsNames(...args) {
+				return connection.sendRequest(options.typescript.serverProxy, ['vue:getComponentsNames', args]);
+			},
+			getComponentProps(...args) {
+				return connection.sendRequest(options.typescript.serverProxy, ['vue:getComponentProps', args]);
+			},
+			getElementAttrs(...args) {
+				return connection.sendRequest(options.typescript.serverProxy, ['vue:getElementAttrs', args]);
+			},
+			getImportPathForFile(...args) {
+				return connection.sendRequest(options.typescript.serverProxy, ['vue:getImportPathForFile', args]);
+			},
+			getPropertiesAtLocation(...args) {
+				return connection.sendRequest(options.typescript.serverProxy, ['vue:getPropertiesAtLocation', args]);
+			},
+			getQuickInfoAtPosition(...args) {
+				return connection.sendRequest(options.typescript.serverProxy, ['vue:getQuickInfoAtPosition', args]);
+			},
+		})
 	);
 });
 

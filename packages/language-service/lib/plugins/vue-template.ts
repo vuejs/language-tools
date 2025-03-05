@@ -39,7 +39,7 @@ let modelData: html.HTMLDataV1;
 export function create(
 	mode: 'html' | 'pug',
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
@@ -236,7 +236,7 @@ export function create(
 
 					// visualize missing required props
 					const casing = await getNameCasing(context, decoded[0]);
-					const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+					const components = await tsPluginClient?.getComponentsNames(root.fileName) ?? [];
 					const componentProps: Record<string, string[]> = {};
 					let token: html.TokenType;
 					let current: {
@@ -507,7 +507,7 @@ export function create(
 						provideTags: () => {
 							if (!components) {
 								promises.push((async () => {
-									components = (await tsPluginClient?.getComponentNames(vueCode.fileName) ?? [])
+									components = (await tsPluginClient?.getComponentsNames(vueCode.fileName) ?? [])
 										.filter(name =>
 											name !== 'Transition'
 											&& name !== 'TransitionGroup'

@@ -11,7 +11,7 @@ export async function convertTagName(
 	context: LanguageServiceContext,
 	uri: URI,
 	casing: TagNameCasing,
-	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client') | undefined
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ) {
 
 	const sourceFile = context.language.scripts.get(uri);
@@ -31,7 +31,7 @@ export async function convertTagName(
 
 	const document = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+	const components = await tsPluginClient?.getComponentsNames(root.fileName) ?? [];
 	const tags = getTemplateTagsAndAttrs(root);
 
 	for (const [tagName, { offsets }] of tags) {
@@ -58,7 +58,7 @@ export async function convertAttrName(
 	context: LanguageServiceContext,
 	uri: URI,
 	casing: AttrNameCasing,
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client')
+	tsPluginClient?: import('@vue/typescript-plugin/lib/requests').Requests
 ) {
 
 	const sourceFile = context.language.scripts.get(uri);
@@ -78,7 +78,7 @@ export async function convertAttrName(
 
 	const document = context.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+	const components = await tsPluginClient?.getComponentsNames(root.fileName) ?? [];
 	const tags = getTemplateTagsAndAttrs(root);
 
 	for (const [tagName, { attrs }] of tags) {
