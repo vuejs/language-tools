@@ -1,7 +1,7 @@
 import { forEachElementNode, hyphenateTag, Language, VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import { _getComponentsNames } from './requests/getComponentsNames';
+import { _getComponentNames } from './requests/getComponentNames';
 import type { RequestContext } from './requests/types';
 
 const windowsPathReg = /\\/g;
@@ -343,7 +343,7 @@ export function getComponentSpans(
 ) {
 	const { typescript: ts, languageService } = this;
 	const result: ts.TextSpan[] = [];
-	const validComponentNames = _getComponentsNames(ts, languageService, vueCode);
+	const validComponentNames = _getComponentNames(ts, languageService, vueCode);
 	const components = new Set([
 		...validComponentNames,
 		...validComponentNames.map(hyphenateTag),

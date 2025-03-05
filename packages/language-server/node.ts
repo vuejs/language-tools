@@ -45,8 +45,8 @@ connection.onInitialize(params => {
 			getComponentEvents(...args) {
 				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getComponentEvents', args]);
 			},
-			getComponentsNames(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getComponentsNames', args]);
+			getComponentNames(...args) {
+				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getComponentNames', args]);
 			},
 			getComponentProps(...args) {
 				return connection.sendRequest(options.typescript.requestForwardingCommand, ['vue:getComponentProps', args]);

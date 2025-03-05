@@ -3,7 +3,7 @@ import type * as ts from 'typescript';
 import type { RequestContext } from './types';
 import { getSelfComponentName, getVariableType } from './utils';
 
-export function getComponentsNames(
+export function getComponentNames(
 	this: RequestContext,
 	fileName: string
 ) {
@@ -13,10 +13,10 @@ export function getComponentsNames(
 		return;
 	}
 	const vueCode = volarFile.generated.root;
-	return _getComponentsNames(ts, languageService, vueCode);
+	return _getComponentNames(ts, languageService, vueCode);
 }
 
-export function _getComponentsNames(
+export function _getComponentNames(
 	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
 	vueCode: VueVirtualCode

@@ -5,7 +5,7 @@ export type Requests = {
 	getImportPathForFile: ToRequest<typeof import('./getImportPathForFile.js')['getImportPathForFile']>;
 	getPropertiesAtLocation: ToRequest<typeof import('./getPropertiesAtLocation.js')['getPropertiesAtLocation']>;
 	getQuickInfoAtPosition: ToRequest<typeof import('./getQuickInfoAtPosition.js')['getQuickInfoAtPosition']>;
-	getComponentsNames: ToRequest<typeof import('./getComponentsNames.js')['getComponentsNames']>;
+	getComponentNames: ToRequest<typeof import('./getComponentNames.js')['getComponentNames']>;
 	getComponentProps: ToRequest<typeof import('./getComponentProps.js')['getComponentProps']>;
 	getComponentEvents: ToRequest<typeof import('./getComponentEvents.js')['getComponentEvents']>;
 	getComponentDirectives: ToRequest<typeof import('./getComponentDirectives.js')['getComponentDirectives']>;

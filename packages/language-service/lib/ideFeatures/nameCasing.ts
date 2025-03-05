@@ -31,7 +31,7 @@ export async function convertTagName(
 
 	const document = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient?.getComponentsNames(root.fileName) ?? [];
+	const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
 	const tags = getTemplateTagsAndAttrs(root);
 
 	for (const [tagName, { offsets }] of tags) {
@@ -78,7 +78,7 @@ export async function convertAttrName(
 
 	const document = context.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient?.getComponentsNames(root.fileName) ?? [];
+	const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
 	const tags = getTemplateTagsAndAttrs(root);
 
 	for (const [tagName, { attrs }] of tags) {

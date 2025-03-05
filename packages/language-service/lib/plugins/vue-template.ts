@@ -236,7 +236,7 @@ export function create(
 
 					// visualize missing required props
 					const casing = await getNameCasing(context, decoded[0]);
-					const components = await tsPluginClient?.getComponentsNames(root.fileName) ?? [];
+					const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
 					const componentProps: Record<string, string[]> = {};
 					let token: html.TokenType;
 					let current: {
@@ -507,7 +507,7 @@ export function create(
 						provideTags: () => {
 							if (!components) {
 								promises.push((async () => {
-									components = (await tsPluginClient?.getComponentsNames(vueCode.fileName) ?? [])
+									components = (await tsPluginClient?.getComponentNames(vueCode.fileName) ?? [])
 										.filter(name =>
 											name !== 'Transition'
 											&& name !== 'TransitionGroup'

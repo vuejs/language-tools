@@ -5,8 +5,8 @@ import { proxyLanguageServiceForVue } from './lib/common';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
 import { getComponentEvents } from './lib/requests/getComponentEvents';
+import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
-import { getComponentsNames } from './lib/requests/getComponentsNames';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './lib/requests/getPropertiesAtLocation';
@@ -95,9 +95,9 @@ const plugin = createLanguageServicePlugin(
 					response: getQuickInfoAtPosition.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('vue:getComponentsNames', ({ arguments: args }) => {
+			session.addProtocolHandler('vue:getComponentNames', ({ arguments: args }) => {
 				return {
-					response: getComponentsNames.apply(getRequestContext(args[0]), args) ?? [],
+					response: getComponentNames.apply(getRequestContext(args[0]), args) ?? [],
 				};
 			});
 			session.addProtocolHandler('vue:getComponentProps', ({ arguments: args }) => {
