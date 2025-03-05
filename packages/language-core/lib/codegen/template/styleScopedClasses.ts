@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
-import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code } from '../../types';
+import { getNodeText } from '../../utils/shared';
 import { endOfLine, normalizeAttributeValue } from '../utils';
 import { generateEscaped } from '../utils/escaped';
 import { wrapWith } from '../utils/wrapWith';

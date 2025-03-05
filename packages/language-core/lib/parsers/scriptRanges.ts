@@ -1,6 +1,7 @@
 import type * as ts from 'typescript';
 import type { TextRange } from '../types';
-import { getNodeText, getStartEnd, parseBindingRanges } from './scriptSetupRanges';
+import { getNodeText, getStartEnd } from '../utils/shared';
+import { parseBindingRanges } from './scriptSetupRanges';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }
 
@@ -46,7 +47,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 				let inheritAttrsOption: string | undefined;
 				ts.forEachChild(obj, node => {
 					if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
-						const name = getNodeText(ts, node.name, ast);
+						const name = _getNodeText(node.name);
 						if (name === 'components' && ts.isObjectLiteralExpression(node.initializer)) {
 							componentsOptionNode = node.initializer;
 						}
@@ -57,7 +58,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 							nameOptionNode = node.initializer;
 						}
 						else if (name === 'inheritAttrs') {
-							inheritAttrsOption = getNodeText(ts, node.initializer, ast);
+							inheritAttrsOption = _getNodeText(node.initializer);
 						}
 					}
 				});
@@ -92,6 +93,10 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(ts, node, ast);
+	}
+
+	function _getNodeText(node: ts.Node) {
+		return getNodeText(ts, node, ast);
 	}
 
 	// isAsExpression is missing in tsc

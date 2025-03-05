@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
-import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code, SfcBlock, SfcBlockAttr, VueCodeInformation } from '../../types';
+import { getNodeText } from '../../utils/shared';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;

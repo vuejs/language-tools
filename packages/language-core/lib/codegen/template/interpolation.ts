@@ -1,7 +1,7 @@
 import { isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
-import { getNodeText, getStartEnd } from '../../parsers/scriptSetupRanges';
 import type { Code, VueCodeInformation } from '../../types';
+import { getNodeText, getStartEnd } from '../../utils/shared';
 import { collectVars, createTsAst } from '../utils';
 import type { TemplateCodegenContext } from './context';
 

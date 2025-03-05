@@ -1,6 +1,7 @@
 import type * as ts from 'typescript';
 import { collectIdentifiers } from '../codegen/utils';
 import type { TextRange, VueCompilerOptions } from '../types';
+import { getNodeText, getStartEnd } from '../utils/shared';
 
 const tsCheckReg = /^\/\/\s*@ts-(?:no)?check($|\s)/;
 
@@ -475,7 +476,7 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 	}
 }
 
-export function findBindingVars(
+function findBindingVars(
 	ts: typeof import('typescript'),
 	left: ts.BindingName,
 	ast: ts.SourceFile
@@ -510,26 +511,6 @@ export function findBindingVars(
 			worker(node.expression);
 		}
 	}
-}
-
-export function getStartEnd(
-	ts: typeof import('typescript'),
-	node: ts.Node,
-	ast: ts.SourceFile
-): TextRange {
-	return {
-		start: (ts as any).getTokenPosOfNode(node, ast) as number,
-		end: node.end,
-	};
-}
-
-export function getNodeText(
-	ts: typeof import('typescript'),
-	node: ts.Node,
-	ast: ts.SourceFile
-) {
-	const { start, end } = getStartEnd(ts, node, ast);
-	return ast.text.slice(start, end);
 }
 
 function getStatementRange(

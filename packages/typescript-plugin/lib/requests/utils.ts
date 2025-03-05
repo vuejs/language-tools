@@ -52,7 +52,7 @@ export function getVariableType(
 ) {
 	const program = languageService.getProgram()!;
 
-	const tsSourceFile = program.getSourceFile(vueCode.fileName)
+	const tsSourceFile = program.getSourceFile(vueCode.fileName);
 	if (tsSourceFile) {
 		const checker = program.getTypeChecker();
 		const node = searchVariableDeclarationNode(ts, tsSourceFile, name);
