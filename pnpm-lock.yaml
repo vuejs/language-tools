@@ -166,6 +166,9 @@ importers:
 
   packages/language-server:
     dependencies:
+      '@typescript/server-harness':
+        specifier: latest
+        version: 0.3.5
       '@volar/language-core':
         specifier: ~2.4.11
         version: 2.4.11
@@ -1206,6 +1209,9 @@ packages:
   '@typescript-eslint/visitor-keys@8.19.0':
     resolution: {integrity: sha512-mCFtBbFBJDCNCWUl5y6sZSCHXw1DEFEk3c/M3nRK2a4XUB8StGFtmcEMizdjKuBzB6e/smJAAWYug3VrdLMr1w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript/server-harness@0.3.5':
+    resolution: {integrity: sha512-YT9oe27zm7HdGXYad5SZrdJzVe9eavG3F6YplsWvAraowGtuDeY7FHPVuQPtQj6GxG097Us4JDkA8n5I4iQovQ==}
 
   '@vitest/expect@2.1.9':
     resolution: {integrity: sha512-UJCIkTBenHeKT1TTlKMJWy1laZewsRIzYighyYiJKZreqtdxSos/S1t+ktRMQWu2CKqaarrkeszJx1cgC5tGZw==}
@@ -4739,6 +4745,8 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.19.0
       eslint-visitor-keys: 4.2.0
+
+  '@typescript/server-harness@0.3.5': {}
 
   '@vitest/expect@2.1.9':
     dependencies:
