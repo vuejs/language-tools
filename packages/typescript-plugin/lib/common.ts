@@ -2,6 +2,7 @@ import { forEachElementNode, hyphenateTag, Language, VueCompilerOptions, VueVirt
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import { _getComponentNames } from './requests/getComponentNames';
+import { _getElementNames } from './requests/getElementAttrs';
 import type { RequestContext } from './requests/types';
 
 const windowsPathReg = /\\/g;
@@ -229,6 +230,7 @@ export function getComponentSpans(
 	const { typescript: ts, languageService } = this;
 	const result: ts.TextSpan[] = [];
 	const validComponentNames = _getComponentNames(ts, languageService, vueCode);
+	const elements = new Set(_getElementNames(ts, languageService, vueCode));
 	const components = new Set([
 		...validComponentNames,
 		...validComponentNames.map(hyphenateTag),
@@ -238,7 +240,7 @@ export function getComponentSpans(
 			if (node.loc.end.offset <= spanTemplateRange.start || node.loc.start.offset >= (spanTemplateRange.start + spanTemplateRange.length)) {
 				continue;
 			}
-			if (components.has(node.tag)) {
+			if (components.has(node.tag) && !elements.has(node.tag)) {
 				let start = node.loc.start.offset;
 				if (template.lang === 'html') {
 					start += '<'.length;
