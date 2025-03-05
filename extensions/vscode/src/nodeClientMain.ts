@@ -5,7 +5,6 @@ import * as fs from 'node:fs';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
-import { enabledHybridMode, enabledTypeScriptPlugin } from './hybridMode';
 import { activate as activateLanguageClient, deactivate as deactivateLanguageClient } from './languageClient';
 import { middleware } from './middleware';
 
@@ -53,26 +52,16 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
 
-			const runOptions: lsp.ForkOptions = {};
-			if (config.server.maxOldSpaceSize) {
-				runOptions.execArgv ??= [];
-				runOptions.execArgv.push(
-					'--max-old-space-size=' + config.server.maxOldSpaceSize
-				);
-			}
-			const debugOptions: lsp.ForkOptions = {
-				execArgv: ['--nolazy', '--inspect=' + port]
-			};
 			const serverOptions: lsp.ServerOptions = {
 				run: {
 					module: serverModule.fsPath,
 					transport: lsp.TransportKind.ipc,
-					options: runOptions
+					options: {},
 				},
 				debug: {
 					module: serverModule.fsPath,
 					transport: lsp.TransportKind.ipc,
-					options: debugOptions
+					options: { execArgv: ['--nolazy', '--inspect=' + port] },
 				}
 			};
 			const clientOptions: lsp.LanguageClientOptions = {
@@ -121,21 +110,13 @@ function updateProviders(client: lsp.LanguageClient) {
 		if (!config.codeLens.enabled) {
 			capabilities.codeLensProvider = undefined;
 		}
-		if (
-			!config.updateImportsOnFileMove.enabled &&
-			capabilities.workspace?.fileOperations?.willRename
-		) {
-			capabilities.workspace.fileOperations.willRename = undefined;
-		}
 
 		return initializeFeatures.call(client, ...args);
 	};
 }
 
 try {
-	const tsExtension = vscode.extensions.getExtension(
-		'vscode.typescript-language-features'
-	)!;
+	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
 	const readFileSync = fs.readFileSync;
 	const extensionJsPath = require.resolve('./dist/extension.js', {
 		paths: [tsExtension.extensionPath],
@@ -147,45 +128,47 @@ try {
 			// @ts-expect-error
 			let text = readFileSync(...args) as string;
 
-			if (!enabledTypeScriptPlugin.value) {
-				text = text.replace(
-					'for(const e of n.contributes.typescriptServerPlugins',
-					s => s + `.filter(p=>p.name!=='vue-typescript-plugin-pack')`
-				);
-			}
-			else if (enabledHybridMode.value) {
-				// patch readPlugins
-				text = text.replace(
-					'languages:Array.isArray(e.languages)',
-					[
-						'languages:',
-						`e.name==='vue-typescript-plugin-pack'?[${config.server.includeLanguages
-							.map(lang => `'${lang}'`)
-							.join(',')}]`,
-						':Array.isArray(e.languages)'
-					].join('')
-				);
+			// patch readPlugins
+			text = text.replace(
+				'languages:Array.isArray(e.languages)',
+				[
+					'languages:',
+					`e.name==='vue-typescript-plugin-pack'?[${config.server.includeLanguages
+						.map(lang => `'${lang}'`)
+						.join(',')}]`,
+					':Array.isArray(e.languages)'
+				].join('')
+			);
 
-				// VSCode < 1.87.0
-				text = text.replace(
-					't.$u=[t.$r,t.$s,t.$p,t.$q]',
-					s => s + '.concat("vue")'
-				); // patch jsTsLanguageModes
-				text = text.replace(
-					'.languages.match([t.$p,t.$q,t.$r,t.$s]',
-					s => s + '.concat("vue")'
-				); // patch isSupportedLanguageMode
+			/**
+			 * VSCode < 1.87.0
+			 */
 
-				// VSCode >= 1.87.0
-				text = text.replace(
-					't.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]',
-					s => s + '.concat("vue")'
-				); // patch jsTsLanguageModes
-				text = text.replace(
-					'.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]',
-					s => s + '.concat("vue")'
-				); // patch isSupportedLanguageMode
-			}
+			// patch jsTsLanguageModes
+			text = text.replace(
+				't.$u=[t.$r,t.$s,t.$p,t.$q]',
+				s => s + '.concat("vue")'
+			);
+			// patch isSupportedLanguageMode
+			text = text.replace(
+				'.languages.match([t.$p,t.$q,t.$r,t.$s]',
+				s => s + '.concat("vue")'
+			);
+
+			/**
+			 * VSCode >= 1.87.0
+			 */
+
+			// patch jsTsLanguageModes
+			text = text.replace(
+				't.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]',
+				s => s + '.concat("vue")'
+			);
+			// patch isSupportedLanguageMode
+			text = text.replace(
+				'.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]',
+				s => s + '.concat("vue")'
+			);
 
 			return text;
 		}

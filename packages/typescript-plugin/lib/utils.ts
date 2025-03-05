@@ -28,7 +28,6 @@ class NamedPipeServer {
 	path: string;
 	connecting = false;
 	projectInfo?: ProjectInfo;
-	containsFileCache = new Map<string, Promise<boolean | undefined | null>>();
 	componentNamesAndProps = new FileMap<
 		Record<string, null | ComponentPropInfo[]>
 	>(false);
@@ -39,17 +38,7 @@ class NamedPipeServer {
 
 	containsFile(fileName: string) {
 		if (this.projectInfo) {
-			if (!this.containsFileCache.has(fileName)) {
-				this.containsFileCache.set(fileName, (async () => {
-					const res = await this.sendRequest<boolean>('containsFile', fileName);
-					if (typeof res !== 'boolean') {
-						// If the request fails, delete the cache
-						this.containsFileCache.delete(fileName);
-					}
-					return res;
-				})());
-			}
-			return this.containsFileCache.get(fileName);
+			return this.sendRequest<boolean>('containsFile', fileName);
 		}
 	}
 
@@ -82,7 +71,6 @@ class NamedPipeServer {
 			if (projectInfo) {
 				console.log('TSServer project ready:', projectInfo.name);
 				this.projectInfo = projectInfo;
-				this.containsFileCache.clear();
 				onServerReady.forEach(cb => cb());
 			} else {
 				this.close();

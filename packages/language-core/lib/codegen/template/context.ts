@@ -105,7 +105,7 @@ export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenCont
  * an error/diagnostic was encountered for a region of code covered by a `@vue-expect-error` directive,
  * and additionally how we use that to determine whether to propagate diagnostics back upward.
  */
-export function createTemplateCodegenContext(options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames' | 'edited'>) {
+export function createTemplateCodegenContext(options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames'>) {
 	let ignoredError = false;
 	let expectErrorToken: {
 		errors: number;
@@ -288,9 +288,6 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 			}
 		},
 		generateAutoImportCompletion: function* (): Generator<Code> {
-			if (!options.edited) {
-				return;
-			}
 			const all = [...accessExternalVariables.entries()];
 			if (!all.some(([_, offsets]) => offsets.size)) {
 				return;

@@ -12,8 +12,6 @@ import { CompilerOptionsResolver } from '../utils/ts';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 
-const fileEditTimes = new Map<string, number>();
-
 const plugin: VueLanguagePlugin = ctx => {
 
 	let appendedGlobalTypes = false;
@@ -193,7 +191,6 @@ function createTsx(
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
 			template: sfc.template,
-			edited: getResolvedOptions().__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			scriptSetupBindingNames: getSetupBindingNames(),
 			scriptSetupImportComponentNames: getSetupImportComponentNames(),
 			destructuredPropNames: getSetupDestructuredPropNames(),
@@ -225,7 +222,6 @@ function createTsx(
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
 			sfc: sfc,
-			edited: getResolvedOptions().__test || (fileEditTimes.get(fileName) ?? 0) >= 2,
 			fileName,
 			lang: getLang(),
 			scriptRanges: getScriptRanges(),
@@ -235,7 +231,6 @@ function createTsx(
 			templateRefNames: getSetupTemplateRefNames(),
 			appendGlobalTypes,
 		});
-		fileEditTimes.set(fileName, (fileEditTimes.get(fileName) ?? 0) + 1);
 
 		let current = codegen.next();
 		while (!current.done) {

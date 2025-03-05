@@ -14,7 +14,6 @@ export interface TemplateCodegenOptions {
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	template: NonNullable<Sfc['template']>;
-	edited: boolean;
 	scriptSetupBindingNames: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
 	destructuredPropNames: Set<string>;

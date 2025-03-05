@@ -18,7 +18,6 @@ export function* generateTemplate(
 
 	const templateCodegenCtx = createTemplateCodegenContext({
 		scriptSetupBindingNames: new Set(),
-		edited: options.edited,
 	});
 	yield* generateTemplateCtx(options);
 	yield* generateTemplateComponents(options);

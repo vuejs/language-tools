@@ -16,6 +16,7 @@
 		"directory": "packages/language-server"
 	},
 	"dependencies": {
+		"@typescript/server-harness": "latest",
 		"@volar/language-core": "~2.4.11",
 		"@volar/language-server": "~2.4.11",
 		"@volar/test-utils": "~2.4.11",
