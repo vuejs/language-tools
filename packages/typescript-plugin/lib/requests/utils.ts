@@ -54,9 +54,9 @@ export function getVariableType(
 
 	const tsSourceFile = program.getSourceFile(vueCode.fileName)
 	if (tsSourceFile) {
+		const checker = program.getTypeChecker();
 		const node = searchVariableDeclarationNode(ts, tsSourceFile, name);
 		if (node) {
-			const checker = program.getTypeChecker();
 			return {
 				node: node,
 				type: checker.getTypeAtLocation(node),
