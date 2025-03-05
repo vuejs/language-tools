@@ -9,22 +9,14 @@ test('TS to vue', async () => {
 	).toMatchInlineSnapshot(`
 		[
 		  {
-		    "contextEnd": {
-		      "line": 1,
-		      "offset": 37,
-		    },
-		    "contextStart": {
+		    "end": {
 		      "line": 1,
 		      "offset": 1,
 		    },
-		    "end": {
-		      "line": 1,
-		      "offset": 17,
-		    },
-		    "file": "\${testWorkspacePath}/tsconfigProject/fixture1.ts",
+		    "file": "\${testWorkspacePath}/tsconfigProject/empty.vue",
 		    "start": {
 		      "line": 1,
-		      "offset": 8,
+		      "offset": 1,
 		    },
 		  },
 		]
@@ -43,7 +35,6 @@ test('TS to vue', async () => {
 		      "line": 1,
 		      "offset": 1,
 		    },
-		    "unverified": true,
 		  },
 		]
 	`);
