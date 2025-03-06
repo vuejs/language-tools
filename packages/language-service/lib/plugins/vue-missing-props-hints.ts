@@ -10,7 +10,6 @@ import { AttrNameCasing, LanguageServicePlugin } from '../types';
 export function create(
 	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
-	
 	return {
 		name: `vue-missing-props-hints`,
 		capabilities: {
