@@ -224,8 +224,8 @@ export function* generateComponent(
 
 	yield `const `;
 	yield* wrapWith(
-		node.loc.start.offset,
-		node.loc.end.offset,
+		tagOffsets[0],
+		tagOffsets[0] + node.tag.length,
 		{
 			verification: {
 				shouldReport(_source, code) {
