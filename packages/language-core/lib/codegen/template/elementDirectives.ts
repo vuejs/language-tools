@@ -44,9 +44,9 @@ export function* generateElementDirectives(
 		yield* wrapWith(
 			prop.loc.start.offset,
 			prop.loc.end.offset,
-			ctx.codeFeatures.verification,
+			codeFeatures.verification,
 			`__VLS_asFunctionalDirective(`,
-			...generateIdentifier(options, ctx, prop),
+			...generateIdentifier(options, prop),
 			`)(null!, { ...__VLS_directiveBindingRestFields, `,
 			...generateArg(options, ctx, prop),
 			...generateModifiers(options, ctx, prop),
@@ -59,20 +59,19 @@ export function* generateElementDirectives(
 
 function* generateIdentifier(
 	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
 	const rawName = 'v-' + prop.name;
 	yield* wrapWith(
 		prop.loc.start.offset,
 		prop.loc.start.offset + rawName.length,
-		ctx.codeFeatures.verification,
+		codeFeatures.verification,
 		`__VLS_directives.`,
 		...generateCamelized(
 			rawName,
 			'template',
 			prop.loc.start.offset,
-			ctx.resolveCodeFeatures({
+			{
 				...codeFeatures.withoutHighlight,
 				// fix https://github.com/vuejs/language-tools/issues/1905
 				...codeFeatures.additionalCompletion,
@@ -81,7 +80,7 @@ function* generateIdentifier(
 					resolveRenameNewName: camelize,
 					resolveRenameEditText: getPropRenameApply(prop.name),
 				},
-			})
+			}
 		)
 	);
 }
@@ -101,7 +100,7 @@ function* generateArg(
 	yield* wrapWith(
 		startOffset,
 		startOffset + arg.content.length,
-		ctx.codeFeatures.verification,
+		codeFeatures.verification,
 		`arg`
 	);
 	yield `: `;
@@ -109,7 +108,7 @@ function* generateArg(
 		yield* generateStringLiteralKey(
 			arg.content,
 			startOffset,
-			ctx.codeFeatures.all
+			codeFeatures.all
 		);
 	}
 	else {
@@ -117,7 +116,7 @@ function* generateArg(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 			arg.content,
 			startOffset,
 			arg.loc,
@@ -145,7 +144,7 @@ export function* generateModifiers(
 	yield* wrapWith(
 		startOffset,
 		endOffset,
-		ctx.codeFeatures.verification,
+		codeFeatures.verification,
 		propertyName
 	);
 	yield `: { `;
@@ -155,7 +154,7 @@ export function* generateModifiers(
 			ctx,
 			mod.content,
 			mod.loc.start.offset,
-			ctx.codeFeatures.withoutHighlightAndNavigation
+			codeFeatures.withoutHighlightAndNavigation
 		);
 		yield `: true, `;
 	}
@@ -175,7 +174,7 @@ function* generateValue(
 	yield* wrapWith(
 		exp.loc.start.offset,
 		exp.loc.end.offset,
-		ctx.codeFeatures.verification,
+		codeFeatures.verification,
 		`value`
 	);
 	yield `: `;
@@ -184,7 +183,7 @@ function* generateValue(
 		ctx,
 		prop,
 		exp,
-		ctx.codeFeatures.all
+		codeFeatures.all
 	);
 }
 

@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -23,7 +24,7 @@ export function* generateVFor(
 			leftExpressionText,
 			'template',
 			leftExpressionRange.start,
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 		];
 	}
 	yield `] of `;
@@ -33,7 +34,7 @@ export function* generateVFor(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 			source.content,
 			source.loc.start.offset,
 			source.loc,
@@ -49,7 +50,6 @@ export function* generateVFor(
 	for (const varName of forBlockVars) {
 		ctx.addLocalVariable(varName);
 	}
-	let isFragment = true;
 	for (const argument of node.codegenNode?.children.arguments ?? []) {
 		if (
 			argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
@@ -57,7 +57,6 @@ export function* generateVFor(
 			&& argument.returns?.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
 		) {
 			if (argument.returns.tag !== CompilerDOM.FRAGMENT) {
-				isFragment = false;
 				continue;
 			}
 			for (const prop of argument.returns.props.properties) {
@@ -69,7 +68,7 @@ export function* generateVFor(
 						options,
 						ctx,
 						'template',
-						ctx.codeFeatures.all,
+						codeFeatures.all,
 						prop.value.content,
 						prop.value.loc.start.offset,
 						prop.value.loc,
@@ -80,9 +79,6 @@ export function* generateVFor(
 				}
 			}
 		}
-	}
-	if (isFragment) {
-		yield* ctx.resetDirectiveComments('end of v-for start');
 	}
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {

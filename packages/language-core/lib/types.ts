@@ -120,6 +120,14 @@ export type SfcBlockAttr = true | {
 	quotes: boolean;
 };
 
+export type SfcTemplateCommentDirective = {
+	name: 'ignore' | 'expect-error';
+	start: number;
+	end: number;
+	rangeStart: number;
+	rangeEnd: number;
+};
+
 export interface Sfc {
 	content: string;
 	comments: string[];
@@ -127,6 +135,7 @@ export interface Sfc {
 		ast: CompilerDOM.RootNode | undefined;
 		errors: CompilerDOM.CompilerError[];
 		warnings: CompilerDOM.CompilerError[];
+		commentDirectives: SfcTemplateCommentDirective[];
 	} | undefined;
 	script: (SfcBlock & {
 		src: SfcBlockAttr | undefined;

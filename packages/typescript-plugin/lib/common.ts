@@ -1,4 +1,4 @@
-import { forEachElementNode, hyphenateTag, Language, VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
+import { forEachTemplateChild, hyphenateTag, Language, VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import { _getComponentNames, _getElementNames } from './requests/getComponentNames';
@@ -20,6 +20,7 @@ export function proxyLanguageServiceForVue<T>(
 			case 'getCompletionEntryDetails': return getCompletionEntryDetails(language, asScriptId, target[p]);
 			case 'getCodeFixesAtPosition': return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan': return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
+			case 'getSemanticDiagnostics': return getSemanticDiagnostics(ts, language, languageService, asScriptId, target[p]);
 			case 'getQuickInfoAtPosition': return getQuickInfoAtPosition(ts, target, target[p]);
 			// TS plugin only
 			case 'getEncodedSemanticClassifications': return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
@@ -252,6 +253,83 @@ function getDefinitionAndBoundSpan<T>(
 	};
 }
 
+function getSemanticDiagnostics<T>(
+	ts: typeof import('typescript'),
+	language: Language<T>,
+	languageService: ts.LanguageService,
+	asScriptId: (fileName: string) => T,
+	getSemanticDiagnostics: ts.LanguageService['getSemanticDiagnostics']
+): ts.LanguageService['getSemanticDiagnostics'] {
+	return (fileName) => {
+		const result = getSemanticDiagnostics(fileName);
+
+		const program = languageService.getProgram()!;
+		const sourceScript = language.scripts.get(asScriptId(fileName));
+		if (!sourceScript?.generated) {
+			return result;
+		}
+
+		const root = sourceScript.generated.root;
+		if (!(root instanceof VueVirtualCode)) {
+			return result;
+		}
+
+		const { template } = root.sfc;
+		if (!template) {
+			return result;
+		}
+
+		const sourceFile = program.getSourceFile(fileName);
+		if (!sourceFile) {
+			return result;
+		}
+
+		const additionalResult: ts.Diagnostic[] = [];
+		const { commentDirectives } = template;
+
+		for (const dir of commentDirectives) {
+			const start = template.startTagEnd + dir.start;
+			const end = template.startTagEnd + dir.end;
+			const rangeStart = template.startTagEnd + dir.rangeStart;
+			const rangeEnd = template.startTagEnd + dir.rangeEnd;
+
+			if (dir.name === 'expect-error') {
+				let containError = false;
+				for (let i = 0; i < result.length; i++) {
+					const diag = result[i];
+					if (diag.start! >= rangeStart && diag.start! + diag.length! <= rangeEnd) {
+						containError = true;
+						result.splice(i, 1);
+						i--;
+					}
+				}
+	
+				if (!containError) {
+					additionalResult.push({
+						category: ts.DiagnosticCategory.Error,
+						code: 2578,
+						file: sourceFile,
+						start,
+						length: end - start,
+						messageText: `Unused '@vue-expect-error' directive.`,
+					});
+				}
+			}
+			else if (dir.name === 'ignore') {
+				for (let i = 0; i < result.length; i++) {
+					const diag = result[i];
+					if (diag.start! >= rangeStart && diag.start! + diag.length! <= rangeEnd) {
+						result.splice(i, 1);
+						i--;
+					}
+				}
+			}
+		}
+
+		return [...result, ...additionalResult];
+	};
+}
+
 function getQuickInfoAtPosition(
 	ts: typeof import('typescript'),
 	languageService: ts.LanguageService,
@@ -350,7 +428,7 @@ function getComponentSpans(
 		...validComponentNames.map(hyphenateTag),
 	]);
 	if (template.ast) {
-		for (const node of forEachElementNode(template.ast)) {
+		for (const node of forEachTemplateChild(template.ast)) {
 			if (node.loc.end.offset <= spanTemplateRange.start || node.loc.start.offset >= (spanTemplateRange.start + spanTemplateRange.length)) {
 				continue;
 			}

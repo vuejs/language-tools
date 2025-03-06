@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
@@ -11,7 +12,7 @@ import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 import { generateVSlot } from './vSlot';
 
-const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
+export const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
 
 // @ts-ignore
 const transformContext: CompilerDOM.TransformContext = {
@@ -45,14 +46,6 @@ export function* generateTemplateChild(
 					yield `// @vue-skip${newLine}`;
 					return;
 				}
-				case 'ignore': {
-					yield* ctx.ignoreError();
-					break;
-				}
-				case 'expect-error': {
-					yield* ctx.expectError(prevNode);
-					break;
-				}
 				case 'generic': {
 					const text = content.trim();
 					if (text.startsWith('{') && text.endsWith('}')) {
@@ -81,7 +74,6 @@ export function* generateTemplateChild(
 			yield* generateTemplateChild(options, ctx, childNode, prev);
 			prev = childNode;
 		}
-		yield* ctx.resetDirectiveComments('end of root');
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 		const vForNode = getVForNode(node);
@@ -136,14 +128,13 @@ export function* generateTemplateChild(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 			content,
 			start,
 			node.content.loc,
 			`(`,
 			`)${endOfLine}`
 		);
-		yield* ctx.resetDirectiveComments('end of INTERPOLATION');
 	}
 	else if (node.type === CompilerDOM.NodeTypes.IF) {
 		// v-if / v-else-if / v-else

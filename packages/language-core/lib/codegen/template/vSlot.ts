@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
@@ -27,7 +28,7 @@ export function* generateVSlot(
 			ctx,
 			slotDir.arg.loc.source,
 			slotDir.arg.loc.start.offset,
-			slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
+			slotDir.arg.isStatic ? codeFeatures.withoutHighlight : codeFeatures.all,
 			slotDir.arg.loc,
 			false,
 			true
@@ -37,7 +38,7 @@ export function* generateVSlot(
 		yield* wrapWith(
 			slotDir.loc.start.offset,
 			slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
-			ctx.codeFeatures.withoutHighlightAndCompletion,
+			codeFeatures.withoutHighlightAndCompletion,
 			`default`
 		);
 	}
@@ -52,7 +53,7 @@ export function* generateVSlot(
 				slotDir.exp.content,
 				'template',
 				slotDir.exp.loc.start.offset,
-				ctx.codeFeatures.all,
+				codeFeatures.all,
 			];
 			yield `] = __VLS_getSlotParams(__VLS_thisSlot)${endOfLine}`;
 		}
@@ -62,7 +63,7 @@ export function* generateVSlot(
 				slotDir.exp.content,
 				'template',
 				slotDir.exp.loc.start.offset,
-				ctx.codeFeatures.all,
+				codeFeatures.all,
 			];
 			yield ` = __VLS_getSlotParam(__VLS_thisSlot)${endOfLine}`;
 		}
@@ -71,8 +72,6 @@ export function* generateVSlot(
 	for (const varName of slotBlockVars) {
 		ctx.addLocalVariable(varName);
 	}
-
-	yield* ctx.resetDirectiveComments('end of slot children start');
 
 	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
@@ -100,7 +99,7 @@ export function* generateVSlot(
 						? 'v-slot:'.length
 						: 0
 			),
-			ctx.codeFeatures.completion,
+			codeFeatures.completion,
 		];
 		yield `'/* empty slot name completion */]${endOfLine}`;
 	}
@@ -122,7 +121,7 @@ export function* generateImplicitDefaultSlot(
 		yield* wrapWith(
 			node.children[0].loc.start.offset,
 			node.children[node.children.length - 1].loc.end.offset,
-			ctx.codeFeatures.navigation,
+			codeFeatures.navigation,
 			`default`
 		);
 		yield endOfLine;

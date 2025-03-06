@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
 import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, identifierRegex, newLine, normalizeAttributeValue } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -93,7 +94,7 @@ export function* generateComponent(
 					componentOriginalVar,
 					'template',
 					tagOffset,
-					ctx.codeFeatures.withoutHighlightAndCompletion,
+					codeFeatures.withoutHighlightAndCompletion,
 				];
 			}
 			else {
@@ -103,7 +104,7 @@ export function* generateComponent(
 					'template',
 					tagOffset,
 					{
-						...ctx.codeFeatures.withoutHighlightAndCompletion,
+						...codeFeatures.withoutHighlightAndCompletion,
 						navigation: {
 							resolveRenameNewName: camelizeComponentName,
 							resolveRenameEditText: getTagRenameApply(node.tag),
@@ -121,7 +122,7 @@ export function* generateComponent(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 			dynamicTagInfo.tag,
 			dynamicTagInfo.offsets[0],
 			dynamicTagInfo.astHolder,
@@ -134,7 +135,7 @@ export function* generateComponent(
 				options,
 				ctx,
 				'template',
-				ctx.codeFeatures.withoutCompletion,
+				codeFeatures.withoutCompletion,
 				dynamicTagInfo.tag,
 				dynamicTagInfo.offsets[1],
 				dynamicTagInfo.astHolder,
@@ -161,7 +162,7 @@ export function* generateComponent(
 		yield* generateCanonicalComponentName(
 			node.tag,
 			tagOffsets[0],
-			ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation
+			codeFeatures.withoutHighlightAndCompletionAndNavigation
 		);
 		yield `${endOfLine}`;
 
@@ -225,14 +226,14 @@ export function* generateComponent(
 	yield* wrapWith(
 		node.loc.start.offset,
 		node.loc.end.offset,
-		ctx.resolveCodeFeatures({
+		{
 			verification: {
 				shouldReport(_source, code) {
 					// https://typescript.tv/errors/#ts6133
 					return String(code) !== '6133';
 				},
 			}
-		}),
+		},
 		componentVNodeVar
 	);
 	yield ` = ${componentFunctionalVar}`;
@@ -241,7 +242,7 @@ export function* generateComponent(
 	yield* wrapWith(
 		tagOffsets[0],
 		tagOffsets[0] + node.tag.length,
-		ctx.codeFeatures.verification,
+		codeFeatures.verification,
 		`{${newLine}`,
 		...generateElementProps(
 			options,
@@ -326,7 +327,7 @@ export function* generateElement(
 		ctx,
 		node.tag,
 		startTagOffset,
-		ctx.codeFeatures.withoutHighlightAndCompletion
+		codeFeatures.withoutHighlightAndCompletion
 	);
 	if (endTagOffset !== undefined) {
 		yield `, __VLS_elements`;
@@ -335,14 +336,14 @@ export function* generateElement(
 			ctx,
 			node.tag,
 			endTagOffset,
-			ctx.codeFeatures.withoutHighlightAndCompletion
+			codeFeatures.withoutHighlightAndCompletion
 		);
 	}
 	yield `)(`;
 	yield* wrapWith(
 		startTagOffset,
 		startTagOffset + node.tag.length,
-		ctx.codeFeatures.verification,
+		codeFeatures.verification,
 		`{${newLine}`,
 		...generateElementProps(
 			options,
@@ -394,7 +395,7 @@ function* generateFailedPropExps(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 			failedExp.node.loc.source,
 			failedExp.node.loc.start.offset,
 			failedExp.node.loc,
@@ -447,13 +448,13 @@ function* generateComponentGeneric(
 		yield* wrapWith(
 			offset,
 			offset + content.length,
-			ctx.codeFeatures.verification,
+			codeFeatures.verification,
 			`<`,
 			[
 				content,
 				'template',
 				offset,
-				ctx.codeFeatures.all
+				codeFeatures.all
 			],
 			`>`
 		);
@@ -481,7 +482,7 @@ function* generateElementReference(
 				ctx,
 				content,
 				startOffset,
-				ctx.codeFeatures.navigation,
+				codeFeatures.navigation,
 				prop.value.loc
 			);
 			yield `} */${endOfLine}`;
