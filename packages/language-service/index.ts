@@ -168,7 +168,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 
 export function getHybridModeLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	getTsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests
+	getTsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ) {
 	const plugins = [
 		createTypeScriptSyntacticPlugin(ts),
