@@ -44,6 +44,7 @@ export function create(
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
 	let lastCompletionComponentNames = new Set<string>();
+	let intrinsicElementNames: Set<string>;
 
 	const cachedPropInfos = new Map<string, ComponentPropInfo>();
 	const onDidChangeCustomDataListeners = new Set<() => void>();
@@ -245,9 +246,17 @@ export function create(
 						insertOffset: number;
 					} | undefined;
 
+					intrinsicElementNames ??= new Set(
+						await tsPluginClient?.getElementNames(root.fileName) ?? []
+					);
+
 					while ((token = scanner.scan()) !== html.TokenType.EOS) {
 						if (token === html.TokenType.StartTag) {
 							const tagName = scanner.getTokenText();
+							if (intrinsicElementNames.has(tagName)) {
+								continue;
+							}
+
 							const checkTag = tagName.includes('.')
 								? tagName
 								: components.find(component => component === tagName || hyphenateTag(component) === tagName);

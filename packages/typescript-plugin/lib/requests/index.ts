@@ -10,4 +10,5 @@ export type Requests = {
 	getComponentEvents: ToRequest<typeof import('./getComponentEvents.js')['getComponentEvents']>;
 	getComponentDirectives: ToRequest<typeof import('./getComponentDirectives.js')['getComponentDirectives']>;
 	getElementAttrs: ToRequest<typeof import('./getElementAttrs.js')['getElementAttrs']>;
+	getElementNames: ToRequest<typeof import('./getElementNames.js')['getElementNames']>;
 };
