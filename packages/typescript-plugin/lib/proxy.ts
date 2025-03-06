@@ -20,10 +20,9 @@ export function proxyLanguageServiceForVue<T>(
 			case 'getCompletionEntryDetails': return getCompletionEntryDetails(language, asScriptId, target[p]);
 			case 'getCodeFixesAtPosition': return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan': return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
+			case 'getEncodedSemanticClassifications': return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
 			case 'getQuickInfoAtPosition': return getQuickInfoAtPosition(ts, target, target[p]);
 			case 'getSemanticDiagnostics': return getSemanticDiagnostics(ts, language, languageService, asScriptId, target[p]);
-			// TS plugin only
-			case 'getEncodedSemanticClassifications': return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
 		}
 	};
 
