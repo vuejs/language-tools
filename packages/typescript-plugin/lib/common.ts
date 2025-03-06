@@ -336,7 +336,7 @@ function getEncodedSemanticClassifications<T>(
 	};
 }
 
-export function getComponentSpans(
+function getComponentSpans(
 	this: Pick<RequestContext, 'typescript' | 'languageService'>,
 	vueCode: VueVirtualCode,
 	template: NonNullable<VueVirtualCode['_sfc']['template']>,
