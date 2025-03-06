@@ -155,4 +155,3 @@ const plugin = createLanguageServicePlugin(
 );
 
 export = plugin;
-
