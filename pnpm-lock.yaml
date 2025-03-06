@@ -160,6 +160,9 @@ importers:
       '@types/node':
         specifier: ^22.10.4
         version: 22.10.4
+      '@vue/compiler-dom':
+        specifier: ^3.5.0
+        version: 3.5.13
       '@vue/language-core':
         specifier: 2.2.8
         version: link:../language-core
@@ -2246,7 +2249,7 @@ packages:
     engines: {node: '>= 12'}
 
   is-arrayish@0.2.1:
-    resolution: {integrity: sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg==}
+    resolution: {integrity: sha1-d8mYQFJ6qOyxqLppe4BkWnqSap0=}
 
   is-ci@4.1.0:
     resolution: {integrity: sha512-Ab9bQDQ11lWootZUI5qxgN2ZXwxNI5hTwnsvOc1wyxQ7zQ8OkEDw79mI0+9jI3x432NfwbVRru+3noJfXF6lSQ==}

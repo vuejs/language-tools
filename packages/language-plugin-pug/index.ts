@@ -1,5 +1,6 @@
 import { SourceMap } from '@volar/source-map';
-import type { CompilerDOM, VueLanguagePlugin } from '@vue/language-core';
+import type * as CompilerDOM from '@vue/compiler-dom';
+import type { VueLanguagePlugin } from '@vue/language-core';
 import * as pug from 'volar-service-pug/lib/languageService';
 
 const classRegex = /^class\s*=/;
