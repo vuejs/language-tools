@@ -18,6 +18,7 @@ import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescr
 import { create as createCssPlugin } from './lib/plugins/css';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoinsert-space';
+import { create as createVueCompilerDomErrorsPlugin } from './lib/plugins/vue-compiler-dom-errors';
 import { create as createVueCompleteDefineAssignmentPlugin } from './lib/plugins/vue-complete-define-assignment';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
@@ -195,6 +196,7 @@ function getCommonLanguageServicePlugins(
 		createVueTemplatePlugin('html', getTsPluginClient),
 		createVueTemplatePlugin('pug', getTsPluginClient),
 		createVueMissingPropsHintsPlugin(getTsPluginClient),
+		createVueCompilerDomErrorsPlugin(),
 		createVueSfcPlugin(),
 		createVueTwoslashQueriesPlugin(getTsPluginClient),
 		createVueDocumentLinksPlugin(),
