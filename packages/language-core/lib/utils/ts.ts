@@ -322,16 +322,6 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 	};
 }
 
-/**
- * @deprecated use `getDefaultCompilerOptions` instead
- */
-export function resolveVueCompilerOptions(options: Partial<VueCompilerOptions>): VueCompilerOptions {
-	return {
-		...getDefaultCompilerOptions(options.target, options.lib),
-		...options,
-	};
-}
-
 export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions, host: {
 	fileExists(path: string): boolean;
 	writeFile?(path: string, data: string): void;
