@@ -2,14 +2,10 @@ import type { Language, LanguagePlugin, LanguageServer, LanguageServerProject, P
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createLanguage } from '@vue/language-core';
 import { createLanguageService, createUriMap, LanguageService } from '@vue/language-service';
-import { configuredServers, getBestServer, inferredServers, onServerReady } from '@vue/typescript-plugin/lib/utils';
 import { URI } from 'vscode-uri';
 
 export function createHybridModeProject(
-	create: (params: {
-		configFileName?: string;
-		asFileName: (scriptId: URI) => string;
-	}) => ProviderResult<{
+	create: () => ProviderResult<{
 		languagePlugins: LanguagePlugin<URI>[];
 		setup?(options: {
 			language: Language;
@@ -24,9 +20,6 @@ export function createHybridModeProject(
 	const project: LanguageServerProject = {
 		setup(_server) {
 			server = _server;
-			onServerReady.push(() => {
-				server.languageFeatures.requestRefresh(false);
-			});
 			server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
 				for (const change of changes) {
 					const changeUri = URI.parse(change.uri);
@@ -36,34 +29,10 @@ export function createHybridModeProject(
 					}
 				}
 			});
-			const end = Date.now() + 60000;
-			const pipeWatcher = setInterval(() => {
-				for (const server of configuredServers) {
-					server.update();
-				}
-				for (const server of inferredServers) {
-					server.update();
-				}
-				if (Date.now() > end) {
-					clearInterval(pipeWatcher);
-				}
-			}, 2500);
 		},
-		async getLanguageService(uri) {
-			const fileName = asFileName(uri);
-			const namedPipeServer = await getBestServer(fileName);
-			if (namedPipeServer?.projectInfo?.kind === 1) {
-				const tsconfig = namedPipeServer.projectInfo.name;
-				const tsconfigUri = URI.file(tsconfig);
-				if (!tsconfigProjects.has(tsconfigUri)) {
-					tsconfigProjects.set(tsconfigUri, createLs(server, tsconfig));
-				}
-				return await tsconfigProjects.get(tsconfigUri)!;
-			}
-			else {
-				simpleLs ??= createLs(server, undefined);
-				return await simpleLs;
-			}
+		async getLanguageService() {
+			simpleLs ??= createLs(server);
+			return await simpleLs;
 		},
 		getExistingLanguageServices() {
 			return Promise.all([
@@ -85,15 +54,8 @@ export function createHybridModeProject(
 
 	return project;
 
-	function asFileName(uri: URI) {
-		return uri.fsPath.replace(/\\/g, '/');
-	}
-
-	async function createLs(server: LanguageServer, tsconfig: string | undefined) {
-		const { languagePlugins, setup } = await create({
-			configFileName: tsconfig,
-			asFileName,
-		});
+	async function createLs(server: LanguageServer) {
+		const { languagePlugins, setup } = await create();
 		const language = createLanguage([
 			{ getLanguageId: uri => server.documents.get(uri)?.languageId },
 			...languagePlugins,

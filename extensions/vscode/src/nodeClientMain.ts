@@ -86,6 +86,20 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 			updateProviders(client);
 
+			client.onRequest('forwardingTsRequest', async ([command, args]) => {
+				const tsserver = (globalThis as any).__TSSERVER__?.semantic;
+				if (!tsserver) {
+					return;
+				}
+				const res = await tsserver.executeImpl(command, args, {
+					isAsync: true,
+					expectsResult: true,
+					lowPriority: true,
+					requireSemantic: true,
+				})[0];
+				return res.body;
+			});
+
 			return client;
 		}
 	);
@@ -138,6 +152,12 @@ try {
 						.join(',')}]`,
 					':Array.isArray(e.languages)'
 				].join('')
+			);
+
+			// Expose tsserver process in SingleTsServer constructor
+			text = text.replace(
+				',this._callbacks.destroy("server errored")}))',
+				s => s + ',globalThis.__TSSERVER__||={},globalThis.__TSSERVER__[arguments[1]]=this'
 			);
 
 			/**

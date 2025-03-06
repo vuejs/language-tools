@@ -10,7 +10,7 @@ export async function convertTagName(
 	context: LanguageServiceContext,
 	uri: URI,
 	casing: TagNameCasing,
-	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client') | undefined
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ) {
 
 	const sourceFile = context.language.scripts.get(uri);
@@ -57,7 +57,7 @@ export async function convertAttrName(
 	context: LanguageServiceContext,
 	uri: URI,
 	casing: AttrNameCasing,
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client')
+	tsPluginClient?: import('@vue/typescript-plugin/lib/requests').Requests
 ) {
 
 	const sourceFile = context.language.scripts.get(uri);

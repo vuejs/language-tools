@@ -107,6 +107,9 @@ async function activateLc(
 
 async function getInitializationOptions(context: vscode.ExtensionContext): Promise<VueInitializationOptions> {
 	return {
-		typescript: { tsdk: (await lsp.getTsdk(context))!.tsdk },
+		typescript: {
+			tsdk: (await lsp.getTsdk(context))!.tsdk,
+			requestForwardingCommand: 'forwardingTsRequest',
+		},
 	};
 }

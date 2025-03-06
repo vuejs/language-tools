@@ -6,7 +6,7 @@ import { URI } from 'vscode-uri';
 const twoslashReg = /<!--\s*\^\?\s*-->/g;
 
 export function create(
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-twoslash-queries',
