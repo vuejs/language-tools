@@ -2,7 +2,7 @@ import type { Language, LanguagePlugin, LanguageServer, LanguageServerProject, P
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createLanguage } from '@vue/language-core';
 import { createLanguageService, createUriMap, LanguageService } from '@vue/language-service';
-import { searchNamedPipeServerForFile } from '@vue/typescript-plugin/lib/utils';
+import { configuredServers, getBestServer, inferredServers, onServerReady } from '@vue/typescript-plugin/lib/utils';
 import { URI } from 'vscode-uri';
 
 export function createHybridModeProject(
@@ -16,26 +16,44 @@ export function createHybridModeProject(
 			project: ProjectContext;
 		}): void;
 	}>
-): LanguageServerProject {
-	let initialized = false;
+) {
 	let simpleLs: Promise<LanguageService> | undefined;
 	let server: LanguageServer;
 
 	const tsconfigProjects = createUriMap<Promise<LanguageService>>();
-
-	return {
+	const project: LanguageServerProject = {
 		setup(_server) {
 			server = _server;
+			onServerReady.push(() => {
+				server.languageFeatures.requestRefresh(false);
+			});
+			server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
+				for (const change of changes) {
+					const changeUri = URI.parse(change.uri);
+					if (tsconfigProjects.has(changeUri)) {
+						tsconfigProjects.get(changeUri)?.then(project => project.dispose());
+						tsconfigProjects.delete(changeUri);
+					}
+				}
+			});
+			const end = Date.now() + 60000;
+			const pipeWatcher = setInterval(() => {
+				for (const server of configuredServers) {
+					server.update();
+				}
+				for (const server of inferredServers) {
+					server.update();
+				}
+				if (Date.now() > end) {
+					clearInterval(pipeWatcher);
+				}
+			}, 2500);
 		},
 		async getLanguageService(uri) {
-			if (!initialized) {
-				initialized = true;
-				initialize(server);
-			}
 			const fileName = asFileName(uri);
-			const projectInfo = (await searchNamedPipeServerForFile(fileName))?.projectInfo;
-			if (projectInfo?.kind === 1) {
-				const tsconfig = projectInfo.name;
+			const namedPipeServer = await getBestServer(fileName);
+			if (namedPipeServer?.projectInfo?.kind === 1) {
+				const tsconfig = namedPipeServer.projectInfo.name;
 				const tsconfigUri = URI.file(tsconfig);
 				if (!tsconfigProjects.has(tsconfigUri)) {
 					tsconfigProjects.set(tsconfigUri, createLs(server, tsconfig));
@@ -65,21 +83,10 @@ export function createHybridModeProject(
 		},
 	};
 
+	return project;
+
 	function asFileName(uri: URI) {
 		return uri.fsPath.replace(/\\/g, '/');
-	}
-
-	function initialize(server: LanguageServer) {
-		server.onDidChangeWatchedFiles(({ changes }) => {
-			for (const change of changes) {
-				const changeUri = URI.parse(change.uri);
-				if (tsconfigProjects.has(changeUri)) {
-					tsconfigProjects.get(changeUri)?.then(project => project.dispose());
-					tsconfigProjects.delete(changeUri);
-					server.clearPushDiagnostics();
-				}
-			}
-		});
 	}
 
 	async function createLs(server: LanguageServer, tsconfig: string | undefined) {
@@ -88,11 +95,10 @@ export function createHybridModeProject(
 			asFileName,
 		});
 		const language = createLanguage([
-			{ getLanguageId: uri => server.documents.get(server.getSyncedDocumentKey(uri) ?? uri.toString())?.languageId },
+			{ getLanguageId: uri => server.documents.get(uri)?.languageId },
 			...languagePlugins,
 		], createUriMap(), uri => {
-			const documentKey = server.getSyncedDocumentKey(uri);
-			const document = documentKey ? server.documents.get(documentKey) : undefined;
+			const document = server.documents.get(uri);
 			if (document) {
 				language.scripts.set(uri, document.getSnapshot(), document.languageId);
 			}
@@ -105,7 +111,7 @@ export function createHybridModeProject(
 		return createLanguageService(
 			language,
 			server.languageServicePlugins,
-			createLanguageServiceEnvironment(server, [...server.workspaceFolders.keys()]),
+			createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
 			project
 		);
 	}

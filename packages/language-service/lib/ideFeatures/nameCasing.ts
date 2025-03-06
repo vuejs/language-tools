@@ -1,8 +1,7 @@
 import type { LanguageServiceContext, ProviderResult, VirtualCode } from '@volar/language-service';
-import type { CompilerDOM } from '@vue/language-core';
-import * as vue from '@vue/language-core';
-import { VueVirtualCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
-import { computed } from 'computeds';
+import * as CompilerDOM from '@vue/compiler-dom';
+import { forEachElementNode, hyphenateAttr, hyphenateTag, VueVirtualCode } from '@vue/language-core';
+import { computed } from 'alien-signals';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { URI } from 'vscode-uri';
 import { AttrNameCasing, TagNameCasing } from '../types';
@@ -19,21 +18,20 @@ export async function convertTagName(
 		return;
 	}
 
-	const rootCode = sourceFile?.generated?.root;
-	if (!(rootCode instanceof VueVirtualCode)) {
+	const root = sourceFile?.generated?.root;
+	if (!(root instanceof VueVirtualCode)) {
 		return;
 	}
 
-	const desc = rootCode.sfc;
-	if (!desc.template) {
+	const { template } = root.sfc;
+	if (!template) {
 		return;
 	}
 
-	const template = desc.template;
 	const document = context.documents.get(sourceFile.id, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient?.getComponentNames(rootCode.fileName) ?? [];
-	const tags = getTemplateTagsAndAttrs(rootCode);
+	const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+	const tags = getTemplateTagsAndAttrs(root);
 
 	for (const [tagName, { offsets }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
@@ -67,26 +65,25 @@ export async function convertAttrName(
 		return;
 	}
 
-	const rootCode = sourceFile?.generated?.root;
-	if (!(rootCode instanceof VueVirtualCode)) {
+	const root = sourceFile?.generated?.root;
+	if (!(root instanceof VueVirtualCode)) {
 		return;
 	}
 
-	const desc = rootCode.sfc;
-	if (!desc.template) {
+	const { template } = root.sfc;
+	if (!template) {
 		return;
 	}
 
-	const template = desc.template;
 	const document = context.documents.get(uri, sourceFile.languageId, sourceFile.snapshot);
 	const edits: vscode.TextEdit[] = [];
-	const components = await tsPluginClient?.getComponentNames(rootCode.fileName) ?? [];
-	const tags = getTemplateTagsAndAttrs(rootCode);
+	const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+	const tags = getTemplateTagsAndAttrs(root);
 
 	for (const [tagName, { attrs }] of tags) {
 		const componentName = components.find(component => component === tagName || hyphenateTag(component) === tagName);
 		if (componentName) {
-			const props = await tsPluginClient?.getComponentProps(rootCode.fileName, componentName) ?? [];
+			const props = (await tsPluginClient?.getComponentProps(root.fileName, componentName) ?? []).map(prop => prop.name);
 			for (const [attrName, { offsets }] of attrs) {
 				const propName = props.find(prop => prop === attrName || hyphenateAttr(prop) === attrName);
 				if (propName) {
@@ -161,7 +158,7 @@ export async function detect(
 			}
 			for (const [tagName] of attrs) {
 				// attr-name
-				if (tagName.indexOf('-') >= 0) {
+				if (tagName.includes('-')) {
 					result.push(AttrNameCasing.Kebab);
 					break;
 				}
@@ -175,7 +172,7 @@ export async function detect(
 		const result = new Set<TagNameCasing>();
 
 		if (file.sfc.template?.ast) {
-			for (const element of vue.forEachElementNode(file.sfc.template.ast)) {
+			for (const element of forEachElementNode(file.sfc.template.ast)) {
 				if (element.tagType === 1 satisfies CompilerDOM.ElementTypes) {
 					if (element.tag !== hyphenateTag(element.tag)) {
 						// TagName
@@ -207,13 +204,13 @@ function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 
 	if (!map.has(sourceFile)) {
 		const getter = computed(() => {
-			if (!(sourceFile instanceof vue.VueVirtualCode)) {
+			if (!(sourceFile instanceof VueVirtualCode)) {
 				return;
 			}
 			const ast = sourceFile.sfc.template?.ast;
 			const tags: Tags = new Map();
 			if (ast) {
-				for (const node of vue.forEachElementNode(ast)) {
+				for (const node of forEachElementNode(ast)) {
 
 					if (!tags.has(node.tag)) {
 						tags.set(node.tag, { offsets: [], attrs: new Map() });

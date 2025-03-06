@@ -1,6 +1,6 @@
 import type { CreateFile, LanguageServiceContext, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import { Sfc, VueVirtualCode, scriptRanges } from '@vue/language-core';
+import { Sfc, VueVirtualCode, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
@@ -21,13 +21,18 @@ export function create(
 		name: 'vue-extract-file',
 		capabilities: {
 			codeActionProvider: {
+				codeActionKinds: ['refactor'],
 				resolveProvider: true,
 			},
 		},
 		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			return {
-				provideCodeActions(document, range, _context) {
+				provideCodeActions(document, range, ctx) {
+
+					if (ctx.only && !ctx.only.includes('refactor')) {
+						return;
+					}
 
 					const startOffset = document.offsetAt(range.start);
 					const endOffset = document.offsetAt(range.end);
@@ -35,16 +40,21 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(sourceScript?.generated?.root instanceof VueVirtualCode) || virtualCode?.id !== 'template') {
+					if (!sourceScript?.generated || virtualCode?.id !== 'template') {
 						return;
 					}
 
-					const { sfc } = sourceScript.generated.root;
-					const script = sfc.scriptSetup ?? sfc.script;
+					const root = sourceScript.generated.root;
+					if (!(root instanceof VueVirtualCode)) {
+						return;
+					}
 
+					const { sfc } = root;
+					const script = sfc.scriptSetup ?? sfc.script;
 					if (!sfc.template || !script) {
 						return;
 					}
@@ -71,19 +81,22 @@ export function create(
 
 					const { uri, range, newName } = codeAction.data as ActionData;
 					const [startOffset, endOffset]: [number, number] = range;
+
 					const parsedUri = URI.parse(uri);
 					const decoded = context.decodeEmbeddedDocumentUri(parsedUri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(sourceScript?.generated?.root instanceof VueVirtualCode) || virtualCode?.id !== 'template') {
+					if (!sourceScript?.generated || virtualCode?.id !== 'template') {
 						return codeAction;
 					}
 
-					const document = context.documents.get(parsedUri, virtualCode.languageId, virtualCode.snapshot);
-					const sfcDocument = context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
-					const { sfc } = sourceScript.generated.root;
-					const script = sfc.scriptSetup ?? sfc.script;
+					const root = sourceScript.generated.root;
+					if (!(root instanceof VueVirtualCode)) {
+						return codeAction;
+					}
 
+					const { sfc } = root;
+					const script = sfc.scriptSetup ?? sfc.script;
 					if (!sfc.template || !script) {
 						return codeAction;
 					}
@@ -93,20 +106,23 @@ export function create(
 						return codeAction;
 					}
 
-					const toExtract = await tsPluginClient?.collectExtractProps(sourceScript.generated.root.fileName, templateCodeRange) ?? [];
+					const toExtract = await tsPluginClient?.collectExtractProps(root.fileName, templateCodeRange) ?? [];
 					if (!toExtract) {
 						return codeAction;
 					}
 
 					const templateInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
 					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.script.initialIndent') ?? false;
-					const newUri = sfcDocument.uri.substring(0, sfcDocument.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
+
+					const document = context.documents.get(parsedUri, virtualCode.languageId, virtualCode.snapshot);
+					const sfcDocument = context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
+					const newUri = sfcDocument.uri.slice(0, sfcDocument.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 
 					let newFileTags = [];
 
 					newFileTags.push(
-						constructTag('template', [], templateInitialIndent, sfc.template.content.substring(templateCodeRange[0], templateCodeRange[1]))
+						constructTag('template', [], templateInitialIndent, sfc.template.content.slice(templateCodeRange[0], templateCodeRange[1]))
 					);
 
 					if (toExtract.length) {
@@ -142,7 +158,7 @@ export function create(
 					];
 
 					if (sfc.script) {
-						const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
+						const edit = createAddComponentToOptionEdit(ts, sfc, sfc.script.ast, newName);
 						if (edit) {
 							sfcEdits.push({
 								range: {
@@ -288,12 +304,13 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 	return lastImportNode;
 }
 
-export function createAddComponentToOptionEdit(ts: typeof import('typescript'), ast: ts.SourceFile, componentName: string) {
+export function createAddComponentToOptionEdit(ts: typeof import('typescript'), sfc: Sfc, ast: ts.SourceFile, componentName: string) {
 
-	const exportDefault = scriptRanges.parseScriptRanges(ts, ast, false, true).exportDefault;
-	if (!exportDefault) {
+	const scriptRanges = tsCodegen.get(sfc)?.getScriptRanges();
+	if (!scriptRanges?.exportDefault) {
 		return;
 	}
+	const { exportDefault } = scriptRanges;
 
 	// https://github.com/microsoft/TypeScript/issues/36174
 	const printer = ts.createPrinter();

@@ -1,6 +1,6 @@
-import * as path from 'path';
+import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { createChecker, createCheckerByJson, MetaCheckerOptions, ComponentMetaChecker, TypeMeta } from '..';
+import { ComponentMetaChecker, createChecker, createCheckerByJson, MetaCheckerOptions, TypeMeta } from '..';
 
 const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
@@ -25,23 +25,49 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		// expect(meta.type).toEqual(TypeMeta.Class);
 
+		const modelValue = meta.props.find(prop => prop.name === 'modelValue');
+		const onUpdateModelValue = meta.events.find(event => event.name === 'update:modelValue');
+
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const onUpdateFoo = meta.events.find(event => event.name === 'update:foo');
 
 		const bar = meta.props.find(prop => prop.name === 'bar');
-		const onUpdateBar = meta.events.find(event => event.name === 'update:bar');
+		const barModifiers = meta.props.find(prop => prop.name === 'barModifiers');
+		const onUpdateBaz = meta.events.find(event => event.name === 'update:bar');
 
-		const qux = meta.props.find(prop => prop.name === 'qux');
-		const quxModifiers = meta.props.find(prop => prop.name === 'quxModifiers');
-		const onUpdateQux = meta.events.find(event => event.name === 'update:qux');
+		expect(modelValue).toBeDefined();
+		expect(modelValue?.default).toBeUndefined();
+		expect(modelValue?.required).toBeTruthy();
+		expect(modelValue?.type).toEqual('number');
+		expect(modelValue?.description).toEqual('required number modelValue');
+		expect(modelValue?.schema).toEqual('number');
+		expect(onUpdateModelValue).toBeDefined();
 
 		expect(foo).toBeDefined();
-		expect(bar).toBeDefined();
-		expect(qux).toBeDefined();
-		expect(quxModifiers).toBeDefined();
+		expect(foo?.default).toBe('false');
+		expect(foo?.required).toBeFalsy();
+		expect(foo?.type).toEqual('boolean | undefined');
+		expect(foo?.description).toEqual('optional boolean foo with default false');
+		expect(foo?.schema).toEqual({
+			kind: 'enum',
+			type: 'boolean | undefined',
+			schema: ['undefined', 'false', 'true'],
+		});
 		expect(onUpdateFoo).toBeDefined();
-		expect(onUpdateBar).toBeDefined();
-		expect(onUpdateQux).toBeDefined();
+
+		expect(bar).toBeDefined();
+		expect(bar?.default).toBeUndefined();
+		expect(bar?.required).toBeFalsy();
+		expect(bar?.type).toEqual('string | undefined');
+		expect(bar?.description).toEqual('optional string bar with lazy and trim modifiers');
+		expect(bar?.schema).toEqual({
+			kind: 'enum',
+			type: 'string | undefined',
+			schema: ['undefined', 'string'],
+		});
+		// TODO: The types of modifiers are inconsistent in the two running results
+		expect(barModifiers).toBeDefined();
+		expect(onUpdateBaz).toBeDefined();
 	});
 
 	test('reference-type-props', () => {
@@ -363,6 +389,17 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 				}
 			}
 		});
+	});
+
+	test('reference-type-props-destructured', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-props/component-destructure.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
+
+		const text = meta.props.find(prop => prop.name === 'text');
+
+		expect(text?.default).toEqual('"foobar"');
 	});
 
 	test('reference-type-props-js', () => {
@@ -727,7 +764,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	test('emits-generic', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/events/component-generic.vue');
 		const meta = checker.getComponentMeta(componentPath);
-		const foo = meta.events.find(event =>event.name === 'foo');
+		const foo = meta.events.find(event => event.name === 'foo');
 
 		expect(foo?.description).toBe('Emitted when foo...');
 	});
@@ -736,7 +773,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 	test.skip('emits-class', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/events/component-class.vue');
 		const meta = checker.getComponentMeta(componentPath);
-		const foo = meta.events.find(event =>event.name === 'foo');
+		const foo = meta.events.find(event => event.name === 'foo');
 
 		expect(foo?.description).toBe('Emitted when foo...');
 	});
@@ -858,17 +895,17 @@ const checkerOptions: MetaCheckerOptions = {
 };
 const tsconfigChecker = createChecker(
 	path.resolve(__dirname, '../../../test-workspace/component-meta/tsconfig.json'),
-	checkerOptions,
+	checkerOptions
 );
 const noTsConfigChecker = createCheckerByJson(
 	path.resolve(__dirname, '../../../test-workspace/component-meta'),
 	{
-		"extends": "../tsconfig.json",
+		"extends": "../tsconfig.base.json",
 		"include": [
 			"**/*",
 		],
 	},
-	checkerOptions,
+	checkerOptions
 );
 
 worker(tsconfigChecker, true);

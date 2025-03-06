@@ -1,0 +1,17 @@
+{
+	"extends": "../vue3_strictTemplate/tsconfig.json",
+	"vueCompilerOptions": {
+		"target": 2.7,
+	},
+	"include": [
+		"**/*",
+		"../vue2/env.d.ts",
+		"../vue3_strictTemplate",
+	],
+	"exclude": [
+		"../vue3_strictTemplate/#3140",
+		"../vue3_strictTemplate/#3718",
+		"../vue3_strictTemplate/defineModel",
+		"../vue3_strictTemplate/intrinsicProps",
+	]
+}

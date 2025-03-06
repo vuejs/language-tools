@@ -7,6 +7,7 @@ import { parse } from '../utils/parseSfc';
 
 const codeblockReg = /(`{3,})[\s\S]+?\1/g;
 const inlineCodeblockReg = /`[^\n`]+?`/g;
+const latexBlockReg = /(\${2,})[\s\S]+?\1/g;
 const scriptSetupReg = /\\\<[\s\S]+?\>\n?/g;
 const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 const angleBracketReg = /\<\S*\:\S*\>/g;
@@ -39,6 +40,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				.replace(codeblockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
 				// inline code block
 				.replace(inlineCodeblockReg, match => `\`${' '.repeat(match.length - 2)}\``)
+				// latex block
+				.replace(latexBlockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
 				// # \<script setup>
 				.replace(scriptSetupReg, match => ' '.repeat(match.length))
 				// <<< https://vitepress.dev/guide/markdown#import-code-snippets
@@ -51,7 +54,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					const matchText = match[0];
 					codes.push([matchText, undefined, match.index]);
 					codes.push('\n\n');
-					content = content.substring(0, match.index) + ' '.repeat(matchText.length) + content.substring(match.index + matchText.length);
+					content = content.slice(0, match.index) + ' '.repeat(matchText.length) + content.slice(match.index + matchText.length);
 				}
 			}
 
@@ -88,14 +91,17 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			return sfc;
 
 			function transformRange(block: SFCBlock) {
-				block.loc.start.offset = -1;
-				block.loc.end.offset = -1;
-				for (const [start] of file2VueSourceMap.toSourceLocation(block.loc.start.offset)) {
-					block.loc.start.offset = start;
+				const { start, end } = block.loc;
+				const startOffset = start.offset;
+				const endOffset = end.offset;
+				start.offset = -1;
+				end.offset = -1;
+				for (const [offset] of file2VueSourceMap.toSourceLocation(startOffset)) {
+					start.offset = offset;
 					break;
 				}
-				for (const [end] of file2VueSourceMap.toSourceLocation(block.loc.end.offset)) {
-					block.loc.end.offset = end;
+				for (const [offset] of file2VueSourceMap.toSourceLocation(endOffset)) {
+					end.offset = offset;
 					break;
 				}
 			}

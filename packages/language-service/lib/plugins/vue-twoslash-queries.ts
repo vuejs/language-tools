@@ -1,5 +1,5 @@
-import type { LanguageServiceContext, LanguageServicePlugin, LanguageServicePluginInstance } from '@volar/language-service';
-import * as vue from '@vue/language-core';
+import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
+import { VueVirtualCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 
@@ -13,15 +13,21 @@ export function create(
 		capabilities: {
 			inlayHintProvider: {},
 		},
-		create(context): LanguageServicePluginInstance {
+		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			return {
 				async provideInlayHints(document, range) {
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(sourceScript?.generated?.root instanceof vue.VueVirtualCode) || virtualCode?.id !== 'template') {
+					if (!sourceScript?.generated || virtualCode?.id !== 'template') {
+						return;
+					}
+
+					const root = sourceScript.generated.root;
+					if (!(root instanceof VueVirtualCode)) {
 						return;
 					}
 
@@ -40,7 +46,7 @@ export function create(
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 						const map = context.language.maps.get(virtualCode, sourceScript);
 						for (const [sourceOffset] of map.toSourceLocation(hoverOffset)) {
-							const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(sourceScript.generated.root.fileName, sourceOffset);
+							const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(root.fileName, sourceOffset);
 							if (quickInfo) {
 								inlayHints.push({
 									position: { line: pointerPosition.line, character: pointerPosition.character + 2 },

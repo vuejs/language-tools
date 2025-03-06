@@ -1,10 +1,7 @@
 {
 	"compilerOptions": {
 		"target": "ES2021",
-		"lib": [
-			"WebWorker",
-			"ES2021",
-		],
+		"lib": [ "ES2021" ],
 		"module": "Node16",
 		"sourceMap": true,
 		"composite": true,
@@ -14,8 +11,6 @@
 		"noUnusedParameters": true,
 		"esModuleInterop": false,
 		"forceConsistentCasingInFileNames": true,
-		"ignoreDeprecations": "5.0",
-		"importsNotUsedAsValues": "error",
 	},
 	"include": [ ],
 }

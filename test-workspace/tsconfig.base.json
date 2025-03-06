@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"lib": [
+			"esnext",
+			"dom"
+		],
+		"strict": true,
+		"noUncheckedIndexedAccess": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"skipLibCheck": true,
+		"allowJs": true,
+		"declaration": true,
+		"noEmit": true,
+		"jsx": "preserve",
+		"baseUrl": ".",
+	},
+	"include": [ ],
+}

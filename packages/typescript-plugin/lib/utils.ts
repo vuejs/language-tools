@@ -1,89 +1,255 @@
-import * as os from 'os';
-import * as net from 'net';
-import * as path from 'path';
+import { FileMap } from '@vue/language-core';
+import { camelize, capitalize } from '@vue/shared';
+import * as fs from 'node:fs';
+import * as net from 'node:net';
+import * as os from 'node:os';
+import * as path from 'node:path';
 import type * as ts from 'typescript';
-import * as fs from 'fs';
-import type { Request } from './server';
+import type { ComponentPropInfo } from './requests/getComponentProps';
+import type { NotificationData, ProjectInfo, RequestData, ResponseData } from './server';
 
 export { TypeScriptProjectHost } from '@volar/typescript';
 
-export interface NamedPipeServer {
-	path: string;
-	serverKind: ts.server.ProjectKind;
-	currentDirectory: string;
-}
-
 const { version } = require('../package.json');
+const platform = os.platform();
+const pipeDir = platform === 'win32'
+	? `\\\\.\\pipe\\`
+	: `/tmp/`;
 
-const pipeTableFile = path.join(os.tmpdir(), `vue-tsp-table-${version}.json`);
-
-export function readPipeTable() {
-	if (!fs.existsSync(pipeTableFile)) {
-		return [];
-	}
-	try {
-		const servers: NamedPipeServer[] = JSON.parse(fs.readFileSync(pipeTableFile, 'utf8'));
-		return servers;
-	} catch {
-		fs.unlinkSync(pipeTableFile);
-		return [];
+export function getServerPath(kind: ts.server.ProjectKind, id: number) {
+	if (kind === 1 satisfies ts.server.ProjectKind.Configured) {
+		return `${pipeDir}vue-named-pipe-${version}-configured-${id}`;
+	} else {
+		return `${pipeDir}vue-named-pipe-${version}-inferred-${id}`;
 	}
 }
 
-export function updatePipeTable(servers: NamedPipeServer[]) {
-	if (servers.length === 0) {
-		fs.unlinkSync(pipeTableFile);
-	}
-	else {
-		fs.writeFileSync(pipeTableFile, JSON.stringify(servers, undefined, 2));
-	}
-}
+class NamedPipeServer {
+	path: string;
+	connecting = false;
+	projectInfo?: ProjectInfo;
+	componentNamesAndProps = new FileMap<
+		Record<string, null | ComponentPropInfo[]>
+	>(false);
 
-export function connect(path: string) {
-	return new Promise<net.Socket | undefined>(resolve => {
-		const client = net.connect(path);
-		client.setTimeout(1000);
-		client.on('connect', () => {
-			resolve(client);
-		});
-		client.on('error', () => {
-			return resolve(undefined);
-		});
-		client.on('timeout', () => {
-			return resolve(undefined);
-		});
-	});
-}
+	constructor(kind: ts.server.ProjectKind, id: number) {
+		this.path = getServerPath(kind, id);
+	}
 
-export async function searchNamedPipeServerForFile(fileName: string) {
-	const servers = readPipeTable();
-	const configuredServers = servers
-		.filter(item => item.serverKind === 1 satisfies ts.server.ProjectKind.Configured);
-	const inferredServers = servers
-		.filter(item => item.serverKind === 0 satisfies ts.server.ProjectKind.Inferred)
-		.sort((a, b) => b.currentDirectory.length - a.currentDirectory.length);
-	for (const server of configuredServers.sort((a, b) => sortTSConfigs(fileName, a.currentDirectory, b.currentDirectory))) {
-		const client = await connect(server.path);
-		if (client) {
-			const projectInfo = await sendRequestWorker<{ name: string; kind: ts.server.ProjectKind; }>({ type: 'projectInfoForFile', args: [fileName] }, client);
+	containsFile(fileName: string) {
+		if (this.projectInfo) {
+			return this.sendRequest<boolean>('containsFile', fileName);
+		}
+	}
+
+	async getComponentProps(fileName: string, tag: string) {
+		const componentAndProps = this.componentNamesAndProps.get(fileName);
+		if (!componentAndProps) {
+			return;
+		}
+		const props = componentAndProps[tag]
+			?? componentAndProps[camelize(tag)]
+			?? componentAndProps[capitalize(camelize(tag))];
+		if (props) {
+			return props;
+		}
+		return await this.sendRequest<ComponentPropInfo[]>('subscribeComponentProps', fileName, tag);
+	}
+
+	update() {
+		if (!this.connecting && !this.projectInfo) {
+			this.connecting = true;
+			this.connect();
+		}
+	}
+
+	connect() {
+		this.socket = net.connect(this.path);
+		this.socket.on('data', this.onData.bind(this));
+		this.socket.on('connect', async () => {
+			const projectInfo = await this.sendRequest<ProjectInfo>('projectInfo', '');
 			if (projectInfo) {
-				return {
-					server,
-					projectInfo,
-				};
+				console.log('TSServer project ready:', projectInfo.name);
+				this.projectInfo = projectInfo;
+				onServerReady.forEach(cb => cb());
+			} else {
+				this.close();
+			}
+		});
+		this.socket.on('error', err => {
+			if ((err as any).code === 'ECONNREFUSED') {
+				try {
+					console.log('Deleteing invalid named pipe file:', this.path);
+					fs.promises.unlink(this.path);
+				} catch { }
+			}
+			this.close();
+		});
+		this.socket.on('timeout', () => {
+			this.close();
+		});
+	}
+
+	close() {
+		this.connecting = false;
+		this.projectInfo = undefined;
+		this.socket?.end();
+	}
+
+	socket?: net.Socket;
+	seq = 0;
+	dataChunks: Buffer[] = [];
+	requestHandlers: Map<number, (res: any) => void> = new Map();
+
+	onData(chunk: Buffer) {
+		this.dataChunks.push(chunk);
+		const data = Buffer.concat(this.dataChunks);
+		const text = data.toString();
+		if (text.endsWith('\n\n')) {
+			this.dataChunks.length = 0;
+			const results = text.split('\n\n');
+			for (let result of results) {
+				result = result.trim();
+				if (!result) {
+					continue;
+				}
+				try {
+					const data: ResponseData | NotificationData = JSON.parse(result.trim());
+					if (typeof data[0] === 'number') {
+						const [seq, res] = data;
+						this.requestHandlers.get(seq)?.(res);
+					} else {
+						const [type, fileName, res] = data;
+						this.onNotification(type, fileName, res);
+					}
+				} catch (e) {
+					console.error('JSON parse error:', e);
+				}
 			}
 		}
 	}
-	for (const server of inferredServers) {
-		if (!path.relative(server.currentDirectory, fileName).startsWith('..')) {
-			const client = await connect(server.path);
-			if (client) {
-				return {
-					server,
-					projectInfo: undefined,
-				};
+
+	onNotification(type: NotificationData[0], fileName: string, data: any) {
+		// console.log(`[${type}] ${fileName} ${JSON.stringify(data)}`);
+
+		if (type === 'componentNamesUpdated') {
+			let components = this.componentNamesAndProps.get(fileName);
+			if (!components) {
+				components = {};
+				this.componentNamesAndProps.set(fileName, components);
+			}
+			const newNames: string[] = data;
+			const newNameSet = new Set(newNames);
+			for (const name in components) {
+				if (!newNameSet.has(name)) {
+					delete components[name];
+				}
+			}
+			for (const name of newNames) {
+				if (!components[name]) {
+					components[name] = null;
+				}
 			}
 		}
+		else if (type === 'componentPropsUpdated') {
+			const components = this.componentNamesAndProps.get(fileName) ?? {};
+			const [name, props]: [
+				name: string,
+				props: ComponentPropInfo[],
+			] = data;
+			if (name in components) {
+				components[name] = props;
+			}
+		}
+		else {
+			console.error('Unknown notification type:', type);
+			debugger;
+		}
+	}
+
+	sendRequest<T>(requestType: RequestData[1], fileName: string, ...args: any[]) {
+		return new Promise<T | undefined | null>(resolve => {
+			const seq = this.seq++;
+			// console.time(`[${seq}] ${requestType} ${fileName}`);
+			this.requestHandlers.set(seq, data => {
+				// console.timeEnd(`[${seq}] ${requestType} ${fileName}`);
+				this.requestHandlers.delete(seq);
+				resolve(data);
+				clearInterval(retryTimer);
+			});
+			const retry = () => {
+				const data: RequestData = [seq, requestType, fileName, ...args];
+				this.socket!.write(JSON.stringify(data) + '\n\n');
+			};
+			retry();
+			const retryTimer = setInterval(retry, 1000);
+		});
+	}
+}
+
+export const configuredServers: NamedPipeServer[] = [];
+export const inferredServers: NamedPipeServer[] = [];
+export const onServerReady: (() => void)[] = [];
+
+for (let i = 0; i < 10; i++) {
+	configuredServers.push(new NamedPipeServer(1 satisfies ts.server.ProjectKind.Configured, i));
+	inferredServers.push(new NamedPipeServer(0 satisfies ts.server.ProjectKind.Inferred, i));
+}
+
+export async function getBestServer(fileName: string) {
+	for (const server of configuredServers) {
+		server.update();
+	}
+
+	let servers = (await Promise.all(
+		configuredServers.map(async server => {
+			const projectInfo = server.projectInfo;
+			if (!projectInfo) {
+				return;
+			}
+			const containsFile = await server.containsFile(fileName);
+			if (!containsFile) {
+				return;
+			}
+			return server;
+		})
+	)).filter(server => !!server);
+
+	// Sort servers by tsconfig
+	servers.sort((a, b) => sortTSConfigs(fileName, a.projectInfo!.name, b.projectInfo!.name));
+
+	if (servers.length) {
+		// Return the first server
+		return servers[0];
+	}
+
+	for (const server of inferredServers) {
+		server.update();
+	}
+
+	servers = (await Promise.all(
+		inferredServers.map(server => {
+			const projectInfo = server.projectInfo;
+			if (!projectInfo) {
+				return;
+			}
+			// Check if the file is in the project's directory
+			if (path.relative(projectInfo.currentDirectory, fileName).startsWith('..')) {
+				return;
+			}
+			return server;
+		})
+	)).filter(server => !!server);
+
+	// Sort servers by directory
+	servers.sort((a, b) =>
+		b.projectInfo!.currentDirectory.replace(/\\/g, '/').split('/').length
+		- a.projectInfo!.currentDirectory.replace(/\\/g, '/').split('/').length
+	);
+
+	if (servers.length) {
+		// Return the first server
+		return servers[0];
 	}
 }
 
@@ -107,41 +273,4 @@ function sortTSConfigs(file: string, a: string, b: string) {
 function isFileInDir(fileName: string, dir: string) {
 	const relative = path.relative(dir, fileName);
 	return !!relative && !relative.startsWith('..') && !path.isAbsolute(relative);
-}
-
-export function sendRequestWorker<T>(request: Request, client: net.Socket) {
-	return new Promise<T | undefined | null>(resolve => {
-		let dataChunks: Buffer[] = [];
-		client.setTimeout(5000);
-		client.on('data', chunk => {
-			dataChunks.push(chunk);
-		});
-		client.on('end', () => {
-			if (!dataChunks.length) {
-				console.warn('[Vue Named Pipe Client] No response from server for request:', request.type);
-				resolve(undefined);
-				return;
-			}
-			const data = Buffer.concat(dataChunks);
-			const text = data.toString();
-			let json = null;
-			try {
-				json = JSON.parse(text);
-			} catch (e) {
-				console.error('[Vue Named Pipe Client] Failed to parse response:', text);
-				resolve(undefined);
-				return;
-			}
-			resolve(json);
-		});
-		client.on('error', err => {
-			console.error('[Vue Named Pipe Client] Error:', err.message);
-			resolve(undefined);
-		});
-		client.on('timeout', () => {
-			console.error('[Vue Named Pipe Client] Timeout');
-			resolve(undefined);
-		});
-		client.write(JSON.stringify(request));
-	});
 }

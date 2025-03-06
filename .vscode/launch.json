@@ -6,6 +6,7 @@
 			"name": "Launch Client",
 			"type": "extensionHost",
 			"request": "launch",
+			"autoAttachChildProcesses": true,
 			"runtimeExecutable": "${execPath}",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}/extensions/vscode",

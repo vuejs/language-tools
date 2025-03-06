@@ -1,6 +1,7 @@
 out
 scripts
 src
+tests
 tsconfig.*
 meta.json
 stats.html

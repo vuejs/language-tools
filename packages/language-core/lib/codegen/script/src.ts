@@ -1,54 +1,51 @@
-import type { Code, Sfc } from '../../types';
-import { endOfLine } from '../common';
-import { codeFeatures } from './index';
+import type { Code, SfcBlockAttr } from '../../types';
+import { codeFeatures } from '../codeFeatures';
+import { endOfLine, generateSfcBlockAttrValue } from '../utils';
 
-export function* generateSrc(
-	script: NonNullable<Sfc['script']>,
-	src: string
-): Generator<Code> {
-	if (src.endsWith('.d.ts')) {
-		src = src.substring(0, src.length - '.d.ts'.length);
+export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
+	if (src === true) {
+		return;
 	}
-	else if (src.endsWith('.ts')) {
-		src = src.substring(0, src.length - '.ts'.length);
+	let { text } = src;
+
+	if (text.endsWith('.d.ts')) {
+		text = text.slice(0, -'.d.ts'.length);
 	}
-	else if (src.endsWith('.tsx')) {
-		src = src.substring(0, src.length - '.tsx'.length) + '.jsx';
+	else if (text.endsWith('.ts')) {
+		text = text.slice(0, -'.ts'.length);
+	}
+	else if (text.endsWith('.tsx')) {
+		text = text.slice(0, -'.tsx'.length) + '.jsx';
 	}
 
-	if (!src.endsWith('.js') && !src.endsWith('.jsx')) {
-		src = src + '.js';
+	if (!text.endsWith('.js') && !text.endsWith('.jsx')) {
+		text = text + '.js';
 	}
 
 	yield `export * from `;
-	yield [
-		`'${src}'`,
-		'script',
-		script.srcOffset - 1,
-		{
-			...codeFeatures.all,
-			navigation: src === script.src
-				? true
-				: {
-					shouldRename: () => false,
-					resolveRenameEditText(newName) {
-						if (newName.endsWith('.jsx') || newName.endsWith('.js')) {
-							newName = newName.split('.').slice(0, -1).join('.');
-						}
-						if (script?.src?.endsWith('.d.ts')) {
-							newName = newName + '.d.ts';
-						}
-						else if (script?.src?.endsWith('.ts')) {
-							newName = newName + '.ts';
-						}
-						else if (script?.src?.endsWith('.tsx')) {
-							newName = newName + '.tsx';
-						}
-						return newName;
-					},
+	yield* generateSfcBlockAttrValue(src, text, {
+		...codeFeatures.all,
+		navigation: text === src.text
+			? true
+			: {
+				shouldRename: () => false,
+				resolveRenameEditText(newName) {
+					if (newName.endsWith('.jsx') || newName.endsWith('.js')) {
+						newName = newName.split('.').slice(0, -1).join('.');
+					}
+					if (src?.text.endsWith('.d.ts')) {
+						newName = newName + '.d.ts';
+					}
+					else if (src?.text.endsWith('.ts')) {
+						newName = newName + '.ts';
+					}
+					else if (src?.text.endsWith('.tsx')) {
+						newName = newName + '.tsx';
+					}
+					return newName;
 				},
-		},
-	];
+			},
+	});
 	yield endOfLine;
-	yield `export { default } from '${src}'${endOfLine}`;
+	yield `export { default } from '${text}'${endOfLine}`;
 }

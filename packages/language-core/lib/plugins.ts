@@ -1,6 +1,7 @@
 import useHtmlFilePlugin from './plugins/file-html';
 import useMdFilePlugin from './plugins/file-md';
 import useVueFilePlugin from './plugins/file-vue';
+import vueRootTagsPlugin from './plugins/vue-root-tags';
 import vueScriptJsPlugin from './plugins/vue-script-js';
 import vueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import vueSfcScriptsFormat from './plugins/vue-sfc-scripts';
@@ -20,6 +21,7 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		useVueFilePlugin,
 		useMdFilePlugin,
 		useHtmlFilePlugin,
+		vueRootTagsPlugin,
 		vueScriptJsPlugin,
 		vueTemplateHtmlPlugin,
 		vueTemplateInlineCssPlugin,
@@ -33,16 +35,23 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 	];
 
 	const pluginInstances = plugins
-		.map(plugin => {
+		.flatMap(plugin => {
 			try {
 				const instance = plugin(pluginContext);
-				instance.name ??= (plugin as any).__moduleName;
+				const moduleName = (plugin as any).__moduleName;
+				if (Array.isArray(instance)) {
+					for (let i = 0; i < instance.length; i++) {
+						instance[i].name ??= `${moduleName} (${i})`;
+					}
+				} else {
+					instance.name ??= moduleName;
+				}
 				return instance;
 			} catch (err) {
 				console.warn('[Vue] Failed to create plugin', err);
 			}
 		})
-		.filter((plugin): plugin is ReturnType<VueLanguagePlugin> => !!plugin)
+		.filter(plugin => !!plugin)
 		.sort((a, b) => {
 			const aOrder = a.order ?? 0;
 			const bOrder = b.order ?? 0;

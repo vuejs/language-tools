@@ -1,6 +1,9 @@
 name: update-html-data
 
 on:
+  push:
+    branches:
+    - 'master'
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
@@ -22,7 +25,7 @@ jobs:
 
       # update data
       - name: Update HTML Data
-        run: cd packages/language-service && npm run update-html-data
+        run: cd packages/language-service && pnpm run update-html-data
 
       # commit
       - name: Commit

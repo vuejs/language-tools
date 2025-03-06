@@ -1,5 +1,4 @@
 import { VueVirtualCode, isSemanticTokensEnabled } from '@vue/language-core';
-import type * as ts from 'typescript';
 import type { RequestContext } from './types';
 
 export function collectExtractProps(
@@ -9,8 +8,13 @@ export function collectExtractProps(
 ) {
 	const { typescript: ts, languageService, language, isTsPlugin, getFileId } = this;
 
-	const volarFile = language.scripts.get(getFileId(fileName));
-	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
+	const sourceScript = language.scripts.get(getFileId(fileName));
+	if (!sourceScript?.generated) {
+		return;
+	}
+
+	const root = sourceScript.generated.root;
+	if (!(root instanceof VueVirtualCode)) {
 		return;
 	}
 
@@ -19,16 +23,12 @@ export function collectExtractProps(
 		type: string;
 		model: boolean;
 	}>();
-	const program: ts.Program = (languageService as any).getCurrentProgram();
-	if (!program) {
-		return;
-	}
-
+	const program = languageService.getProgram()!;
 	const sourceFile = program.getSourceFile(fileName)!;
 	const checker = program.getTypeChecker();
-	const script = volarFile.generated?.languagePlugin.typescript?.getServiceScript(volarFile.generated.root);
+	const script = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(root);
 	const maps = script ? [...language.maps.forEach(script.code)].map(([_sourceScript, map]) => map) : [];
-	const sfc = volarFile.generated.root.sfc;
+	const { sfc } = root;
 
 	sourceFile.forEachChild(function visit(node) {
 		if (
@@ -40,7 +40,7 @@ export function collectExtractProps(
 			const { name } = node;
 			for (const map of maps) {
 				let mapped = false;
-				for (const source of map.toSourceLocation(name.getEnd() - (isTsPlugin ? volarFile.snapshot.getLength() : 0))) {
+				for (const source of map.toSourceLocation(name.getEnd() - (isTsPlugin ? sourceScript.snapshot.getLength() : 0))) {
 					if (
 						source[0] >= sfc.template!.startTagEnd + templateCodeRange[0]
 						&& source[0] <= sfc.template!.startTagEnd + templateCodeRange[1]

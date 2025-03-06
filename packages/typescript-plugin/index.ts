@@ -1,40 +1,39 @@
-import { createLanguageServicePlugin, externalFiles } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
+import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
+import type * as ts from 'typescript';
 import { proxyLanguageServiceForVue } from './lib/common';
-import { projects, startNamedPipeServer } from './lib/server';
+import { startNamedPipeServer } from './lib/server';
 
 const windowsPathReg = /\\/g;
-
+const vueCompilerOptions = new WeakMap<ts.server.Project, vue.VueCompilerOptions>();
 const plugin = createLanguageServicePlugin(
 	(ts, info) => {
 		const vueOptions = getVueCompilerOptions();
 		const languagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
-			id => id,
-			info.project.projectKind === ts.server.ProjectKind.Inferred
-				? () => true
-				: vue.createRootFileChecker(
-					info.languageServiceHost.getProjectVersion ? () => info.languageServiceHost.getProjectVersion!() : undefined,
-					() => externalFiles.get(info.project) ?? [],
-					info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false
-				),
 			info.languageServiceHost.getCompilationSettings(),
-			vueOptions
+			vueOptions,
+			id => id
 		);
+
+		vueCompilerOptions.set(info.project, vueOptions);
 
 		return {
 			languagePlugins: [languagePlugin],
 			setup: language => {
-				projects.set(info.project, { info, language, vueOptions });
-
 				info.languageService = proxyLanguageServiceForVue(ts, language, info.languageService, vueOptions, fileName => fileName);
-				startNamedPipeServer(ts, info.project.projectKind, info.project.getCurrentDirectory());
+				if (
+					info.project.projectKind === ts.server.ProjectKind.Configured
+					|| info.project.projectKind === ts.server.ProjectKind.Inferred
+				) {
+					startNamedPipeServer(ts, info, language, info.project.projectKind);
+				}
 
 				// #3963
 				const timer = setInterval(() => {
 					if (info.project['program']) {
 						clearInterval(timer);
-						(info.project['program'] as any).__vue__ = { language };
+						info.project['program'].__vue__ = { language };
 					}
 				}, 50);
 			}

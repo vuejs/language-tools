@@ -1,5 +1,72 @@
 import type * as ts from 'typescript';
-import type { VueCompilerOptions, TextRange } from '../types';
+import { collectIdentifiers } from '../codegen/utils';
+import type { TextRange, VueCompilerOptions } from '../types';
+import { getNodeText, getStartEnd } from '../utils/shared';
+
+const tsCheckReg = /^\/\/\s*@ts-(?:no)?check($|\s)/;
+
+type CallExpressionRange = {
+	callExp: TextRange;
+	exp: TextRange;
+	arg?: TextRange;
+	typeArg?: TextRange;
+};
+
+type DefineProp = {
+	localName?: TextRange;
+	name?: TextRange;
+	type?: TextRange;
+	modifierType?: TextRange;
+	runtimeType?: TextRange;
+	defaultValue?: TextRange;
+	required?: boolean;
+	isModel?: boolean;
+	comments?: TextRange;
+	// used by component-meta
+	argNode?: ts.Expression;
+};
+
+type DefineProps = CallExpressionRange & {
+	name?: string;
+	destructured?: Map<string, ts.Expression | undefined>;
+	destructuredRest?: string;
+	statement: TextRange;
+	// used by component-meta
+	argNode?: ts.Expression;
+};
+
+type WithDefaults = Omit<CallExpressionRange, 'typeArg'> & {
+	// used by component-meta
+	argNode?: ts.Expression;
+};
+
+type DefineEmits = CallExpressionRange & {
+	name?: string;
+	hasUnionTypeArg?: boolean;
+	statement: TextRange;
+};
+
+type DefineSlots = CallExpressionRange & {
+	name?: string;
+	statement: TextRange;
+};
+
+type DefineExpose = CallExpressionRange;
+
+type DefineOptions = {
+	name?: string;
+	inheritAttrs?: string;
+};
+
+type UseAttrs = CallExpressionRange;
+
+type UseCssModule = CallExpressionRange;
+
+type UseSlots = CallExpressionRange;
+
+type UseTemplateRef = CallExpressionRange & {
+	name?: string;
+};
 
 export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRanges> { }
 
@@ -8,56 +75,34 @@ export function parseScriptSetupRanges(
 	ast: ts.SourceFile,
 	vueCompilerOptions: VueCompilerOptions
 ) {
+	const defineProp: DefineProp[] = [];
+	let defineProps: DefineProps | undefined;
+	let withDefaults: WithDefaults | undefined;
+	let defineEmits: DefineEmits | undefined;
+	let defineSlots: DefineSlots | undefined;
+	let defineExpose: DefineExpose | undefined;
+	let defineOptions: DefineOptions | undefined;
+	const useAttrs: UseAttrs[] = [];
+	const useCssModule: UseCssModule[] = [];
+	const useSlots: UseSlots[] = [];
+	const useTemplateRef: UseTemplateRef[] = [];
+	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
+	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
+	const text = ast.text;
 
+	const leadingCommentRanges = ts.getLeadingCommentRanges(text, 0)?.reverse() ?? [];
+	const leadingCommentEndOffset = leadingCommentRanges.find(
+		range => tsCheckReg.test(text.slice(range.pos, range.end))
+	)?.end ?? 0;
+
+	let bindings = parseBindingRanges(ts, ast);
 	let foundNonImportExportNode = false;
 	let importSectionEndOffset = 0;
 
-	const props: {
-		name?: string;
-		define?: ReturnType<typeof parseDefineFunction> & {
-			statement: TextRange;
-		};
-		withDefaults?: TextRange & {
-			arg?: TextRange;
-		};
-	} = {};
-	const slots: {
-		name?: string;
-		isObjectBindingPattern?: boolean;
-		define?: ReturnType<typeof parseDefineFunction>;
-	} = {};
-	const emits: {
-		name?: string;
-		define?: ReturnType<typeof parseDefineFunction> & {
-			hasUnionTypeArg?: boolean;
-		};
-	} = {};
-	const expose: {
-		name?: string;
-		define?: ReturnType<typeof parseDefineFunction>;
-	} = {};
-	const options: {
-		name?: string;
-	} = {};
-
-	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=kevinEdition');
-	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition' || ast.text.trimStart().startsWith('// @experimentalDefinePropProposal=johnsonEdition');
-	const defineProp: {
-		name: TextRange | undefined;
-		nameIsString: boolean;
-		type: TextRange | undefined;
-		modifierType?: TextRange | undefined;
-		defaultValue: TextRange | undefined;
-		required: boolean;
-		isModel?: boolean;
-	}[] = [];
-	const bindings = parseBindingRanges(ts, ast);
-	const text = ast.text;
-	const leadingCommentEndOffset = ts.getLeadingCommentRanges(text, 0)?.reverse()[0].end ?? 0;
-	const importComponentNames = new Set<string>();
-
 	ts.forEachChild(ast, node => {
-		const isTypeExport = (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
+		const isTypeExport =
+			(ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
+			&& node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
 		if (
 			!foundNonImportExportNode
 			&& !ts.isImportDeclaration(node)
@@ -76,47 +121,31 @@ export function parseScriptSetupRanges(
 			}
 			foundNonImportExportNode = true;
 		}
-
-		if (
-			ts.isImportDeclaration(node)
-			&& node.importClause?.name
-			&& !node.importClause.isTypeOnly
-		) {
-			const moduleName = getNodeText(ts, node.moduleSpecifier, ast).slice(1, -1);
-			if (vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))) {
-				importComponentNames.add(getNodeText(ts, node.importClause.name, ast));
-			}
-		}
 	});
-	ts.forEachChild(ast, child => visitNode(child, [ast]));
+	ts.forEachChild(ast, node => visitNode(node, [ast]));
+
+	const templateRefNames = new Set(useTemplateRef.map(ref => ref.name));
+	bindings = bindings.filter(({ range }) => {
+		const name = text.slice(range.start, range.end);
+		return !templateRefNames.has(name);
+	});
 
 	return {
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		bindings,
-		importComponentNames,
-		props,
-		slots,
-		emits,
-		expose,
 		defineProp,
-		options,
+		defineProps,
+		withDefaults,
+		defineEmits,
+		defineSlots,
+		defineExpose,
+		defineOptions,
+		useAttrs,
+		useCssModule,
+		useSlots,
+		useTemplateRef,
 	};
-
-	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(ts, node, ast);
-	}
-
-	function parseDefineFunction(node: ts.CallExpression): TextRange & {
-		arg?: TextRange;
-		typeArg?: TextRange;
-	} {
-		return {
-			..._getStartEnd(node),
-			arg: node.arguments.length ? _getStartEnd(node.arguments[0]) : undefined,
-			typeArg: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
-		};
-	}
 
 	function visitNode(node: ts.Node, parents: ts.Node[]) {
 		const parent = parents[parents.length - 1];
@@ -124,277 +153,407 @@ export function parseScriptSetupRanges(
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
 		) {
-			const callText = getNodeText(ts, node.expression, ast);
-			if (vueCompilerOptions.macros.defineModel.includes(callText)) {
-				let name: TextRange | undefined;
-				let options: ts.Node | undefined;
-				if (node.arguments.length >= 2) {
-					name = _getStartEnd(node.arguments[0]);
-					options = node.arguments[1];
-				}
-				else if (node.arguments.length >= 1) {
-					if (ts.isStringLiteral(node.arguments[0])) {
-						name = _getStartEnd(node.arguments[0]);
-					}
-					else {
-						options = node.arguments[0];
-					}
-				}
+			const callText = _getNodeText(node.expression);
+			const isDefineModel = vueCompilerOptions.macros.defineModel.includes(callText);
+			if (isDefineModel || callText === 'defineProp') {
+				let localName: TextRange | undefined;
+				let propName: ts.Expression | undefined;
+				let options: ts.Expression | undefined;
+				let type: TextRange | undefined;
+				let modifierType: TextRange | undefined;
+				let runtimeType: TextRange | undefined;
+				let defaultValue: TextRange | undefined;
 				let required = false;
-				if (options && ts.isObjectLiteralExpression(options)) {
-					for (const property of options.properties) {
-						if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && getNodeText(ts, property.name, ast) === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
-							required = true;
-							break;
+
+				if (
+					ts.isVariableDeclaration(parent) &&
+					ts.isIdentifier(parent.name)
+				) {
+					localName = _getStartEnd(parent.name);
+				}
+
+				if (node.typeArguments) {
+					if (node.typeArguments.length >= 1) {
+						type = _getStartEnd(node.typeArguments[0]);
+					}
+					if (node.typeArguments.length >= 2) {
+						modifierType = _getStartEnd(node.typeArguments[1]);
+					}
+				}
+
+				if (isDefineModel) {
+					if (node.arguments.length >= 2) {
+						propName = node.arguments[0];
+						options = node.arguments[1];
+					}
+					else if (node.arguments.length >= 1) {
+						if (ts.isStringLiteralLike(node.arguments[0])) {
+							propName = node.arguments[0];
+						}
+						else {
+							options = node.arguments[0];
 						}
 					}
 				}
-				defineProp.push({
-					name,
-					nameIsString: true,
-					type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
-					modifierType: node.typeArguments && node.typeArguments?.length >= 2 ? _getStartEnd(node.typeArguments[1]) : undefined,
-					defaultValue: undefined,
-					required,
-					isModel: true,
-				});
-			}
-			else if (callText === 'defineProp') {
-				if (definePropProposalA) {
-					let required = false;
+				else if (definePropProposalA) {
 					if (node.arguments.length >= 2) {
-						const secondArg = node.arguments[1];
-						if (ts.isObjectLiteralExpression(secondArg)) {
-							for (const property of secondArg.properties) {
-								if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name) && getNodeText(ts, property.name, ast) === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
-									required = true;
-									break;
-								}
-							}
+						options = node.arguments[1];
+					}
+					if (node.arguments.length >= 1) {
+						propName = node.arguments[0];
+					}
+				}
+				else if (definePropProposalB) {
+					if (node.arguments.length >= 3) {
+						options = node.arguments[2];
+					}
+					if (node.arguments.length >= 2) {
+						if (node.arguments[1].kind === ts.SyntaxKind.TrueKeyword) {
+							required = true;
 						}
 					}
 					if (node.arguments.length >= 1) {
-						defineProp.push({
-							name: _getStartEnd(node.arguments[0]),
-							nameIsString: true,
-							type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
-							defaultValue: undefined,
-							required,
-						});
-					}
-					else if (ts.isVariableDeclaration(parent)) {
-						defineProp.push({
-							name: _getStartEnd(parent.name),
-							nameIsString: false,
-							type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
-							defaultValue: undefined,
-							required,
-						});
+						defaultValue = _getStartEnd(node.arguments[0]);
 					}
 				}
-				else if (definePropProposalB && ts.isVariableDeclaration(parent)) {
-					defineProp.push({
-						name: _getStartEnd(parent.name),
-						nameIsString: false,
-						defaultValue: node.arguments.length >= 1 ? _getStartEnd(node.arguments[0]) : undefined,
-						type: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
-						required: node.arguments.length >= 2 && node.arguments[1].kind === ts.SyntaxKind.TrueKeyword,
-					});
-				}
-			}
-			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
-				slots.define = parseDefineFunction(node);
-				if (ts.isVariableDeclaration(parent)) {
-					if (ts.isIdentifier(parent.name)) {
-						slots.name = getNodeText(ts, parent.name, ast);
-					}
-					else {
-						slots.isObjectBindingPattern = ts.isObjectBindingPattern(parent.name);
-					}
-				}
-			}
-			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
-				emits.define = parseDefineFunction(node);
-				if (ts.isVariableDeclaration(parent)) {
-					emits.name = getNodeText(ts, parent.name, ast);
-				}
-				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0]) && node.typeArguments[0].members.at(0)) {
-					for (const member of node.typeArguments[0].members) {
-						if (ts.isCallSignatureDeclaration(member) && member.parameters[0].type && ts.isUnionTypeNode(member.parameters[0].type)) {
-							emits.define.hasUnionTypeArg = true;
-							return;
+
+				if (options && ts.isObjectLiteralExpression(options)) {
+					for (const property of options.properties) {
+						if (!ts.isPropertyAssignment(property) || !ts.isIdentifier(property.name)) {
+							continue;
+						}
+						const text = _getNodeText(property.name);
+						if (text === 'type') {
+							runtimeType = _getStartEnd(property.initializer);
+						}
+						else if (text === 'default') {
+							defaultValue = _getStartEnd(property.initializer);
+						}
+						else if (text === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
+							required = true;
 						}
 					}
 				}
-			}
-			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
-				expose.define = parseDefineFunction(node);
+
+				let name: TextRange | undefined;
+				if (propName && ts.isStringLiteralLike(propName)) {
+					name = _getStartEnd(propName);
+				}
+
+				defineProp.push({
+					localName,
+					name,
+					type,
+					modifierType,
+					runtimeType,
+					defaultValue,
+					required,
+					isModel: isDefineModel,
+					comments: getCommentsRange(ts, node, parents, ast),
+					argNode: options,
+				});
 			}
 			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
-
-				let statementRange: TextRange | undefined;
-				for (let i = parents.length - 1; i >= 0; i--) {
-					if (ts.isStatement(parents[i])) {
-						const statement = parents[i];
-						ts.forEachChild(statement, child => {
-							const range = _getStartEnd(child);
-							statementRange ??= range;
-							statementRange.end = range.end;
-						});
-						break;
+				defineProps = {
+					...parseCallExpressionAssignment(node, parent),
+					statement: getStatementRange(ts, parents, node, ast),
+					argNode: node.arguments[0]
+				};
+				if (ts.isVariableDeclaration(parent) && ts.isObjectBindingPattern(parent.name)) {
+					defineProps.destructured = new Map();
+					const identifiers = collectIdentifiers(ts, parent.name, []);
+					for (const { id, isRest, initializer } of identifiers) {
+						const name = _getNodeText(id);
+						if (isRest) {
+							defineProps.destructuredRest = name;
+						}
+						else {
+							defineProps.destructured.set(name, initializer);
+						}
 					}
 				}
-				if (!statementRange) {
-					statementRange = _getStartEnd(node);
-				}
-
-				props.define = {
-					...parseDefineFunction(node),
-					statement: statementRange,
-				};
-
-				if (ts.isVariableDeclaration(parent)) {
-					props.name = getNodeText(ts, parent.name, ast);
-				}
-				if (node.arguments.length) {
-					props.define.arg = _getStartEnd(node.arguments[0]);
-				}
-				if (node.typeArguments?.length) {
-					props.define.typeArg = _getStartEnd(node.typeArguments[0]);
+				else if (
+					ts.isCallExpression(parent)
+					&& vueCompilerOptions.macros.withDefaults.includes(_getNodeText(parent.expression))
+				) {
+					const grand = parents.at(-2);
+					if (grand && ts.isVariableDeclaration(grand)) {
+						defineProps.name = _getNodeText(grand.name);
+					}
 				}
 			}
 			else if (vueCompilerOptions.macros.withDefaults.includes(callText)) {
-				props.withDefaults = _getStartEnd(node);
-				if (node.arguments.length >= 2) {
-					const arg = node.arguments[1];
-					props.withDefaults.arg = _getStartEnd(arg);
-				}
-				if (ts.isVariableDeclaration(parent)) {
-					props.name = getNodeText(ts, parent.name, ast);
-				}
+				const [, arg] = node.arguments;
+				withDefaults = {
+					callExp: _getStartEnd(node),
+					exp: _getStartEnd(node.expression),
+					arg: arg ? _getStartEnd(arg) : undefined,
+					argNode: arg
+				};
 			}
-			else if (vueCompilerOptions.macros.defineOptions.includes(callText)) {
-				if (node.arguments.length && ts.isObjectLiteralExpression(node.arguments[0])) {
-					for (const prop of node.arguments[0].properties) {
-						if ((ts.isPropertyAssignment(prop)) && getNodeText(ts, prop.name, ast) === 'name' && ts.isStringLiteral(prop.initializer)) {
-							options.name = prop.initializer.text;
+			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
+				defineEmits = {
+					...parseCallExpressionAssignment(node, parent),
+					statement: getStatementRange(ts, parents, node, ast)
+				};
+				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0])) {
+					for (const member of node.typeArguments[0].members) {
+						if (ts.isCallSignatureDeclaration(member)) {
+							const type = member.parameters[0]?.type;
+							if (type && ts.isUnionTypeNode(type)) {
+								defineEmits.hasUnionTypeArg = true;
+								break;
+							}
 						}
 					}
 				}
 			}
+			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
+				defineSlots = {
+					...parseCallExpressionAssignment(node, parent),
+					statement: getStatementRange(ts, parents, node, ast)
+				};
+			}
+			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
+				defineExpose = parseCallExpression(node);
+			}
+			else if (
+				vueCompilerOptions.macros.defineOptions.includes(callText)
+				&& node.arguments.length
+				&& ts.isObjectLiteralExpression(node.arguments[0])
+			) {
+				defineOptions = {};
+				const obj = node.arguments[0];
+				for (const prop of obj.properties) {
+					if (ts.isPropertyAssignment(prop) && ts.isIdentifier(prop.name)) {
+						const name = _getNodeText(prop.name);
+						if (name === 'inheritAttrs') {
+							defineOptions.inheritAttrs = _getNodeText(prop.initializer);
+						}
+						else if (name === 'name' && ts.isStringLiteral(prop.initializer)) {
+							defineOptions.name = prop.initializer.text;
+						}
+					}
+				}
+			}
+			else if (vueCompilerOptions.composables.useAttrs.includes(callText)) {
+				useAttrs.push(parseCallExpression(node));
+			}
+			else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
+				useCssModule.push(parseCallExpression(node));
+			}
+			else if (vueCompilerOptions.composables.useSlots.includes(callText)) {
+				useSlots.push(parseCallExpression(node));
+			}
+			else if (
+				vueCompilerOptions.composables.useTemplateRef.includes(callText)
+				&& !node.typeArguments?.length
+			) {
+				useTemplateRef.push(parseCallExpressionAssignment(node, parent));
+			}
 		}
+
 		ts.forEachChild(node, child => {
+			if (ts.isFunctionLike(node)) {
+				return;
+			}
 			parents.push(node);
 			visitNode(child, parents);
 			parents.pop();
 		});
 	}
+
+	function parseCallExpression(node: ts.CallExpression) {
+		return {
+			callExp: _getStartEnd(node),
+			exp: _getStartEnd(node.expression),
+			arg: node.arguments.length ? _getStartEnd(node.arguments[0]) : undefined,
+			typeArg: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
+		};
+	}
+
+	function parseCallExpressionAssignment(node: ts.CallExpression, parent: ts.Node) {
+		return {
+			name: ts.isVariableDeclaration(parent) ? _getNodeText(parent.name) : undefined,
+			...parseCallExpression(node),
+		};
+	}
+
+	function _getStartEnd(node: ts.Node) {
+		return getStartEnd(ts, node, ast);
+	}
+
+	function _getNodeText(node: ts.Node) {
+		return getNodeText(ts, node, ast);
+	}
 }
 
-export function parseBindingRanges(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
-	const bindings: TextRange[] = [];
-	ts.forEachChild(sourceFile, node => {
+export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.SourceFile) {
+	const bindings: {
+		range: TextRange;
+		moduleName?: string;
+		isDefaultImport?: boolean;
+		isNamespace?: boolean;
+	}[] = [];
+
+	ts.forEachChild(ast, node => {
 		if (ts.isVariableStatement(node)) {
-			for (const node_2 of node.declarationList.declarations) {
-				const vars = _findBindingVars(node_2.name);
-				for (const _var of vars) {
-					bindings.push(_var);
-				}
+			for (const decl of node.declarationList.declarations) {
+				const vars = _findBindingVars(decl.name);
+				bindings.push(...vars.map(range => ({ range })));
 			}
 		}
 		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && ts.isIdentifier(node.name)) {
-				bindings.push(_getStartEnd(node.name));
+				bindings.push({
+					range: _getStartEnd(node.name)
+				});
 			}
 		}
 		else if (ts.isClassDeclaration(node)) {
 			if (node.name) {
-				bindings.push(_getStartEnd(node.name));
+				bindings.push({
+					range: _getStartEnd(node.name)
+				});
 			}
 		}
 		else if (ts.isEnumDeclaration(node)) {
-			bindings.push(_getStartEnd(node.name));
+			bindings.push({
+				range: _getStartEnd(node.name)
+			});
 		}
 
 		if (ts.isImportDeclaration(node)) {
+			const moduleName = _getNodeText(node.moduleSpecifier).slice(1, -1);
+
 			if (node.importClause && !node.importClause.isTypeOnly) {
-				if (node.importClause.name) {
-					bindings.push(_getStartEnd(node.importClause.name));
+				const { name, namedBindings } = node.importClause;
+
+				if (name) {
+					bindings.push({
+						range: _getStartEnd(name),
+						moduleName,
+						isDefaultImport: true
+					});
 				}
-				if (node.importClause.namedBindings) {
-					if (ts.isNamedImports(node.importClause.namedBindings)) {
-						for (const element of node.importClause.namedBindings.elements) {
+				if (namedBindings) {
+					if (ts.isNamedImports(namedBindings)) {
+						for (const element of namedBindings.elements) {
 							if (element.isTypeOnly) {
 								continue;
 							}
-							bindings.push(_getStartEnd(element.name));
+							bindings.push({
+								range: _getStartEnd(element.name),
+								moduleName,
+								isDefaultImport: element.propertyName?.text === 'default'
+							});
 						}
 					}
-					else if (ts.isNamespaceImport(node.importClause.namedBindings)) {
-						bindings.push(_getStartEnd(node.importClause.namedBindings.name));
+					else {
+						bindings.push({
+							range: _getStartEnd(namedBindings.name),
+							moduleName,
+							isNamespace: true
+						});
 					}
 				}
 			}
 		}
 	});
+
 	return bindings;
+
 	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(ts, node, sourceFile);
+		return getStartEnd(ts, node, ast);
 	}
+
+	function _getNodeText(node: ts.Node) {
+		return getNodeText(ts, node, ast);
+	}
+
 	function _findBindingVars(left: ts.BindingName) {
-		return findBindingVars(ts, left, sourceFile);
+		return findBindingVars(ts, left, ast);
 	}
 }
 
-export function findBindingVars(ts: typeof import('typescript'), left: ts.BindingName, sourceFile: ts.SourceFile) {
+function findBindingVars(
+	ts: typeof import('typescript'),
+	left: ts.BindingName,
+	ast: ts.SourceFile
+) {
 	const vars: TextRange[] = [];
 	worker(left);
 	return vars;
-	function worker(_node: ts.Node) {
-		if (ts.isIdentifier(_node)) {
-			vars.push(getStartEnd(ts, _node, sourceFile));
+	function worker(node: ts.Node) {
+		if (ts.isIdentifier(node)) {
+			vars.push(getStartEnd(ts, node, ast));
 		}
 		// { ? } = ...
 		// [ ? ] = ...
-		else if (ts.isObjectBindingPattern(_node) || ts.isArrayBindingPattern(_node)) {
-			for (const property of _node.elements) {
+		else if (ts.isObjectBindingPattern(node) || ts.isArrayBindingPattern(node)) {
+			for (const property of node.elements) {
 				if (ts.isBindingElement(property)) {
 					worker(property.name);
 				}
 			}
 		}
 		// { foo: ? } = ...
-		else if (ts.isPropertyAssignment(_node)) {
-			worker(_node.initializer);
+		else if (ts.isPropertyAssignment(node)) {
+			worker(node.initializer);
 		}
 		// { foo } = ...
-		else if (ts.isShorthandPropertyAssignment(_node)) {
-			vars.push(getStartEnd(ts, _node.name, sourceFile));
+		else if (ts.isShorthandPropertyAssignment(node)) {
+			vars.push(getStartEnd(ts, node.name, ast));
 		}
 		// { ...? } = ...
 		// [ ...? ] = ...
-		else if (ts.isSpreadAssignment(_node) || ts.isSpreadElement(_node)) {
-			worker(_node.expression);
+		else if (ts.isSpreadAssignment(node) || ts.isSpreadElement(node)) {
+			worker(node.expression);
 		}
 	}
 }
 
-export function getStartEnd(
+function getStatementRange(
 	ts: typeof import('typescript'),
+	parents: ts.Node[],
 	node: ts.Node,
-	sourceFile: ts.SourceFile
+	ast: ts.SourceFile
 ) {
-	return {
-		start: (ts as any).getTokenPosOfNode(node, sourceFile) as number,
-		end: node.end,
-	};
+	let statementRange: TextRange | undefined;
+	for (let i = parents.length - 1; i >= 0; i--) {
+		if (ts.isStatement(parents[i])) {
+			const statement = parents[i];
+			ts.forEachChild(statement, child => {
+				const range = getStartEnd(ts, child, ast);
+				statementRange ??= range;
+				statementRange.end = range.end;
+			});
+			break;
+		}
+	}
+	if (!statementRange) {
+		statementRange = getStartEnd(ts, node, ast);
+	}
+	return statementRange;
 }
 
-export function getNodeText(
+function getCommentsRange(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	sourceFile: ts.SourceFile
+	parents: ts.Node[],
+	ast: ts.SourceFile
 ) {
-	const { start, end } = getStartEnd(ts, node, sourceFile);
-	return sourceFile.text.substring(start, end);
+	for (let i = parents.length - 1; i >= 0; i--) {
+		if (ts.isStatement(node)) {
+			break;
+		}
+		node = parents[i];
+	}
+	const comments = ts.getLeadingCommentRanges(ast.text, node.pos);
+	if (comments?.length) {
+		return {
+			start: comments[0].pos,
+			end: comments.at(-1)!.end,
+		};
+	}
 }

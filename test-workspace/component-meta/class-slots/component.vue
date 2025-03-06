@@ -1,10 +1,10 @@
 <script lang="ts">
-import { VNode } from 'vue';
+import type { VNode } from 'vue';
 
 export default {} as new () => {
 	$slots: {
-		default(_: { num: number; }): VNode[];
-		foo(_: { str: string; }): VNode[];
+		default: (props: { num: number; }) => VNode[];
+		foo: (props: { str: string; }) => VNode[];
 	};
 };
 </script>

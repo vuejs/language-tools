@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
-import { newLine } from '../common';
+import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -10,12 +10,10 @@ import { generateTemplateChild } from './templateChild';
 export function* generateVIf(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.IfNode,
-	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined
+	node: CompilerDOM.IfNode
 ): Generator<Code> {
 
-	let originalBlockConditionsLength = ctx.blockConditions.length;
+	const originalBlockConditionsLength = ctx.blockConditions.length;
 
 	for (let i = 0; i < node.branches.length; i++) {
 
@@ -34,21 +32,18 @@ export function* generateVIf(
 		let addedBlockCondition = false;
 
 		if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-			const codes = [
-				...generateInterpolation(
-					options,
-					ctx,
-					branch.condition.content,
-					branch.condition.loc,
-					branch.condition.loc.start.offset,
-					ctx.codeFeatures.all,
-					'(',
-					')'
-				),
-			];
-			for (const code of codes) {
-				yield code;
-			}
+			const codes = [...generateInterpolation(
+				options,
+				ctx,
+				'template',
+				ctx.codeFeatures.all,
+				branch.condition.content,
+				branch.condition.loc.start.offset,
+				branch.condition.loc,
+				`(`,
+				`)`
+			)];
+			yield* codes;
 			ctx.blockConditions.push(toString(codes));
 			addedBlockCondition = true;
 			yield ` `;
@@ -60,14 +55,14 @@ export function* generateVIf(
 		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of branch.children) {
-			yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar);
+			yield* generateTemplateChild(options, ctx, childNode, prev);
 			prev = childNode;
 		}
 		yield* ctx.generateAutoImportCompletion();
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {
-			ctx.blockConditions[ctx.blockConditions.length - 1] = `!(${ctx.blockConditions[ctx.blockConditions.length - 1]})`;
+			ctx.blockConditions[ctx.blockConditions.length - 1] = `!${ctx.blockConditions[ctx.blockConditions.length - 1]}`;
 		}
 	}
 

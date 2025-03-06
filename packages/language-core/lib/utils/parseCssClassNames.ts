@@ -1,16 +1,15 @@
-import { clearComments } from './parseCssVars';
+import { commentReg, fillBlank } from './parseCssVars';
 
-const cssClassNameReg = /(?=([\.]{1}[a-zA-Z_]+[\w\_\-]*)[\s\.\,\+\{\>#\:]{1})/g;
+const cssClassNameReg = /(?=(\.[a-z_][-\w]*)[\s.,+~>:#)[{])/gi;
+const fragmentReg = /(?<={)[^{]*(?=(?<!\\);)/g;
 
-export function* parseCssClassNames(styleContent: string) {
-	styleContent = clearComments(styleContent);
-	const matches = styleContent.matchAll(cssClassNameReg);
+export function* parseCssClassNames(css: string) {
+	css = fillBlank(css, commentReg, fragmentReg);
+	const matches = css.matchAll(cssClassNameReg);
 	for (const match of matches) {
-		if (match.index !== undefined) {
-			const matchText = match[1];
-			if (matchText !== undefined) {
-				yield { offset: match.index, text: matchText };
-			}
+		const matchText = match[1];
+		if (matchText) {
+			yield { offset: match.index, text: matchText };
 		}
 	}
 }

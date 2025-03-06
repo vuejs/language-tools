@@ -34,6 +34,8 @@
 
 Note: The "Take Over" mode has been discontinued. Instead, a new "Hybrid" mode has been introduced. In this mode, the Vue Language Server exclusively manages the CSS/HTML sections. As a result, you must run `@vue/language-server` in conjunction with a TypeScript server that employs `@vue/typescript-plugin`. Below is a streamlined configuration for Neovim's LSP, updated to accommodate the language server following the upgrade to version `2.0.0`.
 
+> For nvim-lspconfig versions below [v1.0.0](https://newreleases.io/project/github/neovim/nvim-lspconfig/release/v1.0.0) use tsserver instead of ts_ls, e.g. `lspconfig.ts_ls.setup`
+
 ```lua
 -- If you are using mason.nvim, you can get the ts_plugin_path like this
 -- local mason_registry = require('mason-registry')
@@ -43,7 +45,7 @@ local vue_language_server_path = '/path/to/@vue/language-server'
 
 local lspconfig = require('lspconfig')
 
-lspconfig.tsserver.setup {
+lspconfig.ts_ls.setup {
   init_options = {
     plugins = {
       {
@@ -60,9 +62,9 @@ lspconfig.tsserver.setup {
 lspconfig.volar.setup {}
 ```
 
-### None-Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
+### Non-Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
 
-Note: If `hybridMode` is set to `false` `Volar` will run embedded `tsserver` therefore there is no need to run it separately.
+Note: If `hybridMode` is set to `false` `Volar` will run embedded `ts_ls` therefore there is no need to run it separately.
 
 For more information see [#4119](https://github.com/vuejs/language-tools/pull/4119)
 
@@ -72,7 +74,7 @@ Use volar for all `.{vue,js,ts,tsx,jsx}` files.
 ```lua
 local lspconfig = require('lspconfig')
 
--- lspconfig.tsserver.setup {} 
+-- lspconfig.ts_ls.setup {} 
 lspconfig.volar.setup {
   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
   init_options = {
@@ -83,11 +85,11 @@ lspconfig.volar.setup {
 }
 ```
 
-Use `volar` for only `.vue` files and `tsserver` for `.ts` and `.js` files.
+Use `volar` for only `.vue` files and `ts_ls` for `.ts` and `.js` files.
 ```lua
 local lspconfig = require('lspconfig')
 
-lspconfig.tsserver.setup {
+lspconfig.ts_ls.setup {
   init_options = {
     plugins = {
       {
@@ -97,6 +99,7 @@ lspconfig.tsserver.setup {
       },
     },
   },
+}
 
 lspconfig.volar.setup {
   init_options = {
@@ -104,7 +107,7 @@ lspconfig.volar.setup {
       hybridMode = false,
     },
   },
-},
+}
 ```
 
 ### nvim-cmp integration
@@ -174,18 +177,80 @@ To develop with upstream Volar.js modules, you can setup workspace with https://
 
 ---
 
-<h3 align="center">Full-time Support by</h3>
-<br />
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="middle" colspan="6">
+        <b>Special Sponsor</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" colspan="6">
+        <br>
+        <a href="https://voidzero.dev/">
+          <img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/VoidZero.svg" height="60" />
+        </a>
+        <h3>Next Generation Tooling</h3>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" colspan="6">
+        <b>Platinum Sponsors</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" width="50%"  colspan="3">
+        <a href="https://vuejs.org/">
+          <img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/Vue.svg" height="80" />
+        </a>
+        <p>An approachable, performant and versatile framework for building web user interfaces.</p>
+      </td>
+      <td align="center" valign="middle" width="50%" colspan="3">
+        <a href="https://astro.build/">
+          <!-- Expire: 2025-02-04 -->
+          <img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/Astro.svg" width="200" />
+        </a>
+        <p>Astro powers the world's fastest websites, client-side web apps, dynamic API endpoints, and everything in-between.</p>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" colspan="3">
+        <!-- Expire: 2025-02-04 -->
+        <a href="https://www.jetbrains.com/">
+          <img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/JetBrains.svg" width="80" />
+        </a>
+        <p>Essential tools for software developers and teams.</p>
+      </td>
+      <td align="center" valign="middle" colspan="3">
+        <a href="https://stackblitz.com/">
+          <img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/StackBlitz.svg" width="240" />
+        </a>
+        <p>Stay in the flow with instant dev experiences.<br>No more hours stashing/pulling/installing locally</p>
+        <p><b> — just click, and start coding.</b></p>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" colspan="6">
+        <b>Silver Sponsors</b>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" valign="middle" width="33.3%" colspan="2">
+        <a href="https://www.prefect.io/"><img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/Prefect.svg" width="200" /></a>
+      </td>
+      <td align="center" valign="middle" width="33.3%" colspan="2">
+        <a href="https://www.techjobasia.com/"><img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/TechJobAsia.svg" width="200" /></a>
+      </td>
+      <td align="center" valign="middle" width="33.3%" colspan="2">
+        <a href="https://haoqun.blog/"><img src="https://avatars.githubusercontent.com/u/3277634?v=4" height="80" /></a>
+      </td>
+    </tr>
+  </tbody>
+</table>
 
 <p align="center">
-	<span>
-		<a href="https://stackblitz.com/">
-			<img src="https://raw.githubusercontent.com/johnsoncodehk/sponsors/master/logos/StackBlitz.svg" height="80" />
-			<h4 align="center">Boot a fresh environment in milliseconds.</h4>
-		</a>
-	</span>
+	<a href="https://github.com/sponsors/johnsoncodehk">Become a sponsor</a>
 </p>
-<br />
 
 <p align="center">
 	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">

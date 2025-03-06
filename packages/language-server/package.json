@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-server",
-	"version": "2.0.26",
+	"version": "2.2.8",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -9,17 +9,20 @@
 	"bin": {
 		"vue-language-server": "./bin/vue-language-server.js"
 	},
+	"sideEffects": true,
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
 		"directory": "packages/language-server"
 	},
 	"dependencies": {
-		"@volar/language-core": "~2.4.0-alpha.15",
-		"@volar/language-server": "~2.4.0-alpha.15",
-		"@vue/language-core": "2.0.26",
-		"@vue/language-service": "2.0.26",
-		"@vue/typescript-plugin": "2.0.26",
+		"@typescript/server-harness": "latest",
+		"@volar/language-core": "~2.4.11",
+		"@volar/language-server": "~2.4.11",
+		"@volar/test-utils": "~2.4.11",
+		"@vue/language-core": "2.2.8",
+		"@vue/language-service": "2.2.8",
+		"@vue/typescript-plugin": "2.2.8",
 		"vscode-languageserver-protocol": "^3.17.5",
 		"vscode-uri": "^3.0.8"
 	}

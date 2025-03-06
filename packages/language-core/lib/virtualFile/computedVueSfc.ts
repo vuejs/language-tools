@@ -1,34 +1,33 @@
 import type { SFCParseResult } from '@vue/compiler-sfc';
-import { computed } from 'computeds';
+import { computed } from 'alien-signals';
 import type * as ts from 'typescript';
-import type { VueLanguagePlugin } from '../types';
+import type { VueLanguagePluginReturn } from '../types';
 
 export function computedVueSfc(
-	plugins: ReturnType<VueLanguagePlugin>[],
+	plugins: VueLanguagePluginReturn[],
 	fileName: string,
 	languageId: string,
-	snapshot: () => ts.IScriptSnapshot
+	getSnapshot: () => ts.IScriptSnapshot
 ) {
-
 	let cache: {
 		snapshot: ts.IScriptSnapshot,
 		sfc: SFCParseResult,
-		plugin: ReturnType<VueLanguagePlugin>,
+		plugin: VueLanguagePluginReturn,
 	} | undefined;
 
 	return computed(() => {
 
 		// incremental update
 		if (cache?.plugin.updateSFC) {
-			const change = snapshot().getChangeRange(cache.snapshot);
+			const change = getSnapshot().getChangeRange(cache.snapshot);
 			if (change) {
 				const newSfc = cache.plugin.updateSFC(cache.sfc, {
 					start: change.span.start,
 					end: change.span.start + change.span.length,
-					newText: snapshot().getText(change.span.start, change.span.start + change.newLength),
+					newText: getSnapshot().getText(change.span.start, change.span.start + change.newLength),
 				});
 				if (newSfc) {
-					cache.snapshot = snapshot();
+					cache.snapshot = getSnapshot();
 					// force dirty
 					cache.sfc = JSON.parse(JSON.stringify(newSfc));
 					return cache.sfc;
@@ -37,12 +36,12 @@ export function computedVueSfc(
 		}
 
 		for (const plugin of plugins) {
-			const sfc = plugin.parseSFC?.(fileName, snapshot().getText(0, snapshot().getLength()))
-				?? plugin.parseSFC2?.(fileName, languageId, snapshot().getText(0, snapshot().getLength()));
+			const sfc = plugin.parseSFC?.(fileName, getSnapshot().getText(0, getSnapshot().getLength()))
+				?? plugin.parseSFC2?.(fileName, languageId, getSnapshot().getText(0, getSnapshot().getLength()));
 			if (sfc) {
 				if (!sfc.errors.length) {
 					cache = {
-						snapshot: snapshot(),
+						snapshot: getSnapshot(),
 						sfc,
 						plugin,
 					};
