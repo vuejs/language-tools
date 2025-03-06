@@ -4,7 +4,7 @@ import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import { getNameCasing } from '../ideFeatures/nameCasing';
+import { getNameCasing } from '../nameCasing';
 import { AttrNameCasing, LanguageServicePlugin } from '../types';
 
 export function create(

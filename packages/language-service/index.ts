@@ -2,7 +2,7 @@
 
 export * from '@volar/language-service';
 export * from '@vue/language-core';
-export * from './lib/ideFeatures/nameCasing';
+export * from './lib/nameCasing';
 export * from './lib/types';
 
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
@@ -42,7 +42,7 @@ import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImp
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
 import { URI } from 'vscode-uri';
-import { convertAttrName, convertTagName, detect } from './lib/ideFeatures/nameCasing';
+import { convertAttrName, convertTagName, detect } from './lib/nameCasing';
 
 declare module '@volar/language-service' {
 	export interface ProjectContext {
