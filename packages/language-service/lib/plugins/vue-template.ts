@@ -1,7 +1,6 @@
 import type { Disposable, LanguageServiceContext } from '@volar/language-service';
 import { VueVirtualCode, hyphenateAttr, hyphenateTag, tsCodegen } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import { getComponentSpans } from '@vue/typescript-plugin/lib/common';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
@@ -38,7 +37,6 @@ let modelData: html.HTMLDataV1;
 
 export function create(
 	mode: 'html' | 'pug',
-	ts: typeof import('typescript'),
 	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
@@ -91,12 +89,6 @@ export function create(
 				interFileDependencies: false,
 				workspaceDiagnostics: false,
 			},
-			semanticTokensProvider: {
-				legend: {
-					tokenTypes: ['class'],
-					tokenModifiers: [],
-				},
-			}
 		},
 		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
@@ -268,63 +260,6 @@ export function create(
 						...originalResult ?? [],
 						...templateErrors,
 					];
-				},
-
-				provideDocumentSemanticTokens(document, range, legend) {
-
-					if (!isSupportedDocument(document)) {
-						return;
-					}
-
-					if (!context.project.vue) {
-						return;
-					}
-					const vueCompilerOptions = context.project.vue.compilerOptions;
-
-					const languageService = context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService');
-					if (!languageService) {
-						return;
-					}
-
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const root = sourceScript?.generated?.root;
-					if (!(root instanceof VueVirtualCode)) {
-						return;
-					}
-
-					const { template } = root.sfc;
-					if (!template) {
-						return;
-					}
-
-					const spans = getComponentSpans.call(
-						{
-							files: context.language.scripts,
-							languageService,
-							typescript: ts,
-							vueOptions: vueCompilerOptions,
-						},
-						root,
-						template,
-						{
-							start: document.offsetAt(range.start),
-							length: document.offsetAt(range.end) - document.offsetAt(range.start),
-						}
-					);
-					const classTokenIndex = legend.tokenTypes.indexOf('class');
-
-					return spans.map(span => {
-						const start = document.positionAt(span.start);
-						return [
-							start.line,
-							start.character,
-							span.length,
-							classTokenIndex,
-							0,
-						];
-					});
 				},
 			};
 
