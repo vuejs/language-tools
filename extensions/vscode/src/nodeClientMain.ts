@@ -199,4 +199,11 @@ try {
 		// @ts-expect-error
 		return readFileSync(...args);
 	};
+
+	const loadedModule = require.cache[extensionJsPath];
+	if (loadedModule) {
+		delete require.cache[extensionJsPath];
+		const patchedModule = require(extensionJsPath);
+		Object.assign(loadedModule.exports, patchedModule);
+	}
 } catch { }
