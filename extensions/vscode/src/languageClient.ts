@@ -93,7 +93,6 @@ async function activateLc(
 
 	lsp.activateAutoInsertion(selectors, client);
 	lsp.activateDocumentDropEdit(selectors, client);
-	lsp.activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
 
 	useInsidersStatusItem(context);
 

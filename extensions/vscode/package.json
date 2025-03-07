@@ -422,11 +422,6 @@
 				"category": "Vue"
 			},
 			{
-				"command": "vue.action.writeVirtualFiles",
-				"title": "Write Virtual Files",
-				"category": "Vue (Debug)"
-			},
-			{
 				"command": "vue.action.splitEditors",
 				"title": "Split <script>, <template>, <style> Editors",
 				"category": "Vue",
@@ -465,10 +460,6 @@
 				},
 				{
 					"command": "vue.action.doctor",
-					"when": "vue.activated"
-				},
-				{
-					"command": "vue.action.writeVirtualFiles",
 					"when": "vue.activated"
 				},
 				{
