@@ -48,13 +48,13 @@ importers:
         specifier: ^3.2.1
         version: 3.2.1
       '@vue/language-core':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../../packages/language-core
       '@vue/language-server':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../../packages/typescript-plugin
       esbuild:
         specifier: ^0.25.0
@@ -81,7 +81,7 @@ importers:
         specifier: ~2.4.11
         version: 2.4.11
       '@vue/language-core':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
@@ -90,7 +90,7 @@ importers:
         specifier: '*'
         version: 5.7.2
       vue-component-type-helpers:
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../component-type-helpers
     devDependencies:
       '@types/node':
@@ -164,7 +164,7 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/language-core':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../language-core
 
   packages/language-server:
@@ -182,13 +182,13 @@ importers:
         specifier: ~2.4.11
         version: 2.4.11
       '@vue/language-core':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../language-core
       '@vue/language-service':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../language-service
       '@vue/typescript-plugin':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../typescript-plugin
       vscode-languageserver-protocol:
         specifier: ^3.17.5
@@ -212,13 +212,13 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/language-core':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/typescript-plugin':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../typescript-plugin
       alien-signals:
         specifier: ^1.0.3
@@ -282,7 +282,7 @@ importers:
         specifier: ~2.4.11
         version: 2.4.11
       '@vue/language-core':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../language-core
       typescript:
         specifier: '>=5.0.0'
@@ -298,7 +298,7 @@ importers:
         specifier: ~2.4.11
         version: 2.4.11
       '@vue/language-core':
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
@@ -320,7 +320,7 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13(typescript@5.7.2)
       vue-component-type-helpers:
-        specifier: 2.2.8
+        specifier: 3.0.0-alpha.0
         version: link:../packages/component-type-helpers
       vue2:
         specifier: npm:vue@2.7.16
@@ -2249,7 +2249,7 @@ packages:
     engines: {node: '>= 12'}
 
   is-arrayish@0.2.1:
-    resolution: {integrity: sha1-d8mYQFJ6qOyxqLppe4BkWnqSap0=}
+    resolution: {integrity: sha512-zz06S8t0ozoDXMG+ube26zeCTNXcKIPJZJi8hBrF4idCLms4CG9QtK7qBl1boi5ODzFpjswb5JPmHCbMpjaYzg==}
 
   is-ci@4.1.0:
     resolution: {integrity: sha512-Ab9bQDQ11lWootZUI5qxgN2ZXwxNI5hTwnsvOc1wyxQ7zQ8OkEDw79mI0+9jI3x432NfwbVRru+3noJfXF6lSQ==}
