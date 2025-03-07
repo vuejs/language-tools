@@ -15,8 +15,9 @@ import { getQuickInfoAtPosition } from './lib/requests/getQuickInfoAtPosition';
 import type { RequestContext } from './lib/requests/types';
 
 const windowsPathReg = /\\/g;
-const project2Language = new Map<ts.server.Project, [vue.Language, ts.LanguageServiceHost, ts.LanguageService]>();
-const plugin = createLanguageServicePlugin(
+const project2Service = new WeakMap<ts.server.Project, [vue.Language, ts.LanguageServiceHost, ts.LanguageService]>();
+
+export = createLanguageServicePlugin(
 	(ts, info) => {
 		const vueOptions = getVueCompilerOptions();
 		const languagePlugin = vue.createVueLanguagePlugin<string>(
@@ -31,7 +32,7 @@ const plugin = createLanguageServicePlugin(
 		return {
 			languagePlugins: [languagePlugin],
 			setup: language => {
-				project2Language.set(info.project, [language, info.languageServiceHost, info.languageService]);
+				project2Service.set(info.project, [language, info.languageServiceHost, info.languageService]);
 
 				info.languageService = proxyLanguageServiceForVue(ts, language, info.languageService, vueOptions, fileName => fileName);
 
@@ -131,33 +132,25 @@ const plugin = createLanguageServicePlugin(
 		}
 
 		function getRequestContext(fileName: string): RequestContext {
-			for (const [project, [language, languageServiceHost, languageService]] of project2Language) {
-				if (project.projectKind === 1 satisfies ts.server.ProjectKind.Configured && project.containsFile(ts.server.toNormalizedPath(fileName))) {
-					return {
-						typescript: ts,
-						languageService: languageService,
-						languageServiceHost: languageServiceHost,
-						language: language,
-						isTsPlugin: true,
-						getFileId: (fileName: string) => fileName,
-					};
-				}
+			const fileAndProject = (info.session as any).getFileAndProject({
+				file: fileName,
+				projectFileName: undefined,
+			}) as {
+				file: ts.server.NormalizedPath;
+				project: ts.server.Project;
+			};
+			const service = project2Service.get(fileAndProject.project);
+			if (!service) {
+				throw 'No RequestContext';
 			}
-			for (const [project, [language, languageServiceHost, languageService]] of project2Language) {
-				if (project.projectKind === 0 satisfies ts.server.ProjectKind.Inferred) {
-					return {
-						typescript: ts,
-						languageService: languageService,
-						languageServiceHost: languageServiceHost,
-						language: language,
-						isTsPlugin: true,
-						getFileId: (fileName: string) => fileName,
-					};
-				}
-			}
-			throw 'No RequestContext';
+			return {
+				typescript: ts,
+				languageService: service[2],
+				languageServiceHost: service[1],
+				language: service[0],
+				isTsPlugin: true,
+				getFileId: (fileName: string) => fileName,
+			};
 		}
 	}
 );
-
-export = plugin;

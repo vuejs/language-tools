@@ -91,13 +91,17 @@ export const { activate, deactivate } = defineExtension(async () => {
 				if (!tsserver) {
 					return;
 				}
-				const res = await tsserver.executeImpl(command, args, {
-					isAsync: true,
-					expectsResult: true,
-					lowPriority: true,
-					requireSemantic: true,
-				})[0];
-				return res.body;
+				try {
+					const res = await tsserver.executeImpl(command, args, {
+						isAsync: true,
+						expectsResult: true,
+						lowPriority: true,
+						requireSemantic: true,
+					})[0];
+					return res.body;
+				} catch {
+					// noop
+				}
 			});
 
 			return client;

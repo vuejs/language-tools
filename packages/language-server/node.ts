@@ -1,7 +1,10 @@
+import type { LanguageServer } from '@volar/language-server';
+import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer, loadTsdkByPath } from '@volar/language-server/node';
-import { createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
-import { getHybridModeLanguageServicePlugins } from '@vue/language-service';
-import { createHybridModeProject } from './lib/hybridModeProject';
+import { createLanguage, createParsedCommandLine, createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
+import { createLanguageService, createUriMap, getHybridModeLanguageServicePlugins, LanguageService } from '@vue/language-service';
+import type * as ts from 'typescript';
+import { URI } from 'vscode-uri';
 import type { VueInitializationOptions } from './lib/types';
 
 const connection = createConnection();
@@ -20,62 +23,138 @@ connection.onInitialize(params => {
 	}
 
 	const { typescript: ts } = loadTsdkByPath(options.typescript.tsdk, params.locale);
+	const tsconfigProjects = createUriMap<LanguageService>();
+
+	server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
+		for (const change of changes) {
+			const changeUri = URI.parse(change.uri);
+			if (tsconfigProjects.has(changeUri)) {
+				tsconfigProjects.get(changeUri)!.dispose();
+				tsconfigProjects.delete(changeUri);
+			}
+		}
+	});
+
+	let simpleLs: LanguageService | undefined;
+
 	return server.initialize(
 		params,
-		createHybridModeProject(
-			() => {
-				const commandLine = {
-					vueOptions: getDefaultCompilerOptions(),
-					options: ts.getDefaultCompilerOptions(),
-				};
-				return {
-					languagePlugins: [
-						createVueLanguagePlugin(
-							ts,
-							commandLine.options,
-							commandLine.vueOptions,
-							uri => uri.fsPath.replace(/\\/g, '/')
-						),
-					],
-					setup({ project }) {
-						project.vue = { compilerOptions: commandLine.vueOptions };
-					},
-				};
-			}
-		),
+		{
+			setup() { },
+			async getLanguageService(uri) {
+				if (uri.scheme === 'file' && options.typescript.requestForwardingCommand) {
+					const fileName = uri.fsPath.replace(/\\/g, '/');
+					const projectInfo = await sendTsRequest<ts.server.protocol.ProjectInfo>(
+						ts.server.protocol.CommandTypes.ProjectInfo,
+						{
+							file: fileName,
+							needFileNameList: false,
+						} satisfies ts.server.protocol.ProjectInfoRequestArgs
+					);
+					if (projectInfo) {
+						const { configFileName } = projectInfo;
+						let ls = tsconfigProjects.get(URI.file(configFileName));
+						if (!ls) {
+							ls = createLs(server, configFileName);
+							tsconfigProjects.set(URI.file(configFileName), ls);
+						}
+						return ls;
+					}
+				}
+				return simpleLs ??= createLs(server, undefined);
+			},
+			getExistingLanguageServices() {
+				return Promise.all([
+					...tsconfigProjects.values(),
+					simpleLs,
+				].filter(promise => !!promise));
+			},
+			reload() {
+				for (const ls of [
+					...tsconfigProjects.values(),
+					simpleLs,
+				]) {
+					ls?.dispose();
+				}
+				tsconfigProjects.clear();
+				simpleLs = undefined;
+			},
+		},
 		getHybridModeLanguageServicePlugins(ts, options.typescript.requestForwardingCommand ? {
 			collectExtractProps(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:collectExtractProps', args]);
+				return sendTsRequest('vue:collectExtractProps', args);
 			},
 			getComponentDirectives(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getComponentDirectives', args]);
+				return sendTsRequest('vue:getComponentDirectives', args);
 			},
 			getComponentEvents(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getComponentEvents', args]);
+				return sendTsRequest('vue:getComponentEvents', args);
 			},
 			getComponentNames(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getComponentNames', args]);
+				return sendTsRequest('vue:getComponentNames', args);
 			},
 			getComponentProps(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getComponentProps', args]);
+				return sendTsRequest('vue:getComponentProps', args);
 			},
 			getElementAttrs(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getElementAttrs', args]);
+				return sendTsRequest('vue:getElementAttrs', args);
 			},
 			getElementNames(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getElementNames', args]);
+				return sendTsRequest('vue:getElementNames', args);
 			},
 			getImportPathForFile(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getImportPathForFile', args]);
+				return sendTsRequest('vue:getImportPathForFile', args);
 			},
 			getPropertiesAtLocation(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getPropertiesAtLocation', args]);
+				return sendTsRequest('vue:getPropertiesAtLocation', args);
 			},
 			getQuickInfoAtPosition(...args) {
-				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getQuickInfoAtPosition', args]);
+				return sendTsRequest('vue:getQuickInfoAtPosition', args);
 			},
 		} : undefined)
 	);
+
+	function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
+		return connection.sendRequest<T>(options.typescript.requestForwardingCommand!, [command, args]);
+	}
+
+	function createLs(server: LanguageServer, tsconfig: string | undefined) {
+		const commonLine = tsconfig
+			? createParsedCommandLine(ts, ts.sys, tsconfig)
+			: {
+				options: ts.getDefaultCompilerOptions(),
+				vueOptions: getDefaultCompilerOptions(),
+			};
+		const language = createLanguage<URI>(
+			[
+				{
+					getLanguageId: uri => server.documents.get(uri)?.languageId,
+				},
+				createVueLanguagePlugin(
+					ts,
+					commonLine.options,
+					commonLine.vueOptions,
+					uri => uri.fsPath.replace(/\\/g, '/')
+				),
+			],
+			createUriMap(),
+			uri => {
+				const document = server.documents.get(uri);
+				if (document) {
+					language.scripts.set(uri, document.getSnapshot(), document.languageId);
+				}
+				else {
+					language.scripts.delete(uri);
+				}
+			}
+		);
+		return createLanguageService(
+			language,
+			server.languageServicePlugins,
+			createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
+			{ vue: { compilerOptions: commonLine.vueOptions } }
+		);
+	}
 });
 
 connection.onInitialized(server.initialized);
