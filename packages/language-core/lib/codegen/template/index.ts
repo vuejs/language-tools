@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { getSlotsPropertyName } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
@@ -90,7 +91,7 @@ function* generateSlots(
 					ctx,
 					slot.name,
 					slot.offset,
-					ctx.codeFeatures.withoutHighlightAndCompletion,
+					codeFeatures.withoutHighlightAndCompletion,
 					slot.nodeLoc
 				);
 			}
@@ -98,7 +99,7 @@ function* generateSlots(
 				yield* wrapWith(
 					slot.tagRange[0],
 					slot.tagRange[1],
-					ctx.codeFeatures.withoutHighlightAndCompletion,
+					codeFeatures.withoutHighlightAndCompletion,
 					`default`
 				);
 			}
@@ -127,7 +128,7 @@ function* generateInheritedAttrs(
 				loc.source,
 				'template',
 				loc.start.offset,
-				ctx.codeFeatures.all
+				codeFeatures.all
 			];
 			yield `,`;
 		}
@@ -147,7 +148,7 @@ function* generateTemplateRefs(
 			ctx,
 			name,
 			offset,
-			ctx.codeFeatures.navigationAndCompletion
+			codeFeatures.navigationAndCompletion
 		);
 		yield `: ${typeExp},${newLine}`;
 	}
@@ -171,37 +172,76 @@ function* generateRootEl(
 	return `__VLS_RootEl`;
 }
 
-export function* forEachElementNode(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode): Generator<CompilerDOM.ElementNode> {
+export function forEachTemplateChild(
+	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode
+): Generator<CompilerDOM.ElementNode>;
+
+export function forEachTemplateChild(
+	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
+	withInterpolation?: boolean
+): Generator<CompilerDOM.ElementNode | CompilerDOM.InterpolationNode>;
+
+export function forEachTemplateChild(
+	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
+	withInterpolation?: boolean,
+	withComment?: boolean
+): Generator<CompilerDOM.ElementNode | CompilerDOM.InterpolationNode | CompilerDOM.CommentNode>;
+
+export function* forEachTemplateChild(
+	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
+	withInterpolation?: boolean,
+	withComment?: boolean
+) {
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		for (const child of node.children) {
-			yield* forEachElementNode(child);
+			yield* forEachTemplateChild(child, withInterpolation, withComment);
 		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 		const patchForNode = getVForNode(node);
 		if (patchForNode) {
-			yield* forEachElementNode(patchForNode);
+			yield* forEachTemplateChild(patchForNode, withInterpolation, withComment);
 		}
 		else {
 			yield node;
 			for (const child of node.children) {
-				yield* forEachElementNode(child);
+				yield* forEachTemplateChild(child, withInterpolation, withComment);
 			}
 		}
+	}
+	else if (withInterpolation && node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
+		// {{ var }}
+		yield* forEachTemplateChild(node.content, withInterpolation, withComment);
+	}
+	else if (withInterpolation && node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
+		// {{ ... }} {{ ... }}
+		for (const childNode of node.children) {
+			if (typeof childNode === 'object') {
+				yield* forEachTemplateChild(childNode, withInterpolation, withComment);
+			}
+		}
+	}
+	else if (withInterpolation && node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
+		// {{ ... }}
+		yield node;
 	}
 	else if (node.type === CompilerDOM.NodeTypes.IF) {
 		// v-if / v-else-if / v-else
 		for (let i = 0; i < node.branches.length; i++) {
 			const branch = node.branches[i];
 			for (const childNode of branch.children) {
-				yield* forEachElementNode(childNode);
+				yield* forEachTemplateChild(childNode, withInterpolation, withComment);
 			}
 		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.FOR) {
 		// v-for
 		for (const child of node.children) {
-			yield* forEachElementNode(child);
+			yield* forEachTemplateChild(child, withInterpolation, withComment);
 		}
+	}
+	else if (withComment && node.type === CompilerDOM.NodeTypes.COMMENT) {
+		// <!-- ... -->
+		yield node;
 	}
 }

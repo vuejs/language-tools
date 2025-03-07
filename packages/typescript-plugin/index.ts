@@ -1,7 +1,7 @@
 import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
 import type * as ts from 'typescript';
-import { proxyLanguageServiceForVue } from './lib/common';
+import { proxyLanguageServiceForVue } from './lib/proxy';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
 import { getComponentEvents } from './lib/requests/getComponentEvents';

@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -36,7 +37,7 @@ export function* generateVIf(
 				options,
 				ctx,
 				'template',
-				ctx.codeFeatures.all,
+				codeFeatures.all,
 				branch.condition.content,
 				branch.condition.loc.start.offset,
 				branch.condition.loc,
@@ -50,9 +51,6 @@ export function* generateVIf(
 		}
 
 		yield `{${newLine}`;
-		if (isFragment(node)) {
-			yield* ctx.resetDirectiveComments('end of v-if start');
-		}
 		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of branch.children) {
 			yield* generateTemplateChild(options, ctx, childNode, prev);
@@ -67,11 +65,4 @@ export function* generateVIf(
 	}
 
 	ctx.blockConditions.length = originalBlockConditionsLength;
-}
-
-function isFragment(node: CompilerDOM.IfNode) {
-	return node.codegenNode
-		&& 'consequent' in node.codegenNode
-		&& 'tag' in node.codegenNode.consequent
-		&& node.codegenNode.consequent.tag === CompilerDOM.FRAGMENT;
 }

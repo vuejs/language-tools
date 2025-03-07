@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { combineLastMapping, createTsAst, endOfLine, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { wrapWith } from '../utils/wrapWith';
@@ -57,7 +58,7 @@ export function* generateElementEvents(
 			}
 			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${camelize(propPrefix + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => ({${newLine}`;
 			if (prop.name === 'on') {
-				yield* generateEventArg(ctx, source, start!, propPrefix.slice(0, -1));
+				yield* generateEventArg(source, start!, propPrefix.slice(0, -1));
 				yield `: `;
 				yield* generateEventExpression(options, ctx, prop);
 			}
@@ -71,14 +72,13 @@ export function* generateElementEvents(
 }
 
 export function* generateEventArg(
-	ctx: TemplateCodegenContext,
 	name: string,
 	start: number,
 	directive = 'on'
 ): Generator<Code> {
 	const features = {
-		...ctx.codeFeatures.withoutHighlightAndCompletion,
-		...ctx.codeFeatures.navigationWithoutRename,
+		...codeFeatures.withoutHighlightAndCompletion,
+		...codeFeatures.navigationWithoutRename,
 	};
 	if (identifierRegex.test(camelize(name))) {
 		yield ['', 'template', start, features];
@@ -148,7 +148,7 @@ export function* generateEventExpression(
 						].join('\n\n'),
 					});
 				}
-				return ctx.codeFeatures.all;
+				return codeFeatures.all;
 			},
 			prop.exp.content,
 			prop.exp.loc.start.offset,
@@ -182,7 +182,7 @@ export function* generateModelEventExpression(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.verification,
+			codeFeatures.verification,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
 			prop.exp.loc

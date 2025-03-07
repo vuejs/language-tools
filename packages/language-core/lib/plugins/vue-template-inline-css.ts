@@ -1,5 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { forEachElementNode } from '../codegen/template';
+import { forEachTemplateChild } from '../codegen/template';
 import type { Code, VueLanguagePlugin } from '../types';
 import { allCodeFeatures } from './shared';
 
@@ -35,7 +35,7 @@ const plugin: VueLanguagePlugin = () => {
 export default plugin;
 
 function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Code> {
-	for (const node of forEachElementNode(templateAst)) {
+	for (const node of forEachTemplateChild(templateAst)) {
 		for (const prop of node.props) {
 			if (
 				prop.type === CompilerDOM.NodeTypes.DIRECTIVE

@@ -1,8 +1,10 @@
-import type * as CompilerDOM from '@vue/compiler-dom';
+import * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, pauseTracking, resumeTracking } from 'alien-signals';
 import type * as ts from 'typescript';
-import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
+import { forEachTemplateChild } from '../codegen/template';
+import { commentDirectiveRegex } from '../codegen/template/templateChild';
+import type { Sfc, SfcBlock, SfcBlockAttr, SfcTemplateCommentDirective, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
 import { computedArray } from '../utils/signals';
@@ -40,10 +42,12 @@ export function computedSfc(
 		computed(() => getParseResult()?.descriptor.template ?? undefined),
 		(_block, base): NonNullable<Sfc['template']> => {
 			const compiledAst = computedTemplateAst(base);
+			const getCommentDirectives = computedCommentDirectives(compiledAst);
 			return mergeObject(base, {
 				get ast() { return compiledAst()?.ast; },
 				get errors() { return compiledAst()?.errors; },
 				get warnings() { return compiledAst()?.warnings; },
+				get commentDirectives() { return getCommentDirectives(); },
 			});
 		}
 	);
@@ -248,6 +252,43 @@ export function computedSfc(
 				warnings,
 				ast: undefined,
 			};
+		});
+	}
+
+	function computedCommentDirectives(compiledAst: ReturnType<typeof computedTemplateAst>) {
+		return computed(() => {
+			const ast = compiledAst().ast;
+			if (!ast) {
+				return [];
+			}
+			const dirs: SfcTemplateCommentDirective[] = [];
+
+			let prevNode: CompilerDOM.Node | undefined;
+			for (const node of forEachTemplateChild(ast, true, true)) {
+				if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
+					const match = prevNode.loc.source.match(commentDirectiveRegex);
+					if (match) {
+						const { name } = match.groups!;
+						if (name === 'ignore' || name === 'expect-error') {
+							const rangeStart = node.loc.start.offset;
+							let rangeEnd = node.loc.end.offset;
+							if (node.type === CompilerDOM.NodeTypes.ELEMENT && node.children.length) {
+								rangeEnd = node.loc.source.slice(0, node.children[0].loc.start.offset - node.loc.start.offset).lastIndexOf('>') + node.loc.start.offset;
+							}
+
+							dirs.push({
+								name,
+								start: prevNode.loc.start.offset,
+								end: prevNode.loc.end.offset,
+								rangeStart,
+								rangeEnd,
+							});
+						}
+					}
+				}
+				prevNode = node;
+			}
+			return dirs;
 		});
 	}
 

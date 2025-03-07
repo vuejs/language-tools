@@ -46,7 +46,7 @@ export function* generateElementProps(
 			) {
 				if (!isComponent) {
 					yield `...{ `;
-					yield* generateEventArg(ctx, prop.arg.loc.source, prop.arg.loc.start.offset);
+					yield* generateEventArg(prop.arg.loc.source, prop.arg.loc.start.offset);
 					yield `: `;
 					yield* generateEventExpression(options, ctx, prop);
 					yield `},`;
@@ -113,7 +113,7 @@ export function* generateElementProps(
 
 			const shouldSpread = propName === 'style' || propName === 'class';
 			const shouldCamelize = isComponent && getShouldCamelize(options, prop, propName);
-			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck, shouldCamelize);
+			const codeInfo = getPropsCodeInfo(strictPropsCheck, shouldCamelize);
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -121,7 +121,7 @@ export function* generateElementProps(
 			const codes = [...wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				ctx.codeFeatures.verification,
+				codeFeatures.verification,
 				...(
 					prop.arg
 						? generateObjectProperty(
@@ -136,7 +136,7 @@ export function* generateElementProps(
 						: wrapWith(
 							prop.loc.start.offset,
 							prop.loc.start.offset + 'v-model'.length,
-							ctx.codeFeatures.withoutHighlightAndCompletion,
+							codeFeatures.withoutHighlightAndCompletion,
 							propName
 						)
 				),
@@ -146,7 +146,7 @@ export function* generateElementProps(
 					ctx,
 					prop,
 					prop.exp,
-					ctx.codeFeatures.all,
+					codeFeatures.all,
 					enableCodeFeatures
 				)
 			)];
@@ -197,7 +197,7 @@ export function* generateElementProps(
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
 			const shouldCamelize = isComponent && getShouldCamelize(options, prop, prop.name);
-			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck, true);
+			const codeInfo = getPropsCodeInfo(strictPropsCheck, true);
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -205,7 +205,7 @@ export function* generateElementProps(
 			const codes = [...wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				ctx.codeFeatures.verification,
+				codeFeatures.verification,
 				...generateObjectProperty(
 					options,
 					ctx,
@@ -218,7 +218,7 @@ export function* generateElementProps(
 				`: `,
 				...(
 					prop.value
-						? generateAttrValue(prop.value, ctx.codeFeatures.withoutNavigation)
+						? generateAttrValue(prop.value, codeFeatures.withoutNavigation)
 						: [`true`]
 				)
 			)];
@@ -248,14 +248,14 @@ export function* generateElementProps(
 				const codes = [...wrapWith(
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
-					ctx.codeFeatures.verification,
+					codeFeatures.verification,
 					`...`,
 					...generatePropExp(
 						options,
 						ctx,
 						prop,
 						prop.exp,
-						ctx.codeFeatures.all,
+						codeFeatures.all,
 						enableCodeFeatures
 					)
 				)];
@@ -377,11 +377,10 @@ function getShouldCamelize(
 }
 
 function getPropsCodeInfo(
-	ctx: TemplateCodegenContext,
 	strictPropsCheck: boolean,
 	shouldCamelize: boolean
 ): VueCodeInformation {
-	return ctx.resolveCodeFeatures({
+	return {
 		...codeFeatures.withoutHighlightAndCompletion,
 		navigation: {
 			resolveRenameNewName: camelize,
@@ -397,7 +396,7 @@ function getPropsCodeInfo(
 				return true;
 			},
 		},
-	});
+	};
 }
 
 function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: VueCompilerOptions) {

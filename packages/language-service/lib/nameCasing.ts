@@ -1,6 +1,6 @@
 import type { LanguageServiceContext, ProviderResult, VirtualCode } from '@volar/language-service';
 import * as CompilerDOM from '@vue/compiler-dom';
-import { forEachElementNode, hyphenateAttr, hyphenateTag, VueVirtualCode } from '@vue/language-core';
+import { forEachTemplateChild, hyphenateAttr, hyphenateTag, VueVirtualCode } from '@vue/language-core';
 import { computed } from 'alien-signals';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { URI } from 'vscode-uri';
@@ -172,7 +172,7 @@ export async function detect(
 		const result = new Set<TagNameCasing>();
 
 		if (file.sfc.template?.ast) {
-			for (const element of forEachElementNode(file.sfc.template.ast)) {
+			for (const element of forEachTemplateChild(file.sfc.template.ast)) {
 				if (element.tagType === 1 satisfies CompilerDOM.ElementTypes) {
 					if (element.tag !== hyphenateTag(element.tag)) {
 						// TagName
@@ -210,7 +210,7 @@ function getTemplateTagsAndAttrs(sourceFile: VirtualCode): Tags {
 			const ast = sourceFile.sfc.template?.ast;
 			const tags: Tags = new Map();
 			if (ast) {
-				for (const node of forEachElementNode(ast)) {
+				for (const node of forEachTemplateChild(ast)) {
 
 					if (!tags.has(node.tag)) {
 						tags.set(node.tag, { offsets: [], attrs: new Map() });

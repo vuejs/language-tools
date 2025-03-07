@@ -1,11 +1,12 @@
 <template>
-	<!-- @vue-ignore -->
 	<div v-if="true">
+		<!-- @vue-ignore -->
 		{{ notExist }}
 	</div>
 
 	<!-- @vue-ignore -->
 	<div v-for="_a in 10" :foo="notExist">
+		<!-- @vue-ignore -->
 		{{ notExist }} 
 	</div>
 
