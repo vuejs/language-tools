@@ -199,4 +199,15 @@ try {
 		// @ts-expect-error
 		return readFileSync(...args);
 	};
+
+	const loadedModule = require.cache[extensionJsPath];
+	if (loadedModule) {
+		delete require.cache[extensionJsPath];
+		const patchedModule = require(extensionJsPath);
+		Object.assign(loadedModule.exports, patchedModule);
+	}
+
+	if (tsExtension.isActive) {
+		vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+	}
 } catch { }
