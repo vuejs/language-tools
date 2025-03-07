@@ -24,6 +24,7 @@ connection.onInitialize(params => {
 
 	const { typescript: ts } = loadTsdkByPath(options.typescript.tsdk, params.locale);
 	const tsconfigProjects = createUriMap<LanguageService>();
+	const file2ProjectInfo = new Map<string, Promise<ts.server.protocol.ProjectInfo | null>>();
 
 	server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
 		for (const change of changes) {
@@ -31,6 +32,7 @@ connection.onInitialize(params => {
 			if (tsconfigProjects.has(changeUri)) {
 				tsconfigProjects.get(changeUri)!.dispose();
 				tsconfigProjects.delete(changeUri);
+				file2ProjectInfo.clear();
 			}
 		}
 	});
@@ -44,13 +46,18 @@ connection.onInitialize(params => {
 			async getLanguageService(uri) {
 				if (uri.scheme === 'file' && options.typescript.tsserverRequestCommand) {
 					const fileName = uri.fsPath.replace(/\\/g, '/');
-					const projectInfo = await sendTsRequest<ts.server.protocol.ProjectInfo>(
-						ts.server.protocol.CommandTypes.ProjectInfo,
-						{
-							file: fileName,
-							needFileNameList: false,
-						} satisfies ts.server.protocol.ProjectInfoRequestArgs
-					);
+					let projectInfoPromise = file2ProjectInfo.get(fileName);
+					if (!projectInfoPromise) {
+						projectInfoPromise = sendTsRequest<ts.server.protocol.ProjectInfo>(
+							ts.server.protocol.CommandTypes.ProjectInfo,
+							{
+								file: fileName,
+								needFileNameList: false,
+							}
+						);
+						file2ProjectInfo.set(fileName, projectInfoPromise);
+					}
+					const projectInfo = await projectInfoPromise;
 					if (projectInfo) {
 						const { configFileName } = projectInfo;
 						let ls = tsconfigProjects.get(URI.file(configFileName));
