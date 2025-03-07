@@ -8,6 +8,7 @@ import { getComponentEvents } from './lib/requests/getComponentEvents';
 import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
+import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './lib/requests/getPropertiesAtLocation';
 import { getQuickInfoAtPosition } from './lib/requests/getQuickInfoAtPosition';
@@ -118,6 +119,11 @@ const plugin = createLanguageServicePlugin(
 			session.addProtocolHandler('vue:getElementAttrs', ({ arguments: args }) => {
 				return {
 					response: getElementAttrs.apply(getRequestContext(args[0]), args),
+				};
+			});
+			session.addProtocolHandler('vue:getElementNames', ({ arguments: args }) => {
+				return {
+					response: getElementNames.apply(getRequestContext(args[0]), args),
 				};
 			});
 

@@ -2,7 +2,7 @@
 
 export * from '@volar/language-service';
 export * from '@vue/language-core';
-export * from './lib/ideFeatures/nameCasing';
+export * from './lib/nameCasing';
 export * from './lib/types';
 
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
@@ -38,11 +38,12 @@ import { getComponentEvents } from '@vue/typescript-plugin/lib/requests/getCompo
 import { getComponentNames } from '@vue/typescript-plugin/lib/requests/getComponentNames';
 import { getComponentProps } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { getElementAttrs } from '@vue/typescript-plugin/lib/requests/getElementAttrs';
+import { getElementNames } from '@vue/typescript-plugin/lib/requests/getElementNames';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
 import { URI } from 'vscode-uri';
-import { convertAttrName, convertTagName, detect } from './lib/ideFeatures/nameCasing';
+import { convertAttrName, convertTagName, detect } from './lib/nameCasing';
 
 declare module '@volar/language-service' {
 	export interface ProjectContext {
@@ -130,6 +131,9 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 			},
 			async getElementAttrs(...args) {
 				return await getElementAttrs.apply(requestContext, args);
+			},
+			async getElementNames(...args) {
+				return await getElementNames.apply(requestContext, args);
 			},
 			async getQuickInfoAtPosition(fileName, position) {
 				const languageService = context.getLanguageService();

@@ -4,7 +4,7 @@ import * as html from 'vscode-html-languageservice';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import { getNameCasing } from '../ideFeatures/nameCasing';
+import { getNameCasing } from '../nameCasing';
 import { AttrNameCasing, LanguageServicePlugin } from '../types';
 
 export function create(
@@ -17,6 +17,7 @@ export function create(
 		},
 		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
+			let intrinsicElementNames: Set<string>;
 
 			return {
 
@@ -59,6 +60,10 @@ export function create(
 					const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
 					const componentProps: Record<string, string[]> = {};
 
+					intrinsicElementNames ??= new Set(
+						await tsPluginClient?.getElementNames(root.fileName) ?? []
+					);
+
 					let token: html.TokenType;
 					let current: {
 						unburnedRequiredProps: string[];
@@ -69,6 +74,10 @@ export function create(
 					while ((token = scanner.scan()) !== html.TokenType.EOS) {
 						if (token === html.TokenType.StartTag) {
 							const tagName = scanner.getTokenText();
+							if (intrinsicElementNames.has(tagName)) {
+								continue;
+							}
+
 							const checkTag = tagName.includes('.')
 								? tagName
 								: components.find(component => component === tagName || hyphenateTag(component) === tagName);

@@ -4,7 +4,7 @@ import { forEachTemplateChild, hyphenateAttr, hyphenateTag, VueVirtualCode } fro
 import { computed } from 'alien-signals';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { URI } from 'vscode-uri';
-import { AttrNameCasing, TagNameCasing } from '../types';
+import { AttrNameCasing, TagNameCasing } from './types';
 
 export async function convertTagName(
 	context: LanguageServiceContext,
