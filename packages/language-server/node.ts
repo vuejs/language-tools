@@ -62,6 +62,9 @@ connection.onInitialize(params => {
 			getElementAttrs(...args) {
 				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getElementAttrs', args]);
 			},
+			getElementNames(...args) {
+				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getElementNames', args]);
+			},
 			getImportPathForFile(...args) {
 				return connection.sendRequest(options.typescript.requestForwardingCommand!, ['vue:getImportPathForFile', args]);
 			},

@@ -1,9 +1,9 @@
 import { VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type { RequestContext } from './types';
-import { getSelfComponentName, getVariableType } from './utils';
+import { getVariableType } from './utils';
 
-export function getComponentNames(
+export function getElementNames(
 	this: RequestContext,
 	fileName: string
 ) {
@@ -13,21 +13,17 @@ export function getComponentNames(
 		return;
 	}
 	const vueCode = volarFile.generated.root;
-	return _getComponentNames(ts, languageService, vueCode);
+	return _getElementNames(ts, languageService, vueCode);
 }
 
-export function _getComponentNames(
+export function _getElementNames(
 	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
 	vueCode: VueVirtualCode
 ) {
-	const names = getVariableType(ts, tsLs, vueCode, '__VLS_components')
+	return getVariableType(ts, tsLs, vueCode, '__VLS_elements')
 		?.type
 		?.getProperties()
 		.map(c => c.name)
-		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];
-
-	names.push(getSelfComponentName(vueCode.fileName));
-	return names;
 }
