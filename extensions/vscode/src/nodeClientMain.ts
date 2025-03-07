@@ -140,10 +140,6 @@ try {
 		paths: [tsExtension.extensionPath],
 	});
 
-	if (tsExtension.isActive) {
-		debugger;
-	}
-
 	// @ts-expect-error
 	fs.readFileSync = (...args) => {
 		if (args[0] === extensionJsPath) {
@@ -209,5 +205,9 @@ try {
 		delete require.cache[extensionJsPath];
 		const patchedModule = require(extensionJsPath);
 		Object.assign(loadedModule.exports, patchedModule);
+	}
+
+	if (tsExtension.isActive) {
+		vscode.commands.executeCommand('workbench.action.restartExtensionHost');
 	}
 } catch { }
