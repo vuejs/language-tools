@@ -1,7 +1,7 @@
 export type VueInitializationOptions = {
 	typescript: {
 		tsdk: string;
-		requestForwardingCommand?: string;
+		tsserverRequestCommand?: string;
 	};
 };
 

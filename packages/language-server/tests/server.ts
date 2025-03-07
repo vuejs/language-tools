@@ -44,7 +44,7 @@ export async function getLanguageServer(): Promise<{
 				return null;
 			});
 		});
-		serverHandle.connection.onRequest('forwardingTsRequest', async ([command, args]) => {
+		serverHandle.connection.onRequest('tsserverRequest', async ([command, args]) => {
 			const res = await tsserver.message({
 				seq: seq++,
 				command: command,
@@ -58,7 +58,7 @@ export async function getLanguageServer(): Promise<{
 			{
 				typescript: {
 					tsdk: path.dirname(require.resolve('typescript/lib/typescript.js')),
-					requestForwardingCommand: 'forwardingTsRequest',
+					tsserverRequestCommand: 'tsserverRequest',
 				},
 			} satisfies VueInitializationOptions,
 			{

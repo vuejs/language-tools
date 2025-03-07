@@ -18,8 +18,8 @@ connection.onInitialize(params => {
 	if (!options.typescript?.tsdk) {
 		throw new Error('typescript.tsdk is required');
 	}
-	if (!options.typescript?.requestForwardingCommand) {
-		connection.console.warn('typescript.requestForwardingCommand is required since >= 3.0 for complete TS features');
+	if (!options.typescript?.tsserverRequestCommand) {
+		connection.console.warn('typescript.tsserverRequestCommand is required since >= 3.0 for complete TS features');
 	}
 
 	const { typescript: ts } = loadTsdkByPath(options.typescript.tsdk, params.locale);
@@ -42,7 +42,7 @@ connection.onInitialize(params => {
 		{
 			setup() { },
 			async getLanguageService(uri) {
-				if (uri.scheme === 'file' && options.typescript.requestForwardingCommand) {
+				if (uri.scheme === 'file' && options.typescript.tsserverRequestCommand) {
 					const fileName = uri.fsPath.replace(/\\/g, '/');
 					const projectInfo = await sendTsRequest<ts.server.protocol.ProjectInfo>(
 						ts.server.protocol.CommandTypes.ProjectInfo,
@@ -80,7 +80,7 @@ connection.onInitialize(params => {
 				simpleLs = undefined;
 			},
 		},
-		getHybridModeLanguageServicePlugins(ts, options.typescript.requestForwardingCommand ? {
+		getHybridModeLanguageServicePlugins(ts, options.typescript.tsserverRequestCommand ? {
 			collectExtractProps(...args) {
 				return sendTsRequest('vue:collectExtractProps', args);
 			},
@@ -115,7 +115,7 @@ connection.onInitialize(params => {
 	);
 
 	function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
-		return connection.sendRequest<T>(options.typescript.requestForwardingCommand!, [command, args]);
+		return connection.sendRequest<T>(options.typescript.tsserverRequestCommand!, [command, args]);
 	}
 
 	function createLs(server: LanguageServer, tsconfig: string | undefined) {
