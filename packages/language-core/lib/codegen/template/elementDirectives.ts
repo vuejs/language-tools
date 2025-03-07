@@ -1,7 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import type { Code } from '../../types';
-import { hyphenateAttr } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -77,10 +76,6 @@ function* generateIdentifier(
 				// fix https://github.com/vuejs/language-tools/issues/1905
 				...codeFeatures.additionalCompletion,
 				verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
-				navigation: {
-					resolveRenameNewName: camelize,
-					resolveRenameEditText: getPropRenameApply(prop.name),
-				},
 			})
 		)
 	);
@@ -186,8 +181,4 @@ function* generateValue(
 		exp,
 		ctx.codeFeatures.all
 	);
-}
-
-function getPropRenameApply(oldName: string) {
-	return oldName === hyphenateAttr(oldName) ? hyphenateAttr : undefined;
 }

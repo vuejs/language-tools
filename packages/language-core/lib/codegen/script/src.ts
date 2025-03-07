@@ -25,26 +25,7 @@ export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 	yield `export * from `;
 	yield* generateSfcBlockAttrValue(src, text, {
 		...codeFeatures.all,
-		navigation: text === src.text
-			? true
-			: {
-				shouldRename: () => false,
-				resolveRenameEditText(newName) {
-					if (newName.endsWith('.jsx') || newName.endsWith('.js')) {
-						newName = newName.split('.').slice(0, -1).join('.');
-					}
-					if (src?.text.endsWith('.d.ts')) {
-						newName = newName + '.d.ts';
-					}
-					else if (src?.text.endsWith('.ts')) {
-						newName = newName + '.ts';
-					}
-					else if (src?.text.endsWith('.tsx')) {
-						newName = newName + '.tsx';
-					}
-					return newName;
-				},
-			},
+		...text === src.text ? codeFeatures.navigation : codeFeatures.navigationWithoutRename,
 	});
 	yield endOfLine;
 	yield `export { default } from '${text}'${endOfLine}`;
