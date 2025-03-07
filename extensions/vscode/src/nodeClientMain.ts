@@ -140,6 +140,10 @@ try {
 		paths: [tsExtension.extensionPath],
 	});
 
+	if (tsExtension.isActive) {
+		debugger;
+	}
+
 	// @ts-expect-error
 	fs.readFileSync = (...args) => {
 		if (args[0] === extensionJsPath) {
