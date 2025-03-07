@@ -21,7 +21,7 @@ export function create(
 
 			return {
 
-				async provideInlayHints(document) {
+				async provideInlayHints(document, range, cancellationToken) {
 
 					if (!isSupportedDocument(document)) {
 						return;
@@ -68,29 +68,40 @@ export function create(
 					let current: {
 						unburnedRequiredProps: string[];
 						labelOffset: number;
-						insertOffset: number;
 					} | undefined;
 
 					while ((token = scanner.scan()) !== html.TokenType.EOS) {
 						if (token === html.TokenType.StartTag) {
-							const tagName = scanner.getTokenText();
-							if (intrinsicElementNames.has(tagName)) {
-								continue;
-							}
 
+							const tagName = scanner.getTokenText();
+							const tagOffset = scanner.getTokenOffset();
 							const checkTag = tagName.includes('.')
 								? tagName
 								: components.find(component => component === tagName || hyphenateTag(component) === tagName);
-							if (checkTag) {
-								componentProps[checkTag] ??= (await tsPluginClient?.getComponentProps(root.fileName, checkTag) ?? [])
+
+							if (intrinsicElementNames.has(tagName) || !checkTag) {
+								continue;
+							}
+							if (tagOffset < document.offsetAt(range.start)) {
+								continue;
+							}
+							if (tagOffset > document.offsetAt(range.end)) {
+								break;
+							}
+
+							if (!componentProps[checkTag]) {
+								if (cancellationToken.isCancellationRequested) {
+									break;
+								}
+								componentProps[checkTag] = (await tsPluginClient?.getComponentProps(root.fileName, checkTag) ?? [])
 									.filter(prop => prop.required)
 									.map(prop => prop.name);
-								current = {
-									unburnedRequiredProps: [...componentProps[checkTag]],
-									labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
-									insertOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
-								};
 							}
+
+							current = {
+								unburnedRequiredProps: [...componentProps[checkTag]],
+								labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
+							};
 						}
 						else if (token === html.TokenType.AttributeName) {
 							if (current) {
@@ -141,19 +152,14 @@ export function create(
 										kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
 										textEdits: [{
 											range: {
-												start: document.positionAt(current.insertOffset),
-												end: document.positionAt(current.insertOffset),
+												start: document.positionAt(current.labelOffset),
+												end: document.positionAt(current.labelOffset),
 											},
 											newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp}=`,
 										}],
 									});
 								}
 								current = undefined;
-							}
-						}
-						if (token === html.TokenType.AttributeName || token === html.TokenType.AttributeValue) {
-							if (current) {
-								current.insertOffset = scanner.getTokenOffset() + scanner.getTokenLength();
 							}
 						}
 					}
