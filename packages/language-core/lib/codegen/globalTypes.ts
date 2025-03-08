@@ -131,10 +131,8 @@ export function generateGlobalTypes({
 		key: keyof T,
 		index: number,
 	][];
-	// @ts-ignore
-	function __VLS_getSlotParams<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>;
-	// @ts-ignore
-	function __VLS_getSlotParam<T>(slot: T): Parameters<__VLS_PickNotAny<NonNullable<T>, (...args: any[]) => any>>[0];
+	function __VLS_getSlotParameters<S, D extends S>(slot: S, decl?: D):
+		__VLS_PickNotAny<NonNullable<D>, (...args: any) => any> extends (...args: infer P) => any ? P : any[];
 	function __VLS_asFunctionalDirective<T>(dir: T): T extends import('${lib}').ObjectDirective
 		? NonNullable<T['created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted']>
 		: T extends (...args: any) => any
