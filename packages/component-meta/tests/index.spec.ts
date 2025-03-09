@@ -606,7 +606,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const onBar = meta.events.find(event => event.name === 'bar');
 
 		expect(onBar).toBeDefined();
-		expect(onBar?.type).toEqual('number');
+		expect(onBar?.type).toEqual('[number]');
 		expect(onBar?.signature).toEqual('(e: "bar", data: number): void');
 	});
 

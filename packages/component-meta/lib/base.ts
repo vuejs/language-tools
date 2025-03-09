@@ -581,9 +581,33 @@ function createSchemaResolvers(
 		};
 	}
 	function resolveEventSignature(call: ts.Signature): EventMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode);
 		let schema: PropertyMetaSchema[];
 		let declarations: Declaration[];
+		let subtype = undefined;
+		let subtypeStr = '[]';
+		let getSchema = () => [] as PropertyMetaSchema[];
+
+		if (call.parameters.length >= 2) {
+			subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode);
+			if ((call.parameters[1].valueDeclaration as any)?.dotDotDotToken) {
+				subtypeStr = typeChecker.typeToString(subtype);
+				getSchema = () => typeChecker.getTypeArguments(subtype! as ts.TypeReference).map(resolveSchema);
+			}
+			else {
+				subtypeStr = '[';
+				for (let i = 1; i < call.parameters.length; i++) {
+					subtypeStr += typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode)) + ', ';
+				}
+				subtypeStr = subtypeStr.slice(0, -2) + ']';
+				getSchema = () => {
+					const result: PropertyMetaSchema[] = [];
+					for (let i = 1; i < call.parameters.length; i++) {
+						result.push(resolveSchema(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode)));
+					}
+					return result;
+				};
+			}
+		}
 
 		return {
 			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value,
@@ -592,14 +616,14 @@ function createSchemaResolvers(
 				name: tag.name,
 				text: tag.text !== undefined ? ts.displayPartsToString(tag.text) : undefined,
 			})),
-			type: typeChecker.typeToString(subtype),
+			type: subtypeStr,
 			rawType: rawType ? subtype : undefined,
 			signature: typeChecker.signatureToString(call),
 			get declarations() {
 				return declarations ??= call.declaration ? getDeclarations([call.declaration]) : [];
 			},
 			get schema() {
-				return schema ??= typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema);
+				return schema ??= getSchema();
 			},
 		};
 	}
