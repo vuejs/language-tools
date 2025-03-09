@@ -531,7 +531,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const onBaz = meta.events.find(event => event.name === 'baz');
 
 		expect(onFoo).toBeDefined();
-		expect(onFoo?.type).toEqual('[data?: { foo: string; } | undefined]');
+		expect(onFoo?.type).toEqual('[{ foo: string; } | undefined]');
 		expect(onFoo?.signature).toEqual('(event: "foo", data?: { foo: string; } | undefined): void');
 		expect(onFoo?.schema).toEqual([
 			{
@@ -560,7 +560,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		]);
 
 		expect(onBar).toBeDefined();
-		expect(onBar?.type).toEqual('[value: { arg1: number; arg2?: any; }]');
+		expect(onBar?.type).toEqual('[{ arg1: number; arg2?: any; }]');
 		expect(onBar?.signature).toEqual('(event: "bar", value: { arg1: number; arg2?: any; }): void');
 		expect(onBar?.schema).toEqual([
 			{
@@ -593,7 +593,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		expect(onBaz).toBeDefined();
 		expect(onBaz?.type).toEqual('[]');
-		expect(onBaz?.signature).toEqual('(event: "baz"): void');
+		expect(onBaz?.signature).toEqual('(e: "baz"): void');
 		expect(onBaz?.schema).toEqual([]);
 	});
 
