@@ -4,5 +4,5 @@ import Comp from './comp.vue';
 
 <template>
 	<!-- @vue-expect-error -->
-	<Comp :foo="() => []" />
+	<Comp :foo="() => 'foo'" />
 </template>
