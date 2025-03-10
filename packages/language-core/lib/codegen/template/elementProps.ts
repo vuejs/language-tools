@@ -141,13 +141,18 @@ export function* generateElementProps(
 						)
 				),
 				`: `,
-				...generatePropExp(
-					options,
-					ctx,
-					prop,
-					prop.exp,
-					ctx.codeFeatures.all,
-					enableCodeFeatures
+				...wrapWith(
+					prop.arg?.loc.start.offset ?? prop.loc.start.offset,
+					prop.arg?.loc.end.offset ?? prop.loc.end.offset,
+					ctx.codeFeatures.verification,
+					...generatePropExp(
+						options,
+						ctx,
+						prop,
+						prop.exp,
+						ctx.codeFeatures.all,
+						enableCodeFeatures
+					)
 				)
 			)];
 			if (enableCodeFeatures) {
