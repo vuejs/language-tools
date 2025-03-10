@@ -22,6 +22,7 @@ import { create as createVueCompilerDomErrorsPlugin } from './lib/plugins/vue-co
 import { create as createVueCompleteDefineAssignmentPlugin } from './lib/plugins/vue-complete-define-assignment';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
+import { create as createVueDocumentHighlightsPlugin } from './lib/plugins/vue-document-highlights';
 import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-document-links';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
@@ -37,6 +38,7 @@ import { getComponentDirectives } from '@vue/typescript-plugin/lib/requests/getC
 import { getComponentEvents } from '@vue/typescript-plugin/lib/requests/getComponentEvents';
 import { getComponentNames } from '@vue/typescript-plugin/lib/requests/getComponentNames';
 import { getComponentProps } from '@vue/typescript-plugin/lib/requests/getComponentProps';
+import { getDocumentHighlights } from '@vue/typescript-plugin/lib/requests/getDocumentHighlights';
 import { getElementAttrs } from '@vue/typescript-plugin/lib/requests/getElementAttrs';
 import { getElementNames } from '@vue/typescript-plugin/lib/requests/getElementNames';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
@@ -110,6 +112,9 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 		return {
 			async collectExtractProps(...args) {
 				return collectExtractProps.apply(requestContext, args);
+			},
+			async getDocumentHighlights(...args) {
+				return getDocumentHighlights.apply(requestContext, args);
 			},
 			async getPropertiesAtLocation(...args) {
 				return getPropertiesAtLocation.apply(requestContext, args);
@@ -203,8 +208,9 @@ function getCommonLanguageServicePlugins(
 		createVueCompilerDomErrorsPlugin(),
 		createVueSfcPlugin(),
 		createVueTwoslashQueriesPlugin(getTsPluginClient),
-		createVueDocumentLinksPlugin(),
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
+		createVueDocumentHighlightsPlugin(getTsPluginClient),
+		createVueDocumentLinksPlugin(),
 		createVueCompleteDefineAssignmentPlugin(),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueAutoAddSpacePlugin(),

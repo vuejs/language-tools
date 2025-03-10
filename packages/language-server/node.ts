@@ -109,6 +109,9 @@ connection.onInitialize(params => {
 			getElementNames(...args) {
 				return sendTsRequest('vue:getElementNames', args);
 			},
+			getDocumentHighlights(...args) {
+				return sendTsRequest('vue:getDocumentHighlights', args);
+			},
 			getImportPathForFile(...args) {
 				return sendTsRequest('vue:getImportPathForFile', args);
 			},
