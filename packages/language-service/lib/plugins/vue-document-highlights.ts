@@ -1,4 +1,4 @@
-import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
+import type { DocumentHighlightKind, LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
 import { VueVirtualCode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 
@@ -38,7 +38,11 @@ export function create(
 								start: document.positionAt(textSpan.start),
 								end: document.positionAt(textSpan.start + textSpan.length),
 							},
-							kind: kind === 'reference' ? 2 : kind === 'writtenReference' ? 3 : 1,
+							kind: kind === 'reference'
+								? 2 satisfies typeof DocumentHighlightKind.Read
+								: kind === 'writtenReference'
+									? 3 satisfies typeof DocumentHighlightKind.Write
+									: 1 satisfies typeof DocumentHighlightKind.Text,
 						}));
 				},
 			};
