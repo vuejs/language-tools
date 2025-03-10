@@ -53,7 +53,7 @@ connection.onInitialize(params => {
 							{
 								file: fileName,
 								needFileNameList: false,
-							}
+							} satisfies ts.server.protocol.ProjectInfoRequestArgs
 						);
 						file2ProjectInfo.set(fileName, projectInfoPromise);
 					}
