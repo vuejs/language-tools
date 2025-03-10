@@ -12,6 +12,6 @@ export type Requests = {
 	getComponentDirectives: ToRequest<typeof import('./getComponentDirectives.js')['getComponentDirectives']>;
 	getElementAttrs: ToRequest<typeof import('./getElementAttrs.js')['getElementAttrs']>;
 	getElementNames: ToRequest<typeof import('./getElementNames.js')['getElementNames']>;
-	getDocumentHighlights: ToRequest<(fileName: string, position: { line: number; character: number; }) => ts.server.protocol.DocumentHighlightsItem[] | ts.DocumentHighlights[]>;
+	getDocumentHighlights: ToRequest<(fileName: string, position: { line: number; character: number; }) => ts.DocumentHighlights[]>;
 	getQuickInfoAtPosition: ToRequest<(fileName: string, position: { line: number; character: number; }) => string>;
 };

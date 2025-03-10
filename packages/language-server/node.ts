@@ -115,9 +115,9 @@ connection.onInitialize(params => {
 			getPropertiesAtLocation(...args) {
 				return sendTsRequest('vue:getPropertiesAtLocation', args);
 			},
-			async getDocumentHighlights(fileName, { line, character }) {
+			getDocumentHighlights(fileName, { line, character }) {
 				return sendTsRequest(
-					ts.server.protocol.CommandTypes.DocumentHighlights,
+					'documentHighlights-full', // internal command
 					{
 						file: fileName,
 						line: line + 1,
