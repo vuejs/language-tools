@@ -1,4 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
@@ -41,31 +42,12 @@ export function* generateVSlot(
 			`default`
 		);
 	}
-	yield `: __VLS_thisSlot } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
+	yield `: __VLS_slot } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
 
 	if (slotDir.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
 		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
-		if (!slotDir.exp.content.includes(':')) {
-			yield `const [`;
-			yield [
-				slotDir.exp.content,
-				'template',
-				slotDir.exp.loc.start.offset,
-				ctx.codeFeatures.all,
-			];
-			yield `] = __VLS_getSlotParams(__VLS_thisSlot)${endOfLine}`;
-		}
-		else {
-			yield `const `;
-			yield [
-				slotDir.exp.content,
-				'template',
-				slotDir.exp.loc.start.offset,
-				ctx.codeFeatures.all,
-			];
-			yield ` = __VLS_getSlotParam(__VLS_thisSlot)${endOfLine}`;
-		}
+		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp);
 	}
 
 	for (const varName of slotBlockVars) {
@@ -107,6 +89,71 @@ export function* generateVSlot(
 
 	yield* ctx.generateAutoImportCompletion();
 	yield `}${newLine}`;
+}
+
+function* generateSlotParameters(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	ast: ts.SourceFile,
+	exp: CompilerDOM.SimpleExpressionNode
+): Generator<Code> {
+	const { ts } = options;
+
+	const statement = ast.statements[0];
+	if (!ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
+		return;
+	}
+
+	const { expression } = statement;
+	const startOffset = exp.loc.start.offset - 1;
+	const modifies: [Code[], number, number][] = [];
+	const types: (Code | null)[] = [];
+
+	for (const { name, type } of expression.parameters) {
+		if (type) {
+			modifies.push([
+				[``],
+				name.end,
+				type.end,
+			]);
+			types.push(chunk(type.getStart(ast), type.end));
+		}
+		else {
+			types.push(null);
+		}
+	}
+
+	yield `const [`;
+	let nextStart = 1;
+	for (const [codes, start, end] of modifies) {
+		yield chunk(nextStart, start);
+		yield* codes;
+		nextStart = end;
+	}
+	yield chunk(nextStart, expression.equalsGreaterThanToken.pos - 1);
+	yield `] = __VLS_getSlotParameters(__VLS_slot`;
+
+	if (types.some(t => t)) {
+		yield `, `;
+		yield* wrapWith(
+			exp.loc.start.offset,
+			exp.loc.end.offset,
+			ctx.codeFeatures.verification,
+			`(`,
+			...types.flatMap(type => type ? [`_: `, type, `, `] : `_, `),
+			`) => [] as any`
+		);
+	}
+	yield `)${endOfLine}`;
+
+	function chunk(start: number, end: number): Code {
+		return [
+			ast.text.slice(start, end),
+			'template',
+			startOffset + start,
+			ctx.codeFeatures.all,
+		];
+	}
 }
 
 export function* generateImplicitDefaultSlot(
