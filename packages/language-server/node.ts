@@ -109,17 +109,33 @@ connection.onInitialize(params => {
 			getElementNames(...args) {
 				return sendTsRequest('vue:getElementNames', args);
 			},
-			getDocumentHighlights(...args) {
-				return sendTsRequest('vue:getDocumentHighlights', args);
-			},
 			getImportPathForFile(...args) {
 				return sendTsRequest('vue:getImportPathForFile', args);
 			},
 			getPropertiesAtLocation(...args) {
 				return sendTsRequest('vue:getPropertiesAtLocation', args);
 			},
-			getQuickInfoAtPosition(...args) {
-				return sendTsRequest('vue:getQuickInfoAtPosition', args);
+			async getDocumentHighlights(fileName, { line, character }) {
+				return sendTsRequest(
+					ts.server.protocol.CommandTypes.DocumentHighlights,
+					{
+						file: fileName,
+						line: line + 1,
+						offset: character + 1,
+						filesToSearch: [fileName],
+					} satisfies ts.server.protocol.DocumentHighlightsRequestArgs
+				);
+			},
+			async getQuickInfoAtPosition(fileName, { line, character }) {
+				const result = await sendTsRequest<ts.QuickInfo>(
+					ts.server.protocol.CommandTypes.Quickinfo,
+					{
+						file: fileName,
+						line: line + 1,
+						offset: character + 1,
+					} satisfies ts.server.protocol.FileLocationRequestArgs
+				);
+				return ts.displayPartsToString(result?.displayParts ?? []);
 			},
 		} : undefined)
 	);

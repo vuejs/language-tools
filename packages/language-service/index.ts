@@ -38,7 +38,6 @@ import { getComponentDirectives } from '@vue/typescript-plugin/lib/requests/getC
 import { getComponentEvents } from '@vue/typescript-plugin/lib/requests/getComponentEvents';
 import { getComponentNames } from '@vue/typescript-plugin/lib/requests/getComponentNames';
 import { getComponentProps } from '@vue/typescript-plugin/lib/requests/getComponentProps';
-import { getDocumentHighlights } from '@vue/typescript-plugin/lib/requests/getDocumentHighlights';
 import { getElementAttrs } from '@vue/typescript-plugin/lib/requests/getElementAttrs';
 import { getElementNames } from '@vue/typescript-plugin/lib/requests/getElementNames';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
@@ -113,9 +112,6 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 			async collectExtractProps(...args) {
 				return collectExtractProps.apply(requestContext, args);
 			},
-			async getDocumentHighlights(...args) {
-				return getDocumentHighlights.apply(requestContext, args);
-			},
 			async getPropertiesAtLocation(...args) {
 				return getPropertiesAtLocation.apply(requestContext, args);
 			},
@@ -140,6 +136,9 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 			async getElementNames(...args) {
 				return getElementNames.apply(requestContext, args);
 			},
+			async getDocumentHighlights(fileName, position) {
+				return languageService.getDocumentHighlights(fileName, position as any, [fileName]);
+			},
 			async getQuickInfoAtPosition(fileName, position) {
 				const languageService = context.getLanguageService();
 				const uri = context.project.typescript!.uriConverter.asUri(fileName);
@@ -147,8 +146,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 				if (!sourceScript) {
 					return;
 				}
-				const document = context.documents.get(uri, sourceScript.languageId, sourceScript.snapshot);
-				const hover = await languageService.getHover(uri, document.positionAt(position));
+				const hover = await languageService.getHover(uri, position);
 				let text = '';
 				if (typeof hover?.contents === 'string') {
 					text = hover.contents;

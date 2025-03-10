@@ -7,12 +7,10 @@ import { getComponentDirectives } from './lib/requests/getComponentDirectives';
 import { getComponentEvents } from './lib/requests/getComponentEvents';
 import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
-import { getDocumentHighlights } from './lib/requests/getDocumentHighlights';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './lib/requests/getPropertiesAtLocation';
-import { getQuickInfoAtPosition } from './lib/requests/getQuickInfoAtPosition';
 import type { RequestContext } from './lib/requests/types';
 
 const windowsPathReg = /\\/g;
@@ -83,11 +81,6 @@ export = createLanguageServicePlugin(
 					response: collectExtractProps.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('vue:getDocumentHighlights', ({ arguments: args }) => {
-				return {
-					response: getDocumentHighlights.apply(getRequestContext(args[0]), args),
-				};
-			});
 			session.addProtocolHandler('vue:getImportPathForFile', ({ arguments: args }) => {
 				return {
 					response: getImportPathForFile.apply(getRequestContext(args[0]), args),
@@ -96,11 +89,6 @@ export = createLanguageServicePlugin(
 			session.addProtocolHandler('vue:getPropertiesAtLocation', ({ arguments: args }) => {
 				return {
 					response: getPropertiesAtLocation.apply(getRequestContext(args[0]), args),
-				};
-			});
-			session.addProtocolHandler('vue:getQuickInfoAtPosition', ({ arguments: args }) => {
-				return {
-					response: getQuickInfoAtPosition.apply(getRequestContext(args[0]), args),
 				};
 			});
 			session.addProtocolHandler('vue:getComponentNames', ({ arguments: args }) => {

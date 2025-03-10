@@ -28,7 +28,7 @@ export function create(
 						return;
 					}
 
-					const result = await tsPluginClient?.getDocumentHighlights(root.fileName, document.offsetAt(position));
+					const result = await tsPluginClient?.getDocumentHighlights(root.fileName, position);
 
 					return result
 						?.filter(({ fileName }) => fileName === root.fileName)
