@@ -2,6 +2,7 @@ type ToRequest<T extends (...args: any) => any> = (...args: Parameters<T>) => Pr
 
 export type Requests = {
 	collectExtractProps: ToRequest<typeof import('./collectExtractProps.js')['collectExtractProps']>;
+	getDocumentHighlights: ToRequest<typeof import('./getDocumentHighlights.js')['getDocumentHighlights']>;
 	getImportPathForFile: ToRequest<typeof import('./getImportPathForFile.js')['getImportPathForFile']>;
 	getPropertiesAtLocation: ToRequest<typeof import('./getPropertiesAtLocation.js')['getPropertiesAtLocation']>;
 	getQuickInfoAtPosition: ToRequest<typeof import('./getQuickInfoAtPosition.js')['getQuickInfoAtPosition']>;

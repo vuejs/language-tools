@@ -7,6 +7,7 @@ import { getComponentDirectives } from './lib/requests/getComponentDirectives';
 import { getComponentEvents } from './lib/requests/getComponentEvents';
 import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
+import { getDocumentHighlights } from './lib/requests/getDocumentHighlights';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
@@ -80,6 +81,11 @@ export = createLanguageServicePlugin(
 			session.addProtocolHandler('vue:collectExtractProps', ({ arguments: args }) => {
 				return {
 					response: collectExtractProps.apply(getRequestContext(args[0]), args),
+				};
+			});
+			session.addProtocolHandler('vue:getDocumentHighlights', ({ arguments: args }) => {
+				return {
+					response: getDocumentHighlights.apply(getRequestContext(args[0]), args),
 				};
 			});
 			session.addProtocolHandler('vue:getImportPathForFile', ({ arguments: args }) => {
