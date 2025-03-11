@@ -2,7 +2,7 @@ import { isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
-import { collectVars, createTsAst } from '../utils';
+import { collectVars, createTsAst, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 
 export function* generateInterpolation(
@@ -14,30 +14,38 @@ export function* generateInterpolation(
 	ctx: TemplateCodegenContext,
 	source: string,
 	data: VueCodeInformation | ((offset: number) => VueCodeInformation) | undefined,
-	_code: string,
+	code: string,
 	start: number | undefined,
 	astHolder: any = {},
 	prefix: string = '',
 	suffix: string = ''
 ): Generator<Code> {
-	const code = prefix + _code + suffix;
-	const ast = createTsAst(options.ts, astHolder, code);
-	for (let [section, offset, type] of forEachInterpolationSegment(
-		options.ts,
-		options.destructuredPropNames,
-		options.templateRefNames,
-		ctx,
-		code,
-		start !== undefined ? start - prefix.length : undefined,
-		ast
-	)) {
+	const wrappingCode = prefix + code + suffix;
+
+	const segments = identifierRegex.test(code)
+		? generateVar(wrappingCode, ctx.dollarVars, options.destructuredPropNames, options.templateRefNames, {
+			isShorthand: false,
+			offset: prefix.length,
+			text: code,
+		})
+		: forEachInterpolationSegment(
+			options.ts,
+			options.destructuredPropNames,
+			options.templateRefNames,
+			ctx,
+			wrappingCode,
+			start !== undefined ? start - prefix.length : undefined,
+			createTsAst(options.ts, astHolder, wrappingCode)
+		);
+
+	for (let [section, offset, type] of segments) {
 		if (offset === undefined) {
 			yield section;
 		}
 		else {
 			offset -= prefix.length;
 			let addSuffix = '';
-			const overLength = offset + section.length - _code.length;
+			const overLength = offset + section.length - code.length;
 			if (overLength > 0) {
 				addSuffix = section.slice(section.length - overLength);
 				section = section.slice(0, -overLength);
@@ -77,6 +85,12 @@ interface CtxVar {
 	offset: number;
 };
 
+type Segment = [
+	fragment: string,
+	offset: number | undefined,
+	type?: 'errorMappingOnly' | 'startText' | 'endText',
+];
+
 function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
 	destructuredPropNames: Set<string> | undefined,
@@ -85,7 +99,7 @@ function* forEachInterpolationSegment(
 	code: string,
 	offset: number | undefined,
 	ast: ts.SourceFile
-): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly' | 'startText' | 'endText']> {
+): Generator<Segment> {
 	let ctxVars: CtxVar[] = [];
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
@@ -121,32 +135,22 @@ function* forEachInterpolationSegment(
 	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
 
 	if (ctxVars.length) {
-
-		if (ctxVars[0].isShorthand) {
-			yield [code.slice(0, ctxVars[0].offset + ctxVars[0].text.length), 0];
-			yield [': ', undefined];
-		}
-		else if (ctxVars[0].offset > 0) {
-			yield [code.slice(0, ctxVars[0].offset), 0, 'startText'];
-		}
-
-		for (let i = 0; i < ctxVars.length - 1; i++) {
+		for (let i = 0; i < ctxVars.length; i++) {
+			const lastVar = ctxVars[i - 1];
 			const curVar = ctxVars[i];
-			const nextVar = ctxVars[i + 1];
+			const lastVarEnd = lastVar ? lastVar.offset + lastVar.text.length : 0;
 
-			yield* generateVar(code, ctx.dollarVars, destructuredPropNames, templateRefNames, curVar);
-
-			if (nextVar.isShorthand) {
-				yield [code.slice(curVar.offset + curVar.text.length, nextVar.offset + nextVar.text.length), curVar.offset + curVar.text.length];
+			if (curVar.isShorthand) {
+				yield [code.slice(lastVarEnd, curVar.offset + curVar.text.length), lastVarEnd];
 				yield [': ', undefined];
 			}
 			else {
-				yield [code.slice(curVar.offset + curVar.text.length, nextVar.offset), curVar.offset + curVar.text.length];
+				yield [code.slice(lastVarEnd, curVar.offset), lastVarEnd, i ? undefined : 'startText'];
 			}
+			yield* generateVar(code, ctx.dollarVars, destructuredPropNames, templateRefNames, curVar);
 		}
 
 		const lastVar = ctxVars.at(-1)!;
-		yield* generateVar(code, ctx.dollarVars, destructuredPropNames, templateRefNames, lastVar);
 		if (lastVar.offset + lastVar.text.length < code.length) {
 			yield [code.slice(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length, 'endText'];
 		}
@@ -162,7 +166,7 @@ function* generateVar(
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
 	curVar: CtxVar
-): Generator<[fragment: string, offset: number | undefined, type?: 'errorMappingOnly']> {
+): Generator<Segment> {
 	// fix https://github.com/vuejs/language-tools/issues/1205
 	// fix https://github.com/vuejs/language-tools/issues/1264
 	yield ['', curVar.offset, 'errorMappingOnly'];
