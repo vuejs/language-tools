@@ -115,13 +115,12 @@ connection.onInitialize(params => {
 			getPropertiesAtLocation(...args) {
 				return sendTsRequest('vue:getPropertiesAtLocation', args);
 			},
-			getDocumentHighlights(fileName, { line, character }) {
+			getDocumentHighlights(fileName, position) {
 				return sendTsRequest(
 					'documentHighlights-full', // internal command
 					{
 						file: fileName,
-						line: line + 1,
-						offset: character + 1,
+						...{ position } as unknown as { line: number; offset: number; },
 						filesToSearch: [fileName],
 					} satisfies ts.server.protocol.DocumentHighlightsRequestArgs
 				);

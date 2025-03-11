@@ -136,9 +136,6 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 			async getElementNames(...args) {
 				return getElementNames.apply(requestContext, args);
 			},
-			async getDocumentHighlights(fileName, position) {
-				return languageService.getDocumentHighlights(fileName, position as any, [fileName]);
-			},
 			async getQuickInfoAtPosition(fileName, position) {
 				const languageService = context.getLanguageService();
 				const uri = context.project.typescript!.uriConverter.asUri(fileName);
@@ -175,15 +172,22 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 	}
 }
 
+import type * as ts from 'typescript';
+
 export function getHybridModeLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	getTsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests & {
+		getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>;
+	} | undefined
 ) {
 	const plugins = [
 		createTypeScriptSyntacticPlugin(ts),
 		createTypeScriptDocCommentTemplatePlugin(ts),
-		...getCommonLanguageServicePlugins(ts, () => getTsPluginClient)
+		...getCommonLanguageServicePlugins(ts, () => tsPluginClient)
 	];
+	if (tsPluginClient) {
+		plugins.push(createVueDocumentHighlightsPlugin(tsPluginClient.getDocumentHighlights));
+	}
 	for (const plugin of plugins) {
 		// avoid affecting TS plugin
 		delete plugin.capabilities.semanticTokensProvider;
@@ -207,7 +211,6 @@ function getCommonLanguageServicePlugins(
 		createVueSfcPlugin(),
 		createVueTwoslashQueriesPlugin(getTsPluginClient),
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
-		createVueDocumentHighlightsPlugin(getTsPluginClient),
 		createVueDocumentLinksPlugin(),
 		createVueCompleteDefineAssignmentPlugin(),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),

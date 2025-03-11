@@ -1,9 +1,10 @@
-import type { DocumentHighlightKind, LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
+import type { DocumentHighlightKind, LanguageServicePlugin } from '@volar/language-service';
 import { VueVirtualCode } from '@vue/language-core';
+import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 
 export function create(
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
+	getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-highlights',
@@ -11,8 +12,6 @@ export function create(
 			documentHighlightProvider: true,
 		},
 		create(context) {
-			const tsPluginClient = getTsPluginClient?.(context);
-
 			return {
 				async provideDocumentHighlights(document, position) {
 					const uri = URI.parse(document.uri);
@@ -28,7 +27,7 @@ export function create(
 						return;
 					}
 
-					const result = await tsPluginClient?.getDocumentHighlights(root.fileName, position);
+					const result = await getDocumentHighlights(root.fileName, document.offsetAt(position));
 
 					return result
 						?.filter(({ fileName }) => fileName === root.fileName)
