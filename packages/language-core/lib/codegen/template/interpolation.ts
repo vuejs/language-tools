@@ -135,7 +135,7 @@ function* forEachInterpolationSegment(
 			else {
 				yield [code.slice(lastVarEnd, curVar.offset), lastVarEnd, i ? undefined : 'startText'];
 			}
-			yield* generateVar(destructuredPropNames, templateRefNames, ctx, code, offset, curVar);
+			yield* generateVar(templateRefNames, ctx, code, offset, curVar);
 		}
 
 		const lastVar = ctxVars.at(-1)!;
@@ -149,7 +149,6 @@ function* forEachInterpolationSegment(
 }
 
 function* generateVar(
-	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
 	code: string,
@@ -160,7 +159,6 @@ function* generateVar(
 	// fix https://github.com/vuejs/language-tools/issues/1264
 	yield ['', curVar.offset, 'errorMappingOnly'];
 
-	const isDestructuredProp = destructuredPropNames?.has(curVar.text) ?? false;
 	const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
 	if (isTemplateRef) {
 		yield [`__VLS_unref(`, undefined];
@@ -178,9 +176,7 @@ function* generateVar(
 		if (ctx.dollarVars.has(curVar.text)) {
 			yield [`__VLS_dollars.`, undefined];
 		}
-		else if (!isDestructuredProp) {
-			yield [`__VLS_ctx.`, undefined];
-		}
+		yield [`__VLS_ctx.`, undefined];
 		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 	}
 }
