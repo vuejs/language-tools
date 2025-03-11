@@ -5,6 +5,15 @@ import { getNodeText, getStartEnd } from '../../utils/shared';
 import { collectVars, createTsAst, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 
+const keywordLiterals = new Set([
+	'undefined',
+	'null',
+	'true',
+	'false',
+	'Infinity',
+	'NaN',
+]);
+
 export function* generateInterpolation(
 	options: {
 		ts: typeof ts,
@@ -22,12 +31,19 @@ export function* generateInterpolation(
 ): Generator<Code> {
 	const wrappingCode = prefix + code + suffix;
 
-	const segments = identifierRegex.test(code)
-		? generateVar(wrappingCode, ctx.dollarVars, options.destructuredPropNames, options.templateRefNames, {
-			isShorthand: false,
-			offset: prefix.length,
-			text: code,
-		})
+	const segments = identifierRegex.test(code) && !keywordLiterals.has(code)
+		? [
+			[prefix] as const,
+			...generateVar(
+				options.destructuredPropNames,
+				options.templateRefNames,
+				ctx,
+				wrappingCode,
+				start !== undefined ? start - prefix.length : undefined,
+				{ text: code, offset: prefix.length }
+			),
+			[suffix] as const
+		]
 		: forEachInterpolationSegment(
 			options.ts,
 			options.destructuredPropNames,
@@ -81,8 +97,8 @@ export function* generateInterpolation(
 
 interface CtxVar {
 	text: string;
-	isShorthand: boolean;
 	offset: number;
+	isShorthand?: boolean;
 };
 
 type Segment = [
@@ -104,30 +120,12 @@ function* forEachInterpolationSegment(
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		const text = getNodeText(ts, id, ast);
-		if (
-			ctx.hasLocalVariable(text)
-			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
-			|| isGloballyAllowed(text)
-			|| text === 'require'
-			|| text.startsWith('__VLS_')
-		) {
-			// localVarOffsets.push(localVar.getStart(ast));
-		}
-		else {
+		if (!ctx.hasLocalVariable(text)) {
 			ctxVars.push({
 				text,
-				isShorthand: isShorthand,
 				offset: getStartEnd(ts, id, ast).start,
+				isShorthand,
 			});
-			if (destructuredPropNames?.has(text)) {
-				return;
-			}
-			if (offset !== undefined) {
-				ctx.accessExternalVariable(text, offset + getStartEnd(ts, id, ast).start);
-			}
-			else {
-				ctx.accessExternalVariable(text);
-			}
 		}
 	};
 	ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, ctx));
@@ -147,7 +145,7 @@ function* forEachInterpolationSegment(
 			else {
 				yield [code.slice(lastVarEnd, curVar.offset), lastVarEnd, i ? undefined : 'startText'];
 			}
-			yield* generateVar(code, ctx.dollarVars, destructuredPropNames, templateRefNames, curVar);
+			yield* generateVar(destructuredPropNames, templateRefNames, ctx, code, offset, curVar);
 		}
 
 		const lastVar = ctxVars.at(-1)!;
@@ -161,10 +159,11 @@ function* forEachInterpolationSegment(
 }
 
 function* generateVar(
-	code: string,
-	dollarVars: Set<string>,
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
+	ctx: TemplateCodegenContext,
+	code: string,
+	offset: number | undefined,
 	curVar: CtxVar
 ): Generator<Segment> {
 	// fix https://github.com/vuejs/language-tools/issues/1205
@@ -179,11 +178,29 @@ function* generateVar(
 		yield [`)`, undefined];
 	}
 	else {
-		if (dollarVars.has(curVar.text)) {
-			yield [`__VLS_dollars.`, undefined];
-		}
-		else if (!isDestructuredProp) {
-			yield [`__VLS_ctx.`, undefined];
+		const { text } = curVar;
+		if (
+			ctx.hasLocalVariable(text)
+			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
+			|| isGloballyAllowed(text)
+			|| text === 'require'
+			|| text.startsWith('__VLS_')
+			|| destructuredPropNames?.has(text)
+		) {}
+		else {
+			if (offset !== undefined) {
+				ctx.accessExternalVariable(text, offset + curVar.offset);
+			}
+			else {
+				ctx.accessExternalVariable(text);
+			}
+
+			if (ctx.dollarVars.has(curVar.text)) {
+				yield [`__VLS_dollars.`, undefined];
+			}
+			else if (!isDestructuredProp) {
+				yield [`__VLS_ctx.`, undefined];
+			}
 		}
 		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 	}
