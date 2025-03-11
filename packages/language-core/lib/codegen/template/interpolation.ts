@@ -32,7 +32,7 @@ export function* generateInterpolation(
 		start,
 		astHolder,
 		prefix,
-		suffix,
+		suffix
 	)) {
 		if (offset === undefined) {
 			yield section;
@@ -95,7 +95,7 @@ function* forEachInterpolationSegment(
 	start: number | undefined,
 	astHolder: any,
 	prefix: string,
-	suffix: string,
+	suffix: string
 ): Generator<Segment> {
 	const code = prefix + originalCode + suffix;
 	const offset = start !== undefined ? start - prefix.length : undefined;
@@ -307,7 +307,7 @@ function walkIdentifiersInTypeReference(
 function shouldIdentifierSkipped(
 	ctx: TemplateCodegenContext,
 	text: string,
-	destructuredPropNames: Set<string> | undefined,
+	destructuredPropNames: Set<string> | undefined
 ) {
 	return ctx.hasLocalVariable(text)
 		// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
