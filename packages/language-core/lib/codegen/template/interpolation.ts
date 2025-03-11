@@ -23,17 +23,16 @@ export function* generateInterpolation(
 	prefix: string = '',
 	suffix: string = ''
 ): Generator<Code> {
-	const wrappingCode = prefix + code + suffix;
-
 	for (let [section, offset, type] of forEachInterpolationSegment(
 		options.ts,
 		options.destructuredPropNames,
 		options.templateRefNames,
 		ctx,
 		code,
-		wrappingCode,
-		start !== undefined ? start - prefix.length : undefined,
-		astHolder
+		start,
+		astHolder,
+		prefix,
+		suffix,
 	)) {
 		if (offset === undefined) {
 			yield section;
@@ -93,16 +92,19 @@ function* forEachInterpolationSegment(
 	templateRefNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
 	originalCode: string,
-	code: string,
-	offset: number | undefined,
-	astHolder: any
+	start: number | undefined,
+	astHolder: any,
+	prefix: string,
+	suffix: string,
 ): Generator<Segment> {
+	const code = prefix + originalCode + suffix;
+	const offset = start !== undefined ? start - prefix.length : undefined;
 	let ctxVars: CtxVar[] = [];
 
 	if (identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode, destructuredPropNames)) {
 		ctxVars.push({
 			text: originalCode,
-			offset: code.indexOf(originalCode),
+			offset: prefix.length,
 		});
 	}
 	else {
