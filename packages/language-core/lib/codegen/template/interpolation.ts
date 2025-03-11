@@ -1,18 +1,12 @@
-import { isGloballyAllowed } from '@vue/shared';
+import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { collectVars, createTsAst, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 
-const keywordLiterals = new Set([
-	'undefined',
-	'null',
-	'true',
-	'false',
-	'Infinity',
-	'NaN',
-]);
+// https://github.com/vuejs/core/blob/fb0c3ca519f1fccf52049cd6b8db3a67a669afe9/packages/compiler-core/src/transforms/transformExpression.ts#L47
+const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
 	options: {
@@ -31,7 +25,7 @@ export function* generateInterpolation(
 ): Generator<Code> {
 	const wrappingCode = prefix + code + suffix;
 
-	const segments = identifierRegex.test(code) && !keywordLiterals.has(code)
+	const segments = identifierRegex.test(code) && !isLiteralWhitelisted(code)
 		? [
 			[prefix] as const,
 			...generateVar(
@@ -120,7 +114,7 @@ function* forEachInterpolationSegment(
 
 	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 		const text = getNodeText(ts, id, ast);
-		if (!ctx.hasLocalVariable(text)) {
+		if (!shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
 			ctxVars.push({
 				text,
 				offset: getStartEnd(ts, id, ast).start,
@@ -179,15 +173,7 @@ function* generateVar(
 	}
 	else {
 		const { text } = curVar;
-		if (
-			ctx.hasLocalVariable(text)
-			// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
-			|| isGloballyAllowed(text)
-			|| text === 'require'
-			|| text.startsWith('__VLS_')
-			|| destructuredPropNames?.has(text)
-		) {}
-		else {
+		if (!shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
 			if (offset !== undefined) {
 				ctx.accessExternalVariable(text, offset + curVar.offset);
 			}
@@ -325,4 +311,17 @@ function walkIdentifiersInTypeReference(
 	else {
 		ts.forEachChild(node, node => walkIdentifiersInTypeReference(ts, node, cb));
 	}
+}
+
+function shouldIdentifierSkipped(
+	ctx: TemplateCodegenContext,
+	text: string,
+	destructuredPropNames: Set<string> | undefined,
+) {
+	return ctx.hasLocalVariable(text)
+		// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
+		|| isGloballyAllowed(text)
+		|| text === 'require'
+		|| text.startsWith('__VLS_')
+		|| destructuredPropNames?.has(text);
 }
