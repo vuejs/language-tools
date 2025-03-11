@@ -25,30 +25,16 @@ export function* generateInterpolation(
 ): Generator<Code> {
 	const wrappingCode = prefix + code + suffix;
 
-	const segments = identifierRegex.test(code) && !isLiteralWhitelisted(code)
-		? [
-			[prefix] as const,
-			...generateVar(
-				options.destructuredPropNames,
-				options.templateRefNames,
-				ctx,
-				wrappingCode,
-				start !== undefined ? start - prefix.length : undefined,
-				{ text: code, offset: prefix.length }
-			),
-			[suffix] as const
-		]
-		: forEachInterpolationSegment(
-			options.ts,
-			options.destructuredPropNames,
-			options.templateRefNames,
-			ctx,
-			wrappingCode,
-			start !== undefined ? start - prefix.length : undefined,
-			createTsAst(options.ts, astHolder, wrappingCode)
-		);
-
-	for (let [section, offset, type] of segments) {
+	for (let [section, offset, type] of forEachInterpolationSegment(
+		options.ts,
+		options.destructuredPropNames,
+		options.templateRefNames,
+		ctx,
+		code,
+		wrappingCode,
+		start !== undefined ? start - prefix.length : undefined,
+		astHolder
+	)) {
 		if (offset === undefined) {
 			yield section;
 		}
@@ -106,23 +92,33 @@ function* forEachInterpolationSegment(
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
+	originalCode: string,
 	code: string,
 	offset: number | undefined,
-	ast: ts.SourceFile
+	astHolder: any
 ): Generator<Segment> {
 	let ctxVars: CtxVar[] = [];
 
-	const varCb = (id: ts.Identifier, isShorthand: boolean) => {
-		const text = getNodeText(ts, id, ast);
-		if (!shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
-			ctxVars.push({
-				text,
-				offset: getStartEnd(ts, id, ast).start,
-				isShorthand,
-			});
-		}
-	};
-	ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, ctx));
+	if (identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode, destructuredPropNames)) {
+		ctxVars.push({
+			text: originalCode,
+			offset: code.indexOf(originalCode),
+		});
+	}
+	else {
+		const ast = createTsAst(ts, astHolder, code);
+		const varCb = (id: ts.Identifier, isShorthand: boolean) => {
+			const text = getNodeText(ts, id, ast);
+			if (!shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
+				ctxVars.push({
+					text,
+					offset: getStartEnd(ts, id, ast).start,
+					isShorthand,
+				});
+			}
+		};
+		ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, ctx));
+	}
 
 	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
 
@@ -172,21 +168,18 @@ function* generateVar(
 		yield [`)`, undefined];
 	}
 	else {
-		const { text } = curVar;
-		if (!shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
-			if (offset !== undefined) {
-				ctx.accessExternalVariable(text, offset + curVar.offset);
-			}
-			else {
-				ctx.accessExternalVariable(text);
-			}
+		if (offset !== undefined) {
+			ctx.accessExternalVariable(curVar.text, offset + curVar.offset);
+		}
+		else {
+			ctx.accessExternalVariable(curVar.text);
+		}
 
-			if (ctx.dollarVars.has(curVar.text)) {
-				yield [`__VLS_dollars.`, undefined];
-			}
-			else if (!isDestructuredProp) {
-				yield [`__VLS_ctx.`, undefined];
-			}
+		if (ctx.dollarVars.has(curVar.text)) {
+			yield [`__VLS_dollars.`, undefined];
+		}
+		else if (!isDestructuredProp) {
+			yield [`__VLS_ctx.`, undefined];
 		}
 		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 	}
@@ -321,6 +314,7 @@ function shouldIdentifierSkipped(
 	return ctx.hasLocalVariable(text)
 		// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 		|| isGloballyAllowed(text)
+		|| isLiteralWhitelisted(text)
 		|| text === 'require'
 		|| text.startsWith('__VLS_')
 		|| destructuredPropNames?.has(text);
