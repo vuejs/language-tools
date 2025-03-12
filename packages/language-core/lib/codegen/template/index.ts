@@ -157,7 +157,7 @@ function* generateTemplateRefs(
 				ctx,
 				name,
 				offset,
-				ctx.codeFeatures.navigationAndCompletion
+				ctx.codeFeatures.navigation
 			);
 			yield `: ${typeExp} }`;
 		}
