@@ -97,15 +97,6 @@ function* generateSetupFunction(
 	syntax: 'return' | 'export default' | undefined
 ): Generator<Code> {
 	let setupCodeModifies: [Code[], number, number][] = [];
-	for (const { comments } of scriptSetupRanges.defineProp) {
-		if (comments) {
-			setupCodeModifies.push([
-				[``],
-				comments.start,
-				comments.end,
-			]);
-		}
-	}
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
 		setupCodeModifies.push(...generateDefineWithType(
@@ -506,7 +497,7 @@ function* generateComponentProps(
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
 			if (defineProp.comments) {
-				yield generateSfcBlockSection(scriptSetup, defineProp.comments.start, defineProp.comments.end, codeFeatures.all);
+				yield scriptSetup.content.slice(defineProp.comments.start, defineProp.comments.end);
 				yield newLine;
 			}
 
