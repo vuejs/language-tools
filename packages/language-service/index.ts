@@ -22,6 +22,7 @@ import { create as createVueCompilerDomErrorsPlugin } from './lib/plugins/vue-co
 import { create as createVueCompleteDefineAssignmentPlugin } from './lib/plugins/vue-complete-define-assignment';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
+import { create as createVueDocumentHighlightsPlugin } from './lib/plugins/vue-document-highlights';
 import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-document-links';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
@@ -142,8 +143,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 				if (!sourceScript) {
 					return;
 				}
-				const document = context.documents.get(uri, sourceScript.languageId, sourceScript.snapshot);
-				const hover = await languageService.getHover(uri, document.positionAt(position));
+				const hover = await languageService.getHover(uri, position);
 				let text = '';
 				if (typeof hover?.contents === 'string') {
 					text = hover.contents;
@@ -172,15 +172,22 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 	}
 }
 
+import type * as ts from 'typescript';
+
 export function getHybridModeLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	getTsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests & {
+		getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>;
+	} | undefined
 ) {
 	const plugins = [
 		createTypeScriptSyntacticPlugin(ts),
 		createTypeScriptDocCommentTemplatePlugin(ts),
-		...getCommonLanguageServicePlugins(ts, () => getTsPluginClient)
+		...getCommonLanguageServicePlugins(ts, () => tsPluginClient)
 	];
+	if (tsPluginClient) {
+		plugins.push(createVueDocumentHighlightsPlugin(tsPluginClient.getDocumentHighlights));
+	}
 	for (const plugin of plugins) {
 		// avoid affecting TS plugin
 		delete plugin.capabilities.semanticTokensProvider;
@@ -203,8 +210,8 @@ function getCommonLanguageServicePlugins(
 		createVueCompilerDomErrorsPlugin(),
 		createVueSfcPlugin(),
 		createVueTwoslashQueriesPlugin(getTsPluginClient),
-		createVueDocumentLinksPlugin(),
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
+		createVueDocumentLinksPlugin(),
 		createVueCompleteDefineAssignmentPlugin(),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueAutoAddSpacePlugin(),
