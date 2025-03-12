@@ -264,10 +264,7 @@ export function* generateComponent(
 		yield `${endOfLine}`;
 
 		if (refName && offset) {
-			ctx.templateRefs.set(refName, {
-				typeExp: `typeof ${ctx.getHoistVariable(componentInstanceVar)}`,
-				offset
-			});
+			ctx.addTemplateRef(refName, `typeof ${ctx.getHoistVariable(componentInstanceVar)}`, offset);
 		}
 		if (isRootNode) {
 			ctx.singleRootElTypes.push(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
@@ -355,10 +352,7 @@ export function* generateElement(
 		if (isVForChild) {
 			typeExp += `[]`;
 		}
-		ctx.templateRefs.set(refName, {
-			typeExp,
-			offset
-		});
+		ctx.addTemplateRef(refName, typeExp, offset);
 	}
 	if (ctx.singleRootNodes.has(node)) {
 		ctx.singleRootElTypes.push(`__VLS_NativeElements['${node.tag}']`);

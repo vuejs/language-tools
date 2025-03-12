@@ -53,7 +53,7 @@ connection.onInitialize(params => {
 							{
 								file: fileName,
 								needFileNameList: false,
-							}
+							} satisfies ts.server.protocol.ProjectInfoRequestArgs
 						);
 						file2ProjectInfo.set(fileName, projectInfoPromise);
 					}
@@ -115,8 +115,26 @@ connection.onInitialize(params => {
 			getPropertiesAtLocation(...args) {
 				return sendTsRequest('vue:getPropertiesAtLocation', args);
 			},
-			getQuickInfoAtPosition(...args) {
-				return sendTsRequest('vue:getQuickInfoAtPosition', args);
+			getDocumentHighlights(fileName, position) {
+				return sendTsRequest(
+					'documentHighlights-full', // internal command
+					{
+						file: fileName,
+						...{ position } as unknown as { line: number; offset: number; },
+						filesToSearch: [fileName],
+					} satisfies ts.server.protocol.DocumentHighlightsRequestArgs
+				);
+			},
+			async getQuickInfoAtPosition(fileName, { line, character }) {
+				const result = await sendTsRequest<ts.QuickInfo>(
+					ts.server.protocol.CommandTypes.Quickinfo,
+					{
+						file: fileName,
+						line: line + 1,
+						offset: character + 1,
+					} satisfies ts.server.protocol.FileLocationRequestArgs
+				);
+				return ts.displayPartsToString(result?.displayParts ?? []);
 			},
 		} : undefined)
 	);

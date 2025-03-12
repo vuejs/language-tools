@@ -11,7 +11,6 @@ import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './lib/requests/getPropertiesAtLocation';
-import { getQuickInfoAtPosition } from './lib/requests/getQuickInfoAtPosition';
 import type { RequestContext } from './lib/requests/types';
 
 const windowsPathReg = /\\/g;
@@ -90,11 +89,6 @@ export = createLanguageServicePlugin(
 			session.addProtocolHandler('vue:getPropertiesAtLocation', ({ arguments: args }) => {
 				return {
 					response: getPropertiesAtLocation.apply(getRequestContext(args[0]), args),
-				};
-			});
-			session.addProtocolHandler('vue:getQuickInfoAtPosition', ({ arguments: args }) => {
-				return {
-					response: getQuickInfoAtPosition.apply(getRequestContext(args[0]), args),
 				};
 			});
 			session.addProtocolHandler('vue:getComponentNames', ({ arguments: args }) => {

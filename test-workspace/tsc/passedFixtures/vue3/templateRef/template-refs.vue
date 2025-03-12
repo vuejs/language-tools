@@ -25,6 +25,11 @@ if (comp4.value) {
 	exactType(comp4.value, {} as HTMLAnchorElement[]);
 }
 
+const comp5 = useTemplateRef('multiple');
+if (comp5.value) {
+	exactType(comp5.value, {} as HTMLAnchorElement | HTMLDivElement);
+}
+
 // @ts-expect-error
 useTemplateRef('unknown');
 </script>
@@ -41,4 +46,8 @@ useTemplateRef('unknown');
 
 	<a v-for="i in 3" ref="v-for-native" :key="i"></a>
 	{{ exactType(comp4?.[0]?.href, {} as string | undefined) }}
+
+	<a ref="multiple"></a>
+	<div ref="multiple"></div>
+	{{ exactType(comp5, {} as HTMLAnchorElement | HTMLDivElement | null) }}
 </template>

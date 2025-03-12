@@ -46,7 +46,7 @@ export function create(
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 						const map = context.language.maps.get(virtualCode, sourceScript);
 						for (const [sourceOffset] of map.toSourceLocation(hoverOffset)) {
-							const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(root.fileName, sourceOffset);
+							const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(root.fileName, document.positionAt(sourceOffset));
 							if (quickInfo) {
 								inlayHints.push({
 									position: { line: pointerPosition.line, character: pointerPosition.character + 2 },
