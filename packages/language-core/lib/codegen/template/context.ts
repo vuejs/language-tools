@@ -175,7 +175,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	const templateRefs = new Map<string, {
 		typeExp: string;
 		offset: number;
-	}>();
+	}[]>();
 
 	return {
 		codeFeatures: new Proxy(codeFeatures, {
@@ -203,6 +203,13 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		} | undefined,
 		singleRootElTypes: [] as string[],
 		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
+		addTemplateRef: (name: string, typeExp: string, offset: number) => {
+			let refs = templateRefs.get(name);
+			if (!refs) {
+				templateRefs.set(name, refs = []);
+			}
+			refs.push({ typeExp, offset });
+		},
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);
 			if (!arr) {
