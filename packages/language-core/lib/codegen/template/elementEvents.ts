@@ -13,12 +13,12 @@ export function* generateElementEvents(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
+	componentOriginalVar: string,
 	componentFunctionalVar: string,
 	componentVNodeVar: string,
 	componentCtxVar: string
 ): Generator<Code> {
-	let emitVar: string | undefined;
-	let eventsVar: string | undefined;
+	let emitsVar: string | undefined;
 	let propsVar: string | undefined;
 
 	for (const prop of node.props) {
@@ -33,17 +33,15 @@ export function* generateElementEvents(
 			)
 		) {
 			ctx.currentComponent!.used = true;
-			if (!emitVar) {
-				emitVar = ctx.getInternalVariable();
-				eventsVar = ctx.getInternalVariable();
+			if (!emitsVar) {
+				emitsVar = ctx.getInternalVariable();
 				propsVar = ctx.getInternalVariable();
-				yield `let ${emitVar}!: typeof ${componentCtxVar}.emit${endOfLine}`;
-				yield `let ${eventsVar}!: __VLS_NormalizeEmits<typeof ${emitVar}>${endOfLine}`;
+				yield `let ${emitsVar}!: __VLS_ResolveEmits<typeof ${componentOriginalVar}, typeof ${componentCtxVar}.emit>${endOfLine}`;
 				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentFunctionalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 			}
 			let source = prop.arg?.loc.source ?? 'model-value';
 			let start = prop.arg?.loc.start.offset;
-			let propPrefix = 'on-';
+			let propPrefix = 'on';
 			let emitPrefix = '';
 			if (prop.name === 'model') {
 				propPrefix = 'onUpdate:';
@@ -52,17 +50,17 @@ export function* generateElementEvents(
 			else if (source.startsWith('vue:')) {
 				source = source.slice('vue:'.length);
 				start = start! + 'vue:'.length;
-				propPrefix = 'onVnode-';
+				propPrefix = 'onVnode';
 				emitPrefix = 'vnode-';
 			}
-			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${camelize(propPrefix + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => ({${newLine}`;
+			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${camelize(propPrefix + '-' + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => ({${newLine}`;
 			if (prop.name === 'on') {
-				yield* generateEventArg(ctx, source, start!, propPrefix.slice(0, -1));
+				yield* generateEventArg(ctx, source, start!, emitPrefix);
 				yield `: `;
 				yield* generateEventExpression(options, ctx, prop);
 			}
 			else {
-				yield `'${camelize(propPrefix + source)}': `;
+				yield `'${camelize(emitPrefix + source)}': `;
 				yield* generateModelEventExpression(options, ctx, prop);
 			}
 			yield `})${endOfLine}`;
@@ -74,17 +72,17 @@ export function* generateEventArg(
 	ctx: TemplateCodegenContext,
 	name: string,
 	start: number,
-	directive = 'on'
+	directive = ''
 ): Generator<Code> {
-	const features = {
-		...ctx.codeFeatures.withoutHighlightAndCompletion,
-		...ctx.codeFeatures.navigationWithoutRename,
-	};
+	const features = ctx.codeFeatures.withoutHighlightAndCompletion;
+	if (directive) {
+		name = capitalize(name);
+	}
 	if (identifierRegex.test(camelize(name))) {
 		yield ['', 'template', start, features];
 		yield directive;
 		yield* generateCamelized(
-			capitalize(name),
+			name,
 			'template',
 			start,
 			combineLastMapping
@@ -98,7 +96,7 @@ export function* generateEventArg(
 			`'`,
 			directive,
 			...generateCamelized(
-				capitalize(name),
+				name,
 				'template',
 				start,
 				combineLastMapping
