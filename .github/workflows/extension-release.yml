@@ -1,0 +1,31 @@
+name: extension
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install -g ovsx
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build:minify && pnpm ovsx publish
+        working-directory: extensions/vscode
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+    #   - run: pnpm ovsx publish
+    #     working-directory: extensions/vscode-typescript-plugin
+    #     env:
+    #       OVSX_PAT: ${{ secrets.OVSX_PAT }}

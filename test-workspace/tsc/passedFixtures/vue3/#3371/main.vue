@@ -1,7 +1,7 @@
 <script setup lang="ts">
 defineSlots<{
-	content(): any;
-	prop(props: { foo: string }): any;
+	content: () => any;
+	prop: (props: { foo: string }) => any;
 }>();
 </script>
 

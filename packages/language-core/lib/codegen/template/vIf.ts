@@ -13,7 +13,7 @@ export function* generateVIf(
 	node: CompilerDOM.IfNode
 ): Generator<Code> {
 
-	let originalBlockConditionsLength = ctx.blockConditions.length;
+	const originalBlockConditionsLength = ctx.blockConditions.length;
 
 	for (let i = 0; i < node.branches.length; i++) {
 
@@ -32,22 +32,18 @@ export function* generateVIf(
 		let addedBlockCondition = false;
 
 		if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-			const codes = [
-				...generateInterpolation(
-					options,
-					ctx,
-					'template',
-					ctx.codeFeatures.all,
-					branch.condition.content,
-					branch.condition.loc.start.offset,
-					branch.condition.loc,
-					'(',
-					')'
-				),
-			];
-			for (const code of codes) {
-				yield code;
-			}
+			const codes = [...generateInterpolation(
+				options,
+				ctx,
+				'template',
+				ctx.codeFeatures.all,
+				branch.condition.content,
+				branch.condition.loc.start.offset,
+				branch.condition.loc,
+				`(`,
+				`)`
+			)];
+			yield* codes;
 			ctx.blockConditions.push(toString(codes));
 			addedBlockCondition = true;
 			yield ` `;
@@ -66,7 +62,7 @@ export function* generateVIf(
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {
-			ctx.blockConditions[ctx.blockConditions.length - 1] = `!(${ctx.blockConditions[ctx.blockConditions.length - 1]})`;
+			ctx.blockConditions[ctx.blockConditions.length - 1] = `!${ctx.blockConditions[ctx.blockConditions.length - 1]}`;
 		}
 	}
 

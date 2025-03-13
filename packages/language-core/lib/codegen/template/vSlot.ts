@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { collectVars, createTsAst, endOfLine, newLine, wrapWith } from '../utils';
+import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateObjectProperty } from './objectProperty';
@@ -145,4 +146,24 @@ export function* generateVSlot(
 	}
 
 	yield* ctx.generateAutoImportCompletion();
+}
+
+export function* generateImplicitDefaultSlot(
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode
+) {
+	if (!ctx.currentComponent) {
+		return;
+	}
+	if (node.children.length) {
+		ctx.currentComponent.used = true;
+		yield `${ctx.currentComponent.ctxVar}.slots!.`;
+		yield* wrapWith(
+			node.children[0].loc.start.offset,
+			node.children[node.children.length - 1].loc.end.offset,
+			ctx.codeFeatures.navigation,
+			`default`
+		);
+		yield endOfLine;
+	}
 }

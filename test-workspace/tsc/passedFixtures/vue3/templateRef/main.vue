@@ -1,7 +1,9 @@
+<!-- @inferTemplateDollarRefs true -->
+
 <script setup lang="ts">
 import { useTemplateRef } from 'vue';
 import { exactType } from '../../shared';
-import TemplateRef from './template-ref.vue';
+import TemplateRefs from './template-refs.vue';
 
 function Comp() {
 	const foo = useTemplateRef('templateRef');
@@ -11,9 +13,9 @@ function Comp() {
 </script>
 
 <template>
-	<TemplateRef ref="templateRef" />
+	<TemplateRefs ref="templateRefs" />
 
-	{{ exactType($refs.templateRef?.$refs.generic?.foo, {} as (1 | undefined)) }}
+	{{ exactType($refs.templateRefs?.$refs.generic?.foo, {} as (1 | undefined)) }}
 
 	<Comp />
 </template>

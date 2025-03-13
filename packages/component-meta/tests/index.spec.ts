@@ -25,23 +25,49 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		// expect(meta.type).toEqual(TypeMeta.Class);
 
+		const modelValue = meta.props.find(prop => prop.name === 'modelValue');
+		const onUpdateModelValue = meta.events.find(event => event.name === 'update:modelValue');
+
 		const foo = meta.props.find(prop => prop.name === 'foo');
 		const onUpdateFoo = meta.events.find(event => event.name === 'update:foo');
 
 		const bar = meta.props.find(prop => prop.name === 'bar');
-		const onUpdateBar = meta.events.find(event => event.name === 'update:bar');
+		const barModifiers = meta.props.find(prop => prop.name === 'barModifiers');
+		const onUpdateBaz = meta.events.find(event => event.name === 'update:bar');
 
-		const qux = meta.props.find(prop => prop.name === 'qux');
-		const quxModifiers = meta.props.find(prop => prop.name === 'quxModifiers');
-		const onUpdateQux = meta.events.find(event => event.name === 'update:qux');
+		expect(modelValue).toBeDefined();
+		expect(modelValue?.default).toBeUndefined();
+		expect(modelValue?.required).toBeTruthy();
+		expect(modelValue?.type).toEqual('number');
+		expect(modelValue?.description).toEqual('required number modelValue');
+		expect(modelValue?.schema).toEqual('number');
+		expect(onUpdateModelValue).toBeDefined();
 
 		expect(foo).toBeDefined();
-		expect(bar).toBeDefined();
-		expect(qux).toBeDefined();
-		expect(quxModifiers).toBeDefined();
+		expect(foo?.default).toBe('false');
+		expect(foo?.required).toBeFalsy();
+		expect(foo?.type).toEqual('boolean | undefined');
+		expect(foo?.description).toEqual('optional boolean foo with default false');
+		expect(foo?.schema).toEqual({
+			kind: 'enum',
+			type: 'boolean | undefined',
+			schema: ['undefined', 'false', 'true'],
+		});
 		expect(onUpdateFoo).toBeDefined();
-		expect(onUpdateBar).toBeDefined();
-		expect(onUpdateQux).toBeDefined();
+
+		expect(bar).toBeDefined();
+		expect(bar?.default).toBeUndefined();
+		expect(bar?.required).toBeFalsy();
+		expect(bar?.type).toEqual('string | undefined');
+		expect(bar?.description).toEqual('optional string bar with lazy and trim modifiers');
+		expect(bar?.schema).toEqual({
+			kind: 'enum',
+			type: 'string | undefined',
+			schema: ['undefined', 'string'],
+		});
+		// TODO: The types of modifiers are inconsistent in the two running results
+		expect(barModifiers).toBeDefined();
+		expect(onUpdateBaz).toBeDefined();
 	});
 
 	test('reference-type-props', () => {
@@ -365,6 +391,17 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		});
 	});
 
+	test('reference-type-props-destructured', () => {
+		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-props/component-destructure.vue');
+		const meta = checker.getComponentMeta(componentPath);
+
+		expect(meta.type).toEqual(TypeMeta.Class);
+
+		const text = meta.props.find(prop => prop.name === 'text');
+
+		expect(text?.default).toEqual('"foobar"');
+	});
+
 	test('reference-type-props-js', () => {
 		const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/reference-type-props/component-js.vue');
 		const meta = checker.getComponentMeta(componentPath);
@@ -494,7 +531,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const onBaz = meta.events.find(event => event.name === 'baz');
 
 		expect(onFoo).toBeDefined();
-		expect(onFoo?.type).toEqual('[data?: { foo: string; } | undefined]');
+		expect(onFoo?.type).toEqual('[{ foo: string; } | undefined]');
 		expect(onFoo?.signature).toEqual('(event: "foo", data?: { foo: string; } | undefined): void');
 		expect(onFoo?.schema).toEqual([
 			{
@@ -523,7 +560,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		]);
 
 		expect(onBar).toBeDefined();
-		expect(onBar?.type).toEqual('[value: { arg1: number; arg2?: any; }]');
+		expect(onBar?.type).toEqual('[{ arg1: number; arg2?: any; }]');
 		expect(onBar?.signature).toEqual('(event: "bar", value: { arg1: number; arg2?: any; }): void');
 		expect(onBar?.schema).toEqual([
 			{
@@ -556,7 +593,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		expect(onBaz).toBeDefined();
 		expect(onBaz?.type).toEqual('[]');
-		expect(onBaz?.signature).toEqual('(event: "baz"): void');
+		expect(onBaz?.signature).toEqual('(e: "baz"): void');
 		expect(onBaz?.schema).toEqual([]);
 	});
 
@@ -569,7 +606,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const onBar = meta.events.find(event => event.name === 'bar');
 
 		expect(onBar).toBeDefined();
-		expect(onBar?.type).toEqual('number');
+		expect(onBar?.type).toEqual('[number]');
 		expect(onBar?.signature).toEqual('(e: "bar", data: number): void');
 	});
 

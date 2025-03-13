@@ -1,5 +1,5 @@
 import type { Code, VueCodeInformation } from '../../types';
-import { wrapWith } from './index';
+import { wrapWith } from './wrapWith';
 
 export function* generateUnicode(code: string, offset: number, info: VueCodeInformation): Generator<Code> {
 	if (needToUnicode(code)) {

@@ -1,14 +1,25 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import type { Code } from '../../types';
-import { hyphenateAttr } from '../../utils/shared';
-import { endOfLine, wrapWith } from '../utils';
+import { codeFeatures } from '../codeFeatures';
+import { endOfLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
+import { generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
+
+const builtInDirectives = new Set([
+	'cloak',
+	'html',
+	'memo',
+	'once',
+	'show',
+	'text',
+]);
 
 export function* generateElementDirectives(
 	options: TemplateCodegenOptions,
@@ -34,7 +45,7 @@ export function* generateElementDirectives(
 			prop.loc.end.offset,
 			ctx.codeFeatures.verification,
 			`__VLS_asFunctionalDirective(`,
-			...generateIdentifier(ctx, prop),
+			...generateIdentifier(options, ctx, prop),
 			`)(null!, { ...__VLS_directiveBindingRestFields, `,
 			...generateArg(options, ctx, prop),
 			...generateModifiers(options, ctx, prop),
@@ -46,6 +57,7 @@ export function* generateElementDirectives(
 }
 
 function* generateIdentifier(
+	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
@@ -57,19 +69,14 @@ function* generateIdentifier(
 		`__VLS_directives.`,
 		...generateCamelized(
 			rawName,
+			'template',
 			prop.loc.start.offset,
-			{
-				...ctx.codeFeatures.all,
-				verification: false,
-				completion: {
-					// fix https://github.com/vuejs/language-tools/issues/1905
-					isAdditional: true,
-				},
-				navigation: {
-					resolveRenameNewName: camelize,
-					resolveRenameEditText: getPropRenameApply(prop.name),
-				},
-			}
+			ctx.resolveCodeFeatures({
+				...codeFeatures.withoutHighlight,
+				// fix https://github.com/vuejs/language-tools/issues/1905
+				...codeFeatures.additionalCompletion,
+				verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
+			})
 		)
 	);
 }
@@ -143,7 +150,7 @@ export function* generateModifiers(
 			ctx,
 			mod.content,
 			mod.loc.start.offset,
-			ctx.codeFeatures.withoutNavigation
+			ctx.codeFeatures.withoutHighlightAndNavigation
 		);
 		yield `: true, `;
 	}
@@ -167,24 +174,11 @@ function* generateValue(
 		`value`
 	);
 	yield `: `;
-	yield* wrapWith(
-		exp.loc.start.offset,
-		exp.loc.end.offset,
-		ctx.codeFeatures.verification,
-		...generateInterpolation(
-			options,
-			ctx,
-			'template',
-			ctx.codeFeatures.all,
-			exp.content,
-			exp.loc.start.offset,
-			exp.loc,
-			`(`,
-			`)`
-		)
+	yield* generatePropExp(
+		options,
+		ctx,
+		prop,
+		exp,
+		ctx.codeFeatures.all
 	);
-}
-
-function getPropRenameApply(oldName: string) {
-	return oldName === hyphenateAttr(oldName) ? hyphenateAttr : undefined;
 }

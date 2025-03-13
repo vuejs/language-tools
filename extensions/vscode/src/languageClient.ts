@@ -15,7 +15,7 @@ import { config } from './config';
 import { activate as activateDoctor } from './features/doctor';
 import { activate as activateNameCasing } from './features/nameCasing';
 import { activate as activateSplitEditors } from './features/splitEditors';
-import { enabledHybridMode, enabledTypeScriptPlugin, useHybridModeStatusItem, useHybridModeTips } from './hybridMode';
+import { checkCompatible } from './hybridMode';
 import { useInsidersStatusItem } from './insiders';
 
 let client: lsp.BaseLanguageClient;
@@ -36,7 +36,7 @@ export function activate(
 	const activeTextEditor = useActiveTextEditor();
 	const visibleTextEditors = useVisibleTextEditors();
 
-	useHybridModeTips();
+	checkCompatible();
 
 	const { stop } = watch(activeTextEditor, () => {
 		if (visibleTextEditors.value.some(editor => config.server.includeLanguages.includes(editor.document.languageId))) {
@@ -66,37 +66,16 @@ async function activateLc(
 		'vue',
 		'Vue',
 		selectors,
-		await getInitializationOptions(context, enabledHybridMode.value),
+		await getInitializationOptions(context),
 		6009,
 		outputChannel
 	);
 
-	watch([enabledHybridMode, enabledTypeScriptPlugin], (newValues, oldValues) => {
-		if (newValues[0] !== oldValues[0]) {
-			requestReloadVscode(
-				`Please reload VSCode to ${newValues[0] ? 'enable' : 'disable'} Hybrid Mode.`
-			);
-		}
-		else if (newValues[1] !== oldValues[1]) {
-			requestReloadVscode(
-				`Please reload VSCode to ${newValues[1] ? 'enable' : 'disable'} Vue TypeScript Plugin.`
-			);
-		}
-	});
-
 	watch(() => config.server.includeLanguages, () => {
-		if (enabledHybridMode.value) {
-			requestReloadVscode(
-				'Please reload VSCode to apply the new language settings.'
-			);
-		}
+		requestRestartExtensionHost(
+			'Please restart extension host to apply the new language settings.'
+		);
 	});
-
-	watch(config.server, () => {
-		if (!enabledHybridMode.value) {
-			executeCommand('vue.action.restartServer', false);
-		}
-	}, { deep: true });
 
 	useCommand('vue.action.restartServer', async (restartTsServer: boolean = true) => {
 		if (restartTsServer) {
@@ -104,7 +83,7 @@ async function activateLc(
 		}
 		await client.stop();
 		outputChannel.clear();
-		client.clientOptions.initializationOptions = await getInitializationOptions(context, enabledHybridMode.value);
+		client.clientOptions.initializationOptions = await getInitializationOptions(context);
 		await client.start();
 	});
 
@@ -114,34 +93,22 @@ async function activateLc(
 
 	lsp.activateAutoInsertion(selectors, client);
 	lsp.activateDocumentDropEdit(selectors, client);
-	lsp.activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
 
-	if (!enabledHybridMode.value) {
-		lsp.activateTsConfigStatusItem(selectors, 'vue.tsconfig', client);
-		lsp.activateTsVersionStatusItem(selectors, 'vue.tsversion', context, text => 'TS ' + text);
-		lsp.activateFindFileReferences('vue.findAllFileReferences', client);
-	}
-
-	useHybridModeStatusItem();
 	useInsidersStatusItem(context);
 
-	async function requestReloadVscode(msg: string) {
-		const reload = await vscode.window.showInformationMessage(
-			msg,
-			'Reload Window'
-		);
+	async function requestRestartExtensionHost(msg: string) {
+		const reload = await vscode.window.showInformationMessage(msg, 'Restart Extension Host');
 		if (reload) {
-			executeCommand('workbench.action.reloadWindow');
+			executeCommand('workbench.action.restartExtensionHost');
 		}
 	}
 }
 
-async function getInitializationOptions(
-	context: vscode.ExtensionContext,
-	hybridMode: boolean
-): Promise<VueInitializationOptions> {
+async function getInitializationOptions(context: vscode.ExtensionContext): Promise<VueInitializationOptions> {
 	return {
-		typescript: { tsdk: (await lsp.getTsdk(context))!.tsdk },
-		vue: { hybridMode },
+		typescript: {
+			tsdk: (await lsp.getTsdk(context))!.tsdk,
+			tsserverRequestCommand: 'tsserverRequest',
+		},
 	};
 }

@@ -2,6 +2,109 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.2.8 <sup>official</sup>, 2.2.9 <sup>insiders</sup> (2025-03-02)
+
+### Bug Fixes
+
+- revert "fix(language-core): validate `v-model` variable against model type"
+
+## 2.2.6 <sup>official</sup>, 2.2.7 <sup>insiders</sup> (2025-03-01)
+
+### Features
+
+- feat(language-core): infer prop JSDoc from `defineModel`'s leading comments (#5211) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(language-core): map camelized prop name correctly (#5207) - Thanks to @KazariEX!
+- fix(component-meta): resolve `defineModel` options to collect `default` value (#5209) - Thanks to @KazariEX!
+- fix(language-core): avoid duplicate generation of `defineExpose`'s codes - Thanks to @KazariEX!
+- fix(language-core): generate camelized prop name for `defineModel` (#5213) - Thanks to @KazariEX!
+- fix(language-core): validate `v-model` variable against model type (#5214) - Thanks to @KazariEX!
+- fix(language-core): use keywords instead of semicolons to separate script sections (#5217) - Thanks to @KazariEX!
+
+### Other Changes
+
+- ci: auto close issues with `can't reproduce` label - Thanks to @KazariEX!
+- refactor(language-core): defer the calculation of `linkedCodeMappings` offsets (#5220) - Thanks to @KazariEX!
+
+## 2.2.4 <sup>official</sup>, 2.2.5 <sup>insiders</sup> (2025-02-22)
+
+### Features
+
+- feat(language-service): map sfc compiler errors outside the template inner content (#5045) - Thanks to @KazariEX!
+- feat(language-core): introduce options to control type inference of `$attrs`, `$el`, `$refs` and `$slots` (#5135) - Thanks to @KazariEX!
+- feat(language-core): enhance single root nodes collection (#4819) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(language-core): move `generateSfcBlockSection` to the end to fix missing comma errors (#5184) - Thanks to @zhiyuanzmj!
+- fix(language-core): handle edge case of default slot name mismatch - Thanks to @KazariEX!
+- fix(language-core): combine dollar variable keys from the upper level interface - Thanks to @KazariEX!
+- fix(language-core): hoist the variables that may cause `TS4081` (#5192) - Thanks to @KazariEX!
+- fix(language-core): adjust regex match for `@vue-generic` to improve offset calculation (#5193) - Thanks to @Gehbt!
+- fix(language-core): correct codegen of native element refs - Thanks to @KazariEX!
+- fix(language-core): ignore latex block content (#5151) - Thanks to @KazariEX!
+- fix(language-core): do not emit `undefined` for model with default value (#5198) - Thanks to @RylanBueckert-Broadsign!
+- fix(language-service): typescript-semantic renaming first in style blocks (#4685) - Thanks to @KazariEX!
+- fix(typescript-plugin): prevent removed components from appearing in the completion list - Thanks to @KazariEX!
+
+### Other Changes
+
+- refactor(language-core): drop invalid `v-scope` implemention - Thanks to @KazariEX!
+- refactor(language-core): improve type declaration of `v-for` - Thanks to @KazariEX!
+- test: enable `declaration` to track more errors - Thanks to @KazariEX!
+- refactor(language-core): remove semantic highlight of style module names - Thanks to @KazariEX!
+- chore(language-core): add docs for `@vue-expect-error` support (#5176) - Thanks to @machty!
+- ci: upload extension as artifact for each commit - Thanks to @KazariEX!
+
+## 2.2.2 <sup>official</sup>, 2.2.3 <sup>insiders</sup> (2025-02-15)
+
+### Features
+
+- feat(language-core): navigation support for `$attrs`, `$slots`, `$refs` and `$el` in the template (#5056) - Thanks to @KazariEX!
+- feat(language-service): support global directives completion (#4989) - Thanks to @KazariEX!
+- feat(language-core): type support of `useAttrs` (#5106) - Thanks to @KazariEX!
+- feat(language-core): add options for fine-grained configuration of `strictTemplates` (#5138)
+- feat(language-service): display deprecated info of props in completion (#5134) - Thanks to @KazariEX!
+- feat(component-meta): collect destructured props defaults (#5101) - Thanks to @Akryum!
+- feat(language-core): add `checkUnknownDirectives` option (#5141) - Thanks to @KazariEX!
+- feat(language-core): support `<script vapor>` - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(language-core): ignore ts errors in function-scoped declare expressions (#5090) - Thanks to @zhiyuanzmj!
+- fix(language-core, typescript-plugin): handle self-reference component correctly (#5102) - Thanks to @KazariEX!
+- fix(language-core): do not generate element for `<template>` with `v-slot` (#5077) - Thanks to @KazariEX!
+- fix(language-service): set code action kinds to avoid warning (#5096) - Thanks to @KazariEX!
+- fix(language-core): handle parentheses in v-for exp
+- fix(language-core): slot exp formatting virtual code syntax incorrect
+- fix(language-core): arrow function formatting virtual code syntax incorrect in interpolation
+- fix(language-core): improve multiple lines event formatting result
+- fix(language-core): prefer `loc.source` instead of node content
+- fix(language-core): intersect local `$attrs` with `__VLS_ctx.$attrs` (#5113) - Thanks to @KazariEX!
+- fix(language-core): only generate model modifiers for components - Thanks to @KazariEX!
+- fix(language-plugin-pug): ignore duplicate attribute error of `class` (#5100) - Thanks to @KazariEX!
+- fix(language-core): align types of `v-for` with core (#5084) - Thanks to @KazariEX!
+- fix(language-core): map interpolation error with multiple variables correctly (#5158) - Thanks to @KazariEX!
+- fix(vscode): ask user to reload extension host when configuration changes (#5160) - Thanks to @typed-sigterm!
+- fix(typescript-plugin): update component names correctly for the first time - Thanks to @KazariEX!
+- fix(language-core): add `undefined` to first param type of optional model emits (#5171) - Thanks to @KazariEX!
+- fix(language-core): intersect `__VLS_slots` with `__VLS_ctx.$slots` (#5083) - Thanks to @KazariEX!
+- fix(language-core): complete codegen of slot name prop (#5139) - Thanks to @KazariEX!
+
+### Other Changes
+
+- refactor(language-service): read ast from codegen instead of parsing it repeatedly (#5086) - Thanks to @KazariEX!
+- refactor(language-core): rewrite `vueCompilerOptions` resolution logic
+- refactor(component-meta): read `scriptSetupRanges` from codegen - Thanks to @KazariEX!
+- refactor(component-meta): read node directly instead of creating sub ast - Thanks to @KazariEX!
+- refactor(component-meta): read ast from `sfc.script` - Thanks to @KazariEX!
+- refactor(language-core): generate the type of slots with function property (#5173) - Thanks to @KazariEX!
+- refactor(language-core): reduce codegen size of template returns - Thanks to @KazariEX!
+- refactor(language-core): remove semantic highlight of directives - Thanks to @KazariEX!
+- refactor: update alien-signals to 1.0.3 (#5181) - Thanks to @KazariEX!
+
 ## 2.2.0 <sup>official</sup>, 2.2.1 <sup>insiders</sup> (2024-12-24)
 
 ### Features

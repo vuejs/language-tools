@@ -1,3 +1,5 @@
+<!-- @inferTemplateDollarAttrs true -->
+ 
 <script setup lang="ts">
 import { useAttrs } from 'vue';
 import { exactType } from '../shared';
@@ -5,7 +7,7 @@ import { exactType } from '../shared';
 declare module 'vue' {
 	interface ComponentCustomProperties {
 		$attrs: {
-			class: string
+			class: string;
 		};
 	}
 }
