@@ -169,9 +169,6 @@ importers:
 
   packages/language-server:
     dependencies:
-      '@typescript/server-harness':
-        specifier: latest
-        version: 0.3.5
       '@volar/language-core':
         specifier: ~2.4.11
         version: 2.4.11
@@ -196,6 +193,10 @@ importers:
       vscode-uri:
         specifier: ^3.0.8
         version: 3.0.8
+    devDependencies:
+      '@typescript/server-harness':
+        specifier: latest
+        version: 0.3.5
 
   packages/language-service:
     dependencies:
