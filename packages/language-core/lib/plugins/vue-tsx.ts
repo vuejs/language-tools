@@ -71,11 +71,24 @@ function createTsx(
 ) {
 	const ts = ctx.modules.typescript;
 
+	const getRawLang = computed(() => {
+		if (sfc.script && sfc.scriptSetup) {
+			if (sfc.scriptSetup.lang !== 'js') {
+				return sfc.scriptSetup.lang;
+			}
+			else {
+				return sfc.script.lang;
+			}
+		}
+		return sfc.scriptSetup?.lang ?? sfc.script?.lang;
+	});
+
 	const getLang = computed(() => {
-		return !sfc.script && !sfc.scriptSetup ? 'ts'
-			: sfc.scriptSetup && sfc.scriptSetup.lang !== 'js' ? sfc.scriptSetup.lang
-				: sfc.script && sfc.script.lang !== 'js' ? sfc.script.lang
-					: 'js';
+		const rawLang = getRawLang();
+		if (rawLang && ['js', 'jsx', 'ts', 'tsx'].includes(rawLang)) {
+			return rawLang;
+		}
+		return 'ts';
 	});
 
 	const getResolvedOptions = computed(() => {
@@ -89,13 +102,13 @@ function createTsx(
 	});
 
 	const getScriptRanges = computed(() =>
-		sfc.script
+		sfc.script && ['js', 'jsx', 'ts', 'tsx'].includes(sfc.script.lang)
 			? parseScriptRanges(ts, sfc.script.ast, !!sfc.scriptSetup, false)
 			: undefined
 	);
 
 	const getScriptSetupRanges = computed(() =>
-		sfc.scriptSetup
+		sfc.scriptSetup && ['js', 'jsx', 'ts', 'tsx'].includes(sfc.scriptSetup.lang)
 			? parseScriptSetupRanges(ts, sfc.scriptSetup.ast, getResolvedOptions())
 			: undefined
 	);
