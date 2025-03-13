@@ -24,7 +24,7 @@ export function generateGlobalTypes({
 	checkUnknownEvents,
 	checkUnknownComponents,
 }: VueCompilerOptions) {
-	const fnPropsType = `(K extends { $props: infer Props } ? Props : any)${checkUnknownProps ? '' : ' & Record<string, unknown>'}`;
+	const fnPropsType = `(T extends { $props: infer Props } ? Props : any)${checkUnknownProps ? '' : ' & Record<string, unknown>'}`;
 	let text = ``;
 	if (target < 3.5) {
 		text += `
@@ -76,7 +76,7 @@ export function generateGlobalTypes({
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P
 		: {};
-	type __VLS_FunctionalGeneralComponent<T> = (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
+	type __VLS_FunctionalComponent<T> = (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
 		__ctx?: {
 			attrs?: any,
 			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : any,
@@ -89,7 +89,7 @@ export function generateGlobalTypes({
 		[K in keyof R]: R[K] extends infer V
 			? V extends { __ctx?: any } ? V
 			: V extends import('${lib}').VNode<infer E> ? E 
-			: ReturnType<__VLS_FunctionalGeneralComponent<V>>
+			: ReturnType<__VLS_FunctionalComponent<V>>
 			: never
 	} : R;
 	type __VLS_IsFunction<T, K> = K extends keyof T
@@ -158,7 +158,7 @@ export function generateGlobalTypes({
 			: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
 	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 	function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
-		T extends new (...args: any) => any ? __VLS_FunctionalGeneralComponent<K>
+		T extends new (...args: any) => any ? __VLS_FunctionalComponent<K>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: (_: {}${checkUnknownProps ? '' : ' & Record<string, unknown>'}, ctx?: any) => { __ctx?: { attrs?: any, expose?: any, slots?: any, emit?: any, props?: {}${checkUnknownProps ? '' : ' & Record<string, unknown>'} } };

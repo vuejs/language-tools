@@ -296,7 +296,7 @@ export function* generateComponent(
 	}
 
 	if (ctx.currentComponent.used) {
-		yield `var ${componentCtxVar}!: __VLS_PickFunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
+		yield `var ${componentCtxVar}!: __VLS_FunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 	}
 }
 
