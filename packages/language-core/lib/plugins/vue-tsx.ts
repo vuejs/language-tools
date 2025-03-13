@@ -100,60 +100,52 @@ function createTsx(
 			: undefined
 	);
 
-	const getSetupBindingNames = computedSet(
-		computed(() => {
-			const newNames = new Set<string>();
-			const bindings = getScriptSetupRanges()?.bindings;
-			if (sfc.scriptSetup && bindings) {
-				for (const { range } of bindings) {
+	const getSetupBindingNames = computedSet(() => {
+		const newNames = new Set<string>();
+		const bindings = getScriptSetupRanges()?.bindings;
+		if (sfc.scriptSetup && bindings) {
+			for (const { range } of bindings) {
+				newNames.add(sfc.scriptSetup.content.slice(range.start, range.end));
+			}
+		}
+		return newNames;
+	});
+
+	const getSetupImportComponentNames = computedSet(() => {
+		const newNames = new Set<string>();
+		const bindings = getScriptSetupRanges()?.bindings;
+		if (sfc.scriptSetup && bindings) {
+			for (const { range, moduleName, isDefaultImport, isNamespace } of bindings) {
+				if (
+					moduleName
+					&& isDefaultImport
+					&& !isNamespace
+					&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
+				) {
 					newNames.add(sfc.scriptSetup.content.slice(range.start, range.end));
 				}
 			}
-			return newNames;
-		})
-	);
+		}
+		return newNames;
+	});
 
-	const getSetupImportComponentNames = computedSet(
-		computed(() => {
-			const newNames = new Set<string>();
-			const bindings = getScriptSetupRanges()?.bindings;
-			if (sfc.scriptSetup && bindings) {
-				for (const { range, moduleName, isDefaultImport, isNamespace } of bindings) {
-					if (
-						moduleName
-						&& isDefaultImport
-						&& !isNamespace
-						&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
-					) {
-						newNames.add(sfc.scriptSetup.content.slice(range.start, range.end));
-					}
-				}
-			}
-			return newNames;
-		})
-	);
+	const getSetupDestructuredPropNames = computedSet(() => {
+		const newNames = new Set(getScriptSetupRanges()?.defineProps?.destructured?.keys());
+		const rest = getScriptSetupRanges()?.defineProps?.destructuredRest;
+		if (rest) {
+			newNames.add(rest);
+		}
+		return newNames;
+	});
 
-	const getSetupDestructuredPropNames = computedSet(
-		computed(() => {
-			const newNames = new Set(getScriptSetupRanges()?.defineProps?.destructured?.keys());
-			const rest = getScriptSetupRanges()?.defineProps?.destructuredRest;
-			if (rest) {
-				newNames.add(rest);
-			}
-			return newNames;
-		})
-	);
-
-	const getSetupTemplateRefNames = computedSet(
-		computed(() => {
-			const newNames = new Set(
-				getScriptSetupRanges()?.useTemplateRef
-					.map(({ name }) => name)
-					.filter(name => name !== undefined)
-			);
-			return newNames;
-		})
-	);
+	const getSetupTemplateRefNames = computedSet(() => {
+		const newNames = new Set(
+			getScriptSetupRanges()?.useTemplateRef
+				.map(({ name }) => name)
+				.filter(name => name !== undefined)
+		);
+		return newNames;
+	});
 
 	const setupHasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
