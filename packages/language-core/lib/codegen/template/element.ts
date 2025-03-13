@@ -42,9 +42,15 @@ export function* generateComponent(
 	const componentCtxVar = ctx.getInternalVariable();
 	const isComponentTag = node.tag.toLowerCase() === 'component';
 
+	ctx.currentComponent?.childNodes.push({
+		name: componentVNodeVar,
+		start: node.loc.start.offset,
+		end: node.loc.end.offset
+	});
 	ctx.currentComponent = {
 		ctxVar: componentCtxVar,
-		used: false
+		used: false,
+		childNodes: [],
 	};
 
 	let props = node.props;
@@ -290,7 +296,7 @@ export function* generateComponent(
 	}
 
 	if (ctx.currentComponent.used) {
-		yield `var ${componentCtxVar}!: __VLS_PickFunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
+		yield `var ${componentCtxVar}!: __VLS_FunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 	}
 }
 
@@ -305,6 +311,12 @@ export function* generateElement(
 		? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
+
+	ctx.currentComponent?.childNodes.push({
+		name: `__VLS_nativeElements.${node.tag}`,
+		start: node.loc.start.offset,
+		end: node.loc.end.offset,
+	});
 
 	yield `__VLS_asFunctionalElement(__VLS_elements`;
 	yield* generatePropertyAccess(
