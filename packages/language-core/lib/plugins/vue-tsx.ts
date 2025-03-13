@@ -12,6 +12,8 @@ import { CompilerOptionsResolver } from '../utils/ts';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 
+const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
+
 const plugin: VueLanguagePlugin = ctx => {
 
 	let appendedGlobalTypes = false;
@@ -27,14 +29,10 @@ const plugin: VueLanguagePlugin = ctx => {
 
 		getEmbeddedCodes(fileName, sfc) {
 			const codegen = useCodegen(fileName, sfc);
-			const files: {
-				id: string;
-				lang: string;
-			}[] = [];
-			if (['js', 'ts', 'jsx', 'tsx'].includes(codegen.getLang())) {
-				files.push({ id: 'script_' + codegen.getLang(), lang: codegen.getLang() });
-			}
-			return files;
+			return [{
+				id: 'script_' + codegen.getLang(),
+				lang: codegen.getLang(),
+			}];
 		},
 
 		resolveEmbeddedCode(fileName, sfc, embeddedFile) {
@@ -85,7 +83,7 @@ function createTsx(
 
 	const getLang = computed(() => {
 		const rawLang = getRawLang();
-		if (rawLang && ['js', 'jsx', 'ts', 'tsx'].includes(rawLang)) {
+		if (rawLang && validLangs.has(rawLang)) {
 			return rawLang;
 		}
 		return 'ts';
@@ -102,13 +100,13 @@ function createTsx(
 	});
 
 	const getScriptRanges = computed(() =>
-		sfc.script && ['js', 'jsx', 'ts', 'tsx'].includes(sfc.script.lang)
+		sfc.script && validLangs.has(sfc.script.lang)
 			? parseScriptRanges(ts, sfc.script.ast, !!sfc.scriptSetup, false)
 			: undefined
 	);
 
 	const getScriptSetupRanges = computed(() =>
-		sfc.scriptSetup && ['js', 'jsx', 'ts', 'tsx'].includes(sfc.scriptSetup.lang)
+		sfc.scriptSetup && validLangs.has(sfc.scriptSetup.lang)
 			? parseScriptSetupRanges(ts, sfc.scriptSetup.ast, getResolvedOptions())
 			: undefined
 	);
