@@ -437,8 +437,8 @@ function* generateCanonicalComponentName(tagText: string, offset: number, featur
 function* generateComponentGeneric(
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
-	if (ctx.lastGenericComment) {
-		const { content, offset } = ctx.lastGenericComment;
+	if (ctx.currentInfo.generic) {
+		const { content, offset } = ctx.currentInfo.generic;
 		yield* wrapWith(
 			offset,
 			offset + content.length,
@@ -453,7 +453,6 @@ function* generateComponentGeneric(
 			`>`
 		);
 	}
-	ctx.lastGenericComment = undefined;
 }
 
 function* generateElementReference(

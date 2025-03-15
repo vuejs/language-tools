@@ -50,7 +50,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	if (options.template.ast) {
-		yield* generateTemplateChild(options, ctx, options.template.ast, undefined);
+		yield* generateTemplateChild(options, ctx, options.template.ast);
 	}
 
 	yield* generateStyleScopedClassReferences(ctx);

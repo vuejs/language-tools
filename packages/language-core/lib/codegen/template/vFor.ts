@@ -81,13 +81,8 @@ export function* generateVFor(
 			}
 		}
 	}
-	if (isFragment) {
-		yield* ctx.resetDirectiveComments('end of v-for start');
-	}
-	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, prev, true);
-		prev = childNode;
+		yield* generateTemplateChild(options, ctx, childNode, isFragment, true);
 	}
 	for (const varName of forBlockVars) {
 		ctx.removeLocalVariable(varName);

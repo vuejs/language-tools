@@ -9,11 +9,8 @@ export function* generateElementChildren(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode
 ): Generator<Code> {
-	yield* ctx.resetDirectiveComments('end of element children start');
-	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, prev);
-		prev = childNode;
+		yield* generateTemplateChild(options, ctx, childNode);
 	}
 	yield* ctx.generateAutoImportCompletion();
 }

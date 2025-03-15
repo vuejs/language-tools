@@ -50,13 +50,8 @@ export function* generateVIf(
 		}
 
 		yield `{${newLine}`;
-		if (isFragment(node)) {
-			yield* ctx.resetDirectiveComments('end of v-if start');
-		}
-		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of branch.children) {
-			yield* generateTemplateChild(options, ctx, childNode, prev);
-			prev = childNode;
+			yield* generateTemplateChild(options, ctx, childNode, isFragment(node));
 		}
 		yield* ctx.generateAutoImportCompletion();
 		yield `}${newLine}`;

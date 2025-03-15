@@ -72,9 +72,7 @@ function* generateIdentifier(
 			'template',
 			prop.loc.start.offset,
 			ctx.resolveCodeFeatures({
-				...codeFeatures.withoutHighlight,
-				// fix https://github.com/vuejs/language-tools/issues/1905
-				...codeFeatures.additionalCompletion,
+				...codeFeatures.withoutHighlightAndCompletion,
 				verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
 			})
 		)
