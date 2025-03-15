@@ -310,6 +310,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 						const { name, content } = match.groups!;
 						switch (name) {
 							case 'skip': {
+								commentBuffer.length = 0;
 								return false;
 							}
 							case 'ignore': {
