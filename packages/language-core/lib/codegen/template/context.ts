@@ -304,13 +304,15 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 			}
 			else {
 				const data: typeof stack[number] = {};
-				for (const comment of commentBuffer) {
+				const comments = [...commentBuffer];
+				commentBuffer.length = 0;
+
+				for (const comment of comments) {
 					const match = comment.loc.source.match(commentDirectiveRegex);
 					if (match) {
 						const { name, content } = match.groups!;
 						switch (name) {
 							case 'skip': {
-								commentBuffer.length = 0;
 								return false;
 							}
 							case 'ignore': {
@@ -337,7 +339,6 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 						}
 					}
 				}
-				commentBuffer.length = 0;
 				stack.push(data);
 				return true;
 			}
