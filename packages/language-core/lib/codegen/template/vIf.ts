@@ -51,7 +51,7 @@ export function* generateVIf(
 
 		yield `{${newLine}`;
 		for (const childNode of branch.children) {
-			yield* generateTemplateChild(options, ctx, childNode, false);
+			yield* generateTemplateChild(options, ctx, childNode, isFragment(node));
 		}
 		yield* ctx.generateAutoImportCompletion();
 		yield `}${newLine}`;
@@ -62,4 +62,11 @@ export function* generateVIf(
 	}
 
 	ctx.blockConditions.length = originalBlockConditionsLength;
+}
+
+function isFragment(node: CompilerDOM.IfNode) {
+	return node.codegenNode
+		&& 'consequent' in node.codegenNode
+		&& 'tag' in node.codegenNode.consequent
+		&& node.codegenNode.consequent.tag === CompilerDOM.FRAGMENT;
 }

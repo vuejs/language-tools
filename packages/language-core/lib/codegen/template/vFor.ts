@@ -49,6 +49,7 @@ export function* generateVFor(
 	for (const varName of forBlockVars) {
 		ctx.addLocalVariable(varName);
 	}
+	let isFragment = true;
 	for (const argument of node.codegenNode?.children.arguments ?? []) {
 		if (
 			argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
@@ -56,6 +57,7 @@ export function* generateVFor(
 			&& argument.returns?.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
 		) {
 			if (argument.returns.tag !== CompilerDOM.FRAGMENT) {
+				isFragment = false;
 				continue;
 			}
 			for (const prop of argument.returns.props.properties) {
@@ -80,7 +82,7 @@ export function* generateVFor(
 		}
 	}
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, false, true);
+		yield* generateTemplateChild(options, ctx, childNode, isFragment, true);
 	}
 	for (const varName of forBlockVars) {
 		ctx.removeLocalVariable(varName);
