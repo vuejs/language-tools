@@ -302,46 +302,45 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 				commentBuffer.push(node);
 				return false;
 			}
-			else {
-				const data: typeof stack[number] = {};
-				const comments = [...commentBuffer];
-				commentBuffer.length = 0;
 
-				for (const comment of comments) {
-					const match = comment.loc.source.match(commentDirectiveRegex);
-					if (match) {
-						const { name, content } = match.groups!;
-						switch (name) {
-							case 'skip': {
-								return false;
-							}
-							case 'ignore': {
-								data.ignoreError = true;
-								break;
-							}
-							case 'expect-error': {
-								data.expectError = {
-									token: 0,
-									node: comment,
+			const data: typeof stack[number] = {};
+			const comments = [...commentBuffer];
+			commentBuffer.length = 0;
+
+			for (const comment of comments) {
+				const match = comment.loc.source.match(commentDirectiveRegex);
+				if (match) {
+					const { name, content } = match.groups!;
+					switch (name) {
+						case 'skip': {
+							return false;
+						}
+						case 'ignore': {
+							data.ignoreError = true;
+							break;
+						}
+						case 'expect-error': {
+							data.expectError = {
+								token: 0,
+								node: comment,
+							};
+							break;
+						}
+						case 'generic': {
+							const text = content.trim();
+							if (text.startsWith('{') && text.endsWith('}')) {
+								data.generic = {
+									content: text.slice(1, -1),
+									offset: comment.loc.start.offset + comment.loc.source.indexOf('{') + 1,
 								};
-								break;
 							}
-							case 'generic': {
-								const text = content.trim();
-								if (text.startsWith('{') && text.endsWith('}')) {
-									data.generic = {
-										content: text.slice(1, -1),
-										offset: comment.loc.start.offset + comment.loc.source.indexOf('{') + 1,
-									};
-								}
-								break;
-							}
+							break;
 						}
 					}
 				}
-				stack.push(data);
-				return true;
 			}
+			stack.push(data);
+			return true;
 		},
 		* exit(): Generator<Code> {
 			const data = stack.pop()!;
