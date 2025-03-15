@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
-import { endOfLine, newLine } from '../utils';
+import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
 import type { TemplateCodegenOptions } from './index';
@@ -10,8 +10,6 @@ import { generateSlotOutlet } from './slotOutlet';
 import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 import { generateVSlot } from './vSlot';
-
-const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
 
 // @ts-ignore
 const transformContext: CompilerDOM.TransformContext = {
@@ -33,38 +31,11 @@ export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
-	prevNode: CompilerDOM.TemplateChildNode | undefined,
+	enterNode: boolean = true,
 	isVForChild: boolean = false
 ): Generator<Code> {
-	if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
-		const match = prevNode.loc.source.match(commentDirectiveRegex);
-		if (match) {
-			const { name, content } = match.groups!;
-			switch (name) {
-				case 'skip': {
-					yield `// @vue-skip${newLine}`;
-					return;
-				}
-				case 'ignore': {
-					yield* ctx.ignoreError();
-					break;
-				}
-				case 'expect-error': {
-					yield* ctx.expectError(prevNode);
-					break;
-				}
-				case 'generic': {
-					const text = content.trim();
-					if (text.startsWith('{') && text.endsWith('}')) {
-						ctx.lastGenericComment = {
-							content: text.slice(1, -1),
-							offset: prevNode.loc.start.offset + prevNode.loc.source.indexOf('{') + 1,
-						};
-					}
-					break;
-				}
-			}
-		}
+	if (enterNode && !ctx.enter(node)) {
+		return;
 	}
 
 	const cur = node as CompilerDOM.ElementNode | CompilerDOM.IfNode | CompilerDOM.ForNode;
@@ -76,12 +47,9 @@ export function* generateTemplateChild(
 		for (const item of collectSingleRootNodes(options, node.children)) {
 			ctx.singleRootNodes.add(item);
 		}
-		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of node.children) {
-			yield* generateTemplateChild(options, ctx, childNode, prev);
-			prev = childNode;
+			yield* generateTemplateChild(options, ctx, childNode);
 		}
-		yield* ctx.resetDirectiveComments('end of root');
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 		const vForNode = getVForNode(node);
@@ -119,13 +87,13 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 		// {{ var }}
-		yield* generateTemplateChild(options, ctx, node.content, undefined);
+		yield* generateTemplateChild(options, ctx, node.content, false);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		// {{ ... }} {{ ... }}
 		for (const childNode of node.children) {
 			if (typeof childNode === 'object') {
-				yield* generateTemplateChild(options, ctx, childNode, undefined);
+				yield* generateTemplateChild(options, ctx, childNode, false);
 			}
 		}
 	}
@@ -143,7 +111,6 @@ export function* generateTemplateChild(
 			`(`,
 			`)${endOfLine}`
 		);
-		yield* ctx.resetDirectiveComments('end of INTERPOLATION');
 	}
 	else if (node.type === CompilerDOM.NodeTypes.IF) {
 		// v-if / v-else-if / v-else
@@ -155,6 +122,10 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 		// not needed progress
+	}
+
+	if (enterNode) {
+		yield* ctx.exit();
 	}
 }
 

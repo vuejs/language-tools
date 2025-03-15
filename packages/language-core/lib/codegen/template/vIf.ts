@@ -50,13 +50,8 @@ export function* generateVIf(
 		}
 
 		yield `{${newLine}`;
-		if (isFragment(node)) {
-			yield* ctx.resetDirectiveComments('end of v-if start');
-		}
-		let prev: CompilerDOM.TemplateChildNode | undefined;
 		for (const childNode of branch.children) {
-			yield* generateTemplateChild(options, ctx, childNode, prev);
-			prev = childNode;
+			yield* generateTemplateChild(options, ctx, childNode, false);
 		}
 		yield* ctx.generateAutoImportCompletion();
 		yield `}${newLine}`;
@@ -67,11 +62,4 @@ export function* generateVIf(
 	}
 
 	ctx.blockConditions.length = originalBlockConditionsLength;
-}
-
-function isFragment(node: CompilerDOM.IfNode) {
-	return node.codegenNode
-		&& 'consequent' in node.codegenNode
-		&& 'tag' in node.codegenNode.consequent
-		&& node.codegenNode.consequent.tag === CompilerDOM.FRAGMENT;
 }
