@@ -16,7 +16,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { collectStyleScopedClassReferences } from './styleScopedClasses';
-import { generateImplicitDefaultSlot, generateVSlot } from './vSlot';
+import { generateVSlot } from './vSlot';
 
 const colonReg = /:/g;
 
@@ -286,14 +286,7 @@ export function* generateComponent(
 	collectStyleScopedClassReferences(options, ctx, node);
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
-	if (slotDir) {
-		yield* generateVSlot(options, ctx, node, slotDir);
-	}
-	else {
-		// #932: reference for default slot
-		yield* generateImplicitDefaultSlot(ctx, node);
-		yield* generateElementChildren(options, ctx, node);
-	}
+	yield* generateVSlot(options, ctx, node, slotDir);
 
 	if (ctx.currentComponent.used) {
 		yield `var ${componentCtxVar}!: __VLS_FunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
@@ -313,7 +306,7 @@ export function* generateElement(
 	const failedPropExps: FailedPropExpression[] = [];
 
 	ctx.currentComponent?.childNodes.push({
-		name: `__VLS_nativeElements.${node.tag}`,
+		name: `{} as __VLS_NativeElements['${node.tag}']`,
 		start: node.loc.start.offset,
 		end: node.loc.end.offset,
 	});
