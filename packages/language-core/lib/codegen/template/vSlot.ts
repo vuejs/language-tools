@@ -54,12 +54,8 @@ export function* generateVSlot(
 		ctx.addLocalVariable(varName);
 	}
 
-	yield* ctx.resetDirectiveComments('end of slot children start');
-
-	let prev: CompilerDOM.TemplateChildNode | undefined;
 	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, prev);
-		prev = childNode;
+		yield* generateTemplateChild(options, ctx, childNode);
 	}
 
 	for (const varName of slotBlockVars) {
