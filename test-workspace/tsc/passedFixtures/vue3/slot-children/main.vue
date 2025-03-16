@@ -6,7 +6,7 @@ const foo = {} as 'a' | 'b';
 </script>
 
 <template>
-	<Parent :foo> 
+	<Parent :foo>
 		<Child :foo="(`a` as const)" />
 		<Child :foo="(`b` as const)" />
 	</Parent>
