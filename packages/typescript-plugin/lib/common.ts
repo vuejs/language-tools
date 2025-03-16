@@ -182,21 +182,27 @@ function getDefinitionAndBoundSpan<T>(
 			return result;
 		}
 
-		// #5275
+		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
+		const skippedDefinitions: ts.DefinitionInfo[] = [];
+
 		if (result.definitions.length >= 2) {
-			result.definitions = result.definitions.filter(definition => {
+			for (const definition of result.definitions) {
+				if (
+					definition.fileName !== root.fileName
+					|| result.textSpan.start !== definition.textSpan.start
+					|| result.textSpan.length !== definition.textSpan.length
+				) {
+					continue;
+				}
+
 				if (
 					root.sfc.content[definition.textSpan.start - 1] === '@'
 					|| root.sfc.content.slice(definition.textSpan.start - 5, definition.textSpan.start) === 'v-on:'
 				) {
-					return false;
+					skippedDefinitions.push(definition);
 				}
-				return true;
-			});
+			}
 		}
-
-		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
-		const skippedDefinitions: ts.DefinitionInfo[] = [];
 
 		for (const definition of result.definitions) {
 			if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
