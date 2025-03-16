@@ -359,7 +359,10 @@ export function* generateElement(
 
 	collectStyleScopedClassReferences(options, ctx, node);
 
+	const { currentComponent } = ctx;
+	ctx.currentComponent = undefined;
 	yield* generateElementChildren(options, ctx, node.children);
+	ctx.currentComponent = currentComponent;
 }
 
 function* generateFailedPropExps(
