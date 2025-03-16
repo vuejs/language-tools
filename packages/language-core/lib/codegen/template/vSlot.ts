@@ -52,6 +52,7 @@ export function* generateVSlot(
 			}
 		}
 		else {
+			// #932: reference for implicit default slot
 			yield* wrapWith(
 				node.children[0].loc.start.offset,
 				node.children.at(-1)!.loc.end.offset,
