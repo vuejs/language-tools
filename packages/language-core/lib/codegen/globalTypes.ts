@@ -85,7 +85,7 @@ export function generateGlobalTypes({
 			expose?: (exposed: T) => void,
 		}
 	};
-	type __VLS_NormalizeSlotReturns<S, R = ReturnType<NonNullable<S>>> = R extends any[] ? {
+	type __VLS_NormalizeSlotReturns<S, R = NonNullable<S> extends (...args: any) => infer K ? K : any> = R extends any[] ? {
 		[K in keyof R]: R[K] extends infer V
 			? V extends { __ctx?: any } ? V
 			: V extends import('${lib}').VNode<infer E> ? E 

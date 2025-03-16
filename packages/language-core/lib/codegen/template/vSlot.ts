@@ -17,7 +17,6 @@ export function* generateVSlot(
 	if (!ctx.currentComponent) {
 		return;
 	}
-	ctx.currentComponent.used = true;
 
 	const slotBlockVars: string[] = [];
 	const var_slot = ctx.getInternalVariable();
@@ -27,6 +26,8 @@ export function* generateVSlot(
 	}
 
 	if (slotDir || node.children.length) {
+		ctx.currentComponent.used = true;
+
 		yield `const { `;
 		if (slotDir) {
 			if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
@@ -80,24 +81,16 @@ export function* generateVSlot(
 	}
 
 	if (node.children.length) {
-		yield `(): __VLS_NormalizeSlotReturns<typeof ${var_slot}> => `;
+		yield `(): __VLS_NormalizeSlotReturns<typeof ${var_slot}> => (`;
 		yield* wrapWith(
 			node.children[0].loc.start.offset,
 			node.children.at(-1)!.loc.end.offset,
 			ctx.codeFeatures.verification,
-			`[`,
-			...ctx.currentComponent.childNodes.flatMap(({ name, start, end }) => [
-				...wrapWith(
-					start,
-					end,
-					ctx.codeFeatures.verification,
-					name
-				),
-				`, `
-			]),
+			`{} as [`,
+			...ctx.currentComponent.childTypes.map((name) => `${name}, `),
 			`]`
 		);
-		yield endOfLine;
+		yield `)${endOfLine}`;
 	}
 
 	if (slotDir) {

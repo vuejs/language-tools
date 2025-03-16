@@ -42,15 +42,11 @@ export function* generateComponent(
 	const componentCtxVar = ctx.getInternalVariable();
 	const isComponentTag = node.tag.toLowerCase() === 'component';
 
-	ctx.currentComponent?.childNodes.push({
-		name: componentVNodeVar,
-		start: node.loc.start.offset,
-		end: node.loc.end.offset
-	});
+	ctx.currentComponent?.childTypes.push(`typeof ${componentVNodeVar}`);
 	ctx.currentComponent = {
 		ctxVar: componentCtxVar,
+		childTypes: [],
 		used: false,
-		childNodes: [],
 	};
 
 	let props = node.props;
@@ -305,11 +301,7 @@ export function* generateElement(
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
 
-	ctx.currentComponent?.childNodes.push({
-		name: `{} as __VLS_NativeElements['${node.tag}']`,
-		start: node.loc.start.offset,
-		end: node.loc.end.offset,
-	});
+	ctx.currentComponent?.childTypes.push(`__VLS_NativeElements['${node.tag}']`);
 
 	yield `__VLS_asFunctionalElement(__VLS_elements`;
 	yield* generatePropertyAccess(
