@@ -19,7 +19,7 @@ export function* generateVSlot(
 	}
 
 	const slotBlockVars: string[] = [];
-	const var_slot = ctx.getInternalVariable();
+	const slotVar = ctx.getInternalVariable();
 
 	if (slotDir) {
 		yield `{${newLine}`;
@@ -59,13 +59,13 @@ export function* generateVSlot(
 				`default`
 			);
 		}
-		yield `: ${var_slot} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
+		yield `: ${slotVar} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
 	}
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
 		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
-		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp);
+		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
 	}
 
 	for (const varName of slotBlockVars) {
@@ -81,7 +81,7 @@ export function* generateVSlot(
 	}
 
 	if (node.children.length) {
-		yield `(): __VLS_NormalizeSlotReturns<typeof ${var_slot}> => (`;
+		yield `(): __VLS_NormalizeSlotReturns<typeof ${slotVar}> => (`;
 		yield* wrapWith(
 			node.children[0].loc.start.offset,
 			node.children.at(-1)!.loc.end.offset,
@@ -124,7 +124,8 @@ function* generateSlotParameters(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	ast: ts.SourceFile,
-	exp: CompilerDOM.SimpleExpressionNode
+	exp: CompilerDOM.SimpleExpressionNode,
+	slotVar: string
 ): Generator<Code> {
 	const { ts } = options;
 
@@ -160,7 +161,7 @@ function* generateSlotParameters(
 		nextStart = end;
 	}
 	yield chunk(nextStart, expression.equalsGreaterThanToken.pos - 1);
-	yield `] = __VLS_getSlotParameters(__VLS_slot`;
+	yield `] = __VLS_getSlotParameters(${slotVar}`;
 
 	if (types.some(t => t)) {
 		yield `, `;
