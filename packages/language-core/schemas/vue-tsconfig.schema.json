@@ -47,6 +47,11 @@
 					"default": false,
 					"markdownDescription": "Enables strict templates. When set to `true`, all `checkUnknown*` options will be enabled."
 				},
+				"strictSlotChildren": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Strict type constraints of slot children. If not set, uses the 'strictTemplates' value."
+				},
 				"strictVModel": {
 					"type": "boolean",
 					"default": false,

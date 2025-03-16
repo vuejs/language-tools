@@ -79,7 +79,7 @@ export function* generateVSlot(
 		ctx.removeLocalVariable(varName);
 	}
 
-	if (node.children.length) {
+	if (options.vueCompilerOptions.strictSlotChildren && node.children.length) {
 		yield `(): __VLS_NormalizeSlotReturns<typeof ${slotVar}> => (`;
 		yield* wrapWith(
 			node.children[0].loc.start.offset,
