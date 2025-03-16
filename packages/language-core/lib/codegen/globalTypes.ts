@@ -90,7 +90,7 @@ export function generateGlobalTypes({
 			? V extends Element ? V
 			: V extends new (...args: any) => infer R ? ReturnType<__VLS_FunctionalComponent<R>>
 			: V extends (...args: any) => infer R ? R
-			: V
+			: any
 			: never
 	} : R;
 	type __VLS_IsFunction<T, K> = K extends keyof T
