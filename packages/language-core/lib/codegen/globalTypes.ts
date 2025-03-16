@@ -24,7 +24,7 @@ export function generateGlobalTypes({
 	checkUnknownEvents,
 	checkUnknownComponents,
 }: VueCompilerOptions) {
-	const fnPropsType = `(T extends { $props: infer Props } ? Props : any)${checkUnknownProps ? '' : ' & Record<string, unknown>'}`;
+	const fnPropsType = `(T extends { $props: infer Props } ? Props : {})${checkUnknownProps ? '' : ' & Record<string, unknown>'}`;
 	let text = ``;
 	if (target < 3.5) {
 		text += `
@@ -79,17 +79,18 @@ export function generateGlobalTypes({
 	type __VLS_FunctionalComponent<T> = (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
 		__ctx?: {
 			attrs?: any,
-			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : any,
-			emit?: T extends { $emit: infer Emit } ? Emit : any,
+			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : Record<string, any>,
+			emit?: T extends { $emit: infer Emit } ? Emit : {},
 			props?: ${fnPropsType},
 			expose?: (exposed: T) => void,
 		}
 	};
 	type __VLS_NormalizeSlotReturns<S, R = NonNullable<S> extends (...args: any) => infer K ? K : any> = R extends any[] ? {
 		[K in keyof R]: R[K] extends infer V
-			? V extends { __ctx?: any } ? V
-			: V extends import('${lib}').VNode<infer E> ? E 
-			: ReturnType<__VLS_FunctionalComponent<V>>
+			? V extends Element ? V
+			: V extends { new (...args: any) => infer R } ? ReturnType<__VLS_FunctionalComponent<R>>
+			: V extends (...args: any) => infer R ? R
+			: V
 			: never
 	} : R;
 	type __VLS_IsFunction<T, K> = K extends keyof T
