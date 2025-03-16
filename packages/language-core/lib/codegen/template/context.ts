@@ -194,6 +194,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 			},
 		}),
 		resolveCodeFeatures,
+		inVFor: false,
 		slots,
 		dynamicSlots,
 		dollarVars,

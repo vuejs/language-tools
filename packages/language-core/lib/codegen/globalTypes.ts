@@ -99,13 +99,13 @@ export function generateGlobalTypes({
 		: true
 		: false
 		: false;
-	type __VLS_NormalizeComponentEvent<Props, Events, onEvent extends keyof Props, Event extends keyof Events, CamelizedEvent extends keyof Events> = (
+	type __VLS_NormalizeComponentEvent<Props, Emits, onEvent extends keyof Props, Event extends keyof Emits, CamelizedEvent extends keyof Emits> = (
 		__VLS_IsFunction<Props, onEvent> extends true
 			? Props
-			: __VLS_IsFunction<Events, Event> extends true
-				? { [K in onEvent]?: Events[Event] }
-				: __VLS_IsFunction<Events, CamelizedEvent> extends true
-					? { [K in onEvent]?: Events[CamelizedEvent] }
+			: __VLS_IsFunction<Emits, Event> extends true
+				? { [K in onEvent]?: Emits[Event] }
+				: __VLS_IsFunction<Emits, CamelizedEvent> extends true
+					? { [K in onEvent]?: Emits[CamelizedEvent] }
 					: Props
 	)${checkUnknownEvents ? '' : ' & Record<string, unknown>'};
 	// fix https://github.com/vuejs/language-tools/issues/926
@@ -131,6 +131,12 @@ export function generateGlobalTypes({
 			}
 		>
 	>;
+	type __VLS_ResolveEmits<
+		Comp,
+		Emits,
+		TypeEmits = ${target >= 3.6 ? `Comp extends { __typeEmits?: infer T } ? unknown extends T ? {} : import('${lib}').ShortEmitsToObject<T> : {}` : `{}`},
+		NormalizedEmits = __VLS_NormalizeEmits<Emits> extends infer E ? string extends keyof E ? {} : E : never,
+	> = __VLS_SpreadMerge<NormalizedEmits, TypeEmits>;
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
 

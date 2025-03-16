@@ -168,6 +168,5 @@ export function* generateSlotOutlet(
 			});
 		}
 	}
-	yield* ctx.generateAutoImportCompletion();
-	yield* generateElementChildren(options, ctx, node);
+	yield* generateElementChildren(options, ctx, node.children);
 }

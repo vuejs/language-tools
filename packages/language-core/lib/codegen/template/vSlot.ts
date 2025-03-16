@@ -1,12 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
+import { getStartEnd } from '../../utils/shared';
 import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
+import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateObjectProperty } from './objectProperty';
-import { generateTemplateChild } from './templateChild';
 
 export function* generateVSlot(
 	options: TemplateCodegenOptions,
@@ -17,7 +18,6 @@ export function* generateVSlot(
 	if (!ctx.currentComponent) {
 		return;
 	}
-
 	const slotBlockVars: string[] = [];
 	const slotVar = ctx.getInternalVariable();
 
@@ -52,6 +52,7 @@ export function* generateVSlot(
 			}
 		}
 		else {
+			// #932: reference for implicit default slot
 			yield* wrapWith(
 				node.children[0].loc.start.offset,
 				node.children.at(-1)!.loc.end.offset,
@@ -72,9 +73,7 @@ export function* generateVSlot(
 		ctx.addLocalVariable(varName);
 	}
 
-	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode);
-	}
+	yield* generateElementChildren(options, ctx, node.children);
 
 	for (const varName of slotBlockVars) {
 		ctx.removeLocalVariable(varName);
@@ -87,13 +86,11 @@ export function* generateVSlot(
 			node.children.at(-1)!.loc.end.offset,
 			ctx.codeFeatures.verification,
 			`{} as [`,
-			...ctx.currentComponent.childTypes.map((name) => `${name}, `),
+			...ctx.currentComponent.childTypes.map(name => `${name}, `),
 			`]`
 		);
 		yield `)${endOfLine}`;
 	}
-
-	yield* ctx.generateAutoImportCompletion();
 
 	if (slotDir) {
 		let isStatic = true;
@@ -146,7 +143,7 @@ function* generateSlotParameters(
 				name.end,
 				type.end,
 			]);
-			types.push(chunk(type.getStart(ast), type.end));
+			types.push(chunk(getStartEnd(ts, type, ast).start, type.end));
 		}
 		else {
 			types.push(null);

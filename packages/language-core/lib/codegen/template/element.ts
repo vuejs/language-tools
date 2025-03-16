@@ -23,8 +23,7 @@ const colonReg = /:/g;
 export function* generateComponent(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-	isVForChild: boolean
+	node: CompilerDOM.ElementNode
 ): Generator<Code> {
 	const tagOffsets = [node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag)];
 	if (!node.isSelfClosing && options.template.lang === 'html') {
@@ -248,7 +247,7 @@ export function* generateComponent(
 	yield `, ...__VLS_functionalComponentArgsRest(${componentFunctionalVar}))${endOfLine}`;
 
 	yield* generateFailedPropExps(options, ctx, failedPropExps);
-	yield* generateElementEvents(options, ctx, node, componentFunctionalVar, componentVNodeVar, componentCtxVar);
+	yield* generateElementEvents(options, ctx, node, componentOriginalVar, componentFunctionalVar, componentVNodeVar, componentCtxVar);
 	yield* generateElementDirectives(options, ctx, node);
 
 	const [refName, offset] = yield* generateElementReference(options, ctx, node);
@@ -260,7 +259,7 @@ export function* generateComponent(
 		ctx.currentComponent.used = true;
 
 		yield `var ${componentInstanceVar} = {} as (Parameters<NonNullable<typeof ${componentCtxVar}['expose']>>[0] | null)`;
-		if (isVForChild) {
+		if (ctx.inVFor) {
 			yield `[]`;
 		}
 		yield `${endOfLine}`;
@@ -292,8 +291,7 @@ export function* generateComponent(
 export function* generateElement(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-	isVForChild: boolean
+	node: CompilerDOM.ElementNode
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
@@ -346,7 +344,7 @@ export function* generateElement(
 	const [refName, offset] = yield* generateElementReference(options, ctx, node);
 	if (refName && offset) {
 		let typeExp = `__VLS_NativeElements['${node.tag}']`;
-		if (isVForChild) {
+		if (ctx.inVFor) {
 			typeExp += `[]`;
 		}
 		ctx.addTemplateRef(refName, typeExp, offset);
@@ -361,7 +359,7 @@ export function* generateElement(
 
 	collectStyleScopedClassReferences(options, ctx, node);
 
-	yield* generateElementChildren(options, ctx, node);
+	yield* generateElementChildren(options, ctx, node.children);
 }
 
 function* generateFailedPropExps(
