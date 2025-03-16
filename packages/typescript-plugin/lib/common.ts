@@ -185,6 +185,18 @@ function getDefinitionAndBoundSpan<T>(
 		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
 		const skippedDefinitions: ts.DefinitionInfo[] = [];
 
+		// #5275
+		if (result.definitions.length >= 2) {
+			for (const definition of result.definitions) {
+				if (
+					root.sfc.content[definition.textSpan.start - 1] === '@'
+					|| root.sfc.content.slice(definition.textSpan.start - 5, definition.textSpan.start) === 'v-on:'
+				) {
+					skippedDefinitions.push(definition);
+				}
+			}
+		}
+
 		for (const definition of result.definitions) {
 			if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
 				continue;

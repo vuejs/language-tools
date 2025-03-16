@@ -245,7 +245,7 @@ export function* generateComponent(
 	yield `, ...__VLS_functionalComponentArgsRest(${componentFunctionalVar}))${endOfLine}`;
 
 	yield* generateFailedPropExps(options, ctx, failedPropExps);
-	yield* generateElementEvents(options, ctx, node, componentFunctionalVar, componentVNodeVar, componentCtxVar);
+	yield* generateElementEvents(options, ctx, node, componentOriginalVar, componentFunctionalVar, componentVNodeVar, componentCtxVar);
 	yield* generateElementDirectives(options, ctx, node);
 
 	const [refName, offset] = yield* generateElementReference(options, ctx, node);

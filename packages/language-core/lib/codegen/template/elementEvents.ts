@@ -8,17 +8,18 @@ import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generatePropertyAccess } from './propertyAccess';
 
 export function* generateElementEvents(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
+	componentOriginalVar: string,
 	componentFunctionalVar: string,
 	componentVNodeVar: string,
 	componentCtxVar: string
 ): Generator<Code> {
-	let emitVar: string | undefined;
-	let eventsVar: string | undefined;
+	let emitsVar: string | undefined;
 	let propsVar: string | undefined;
 
 	for (const prop of node.props) {
@@ -33,12 +34,10 @@ export function* generateElementEvents(
 			)
 		) {
 			ctx.currentComponent!.used = true;
-			if (!emitVar) {
-				emitVar = ctx.getInternalVariable();
-				eventsVar = ctx.getInternalVariable();
+			if (!emitsVar) {
+				emitsVar = ctx.getInternalVariable();
 				propsVar = ctx.getInternalVariable();
-				yield `let ${emitVar}!: typeof ${componentCtxVar}.emit${endOfLine}`;
-				yield `let ${eventsVar}!: __VLS_NormalizeEmits<typeof ${emitVar}>${endOfLine}`;
+				yield `let ${emitsVar}!: __VLS_ResolveEmits<typeof ${componentOriginalVar}, typeof ${componentCtxVar}.emit>${endOfLine}`;
 				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentFunctionalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 			}
 			let source = prop.arg?.loc.source ?? 'model-value';
@@ -55,7 +54,16 @@ export function* generateElementEvents(
 				propPrefix = 'onVnode-';
 				emitPrefix = 'vnode-';
 			}
-			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${camelize(propPrefix + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => ({${newLine}`;
+			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${camelize(propPrefix + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => (`;
+			yield emitsVar;
+			yield* generatePropertyAccess(
+				options,
+				ctx,
+				emitPrefix + source,
+				start,
+				ctx.codeFeatures.navigation
+			);
+			yield `, {${newLine}`;
 			if (prop.name === 'on') {
 				yield* generateEventArg(ctx, source, start!, propPrefix.slice(0, -1));
 				yield `: `;
