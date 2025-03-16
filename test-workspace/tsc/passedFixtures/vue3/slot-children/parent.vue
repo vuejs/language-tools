@@ -6,6 +6,6 @@ defineProps<{
 	foo: T;
 }>();
 defineSlots<{
-	default?(): (ReturnType<typeof Child<T>> | VNode<HTMLAnchorElement>)[];
+	default?: () => (ReturnType<typeof Child<T>> | VNode<HTMLAnchorElement>)[];
 }>();
 </script>

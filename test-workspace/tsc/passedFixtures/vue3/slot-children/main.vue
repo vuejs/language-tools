@@ -6,14 +6,23 @@ const foo = {} as 'a' | 'b';
 </script>
 
 <template>
-	<Parent :foo>
+	<Parent :foo> 
 		<Child :foo="(`a` as const)" />
 		<Child :foo="(`b` as const)" />
-		<!-- @vue-expect-error -->
-		<Child :foo="(`c` as const)" /> 
+	</Parent>
 
+	<!-- @vue-expect-error -->
+	<Parent :foo>
+		<Child :foo="(`a` as const)" />
+		<Child :foo="(`c` as const)" />
+	</Parent>
+
+	<Parent :foo>
 		<a></a>
-		<!-- @vue-expect-error -->
+	</Parent>
+
+	<!-- @vue-expect-error -->
+	<Parent :foo>
 		<img />
 	</Parent>
 </template>
