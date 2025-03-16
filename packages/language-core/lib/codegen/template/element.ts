@@ -16,15 +16,14 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { collectStyleScopedClassReferences } from './styleScopedClasses';
-import { generateImplicitDefaultSlot, generateVSlot } from './vSlot';
+import { generateVSlot } from './vSlot';
 
 const colonReg = /:/g;
 
 export function* generateComponent(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-	isVForChild: boolean
+	node: CompilerDOM.ElementNode
 ): Generator<Code> {
 	const tagOffsets = [node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag)];
 	if (!node.isSelfClosing && options.template.lang === 'html') {
@@ -258,7 +257,7 @@ export function* generateComponent(
 		ctx.currentComponent.used = true;
 
 		yield `var ${componentInstanceVar} = {} as (Parameters<NonNullable<typeof ${componentCtxVar}['expose']>>[0] | null)`;
-		if (isVForChild) {
+		if (ctx.inVFor) {
 			yield `[]`;
 		}
 		yield `${endOfLine}`;
@@ -280,14 +279,7 @@ export function* generateComponent(
 	collectStyleScopedClassReferences(options, ctx, node);
 
 	const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as CompilerDOM.DirectiveNode;
-	if (slotDir) {
-		yield* generateVSlot(options, ctx, node, slotDir);
-	}
-	else {
-		// #932: reference for default slot
-		yield* generateImplicitDefaultSlot(ctx, node);
-		yield* generateElementChildren(options, ctx, node);
-	}
+	yield* generateVSlot(options, ctx, node, slotDir);
 
 	if (ctx.currentComponent.used) {
 		yield `var ${componentCtxVar}!: __VLS_PickFunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
@@ -297,8 +289,7 @@ export function* generateComponent(
 export function* generateElement(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-	isVForChild: boolean
+	node: CompilerDOM.ElementNode
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
@@ -349,7 +340,7 @@ export function* generateElement(
 	const [refName, offset] = yield* generateElementReference(options, ctx, node);
 	if (refName && offset) {
 		let typeExp = `__VLS_NativeElements['${node.tag}']`;
-		if (isVForChild) {
+		if (ctx.inVFor) {
 			typeExp += `[]`;
 		}
 		ctx.addTemplateRef(refName, typeExp, offset);
@@ -364,7 +355,7 @@ export function* generateElement(
 
 	collectStyleScopedClassReferences(options, ctx, node);
 
-	yield* generateElementChildren(options, ctx, node);
+	yield* generateElementChildren(options, ctx, node.children);
 }
 
 function* generateFailedPropExps(

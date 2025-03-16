@@ -4,6 +4,7 @@ import { hyphenateTag } from '../../utils/shared';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
+import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
@@ -31,8 +32,7 @@ export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
-	enterNode: boolean = true,
-	isVForChild: boolean = false
+	enterNode: boolean = true
 ): Generator<Code> {
 	if (enterNode && !ctx.enter(node)) {
 		return;
@@ -47,9 +47,7 @@ export function* generateTemplateChild(
 		for (const item of collectSingleRootNodes(options, node.children)) {
 			ctx.singleRootNodes.add(item);
 		}
-		for (const childNode of node.children) {
-			yield* generateTemplateChild(options, ctx, childNode);
-		}
+		yield* generateElementChildren(options, ctx, node.children);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 		const vForNode = getVForNode(node);
@@ -76,11 +74,11 @@ export function* generateTemplateChild(
 				node.tagType === CompilerDOM.ElementTypes.ELEMENT
 				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
 			) {
-				yield* generateElement(options, ctx, node, isVForChild);
+				yield* generateElement(options, ctx, node);
 			}
 			else {
 				const { currentComponent } = ctx;
-				yield* generateComponent(options, ctx, node, isVForChild);
+				yield* generateComponent(options, ctx, node);
 				ctx.currentComponent = currentComponent;
 			}
 		}
@@ -91,11 +89,7 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		// {{ ... }} {{ ... }}
-		for (const childNode of node.children) {
-			if (typeof childNode === 'object') {
-				yield* generateTemplateChild(options, ctx, childNode, false);
-			}
-		}
+		yield* generateElementChildren(options, ctx, node.children.filter(child => typeof child === 'object'), false);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 		// {{ ... }}
