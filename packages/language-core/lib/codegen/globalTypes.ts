@@ -79,12 +79,14 @@ export function generateGlobalTypes({
 		: true
 		: false
 		: false;
-	type __VLS_NormalizeComponentEvent<Props, Emits, OnEvent extends keyof Props, Event extends keyof Emits, CamelizedEvent extends keyof Emits> = (
-		__VLS_IsFunction<Emits, CamelizedEvent> extends true
-			? Partial<Emits>
+	type __VLS_NormalizeComponentEvent<Props, Emits, onEvent extends keyof Props, Event extends keyof Emits, CamelizedEvent extends keyof Emits> = (
+		__VLS_IsFunction<Props, onEvent> extends true
+			? Props
 			: __VLS_IsFunction<Emits, Event> extends true
-				? { [K in CamelizedEvent]?: Emits[Event] }
-				: { [K in CamelizedEvent]?: Props[OnEvent] }
+				? { [K in onEvent]?: Emits[Event] }
+				: __VLS_IsFunction<Emits, CamelizedEvent> extends true
+					? { [K in onEvent]?: Emits[CamelizedEvent] }
+					: Props
 	)${checkUnknownEvents ? '' : ' & Record<string, unknown>'};
 	// fix https://github.com/vuejs/language-tools/issues/926
 	type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;

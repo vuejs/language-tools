@@ -8,6 +8,7 @@ import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generatePropertyAccess } from './propertyAccess';
 
 export function* generateElementEvents(
 	options: TemplateCodegenOptions,
@@ -41,7 +42,7 @@ export function* generateElementEvents(
 			}
 			let source = prop.arg?.loc.source ?? 'model-value';
 			let start = prop.arg?.loc.start.offset;
-			let propPrefix = 'on';
+			let propPrefix = 'on-';
 			let emitPrefix = '';
 			if (prop.name === 'model') {
 				propPrefix = 'onUpdate:';
@@ -50,17 +51,26 @@ export function* generateElementEvents(
 			else if (source.startsWith('vue:')) {
 				source = source.slice('vue:'.length);
 				start = start! + 'vue:'.length;
-				propPrefix = 'onVnode';
+				propPrefix = 'onVnode-';
 				emitPrefix = 'vnode-';
 			}
-			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${camelize(propPrefix + '-' + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => ({${newLine}`;
+			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${camelize(propPrefix + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => (`;
+			yield emitsVar;
+			yield* generatePropertyAccess(
+				options,
+				ctx,
+				emitPrefix + source,
+				start,
+				ctx.codeFeatures.navigation
+			);
+			yield `, {${newLine}`;
 			if (prop.name === 'on') {
-				yield* generateEventArg(ctx, source, start!, emitPrefix);
+				yield* generateEventArg(ctx, source, start!, propPrefix.slice(0, -1));
 				yield `: `;
 				yield* generateEventExpression(options, ctx, prop);
 			}
 			else {
-				yield `'${camelize(emitPrefix + source)}': `;
+				yield `'${camelize(propPrefix + source)}': `;
 				yield* generateModelEventExpression(options, ctx, prop);
 			}
 			yield `})${endOfLine}`;
@@ -72,17 +82,17 @@ export function* generateEventArg(
 	ctx: TemplateCodegenContext,
 	name: string,
 	start: number,
-	directive = ''
+	directive = 'on'
 ): Generator<Code> {
-	const features = ctx.codeFeatures.withoutHighlightAndCompletion;
-	if (directive) {
-		name = capitalize(name);
-	}
+	const features = {
+		...ctx.codeFeatures.withoutHighlightAndCompletion,
+		...ctx.codeFeatures.navigationWithoutRename,
+	};
 	if (identifierRegex.test(camelize(name))) {
 		yield ['', 'template', start, features];
 		yield directive;
 		yield* generateCamelized(
-			name,
+			capitalize(name),
 			'template',
 			start,
 			combineLastMapping
@@ -96,7 +106,7 @@ export function* generateEventArg(
 			`'`,
 			directive,
 			...generateCamelized(
-				name,
+				capitalize(name),
 				'template',
 				start,
 				combineLastMapping
