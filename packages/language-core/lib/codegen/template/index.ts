@@ -54,7 +54,6 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	yield* generateStyleScopedClassReferences(ctx);
-	yield* ctx.generateAutoImportCompletion();
 	yield* ctx.generateHoistVariables();
 
 	const speicalTypes = [

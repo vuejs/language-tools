@@ -1,97 +1,116 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
+import { getStartEnd } from '../../utils/shared';
 import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
+import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateObjectProperty } from './objectProperty';
-import { generateTemplateChild } from './templateChild';
 
 export function* generateVSlot(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	slotDir: CompilerDOM.DirectiveNode
+	slotDir: CompilerDOM.DirectiveNode | undefined
 ): Generator<Code> {
 	if (!ctx.currentComponent) {
 		return;
 	}
-	ctx.currentComponent.used = true;
 	const slotBlockVars: string[] = [];
-	yield `{${newLine}`;
+	const slotVar = ctx.getInternalVariable();
 
-	yield `const { `;
-	if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
-		yield* generateObjectProperty(
-			options,
-			ctx,
-			slotDir.arg.loc.source,
-			slotDir.arg.loc.start.offset,
-			slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
-			slotDir.arg.loc,
-			false,
-			true
-		);
+	if (slotDir) {
+		yield `{${newLine}`;
 	}
-	else {
-		yield* wrapWith(
-			slotDir.loc.start.offset,
-			slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
-			ctx.codeFeatures.withoutHighlightAndCompletion,
-			`default`
-		);
-	}
-	yield `: __VLS_slot } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
 
-	if (slotDir.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+	if (slotDir || node.children.length) {
+		ctx.currentComponent.used = true;
+
+		yield `const { `;
+		if (slotDir) {
+			if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					slotDir.arg.loc.source,
+					slotDir.arg.loc.start.offset,
+					slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
+					slotDir.arg.loc,
+					false,
+					true
+				);
+			}
+			else {
+				yield* wrapWith(
+					slotDir.loc.start.offset,
+					slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
+					ctx.codeFeatures.withoutHighlightAndCompletion,
+					`default`
+				);
+			}
+		}
+		else {
+			// #932: reference for implicit default slot
+			yield* wrapWith(
+				node.children[0].loc.start.offset,
+				node.children.at(-1)!.loc.end.offset,
+				ctx.codeFeatures.navigation,
+				`default`
+			);
+		}
+		yield `: ${slotVar} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
+	}
+
+
+	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
 		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
-		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp);
+		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
 	}
 
 	for (const varName of slotBlockVars) {
 		ctx.addLocalVariable(varName);
 	}
 
-	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode);
-	}
+	yield* generateElementChildren(options, ctx, node.children);
 
 	for (const varName of slotBlockVars) {
 		ctx.removeLocalVariable(varName);
 	}
 
-	let isStatic = true;
-	if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		isStatic = slotDir.arg.isStatic;
+	if (slotDir) {
+		let isStatic = true;
+		if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+			isStatic = slotDir.arg.isStatic;
+		}
+		if (isStatic && !slotDir.arg) {
+			yield `${ctx.currentComponent.ctxVar}.slots!['`;
+			yield [
+				'',
+				'template',
+				slotDir.loc.start.offset + (
+					slotDir.loc.source.startsWith('#')
+						? '#'.length
+						: slotDir.loc.source.startsWith('v-slot:')
+							? 'v-slot:'.length
+							: 0
+				),
+				ctx.codeFeatures.completion,
+			];
+			yield `'/* empty slot name completion */]${endOfLine}`;
+		}
+		yield `}${newLine}`;
 	}
-	if (isStatic && !slotDir.arg) {
-		yield `${ctx.currentComponent.ctxVar}.slots!['`;
-		yield [
-			'',
-			'template',
-			slotDir.loc.start.offset + (
-				slotDir.loc.source.startsWith('#')
-					? '#'.length
-					: slotDir.loc.source.startsWith('v-slot:')
-						? 'v-slot:'.length
-						: 0
-			),
-			ctx.codeFeatures.completion,
-		];
-		yield `'/* empty slot name completion */]${endOfLine}`;
-	}
-
-	yield* ctx.generateAutoImportCompletion();
-	yield `}${newLine}`;
 }
 
 function* generateSlotParameters(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	ast: ts.SourceFile,
-	exp: CompilerDOM.SimpleExpressionNode
+	exp: CompilerDOM.SimpleExpressionNode,
+	slotVar: string
 ): Generator<Code> {
 	const { ts } = options;
 
@@ -112,7 +131,7 @@ function* generateSlotParameters(
 				name.end,
 				type.end,
 			]);
-			types.push(chunk(type.getStart(ast), type.end));
+			types.push(chunk(getStartEnd(ts, type, ast).start, type.end));
 		}
 		else {
 			types.push(null);
@@ -127,7 +146,7 @@ function* generateSlotParameters(
 		nextStart = end;
 	}
 	yield chunk(nextStart, expression.equalsGreaterThanToken.pos - 1);
-	yield `] = __VLS_getSlotParameters(__VLS_slot`;
+	yield `] = __VLS_getSlotParameters(${slotVar}`;
 
 	if (types.some(t => t)) {
 		yield `, `;
@@ -149,25 +168,5 @@ function* generateSlotParameters(
 			startOffset + start,
 			ctx.codeFeatures.all,
 		];
-	}
-}
-
-export function* generateImplicitDefaultSlot(
-	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
-) {
-	if (!ctx.currentComponent) {
-		return;
-	}
-	if (node.children.length) {
-		ctx.currentComponent.used = true;
-		yield `${ctx.currentComponent.ctxVar}.slots!.`;
-		yield* wrapWith(
-			node.children[0].loc.start.offset,
-			node.children[node.children.length - 1].loc.end.offset,
-			ctx.codeFeatures.navigation,
-			`default`
-		);
-		yield endOfLine;
 	}
 }

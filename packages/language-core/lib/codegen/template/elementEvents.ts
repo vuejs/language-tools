@@ -161,7 +161,6 @@ export function* generateEventExpression(
 			ctx.removeLocalVariable('$event');
 
 			yield endOfLine;
-			yield* ctx.generateAutoImportCompletion();
 			yield `}`;
 		}
 	}

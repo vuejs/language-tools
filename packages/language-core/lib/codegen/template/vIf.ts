@@ -3,9 +3,9 @@ import { toString } from 'muggle-string';
 import type { Code } from '../../types';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
+import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateTemplateChild } from './templateChild';
 
 export function* generateVIf(
 	options: TemplateCodegenOptions,
@@ -50,10 +50,7 @@ export function* generateVIf(
 		}
 
 		yield `{${newLine}`;
-		for (const childNode of branch.children) {
-			yield* generateTemplateChild(options, ctx, childNode, isFragment(node));
-		}
-		yield* ctx.generateAutoImportCompletion();
+		yield* generateElementChildren(options, ctx, branch.children, isFragment(node));
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {

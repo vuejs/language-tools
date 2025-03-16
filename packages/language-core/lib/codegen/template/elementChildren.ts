@@ -7,10 +7,12 @@ import { generateTemplateChild } from './templateChild';
 export function* generateElementChildren(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
+	children: (CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode)[],
+	enterNode = true
 ): Generator<Code> {
-	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode);
+	yield* ctx.generateAutoImportCompletion();
+	for (const childNode of children) {
+		yield* generateTemplateChild(options, ctx, childNode, enterNode);
 	}
 	yield* ctx.generateAutoImportCompletion();
 }
