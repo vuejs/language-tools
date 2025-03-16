@@ -41,9 +41,11 @@ export function* generateComponent(
 	const componentCtxVar = ctx.getInternalVariable();
 	const isComponentTag = node.tag.toLowerCase() === 'component';
 
+	ctx.currentComponent?.childTypes.push(`typeof ${componentVNodeVar}`);
 	ctx.currentComponent = {
 		ctxVar: componentCtxVar,
-		used: false
+		childTypes: [],
+		used: false,
 	};
 
 	let props = node.props;
@@ -282,7 +284,7 @@ export function* generateComponent(
 	yield* generateVSlot(options, ctx, node, slotDir);
 
 	if (ctx.currentComponent.used) {
-		yield `var ${componentCtxVar}!: __VLS_PickFunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
+		yield `var ${componentCtxVar}!: __VLS_FunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 	}
 }
 
@@ -296,6 +298,8 @@ export function* generateElement(
 		? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
+
+	ctx.currentComponent?.childTypes.push(`__VLS_NativeElements['${node.tag}']`);
 
 	yield `__VLS_asFunctionalElement(__VLS_elements`;
 	yield* generatePropertyAccess(
@@ -355,7 +359,10 @@ export function* generateElement(
 
 	collectStyleScopedClassReferences(options, ctx, node);
 
+	const { currentComponent } = ctx;
+	ctx.currentComponent = undefined;
 	yield* generateElementChildren(options, ctx, node.children);
+	ctx.currentComponent = currentComponent;
 }
 
 function* generateFailedPropExps(

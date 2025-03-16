@@ -53,16 +53,16 @@ export function* generateVSlot(
 		}
 		else {
 			// #932: reference for implicit default slot
+			const { start, end } = getElementInnerLoc(options, node);
 			yield* wrapWith(
-				node.children[0].loc.start.offset,
-				node.children.at(-1)!.loc.end.offset,
+				start,
+				end,
 				ctx.codeFeatures.navigation,
 				`default`
 			);
 		}
 		yield `: ${slotVar} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
 	}
-
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
@@ -78,6 +78,20 @@ export function* generateVSlot(
 
 	for (const varName of slotBlockVars) {
 		ctx.removeLocalVariable(varName);
+	}
+
+	if (options.vueCompilerOptions.strictSlotChildren && node.children.length) {
+		const { start, end } = getElementInnerLoc(options, node);
+		yield `(): __VLS_NormalizeSlotReturns<typeof ${slotVar}> => (`;
+		yield* wrapWith(
+			start,
+			end,
+			ctx.codeFeatures.verification,
+			`{} as [`,
+			...ctx.currentComponent.childTypes.map(name => `${name}, `),
+			`]`
+		);
+		yield `)${endOfLine}`;
 	}
 
 	if (slotDir) {
@@ -168,5 +182,31 @@ function* generateSlotParameters(
 			startOffset + start,
 			ctx.codeFeatures.all,
 		];
+	}
+}
+
+function getElementInnerLoc(
+	options: TemplateCodegenOptions,
+	node: CompilerDOM.ElementNode
+) {
+	if (node.children.length) {
+		let start = node.children[0].loc.start.offset;
+		let end = node.children.at(-1)!.loc.end.offset;
+		while (options.template.content[start - 1] !== '>') {
+			start--;
+		}
+		while (options.template.content[end] !== '<') {
+			end++;
+		}
+		return {
+			start,
+			end,
+		};
+	}
+	else {
+		return {
+			start: node.loc.start.offset,
+			end: node.loc.end.offset,
+		};
 	}
 }

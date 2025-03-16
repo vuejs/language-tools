@@ -12,5 +12,5 @@
 import { exactType } from '../../shared';
 import Child from './child.vue'
 
-const n = 1 as const
+const n = 1
 </script>

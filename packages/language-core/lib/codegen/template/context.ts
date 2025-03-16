@@ -208,6 +208,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		templateRefs,
 		currentComponent: undefined as {
 			ctxVar: string;
+			childTypes: string[];
 			used: boolean;
 		} | undefined,
 		singleRootElTypes: [] as string[],
