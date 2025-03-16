@@ -93,6 +93,8 @@ export function* generateVSlot(
 		yield `)${endOfLine}`;
 	}
 
+	yield* ctx.generateAutoImportCompletion();
+
 	if (slotDir) {
 		let isStatic = true;
 		if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -116,8 +118,6 @@ export function* generateVSlot(
 		}
 		yield `}${newLine}`;
 	}
-
-	yield* ctx.generateAutoImportCompletion();
 }
 
 function* generateSlotParameters(
