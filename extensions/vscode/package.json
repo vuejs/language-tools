@@ -5,7 +5,7 @@
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
-		"directory": "packages/vscode"
+		"directory": "extensions/vscode"
 	},
 	"categories": [
 		"Programming Languages"
