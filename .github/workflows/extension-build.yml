@@ -27,5 +27,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Extension
+          name: extensions
           path: ./extensions/vscode/volar-*.vsix
