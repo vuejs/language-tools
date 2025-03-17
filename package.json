@@ -26,7 +26,7 @@
 		"@tsslint/config": "^1.5.0",
 		"@tsslint/eslint": "^1.5.0",
 		"@typescript-eslint/eslint-plugin": "^8.19.0",
-		"typescript": "^5.7.2",
+		"typescript": "latest",
 		"vitest": "^2.1.8"
 	},
 	"pnpm": {
