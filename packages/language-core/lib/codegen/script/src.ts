@@ -1,6 +1,7 @@
 import type { Code, SfcBlockAttr } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, generateSfcBlockAttrValue } from '../utils';
+import { combineLastMapping, endOfLine } from '../utils';
+import { wrapWith } from '../utils/wrapWith';
 
 export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 	if (src === true) {
@@ -23,10 +24,19 @@ export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 	}
 
 	yield `export * from `;
-	yield* generateSfcBlockAttrValue(src, text, {
-		...codeFeatures.all,
-		...text === src.text ? codeFeatures.navigation : codeFeatures.navigationWithoutRename,
-	});
+	yield* wrapWith(
+		src.offset,
+		src.offset + src.text.length,
+		'main',
+		{
+			...codeFeatures.all,
+			...text !== src.text ? codeFeatures.navigationWithoutRename : {},
+		},
+		`'`,
+		[text.slice(0, src.text.length), 'main', src.offset, combineLastMapping],
+		text.slice(src.text.length),
+		`'`
+	);
 	yield endOfLine;
 	yield `export { default } from '${text}'${endOfLine}`;
 }

@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
-import type { Code, SfcBlock, SfcBlockAttr, VueCodeInformation } from '../../types';
+import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 import { getNodeText } from '../../utils/shared';
 
 export const newLine = `\n`;
@@ -81,24 +81,4 @@ export function generateSfcBlockSection(block: SfcBlock, start: number, end: num
 		start,
 		features,
 	];
-}
-
-export function* generateSfcBlockAttrValue(
-	src: SfcBlockAttr & object,
-	text: string,
-	features: VueCodeInformation
-): Generator<Code> {
-	const { offset, quotes } = src;
-	if (!quotes) {
-		yield [``, 'main', offset, { verification: true }];
-	}
-	yield [
-		`'${text}'`,
-		'main',
-		quotes ? offset - 1 : offset,
-		features
-	];
-	if (!quotes) {
-		yield [``, 'main', offset + text.length, { __combineOffset: 2 }];
-	}
 }
