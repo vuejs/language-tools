@@ -8,7 +8,7 @@ import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generatePropertyAccess } from './propertyAccess';
+import { generateObjectProperty } from './objectProperty';
 
 export function* generateElementEvents(
 	options: TemplateCodegenOptions,
@@ -54,16 +54,21 @@ export function* generateElementEvents(
 				propPrefix = 'onVnode-';
 				emitPrefix = 'vnode-';
 			}
-			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${camelize(propPrefix + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => (`;
-			yield emitsVar;
-			yield* generatePropertyAccess(
-				options,
-				ctx,
-				emitPrefix + source,
-				start,
-				ctx.codeFeatures.navigation
-			);
-			yield `, {${newLine}`;
+			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${camelize(propPrefix + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => (${newLine}`;
+			if (prop.name === 'on') {
+				yield `{ `;
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					emitPrefix + source,
+					start!,
+					ctx.codeFeatures.navigation,
+					undefined,
+					true
+				);
+				yield `: {} as any } as typeof ${emitsVar},${newLine}`;
+			}
+			yield `{ `;
 			if (prop.name === 'on') {
 				yield* generateEventArg(ctx, source, start!, propPrefix.slice(0, -1));
 				yield `: `;
