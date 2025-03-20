@@ -375,7 +375,7 @@ export function create(
 										{
 											name: 'v-bind:' + propName,
 											description: propKey,
-										},
+										}
 									);
 								}
 							}
