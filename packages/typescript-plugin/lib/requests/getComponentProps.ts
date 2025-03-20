@@ -22,8 +22,6 @@ export function getComponentProps(
 		return;
 	}
 	const vueCode = volarFile.generated.root;
-	const program = languageService.getProgram()!;
-	const checker = program.getTypeChecker();
 	const components = getVariableType(ts, languageService, vueCode, '__VLS_components');
 	if (!components) {
 		return [];
@@ -35,6 +33,8 @@ export function getComponentProps(
 	}
 
 	const result = new Map<string, ComponentPropInfo>();
+	const program = languageService.getProgram()!;
+	const checker = program.getTypeChecker();
 
 	for (const sig of componentType.getCallSignatures()) {
 		const propParam = sig.parameters[0];
@@ -42,19 +42,7 @@ export function getComponentProps(
 			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.node);
 			const props = propsType.getProperties();
 			for (const prop of props) {
-				const name = prop.name;
-				const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
-				const {
-					content: commentMarkdown,
-					deprecated
-				} = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
-
-				result.set(name, {
-					name,
-					required,
-					deprecated,
-					commentMarkdown
-				});
+				handlePropSymbol(prop);
 			}
 		}
 	}
@@ -66,27 +54,44 @@ export function getComponentProps(
 			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, components.node);
 			const props = propsType.getProperties();
 			for (const prop of props) {
-				if (prop.flags & ts.SymbolFlags.Method) { // #2443
-					continue;
-				}
-				const name = prop.name;
-				const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
-				const {
-					content: commentMarkdown,
-					deprecated
-				} = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
-
-				result.set(name, {
-					name,
-					required,
-					deprecated,
-					commentMarkdown
-				});
+				handlePropSymbol(prop);
 			}
 		}
 	}
 
 	return [...result.values()];
+
+	function handlePropSymbol(prop: ts.Symbol) {
+		if (prop.flags & ts.SymbolFlags.Method) { // #2443
+			return;
+		}
+		const name = prop.name;
+		const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
+		const {
+			content: commentMarkdown,
+			deprecated,
+		} = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
+		const values: any[] = [];
+		const type = checker.getTypeOfSymbol(prop);
+		const subTypes: ts.Type[] | undefined = (type as any).types;
+
+		if (subTypes) {
+			for (const subType of subTypes) {
+				const value = (subType as any).value;
+				if (value) {
+					values.push(value);
+				}
+			}
+		}
+
+		result.set(name, {
+			name,
+			required,
+			deprecated,
+			commentMarkdown,
+			values,
+		});
+	}
 }
 
 function generateCommentMarkdown(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JSDocTagInfo[]) {

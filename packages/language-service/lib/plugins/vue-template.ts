@@ -312,20 +312,23 @@ export function create(
 							}
 
 							const { attrs, propInfos, events, directives } = tagInfo;
-							const props = propInfos.map(prop =>
-								hyphenateTag(prop.name).startsWith('on-vnode-')
-									? 'onVue:' + prop.name.slice('onVnode'.length)
-									: prop.name
-							);
+
+							for (const prop of propInfos) {
+								if (hyphenateTag(prop.name).startsWith('on-vnode-')) {
+									prop.name = 'onVue:' + prop.name.slice('onVnode'.length);
+								}
+							}
+
 							const attributes: html.IAttributeData[] = [];
+							const propsSet = new Set(propInfos.map(prop => prop.name));
 
-							const propsSet = new Set(props);
+							for (const prop of [
+								...propInfos,
+								...attrs.map<ComponentPropInfo>(attr => ({ name: attr })),
+							]) {
 
-							for (const prop of [...props, ...attrs]) {
-
-								const isGlobal = !propsSet.has(prop);
-								const name = casing.attr === AttrNameCasing.Camel ? prop : hyphenateAttr(prop);
-
+								const isGlobal = !propsSet.has(prop.name);
+								const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 								const isEvent = hyphenateAttr(name).startsWith('on-');
 
 								if (isEvent) {
@@ -363,6 +366,7 @@ export function create(
 										{
 											name: propName,
 											description: propKey,
+											valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
 										},
 										{
 											name: ':' + propName,
@@ -371,7 +375,7 @@ export function create(
 										{
 											name: 'v-bind:' + propName,
 											description: propKey,
-										}
+										},
 									);
 								}
 							}
@@ -402,10 +406,13 @@ export function create(
 
 							const models: [boolean, string][] = [];
 
-							for (const prop of [...props, ...attrs]) {
-								if (prop.startsWith('onUpdate:')) {
-									const isGlobal = !propsSet.has(prop);
-									models.push([isGlobal, prop.slice('onUpdate:'.length)]);
+							for (const prop of [
+								...propInfos,
+								...attrs.map(attr => ({ name: attr })),
+							]) {
+								if (prop.name.startsWith('onUpdate:')) {
+									const isGlobal = !propsSet.has(prop.name);
+									models.push([isGlobal, prop.name.slice('onUpdate:'.length)]);
 								}
 							}
 							for (const event of events) {
