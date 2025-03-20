@@ -165,6 +165,11 @@ export function generateGlobalTypes({
 	function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 		T extends new (...args: any) => any ? __VLS_FunctionalComponent<K>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
+		${(
+			target === 2.7
+				? `: T extends import('vue').AsyncComponent ? (props: {}, ctx?: any) => any`
+				: ``
+		)}
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent<{}>;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
