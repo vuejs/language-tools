@@ -138,6 +138,9 @@ export function generateGlobalTypes({
 		TypeEmits = ${target >= 3.6 ? `Comp extends { __typeEmits?: infer T } ? unknown extends T ? {} : import('${lib}').ShortEmitsToObject<T> : {}` : `{}`},
 		NormalizedEmits = __VLS_NormalizeEmits<Emits> extends infer E ? string extends keyof E ? {} : E : never,
 	> = __VLS_SpreadMerge<NormalizedEmits, TypeEmits>;
+	type __VLS_ResolveDirectives<T> = {
+		[K in Exclude<keyof T, keyof __VLS_GlobalDirectives> & string as \`v\${Capitalize<K>}\`]: T[K];
+	};
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
 

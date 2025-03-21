@@ -60,7 +60,7 @@ function* generateTemplateElements(): Generator<Code> {
 }
 
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
-	const types: Code[] = [];
+	const types: Code[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
 		const { componentsOption } = options.scriptRanges.exportDefault;
@@ -75,8 +75,6 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		types.push(`typeof __VLS_componentsOption`);
 	}
 
-	types.push(`typeof __VLS_ctx`);
-
 	yield `type __VLS_LocalComponents =`;
 	for (const type of types) {
 		yield ` & `;
@@ -88,7 +86,7 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 }
 
 export function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
-	const types: Code[] = [];
+	const types: Code[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
 		const { directivesOption } = options.scriptRanges.exportDefault;
@@ -100,10 +98,8 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 			codeFeatures.navigation,
 		];
 		yield endOfLine;
-		types.push(`typeof __VLS_directivesOption`);
+		types.push(`__VLS_ResolveDirectives<typeof __VLS_directivesOption>`);
 	}
-
-	types.push(`typeof __VLS_ctx`);
 
 	yield `type __VLS_LocalDirectives =`;
 	for (const type of types) {
