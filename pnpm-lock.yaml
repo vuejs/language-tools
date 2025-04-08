@@ -88,7 +88,7 @@ importers:
         version: 1.0.1
       typescript:
         specifier: '*'
-        version: 5.8.2
+        version: 5.8.3
       vue-component-type-helpers:
         specifier: 3.0.0-alpha.4
         version: link:../component-type-helpers
@@ -130,7 +130,7 @@ importers:
         version: 1.0.1
       typescript:
         specifier: '*'
-        version: 5.8.2
+        version: 5.8.3
     devDependencies:
       '@types/minimatch':
         specifier: ^5.1.2
@@ -287,7 +287,7 @@ importers:
         version: link:../language-core
       typescript:
         specifier: '>=5.0.0'
-        version: 5.8.2
+        version: 5.8.3
     devDependencies:
       '@types/node':
         specifier: ^22.10.4
@@ -322,7 +322,7 @@ importers:
         version: typescript@5.9.0-dev.20250319
       typescript-stable:
         specifier: npm:typescript@latest
-        version: typescript@5.8.2
+        version: typescript@5.8.3
       vue:
         specifier: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72
         version: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72(typescript@5.8.3)
@@ -3454,11 +3454,6 @@ packages:
 
   typescript-auto-import-cache@0.3.5:
     resolution: {integrity: sha512-fAIveQKsoYj55CozUiBoj4b/7WpN0i4o74wiGY5JVUEoD0XiqDk1tJqTEjgzL2/AizKQrXxyRosSebyDzBZKjw==}
-
-  typescript@5.8.2:
-    resolution: {integrity: sha512-aJn6wq13/afZp/jT9QZmwEjDqqvSGp1VT5GVg+f/t6/oVyrgXM6BY1h9BRh/O5p3PlUPAe+WuiEZOmb/49RqoQ==}
-    engines: {node: '>=14.17'}
-    hasBin: true
 
   typescript@5.8.3:
     resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
@@ -7270,8 +7265,6 @@ snapshots:
   typescript-auto-import-cache@0.3.5:
     dependencies:
       semver: 7.7.1
-
-  typescript@5.8.2: {}
 
   typescript@5.8.3: {}
 
