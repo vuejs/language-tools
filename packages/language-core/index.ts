@@ -5,7 +5,7 @@ export * from './lib/parsers/scriptSetupRanges';
 export * from './lib/plugins';
 export * from './lib/types';
 export * from './lib/utils/parseSfc';
-export * from './lib/utils/shared';
+export * from "./lib/utils/shared";
 export * from './lib/utils/ts';
 export * from './lib/virtualFile/vueFile';
 
