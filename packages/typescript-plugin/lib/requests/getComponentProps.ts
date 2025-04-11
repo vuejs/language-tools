@@ -7,6 +7,7 @@ export interface ComponentPropInfo {
 	name: string;
 	required?: boolean;
 	deprecated?: boolean;
+	isAttribute?: boolean;
 	commentMarkdown?: string;
 	values?: string[];
 }
@@ -84,10 +85,29 @@ export function getComponentProps(
 			}
 		}
 
+		let isAttribute: boolean | undefined;
+		for (const root of checker.getRootSymbols(prop)) {
+			for (const { parent } of root.declarations ?? []) {
+				if (!ts.isInterfaceDeclaration(parent)) {
+					continue;
+				}
+				const { text } = parent.name;
+				if (
+					text.endsWith('HTMLAttributes')
+					|| text === 'AriaAttributes'
+					|| text === 'SVGAttributes'
+				) {
+					isAttribute = true;
+					break;
+				}
+			}
+		}
+
 		result.set(name, {
 			name,
 			required,
 			deprecated,
+			isAttribute,
 			commentMarkdown,
 			values,
 		});
