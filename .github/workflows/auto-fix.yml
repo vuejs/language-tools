@@ -6,7 +6,7 @@ on:
       - master
   pull_request:
     branches:
-      - master
+      - "*"
 
 permissions:
   contents: write
@@ -16,8 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
 
       - uses: pnpm/action-setup@v4
 
