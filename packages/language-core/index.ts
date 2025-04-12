@@ -11,4 +11,4 @@ export * from './lib/virtualFile/vueFile';
 
 export { tsCodegen } from './lib/plugins/vue-tsx';
 
-export * from '@volar/language-core';
+export * from '@volar/language-core'
