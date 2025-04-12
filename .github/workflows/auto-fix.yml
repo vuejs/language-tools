@@ -9,7 +9,8 @@ on:
       - master
 
 permissions:
-  contents: write
+  contents: read
+  pull-requests: read
 
 jobs:
   auto-fix:
