@@ -2,6 +2,8 @@ name: auto-fix
 
 on:
   pull_request:
+    branches:
+      - master
   push:
     branches:
       - master
@@ -15,7 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          clean: false
 
       - uses: pnpm/action-setup@v4
 
@@ -34,4 +37,4 @@ jobs:
       - name: Commit
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "ci(lint): auto-fix"
+          commit_message: 'ci(lint): auto-fix'
