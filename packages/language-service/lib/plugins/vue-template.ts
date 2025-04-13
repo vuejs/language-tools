@@ -327,7 +327,7 @@ export function create(
 								...attrs.map<ComponentPropInfo>(attr => ({ name: attr })),
 							]) {
 
-								const isGlobal = !propsSet.has(prop.name);
+								const isGlobal = prop.isAttribute || !propsSet.has(prop.name);
 								const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 								const isEvent = hyphenateAttr(name).startsWith('on-');
 
