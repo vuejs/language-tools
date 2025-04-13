@@ -86,7 +86,7 @@ export function getComponentProps(
 		}
 
 		let isAttribute: boolean | undefined;
-		for (const { parent } of checker.getRootSymbols(prop).flatMap((root) => root.declarations ?? [])) {
+		for (const { parent } of checker.getRootSymbols(prop).flatMap(root => root.declarations ?? [])) {
 			if (!ts.isInterfaceDeclaration(parent)) {
 				continue;
 			}
