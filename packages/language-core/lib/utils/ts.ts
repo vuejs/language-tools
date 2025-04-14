@@ -1,5 +1,5 @@
 import { camelize } from '@vue/shared';
-import { posix as path } from 'path-browserify';
+import { posix as path } from 'pathe';
 import type * as ts from 'typescript';
 import { generateGlobalTypes, getGlobalTypesFileName } from '../codegen/globalTypes';
 import { getAllExtensions } from '../languagePlugin';

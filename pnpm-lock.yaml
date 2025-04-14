@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    pathe:
+      specifier: ^2.0.3
+      version: 2.0.3
+
 importers:
 
   .:
@@ -83,9 +89,9 @@ importers:
       '@vue/language-core':
         specifier: 3.0.0-alpha.4
         version: link:../language-core
-      path-browserify:
-        specifier: ^1.0.1
-        version: 1.0.1
+      pathe:
+        specifier: 'catalog:'
+        version: 2.0.3
       typescript:
         specifier: '*'
         version: 5.8.3
@@ -96,9 +102,6 @@ importers:
       '@types/node':
         specifier: ^22.10.4
         version: 22.13.10
-      '@types/path-browserify':
-        specifier: ^1.0.1
-        version: 1.0.3
 
   packages/component-type-helpers: {}
 
@@ -125,9 +128,9 @@ importers:
       muggle-string:
         specifier: ^0.4.1
         version: 0.4.1
-      path-browserify:
-        specifier: ^1.0.1
-        version: 1.0.1
+      pathe:
+        specifier: 'catalog:'
+        version: 2.0.3
       typescript:
         specifier: '*'
         version: 5.8.3
@@ -138,9 +141,6 @@ importers:
       '@types/node':
         specifier: ^22.10.4
         version: 22.13.10
-      '@types/path-browserify':
-        specifier: ^1.0.1
-        version: 1.0.3
       '@volar/typescript':
         specifier: ~2.4.11
         version: 2.4.12
@@ -224,9 +224,9 @@ importers:
       alien-signals:
         specifier: ^1.0.3
         version: 1.0.4
-      path-browserify:
-        specifier: ^1.0.1
-        version: 1.0.1
+      pathe:
+        specifier: 'catalog:'
+        version: 2.0.3
       volar-service-css:
         specifier: 0.0.64
         version: 0.0.64(@volar/language-service@2.4.12)
@@ -267,9 +267,6 @@ importers:
       '@types/node':
         specifier: ^22.10.4
         version: 22.13.10
-      '@types/path-browserify':
-        specifier: ^1.0.1
-        version: 1.0.3
       '@volar/kit':
         specifier: ~2.4.11
         version: 2.4.12(typescript@5.9.0-dev.20250319)
@@ -304,16 +301,13 @@ importers:
       '@vue/shared':
         specifier: ^3.5.0
         version: 3.5.13
-      path-browserify:
-        specifier: ^1.0.1
-        version: 1.0.1
+      pathe:
+        specifier: 'catalog:'
+        version: 2.0.3
     devDependencies:
       '@types/node':
         specifier: ^22.10.4
         version: 22.13.10
-      '@types/path-browserify':
-        specifier: ^1.0.1
-        version: 1.0.3
 
   test-workspace:
     devDependencies:
@@ -1185,9 +1179,6 @@ packages:
 
   '@types/parse-path@7.0.3':
     resolution: {integrity: sha512-LriObC2+KYZD3FzCrgWGv/qufdUy4eXrxcLgQMfYXgPbLIecKIsVBaQgUPmxSSLcjmYbDTQbMgr6qr6l/eb7Bg==}
-
-  '@types/path-browserify@1.0.3':
-    resolution: {integrity: sha512-ZmHivEbNCBtAfcrFeBCiTjdIc2dey0l7oCGNGpSuRTy8jP6UVND7oUowlvDujBy8r2Hoa8bfFUOCiPWfmtkfxw==}
 
   '@types/semver@7.5.8':
     resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
@@ -2971,6 +2962,9 @@ packages:
 
   pathe@1.1.2:
     resolution: {integrity: sha512-whLdWMYL2TwI08hn8/ZqAbrVemu0LNaNNJZX73O6qaIdCTfXutsLhMkjdENX0qhsQ9uIimo4/aQOmXkoon2nDQ==}
+
+  pathe@2.0.3:
+    resolution: {integrity: sha512-WUjGcAqP1gQacoQe+OBJsFA7Ld4DyXuUIjZ5cc75cLHvJ7dtNsTugphxIADwspS+AraAUePCKrSVtPLFj/F88w==}
 
   pathval@2.0.0:
     resolution: {integrity: sha512-vE7JKRyES09KiunauX7nd2Q9/L7lhok4smP9RZTDeD4MVs72Dp2qNFVz39Nz5a0FVEW0BJR6C0DYrq6unoziZA==}
@@ -4756,8 +4750,6 @@ snapshots:
   '@types/normalize-package-data@2.4.4': {}
 
   '@types/parse-path@7.0.3': {}
-
-  '@types/path-browserify@1.0.3': {}
 
   '@types/semver@7.5.8': {}
 
@@ -6776,6 +6768,8 @@ snapshots:
       minipass: 7.1.2
 
   pathe@1.1.2: {}
+
+  pathe@2.0.3: {}
 
   pathval@2.0.0: {}
 

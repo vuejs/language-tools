@@ -1,6 +1,6 @@
 import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
 import * as vue from '@vue/language-core';
-import { posix as path } from 'path-browserify';
+import { posix as path } from 'pathe';
 import type * as ts from 'typescript';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
 import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
