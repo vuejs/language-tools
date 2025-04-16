@@ -176,7 +176,6 @@ function* generateValue(
 		options,
 		ctx,
 		prop,
-		exp,
-		ctx.codeFeatures.all
+		exp
 	);
 }
