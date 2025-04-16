@@ -20,7 +20,7 @@
 		"alien-signals": "^1.0.3",
 		"minimatch": "^9.0.3",
 		"muggle-string": "^0.4.1",
-		"pathe": "catalog:"
+		"pathe": "^2.0.3"
 	},
 	"devDependencies": {
 		"@types/minimatch": "^5.1.2",

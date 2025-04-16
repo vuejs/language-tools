@@ -15,7 +15,7 @@
 	"dependencies": {
 		"@volar/typescript": "~2.4.11",
 		"@vue/language-core": "3.0.0-alpha.4",
-		"pathe": "catalog:",
+		"pathe": "^2.0.3",
 		"vue-component-type-helpers": "3.0.0-alpha.4"
 	},
 	"peerDependencies": {

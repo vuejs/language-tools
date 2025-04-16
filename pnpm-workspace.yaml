@@ -2,6 +2,3 @@ packages:
   - 'extensions/*'
   - 'packages/*'
   - 'test-workspace'
-
-catalog:
-  pathe: '^2.0.3'
