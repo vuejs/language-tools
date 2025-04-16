@@ -195,7 +195,7 @@ function getElementInnerLoc(
 		while (options.template.content[start - 1] !== '>') {
 			start--;
 		}
-		while (options.template.content[end] !== '<') {
+		while (options.template.content[end] !== '<' && end < node.loc.end.offset) {
 			end++;
 		}
 		return {
