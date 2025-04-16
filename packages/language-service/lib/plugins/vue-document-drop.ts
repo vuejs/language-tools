@@ -1,6 +1,6 @@
 import { VueVirtualCode, forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
-import { posix as path } from 'path-browserify';
+import { posix as path } from 'pathe';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';

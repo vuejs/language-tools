@@ -1,6 +1,6 @@
 import type { VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import * as path from 'path-browserify';
+import path from 'pathe';
 import type * as ts from 'typescript';
 
 export function getComponentType(
