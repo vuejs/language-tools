@@ -491,7 +491,6 @@
 		]
 	},
 	"scripts": {
-		"__prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
 		"build": "unbuild",
 		"build:minify": "pnpm run build --minify",
 		"dev": "unbuild --stub",
@@ -500,6 +499,7 @@
 		"release": "pnpm run build:minify && vsce publish",
 		"release:next": "pnpm run build && vsce publish --pre-release",
 		"size": "pnpm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html",
+		"prebuild": "pnpm run postinstall",
 		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {

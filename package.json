@@ -3,7 +3,7 @@
 	"packageManager": "pnpm@10.4.1",
 	"scripts": {
 		"build": "tsc -b",
-		"dev:vue": "pnpm -C ./extensions/vscode dev",
+		"dev": "pnpm -C ./extensions/vscode dev",
 		"watch": "pnpm run build && pnpm run \"/^watch:.*/\"",
 		"watch:base": "tsc -b -w",
 		"prerelease": "pnpm run build && pnpm run test",
