@@ -26,7 +26,7 @@ const plugin: VueLanguagePlugin = () => {
 			if (embeddedFile.id !== 'template_inline_css' || !sfc.template?.ast) {
 				return;
 			}
-			embeddedFile.parentCodeId = 'template';
+			embeddedFile.parentCodeId = sfc.template.lang === 'md' ? 'root_tags' : 'template';
 			embeddedFile.content.push(...generate(sfc.template.ast));
 		},
 	};

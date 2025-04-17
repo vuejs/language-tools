@@ -1,5 +1,5 @@
-import type { VirtualCode } from '@volar/language-core';
-import { computed, ISignal } from 'alien-signals';
+import type { Mapping, VirtualCode } from '@volar/language-core';
+import { computed } from 'alien-signals';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code, Sfc, SfcBlock, VueLanguagePluginReturn } from '../types';
@@ -11,8 +11,7 @@ export function computedEmbeddedCodes(
 	fileName: string,
 	sfc: Sfc
 ) {
-
-	const nameToBlock = computed(() => {
+	const getNameToBlockMap = computed(() => {
 		const blocks: Record<string, SfcBlock> = {};
 		if (sfc.template) {
 			blocks[sfc.template.name] = sfc.template;
@@ -31,13 +30,21 @@ export function computedEmbeddedCodes(
 		}
 		return blocks;
 	});
-	const pluginsResult = plugins.map(plugin => computedPluginEmbeddedCodes(plugins, plugin, fileName, sfc, nameToBlock));
-	const flatResult = computed(() => pluginsResult.map(r => r.get()).flat());
-	const structuredResult = computed(() => {
+	const getPluginsResult = plugins.map(plugin =>
+		computedPluginEmbeddedCodes(
+			plugins,
+			plugin,
+			fileName,
+			sfc,
+			name => getNameToBlockMap()[name]
+		)
+	);
+	const getFlatResult = computed(() => getPluginsResult.map(r => r()).flat());
+	const getStructuredResult = computed(() => {
 
 		const embeddedCodes: VirtualCode[] = [];
 
-		let remain = [...flatResult.get()];
+		let remain = [...getFlatResult()];
 
 		while (remain.length) {
 			const beforeLength = remain.length;
@@ -97,7 +104,7 @@ export function computedEmbeddedCodes(
 		}
 	});
 
-	return structuredResult;
+	return getStructuredResult;
 }
 
 function computedPluginEmbeddedCodes(
@@ -105,14 +112,14 @@ function computedPluginEmbeddedCodes(
 	plugin: VueLanguagePluginReturn,
 	fileName: string,
 	sfc: Sfc,
-	nameToBlock: ISignal<Record<string, SfcBlock>>
+	getBlockByName: (name: string) => SfcBlock | undefined
 ) {
-	const computeds = new Map<string, ISignal<{ code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>>();
+	const computeds = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>();
 	const getComputedKey = (code: {
 		id: string;
 		lang: string;
 	}) => code.id + '__' + code.lang;
-	const codes = computed(() => {
+	const getCodes = computed(() => {
 		try {
 			if (!plugin.getEmbeddedCodes) {
 				return [...computeds.values()];
@@ -171,8 +178,8 @@ function computedPluginEmbeddedCodes(
 	});
 
 	return computed(() => {
-		return codes.get().map(_file => {
-			const { code, snapshot } = _file.get();
+		return getCodes().map(_file => {
+			const { code, snapshot } = _file();
 			const mappings = buildMappings(code.content.map<Code>(segment => {
 				if (typeof segment === 'string') {
 					return segment;
@@ -181,7 +188,7 @@ function computedPluginEmbeddedCodes(
 				if (source === undefined) {
 					return segment;
 				}
-				const block = nameToBlock.get()[source];
+				const block = getBlockByName(source);
 				if (!block) {
 					// console.warn('Unable to find block: ' + source);
 					return segment;
@@ -194,28 +201,35 @@ function computedPluginEmbeddedCodes(
 				];
 			}));
 			const newMappings: typeof mappings = [];
-			let lastValidMapping: typeof mappings[number] | undefined;
+			const tokenMappings = new Map<symbol, Mapping>();
 
 			for (let i = 0; i < mappings.length; i++) {
 				const mapping = mappings[i];
-				if (mapping.data.__combineOffsetMapping !== undefined) {
-					const offsetMapping = mappings[i - mapping.data.__combineOffsetMapping];
+				if (mapping.data.__combineOffset !== undefined) {
+					const offsetMapping = mappings[i - mapping.data.__combineOffset];
 					if (typeof offsetMapping === 'string' || !offsetMapping) {
-						throw new Error('Invalid offset mapping, mappings: ' + mappings.length + ', i: ' + i + ', offset: ' + mapping.data.__combineOffsetMapping);
+						throw new Error('Invalid offset mapping, mappings: ' + mappings.length + ', i: ' + i + ', offset: ' + mapping.data.__combineOffset);
 					}
 					offsetMapping.sourceOffsets.push(...mapping.sourceOffsets);
 					offsetMapping.generatedOffsets.push(...mapping.generatedOffsets);
 					offsetMapping.lengths.push(...mapping.lengths);
 					continue;
 				}
-				else if (mapping.data.__combineLastMapping) {
-					lastValidMapping!.sourceOffsets.push(...mapping.sourceOffsets);
-					lastValidMapping!.generatedOffsets.push(...mapping.generatedOffsets);
-					lastValidMapping!.lengths.push(...mapping.lengths);
+				if (mapping.data.__linkedToken !== undefined) {
+					const token = mapping.data.__linkedToken;
+					if (tokenMappings.has(token)) {
+						const prevMapping = tokenMappings.get(token)!;
+						code.linkedCodeMappings.push({
+							sourceOffsets: [prevMapping.generatedOffsets[0]],
+							generatedOffsets: [mapping.generatedOffsets[0]],
+							lengths: [Number(token.description)],
+							data: undefined,
+						});
+					}
+					else {
+						tokenMappings.set(token, mapping);
+					}
 					continue;
-				}
-				else {
-					lastValidMapping = mapping;
 				}
 				newMappings.push(mapping);
 			}

@@ -1,3 +1,5 @@
+/// <reference types="@volar/typescript" />
+
 import { isCompletionEnabled } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type { RequestContext } from './types';

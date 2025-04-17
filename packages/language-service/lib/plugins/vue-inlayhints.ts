@@ -15,80 +15,89 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 			return {
 				async provideInlayHints(document, range) {
 
-					const settings: Record<string, boolean> = {};
-					const result: vscode.InlayHint[] = [];
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+					if (!(virtualCode instanceof VueVirtualCode)) {
+						return;
+					}
 
-					if (virtualCode instanceof VueVirtualCode) {
+					const settings: Record<string, boolean> = {};
+					async function getSettingEnabled(key: string) {
+						return settings[key] ??= await context.env.getConfiguration?.<boolean>(key) ?? false;
+					}
 
-						const codegen = tsCodegen.get(virtualCode._sfc);
-						const inlayHints = [
-							...codegen?.generatedTemplate.get()?.inlayHints ?? [],
-							...codegen?.generatedScript.get()?.inlayHints ?? [],
-						];
-						const scriptSetupRanges = codegen?.scriptSetupRanges.get();
+					const result: vscode.InlayHint[] = [];
 
-						if (scriptSetupRanges?.defineProps?.destructured && virtualCode._sfc.scriptSetup?.ast) {
-							const setting = 'vue.inlayHints.destructuredProps';
-							settings[setting] ??= await context.env.getConfiguration?.<boolean>(setting) ?? false;
+					const codegen = tsCodegen.get(virtualCode.sfc);
+					const inlayHints = [
+						...codegen?.getGeneratedTemplate()?.inlayHints ?? [],
+						...codegen?.getGeneratedScript()?.inlayHints ?? [],
+					];
+					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 
-							if (settings[setting]) {
-								for (const [prop, isShorthand] of findDestructuredProps(
-									ts,
-									virtualCode._sfc.scriptSetup.ast,
-									scriptSetupRanges.defineProps.destructured
-								)) {
-									const name = prop.text;
-									const end = prop.getEnd();
-									const pos = isShorthand ? end : end - name.length;
-									const label = isShorthand ? `: props.${name}` : 'props.';
-									inlayHints.push({
-										blockName: 'scriptSetup',
-										offset: pos,
-										setting,
-										label,
-									});
-								}
-							}
-						}
+					if (scriptSetupRanges?.defineProps?.destructured && virtualCode.sfc.scriptSetup?.ast) {
+						const setting = 'vue.inlayHints.destructuredProps';
+						const enabled = await getSettingEnabled(setting);
 
-						const blocks = [
-							virtualCode._sfc.template,
-							virtualCode._sfc.script,
-							virtualCode._sfc.scriptSetup,
-						];
-						const start = document.offsetAt(range.start);
-						const end = document.offsetAt(range.end);
-
-						for (const hint of inlayHints) {
-
-							const block = blocks.find(block => block?.name === hint.blockName);
-							const hintOffset = (block?.startTagEnd ?? 0) + hint.offset;
-
-							if (hintOffset >= start && hintOffset <= end) {
-
-								settings[hint.setting] ??= await context.env.getConfiguration?.<boolean>(hint.setting) ?? false;
-
-								if (!settings[hint.setting]) {
-									continue;
-								}
-
-								result.push({
-									label: hint.label,
-									paddingRight: hint.paddingRight,
-									paddingLeft: hint.paddingLeft,
-									position: document.positionAt(hintOffset),
-									kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
-									tooltip: hint.tooltip ? {
-										kind: 'markdown',
-										value: hint.tooltip,
-									} : undefined,
+						if (enabled) {
+							for (const [prop, isShorthand] of findDestructuredProps(
+								ts,
+								virtualCode.sfc.scriptSetup.ast,
+								scriptSetupRanges.defineProps.destructured.keys()
+							)) {
+								const name = prop.text;
+								const end = prop.getEnd();
+								const pos = isShorthand ? end : end - name.length;
+								const label = isShorthand ? `: props.${name}` : 'props.';
+								inlayHints.push({
+									blockName: 'scriptSetup',
+									offset: pos,
+									setting,
+									label,
 								});
 							}
 						}
 					}
+
+					const blocks = [
+						virtualCode.sfc.template,
+						virtualCode.sfc.script,
+						virtualCode.sfc.scriptSetup,
+					];
+					const start = document.offsetAt(range.start);
+					const end = document.offsetAt(range.end);
+
+					for (const hint of inlayHints) {
+						const block = blocks.find(block => block?.name === hint.blockName);
+						if (!block) {
+							continue;
+						}
+
+						const hintOffset = block.startTagEnd + hint.offset;
+						if (hintOffset < start || hintOffset >= end) {
+							continue;
+						}
+
+						const enabled = await getSettingEnabled(hint.setting);
+						if (!enabled) {
+							continue;
+						}
+
+						result.push({
+							label: hint.label,
+							paddingRight: hint.paddingRight,
+							paddingLeft: hint.paddingLeft,
+							position: document.positionAt(hintOffset),
+							kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
+							tooltip: hint.tooltip ? {
+								kind: 'markdown',
+								value: hint.tooltip,
+							} : undefined,
+						});
+					}
+
 					return result;
 				},
 			};
@@ -108,7 +117,7 @@ type Scope = Record<string, boolean>;
 export function findDestructuredProps(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
-	props: Set<string>
+	props: MapIterator<string>
 ) {
 	const rootScope: Scope = Object.create(null);
 	const scopeStack: Scope[] = [rootScope];
@@ -183,7 +192,7 @@ export function findDestructuredProps(
 			&& ts.isCallExpression(initializer)
 			&& initializer.expression.getText(ast) === 'defineProps';
 
-		for (const [id] of collectIdentifiers(ts, name)) {
+		for (const { id } of collectIdentifiers(ts, name)) {
 			if (isDefineProps) {
 				excludedIds.add(id);
 			} else {
@@ -199,7 +208,7 @@ export function findDestructuredProps(
 		}
 
 		for (const p of parameters) {
-			for (const [id] of collectIdentifiers(ts, p)) {
+			for (const { id } of collectIdentifiers(ts, p)) {
 				registerLocalBinding(id);
 			}
 		}

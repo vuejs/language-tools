@@ -2,16 +2,14 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
+import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateTemplateChild } from './templateChild';
 
 export function* generateVFor(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ForNode,
-	currentComponent: CompilerDOM.ElementNode | undefined,
-	componentCtxVar: string | undefined
+	node: CompilerDOM.ForNode
 ): Generator<Code> {
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
@@ -39,8 +37,8 @@ export function* generateVFor(
 			source.content,
 			source.loc.start.offset,
 			source.loc,
-			'(',
-			')'
+			`(`,
+			`)`
 		);
 		yield `!)`; // #3102
 	}
@@ -48,9 +46,11 @@ export function* generateVFor(
 		yield `{} as any`;
 	}
 	yield `) {${newLine}`;
+
 	for (const varName of forBlockVars) {
 		ctx.addLocalVariable(varName);
 	}
+
 	let isFragment = true;
 	for (const argument of node.codegenNode?.children.arguments ?? []) {
 		if (
@@ -75,26 +75,23 @@ export function* generateVFor(
 						prop.value.content,
 						prop.value.loc.start.offset,
 						prop.value.loc,
-						'(',
-						')'
+						`(`,
+						`)`
 					);
 					yield endOfLine;
 				}
 			}
 		}
 	}
-	if (isFragment) {
-		yield* ctx.resetDirectiveComments('end of v-for start');
-	}
-	let prev: CompilerDOM.TemplateChildNode | undefined;
-	for (const childNode of node.children) {
-		yield* generateTemplateChild(options, ctx, childNode, currentComponent, prev, componentCtxVar, true);
-		prev = childNode;
-	}
+
+	const { inVFor } = ctx;
+	ctx.inVFor = true;
+	yield* generateElementChildren(options, ctx, node.children, isFragment);
+	ctx.inVFor = inVFor;
+
 	for (const varName of forBlockVars) {
 		ctx.removeLocalVariable(varName);
 	}
-	yield* ctx.generateAutoImportCompletion();
 	yield `}${newLine}`;
 }
 

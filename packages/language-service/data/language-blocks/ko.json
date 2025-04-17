@@ -8,7 +8,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```"
+            "value": "`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning Note\n`src`에서 별칭(alias)을 사용할 때, `~`로 시작하지 마세요. `~` 이후의 내용은 모듈 요청으로 해석됩니다. 이를 활용하면 Node 모듈 내부의 애셋을 참조할 수 있습니다.\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n:::"
           },
           "references": "api/sfc-spec.html#src-imports"
         },
@@ -31,7 +31,7 @@
       ],
       "description": {
         "kind": "markdown",
-        "value": "\n- 각 `*.vue` 파일은 최상위 `<template>` 블록을 하나만 포함할 수 있습니다.\n\n- 컨텐츠는 추출되어 `@vue/compiler-dom`으로 전달되고,\n  JavaScript 렌더 함수로 사전 컴파일되며,\n  내보낸 컴포넌트에 `render` 옵션으로 첨부됩니다.\n"
+        "value": "\n- 각 `*.vue` 파일은 최상위 `<template>` 블록을 한번에 하나만 포함할 수 있습니다.\n\n- 컨텐츠는 추출되어 `@vue/compiler-dom`으로 전달되고,\n  JavaScript 렌더 함수로 사전 컴파일되며,\n  내보낸 컴포넌트에 `render` 옵션으로 첨부됩니다.\n"
       },
       "references": "api/sfc-spec.html#template"
     },
@@ -42,7 +42,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```"
+            "value": "`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning Note\n`src`에서 별칭(alias)을 사용할 때, `~`로 시작하지 마세요. `~` 이후의 내용은 모듈 요청으로 해석됩니다. 이를 활용하면 Node 모듈 내부의 애셋을 참조할 수 있습니다.\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n:::"
           },
           "references": "api/sfc-spec.html#src-imports"
         },
@@ -103,7 +103,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```"
+            "value": "`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning Note\n`src`에서 별칭(alias)을 사용할 때, `~`로 시작하지 마세요. `~` 이후의 내용은 모듈 요청으로 해석됩니다. 이를 활용하면 Node 모듈 내부의 애셋을 참조할 수 있습니다.\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n:::"
           },
           "references": "api/sfc-spec.html#src-imports"
         },
@@ -167,7 +167,7 @@
           "name": "src",
           "description": {
             "kind": "markdown",
-            "value": "`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```"
+            "value": "`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning Note\n`src`에서 별칭(alias)을 사용할 때, `~`로 시작하지 마세요. `~` 이후의 내용은 모듈 요청으로 해석됩니다. 이를 활용하면 Node 모듈 내부의 애셋을 참조할 수 있습니다.\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n:::"
           },
           "references": "api/sfc-spec.html#src-imports"
         }
@@ -193,7 +193,7 @@
       "name": "src",
       "description": {
         "kind": "markdown",
-        "value": "`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```"
+        "value": "`*.vue` 컴포넌트를 여러 파일로 분할하는 것을 선호하는 경우,\n`src` 속성을 사용하여 언어 블록에서 외부 파일을 가져올 수 있습니다:\n\n```vue\n<template src=\"./template.html\"></template>\n<style src=\"./style.css\"></style>\n<script src=\"./script.js\"></script>\n```\n\n`src` 가져오기는 웹팩 모듈 요청과 동일한 경로 확인 규칙을 따릅니다.\n즉, 다음을 의미합니다:\n\n- 상대 경로는 `./`로 시작해야 함.\n- npm 의존성에서 리소스를 가져올 수 있음.\n\n```vue\n<!-- 설치된 \"todomvc-app-css\" npm 패키지에서 파일 가져오기 -->\n<style src=\"todomvc-app-css/index.css\" />\n```\n\n`src` 가져오기는 커스텀 블록에서도 작동합니다. 예를들어:\n\n```vue\n<unit-test src=\"./unit-test.js\">\n</unit-test>\n```\n\n:::warning Note\n`src`에서 별칭(alias)을 사용할 때, `~`로 시작하지 마세요. `~` 이후의 내용은 모듈 요청으로 해석됩니다. 이를 활용하면 Node 모듈 내부의 애셋을 참조할 수 있습니다.\n```vue\n<img src=\"~some-npm-package/foo.png\">\n```\n:::"
       },
       "references": "api/sfc-spec.html#src-imports"
     }

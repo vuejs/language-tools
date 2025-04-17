@@ -1,96 +1,119 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Code, VueCodeInformation } from '../../types';
-import { hyphenateAttr } from '../../utils/shared';
-import { combineLastMapping, createTsAst, endOfLine, newLine, variableNameRegex, wrapWith } from '../utils';
+import type { Code } from '../../types';
+import { combineLastMapping, createTsAst, endOfLine, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generateObjectProperty } from './objectProperty';
 
 export function* generateElementEvents(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	componentVar: string,
-	componentInstanceVar: string,
-	eventsVar: string
-): Generator<Code, boolean> {
-	let usedComponentEventsVar = false;
+	componentOriginalVar: string,
+	componentFunctionalVar: string,
+	componentVNodeVar: string,
+	componentCtxVar: string
+): Generator<Code> {
+	let emitsVar: string | undefined;
 	let propsVar: string | undefined;
+
 	for (const prop of node.props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'on'
-			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			&& !prop.arg.loc.source.startsWith('[')
-			&& !prop.arg.loc.source.endsWith(']')
+			&& (
+				prop.name === 'on'
+				&& (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+				|| options.vueCompilerOptions.strictVModel
+				&& prop.name === 'model'
+				&& (!prop.arg || prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+			)
 		) {
-			usedComponentEventsVar = true;
-			if (!propsVar) {
+			ctx.currentComponent!.used = true;
+			if (!emitsVar) {
+				emitsVar = ctx.getInternalVariable();
 				propsVar = ctx.getInternalVariable();
-				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentVar}, typeof ${componentInstanceVar}>${endOfLine}`;
+				yield `let ${emitsVar}!: __VLS_ResolveEmits<typeof ${componentOriginalVar}, typeof ${componentCtxVar}.emit>${endOfLine}`;
+				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentFunctionalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 			}
-			const originalPropName = camelize('on-' + prop.arg.loc.source);
-			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${eventsVar}, '${originalPropName}', '${prop.arg.loc.source}', '${camelize(prop.arg.loc.source)}'> = {${newLine}`;
-			yield* generateEventArg(ctx, prop.arg, true);
-			yield `: `;
-			yield* generateEventExpression(options, ctx, prop);
-			yield `}${endOfLine}`;
+			let source = prop.arg?.loc.source ?? 'model-value';
+			let start = prop.arg?.loc.start.offset;
+			let propPrefix = 'on-';
+			let emitPrefix = '';
+			if (prop.name === 'model') {
+				propPrefix = 'onUpdate:';
+				emitPrefix = 'update:';
+			}
+			else if (source.startsWith('vue:')) {
+				source = source.slice('vue:'.length);
+				start = start! + 'vue:'.length;
+				propPrefix = 'onVnode-';
+				emitPrefix = 'vnode-';
+			}
+			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${camelize(propPrefix + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => (${newLine}`;
+			if (prop.name === 'on') {
+				yield `{ `;
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					emitPrefix + source,
+					start!,
+					ctx.codeFeatures.navigation,
+					undefined,
+					true
+				);
+				yield `: {} as any } as typeof ${emitsVar},${newLine}`;
+			}
+			yield `{ `;
+			if (prop.name === 'on') {
+				yield* generateEventArg(ctx, source, start!, propPrefix.slice(0, -1));
+				yield `: `;
+				yield* generateEventExpression(options, ctx, prop);
+			}
+			else {
+				yield `'${camelize(propPrefix + source)}': `;
+				yield* generateModelEventExpression(options, ctx, prop);
+			}
+			yield `})${endOfLine}`;
 		}
 	}
-	return usedComponentEventsVar;
 }
-
-const eventArgFeatures: VueCodeInformation = {
-	navigation: {
-		// @click-outside -> onClickOutside
-		resolveRenameNewName(newName) {
-			return camelize('on-' + newName);
-		},
-		// onClickOutside -> @click-outside
-		resolveRenameEditText(newName) {
-			const hName = hyphenateAttr(newName);
-			if (hyphenateAttr(newName).startsWith('on-')) {
-				return camelize(hName.slice('on-'.length));
-			}
-			return newName;
-		},
-	},
-};
 
 export function* generateEventArg(
 	ctx: TemplateCodegenContext,
-	arg: CompilerDOM.SimpleExpressionNode,
-	enableHover: boolean
+	name: string,
+	start: number,
+	directive = 'on'
 ): Generator<Code> {
-	const features = enableHover
-		? {
-			...ctx.codeFeatures.withoutHighlightAndCompletion,
-			...eventArgFeatures,
-		}
-		: eventArgFeatures;
-	if (variableNameRegex.test(camelize(arg.loc.source))) {
-		yield ['', 'template', arg.loc.start.offset, features];
-		yield `on`;
+	const features = {
+		...ctx.codeFeatures.withoutHighlightAndCompletion,
+		...ctx.codeFeatures.navigationWithoutRename,
+	};
+	if (identifierRegex.test(camelize(name))) {
+		yield ['', 'template', start, features];
+		yield directive;
 		yield* generateCamelized(
-			capitalize(arg.loc.source),
-			arg.loc.start.offset,
+			capitalize(name),
+			'template',
+			start,
 			combineLastMapping
 		);
 	}
 	else {
 		yield* wrapWith(
-			arg.loc.start.offset,
-			arg.loc.end.offset,
+			start,
+			start + name.length,
 			features,
 			`'`,
-			['', 'template', arg.loc.start.offset, combineLastMapping],
-			'on',
+			directive,
 			...generateCamelized(
-				capitalize(arg.loc.source),
-				arg.loc.start.offset,
+				capitalize(name),
+				'template',
+				start,
 				combineLastMapping
 			),
 			`'`
@@ -104,8 +127,8 @@ export function* generateEventExpression(
 	prop: CompilerDOM.DirectiveNode
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		let prefix = '(';
-		let suffix = ')';
+		let prefix = `(`;
+		let suffix = `)`;
 		let isFirstMapping = true;
 
 		const ast = createTsAst(options.ts, prop.exp, prop.exp.content);
@@ -113,12 +136,9 @@ export function* generateEventExpression(
 		if (_isCompoundExpression) {
 			yield `(...[$event]) => {${newLine}`;
 			ctx.addLocalVariable('$event');
-
-			prefix = '';
-			suffix = '';
-			for (const blockCondition of ctx.blockConditions) {
-				prefix += `if (!(${blockCondition})) return${endOfLine}`;
-			}
+			yield* ctx.generateConditionGuards();
+			prefix = ``;
+			suffix = ``;
 		}
 
 		yield* generateInterpolation(
@@ -154,9 +174,33 @@ export function* generateEventExpression(
 			ctx.removeLocalVariable('$event');
 
 			yield endOfLine;
-			yield* ctx.generateAutoImportCompletion();
 			yield `}`;
 		}
+	}
+	else {
+		yield `() => {}`;
+	}
+}
+
+export function* generateModelEventExpression(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	prop: CompilerDOM.DirectiveNode
+): Generator<Code> {
+	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+		yield `(...[$event]) => {${newLine}`;
+		yield* ctx.generateConditionGuards();
+		yield* generateInterpolation(
+			options,
+			ctx,
+			'template',
+			ctx.codeFeatures.verification,
+			prop.exp.content,
+			prop.exp.loc.start.offset,
+			prop.exp.loc
+		);
+		yield ` = $event${endOfLine}`;
+		yield `}`;
 	}
 	else {
 		yield `() => {}`;

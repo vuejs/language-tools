@@ -1,6 +1,6 @@
 import { VueVirtualCode, forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
-import { posix as path } from 'path-browserify';
+import { posix as path } from 'pathe';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
@@ -9,7 +9,7 @@ import { LanguageServiceContext, LanguageServicePlugin, TagNameCasing } from '..
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
@@ -33,11 +33,15 @@ export function create(
 						return;
 					}
 
-					const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
+					const uri = URI.parse(document.uri);
+					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					const vueVirtualCode = sourceScript?.generated?.root;
-					if (!sourceScript || !virtualCode || !(vueVirtualCode instanceof VueVirtualCode)) {
+					if (!sourceScript?.generated) {
+						return;
+					}
+
+					const root = sourceScript.generated.root;
+					if (!(root instanceof VueVirtualCode)) {
 						return;
 					}
 
@@ -51,38 +55,37 @@ export function create(
 						return;
 					}
 
-					let baseName = importUri.slice(importUri.lastIndexOf('/') + 1);
-					baseName = baseName.slice(0, baseName.lastIndexOf('.'));
-
-					const newName = capitalize(camelize(baseName));
-					const { _sfc: sfc } = vueVirtualCode;
+					const { sfc } = root;
 					const script = sfc.scriptSetup ?? sfc.script;
-
 					if (!script) {
 						return;
 					}
 
+					let baseName = importUri.slice(importUri.lastIndexOf('/') + 1);
+					baseName = baseName.slice(0, baseName.lastIndexOf('.'));
+					const newName = capitalize(camelize(baseName));
+
 					const additionalEdit: vscode.WorkspaceEdit = {};
-					const code = [...forEachEmbeddedCode(vueVirtualCode)].find(code => code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw'))!;
+					const code = [...forEachEmbeddedCode(root)].find(code => code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw'))!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 					const incomingFileName = context.project.typescript?.uriConverter.asFileName(URI.parse(importUri))
 						?? URI.parse(importUri).fsPath.replace(/\\/g, '/');
 
 					let importPath: string | undefined;
 
-					const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(vueVirtualCode);
+					const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(root);
 					if (tsPluginClient && serviceScript) {
 						const tsDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, serviceScript.code.id);
 						const tsDocument = context.documents.get(tsDocumentUri, serviceScript.code.languageId, serviceScript.code.snapshot);
 						const preferences = await getUserPreferences(context, tsDocument);
-						const importPathRequest = await tsPluginClient.getImportPathForFile(vueVirtualCode.fileName, incomingFileName, preferences);
+						const importPathRequest = await tsPluginClient.getImportPathForFile(root.fileName, incomingFileName, preferences);
 						if (importPathRequest) {
 							importPath = importPathRequest;
 						}
 					}
 
 					if (!importPath) {
-						importPath = path.relative(path.dirname(vueVirtualCode.fileName), incomingFileName)
+						importPath = path.relative(path.dirname(root.fileName), incomingFileName)
 							|| importUri.slice(importUri.lastIndexOf('/') + 1);
 
 						if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
@@ -107,7 +110,7 @@ export function create(
 					});
 
 					if (sfc.script) {
-						const edit = createAddComponentToOptionEdit(ts, sfc.script.ast, newName);
+						const edit = createAddComponentToOptionEdit(ts, sfc, sfc.script.ast, newName);
 						if (edit) {
 							additionalEdit.changes[embeddedDocumentUriStr].push({
 								range: {

@@ -1,12 +1,14 @@
-import * as path from 'path-browserify';
 import type { Code } from '../../types';
-import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
-import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
+import { hyphenateTag } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
+import { generateStyleModules } from '../style/modules';
+import { generateStyleScopedClasses } from '../style/scopedClasses';
+import { type TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
 import { endOfLine, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
-import { codeFeatures, type ScriptCodegenOptions } from './index';
+import type { ScriptCodegenOptions } from './index';
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
@@ -16,9 +18,9 @@ export function* generateTemplate(
 
 	const templateCodegenCtx = createTemplateCodegenContext({
 		scriptSetupBindingNames: new Set(),
-		edited: options.edited,
 	});
 	yield* generateTemplateCtx(options);
+	yield* generateTemplateElements();
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, templateCodegenCtx);
@@ -53,75 +55,60 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 	}
 }
 
+function* generateTemplateElements(): Generator<Code> {
+	yield `let __VLS_elements!: __VLS_IntrinsicElements${endOfLine}`;
+}
+
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
-	const exps: Code[] = [];
+	const types: Code[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
 		const { componentsOption } = options.scriptRanges.exportDefault;
-		exps.push([
+		yield `const __VLS_componentsOption = `;
+		yield [
 			options.sfc.script.content.slice(componentsOption.start, componentsOption.end),
 			'script',
 			componentsOption.start,
 			codeFeatures.navigation,
-		]);
+		];
+		yield endOfLine;
+		types.push(`typeof __VLS_componentsOption`);
 	}
 
-	let nameType: Code | undefined;
-	if (options.sfc.script && options.scriptRanges?.exportDefault?.nameOption) {
-		const { nameOption } = options.scriptRanges.exportDefault;
-		nameType = options.sfc.script.content.slice(nameOption.start, nameOption.end);
-	}
-	else if (options.sfc.scriptSetup) {
-		const baseName = path.basename(options.fileName);
-		nameType = `'${options.scriptSetupRanges?.defineOptions?.name ?? baseName.slice(0, baseName.lastIndexOf('.'))}'`;
-	}
-	if (nameType) {
-		exps.push(
-			`{} as { [K in ${nameType}]: typeof __VLS_self & (new () => { `
-			+ getSlotsPropertyName(options.vueCompilerOptions.target)
-			+ `: typeof ${options.scriptSetupRanges?.defineSlots?.name ?? `__VLS_slots`} }) }`
-		);
-	}
-
-	exps.push(`{} as NonNullable<typeof __VLS_self extends { components: infer C } ? C : {}>`);
-	exps.push(`__VLS_ctx`);
-
-	yield `const __VLS_localComponents = {${newLine}`;
-	for (const type of exps) {
-		yield `...`;
+	yield `type __VLS_LocalComponents =`;
+	for (const type of types) {
+		yield ` & `;
 		yield type;
-		yield `,${newLine}`;
 	}
-	yield `}${endOfLine}`;
+	yield endOfLine;
 
-	yield `let __VLS_components!: typeof __VLS_localComponents & __VLS_GlobalComponents${endOfLine}`;
+	yield `let __VLS_components!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
 export function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
-	const exps: Code[] = [];
+	const types: Code[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
 		const { directivesOption } = options.scriptRanges.exportDefault;
-		exps.push([
+		yield `const __VLS_directivesOption = `;
+		yield [
 			options.sfc.script.content.slice(directivesOption.start, directivesOption.end),
 			'script',
 			directivesOption.start,
 			codeFeatures.navigation,
-		]);
+		];
+		yield endOfLine;
+		types.push(`__VLS_ResolveDirectives<typeof __VLS_directivesOption>`);
 	}
 
-	exps.push(`{} as NonNullable<typeof __VLS_self extends { directives: infer D } ? D : {}>`);
-	exps.push(`__VLS_ctx`);
-
-	yield `const __VLS_localDirectives = {${newLine}`;
-	for (const type of exps) {
-		yield `...`;
+	yield `type __VLS_LocalDirectives =`;
+	for (const type of types) {
+		yield ` & `;
 		yield type;
-		yield `,${newLine}`;
 	}
-	yield `}${endOfLine}`;
+	yield endOfLine;
 
-	yield `let __VLS_directives!: typeof __VLS_localDirectives & __VLS_GlobalDirectives${endOfLine}`;
+	yield `let __VLS_directives!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
 function* generateTemplateBody(
@@ -130,94 +117,21 @@ function* generateTemplateBody(
 ): Generator<Code> {
 	yield* generateStyleScopedClasses(options, templateCodegenCtx);
 	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
+	yield* generateStyleModules(options);
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
-		for (const code of options.templateCodegen.codes) {
-			yield code;
-		}
+		yield* options.templateCodegen.codes;
 	}
 	else {
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.defineSlots) {
-			yield `const __VLS_slots = {}${endOfLine}`;
+			yield `type __VLS_Slots = {}${endOfLine}`;
 		}
-		yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
-		yield `const $refs = {}${endOfLine}`;
-		yield `const $el = {} as any${endOfLine}`;
+		yield `type __VLS_InheritedAttrs = {}${endOfLine}`;
+		yield `type __VLS_TemplateRefs = {}${endOfLine}`;
+		yield `type __VLS_RootEl = any${endOfLine}`;
 	}
-
-	yield `return {${newLine}`;
-	yield `	attrs: {} as Partial<typeof __VLS_inheritedAttrs>,${newLine}`;
-	yield `	slots: ${options.scriptSetupRanges?.defineSlots?.name ?? '__VLS_slots'},${newLine}`;
-	yield `	refs: $refs,${newLine}`;
-	yield `	rootEl: $el,${newLine}`;
-	yield `}${endOfLine}`;
-}
-
-function* generateStyleScopedClasses(
-	options: ScriptCodegenOptions,
-	ctx: TemplateCodegenContext
-): Generator<Code> {
-	const firstClasses = new Set<string>();
-	yield `type __VLS_StyleScopedClasses = {}`;
-	for (let i = 0; i < options.sfc.styles.length; i++) {
-		const style = options.sfc.styles[i];
-		const option = options.vueCompilerOptions.experimentalResolveStyleCssClasses;
-		if (option === 'always' || (option === 'scoped' && style.scoped)) {
-			for (const className of style.classNames) {
-				if (firstClasses.has(className.text)) {
-					ctx.scopedClasses.push({
-						source: 'style_' + i,
-						className: className.text.slice(1),
-						offset: className.offset + 1
-					});
-					continue;
-				}
-				firstClasses.add(className.text);
-				yield* generateCssClassProperty(
-					i,
-					className.text,
-					className.offset,
-					'boolean',
-					true
-				);
-			}
-		}
-	}
-	yield endOfLine;
-}
-
-export function* generateCssClassProperty(
-	styleIndex: number,
-	classNameWithDot: string,
-	offset: number,
-	propertyType: string,
-	optional: boolean
-): Generator<Code> {
-	yield `${newLine} & { `;
-	yield [
-		'',
-		'style_' + styleIndex,
-		offset,
-		codeFeatures.navigation,
-	];
-	yield `'`;
-	yield [
-		classNameWithDot.slice(1),
-		'style_' + styleIndex,
-		offset + 1,
-		codeFeatures.navigation,
-	];
-	yield `'`;
-	yield [
-		'',
-		'style_' + styleIndex,
-		offset + classNameWithDot.length,
-		codeFeatures.navigationWithoutRename,
-	];
-	yield `${optional ? '?' : ''}: ${propertyType}`;
-	yield ` }`;
 }
 
 function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {

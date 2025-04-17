@@ -1,11 +1,11 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "2.1.10",
+	"version": "3.0.0-alpha.4",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
-		"directory": "packages/vscode"
+		"directory": "extensions/vscode"
 	},
 	"categories": [
 		"Programming Languages"
@@ -254,34 +254,6 @@
 					"default": "off",
 					"description": "Traces the communication between VS Code and the language server."
 				},
-				"vue.server.hybridMode": {
-					"type": [
-						"boolean",
-						"string"
-					],
-					"default": "auto",
-					"enum": [
-						"auto",
-						"typeScriptPluginOnly",
-						true,
-						false
-					],
-					"enumDescriptions": [
-						"Automatically detect and enable TypeScript Plugin/Hybrid Mode in a safe environment.",
-						"Only enable Vue TypeScript Plugin but disable Hybrid Mode.",
-						"Enable TypeScript Plugin/Hybrid Mode.",
-						"Disable TypeScript Plugin/Hybrid Mode."
-					],
-					"description": "Vue language server only handles CSS and HTML language support, and tsserver takes over TS language support via TS plugin."
-				},
-				"vue.server.compatibleExtensions": {
-					"type": "array",
-					"items": {
-						"type": "string"
-					},
-					"default": [],
-					"description": "Set compatible extensions to skip automatic detection of Hybrid Mode."
-				},
 				"vue.server.includeLanguages": {
 					"type": "array",
 					"items": {
@@ -290,14 +262,6 @@
 					"default": [
 						"vue"
 					]
-				},
-				"vue.server.maxOldSpaceSize": {
-					"type": [
-						"number",
-						"null"
-					],
-					"default": null,
-					"description": "Set --max-old-space-size option on server process. If you have problem on frequently \"Request textDocument/** failed.\" error, try setting higher memory(MB) on it."
 				},
 				"vue.doctor.status": {
 					"type": "boolean",
@@ -329,11 +293,6 @@
 						"template",
 						"customBlocks"
 					]
-				},
-				"vue.updateImportsOnFileMove.enabled": {
-					"type": "boolean",
-					"default": true,
-					"description": "Enabled update imports on file move."
 				},
 				"vue.codeActions.enabled": {
 					"type": "boolean",
@@ -402,27 +361,27 @@
 				"vue.inlayHints.destructuredProps": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for destructured props."
+					"markdownDescription": "Show inlay hints for destructured props:\n\n```ts\nwatch(() => /* props. */foo, () => { ... });\n```"
 				},
 				"vue.inlayHints.missingProps": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for missing required props."
+					"markdownDescription": "Show inlay hints for missing required props:\n\n```html\n<Comp />\n<!-- ^ foo! -->\n```"
 				},
 				"vue.inlayHints.inlineHandlerLeading": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for event argument in inline handlers."
+					"markdownDescription": "Show inlay hints for event argument in inline handlers:\n\n```html\n<Comp @foo=\"/* $event => */console.log($event)\" />\n```"
 				},
 				"vue.inlayHints.optionsWrapper": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for component options wrapper for type support."
+					"markdownDescription": "Show inlay hints for component options wrapper for type support:\n\n```vue\n<script lang=\"ts\">\nexport default /* (await import('vue')).defineComponent( */{}/* ) */;\n</script>\n```"
 				},
 				"vue.inlayHints.vBindShorthand": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show inlay hints for v-bind shorthand."
+					"markdownDescription": "Show inlay hints for v-bind shorthand:\n\n```html\n<Comp :foo />\n     <!-- ^ =\"foo\" -->\n```"
 				},
 				"vue.format.template.initialIndent": {
 					"type": "boolean",
@@ -463,63 +422,44 @@
 				"category": "Vue"
 			},
 			{
-				"command": "vue.action.writeVirtualFiles",
-				"title": "Write Virtual Files",
-				"category": "Vue (Debug)"
-			},
-			{
 				"command": "vue.action.splitEditors",
 				"title": "Split <script>, <template>, <style> Editors",
 				"category": "Vue",
 				"icon": "images/split-editors.png"
-			},
-			{
-				"command": "vue.findAllFileReferences",
-				"title": "Find File References via Vue Language Server",
-				"category": "Vue"
 			}
 		],
 		"menus": {
 			"editor/context": [
 				{
 					"command": "typescript.goToSourceDefinition",
-					"when": "vueHybridMode && tsSupportsSourceDefinition && resourceLangId == vue",
+					"when": "tsSupportsSourceDefinition && resourceLangId == vue",
 					"group": "navigation@9"
 				}
 			],
 			"explorer/context": [
 				{
 					"command": "typescript.findAllFileReferences",
-					"when": "vueHybridMode && tsSupportsFileReferences && resourceLangId == vue",
-					"group": "4_search"
-				},
-				{
-					"command": "vue.findAllFileReferences",
-					"when": "!vueHybridMode && resourceLangId == vue",
+					"when": "tsSupportsFileReferences && resourceLangId == vue",
 					"group": "4_search"
 				}
 			],
 			"editor/title/context": [
 				{
 					"command": "typescript.findAllFileReferences",
-					"when": "vueHybridMode && tsSupportsFileReferences && resourceLangId == vue"
+					"when": "tsSupportsFileReferences && resourceLangId == vue"
 				}
 			],
 			"commandPalette": [
 				{
 					"command": "typescript.reloadProjects",
-					"when": "vueHybridMode && editorLangId == vue && typescript.isManagedFile"
+					"when": "editorLangId == vue && typescript.isManagedFile"
 				},
 				{
 					"command": "typescript.goToProjectConfig",
-					"when": "vueHybridMode && editorLangId == vue"
+					"when": "editorLangId == vue"
 				},
 				{
 					"command": "vue.action.doctor",
-					"when": "vue.activated"
-				},
-				{
-					"command": "vue.action.writeVirtualFiles",
 					"when": "vue.activated"
 				},
 				{
@@ -567,17 +507,17 @@
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
 		"@volar/vscode": "~2.4.11",
-		"@vscode/vsce": "latest",
-		"@vue/language-core": "2.1.10",
-		"@vue/language-server": "2.1.10",
-		"@vue/typescript-plugin": "2.1.10",
-		"esbuild": "latest",
-		"esbuild-visualizer": "latest",
+		"@vscode/vsce": "^3.2.1",
+		"@vue/language-core": "3.0.0-alpha.4",
+		"@vue/language-server": "3.0.0-alpha.4",
+		"@vue/typescript-plugin": "3.0.0-alpha.4",
+		"esbuild": "^0.25.0",
+		"esbuild-visualizer": "^0.7.0",
 		"reactive-vscode": "^0.2.9",
 		"rollup-plugin-visualizer": "^5.12.0",
 		"semver": "^7.5.4",
 		"unbuild": "^3.0.1",
 		"vscode-ext-gen": "^0.5.0",
-		"vscode-tmlanguage-snapshot": "latest"
+		"vscode-tmlanguage-snapshot": "^0.1.3"
 	}
 }

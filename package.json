@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"packageManager": "pnpm@9.4.0",
+	"packageManager": "pnpm@10.4.1",
 	"scripts": {
 		"build": "tsc -b",
 		"dev:vue": "pnpm -C ./extensions/vscode dev",
@@ -16,15 +16,25 @@
 		"test": "vitest run",
 		"test:update": "vitest run --update",
 		"lint": "tsslint --projects {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
-		"lint:fix": "pnpm run lint -- --fix",
+		"lint:fix": "pnpm run lint -- --fix --vscode-settings .vscode/settings.json",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
-		"@lerna-lite/cli": "latest",
-		"@lerna-lite/publish": "latest",
-		"@tsslint/cli": "latest",
-		"@tsslint/config": "latest",
+		"@lerna-lite/cli": "^3.11.0",
+		"@lerna-lite/publish": "^3.11.0",
+		"@tsslint/cli": "^1.5.0",
+		"@tsslint/config": "^1.5.0",
+		"@tsslint/eslint": "^1.5.0",
+		"@typescript-eslint/eslint-plugin": "^8.19.0",
 		"typescript": "latest",
-		"vitest": "latest"
+		"vitest": "^2.1.8"
+	},
+	"pnpm": {
+		"onlyBuiltDependencies": [
+			"@tsslint/core",
+			"@vscode/vsce-sign",
+			"esbuild",
+			"keytar"
+		]
 	}
 }

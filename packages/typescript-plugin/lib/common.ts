@@ -1,7 +1,8 @@
 import { forEachElementNode, hyphenateTag, Language, VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import { _getComponentNames } from './requests/componentInfos';
+import { _getComponentNames } from './requests/getComponentNames';
+import { _getElementNames } from './requests/getElementNames';
 import type { RequestContext } from './requests/types';
 
 const windowsPathReg = /\\/g;
@@ -19,6 +20,7 @@ export function proxyLanguageServiceForVue<T>(
 			case 'getCompletionsAtPosition': return getCompletionsAtPosition(vueOptions, target[p]);
 			case 'getCompletionEntryDetails': return getCompletionEntryDetails(language, asScriptId, target[p]);
 			case 'getCodeFixesAtPosition': return getCodeFixesAtPosition(target[p]);
+			case 'getDefinitionAndBoundSpan': return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
 			case 'getQuickInfoAtPosition': return getQuickInfoAtPosition(ts, target, target[p]);
 			// TS plugin only
 			case 'getEncodedSemanticClassifications': return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
@@ -91,7 +93,11 @@ function getCompletionsAtPosition(vueOptions: VueCompilerOptions, getCompletions
 	};
 }
 
-function getCompletionEntryDetails<T>(language: Language<T>, asScriptId: (fileName: string) => T, getCompletionEntryDetails: ts.LanguageService['getCompletionEntryDetails']): ts.LanguageService['getCompletionEntryDetails'] {
+function getCompletionEntryDetails<T>(
+	language: Language<T>,
+	asScriptId: (fileName: string) => T,
+	getCompletionEntryDetails: ts.LanguageService['getCompletionEntryDetails']
+): ts.LanguageService['getCompletionEntryDetails'] {
 	return (...args) => {
 		const details = getCompletionEntryDetails(...args);
 		// modify import statement
@@ -113,7 +119,7 @@ function getCompletionEntryDetails<T>(language: Language<T>, asScriptId: (fileNa
 			const { fileName } = args[6]?.__isAutoImport;
 			const sourceScript = language.scripts.get(asScriptId(fileName));
 			if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-				const sfc = sourceScript.generated.root._vueSfc.get();
+				const sfc = sourceScript.generated.root.vueSfc;
 				if (!sfc?.descriptor.script && !sfc?.descriptor.scriptSetup) {
 					for (const codeAction of details?.codeActions ?? []) {
 						for (const change of codeAction.changes) {
@@ -132,7 +138,9 @@ function getCompletionEntryDetails<T>(language: Language<T>, asScriptId: (fileNa
 	};
 }
 
-function getCodeFixesAtPosition(getCodeFixesAtPosition: ts.LanguageService['getCodeFixesAtPosition']): ts.LanguageService['getCodeFixesAtPosition'] {
+function getCodeFixesAtPosition(
+	getCodeFixesAtPosition: ts.LanguageService['getCodeFixesAtPosition']
+): ts.LanguageService['getCodeFixesAtPosition'] {
 	return (...args) => {
 		let result = getCodeFixesAtPosition(...args);
 		// filter __VLS_
@@ -141,7 +149,127 @@ function getCodeFixesAtPosition(getCodeFixesAtPosition: ts.LanguageService['getC
 	};
 }
 
-function getQuickInfoAtPosition(ts: typeof import('typescript'), languageService: ts.LanguageService, getQuickInfoAtPosition: ts.LanguageService['getQuickInfoAtPosition']): ts.LanguageService['getQuickInfoAtPosition'] {
+function getDefinitionAndBoundSpan<T>(
+	ts: typeof import('typescript'),
+	language: Language<T>,
+	languageService: ts.LanguageService,
+	vueOptions: VueCompilerOptions,
+	asScriptId: (fileName: string) => T,
+	getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan']
+): ts.LanguageService['getDefinitionAndBoundSpan'] {
+	return (fileName, position) => {
+		const result = getDefinitionAndBoundSpan(fileName, position);
+		if (!result?.definitions?.length) {
+			return result;
+		}
+
+		const program = languageService.getProgram()!;
+		const sourceScript = language.scripts.get(asScriptId(fileName));
+		if (!sourceScript?.generated) {
+			return result;
+		}
+
+		const root = sourceScript.generated.root;
+		if (!(root instanceof VueVirtualCode)) {
+			return result;
+		}
+
+		if (
+			!root.sfc.template
+			|| position < root.sfc.template.startTagEnd
+			|| position > root.sfc.template.endTagStart
+		) {
+			return result;
+		}
+
+		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
+		const skippedDefinitions: ts.DefinitionInfo[] = [];
+
+		// #5275
+		if (result.definitions.length >= 2) {
+			for (const definition of result.definitions) {
+				if (
+					root.sfc.content[definition.textSpan.start - 1] === '@'
+					|| root.sfc.content.slice(definition.textSpan.start - 5, definition.textSpan.start) === 'v-on:'
+				) {
+					skippedDefinitions.push(definition);
+				}
+			}
+		}
+
+		for (const definition of result.definitions) {
+			if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
+				continue;
+			}
+
+			const sourceFile = program.getSourceFile(definition.fileName);
+			if (!sourceFile) {
+				continue;
+			}
+
+			visit(sourceFile, definition, sourceFile);
+		}
+
+		for (const definition of skippedDefinitions) {
+			definitions.delete(definition);
+		}
+
+		return {
+			definitions: [...definitions],
+			textSpan: result.textSpan,
+		};
+
+		function visit(
+			node: ts.Node,
+			definition: ts.DefinitionInfo,
+			sourceFile: ts.SourceFile
+		) {
+			if (ts.isPropertySignature(node) && node.type) {
+				proxy(node.name, node.type, definition, sourceFile);
+			}
+			else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type && !node.initializer) {
+				proxy(node.name, node.type, definition, sourceFile);
+			}
+			else {
+				ts.forEachChild(node, child => visit(child, definition, sourceFile));
+			}
+		}
+
+		function proxy(
+			name: ts.PropertyName,
+			type: ts.TypeNode,
+			definition: ts.DefinitionInfo,
+			sourceFile: ts.SourceFile
+		) {
+			const { textSpan, fileName } = definition;
+			const start = name.getStart(sourceFile);
+			const end = name.getEnd();
+
+			if (start !== textSpan.start || end - start !== textSpan.length) {
+				return;
+			}
+
+			if (!ts.isIndexedAccessTypeNode(type)) {
+				return;
+			}
+
+			const pos = type.indexType.getStart(sourceFile);
+			const res = getDefinitionAndBoundSpan(fileName, pos);
+			if (res?.definitions?.length) {
+				for (const definition of res.definitions) {
+					definitions.add(definition);
+				}
+				skippedDefinitions.push(definition);
+			}
+		}
+	};
+}
+
+function getQuickInfoAtPosition(
+	ts: typeof import('typescript'),
+	languageService: ts.LanguageService,
+	getQuickInfoAtPosition: ts.LanguageService['getQuickInfoAtPosition']
+): ts.LanguageService['getQuickInfoAtPosition'] {
 	return (...args) => {
 		const result = getQuickInfoAtPosition(...args);
 		if (result && result.documentation?.length === 1 && result.documentation[0].text.startsWith('__VLS_emit,')) {
@@ -194,13 +322,14 @@ function getEncodedSemanticClassifications<T>(
 	return (filePath, span, format) => {
 		const fileName = filePath.replace(windowsPathReg, '/');
 		const result = getEncodedSemanticClassifications(fileName, span, format);
-		const file = language.scripts.get(asScriptId(fileName));
-		if (file?.generated?.root instanceof VueVirtualCode) {
-			const { template } = file.generated.root._sfc;
+		const sourceScript = language.scripts.get(asScriptId(fileName));
+		const root = sourceScript?.generated?.root;
+		if (root instanceof VueVirtualCode) {
+			const { template } = root.sfc;
 			if (template) {
 				for (const componentSpan of getComponentSpans.call(
 					{ typescript: ts, languageService },
-					file.generated.root,
+					root,
 					template,
 					{
 						start: span.start - template.startTagEnd,
@@ -219,7 +348,7 @@ function getEncodedSemanticClassifications<T>(
 	};
 }
 
-export function getComponentSpans(
+function getComponentSpans(
 	this: Pick<RequestContext, 'typescript' | 'languageService'>,
 	vueCode: VueVirtualCode,
 	template: NonNullable<VueVirtualCode['_sfc']['template']>,
@@ -228,6 +357,7 @@ export function getComponentSpans(
 	const { typescript: ts, languageService } = this;
 	const result: ts.TextSpan[] = [];
 	const validComponentNames = _getComponentNames(ts, languageService, vueCode);
+	const elements = new Set(_getElementNames(ts, languageService, vueCode));
 	const components = new Set([
 		...validComponentNames,
 		...validComponentNames.map(hyphenateTag),
@@ -237,7 +367,7 @@ export function getComponentSpans(
 			if (node.loc.end.offset <= spanTemplateRange.start || node.loc.start.offset >= (spanTemplateRange.start + spanTemplateRange.length)) {
 				continue;
 			}
-			if (components.has(node.tag)) {
+			if (components.has(node.tag) && !elements.has(node.tag)) {
 				let start = node.loc.start.offset;
 				if (template.lang === 'html') {
 					start += '<'.length;
