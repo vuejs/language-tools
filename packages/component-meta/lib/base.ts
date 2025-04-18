@@ -486,7 +486,7 @@ function createSchemaResolvers(
 	const visited = new Set<ts.Type>();
 
 	function shouldIgnore(subtype: ts.Type) {
-		const name = typeChecker.typeToString(subtype);
+		const name = getFullyQualifiedName(subtype);
 		if (name === 'any') {
 			return true;
 		}
@@ -596,7 +596,7 @@ function createSchemaResolvers(
 			else {
 				subtypeStr = '[';
 				for (let i = 1; i < call.parameters.length; i++) {
-					subtypeStr += typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode)) + ', ';
+					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode)) + ', ';
 				}
 				subtypeStr = subtypeStr.slice(0, -2) + ']';
 				getSchema = () => {
@@ -694,14 +694,11 @@ function createSchemaResolvers(
 		return type;
 	}
 	function getFullyQualifiedName(type: ts.Type) {
-		const symbol = type.aliasSymbol;
-		const parent = (symbol as any)?.parent as ts.Symbol | undefined;
-		if (parent && parent.flags & ts.SymbolFlags.NamespaceModule) {
-			return `${parent.name}.${symbol!.name}`;
+		const str = typeChecker.typeToString(type, undefined, ts.TypeFormatFlags.UseFullyQualifiedType);
+		if (str.includes('import(')) {
+			return str.replace(/import\(.*?\)\./g, '');
 		}
-		else {
-			return typeChecker.typeToString(type);
-		}
+		return str;
 	}
 	function getDeclarations(declaration: ts.Declaration[]) {
 		if (noDeclarations) {
