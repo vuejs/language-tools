@@ -103,7 +103,7 @@ export interface MyProps {
 	 */
 	literalFromContext: MyCategories,
 	inlined: { foo: string; },
-	recursive: MyNestedRecursiveProps,
+	recursive: MyNestedRecursiveProps
 }
 
 export const StringRequired = {
