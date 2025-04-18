@@ -531,7 +531,7 @@ function createSchemaResolvers(
 				text: tag.text !== undefined ? ts.displayPartsToString(tag.text) : undefined,
 			})),
 			required: !(prop.flags & ts.SymbolFlags.Optional),
-			type: typeChecker.typeToString(subtype),
+			type: getFullyQualifiedName(subtype),
 			rawType: rawType ? subtype : undefined,
 			get declarations() {
 				return declarations ??= getDeclarations(prop.declarations ?? []);
@@ -551,7 +551,7 @@ function createSchemaResolvers(
 
 		return {
 			name: prop.getName(),
-			type: typeChecker.typeToString(subtype),
+			type: getFullyQualifiedName(subtype),
 			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
 			get declarations() {
@@ -569,7 +569,7 @@ function createSchemaResolvers(
 
 		return {
 			name: expose.getName(),
-			type: typeChecker.typeToString(subtype),
+			type: getFullyQualifiedName(subtype),
 			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
 			get declarations() {
@@ -590,7 +590,7 @@ function createSchemaResolvers(
 		if (call.parameters.length >= 2) {
 			subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode);
 			if ((call.parameters[1].valueDeclaration as any)?.dotDotDotToken) {
-				subtypeStr = typeChecker.typeToString(subtype);
+				subtypeStr = getFullyQualifiedName(subtype);
 				getSchema = () => typeChecker.getTypeArguments(subtype! as ts.TypeReference).map(resolveSchema);
 			}
 			else {
@@ -643,7 +643,7 @@ function createSchemaResolvers(
 		};
 	}
 	function resolveSchema(subtype: ts.Type): PropertyMetaSchema {
-		const type = typeChecker.typeToString(subtype);
+		const type = getFullyQualifiedName(subtype);
 
 		if (shouldIgnore(subtype)) {
 			return type;
@@ -662,7 +662,6 @@ function createSchemaResolvers(
 			};
 		}
 
-		// @ts-ignore - typescript internal, isArrayLikeType exists
 		else if (typeChecker.isArrayLikeType(subtype)) {
 			let schema: PropertyMetaSchema[];
 			return {
@@ -693,6 +692,16 @@ function createSchemaResolvers(
 		}
 
 		return type;
+	}
+	function getFullyQualifiedName(type: ts.Type) {
+		const symbol = type.aliasSymbol;
+		const parent = (symbol as any)?.parent as ts.Symbol | undefined;
+		if (parent && parent.flags & ts.SymbolFlags.NamespaceModule) {
+			return `${parent.name}.${symbol!.name}`;
+		}
+		else {
+			return typeChecker.typeToString(type);
+		}
 	}
 	function getDeclarations(declaration: ts.Declaration[]) {
 		if (noDeclarations) {

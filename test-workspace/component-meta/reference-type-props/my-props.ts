@@ -19,6 +19,10 @@ enum MyEnum {
 	Large,
 }
 
+namespace MyNamespace {
+	export type MyType = {};
+}
+
 const categories = [
 	'Uncategorized',
 	'Content',
@@ -91,11 +95,15 @@ export interface MyProps {
 	 */
 	enumValue: MyEnum,
 	/**
+	 * namespace type
+	 */
+	namespaceType: MyNamespace.MyType,
+	/**
 	 * literal type alias that require context
 	 */
 	literalFromContext: MyCategories,
 	inlined: { foo: string; },
-	recursive: MyNestedRecursiveProps
+	recursive: MyNestedRecursiveProps,
 }
 
 export const StringRequired = {

@@ -88,6 +88,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const array = meta.props.find(prop => prop.name === 'array');
 		const arrayOptional = meta.props.find(prop => prop.name === 'arrayOptional');
 		const enumValue = meta.props.find(prop => prop.name === 'enumValue');
+		const namespaceType = meta.props.find(prop => prop.name === 'namespaceType');
 		const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
 		const inlined = meta.props.find(prop => prop.name === 'inlined');
 		const recursive = meta.props.find(prop => prop.name === 'recursive');
@@ -329,6 +330,17 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 			kind: 'enum',
 			type: 'MyEnum',
 			schema: ['MyEnum.Small', 'MyEnum.Medium', 'MyEnum.Large']
+		});
+
+		expect(namespaceType).toBeDefined();
+		expect(namespaceType?.default).toBeUndefined();
+		expect(namespaceType?.required).toBeTruthy();
+		expect(namespaceType?.type).toEqual('MyNamespace.MyType');
+		expect(namespaceType?.description).toEqual('namespace type');
+		expect(namespaceType?.schema).toEqual({
+			kind: 'object',
+			type: 'MyNamespace.MyType',
+			schema: {}
 		});
 
 		expect(inlined).toBeDefined();
