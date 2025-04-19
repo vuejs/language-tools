@@ -101,6 +101,7 @@ export function addVueCommands(
 					}
 				}
 			}
+			lastProjectVersion = projectVersion;
 		}
 	}
 
