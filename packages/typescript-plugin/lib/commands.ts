@@ -74,7 +74,7 @@ export function addVueCommands(
 					);
 				}
 
-				const data = getComponentInfo(scriptInfo.fileName);
+				let data = getComponentInfo(scriptInfo.fileName);
 				const [oldComponentNames, componentProps] = data;
 				const newComponentNames = getComponentNames.apply(requestContext, [scriptInfo.fileName]) ?? [];
 
@@ -98,10 +98,13 @@ export function addVueCommands(
 		}
 	}
 
-	function getComponentInfo(fileName: string) {
+	function getComponentInfo(fileName: string, initialize?: boolean) {
 		let data = componentInfos.get(fileName);
 		if (!data) {
-			componentInfos.set(fileName, data = [[], {}]);
+			componentInfos.set(fileName, data = [
+				initialize && getComponentNames.apply(getRequestContext(fileName), [fileName]) || [],
+				{}
+			]);
 		}
 		return data;
 	}
@@ -123,11 +126,11 @@ export function addVueCommands(
 	});
 	session.addProtocolHandler('vue:getComponentNames', ({ arguments: [fileName] }) => {
 		return {
-			response: getComponentInfo(fileName)[0],
+			response: getComponentInfo(fileName, true)[0],
 		};
 	});
 	session.addProtocolHandler('vue:getComponentProps', ({ arguments: [fileName, tag] }) => {
-		const [, componentProps] = getComponentInfo(fileName);
+		const [, componentProps] = getComponentInfo(fileName, true);
 		let response = componentProps[tag]
 			?? componentProps[camelize(tag)]
 			?? componentProps[capitalize(camelize(tag))];
