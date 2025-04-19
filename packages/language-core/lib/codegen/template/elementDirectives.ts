@@ -33,8 +33,6 @@ export function* generateElementDirectives(
 			|| prop.name === 'on'
 			|| prop.name === 'model'
 			|| prop.name === 'bind'
-			|| prop.name === 'scope'
-			|| prop.name === 'data'
 		) {
 			continue;
 		}
