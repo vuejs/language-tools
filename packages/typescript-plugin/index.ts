@@ -17,14 +17,14 @@ export = createLanguageServicePlugin(
 			id => id
 		);
 
-		addVueCommands(ts, info, project2Service);
-
 		return {
 			languagePlugins: [languagePlugin],
 			setup: language => {
 				project2Service.set(info.project, [language, info.languageServiceHost, info.languageService]);
 
 				info.languageService = proxyLanguageServiceForVue(ts, language, info.languageService, vueOptions, fileName => fileName);
+
+				addVueCommands(ts, info, project2Service);
 
 				// #3963
 				const timer = setInterval(() => {
