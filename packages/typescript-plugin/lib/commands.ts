@@ -123,7 +123,7 @@ export function addVueCommands(
 		let response;
 		const data = componentInfos.get(fileName);
 		if (data) {
-			response = Object.keys(data[0]);
+			response = data[0];
 		}
 		return { response };
 	});
