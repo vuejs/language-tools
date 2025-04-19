@@ -8,7 +8,7 @@
 	"configuration.codeActions.enabled": "Enable code actions.",
 	"configuration.codeActions.askNewComponentName": "Ask for new component name when extract component.",
 
-	"configuration.codeLens.enabled": "Enabled code lens.",
+	"configuration.codeLens.enabled": "Enable code lens.",
 	"configuration.complete.casing.tags": "Preferred tag name case.",
 	"configuration.complete.casing.props": "Preferred attr name case.",
 	"configuration.complete.defineAssignment": "Auto add `const props = ` before `defineProps` when selecting the completion item `props`. (also `emit` and `slots`)",
