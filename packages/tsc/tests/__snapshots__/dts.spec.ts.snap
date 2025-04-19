@@ -620,6 +620,9 @@ declare enum MyEnum {
     Medium = 1,
     Large = 2
 }
+declare namespace MyNamespace {
+    type MyType = {};
+}
 declare const categories: readonly ["Uncategorized", "Content", "Interaction", "Display", "Forms", "Addons"];
 type MyCategories = typeof categories[number];
 export interface MyProps {
@@ -682,6 +685,10 @@ export interface MyProps {
      * enum value
      */
     enumValue: MyEnum;
+    /**
+     * namespace type
+     */
+    namespaceType: MyNamespace.MyType;
     /**
      * literal type alias that require context
      */

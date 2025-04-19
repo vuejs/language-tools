@@ -19,6 +19,10 @@ enum MyEnum {
 	Large,
 }
 
+namespace MyNamespace {
+	export type MyType = {};
+}
+
 const categories = [
 	'Uncategorized',
 	'Content',
@@ -90,6 +94,10 @@ export interface MyProps {
 	 * enum value
 	 */
 	enumValue: MyEnum,
+	/**
+	 * namespace type
+	 */
+	namespaceType: MyNamespace.MyType,
 	/**
 	 * literal type alias that require context
 	 */
