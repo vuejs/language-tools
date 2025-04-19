@@ -1282,6 +1282,9 @@
 		"vue-comments": {
 			"patterns": [
 				{
+					"include": "#vue-comments-key-value"
+				},
+				{
 					"begin": "<!--",
 					"captures": {
 						"0": {
@@ -1290,9 +1293,6 @@
 					},
 					"end": "-->",
 					"name": "comment.block.vue"
-				},
-				{
-					"include": "#vue-comments-key-value"
 				}
 			]
 		},
