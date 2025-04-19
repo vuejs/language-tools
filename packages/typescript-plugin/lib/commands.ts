@@ -66,14 +66,6 @@ export function addVueCommands(
 					break;
 				}
 
-				let data = componentInfos.get(scriptInfo.fileName);
-				if (!data) {
-					componentInfos.set(
-						scriptInfo.fileName,
-						data = [[], {}]
-					);
-				}
-
 				let requestContext = requestContexts.get(scriptInfo.fileName);
 				if (!requestContext) {
 					requestContexts.set(
@@ -82,6 +74,7 @@ export function addVueCommands(
 					);
 				}
 
+				const data = getComponentInfo(scriptInfo.fileName);
 				const [oldComponentNames, componentProps] = data;
 				const newComponentNames = getComponentNames.apply(requestContext, [scriptInfo.fileName]) ?? [];
 
@@ -105,6 +98,14 @@ export function addVueCommands(
 		}
 	}
 
+	function getComponentInfo(fileName: string) {
+		let data = componentInfos.get(fileName);
+		if (!data) {
+			componentInfos.set(fileName, data = [[], {}]);
+		}
+		return data;
+	}
+
 	session.addProtocolHandler('vue:collectExtractProps', ({ arguments: args }) => {
 		return {
 			response: collectExtractProps.apply(getRequestContext(args[0]), args),
@@ -121,27 +122,20 @@ export function addVueCommands(
 		};
 	});
 	session.addProtocolHandler('vue:getComponentNames', ({ arguments: [fileName] }) => {
-		let response;
-		const data = componentInfos.get(fileName);
-		if (data) {
-			response = data[0];
-		}
-		return { response };
+		return {
+			response: getComponentInfo(fileName)[0],
+		};
 	});
 	session.addProtocolHandler('vue:getComponentProps', ({ arguments: [fileName, tag] }) => {
-		let response;
-		const data = componentInfos.get(fileName);
-		if (data) {
-			const componentProps = data[1];
-			response = componentProps[tag]
-				?? componentProps[camelize(tag)]
-				?? componentProps[capitalize(camelize(tag))];
+		const [, componentProps] = getComponentInfo(fileName);
+		let response = componentProps[tag]
+			?? componentProps[camelize(tag)]
+			?? componentProps[capitalize(camelize(tag))];
 
-			if (!response) {
-				const requestContext = getRequestContext(fileName);
-				const props = getComponentProps.apply(requestContext, [fileName, tag]) ?? [];
-				response = data[1][tag] = props;
-			}
+		if (!response) {
+			const requestContext = getRequestContext(fileName);
+			const props = getComponentProps.apply(requestContext, [fileName, tag]) ?? [];
+			response = componentProps[tag] = props;
 		}
 		return { response };
 	});
