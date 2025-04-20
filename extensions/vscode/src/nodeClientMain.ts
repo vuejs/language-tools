@@ -86,7 +86,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 			updateProviders(client);
 
-			client.onRequest('tsserverRequest', async ([command, args]) => {
+			client.onRequest('tsserverRequest', async ([command, args, isHighPriority]) => {
 				const tsserver = (globalThis as any).__TSSERVER__?.semantic;
 				if (!tsserver) {
 					return;
@@ -95,7 +95,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 					const res = await tsserver.executeImpl(command, args, {
 						isAsync: true,
 						expectsResult: true,
-						lowPriority: true,
+						lowPriority: !isHighPriority,
 						requireSemantic: true,
 					})[0];
 					return res.body;

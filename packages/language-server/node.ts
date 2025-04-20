@@ -88,32 +88,32 @@ connection.onInitialize(params => {
 			},
 		},
 		getHybridModeLanguageServicePlugins(ts, options.typescript.tsserverRequestCommand ? {
-			collectExtractProps(...args) {
-				return sendTsRequest('vue:collectExtractProps', args);
+			collectExtractProps(fileName, tempalteCodeRange, isHighPriority) {
+				return sendTsRequest('vue:collectExtractProps', [fileName, tempalteCodeRange], isHighPriority);
 			},
-			getComponentDirectives(...args) {
-				return sendTsRequest('vue:getComponentDirectives', args);
+			getImportPathForFile(fileName, incomingFileName, preferences, isHighPriority) {
+				return sendTsRequest('vue:getImportPathForFile', [fileName, incomingFileName, preferences], isHighPriority);
 			},
-			getComponentEvents(...args) {
-				return sendTsRequest('vue:getComponentEvents', args);
+			getPropertiesAtLocation(fileName, position, isHighPriority) {
+				return sendTsRequest('vue:getPropertiesAtLocation', [fileName, position], isHighPriority);
 			},
-			getComponentNames(...args) {
-				return sendTsRequest('vue:getComponentNames', args);
+			getComponentNames(fileName, isHighPriority) {
+				return sendTsRequest('vue:getComponentNames', [fileName], isHighPriority);
 			},
-			getComponentProps(...args) {
-				return sendTsRequest('vue:getComponentProps', args);
+			getComponentProps(fileName, tag, isHighPriority) {
+				return sendTsRequest('vue:getComponentProps', [fileName, tag], isHighPriority);
 			},
-			getElementAttrs(...args) {
-				return sendTsRequest('vue:getElementAttrs', args);
+			getComponentEvents(fileName, tag, isHighPriority) {
+				return sendTsRequest('vue:getComponentEvents', [fileName, tag], isHighPriority);
 			},
-			getElementNames(...args) {
-				return sendTsRequest('vue:getElementNames', args);
+			getComponentDirectives(fileName, isHighPriority) {
+				return sendTsRequest('vue:getComponentDirectives', [fileName], isHighPriority);
 			},
-			getImportPathForFile(...args) {
-				return sendTsRequest('vue:getImportPathForFile', args);
+			getElementAttrs(fileName, tag, isHighPriority) {
+				return sendTsRequest('vue:getElementAttrs', [fileName, tag], isHighPriority);
 			},
-			getPropertiesAtLocation(...args) {
-				return sendTsRequest('vue:getPropertiesAtLocation', args);
+			getElementNames(fileName, isHighPriority) {
+				return sendTsRequest('vue:getElementNames', [fileName], isHighPriority);
 			},
 			getDocumentHighlights(fileName, position) {
 				return sendTsRequest(
@@ -139,8 +139,8 @@ connection.onInitialize(params => {
 		} : undefined)
 	);
 
-	function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
-		return connection.sendRequest<T>(options.typescript.tsserverRequestCommand!, [command, args]);
+	function sendTsRequest<T>(command: string, args: any, isHighPriority = false): Promise<T | null> {
+		return connection.sendRequest<T>(options.typescript.tsserverRequestCommand!, [command, args, isHighPriority]);
 	}
 
 	function createLs(server: LanguageServer, tsconfig: string | undefined) {

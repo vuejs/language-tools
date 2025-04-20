@@ -244,7 +244,7 @@ export function create(
 						provideTags: () => {
 							if (!components) {
 								promises.push((async () => {
-									components = (await tsPluginClient?.getComponentNames(vueCode.fileName) ?? [])
+									components = (await tsPluginClient?.getComponentNames(vueCode.fileName, true) ?? [])
 										.filter(name =>
 											name !== 'Transition'
 											&& name !== 'TransitionGroup'
@@ -294,17 +294,22 @@ export function create(
 
 							if (!tagInfo) {
 								promises.push((async () => {
-									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
-									const propInfos = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
-									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
-									const directives = await tsPluginClient?.getComponentDirectives(vueCode.fileName) ?? [];
+									const start = performance.now();
+									const [attrs, propInfos, events, directives] = await Promise.all([
+										tsPluginClient?.getElementAttrs(vueCode.fileName, tag, true),
+										tsPluginClient?.getComponentProps(vueCode.fileName, tag, true),
+										tsPluginClient?.getComponentEvents(vueCode.fileName, tag, true),
+										tsPluginClient?.getComponentDirectives(vueCode.fileName, true),
+									]);
+									const end = performance.now();
+									console.log(`provideAttributes time: ${end - start}ms`);
 									tagInfos.set(tag, {
-										attrs,
-										propInfos: propInfos.filter(prop =>
+										attrs: attrs ?? [],
+										propInfos: propInfos?.filter(prop =>
 											!prop.name.startsWith('ref_')
-										),
-										events,
-										directives,
+										) ?? [],
+										events: events ?? [],
+										directives: directives ?? [],
 									});
 									version++;
 								})());
