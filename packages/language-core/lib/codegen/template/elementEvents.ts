@@ -1,14 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Code } from '../../types';
+import type { Code, VueCodeInformation } from '../../types';
 import { combineLastMapping, createTsAst, endOfLine, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateObjectProperty } from './objectProperty';
 
 export function* generateElementEvents(
 	options: TemplateCodegenOptions,
@@ -40,6 +39,7 @@ export function* generateElementEvents(
 				yield `let ${emitsVar}!: __VLS_ResolveEmits<typeof ${componentOriginalVar}, typeof ${componentCtxVar}.emit>${endOfLine}`;
 				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentFunctionalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 			}
+
 			let source = prop.arg?.loc.source ?? 'model-value';
 			let start = prop.arg?.loc.start.offset;
 			let propPrefix = 'on-';
@@ -54,18 +54,14 @@ export function* generateElementEvents(
 				propPrefix = 'onVnode-';
 				emitPrefix = 'vnode-';
 			}
-			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${camelize(propPrefix + source)}', '${emitPrefix + source}', '${camelize(emitPrefix + source)}'> => (${newLine}`;
+			const propName = camelize(propPrefix + source);
+			const emitName = emitPrefix + source;
+			const camelizedEmitName = camelize(emitName);
+
+			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> => (${newLine}`;
 			if (prop.name === 'on') {
 				yield `{ `;
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					emitPrefix + source,
-					start!,
-					ctx.codeFeatures.navigation,
-					undefined,
-					true
-				);
+				yield* generateEventArg(ctx, source, start!, emitPrefix.slice(0, -1), ctx.codeFeatures.navigation);
 				yield `: {} as any } as typeof ${emitsVar},${newLine}`;
 			}
 			yield `{ `;
@@ -75,7 +71,7 @@ export function* generateElementEvents(
 				yield* generateEventExpression(options, ctx, prop);
 			}
 			else {
-				yield `'${camelize(propPrefix + source)}': `;
+				yield `'${propName}': `;
 				yield* generateModelEventExpression(options, ctx, prop);
 			}
 			yield `})${endOfLine}`;
@@ -87,21 +83,19 @@ export function* generateEventArg(
 	ctx: TemplateCodegenContext,
 	name: string,
 	start: number,
-	directive = 'on'
-): Generator<Code> {
-	const features = {
+	directive = 'on',
+	features: VueCodeInformation = {
 		...ctx.codeFeatures.withoutHighlightAndCompletion,
 		...ctx.codeFeatures.navigationWithoutRename,
-	};
+	}
+): Generator<Code> {
+	if (directive.length) {
+		name = capitalize(name);
+	}
 	if (identifierRegex.test(camelize(name))) {
 		yield ['', 'template', start, features];
 		yield directive;
-		yield* generateCamelized(
-			capitalize(name),
-			'template',
-			start,
-			combineLastMapping
-		);
+		yield* generateCamelized(name, 'template', start, combineLastMapping);
 	}
 	else {
 		yield* wrapWith(
@@ -110,12 +104,7 @@ export function* generateEventArg(
 			features,
 			`'`,
 			directive,
-			...generateCamelized(
-				capitalize(name),
-				'template',
-				start,
-				combineLastMapping
-			),
+			...generateCamelized(name, 'template', start, combineLastMapping),
 			`'`
 		);
 	}
