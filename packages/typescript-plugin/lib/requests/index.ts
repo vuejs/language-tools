@@ -1,4 +1,4 @@
-type ToRequest<T extends (...args: any) => any> = (...args: [...Parameters<T>, isHighPriority?: boolean]) => Promise<ReturnType<T> | null | undefined>;
+type ToRequest<T extends (...args: any) => any> = (...args: Parameters<T>) => Promise<ReturnType<T> | null | undefined>;
 
 export type Requests = {
 	collectExtractProps: ToRequest<typeof import('./collectExtractProps.js')['collectExtractProps']>;

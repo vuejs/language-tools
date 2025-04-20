@@ -5,7 +5,7 @@ import { addVueCommands } from './lib/commands';
 import { proxyLanguageServiceForVue } from './lib/proxy';
 
 const windowsPathReg = /\\/g;
-const project2Service = new WeakMap<ts.server.Project, [vue.Language, ts.LanguageServiceHost, ts.LanguageService]>();
+const project2Service = new Map<ts.server.Project, [vue.Language, ts.LanguageServiceHost, ts.LanguageService]>();
 
 export = createLanguageServicePlugin(
 	(ts, info) => {

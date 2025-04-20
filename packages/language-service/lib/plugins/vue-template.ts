@@ -154,6 +154,8 @@ export function create(
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const root = sourceScript?.generated?.root;
 
+					const start = performance.now();
+
 					if (root instanceof VueVirtualCode) {
 
 						// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
@@ -170,6 +172,9 @@ export function create(
 					if (!htmlComplete) {
 						return;
 					}
+
+					const end = performance.now();
+					console.log("[VVVIP] provideCompletionItems", end - start);
 
 					if (sourceScript?.generated) {
 						const virtualCode = sourceScript.generated.embeddedCodes.get('template');
@@ -244,7 +249,8 @@ export function create(
 						provideTags: () => {
 							if (!components) {
 								promises.push((async () => {
-									components = (await tsPluginClient?.getComponentNames(vueCode.fileName, true) ?? [])
+									console.log("[VVVIP] service getComponentNames", Date.now());
+									components = (await tsPluginClient?.getComponentNames(vueCode.fileName) ?? [])
 										.filter(name =>
 											name !== 'Transition'
 											&& name !== 'TransitionGroup'
@@ -294,15 +300,12 @@ export function create(
 
 							if (!tagInfo) {
 								promises.push((async () => {
-									const start = performance.now();
 									const [attrs, propInfos, events, directives] = await Promise.all([
-										tsPluginClient?.getElementAttrs(vueCode.fileName, tag, true),
-										tsPluginClient?.getComponentProps(vueCode.fileName, tag, true),
-										tsPluginClient?.getComponentEvents(vueCode.fileName, tag, true),
-										tsPluginClient?.getComponentDirectives(vueCode.fileName, true),
+										tsPluginClient?.getElementAttrs(vueCode.fileName, tag),
+										tsPluginClient?.getComponentProps(vueCode.fileName, tag),
+										tsPluginClient?.getComponentEvents(vueCode.fileName, tag),
+										tsPluginClient?.getComponentDirectives(vueCode.fileName),
 									]);
-									const end = performance.now();
-									console.log(`provideAttributes time: ${end - start}ms`);
 									tagInfos.set(tag, {
 										attrs: attrs ?? [],
 										propInfos: propInfos?.filter(prop =>

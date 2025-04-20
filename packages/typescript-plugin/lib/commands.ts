@@ -1,11 +1,10 @@
-import { FileMap } from '@vue/language-core';
-import { camelize, capitalize } from '@vue/shared';
+import { FileMap, VueVirtualCode, type IScriptSnapshot, type Language } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { collectExtractProps } from './requests/collectExtractProps';
 import { getComponentDirectives } from './requests/getComponentDirectives';
 import { getComponentEvents } from './requests/getComponentEvents';
 import { getComponentNames } from './requests/getComponentNames';
-import { ComponentPropInfo, getComponentProps } from './requests/getComponentProps';
+import { getComponentProps } from './requests/getComponentProps';
 import { getElementAttrs } from './requests/getElementAttrs';
 import { getElementNames } from './requests/getElementNames';
 import { getImportPathForFile } from './requests/getImportPathForFile';
@@ -16,7 +15,7 @@ import type { RequestContext } from './requests/types';
 export function addVueCommands(
 	ts: typeof import('typescript'),
 	info: ts.server.PluginCreateInfo,
-	project2Service: WeakMap<ts.server.Project, [any, ts.LanguageServiceHost, ts.LanguageService]>
+	project2Service: Map<ts.server.Project, [Language, ts.LanguageServiceHost, ts.LanguageService]>
 ) {
 	const projectService = info.project.projectService;
 	projectService.logger.info("Vue: called handler processing " + info.project.projectKind);
@@ -36,79 +35,66 @@ export function addVueCommands(
 	}
 	(session as any).vueCommandsAdded = true;
 
+	interface ScriptInfo {
+		version: string;
+		snapshot?: IScriptSnapshot;
+	}
+
+	const isCaseSensitive = info.languageServiceHost.useCaseSensitiveFileNames?.() ?? false;
 	let lastProjectVersion: string | undefined;
-	const componentInfos = new FileMap<[
-		componentNames: string[],
-		componentProps: Record<string, ComponentPropInfo[]>,
-	]>(false);
+	let scriptInfos = new FileMap<ScriptInfo>(isCaseSensitive);
 
-	listenComponentInfos();
+	session.addProtocolHandler('vue:isProjectUpdated', () => {
+		const projectVersion = info.project.getProjectVersion();
+		if (projectVersion === lastProjectVersion) {
+			return { response: false };
+		}
+		lastProjectVersion = projectVersion;
 
-	async function listenComponentInfos() {
-		while (true) {
-			await sleep(500);
-			const projectVersion = info.project.getProjectVersion();
-			if (lastProjectVersion === projectVersion) {
+		let shouldUpdate = false;
+		const [, [language, languageServiceHost]] = [...project2Service].find(
+			([project]) => project.projectKind === ts.server.ProjectKind.Configured
+		)!;
+
+		const fileNames = languageServiceHost.getScriptFileNames();
+		const infos = new FileMap<ScriptInfo>(isCaseSensitive);
+
+		for (const file of fileNames) {
+			let scriptVersion = languageServiceHost.getScriptVersion(file);
+
+			const scriptInfo = scriptInfos.get(file) ?? { version: "" };
+			infos.set(file, scriptInfo);
+			if (scriptInfo.version === scriptVersion) {
+				continue;
+			}
+			scriptInfo.version = scriptVersion;
+
+			const volarFile = language.scripts.get(file);
+			if (!volarFile?.generated) {
 				continue;
 			}
 
-			const openedScriptInfos = info.project.getRootScriptInfos().filter(info => info.isScriptOpen());
-			if (!openedScriptInfos.length) {
+			const root = volarFile.generated.root;
+			if (!(root instanceof VueVirtualCode)) {
 				continue;
 			}
 
-			const requestContexts = new Map<string, RequestContext>();
-			const token = info.languageServiceHost.getCancellationToken?.();
-
-			for (const scriptInfo of openedScriptInfos) {
-				await sleep(10);
-				if (token?.isCancellationRequested()) {
-					break;
-				}
-
-				let requestContext = requestContexts.get(scriptInfo.fileName);
-				if (!requestContext) {
-					requestContexts.set(
-						scriptInfo.fileName,
-						requestContext = getRequestContext(scriptInfo.fileName)
-					);
-				}
-
-				let data = getComponentInfo(scriptInfo.fileName);
-				const [oldComponentNames, componentProps] = data;
-				const newComponentNames = getComponentNames.apply(requestContext, [scriptInfo.fileName]) ?? [];
-
-				if (JSON.stringify(oldComponentNames) !== JSON.stringify(newComponentNames)) {
-					data[0] = newComponentNames;
-				}
-
-				for (const [name, props] of Object.entries(componentProps)) {
-					await sleep(10);
-					if (token?.isCancellationRequested()) {
-						break;
-					}
-
-					const newProps = getComponentProps.apply(requestContext, [scriptInfo.fileName, name]) ?? [];
-					if (JSON.stringify(props) !== JSON.stringify(newProps)) {
-						componentProps[name] = newProps;
-					}
-				}
+			const serviceScript = volarFile.generated.languagePlugin.typescript?.getServiceScript(root);
+			if (!serviceScript) {
+				continue;
 			}
-			lastProjectVersion = projectVersion;
-		}
-	}
 
-	function getComponentInfo(fileName: string, initialize?: boolean) {
-		let data = componentInfos.get(fileName);
-		if (!data) {
-			componentInfos.set(fileName, data = [
-				initialize && getComponentNames.apply(getRequestContext(fileName), [fileName]) || [],
-				{}
-			]);
+			const { snapshot } = serviceScript.code;
+			if (scriptInfo.snapshot === snapshot) {
+				continue;
+			}
+			scriptInfo.snapshot = snapshot;
+			shouldUpdate = true;
 		}
-		return data;
-	}
+		scriptInfos = infos;
 
+		return { response: shouldUpdate };
+	});
 	session.addProtocolHandler('vue:collectExtractProps', ({ arguments: args }) => {
 		return {
 			response: collectExtractProps.apply(getRequestContext(args[0]), args),
@@ -124,23 +110,15 @@ export function addVueCommands(
 			response: getPropertiesAtLocation.apply(getRequestContext(args[0]), args),
 		};
 	});
-	session.addProtocolHandler('vue:getComponentNames', ({ arguments: [fileName] }) => {
+	session.addProtocolHandler('vue:getComponentNames', ({ arguments: args }) => {
 		return {
-			response: getComponentInfo(fileName, true)[0],
+			response: getComponentNames.apply(getRequestContext(args[0]), args),
 		};
 	});
-	session.addProtocolHandler('vue:getComponentProps', ({ arguments: [fileName, tag] }) => {
-		const [, componentProps] = getComponentInfo(fileName, true);
-		let response = componentProps[tag]
-			?? componentProps[camelize(tag)]
-			?? componentProps[capitalize(camelize(tag))];
-
-		if (!response) {
-			const requestContext = getRequestContext(fileName);
-			const props = getComponentProps.apply(requestContext, [fileName, tag]) ?? [];
-			response = componentProps[tag] = props;
-		}
-		return { response };
+	session.addProtocolHandler('vue:getComponentProps', ({ arguments: args }) => {
+		return {
+			response: getComponentProps.apply(getRequestContext(args[0]), args),
+		};
 	});
 	session.addProtocolHandler('vue:getComponentEvents', ({ arguments: args }) => {
 		return {
@@ -186,8 +164,4 @@ export function addVueCommands(
 			getFileId: (fileName: string) => fileName,
 		};
 	}
-}
-
-function sleep(ms: number) {
-	return new Promise(resolve => setTimeout(resolve, ms));
 }
