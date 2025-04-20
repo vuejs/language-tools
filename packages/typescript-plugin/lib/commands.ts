@@ -1,4 +1,4 @@
-import { FileMap, VueVirtualCode, type IScriptSnapshot, type Language } from '@vue/language-core';
+import { FileMap, type IScriptSnapshot, type Language } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { collectExtractProps } from './requests/collectExtractProps';
 import { getComponentDirectives } from './requests/getComponentDirectives';
@@ -51,49 +51,42 @@ export function addVueCommands(
 		}
 		lastProjectVersion = projectVersion;
 
-		let shouldUpdate = false;
 		const [, [language, languageServiceHost]] = [...project2Service].find(
 			([project]) => project.projectKind === ts.server.ProjectKind.Configured
 		)!;
 
 		const fileNames = languageServiceHost.getScriptFileNames();
 		const infos = new FileMap<ScriptInfo>(isCaseSensitive);
+		let isAnyScriptVersionChanged = false;
+		let isAnyScriptSnapshotChanged = false;
 
 		for (const file of fileNames) {
-			let scriptVersion = languageServiceHost.getScriptVersion(file);
-
+			const scriptVersion = languageServiceHost.getScriptVersion(file);
 			const scriptInfo = scriptInfos.get(file) ?? { version: "" };
 			infos.set(file, scriptInfo);
 			if (scriptInfo.version === scriptVersion) {
 				continue;
 			}
 			scriptInfo.version = scriptVersion;
+			isAnyScriptVersionChanged = true;
 
 			const volarFile = language.scripts.get(file);
-			if (!volarFile?.generated) {
-				continue;
-			}
-
-			const root = volarFile.generated.root;
-			if (!(root instanceof VueVirtualCode)) {
-				continue;
-			}
-
-			const serviceScript = volarFile.generated.languagePlugin.typescript?.getServiceScript(root);
+			const root = volarFile?.generated?.root;
+			const serviceScript = volarFile?.generated?.languagePlugin.typescript?.getServiceScript(root!);
 			if (!serviceScript) {
+				isAnyScriptSnapshotChanged = true;
 				continue;
 			}
 
 			const { snapshot } = serviceScript.code;
-			if (scriptInfo.snapshot === snapshot) {
-				continue;
+			if (scriptInfo.snapshot !== snapshot) {
+				scriptInfo.snapshot = snapshot;
+				isAnyScriptSnapshotChanged = true;
 			}
-			scriptInfo.snapshot = snapshot;
-			shouldUpdate = true;
 		}
 		scriptInfos = infos;
 
-		return { response: shouldUpdate ? 'yes' : 'no' };
+		return { response: isAnyScriptSnapshotChanged || !isAnyScriptVersionChanged ? 'yes' : 'no' };
 	});
 	session.addProtocolHandler('vue:collectExtractProps', ({ arguments: args }) => {
 		return {
