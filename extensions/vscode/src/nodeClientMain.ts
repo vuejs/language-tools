@@ -89,7 +89,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 			client.onRequest('tsserverRequest', executeCommand);
 
-			const cachedData = new Map<string, Map<string, any>>();
+			const cachedData = new Map<string, any>();
 			const allowCacheCommands = new Set<`vue:${keyof Requests}`>([
 				'vue:getComponentNames',
 				'vue:getComponentProps',
@@ -106,21 +106,17 @@ export const { activate, deactivate } = defineExtension(async () => {
 			async function listenProjectVersion() {
 				while (true) {
 					await sleep(500);
-					const isProjectUpdated = await executeCommand('vue:isProjectUpdated', []);
+					const isProjectUpdated = await executeCommand(['vue:isProjectUpdated', []]);
 					if (isProjectUpdated) {
 						cachedData.clear();
 					}
 				}
 			}
 
-			async function executeCommand(command: string, args: any[]) {
-				const fileName = args[0];
-				let data = cachedData.get(fileName);
-				if (!data && fileName) {
-					cachedData.set(fileName, data = new Map());
-				}
-				else if (data?.has(command)) {
-					return data.get(command);
+			async function executeCommand([command, args]: [string, any[]]) {
+				const key = command + ':' + JSON.stringify(args);
+				if (cachedData.has(key)) {
+					return cachedData.get(key);
 				}
 
 				const tsserver = (globalThis as any).__TSSERVER__?.semantic;
@@ -134,15 +130,14 @@ export const { activate, deactivate } = defineExtension(async () => {
 						lowPriority: true,
 						requireSemantic: true,
 					})[0];
-					const body = await res.body();
+					const { body } = res;
 
 					if (allowCacheCommands.has(command as any)) {
-						data?.set(command, body);
+						cachedData.set(key, body);
 					}
 					return body;
-				} catch (err) {
+				} catch {
 					// noop
-					console.log(err);
 				}
 			}
 		}

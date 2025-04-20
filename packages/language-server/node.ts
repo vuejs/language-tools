@@ -139,7 +139,7 @@ connection.onInitialize(params => {
 		} : undefined)
 	);
 
-	function sendTsRequest<T>(command: string, args: any = false): Promise<T | null> {
+	function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
 		return connection.sendRequest<T>(options.typescript.tsserverRequestCommand!, [command, args]);
 	}
 
