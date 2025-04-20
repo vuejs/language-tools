@@ -53,6 +53,19 @@ require('esbuild').context({
 			},
 		},
 		{
+			name: 'typescript-plugin-development',
+			setup(build) {
+				build.onEnd(() => {
+					if (!process.argv.includes('--minify')) {
+						fs.writeFileSync(
+							path.resolve(__dirname, '../node_modules/vue-typescript-plugin-pack/index.js'),
+							'module.exports = require(\'@vue/typescript-plugin\');'
+						);
+					}
+				});
+			},
+		},
+		{
 			name: 'schemas',
 			setup(build) {
 				build.onEnd(() => {
