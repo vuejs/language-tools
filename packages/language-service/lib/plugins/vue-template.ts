@@ -154,8 +154,6 @@ export function create(
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const root = sourceScript?.generated?.root;
 
-					const start = performance.now();
-
 					if (root instanceof VueVirtualCode) {
 
 						// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
@@ -172,9 +170,6 @@ export function create(
 					if (!htmlComplete) {
 						return;
 					}
-
-					const end = performance.now();
-					console.log("[VVVIP] provideCompletionItems", end - start);
 
 					if (sourceScript?.generated) {
 						const virtualCode = sourceScript.generated.embeddedCodes.get('template');

@@ -107,7 +107,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 				while (true) {
 					await sleep(500);
 					const isProjectUpdated = await executeCommand(['vue:isProjectUpdated', []]);
-					if (isProjectUpdated) {
+					if (isProjectUpdated === 'yes') {
 						cachedData.clear();
 					}
 				}

@@ -47,7 +47,7 @@ export function addVueCommands(
 	session.addProtocolHandler('vue:isProjectUpdated', () => {
 		const projectVersion = info.project.getProjectVersion();
 		if (projectVersion === lastProjectVersion) {
-			return { response: false };
+			return { response: 'no' };
 		}
 		lastProjectVersion = projectVersion;
 
@@ -93,7 +93,7 @@ export function addVueCommands(
 		}
 		scriptInfos = infos;
 
-		return { response: shouldUpdate };
+		return { response: shouldUpdate ? 'yes' : 'no' };
 	});
 	session.addProtocolHandler('vue:collectExtractProps', ({ arguments: args }) => {
 		return {
