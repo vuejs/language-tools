@@ -47,6 +47,9 @@ const plugin: VueLanguagePlugin = ctx => {
 		},
 
 		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
+			if (!embeddedFile.id.startsWith('template_inline_ts_')) {
+				return;
+			}
 			// access template content to watch change
 			void sfc.template?.content;
 
