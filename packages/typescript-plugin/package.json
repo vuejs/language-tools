@@ -16,9 +16,10 @@
 		"@volar/typescript": "~2.4.11",
 		"@vue/language-core": "3.0.0-alpha.4",
 		"@vue/shared": "^3.5.0",
-		"pathe": "^2.0.3"
+		"path-browserify": "^1.0.1"
 	},
 	"devDependencies": {
-		"@types/node": "^22.10.4"
+		"@types/node": "^22.10.4",
+		"@types/path-browserify": "^1.0.1"
 	}
 }

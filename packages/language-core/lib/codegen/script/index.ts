@@ -1,4 +1,4 @@
-import path from 'pathe';
+import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
