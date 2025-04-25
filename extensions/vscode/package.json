@@ -485,15 +485,12 @@
 		]
 	},
 	"scripts": {
-		"prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
-		"build": "rolldown --config",
-		"build:minify": "rolldown --minify --config",
+		"build:dev": "rolldown --config",
+		"build:prod": "rolldown --minify --config",
 		"watch": "rolldown --watch --config",
-		"pack": "pnpm run build:minify && vsce package",
-		"pack:next": "pnpm run build && vsce package",
-		"release": "pnpm run build:minify && vsce publish",
-		"release:next": "pnpm run build && vsce publish --pre-release",
-		"size": "pnpm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html",
+		"pack": "pnpm run build:prod && vsce package",
+		"release": "pnpm run build:prod && vsce publish",
+		"size": "pnpm run build:prod -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html",
 		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {
