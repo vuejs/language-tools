@@ -244,6 +244,7 @@ export function create(
 						provideTags: () => {
 							if (!components) {
 								promises.push((async () => {
+									console.log("[VVVIP] service getComponentNames", Date.now());
 									components = (await tsPluginClient?.getComponentNames(vueCode.fileName) ?? [])
 										.filter(name =>
 											name !== 'Transition'
@@ -294,17 +295,19 @@ export function create(
 
 							if (!tagInfo) {
 								promises.push((async () => {
-									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
-									const propInfos = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
-									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
-									const directives = await tsPluginClient?.getComponentDirectives(vueCode.fileName) ?? [];
+									const [attrs, propInfos, events, directives] = await Promise.all([
+										tsPluginClient?.getElementAttrs(vueCode.fileName, tag),
+										tsPluginClient?.getComponentProps(vueCode.fileName, tag),
+										tsPluginClient?.getComponentEvents(vueCode.fileName, tag),
+										tsPluginClient?.getComponentDirectives(vueCode.fileName),
+									]);
 									tagInfos.set(tag, {
-										attrs,
-										propInfos: propInfos.filter(prop =>
+										attrs: attrs ?? [],
+										propInfos: propInfos?.filter(prop =>
 											!prop.name.startsWith('ref_')
-										),
-										events,
-										directives,
+										) ?? [],
+										events: events ?? [],
+										directives: directives ?? [],
 									});
 									version++;
 								})());

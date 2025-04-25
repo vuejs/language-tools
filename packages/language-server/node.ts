@@ -91,11 +91,11 @@ connection.onInitialize(params => {
 			collectExtractProps(...args) {
 				return sendTsRequest('vue:collectExtractProps', args);
 			},
-			getComponentDirectives(...args) {
-				return sendTsRequest('vue:getComponentDirectives', args);
+			getImportPathForFile(...args) {
+				return sendTsRequest('vue:getImportPathForFile', args);
 			},
-			getComponentEvents(...args) {
-				return sendTsRequest('vue:getComponentEvents', args);
+			getPropertiesAtLocation(...args) {
+				return sendTsRequest('vue:getPropertiesAtLocation', args);
 			},
 			getComponentNames(...args) {
 				return sendTsRequest('vue:getComponentNames', args);
@@ -103,17 +103,17 @@ connection.onInitialize(params => {
 			getComponentProps(...args) {
 				return sendTsRequest('vue:getComponentProps', args);
 			},
+			getComponentEvents(...args) {
+				return sendTsRequest('vue:getComponentEvents', args);
+			},
+			getComponentDirectives(...args) {
+				return sendTsRequest('vue:getComponentDirectives', args);
+			},
 			getElementAttrs(...args) {
 				return sendTsRequest('vue:getElementAttrs', args);
 			},
 			getElementNames(...args) {
 				return sendTsRequest('vue:getElementNames', args);
-			},
-			getImportPathForFile(...args) {
-				return sendTsRequest('vue:getImportPathForFile', args);
-			},
-			getPropertiesAtLocation(...args) {
-				return sendTsRequest('vue:getPropertiesAtLocation', args);
 			},
 			getDocumentHighlights(fileName, position) {
 				return sendTsRequest(

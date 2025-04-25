@@ -1,6 +1,7 @@
 import { createLabsInfo } from '@volar/vscode';
 import * as lsp from '@volar/vscode/node';
 import * as protocol from '@vue/language-server/protocol';
+import type { Requests } from '@vue/typescript-plugin/lib/requests/index';
 import * as fs from 'node:fs';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
 import * as vscode from 'vscode';
@@ -86,7 +87,38 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 			updateProviders(client);
 
-			client.onRequest('tsserverRequest', async ([command, args]) => {
+			client.onRequest('tsserverRequest', executeCommand);
+
+			const cachedData = new Map<string, any>();
+			const allowCacheCommands = new Set<`vue:${keyof Requests}`>([
+				'vue:getComponentNames',
+				'vue:getComponentProps',
+				'vue:getComponentEvents',
+				'vue:getComponentDirectives',
+				'vue:getElementNames',
+				'vue:getElementAttrs'
+			]);
+
+			listenProjectVersion();
+
+			return client;
+
+			async function listenProjectVersion() {
+				while (true) {
+					await sleep(500);
+					const isProjectUpdated = await executeCommand(['vue:isProjectUpdated', []]);
+					if (isProjectUpdated === 'yes') {
+						cachedData.clear();
+					}
+				}
+			}
+
+			async function executeCommand([command, args]: [string, any[]]) {
+				const key = command + ':' + JSON.stringify(args);
+				if (cachedData.has(key)) {
+					return cachedData.get(key);
+				}
+
 				const tsserver = (globalThis as any).__TSSERVER__?.semantic;
 				if (!tsserver) {
 					return;
@@ -98,13 +130,16 @@ export const { activate, deactivate } = defineExtension(async () => {
 						lowPriority: true,
 						requireSemantic: true,
 					})[0];
-					return res.body;
+					const { body } = res;
+
+					if (allowCacheCommands.has(command as any)) {
+						cachedData.set(key, body);
+					}
+					return body;
 				} catch {
 					// noop
 				}
-			});
-
-			return client;
+			}
 		}
 	);
 
@@ -131,6 +166,10 @@ function updateProviders(client: lsp.LanguageClient) {
 
 		return initializeFeatures.call(client, ...args);
 	};
+}
+
+function sleep(ms: number) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 try {
