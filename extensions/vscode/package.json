@@ -486,9 +486,9 @@
 	},
 	"scripts": {
 		"prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
-		"build": "node scripts/build",
-		"build:minify": "pnpm run build -- --minify",
-		"watch": "pnpm run build -- --watch",
+		"build": "rolldown --config",
+		"build:minify": "rolldown --minify --config",
+		"watch": "rolldown --watch --config",
 		"pack": "pnpm run build:minify && vsce package",
 		"pack:next": "pnpm run build && vsce package",
 		"release": "pnpm run build:minify && vsce publish",
@@ -507,6 +507,7 @@
 		"esbuild": "^0.25.0",
 		"esbuild-visualizer": "^0.7.0",
 		"reactive-vscode": "^0.2.9",
+		"rolldown": "1.0.0-beta.8",
 		"semver": "^7.5.4",
 		"vscode-ext-gen": "^0.5.0",
 		"vscode-tmlanguage-snapshot": "^0.1.3"

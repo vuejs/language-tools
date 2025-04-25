@@ -34,7 +34,8 @@
 			"@tsslint/core",
 			"@vscode/vsce-sign",
 			"esbuild",
-			"keytar"
+			"keytar",
+			"rolldown"
 		]
 	}
 }
