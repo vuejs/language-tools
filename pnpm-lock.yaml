@@ -35,6 +35,9 @@ importers:
 
   extensions/vscode:
     devDependencies:
+      '@types/node':
+        specifier: ^22.10.4
+        version: 22.15.2
       '@types/semver':
         specifier: ^7.5.3
         version: 7.7.0

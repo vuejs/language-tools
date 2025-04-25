@@ -1,12 +1,11 @@
 {
 	"extends": "../../tsconfig.base.json",
 	"compilerOptions": {
-		"outDir": "out",
-		"rootDir": "src",
+		"noEmit": true,
 		"module": "CommonJS",
 		"moduleResolution": "Node"
 	},
-	"include": [ "src" ],
+	"include": [ "src", "rolldown.config.ts" ],
 	"references": [
 		{ "path": "../../packages/language-server/tsconfig.json" },
 		{ "path": "../../packages/typescript-plugin/tsconfig.json" },

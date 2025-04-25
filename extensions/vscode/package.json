@@ -26,7 +26,7 @@
 		"onLanguage:markdown",
 		"onLanguage:html"
 	],
-	"main": "./client.js",
+	"main": "./dist/client.js",
 	"browser": "./web.js",
 	"capabilities": {
 		"virtualWorkspaces": {
@@ -497,6 +497,7 @@
 		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {
+		"@types/node": "^22.10.4",
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
 		"@volar/vscode": "~2.4.13",

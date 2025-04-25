@@ -1,12 +1,13 @@
 import { createLabsInfo } from '@volar/vscode';
 import * as lsp from '@volar/vscode/node';
 import * as protocol from '@vue/language-server/protocol';
-import * as fs from 'node:fs';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
 import { activate as activateLanguageClient, deactivate as deactivateLanguageClient } from './languageClient';
 import { middleware } from './middleware';
+
+const fs = require('node:fs');
 
 export const { activate, deactivate } = defineExtension(async () => {
 	const volarLabs = createLabsInfo(protocol);
@@ -50,7 +51,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 				}
 			}
 
-			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
+			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist', 'server.js');
 
 			const serverOptions: lsp.ServerOptions = {
 				run: {
@@ -143,7 +144,6 @@ try {
 	// @ts-expect-error
 	fs.readFileSync = (...args) => {
 		if (args[0] === extensionJsPath) {
-			// @ts-expect-error
 			let text = readFileSync(...args) as string;
 
 			// patch readPlugins
@@ -196,7 +196,6 @@ try {
 
 			return text;
 		}
-		// @ts-expect-error
 		return readFileSync(...args);
 	};
 
