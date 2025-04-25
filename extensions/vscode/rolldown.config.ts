@@ -10,8 +10,7 @@ export default defineConfig({
 	},
 	output: {
 		format: 'cjs',
-		minify: process.argv.includes('--minify'),
-		sourcemap: !process.argv.includes('--minify')
+		sourcemap: !process.argv.includes('--watch'),
 	},
 	define: {
 		'process.env.NODE_ENV': '"production"',
@@ -21,23 +20,15 @@ export default defineConfig({
 	plugins: [
 		{
 			name: 'umd2esm',
-			resolveId(source, importer) {
-				if (/^(vscode-.*-languageservice|vscode-languageserver-types|jsonc-parser)$/.test(source)) {
+			resolveId: {
+				filter: {
+					id: /^(vscode-.*-languageservice|vscode-languageserver-types|jsonc-parser)$/
+				},
+				handler(source, importer) {
 					const pathUmdMay = require.resolve(source, { paths: [importer!] });
 					// Call twice the replace is to solve the problem of the path in Windows
 					const pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\');
 					return { id: pathEsm };
-				}
-			}
-		},
-		{
-			name: 'typescript-plugin-development',
-			closeBundle() {
-				if (!process.argv.includes('--minify')) {
-					fs.writeFileSync(
-						path.resolve(__dirname, './node_modules/vue-typescript-plugin-pack/index.js'),
-						'module.exports = require(\'@vue/typescript-plugin\');'
-					);
 				}
 			}
 		},
