@@ -10,10 +10,10 @@ export default defineConfig({
 	},
 	output: {
 		format: 'cjs',
-		sourcemap: process.argv.includes('--watch'),
+		sourcemap: !process.argv.includes('--minify'),
 	},
 	define: {
-		'process.env.NODE_ENV': '"production"',
+		'process.env.NODE_ENV': process.argv.includes('--minify') ? '"production"' : '"development"',
 	},
 	external: ['vscode'],
 	platform: 'node',
