@@ -17,9 +17,16 @@ type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any
 	const WithDefaults = defineHelper(
 		`__VLS_WithDefaults`,
 		() => `
+type __VLS_OptionTypeAsIfRequired<T, N> = {
+    [K in keyof T]: K extends "type" ?
+        T[K] extends PropType<infer U> ?
+            PropType<N extends keyof __VLS_Props ? Required<__VLS_Props>[N] : never>
+            : T[K]
+        : T[K]
+    }
 type __VLS_WithDefaults<P, D> = {
 	[K in keyof Pick<P, keyof P>]: K extends keyof D
-		? ${PrettifyLocal.name}<P[K] & { default: D[K]}>
+		? ${PrettifyLocal.name}<__VLS_OptionTypeAsIfRequired<P[K], K> & { default: D[K]}>
 		: P[K]
 };
 `.trimStart()
