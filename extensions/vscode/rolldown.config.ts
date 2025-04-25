@@ -33,6 +33,16 @@ export default defineConfig({
 			},
 		},
 		{
+			name: 'clean',
+			buildStart() {
+				try {
+					fs.rmSync(path.resolve(__dirname, './dist'), { recursive: true });
+					fs.rmSync(path.resolve(__dirname, './node_modules/vue-typescript-plugin-pack'), { recursive: true });
+				}
+				catch { }
+			},
+		},
+		{
 			name: 'schemas',
 			buildEnd() {
 				fs.cpSync(
