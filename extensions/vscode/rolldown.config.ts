@@ -10,7 +10,7 @@ export default defineConfig({
 	},
 	output: {
 		format: 'cjs',
-		sourcemap: !process.argv.includes('--watch'),
+		sourcemap: process.argv.includes('--watch'),
 	},
 	define: {
 		'process.env.NODE_ENV': '"production"',
