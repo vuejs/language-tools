@@ -29,20 +29,18 @@ export default defineConfig({
 					// Call twice the replace is to solve the problem of the path in Windows
 					const pathEsm = pathUmdMay.replace('/umd/', '/esm/').replace('\\umd\\', '\\esm\\');
 					return { id: pathEsm };
-				}
-			}
+				},
+			},
 		},
 		{
 			name: 'schemas',
-			closeBundle() {
-				if (!fs.existsSync(path.resolve(__dirname, './dist/schemas'))) {
-					fs.mkdirSync(path.resolve(__dirname, './dist/schemas'));
-				}
+			buildEnd() {
 				fs.cpSync(
 					path.resolve(__dirname, './node_modules/@vue/language-core/schemas/vue-tsconfig.schema.json'),
-					path.resolve(__dirname, './dist/schemas/vue-tsconfig.schema.json')
+					path.resolve(__dirname, './dist/schemas/vue-tsconfig.schema.json'),
+					{ recursive: true }
 				);
-			}
+			},
 		},
 	],
 });

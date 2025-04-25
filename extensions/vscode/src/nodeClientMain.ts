@@ -7,8 +7,6 @@ import { config } from './config';
 import { activate as activateLanguageClient, deactivate as deactivateLanguageClient } from './languageClient';
 import { middleware } from './middleware';
 
-const fs = require('node:fs');
-
 export const { activate, deactivate } = defineExtension(async () => {
 	const volarLabs = createLabsInfo(protocol);
 
@@ -135,6 +133,7 @@ function updateProviders(client: lsp.LanguageClient) {
 }
 
 try {
+	const fs = require('node:fs');
 	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
 	const readFileSync = fs.readFileSync;
 	const extensionJsPath = require.resolve('./dist/extension.js', {
