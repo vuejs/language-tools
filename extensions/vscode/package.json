@@ -251,11 +251,6 @@
 					],
 					"markdownDescription": "%configuration.server.includeLanguages%"
 				},
-				"vue.doctor.status": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "%configuration.doctor.status%"
-				},
 				"vue.splitEditors.icon": {
 					"type": "boolean",
 					"default": false,
@@ -411,11 +406,6 @@
 				"category": "Vue"
 			},
 			{
-				"command": "vue.action.doctor",
-				"title": "%command.action.doctor%",
-				"category": "Vue"
-			},
-			{
 				"command": "vue.action.splitEditors",
 				"title": "%command.action.splitEditors%",
 				"category": "Vue",
@@ -451,10 +441,6 @@
 				{
 					"command": "typescript.goToProjectConfig",
 					"when": "editorLangId == vue"
-				},
-				{
-					"command": "vue.action.doctor",
-					"when": "vue.activated"
 				},
 				{
 					"command": "vue.action.splitEditors",

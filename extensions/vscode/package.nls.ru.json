@@ -1,7 +1,6 @@
 {
 	"configuration.trace.server": "Отслеживает коммуникацию между VS Code и языковым сервером Vue.",
 	"configuration.server.includeLanguages": "Конфигурирует языки, для которых должна быть активирована расширение.",
-	"configuration.doctor.status": "Отображает известные проблемы в строке состояния.",
 	"configuration.splitEditors.icon": "Отображает иконку разделенного редактора в области заголовка редактора.",
 	"configuration.splitEditors.layout.left": "Блоки в левом разделенном редакторе.",
 	"configuration.splitEditors.layout.right": "Блоки в правом разделенном редакторе.",
@@ -23,6 +22,5 @@
 	"configuration.format.style.initialIndent": "Начальный отступ для блока `<style>`.",
 	"configuration.format.wrapAttributes": "Отображает подсказки для оберток компонентов.",
 	"command.action.restartServer": "Перезапускает Vue и TS сервер",
-	"command.action.doctor": "Проект диагностика",
 	"command.action.splitEditors": "Разделяет `<script>`, `<template>`, `<style>` редакторы"
 }
