@@ -21,8 +21,8 @@
 	"configuration.format.template.initialIndent": "Начальный отступ для блока `<template>`.",
 	"configuration.format.script.initialIndent": "Начальный отступ для блока `<script>`.",
 	"configuration.format.style.initialIndent": "Начальный отступ для блока `<style>`.",
-	"configuration.format.wrapAttributes": "Отображает подсказки для оберток компонентов:",
-	"command.action.restartServer": "Перезапускает Vue и TS сервер.",
-	"command.action.doctor": "Проект диагностика.",
-	"command.action.splitEditors": "Разделяет `<script>`, `<template>`, `<style>` редакторы."
+	"configuration.format.wrapAttributes": "Отображает подсказки для оберток компонентов.",
+	"command.action.restartServer": "Перезапускает Vue и TS сервер",
+	"command.action.doctor": "Проект диагностика",
+	"command.action.splitEditors": "Разделяет `<script>`, `<template>`, `<style>` редакторы"
 }
