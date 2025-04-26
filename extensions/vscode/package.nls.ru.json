@@ -7,7 +7,6 @@
 	"configuration.splitEditors.layout.right": "Блоки в правом разделенном редакторе.",
 	"configuration.codeActions.enabled": "Включает код-действия.",
 	"configuration.codeActions.askNewComponentName": "Запрашивает новое имя компонента при извлечении компонента.",
-
 	"configuration.codeLens.enabled": "Включает код-линзы.",
 	"configuration.complete.casing.tags": "Предпочитаемый формат имени тега.",
 	"configuration.complete.casing.props": "Предпочитаемый формат имени атрибута.",
@@ -27,4 +26,3 @@
 	"command.action.doctor": "Проект диагностика.",
 	"command.action.splitEditors": "Разделяет `<script>`, `<template>`, `<style>` редакторы."
 }
-

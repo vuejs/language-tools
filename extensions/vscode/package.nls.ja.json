@@ -7,7 +7,6 @@
 	"configuration.splitEditors.layout.right": "右分割エディターのブロック。",
 	"configuration.codeActions.enabled": "コードアクションを有効にします。",
 	"configuration.codeActions.askNewComponentName": "コンポーネントを抽出するときに新しいコンポーネント名を尋ねます。",
-
 	"configuration.codeLens.enabled": "コード透鏡を有効にします。",
 	"configuration.complete.casing.tags": "タグ名のケース。",
 	"configuration.complete.casing.props": "属性名のケース。",

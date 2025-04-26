@@ -7,7 +7,6 @@
 	"configuration.splitEditors.layout.right": "位於右側拆分編輯器的區塊。",
 	"configuration.codeActions.enabled": "啟用程式碼動作。",
 	"configuration.codeActions.askNewComponentName": "提取元件時詢問新元件名稱。",
-
 	"configuration.codeLens.enabled": "啟用程式碼透鏡。",
 	"configuration.complete.casing.tags": "首選標籤名稱格式。",
 	"configuration.complete.casing.props": "首選屬性名稱格式。",
