@@ -7,7 +7,6 @@
 	"configuration.splitEditors.layout.right": "Blocks in the right split editor.",
 	"configuration.codeActions.enabled": "Enable code actions.",
 	"configuration.codeActions.askNewComponentName": "Ask for new component name when extract component.",
-
 	"configuration.codeLens.enabled": "Enable code lens.",
 	"configuration.complete.casing.tags": "Preferred tag name case.",
 	"configuration.complete.casing.props": "Preferred attr name case.",

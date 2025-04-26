@@ -7,7 +7,6 @@
 	"configuration.splitEditors.layout.right": "位于右侧拆分编辑器的块。",
 	"configuration.codeActions.enabled": "启用代码操作。",
 	"configuration.codeActions.askNewComponentName": "提取组件时询问新组件名称。",
-
 	"configuration.codeLens.enabled": "启用代码透镜。",
 	"configuration.complete.casing.tags": "首选标签命名格式。",
 	"configuration.complete.casing.props": "首选属性命名格式。",
