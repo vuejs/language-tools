@@ -15,7 +15,7 @@ export default defineConfig({
 		sourcemap: !process.argv.includes('--minify'),
 	},
 	define: {
-		'process.env.NODE_ENV': process.argv.includes('--minify') ? '"production"' : '"development"',
+		'process.env.NODE_ENV': '"production"',
 	},
 	external: ['vscode'],
 	plugins: [
