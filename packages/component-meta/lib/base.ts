@@ -694,7 +694,7 @@ function createSchemaResolvers(
 		return type;
 	}
 	function getFullyQualifiedName(type: ts.Type) {
-		const str = typeChecker.typeToString(type, undefined, ts.TypeFormatFlags.UseFullyQualifiedType);
+		const str = typeChecker.typeToString(type, undefined, ts.TypeFormatFlags.UseFullyQualifiedType | ts.TypeFormatFlags.NoTruncation);
 		if (str.includes('import(')) {
 			return str.replace(/import\(.*?\)\./g, '');
 		}
