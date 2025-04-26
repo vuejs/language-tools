@@ -3,8 +3,8 @@
 	"include": [ "*", "lib/**/*" ],
 	"exclude": [ "tests" ],
 	"references": [
-		{ "path": "../component-meta/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" },
 		{ "path": "../language-service/tsconfig.json" },
+		{ "path": "../typescript-plugin/tsconfig.json" },
 	],
 }
