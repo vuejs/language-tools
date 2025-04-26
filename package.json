@@ -3,9 +3,7 @@
 	"packageManager": "pnpm@10.4.1",
 	"scripts": {
 		"build": "tsc -b",
-		"watch": "pnpm run build && pnpm run \"/^watch:.*/\"",
-		"watch:base": "tsc -b -w",
-		"watch:vue": "cd ./extensions/vscode && pnpm run watch",
+		"watch": "cd ./extensions/vscode && pnpm run watch",
 		"prerelease": "pnpm run build && pnpm run test",
 		"release": "pnpm run release:base && pnpm run release:vue",
 		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock --no-git-tag-version",
@@ -34,7 +32,8 @@
 			"@tsslint/core",
 			"@vscode/vsce-sign",
 			"esbuild",
-			"keytar"
+			"keytar",
+			"rolldown"
 		]
 	}
 }
