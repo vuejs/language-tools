@@ -31,7 +31,7 @@ import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 
-import { parse, VueCompilerOptions } from '@vue/language-core';
+import { parse, type VueCompilerOptions } from '@vue/language-core';
 import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
 import { getComponentDirectives } from '@vue/typescript-plugin/lib/requests/getComponentDirectives';

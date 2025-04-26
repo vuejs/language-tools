@@ -13,7 +13,7 @@
 		"release:next-vue": "cd ./extensions/vscode && pnpm run release:next",
 		"test": "vitest run",
 		"test:update": "vitest run --update",
-		"lint": "tsslint --projects {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
+		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
 		"lint:fix": "pnpm run lint -- --fix --vscode-settings .vscode/settings.json",
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},

@@ -1,4 +1,4 @@
-import { BaseLanguageClient, ExecuteCommandParams, ExecuteCommandRequest, getTsdk } from '@volar/vscode';
+import { type BaseLanguageClient, type ExecuteCommandParams, ExecuteCommandRequest, getTsdk } from '@volar/vscode';
 import type { SFCParseResult } from '@vue/language-server';
 import { commands } from '@vue/language-server/lib/types';
 import { executeCommand, extensionContext, useActiveTextEditor, useCommand, useDisposable, useEventEmitter, useStatusBarItem, watchEffect } from 'reactive-vscode';

@@ -2,7 +2,7 @@ import { VueVirtualCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import { LanguageServicePlugin } from '../types';
+import type { LanguageServicePlugin } from '../types';
 
 export function create(): LanguageServicePlugin {
 	return {

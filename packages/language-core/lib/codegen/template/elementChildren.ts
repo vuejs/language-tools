@@ -1,4 +1,4 @@
-import * as CompilerDOM from '@vue/compiler-dom';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';

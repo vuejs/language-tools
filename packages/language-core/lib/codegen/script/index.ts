@@ -8,7 +8,7 @@ import { generateGlobalTypes, getGlobalTypesFileName } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
-import { createScriptCodegenContext, ScriptCodegenContext } from './context';
+import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';

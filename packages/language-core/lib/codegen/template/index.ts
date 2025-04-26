@@ -4,7 +4,7 @@ import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { getSlotsPropertyName } from '../../utils/shared';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
-import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
+import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild, getVForNode } from './templateChild';

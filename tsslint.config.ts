@@ -1,12 +1,16 @@
 import { defineConfig } from '@tsslint/config';
-import { convertConfig } from '@tsslint/eslint';
+import { convertRules } from '@tsslint/eslint';
 import * as path from 'node:path';
-import type * as ts from 'typescript';
+import type ts from 'typescript';
 
 export default defineConfig({
 	rules: {
 		semantic: {
-			...convertConfig({
+			...await convertRules({
+				'@typescript-eslint/consistent-type-imports': ['warn', {
+					disallowTypeAnnotations: false,
+					fixStyle: 'inline-type-imports',
+				}],
 				'@typescript-eslint/no-unnecessary-type-assertion': 'warn',
 			}),
 		},
