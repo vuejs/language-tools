@@ -1,6 +1,6 @@
 import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
-import path from 'pathe';
+import * as path from 'path-browserify';
 import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
