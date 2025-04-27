@@ -1,9 +1,8 @@
-import type * as ts from 'typescript';
 import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 import { endOfLine } from './utils';
 
-export function getLocalTypesGenerator(compilerOptions: ts.CompilerOptions, vueCompilerOptions: VueCompilerOptions) {
+export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions) {
 	const used = new Set<string>();
 
 	const OmitKeepDiscriminatedUnion = defineHelper(
@@ -19,7 +18,7 @@ type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any
 		() => `
 type __VLS_WithDefaults<P, D> = {
 	[K in keyof Pick<P, keyof P>]: K extends keyof D
-		? ${PrettifyLocal.name}<P[K] & { default: D[K]}>
+		? ${PrettifyLocal.name}<P[K] & { default: D[K] }>
 		: P[K]
 };
 `.trimStart()
@@ -59,19 +58,10 @@ type __VLS_PropsChildren<S> = {
 	);
 	const TypePropsToOption = defineHelper(
 		`__VLS_TypePropsToOption`,
-		() => compilerOptions.exactOptionalPropertyTypes ?
-			`
+		() => `
 type __VLS_TypePropsToOption<T> = {
 	[K in keyof T]-?: {} extends Pick<T, K>
-		? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> }
-		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
-};
-`.trimStart() :
-			`
-type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
-type __VLS_TypePropsToOption<T> = {
-	[K in keyof T]-?: {} extends Pick<T, K>
-		? { type: import('${vueCompilerOptions.lib}').PropType<__VLS_NonUndefinedable<T[K]>> }
+		? { type: import('${vueCompilerOptions.lib}').PropType<Required<T>[K]> }
 		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
 };
 `.trimStart()
