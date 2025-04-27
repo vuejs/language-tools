@@ -1,5 +1,5 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
-import { Sfc, VueVirtualCode, tsCodegen } from '@vue/language-core';
+import { type Sfc, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 

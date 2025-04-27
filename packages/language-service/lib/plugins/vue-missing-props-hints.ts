@@ -5,7 +5,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import { getNameCasing } from '../nameCasing';
-import { AttrNameCasing, LanguageServicePlugin } from '../types';
+import { AttrNameCasing, type LanguageServicePlugin } from '../types';
 
 export function create(
 	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined

@@ -2,7 +2,7 @@ import type { LanguageServer } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer, loadTsdkByPath } from '@volar/language-server/node';
 import { createLanguage, createParsedCommandLine, createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
-import { createLanguageService, createUriMap, getHybridModeLanguageServicePlugins, LanguageService } from '@vue/language-service';
+import { createLanguageService, createUriMap, getHybridModeLanguageServicePlugins, type LanguageService } from '@vue/language-service';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import type { VueInitializationOptions } from './lib/types';

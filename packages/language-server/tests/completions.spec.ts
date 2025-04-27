@@ -1,4 +1,4 @@
-import { TextDocument } from '@volar/language-server';
+import type { TextDocument } from '@volar/language-server';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server.js';

@@ -1,4 +1,4 @@
-import { TypeScriptProjectHost, createLanguageServiceHost, resolveFileLanguageId } from '@volar/typescript';
+import { createLanguageServiceHost, resolveFileLanguageId, type TypeScriptProjectHost } from '@volar/typescript';
 import * as vue from '@vue/language-core';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
@@ -486,7 +486,7 @@ function createSchemaResolvers(
 	const visited = new Set<ts.Type>();
 
 	function shouldIgnore(subtype: ts.Type) {
-		const name = typeChecker.typeToString(subtype);
+		const name = getFullyQualifiedName(subtype);
 		if (name === 'any') {
 			return true;
 		}
@@ -531,7 +531,7 @@ function createSchemaResolvers(
 				text: tag.text !== undefined ? ts.displayPartsToString(tag.text) : undefined,
 			})),
 			required: !(prop.flags & ts.SymbolFlags.Optional),
-			type: typeChecker.typeToString(subtype),
+			type: getFullyQualifiedName(subtype),
 			rawType: rawType ? subtype : undefined,
 			get declarations() {
 				return declarations ??= getDeclarations(prop.declarations ?? []);
@@ -551,7 +551,7 @@ function createSchemaResolvers(
 
 		return {
 			name: prop.getName(),
-			type: typeChecker.typeToString(subtype),
+			type: getFullyQualifiedName(subtype),
 			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
 			get declarations() {
@@ -569,7 +569,7 @@ function createSchemaResolvers(
 
 		return {
 			name: expose.getName(),
-			type: typeChecker.typeToString(subtype),
+			type: getFullyQualifiedName(subtype),
 			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
 			get declarations() {
@@ -590,13 +590,13 @@ function createSchemaResolvers(
 		if (call.parameters.length >= 2) {
 			subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode);
 			if ((call.parameters[1].valueDeclaration as any)?.dotDotDotToken) {
-				subtypeStr = typeChecker.typeToString(subtype);
+				subtypeStr = getFullyQualifiedName(subtype);
 				getSchema = () => typeChecker.getTypeArguments(subtype! as ts.TypeReference).map(resolveSchema);
 			}
 			else {
 				subtypeStr = '[';
 				for (let i = 1; i < call.parameters.length; i++) {
-					subtypeStr += typeChecker.typeToString(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode)) + ', ';
+					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode)) + ', ';
 				}
 				subtypeStr = subtypeStr.slice(0, -2) + ']';
 				getSchema = () => {
@@ -643,7 +643,7 @@ function createSchemaResolvers(
 		};
 	}
 	function resolveSchema(subtype: ts.Type): PropertyMetaSchema {
-		const type = typeChecker.typeToString(subtype);
+		const type = getFullyQualifiedName(subtype);
 
 		if (shouldIgnore(subtype)) {
 			return type;
@@ -662,7 +662,6 @@ function createSchemaResolvers(
 			};
 		}
 
-		// @ts-ignore - typescript internal, isArrayLikeType exists
 		else if (typeChecker.isArrayLikeType(subtype)) {
 			let schema: PropertyMetaSchema[];
 			return {
@@ -693,6 +692,13 @@ function createSchemaResolvers(
 		}
 
 		return type;
+	}
+	function getFullyQualifiedName(type: ts.Type) {
+		const str = typeChecker.typeToString(type, undefined, ts.TypeFormatFlags.UseFullyQualifiedType | ts.TypeFormatFlags.NoTruncation);
+		if (str.includes('import(')) {
+			return str.replace(/import\(.*?\)\./g, '');
+		}
+		return str;
 	}
 	function getDeclarations(declaration: ts.Declaration[]) {
 		if (noDeclarations) {

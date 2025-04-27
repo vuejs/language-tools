@@ -1,4 +1,4 @@
-import * as CompilerDOM from '@vue/compiler-dom';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 import { getNodeText } from '../../utils/shared';

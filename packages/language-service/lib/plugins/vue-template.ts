@@ -9,7 +9,7 @@ import type * as vscode from 'vscode-languageserver-protocol';
 import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI, Utils } from 'vscode-uri';
 import { getNameCasing } from '../nameCasing';
-import { AttrNameCasing, LanguageServicePlugin, TagNameCasing } from '../types';
+import { AttrNameCasing, type LanguageServicePlugin, TagNameCasing } from '../types';
 import { loadModelModifiersData, loadTemplateData } from './data';
 
 type InternalItemId =

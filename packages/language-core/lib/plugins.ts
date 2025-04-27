@@ -11,7 +11,7 @@ import vueTemplateHtmlPlugin from './plugins/vue-template-html';
 import vueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
 import vueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
 import vueTsx from './plugins/vue-tsx';
-import { validVersions, VueLanguagePlugin } from './types';
+import { validVersions, type VueLanguagePlugin } from './types';
 
 export * from './plugins/shared';
 

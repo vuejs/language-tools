@@ -26,7 +26,7 @@
 		"onLanguage:markdown",
 		"onLanguage:html"
 	],
-	"main": "./client.js",
+	"main": "./dist/client.js",
 	"browser": "./web.js",
 	"capabilities": {
 		"virtualWorkspaces": {
@@ -251,11 +251,6 @@
 					],
 					"markdownDescription": "%configuration.server.includeLanguages%"
 				},
-				"vue.doctor.status": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "%configuration.doctor.status%"
-				},
 				"vue.splitEditors.icon": {
 					"type": "boolean",
 					"default": false,
@@ -411,11 +406,6 @@
 				"category": "Vue"
 			},
 			{
-				"command": "vue.action.doctor",
-				"title": "%command.action.doctor%",
-				"category": "Vue"
-			},
-			{
 				"command": "vue.action.splitEditors",
 				"title": "%command.action.splitEditors%",
 				"category": "Vue",
@@ -453,10 +443,6 @@
 					"when": "editorLangId == vue"
 				},
 				{
-					"command": "vue.action.doctor",
-					"when": "vue.activated"
-				},
-				{
 					"command": "vue.action.splitEditors",
 					"when": "editorLangId == vue"
 				}
@@ -485,18 +471,15 @@
 		]
 	},
 	"scripts": {
-		"prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
-		"build": "node scripts/build",
-		"build:minify": "pnpm run build -- --minify",
-		"watch": "pnpm run build -- --watch",
-		"pack": "pnpm run build:minify && vsce package",
-		"pack:next": "pnpm run build && vsce package",
-		"release": "pnpm run build:minify && vsce publish",
-		"release:next": "pnpm run build && vsce publish --pre-release",
-		"size": "pnpm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html",
+		"build:dev": "rolldown --config",
+		"build:prod": "rolldown --minify --config",
+		"watch": "rolldown --watch --config",
+		"pack": "pnpm run build:prod && vsce package",
+		"release": "pnpm run build:prod && vsce publish",
 		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {
+		"@types/node": "^22.10.4",
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
 		"@volar/vscode": "~2.4.13",
@@ -504,9 +487,8 @@
 		"@vue/language-core": "3.0.0-alpha.4",
 		"@vue/language-server": "3.0.0-alpha.4",
 		"@vue/typescript-plugin": "3.0.0-alpha.4",
-		"esbuild": "^0.25.0",
-		"esbuild-visualizer": "^0.7.0",
 		"reactive-vscode": "^0.2.9",
+		"rolldown": "1.0.0-beta.8",
 		"semver": "^7.5.4",
 		"vscode-ext-gen": "^0.5.0",
 		"vscode-tmlanguage-snapshot": "^0.1.3"

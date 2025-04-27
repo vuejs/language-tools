@@ -1,5 +1,5 @@
 import type { LanguageServiceContext, ProviderResult, VirtualCode } from '@volar/language-service';
-import * as CompilerDOM from '@vue/compiler-dom';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import { forEachElementNode, hyphenateAttr, hyphenateTag, VueVirtualCode } from '@vue/language-core';
 import { computed } from 'alien-signals';
 import type * as vscode from 'vscode-languageserver-protocol';

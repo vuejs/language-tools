@@ -1,10 +1,10 @@
 import { launchServer } from '@typescript/server-harness';
-import { ConfigurationRequest, PublishDiagnosticsNotification, TextDocument } from '@volar/language-server';
+import { ConfigurationRequest, PublishDiagnosticsNotification, type TextDocument } from '@volar/language-server';
 import type { LanguageServerHandle } from '@volar/test-utils';
 import { startLanguageServer } from '@volar/test-utils';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
-import { VueInitializationOptions } from '../lib/types';
+import type { VueInitializationOptions } from '../lib/types';
 
 let serverHandle: LanguageServerHandle | undefined;
 let tsserver: import('@typescript/server-harness').Server;

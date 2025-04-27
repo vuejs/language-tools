@@ -1,4 +1,4 @@
-import { forEachElementNode, hyphenateTag, Language, VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
+import { forEachElementNode, hyphenateTag, type Language, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import { _getComponentNames } from './requests/getComponentNames';

@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { InlayHintInfo } from '../inlayHints';
+import type { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenOptions } from './index';

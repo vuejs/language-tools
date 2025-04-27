@@ -1,13 +1,11 @@
 {
 	"configuration.trace.server": "Traces the communication between VS Code and the language server.",
 	"configuration.server.includeLanguages": "Configure the languages for which the extension should be activated.",
-	"configuration.doctor.status": "Show known problems in status bar.",
 	"configuration.splitEditors.icon": "Show split editor icon in title area of editor.",
 	"configuration.splitEditors.layout.left": "Blocks in the left split editor.",
 	"configuration.splitEditors.layout.right": "Blocks in the right split editor.",
 	"configuration.codeActions.enabled": "Enable code actions.",
 	"configuration.codeActions.askNewComponentName": "Ask for new component name when extract component.",
-
 	"configuration.codeLens.enabled": "Enable code lens.",
 	"configuration.complete.casing.tags": "Preferred tag name case.",
 	"configuration.complete.casing.props": "Preferred attr name case.",
@@ -24,6 +22,5 @@
 	"configuration.format.style.initialIndent": "Initial indent for `<style>` block.",
 	"configuration.format.wrapAttributes": "Wrap attributes.",
 	"command.action.restartServer": "Restart Vue and TS servers",
-	"command.action.doctor": "Doctor",
 	"command.action.splitEditors": "Split <script>, <template>, <style> Editors"
 }
