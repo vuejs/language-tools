@@ -18,7 +18,7 @@ type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any
 		() => `
 type __VLS_WithDefaults<P, D> = {
 	[K in keyof Pick<P, keyof P>]: K extends keyof D
-		? ${PrettifyLocal.name}<P[K] & { default: D[K]}>
+		? ${PrettifyLocal.name}<P[K] & { default: D[K] }>
 		: P[K]
 };
 `.trimStart()
