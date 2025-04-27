@@ -12,7 +12,7 @@ export interface HelperType {
 export type ScriptCodegenContext = ReturnType<typeof createScriptCodegenContext>;
 
 export function createScriptCodegenContext(options: ScriptCodegenOptions) {
-	const localTypes = getLocalTypesGenerator(options.compilerOptions, options.vueCompilerOptions);
+	const localTypes = getLocalTypesGenerator(options.vueCompilerOptions);
 	const inlayHints: InlayHintInfo[] = [];
 
 	return {
