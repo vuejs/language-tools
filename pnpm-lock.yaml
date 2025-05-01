@@ -42,7 +42,7 @@ importers:
         specifier: ^1.82.0
         version: 1.96.0
       '@volar/vscode':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@vscode/vsce':
         specifier: ^3.2.1
@@ -78,7 +78,7 @@ importers:
   packages/component-meta:
     dependencies:
       '@volar/typescript':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@vue/language-core':
         specifier: 2.2.10
@@ -105,7 +105,7 @@ importers:
   packages/language-core:
     dependencies:
       '@volar/language-core':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@vue/compiler-dom':
         specifier: ^3.5.0
@@ -142,7 +142,7 @@ importers:
         specifier: ^1.0.1
         version: 1.0.3
       '@volar/typescript':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@vue/compiler-sfc':
         specifier: ^3.5.0
@@ -151,7 +151,7 @@ importers:
   packages/language-plugin-pug:
     dependencies:
       '@volar/source-map':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       volar-service-pug:
         specifier: 0.0.62
@@ -167,13 +167,13 @@ importers:
   packages/language-server:
     dependencies:
       '@volar/language-core':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@volar/language-server':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@volar/test-utils':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@vue/language-core':
         specifier: 2.2.10
@@ -194,13 +194,13 @@ importers:
   packages/language-service:
     dependencies:
       '@volar/language-core':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@volar/language-service':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@volar/typescript':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@vue/compiler-dom':
         specifier: ^3.5.0
@@ -264,7 +264,7 @@ importers:
         specifier: ^1.0.1
         version: 1.0.3
       '@volar/kit':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11(typescript@5.7.2)
       vscode-languageserver-protocol:
         specifier: ^3.17.5
@@ -273,7 +273,7 @@ importers:
   packages/tsc:
     dependencies:
       '@volar/typescript':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@vue/language-core':
         specifier: 2.2.10
@@ -289,7 +289,7 @@ importers:
   packages/typescript-plugin:
     dependencies:
       '@volar/typescript':
-        specifier: ~2.4.11
+        specifier: 2.4.11
         version: 2.4.11
       '@vue/language-core':
         specifier: 2.2.10
