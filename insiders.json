@@ -1,6 +1,14 @@
 {
-	"latest": "3.0.0-alpha.5",
+	"latest": "3.0.0-alpha.7",
 	"versions": [
+		{
+			"version": "3.0.0-alpha.7",
+			"date": "2025-05-05",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.7",
+				"AFDIAN": "https://afdian.com/p/fa6e6926299111f098d452540025c377"
+			}
+		},
 		{
 			"version": "3.0.0-alpha.5",
 			"date": "2025-04-08",
