@@ -22,7 +22,7 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm --filter ./extensions/vscode run pack
+        run: pnpm run build && pnpm --filter volar run pack
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
