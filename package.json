@@ -32,6 +32,7 @@
 	"pnpm": {
 		"onlyBuiltDependencies": [
 			"@tsslint/core",
+			"@tsslint/eslint",
 			"@vscode/vsce-sign",
 			"esbuild",
 			"keytar",
