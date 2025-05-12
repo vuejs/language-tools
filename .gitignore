@@ -14,5 +14,3 @@ packages/*/*.map
 packages/*/lib/**/*.d.ts
 packages/*/lib/**/*.js
 packages/*/lib/**/*.map
-
-.DS_Store
