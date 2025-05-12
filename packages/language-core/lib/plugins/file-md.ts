@@ -5,6 +5,7 @@ import type { VueLanguagePlugin } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 import { parse } from '../utils/parseSfc';
 
+const frontmatterReg = /^---[\s\S]*?\n---(?:\r?\n|$)/;
 const codeblockReg = /(`{3,})[\s\S]+?\1/g;
 const inlineCodeblockReg = /`[^\n`]+?`/g;
 const latexBlockReg = /(\${2,})[\s\S]+?\1/g;
@@ -36,6 +37,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			}
 
 			content = content
+				// frontmatter
+				.replace(frontmatterReg, match => ' '.repeat(match.length))
 				// code block
 				.replace(codeblockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
 				// inline code block
