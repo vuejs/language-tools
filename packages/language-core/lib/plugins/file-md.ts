@@ -5,6 +5,7 @@ import type { VueLanguagePlugin } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 import { parse } from '../utils/parseSfc';
 
+const frontmatterReg = /^---[\s\S]*?\n---(?:\r?\n|$)/;
 const codeblockReg = /(`{3,})[\s\S]+?\1/g;
 const inlineCodeblockReg = /`[^\n`]+?`/g;
 const latexBlockReg = /(\${2,})[\s\S]+?\1/g;
@@ -13,7 +14,6 @@ const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 const angleBracketReg = /\<\S*\:\S*\>/g;
 const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
 const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
-const frontmatterReg = /^---[\s\S]*?\n---(?:\r?\n|$)/;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
@@ -37,6 +37,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			}
 
 			content = content
+				// frontmatter
+				.replace(frontmatterReg, match => ' '.repeat(match.length))
 				// code block
 				.replace(codeblockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
 				// inline code block
@@ -46,9 +48,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				// # \<script setup>
 				.replace(scriptSetupReg, match => ' '.repeat(match.length))
 				// <<< https://vitepress.dev/guide/markdown#import-code-snippets
-				.replace(codeSnippetImportReg, match => ' '.repeat(match.length))
-				// frontmatter
-				.replace(frontmatterReg, match => ' '.repeat(match.length));
+				.replace(codeSnippetImportReg, match => ' '.repeat(match.length));
 
 			const codes: Segment[] = [];
 
