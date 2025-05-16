@@ -3,7 +3,10 @@
 	"compilerOptions": {
 		"noEmit": true,
 	},
-	"include": [ "packages/*/tests" ],
+	"include": [
+		"packages/*/tests",
+		"tsslint.config.ts"
+	],
 	"references": [
 		{ "path": "./packages/component-meta/tsconfig.json" },
 		{ "path": "./packages/language-server/tsconfig.json" },

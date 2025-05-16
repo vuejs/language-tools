@@ -1,7 +1,7 @@
 import { defineConfig } from '@tsslint/config';
 import { convertRules } from '@tsslint/eslint';
 import * as path from 'node:path';
-import type ts from 'typescript';
+import type * as ts from 'typescript';
 
 export default defineConfig({
 	rules: {
