@@ -893,7 +893,6 @@ function readTsComponentDefaultProps(
 				return component;
 			}
 			// export default defineComponent({ ... })
-			// export default Vue.extend({ ... })
 			else if (ts.isCallExpression(component)) {
 				if (component.arguments.length) {
 					const arg = component.arguments[0];
