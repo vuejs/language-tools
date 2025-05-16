@@ -1,6 +1,6 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
-import { computed, pauseTracking, resumeTracking } from 'alien-signals';
+import { computed, setCurrentSub } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
@@ -16,9 +16,9 @@ export function computedSfc(
 ): Sfc {
 
 	const getUntrackedSnapshot = () => {
-		pauseTracking();
+		const pausedSub = setCurrentSub(undefined);
 		const res = getSnapshot();
-		resumeTracking();
+		setCurrentSub(pausedSub);
 		return res;
 	};
 	const getContent = computed(() => {
@@ -178,9 +178,9 @@ export function computedSfc(
 				const change = getUntrackedSnapshot().getChangeRange(cache.snapshot);
 				if (change) {
 
-					pauseTracking();
+					const pausedSub = setCurrentSub(undefined);
 					const templateOffset = base.startTagEnd;
-					resumeTracking();
+					setCurrentSub(pausedSub);
 
 					const newText = getUntrackedSnapshot().getText(change.span.start, change.span.start + change.newLength);
 					const newResult = cache.plugin.updateSFCTemplate(cache.result, {

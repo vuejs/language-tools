@@ -20,14 +20,14 @@
 		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
 	},
 	"devDependencies": {
-		"@lerna-lite/cli": "^3.11.0",
-		"@lerna-lite/publish": "^3.11.0",
+		"@lerna-lite/cli": "^4.1.2",
+		"@lerna-lite/publish": "^4.1.2",
 		"@tsslint/cli": "^1.5.0",
 		"@tsslint/config": "^1.5.0",
 		"@tsslint/eslint": "^1.5.0",
 		"@typescript-eslint/eslint-plugin": "^8.19.0",
 		"typescript": "latest",
-		"vitest": "^2.1.8"
+		"vitest": "^3.1.3"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
