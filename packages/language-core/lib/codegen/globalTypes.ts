@@ -1,5 +1,4 @@
 import type { VueCompilerOptions } from '../types';
-import { getSlotsPropertyName } from '../utils/shared';
 
 export function getGlobalTypesFileName({
 	lib,
@@ -79,7 +78,7 @@ export function generateGlobalTypes({
 	type __VLS_FunctionalComponent<T> = (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
 		__ctx?: {
 			attrs?: any,
-			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : Record<string, any>,
+			slots?: T extends { $slots: infer Slots } ? Slots : Record<string, any>,
 			emit?: T extends { $emit: infer Emit } ? Emit : {},
 			props?: ${fnPropsType},
 			expose?: (exposed: T) => void,
@@ -167,10 +166,7 @@ export function generateGlobalTypes({
 	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 	function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 		T extends new (...args: any) => any ? __VLS_FunctionalComponent<K>
-		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>${(
-			target === 2.7
-				? `: T extends import('${lib}').AsyncComponent ? (props: {}, ctx?: any) => any`
-				: ``)}
+		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent<{}>;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];

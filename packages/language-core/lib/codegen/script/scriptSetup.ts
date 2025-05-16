@@ -433,11 +433,9 @@ function* generateComponentProps(
 
 		yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
 			? `import('${options.vueCompilerOptions.lib}').PublicProps`
-			: options.vueCompilerOptions.target >= 3.0
-				? `import('${options.vueCompilerOptions.lib}').VNodeProps`
-				+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
-				+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
-				: `globalThis.JSX.IntrinsicAttributes`
+			: `import('${options.vueCompilerOptions.lib}').VNodeProps`
+			+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
+			+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
 			}`;
 		yield endOfLine;
 
