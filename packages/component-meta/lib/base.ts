@@ -3,7 +3,6 @@ import * as vue from '@vue/language-core';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
 import { code as typeHelpersCode } from 'vue-component-type-helpers';
-import { code as vue2TypeHelpersCode } from 'vue-component-type-helpers/vue2';
 
 import type {
 	ComponentMeta,
@@ -236,7 +235,7 @@ interface ComponentMeta<T> {
 	exposed: ComponentExposed<T>;
 };
 
-${commandLine.vueOptions.target < 3 ? vue2TypeHelpersCode : typeHelpersCode}
+${typeHelpersCode}
 `.trim();
 		return code;
 	}

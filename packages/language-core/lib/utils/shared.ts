@@ -13,10 +13,6 @@ export function hyphenateAttr(str: string) {
 	return hyphencase;
 }
 
-export function getSlotsPropertyName(vueVersion: number) {
-	return vueVersion < 3 ? '$scopedSlots' : '$slots';
-}
-
 export function getStartEnd(
 	ts: typeof import('typescript'),
 	node: ts.Node,
