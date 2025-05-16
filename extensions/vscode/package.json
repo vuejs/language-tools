@@ -1,11 +1,11 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "2.2.8",
+	"version": "3.0.0-alpha.6",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
-		"directory": "packages/vscode"
+		"directory": "extensions/vscode"
 	},
 	"categories": [
 		"Programming Languages"
@@ -26,7 +26,7 @@
 		"onLanguage:markdown",
 		"onLanguage:html"
 	],
-	"main": "./client.js",
+	"main": "./dist/client.js",
 	"browser": "./web.js",
 	"capabilities": {
 		"virtualWorkspaces": {
@@ -37,27 +37,14 @@
 	"contributes": {
 		"jsonValidation": [
 			{
-				"fileMatch": "tsconfig.json",
-				"url": "./dist/schemas/vue-tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig-*.json",
-				"url": "./dist/schemas/vue-tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "tsconfig.*.json",
-				"url": "./dist/schemas/vue-tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "jsconfig.json",
-				"url": "./dist/schemas/vue-tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "jsconfig-*.json",
-				"url": "./dist/schemas/vue-tsconfig.schema.json"
-			},
-			{
-				"fileMatch": "jsconfig.*.json",
+				"fileMatch": [
+					"tsconfig.json",
+					"tsconfig.*.json",
+					"tsconfig-*.json",
+					"jsconfig.json",
+					"jsconfig.*.json",
+					"jsconfig-*.json"
+				],
 				"url": "./dist/schemas/vue-tsconfig.schema.json"
 			}
 		],
@@ -252,7 +239,7 @@
 						"verbose"
 					],
 					"default": "off",
-					"description": "Traces the communication between VS Code and the language server."
+					"markdownDescription": "%configuration.trace.server%"
 				},
 				"vue.server.includeLanguages": {
 					"type": "array",
@@ -261,17 +248,13 @@
 					},
 					"default": [
 						"vue"
-					]
-				},
-				"vue.doctor.status": {
-					"type": "boolean",
-					"default": true,
-					"description": "Show known problems in status bar."
+					],
+					"markdownDescription": "%configuration.server.includeLanguages%"
 				},
 				"vue.splitEditors.icon": {
 					"type": "boolean",
 					"default": false,
-					"description": "Show split editor icon in title area of editor."
+					"markdownDescription": "%configuration.splitEditors.icon%"
 				},
 				"vue.splitEditors.layout.left": {
 					"type": "array",
@@ -282,7 +265,8 @@
 						"script",
 						"scriptSetup",
 						"styles"
-					]
+					],
+					"markdownDescription": "%configuration.splitEditors.layout.left%"
 				},
 				"vue.splitEditors.layout.right": {
 					"type": "array",
@@ -292,22 +276,23 @@
 					"default": [
 						"template",
 						"customBlocks"
-					]
+					],
+					"markdownDescription": "%configuration.splitEditors.layout.right%"
 				},
 				"vue.codeActions.enabled": {
 					"type": "boolean",
 					"default": true,
-					"description": "Enabled code actions."
+					"markdownDescription": "%configuration.codeActions.enabled%"
 				},
 				"vue.codeActions.askNewComponentName": {
 					"type": "boolean",
 					"default": true,
-					"description": "Ask for new component name when extract component."
+					"markdownDescription": "%configuration.codeActions.askNewComponentName%"
 				},
 				"vue.codeLens.enabled": {
 					"type": "boolean",
 					"default": true,
-					"description": "Enabled code lens."
+					"markdownDescription": "%configuration.codeLens.enabled%"
 				},
 				"vue.complete.casing.tags": {
 					"type": "string",
@@ -324,7 +309,7 @@
 						"<PascalCase>"
 					],
 					"default": "autoPascal",
-					"description": "Preferred tag name case."
+					"markdownDescription": "%configuration.complete.casing.tags%"
 				},
 				"vue.complete.casing.props": {
 					"type": "string",
@@ -341,59 +326,62 @@
 						":camelCase=\"...\""
 					],
 					"default": "autoKebab",
-					"description": "Preferred attr name case."
+					"markdownDescription": "%configuration.complete.casing.props%"
 				},
 				"vue.complete.defineAssignment": {
 					"type": "boolean",
 					"default": true,
-					"description": "Auto add `const props = ` before `defineProps` when selecting the completion item `props`. (also `emit` and `slots`)"
+					"markdownDescription": "%configuration.complete.defineAssignment%"
 				},
 				"vue.autoInsert.dotValue": {
 					"type": "boolean",
 					"default": false,
-					"description": "Auto-complete Ref value with `.value`."
+					"markdownDescription": "%configuration.autoInsert.dotValue%"
 				},
 				"vue.autoInsert.bracketSpacing": {
 					"type": "boolean",
 					"default": true,
-					"description": "Auto add space between double curly brackets: {{|}} -> {{ | }}"
+					"markdownDescription": "%configuration.autoInsert.bracketSpacing%"
 				},
 				"vue.inlayHints.destructuredProps": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Show inlay hints for destructured props:\n\n```ts\nwatch(() => /* props. */foo, () => { ... });\n```"
+					"markdownDescription": "%configuration.inlayHints.destructuredProps%"
 				},
 				"vue.inlayHints.missingProps": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Show inlay hints for missing required props:\n\n```html\n<Comp />\n<!-- ^ foo! -->\n```"
+					"markdownDescription": "%configuration.inlayHints.missingProps%"
 				},
 				"vue.inlayHints.inlineHandlerLeading": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Show inlay hints for event argument in inline handlers:\n\n```html\n<Comp @foo=\"/* $event => */console.log($event)\" />\n```"
+					"markdownDescription": "%configuration.inlayHints.inlineHandlerLeading%"
 				},
 				"vue.inlayHints.optionsWrapper": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Show inlay hints for component options wrapper for type support:\n\n```vue\n<script lang=\"ts\">\nexport default /* (await import('vue')).defineComponent( */{}/* ) */;\n</script>\n```"
+					"markdownDescription": "%configuration.inlayHints.optionsWrapper%"
 				},
 				"vue.inlayHints.vBindShorthand": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "Show inlay hints for v-bind shorthand:\n\n```html\n<Comp :foo />\n     <!-- ^ =\"foo\" -->\n```"
+					"markdownDescription": "%configuration.inlayHints.vBindShorthand%"
 				},
 				"vue.format.template.initialIndent": {
 					"type": "boolean",
-					"default": true
-				},
-				"vue.format.style.initialIndent": {
-					"type": "boolean",
-					"default": false
+					"default": true,
+					"markdownDescription": "%configuration.format.template.initialIndent%"
 				},
 				"vue.format.script.initialIndent": {
 					"type": "boolean",
-					"default": false
+					"default": false,
+					"markdownDescription": "%configuration.format.script.initialIndent%"
+				},
+				"vue.format.style.initialIndent": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "%configuration.format.style.initialIndent%"
 				},
 				"vue.format.wrapAttributes": {
 					"type": "string",
@@ -406,29 +394,20 @@
 						"aligned-multiple",
 						"preserve",
 						"preserve-aligned"
-					]
+					],
+					"markdownDescription": "%configuration.format.wrapAttributes%"
 				}
 			}
 		},
 		"commands": [
 			{
 				"command": "vue.action.restartServer",
-				"title": "Restart Vue and TS servers",
+				"title": "%command.action.restartServer%",
 				"category": "Vue"
-			},
-			{
-				"command": "vue.action.doctor",
-				"title": "Doctor",
-				"category": "Vue"
-			},
-			{
-				"command": "vue.action.writeVirtualFiles",
-				"title": "Write Virtual Files",
-				"category": "Vue (Debug)"
 			},
 			{
 				"command": "vue.action.splitEditors",
-				"title": "Split <script>, <template>, <style> Editors",
+				"title": "%command.action.splitEditors%",
 				"category": "Vue",
 				"icon": "images/split-editors.png"
 			}
@@ -464,14 +443,6 @@
 					"when": "editorLangId == vue"
 				},
 				{
-					"command": "vue.action.doctor",
-					"when": "vue.activated"
-				},
-				{
-					"command": "vue.action.writeVirtualFiles",
-					"when": "vue.activated"
-				},
-				{
 					"command": "vue.action.splitEditors",
 					"when": "editorLangId == vue"
 				}
@@ -500,30 +471,26 @@
 		]
 	},
 	"scripts": {
-		"prebuild": "pnpm run postinstall && pnpm -C ../.. run build",
-		"build": "node scripts/build",
-		"build:minify": "pnpm run build -- --minify",
-		"watch": "pnpm run build -- --watch",
-		"pack": "pnpm run build:minify && vsce package",
-		"pack:next": "pnpm run build && vsce package",
-		"release": "pnpm run build:minify && vsce publish",
-		"release:next": "pnpm run build && vsce publish --pre-release",
-		"size": "pnpm run build:minify -- --metafile && esbuild-visualizer --metadata ./meta.json && open ./stats.html",
+		"build:dev": "rolldown --config",
+		"build:prod": "rolldown --minify --config",
+		"watch": "rolldown --watch --config",
+		"pack": "pnpm run build:prod && vsce package",
+		"release": "pnpm run build:prod && vsce publish",
 		"postinstall": "vscode-ext-gen --scope vue"
 	},
 	"devDependencies": {
+		"@types/node": "^22.10.4",
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "^1.82.0",
-		"@volar/vscode": "~2.4.11",
+		"@volar/vscode": "2.4.13",
 		"@vscode/vsce": "^3.2.1",
-		"@vue/language-core": "2.2.8",
-		"@vue/language-server": "2.2.8",
-		"@vue/typescript-plugin": "2.2.8",
-		"esbuild": "^0.25.0",
-		"esbuild-visualizer": "^0.7.0",
+		"@vue/language-core": "3.0.0-alpha.6",
+		"@vue/language-server": "3.0.0-alpha.6",
+		"@vue/typescript-plugin": "3.0.0-alpha.6",
 		"reactive-vscode": "^0.2.9",
+		"rolldown": "1.0.0-beta.8",
 		"semver": "^7.5.4",
-		"vscode-ext-gen": "^0.5.0",
+		"vscode-ext-gen": "^1.0.2",
 		"vscode-tmlanguage-snapshot": "^0.1.3"
 	}
 }

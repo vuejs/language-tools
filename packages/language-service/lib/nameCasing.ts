@@ -1,16 +1,16 @@
 import type { LanguageServiceContext, ProviderResult, VirtualCode } from '@volar/language-service';
-import * as CompilerDOM from '@vue/compiler-dom';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import { forEachElementNode, hyphenateAttr, hyphenateTag, VueVirtualCode } from '@vue/language-core';
 import { computed } from 'alien-signals';
 import type * as vscode from 'vscode-languageserver-protocol';
 import type { URI } from 'vscode-uri';
-import { AttrNameCasing, TagNameCasing } from '../types';
+import { AttrNameCasing, TagNameCasing } from './types';
 
 export async function convertTagName(
 	context: LanguageServiceContext,
 	uri: URI,
 	casing: TagNameCasing,
-	tsPluginClient: typeof import('@vue/typescript-plugin/lib/client') | undefined
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ) {
 
 	const sourceFile = context.language.scripts.get(uri);
@@ -57,7 +57,7 @@ export async function convertAttrName(
 	context: LanguageServiceContext,
 	uri: URI,
 	casing: AttrNameCasing,
-	tsPluginClient?: typeof import('@vue/typescript-plugin/lib/client')
+	tsPluginClient?: import('@vue/typescript-plugin/lib/requests').Requests
 ) {
 
 	const sourceFile = context.language.scripts.get(uri);

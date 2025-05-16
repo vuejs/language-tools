@@ -113,7 +113,7 @@ export function* generateElementProps(
 
 			const shouldSpread = propName === 'style' || propName === 'class';
 			const shouldCamelize = isComponent && getShouldCamelize(options, prop, propName);
-			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck, shouldCamelize);
+			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck);
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -141,13 +141,17 @@ export function* generateElementProps(
 						)
 				),
 				`: `,
-				...generatePropExp(
-					options,
-					ctx,
-					prop,
-					prop.exp,
-					ctx.codeFeatures.all,
-					enableCodeFeatures
+				...wrapWith(
+					prop.arg?.loc.start.offset ?? prop.loc.start.offset,
+					prop.arg?.loc.end.offset ?? prop.loc.end.offset,
+					ctx.codeFeatures.verification,
+					...generatePropExp(
+						options,
+						ctx,
+						prop,
+						prop.exp,
+						enableCodeFeatures
+					)
 				)
 			)];
 			if (enableCodeFeatures) {
@@ -183,21 +187,13 @@ export function* generateElementProps(
 			}
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
-			if (
-				options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(prop.name, pattern))
-				// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom` always adds it (#3881)
-				|| (
-					options.vueCompilerOptions.target < 3
-					&& prop.name === 'persisted'
-					&& node.tag.toLowerCase() === 'transition'
-				)
-			) {
+			if (options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(prop.name, pattern))) {
 				continue;
 			}
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
 			const shouldCamelize = isComponent && getShouldCamelize(options, prop, prop.name);
-			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck, true);
+			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck);
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -255,7 +251,6 @@ export function* generateElementProps(
 						ctx,
 						prop,
 						prop.exp,
-						ctx.codeFeatures.all,
 						enableCodeFeatures
 					)
 				)];
@@ -276,17 +271,13 @@ export function* generatePropExp(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
-	features: VueCodeInformation,
 	enableCodeFeatures: boolean = true
 ): Generator<Code> {
 	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
+	const features = isShorthand
+		? ctx.codeFeatures.withoutHighlightAndCompletion
+		: ctx.codeFeatures.all;
 
-	if (isShorthand && features.completion) {
-		features = {
-			...features,
-			completion: undefined,
-		};
-	}
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 		if (!isShorthand) { // vue 3.4+
 			yield* generateInterpolation(
@@ -378,15 +369,10 @@ function getShouldCamelize(
 
 function getPropsCodeInfo(
 	ctx: TemplateCodegenContext,
-	strictPropsCheck: boolean,
-	shouldCamelize: boolean
+	strictPropsCheck: boolean
 ): VueCodeInformation {
 	return ctx.resolveCodeFeatures({
 		...codeFeatures.withoutHighlightAndCompletion,
-		navigation: {
-			resolveRenameNewName: camelize,
-			resolveRenameEditText: shouldCamelize ? hyphenateAttr : undefined,
-		},
 		verification: strictPropsCheck || {
 			shouldReport(_source, code) {
 				// https://typescript.tv/errors/#ts2353
@@ -442,5 +428,5 @@ function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: Vue
 		}
 	}
 
-	return vueCompilerOptions.target < 3 ? 'value' : 'modelValue';
+	return 'modelValue';
 }

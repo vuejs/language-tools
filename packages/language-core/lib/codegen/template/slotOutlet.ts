@@ -59,8 +59,7 @@ export function* generateSlotOutlet(
 						options,
 						ctx,
 						nameProp,
-						nameProp.exp,
-						ctx.codeFeatures.all
+						nameProp.exp
 					),
 					`]`
 				];
@@ -168,6 +167,5 @@ export function* generateSlotOutlet(
 			});
 		}
 	}
-	yield* ctx.generateAutoImportCompletion();
-	yield* generateElementChildren(options, ctx, node);
+	yield* generateElementChildren(options, ctx, node.children);
 }

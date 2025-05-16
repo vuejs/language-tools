@@ -16,8 +16,8 @@ describe(`vue-tsc`, () => {
 			  "test-workspace/tsc/failureFixtures/#5071/withScript.vue(1,19): error TS1005: ';' expected.",
 			  "test-workspace/tsc/failureFixtures/#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",
-			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { exist: typeof exist; }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 18 more ..., {}>'.",
-			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { exist: typeof exist; }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 18 more ..., {}>'.",
+			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<Readonly<{} & {} & {}>, { exist: {}; }, {}, {}, {}, {}, {}, {}, PublicProps, {}, true, {}, {}, GlobalComponents, GlobalDirectives, ... 12 more ..., {}>'.",
+			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<Readonly<{} & {} & {}>, { exist: {}; }, {}, {}, {}, {}, {}, {}, PublicProps, {}, true, {}, {}, GlobalComponents, GlobalDirectives, ... 12 more ..., {}>'.",
 			]
 		`);
 	});
@@ -37,8 +37,8 @@ describe(`vue-tsc`, () => {
 			  "test-workspace/tsc/failureFixtures/#5071/withScript.vue(1,19): error TS1005: ';' expected.",
 			  "test-workspace/tsc/failureFixtures/#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",
-			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { exist: typeof exist; }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 18 more ..., {}>'.",
-			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<ToResolvedProps<{}, {}>, { exist: typeof exist; }, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, ... 18 more ..., {}>'.",
+			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<Readonly<{} & {} & {}>, { exist: {}; }, {}, {}, {}, {}, {}, {}, PublicProps, {}, true, {}, {}, GlobalComponents, GlobalDirectives, ... 12 more ..., {}>'.",
+			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<Readonly<{} & {} & {}>, { exist: {}; }, {}, {}, {}, {}, {}, {}, PublicProps, {}, true, {}, {}, GlobalComponents, GlobalDirectives, ... 12 more ..., {}>'.",
 			]
 		`);
 	});

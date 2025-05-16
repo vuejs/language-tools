@@ -5,11 +5,11 @@ import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUser
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { LanguageServiceContext, LanguageServicePlugin, TagNameCasing } from '../types';
+import { type LanguageServiceContext, type LanguageServicePlugin, TagNameCasing } from '../types';
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',

@@ -97,15 +97,6 @@ function* generateSetupFunction(
 	syntax: 'return' | 'export default' | undefined
 ): Generator<Code> {
 	let setupCodeModifies: [Code[], number, number][] = [];
-	for (const { comments } of scriptSetupRanges.defineProp) {
-		if (comments) {
-			setupCodeModifies.push([
-				[``],
-				comments.start,
-				comments.end,
-			]);
-		}
-	}
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
 		setupCodeModifies.push(...generateDefineWithType(
@@ -442,11 +433,9 @@ function* generateComponentProps(
 
 		yield `type __VLS_BuiltInPublicProps = ${options.vueCompilerOptions.target >= 3.4
 			? `import('${options.vueCompilerOptions.lib}').PublicProps`
-			: options.vueCompilerOptions.target >= 3.0
-				? `import('${options.vueCompilerOptions.lib}').VNodeProps`
-				+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
-				+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
-				: `globalThis.JSX.IntrinsicAttributes`
+			: `import('${options.vueCompilerOptions.lib}').VNodeProps`
+			+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
+			+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
 			}`;
 		yield endOfLine;
 
@@ -506,7 +495,7 @@ function* generateComponentProps(
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
 
 			if (defineProp.comments) {
-				yield generateSfcBlockSection(scriptSetup, defineProp.comments.start, defineProp.comments.end, codeFeatures.all);
+				yield scriptSetup.content.slice(defineProp.comments.start, defineProp.comments.end);
 				yield newLine;
 			}
 

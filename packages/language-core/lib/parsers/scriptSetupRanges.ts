@@ -249,7 +249,7 @@ export function parseScriptSetupRanges(
 					defaultValue,
 					required,
 					isModel: isDefineModel,
-					comments: getCommentsRange(ts, node, parents, ast),
+					comments: getClosestMultiLineCommentRange(ts, node, parents, ast),
 					argNode: options,
 				});
 			}
@@ -537,7 +537,7 @@ function getStatementRange(
 	return statementRange;
 }
 
-function getCommentsRange(
+function getClosestMultiLineCommentRange(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	parents: ts.Node[],
@@ -549,11 +549,14 @@ function getCommentsRange(
 		}
 		node = parents[i];
 	}
-	const comments = ts.getLeadingCommentRanges(ast.text, node.pos);
-	if (comments?.length) {
+	const comment = ts.getLeadingCommentRanges(ast.text, node.pos)
+		?.reverse()
+		.find(range => range.kind === 3 satisfies ts.SyntaxKind.MultiLineCommentTrivia);
+
+	if (comment) {
 		return {
-			start: comments[0].pos,
-			end: comments.at(-1)!.end,
+			start: comment.pos,
+			end: comment.end,
 		};
 	}
 }

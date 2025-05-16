@@ -59,3 +59,19 @@ export function computedSet<T>(source: () => Set<T>): () => Set<T> {
 		}
 	);
 }
+
+export function computedItems<T>(
+	source: () => T[],
+	compareFn: (oldItem: T, newItem: T) => boolean
+) {
+	return computed<T[]>(
+		oldArr => {
+			oldArr ??= [];
+			const newArr = source();
+			if (oldArr.length === newArr.length && oldArr.every((item, index) => compareFn(item, newArr[index]))) {
+				return oldArr;
+			}
+			return newArr;
+		}
+	);
+}

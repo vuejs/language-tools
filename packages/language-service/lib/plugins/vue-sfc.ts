@@ -215,7 +215,11 @@ export function create(): LanguageServicePlugin {
 					if (!result) {
 						return;
 					}
-					result.items = result.items.filter(item => item.label !== '!DOCTYPE' && item.label !== 'Custom Blocks');
+					result.items = result.items.filter(item =>
+						item.label !== '!DOCTYPE' &&
+						item.label !== 'Custom Blocks' &&
+						item.label !== 'data-'
+					);
 
 					const tags = sfcDataProvider?.provideTags();
 

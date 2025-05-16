@@ -1,6 +1,6 @@
 import type { CreateFile, LanguageServiceContext, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import { Sfc, VueVirtualCode, tsCodegen } from '@vue/language-core';
+import { type Sfc, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
@@ -15,7 +15,7 @@ const unicodeReg = /\\u/g;
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-extract-file',

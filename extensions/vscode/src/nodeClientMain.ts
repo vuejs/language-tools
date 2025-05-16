@@ -1,7 +1,6 @@
 import { createLabsInfo } from '@volar/vscode';
 import * as lsp from '@volar/vscode/node';
 import * as protocol from '@vue/language-server/protocol';
-import * as fs from 'node:fs';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
@@ -50,7 +49,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 				}
 			}
 
-			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'server.js');
+			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist', 'server.js');
 
 			const serverOptions: lsp.ServerOptions = {
 				run: {
@@ -86,6 +85,24 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 			updateProviders(client);
 
+			client.onRequest('tsserverRequest', async ([command, args]) => {
+				const tsserver = (globalThis as any).__TSSERVER__?.semantic;
+				if (!tsserver) {
+					return;
+				}
+				try {
+					const res = await tsserver.executeImpl(command, args, {
+						isAsync: true,
+						expectsResult: true,
+						lowPriority: true,
+						requireSemantic: true,
+					})[0];
+					return res.body;
+				} catch {
+					// noop
+				}
+			});
+
 			return client;
 		}
 	);
@@ -116,6 +133,7 @@ function updateProviders(client: lsp.LanguageClient) {
 }
 
 try {
+	const fs = require('node:fs');
 	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
 	const readFileSync = fs.readFileSync;
 	const extensionJsPath = require.resolve('./dist/extension.js', {
@@ -125,7 +143,6 @@ try {
 	// @ts-expect-error
 	fs.readFileSync = (...args) => {
 		if (args[0] === extensionJsPath) {
-			// @ts-expect-error
 			let text = readFileSync(...args) as string;
 
 			// patch readPlugins
@@ -138,6 +155,12 @@ try {
 						.join(',')}]`,
 					':Array.isArray(e.languages)'
 				].join('')
+			);
+
+			// Expose tsserver process in SingleTsServer constructor
+			text = text.replace(
+				',this._callbacks.destroy("server errored")}))',
+				s => s + ',globalThis.__TSSERVER__||={},globalThis.__TSSERVER__[arguments[1]]=this'
 			);
 
 			/**
@@ -172,7 +195,17 @@ try {
 
 			return text;
 		}
-		// @ts-expect-error
 		return readFileSync(...args);
 	};
+
+	const loadedModule = require.cache[extensionJsPath];
+	if (loadedModule) {
+		delete require.cache[extensionJsPath];
+		const patchedModule = require(extensionJsPath);
+		Object.assign(loadedModule.exports, patchedModule);
+	}
+
+	if (tsExtension.isActive) {
+		vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+	}
 } catch { }

@@ -12,7 +12,6 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
-import { activate as activateDoctor } from './features/doctor';
 import { activate as activateNameCasing } from './features/nameCasing';
 import { activate as activateSplitEditors } from './features/splitEditors';
 import { checkCompatible } from './hybridMode';
@@ -87,13 +86,11 @@ async function activateLc(
 		await client.start();
 	});
 
-	activateDoctor(client);
 	activateNameCasing(client, selectors);
 	activateSplitEditors(client);
 
 	lsp.activateAutoInsertion(selectors, client);
 	lsp.activateDocumentDropEdit(selectors, client);
-	lsp.activateWriteVirtualFiles('vue.action.writeVirtualFiles', client);
 
 	useInsidersStatusItem(context);
 
@@ -107,6 +104,9 @@ async function activateLc(
 
 async function getInitializationOptions(context: vscode.ExtensionContext): Promise<VueInitializationOptions> {
 	return {
-		typescript: { tsdk: (await lsp.getTsdk(context))!.tsdk },
+		typescript: {
+			tsdk: (await lsp.getTsdk(context))!.tsdk,
+			tsserverRequestCommand: 'tsserverRequest',
+		},
 	};
 }

@@ -25,9 +25,16 @@
 				"panel": "dedicated",
 				"reveal": "never"
 			},
-			"problemMatcher": [
-				"$tsc-watch"
-			]
+			"problemMatcher": {
+				"pattern": {
+					"regexp": "__________"
+				},
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": " ",
+					"endsPattern": "Waiting for changes..."
+				}
+			}
 		}
 	]
 }

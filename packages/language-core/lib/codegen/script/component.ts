@@ -143,15 +143,23 @@ export function* generatePropsOption(
 	}[] = [];
 
 	if (ctx.generatedPropsType) {
-		codes.push({
-			optionExp: [
-				`{} as `,
-				scriptSetupRanges.withDefaults?.arg ? `${ctx.localTypes.WithDefaults}<` : '',
-				`${ctx.localTypes.TypePropsToOption}<__VLS_PublicProps>`,
-				scriptSetupRanges.withDefaults?.arg ? `, typeof __VLS_withDefaultsArg>` : '',
-			].join(''),
-			typeOptionExp: `{} as __VLS_PublicProps`,
-		});
+		if (options.vueCompilerOptions.target >= 3.6) {
+			codes.push({
+				optionExp: '{}',
+				typeOptionExp: `{} as __VLS_PublicProps`,
+			});
+		}
+		else {
+			codes.push({
+				optionExp: [
+					`{} as `,
+					scriptSetupRanges.withDefaults?.arg ? `${ctx.localTypes.WithDefaults}<` : '',
+					`${ctx.localTypes.TypePropsToOption}<__VLS_PublicProps>`,
+					scriptSetupRanges.withDefaults?.arg ? `, typeof __VLS_withDefaultsArg>` : '',
+				].join(''),
+				typeOptionExp: `{} as __VLS_PublicProps`,
+			});
+		}
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
 		const { arg } = scriptSetupRanges.defineProps;
@@ -180,6 +188,12 @@ export function* generatePropsOption(
 	const useOption = !useTypeOption || scriptSetupRanges.withDefaults;
 
 	if (useTypeOption) {
+		if (
+			options.vueCompilerOptions.target >= 3.6
+			&& scriptSetupRanges.withDefaults?.arg
+		) {
+			yield `__defaults: __VLS_withDefaultsArg,${newLine}`;
+		}
 		if (codes.length === 1) {
 			yield `__typeProps: `;
 			yield codes[0].typeOptionExp!;

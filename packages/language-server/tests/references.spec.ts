@@ -1,4 +1,4 @@
-import { TextDocument } from '@volar/language-server';
+import type { TextDocument } from '@volar/language-server';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server.js';
@@ -23,46 +23,39 @@ test('Default slot', async () => {
 		`)
 	).toMatchInlineSnapshot(`
 		{
-		  "body": {
-		    "refs": [
-		      {
-		        "end": {
-		          "line": 3,
-		          "offset": 10,
-		        },
-		        "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		        "isDefinition": true,
-		        "isWriteAccess": false,
-		        "lineText": "				<slot></slot>",
-		        "start": {
-		          "line": 3,
-		          "offset": 6,
-		        },
+		  "refs": [
+		    {
+		      "end": {
+		        "line": 3,
+		        "offset": 10,
 		      },
-		      {
-		        "end": {
-		          "line": 8,
-		          "offset": 16,
-		        },
-		        "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
-		        "isDefinition": false,
-		        "isWriteAccess": false,
-		        "lineText": "				<div></div>",
-		        "start": {
-		          "line": 8,
-		          "offset": 5,
-		        },
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "isDefinition": true,
+		      "isWriteAccess": false,
+		      "lineText": "				<slot></slot>",
+		      "start": {
+		        "line": 3,
+		        "offset": 6,
 		      },
-		    ],
-		    "symbolDisplayString": "(property) default?: (props: typeof __VLS_1) => any",
-		    "symbolName": "slot",
-		    "symbolStartOffset": 6,
-		  },
-		  "command": "references",
-		  "request_seq": 84,
-		  "seq": 0,
-		  "success": true,
-		  "type": "response",
+		    },
+		    {
+		      "end": {
+		        "line": 9,
+		        "offset": 4,
+		      },
+		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
+		      "isDefinition": false,
+		      "isWriteAccess": false,
+		      "lineText": "			<Fixture>",
+		      "start": {
+		        "line": 7,
+		        "offset": 13,
+		      },
+		    },
+		  ],
+		  "symbolDisplayString": "(property) default?: (props: typeof __VLS_1) => any",
+		  "symbolName": "slot",
+		  "symbolStartOffset": 6,
 		}
 	`);
 });
@@ -85,46 +78,39 @@ test('Named slot', async () => {
 	`)
 	).toMatchInlineSnapshot(`
 		{
-		  "body": {
-		    "refs": [
-		      {
-		        "end": {
-		          "line": 3,
-		          "offset": 19,
-		        },
-		        "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		        "isDefinition": true,
-		        "isWriteAccess": false,
-		        "lineText": "			<slot name="foo"></slot>",
-		        "start": {
-		          "line": 3,
-		          "offset": 16,
-		        },
+		  "refs": [
+		    {
+		      "end": {
+		        "line": 3,
+		        "offset": 19,
 		      },
-		      {
-		        "end": {
-		          "line": 7,
-		          "offset": 17,
-		        },
-		        "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
-		        "isDefinition": false,
-		        "isWriteAccess": false,
-		        "lineText": "			<Fixture #foo></Fixture>",
-		        "start": {
-		          "line": 7,
-		          "offset": 14,
-		        },
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "isDefinition": true,
+		      "isWriteAccess": false,
+		      "lineText": "			<slot name="foo"></slot>",
+		      "start": {
+		        "line": 3,
+		        "offset": 16,
 		      },
-		    ],
-		    "symbolDisplayString": "(property) foo?: (props: typeof __VLS_1) => any",
-		    "symbolName": "foo",
-		    "symbolStartOffset": 16,
-		  },
-		  "command": "references",
-		  "request_seq": 89,
-		  "seq": 0,
-		  "success": true,
-		  "type": "response",
+		    },
+		    {
+		      "end": {
+		        "line": 7,
+		        "offset": 17,
+		      },
+		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
+		      "isDefinition": false,
+		      "isWriteAccess": false,
+		      "lineText": "			<Fixture #foo></Fixture>",
+		      "start": {
+		        "line": 7,
+		        "offset": 14,
+		      },
+		    },
+		  ],
+		  "symbolDisplayString": "(property) foo?: (props: typeof __VLS_1) => any",
+		  "symbolName": "foo",
+		  "symbolStartOffset": 16,
 		}
 	`);
 });
@@ -142,54 +128,47 @@ test('v-bind shorthand', async () => {
 		`)
 	).toMatchInlineSnapshot(`
 		{
-		  "body": {
-		    "refs": [
-		      {
-		        "contextEnd": {
-		          "line": 3,
-		          "offset": 18,
-		        },
-		        "contextStart": {
-		          "line": 3,
-		          "offset": 4,
-		        },
-		        "end": {
-		          "line": 3,
-		          "offset": 13,
-		        },
-		        "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		        "isDefinition": true,
-		        "isWriteAccess": true,
-		        "lineText": "			const foo = 1;",
-		        "start": {
-		          "line": 3,
-		          "offset": 10,
-		        },
+		  "refs": [
+		    {
+		      "contextEnd": {
+		        "line": 3,
+		        "offset": 18,
 		      },
-		      {
-		        "end": {
-		          "line": 7,
-		          "offset": 14,
-		        },
-		        "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
-		        "isDefinition": false,
-		        "isWriteAccess": false,
-		        "lineText": "				<Foo :foo></Foo>",
-		        "start": {
-		          "line": 7,
-		          "offset": 11,
-		        },
+		      "contextStart": {
+		        "line": 3,
+		        "offset": 4,
 		      },
-		    ],
-		    "symbolDisplayString": "const foo: 1",
-		    "symbolName": "foo",
-		    "symbolStartOffset": 10,
-		  },
-		  "command": "references",
-		  "request_seq": 93,
-		  "seq": 0,
-		  "success": true,
-		  "type": "response",
+		      "end": {
+		        "line": 3,
+		        "offset": 13,
+		      },
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "isDefinition": true,
+		      "isWriteAccess": true,
+		      "lineText": "			const foo = 1;",
+		      "start": {
+		        "line": 3,
+		        "offset": 10,
+		      },
+		    },
+		    {
+		      "end": {
+		        "line": 7,
+		        "offset": 14,
+		      },
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "isDefinition": false,
+		      "isWriteAccess": false,
+		      "lineText": "				<Foo :foo></Foo>",
+		      "start": {
+		        "line": 7,
+		        "offset": 11,
+		      },
+		    },
+		  ],
+		  "symbolDisplayString": "const foo: 1",
+		  "symbolName": "foo",
+		  "symbolStartOffset": 10,
 		}
 	`);
 });
@@ -227,7 +206,7 @@ async function requestReferences(fileName: string, languageId: string, content: 
 		ref.file = '${testWorkspacePath}' + ref.file.slice(testWorkspacePath.length);
 	}
 
-	return res!;
+	return res.body;
 }
 
 async function prepareDocument(fileName: string, languageId: string, content: string) {

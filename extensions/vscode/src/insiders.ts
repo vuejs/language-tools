@@ -88,7 +88,7 @@ export function useInsidersStatusItem(context: vscode.ExtensionContext) {
 		}
 		else {
 			item.text = '✨ Get Insiders Edition';
-			item.severity = vscode.LanguageStatusSeverity.Warning;
+			item.severity = vscode.LanguageStatusSeverity.Information;
 		}
 
 		useCommand('vue-insiders.update', async () => {

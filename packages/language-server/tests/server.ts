@@ -1,9 +1,10 @@
 import { launchServer } from '@typescript/server-harness';
-import { ConfigurationRequest, PublishDiagnosticsNotification, TextDocument } from '@volar/language-server';
+import { ConfigurationRequest, PublishDiagnosticsNotification, type TextDocument } from '@volar/language-server';
 import type { LanguageServerHandle } from '@volar/test-utils';
 import { startLanguageServer } from '@volar/test-utils';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
+import type { VueInitializationOptions } from '../lib/types';
 
 let serverHandle: LanguageServerHandle | undefined;
 let tsserver: import('@typescript/server-harness').Server;
@@ -43,14 +44,23 @@ export async function getLanguageServer(): Promise<{
 				return null;
 			});
 		});
+		serverHandle.connection.onRequest('tsserverRequest', async ([command, args]) => {
+			const res = await tsserver.message({
+				seq: seq++,
+				command: command,
+				arguments: args,
+			});
+			return res.body;
+		});
 
 		await serverHandle.initialize(
 			URI.file(testWorkspacePath).toString(),
 			{
 				typescript: {
 					tsdk: path.dirname(require.resolve('typescript/lib/typescript.js')),
+					tsserverRequestCommand: 'tsserverRequest',
 				},
-			},
+			} satisfies VueInitializationOptions,
 			{
 				workspace: {
 					configuration: true,
@@ -74,8 +84,6 @@ export async function getLanguageServer(): Promise<{
 						{
 							file: URI.parse(uri).fsPath,
 							fileContent: content,
-							projectRootPath: path.resolve(testWorkspacePath, './tsconfigProject'),
-							plugins: ['@vue/typescript-plugin'],
 						}
 					]
 				}
@@ -83,11 +91,6 @@ export async function getLanguageServer(): Promise<{
 			if (!res.success) {
 				throw new Error(res.body);
 			}
-
-			// Wait for the named pipe server ready
-			// TODO: remove this when named pipe logic is removed
-			await new Promise<void>(resolve => setTimeout(resolve, 2000));
-
 			return await serverHandle!.openInMemoryDocument(uri, languageId, content);
 		},
 		close: async (uri: string) => {

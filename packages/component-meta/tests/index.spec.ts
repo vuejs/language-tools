@@ -1,6 +1,6 @@
 import * as path from 'node:path';
 import { describe, expect, test } from 'vitest';
-import { ComponentMetaChecker, createChecker, createCheckerByJson, MetaCheckerOptions, TypeMeta } from '..';
+import { type ComponentMetaChecker, createChecker, createCheckerByJson, type MetaCheckerOptions, TypeMeta } from '..';
 
 const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describe(`vue-component-meta ${withTsconfig ? 'with tsconfig' : 'without tsconfig'}`, () => {
 
@@ -88,6 +88,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const array = meta.props.find(prop => prop.name === 'array');
 		const arrayOptional = meta.props.find(prop => prop.name === 'arrayOptional');
 		const enumValue = meta.props.find(prop => prop.name === 'enumValue');
+		const namespaceType = meta.props.find(prop => prop.name === 'namespaceType');
 		const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
 		const inlined = meta.props.find(prop => prop.name === 'inlined');
 		const recursive = meta.props.find(prop => prop.name === 'recursive');
@@ -331,6 +332,17 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 			schema: ['MyEnum.Small', 'MyEnum.Medium', 'MyEnum.Large']
 		});
 
+		expect(namespaceType).toBeDefined();
+		expect(namespaceType?.default).toBeUndefined();
+		expect(namespaceType?.required).toBeTruthy();
+		expect(namespaceType?.type).toEqual('MyNamespace.MyType');
+		expect(namespaceType?.description).toEqual('namespace type');
+		expect(namespaceType?.schema).toEqual({
+			kind: 'object',
+			type: 'MyNamespace.MyType',
+			schema: {}
+		});
+
 		expect(inlined).toBeDefined();
 		expect(inlined?.default).toBeUndefined();
 		expect(inlined?.required).toBeTruthy();
@@ -531,7 +543,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const onBaz = meta.events.find(event => event.name === 'baz');
 
 		expect(onFoo).toBeDefined();
-		expect(onFoo?.type).toEqual('[data?: { foo: string; } | undefined]');
+		expect(onFoo?.type).toEqual('[{ foo: string; } | undefined]');
 		expect(onFoo?.signature).toEqual('(event: "foo", data?: { foo: string; } | undefined): void');
 		expect(onFoo?.schema).toEqual([
 			{
@@ -560,7 +572,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		]);
 
 		expect(onBar).toBeDefined();
-		expect(onBar?.type).toEqual('[value: { arg1: number; arg2?: any; }]');
+		expect(onBar?.type).toEqual('[{ arg1: number; arg2?: any; }]');
 		expect(onBar?.signature).toEqual('(event: "bar", value: { arg1: number; arg2?: any; }): void');
 		expect(onBar?.schema).toEqual([
 			{
@@ -593,7 +605,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		expect(onBaz).toBeDefined();
 		expect(onBaz?.type).toEqual('[]');
-		expect(onBaz?.signature).toEqual('(event: "baz"): void');
+		expect(onBaz?.signature).toEqual('(e: "baz"): void');
 		expect(onBaz?.schema).toEqual([]);
 	});
 
@@ -606,7 +618,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const onBar = meta.events.find(event => event.name === 'bar');
 
 		expect(onBar).toBeDefined();
-		expect(onBar?.type).toEqual('number');
+		expect(onBar?.type).toEqual('[number]');
 		expect(onBar?.signature).toEqual('(e: "bar", data: number): void');
 	});
 

@@ -1,4 +1,4 @@
-import { ExecuteCommandParams, ExecuteCommandRequest, type BaseLanguageClient } from '@volar/vscode';
+import { ExecuteCommandRequest, type BaseLanguageClient, type ExecuteCommandParams } from '@volar/vscode';
 import type { SFCParseResult } from '@vue/language-server';
 import { commands } from '@vue/language-server/lib/types';
 import { executeCommand, useActiveTextEditor, useCommand } from 'reactive-vscode';

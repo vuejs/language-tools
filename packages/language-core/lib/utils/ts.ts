@@ -267,6 +267,7 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		vitePressExtensions: [],
 		petiteVueExtensions: [],
 		jsxSlots: false,
+		strictSlotChildren: strictTemplates,
 		strictVModel: strictTemplates,
 		checkUnknownProps: strictTemplates,
 		checkUnknownEvents: strictTemplates,
@@ -288,9 +289,7 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		],
 		dataAttributes: [],
 		htmlAttributes: ['aria-*'],
-		optionsWrapper: target >= 2.7
-			? [`(await import('${lib}')).defineComponent(`, `)`]
-			: [`(await import('${lib}')).default.extend(`, `)`],
+		optionsWrapper: [`(await import('${lib}')).defineComponent(`, `)`],
 		macros: {
 			defineProps: ['defineProps'],
 			defineSlots: ['defineSlots'],
@@ -319,16 +318,6 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 				select: true
 			}
 		},
-	};
-}
-
-/**
- * @deprecated use `getDefaultCompilerOptions` instead
- */
-export function resolveVueCompilerOptions(options: Partial<VueCompilerOptions>): VueCompilerOptions {
-	return {
-		...getDefaultCompilerOptions(options.target, options.lib),
-		...options,
 	};
 }
 

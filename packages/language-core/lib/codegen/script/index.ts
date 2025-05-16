@@ -6,9 +6,9 @@ import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { generateGlobalTypes, getGlobalTypesFileName } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
-import { createScriptCodegenContext, ScriptCodegenContext } from './context';
+import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';
@@ -45,7 +45,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		}
 	}
 	else {
-		yield `/* placeholder */`;
+		yield `/// <reference path="./__VLS_fake.d.ts" />`;
 	}
 
 	if (options.sfc.script?.src) {
@@ -55,7 +55,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 	if (options.sfc.script && options.scriptRanges) {
-		const { exportDefault, classBlockEnd } = options.scriptRanges;
+		const { exportDefault } = options.scriptRanges;
 		const isExportRawObject = exportDefault
 			&& options.sfc.script.content[exportDefault.expression.start] === '{';
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
@@ -95,19 +95,6 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.start, exportDefault.expression.end, codeFeatures.all);
 			yield options.vueCompilerOptions.optionsWrapper[1];
 			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.end, options.sfc.script.content.length, codeFeatures.all);
-		}
-		else if (classBlockEnd !== undefined) {
-			if (options.vueCompilerOptions.skipTemplateCodegen) {
-				yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
-			}
-			else {
-				yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
-				yield `__VLS_template = () => {${newLine}`;
-				const templateCodegenCtx = yield* generateTemplate(options, ctx);
-				yield* generateComponentSelf(options, ctx, templateCodegenCtx);
-				yield `}${endOfLine}`;
-				yield generateSfcBlockSection(options.sfc.script, classBlockEnd, options.sfc.script.content.length, codeFeatures.all);
-			}
 		}
 		else {
 			yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);

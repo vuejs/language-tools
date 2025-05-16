@@ -1,6 +1,38 @@
 {
-	"latest": "2.2.9",
+	"latest": "3.0.0-alpha.7",
 	"versions": [
+		{
+			"version": "3.0.0-alpha.7",
+			"date": "2025-05-05",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.7",
+				"AFDIAN": "https://afdian.com/p/fa6e6926299111f098d452540025c377"
+			}
+		},
+		{
+			"version": "3.0.0-alpha.5",
+			"date": "2025-04-08",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.5",
+				"AFDIAN": "https://afdian.com/p/623aa52a148811f0bff452540025c377"
+			}
+		},
+		{
+			"version": "3.0.0-alpha.3",
+			"date": "2025-03-17",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.3",
+				"AFDIAN": "https://afdian.com/p/a9d56800028311f0b56952540025c377"
+			}
+		},
+		{
+			"version": "3.0.0-alpha.1",
+			"date": "2025-03-08",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.1",
+				"AFDIAN": "https://afdian.com/p/09694088fba011efa49c52540025c377"
+			}
+		},
 		{
 			"version": "2.2.9",
 			"date": "2025-03-02",

@@ -1,12 +1,14 @@
-import type * as CompilerDOM from '@vue/compiler-dom';
+import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { InlayHintInfo } from '../inlayHints';
+import type { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenOptions } from './index';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
+
+const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)-->$/;
 
 /**
  * Creates and returns a Context object used for generating type-checkable TS code
@@ -106,20 +108,12 @@ export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenCont
  * and additionally how we use that to determine whether to propagate diagnostics back upward.
  */
 export function createTemplateCodegenContext(options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames'>) {
-	let ignoredError = false;
-	let expectErrorToken: {
-		errors: number;
-		node: CompilerDOM.CommentNode;
-	} | undefined;
-	let lastGenericComment: {
-		content: string;
-		offset: number;
-	} | undefined;
 	let variableId = 0;
 
 	function resolveCodeFeatures(features: VueCodeInformation) {
-		if (features.verification) {
-			if (ignoredError) {
+		if (features.verification && stack.length) {
+			const data = stack[stack.length - 1];
+			if (data.ignoreError) {
 				// We are currently in a region of code covered by a @vue-ignore directive, so don't
 				// even bother performing any type-checking: set verification to false.
 				return {
@@ -127,17 +121,16 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 					verification: false,
 				};
 			}
-			if (expectErrorToken) {
+			if (data.expectError !== undefined) {
 				// We are currently in a region of code covered by a @vue-expect-error directive. We need to
 				// keep track of the number of errors encountered within this region so that we can know whether
 				// we will need to propagate an "unused ts-expect-error" diagnostic back to the original
 				// .vue file or not.
-				const token = expectErrorToken;
 				return {
 					...features,
 					verification: {
 						shouldReport: () => {
-							token.errors++;
+							data.expectError!.token++;
 							return false;
 						},
 					},
@@ -175,9 +168,25 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 	const templateRefs = new Map<string, {
 		typeExp: string;
 		offset: number;
-	}>();
+	}[]>();
+
+	const stack: {
+		ignoreError?: boolean;
+		expectError?: {
+			token: number;
+			node: CompilerDOM.CommentNode;
+		};
+		generic?: {
+			content: string;
+			offset: number;
+		},
+	}[] = [];
+	const commentBuffer: CompilerDOM.CommentNode[] = [];
 
 	return {
+		get currentInfo() {
+			return stack[stack.length - 1];
+		},
 		codeFeatures: new Proxy(codeFeatures, {
 			get(target, key: keyof typeof codeFeatures) {
 				const data = target[key];
@@ -185,11 +194,11 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 			},
 		}),
 		resolveCodeFeatures,
+		inVFor: false,
 		slots,
 		dynamicSlots,
 		dollarVars,
 		accessExternalVariables,
-		lastGenericComment,
 		blockConditions,
 		scopedClasses,
 		emptyClassOffsets,
@@ -199,10 +208,18 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		templateRefs,
 		currentComponent: undefined as {
 			ctxVar: string;
+			childTypes: string[];
 			used: boolean;
 		} | undefined,
 		singleRootElTypes: [] as string[],
 		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
+		addTemplateRef(name: string, typeExp: string, offset: number) {
+			let refs = templateRefs.get(name);
+			if (!refs) {
+				templateRefs.set(name, refs = []);
+			}
+			refs.push({ typeExp, offset });
+		},
 		accessExternalVariable(name: string, offset?: number) {
 			let arr = accessExternalVariables.get(name);
 			if (!arr) {
@@ -212,26 +229,26 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 				arr.add(offset);
 			}
 		},
-		hasLocalVariable: (name: string) => {
+		hasLocalVariable(name: string) {
 			return !!localVars.get(name);
 		},
-		addLocalVariable: (name: string) => {
+		addLocalVariable(name: string) {
 			localVars.set(name, (localVars.get(name) ?? 0) + 1);
 		},
-		removeLocalVariable: (name: string) => {
+		removeLocalVariable(name: string) {
 			localVars.set(name, localVars.get(name)! - 1);
 		},
-		getInternalVariable: () => {
+		getInternalVariable() {
 			return `__VLS_${variableId++}`;
 		},
-		getHoistVariable: (originalVar: string) => {
+		getHoistVariable(originalVar: string) {
 			let name = hoistVars.get(originalVar);
 			if (name === undefined) {
 				hoistVars.set(originalVar, name = `__VLS_${variableId++}`);
 			}
 			return name;
 		},
-		generateHoistVariables: function* () {
+		* generateHoistVariables() {
 			// trick to avoid TS 4081 (#5186)
 			if (hoistVars.size) {
 				yield `// @ts-ignore${newLine}`;
@@ -242,52 +259,12 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 				yield endOfLine;
 			}
 		},
-		generateConditionGuards: function* () {
+		* generateConditionGuards() {
 			for (const condition of blockConditions) {
 				yield `if (!${condition}) return${endOfLine}`;
 			}
 		},
-		ignoreError: function* (): Generator<Code> {
-			if (!ignoredError) {
-				ignoredError = true;
-				yield `// @vue-ignore start${newLine}`;
-			}
-		},
-		expectError: function* (prevNode: CompilerDOM.CommentNode): Generator<Code> {
-			if (!expectErrorToken) {
-				expectErrorToken = {
-					errors: 0,
-					node: prevNode,
-				};
-				yield `// @vue-expect-error start${newLine}`;
-			}
-		},
-		resetDirectiveComments: function* (endStr: string): Generator<Code> {
-			if (expectErrorToken) {
-				const token = expectErrorToken;
-				yield* wrapWith(
-					expectErrorToken.node.loc.start.offset,
-					expectErrorToken.node.loc.end.offset,
-					{
-						verification: {
-							// If no errors/warnings/diagnostics were reported within the region of code covered
-							// by the @vue-expect-error directive, then we should allow any `unused @ts-expect-error`
-							// diagnostics to be reported upward.
-							shouldReport: () => token.errors === 0,
-						},
-					},
-					`// @ts-expect-error __VLS_TS_EXPECT_ERROR`
-				);
-				yield `${newLine}${endOfLine}`;
-				expectErrorToken = undefined;
-				yield `// @vue-expect-error ${endStr}${newLine}`;
-			}
-			if (ignoredError) {
-				ignoredError = false;
-				yield `// @vue-ignore ${endStr}${newLine}`;
-			}
-		},
-		generateAutoImportCompletion: function* (): Generator<Code> {
+		* generateAutoImportCompletion(): Generator<Code> {
 			const all = [...accessExternalVariables.entries()];
 			if (!all.some(([_, offsets]) => offsets.size)) {
 				return;
@@ -321,6 +298,71 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 				offsets.clear();
 			}
 			yield `]${endOfLine}`;
-		}
+		},
+		enter(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode) {
+			if (node.type === CompilerDOM.NodeTypes.COMMENT) {
+				commentBuffer.push(node);
+				return false;
+			}
+
+			const data: typeof stack[number] = {};
+			const comments = [...commentBuffer];
+			commentBuffer.length = 0;
+
+			for (const comment of comments) {
+				const match = comment.loc.source.match(commentDirectiveRegex);
+				if (match) {
+					const { name, content } = match.groups!;
+					switch (name) {
+						case 'skip': {
+							return false;
+						}
+						case 'ignore': {
+							data.ignoreError = true;
+							break;
+						}
+						case 'expect-error': {
+							data.expectError = {
+								token: 0,
+								node: comment,
+							};
+							break;
+						}
+						case 'generic': {
+							const text = content.trim();
+							if (text.startsWith('{') && text.endsWith('}')) {
+								data.generic = {
+									content: text.slice(1, -1),
+									offset: comment.loc.start.offset + comment.loc.source.indexOf('{') + 1,
+								};
+							}
+							break;
+						}
+					}
+				}
+			}
+			stack.push(data);
+			return true;
+		},
+		* exit(): Generator<Code> {
+			const data = stack.pop()!;
+			commentBuffer.length = 0;
+			if (data.expectError !== undefined) {
+				yield* wrapWith(
+					data.expectError.node.loc.start.offset,
+					data.expectError.node.loc.end.offset,
+					{
+						verification: {
+							// If no errors/warnings/diagnostics were reported within the region of code covered
+							// by the @vue-expect-error directive, then we should allow any `unused @ts-expect-error`
+							// diagnostics to be reported upward.
+							shouldReport: () => data.expectError!.token === 0,
+						},
+					},
+					`// @ts-expect-error`
+				);
+				yield `${newLine}${endOfLine}`;
+			}
+		},
 	};
 }

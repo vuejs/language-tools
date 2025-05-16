@@ -1,7 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import type { Code } from '../../types';
-import { hyphenateAttr } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
@@ -34,8 +33,6 @@ export function* generateElementDirectives(
 			|| prop.name === 'on'
 			|| prop.name === 'model'
 			|| prop.name === 'bind'
-			|| prop.name === 'scope'
-			|| prop.name === 'data'
 		) {
 			continue;
 		}
@@ -73,14 +70,8 @@ function* generateIdentifier(
 			'template',
 			prop.loc.start.offset,
 			ctx.resolveCodeFeatures({
-				...codeFeatures.withoutHighlight,
-				// fix https://github.com/vuejs/language-tools/issues/1905
-				...codeFeatures.additionalCompletion,
+				...codeFeatures.withoutHighlightAndCompletion,
 				verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
-				navigation: {
-					resolveRenameNewName: camelize,
-					resolveRenameEditText: getPropRenameApply(prop.name),
-				},
 			})
 		)
 	);
@@ -183,11 +174,6 @@ function* generateValue(
 		options,
 		ctx,
 		prop,
-		exp,
-		ctx.codeFeatures.all
+		exp
 	);
-}
-
-function getPropRenameApply(oldName: string) {
-	return oldName === hyphenateAttr(oldName) ? hyphenateAttr : undefined;
 }

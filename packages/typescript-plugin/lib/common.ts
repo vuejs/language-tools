@@ -1,7 +1,8 @@
-import { forEachElementNode, hyphenateTag, Language, VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
+import { forEachElementNode, hyphenateTag, type Language, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
-import { _getComponentNames, _getElementNames } from './requests/getComponentNames';
+import { _getComponentNames } from './requests/getComponentNames';
+import { _getElementNames } from './requests/getElementNames';
 import type { RequestContext } from './requests/types';
 
 const windowsPathReg = /\\/g;
@@ -184,6 +185,18 @@ function getDefinitionAndBoundSpan<T>(
 		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
 		const skippedDefinitions: ts.DefinitionInfo[] = [];
 
+		// #5275
+		if (result.definitions.length >= 2) {
+			for (const definition of result.definitions) {
+				if (
+					root.sfc.content[definition.textSpan.start - 1] === '@'
+					|| root.sfc.content.slice(definition.textSpan.start - 5, definition.textSpan.start) === 'v-on:'
+				) {
+					skippedDefinitions.push(definition);
+				}
+			}
+		}
+
 		for (const definition of result.definitions) {
 			if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
 				continue;
@@ -335,7 +348,7 @@ function getEncodedSemanticClassifications<T>(
 	};
 }
 
-export function getComponentSpans(
+function getComponentSpans(
 	this: Pick<RequestContext, 'typescript' | 'languageService'>,
 	vueCode: VueVirtualCode,
 	template: NonNullable<VueVirtualCode['_sfc']['template']>,

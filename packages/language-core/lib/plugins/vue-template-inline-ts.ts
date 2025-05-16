@@ -47,15 +47,18 @@ const plugin: VueLanguagePlugin = ctx => {
 		},
 
 		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
+			if (!embeddedFile.id.startsWith('template_inline_ts_')) {
+				return;
+			}
 			// access template content to watch change
-			(() => sfc.template?.content)();
+			void sfc.template?.content;
 
 			const parsed = parseds.get(sfc);
 			if (parsed) {
 				const codes = parsed.get(embeddedFile.id);
 				if (codes) {
 					embeddedFile.content.push(...codes);
-					embeddedFile.parentCodeId = 'template';
+					embeddedFile.parentCodeId = sfc.template?.lang === 'md' ? 'root_tags' : 'template';
 				}
 			}
 		},

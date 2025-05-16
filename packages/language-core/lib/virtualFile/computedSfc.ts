@@ -1,11 +1,11 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
-import { computed, pauseTracking, resumeTracking } from 'alien-signals';
+import { computed, setCurrentSub } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
 import { parseCssVars } from '../utils/parseCssVars';
-import { computedArray } from '../utils/signals';
+import { computedArray, computedItems } from '../utils/signals';
 
 export function computedSfc(
 	ts: typeof import('typescript'),
@@ -16,9 +16,9 @@ export function computedSfc(
 ): Sfc {
 
 	const getUntrackedSnapshot = () => {
-		pauseTracking();
+		const pausedSub = setCurrentSub(undefined);
 		const res = getSnapshot();
-		resumeTracking();
+		setCurrentSub(pausedSub);
 		return res;
 	};
 	const getContent = computed(() => {
@@ -116,8 +116,14 @@ export function computedSfc(
 			const base = computedSfcBlock('style_' + i, 'css', getBlock);
 			const getModule = computedAttrValue('__module', base, getBlock);
 			const getScoped = computed(() => !!getBlock().scoped);
-			const getCssVars = computed(() => [...parseCssVars(base.content)]);
-			const getClassNames = computed(() => [...parseCssClassNames(base.content)]);
+			const getCssVars = computedItems(
+				() => [...parseCssVars(base.content)],
+				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset
+			);
+			const getClassNames = computedItems(
+				() => [...parseCssClassNames(base.content)],
+				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset
+			);
 			return () => mergeObject(base, {
 				get module() { return getModule(); },
 				get scoped() { return getScoped(); },
@@ -172,9 +178,9 @@ export function computedSfc(
 				const change = getUntrackedSnapshot().getChangeRange(cache.snapshot);
 				if (change) {
 
-					pauseTracking();
+					const pausedSub = setCurrentSub(undefined);
 					const templateOffset = base.startTagEnd;
-					resumeTracking();
+					setCurrentSub(pausedSub);
 
 					const newText = getUntrackedSnapshot().getText(change.span.start, change.span.start + change.newLength);
 					const newResult = cache.plugin.updateSFCTemplate(cache.result, {

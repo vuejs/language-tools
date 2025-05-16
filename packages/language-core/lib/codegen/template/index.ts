@@ -1,10 +1,9 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
-import { getSlotsPropertyName } from '../../utils/shared';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
-import { TemplateCodegenContext, createTemplateCodegenContext } from './context';
+import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild, getVForNode } from './templateChild';
@@ -35,9 +34,8 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		ctx.addLocalVariable(options.propsAssignName);
 	}
 
-	const slotsPropertyName = getSlotsPropertyName(options.vueCompilerOptions.target);
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
-		ctx.dollarVars.add(slotsPropertyName);
+		ctx.dollarVars.add('$slots');
 	}
 	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
 		ctx.dollarVars.add('$attrs');
@@ -50,15 +48,14 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	}
 
 	if (options.template.ast) {
-		yield* generateTemplateChild(options, ctx, options.template.ast, undefined);
+		yield* generateTemplateChild(options, ctx, options.template.ast);
 	}
 
 	yield* generateStyleScopedClassReferences(ctx);
-	yield* ctx.generateAutoImportCompletion();
 	yield* ctx.generateHoistVariables();
 
 	const speicalTypes = [
-		[slotsPropertyName, yield* generateSlots(options, ctx)],
+		['$slots', yield* generateSlots(options, ctx)],
 		['$attrs', yield* generateInheritedAttrs(options, ctx)],
 		['$refs', yield* generateTemplateRefs(options, ctx)],
 		['$el', yield* generateRootEl(ctx)]
@@ -140,18 +137,32 @@ function* generateTemplateRefs(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
-	yield `type __VLS_TemplateRefs = {${newLine}`;
-	for (const [name, { typeExp, offset }] of ctx.templateRefs) {
-		yield* generateObjectProperty(
-			options,
-			ctx,
-			name,
-			offset,
-			ctx.codeFeatures.navigationAndCompletion
-		);
-		yield `: ${typeExp},${newLine}`;
+	yield `type __VLS_TemplateRefs = {}`;
+	for (const [name, refs] of ctx.templateRefs) {
+		yield `${newLine}& `;
+		if (refs.length >= 2) {
+			yield `(`;
+		}
+		for (let i = 0; i < refs.length; i++) {
+			const { typeExp, offset } = refs[i];
+			if (i) {
+				yield ` | `;
+			}
+			yield `{ `;
+			yield* generateObjectProperty(
+				options,
+				ctx,
+				name,
+				offset,
+				ctx.codeFeatures.navigation
+			);
+			yield `: ${typeExp} }`;
+		}
+		if (refs.length >= 2) {
+			yield `)`;
+		}
 	}
-	yield `}${endOfLine}`;
+	yield endOfLine;
 	return `__VLS_TemplateRefs`;
 }
 

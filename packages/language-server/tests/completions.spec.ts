@@ -1,4 +1,4 @@
-import { TextDocument } from '@volar/language-server';
+import type { TextDocument } from '@volar/language-server';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server.js';
@@ -50,6 +50,12 @@ test('#4670', async () => {
 		[
 		  "onclick",
 		  "ondblclick",
+		  "v-on:auxclick",
+		  "@auxclick",
+		  "v-on:click",
+		  "@click",
+		  "v-on:dblclick",
+		  "@dblclick",
 		]
 	`);
 });
@@ -171,6 +177,9 @@ test('HTML tags and built-in components', async () => {
 		  "data",
 		  "hgroup",
 		  "menu",
+		  "search",
+		  "fencedframe",
+		  "selectedcontent",
 		  "Transition",
 		  "TransitionGroup",
 		  "KeepAlive",
@@ -181,7 +190,6 @@ test('HTML tags and built-in components', async () => {
 		  "template",
 		  "BaseTransition",
 		  "Fixture",
-		  "foo",
 		]
 	`);
 });
@@ -247,7 +255,7 @@ test('Slot name', async () => {
 	`, 'default');
 });
 
-test.skip('#2454', async () => {
+test('#2454', async () => {
 	await requestCompletionItemToVueServer('fixture.vue', 'vue', `
 		<script setup lang="ts">
 		let vLoading: any;

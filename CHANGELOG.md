@@ -2,6 +2,15 @@
 
 > [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
 
+## 2.2.10 <sup>official</sup> (2025-04-22)
+
+## Bug Fixes
+
+- fix(language-core): generate condition guards for model events (#5225) - Thanks to @KazariEX!
+- fix(language-core): prevent global types generation in declaration files (#5239) - Thanks to @KazariEX!
+- fix(language-core): prevent eager inference of slot props from generics (#5247) - Thanks to @KazariEX!
+- fix(typescript-plugin): prevent highlighting native element tags with same name as components (#5253) - Thanks to @KazariEX!
+
 ## 2.2.8 <sup>official</sup>, 2.2.9 <sup>insiders</sup> (2025-03-02)
 
 ### Bug Fixes

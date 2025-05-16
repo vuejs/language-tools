@@ -12,4 +12,3 @@ export * from './lib/virtualFile/vueFile';
 export { tsCodegen } from './lib/plugins/vue-tsx';
 
 export * from '@volar/language-core';
-export type * as CompilerDOM from '@vue/compiler-dom';

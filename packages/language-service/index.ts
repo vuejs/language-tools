@@ -2,7 +2,7 @@
 
 export * from '@volar/language-service';
 export * from '@vue/language-core';
-export * from './lib/ideFeatures/nameCasing';
+export * from './lib/nameCasing';
 export * from './lib/types';
 
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
@@ -18,17 +18,20 @@ import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescr
 import { create as createCssPlugin } from './lib/plugins/css';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoinsert-space';
+import { create as createVueCompilerDomErrorsPlugin } from './lib/plugins/vue-compiler-dom-errors';
 import { create as createVueCompleteDefineAssignmentPlugin } from './lib/plugins/vue-complete-define-assignment';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
+import { create as createVueDocumentHighlightsPlugin } from './lib/plugins/vue-document-highlights';
 import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-document-links';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
+import { create as createVueMissingPropsHintsPlugin } from './lib/plugins/vue-missing-props-hints';
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 
-import { parse, VueCompilerOptions } from '@vue/language-core';
+import { parse, type VueCompilerOptions } from '@vue/language-core';
 import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
 import { getComponentDirectives } from '@vue/typescript-plugin/lib/requests/getComponentDirectives';
@@ -36,11 +39,12 @@ import { getComponentEvents } from '@vue/typescript-plugin/lib/requests/getCompo
 import { getComponentNames } from '@vue/typescript-plugin/lib/requests/getComponentNames';
 import { getComponentProps } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { getElementAttrs } from '@vue/typescript-plugin/lib/requests/getElementAttrs';
+import { getElementNames } from '@vue/typescript-plugin/lib/requests/getElementNames';
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
 import { URI } from 'vscode-uri';
-import { convertAttrName, convertTagName, detect } from './lib/ideFeatures/nameCasing';
+import { convertAttrName, convertTagName, detect } from './lib/nameCasing';
 
 declare module '@volar/language-service' {
 	export interface ProjectContext {
@@ -88,7 +92,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 	}
 	return plugins;
 
-	function getTsPluginClientForLSP(context: LanguageServiceContext): typeof import('@vue/typescript-plugin/lib/client') | undefined {
+	function getTsPluginClientForLSP(context: LanguageServiceContext): import('@vue/typescript-plugin/lib/requests').Requests | undefined {
 		if (!context.project.typescript) {
 			return;
 		}
@@ -106,28 +110,31 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 		};
 		return {
 			async collectExtractProps(...args) {
-				return await collectExtractProps.apply(requestContext, args);
+				return collectExtractProps.apply(requestContext, args);
 			},
 			async getPropertiesAtLocation(...args) {
-				return await getPropertiesAtLocation.apply(requestContext, args);
+				return getPropertiesAtLocation.apply(requestContext, args);
 			},
 			async getImportPathForFile(...args) {
-				return await getImportPathForFile.apply(requestContext, args);
+				return getImportPathForFile.apply(requestContext, args);
 			},
 			async getComponentEvents(...args) {
-				return await getComponentEvents.apply(requestContext, args);
+				return getComponentEvents.apply(requestContext, args);
 			},
 			async getComponentDirectives(...args) {
-				return await getComponentDirectives.apply(requestContext, args);
+				return getComponentDirectives.apply(requestContext, args);
 			},
 			async getComponentNames(...args) {
-				return await getComponentNames.apply(requestContext, args);
+				return getComponentNames.apply(requestContext, args);
 			},
 			async getComponentProps(...args) {
-				return await getComponentProps.apply(requestContext, args);
+				return getComponentProps.apply(requestContext, args);
 			},
 			async getElementAttrs(...args) {
-				return await getElementAttrs.apply(requestContext, args);
+				return getElementAttrs.apply(requestContext, args);
+			},
+			async getElementNames(...args) {
+				return getElementNames.apply(requestContext, args);
 			},
 			async getQuickInfoAtPosition(fileName, position) {
 				const languageService = context.getLanguageService();
@@ -136,8 +143,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 				if (!sourceScript) {
 					return;
 				}
-				const document = context.documents.get(uri, sourceScript.languageId, sourceScript.snapshot);
-				const hover = await languageService.getHover(uri, document.positionAt(position));
+				const hover = await languageService.getHover(uri, position);
 				let text = '';
 				if (typeof hover?.contents === 'string') {
 					text = hover.contents;
@@ -166,15 +172,22 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 	}
 }
 
+import type * as ts from 'typescript';
+
 export function getHybridModeLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	getTsPluginClient: typeof import("@vue/typescript-plugin/lib/client")
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests & {
+		getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>;
+	} | undefined
 ) {
 	const plugins = [
 		createTypeScriptSyntacticPlugin(ts),
 		createTypeScriptDocCommentTemplatePlugin(ts),
-		...getCommonLanguageServicePlugins(ts, () => getTsPluginClient)
+		...getCommonLanguageServicePlugins(ts, () => tsPluginClient)
 	];
+	if (tsPluginClient) {
+		plugins.push(createVueDocumentHighlightsPlugin(tsPluginClient.getDocumentHighlights));
+	}
 	for (const plugin of plugins) {
 		// avoid affecting TS plugin
 		delete plugin.capabilities.semanticTokensProvider;
@@ -184,19 +197,21 @@ export function getHybridModeLanguageServicePlugins(
 
 function getCommonLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	getTsPluginClient: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin[] {
 	return [
 		createTypeScriptTwoslashQueriesPlugin(ts),
 		createCssPlugin(),
 		createPugFormatPlugin(),
 		createJsonPlugin(),
-		createVueTemplatePlugin('html', ts, getTsPluginClient),
-		createVueTemplatePlugin('pug', ts, getTsPluginClient),
+		createVueTemplatePlugin('html', getTsPluginClient),
+		createVueTemplatePlugin('pug', getTsPluginClient),
+		createVueMissingPropsHintsPlugin(getTsPluginClient),
+		createVueCompilerDomErrorsPlugin(),
 		createVueSfcPlugin(),
 		createVueTwoslashQueriesPlugin(getTsPluginClient),
-		createVueDocumentLinksPlugin(),
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
+		createVueDocumentLinksPlugin(),
 		createVueCompleteDefineAssignmentPlugin(),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueAutoAddSpacePlugin(),

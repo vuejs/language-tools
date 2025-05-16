@@ -7,7 +7,7 @@ import { isTsDocument, sleep } from './utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
