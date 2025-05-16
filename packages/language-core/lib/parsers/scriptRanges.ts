@@ -67,7 +67,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 					args: _getStartEnd(obj),
 					argsNode: obj,
 					componentsOption: componentsOptionNode ? _getStartEnd(componentsOptionNode) : undefined,
-					componentsOptionNode: componentsOptionNode,
+					componentsOptionNode,
 					directivesOption: directivesOptionNode ? _getStartEnd(directivesOptionNode) : undefined,
 					nameOption: nameOptionNode ? _getStartEnd(nameOptionNode) : undefined,
 					inheritAttrsOption,
