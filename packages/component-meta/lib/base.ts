@@ -299,7 +299,7 @@ ${typeHelpersCode}
 		function getProps() {
 
 			const $props = symbolProperties.find(prop => prop.escapedName === 'props');
-			const propEventRegex = /^(on[A-Z])/;
+			const vnodeEventRegex = /^onVnode[A-Z]/;
 			let result: PropertyMeta[] = [];
 
 			if ($props) {
@@ -314,7 +314,7 @@ ${typeHelpersCode}
 
 						return resolveNestedProperties(prop);
 					})
-					.filter(prop => !propEventRegex.test(prop.name));
+					.filter(prop => !vnodeEventRegex.test(prop.name));
 			}
 
 			// fill global
