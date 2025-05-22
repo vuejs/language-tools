@@ -454,21 +454,7 @@
 					"group": "navigation"
 				}
 			]
-		},
-		"problemMatchers": [
-			{
-				"name": "vite",
-				"label": "Vite problems",
-				"pattern": {
-					"regexp": ""
-				},
-				"background": {
-					"activeOnStart": true,
-					"beginsPattern": "restarting server...$",
-					"endsPattern": "\\s*ready in|server restarted."
-				}
-			}
-		]
+		}
 	},
 	"scripts": {
 		"build:dev": "rolldown --config",
