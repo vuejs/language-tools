@@ -69,7 +69,7 @@ lspconfig.ts_ls.setup {
 }
 
 -- No need to set `hybridMode` to `true` as it's the default value
-lspconfig.volar.setup {}
+lspconfig.vue_ls.setup {}
 ```
 
 ### Non-Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
