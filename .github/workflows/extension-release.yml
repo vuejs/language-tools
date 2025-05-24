@@ -27,12 +27,12 @@ jobs:
 
       - name: Publish
         run: |
-          TAG_NAME=${GITHUB_REF##*/}
-          if [[ "$TAG_NAME" == *-* ]]; then
-            echo "Detected prerelease version: $TAG_NAME"
+          VERSION=$(jq -r .version package.json)
+          if [[ "$VERSION" == *-* ]]; then
+            echo "Detected prerelease version: $VERSION"
             pnpm ovsx publish --pre-release
           else
-            echo "Detected stable release version: $TAG_NAME"
+            echo "Detected stable release version: $VERSION"
             pnpm ovsx publish
           fi
         working-directory: extensions/vscode
