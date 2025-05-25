@@ -28,66 +28,84 @@ export function create(): LanguageServicePlugin {
 					return diagnostics;
 				},
 				/**
-				 * If the editing position is within the virtual code and navigation is enabled,
-				 * skip the CSS renaming feature.
+				 * If the position is within the virtual code and navigation is enabled,
+				 * skip the CSS navigation feature.
 				 */
+				provideReferences(document, position) {
+					if (isWithinNavigationVirtualCode(document, position)) {
+						return;
+					}
+					return worker(document, (stylesheet, cssLs) => {
+						return cssLs.findReferences(document, position, stylesheet);
+					});
+				},
 				provideRenameRange(document, position) {
-					do {
-						const uri = URI.parse(document.uri);
-						const decoded = context.decodeEmbeddedDocumentUri(uri);
-						const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-						const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-						if (!sourceScript?.generated || !virtualCode?.id.startsWith('style_')) {
-							break;
-						}
-
-						const root = sourceScript.generated.root;
-						if (!(root instanceof VueVirtualCode)) {
-							break;
-						}
-
-						const block = root.sfc.styles.find(style => style.name === decoded![1]);
-						if (!block) {
-							break;
-						}
-
-						let script: VirtualCode | undefined;
-						for (const [key, value] of sourceScript.generated.embeddedCodes) {
-							if (key.startsWith('script_')) {
-								script = value;
-								break;
-							}
-						}
-						if (!script) {
-							break;
-						}
-
-						const offset = document.offsetAt(position) + block.startTagEnd;
-						for (const { sourceOffsets, lengths, data } of script.mappings) {
-							if (
-								!sourceOffsets.length
-								|| !data.navigation
-								|| typeof data.navigation === 'object' && !data.navigation.shouldRename
-							) {
-								continue;
-							}
-
-							const start = sourceOffsets[0];
-							const end = sourceOffsets.at(-1)! + lengths.at(-1)!;
-
-							if (offset >= start && offset <= end) {
-								return;
-							}
-						}
-					} while (0);
-
+					if (isWithinNavigationVirtualCode(document, position)) {
+						return;
+					}
 					return worker(document, (stylesheet, cssLs) => {
 						return cssLs.prepareRename(document, position, stylesheet);
 					});
 				}
 			};
 
-			function worker<T>(document: TextDocument, callback: (stylesheet: css.Stylesheet, cssLs: css.LanguageService) => T) {
+			function isWithinNavigationVirtualCode(
+				document: TextDocument,
+				position: css.Position
+			) {
+				const uri = URI.parse(document.uri);
+				const decoded = context.decodeEmbeddedDocumentUri(uri);
+				const sourceScript = decoded && context.language.scripts.get(decoded[0]);
+				const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
+				if (!sourceScript?.generated || !virtualCode?.id.startsWith('style_')) {
+					return false;
+				}
+
+				const root = sourceScript.generated.root;
+				if (!(root instanceof VueVirtualCode)) {
+					return false;
+				}
+
+				const block = root.sfc.styles.find(style => style.name === decoded![1]);
+				if (!block) {
+					return false;
+				}
+
+				let script: VirtualCode | undefined;
+				for (const [key, value] of sourceScript.generated.embeddedCodes) {
+					if (key.startsWith('script_')) {
+						script = value;
+						break;
+					}
+				}
+				if (!script) {
+					return false;
+				}
+
+				const offset = document.offsetAt(position) + block.startTagEnd;
+				for (const { sourceOffsets, lengths, data } of script.mappings) {
+					if (
+						!sourceOffsets.length
+						|| !data.navigation
+						|| typeof data.navigation === 'object' && !data.navigation.shouldRename
+					) {
+						continue;
+					}
+
+					const start = sourceOffsets[0];
+					const end = sourceOffsets.at(-1)! + lengths.at(-1)!;
+
+					if (offset >= start && offset <= end) {
+						return true;
+					}
+				}
+				return false;
+			}
+
+			function worker<T>(
+				document: TextDocument,
+				callback: (stylesheet: css.Stylesheet, cssLs: css.LanguageService) => T
+			) {
 				const cssLs = getCssLs(document);
 				if (!cssLs) {
 					return;
