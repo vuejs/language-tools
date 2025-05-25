@@ -28,7 +28,7 @@ export function create(): LanguageServicePlugin {
 					return diagnostics;
 				},
 				/**
-				 * If the position is inside the virtual code and navigation is enabled,
+				 * If the position is within the virtual code and navigation is enabled,
 				 * skip the CSS navigation feature.
 				 */
 				provideReferences(document, position) {
