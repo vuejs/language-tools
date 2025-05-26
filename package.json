@@ -11,7 +11,7 @@
 		"release:base": "lerna publish --exact --force-publish --yes --sync-workspace-lock --no-git-tag-version",
 		"release:vue": "cd ./extensions/vscode && pnpm run release",
 		"release:next": "pnpm run release:next-base && pnpm run release:next-vue",
-		"release:next-base": "pnpm run release:base -- --dist-tag next",
+		"release:next-base": "pnpm run release:base --dist-tag next",
 		"release:next-vue": "cd ./extensions/vscode && pnpm run release:next",
 		"test": "vitest run",
 		"test:update": "vitest run --update",
