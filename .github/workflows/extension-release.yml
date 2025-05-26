@@ -26,7 +26,15 @@ jobs:
         run: pnpm run build && pnpm --filter volar run build:prod
 
       - name: Publish
-        run: pnpm ovsx publish
+        run: |
+          VERSION=$(jq -r .version package.json)
+          if [[ "$VERSION" == *-* ]]; then
+            echo "Detected prerelease version: $VERSION"
+            pnpm ovsx publish --pre-release
+          else
+            echo "Detected stable release version: $VERSION"
+            pnpm ovsx publish
+          fi
         working-directory: extensions/vscode
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
