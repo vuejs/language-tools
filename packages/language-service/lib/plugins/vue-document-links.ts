@@ -17,7 +17,7 @@ export function create(): LanguageServicePlugin {
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript?.generated || virtualCode?.id !== 'template') {
+					if (!sourceScript?.generated || (virtualCode?.id !== 'template' && virtualCode?.id !== "scriptsetup_raw")) {
 						return;
 					}
 
@@ -30,48 +30,95 @@ export function create(): LanguageServicePlugin {
 
 					const { sfc } = root;
 					const codegen = tsCodegen.get(sfc);
-					const scopedClasses = codegen?.getGeneratedTemplate()?.scopedClasses ?? [];
-					const styleClasses = new Map<string, {
-						index: number;
-						style: Sfc['styles'][number];
-						classOffset: number;
-					}[]>();
-					const option = root.vueCompilerOptions.experimentalResolveStyleCssClasses;
+					if (virtualCode.id === 'template') {
+						const scopedClasses = codegen?.getGeneratedTemplate()?.scopedClasses ?? [];
+						const styleClasses = new Map<string, {
+							index: number;
+							style: Sfc['styles'][number];
+							classOffset: number;
+						}[]>();
+						const option = root.vueCompilerOptions.experimentalResolveStyleCssClasses;
 
-					for (let i = 0; i < sfc.styles.length; i++) {
-						const style = sfc.styles[i];
-						if (option === 'always' || (option === 'scoped' && style.scoped)) {
-							for (const className of style.classNames) {
-								if (!styleClasses.has(className.text.slice(1))) {
-									styleClasses.set(className.text.slice(1), []);
+						for (let i = 0; i < sfc.styles.length; i++) {
+							const style = sfc.styles[i];
+							if (option === 'always' || (option === 'scoped' && style.scoped)) {
+								for (const className of style.classNames) {
+									if (!styleClasses.has(className.text.slice(1))) {
+										styleClasses.set(className.text.slice(1), []);
+									}
+									styleClasses.get(className.text.slice(1))!.push({
+										index: i,
+										style,
+										classOffset: className.offset,
+									});
 								}
-								styleClasses.get(className.text.slice(1))!.push({
-									index: i,
-									style,
-									classOffset: className.offset,
-								});
+							}
+						}
+
+						for (const { className, offset } of scopedClasses) {
+							const styles = styleClasses.get(className);
+							if (styles) {
+								for (const style of styles) {
+									const styleDocumentUri = context.encodeEmbeddedDocumentUri(decoded![0], 'style_' + style.index);
+									const styleVirtualCode = sourceScript.generated.embeddedCodes.get('style_' + style.index);
+									if (!styleVirtualCode) {
+										continue;
+									}
+									const styleDocument = context.documents.get(styleDocumentUri, styleVirtualCode.languageId, styleVirtualCode.snapshot);
+									const start = styleDocument.positionAt(style.classOffset);
+									const end = styleDocument.positionAt(style.classOffset + className.length + 1);
+									result.push({
+										range: {
+											start: document.positionAt(offset),
+											end: document.positionAt(offset + className.length),
+										},
+										target: context.encodeEmbeddedDocumentUri(decoded![0], 'style_' + style.index) + `#L${start.line + 1},${start.character + 1}-L${end.line + 1},${end.character + 1}`,
+									});
+								}
 							}
 						}
 					}
+					else if (virtualCode.id === 'scriptsetup_raw') {
+						if (!sfc.scriptSetup) {
+							return;
+						}
 
-					for (const { className, offset } of scopedClasses) {
-						const styles = styleClasses.get(className);
-						if (styles) {
-							for (const style of styles) {
-								const styleDocumentUri = context.encodeEmbeddedDocumentUri(decoded![0], 'style_' + style.index);
-								const styleVirtualCode = sourceScript.generated.embeddedCodes.get('style_' + style.index);
-								if (!styleVirtualCode) {
-									continue;
-								}
-								const styleDocument = context.documents.get(styleDocumentUri, styleVirtualCode.languageId, styleVirtualCode.snapshot);
-								const start = styleDocument.positionAt(style.classOffset);
-								const end = styleDocument.positionAt(style.classOffset + className.length + 1);
+						const templateRefs = codegen?.getGeneratedTemplate()?.templateRefs ?? [];
+						const scriptSetupUseTemplateRefs = codegen?.getScriptSetupRanges()?.useTemplateRef ?? [];
+						const templateRefOffsetsByName = new Map<string, number[]>();
+						for (const [name, refs] of templateRefs) {
+							templateRefOffsetsByName.set(name, refs.map(ref => ref.offset));
+						}
+
+						const templateDocumentUri = context.encodeEmbeddedDocumentUri(decoded![0], 'template');
+						const templateVirtualCode = sourceScript.generated.embeddedCodes.get('template');
+						if (!templateVirtualCode) {
+							return;
+						}
+						const templateDocument = context.documents.get(templateDocumentUri, templateVirtualCode.languageId, templateVirtualCode.snapshot);
+
+						for (const { arg } of scriptSetupUseTemplateRefs) {
+							if (!arg) {
+								continue;
+							}
+
+							const scriptSetupTemplateRefName = sfc.scriptSetup.content.slice(arg.start + 1, arg.end - 1);
+
+							const templateRefOffsets = templateRefOffsetsByName.get(scriptSetupTemplateRefName);
+							if (!templateRefOffsets) {
+								continue;
+							}
+
+							for (const templateRefOffset of templateRefOffsets) {
+								const targetStart = templateDocument.positionAt(templateRefOffset);
+								const targetEnd = templateDocument.positionAt(templateRefOffset + scriptSetupTemplateRefName.length);
+
 								result.push({
 									range: {
-										start: document.positionAt(offset),
-										end: document.positionAt(offset + className.length),
+										start: document.positionAt(arg.start + 1),
+										end: document.positionAt(arg.end - 1),
 									},
-									target: context.encodeEmbeddedDocumentUri(decoded![0], 'style_' + style.index) + `#L${start.line + 1},${start.character + 1}-L${end.line + 1},${end.character + 1}`,
+									target: templateDocumentUri + `#L${targetStart.line + 1},${targetStart.character + 1}-L${targetEnd.line + 1},${targetEnd.character + 1}`,
 								});
 							}
 						}
