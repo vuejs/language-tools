@@ -26,10 +26,10 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const result: vscode.DocumentLink[] = [];
-
 					const { sfc } = root;
 					const codegen = tsCodegen.get(sfc);
+					const result: vscode.DocumentLink[] = [];
+
 					if (virtualCode.id === 'template') {
 						const scopedClasses = codegen?.getGeneratedTemplate()?.scopedClasses ?? [];
 						const styleClasses = new Map<string, {
@@ -83,42 +83,33 @@ export function create(): LanguageServicePlugin {
 							return;
 						}
 
-						const templateRefs = codegen?.getGeneratedTemplate()?.templateRefs ?? [];
-						const scriptSetupUseTemplateRefs = codegen?.getScriptSetupRanges()?.useTemplateRef ?? [];
-						const templateRefOffsetsByName = new Map<string, number[]>();
-						for (const [name, refs] of templateRefs) {
-							templateRefOffsetsByName.set(name, refs.map(ref => ref.offset));
-						}
-
-						const templateDocumentUri = context.encodeEmbeddedDocumentUri(decoded![0], 'template');
 						const templateVirtualCode = sourceScript.generated.embeddedCodes.get('template');
 						if (!templateVirtualCode) {
 							return;
 						}
+						const templateDocumentUri = context.encodeEmbeddedDocumentUri(decoded![0], 'template');
 						const templateDocument = context.documents.get(templateDocumentUri, templateVirtualCode.languageId, templateVirtualCode.snapshot);
 
-						for (const { arg } of scriptSetupUseTemplateRefs) {
+						const templateRefs = codegen?.getGeneratedTemplate()?.templateRefs;
+						const useTemplateRefs = codegen?.getScriptSetupRanges()?.useTemplateRef ?? [];
+
+						for (const { arg } of useTemplateRefs) {
 							if (!arg) {
 								continue;
 							}
 
-							const scriptSetupTemplateRefName = sfc.scriptSetup.content.slice(arg.start + 1, arg.end - 1);
+							const name = sfc.scriptSetup.content.slice(arg.start + 1, arg.end - 1);
 
-							const templateRefOffsets = templateRefOffsetsByName.get(scriptSetupTemplateRefName);
-							if (!templateRefOffsets) {
-								continue;
-							}
-
-							for (const templateRefOffset of templateRefOffsets) {
-								const targetStart = templateDocument.positionAt(templateRefOffset);
-								const targetEnd = templateDocument.positionAt(templateRefOffset + scriptSetupTemplateRefName.length);
+							for (const { offset } of templateRefs?.get(name) ?? []) {
+								const start = templateDocument.positionAt(offset);
+								const end = templateDocument.positionAt(offset + name.length);
 
 								result.push({
 									range: {
 										start: document.positionAt(arg.start + 1),
 										end: document.positionAt(arg.end - 1),
 									},
-									target: templateDocumentUri + `#L${targetStart.line + 1},${targetStart.character + 1}-L${targetEnd.line + 1},${targetEnd.character + 1}`,
+									target: templateDocumentUri + `#L${start.line + 1},${start.character + 1}-L${end.line + 1},${end.character + 1}`,
 								});
 							}
 						}
