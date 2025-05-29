@@ -118,7 +118,7 @@ async function requestDocumentLinks(fileName: string, languageId: string, conten
 	expect(documentLinks!.length).greaterThan(0);
 
 	for (const documentLink of documentLinks!) {
-		documentLink.target = documentLink.target!.replace(testWorkspacePath, "${testWorkspacePath}");
+		documentLink.target = 'file://${testWorkspacePath}' + documentLink.target!.slice(URI.file(testWorkspacePath).toString().length)
 	}
 
 	return documentLinks!;
