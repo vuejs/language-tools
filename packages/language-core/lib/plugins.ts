@@ -34,7 +34,7 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		...pluginContext.vueCompilerOptions.plugins,
 	];
 
-	const pluginInstances = plugins
+	const pluginInstances = plugins.flat()
 		.flatMap(plugin => {
 			try {
 				const instance = plugin(pluginContext);
