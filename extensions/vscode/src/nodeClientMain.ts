@@ -85,7 +85,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 			updateProviders(client);
 
-			client.onRequest('tsserverRequest', async ([command, args]) => {
+			client.onNotification('typescript.tsserverRequest', async ([id, command, args]) => {
 				const tsserver = (globalThis as any).__TSSERVER__?.semantic;
 				if (!tsserver) {
 					return;
@@ -97,7 +97,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 						lowPriority: true,
 						requireSemantic: true,
 					})[0];
-					return res.body;
+					client.sendNotification('typescript.tsserverResponse', [id, res.body]);
 				} catch {
 					// noop
 				}

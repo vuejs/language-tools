@@ -18,8 +18,8 @@ connection.onInitialize(params => {
 	if (!options.typescript?.tsdk) {
 		throw new Error('typescript.tsdk is required');
 	}
-	if (!options.typescript?.tsserverRequestCommand) {
-		connection.console.warn('typescript.tsserverRequestCommand is required since >= 3.0 for complete TS features');
+	if (!options.typescript?.tsserverRequestCommand && !options.typescript?.tsserverNotificationCommands) {
+		connection.console.warn('typescript.tsserverRequestCommand/typescript.tsserverNotificationCommands is required since >= 3.0 for complete TS features');
 	}
 
 	const { typescript: ts } = loadTsdkByPath(options.typescript.tsdk, params.locale);
@@ -38,13 +38,23 @@ connection.onInitialize(params => {
 	});
 
 	let simpleLs: LanguageService | undefined;
+	let tsserverRequestId = 0;
+
+	const tsserverRequestHandlers = new Map<number, (res: any) => void>();
+
+	if (options.typescript.tsserverNotificationCommands) {
+		connection.onNotification(options.typescript.tsserverNotificationCommands.response, ([id, res]) => {
+			tsserverRequestHandlers.get(id)?.(res);
+			tsserverRequestHandlers.delete(id);
+		});
+	}
 
 	return server.initialize(
 		params,
 		{
 			setup() { },
 			async getLanguageService(uri) {
-				if (uri.scheme === 'file' && options.typescript.tsserverRequestCommand) {
+				if (uri.scheme === 'file' && (options.typescript.tsserverRequestCommand || options.typescript.tsserverNotificationCommands)) {
 					const fileName = uri.fsPath.replace(/\\/g, '/');
 					let projectInfoPromise = file2ProjectInfo.get(fileName);
 					if (!projectInfoPromise) {
@@ -87,7 +97,7 @@ connection.onInitialize(params => {
 				simpleLs = undefined;
 			},
 		},
-		getHybridModeLanguageServicePlugins(ts, options.typescript.tsserverRequestCommand ? {
+		getHybridModeLanguageServicePlugins(ts, (options.typescript.tsserverRequestCommand || options.typescript.tsserverNotificationCommands) ? {
 			collectExtractProps(...args) {
 				return sendTsRequest('vue:collectExtractProps', args);
 			},
@@ -139,8 +149,16 @@ connection.onInitialize(params => {
 		} : undefined)
 	);
 
-	function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
-		return connection.sendRequest<T>(options.typescript.tsserverRequestCommand!, [command, args]);
+	async function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
+		if (options.typescript.tsserverNotificationCommands) {
+			let resolve: (res: T | null) => void;
+			const id = ++tsserverRequestId;
+			tsserverRequestHandlers.set(id, res => resolve(res));
+			connection.sendNotification(options.typescript.tsserverNotificationCommands.request, [id, command, args]);
+			return new Promise<T | null>(_resolve => resolve = _resolve);
+		} else {
+			return await connection.sendRequest<T>(options.typescript.tsserverRequestCommand!, [command, args]);
+		}
 	}
 
 	function createLs(server: LanguageServer, tsconfig: string | undefined) {
