@@ -151,11 +151,11 @@ connection.onInitialize(params => {
 
 	async function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
 		if (options.typescript.tsserverNotificationCommands) {
-			let resolve: (res: T | null) => void;
-			const id = ++tsserverRequestId;
-			tsserverRequestHandlers.set(id, res => resolve(res));
-			connection.sendNotification(options.typescript.tsserverNotificationCommands.request, [id, command, args]);
-			return new Promise<T | null>(_resolve => resolve = _resolve);
+			return await new Promise<T | null>(resolve => {
+				const id = ++tsserverRequestId;
+				tsserverRequestHandlers.set(id, resolve);
+				connection.sendNotification(options.typescript.tsserverNotificationCommands!.request, [id, command, args]);
+			});
 		} else {
 			return await connection.sendRequest<T>(options.typescript.tsserverRequestCommand!, [command, args]);
 		}
