@@ -10,7 +10,7 @@ export interface MyIgnoredNestedProps {
 }
 
 export interface MyNestedRecursiveProps {
-	recursive: MyNestedRecursiveProps
+	recursive: MyNestedRecursiveProps;
 }
 
 enum MyEnum {
@@ -48,27 +48,27 @@ export interface MyProps {
    * </template>
    * ```
 	 */
-	foo: string,
+	foo: string;
 	/**
 	 * optional number bar
 	 */
-	bar?: number,
+	bar?: number;
 	/**
 	 * string array baz
 	 */
-	baz?: string[],
+	baz?: string[];
 	/**
 	 * required union type
 	 */
-	union: string | number,
+	union: string | number;
 	/**
 	 * optional union type
 	 */
-	unionOptional?: string | number,
+	unionOptional?: string | number;
 	/**
 	 * required nested object
 	 */
-	nested: MyNestedProps,
+	nested: MyNestedProps;
 	/**
 	 * required nested object with intersection
 	 */
@@ -77,45 +77,45 @@ export interface MyProps {
 		 * required additional property
 		 */
 		additionalProp: string;
-	},
+	};
 	/**
 	 * optional nested object
 	 */
-	nestedOptional?: MyNestedProps | MyIgnoredNestedProps,
+	nestedOptional?: MyNestedProps | MyIgnoredNestedProps;
 	/**
 	 * required array object
 	 */
-	array: MyNestedProps[],
+	array: MyNestedProps[];
 	/**
 	 * optional array object
 	 */
-	arrayOptional?: MyNestedProps[],
+	arrayOptional?: MyNestedProps[];
 	/**
 	 * enum value
 	 */
-	enumValue: MyEnum,
+	enumValue: MyEnum;
 	/**
 	 * namespace type
 	 */
-	namespaceType: MyNamespace.MyType,
+	namespaceType: MyNamespace.MyType;
 	/**
 	 * literal type alias that require context
 	 */
-	literalFromContext: MyCategories,
-	inlined: { foo: string; },
-	recursive: MyNestedRecursiveProps
+	literalFromContext: MyCategories;
+	inlined: { foo: string; };
+	recursive: MyNestedRecursiveProps;
 }
 
 export const StringRequired = {
 	type: String,
 	required: true,
-} as const
+} as const;
 
 export const StringEmpty = {
 	type: String,
-	value: '',
-} as const
+	default: '',
+} as const;
 
 export const StringUndefined = {
 	type: String,
-} as const
+} as const;

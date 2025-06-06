@@ -1,0 +1,2129 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`vue-component-meta w/ tsconfig > options-api > propArrayDefault 1`] = `
+{
+  "declarations": [],
+  "default": "[1, 2, 3]",
+  "description": "Default function Array",
+  "global": false,
+  "name": "arrayDefault",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      {
+        "kind": "array",
+        "schema": [
+          "unknown",
+        ],
+        "type": "unknown[]",
+      },
+    ],
+    "type": "unknown[] | undefined",
+  },
+  "tags": [],
+  "type": "unknown[] | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > options-api > propNumberDefault 1`] = `
+{
+  "declarations": [],
+  "default": "42",
+  "description": "Default number",
+  "global": false,
+  "name": "numberDefault",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "number",
+    ],
+    "type": "number | undefined",
+  },
+  "tags": [],
+  "type": "number | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > options-api > propObjectDefault 1`] = `
+{
+  "declarations": [],
+  "default": "{
+    foo: "bar"
+}",
+  "description": "Default function Object",
+  "global": false,
+  "name": "objectDefault",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "Record<string, any>",
+    ],
+    "type": "Record<string, any> | undefined",
+  },
+  "tags": [],
+  "type": "Record<string, any> | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > options-api > submitEvent 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "name": "submit",
+  "rawType": undefined,
+  "schema": [
+    {
+      "kind": "object",
+      "schema": {
+        "email": {
+          "declarations": [],
+          "description": "email of user",
+          "global": false,
+          "name": "email",
+          "rawType": undefined,
+          "required": true,
+          "schema": "string",
+          "tags": [],
+          "type": "string",
+        },
+        "password": {
+          "declarations": [],
+          "description": "password of same user",
+          "global": false,
+          "name": "password",
+          "rawType": undefined,
+          "required": true,
+          "schema": "string",
+          "tags": [],
+          "type": "string",
+        },
+      },
+      "type": "SubmitPayload",
+    },
+  ],
+  "signature": "(event: "submit", args_0: SubmitPayload): void",
+  "tags": [],
+  "type": "[SubmitPayload]",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-events > onBar 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "name": "bar",
+  "rawType": undefined,
+  "schema": [
+    {
+      "kind": "object",
+      "schema": {
+        "arg1": {
+          "declarations": [],
+          "description": "",
+          "global": false,
+          "name": "arg1",
+          "rawType": undefined,
+          "required": true,
+          "schema": "number",
+          "tags": [],
+          "type": "number",
+        },
+        "arg2": {
+          "declarations": [],
+          "description": "",
+          "global": false,
+          "name": "arg2",
+          "rawType": undefined,
+          "required": false,
+          "schema": "any",
+          "tags": [],
+          "type": "any",
+        },
+      },
+      "type": "{ arg1: number; arg2?: any; }",
+    },
+  ],
+  "signature": "(event: "bar", value: { arg1: number; arg2?: any; }): void",
+  "tags": [],
+  "type": "[{ arg1: number; arg2?: any; }]",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-events > onBaz 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "name": "baz",
+  "rawType": undefined,
+  "schema": [],
+  "signature": "(e: "baz"): void",
+  "tags": [],
+  "type": "[]",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-events > onFoo 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "name": "foo",
+  "rawType": undefined,
+  "schema": [
+    {
+      "kind": "enum",
+      "schema": [
+        "undefined",
+        {
+          "kind": "object",
+          "schema": {
+            "foo": {
+              "declarations": [],
+              "description": "",
+              "global": false,
+              "name": "foo",
+              "rawType": undefined,
+              "required": true,
+              "schema": "string",
+              "tags": [],
+              "type": "string",
+            },
+          },
+          "type": "{ foo: string; }",
+        },
+      ],
+      "type": "{ foo: string; } | undefined",
+    },
+  ],
+  "signature": "(event: "foo", data?: { foo: string; } | undefined): void",
+  "tags": [],
+  "type": "[{ foo: string; } | undefined]",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-events w/ generic > onBar 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "name": "bar",
+  "rawType": undefined,
+  "schema": [
+    "number",
+  ],
+  "signature": "(e: "bar", data: number): void",
+  "tags": [],
+  "type": "[number]",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-exposed > counter 1`] = `
+{
+  "declarations": [],
+  "description": "a counter string",
+  "name": "counter",
+  "rawType": undefined,
+  "schema": "string",
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-model > bar 1`] = `
+{
+  "declarations": [],
+  "description": "optional string bar with lazy and trim modifiers",
+  "global": false,
+  "name": "bar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-model > barModifiers 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "barModifiers",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "Partial<Record<"trim" | "lazy", true>>",
+    ],
+    "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+  },
+  "tags": [],
+  "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-model > foo 1`] = `
+{
+  "declarations": [],
+  "default": "false",
+  "description": "optional boolean foo with default false",
+  "global": false,
+  "name": "foo",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "false",
+      "true",
+    ],
+    "type": "boolean | undefined",
+  },
+  "tags": [],
+  "type": "boolean | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-model > modelValue 1`] = `
+{
+  "declarations": [],
+  "default": undefined,
+  "description": "required number modelValue",
+  "global": false,
+  "name": "modelValue",
+  "rawType": undefined,
+  "required": true,
+  "schema": "number",
+  "tags": [],
+  "type": "number",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > array 1`] = `
+{
+  "declarations": [],
+  "description": "required array object",
+  "global": false,
+  "name": "array",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "array",
+    "schema": [
+      {
+        "kind": "object",
+        "schema": {
+          "nestedProp": {
+            "declarations": [],
+            "description": "nested prop documentation",
+            "global": false,
+            "name": "nestedProp",
+            "rawType": undefined,
+            "required": true,
+            "schema": "string",
+            "tags": [],
+            "type": "string",
+          },
+        },
+        "type": "MyNestedProps",
+      },
+    ],
+    "type": "MyNestedProps[]",
+  },
+  "tags": [],
+  "type": "MyNestedProps[]",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > arrayOptional 1`] = `
+{
+  "declarations": [],
+  "description": "optional array object",
+  "global": false,
+  "name": "arrayOptional",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      {
+        "kind": "array",
+        "schema": [
+          {
+            "kind": "object",
+            "schema": {
+              "nestedProp": {
+                "declarations": [],
+                "description": "nested prop documentation",
+                "global": false,
+                "name": "nestedProp",
+                "rawType": undefined,
+                "required": true,
+                "schema": "string",
+                "tags": [],
+                "type": "string",
+              },
+            },
+            "type": "MyNestedProps",
+          },
+        ],
+        "type": "MyNestedProps[]",
+      },
+    ],
+    "type": "MyNestedProps[] | undefined",
+  },
+  "tags": [],
+  "type": "MyNestedProps[] | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > bar 1`] = `
+{
+  "declarations": [],
+  "default": "1",
+  "description": "optional number bar",
+  "global": false,
+  "name": "bar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "number",
+    ],
+    "type": "number | undefined",
+  },
+  "tags": [],
+  "type": "number | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > baz 1`] = `
+{
+  "declarations": [],
+  "default": "["foo", "bar"]",
+  "description": "string array baz",
+  "global": false,
+  "name": "baz",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      {
+        "kind": "array",
+        "schema": [
+          "string",
+        ],
+        "type": "string[]",
+      },
+    ],
+    "type": "string[] | undefined",
+  },
+  "tags": [],
+  "type": "string[] | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > enumValue 1`] = `
+{
+  "declarations": [],
+  "description": "enum value",
+  "global": false,
+  "name": "enumValue",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "MyEnum.Small",
+      "MyEnum.Medium",
+      "MyEnum.Large",
+    ],
+    "type": "MyEnum",
+  },
+  "tags": [],
+  "type": "MyEnum",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > foo 1`] = `
+{
+  "declarations": [],
+  "description": "string foo",
+  "global": false,
+  "name": "foo",
+  "rawType": undefined,
+  "required": true,
+  "schema": "string",
+  "tags": [
+    {
+      "name": "default",
+      "text": ""rounded"",
+    },
+    {
+      "name": "since",
+      "text": "v1.0.0",
+    },
+    {
+      "name": "see",
+      "text": "https://vuejs.org/",
+    },
+    {
+      "name": "example",
+      "text": "\`\`\`vue
+<template>
+  <component foo="straight" />
+</template>
+\`\`\`",
+    },
+  ],
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > inlined 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "inlined",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "object",
+    "schema": {
+      "foo": {
+        "declarations": [],
+        "description": "",
+        "global": false,
+        "name": "foo",
+        "rawType": undefined,
+        "required": true,
+        "schema": "string",
+        "tags": [],
+        "type": "string",
+      },
+    },
+    "type": "{ foo: string; }",
+  },
+  "tags": [],
+  "type": "{ foo: string; }",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > literalFromContext 1`] = `
+{
+  "declarations": [],
+  "description": "literal type alias that require context",
+  "global": false,
+  "name": "literalFromContext",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      ""Uncategorized"",
+      ""Content"",
+      ""Interaction"",
+      ""Display"",
+      ""Forms"",
+      ""Addons"",
+    ],
+    "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
+  },
+  "tags": [],
+  "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > namespaceType 1`] = `
+{
+  "declarations": [],
+  "description": "namespace type",
+  "global": false,
+  "name": "namespaceType",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "object",
+    "schema": {},
+    "type": "MyNamespace.MyType",
+  },
+  "tags": [],
+  "type": "MyNamespace.MyType",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > nested 1`] = `
+{
+  "declarations": [],
+  "description": "required nested object",
+  "global": false,
+  "name": "nested",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "object",
+    "schema": {
+      "nestedProp": {
+        "declarations": [],
+        "description": "nested prop documentation",
+        "global": false,
+        "name": "nestedProp",
+        "rawType": undefined,
+        "required": true,
+        "schema": "string",
+        "tags": [],
+        "type": "string",
+      },
+    },
+    "type": "MyNestedProps",
+  },
+  "tags": [],
+  "type": "MyNestedProps",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > nestedIntersection 1`] = `
+{
+  "declarations": [],
+  "description": "required nested object with intersection",
+  "global": false,
+  "name": "nestedIntersection",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "object",
+    "schema": {
+      "additionalProp": {
+        "declarations": [],
+        "description": "required additional property",
+        "global": false,
+        "name": "additionalProp",
+        "rawType": undefined,
+        "required": true,
+        "schema": "string",
+        "tags": [],
+        "type": "string",
+      },
+      "nestedProp": {
+        "declarations": [],
+        "description": "nested prop documentation",
+        "global": false,
+        "name": "nestedProp",
+        "rawType": undefined,
+        "required": true,
+        "schema": "string",
+        "tags": [],
+        "type": "string",
+      },
+    },
+    "type": "MyNestedProps & { additionalProp: string; }",
+  },
+  "tags": [],
+  "type": "MyNestedProps & { additionalProp: string; }",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > nestedOptional 1`] = `
+{
+  "declarations": [],
+  "description": "optional nested object",
+  "global": false,
+  "name": "nestedOptional",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      {
+        "kind": "object",
+        "schema": {
+          "nestedProp": {
+            "declarations": [],
+            "description": "nested prop documentation",
+            "global": false,
+            "name": "nestedProp",
+            "rawType": undefined,
+            "required": true,
+            "schema": "string",
+            "tags": [],
+            "type": "string",
+          },
+        },
+        "type": "MyNestedProps",
+      },
+      "MyIgnoredNestedProps",
+    ],
+    "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
+  },
+  "tags": [],
+  "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > recursive 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "recursive",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "object",
+    "schema": {
+      "recursive": {
+        "declarations": [],
+        "description": "",
+        "global": false,
+        "name": "recursive",
+        "rawType": undefined,
+        "required": true,
+        "schema": "MyNestedRecursiveProps",
+        "tags": [],
+        "type": "MyNestedRecursiveProps",
+      },
+    },
+    "type": "MyNestedRecursiveProps",
+  },
+  "tags": [],
+  "type": "MyNestedRecursiveProps",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > union 1`] = `
+{
+  "declarations": [],
+  "description": "required union type",
+  "global": false,
+  "name": "union",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "string",
+      "number",
+    ],
+    "type": "string | number",
+  },
+  "tags": [],
+  "type": "string | number",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props > unionOptional 1`] = `
+{
+  "declarations": [],
+  "description": "optional union type",
+  "global": false,
+  "name": "unionOptional",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+      "number",
+    ],
+    "type": "string | number | undefined",
+  },
+  "tags": [],
+  "type": "string | number | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js > bar 1`] = `
+{
+  "declarations": [],
+  "default": ""BAR"",
+  "description": "",
+  "global": false,
+  "name": "bar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js > baz 1`] = `
+{
+  "declarations": [],
+  "default": undefined,
+  "description": "",
+  "global": false,
+  "name": "baz",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js > foo 1`] = `
+{
+  "declarations": [],
+  "default": undefined,
+  "description": "",
+  "global": false,
+  "name": "foo",
+  "rawType": undefined,
+  "required": true,
+  "schema": "string",
+  "tags": [],
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js > xbar 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xbar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js > xbaz 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xbaz",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js > xfoo 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xfoo",
+  "rawType": undefined,
+  "required": true,
+  "schema": "string",
+  "tags": [],
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js-setup > arrayProps 1`] = `
+{
+  "declarations": [],
+  "default": "[42, 43, 44]",
+  "description": "",
+  "global": false,
+  "name": "arrayProps",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      {
+        "kind": "array",
+        "schema": [
+          "unknown",
+        ],
+        "type": "unknown[]",
+      },
+    ],
+    "type": "unknown[] | undefined",
+  },
+  "tags": [],
+  "type": "unknown[] | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js-setup > bar 1`] = `
+{
+  "declarations": [],
+  "default": ""BAR"",
+  "description": "",
+  "global": false,
+  "name": "bar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js-setup > baz 1`] = `
+{
+  "declarations": [],
+  "default": undefined,
+  "description": "",
+  "global": false,
+  "name": "baz",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js-setup > foo 1`] = `
+{
+  "declarations": [],
+  "default": undefined,
+  "description": "",
+  "global": false,
+  "name": "foo",
+  "rawType": undefined,
+  "required": true,
+  "schema": "string",
+  "tags": [],
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js-setup > hello 1`] = `
+{
+  "declarations": [],
+  "default": ""Hello"",
+  "description": "The hello property.",
+  "global": false,
+  "name": "hello",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [
+    {
+      "name": "since",
+      "text": "v1.0.0",
+    },
+  ],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js-setup > numberOrStringProp 1`] = `
+{
+  "declarations": [],
+  "default": "42",
+  "description": "",
+  "global": false,
+  "name": "numberOrStringProp",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+      "number",
+    ],
+    "type": "string | number | undefined",
+  },
+  "tags": [],
+  "type": "string | number | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js-setup > xbar 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xbar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js-setup > xbaz 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xbaz",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/ tsconfig > reference-type-props-js-setup > xfoo 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xfoo",
+  "rawType": undefined,
+  "required": true,
+  "schema": "string",
+  "tags": [],
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > options-api > propArrayDefault 1`] = `
+{
+  "declarations": [],
+  "default": "[1, 2, 3]",
+  "description": "Default function Array",
+  "global": false,
+  "name": "arrayDefault",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      {
+        "kind": "array",
+        "schema": [
+          "unknown",
+        ],
+        "type": "unknown[]",
+      },
+    ],
+    "type": "unknown[] | undefined",
+  },
+  "tags": [],
+  "type": "unknown[] | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > options-api > propNumberDefault 1`] = `
+{
+  "declarations": [],
+  "default": "42",
+  "description": "Default number",
+  "global": false,
+  "name": "numberDefault",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "number",
+    ],
+    "type": "number | undefined",
+  },
+  "tags": [],
+  "type": "number | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > options-api > propObjectDefault 1`] = `
+{
+  "declarations": [],
+  "default": "{
+    foo: "bar"
+}",
+  "description": "Default function Object",
+  "global": false,
+  "name": "objectDefault",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "Record<string, any>",
+    ],
+    "type": "Record<string, any> | undefined",
+  },
+  "tags": [],
+  "type": "Record<string, any> | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > options-api > submitEvent 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "name": "submit",
+  "rawType": undefined,
+  "schema": [
+    {
+      "kind": "object",
+      "schema": {
+        "email": {
+          "declarations": [],
+          "description": "email of user",
+          "global": false,
+          "name": "email",
+          "rawType": undefined,
+          "required": true,
+          "schema": "string",
+          "tags": [],
+          "type": "string",
+        },
+        "password": {
+          "declarations": [],
+          "description": "password of same user",
+          "global": false,
+          "name": "password",
+          "rawType": undefined,
+          "required": true,
+          "schema": "string",
+          "tags": [],
+          "type": "string",
+        },
+      },
+      "type": "SubmitPayload",
+    },
+  ],
+  "signature": "(event: "submit", args_0: SubmitPayload): void",
+  "tags": [],
+  "type": "[SubmitPayload]",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-events > onBar 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "name": "bar",
+  "rawType": undefined,
+  "schema": [
+    {
+      "kind": "object",
+      "schema": {
+        "arg1": {
+          "declarations": [],
+          "description": "",
+          "global": false,
+          "name": "arg1",
+          "rawType": undefined,
+          "required": true,
+          "schema": "number",
+          "tags": [],
+          "type": "number",
+        },
+        "arg2": {
+          "declarations": [],
+          "description": "",
+          "global": false,
+          "name": "arg2",
+          "rawType": undefined,
+          "required": false,
+          "schema": "any",
+          "tags": [],
+          "type": "any",
+        },
+      },
+      "type": "{ arg1: number; arg2?: any; }",
+    },
+  ],
+  "signature": "(event: "bar", value: { arg1: number; arg2?: any; }): void",
+  "tags": [],
+  "type": "[{ arg1: number; arg2?: any; }]",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-events > onBaz 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "name": "baz",
+  "rawType": undefined,
+  "schema": [],
+  "signature": "(e: "baz"): void",
+  "tags": [],
+  "type": "[]",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-events > onFoo 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "name": "foo",
+  "rawType": undefined,
+  "schema": [
+    {
+      "kind": "enum",
+      "schema": [
+        "undefined",
+        {
+          "kind": "object",
+          "schema": {
+            "foo": {
+              "declarations": [],
+              "description": "",
+              "global": false,
+              "name": "foo",
+              "rawType": undefined,
+              "required": true,
+              "schema": "string",
+              "tags": [],
+              "type": "string",
+            },
+          },
+          "type": "{ foo: string; }",
+        },
+      ],
+      "type": "{ foo: string; } | undefined",
+    },
+  ],
+  "signature": "(event: "foo", data?: { foo: string; } | undefined): void",
+  "tags": [],
+  "type": "[{ foo: string; } | undefined]",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-events w/ generic > onBar 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "name": "bar",
+  "rawType": undefined,
+  "schema": [
+    "number",
+  ],
+  "signature": "(e: "bar", data: number): void",
+  "tags": [],
+  "type": "[number]",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-exposed > counter 1`] = `
+{
+  "declarations": [],
+  "description": "a counter string",
+  "name": "counter",
+  "rawType": undefined,
+  "schema": "string",
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-model > bar 1`] = `
+{
+  "declarations": [],
+  "description": "optional string bar with lazy and trim modifiers",
+  "global": false,
+  "name": "bar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-model > barModifiers 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "barModifiers",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "Partial<Record<"trim" | "lazy", true>>",
+    ],
+    "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+  },
+  "tags": [],
+  "type": "Partial<Record<"trim" | "lazy", true>> | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-model > foo 1`] = `
+{
+  "declarations": [],
+  "default": "false",
+  "description": "optional boolean foo with default false",
+  "global": false,
+  "name": "foo",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "false",
+      "true",
+    ],
+    "type": "boolean | undefined",
+  },
+  "tags": [],
+  "type": "boolean | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-model > modelValue 1`] = `
+{
+  "declarations": [],
+  "default": undefined,
+  "description": "required number modelValue",
+  "global": false,
+  "name": "modelValue",
+  "rawType": undefined,
+  "required": true,
+  "schema": "number",
+  "tags": [],
+  "type": "number",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > array 1`] = `
+{
+  "declarations": [],
+  "description": "required array object",
+  "global": false,
+  "name": "array",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "array",
+    "schema": [
+      {
+        "kind": "object",
+        "schema": {
+          "nestedProp": {
+            "declarations": [],
+            "description": "nested prop documentation",
+            "global": false,
+            "name": "nestedProp",
+            "rawType": undefined,
+            "required": true,
+            "schema": "string",
+            "tags": [],
+            "type": "string",
+          },
+        },
+        "type": "MyNestedProps",
+      },
+    ],
+    "type": "MyNestedProps[]",
+  },
+  "tags": [],
+  "type": "MyNestedProps[]",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > arrayOptional 1`] = `
+{
+  "declarations": [],
+  "description": "optional array object",
+  "global": false,
+  "name": "arrayOptional",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      {
+        "kind": "array",
+        "schema": [
+          {
+            "kind": "object",
+            "schema": {
+              "nestedProp": {
+                "declarations": [],
+                "description": "nested prop documentation",
+                "global": false,
+                "name": "nestedProp",
+                "rawType": undefined,
+                "required": true,
+                "schema": "string",
+                "tags": [],
+                "type": "string",
+              },
+            },
+            "type": "MyNestedProps",
+          },
+        ],
+        "type": "MyNestedProps[]",
+      },
+    ],
+    "type": "MyNestedProps[] | undefined",
+  },
+  "tags": [],
+  "type": "MyNestedProps[] | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > bar 1`] = `
+{
+  "declarations": [],
+  "default": "1",
+  "description": "optional number bar",
+  "global": false,
+  "name": "bar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "number",
+    ],
+    "type": "number | undefined",
+  },
+  "tags": [],
+  "type": "number | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > baz 1`] = `
+{
+  "declarations": [],
+  "default": "["foo", "bar"]",
+  "description": "string array baz",
+  "global": false,
+  "name": "baz",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      {
+        "kind": "array",
+        "schema": [
+          "string",
+        ],
+        "type": "string[]",
+      },
+    ],
+    "type": "string[] | undefined",
+  },
+  "tags": [],
+  "type": "string[] | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > enumValue 1`] = `
+{
+  "declarations": [],
+  "description": "enum value",
+  "global": false,
+  "name": "enumValue",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "MyEnum.Small",
+      "MyEnum.Medium",
+      "MyEnum.Large",
+    ],
+    "type": "MyEnum",
+  },
+  "tags": [],
+  "type": "MyEnum",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > foo 1`] = `
+{
+  "declarations": [],
+  "description": "string foo",
+  "global": false,
+  "name": "foo",
+  "rawType": undefined,
+  "required": true,
+  "schema": "string",
+  "tags": [
+    {
+      "name": "default",
+      "text": ""rounded"",
+    },
+    {
+      "name": "since",
+      "text": "v1.0.0",
+    },
+    {
+      "name": "see",
+      "text": "https://vuejs.org/",
+    },
+    {
+      "name": "example",
+      "text": "\`\`\`vue
+<template>
+  <component foo="straight" />
+</template>
+\`\`\`",
+    },
+  ],
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > inlined 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "inlined",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "object",
+    "schema": {
+      "foo": {
+        "declarations": [],
+        "description": "",
+        "global": false,
+        "name": "foo",
+        "rawType": undefined,
+        "required": true,
+        "schema": "string",
+        "tags": [],
+        "type": "string",
+      },
+    },
+    "type": "{ foo: string; }",
+  },
+  "tags": [],
+  "type": "{ foo: string; }",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > literalFromContext 1`] = `
+{
+  "declarations": [],
+  "description": "literal type alias that require context",
+  "global": false,
+  "name": "literalFromContext",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      ""Uncategorized"",
+      ""Content"",
+      ""Interaction"",
+      ""Display"",
+      ""Forms"",
+      ""Addons"",
+    ],
+    "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
+  },
+  "tags": [],
+  "type": ""Uncategorized" | "Content" | "Interaction" | "Display" | "Forms" | "Addons"",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > namespaceType 1`] = `
+{
+  "declarations": [],
+  "description": "namespace type",
+  "global": false,
+  "name": "namespaceType",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "object",
+    "schema": {},
+    "type": "MyNamespace.MyType",
+  },
+  "tags": [],
+  "type": "MyNamespace.MyType",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > nested 1`] = `
+{
+  "declarations": [],
+  "description": "required nested object",
+  "global": false,
+  "name": "nested",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "object",
+    "schema": {
+      "nestedProp": {
+        "declarations": [],
+        "description": "nested prop documentation",
+        "global": false,
+        "name": "nestedProp",
+        "rawType": undefined,
+        "required": true,
+        "schema": "string",
+        "tags": [],
+        "type": "string",
+      },
+    },
+    "type": "MyNestedProps",
+  },
+  "tags": [],
+  "type": "MyNestedProps",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > nestedIntersection 1`] = `
+{
+  "declarations": [],
+  "description": "required nested object with intersection",
+  "global": false,
+  "name": "nestedIntersection",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "object",
+    "schema": {
+      "additionalProp": {
+        "declarations": [],
+        "description": "required additional property",
+        "global": false,
+        "name": "additionalProp",
+        "rawType": undefined,
+        "required": true,
+        "schema": "string",
+        "tags": [],
+        "type": "string",
+      },
+      "nestedProp": {
+        "declarations": [],
+        "description": "nested prop documentation",
+        "global": false,
+        "name": "nestedProp",
+        "rawType": undefined,
+        "required": true,
+        "schema": "string",
+        "tags": [],
+        "type": "string",
+      },
+    },
+    "type": "MyNestedProps & { additionalProp: string; }",
+  },
+  "tags": [],
+  "type": "MyNestedProps & { additionalProp: string; }",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > nestedOptional 1`] = `
+{
+  "declarations": [],
+  "description": "optional nested object",
+  "global": false,
+  "name": "nestedOptional",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      {
+        "kind": "object",
+        "schema": {
+          "nestedProp": {
+            "declarations": [],
+            "description": "nested prop documentation",
+            "global": false,
+            "name": "nestedProp",
+            "rawType": undefined,
+            "required": true,
+            "schema": "string",
+            "tags": [],
+            "type": "string",
+          },
+        },
+        "type": "MyNestedProps",
+      },
+      "MyIgnoredNestedProps",
+    ],
+    "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
+  },
+  "tags": [],
+  "type": "MyNestedProps | MyIgnoredNestedProps | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > recursive 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "recursive",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "object",
+    "schema": {
+      "recursive": {
+        "declarations": [],
+        "description": "",
+        "global": false,
+        "name": "recursive",
+        "rawType": undefined,
+        "required": true,
+        "schema": "MyNestedRecursiveProps",
+        "tags": [],
+        "type": "MyNestedRecursiveProps",
+      },
+    },
+    "type": "MyNestedRecursiveProps",
+  },
+  "tags": [],
+  "type": "MyNestedRecursiveProps",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > union 1`] = `
+{
+  "declarations": [],
+  "description": "required union type",
+  "global": false,
+  "name": "union",
+  "rawType": undefined,
+  "required": true,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "string",
+      "number",
+    ],
+    "type": "string | number",
+  },
+  "tags": [],
+  "type": "string | number",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props > unionOptional 1`] = `
+{
+  "declarations": [],
+  "description": "optional union type",
+  "global": false,
+  "name": "unionOptional",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+      "number",
+    ],
+    "type": "string | number | undefined",
+  },
+  "tags": [],
+  "type": "string | number | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js > bar 1`] = `
+{
+  "declarations": [],
+  "default": ""BAR"",
+  "description": "",
+  "global": false,
+  "name": "bar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js > baz 1`] = `
+{
+  "declarations": [],
+  "default": undefined,
+  "description": "",
+  "global": false,
+  "name": "baz",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js > foo 1`] = `
+{
+  "declarations": [],
+  "default": undefined,
+  "description": "",
+  "global": false,
+  "name": "foo",
+  "rawType": undefined,
+  "required": true,
+  "schema": "string",
+  "tags": [],
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js > xbar 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xbar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js > xbaz 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xbaz",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js > xfoo 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xfoo",
+  "rawType": undefined,
+  "required": true,
+  "schema": "string",
+  "tags": [],
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js-setup > arrayProps 1`] = `
+{
+  "declarations": [],
+  "default": "[42, 43, 44]",
+  "description": "",
+  "global": false,
+  "name": "arrayProps",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      {
+        "kind": "array",
+        "schema": [
+          "unknown",
+        ],
+        "type": "unknown[]",
+      },
+    ],
+    "type": "unknown[] | undefined",
+  },
+  "tags": [],
+  "type": "unknown[] | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js-setup > bar 1`] = `
+{
+  "declarations": [],
+  "default": ""BAR"",
+  "description": "",
+  "global": false,
+  "name": "bar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js-setup > baz 1`] = `
+{
+  "declarations": [],
+  "default": undefined,
+  "description": "",
+  "global": false,
+  "name": "baz",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js-setup > foo 1`] = `
+{
+  "declarations": [],
+  "default": undefined,
+  "description": "",
+  "global": false,
+  "name": "foo",
+  "rawType": undefined,
+  "required": true,
+  "schema": "string",
+  "tags": [],
+  "type": "string",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js-setup > hello 1`] = `
+{
+  "declarations": [],
+  "default": ""Hello"",
+  "description": "The hello property.",
+  "global": false,
+  "name": "hello",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [
+    {
+      "name": "since",
+      "text": "v1.0.0",
+    },
+  ],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js-setup > numberOrStringProp 1`] = `
+{
+  "declarations": [],
+  "default": "42",
+  "description": "",
+  "global": false,
+  "name": "numberOrStringProp",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+      "number",
+    ],
+    "type": "string | number | undefined",
+  },
+  "tags": [],
+  "type": "string | number | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js-setup > xbar 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xbar",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js-setup > xbaz 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xbaz",
+  "rawType": undefined,
+  "required": false,
+  "schema": {
+    "kind": "enum",
+    "schema": [
+      "undefined",
+      "string",
+    ],
+    "type": "string | undefined",
+  },
+  "tags": [],
+  "type": "string | undefined",
+}
+`;
+
+exports[`vue-component-meta w/o tsconfig > reference-type-props-js-setup > xfoo 1`] = `
+{
+  "declarations": [],
+  "description": "",
+  "global": false,
+  "name": "xfoo",
+  "rawType": undefined,
+  "required": true,
+  "schema": "string",
+  "tags": [],
+  "type": "string",
+}
+`;
