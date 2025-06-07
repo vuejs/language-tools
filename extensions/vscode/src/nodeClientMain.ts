@@ -85,7 +85,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 			updateProviders(client);
 
-			client.onRequest('tsserverRequest', async ([command, args]) => {
+			client.onRequest('typescript.tsserverRequest', async ([command, args]) => {
 				const tsserver = (globalThis as any).__TSSERVER__?.semantic;
 				if (!tsserver) {
 					return;

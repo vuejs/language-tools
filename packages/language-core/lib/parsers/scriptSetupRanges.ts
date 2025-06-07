@@ -100,27 +100,33 @@ export function parseScriptSetupRanges(
 	let importSectionEndOffset = 0;
 
 	ts.forEachChild(ast, node => {
-		const isTypeExport =
-			(ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
-			&& node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword);
 		if (
-			!foundNonImportExportNode
-			&& !ts.isImportDeclaration(node)
-			&& !isTypeExport
-			&& !ts.isEmptyStatement(node)
+			foundNonImportExportNode
+			|| ts.isImportDeclaration(node)
+			|| ts.isExportDeclaration(node)
+			|| ts.isEmptyStatement(node)
 			// fix https://github.com/vuejs/language-tools/issues/1223
-			&& !ts.isImportEqualsDeclaration(node)
+			|| ts.isImportEqualsDeclaration(node)
 		) {
-			const commentRanges = ts.getLeadingCommentRanges(text, node.pos);
-			if (commentRanges?.length) {
-				const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
-				importSectionEndOffset = commentRange.pos;
-			}
-			else {
-				importSectionEndOffset = getStartEnd(ts, node, ast).start;
-			}
-			foundNonImportExportNode = true;
+			return;
 		}
+
+		if (
+			(ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node))
+			&& node.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
+		) {
+			return;
+		}
+
+		const commentRanges = ts.getLeadingCommentRanges(text, node.pos);
+		if (commentRanges?.length) {
+			const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
+			importSectionEndOffset = commentRange.pos;
+		}
+		else {
+			importSectionEndOffset = getStartEnd(ts, node, ast).start;
+		}
+		foundNonImportExportNode = true;
 	});
 	ts.forEachChild(ast, node => visitNode(node, [ast]));
 
