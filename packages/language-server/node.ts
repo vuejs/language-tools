@@ -155,9 +155,9 @@ connection.onInitialize(params => {
 		} else {
 			const [requestCommand] = options.typescript.tsserverRequestCommand!;
 			return await new Promise<T | null>(resolve => {
-				const id = ++tsserverRequestId;
-				tsserverRequestHandlers.set(id, resolve);
-				connection.sendNotification(requestCommand, [id, command, args]);
+				const requestId = ++tsserverRequestId;
+				tsserverRequestHandlers.set(requestId, resolve);
+				connection.sendNotification(requestCommand, [command, args, requestId]);
 			});
 		}
 	}
