@@ -35,13 +35,11 @@
 *Vue language server configuration for Neovim*
 
 <details>
-  <summary>How to configure vue language server with neovim and lsp?</summary>
+  <summary>Configuring vue language server with neovim.</summary>
 
-### Hybrid mode configuration (Requires `@vue/language-server` version `^2.0.0`)
-
-Note: The "Take Over" mode has been discontinued. Instead, a new "Hybrid" mode has been introduced. In this mode, the Vue Language Server exclusively manages the CSS/HTML sections. As a result, you must run `@vue/language-server` in conjunction with a TypeScript server that employs `@vue/typescript-plugin`. Below is a streamlined configuration for Neovim's LSP, updated to accommodate the language server following the upgrade to version `2.0.0`.
-
-> For nvim-lspconfig versions below [v1.0.0](https://newreleases.io/project/github/neovim/nvim-lspconfig/release/v1.0.0) use tsserver instead of ts_ls, e.g. `lspconfig.ts_ls.setup`
+> [!IMPORTANT]
+> V3 currently only work with `vtsls`, if you are using `ts_ls`, either switch to `vtsls` or create an issue on `ts_ls`.
+> See: https://github.com/yioneko/vtsls/issues/249#issuecomment-2866277424 and https://github.com/yioneko/vtsls/blob/main/packages/service/patches/260-allow-any-tsserver-commands.patch
 
 ```lua
 -- If you are using mason.nvim, you can get the ts_plugin_path like this
@@ -52,79 +50,73 @@ Note: The "Take Over" mode has been discontinued. Instead, a new "Hybrid" mode h
 -- local vue_language_server_path = vim.fn.expand '$MASON/packages' .. '/vue-language-server' .. '/node_modules/@vue/language-server'
 -- or even
 -- local vue_language_server_path = vim.fn.stdpath('data') .. "/mason/packages/vue-language-server/node_modules/@vue/language-server"
-
 local vue_language_server_path = '/path/to/@vue/language-server'
-
-local lspconfig = require('lspconfig')
-
-lspconfig.ts_ls.setup {
+local vue_plugin = {
+  name = '@vue/typescript-plugin',
+  location = vue_language_server_path,
+  languages = { 'vue' },
+  configNamespace = 'typescript',
+}
+local vtsls_config = {
   init_options = {
     plugins = {
-      {
-        name = '@vue/typescript-plugin',
-        location = vue_language_server_path,
-        languages = { 'vue' },
-      },
+      vue_plugin,
     },
   },
   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
 }
-
--- No need to set `hybridMode` to `true` as it's the default value
-lspconfig.vue_ls.setup {}
-```
-
-### Non-Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
-
-Note: If `hybridMode` is set to `false` `Volar` will run embedded `ts_ls` therefore there is no need to run it separately.
-
-For more information see [#4119](https://github.com/vuejs/language-tools/pull/4119)
-
-*Make sure you have typescript installed globally or pass the location to volar*
-
-Use volar for all `.{vue,js,ts,tsx,jsx}` files.
-```lua
-local lspconfig = require('lspconfig')
-
--- lspconfig.ts_ls.setup {} 
-lspconfig.volar.setup {
-  filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
+local vue_ls_config = {
+  -- If you are not using mason
+  -- You have to make sure `init_options.typescript.tsdk` is set for the projects do not have typescript installed(aka, no typescript dependency in `package.json`).
+  --- @see Mason https://github.com/mason-org/mason-lspconfig.nvim/blob/main/lua/mason-lspconfig/lsp/vue_ls.lua
   init_options = {
-    vue = {
-      hybridMode = false,
-    },
-  },
-}
-```
-
-Use `volar` for only `.vue` files and `ts_ls` for `.ts` and `.js` files.
-```lua
-local lspconfig = require('lspconfig')
-
-lspconfig.ts_ls.setup {
-  init_options = {
-    plugins = {
-      {
-        name = '@vue/typescript-plugin',
-        location = '/path/to/@vue/language-server',
-        languages = { 'vue' },
+    typescript = {
+      tsserverRequestCommand = {
+        'typescript.tsserverRequest',
+        'typescript.tsserverResponse',
       },
     },
   },
-}
+  on_init = function(client)
+    client.handlers['typescript.tsserverRequest'] = function(_, result, context)
+      local clients = vim.lsp.get_clients({ bufnr = context.bufnr, name = 'vtsls' })
+      if #clients == 0 then
+        vim.notify('Could not found `vtsls` lsp client, vue_lsp would not work with it.', vim.log.levels.ERROR)
+        return
+      end
+      local ts_client = clients[1]
 
-lspconfig.volar.setup {
-  init_options = {
-    vue = {
-      hybridMode = false,
-    },
-  },
+      local param = unpack(result)
+      local command, payload, id = unpack(param)
+      ts_client:exec_cmd({
+        command = 'typescript.tsserverRequest',
+        arguments = {
+          command,
+          payload,
+        },
+      }, { bufnr = context.bufnr }, function(_, r)
+          local response_data = { { id, r.body } }
+          ---@diagnostic disable-next-line: param-type-mismatch
+          client:notify('typescript.tsserverResponse', response_data)
+        end)
+    end
+  end,
 }
+-- nvim 0.11 or above
+vim.lsp.config('vtsls', vtsls_config)
+vim.lsp.config('vue_ls', vue_ls_config)
+vim.lsp.enable({'vtsls', 'vue_ls'})
+
+-- nvim below 0.11
+local lspconfig = require('lspconfig')
+lspconfig.vtsls.setup vtsls_config
+lspconfig.vue_ls.setup vue_ls_config
 ```
-
 ### nvim-cmp integration
 
 Check out this [discussion](https://github.com/vuejs/language-tools/discussions/4495)
+
+_For vue 2 please check:https://github.com/vuejs/language-tools/tree/v2?tab=readme-ov-file#community-integration_
 
 </details>
 
