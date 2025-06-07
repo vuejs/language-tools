@@ -236,7 +236,7 @@ function* generateSetupFunction(
 		const templateRefType = arg
 			? [
 				`__VLS_TemplateRefs[`,
-				generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+				generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic),
 				`]`
 			]
 			: [`unknown`];

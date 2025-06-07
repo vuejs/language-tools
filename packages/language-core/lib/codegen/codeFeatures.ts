@@ -65,6 +65,11 @@ const raw = {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
 	},
+	withoutSemantic: {
+		verification: true,
+		navigation: true,
+		completion: true,
+	},
 } satisfies Record<string, VueCodeInformation>;
 
 export const codeFeatures = raw as {
