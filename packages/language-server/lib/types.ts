@@ -1,7 +1,7 @@
 export type VueInitializationOptions = {
 	typescript: {
 		tsdk: string;
-		tsserverRequestCommand?: string;
+		tsserverRequestCommand?: string | [request: string, response: string];
 	};
 };
 

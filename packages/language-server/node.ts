@@ -38,6 +38,16 @@ connection.onInitialize(params => {
 	});
 
 	let simpleLs: LanguageService | undefined;
+	let tsserverRequestId = 0;
+
+	const tsserverRequestHandlers = new Map<number, (res: any) => void>();
+
+	if (Array.isArray(options.typescript.tsserverRequestCommand)) {
+		connection.onNotification(options.typescript.tsserverRequestCommand[1], ([id, res]) => {
+			tsserverRequestHandlers.get(id)?.(res);
+			tsserverRequestHandlers.delete(id);
+		});
+	}
 
 	return server.initialize(
 		params,
@@ -139,8 +149,17 @@ connection.onInitialize(params => {
 		} : undefined)
 	);
 
-	function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
-		return connection.sendRequest<T>(options.typescript.tsserverRequestCommand!, [command, args]);
+	async function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
+		if (typeof options.typescript.tsserverRequestCommand === 'string') {
+			return await connection.sendRequest<T>(options.typescript.tsserverRequestCommand, [command, args]);
+		} else {
+			const [requestCommand] = options.typescript.tsserverRequestCommand!;
+			return await new Promise<T | null>(resolve => {
+				const requestId = ++tsserverRequestId;
+				tsserverRequestHandlers.set(requestId, resolve);
+				connection.sendNotification(requestCommand, [command, args, requestId]);
+			});
+		}
 	}
 
 	function createLs(server: LanguageServer, tsconfig: string | undefined) {
@@ -185,3 +204,4 @@ connection.onInitialize(params => {
 connection.onInitialized(server.initialized);
 
 connection.onShutdown(server.shutdown);
+
