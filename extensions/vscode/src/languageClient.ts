@@ -65,8 +65,7 @@ async function activateLc(
 
 	// Setup typescript.js in production mode
 	if (fs.existsSync(path.join(__dirname, 'server.js'))) {
-		const { tsdk } = (await lsp.getTsdk(context))!;
-		fs.writeFileSync(path.join(__dirname, 'typescript.js'), `module.exports = require("${tsdk}/typescript.js");`);
+		fs.writeFileSync(path.join(__dirname, 'typescript.js'), `module.exports = require("${vscode.env.appRoot.replace(/\\/g, '/')}/extensions/node_modules/typescript/lib/typescript.js");`);
 	}
 
 	client = createLc(
