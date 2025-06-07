@@ -115,7 +115,7 @@ lspconfig.vue_ls.setup vue_ls_config
 
 Check out this [discussion](https://github.com/vuejs/language-tools/discussions/4495)
 
-_For vue 2 please check:https://github.com/vuejs/language-tools/tree/v2?tab=readme-ov-file#community-integration_
+_For vue 2 support please check:https://github.com/vuejs/language-tools/tree/v2?tab=readme-ov-file#community-integration_
 
 </details>
 
