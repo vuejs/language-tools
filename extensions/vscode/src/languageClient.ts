@@ -1,5 +1,7 @@
 import * as lsp from '@volar/vscode';
 import type { VueInitializationOptions } from '@vue/language-server';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import {
 	executeCommand,
 	nextTick,
@@ -61,11 +63,21 @@ async function activateLc(
 	const outputChannel = useOutputChannel('Vue Language Server');
 	const selectors = config.server.includeLanguages;
 
+	// Setup typescript.js in production mode
+	if (fs.existsSync(path.join(__dirname, 'server.js'))) {
+		const { tsdk } = (await lsp.getTsdk(context))!;
+		fs.writeFileSync(path.join(__dirname, 'typescript.js'), `module.exports = require("${tsdk}/typescript.js");`);
+	}
+
 	client = createLc(
 		'vue',
 		'Vue',
 		selectors,
-		await getInitializationOptions(context),
+		{
+			typescript: {
+				tsserverRequestCommand: 'typescript.tsserverRequest',
+			},
+		} satisfies VueInitializationOptions,
 		6009,
 		outputChannel
 	);
@@ -82,7 +94,6 @@ async function activateLc(
 		}
 		await client.stop();
 		outputChannel.clear();
-		client.clientOptions.initializationOptions = await getInitializationOptions(context);
 		await client.start();
 	});
 
@@ -100,13 +111,4 @@ async function activateLc(
 			executeCommand('workbench.action.restartExtensionHost');
 		}
 	}
-}
-
-async function getInitializationOptions(context: vscode.ExtensionContext): Promise<VueInitializationOptions> {
-	return {
-		typescript: {
-			tsdk: (await lsp.getTsdk(context))!.tsdk,
-			tsserverRequestCommand: 'typescript.tsserverRequest',
-		},
-	};
 }

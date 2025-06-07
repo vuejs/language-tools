@@ -25,6 +25,9 @@
 		"vscode-languageserver-protocol": "^3.17.5",
 		"vscode-uri": "^3.0.8"
 	},
+	"peerDependencies": {
+		"typescript": "*"
+	},
 	"devDependencies": {
 		"@typescript/server-harness": "latest"
 	}

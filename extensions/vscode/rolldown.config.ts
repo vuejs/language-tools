@@ -60,6 +60,17 @@ const config: RolldownOptions = {
 				},
 			},
 		},
+		{
+			name: 'typescript',
+			resolveId: {
+				filter: {
+					id: /^typescript$/,
+				},
+				handler() {
+					return { id: './typescript.js', external: true };
+				},
+			},
+		},
 	],
 };
 
