@@ -37,8 +37,7 @@
 <details>
   <summary>Configuring vue language server with neovim.</summary>
 
-> [!IMPORTANT]
-> V3 currently only work with `vtsls`, if you are using `ts_ls`, either switch to `vtsls` or create an issue on `ts_ls`.
+> IMPORTANT: V3 currently only work with `vtsls`, if you are using `ts_ls`, either switch to `vtsls` or create an issue on `ts_ls`.
 > See: https://github.com/yioneko/vtsls/issues/249#issuecomment-2866277424 and https://github.com/yioneko/vtsls/blob/main/packages/service/patches/260-allow-any-tsserver-commands.patch
 
 ```lua
