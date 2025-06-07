@@ -18,8 +18,8 @@ connection.onInitialize(params => {
 	if (!options.typescript?.tsdk) {
 		throw new Error('typescript.tsdk is required');
 	}
-	if (!options.typescript?.tsserverRequestCommand && !options.typescript?.tsserverNotificationCommands) {
-		connection.console.warn('typescript.tsserverRequestCommand/typescript.tsserverNotificationCommands is required since >= 3.0 for complete TS features');
+	if (!options.typescript?.tsserverRequestCommand) {
+		connection.console.warn('typescript.tsserverRequestCommand is required since >= 3.0 for complete TS features');
 	}
 
 	const { typescript: ts } = loadTsdkByPath(options.typescript.tsdk, params.locale);
@@ -42,8 +42,8 @@ connection.onInitialize(params => {
 
 	const tsserverRequestHandlers = new Map<number, (res: any) => void>();
 
-	if (options.typescript.tsserverNotificationCommands) {
-		connection.onNotification(options.typescript.tsserverNotificationCommands.response, ([id, res]) => {
+	if (Array.isArray(options.typescript.tsserverRequestCommand)) {
+		connection.onNotification(options.typescript.tsserverRequestCommand[1], ([id, res]) => {
 			tsserverRequestHandlers.get(id)?.(res);
 			tsserverRequestHandlers.delete(id);
 		});
@@ -54,7 +54,7 @@ connection.onInitialize(params => {
 		{
 			setup() { },
 			async getLanguageService(uri) {
-				if (uri.scheme === 'file' && (options.typescript.tsserverRequestCommand || options.typescript.tsserverNotificationCommands)) {
+				if (uri.scheme === 'file' && options.typescript.tsserverRequestCommand) {
 					const fileName = uri.fsPath.replace(/\\/g, '/');
 					let projectInfoPromise = file2ProjectInfo.get(fileName);
 					if (!projectInfoPromise) {
@@ -97,7 +97,7 @@ connection.onInitialize(params => {
 				simpleLs = undefined;
 			},
 		},
-		getHybridModeLanguageServicePlugins(ts, (options.typescript.tsserverRequestCommand || options.typescript.tsserverNotificationCommands) ? {
+		getHybridModeLanguageServicePlugins(ts, options.typescript.tsserverRequestCommand ? {
 			collectExtractProps(...args) {
 				return sendTsRequest('vue:collectExtractProps', args);
 			},
@@ -150,14 +150,15 @@ connection.onInitialize(params => {
 	);
 
 	async function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
-		if (options.typescript.tsserverNotificationCommands) {
+		if (typeof options.typescript.tsserverRequestCommand === 'string') {
+			return await connection.sendRequest<T>(options.typescript.tsserverRequestCommand, [command, args]);
+		} else {
+			const [requestCommand] = options.typescript.tsserverRequestCommand!;
 			return await new Promise<T | null>(resolve => {
 				const id = ++tsserverRequestId;
 				tsserverRequestHandlers.set(id, resolve);
-				connection.sendNotification(options.typescript.tsserverNotificationCommands!.request, [id, command, args]);
+				connection.sendNotification(requestCommand, [id, command, args]);
 			});
-		} else {
-			return await connection.sendRequest<T>(options.typescript.tsserverRequestCommand!, [command, args]);
 		}
 	}
 
@@ -203,3 +204,4 @@ connection.onInitialize(params => {
 connection.onInitialized(server.initialized);
 
 connection.onShutdown(server.shutdown);
+
