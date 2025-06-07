@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-service",
-	"version": "3.0.0-alpha.8",
+	"version": "3.0.0-alpha.10",
 	"license": "MIT",
 	"files": [
 		"data",
@@ -21,9 +21,9 @@
 		"@volar/language-service": "~2.4.13",
 		"@volar/typescript": "~2.4.13",
 		"@vue/compiler-dom": "^3.5.0",
-		"@vue/language-core": "3.0.0-alpha.8",
+		"@vue/language-core": "3.0.0-alpha.10",
 		"@vue/shared": "^3.5.0",
-		"@vue/typescript-plugin": "3.0.0-alpha.8",
+		"@vue/typescript-plugin": "3.0.0-alpha.10",
 		"alien-signals": "^2.0.5",
 		"path-browserify": "^1.0.1",
 		"volar-service-css": "0.0.64",
