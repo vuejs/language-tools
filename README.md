@@ -51,7 +51,7 @@ Note: The "Take Over" mode has been discontinued. Instead, a new "Hybrid" mode h
 -- For Mason v2,
 -- local vue_language_server_path = vim.fn.expand '$MASON/packages' .. '/vue-language-server' .. '/node_modules/@vue/language-server'
 -- or even
--- local vue_language_server_path = vim.fn.stdpath('data') .. "/mason/packages/vue-language-server/node_modules/@vue/language-server"
+-- local vue_language_server_path = vim.fn.stdpath('data') .. '/mason/packages/vue-language-server/node_modules/@vue/language-server'
 
 local vue_language_server_path = '/path/to/@vue/language-server'
 
@@ -74,20 +74,20 @@ lspconfig.ts_ls.setup {
 lspconfig.vue_ls.setup {}
 ```
 
-### Non-Hybrid mode(similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
+### Non-Hybrid mode (similar to takeover mode) configuration (Requires `@vue/language-server` version `^2.0.7`)
 
-Note: If `hybridMode` is set to `false` `Volar` will run embedded `ts_ls` therefore there is no need to run it separately.
+Note: If `hybridMode` is set to `false`, `vue_ls` will run embedded `ts_ls` therefore there is no need to run it separately.
 
 For more information see [#4119](https://github.com/vuejs/language-tools/pull/4119)
 
-*Make sure you have typescript installed globally or pass the location to volar*
+*Make sure you have TypeScript installed globally or pass the location to vue_ls*
 
-Use volar for all `.{vue,js,ts,tsx,jsx}` files.
+Use `vue_ls` for all `.{vue,js,ts,tsx,jsx}` files.
 ```lua
 local lspconfig = require('lspconfig')
 
 -- lspconfig.ts_ls.setup {} 
-lspconfig.volar.setup {
+lspconfig.vue_ls.setup {
   filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' },
   init_options = {
     vue = {
@@ -97,7 +97,7 @@ lspconfig.volar.setup {
 }
 ```
 
-Use `volar` for only `.vue` files and `ts_ls` for `.ts` and `.js` files.
+Use `vue_ls` for only `.vue` files and `ts_ls` for `.ts` and `.js` files.
 ```lua
 local lspconfig = require('lspconfig')
 
@@ -113,7 +113,7 @@ lspconfig.ts_ls.setup {
   },
 }
 
-lspconfig.volar.setup {
+lspconfig.vue_ls.setup {
   init_options = {
     vue = {
       hybridMode = false,
