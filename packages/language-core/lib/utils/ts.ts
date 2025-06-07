@@ -176,7 +176,7 @@ export class CompilerOptionsResolver {
 					break;
 				case 'plugins':
 					this.plugins = (options.plugins ?? [])
-						.map<VueLanguagePlugin>((pluginPath: string) => {
+						.flatMap<VueLanguagePlugin>((pluginPath: string) => {
 							try {
 								const resolvedPath = resolvePath(pluginPath, rootDir);
 								if (resolvedPath) {
