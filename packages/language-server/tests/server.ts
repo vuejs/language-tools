@@ -4,7 +4,6 @@ import type { LanguageServerHandle } from '@volar/test-utils';
 import { startLanguageServer } from '@volar/test-utils';
 import * as path from 'node:path';
 import { URI } from 'vscode-uri';
-import type { VueInitializationOptions } from '../lib/types';
 
 let serverHandle: LanguageServerHandle | undefined;
 let tsserver: import('@typescript/server-harness').Server;
@@ -44,22 +43,18 @@ export async function getLanguageServer(): Promise<{
 				return null;
 			});
 		});
-		serverHandle.connection.onRequest('tsserverRequest', async ([command, args]) => {
+		serverHandle.connection.onNotification('tsserver/request', async ([id, command, args]) => {
 			const res = await tsserver.message({
 				seq: seq++,
 				command: command,
 				arguments: args,
 			});
-			return res.body;
+			serverHandle!.connection.sendNotification('tsserver/response', [id, res.body]);
 		});
 
 		await serverHandle.initialize(
 			URI.file(testWorkspacePath).toString(),
-			{
-				typescript: {
-					tsserverRequestCommand: 'tsserverRequest',
-				},
-			} satisfies VueInitializationOptions,
+			{},
 			{
 				workspace: {
 					configuration: true,

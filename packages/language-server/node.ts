@@ -5,7 +5,6 @@ import { createLanguage, createParsedCommandLine, createVueLanguagePlugin, getDe
 import { createLanguageService, createUriMap, getHybridModeLanguageServicePlugins, type LanguageService } from '@vue/language-service';
 import * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import type { VueInitializationOptions } from './lib/types';
 
 const connection = createConnection();
 const server = createServer(connection);
@@ -13,12 +12,6 @@ const server = createServer(connection);
 connection.listen();
 
 connection.onInitialize(params => {
-	const options: VueInitializationOptions = params.initializationOptions;
-
-	if (!options.typescript?.tsserverRequestCommand) {
-		connection.console.warn('typescript.tsserverRequestCommand is required since >= 3.0 for complete TS features');
-	}
-
 	const tsconfigProjects = createUriMap<LanguageService>();
 	const file2ProjectInfo = new Map<string, Promise<ts.server.protocol.ProjectInfo | null>>();
 
@@ -38,19 +31,17 @@ connection.onInitialize(params => {
 
 	const tsserverRequestHandlers = new Map<number, (res: any) => void>();
 
-	if (Array.isArray(options.typescript.tsserverRequestCommand)) {
-		connection.onNotification(options.typescript.tsserverRequestCommand[1], ([id, res]) => {
-			tsserverRequestHandlers.get(id)?.(res);
-			tsserverRequestHandlers.delete(id);
-		});
-	}
+	connection.onNotification('tsserver/response', ([id, res]) => {
+		tsserverRequestHandlers.get(id)?.(res);
+		tsserverRequestHandlers.delete(id);
+	});
 
 	return server.initialize(
 		params,
 		{
 			setup() { },
 			async getLanguageService(uri) {
-				if (uri.scheme === 'file' && options.typescript.tsserverRequestCommand) {
+				if (uri.scheme === 'file') {
 					const fileName = uri.fsPath.replace(/\\/g, '/');
 					let projectInfoPromise = file2ProjectInfo.get(fileName);
 					if (!projectInfoPromise) {
@@ -83,17 +74,17 @@ connection.onInitialize(params => {
 				].filter(promise => !!promise));
 			},
 			reload() {
-				for (const ls of [
-					...tsconfigProjects.values(),
-					simpleLs,
-				]) {
-					ls?.dispose();
+				for (const ls of tsconfigProjects.values()) {
+					ls.dispose();
 				}
 				tsconfigProjects.clear();
-				simpleLs = undefined;
+				if (simpleLs) {
+					simpleLs.dispose();
+					simpleLs = undefined;
+				}
 			},
 		},
-		getHybridModeLanguageServicePlugins(ts, options.typescript.tsserverRequestCommand ? {
+		getHybridModeLanguageServicePlugins(ts, {
 			collectExtractProps(...args) {
 				return sendTsRequest('vue:collectExtractProps', args);
 			},
@@ -142,20 +133,15 @@ connection.onInitialize(params => {
 				);
 				return ts.displayPartsToString(result?.displayParts ?? []);
 			},
-		} : undefined)
+		})
 	);
 
 	async function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
-		if (typeof options.typescript.tsserverRequestCommand === 'string') {
-			return await connection.sendRequest<T>(options.typescript.tsserverRequestCommand, [command, args]);
-		} else {
-			const [requestCommand] = options.typescript.tsserverRequestCommand!;
-			return await new Promise<T | null>(resolve => {
-				const requestId = ++tsserverRequestId;
-				tsserverRequestHandlers.set(requestId, resolve);
-				connection.sendNotification(requestCommand, [command, args, requestId]);
-			});
-		}
+		return await new Promise<T | null>(resolve => {
+			const requestId = ++tsserverRequestId;
+			tsserverRequestHandlers.set(requestId, resolve);
+			connection.sendNotification('tsserver/request', [requestId, command, args]);
+		});
 	}
 
 	function createLs(server: LanguageServer, tsconfig: string | undefined) {
