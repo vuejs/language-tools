@@ -1,9 +1,9 @@
 import type { LanguageServer } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
-import { createConnection, createServer, loadTsdkByPath } from '@volar/language-server/node';
+import { createConnection, createServer } from '@volar/language-server/node';
 import { createLanguage, createParsedCommandLine, createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
 import { createLanguageService, createUriMap, getHybridModeLanguageServicePlugins, type LanguageService } from '@vue/language-service';
-import type * as ts from 'typescript';
+import * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import type { VueInitializationOptions } from './lib/types';
 
@@ -15,14 +15,10 @@ connection.listen();
 connection.onInitialize(params => {
 	const options: VueInitializationOptions = params.initializationOptions;
 
-	if (!options.typescript?.tsdk) {
-		throw new Error('typescript.tsdk is required');
-	}
 	if (!options.typescript?.tsserverRequestCommand) {
 		connection.console.warn('typescript.tsserverRequestCommand is required since >= 3.0 for complete TS features');
 	}
 
-	const { typescript: ts } = loadTsdkByPath(options.typescript.tsdk, params.locale);
 	const tsconfigProjects = createUriMap<LanguageService>();
 	const file2ProjectInfo = new Map<string, Promise<ts.server.protocol.ProjectInfo | null>>();
 
@@ -204,4 +200,3 @@ connection.onInitialize(params => {
 connection.onInitialized(server.initialized);
 
 connection.onShutdown(server.shutdown);
-

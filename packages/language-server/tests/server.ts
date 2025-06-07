@@ -57,7 +57,6 @@ export async function getLanguageServer(): Promise<{
 			URI.file(testWorkspacePath).toString(),
 			{
 				typescript: {
-					tsdk: path.dirname(require.resolve('typescript/lib/typescript.js')),
 					tsserverRequestCommand: 'tsserverRequest',
 				},
 			} satisfies VueInitializationOptions,
