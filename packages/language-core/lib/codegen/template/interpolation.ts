@@ -178,7 +178,9 @@ function* generateVar(
 		if (ctx.dollarVars.has(curVar.text)) {
 			yield [`__VLS_dollars.`, undefined];
 		}
-		yield [`__VLS_ctx.`, undefined];
+		else {
+			yield [`__VLS_ctx.`, undefined];
+		}
 		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 	}
 }
