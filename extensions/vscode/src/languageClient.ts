@@ -1,5 +1,4 @@
 import * as lsp from '@volar/vscode';
-import type { VueInitializationOptions } from '@vue/language-server';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
@@ -25,7 +24,6 @@ type CreateLanguageClient = (
 	id: string,
 	name: string,
 	langs: lsp.DocumentSelector,
-	initOptions: VueInitializationOptions,
 	port: number,
 	outputChannel: vscode.OutputChannel
 ) => lsp.BaseLanguageClient;
@@ -72,11 +70,6 @@ async function activateLc(
 		'vue',
 		'Vue',
 		selectors,
-		{
-			typescript: {
-				tsserverRequestCommand: 'typescript.tsserverRequest',
-			},
-		} satisfies VueInitializationOptions,
 		6009,
 		outputChannel
 	);

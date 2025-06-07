@@ -41,7 +41,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 	const context = extensionContext.value!;
 	activateLanguageClient(
 		context,
-		(id, name, documentSelector, initOptions, port, outputChannel) => {
+		(id, name, documentSelector, port, outputChannel) => {
 			class _LanguageClient extends lsp.LanguageClient {
 				fillInitializeParams(params: lsp.InitializeParams) {
 					// fix https://github.com/vuejs/language-tools/issues/1959
@@ -66,7 +66,6 @@ export const { activate, deactivate } = defineExtension(async () => {
 			const clientOptions: lsp.LanguageClientOptions = {
 				middleware,
 				documentSelector: documentSelector,
-				initializationOptions: initOptions,
 				markdown: {
 					isTrusted: true,
 					supportHtml: true
@@ -85,7 +84,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 			updateProviders(client);
 
-			client.onRequest('typescript.tsserverRequest', async ([command, args]) => {
+			client.onNotification('tsserver/request', async ([id, command, args]) => {
 				const tsserver = (globalThis as any).__TSSERVER__?.semantic;
 				if (!tsserver) {
 					return;
@@ -97,7 +96,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 						lowPriority: true,
 						requireSemantic: true,
 					})[0];
-					return res.body;
+					client.sendNotification('tsserver/response', [id, res.body]);
 				} catch {
 					// noop
 				}
