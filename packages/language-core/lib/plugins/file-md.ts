@@ -1,12 +1,14 @@
-import { CodeInformation, Mapping, defaultMapperFactory } from '@volar/language-core';
+import { type CodeInformation, type Mapping, defaultMapperFactory } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
-import { Segment, toString } from 'muggle-string';
+import { type Segment, toString } from 'muggle-string';
 import type { VueLanguagePlugin } from '../types';
 import { buildMappings } from '../utils/buildMappings';
 import { parse } from '../utils/parseSfc';
 
+const frontmatterReg = /^---[\s\S]*?\n---(?:\r?\n|$)/;
 const codeblockReg = /(`{3,})[\s\S]+?\1/g;
 const inlineCodeblockReg = /`[^\n`]+?`/g;
+const latexBlockReg = /(\${2,})[\s\S]+?\1/g;
 const scriptSetupReg = /\\\<[\s\S]+?\>\n?/g;
 const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
 const angleBracketReg = /\<\S*\:\S*\>/g;
@@ -35,10 +37,14 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			}
 
 			content = content
+				// frontmatter
+				.replace(frontmatterReg, match => ' '.repeat(match.length))
 				// code block
 				.replace(codeblockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
 				// inline code block
 				.replace(inlineCodeblockReg, match => `\`${' '.repeat(match.length - 2)}\``)
+				// latex block
+				.replace(latexBlockReg, (match, quotes) => quotes + ' '.repeat(match.length - quotes.length * 2) + quotes)
 				// # \<script setup>
 				.replace(scriptSetupReg, match => ' '.repeat(match.length))
 				// <<< https://vitepress.dev/guide/markdown#import-code-snippets

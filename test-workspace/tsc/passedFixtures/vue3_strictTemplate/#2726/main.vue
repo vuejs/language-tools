@@ -4,7 +4,7 @@ import { ref } from 'vue';
 const foo = ref('bar');
 
 defineSlots<{
-	default: (_: {
+	default: (props: {
 		foo: string;
 		buz?: number;
 	}) => any;

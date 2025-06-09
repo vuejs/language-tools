@@ -1,28 +1,12 @@
+import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
-import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
+import { getNodeText } from '../../utils/shared';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
-export const combineLastMapping: VueCodeInformation = { __combineLastMapping: true };
-export const variableNameRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
-
-export function* wrapWith(
-	startOffset: number,
-	endOffset: number,
-	features: VueCodeInformation,
-	...wrapCodes: Code[]
-): Generator<Code> {
-	yield ['', 'template', startOffset, features];
-	let offset = 1;
-	for (const wrapCode of wrapCodes) {
-		if (typeof wrapCode !== 'string') {
-			offset++;
-		}
-		yield wrapCode;
-	}
-	yield ['', 'template', endOffset, { __combineOffsetMapping: offset }];
-}
+export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
+export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
 export function collectVars(
 	ts: typeof import('typescript'),
@@ -31,7 +15,7 @@ export function collectVars(
 	results: string[] = []
 ) {
 	const identifiers = collectIdentifiers(ts, node, []);
-	for (const [id] of identifiers) {
+	for (const { id } of identifiers) {
 		results.push(getNodeText(ts, id, ast));
 	}
 	return results;
@@ -40,15 +24,20 @@ export function collectVars(
 export function collectIdentifiers(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	results: [id: ts.Identifier, isRest: boolean][] = [],
-	isRest = false
+	results: {
+		id: ts.Identifier,
+		isRest: boolean,
+		initializer: ts.Expression | undefined;
+	}[] = [],
+	isRest = false,
+	initializer: ts.Expression | undefined = undefined
 ) {
 	if (ts.isIdentifier(node)) {
-		results.push([node, isRest]);
+		results.push({ id: node, isRest, initializer });
 	}
 	else if (ts.isObjectBindingPattern(node)) {
 		for (const el of node.elements) {
-			collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken);
+			collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken, el.initializer);
 		}
 	}
 	else if (ts.isArrayBindingPattern(node)) {
@@ -62,6 +51,19 @@ export function collectIdentifiers(
 		ts.forEachChild(node, node => collectIdentifiers(ts, node, results, false));
 	}
 	return results;
+}
+
+export function normalizeAttributeValue(node: CompilerDOM.TextNode): [string, number] {
+	let offset = node.loc.start.offset;
+	let content = node.loc.source;
+	if (
+		(content.startsWith(`'`) && content.endsWith(`'`))
+		|| (content.startsWith(`"`) && content.endsWith(`"`))
+	) {
+		offset++;
+		content = content.slice(1, -1);
+	}
+	return [content, offset];
 }
 
 export function createTsAst(ts: typeof import('typescript'), astHolder: any, text: string) {

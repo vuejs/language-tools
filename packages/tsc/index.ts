@@ -1,14 +1,13 @@
 import { runTsc } from '@volar/typescript/lib/quickstart/runTsc';
 import * as vue from '@vue/language-core';
-import * as semver from 'semver';
 
 const windowsPathReg = /\\/g;
 
-export function run(tscPath = getTscPath()) {
+export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 
 	let runExtensions = ['.vue'];
+	let extensionsChangedException: Error | undefined;
 
-	const extensionsChangedException = new Error('extensions changed');
 	const main = () => runTsc(
 		tscPath,
 		runExtensions,
@@ -16,7 +15,7 @@ export function run(tscPath = getTscPath()) {
 			const { configFilePath } = options.options;
 			const vueOptions = typeof configFilePath === 'string'
 				? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
-				: vue.resolveVueCompilerOptions({});
+				: vue.getDefaultCompilerOptions();
 			const allExtensions = vue.getAllExtensions(vueOptions);
 			if (
 				runExtensions.length === allExtensions.length
@@ -32,7 +31,7 @@ export function run(tscPath = getTscPath()) {
 			}
 			else {
 				runExtensions = allExtensions;
-				throw extensionsChangedException;
+				throw extensionsChangedException = new Error('extensions changed');
 			}
 		}
 	);
@@ -45,16 +44,5 @@ export function run(tscPath = getTscPath()) {
 		} else {
 			throw err;
 		}
-	}
-}
-
-function getTscPath() {
-	const version = require('typescript/package.json').version as string;
-
-	if (semver.gte(version, '5.7.0')) {
-		return require.resolve('typescript/lib/_tsc');
-	}
-	else {
-		return require.resolve('typescript/lib/tsc');
 	}
 }

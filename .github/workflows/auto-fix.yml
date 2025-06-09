@@ -3,7 +3,13 @@ name: auto-fix
 on:
   push:
     branches:
-      - 'master'
+      - master
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: write
 
 jobs:
   auto-fix:

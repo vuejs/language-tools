@@ -1,5 +1,7 @@
+<!-- @inferTemplateDollarSlots true -->
+
 <template>
-	<!-- $slots type -->
+	<!-- component slots type -->
 	<Comp value="1">
 		<template #foo="bindings">{{ exactType(bindings, {} as string) }}</template>
 	</Comp>
@@ -26,26 +28,28 @@
 </template>
 
 <script lang="ts">
-export default { name: 'Self' };
+export default {
+	name: 'Self',
+};
 
 declare const Comp: new <T>(props: { value: T; }) => {
 	$props: typeof props;
 	$slots: {
-		foo: (_: T) => VNode[];
+		foo: (props: T) => VNode[];
 	},
 };
 </script>
 
 <script lang="ts" setup>
-import { ref, useSlots, VNode } from 'vue';
+import { ref, useSlots, type VNode } from 'vue';
 import { exactType } from '../../shared';
 
 const baz = ref('baz' as const);
 
 const slots = useSlots();
 exactType(slots, {} as {
-	bar?(_: { str: string; num: number; }): any;
+	bar?: (props: { str: string; num: number; }) => any;
 } & {
-	baz?(_: { str: string; num: number; }): any;
+	baz?: (props: { str: string; num: number; }) => any;
 });
 </script>

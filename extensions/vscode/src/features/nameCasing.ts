@@ -1,4 +1,4 @@
-import { BaseLanguageClient, ExecuteCommandParams, ExecuteCommandRequest, TextEdit } from '@volar/vscode';
+import { type BaseLanguageClient, type ExecuteCommandParams, ExecuteCommandRequest, type TextEdit } from '@volar/vscode';
 import { quickPick } from '@volar/vscode/lib/common';
 import { AttrNameCasing, TagNameCasing, commands } from '@vue/language-server/lib/types';
 import { reactive, useActiveTextEditor, useCommand, useDisposable, watch, watchEffect } from 'reactive-vscode';

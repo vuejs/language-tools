@@ -1,6 +1,9 @@
 import { SourceMap } from '@volar/source-map';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import type { VueLanguagePlugin } from '@vue/language-core';
 import * as pug from 'volar-service-pug/lib/languageService';
+
+const classRegex = /^class\s*=/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
 
@@ -71,6 +74,13 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							options?.onWarn?.(createProxyObject(warning));
 						},
 						onError(error) {
+							// #5099
+							if (
+								error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
+								&& classRegex.test(pugFile.htmlCode.slice(error.loc?.start.offset))
+							) {
+								return;
+							}
 							options?.onError?.(createProxyObject(error));
 						},
 					});

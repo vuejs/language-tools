@@ -3,12 +3,15 @@
 	"compilerOptions": {
 		"noEmit": true,
 	},
-	"include": [ "packages/*/tests" ],
+	"include": [
+		"packages/*/tests",
+		"tsslint.config.ts"
+	],
 	"references": [
-		{ "path": "./extensions/vscode/tsconfig.json" },
-		{ "path": "./packages/language-plugin-pug/tsconfig.json" },
-		{ "path": "./packages/typescript-plugin/tsconfig.json" },
-		{ "path": "./packages/tsc/tsconfig.json" },
 		{ "path": "./packages/component-meta/tsconfig.json" },
+		{ "path": "./packages/language-server/tsconfig.json" },
+		{ "path": "./packages/language-plugin-pug/tsconfig.json" },
+		{ "path": "./packages/tsc/tsconfig.json" },
+		{ "path": "./packages/typescript-plugin/tsconfig.json" },
 	],
 }

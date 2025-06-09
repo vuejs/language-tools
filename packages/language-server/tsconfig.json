@@ -5,6 +5,6 @@
 	"references": [
 		{ "path": "../language-core/tsconfig.json" },
 		{ "path": "../language-service/tsconfig.json" },
-		{ "path": "../component-meta/tsconfig.json" },
+		{ "path": "../typescript-plugin/tsconfig.json" },
 	],
 }
