@@ -3,6 +3,7 @@ import type { ScriptCodegenOptions } from '../script';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine } from '../utils';
 import { generateClassProperty } from './classProperty';
+import { generateExternalStylesheets } from './externalStylesheets';
 
 export function* generateStyleScopedClasses(
 	options: ScriptCodegenOptions,
@@ -19,6 +20,9 @@ export function* generateStyleScopedClasses(
 	const firstClasses = new Set<string>();
 	yield `type __VLS_StyleScopedClasses = {}`;
 	for (const [style, i] of styles) {
+		if (options.vueCompilerOptions.resolveExternalStylesheets) {
+			yield* generateExternalStylesheets(style);
+		}
 		for (const className of style.classNames) {
 			if (firstClasses.has(className.text)) {
 				ctx.scopedClasses.push({

@@ -43,6 +43,7 @@ export interface VueCompilerOptions {
 	inferTemplateDollarSlots: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
+	resolveExternalStylesheets: boolean;
 	fallthroughComponentNames: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
@@ -139,8 +140,13 @@ export interface Sfc {
 		ast: ts.SourceFile;
 	} | undefined;
 	styles: readonly (SfcBlock & {
+		src: SfcBlockAttr | undefined;
+		module: SfcBlockAttr | undefined;
 		scoped: boolean;
-		module?: SfcBlockAttr | undefined;
+		imports: {
+			text: string;
+			offset: number;
+		}[],
 		cssVars: {
 			text: string;
 			offset: number;

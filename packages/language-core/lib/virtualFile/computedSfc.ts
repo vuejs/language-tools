@@ -4,6 +4,7 @@ import { computed, setCurrentSub } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
 import { parseCssClassNames } from '../utils/parseCssClassNames';
+import { parseCssImports } from '../utils/parseCssImports';
 import { parseCssVars } from '../utils/parseCssVars';
 import { computedArray, computedItems } from '../utils/signals';
 
@@ -114,8 +115,13 @@ export function computedSfc(
 		computed(() => getParseResult()?.descriptor.styles ?? []),
 		(getBlock, i) => {
 			const base = computedSfcBlock('style_' + i, 'css', getBlock);
+			const getSrc = computedAttrValue('__src', base, getBlock);
 			const getModule = computedAttrValue('__module', base, getBlock);
 			const getScoped = computed(() => !!getBlock().scoped);
+			const getImports = computedItems(
+				() => [...parseCssImports(base.content)],
+				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset
+			);
 			const getCssVars = computedItems(
 				() => [...parseCssVars(base.content)],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset
@@ -125,8 +131,10 @@ export function computedSfc(
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset
 			);
 			return () => mergeObject(base, {
+				get src() { return getSrc(); },
 				get module() { return getModule(); },
 				get scoped() { return getScoped(); },
+				get imports() { return getImports(); },
 				get cssVars() { return getCssVars(); },
 				get classNames() { return getClassNames(); },
 			}) satisfies Sfc['styles'][number];

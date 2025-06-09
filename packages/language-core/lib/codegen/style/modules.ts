@@ -3,6 +3,7 @@ import { codeFeatures } from '../codeFeatures';
 import type { ScriptCodegenOptions } from '../script';
 import { endOfLine, newLine } from '../utils';
 import { generateClassProperty } from './classProperty';
+import { generateExternalStylesheets } from './externalStylesheets';
 
 export function* generateStyleModules(
 	options: ScriptCodegenOptions
@@ -22,10 +23,13 @@ export function* generateStyleModules(
 				text,
 				'main',
 				offset,
-				codeFeatures.withoutHighlight
+				codeFeatures.navigation,
 			];
 		}
 		yield `: Record<string, string> & __VLS_PrettifyGlobal<{}`;
+		if (options.vueCompilerOptions.resolveExternalStylesheets) {
+			yield* generateExternalStylesheets(style);
+		}
 		for (const className of style.classNames) {
 			yield* generateClassProperty(
 				i,
