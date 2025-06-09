@@ -1,5 +1,5 @@
 import type { Code, VueCodeInformation } from '../../types';
-import { variableNameRegex } from '../utils';
+import { identifierRegex } from '../utils';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -13,7 +13,7 @@ export function* generatePropertyAccess(
 	features?: VueCodeInformation,
 	astHolder?: any
 ): Generator<Code> {
-	if (!options.compilerOptions.noPropertyAccessFromIndexSignature && variableNameRegex.test(code)) {
+	if (!options.compilerOptions.noPropertyAccessFromIndexSignature && identifierRegex.test(code)) {
 		yield `.`;
 		yield offset !== undefined && features
 			? [code, 'template', offset, features]

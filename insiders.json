@@ -1,6 +1,86 @@
 {
-	"latest": "2.2.1",
+	"latest": "3.0.0-alpha.11",
 	"versions": [
+		{
+			"version": "3.0.0-alpha.11",
+			"date": "2025-06-08",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.11",
+				"AFDIAN": "https://afdian.com/p/9c24b10443bd11f0829752540025c377"
+			}
+		},
+		{
+			"version": "3.0.0-alpha.9",
+			"date": "2025-05-26",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.9",
+				"AFDIAN": "https://afdian.com/p/e31251d23a3211f08e3852540025c377"
+			}
+		},
+		{
+			"version": "3.0.0-alpha.7",
+			"date": "2025-05-05",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.7",
+				"AFDIAN": "https://afdian.com/p/fa6e6926299111f098d452540025c377"
+			}
+		},
+		{
+			"version": "3.0.0-alpha.5",
+			"date": "2025-04-08",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.5",
+				"AFDIAN": "https://afdian.com/p/623aa52a148811f0bff452540025c377"
+			}
+		},
+		{
+			"version": "3.0.0-alpha.3",
+			"date": "2025-03-17",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.3",
+				"AFDIAN": "https://afdian.com/p/a9d56800028311f0b56952540025c377"
+			}
+		},
+		{
+			"version": "3.0.0-alpha.1",
+			"date": "2025-03-08",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v3.0.0-alpha.1",
+				"AFDIAN": "https://afdian.com/p/09694088fba011efa49c52540025c377"
+			}
+		},
+		{
+			"version": "2.2.9",
+			"date": "2025-03-02",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.2.9",
+				"AFDIAN": "https://afdian.com/p/d78b61e8f75011ef812652540025c377"
+			}
+		},
+		{
+			"version": "2.2.7",
+			"date": "2025-03-01",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.2.7",
+				"AFDIAN": "https://afdian.com/p/f5f588def68311efb21b52540025c377"
+			}
+		},
+		{
+			"version": "2.2.5",
+			"date": "2025-02-22",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.2.5",
+				"AFDIAN": "https://afdian.com/p/708861e2f1c611ef9fc552540025c377"
+			}
+		},
+		{
+			"version": "2.2.3",
+			"date": "2025-02-15",
+			"downloads": {
+				"GitHub": "https://github.com/volarjs/insiders/releases/tag/v2.2.3",
+				"AFDIAN": "https://afdian.com/p/6fa17e40ebc111ef849e52540025c377"
+			}
+		},
 		{
 			"version": "2.2.1",
 			"date": "2024-12-24",

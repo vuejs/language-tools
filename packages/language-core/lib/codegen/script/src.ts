@@ -1,6 +1,7 @@
 import type { Code, SfcBlockAttr } from '../../types';
-import { endOfLine, generateSfcBlockAttrValue } from '../utils';
-import { codeFeatures } from './index';
+import { codeFeatures } from '../codeFeatures';
+import { combineLastMapping, endOfLine } from '../utils';
+import { wrapWith } from '../utils/wrapWith';
 
 export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 	if (src === true) {
@@ -23,29 +24,19 @@ export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 	}
 
 	yield `export * from `;
-	yield* generateSfcBlockAttrValue(src, text, {
-		...codeFeatures.all,
-		navigation: text === src.text
-			? true
-			: {
-				shouldRename: () => false,
-				resolveRenameEditText(newName) {
-					if (newName.endsWith('.jsx') || newName.endsWith('.js')) {
-						newName = newName.split('.').slice(0, -1).join('.');
-					}
-					if (src?.text.endsWith('.d.ts')) {
-						newName = newName + '.d.ts';
-					}
-					else if (src?.text.endsWith('.ts')) {
-						newName = newName + '.ts';
-					}
-					else if (src?.text.endsWith('.tsx')) {
-						newName = newName + '.tsx';
-					}
-					return newName;
-				},
-			},
-	});
+	yield* wrapWith(
+		src.offset,
+		src.offset + src.text.length,
+		'main',
+		{
+			...codeFeatures.all,
+			...text !== src.text ? codeFeatures.navigationWithoutRename : {},
+		},
+		`'`,
+		[text.slice(0, src.text.length), 'main', src.offset, combineLastMapping],
+		text.slice(src.text.length),
+		`'`
+	);
 	yield endOfLine;
 	yield `export { default } from '${text}'${endOfLine}`;
 }

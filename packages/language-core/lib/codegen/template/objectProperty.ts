@@ -1,8 +1,9 @@
 import { camelize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
-import { combineLastMapping, variableNameRegex, wrapWith } from '../utils';
+import { combineLastMapping, identifierRegex } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
+import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -44,8 +45,8 @@ export function* generateObjectProperty(
 		}
 	}
 	else if (shouldCamelize) {
-		if (variableNameRegex.test(camelize(code))) {
-			yield* generateCamelized(code, offset, features);
+		if (identifierRegex.test(camelize(code))) {
+			yield* generateCamelized(code, 'template', offset, features);
 		}
 		else {
 			yield* wrapWith(
@@ -53,13 +54,13 @@ export function* generateObjectProperty(
 				offset + code.length,
 				features,
 				`'`,
-				...generateCamelized(code, offset, combineLastMapping),
+				...generateCamelized(code, 'template', offset, combineLastMapping),
 				`'`
 			);
 		}
 	}
 	else {
-		if (variableNameRegex.test(code)) {
+		if (identifierRegex.test(code)) {
 			yield [code, 'template', offset, features];
 		}
 		else {

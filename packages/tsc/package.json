@@ -1,6 +1,6 @@
 {
 	"name": "vue-tsc",
-	"version": "2.2.0",
+	"version": "3.0.0-alpha.10",
 	"license": "MIT",
 	"files": [
 		"bin",
@@ -16,14 +16,14 @@
 	"bin": {
 		"vue-tsc": "./bin/vue-tsc.js"
 	},
-	"dependencies": {
-		"@volar/typescript": "~2.4.11",
-		"@vue/language-core": "2.2.0"
-	},
 	"peerDependencies": {
 		"typescript": ">=5.0.0"
 	},
+	"dependencies": {
+		"@volar/typescript": "~2.4.13",
+		"@vue/language-core": "3.0.0-alpha.10"
+	},
 	"devDependencies": {
-		"@types/node": "latest"
+		"@types/node": "^22.10.4"
 	}
 }

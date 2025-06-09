@@ -1,13 +1,12 @@
 import type { Code } from '../../types';
-import type { ScriptCodegenContext } from '../script/context';
-import { type ScriptCodegenOptions, codeFeatures } from '../script/index';
+import { codeFeatures } from '../codeFeatures';
+import type { ScriptCodegenOptions } from '../script';
 import { endOfLine, newLine } from '../utils';
 import { generateClassProperty } from './classProperty';
 import { generateExternalStylesheets } from './externalStylesheets';
 
 export function* generateStyleModules(
-	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext
+	options: ScriptCodegenOptions
 ): Generator<Code> {
 	const styles = options.sfc.styles.map((style, i) => [style, i] as const).filter(([style]) => style.module);
 	if (!styles.length && !options.scriptSetupRanges?.useCssModule.length) {
@@ -16,7 +15,7 @@ export function* generateStyleModules(
 	yield `type __VLS_StyleModules = {${newLine}`;
 	for (const [style, i] of styles) {
 		if (style.module === true) {
-			yield '$style';
+			yield `$style`;
 		}
 		else {
 			const { text, offset } = style.module!;
@@ -24,20 +23,19 @@ export function* generateStyleModules(
 				text,
 				'main',
 				offset,
-				codeFeatures.navigation
+				codeFeatures.navigation,
 			];
 		}
-		yield `: Record<string, string> & ${ctx.localTypes.PrettifyLocal}<{}`;
+		yield `: Record<string, string> & __VLS_PrettifyGlobal<{}`;
 		if (options.vueCompilerOptions.experimentalResolveExternalStylesheets) {
 			yield* generateExternalStylesheets(style);
 		}
-		for (const { text, offset } of style.classNames) {
+		for (const className of style.classNames) {
 			yield* generateClassProperty(
 				i,
-				text,
-				offset,
-				'string',
-				false
+				className.text,
+				className.offset,
+				'string'
 			);
 		}
 		yield `>${endOfLine}`;

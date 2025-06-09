@@ -1,6 +1,6 @@
 import type { CreateFile, LanguageServiceContext, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
-import { Sfc, VueVirtualCode, tsCodegen } from '@vue/language-core';
+import { type Sfc, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
@@ -15,7 +15,7 @@ const unicodeReg = /\\u/g;
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-extract-file',
@@ -53,7 +53,7 @@ export function create(
 						return;
 					}
 
-					const sfc = root._sfc;
+					const { sfc } = root;
 					const script = sfc.scriptSetup ?? sfc.script;
 					if (!sfc.template || !script) {
 						return;
@@ -95,7 +95,7 @@ export function create(
 						return codeAction;
 					}
 
-					const sfc = root._sfc;
+					const { sfc } = root;
 					const script = sfc.scriptSetup ?? sfc.script;
 					if (!sfc.template || !script) {
 						return codeAction;
@@ -306,7 +306,7 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 
 export function createAddComponentToOptionEdit(ts: typeof import('typescript'), sfc: Sfc, ast: ts.SourceFile, componentName: string) {
 
-	const scriptRanges = tsCodegen.get(sfc)?.scriptRanges.get();
+	const scriptRanges = tsCodegen.get(sfc)?.getScriptRanges();
 	if (!scriptRanges?.exportDefault) {
 		return;
 	}

@@ -1,22 +1,22 @@
 import type * as ts from 'typescript';
 import type { TextRange } from '../types';
-import { getNodeText, getStartEnd, parseBindingRanges } from './scriptSetupRanges';
+import { getNodeText, getStartEnd } from '../utils/shared';
+import { parseBindingRanges } from './scriptSetupRanges';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> { }
 
-export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.SourceFile, hasScriptSetup: boolean, withNode: boolean) {
+export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.SourceFile, hasScriptSetup: boolean) {
 
 	let exportDefault: (TextRange & {
 		expression: TextRange,
 		args: TextRange,
-		argsNode: ts.ObjectLiteralExpression | undefined,
+		argsNode: ts.ObjectLiteralExpression,
 		componentsOption: TextRange | undefined,
 		componentsOptionNode: ts.ObjectLiteralExpression | undefined,
 		directivesOption: TextRange | undefined,
 		nameOption: TextRange | undefined,
 		inheritAttrsOption: string | undefined,
 	}) | undefined;
-	let classBlockEnd: number | undefined;
 
 	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast) : [];
 
@@ -46,7 +46,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 				let inheritAttrsOption: string | undefined;
 				ts.forEachChild(obj, node => {
 					if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
-						const name = getNodeText(ts, node.name, ast);
+						const name = _getNodeText(node.name);
 						if (name === 'components' && ts.isObjectLiteralExpression(node.initializer)) {
 							componentsOptionNode = node.initializer;
 						}
@@ -57,7 +57,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 							nameOptionNode = node.initializer;
 						}
 						else if (name === 'inheritAttrs') {
-							inheritAttrsOption = getNodeText(ts, node.initializer, ast);
+							inheritAttrsOption = _getNodeText(node.initializer);
 						}
 					}
 				});
@@ -65,33 +65,28 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 					..._getStartEnd(raw),
 					expression: _getStartEnd(node.expression),
 					args: _getStartEnd(obj),
-					argsNode: withNode ? obj : undefined,
+					argsNode: obj,
 					componentsOption: componentsOptionNode ? _getStartEnd(componentsOptionNode) : undefined,
-					componentsOptionNode: withNode ? componentsOptionNode : undefined,
+					componentsOptionNode,
 					directivesOption: directivesOptionNode ? _getStartEnd(directivesOptionNode) : undefined,
 					nameOption: nameOptionNode ? _getStartEnd(nameOptionNode) : undefined,
 					inheritAttrsOption,
 				};
 			}
 		}
-
-		if (
-			ts.isClassDeclaration(raw)
-			&& raw.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
-			&& raw.modifiers?.some(mod => mod.kind === ts.SyntaxKind.DefaultKeyword)
-		) {
-			classBlockEnd = raw.end - 1;
-		}
 	});
 
 	return {
 		exportDefault,
-		classBlockEnd,
 		bindings,
 	};
 
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(ts, node, ast);
+	}
+
+	function _getNodeText(node: ts.Node) {
+		return getNodeText(ts, node, ast);
 	}
 
 	// isAsExpression is missing in tsc

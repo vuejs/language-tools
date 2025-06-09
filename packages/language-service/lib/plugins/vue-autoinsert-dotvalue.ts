@@ -7,7 +7,7 @@ import { isTsDocument, sleep } from './utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
@@ -60,10 +60,8 @@ export function create(
 						return;
 					}
 
-					const blocks = [
-						root._sfc.script,
-						root._sfc.scriptSetup,
-					].filter(block => !!block);
+					const { sfc } = root;
+					const blocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);
 					if (!blocks.length) {
 						return;
 					}

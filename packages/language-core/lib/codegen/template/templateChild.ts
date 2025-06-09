@@ -1,8 +1,10 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { endOfLine, newLine } from '../utils';
+import { hyphenateTag } from '../../utils/shared';
+import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
+import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
@@ -30,34 +32,11 @@ export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
-	prevNode: CompilerDOM.TemplateChildNode | undefined,
-	isVForChild: boolean = false
+	enterNode: boolean = true
 ): Generator<Code> {
-	if (prevNode?.type === CompilerDOM.NodeTypes.COMMENT) {
-		const commentText = prevNode.content.trim().split(' ')[0];
-		if (/^@vue-skip\b[\s\S]*/.test(commentText)) {
-			yield `// @vue-skip${newLine}`;
-			return;
-		}
-		else if (/^@vue-ignore\b[\s\S]*/.test(commentText)) {
-			yield* ctx.ignoreError();
-		}
-		else if (/^@vue-expect-error\b[\s\S]*/.test(commentText)) {
-			yield* ctx.expectError(prevNode);
-		}
-		else {
-			const match = prevNode.loc.source.match(/^<!--\s*@vue-generic\b\s*\{(?<content>[^}]*)\}/);
-			if (match) {
-				const { content } = match.groups ?? {};
-				ctx.lastGenericComment = {
-					content,
-					offset: prevNode.loc.start.offset + match[0].indexOf(content)
-				};
-			}
-		}
+	if (enterNode && !ctx.enter(node)) {
+		return;
 	}
-
-	const shouldInheritRootNodeAttrs = options.inheritAttrs;
 
 	const cur = node as CompilerDOM.ElementNode | CompilerDOM.IfNode | CompilerDOM.ForNode;
 	if (cur.codegenNode?.type === CompilerDOM.NodeTypes.JS_CACHE_EXPRESSION) {
@@ -65,15 +44,10 @@ export function* generateTemplateChild(
 	}
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
-		let prev: CompilerDOM.TemplateChildNode | undefined;
-		if (shouldInheritRootNodeAttrs && node.children.length === 1 && node.children[0].type === CompilerDOM.NodeTypes.ELEMENT) {
-			ctx.singleRootNode = node.children[0];
+		for (const item of collectSingleRootNodes(options, node.children)) {
+			ctx.singleRootNodes.add(item);
 		}
-		for (const childNode of node.children) {
-			yield* generateTemplateChild(options, ctx, childNode, prev);
-			prev = childNode;
-		}
-		yield* ctx.resetDirectiveComments('end of root');
+		yield* generateElementChildren(options, ctx, node.children);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 		const vForNode = getVForNode(node);
@@ -100,7 +74,7 @@ export function* generateTemplateChild(
 				node.tagType === CompilerDOM.ElementTypes.ELEMENT
 				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
 			) {
-				yield* generateElement(options, ctx, node, isVForChild);
+				yield* generateElement(options, ctx, node);
 			}
 			else {
 				const { currentComponent } = ctx;
@@ -111,15 +85,11 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 		// {{ var }}
-		yield* generateTemplateChild(options, ctx, node.content, undefined);
+		yield* generateTemplateChild(options, ctx, node.content, false);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		// {{ ... }} {{ ... }}
-		for (const childNode of node.children) {
-			if (typeof childNode === 'object') {
-				yield* generateTemplateChild(options, ctx, childNode, undefined);
-			}
-		}
+		yield* generateElementChildren(options, ctx, node.children.filter(child => typeof child === 'object'), false);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 		// {{ ... }}
@@ -135,7 +105,6 @@ export function* generateTemplateChild(
 			`(`,
 			`)${endOfLine}`
 		);
-		yield* ctx.resetDirectiveComments('end of INTERPOLATION');
 	}
 	else if (node.type === CompilerDOM.NodeTypes.IF) {
 		// v-if / v-else-if / v-else
@@ -147,6 +116,40 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT) {
 		// not needed progress
+	}
+
+	if (enterNode) {
+		yield* ctx.exit();
+	}
+}
+
+function* collectSingleRootNodes(
+	options: TemplateCodegenOptions,
+	children: CompilerDOM.TemplateChildNode[]
+): Generator<CompilerDOM.ElementNode | null> {
+	if (children.length !== 1) {
+		// "null" is used to determine whether the component is not always has a single root
+		if (children.length > 1) {
+			yield null;
+		}
+		return;
+	}
+
+	const child = children[0];
+	if (child.type === CompilerDOM.NodeTypes.IF) {
+		for (const branch of child.branches) {
+			yield* collectSingleRootNodes(options, branch.children);
+		}
+		return;
+	}
+	else if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
+		return;
+	}
+	yield child;
+
+	const tag = hyphenateTag(child.tag);
+	if (options.vueCompilerOptions.fallthroughComponentNames.includes(tag)) {
+		yield* collectSingleRootNodes(options, child.children);
 	}
 }
 
@@ -174,14 +177,14 @@ export function getVForNode(node: CompilerDOM.ElementNode) {
 }
 
 function getVIfNode(node: CompilerDOM.ElementNode) {
-	const forDirective = node.props.find(
+	const ifDirective = node.props.find(
 		(prop): prop is CompilerDOM.DirectiveNode =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'if'
 	);
-	if (forDirective) {
+	if (ifDirective) {
 		let ifNode: CompilerDOM.IfNode | undefined;
-		CompilerDOM.processIf(node, forDirective, transformContext, _ifNode => {
+		CompilerDOM.processIf(node, ifDirective, transformContext, _ifNode => {
 			ifNode = { ..._ifNode };
 			return undefined;
 		});
@@ -189,7 +192,7 @@ function getVIfNode(node: CompilerDOM.ElementNode) {
 			for (const branch of ifNode.branches) {
 				branch.children = [{
 					...node,
-					props: node.props.filter(prop => prop !== forDirective),
+					props: node.props.filter(prop => prop !== ifDirective),
 				}];
 			}
 			return ifNode;

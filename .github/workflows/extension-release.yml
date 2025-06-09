@@ -1,0 +1,40 @@
+name: extension
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install -g ovsx && pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm run build && pnpm --filter volar run build:prod
+
+      - name: Publish
+        run: |
+          VERSION=$(jq -r .version package.json)
+          if [[ "$VERSION" == *-* ]]; then
+            echo "Detected prerelease version: $VERSION"
+            pnpm ovsx publish --pre-release
+          else
+            echo "Detected stable release version: $VERSION"
+            pnpm ovsx publish
+          fi
+        working-directory: extensions/vscode
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}

@@ -1,12 +1,14 @@
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
+import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
-import { TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
+import { type TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
 import { endOfLine, newLine } from '../utils';
 import type { ScriptCodegenContext } from './context';
-import { codeFeatures, type ScriptCodegenOptions } from './index';
+import type { ScriptCodegenOptions } from './index';
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
@@ -16,9 +18,9 @@ export function* generateTemplate(
 
 	const templateCodegenCtx = createTemplateCodegenContext({
 		scriptSetupBindingNames: new Set(),
-		edited: options.edited,
 	});
 	yield* generateTemplateCtx(options);
+	yield* generateTemplateElements();
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, templateCodegenCtx);
@@ -53,8 +55,12 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 	}
 }
 
+function* generateTemplateElements(): Generator<Code> {
+	yield `let __VLS_elements!: __VLS_IntrinsicElements${endOfLine}`;
+}
+
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
-	const types: Code[] = [];
+	const types: Code[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
 		const { componentsOption } = options.scriptRanges.exportDefault;
@@ -69,8 +75,6 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		types.push(`typeof __VLS_componentsOption`);
 	}
 
-	types.push(`typeof __VLS_ctx`);
-
 	yield `type __VLS_LocalComponents =`;
 	for (const type of types) {
 		yield ` & `;
@@ -82,7 +86,7 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 }
 
 export function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
-	const types: Code[] = [];
+	const types: Code[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
 		const { directivesOption } = options.scriptRanges.exportDefault;
@@ -94,10 +98,8 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 			codeFeatures.navigation,
 		];
 		yield endOfLine;
-		types.push(`typeof __VLS_directivesOption`);
+		types.push(`__VLS_ResolveDirectives<typeof __VLS_directivesOption>`);
 	}
-
-	types.push(`typeof __VLS_ctx`);
 
 	yield `type __VLS_LocalDirectives =`;
 	for (const type of types) {
@@ -115,27 +117,21 @@ function* generateTemplateBody(
 ): Generator<Code> {
 	yield* generateStyleScopedClasses(options, templateCodegenCtx);
 	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
+	yield* generateStyleModules(options);
 	yield* generateCssVars(options, templateCodegenCtx);
 
 	if (options.templateCodegen) {
-		for (const code of options.templateCodegen.codes) {
-			yield code;
-		}
+		yield* options.templateCodegen.codes;
 	}
 	else {
 		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.defineSlots) {
-			yield `const __VLS_slots = {}${endOfLine}`;
+			yield `type __VLS_Slots = {}${endOfLine}`;
 		}
-		yield `const __VLS_inheritedAttrs = {}${endOfLine}`;
-		yield `const __VLS_refs = {}${endOfLine}`;
-		yield `const __VLS_rootEl = {} as any${endOfLine}`;
+		yield `type __VLS_InheritedAttrs = {}${endOfLine}`;
+		yield `type __VLS_TemplateRefs = {}${endOfLine}`;
+		yield `type __VLS_RootEl = any${endOfLine}`;
 	}
-
-	yield `type __VLS_TemplateAttrs = Partial<typeof __VLS_inheritedAttrs>${endOfLine}`;
-	yield `type __VLS_TemplateSlots = typeof ${options.scriptSetupRanges?.defineSlots?.name ?? '__VLS_slots'}${endOfLine}`;
-	yield `type __VLS_TemplateRefs = typeof __VLS_refs${endOfLine}`;
-	yield `type __VLS_TemplateEl = typeof __VLS_rootEl${endOfLine}`;
 }
 
 function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {

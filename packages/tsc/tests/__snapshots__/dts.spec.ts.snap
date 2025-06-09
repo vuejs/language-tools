@@ -8,13 +8,13 @@ declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<t
     props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, never> & {
         nonGeneric: string;
         rows: Row[];
-    } & Partial<{}>> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    } & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {
-        default?(_: {
+        default?: (props: {
             row: Row;
-        }): any;
+        }) => any;
     };
     emit: {};
 }>) => import("vue").VNode & {
@@ -27,60 +27,55 @@ type __VLS_PrettifyLocal<T> = {
 "
 `;
 
-exports[`vue-tsc-dts > Input: class-slots/component.vue, Output: class-slots/component.vue.d.ts 1`] = `
-"import { VNode } from 'vue';
-declare const _default: new () => {
-    $slots: {
-        default(_: {
-            num: number;
-        }): VNode[];
-        foo(_: {
-            str: string;
-        }): VNode[];
-    };
-};
-export default _default;
-"
-`;
-
 exports[`vue-tsc-dts > Input: empty-component/component.vue, Output: empty-component/component.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+"declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
 export default _default;
 "
 `;
 
 exports[`vue-tsc-dts > Input: empty-component/custom-extension-component.cext, Output: empty-component/custom-extension-component.cext.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
-export default _default;
-"
-`;
-
-exports[`vue-tsc-dts > Input: events/component-class.vue, Output: events/component-class.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    foo: (value: string) => void;
-}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{
-    onFoo?: (value: string) => any;
-}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
-export default _default;
-"
-`;
-
-exports[`vue-tsc-dts > Input: events/component-generic.vue, Output: events/component-generic.vue.d.ts 1`] = `
-"declare const _default: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
-        readonly onFoo?: (value: string) => any;
-    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onFoo"> & {} & Partial<{}>> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
-    expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
-    attrs: any;
+"declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
     slots: {};
-    emit: (evt: "foo", value: string) => void;
-}>) => import("vue").VNode & {
-    __ctx?: Awaited<typeof __VLS_setup>;
-};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
 export default _default;
-type __VLS_PrettifyLocal<T> = {
-    [K in keyof T]: T[K];
-} & {};
 "
 `;
 
@@ -90,22 +85,18 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         readonly "onUpdate:title"?: (value: string) => any;
         readonly onBar?: (data: number) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onUpdate:title" | "onBar"> & ({
-        title?: string;
-    } & {
         foo: number;
-    }) & Partial<{}>> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    } & {
+        title?: string;
+    }) & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
     attrs: any;
-    slots: Readonly<{
-        default?(data: {
+    slots: {
+        default?: (props: {
             foo: number;
-        }): any;
-    }> & {
-        default?(data: {
-            foo: number;
-        }): any;
+        }) => any;
     };
     emit: ((e: "bar", data: number) => void) & ((evt: "update:title", value: string) => void);
 }>) => import("vue").VNode & {
@@ -124,22 +115,18 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
         readonly "onUpdate:title"?: (value: string) => any;
         readonly onBar?: (data: number) => any;
     } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onUpdate:title" | "onBar"> & ({
-        title?: string;
-    } & {
         foo: number;
-    }) & Partial<{}>> & (import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps);
+    } & {
+        title?: string;
+    }) & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
     attrs: any;
-    slots: Readonly<{
-        default?(data: {
+    slots: {
+        default?: (props: {
             foo: number;
-        }): any;
-    }> & {
-        default?(data: {
-            foo: number;
-        }): any;
+        }) => any;
     };
     emit: ((e: "bar", data: number) => void) & ((evt: "update:title", value: string) => void);
 }>) => import("vue").VNode & {
@@ -153,7 +140,27 @@ type __VLS_PrettifyLocal<T> = {
 `;
 
 exports[`vue-tsc-dts > Input: generic/main.vue, Output: generic/main.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+"declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
 export default _default;
 "
 `;
@@ -175,102 +182,87 @@ exports[`vue-tsc-dts > Input: options-api/component.ts, Output: options-api/comp
      */
     password: string;
 }
-declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
-    /**
-     * Default number
-     */
-    numberDefault: {
-        type: NumberConstructor;
-        default: number;
-    };
-    /**
-     * Default function Object
-     */
-    objectDefault: {
-        type: ObjectConstructor;
-        default: () => {
-            foo: string;
+declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {
+        /**
+         * Default number
+         */
+        numberDefault: {
+            type: NumberConstructor;
+            default: number;
+        };
+        /**
+         * Default function Object
+         */
+        objectDefault: {
+            type: ObjectConstructor;
+            default: () => {
+                foo: string;
+            };
+        };
+        /**
+         * Default function Array
+         */
+        arrayDefault: {
+            type: ArrayConstructor;
+            default: () => number[];
+        };
+        /**
+         * Default function more complex
+         */
+        complexDefault: {
+            type: ArrayConstructor;
+            default: (props: any) => any[];
         };
     };
-    /**
-     * Default function Array
-     */
-    arrayDefault: {
-        type: ArrayConstructor;
-        default: () => number[];
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: {
+        submit: ({ email, password }: SubmitPayload) => boolean;
     };
-    /**
-     * Default function more complex
-     */
-    complexDefault: {
-        type: ArrayConstructor;
-        default: (props: any) => any[];
-    };
-}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    submit: ({ email, password }: SubmitPayload) => boolean;
-}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
-    /**
-     * Default number
-     */
-    numberDefault: {
-        type: NumberConstructor;
-        default: number;
-    };
-    /**
-     * Default function Object
-     */
-    objectDefault: {
-        type: ObjectConstructor;
-        default: () => {
-            foo: string;
-        };
-    };
-    /**
-     * Default function Array
-     */
-    arrayDefault: {
-        type: ArrayConstructor;
-        default: () => number[];
-    };
-    /**
-     * Default function more complex
-     */
-    complexDefault: {
-        type: ArrayConstructor;
-        default: (props: any) => any[];
-    };
-}>> & Readonly<{
-    onSubmit?: (args_0: SubmitPayload) => any;
-}>, {
-    numberDefault: number;
-    objectDefault: Record<string, any>;
-    arrayDefault: unknown[];
-    complexDefault: unknown[];
-}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
 export default _default;
 "
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-events/component.vue, Output: reference-type-events/component.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    foo: (data?: {
-        foo: string;
-    }) => void;
-    bar: (value: {
-        arg1: number;
-        arg2?: any;
-    }) => void;
-    baz: () => void;
-}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{
-    onFoo?: (data?: {
-        foo: string;
-    }) => any;
-    onBar?: (value: {
-        arg1: number;
-        arg2?: any;
-    }) => any;
-    onBaz?: () => any;
-}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+"import type { MyEvents } from './my-events';
+declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: MyEvents;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
 export default _default;
 "
 `;
@@ -295,219 +287,252 @@ export {};
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-exposed/component.vue, Output: reference-type-exposed/component.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<{}, {
-    /**
-     * a counter string
-     */
-    counter: import("vue").Ref<string, string>;
-}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+"declare const _default: import("vue").DefineComponent2<{
+    setup(): {
+        /**
+         * a counter string
+         */
+        counter: import("vue").Ref<string, string>;
+    };
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
 export default _default;
 "
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
 "type __VLS_PublicProps = {
-    "foo"?: number;
-    "bar"?: string[];
-    "qux"?: string;
-    'quxModifiers'?: Partial<Record<'lazy' | 'trim', true>>;
+    /**
+     * required number modelValue
+     */
+    modelValue: number;
+    /**
+     * optional boolean foo with default false
+     */
+    'foo'?: boolean;
+    /**
+     * optional string bar with lazy and trim modifiers
+     */
+    'bar'?: string;
+    'barModifiers'?: Partial<Record<'lazy' | 'trim', true>>;
 };
-declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<__VLS_PublicProps>>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {
-    "update:foo": (value: number) => void;
-    "update:bar": (value: string[]) => void;
-    "update:qux": (value: string) => void;
-}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_TypePropsToOption<__VLS_PublicProps>>> & Readonly<{
-    "onUpdate:foo"?: (value: number) => any;
-    "onUpdate:bar"?: (value: string[]) => any;
-    "onUpdate:qux"?: (value: string) => any;
-}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+type __VLS_ModelEmit = {
+    'update:modelValue': [value: number];
+    'update:foo': [value: boolean];
+    'update:bar': [value: string | undefined];
+};
+declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: __VLS_PublicProps;
+    __typeEmits: __VLS_ModelEmit;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
 export default _default;
-type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
-type __VLS_TypePropsToOption<T> = {
-    [K in keyof T]-?: {} extends Pick<T, K> ? {
-        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
-    } : {
-        type: import('vue').PropType<T[K]>;
-        required: true;
-    };
-};
 "
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-props/component.vue, Output: reference-type-props/component.vue.d.ts 1`] = `
 "import { MyProps } from './my-props';
-declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps>, {
-    bar: number;
-    baz: () => string[];
-}>>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<__VLS_WithDefaults<__VLS_TypePropsToOption<MyProps>, {
-    bar: number;
-    baz: () => string[];
-}>>> & Readonly<{}>, {
-    bar: number;
-    baz: string[];
-}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
-export default _default;
-type __VLS_WithDefaults<P, D> = {
-    [K in keyof Pick<P, keyof P>]: K extends keyof D ? __VLS_PrettifyLocal<P[K] & {
-        default: D[K];
-    }> : P[K];
-};
-type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
-type __VLS_TypePropsToOption<T> = {
-    [K in keyof T]-?: {} extends Pick<T, K> ? {
-        type: import('vue').PropType<__VLS_NonUndefinedable<T[K]>>;
-    } : {
-        type: import('vue').PropType<T[K]>;
-        required: true;
+declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: MyProps;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: {
+        bar: number;
+        baz: () => string[];
     };
+}>;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: reference-type-props/component-destructure.vue, Output: reference-type-props/component-destructure.vue.d.ts 1`] = `
+"type __VLS_Props = {
+    text: string;
 };
-type __VLS_PrettifyLocal<T> = {
-    [K in keyof T]: T[K];
-} & {};
+declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: __VLS_Props;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+export default _default;
 "
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-props/component-js.vue, Output: reference-type-props/component-js.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
-    foo: {
-        type: StringConstructor;
-        required: true;
+"declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {
+        foo: {
+            type: StringConstructor;
+            required: true;
+        };
+        bar: {
+            type: StringConstructor;
+            default: string;
+        };
+        baz: {
+            type: StringConstructor;
+        };
+        xfoo: {
+            readonly type: StringConstructor;
+            readonly required: true;
+        };
+        xbar: {
+            readonly type: StringConstructor;
+            readonly default: "";
+        };
+        xbaz: {
+            readonly type: StringConstructor;
+        };
     };
-    bar: {
-        type: StringConstructor;
-        default: string;
-    };
-    baz: {
-        type: StringConstructor;
-    };
-    xfoo: {
-        readonly type: StringConstructor;
-        readonly required: true;
-    };
-    xbar: {
-        readonly type: StringConstructor;
-        readonly value: "";
-    };
-    xbaz: {
-        readonly type: StringConstructor;
-    };
-}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
-    foo: {
-        type: StringConstructor;
-        required: true;
-    };
-    bar: {
-        type: StringConstructor;
-        default: string;
-    };
-    baz: {
-        type: StringConstructor;
-    };
-    xfoo: {
-        readonly type: StringConstructor;
-        readonly required: true;
-    };
-    xbar: {
-        readonly type: StringConstructor;
-        readonly value: "";
-    };
-    xbaz: {
-        readonly type: StringConstructor;
-    };
-}>> & Readonly<{}>, {
-    bar: string;
-}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
 export default _default;
 "
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-props/component-js-setup.vue, Output: reference-type-props/component-js-setup.vue.d.ts 1`] = `
-"declare const _default: import("vue").DefineComponent<import("vue").ExtractPropTypes<{
-    foo: {
-        type: StringConstructor;
-        required: true;
+"declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {
+        foo: {
+            type: StringConstructor;
+            required: true;
+        };
+        bar: {
+            type: StringConstructor;
+            default: string;
+        };
+        baz: {
+            type: StringConstructor;
+        };
+        xfoo: {
+            readonly type: StringConstructor;
+            readonly required: true;
+        };
+        xbar: {
+            readonly type: StringConstructor;
+            readonly default: "";
+        };
+        xbaz: {
+            readonly type: StringConstructor;
+        };
+        /**
+         * The hello property.
+         *
+         * @since v1.0.0
+         */
+        hello: {
+            type: StringConstructor;
+            default: string;
+        };
+        numberOrStringProp: {
+            type: (NumberConstructor | StringConstructor)[];
+            default: number;
+        };
+        arrayProps: {
+            type: ArrayConstructor;
+            default: () => number[];
+        };
     };
-    bar: {
-        type: StringConstructor;
-        default: string;
-    };
-    baz: {
-        type: StringConstructor;
-    };
-    xfoo: {
-        readonly type: StringConstructor;
-        readonly required: true;
-    };
-    xbar: {
-        readonly type: StringConstructor;
-        readonly value: "";
-    };
-    xbaz: {
-        readonly type: StringConstructor;
-    };
-    /**
-     * The hello property.
-     *
-     * @since v1.0.0
-     */
-    hello: {
-        type: StringConstructor;
-        default: string;
-    };
-    numberOrStringProp: {
-        type: (NumberConstructor | StringConstructor)[];
-        default: number;
-    };
-    arrayProps: {
-        type: ArrayConstructor;
-        default: () => number[];
-    };
-}>, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<import("vue").ExtractPropTypes<{
-    foo: {
-        type: StringConstructor;
-        required: true;
-    };
-    bar: {
-        type: StringConstructor;
-        default: string;
-    };
-    baz: {
-        type: StringConstructor;
-    };
-    xfoo: {
-        readonly type: StringConstructor;
-        readonly required: true;
-    };
-    xbar: {
-        readonly type: StringConstructor;
-        readonly value: "";
-    };
-    xbaz: {
-        readonly type: StringConstructor;
-    };
-    /**
-     * The hello property.
-     *
-     * @since v1.0.0
-     */
-    hello: {
-        type: StringConstructor;
-        default: string;
-    };
-    numberOrStringProp: {
-        type: (NumberConstructor | StringConstructor)[];
-        default: number;
-    };
-    arrayProps: {
-        type: ArrayConstructor;
-        default: () => number[];
-    };
-}>> & Readonly<{}>, {
-    bar: string;
-    hello: string;
-    numberOrStringProp: string | number;
-    arrayProps: unknown[];
-}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
 export default _default;
 "
 `;
@@ -529,6 +554,9 @@ declare enum MyEnum {
     Small = 0,
     Medium = 1,
     Large = 2
+}
+declare namespace MyNamespace {
+    type MyType = {};
 }
 declare const categories: readonly ["Uncategorized", "Content", "Interaction", "Display", "Forms", "Addons"];
 type MyCategories = typeof categories[number];
@@ -593,6 +621,10 @@ export interface MyProps {
      */
     enumValue: MyEnum;
     /**
+     * namespace type
+     */
+    namespaceType: MyNamespace.MyType;
+    /**
      * literal type alias that require context
      */
     literalFromContext: MyCategories;
@@ -607,7 +639,7 @@ export declare const StringRequired: {
 };
 export declare const StringEmpty: {
     readonly type: StringConstructor;
-    readonly value: "";
+    readonly default: "";
 };
 export declare const StringUndefined: {
     readonly type: StringConstructor;
@@ -616,29 +648,48 @@ export {};
 "
 `;
 
-exports[`vue-tsc-dts > Input: template-slots/component.vue, Output: template-slots/component.vue.d.ts 1`] = `
-"declare var __VLS_0: {};
-declare var __VLS_1: {
+exports[`vue-tsc-dts > Input: reference-type-slots/component.vue, Output: reference-type-slots/component.vue.d.ts 1`] = `
+"declare var __VLS_1: {}, __VLS_3: {
     num: number;
-};
-declare var __VLS_2: {
+}, __VLS_5: {
     str: string;
-};
-declare var __VLS_3: {
+}, __VLS_7: {
     num: number;
     str: string;
 };
-declare var __VLS_slots: {
-    'no-bind'?(_: typeof __VLS_0): any;
-    default?(_: typeof __VLS_1): any;
-    'named-slot'?(_: typeof __VLS_2): any;
-    vbind?(_: typeof __VLS_3): any;
+type __VLS_Slots = {} & {
+    'no-bind'?: (props: typeof __VLS_1) => any;
+} & {
+    default?: (props: typeof __VLS_3) => any;
+} & {
+    'named-slot'?: (props: typeof __VLS_5) => any;
+} & {
+    vbind?: (props: typeof __VLS_7) => any;
 };
-type __VLS_TemplateSlots = typeof __VLS_slots;
-declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
-declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, __VLS_TemplateSlots>;
+declare const __VLS_component: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;
-type __VLS_WithTemplateSlots<T, S> = T & {
+type __VLS_WithSlots<T, S> = T & {
     new (): {
         $slots: S;
     };
@@ -646,9 +697,9 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 "
 `;
 
-exports[`vue-tsc-dts > Input: template-slots/component-define-slots.vue, Output: template-slots/component-define-slots.vue.d.ts 1`] = `
-"import { VNode } from 'vue';
-declare const __VLS_slots: Readonly<{
+exports[`vue-tsc-dts > Input: reference-type-slots/component-define-slots.vue, Output: reference-type-slots/component-define-slots.vue.d.ts 1`] = `
+"import type { VNode } from 'vue';
+type __VLS_Slots = {
     default: (props: {
         num: number;
     }) => VNode[];
@@ -660,24 +711,31 @@ declare const __VLS_slots: Readonly<{
         str: string;
     }) => VNode[];
     'no-bind': () => VNode[];
-}> & {
-    default: (props: {
-        num: number;
-    }) => VNode[];
-    'named-slot': (props: {
-        str: string;
-    }) => VNode[];
-    vbind: (props: {
-        num: number;
-        str: string;
-    }) => VNode[];
-    'no-bind': () => VNode[];
 };
-type __VLS_TemplateSlots = typeof __VLS_slots;
-declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
-declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, __VLS_TemplateSlots>;
+declare const __VLS_component: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;
-type __VLS_WithTemplateSlots<T, S> = T & {
+type __VLS_WithSlots<T, S> = T & {
     new (): {
         $slots: S;
     };
@@ -685,51 +743,48 @@ type __VLS_WithTemplateSlots<T, S> = T & {
 "
 `;
 
-exports[`vue-tsc-dts > Input: template-slots/component-destructuring.vue, Output: template-slots/component-destructuring.vue.d.ts 1`] = `
-"declare const __VLS_slots: Readonly<{
-    bottom: (props: {
-        num: number;
-    }) => any[];
-}> & {
-    bottom: (props: {
-        num: number;
-    }) => any[];
-};
-type __VLS_TemplateSlots = typeof __VLS_slots;
-declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
-declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, __VLS_TemplateSlots>;
-export default _default;
-type __VLS_WithTemplateSlots<T, S> = T & {
-    new (): {
-        $slots: S;
-    };
-};
-"
-`;
-
-exports[`vue-tsc-dts > Input: template-slots/component-no-script.vue, Output: template-slots/component-no-script.vue.d.ts 1`] = `
-"declare var __VLS_0: {};
-declare var __VLS_1: {
+exports[`vue-tsc-dts > Input: reference-type-slots/component-no-script.vue, Output: reference-type-slots/component-no-script.vue.d.ts 1`] = `
+"declare var __VLS_1: {}, __VLS_3: {
     num: number;
-};
-declare var __VLS_2: {
+}, __VLS_5: {
     str: string;
-};
-declare var __VLS_3: {
+}, __VLS_7: {
     num: number;
     str: string;
 };
-declare var __VLS_slots: {
-    'no-bind'?(_: typeof __VLS_0): any;
-    default?(_: typeof __VLS_1): any;
-    'named-slot'?(_: typeof __VLS_2): any;
-    vbind?(_: typeof __VLS_3): any;
+type __VLS_Slots = {} & {
+    'no-bind'?: (props: typeof __VLS_1) => any;
+} & {
+    default?: (props: typeof __VLS_3) => any;
+} & {
+    'named-slot'?: (props: typeof __VLS_5) => any;
+} & {
+    vbind?: (props: typeof __VLS_7) => any;
 };
-type __VLS_TemplateSlots = typeof __VLS_slots;
-declare const __VLS_component: import("vue").DefineComponent<{}, {}, {}, {}, {}, import("vue").ComponentOptionsMixin, import("vue").ComponentOptionsMixin, {}, string, import("vue").PublicProps, Readonly<{}> & Readonly<{}>, {}, {}, {}, {}, string, import("vue").ComponentProvideOptions, true, {}, any>;
-declare const _default: __VLS_WithTemplateSlots<typeof __VLS_component, __VLS_TemplateSlots>;
+declare const __VLS_component: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+declare const _default: __VLS_WithSlots<typeof __VLS_component, __VLS_Slots>;
 export default _default;
-type __VLS_WithTemplateSlots<T, S> = T & {
+type __VLS_WithSlots<T, S> = T & {
     new (): {
         $slots: S;
     };
@@ -758,13 +813,17 @@ exports[`vue-tsc-dts > Input: ts-component/component.tsx, Output: ts-component/c
 exports[`vue-tsc-dts > Input: ts-named-export/component.ts, Output: ts-named-export/component.d.ts 1`] = `
 "export declare const Foo: import("vue").DefineSetupFnComponent<{
     foo: string;
-}, {}, {}, {
+}, string[], {}, {
     foo: string;
-} & {}, import("vue").PublicProps>;
+} & {
+    [x: \`on\${Capitalize<string>}\`]: (...args: any[]) => any;
+}, import("vue").PublicProps>;
 export declare const Bar: import("vue").DefineSetupFnComponent<{
     bar?: number;
-}, {}, {}, {
+}, string[], {}, {
     bar?: number;
-} & {}, import("vue").PublicProps>;
+} & {
+    [x: \`on\${Capitalize<string>}\`]: (...args: any[]) => any;
+}, import("vue").PublicProps>;
 "
 `;

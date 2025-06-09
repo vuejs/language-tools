@@ -10,13 +10,14 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 export { VueEmbeddedCode };
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
-	target?: 'auto' | 2 | 2.7 | 3 | 3.3;
+	strictTemplates?: boolean;
+	target?: 'auto' | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
 	plugins?: string[];
 };
 
 export interface VueCodeInformation extends CodeInformation {
-	__combineLastMapping?: boolean;
-	__combineOffsetMapping?: number;
+	__combineOffset?: number;
+	__linkedToken?: symbol;
 }
 
 export type Code = Segment<VueCodeInformation>;
@@ -28,9 +29,21 @@ export interface VueCompilerOptions {
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
 	jsxSlots: boolean;
-	strictTemplates: boolean;
+	strictSlotChildren: boolean;
+	strictVModel: boolean;
+	checkUnknownProps: boolean;
+	checkUnknownEvents: boolean;
+	checkUnknownDirectives: boolean;
+	checkUnknownComponents: boolean;
+	inferComponentDollarEl: boolean;
+	inferComponentDollarRefs: boolean;
+	inferTemplateDollarAttrs: boolean;
+	inferTemplateDollarEl: boolean;
+	inferTemplateDollarRefs: boolean;
+	inferTemplateDollarSlots: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
+	fallthroughComponentNames: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
 	optionsWrapper: [string, string] | [];
@@ -61,7 +74,6 @@ export interface VueCompilerOptions {
 	__setupedGlobalTypes?: true | {
 		absolutePath: string;
 	};
-	__test?: boolean;
 }
 
 export const validVersions = [2, 2.1] as const;
@@ -130,7 +142,7 @@ export interface Sfc {
 	styles: readonly (SfcBlock & {
 		src: SfcBlockAttr | undefined;
 		scoped: boolean;
-		module: SfcBlockAttr | undefined;
+		module?: SfcBlockAttr | undefined;
 		imports: {
 			text: string;
 			offset: number;

@@ -2,9 +2,9 @@ export interface MyProps {
 	/**
 	 * string foo
 	 */
-	foo: string,
+	foo: string;
 	/**
 	 * optional number bar
 	 */
-	bar?: number,
+	bar?: number;
 }

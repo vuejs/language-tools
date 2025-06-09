@@ -49,7 +49,7 @@ export function parse(source: string): SFCParseResult {
 				break;
 			case 'script':
 				const scriptBlock = createBlock(node, source) as SFCScriptBlock;
-				const isSetup = !!scriptBlock.attrs.setup;
+				const isSetup = !!scriptBlock.setup;
 				if (isSetup && !descriptor.scriptSetup) {
 					descriptor.scriptSetup = scriptBlock;
 					break;
@@ -117,8 +117,8 @@ function createBlock(node: ElementNode, source: string) {
 				block.__src = parseAttr(p, node);
 			}
 			else if (isScriptBlock(block)) {
-				if (p.name === 'setup') {
-					block.setup = attrs.setup;
+				if (p.name === 'setup' || p.name === 'vapor') {
+					block.setup = attrs[p.name];
 				}
 				else if (p.name === 'generic') {
 					block.__generic = parseAttr(p, node);
@@ -159,6 +159,6 @@ function parseAttr(p: CompilerDOM.AttributeNode, node: CompilerDOM.ElementNode) 
 	return {
 		text,
 		offset,
-		quotes
+		quotes,
 	};
 }

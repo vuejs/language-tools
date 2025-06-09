@@ -1,3 +1,5 @@
+<!-- @inferTemplateDollarEl true -->
+
 <script setup lang="ts">
 import { exactType } from '../../shared';
 import Child from './child.vue';
@@ -5,6 +7,6 @@ import Child from './child.vue';
 
 <template>
 	<Child>
-		{{ exactType($el, {} as HTMLAnchorElement) }}
+		{{ exactType($el, {} as HTMLAnchorElement | HTMLImageElement) }}
 	</Child>
 </template>
