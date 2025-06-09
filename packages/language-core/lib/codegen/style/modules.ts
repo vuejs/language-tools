@@ -26,7 +26,11 @@ export function* generateStyleModules(
 				codeFeatures.navigation,
 			];
 		}
-		yield `: Record<string, string> & __VLS_PrettifyGlobal<{}`;
+		yield `: `;
+		if (!options.vueCompilerOptions.strictCssModules) {
+			yield `Record<string, string> & `;
+		}
+		yield `__VLS_PrettifyGlobal<{}`;
 		if (options.vueCompilerOptions.resolveExternalStylesheets) {
 			yield* generateExternalStylesheets(style);
 		}

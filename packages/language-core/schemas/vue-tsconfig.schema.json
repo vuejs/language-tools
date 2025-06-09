@@ -55,6 +55,11 @@
 					"default": false,
 					"markdownDescription": "Strict type constraints of `v-model`. If not set, uses the 'strictTemplates' value."
 				},
+				"strictCssModules": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "Strict type checking of CSS modules."
+				},
 				"checkUnknownProps": {
 					"type": "boolean",
 					"default": false,
@@ -114,6 +119,11 @@
 					"type": "boolean",
 					"default": false,
 					"markdownDescription": "Enable to support typed fallthrough attributes. Please note that enabling may significantly slow down type checking."
+				},
+				"resolveExternalStylesheets": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "https://github.com/vuejs/language-tools/pull/5136"
 				},
 				"fallthroughComponentNames": {
 					"type": "array",
@@ -176,10 +186,6 @@
 						"never"
 					],
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1038, https://github.com/vuejs/language-tools/issues/1121"
-				},
-				"experimentalResolveExternalStylesheets": {
-					"type": "boolean",
-					"default": false
 				},
 				"experimentalModelPropName": {
 					"type": "object",
