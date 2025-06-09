@@ -43,6 +43,7 @@ export interface VueCompilerOptions {
 	inferTemplateDollarSlots: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
+	resolveExternalStylesheets: boolean;
 	fallthroughComponentNames: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
@@ -67,7 +68,6 @@ export interface VueCompilerOptions {
 	// experimental
 	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;
 	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
-	experimentalResolveExternalStylesheets: boolean;
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 
 	// internal
@@ -141,8 +141,8 @@ export interface Sfc {
 	} | undefined;
 	styles: readonly (SfcBlock & {
 		src: SfcBlockAttr | undefined;
+		module: SfcBlockAttr | undefined;
 		scoped: boolean;
-		module?: SfcBlockAttr | undefined;
 		imports: {
 			text: string;
 			offset: number;

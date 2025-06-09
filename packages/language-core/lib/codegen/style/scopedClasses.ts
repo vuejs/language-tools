@@ -20,7 +20,7 @@ export function* generateStyleScopedClasses(
 	const firstClasses = new Set<string>();
 	yield `type __VLS_StyleScopedClasses = {}`;
 	for (const [style, i] of styles) {
-		if (options.vueCompilerOptions.experimentalResolveExternalStylesheets) {
+		if (options.vueCompilerOptions.resolveExternalStylesheets) {
 			yield* generateExternalStylesheets(style);
 		}
 		for (const className of style.classNames) {

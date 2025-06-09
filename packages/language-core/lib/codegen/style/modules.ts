@@ -27,7 +27,7 @@ export function* generateStyleModules(
 			];
 		}
 		yield `: Record<string, string> & __VLS_PrettifyGlobal<{}`;
-		if (options.vueCompilerOptions.experimentalResolveExternalStylesheets) {
+		if (options.vueCompilerOptions.resolveExternalStylesheets) {
 			yield* generateExternalStylesheets(style);
 		}
 		for (const className of style.classNames) {
