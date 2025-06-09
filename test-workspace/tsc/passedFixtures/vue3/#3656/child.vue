@@ -5,7 +5,7 @@ export interface Column {
 	[key: string]: any;
 }
 
-interface Props {
+type Props = {
 	columns: T[];
 	rows: K[];
 }

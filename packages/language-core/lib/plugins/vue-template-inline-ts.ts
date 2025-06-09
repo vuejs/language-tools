@@ -47,15 +47,18 @@ const plugin: VueLanguagePlugin = ctx => {
 		},
 
 		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
+			if (!embeddedFile.id.startsWith('template_inline_ts_')) {
+				return;
+			}
 			// access template content to watch change
-			(() => sfc.template?.content)();
+			void sfc.template?.content;
 
 			const parsed = parseds.get(sfc);
 			if (parsed) {
 				const codes = parsed.get(embeddedFile.id);
 				if (codes) {
 					embeddedFile.content.push(...codes);
-					embeddedFile.parentCodeId = 'template';
+					embeddedFile.parentCodeId = sfc.template?.lang === 'md' ? 'root_tags' : 'template';
 				}
 			}
 		},
@@ -73,12 +76,12 @@ const plugin: VueLanguagePlugin = ctx => {
 
 		function visit(node: CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode) {
 			if (node.type === CompilerDOM.NodeTypes.COMMENT) {
-				const match = node.loc.source.match(/^<!--\s*@vue-generic\b\s*\{(?<content>[^}]*)\}/);
+				const match = node.loc.source.match(/^<!--\s*@vue-generic\s*\{(?<content>[\s\S]*)\}\s*-->$/);
 				if (match) {
-					const { content } = match.groups ?? {};
+					const { content } = match.groups!;
 					addFormatCodes(
 						content,
-						node.loc.start.offset + match[0].indexOf(content),
+						node.loc.start.offset + node.loc.source.indexOf('{') + 1,
 						formatBrackets.generic
 					);
 				}

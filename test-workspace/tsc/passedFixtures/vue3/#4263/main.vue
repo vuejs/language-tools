@@ -20,7 +20,7 @@
 <script setup lang="ts">
 declare const SomeComponent: new () => {
 	$slots: {
-		item(props: {}): any;
+		item: (props: {}) => any;
 	};
 };
 </script>

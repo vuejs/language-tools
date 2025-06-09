@@ -1,9 +1,7 @@
-import type * as ts from 'typescript';
-import { VueCompilerOptions } from '../types';
-import { getSlotsPropertyName } from '../utils/shared';
+import type { VueCompilerOptions } from '../types';
 import { endOfLine } from './utils';
 
-export function getLocalTypesGenerator(compilerOptions: ts.CompilerOptions, vueCompilerOptions: VueCompilerOptions) {
+export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions) {
 	const used = new Set<string>();
 
 	const OmitKeepDiscriminatedUnion = defineHelper(
@@ -19,7 +17,7 @@ type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any
 		() => `
 type __VLS_WithDefaults<P, D> = {
 	[K in keyof Pick<P, keyof P>]: K extends keyof D
-		? ${PrettifyLocal.name}<P[K] & { default: D[K]}>
+		? ${PrettifyLocal.name}<P[K] & { default: D[K] }>
 		: P[K]
 };
 `.trimStart()
@@ -28,12 +26,12 @@ type __VLS_WithDefaults<P, D> = {
 		`__VLS_PrettifyLocal`,
 		() => `type __VLS_PrettifyLocal<T> = { [K in keyof T]: T[K]; } & {}${endOfLine}`
 	);
-	const WithTemplateSlots = defineHelper(
-		`__VLS_WithTemplateSlots`,
+	const WithSlots = defineHelper(
+		`__VLS_WithSlots`,
 		() => `
-type __VLS_WithTemplateSlots<T, S> = T & {
+type __VLS_WithSlots<T, S> = T & {
 	new(): {
-		${getSlotsPropertyName(vueCompilerOptions.target)}: S;
+		$slots: S;
 		${vueCompilerOptions.jsxSlots ? `$props: ${PropsChildren.name}<S>;` : ''}
 	}
 };
@@ -59,19 +57,10 @@ type __VLS_PropsChildren<S> = {
 	);
 	const TypePropsToOption = defineHelper(
 		`__VLS_TypePropsToOption`,
-		() => compilerOptions.exactOptionalPropertyTypes ?
-			`
+		() => `
 type __VLS_TypePropsToOption<T> = {
 	[K in keyof T]-?: {} extends Pick<T, K>
-		? { type: import('${vueCompilerOptions.lib}').PropType<T[K]> }
-		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
-};
-`.trimStart() :
-			`
-type __VLS_NonUndefinedable<T> = T extends undefined ? never : T;
-type __VLS_TypePropsToOption<T> = {
-	[K in keyof T]-?: {} extends Pick<T, K>
-		? { type: import('${vueCompilerOptions.lib}').PropType<__VLS_NonUndefinedable<T[K]>> }
+		? { type: import('${vueCompilerOptions.lib}').PropType<Required<T>[K]> }
 		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
 };
 `.trimStart()
@@ -84,7 +73,7 @@ type __VLS_TypePropsToOption<T> = {
 		[PrettifyLocal.name]: PrettifyLocal,
 		[OmitKeepDiscriminatedUnion.name]: OmitKeepDiscriminatedUnion,
 		[WithDefaults.name]: WithDefaults,
-		[WithTemplateSlots.name]: WithTemplateSlots,
+		[WithSlots.name]: WithSlots,
 		[PropsChildren.name]: PropsChildren,
 		[TypePropsToOption.name]: TypePropsToOption,
 		[OmitIndexSignature.name]: OmitIndexSignature,
@@ -99,7 +88,7 @@ type __VLS_TypePropsToOption<T> = {
 		get PrettifyLocal() { return PrettifyLocal.name; },
 		get OmitKeepDiscriminatedUnion() { return OmitKeepDiscriminatedUnion.name; },
 		get WithDefaults() { return WithDefaults.name; },
-		get WithTemplateSlots() { return WithTemplateSlots.name; },
+		get WithSlots() { return WithSlots.name; },
 		get PropsChildren() { return PropsChildren.name; },
 		get TypePropsToOption() { return TypePropsToOption.name; },
 		get OmitIndexSignature() { return OmitIndexSignature.name; },

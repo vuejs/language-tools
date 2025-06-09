@@ -1,5 +1,7 @@
-<template>{{ other }}</template>
-
 <script lang="ts" setup>
-const other = defineModel<string | null>('other')
+const other = defineModel<string | null>('other');
 </script>
+
+<template>
+    {{ other }}
+</template>

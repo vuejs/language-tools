@@ -1,29 +1,12 @@
-import * as CompilerDOM from '@vue/compiler-dom';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
-import { getNodeText } from '../../parsers/scriptSetupRanges';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
+import { getNodeText } from '../../utils/shared';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
-export const combineLastMapping: VueCodeInformation = { __combineLastMapping: true };
-export const variableNameRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
-
-export function* wrapWith(
-	startOffset: number,
-	endOffset: number,
-	features: VueCodeInformation,
-	...wrapCodes: Code[]
-): Generator<Code> {
-	yield ['', 'template', startOffset, features];
-	let offset = 1;
-	for (const wrapCode of wrapCodes) {
-		if (typeof wrapCode !== 'string') {
-			offset++;
-		}
-		yield wrapCode;
-	}
-	yield ['', 'template', endOffset, { __combineOffsetMapping: offset }];
-}
+export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
+export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
 export function collectVars(
 	ts: typeof import('typescript'),
@@ -41,7 +24,11 @@ export function collectVars(
 export function collectIdentifiers(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	results: Array<{ id: ts.Identifier, isRest: boolean, initializer: ts.Expression | undefined; }> = [],
+	results: {
+		id: ts.Identifier,
+		isRest: boolean,
+		initializer: ts.Expression | undefined;
+	}[] = [],
 	isRest = false,
 	initializer: ts.Expression | undefined = undefined
 ) {

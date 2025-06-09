@@ -1,11 +1,11 @@
 <script setup lang="ts" generic="T extends string | number">
-interface InputProps {
+type InputProps = {
 	type?: 'input';
 	value: (k: T) => void;
 	typeDefinition: T;
 }
 
-interface SelectProps {
+type SelectProps = {
 	type: 'select';
 	value: (k: T[]) => void;
 	typeDefinition: T;

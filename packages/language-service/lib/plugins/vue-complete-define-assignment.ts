@@ -1,5 +1,5 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
-import { TextRange, tsCodegen, VueVirtualCode } from '@vue/language-core';
+import { type TextRange, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { isTsDocument } from './utils';
@@ -36,9 +36,10 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const codegen = tsCodegen.get(root._sfc);
-					const scriptSetup = root._sfc.scriptSetup;
-					const scriptSetupRanges = codegen?.scriptSetupRanges.get();
+					const { sfc } = root;
+					const codegen = tsCodegen.get(sfc);
+					const scriptSetup = sfc.scriptSetup;
+					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 					if (!scriptSetup || !scriptSetupRanges) {
 						return;
 					}

@@ -5,11 +5,11 @@ import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUser
 import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { LanguageServiceContext, LanguageServicePlugin, TagNameCasing } from '../types';
+import { type LanguageServiceContext, type LanguageServicePlugin, TagNameCasing } from '../types';
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => typeof import('@vue/typescript-plugin/lib/client') | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
@@ -55,16 +55,15 @@ export function create(
 						return;
 					}
 
-					let baseName = importUri.slice(importUri.lastIndexOf('/') + 1);
-					baseName = baseName.slice(0, baseName.lastIndexOf('.'));
-
-					const newName = capitalize(camelize(baseName));
-					const sfc = root._sfc;
+					const { sfc } = root;
 					const script = sfc.scriptSetup ?? sfc.script;
-
 					if (!script) {
 						return;
 					}
+
+					let baseName = importUri.slice(importUri.lastIndexOf('/') + 1);
+					baseName = baseName.slice(0, baseName.lastIndexOf('.'));
+					const newName = capitalize(camelize(baseName));
 
 					const additionalEdit: vscode.WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(root)].find(code => code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw'))!;

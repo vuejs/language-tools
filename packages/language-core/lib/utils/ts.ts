@@ -4,6 +4,7 @@ import type * as ts from 'typescript';
 import { generateGlobalTypes, getGlobalTypesFileName } from '../codegen/globalTypes';
 import { getAllExtensions } from '../languagePlugin';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
+import { hyphenateTag } from './shared';
 
 export type ParsedCommandLine = ts.ParsedCommandLine & {
 	vueOptions: VueCompilerOptions;
@@ -175,7 +176,7 @@ export class CompilerOptionsResolver {
 					break;
 				case 'plugins':
 					this.plugins = (options.plugins ?? [])
-						.map<VueLanguagePlugin>((pluginPath: string) => {
+						.flatMap<VueLanguagePlugin>((pluginPath: string) => {
 							try {
 								const resolvedPath = resolvePath(pluginPath, rootDir);
 								if (resolvedPath) {
@@ -219,6 +220,10 @@ export class CompilerOptionsResolver {
 				...defaults.composables,
 				...this.options.composables,
 			},
+			fallthroughComponentNames: [
+				...defaults.fallthroughComponentNames,
+				...this.options.fallthroughComponentNames ?? []
+			].map(hyphenateTag),
 			// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 			experimentalModelPropName: Object.fromEntries(Object.entries(
@@ -262,17 +267,31 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		vitePressExtensions: [],
 		petiteVueExtensions: [],
 		jsxSlots: false,
+		strictSlotChildren: strictTemplates,
+		strictVModel: strictTemplates,
+		strictCssModules: false,
 		checkUnknownProps: strictTemplates,
 		checkUnknownEvents: strictTemplates,
+		checkUnknownDirectives: strictTemplates,
 		checkUnknownComponents: strictTemplates,
-		strictCssModules: false,
+		inferComponentDollarEl: false,
+		inferComponentDollarRefs: false,
+		inferTemplateDollarAttrs: false,
+		inferTemplateDollarEl: false,
+		inferTemplateDollarRefs: false,
+		inferTemplateDollarSlots: false,
 		skipTemplateCodegen: false,
 		fallthroughAttributes: false,
+		resolveExternalStylesheets: false,
+		fallthroughComponentNames: [
+			'Transition',
+			'KeepAlive',
+			'Teleport',
+			'Suspense',
+		],
 		dataAttributes: [],
 		htmlAttributes: ['aria-*'],
-		optionsWrapper: target >= 2.7
-			? [`(await import('${lib}')).defineComponent(`, `)`]
-			: [`(await import('${lib}')).default.extend(`, `)`],
+		optionsWrapper: [`(await import('${lib}')).defineComponent(`, `)`],
 		macros: {
 			defineProps: ['defineProps'],
 			defineSlots: ['defineSlots'],
@@ -301,16 +320,6 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 				select: true
 			}
 		},
-	};
-}
-
-/**
- * @deprecated use `getDefaultCompilerOptions` instead
- */
-export function resolveVueCompilerOptions(options: Partial<VueCompilerOptions>): VueCompilerOptions {
-	return {
-		...getDefaultCompilerOptions(options.target, options.lib),
-		...options,
 	};
 }
 

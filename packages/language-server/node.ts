@@ -1,10 +1,10 @@
-import { createConnection, createServer, loadTsdkByPath } from '@volar/language-server/node';
-import { createParsedCommandLine, createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
-import { getHybridModeLanguageServicePlugins } from '@vue/language-service';
-import * as namedPipeClient from '@vue/typescript-plugin/lib/client';
-import { createHybridModeProject } from './lib/hybridModeProject';
-import { initialize } from './lib/initialize';
-import type { VueInitializationOptions } from './lib/types';
+import type { LanguageServer } from '@volar/language-server';
+import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
+import { createConnection, createServer } from '@volar/language-server/node';
+import { createLanguage, createParsedCommandLine, createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
+import { createLanguageService, createUriMap, getHybridModeLanguageServicePlugins, type LanguageService } from '@vue/language-service';
+import * as ts from 'typescript';
+import { URI } from 'vscode-uri';
 
 const connection = createConnection();
 const server = createServer(connection);
@@ -12,41 +12,174 @@ const server = createServer(connection);
 connection.listen();
 
 connection.onInitialize(params => {
-	const options: VueInitializationOptions = params.initializationOptions;
-	const { typescript: ts, diagnosticMessages } = loadTsdkByPath(options.typescript.tsdk, params.locale);
-	const hybridMode = options.vue?.hybridMode ?? true;
-	if (hybridMode) {
-		return server.initialize(
-			params,
-			createHybridModeProject(
-				({ asFileName, configFileName }) => {
-					const commandLine = configFileName
-						? createParsedCommandLine(ts, ts.sys, configFileName)
-						: {
-							vueOptions: getDefaultCompilerOptions(),
-							options: ts.getDefaultCompilerOptions(),
-						};
-					commandLine.vueOptions.__test = params.initializationOptions.typescript.disableAutoImportCache;
-					return {
-						languagePlugins: [
-							createVueLanguagePlugin(
-								ts,
-								commandLine.options,
-								commandLine.vueOptions,
-								asFileName
-							),
-						],
-						setup({ project }) {
-							project.vue = { compilerOptions: commandLine.vueOptions };
-						},
-					};
+	const tsconfigProjects = createUriMap<LanguageService>();
+	const file2ProjectInfo = new Map<string, Promise<ts.server.protocol.ProjectInfo | null>>();
+
+	server.fileWatcher.onDidChangeWatchedFiles(({ changes }) => {
+		for (const change of changes) {
+			const changeUri = URI.parse(change.uri);
+			if (tsconfigProjects.has(changeUri)) {
+				tsconfigProjects.get(changeUri)!.dispose();
+				tsconfigProjects.delete(changeUri);
+				file2ProjectInfo.clear();
+			}
+		}
+	});
+
+	let simpleLs: LanguageService | undefined;
+	let tsserverRequestId = 0;
+
+	const tsserverRequestHandlers = new Map<number, (res: any) => void>();
+
+	connection.onNotification('tsserver/response', ([id, res]) => {
+		tsserverRequestHandlers.get(id)?.(res);
+		tsserverRequestHandlers.delete(id);
+	});
+
+	return server.initialize(
+		params,
+		{
+			setup() { },
+			async getLanguageService(uri) {
+				if (uri.scheme === 'file') {
+					const fileName = uri.fsPath.replace(/\\/g, '/');
+					let projectInfoPromise = file2ProjectInfo.get(fileName);
+					if (!projectInfoPromise) {
+						projectInfoPromise = sendTsRequest<ts.server.protocol.ProjectInfo>(
+							ts.server.protocol.CommandTypes.ProjectInfo,
+							{
+								file: fileName,
+								needFileNameList: false,
+							} satisfies ts.server.protocol.ProjectInfoRequestArgs
+						);
+						file2ProjectInfo.set(fileName, projectInfoPromise);
+					}
+					const projectInfo = await projectInfoPromise;
+					if (projectInfo) {
+						const { configFileName } = projectInfo;
+						let ls = tsconfigProjects.get(URI.file(configFileName));
+						if (!ls) {
+							ls = createLs(server, configFileName);
+							tsconfigProjects.set(URI.file(configFileName), ls);
+						}
+						return ls;
+					}
 				}
-			),
-			getHybridModeLanguageServicePlugins(ts, namedPipeClient)
-		);
+				return simpleLs ??= createLs(server, undefined);
+			},
+			getExistingLanguageServices() {
+				return Promise.all([
+					...tsconfigProjects.values(),
+					simpleLs,
+				].filter(promise => !!promise));
+			},
+			reload() {
+				for (const ls of tsconfigProjects.values()) {
+					ls.dispose();
+				}
+				tsconfigProjects.clear();
+				if (simpleLs) {
+					simpleLs.dispose();
+					simpleLs = undefined;
+				}
+			},
+		},
+		getHybridModeLanguageServicePlugins(ts, {
+			collectExtractProps(...args) {
+				return sendTsRequest('vue:collectExtractProps', args);
+			},
+			getComponentDirectives(...args) {
+				return sendTsRequest('vue:getComponentDirectives', args);
+			},
+			getComponentEvents(...args) {
+				return sendTsRequest('vue:getComponentEvents', args);
+			},
+			getComponentNames(...args) {
+				return sendTsRequest('vue:getComponentNames', args);
+			},
+			getComponentProps(...args) {
+				return sendTsRequest('vue:getComponentProps', args);
+			},
+			getElementAttrs(...args) {
+				return sendTsRequest('vue:getElementAttrs', args);
+			},
+			getElementNames(...args) {
+				return sendTsRequest('vue:getElementNames', args);
+			},
+			getImportPathForFile(...args) {
+				return sendTsRequest('vue:getImportPathForFile', args);
+			},
+			getPropertiesAtLocation(...args) {
+				return sendTsRequest('vue:getPropertiesAtLocation', args);
+			},
+			getDocumentHighlights(fileName, position) {
+				return sendTsRequest(
+					'documentHighlights-full', // internal command
+					{
+						file: fileName,
+						...{ position } as unknown as { line: number; offset: number; },
+						filesToSearch: [fileName],
+					} satisfies ts.server.protocol.DocumentHighlightsRequestArgs
+				);
+			},
+			async getQuickInfoAtPosition(fileName, { line, character }) {
+				const result = await sendTsRequest<ts.QuickInfo>(
+					ts.server.protocol.CommandTypes.Quickinfo,
+					{
+						file: fileName,
+						line: line + 1,
+						offset: character + 1,
+					} satisfies ts.server.protocol.FileLocationRequestArgs
+				);
+				return ts.displayPartsToString(result?.displayParts ?? []);
+			},
+		})
+	);
+
+	async function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
+		return await new Promise<T | null>(resolve => {
+			const requestId = ++tsserverRequestId;
+			tsserverRequestHandlers.set(requestId, resolve);
+			connection.sendNotification('tsserver/request', [requestId, command, args]);
+		});
 	}
-	else {
-		return initialize(server, params, ts, diagnosticMessages);
+
+	function createLs(server: LanguageServer, tsconfig: string | undefined) {
+		const commonLine = tsconfig
+			? createParsedCommandLine(ts, ts.sys, tsconfig)
+			: {
+				options: ts.getDefaultCompilerOptions(),
+				vueOptions: getDefaultCompilerOptions(),
+			};
+		const language = createLanguage<URI>(
+			[
+				{
+					getLanguageId: uri => server.documents.get(uri)?.languageId,
+				},
+				createVueLanguagePlugin(
+					ts,
+					commonLine.options,
+					commonLine.vueOptions,
+					uri => uri.fsPath.replace(/\\/g, '/')
+				),
+			],
+			createUriMap(),
+			uri => {
+				const document = server.documents.get(uri);
+				if (document) {
+					language.scripts.set(uri, document.getSnapshot(), document.languageId);
+				}
+				else {
+					language.scripts.delete(uri);
+				}
+			}
+		);
+		return createLanguageService(
+			language,
+			server.languageServicePlugins,
+			createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
+			{ vue: { compilerOptions: commonLine.vueOptions } }
+		);
 	}
 });
 
