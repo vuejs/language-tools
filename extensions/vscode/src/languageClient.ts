@@ -13,7 +13,6 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
-import { activate as activateNameCasing } from './features/nameCasing';
 import { activate as activateSplitEditors } from './features/splitEditors';
 import { checkCompatible } from './hybridMode';
 import { useInsidersStatusItem } from './insiders';
@@ -89,7 +88,6 @@ async function activateLc(
 		await client.start();
 	});
 
-	activateNameCasing(client, selectors);
 	activateSplitEditors(client);
 
 	lsp.activateAutoInsertion(selectors, client);
