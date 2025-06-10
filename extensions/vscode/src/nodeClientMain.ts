@@ -1,6 +1,5 @@
 import { createLabsInfo } from '@volar/vscode';
 import * as lsp from '@volar/vscode/node';
-import * as protocol from '@vue/language-server/protocol';
 import { defineExtension, executeCommand, extensionContext, onDeactivate } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
@@ -8,7 +7,7 @@ import { activate as activateLanguageClient, deactivate as deactivateLanguageCli
 import { middleware } from './middleware';
 
 export const { activate, deactivate } = defineExtension(async () => {
-	const volarLabs = createLabsInfo(protocol);
+	const volarLabs = createLabsInfo();
 
 	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features');
 	const vueTsPluginExtension = vscode.extensions.getExtension('Vue.vscode-typescript-vue-plugin');
