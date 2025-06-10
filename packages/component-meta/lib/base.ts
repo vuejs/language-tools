@@ -801,11 +801,11 @@ function readVueComponentDefaultProps(
 			}
 		}
 
-		if (scriptSetupRanges?.defineProp) {
-			for (const defineProp of scriptSetupRanges.defineProp) {
-				const obj = defineProp.argNode ? findObjectLiteralExpression(defineProp.argNode) : undefined;
+		if (scriptSetupRanges?.defineModel) {
+			for (const defineModel of scriptSetupRanges.defineModel) {
+				const obj = defineModel.argNode ? findObjectLiteralExpression(defineModel.argNode) : undefined;
 				if (obj) {
-					const name = defineProp.name ? sfc.scriptSetup.content.slice(defineProp.name.start, defineProp.name.end).slice(1, -1) : 'modelValue';
+					const name = defineModel.name ? sfc.scriptSetup.content.slice(defineModel.name.start, defineModel.name.end).slice(1, -1) : 'modelValue';
 					result[name] = resolveModelOption(ast, obj, printer, ts);
 				}
 			}

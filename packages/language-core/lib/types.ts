@@ -68,7 +68,6 @@ export interface VueCompilerOptions {
 	plugins: VueLanguagePlugin[];
 
 	// experimental
-	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 
 	// internal
