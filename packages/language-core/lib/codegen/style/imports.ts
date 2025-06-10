@@ -2,7 +2,7 @@ import type { Code, Sfc, VueCodeInformation } from '../../types';
 import { combineLastMapping, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 
-export function* generateExternalStylesheets(
+export function* generateStyleImports(
 	style: Sfc['styles'][number]
 ): Generator<Code> {
 	const features: VueCodeInformation = {

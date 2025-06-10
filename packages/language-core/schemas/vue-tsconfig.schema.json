@@ -120,10 +120,23 @@
 					"default": false,
 					"markdownDescription": "Enable to support typed fallthrough attributes. Please note that enabling may significantly slow down type checking."
 				},
-				"resolveExternalStylesheets": {
+				"resolveStyleImports": {
 					"type": "boolean",
 					"default": false,
-					"markdownDescription": "https://github.com/vuejs/language-tools/pull/5136"
+					"markdownDescription": "Enable to generate type imports for external CSS files by `<style src=\"...\">` or `@import \"...\"`.\n\nSee: https://github.com/vuejs/language-tools/pull/5136"
+				},
+				"resolveStyleClassNames": {
+					"type": [
+						"boolean",
+						"string"
+					],
+					"default": "scoped",
+					"enum": [
+						true,
+						false,
+						"scoped"
+					],
+					"markdownDescription": "Enable to apply completions and document links for CSS class names used in templates."
 				},
 				"fallthroughComponentNames": {
 					"type": "array",
@@ -178,14 +191,6 @@
 					"type": "array",
 					"default": [ ],
 					"markdownDescription": "Plugins to be used in the SFC compiler."
-				},
-				"experimentalResolveStyleCssClasses": {
-					"enum": [
-						"scoped",
-						"always",
-						"never"
-					],
-					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1038, https://github.com/vuejs/language-tools/issues/1121"
 				},
 				"experimentalModelPropName": {
 					"type": "object",

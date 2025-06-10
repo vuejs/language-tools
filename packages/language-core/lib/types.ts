@@ -44,7 +44,8 @@ export interface VueCompilerOptions {
 	inferTemplateDollarSlots: boolean;
 	skipTemplateCodegen: boolean;
 	fallthroughAttributes: boolean;
-	resolveExternalStylesheets: boolean;
+	resolveStyleImports: boolean;
+	resolveStyleClassNames: boolean | 'scoped';
 	fallthroughComponentNames: string[];
 	dataAttributes: string[];
 	htmlAttributes: string[];
@@ -68,7 +69,6 @@ export interface VueCompilerOptions {
 
 	// experimental
 	experimentalDefinePropProposal: 'kevinEdition' | 'johnsonEdition' | false;
-	experimentalResolveStyleCssClasses: 'scoped' | 'always' | 'never';
 	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
 
 	// internal

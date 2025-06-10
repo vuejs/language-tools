@@ -3,16 +3,16 @@ import type { ScriptCodegenOptions } from '../script';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine } from '../utils';
 import { generateClassProperty } from './classProperty';
-import { generateExternalStylesheets } from './externalStylesheets';
+import { generateStyleImports } from './imports';
 
 export function* generateStyleScopedClasses(
 	options: ScriptCodegenOptions,
 	ctx: TemplateCodegenContext
 ): Generator<Code> {
-	const option = options.vueCompilerOptions.experimentalResolveStyleCssClasses;
+	const option = options.vueCompilerOptions.resolveStyleClassNames;
 	const styles = options.sfc.styles
 		.map((style, i) => [style, i] as const)
-		.filter(([style]) => option === 'always' || (option === 'scoped' && style.scoped));
+		.filter(([style]) => option === true || (option === 'scoped' && style.scoped));
 	if (!styles.length) {
 		return;
 	}
@@ -20,8 +20,8 @@ export function* generateStyleScopedClasses(
 	const firstClasses = new Set<string>();
 	yield `type __VLS_StyleScopedClasses = {}`;
 	for (const [style, i] of styles) {
-		if (options.vueCompilerOptions.resolveExternalStylesheets) {
-			yield* generateExternalStylesheets(style);
+		if (options.vueCompilerOptions.resolveStyleImports) {
+			yield* generateStyleImports(style);
 		}
 		for (const className of style.classNames) {
 			if (firstClasses.has(className.text)) {
