@@ -1,7 +1,4 @@
-out
-scripts
 src
 tests
-tsconfig.*
-meta.json
-stats.html
+rolldown.config.ts
+tsconfig.json
