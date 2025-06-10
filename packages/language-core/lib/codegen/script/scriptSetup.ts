@@ -479,7 +479,7 @@ function* generateComponentProps(
 				);
 			}
 			else {
-				yield propName!;
+				yield propName;
 			}
 
 			yield defineModel.required ? `: ` : `?: `;
