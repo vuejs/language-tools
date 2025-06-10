@@ -105,7 +105,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 			languageService,
 			languageServiceHost: context.project.typescript.languageServiceHost,
 			isTsPlugin: false,
-			getFileId: s => context.project.typescript!.uriConverter.asUri(s),
+			asScriptId: s => context.project.typescript!.uriConverter.asUri(s),
 		};
 		return {
 			async collectExtractProps(...args) {

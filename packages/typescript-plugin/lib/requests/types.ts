@@ -7,5 +7,5 @@ export interface RequestContext<T = any> {
 	languageServiceHost: ts.LanguageServiceHost;
 	language: Language<T>;
 	isTsPlugin: boolean;
-	getFileId: (fileName: string) => T;
+	asScriptId: (fileName: string) => T;
 }

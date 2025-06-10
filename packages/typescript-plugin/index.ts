@@ -143,7 +143,7 @@ export = createLanguageServicePlugin(
 				languageServiceHost: service[1],
 				language: service[0],
 				isTsPlugin: true,
-				getFileId: (fileName: string) => fileName,
+				asScriptId: (fileName: string) => fileName,
 			};
 		}
 	}
