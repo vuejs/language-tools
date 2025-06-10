@@ -1,4 +1,4 @@
-<!-- @experimentalResolveStyleCssClasses "always" -->
+<!-- @resolveStyleClassNames true -->
 
 <template>
 	{{ () => {

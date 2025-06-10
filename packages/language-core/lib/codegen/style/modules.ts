@@ -3,7 +3,7 @@ import { codeFeatures } from '../codeFeatures';
 import type { ScriptCodegenOptions } from '../script';
 import { endOfLine, newLine } from '../utils';
 import { generateClassProperty } from './classProperty';
-import { generateExternalStylesheets } from './externalStylesheets';
+import { generateStyleImports } from './imports';
 
 export function* generateStyleModules(
 	options: ScriptCodegenOptions
@@ -31,8 +31,8 @@ export function* generateStyleModules(
 			yield `Record<string, string> & `;
 		}
 		yield `__VLS_PrettifyGlobal<{}`;
-		if (options.vueCompilerOptions.resolveExternalStylesheets) {
-			yield* generateExternalStylesheets(style);
+		if (options.vueCompilerOptions.resolveStyleImports) {
+			yield* generateStyleImports(style);
 		}
 		for (const className of style.classNames) {
 			yield* generateClassProperty(

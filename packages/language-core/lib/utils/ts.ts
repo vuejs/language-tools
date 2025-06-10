@@ -282,7 +282,8 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		inferTemplateDollarSlots: false,
 		skipTemplateCodegen: false,
 		fallthroughAttributes: false,
-		resolveExternalStylesheets: false,
+		resolveStyleImports: false,
+		resolveStyleClassNames: 'scoped',
 		fallthroughComponentNames: [
 			'Transition',
 			'KeepAlive',
@@ -309,7 +310,6 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		},
 		plugins: [],
 		experimentalDefinePropProposal: false,
-		experimentalResolveStyleCssClasses: 'scoped',
 		experimentalModelPropName: {
 			'': {
 				input: true

@@ -37,11 +37,11 @@ export function create(): LanguageServicePlugin {
 							style: Sfc['styles'][number];
 							classOffset: number;
 						}[]>();
-						const option = root.vueCompilerOptions.experimentalResolveStyleCssClasses;
+						const option = root.vueCompilerOptions.resolveStyleClassNames;
 
 						for (let i = 0; i < sfc.styles.length; i++) {
 							const style = sfc.styles[i];
-							if (option === 'always' || (option === 'scoped' && style.scoped)) {
+							if (option === true || (option === 'scoped' && style.scoped)) {
 								for (const className of style.classNames) {
 									if (!styleClasses.has(className.text.slice(1))) {
 										styleClasses.set(className.text.slice(1), []);
