@@ -43,7 +43,7 @@ import { getElementNames } from '@vue/typescript-plugin/lib/requests/getElementN
 import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
-import { URI } from 'vscode-uri';
+import type { URI } from 'vscode-uri';
 
 declare module '@volar/language-service' {
 	export interface ProjectContext {

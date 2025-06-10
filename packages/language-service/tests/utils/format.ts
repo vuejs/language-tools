@@ -2,7 +2,7 @@ import * as kit from '@volar/kit';
 import * as ts from 'typescript';
 import { describe, expect, it } from 'vitest';
 import type { URI } from 'vscode-uri';
-import { createVueLanguagePlugin, getDefaultCompilerOptions, getFullLanguageServicePlugins } from '../..';
+import { createVueLanguagePlugin, getDefaultCompilerOptions, getHybridModeLanguageServicePlugins } from '../..';
 
 const resolvedVueOptions = getDefaultCompilerOptions();
 const vueLanguagePlugin = createVueLanguagePlugin<URI>(
@@ -11,7 +11,7 @@ const vueLanguagePlugin = createVueLanguagePlugin<URI>(
 	resolvedVueOptions,
 	() => ''
 );
-const vueServicePLugins = getFullLanguageServicePlugins(ts);
+const vueServicePLugins = getHybridModeLanguageServicePlugins(ts, undefined);
 const formatter = kit.createFormatter([vueLanguagePlugin], vueServicePLugins);
 
 export function defineFormatTest(options: {
