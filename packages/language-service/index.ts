@@ -6,7 +6,7 @@ export * from './lib/nameCasing';
 export * from './lib/types';
 
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
-import { AttrNameCasing, commands, TagNameCasing } from './lib/types';
+import { commands } from './lib/types';
 
 import { create as createEmmetPlugin } from 'volar-service-emmet';
 import { create as createJsonPlugin } from 'volar-service-json';
@@ -44,7 +44,6 @@ import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImp
 import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
 import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
 import { URI } from 'vscode-uri';
-import { convertAttrName, convertTagName, detect } from './lib/nameCasing';
 
 declare module '@volar/language-service' {
 	export interface ProjectContext {
@@ -239,40 +238,5 @@ function getCommonLanguageServicePlugins(
 				};
 			},
 		},
-		{
-			name: 'vue-name-casing',
-			capabilities: {
-				executeCommandProvider: {
-					commands: [
-						commands.detectNameCasing,
-						commands.convertTagsToKebabCase,
-						commands.convertTagsToPascalCase,
-						commands.convertPropsToKebabCase,
-						commands.convertPropsToCamelCase,
-					],
-				}
-			},
-			create(context) {
-				return {
-					executeCommand(command, [uri]) {
-						if (command === commands.detectNameCasing) {
-							return detect(context, URI.parse(uri));
-						}
-						else if (command === commands.convertTagsToKebabCase) {
-							return convertTagName(context, URI.parse(uri), TagNameCasing.Kebab, getTsPluginClient(context));
-						}
-						else if (command === commands.convertTagsToPascalCase) {
-							return convertTagName(context, URI.parse(uri), TagNameCasing.Pascal, getTsPluginClient(context));
-						}
-						else if (command === commands.convertPropsToKebabCase) {
-							return convertAttrName(context, URI.parse(uri), AttrNameCasing.Kebab, getTsPluginClient(context));
-						}
-						else if (command === commands.convertPropsToCamelCase) {
-							return convertAttrName(context, URI.parse(uri), AttrNameCasing.Camel, getTsPluginClient(context));
-						}
-					},
-				};
-			},
-		}
 	];
 }
