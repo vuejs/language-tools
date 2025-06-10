@@ -7,7 +7,7 @@ import type { RequestContext } from './requests/types';
 
 const windowsPathReg = /\\/g;
 
-export function proxyLanguageServiceForVue<T>(
+export function createVueLanguageServiceProxy<T>(
 	ts: typeof import('typescript'),
 	language: Language<T>,
 	languageService: ts.LanguageService,

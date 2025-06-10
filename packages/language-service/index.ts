@@ -32,7 +32,7 @@ import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 
 import { parse, type VueCompilerOptions } from '@vue/language-core';
-import { proxyLanguageServiceForVue } from '@vue/typescript-plugin/lib/common';
+import { createVueLanguageServiceProxy } from '@vue/typescript-plugin/lib/common';
 import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
 import { getComponentDirectives } from '@vue/typescript-plugin/lib/requests/getComponentDirectives';
 import { getComponentEvents } from '@vue/typescript-plugin/lib/requests/getComponentEvents';
@@ -70,7 +70,7 @@ export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
 					}
 					const languageService = (created.provide as import('volar-service-typescript').Provide)['typescript/languageService']();
 					if (context.project.vue) {
-						const proxy = proxyLanguageServiceForVue(
+						const proxy = createVueLanguageServiceProxy(
 							ts,
 							context.language,
 							languageService,

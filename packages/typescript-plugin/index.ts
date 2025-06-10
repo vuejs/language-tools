@@ -1,7 +1,7 @@
 import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as vue from '@vue/language-core';
 import type * as ts from 'typescript';
-import { proxyLanguageServiceForVue } from './lib/common';
+import { createVueLanguageServiceProxy } from './lib/common';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
 import { getComponentEvents } from './lib/requests/getComponentEvents';
@@ -33,7 +33,7 @@ export = createLanguageServicePlugin(
 			setup: language => {
 				project2Service.set(info.project, [language, info.languageServiceHost, info.languageService]);
 
-				info.languageService = proxyLanguageServiceForVue(ts, language, info.languageService, vueOptions, fileName => fileName);
+				info.languageService = createVueLanguageServiceProxy(ts, language, info.languageService, vueOptions, fileName => fileName);
 
 				// #3963
 				const timer = setInterval(() => {
