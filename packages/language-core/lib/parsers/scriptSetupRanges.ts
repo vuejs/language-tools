@@ -12,7 +12,7 @@ type CallExpressionRange = {
 	typeArg?: TextRange;
 };
 
-type DefineProp = {
+type DefineModel = {
 	localName?: TextRange;
 	name?: TextRange;
 	type?: TextRange;
@@ -20,7 +20,6 @@ type DefineProp = {
 	runtimeType?: TextRange;
 	defaultValue?: TextRange;
 	required?: boolean;
-	isModel?: boolean;
 	comments?: TextRange;
 	// used by component-meta
 	argNode?: ts.Expression;
@@ -75,7 +74,7 @@ export function parseScriptSetupRanges(
 	ast: ts.SourceFile,
 	vueCompilerOptions: VueCompilerOptions
 ) {
-	const defineProp: DefineProp[] = [];
+	const defineModel: DefineModel[] = [];
 	let defineProps: DefineProps | undefined;
 	let withDefaults: WithDefaults | undefined;
 	let defineEmits: DefineEmits | undefined;
@@ -86,8 +85,6 @@ export function parseScriptSetupRanges(
 	const useCssModule: UseCssModule[] = [];
 	const useSlots: UseSlots[] = [];
 	const useTemplateRef: UseTemplateRef[] = [];
-	const definePropProposalA = vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
-	const definePropProposalB = vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
 	const text = ast.text;
 
 	const leadingCommentRanges = ts.getLeadingCommentRanges(text, 0)?.reverse() ?? [];
@@ -140,7 +137,7 @@ export function parseScriptSetupRanges(
 		leadingCommentEndOffset,
 		importSectionEndOffset,
 		bindings,
-		defineProp,
+		defineModel,
 		defineProps,
 		withDefaults,
 		defineEmits,
@@ -160,8 +157,7 @@ export function parseScriptSetupRanges(
 			&& ts.isIdentifier(node.expression)
 		) {
 			const callText = _getNodeText(node.expression);
-			const isDefineModel = vueCompilerOptions.macros.defineModel.includes(callText);
-			if (isDefineModel || callText === 'defineProp') {
+			if (vueCompilerOptions.macros.defineModel.includes(callText)) {
 				let localName: TextRange | undefined;
 				let propName: ts.Expression | undefined;
 				let options: ts.Expression | undefined;
@@ -171,10 +167,7 @@ export function parseScriptSetupRanges(
 				let defaultValue: TextRange | undefined;
 				let required = false;
 
-				if (
-					ts.isVariableDeclaration(parent) &&
-					ts.isIdentifier(parent.name)
-				) {
+				if (ts.isVariableDeclaration(parent) && ts.isIdentifier(parent.name)) {
 					localName = _getStartEnd(parent.name);
 				}
 
@@ -187,39 +180,16 @@ export function parseScriptSetupRanges(
 					}
 				}
 
-				if (isDefineModel) {
-					if (node.arguments.length >= 2) {
-						propName = node.arguments[0];
-						options = node.arguments[1];
-					}
-					else if (node.arguments.length >= 1) {
-						if (ts.isStringLiteralLike(node.arguments[0])) {
-							propName = node.arguments[0];
-						}
-						else {
-							options = node.arguments[0];
-						}
-					}
+				if (node.arguments.length >= 2) {
+					propName = node.arguments[0];
+					options = node.arguments[1];
 				}
-				else if (definePropProposalA) {
-					if (node.arguments.length >= 2) {
-						options = node.arguments[1];
-					}
-					if (node.arguments.length >= 1) {
+				else if (node.arguments.length >= 1) {
+					if (ts.isStringLiteralLike(node.arguments[0])) {
 						propName = node.arguments[0];
 					}
-				}
-				else if (definePropProposalB) {
-					if (node.arguments.length >= 3) {
-						options = node.arguments[2];
-					}
-					if (node.arguments.length >= 2) {
-						if (node.arguments[1].kind === ts.SyntaxKind.TrueKeyword) {
-							required = true;
-						}
-					}
-					if (node.arguments.length >= 1) {
-						defaultValue = _getStartEnd(node.arguments[0]);
+					else {
+						options = node.arguments[0];
 					}
 				}
 
@@ -246,7 +216,7 @@ export function parseScriptSetupRanges(
 					name = _getStartEnd(propName);
 				}
 
-				defineProp.push({
+				defineModel.push({
 					localName,
 					name,
 					type,
@@ -254,7 +224,6 @@ export function parseScriptSetupRanges(
 					runtimeType,
 					defaultValue,
 					required,
-					isModel: isDefineModel,
 					comments: getClosestMultiLineCommentRange(ts, node, parents, ast),
 					argNode: options,
 				});

@@ -61,7 +61,7 @@ export function* generateScriptSetup(
 		if (scriptSetupRanges.defineEmits) {
 			emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? '__VLS_emit'}`);
 		}
-		if (scriptSetupRanges.defineProp.some(p => p.isModel)) {
+		if (scriptSetupRanges.defineModel.length) {
 			emitTypes.push(`typeof __VLS_modelEmit`);
 		}
 
@@ -286,7 +286,6 @@ function* generateSetupFunction(
 
 	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
 	yield* generateMacros(options, ctx);
-	yield* generateDefineProp(options);
 
 	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
@@ -341,24 +340,6 @@ function* generateMacros(
 			}
 		}
 		yield `}: typeof import('${options.vueCompilerOptions.lib}')${endOfLine}`;
-	}
-}
-
-function* generateDefineProp(options: ScriptCodegenOptions): Generator<Code> {
-	const definePropProposalA = options.vueCompilerOptions.experimentalDefinePropProposal === 'kevinEdition';
-	const definePropProposalB = options.vueCompilerOptions.experimentalDefinePropProposal === 'johnsonEdition';
-
-	if (definePropProposalA || definePropProposalB) {
-		yield `type __VLS_PropOptions<T> = Exclude<import('${options.vueCompilerOptions.lib}').Prop<T>, import('${options.vueCompilerOptions.lib}').PropType<T>>${endOfLine}`;
-		if (definePropProposalA) {
-			yield `declare function defineProp<T>(name: string, options: ({ required: true } | { default: T }) & __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
-			yield `declare function defineProp<T>(name?: string, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
-		}
-		if (definePropProposalB) {
-			yield `declare function defineProp<T>(value: T | (() => T), required?: boolean, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
-			yield `declare function defineProp<T>(value: T | (() => T) | undefined, required: true, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T>${endOfLine}`;
-			yield `declare function defineProp<T>(value?: T | (() => T), required?: boolean, options?: __VLS_PropOptions<T>): import('${options.vueCompilerOptions.lib}').ComputedRef<T | undefined>${endOfLine}`;
-		}
 	}
 }
 
@@ -444,27 +425,17 @@ function* generateComponentProps(
 		yield endOfLine;
 	}
 
-	if (scriptSetupRanges.defineProp.length) {
+	if (scriptSetupRanges.defineModel.length) {
 		yield `const __VLS_defaults = {${newLine}`;
-		for (const defineProp of scriptSetupRanges.defineProp) {
-			if (!defineProp.defaultValue) {
+		for (const defineModel of scriptSetupRanges.defineModel) {
+			if (!defineModel.defaultValue) {
 				continue;
 			}
 
-			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
+			const [propName] = getPropAndLocalName(scriptSetup, defineModel);
 
-			if (defineProp.name || defineProp.isModel) {
-				yield `'${propName}'`;
-			}
-			else if (defineProp.localName) {
-				yield localName!;
-			}
-			else {
-				continue;
-			}
-
-			yield `: `;
-			yield getRangeText(scriptSetup, defineProp.defaultValue);
+			yield `'${propName}': `;
+			yield getRangeText(scriptSetup, defineModel.defaultValue);
 			yield `,${newLine}`;
 		}
 		yield `}${endOfLine}`;
@@ -485,47 +456,39 @@ function* generateComponentProps(
 		ctx.generatedPropsType = true;
 		yield `__VLS_Props`;
 	}
-	if (scriptSetupRanges.defineProp.length) {
+	if (scriptSetupRanges.defineModel.length) {
 		if (ctx.generatedPropsType) {
 			yield ` & `;
 		}
 		ctx.generatedPropsType = true;
 		yield `{${newLine}`;
-		for (const defineProp of scriptSetupRanges.defineProp) {
-			const [propName, localName] = getPropAndLocalName(scriptSetup, defineProp);
+		for (const defineModel of scriptSetupRanges.defineModel) {
+			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
 
-			if (defineProp.comments) {
-				yield scriptSetup.content.slice(defineProp.comments.start, defineProp.comments.end);
+			if (defineModel.comments) {
+				yield scriptSetup.content.slice(defineModel.comments.start, defineModel.comments.end);
 				yield newLine;
 			}
 
-			if (defineProp.isModel && !defineProp.name) {
-				yield propName!;
-			}
-			else if (defineProp.name) {
+			if (defineModel.name) {
 				yield* generateCamelized(
-					getRangeText(scriptSetup, defineProp.name),
+					getRangeText(scriptSetup, defineModel.name),
 					scriptSetup.name,
-					defineProp.name.start,
+					defineModel.name.start,
 					codeFeatures.navigation
 				);
 			}
-			else if (defineProp.localName) {
-				yield generateSfcBlockSection(scriptSetup, defineProp.localName.start, defineProp.localName.end, codeFeatures.navigation);
-			}
 			else {
-				continue;
+				yield propName!;
 			}
 
-			yield defineProp.required
-				? `: `
-				: `?: `;
-			yield* generateDefinePropType(scriptSetup, propName, localName, defineProp);
+			yield defineModel.required ? `: ` : `?: `;
+			yield* generateDefineModelType(scriptSetup, propName, localName, defineModel);
 			yield `,${newLine}`;
 
-			if (defineProp.modifierType) {
-				const modifierName = `${defineProp.name ? propName : 'model'}Modifiers`;
-				const modifierType = getRangeText(scriptSetup, defineProp.modifierType);
+			if (defineModel.modifierType) {
+				const modifierName = `${defineModel.name ? propName : 'model'}Modifiers`;
+				const modifierType = getRangeText(scriptSetup, defineModel.modifierType);
 				yield `'${modifierName}'?: Partial<Record<${modifierType}, true>>,${newLine}`;
 			}
 		}
@@ -541,13 +504,12 @@ function* generateModelEmit(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges
 ): Generator<Code> {
-	const defineModels = scriptSetupRanges.defineProp.filter(p => p.isModel);
-	if (defineModels.length) {
+	if (scriptSetupRanges.defineModel.length) {
 		yield `type __VLS_ModelEmit = {${newLine}`;
-		for (const defineModel of defineModels) {
+		for (const defineModel of scriptSetupRanges.defineModel) {
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
 			yield `'update:${propName}': [value: `;
-			yield* generateDefinePropType(scriptSetup, propName, localName, defineModel);
+			yield* generateDefineModelType(scriptSetup, propName, localName, defineModel);
 			if (!defineModel.required && !defineModel.defaultValue) {
 				yield ` | undefined`;
 			}
@@ -558,22 +520,22 @@ function* generateModelEmit(
 	}
 }
 
-function* generateDefinePropType(
+function* generateDefineModelType(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	propName: string | undefined,
 	localName: string | undefined,
-	defineProp: ScriptSetupRanges['defineProp'][number]
+	defineModel: ScriptSetupRanges['defineModel'][number]
 ) {
-	if (defineProp.type) {
-		// Infer from defineProp<T>
-		yield getRangeText(scriptSetup, defineProp.type);
+	if (defineModel.type) {
+		// Infer from defineModel<T>
+		yield getRangeText(scriptSetup, defineModel.type);
 	}
-	else if (defineProp.runtimeType && localName) {
+	else if (defineModel.runtimeType && localName) {
 		// Infer from actual prop declaration code 
 		yield `typeof ${localName}['value']`;
 	}
-	else if (defineProp.defaultValue && propName) {
-		// Infer from defineProp({default: T})
+	else if (defineModel.defaultValue && propName) {
+		// Infer from defineModel({default: T})
 		yield `typeof __VLS_defaults['${propName}']`;
 	}
 	else {
@@ -583,16 +545,14 @@ function* generateDefinePropType(
 
 function getPropAndLocalName(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	defineProp: ScriptSetupRanges['defineProp'][number]
+	defineModel: ScriptSetupRanges['defineModel'][number]
 ) {
-	const localName = defineProp.localName
-		? getRangeText(scriptSetup, defineProp.localName)
+	const localName = defineModel.localName
+		? getRangeText(scriptSetup, defineModel.localName)
 		: undefined;
-	const propName = defineProp.name
-		? camelize(getRangeText(scriptSetup, defineProp.name).slice(1, -1))
-		: defineProp.isModel
-			? 'modelValue'
-			: localName;
+	const propName = defineModel.name
+		? camelize(getRangeText(scriptSetup, defineModel.name).slice(1, -1))
+		: 'modelValue';
 	return [propName, localName] as const;
 }
 

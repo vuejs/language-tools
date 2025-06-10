@@ -309,7 +309,6 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 			useTemplateRef: ['useTemplateRef', 'templateRef'],
 		},
 		plugins: [],
-		experimentalDefinePropProposal: false,
 		experimentalModelPropName: {
 			'': {
 				input: true

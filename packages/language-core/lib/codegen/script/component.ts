@@ -79,7 +79,7 @@ export function* generateEmitsOption(
 		// undefined means the emit source cannot be explained by type
 		typeOptionType?: Code,
 	}[] = [];
-	if (scriptSetupRanges.defineProp.some(p => p.isModel)) {
+	if (scriptSetupRanges.defineModel.length) {
 		codes.push({
 			optionExp: `{} as __VLS_NormalizeEmits<typeof __VLS_modelEmit>`,
 			typeOptionType: `__VLS_ModelEmit`,

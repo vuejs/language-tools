@@ -205,13 +205,6 @@
 						}
 					},
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1969"
-				},
-				"experimentalDefinePropProposal": {
-					"enum": [
-						"kevinEdition",
-						"johnsonEdition",
-						false
-					]
 				}
 			}
 		}
