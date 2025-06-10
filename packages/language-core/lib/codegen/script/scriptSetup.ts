@@ -431,7 +431,6 @@ function* generateComponentProps(
 			if (!defineModel.defaultValue) {
 				continue;
 			}
-
 			const [propName] = getPropAndLocalName(scriptSetup, defineModel);
 
 			yield `'${propName}': `;
