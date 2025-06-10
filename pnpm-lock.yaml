@@ -314,12 +314,9 @@ importers:
 
   test-workspace:
     devDependencies:
-      typescript-next:
-        specifier: npm:typescript@next
-        version: typescript@5.9.0-dev.20250425
-      typescript-stable:
-        specifier: npm:typescript@latest
-        version: typescript@5.8.3
+      typescript:
+        specifier: latest
+        version: 5.8.3
       vue:
         specifier: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72
         version: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72(typescript@5.8.3)
