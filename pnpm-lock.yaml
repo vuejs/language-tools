@@ -169,9 +169,6 @@ importers:
       '@volar/language-server':
         specifier: ~2.4.13
         version: 2.4.13
-      '@volar/test-utils':
-        specifier: ~2.4.13
-        version: 2.4.13
       '@vue/language-core':
         specifier: 3.0.0-alpha.10
         version: link:../language-core
@@ -194,6 +191,9 @@ importers:
       '@typescript/server-harness':
         specifier: latest
         version: 0.3.5
+      '@volar/test-utils':
+        specifier: ~2.4.13
+        version: 2.4.13
 
   packages/language-service:
     dependencies:
