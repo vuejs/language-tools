@@ -163,21 +163,6 @@ try {
 			);
 
 			/**
-			 * VSCode < 1.87.0
-			 */
-
-			// patch jsTsLanguageModes
-			text = text.replace(
-				't.$u=[t.$r,t.$s,t.$p,t.$q]',
-				s => s + '.concat("vue")'
-			);
-			// patch isSupportedLanguageMode
-			text = text.replace(
-				'.languages.match([t.$p,t.$q,t.$r,t.$s]',
-				s => s + '.concat("vue")'
-			);
-
-			/**
 			 * VSCode >= 1.87.0
 			 */
 
