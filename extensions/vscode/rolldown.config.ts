@@ -25,22 +25,13 @@ const config: RolldownOptions = {
 			},
 		},
 		{
-			name: 'schemas',
-			buildEnd() {
-				fs.cpSync(
-					resolve('./node_modules/@vue/language-core/schemas/vue-tsconfig.schema.json'),
-					resolve('./dist/schemas/vue-tsconfig.schema.json'),
-					{ recursive: true }
-				);
-			},
-		},
-		{
 			name: 'redirect',
 			buildEnd() {
 				fs.mkdirSync(resolve('./node_modules/vue-typescript-plugin-pack'), { recursive: true });
 				fs.writeFileSync(resolve('./node_modules/vue-typescript-plugin-pack/index.js'), `module.exports = require('../../dist/plugin.js');`);
 
 				if (isDev) {
+					fs.mkdirSync(resolve('./dist'), { recursive: true });
 					fs.writeFileSync(resolve('./dist/server.js'), `module.exports = require('../node_modules/@vue/language-server/node.js');`);
 					fs.writeFileSync(resolve('./dist/plugin.js'), `module.exports = require('../node_modules/@vue/typescript-plugin/index.js');`);
 				}

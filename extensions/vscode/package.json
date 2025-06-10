@@ -45,7 +45,7 @@
 					"jsconfig.*.json",
 					"jsconfig-*.json"
 				],
-				"url": "./dist/schemas/vue-tsconfig.schema.json"
+				"url": "./schemas/vue-tsconfig.schema.json"
 			}
 		],
 		"languages": [
