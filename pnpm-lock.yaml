@@ -181,9 +181,6 @@ importers:
       typescript:
         specifier: '*'
         version: 5.8.3
-      vscode-languageserver-protocol:
-        specifier: ^3.17.5
-        version: 3.17.5
       vscode-uri:
         specifier: ^3.0.8
         version: 3.1.0
