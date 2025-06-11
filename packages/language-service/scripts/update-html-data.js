@@ -82,16 +82,16 @@ const langs = [
 	},
 ];
 
+localeWorker();
 for (const lang of langs) {
 	if (lang.supported) {
-		localeWorker(lang);
 		templateWorker(lang);
 		sfcWorker(lang);
 		modelWorker(lang);
 	}
 }
 
-function localeWorker(lang) {
+function localeWorker() {
 
 	const data = langs.map(({ name, url }) => ({ name, url }));
 
@@ -417,7 +417,7 @@ async function templateWorker(lang) {
 async function fetchText(url, baseUrl) {
 	let text = await (await fetch(url)).text();
 	text = text.replace(/```vue-html/g, '```html');
-	text = text.replace(/\{\#.*?\}/g, '')
+	text = text.replace(/\{#.*?\}/g, '')
 	text = resolveMarkdownLinks(text, baseUrl);
 	return text;
 }

@@ -223,7 +223,9 @@ export function findDestructuredProps(
 		});
 
 		function enter(node: ts.Node) {
-			parent && parentStack.push(parent);
+			if (parent) {
+				parentStack.push(parent);
+			}
 
 			if (
 				ts.isTypeLiteralNode(node) ||
@@ -275,7 +277,10 @@ export function findDestructuredProps(
 		}
 
 		function leave(node: ts.Node) {
-			parent && parentStack.pop();
+			if (parent) {
+				parentStack.pop();
+			}
+
 			if (
 				ts.isFunctionLike(node)
 				|| ts.isCatchClause(node)

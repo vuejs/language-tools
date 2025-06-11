@@ -41,7 +41,7 @@ export function loadTemplateData(lang: string) {
 
 	resolveReferences(data);
 
-	for (const attr of [...data.globalAttributes ?? []]) {
+	for (const attr of data.globalAttributes ?? []) {
 		if (!attr.name.startsWith('v-')) {
 			data.globalAttributes?.push(
 				{ ...attr, name: `:${attr.name}` },
