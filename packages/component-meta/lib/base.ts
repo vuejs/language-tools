@@ -2,7 +2,6 @@ import { createLanguageServiceHost, resolveFileLanguageId, type TypeScriptProjec
 import * as vue from '@vue/language-core';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
-import { code as typeHelpersCode } from 'vue-component-type-helpers';
 
 import type {
 	ComponentMeta,
@@ -224,7 +223,9 @@ export function baseCreate(
 
 	function getMetaScriptContent(fileName: string) {
 		let code = `
+import type { ComponentType, ComponentProps, ComponentEmit, ComponentSlots, ComponentExposed } from 'vue-component-type-helpers';
 import * as Components from '${fileName.slice(0, -'.meta.ts'.length)}';
+
 export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
 
 interface ComponentMeta<T> {
@@ -233,9 +234,7 @@ interface ComponentMeta<T> {
 	emit: ComponentEmit<T>;
 	slots: ComponentSlots<T>;
 	exposed: ComponentExposed<T>;
-};
-
-${typeHelpersCode}
+}
 `.trim();
 		return code;
 	}

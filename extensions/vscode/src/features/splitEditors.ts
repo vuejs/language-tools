@@ -1,11 +1,8 @@
 import { ExecuteCommandRequest, type BaseLanguageClient, type ExecuteCommandParams } from '@volar/vscode';
-import type { SFCParseResult } from '@vue/language-server';
-import { commands } from '@vue/language-server/lib/types';
+import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { executeCommand, useActiveTextEditor, useCommand } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from '../config';
-
-type SFCBlock = SFCParseResult['descriptor']['customBlocks'][number];
 
 export function activate(client: BaseLanguageClient) {
 
@@ -109,7 +106,7 @@ export function useDocDescriptor(client: BaseLanguageClient) {
 		if (text !== splitDocText) {
 			splitDocText = text;
 			splitDocDescriptor = await client.sendRequest(ExecuteCommandRequest.type, {
-				command: commands.parseSfc,
+				command: 'vue.parseSfc',
 				arguments: [text],
 			} satisfies ExecuteCommandParams);
 		}

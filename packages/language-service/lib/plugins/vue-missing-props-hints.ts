@@ -1,11 +1,8 @@
-import type { LanguageServiceContext } from '@volar/language-service';
+import type { InlayHint, InlayHintKind, LanguageServiceContext, LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { VueVirtualCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import * as html from 'vscode-html-languageservice';
-import type * as vscode from 'vscode-languageserver-protocol';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import { getNameCasing } from '../nameCasing';
-import { AttrNameCasing, type LanguageServicePlugin } from '../types';
+import { AttrNameCasing, checkCasing } from '../nameCasing';
 
 export function create(
 	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
@@ -54,8 +51,8 @@ export function create(
 						return;
 					}
 
-					const result: vscode.InlayHint[] = [];
-					const casing = await getNameCasing(context, decoded[0]);
+					const result: InlayHint[] = [];
+					const casing = await checkCasing(context, decoded[0]);
 					const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
 					const componentProps: Record<string, string[]> = {};
 
@@ -148,7 +145,7 @@ export function create(
 										label: `${requiredProp}!`,
 										paddingLeft: true,
 										position: document.positionAt(current.labelOffset),
-										kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
+										kind: 2 satisfies typeof InlayHintKind.Parameter,
 										textEdits: [{
 											range: {
 												start: document.positionAt(current.labelOffset),

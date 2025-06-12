@@ -1,15 +1,12 @@
-import type { Disposable, LanguageServiceContext } from '@volar/language-service';
-import { VueVirtualCode, hyphenateAttr, hyphenateTag, tsCodegen } from '@vue/language-core';
+import type { CompletionItemKind, CompletionItemTag, CompletionList, Disposable, LanguageServiceContext, LanguageServicePlugin, TextDocument } from '@volar/language-service';
+import { hyphenateAttr, hyphenateTag, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
-import type * as vscode from 'vscode-languageserver-protocol';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI, Utils } from 'vscode-uri';
-import { getNameCasing } from '../nameCasing';
-import { AttrNameCasing, type LanguageServicePlugin, TagNameCasing } from '../types';
+import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
 import { loadModelModifiersData, loadTemplateData } from './data';
 
 type InternalItemId =
@@ -97,8 +94,10 @@ export function create(
 			// https://vuejs.org/api/built-in-directives.html#v-bind
 			const vOnModifiers: Record<string, string> = {};
 			const vBindModifiers: Record<string, string> = {};
+			const vModelModifiers: Record<string, string> = {};
 			const vOn = builtInData.globalAttributes?.find(x => x.name === 'v-on');
 			const vBind = builtInData.globalAttributes?.find(x => x.name === 'v-bind');
+			const vModel = builtInData.globalAttributes?.find(x => x.name === 'v-model');
 
 			if (vOn) {
 				const markdown = (typeof vOn.description === 'string' ? vOn.description : vOn.description?.value) ?? '';
@@ -120,6 +119,13 @@ export function create(
 					text = text.slice('  - `.'.length);
 					const [name, desc] = text.split('` - ');
 					vBindModifiers[name] = desc;
+				}
+			}
+			if (vModel) {
+				for (const modifier of modelData.globalAttributes ?? []) {
+					const description = typeof modifier.description === 'object' ? modifier.description.value : modifier.description;
+					const references = modifier.references?.map(ref => `[${ref.name}](${ref.url})`).join(' | ');
+					vModelModifiers[modifier.name] = description + '\n\n' + references;
 				}
 			}
 
@@ -203,7 +209,7 @@ export function create(
 
 				await (initializing ??= initialize());
 
-				const casing = await getNameCasing(context, sourceDocumentUri);
+				const casing = await checkCasing(context, sourceDocumentUri);
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
@@ -453,83 +459,54 @@ export function create(
 				};
 			}
 
-			function afterHtmlCompletion(completionList: vscode.CompletionList, document: TextDocument) {
+			function afterHtmlCompletion(completionList: CompletionList, document: TextDocument) {
 
-				do {
+				addDirectiveModifiers();
+
+				function addDirectiveModifiers() {
 					const replacement = getReplacement(completionList, document);
-					if (!replacement) {
-						break;
-					}
-
-					const hasModifier = replacement.text.includes('.');
-					if (!hasModifier) {
-						break;
+					if (!replacement?.text.includes('.')) {
+						return;
 					}
 
 					const [text, ...modifiers] = replacement.text.split('.');
 					const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
 					const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
 					const isVModel = text.startsWith('v-model:') || text === 'v-model';
-					const validModifiers =
+					const currentModifiers =
 						isVOn ? vOnModifiers
 							: isVBind ? vBindModifiers
-								: undefined;
+								: isVModel ? vModelModifiers
+									: undefined;
 
-					if (validModifiers) {
-
-						for (const modifier in validModifiers) {
-
-							if (modifiers.includes(modifier)) {
-								continue;
-							}
-
-							const description = validModifiers[modifier];
-							const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
-							const newItem: html.CompletionItem = {
-								label: modifier,
-								filterText: insertText,
-								documentation: {
-									kind: 'markdown',
-									value: description,
-								},
-								textEdit: {
-									range: replacement.textEdit.range,
-									newText: insertText,
-								},
-								kind: 20 satisfies typeof vscode.CompletionItemKind.EnumMember,
-							};
-
-							completionList.items.push(newItem);
-						}
+					if (!currentModifiers) {
+						return;
 					}
-					else if (isVModel) {
 
-						for (const modifier of modelData.globalAttributes ?? []) {
-
-							if (modifiers.includes(modifier.name)) {
-								continue;
-							}
-
-							const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier.name;
-							const newItem: html.CompletionItem = {
-								label: modifier.name,
-								filterText: insertText,
-								documentation: {
-									kind: 'markdown',
-									value: (typeof modifier.description === 'object' ? modifier.description.value : modifier.description)
-										+ '\n\n' + modifier.references?.map(ref => `[${ref.name}](${ref.url})`).join(' | '),
-								},
-								textEdit: {
-									range: replacement.textEdit.range,
-									newText: insertText,
-								},
-								kind: 20 satisfies typeof vscode.CompletionItemKind.EnumMember,
-							};
-
-							completionList.items.push(newItem);
+					for (const modifier in currentModifiers) {
+						if (modifiers.includes(modifier)) {
+							continue;
 						}
+
+						const description = currentModifiers[modifier];
+						const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
+						const newItem: html.CompletionItem = {
+							label: modifier,
+							filterText: insertText,
+							documentation: {
+								kind: 'markdown',
+								value: description,
+							},
+							textEdit: {
+								range: replacement.textEdit.range,
+								newText: insertText,
+							},
+							kind: 20 satisfies typeof CompletionItemKind.EnumMember,
+						};
+
+						completionList.items.push(newItem);
 					}
-				} while (0!);
+				}
 
 				completionList.items = completionList.items.filter(item => !specialTags.has(parseLabel(item.label).name));
 
@@ -543,13 +520,13 @@ export function create(
 				}
 
 				for (const item of completionList.items) {
-					const parsedLabelKey = parseItemKey(item.label);
+					const parsedLabel = parseItemKey(item.label);
 
-					if (parsedLabelKey) {
-						const name = parsedLabelKey.tag;
-						item.label = parsedLabelKey.leadingSlash ? '/' + name : name;
+					if (parsedLabel) {
+						const name = parsedLabel.tag;
+						item.label = parsedLabel.leadingSlash ? '/' + name : name;
 
-						const text = parsedLabelKey.leadingSlash ? `/${name}>` : name;
+						const text = parsedLabel.leadingSlash ? `/${name}>` : name;
 						if (item.textEdit) {
 							item.textEdit.newText = text;
 						};
@@ -561,20 +538,19 @@ export function create(
 						}
 					}
 
-					const itemKeyStr = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
-
-					let parsedItemKey = itemKeyStr ? parseItemKey(itemKeyStr) : undefined;
+					const itemKey = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+					let parsedItem = itemKey ? parseItemKey(itemKey) : undefined;
 					let propInfo: ComponentPropInfo | undefined;
 
-					if (parsedItemKey) {
+					if (parsedItem) {
 						const documentations: string[] = [];
 
-						propInfo = cachedPropInfos.get(parsedItemKey.prop);
+						propInfo = cachedPropInfos.get(parsedItem.prop);
 						if (propInfo?.commentMarkdown) {
 							documentations.push(propInfo.commentMarkdown);
 						}
 
-						let { isEvent, propName } = getPropName(parsedItemKey);
+						let { isEvent, propName } = getPropName(parsedItem);
 						if (isEvent) {
 							// click -> onclick
 							propName = 'on' + propName;
@@ -605,7 +581,7 @@ export function create(
 
 						// for special props without internal item key
 						if (specialProps.has(propName)) {
-							parsedItemKey = {
+							parsedItem = {
 								type: 'componentProp',
 								tag: '^',
 								prop: propName,
@@ -628,30 +604,30 @@ export function create(
 					}
 
 					if (propInfo?.deprecated) {
-						item.tags = [1 satisfies typeof vscode.CompletionItemTag.Deprecated];
+						item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 					}
 
 					const tokens: string[] = [];
 
 					if (
-						item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property
+						item.kind === 10 satisfies typeof CompletionItemKind.Property
 						&& lastCompletionComponentNames.has(hyphenateTag(item.label))
 					) {
-						item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
+						item.kind = 6 satisfies typeof CompletionItemKind.Variable;
 						tokens.push('\u0000');
 					}
-					else if (parsedItemKey) {
+					else if (parsedItem) {
 
-						const isComponent = parsedItemKey.tag !== '*';
-						const { isEvent, propName } = getPropName(parsedItemKey);
+						const isComponent = parsedItem.tag !== '*';
+						const { isEvent, propName } = getPropName(parsedItem);
 
-						if (parsedItemKey.type === 'componentProp') {
+						if (parsedItem.type === 'componentProp') {
 							if (isComponent || specialProps.has(propName)) {
-								item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
+								item.kind = 5 satisfies typeof CompletionItemKind.Field;
 							}
 						}
 						else if (isEvent) {
-							item.kind = 23 satisfies typeof vscode.CompletionItemKind.Event;
+							item.kind = 23 satisfies typeof CompletionItemKind.Event;
 							if (propName.startsWith('vue:')) {
 								tokens.push('\u0004');
 							}
@@ -693,11 +669,11 @@ export function create(
 						|| item.label === 'v-else'
 						|| item.label === 'v-for'
 					) {
-						item.kind = 14 satisfies typeof vscode.CompletionItemKind.Keyword;
+						item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
 						tokens.push('\u0003');
 					}
 					else if (item.label.startsWith('v-')) {
-						item.kind = 3 satisfies typeof vscode.CompletionItemKind.Function;
+						item.kind = 3 satisfies typeof CompletionItemKind.Function;
 						tokens.push('\u0002');
 					}
 					else {
@@ -796,13 +772,13 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 }
 
 function getPropName(
-	itemKey: ReturnType<typeof parseItemKey> & {}
+	parsedItem: ReturnType<typeof parseItemKey> & {}
 ) {
-	const name = hyphenateAttr(itemKey.prop);
+	const name = hyphenateAttr(parsedItem.prop);
 	if (name.startsWith('on-')) {
 		return { isEvent: true, propName: name.slice('on-'.length) };
 	}
-	else if (itemKey.type === 'componentEvent') {
+	else if (parsedItem.type === 'componentEvent') {
 		return { isEvent: true, propName: name };
 	}
 	return { isEvent: false, propName: name };

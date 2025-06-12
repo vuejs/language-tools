@@ -1,6 +1,5 @@
-import type { LanguageServicePlugin } from '@volar/language-service';
+import type { DocumentLink, LanguageServicePlugin } from '@volar/language-service';
 import { type Sfc, tsCodegen, VueVirtualCode } from '@vue/language-core';
-import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 
 export function create(): LanguageServicePlugin {
@@ -28,7 +27,7 @@ export function create(): LanguageServicePlugin {
 
 					const { sfc } = root;
 					const codegen = tsCodegen.get(sfc);
-					const result: vscode.DocumentLink[] = [];
+					const result: DocumentLink[] = [];
 
 					if (virtualCode.id === 'template') {
 						const scopedClasses = codegen?.getGeneratedTemplate()?.scopedClasses ?? [];

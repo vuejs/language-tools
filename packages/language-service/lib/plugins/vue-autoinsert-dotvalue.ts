@@ -1,7 +1,6 @@
-import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
+import type { LanguageServiceContext, LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { hyphenateAttr, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 import { isTsDocument, sleep } from './utils';
 

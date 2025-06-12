@@ -1,11 +1,11 @@
+import type { InsertTextFormat, LanguageServiceContext, LanguageServicePlugin, WorkspaceEdit } from '@volar/language-service';
 import { VueVirtualCode, forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
-import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
+import { TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { type LanguageServiceContext, type LanguageServicePlugin, TagNameCasing } from '../types';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -65,7 +65,7 @@ export function create(
 					baseName = baseName.slice(0, baseName.lastIndexOf('.'));
 					const newName = capitalize(camelize(baseName));
 
-					const additionalEdit: vscode.WorkspaceEdit = {};
+					const additionalEdit: WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(root)].find(code => code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw'))!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 					const incomingFileName = context.project.typescript?.uriConverter.asFileName(URI.parse(importUri))
@@ -124,7 +124,7 @@ export function create(
 
 					return {
 						insertText: `<${casing === TagNameCasing.Kebab ? hyphenate(newName) : newName}$0 />`,
-						insertTextFormat: 2 satisfies typeof vscode.InsertTextFormat.Snippet,
+						insertTextFormat: 2 satisfies typeof InsertTextFormat.Snippet,
 						additionalEdit,
 					};
 				},
