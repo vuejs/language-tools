@@ -13,6 +13,11 @@ export type ComponentSlots<T> =
 	T extends (props: any, ctx: { slots: infer S; attrs: any; emit: any; }, ...args: any) => any ? NonNullable<S> :
 	{};
 
+export type ComponentAttrs<T> =
+	T extends new (...args: any) => { $attrs: infer A; } ? NonNullable<A> :
+	T extends (props: any, ctx: { slots: any; attrs: infer A; emit: any; }, ...args: any) => any ? NonNullable<A> :
+	{};
+
 export type ComponentEmit<T> =
 	T extends new (...args: any) => { $emit: infer E; } ? NonNullable<E> :
 	T extends (props: any, ctx: { slots: any; attrs: any; emit: infer E; }, ...args: any) => any ? NonNullable<E> :
