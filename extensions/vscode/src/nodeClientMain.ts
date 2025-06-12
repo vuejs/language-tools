@@ -48,34 +48,31 @@ export const { activate, deactivate } = defineExtension(async () => {
 				}
 			}
 
-			let serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist', 'server.js');
-
-			const serverOptions: lsp.ServerOptions = {
-				run: {
-					module: serverModule.fsPath,
-					transport: lsp.TransportKind.ipc,
-					options: {},
-				},
-				debug: {
-					module: serverModule.fsPath,
-					transport: lsp.TransportKind.ipc,
-					options: { execArgv: ['--nolazy', '--inspect=' + port] },
-				}
-			};
-			const clientOptions: lsp.LanguageClientOptions = {
-				middleware,
-				documentSelector: documentSelector,
-				markdown: {
-					isTrusted: true,
-					supportHtml: true
-				},
-				outputChannel
-			};
+			const serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js');
 			const client = new _LanguageClient(
 				id,
 				name,
-				serverOptions,
-				clientOptions
+				{
+					run: {
+						module: serverModule.fsPath,
+						transport: lsp.TransportKind.ipc,
+						options: {},
+					},
+					debug: {
+						module: serverModule.fsPath,
+						transport: lsp.TransportKind.ipc,
+						options: { execArgv: ['--nolazy', '--inspect=' + port] },
+					}
+				},
+				{
+					middleware,
+					documentSelector: documentSelector,
+					markdown: {
+						isTrusted: true,
+						supportHtml: true
+					},
+					outputChannel
+				}
 			);
 			client.start();
 

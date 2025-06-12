@@ -1,8 +1,7 @@
-import type { LanguageServicePlugin, VirtualCode } from '@volar/language-service';
+import type { LanguageServicePlugin, TextDocument, VirtualCode } from '@volar/language-service';
 import { VueVirtualCode } from '@vue/language-core';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
 
 export function create(): LanguageServicePlugin {

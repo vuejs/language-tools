@@ -50,9 +50,9 @@ importers:
       '@vscode/vsce':
         specifier: ^3.2.1
         version: 3.3.2
-      '@vue/language-core':
-        specifier: 3.0.0-alpha.10
-        version: link:../../packages/language-core
+      '@vue/compiler-sfc':
+        specifier: ^3.5.0
+        version: 3.5.13
       '@vue/language-server':
         specifier: 3.0.0-alpha.10
         version: link:../../packages/language-server
@@ -163,9 +163,6 @@ importers:
 
   packages/language-server:
     dependencies:
-      '@volar/language-core':
-        specifier: ~2.4.14
-        version: 2.4.14
       '@volar/language-server':
         specifier: ~2.4.14
         version: 2.4.14
@@ -175,9 +172,6 @@ importers:
       '@vue/language-service':
         specifier: 3.0.0-alpha.10
         version: link:../language-service
-      '@vue/typescript-plugin':
-        specifier: 3.0.0-alpha.10
-        version: link:../typescript-plugin
       typescript:
         specifier: '*'
         version: 5.8.3
@@ -194,30 +188,15 @@ importers:
 
   packages/language-service:
     dependencies:
-      '@volar/language-core':
-        specifier: ~2.4.14
-        version: 2.4.14
       '@volar/language-service':
         specifier: ~2.4.14
         version: 2.4.14
-      '@volar/typescript':
-        specifier: ~2.4.14
-        version: 2.4.14
-      '@vue/compiler-dom':
-        specifier: ^3.5.0
-        version: 3.5.13
       '@vue/language-core':
         specifier: 3.0.0-alpha.10
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
         version: 3.5.13
-      '@vue/typescript-plugin':
-        specifier: 3.0.0-alpha.10
-        version: link:../typescript-plugin
-      alien-signals:
-        specifier: ^2.0.5
-        version: 2.0.5
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -245,15 +224,9 @@ importers:
       volar-service-typescript-twoslash-queries:
         specifier: 0.0.64
         version: 0.0.64(@volar/language-service@2.4.14)
-      vscode-css-languageservice:
-        specifier: ^6.3.1
-        version: 6.3.5
       vscode-html-languageservice:
         specifier: ^5.2.0
         version: 5.4.0
-      vscode-languageserver-textdocument:
-        specifier: ^1.0.11
-        version: 1.0.12
       vscode-uri:
         specifier: ^3.0.8
         version: 3.1.0
@@ -267,9 +240,18 @@ importers:
       '@volar/kit':
         specifier: ~2.4.14
         version: 2.4.14(typescript@5.9.0-dev.20250425)
-      vscode-languageserver-protocol:
-        specifier: ^3.17.5
-        version: 3.17.5
+      '@volar/typescript':
+        specifier: ~2.4.14
+        version: 2.4.14
+      '@vue/compiler-dom':
+        specifier: ^3.5.0
+        version: 3.5.13
+      '@vue/typescript-plugin':
+        specifier: 3.0.0-alpha.10
+        version: link:../typescript-plugin
+      vscode-css-languageservice:
+        specifier: ^6.3.1
+        version: 6.3.5
 
   packages/tsc:
     dependencies:

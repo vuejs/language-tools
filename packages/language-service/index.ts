@@ -1,17 +1,15 @@
 /// <reference types="@volar/typescript" />
 
 export * from '@volar/language-service';
-export * from '@vue/language-core';
-export * from './lib/nameCasing';
 export * from './lib/types';
 
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
-import { commands } from './lib/types';
+import { parse, type VueCompilerOptions } from '@vue/language-core';
+import type * as ts from 'typescript';
 
 import { create as createEmmetPlugin } from 'volar-service-emmet';
 import { create as createJsonPlugin } from 'volar-service-json';
 import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';
-import { create as createTypeScriptPlugins } from 'volar-service-typescript';
 import { create as createTypeScriptTwoslashQueriesPlugin } from 'volar-service-typescript-twoslash-queries';
 import { create as createTypeScriptDocCommentTemplatePlugin } from 'volar-service-typescript/lib/plugins/docCommentTemplate';
 import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescript/lib/plugins/syntactic';
@@ -31,20 +29,6 @@ import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 
-import { parse, type VueCompilerOptions } from '@vue/language-core';
-import { createVueLanguageServiceProxy } from '@vue/typescript-plugin/lib/common';
-import { collectExtractProps } from '@vue/typescript-plugin/lib/requests/collectExtractProps';
-import { getComponentDirectives } from '@vue/typescript-plugin/lib/requests/getComponentDirectives';
-import { getComponentEvents } from '@vue/typescript-plugin/lib/requests/getComponentEvents';
-import { getComponentNames } from '@vue/typescript-plugin/lib/requests/getComponentNames';
-import { getComponentProps } from '@vue/typescript-plugin/lib/requests/getComponentProps';
-import { getElementAttrs } from '@vue/typescript-plugin/lib/requests/getElementAttrs';
-import { getElementNames } from '@vue/typescript-plugin/lib/requests/getElementNames';
-import { getImportPathForFile } from '@vue/typescript-plugin/lib/requests/getImportPathForFile';
-import { getPropertiesAtLocation } from '@vue/typescript-plugin/lib/requests/getPropertiesAtLocation';
-import type { RequestContext } from '@vue/typescript-plugin/lib/requests/types';
-import type { URI } from 'vscode-uri';
-
 declare module '@volar/language-service' {
 	export interface ProjectContext {
 		vue?: {
@@ -53,127 +37,7 @@ declare module '@volar/language-service' {
 	}
 }
 
-export function getFullLanguageServicePlugins(ts: typeof import('typescript')) {
-	const plugins: LanguageServicePlugin[] = [
-		...createTypeScriptPlugins(ts),
-		...getCommonLanguageServicePlugins(ts, getTsPluginClientForLSP),
-	];
-	for (let i = 0; i < plugins.length; i++) {
-		const plugin = plugins[i];
-		if (plugin.name === 'typescript-semantic') {
-			plugins[i] = {
-				...plugin,
-				create(context) {
-					const created = plugin.create(context);
-					if (!context.project.typescript) {
-						return created;
-					}
-					const languageService = (created.provide as import('volar-service-typescript').Provide)['typescript/languageService']();
-					if (context.project.vue) {
-						const proxy = createVueLanguageServiceProxy(
-							ts,
-							context.language,
-							languageService,
-							context.project.vue.compilerOptions,
-							s => context.project.typescript?.uriConverter.asUri(s)
-						);
-						languageService.getCompletionsAtPosition = proxy.getCompletionsAtPosition;
-						languageService.getCompletionEntryDetails = proxy.getCompletionEntryDetails;
-						languageService.getCodeFixesAtPosition = proxy.getCodeFixesAtPosition;
-						languageService.getDefinitionAndBoundSpan = proxy.getDefinitionAndBoundSpan;
-						languageService.getQuickInfoAtPosition = proxy.getQuickInfoAtPosition;
-					}
-					return created;
-				},
-			};
-			break;
-		}
-	}
-	return plugins;
-
-	function getTsPluginClientForLSP(context: LanguageServiceContext): import('@vue/typescript-plugin/lib/requests').Requests | undefined {
-		if (!context.project.typescript) {
-			return;
-		}
-		const languageService = context.inject<(import('volar-service-typescript').Provide), 'typescript/languageService'>('typescript/languageService');
-		if (!languageService) {
-			return;
-		}
-		const requestContext: RequestContext<URI> = {
-			typescript: ts,
-			language: context.language,
-			languageService,
-			languageServiceHost: context.project.typescript.languageServiceHost,
-			isTsPlugin: false,
-			asScriptId: s => context.project.typescript!.uriConverter.asUri(s),
-		};
-		return {
-			async collectExtractProps(...args) {
-				return collectExtractProps.apply(requestContext, args);
-			},
-			async getPropertiesAtLocation(...args) {
-				return getPropertiesAtLocation.apply(requestContext, args);
-			},
-			async getImportPathForFile(...args) {
-				return getImportPathForFile.apply(requestContext, args);
-			},
-			async getComponentEvents(...args) {
-				return getComponentEvents.apply(requestContext, args);
-			},
-			async getComponentDirectives(...args) {
-				return getComponentDirectives.apply(requestContext, args);
-			},
-			async getComponentNames(...args) {
-				return getComponentNames.apply(requestContext, args);
-			},
-			async getComponentProps(...args) {
-				return getComponentProps.apply(requestContext, args);
-			},
-			async getElementAttrs(...args) {
-				return getElementAttrs.apply(requestContext, args);
-			},
-			async getElementNames(...args) {
-				return getElementNames.apply(requestContext, args);
-			},
-			async getQuickInfoAtPosition(fileName, position) {
-				const languageService = context.getLanguageService();
-				const uri = context.project.typescript!.uriConverter.asUri(fileName);
-				const sourceScript = context.language.scripts.get(uri);
-				if (!sourceScript) {
-					return;
-				}
-				const hover = await languageService.getHover(uri, position);
-				let text = '';
-				if (typeof hover?.contents === 'string') {
-					text = hover.contents;
-				}
-				else if (Array.isArray(hover?.contents)) {
-					text = hover.contents.map(c => typeof c === 'string' ? c : c.value).join('\n');
-				}
-				else if (hover) {
-					text = hover.contents.value;
-				}
-				text = text.replace(/```typescript/g, '');
-				text = text.replace(/```/g, '');
-				text = text.replace(/---/g, '');
-				text = text.trim();
-				while (true) {
-					const newText = text.replace(/\n\n/g, '\n');
-					if (newText === text) {
-						break;
-					}
-					text = newText;
-				}
-				text = text.replace(/\n/g, ' | ');
-				return text;
-			},
-		};
-	}
-}
-
-import type * as ts from 'typescript';
-
-export function getHybridModeLanguageServicePlugins(
+export function createVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
 	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests & {
 		getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>;
@@ -227,7 +91,7 @@ function getCommonLanguageServicePlugins(
 			name: 'vue-parse-sfc',
 			capabilities: {
 				executeCommandProvider: {
-					commands: [commands.parseSfc],
+					commands: ['vue.parseSfc'],
 				},
 			},
 			create() {

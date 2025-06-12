@@ -21,11 +21,6 @@
 	"peerDependencies": {
 		"typescript": "*"
 	},
-	"peerDependenciesMeta": {
-		"typescript": {
-			"optional": true
-		}
-	},
 	"devDependencies": {
 		"@types/node": "^22.10.4",
 		"@types/path-browserify": "^1.0.1"

@@ -1,5 +1,6 @@
 export * from './lib/codegen/globalTypes';
 export * from './lib/codegen/template';
+export * from './lib/codegen/utils';
 export * from './lib/languagePlugin';
 export * from './lib/parsers/scriptSetupRanges';
 export * from './lib/plugins';

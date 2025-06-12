@@ -1,15 +1,12 @@
-import type { Disposable, LanguageServiceContext } from '@volar/language-service';
-import { VueVirtualCode, hyphenateAttr, hyphenateTag, tsCodegen } from '@vue/language-core';
+import type { CompletionItemKind, CompletionItemTag, CompletionList, Disposable, LanguageServiceContext, LanguageServicePlugin, TextDocument } from '@volar/language-service';
+import { hyphenateAttr, hyphenateTag, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
-import type * as vscode from 'vscode-languageserver-protocol';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI, Utils } from 'vscode-uri';
-import { getNameCasing } from '../nameCasing';
-import { AttrNameCasing, type LanguageServicePlugin, TagNameCasing } from '../types';
+import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
 import { loadModelModifiersData, loadTemplateData } from './data';
 
 type InternalItemId =
@@ -212,7 +209,7 @@ export function create(
 
 				await (initializing ??= initialize());
 
-				const casing = await getNameCasing(context, sourceDocumentUri);
+				const casing = await checkCasing(context, sourceDocumentUri);
 
 				if (builtInData.tags) {
 					for (const tag of builtInData.tags) {
@@ -462,7 +459,7 @@ export function create(
 				};
 			}
 
-			function afterHtmlCompletion(completionList: vscode.CompletionList, document: TextDocument) {
+			function afterHtmlCompletion(completionList: CompletionList, document: TextDocument) {
 
 				addDirectiveModifiers();
 
@@ -504,7 +501,7 @@ export function create(
 								range: replacement.textEdit.range,
 								newText: insertText,
 							},
-							kind: 20 satisfies typeof vscode.CompletionItemKind.EnumMember,
+							kind: 20 satisfies typeof CompletionItemKind.EnumMember,
 						};
 
 						completionList.items.push(newItem);
@@ -607,16 +604,16 @@ export function create(
 					}
 
 					if (propInfo?.deprecated) {
-						item.tags = [1 satisfies typeof vscode.CompletionItemTag.Deprecated];
+						item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 					}
 
 					const tokens: string[] = [];
 
 					if (
-						item.kind === 10 satisfies typeof vscode.CompletionItemKind.Property
+						item.kind === 10 satisfies typeof CompletionItemKind.Property
 						&& lastCompletionComponentNames.has(hyphenateTag(item.label))
 					) {
-						item.kind = 6 satisfies typeof vscode.CompletionItemKind.Variable;
+						item.kind = 6 satisfies typeof CompletionItemKind.Variable;
 						tokens.push('\u0000');
 					}
 					else if (parsedItem) {
@@ -626,11 +623,11 @@ export function create(
 
 						if (parsedItem.type === 'componentProp') {
 							if (isComponent || specialProps.has(propName)) {
-								item.kind = 5 satisfies typeof vscode.CompletionItemKind.Field;
+								item.kind = 5 satisfies typeof CompletionItemKind.Field;
 							}
 						}
 						else if (isEvent) {
-							item.kind = 23 satisfies typeof vscode.CompletionItemKind.Event;
+							item.kind = 23 satisfies typeof CompletionItemKind.Event;
 							if (propName.startsWith('vue:')) {
 								tokens.push('\u0004');
 							}
@@ -672,11 +669,11 @@ export function create(
 						|| item.label === 'v-else'
 						|| item.label === 'v-for'
 					) {
-						item.kind = 14 satisfies typeof vscode.CompletionItemKind.Keyword;
+						item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
 						tokens.push('\u0003');
 					}
 					else if (item.label.startsWith('v-')) {
-						item.kind = 3 satisfies typeof vscode.CompletionItemKind.Function;
+						item.kind = 3 satisfies typeof CompletionItemKind.Function;
 						tokens.push('\u0002');
 					}
 					else {

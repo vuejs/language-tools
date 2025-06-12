@@ -28,12 +28,12 @@ const config: RolldownOptions = {
 			name: 'redirect',
 			buildEnd() {
 				fs.mkdirSync(resolve('./node_modules/vue-typescript-plugin-pack'), { recursive: true });
-				fs.writeFileSync(resolve('./node_modules/vue-typescript-plugin-pack/index.js'), `module.exports = require('../../dist/plugin.js');`);
+				fs.writeFileSync(resolve('./node_modules/vue-typescript-plugin-pack/index.js'), `module.exports = require('../../dist/typescript-plugin.js');`);
 
 				if (isDev) {
 					fs.mkdirSync(resolve('./dist'), { recursive: true });
-					fs.writeFileSync(resolve('./dist/server.js'), `module.exports = require('../node_modules/@vue/language-server/node.js');`);
-					fs.writeFileSync(resolve('./dist/plugin.js'), `module.exports = require('../node_modules/@vue/typescript-plugin/index.js');`);
+					fs.writeFileSync(resolve('./dist/language-server.js'), `module.exports = require('../node_modules/@vue/language-server/index.js');`);
+					fs.writeFileSync(resolve('./dist/typescript-plugin.js'), `module.exports = require('../node_modules/@vue/typescript-plugin/index.js');`);
 				}
 			},
 		},
@@ -68,8 +68,8 @@ const config: RolldownOptions = {
 if (!isDev) {
 	config.input = {
 		...config.input as Record<string, string>,
-		'server': './node_modules/@vue/language-server/node.js',
-		'plugin': './node_modules/@vue/typescript-plugin/index.js',
+		'language-server': './node_modules/@vue/language-server/index.js',
+		'typescript-plugin': './node_modules/@vue/typescript-plugin/index.js',
 	};
 }
 
