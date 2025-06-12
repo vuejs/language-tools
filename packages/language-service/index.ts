@@ -1,7 +1,6 @@
 /// <reference types="@volar/typescript" />
 
 export * from '@volar/language-service';
-export * from './lib/types';
 
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
 import { parse, type VueCompilerOptions } from '@vue/language-core';
