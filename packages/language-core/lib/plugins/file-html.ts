@@ -1,8 +1,8 @@
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type { VueLanguagePlugin } from '../types';
 
-const sfcBlockReg = /\<(script|style)\b([\s\S]*?)\>([\s\S]*?)\<\/\1\>/g;
-const langReg = /\blang\s*=\s*(['\"]?)(\S*)\b\1/;
+const sfcBlockReg = /<(script|style)\b([\s\S]*?)>([\s\S]*?)<\/\1>/g;
+const langReg = /\blang\s*=\s*(['"]?)(\S*)\b\1/;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 

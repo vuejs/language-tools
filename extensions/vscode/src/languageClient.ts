@@ -51,7 +51,7 @@ export function deactivate() {
 	return client?.stop();
 }
 
-async function activateLc(
+function activateLc(
 	context: vscode.ExtensionContext,
 	createLc: CreateLanguageClient
 ) {

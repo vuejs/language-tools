@@ -32,7 +32,7 @@ export function createParsedCommandLineByJson(
 			const obj = ts.convertToObject(configFile, []);
 			const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
 			resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
-		} catch (err) { }
+		} catch { }
 	}
 
 	const resolvedVueOptions = resolver.build();
@@ -88,7 +88,7 @@ export function createParsedCommandLine(
 				const obj = ts.convertToObject(configFile, []);
 				const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
 				resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
-			} catch (err) { }
+			} catch { }
 		}
 
 		const resolvedVueOptions = resolver.build();
@@ -124,7 +124,7 @@ export function createParsedCommandLine(
 			vueOptions: resolvedVueOptions,
 		};
 	}
-	catch (err) {
+	catch {
 		// console.warn('Failed to resolve tsconfig path:', tsConfigPath, err);
 		return {
 			fileNames: [],
@@ -254,7 +254,7 @@ function resolvePath(scriptPath: string, root: string) {
 			// console.warn('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
 		}
 	}
-	catch (error) {
+	catch {
 		// console.warn(error);
 	}
 }

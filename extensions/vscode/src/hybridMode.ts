@@ -81,7 +81,7 @@ function getTsVersion(libPath: string) {
 		try {
 			desc = JSON.parse(contents);
 		}
-		catch (err) {
+		catch {
 			return;
 		}
 		if (!desc || !desc.version) {
