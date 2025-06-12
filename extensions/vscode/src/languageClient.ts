@@ -8,7 +8,6 @@ import {
 	useCommand,
 	useOutputChannel,
 	useVisibleTextEditors,
-	useVscodeContext,
 	watch,
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
@@ -56,7 +55,6 @@ async function activateLc(
 	context: vscode.ExtensionContext,
 	createLc: CreateLanguageClient
 ) {
-	useVscodeContext('vue.activated', true);
 	const outputChannel = useOutputChannel('Vue Language Server');
 	const selectors = config.server.includeLanguages;
 
