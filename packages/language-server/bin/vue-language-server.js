@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// @ts-check
+
 if (process.argv.includes('--version')) {
 	console.log(require('../package.json').version);
+	return;
 }
-else {
-	require('../node.js');
-}
+
+require('../index.js');

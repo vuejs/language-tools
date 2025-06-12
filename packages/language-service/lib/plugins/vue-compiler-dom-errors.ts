@@ -1,8 +1,6 @@
+import type { Diagnostic, DiagnosticSeverity, LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { VueVirtualCode } from '@vue/language-core';
-import type * as vscode from 'vscode-languageserver-protocol';
-import type { TextDocument } from 'vscode-languageserver-textdocument';
 import { URI } from 'vscode-uri';
-import type { LanguageServicePlugin } from '../types';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -34,20 +32,20 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const templateErrors: vscode.Diagnostic[] = [];
+					const templateErrors: Diagnostic[] = [];
 					const { template } = root.sfc;
 
 					if (template) {
 
 						for (const error of template.errors) {
-							onCompilerError(error, 1 satisfies typeof vscode.DiagnosticSeverity.Error);
+							onCompilerError(error, 1 satisfies typeof DiagnosticSeverity.Error);
 						}
 
 						for (const warning of template.warnings) {
-							onCompilerError(warning, 2 satisfies typeof vscode.DiagnosticSeverity.Warning);
+							onCompilerError(warning, 2 satisfies typeof DiagnosticSeverity.Warning);
 						}
 
-						function onCompilerError(error: NonNullable<typeof template>['errors'][number], severity: vscode.DiagnosticSeverity) {
+						function onCompilerError(error: NonNullable<typeof template>['errors'][number], severity: DiagnosticSeverity) {
 
 							const templateHtmlRange = {
 								start: error.loc?.start.offset ?? 0,

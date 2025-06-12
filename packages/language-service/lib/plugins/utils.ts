@@ -1,4 +1,4 @@
-import type { TextDocument } from 'vscode-languageserver-textdocument';
+import type { TextDocument } from '@volar/language-service';
 
 export function sleep(ms: number) {
 	return new Promise(resolve => setTimeout(resolve, ms));

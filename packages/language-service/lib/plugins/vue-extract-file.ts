@@ -2,7 +2,6 @@ import type { CreateFile, LanguageServiceContext, LanguageServicePlugin, TextDoc
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
 import { type Sfc, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
-import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
 
 interface ActionData {
@@ -134,7 +133,7 @@ export function create(
 						newFileTags = newFileTags.reverse();
 					}
 
-					const templateEdits: vscode.TextEdit[] = [
+					const templateEdits: TextEdit[] = [
 						{
 							range: {
 								start: document.positionAt(templateCodeRange[0]),
@@ -144,7 +143,7 @@ export function create(
 						},
 					];
 
-					const sfcEdits: vscode.TextEdit[] = [
+					const sfcEdits: TextEdit[] = [
 						{
 							range: lastImportNode ? {
 								start: sfcDocument.positionAt(script.startTagEnd + lastImportNode.end),

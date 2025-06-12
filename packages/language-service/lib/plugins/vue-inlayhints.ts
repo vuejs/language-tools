@@ -1,9 +1,7 @@
-import { tsCodegen, VueVirtualCode } from '@vue/language-core';
-import { collectIdentifiers } from '@vue/language-core/lib/codegen/utils/index';
+import type { InlayHint, InlayHintKind, LanguageServicePlugin } from '@volar/language-service';
+import { collectIdentifiers, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
-import type * as vscode from 'vscode-languageserver-protocol';
 import { URI } from 'vscode-uri';
-import type { LanguageServicePlugin } from '../types';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
@@ -28,7 +26,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						return settings[key] ??= await context.env.getConfiguration?.<boolean>(key) ?? false;
 					}
 
-					const result: vscode.InlayHint[] = [];
+					const result: InlayHint[] = [];
 
 					const codegen = tsCodegen.get(virtualCode.sfc);
 					const inlayHints = [
@@ -90,7 +88,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 							paddingRight: hint.paddingRight,
 							paddingLeft: hint.paddingLeft,
 							position: document.positionAt(hintOffset),
-							kind: 2 satisfies typeof vscode.InlayHintKind.Parameter,
+							kind: 2 satisfies typeof InlayHintKind.Parameter,
 							tooltip: hint.tooltip ? {
 								kind: 'markdown',
 								value: hint.tooltip,

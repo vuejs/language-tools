@@ -61,7 +61,7 @@ async function activateLc(
 	const selectors = config.server.includeLanguages;
 
 	// Setup typescript.js in production mode
-	if (fs.existsSync(path.join(__dirname, 'server.js'))) {
+	if (fs.existsSync(path.join(__dirname, 'language-server.js'))) {
 		fs.writeFileSync(path.join(__dirname, 'typescript.js'), `module.exports = require("${vscode.env.appRoot.replace(/\\/g, '/')}/extensions/node_modules/typescript/lib/typescript.js");`);
 	}
 
