@@ -16,8 +16,7 @@
 		"test": "vitest run",
 		"test:update": "vitest run --update",
 		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
-		"lint:fix": "pnpm run lint -- --fix --vscode-settings .vscode/settings.json",
-		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
+		"lint:fix": "pnpm run lint -- --fix --vscode-settings .vscode/settings.json"
 	},
 	"devDependencies": {
 		"@lerna-lite/cli": "^4.1.2",

@@ -42,8 +42,8 @@ importers:
         specifier: ^7.5.3
         version: 7.7.0
       '@types/vscode':
-        specifier: ^1.82.0
-        version: 1.99.1
+        specifier: 1.88.0
+        version: 1.88.0
       '@volar/vscode':
         specifier: 2.4.14
         version: 2.4.14
@@ -61,7 +61,7 @@ importers:
         version: link:../../packages/typescript-plugin
       reactive-vscode:
         specifier: ^0.2.9
-        version: 0.2.14(@types/vscode@1.99.1)
+        version: 0.2.14(@types/vscode@1.88.0)
       rolldown:
         specifier: 1.0.0-beta.8
         version: 1.0.0-beta.8(typescript@5.8.3)
@@ -1280,8 +1280,8 @@ packages:
   '@types/semver@7.7.0':
     resolution: {integrity: sha512-k107IF4+Xr7UHjwDc7Cfd6PRQfbdkiRabXGRjo07b4WyPahFBZCZ1sE+BNxYIJPPg73UkfOsVOLwqVc/6ETrIA==}
 
-  '@types/vscode@1.99.1':
-    resolution: {integrity: sha512-cQlqxHZ040ta6ovZXnXRxs3fJiTmlurkIWOfZVcLSZPcm9J4ikFpXuB7gihofGn5ng+kDVma5EmJIclfk0trPQ==}
+  '@types/vscode@1.88.0':
+    resolution: {integrity: sha512-rWY+Bs6j/f1lvr8jqZTyp5arRMfovdxolcqGi+//+cPDOh8SBvzXH90e7BiSXct5HJ9HGW6jATchbRTpTJpEkw==}
 
   '@typescript-eslint/eslint-plugin@8.31.0':
     resolution: {integrity: sha512-evaQJZ/J/S4wisevDvC1KFZkPzRetH8kYZbkgcTRyql3mcKsf+ZFDV1BVWUGTCAW5pQHoqn5gK5b8kn7ou9aFQ==}
@@ -4867,7 +4867,7 @@ snapshots:
 
   '@types/semver@7.7.0': {}
 
-  '@types/vscode@1.99.1': {}
+  '@types/vscode@1.88.0': {}
 
   '@typescript-eslint/eslint-plugin@8.31.0(@typescript-eslint/parser@8.31.0(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)(typescript@5.8.3)':
     dependencies:
@@ -6923,10 +6923,10 @@ snapshots:
       strip-json-comments: 2.0.1
     optional: true
 
-  reactive-vscode@0.2.14(@types/vscode@1.99.1):
+  reactive-vscode@0.2.14(@types/vscode@1.88.0):
     dependencies:
       '@reactive-vscode/reactivity': 0.2.14
-      '@types/vscode': 1.99.1
+      '@types/vscode': 1.88.0
 
   read-cmd-shim@5.0.0: {}
 

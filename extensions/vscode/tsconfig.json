@@ -5,5 +5,5 @@
 		"module": "CommonJS",
 		"moduleResolution": "Node"
 	},
-	"include": [ "src", "rolldown.config.ts" ]
+	"include": [ "*", "lib/**/*" ],
 }
