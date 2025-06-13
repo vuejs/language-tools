@@ -2,12 +2,12 @@ import { ExecuteCommandRequest, type BaseLanguageClient, type ExecuteCommandPara
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { executeCommand, useActiveTextEditor, useCommand } from 'reactive-vscode';
 import * as vscode from 'vscode';
-import { config } from '../config';
+import { config } from './config';
 
 export function activate(client: BaseLanguageClient) {
 
+	const astMap = new WeakMap<vscode.TextDocument, [version: number, Promise<SFCParseResult | undefined>]>();
 	const activeTextEditor = useActiveTextEditor();
-	const getDocDescriptor = useDocDescriptor(client);
 
 	useCommand('vue.action.splitEditors', async () => {
 		const editor = activeTextEditor.value;
@@ -17,10 +17,21 @@ export function activate(client: BaseLanguageClient) {
 
 		const layout = config.splitEditors.layout;
 		const doc = editor.document;
-		const descriptor = (await getDocDescriptor(doc.getText()))?.descriptor;
-		if (!descriptor) {
+		if (!astMap.has(doc) || astMap.get(doc)![0] !== doc.version) {
+			astMap.set(doc, [
+				doc.version,
+				client.sendRequest(ExecuteCommandRequest.type, {
+					command: 'vue.parseSfc',
+					arguments: [doc.getText()],
+				} satisfies ExecuteCommandParams),
+			]);
+		}
+		const ast = await astMap.get(doc)![1];
+		if (!ast) {
 			return;
 		}
+
+		const descriptor = ast.descriptor;
 
 		let leftBlocks: SFCBlock[] = [];
 		let rightBlocks: SFCBlock[] = [];
@@ -65,51 +76,32 @@ export function activate(client: BaseLanguageClient) {
 		await executeCommand('workbench.action.joinEditorInGroup');
 
 		if (activeTextEditor.value === editor) {
-			await foldingBlocks(leftBlocks);
+			await foldingBlocks(doc, leftBlocks);
 			await executeCommand('workbench.action.toggleSplitEditorInGroup');
-			await foldingBlocks(rightBlocks);
+			await foldingBlocks(doc, rightBlocks);
 		}
 		else {
 			await executeCommand('editor.unfoldAll');
 		}
-
-		async function foldingBlocks(blocks: SFCBlock[]) {
-
-			const editor = activeTextEditor.value;
-			if (!editor) {
-				return;
-			}
-
-			editor.selections = blocks.length
-				? blocks.map(block => new vscode.Selection(doc.positionAt(block.loc.start.offset), doc.positionAt(block.loc.start.offset)))
-				: [new vscode.Selection(doc.positionAt(doc.getText().length), doc.positionAt(doc.getText().length))];
-
-			await executeCommand('editor.unfoldAll');
-			await executeCommand('editor.foldLevel1');
-
-			const firstBlock = blocks.sort((a, b) => a.loc.start.offset - b.loc.start.offset)[0];
-			if (firstBlock) {
-				editor.revealRange(new vscode.Range(doc.positionAt(firstBlock.loc.start.offset), new vscode.Position(editor.document.lineCount, 0)), vscode.TextEditorRevealType.AtTop);
-			}
-		}
 	});
-}
 
-export function useDocDescriptor(client: BaseLanguageClient) {
+	async function foldingBlocks(doc: vscode.TextDocument, blocks: SFCBlock[]) {
 
-	let splitDocText: string | undefined;
-	let splitDocDescriptor: SFCParseResult | undefined;
-
-	return getDescriptor;
-
-	async function getDescriptor(text: string) {
-		if (text !== splitDocText) {
-			splitDocText = text;
-			splitDocDescriptor = await client.sendRequest(ExecuteCommandRequest.type, {
-				command: 'vue.parseSfc',
-				arguments: [text],
-			} satisfies ExecuteCommandParams);
+		const editor = activeTextEditor.value;
+		if (!editor) {
+			return;
 		}
-		return splitDocDescriptor;
+
+		editor.selections = blocks.length
+			? blocks.map(block => new vscode.Selection(doc.positionAt(block.loc.start.offset), doc.positionAt(block.loc.start.offset)))
+			: [new vscode.Selection(doc.positionAt(doc.getText().length), doc.positionAt(doc.getText().length))];
+
+		await executeCommand('editor.unfoldAll');
+		await executeCommand('editor.foldLevel1');
+
+		const firstBlock = blocks.sort((a, b) => a.loc.start.offset - b.loc.start.offset)[0];
+		if (firstBlock) {
+			editor.revealRange(new vscode.Range(doc.positionAt(firstBlock.loc.start.offset), new vscode.Position(editor.document.lineCount, 0)), vscode.TextEditorRevealType.AtTop);
+		}
 	}
 }
