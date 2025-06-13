@@ -1,4 +1,4 @@
-import { ExecuteCommandRequest, type BaseLanguageClient, type ExecuteCommandParams } from '@volar/vscode';
+import { type BaseLanguageClient } from '@volar/vscode';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { executeCommand, useActiveTextEditor, useCommand } from 'reactive-vscode';
 import * as vscode from 'vscode';
@@ -20,10 +20,9 @@ export function activate(client: BaseLanguageClient) {
 		if (!astMap.has(doc) || astMap.get(doc)![0] !== doc.version) {
 			astMap.set(doc, [
 				doc.version,
-				client.sendRequest(ExecuteCommandRequest.type, {
-					command: 'vue.parseSfc',
-					arguments: [doc.getText()],
-				} satisfies ExecuteCommandParams),
+				client.sendRequest('vue/parseSfc', {
+					textDocument: client.code2ProtocolConverter.asTextDocumentIdentifier(doc),
+				}),
 			]);
 		}
 		const ast = await astMap.get(doc)![1];
