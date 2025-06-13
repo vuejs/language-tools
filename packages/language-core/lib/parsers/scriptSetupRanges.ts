@@ -451,7 +451,7 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 	}
 }
 
-function findBindingVars(
+export function findBindingVars(
 	ts: typeof import('typescript'),
 	left: ts.BindingName,
 	ast: ts.SourceFile
