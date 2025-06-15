@@ -172,6 +172,9 @@ importers:
       '@vue/language-service':
         specifier: 3.0.0-beta.1
         version: link:../language-service
+      '@vue/typescript-plugin':
+        specifier: 3.0.0-beta.1
+        version: link:../typescript-plugin
       typescript:
         specifier: '*'
         version: 5.8.3
