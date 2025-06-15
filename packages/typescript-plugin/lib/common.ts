@@ -63,22 +63,31 @@ function getCompletionsAtPosition<T>(
 					&& !entry.labelDetails?.description?.includes('__VLS_')
 			);
 
-			// filter global variables in template
+			// filter global variables in template and styles
 			const sourceScript = language.scripts.get(asScriptId(fileName));
 			const root = sourceScript?.generated?.root;
 			if (root instanceof VueVirtualCode) {
-				const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
-				const sortTexts = new Set([
-					globalsOrKeywords,
-					'z' + globalsOrKeywords,
-					globalsOrKeywords + '1',
-				]);
+				const ranges: [number, number][] = [];
+				if (root.sfc.template) {
+					ranges.push([
+						root.sfc.template.startTagEnd,
+						root.sfc.template.endTagStart,
+					]);
+				}
+				if (root.sfc.styles.length) {
+					for (const style of root.sfc.styles) {
+						ranges.push([style.startTagEnd, style.endTagStart]);
+					}
+				}
 
-				if (
-					root.sfc.template
-					&& position >= root.sfc.template.startTagEnd
-					&& position <= root.sfc.template.endTagStart
-				) {
+				if (ranges.some(([start, end]) => position >= start && position <= end)) {
+					const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
+					const sortTexts = new Set([
+						globalsOrKeywords,
+						'z' + globalsOrKeywords,
+						globalsOrKeywords + '1',
+					]);
+
 					result.entries = result.entries.filter(
 						entry => entry.kind !== 'var' && entry.kind !== 'function'
 							|| !sortTexts.has(entry.sortText)
