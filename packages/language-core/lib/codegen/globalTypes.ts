@@ -140,7 +140,7 @@ export function generateGlobalTypes({
 	type __VLS_ResolveDirectives<T> = {
 		[K in Exclude<keyof T, keyof __VLS_GlobalDirectives> & string as \`v\${Capitalize<K>}\`]: T[K];
 	};
-	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
+	type __VLS_PrettifyGlobal<T> = { [K in keyof T as K]: T[K]; } & {};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
 
 	function __VLS_getVForSourceType<T extends number | string | any[] | Iterable<any>>(source: T): [
