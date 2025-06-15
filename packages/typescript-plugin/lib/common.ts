@@ -67,18 +67,14 @@ function getCompletionsAtPosition<T>(
 			const sourceScript = language.scripts.get(asScriptId(fileName));
 			const root = sourceScript?.generated?.root;
 			if (root instanceof VueVirtualCode) {
-				const ranges: [number, number][] = [];
-				if (root.sfc.template) {
-					ranges.push([
-						root.sfc.template.startTagEnd,
-						root.sfc.template.endTagStart,
-					]);
-				}
-				if (root.sfc.styles.length) {
-					for (const style of root.sfc.styles) {
-						ranges.push([style.startTagEnd, style.endTagStart]);
-					}
-				}
+				const blocks = [
+					root.sfc.template,
+					...root.sfc.styles,
+				];
+				const ranges = blocks.filter(Boolean).map(block => [
+					block!.startTagEnd,
+					block!.endTagStart,
+				]);
 
 				if (ranges.some(([start, end]) => position >= start && position <= end)) {
 					const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
