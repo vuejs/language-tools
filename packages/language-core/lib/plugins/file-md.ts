@@ -9,9 +9,9 @@ const frontmatterReg = /^---[\s\S]*?\n---(?:\r?\n|$)/;
 const codeblockReg = /(`{3,})[\s\S]+?\1/g;
 const inlineCodeblockReg = /`[^\n`]+?`/g;
 const latexBlockReg = /(\${2,})[\s\S]+?\1/g;
-const scriptSetupReg = /\\\<[\s\S]+?\>\n?/g;
-const sfcBlockReg = /\<(script|style)\b[\s\S]*?\>([\s\S]*?)\<\/\1\>/g;
-const angleBracketReg = /\<\S*\:\S*\>/g;
+const scriptSetupReg = /\\<[\s\S]+?>\n?/g;
+const sfcBlockReg = /<(script|style)\b[\s\S]*?>([\s\S]*?)<\/\1>/g;
+const angleBracketReg = /<\S*:\S*>/g;
 const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
 const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
 

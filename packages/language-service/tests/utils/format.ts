@@ -22,7 +22,7 @@ export function defineFormatTest(options: {
 	languageId: string;
 	settings?: any;
 }) {
-	describe(`format: ${options.title}`, async () => {
+	describe(`format: ${options.title}`, () => {
 
 		it(`format`, async () => {
 

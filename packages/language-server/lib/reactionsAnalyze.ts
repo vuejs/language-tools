@@ -308,7 +308,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 			}
 		}
 		else if (ts.isParameter(node)) {
-			if (node.type && node.type && ts.isTypeReferenceNode(node.type)) {
+			if (node.type && ts.isTypeReferenceNode(node.type)) {
 				const typeName = node.type.typeName.getText(sourceFile);
 				if (typeName.endsWith('Ref')) {
 					signals.push({

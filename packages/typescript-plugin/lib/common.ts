@@ -142,7 +142,7 @@ function getCompletionEntryDetails<T>(
 		// @ts-expect-error
 		if (args[6]?.__isComponentAutoImport) {
 			// @ts-expect-error
-			const { ext, suffix, originalName, newName } = args[6]?.__isComponentAutoImport;
+			const { originalName, newName } = args[6].__isComponentAutoImport;
 			for (const codeAction of details?.codeActions ?? []) {
 				for (const change of codeAction.changes) {
 					for (const textChange of change.textChanges) {
@@ -154,7 +154,7 @@ function getCompletionEntryDetails<T>(
 		// @ts-expect-error
 		if (args[6]?.__isAutoImport) {
 			// @ts-expect-error
-			const { fileName } = args[6]?.__isAutoImport;
+			const { fileName } = args[6].__isAutoImport;
 			const sourceScript = language.scripts.get(asScriptId(fileName));
 			if (sourceScript?.generated?.root instanceof VueVirtualCode) {
 				const sfc = sourceScript.generated.root.vueSfc;
