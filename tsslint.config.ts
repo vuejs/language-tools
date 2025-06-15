@@ -90,8 +90,12 @@ export default defineConfig({
 					lastNode = node.elements[node.elements.length - 1];
 					end = node.end;
 				}
-				else if (ts.isCallExpression(node)) {
-					lastNode = node.arguments[node.arguments.length - 1];
+				else if (ts.isEnumDeclaration(node)) {
+					lastNode = node.members[node.members.length - 1];
+					end = node.end;
+				}
+				else if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+					lastNode = node.arguments?.[node.arguments.length - 1];
 					end = node.end;
 					allow = false;
 				}
