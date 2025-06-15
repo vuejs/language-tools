@@ -250,7 +250,7 @@ const plugin: VueLanguagePlugin = ctx => {
 							start,
 							[
 								firstLineEmpty ? '(' : '(0 +',
-								lastLineEmpty ? ');' : '+ 0);'
+								lastLineEmpty ? ');' : '+ 0);',
 							]
 						);
 					}

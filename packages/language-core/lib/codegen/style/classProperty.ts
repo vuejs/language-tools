@@ -20,7 +20,7 @@ export function* generateClassProperty(
 			classNameWithDot.slice(1),
 			'style_' + styleIndex,
 			offset + 1,
-			combineLastMapping
+			combineLastMapping,
 		],
 		`'`
 	);

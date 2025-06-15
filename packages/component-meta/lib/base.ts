@@ -11,7 +11,7 @@ import type {
 	MetaCheckerOptions,
 	PropertyMeta,
 	PropertyMetaSchema,
-	SlotMeta
+	SlotMeta,
 } from './types';
 
 export * from './types';
@@ -794,7 +794,7 @@ function readVueComponentDefaultProps(
 				if (initializer) {
 					const expText = printer?.printNode(ts.EmitHint.Expression, initializer, ast) ?? initializer.getText(ast);
 					result[name] = {
-						default: expText
+						default: expText,
 					};
 				}
 			}

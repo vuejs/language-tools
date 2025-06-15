@@ -108,7 +108,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					break;
 				}
 			}
-		}
+		},
 	};
 };
 

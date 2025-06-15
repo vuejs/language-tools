@@ -58,7 +58,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		['$slots', yield* generateSlots(options, ctx)],
 		['$attrs', yield* generateInheritedAttrs(options, ctx)],
 		['$refs', yield* generateTemplateRefs(options, ctx)],
-		['$el', yield* generateRootEl(ctx)]
+		['$el', yield* generateRootEl(ctx)],
 	];
 
 	yield `var __VLS_dollars!: {${newLine}`;
@@ -124,7 +124,7 @@ function* generateInheritedAttrs(
 				loc.source,
 				'template',
 				loc.start.offset,
-				ctx.codeFeatures.all
+				ctx.codeFeatures.all,
 			];
 			yield `,`;
 		}

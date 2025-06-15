@@ -46,7 +46,7 @@ export function create(): LanguageServicePlugin {
 			diagnosticProvider: {
 				interFileDependencies: false,
 				workspaceDiagnostics: false,
-			}
+			},
 		},
 		create(context) {
 			const htmlServiceInstance = htmlService.create(context);
@@ -91,7 +91,7 @@ export function create(): LanguageServicePlugin {
 
 						const {
 							startTagEnd = Infinity,
-							endTagStart = -Infinity
+							endTagStart = -Infinity,
 						} = template ?? {};
 
 						for (const error of vueSfc.errors) {
@@ -115,7 +115,7 @@ export function create(): LanguageServicePlugin {
 
 						return [
 							...originalResult ?? [],
-							...sfcErrors
+							...sfcErrors,
 						];
 					});
 				},
@@ -315,6 +315,6 @@ function getStyleCompletionItem(
 		textEdit: styleItem.textEdit ? {
 			...styleItem.textEdit,
 			newText: styleItem.textEdit.newText + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
-		} : undefined
+		} : undefined,
 	};
 }

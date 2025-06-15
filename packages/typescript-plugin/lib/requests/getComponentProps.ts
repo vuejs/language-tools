@@ -119,7 +119,7 @@ function generateCommentMarkdown(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JS
 	const deprecated = jsDocTags.some(tag => tag.name === 'deprecated');
 	return {
 		content,
-		deprecated
+		deprecated,
 	};
 }
 

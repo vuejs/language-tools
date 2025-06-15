@@ -87,7 +87,7 @@ function launch(context: vscode.ExtensionContext) {
 				module: serverModule.fsPath,
 				transport: lsp.TransportKind.ipc,
 				options: { execArgv: ['--nolazy', '--inspect=' + 6009] },
-			}
+			},
 		},
 		{
 			middleware: {
@@ -106,7 +106,7 @@ function launch(context: vscode.ExtensionContext) {
 			documentSelector: config.server.includeLanguages,
 			markdown: {
 				isTrusted: true,
-				supportHtml: true
+				supportHtml: true,
 			},
 			outputChannel: useOutputChannel('Vue Language Server'),
 		}
@@ -155,7 +155,7 @@ try {
 					`e.name==='vue-typescript-plugin-pack'?[${config.server.includeLanguages
 						.map(lang => `'${lang}'`)
 						.join(',')}]`,
-					':Array.isArray(e.languages)'
+					':Array.isArray(e.languages)',
 				].join('')
 			);
 

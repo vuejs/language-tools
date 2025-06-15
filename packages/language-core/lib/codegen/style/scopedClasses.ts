@@ -28,7 +28,7 @@ export function* generateStyleScopedClasses(
 				ctx.scopedClasses.push({
 					source: 'style_' + i,
 					className: className.text.slice(1),
-					offset: className.offset + 1
+					offset: className.offset + 1,
 				});
 				continue;
 			}

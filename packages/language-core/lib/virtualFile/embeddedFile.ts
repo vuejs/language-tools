@@ -10,6 +10,6 @@ export class VueEmbeddedCode {
 	constructor(
 		public id: string,
 		public lang: string,
-		public content: Code[],
+		public content: Code[]
 	) { }
 }

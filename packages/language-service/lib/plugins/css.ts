@@ -45,7 +45,7 @@ export function create(): LanguageServicePlugin {
 					return worker(document, (stylesheet, cssLs) => {
 						return cssLs.prepareRename(document, position, stylesheet);
 					});
-				}
+				},
 			};
 
 			function isWithinNavigationVirtualCode(

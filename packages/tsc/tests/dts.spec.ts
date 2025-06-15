@@ -21,7 +21,7 @@ describe('vue-tsc-dts', () => {
 	const options: ts.CreateProgramOptions = {
 		host,
 		rootNames: readFilesRecursive(workspace),
-		options: compilerOptions
+		options: compilerOptions,
 	};
 
 	let vueOptions: vue.VueCompilerOptions;

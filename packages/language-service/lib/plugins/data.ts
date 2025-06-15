@@ -163,7 +163,7 @@ function resolveReferences(data: html.HTMLDataV1) {
 			const relativeUrl = item.references as string;
 			item.references = locale.map(({ name, url }) => ({
 				name,
-				url: url + relativeUrl
+				url: url + relativeUrl,
 			}));
 		}
 	}

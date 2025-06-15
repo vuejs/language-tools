@@ -92,7 +92,7 @@ export function createVueLanguagePlugin<T>(
 						snapshot,
 						vueCompilerOptions,
 						plugins,
-						ts,
+						ts
 					);
 					fileRegistry.set(fileName, code);
 					return code;

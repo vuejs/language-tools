@@ -219,7 +219,7 @@ export function* generateComponent(
 					// https://typescript.tv/errors/#ts6133
 					return String(code) !== '6133';
 				},
-			}
+			},
 		}),
 		componentVNodeVar
 	);
@@ -432,7 +432,7 @@ function* generateComponentGeneric(
 				content,
 				'template',
 				offset,
-				ctx.codeFeatures.all
+				ctx.codeFeatures.all,
 			],
 			`>`
 		);

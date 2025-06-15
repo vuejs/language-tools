@@ -60,7 +60,7 @@ export function create(): LanguageServicePlugin {
 									},
 									newText: '@' + text,
 								},
-								insertTextFormat: 2 satisfies typeof InsertTextFormat.Snippet
+								insertTextFormat: 2 satisfies typeof InsertTextFormat.Snippet,
 							});
 						}
 					}

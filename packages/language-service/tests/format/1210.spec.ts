@@ -15,6 +15,6 @@ const count = ref(0);
 </template>
 	`.trim(),
 	settings: {
-		'typescript.format.semicolons': 'insert'
+		'typescript.format.semicolons': 'insert',
 	},
 });

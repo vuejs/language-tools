@@ -47,7 +47,7 @@ export function createVueLanguageServicePlugins(
 	const plugins = [
 		createTypeScriptSyntacticPlugin(ts),
 		createTypeScriptDocCommentTemplatePlugin(ts),
-		...getCommonLanguageServicePlugins(ts, () => tsPluginClient)
+		...getCommonLanguageServicePlugins(ts, () => tsPluginClient),
 	];
 	if (tsPluginClient) {
 		plugins.push(createVueDocumentHighlightsPlugin(tsPluginClient.getDocumentHighlights));

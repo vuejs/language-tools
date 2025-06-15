@@ -115,7 +115,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 									return proxyed;
 								}
 								return value;
-							}
+							},
 						});
 					}
 
