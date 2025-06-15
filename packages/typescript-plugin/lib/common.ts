@@ -17,7 +17,7 @@ export function createVueLanguageServiceProxy<T>(
 	const proxyCache = new Map<string | symbol, Function | undefined>();
 	const getProxyMethod = (target: ts.LanguageService, p: string | symbol): Function | undefined => {
 		switch (p) {
-			case 'getCompletionsAtPosition': return getCompletionsAtPosition(language, vueOptions, asScriptId, target[p]);
+			case 'getCompletionsAtPosition': return getCompletionsAtPosition(ts, language, vueOptions, asScriptId, target[p]);
 			case 'getCompletionEntryDetails': return getCompletionEntryDetails(language, asScriptId, target[p]);
 			case 'getCodeFixesAtPosition': return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan': return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
@@ -47,6 +47,7 @@ export function createVueLanguageServiceProxy<T>(
 }
 
 function getCompletionsAtPosition<T>(
+	ts: typeof import('typescript'),
 	language: Language<T>,
 	vueOptions: VueCompilerOptions,
 	asScriptId: (fileName: string) => T,
@@ -66,6 +67,13 @@ function getCompletionsAtPosition<T>(
 			const sourceScript = language.scripts.get(asScriptId(fileName));
 			const root = sourceScript?.generated?.root;
 			if (root instanceof VueVirtualCode) {
+				const globalsOrKeywords = (ts as any).Completions.SortTexts.GlobalsOrKeywords;
+				const sortTexts = new Set([
+					globalsOrKeywords,
+					'z' + globalsOrKeywords,
+					globalsOrKeywords + '1',
+				]);
+
 				if (
 					root.sfc.template
 					&& position >= root.sfc.template.startTagEnd
@@ -73,7 +81,7 @@ function getCompletionsAtPosition<T>(
 				) {
 					result.entries = result.entries.filter(
 						entry => entry.kind !== 'var' && entry.kind !== 'function'
-							|| entry.sortText !== '15' && entry.sortText !== 'z15'
+							|| !sortTexts.has(entry.sortText)
 							|| isGloballyAllowed(entry.name)
 					);
 				}
