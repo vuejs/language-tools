@@ -67,7 +67,7 @@ function getCompletionsAtPosition<T>(
 			const sourceScript = language.scripts.get(asScriptId(fileName));
 			const root = sourceScript?.generated?.root;
 			if (root instanceof VueVirtualCode) {
-				const globalsOrKeywords = (ts as any).Completions.SortTexts.GlobalsOrKeywords;
+				const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
 				const sortTexts = new Set([
 					globalsOrKeywords,
 					'z' + globalsOrKeywords,
