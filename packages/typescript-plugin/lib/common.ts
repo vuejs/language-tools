@@ -84,10 +84,12 @@ function getCompletionsAtPosition<T>(
 						globalsOrKeywords + '1',
 					]);
 
-					result.entries = result.entries.filter(
-						entry => entry.kind !== 'var' && entry.kind !== 'function'
+					result.entries = result.entries.filter(entry =>
+						!(entry.kind === 'const' && entry.name in vueOptions.macros) && (
+							entry.kind !== 'var' && entry.kind !== 'function'
 							|| !sortTexts.has(entry.sortText)
 							|| isGloballyAllowed(entry.name)
+						)
 					);
 				}
 			}
