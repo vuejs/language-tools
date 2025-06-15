@@ -109,17 +109,15 @@ export default defineConfig({
 
 				if (lastNode && end) {
 					const trailings = text.slice(lastNode.end, end - 1);
+					const commaIndex = trailings.indexOf(',');
 					if (allow && trailings.includes('\n')) {
-						if (!trailings.includes(',')) {
+						if (commaIndex === -1) {
 							insert(lastNode.end, ',');
 						}
 					}
-					else {
-						const commaIndex = trailings.indexOf(',');
-						if (commaIndex !== -1) {
-							const start = lastNode.end + commaIndex;
-							remove(start, start + 1);
-						}
+					else if (commaIndex !== -1) {
+						const start = lastNode.end + commaIndex;
+						remove(start, start + 1);
 					}
 				}
 				ts.forEachChild(node, visit);
