@@ -54,10 +54,10 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/language-server':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../../packages/typescript-plugin
       reactive-vscode:
         specifier: ^0.2.9
@@ -81,7 +81,7 @@ importers:
         specifier: 2.4.14
         version: 2.4.14
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
@@ -98,7 +98,7 @@ importers:
         version: 1.0.3
       vue-component-type-helpers:
         specifier: 3.0.0-beta.1
-        version: link:../component-type-helpers
+        version: 3.0.0-beta.1
 
   packages/component-type-helpers: {}
 
@@ -158,7 +158,7 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
 
   packages/language-server:
@@ -167,13 +167,13 @@ importers:
         specifier: 2.4.14
         version: 2.4.14
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
       '@vue/language-service':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-service
       '@vue/typescript-plugin':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../typescript-plugin
       typescript:
         specifier: '*'
@@ -195,7 +195,7 @@ importers:
         specifier: 2.4.14
         version: 2.4.14
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
@@ -250,7 +250,7 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/typescript-plugin':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../typescript-plugin
       vscode-css-languageservice:
         specifier: ^6.3.1
@@ -262,7 +262,7 @@ importers:
         specifier: 2.4.14
         version: 2.4.14
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
       typescript:
         specifier: '>=5.0.0'
@@ -278,7 +278,7 @@ importers:
         specifier: 2.4.14
         version: 2.4.14
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
@@ -303,7 +303,7 @@ importers:
         specifier: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72
         version: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72(typescript@5.8.3)
       vue-component-type-helpers:
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../packages/component-type-helpers
       vue3.4:
         specifier: npm:vue@3.4.38
@@ -3718,6 +3718,9 @@ packages:
 
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
+
+  vue-component-type-helpers@3.0.0-beta.1:
+    resolution: {integrity: sha512-XZ/9c02NsBSDFK5epnbl7nwpjbYYstYzCgAjfV02sRy4b1hhCvFkZ/+8W1WX+/hOjYXDfUyqgjvkxUkSAm05Ng==}
 
   vue@3.4.38:
     resolution: {integrity: sha512-f0ZgN+mZ5KFgVv9wz0f4OgVKukoXtS3nwET4c2vLBGQR50aI8G0cqbFtLlX9Yiyg3LFGBitruPHt2PxwTduJEw==}
@@ -7563,6 +7566,8 @@ snapshots:
       vscode-textmate: 9.2.0
 
   vscode-uri@3.1.0: {}
+
+  vue-component-type-helpers@3.0.0-beta.1: {}
 
   vue@3.4.38(typescript@5.8.3):
     dependencies:
