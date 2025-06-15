@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "3.0.0-alpha.10",
+	"version": "3.0.0-beta.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -26,7 +26,7 @@
 		"onLanguage:markdown",
 		"onLanguage:html"
 	],
-	"main": "./dist/client.js",
+	"main": "./dist/extension.js",
 	"browser": "./web.js",
 	"capabilities": {
 		"virtualWorkspaces": {
@@ -279,20 +279,10 @@
 					],
 					"markdownDescription": "%configuration.splitEditors.layout.right%"
 				},
-				"vue.codeActions.enabled": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "%configuration.codeActions.enabled%"
-				},
 				"vue.codeActions.askNewComponentName": {
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "%configuration.codeActions.askNewComponentName%"
-				},
-				"vue.codeLens.enabled": {
-					"type": "boolean",
-					"default": true,
-					"markdownDescription": "%configuration.codeLens.enabled%"
 				},
 				"vue.complete.casing.tags": {
 					"type": "string",
@@ -462,17 +452,17 @@
 		"watch": "rolldown --watch --config",
 		"pack": "pnpm run build:prod && vsce package",
 		"release": "pnpm run build:prod && vsce publish",
-		"postinstall": "vscode-ext-gen --scope vue"
+		"postinstall": "vscode-ext-gen --scope vue --output lib/generated-meta.ts"
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.4",
 		"@types/semver": "^7.5.3",
-		"@types/vscode": "^1.82.0",
+		"@types/vscode": "1.88.0",
 		"@volar/vscode": "2.4.14",
 		"@vscode/vsce": "^3.2.1",
 		"@vue/compiler-sfc": "^3.5.0",
-		"@vue/language-server": "3.0.0-alpha.10",
-		"@vue/typescript-plugin": "3.0.0-alpha.10",
+		"@vue/language-server": "3.0.0-beta.2",
+		"@vue/typescript-plugin": "3.0.0-beta.2",
 		"reactive-vscode": "^0.2.9",
 		"rolldown": "1.0.0-beta.8",
 		"semver": "^7.5.4",

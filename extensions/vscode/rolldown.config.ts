@@ -7,7 +7,7 @@ const resolve = (...paths: string[]) => path.resolve(__dirname, ...paths);
 
 const config: RolldownOptions = {
 	input: {
-		'client': './src/nodeClientMain.ts',
+		'extension': './index.ts',
 	},
 	output: {
 		format: 'cjs',

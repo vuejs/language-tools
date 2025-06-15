@@ -1,5 +1,5 @@
 import { forEachElementNode, hyphenateTag, type Language, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
-import { capitalize } from '@vue/shared';
+import { capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 import { _getComponentNames } from './requests/getComponentNames';
 import { _getElementNames } from './requests/getElementNames';
@@ -17,7 +17,7 @@ export function createVueLanguageServiceProxy<T>(
 	const proxyCache = new Map<string | symbol, Function | undefined>();
 	const getProxyMethod = (target: ts.LanguageService, p: string | symbol): Function | undefined => {
 		switch (p) {
-			case 'getCompletionsAtPosition': return getCompletionsAtPosition(vueOptions, target[p]);
+			case 'getCompletionsAtPosition': return getCompletionsAtPosition(ts, language, vueOptions, asScriptId, target[p]);
 			case 'getCompletionEntryDetails': return getCompletionEntryDetails(language, asScriptId, target[p]);
 			case 'getCodeFixesAtPosition': return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan': return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
@@ -46,7 +46,13 @@ export function createVueLanguageServiceProxy<T>(
 	});
 }
 
-function getCompletionsAtPosition(vueOptions: VueCompilerOptions, getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition']): ts.LanguageService['getCompletionsAtPosition'] {
+function getCompletionsAtPosition<T>(
+	ts: typeof import('typescript'),
+	language: Language<T>,
+	vueOptions: VueCompilerOptions,
+	asScriptId: (fileName: string) => T,
+	getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition']
+): ts.LanguageService['getCompletionsAtPosition'] {
 	return (filePath, position, options, formattingSettings) => {
 		const fileName = filePath.replace(windowsPathReg, '/');
 		const result = getCompletionsAtPosition(fileName, position, options, formattingSettings);
@@ -56,6 +62,38 @@ function getCompletionsAtPosition(vueOptions: VueCompilerOptions, getCompletions
 				entry => !entry.name.includes('__VLS_')
 					&& !entry.labelDetails?.description?.includes('__VLS_')
 			);
+
+			// filter global variables in template and styles
+			const sourceScript = language.scripts.get(asScriptId(fileName));
+			const root = sourceScript?.generated?.root;
+			if (root instanceof VueVirtualCode) {
+				const blocks = [
+					root.sfc.template,
+					...root.sfc.styles,
+				];
+				const ranges = blocks.filter(Boolean).map(block => [
+					block!.startTagEnd,
+					block!.endTagStart,
+				]);
+
+				if (ranges.some(([start, end]) => position >= start && position <= end)) {
+					const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
+					const sortTexts = new Set([
+						globalsOrKeywords,
+						'z' + globalsOrKeywords,
+						globalsOrKeywords + '1',
+					]);
+
+					result.entries = result.entries.filter(entry =>
+						!(entry.kind === 'const' && entry.name in vueOptions.macros) && (
+							entry.kind !== 'var' && entry.kind !== 'function'
+							|| !sortTexts.has(entry.sortText)
+							|| isGloballyAllowed(entry.name)
+						)
+					);
+				}
+			}
+
 			// modify label
 			for (const item of result.entries) {
 				if (item.source) {

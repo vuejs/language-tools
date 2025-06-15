@@ -20,8 +20,7 @@
 		"oxlint": "oxlint",
 		"oxlint:fix": "oxlint --fix",
 		"tsslint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
-		"tsslint:fix": "pnpm run lint -- --fix --vscode-settings .vscode/settings.json",
-		"chrome": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=./extensions/vscode ../volar-starter"
+		"tsslint:fix": "pnpm run lint -- --fix --vscode-settings .vscode/settings.json"
 	},
 	"devDependencies": {
 		"@lerna-lite/cli": "^4.1.2",

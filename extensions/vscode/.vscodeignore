@@ -1,4 +1,3 @@
-src
+**/*.ts
 tests
-rolldown.config.ts
 tsconfig.json

@@ -224,7 +224,7 @@ test.skip('Directive Modifiers', async () => {
 });
 
 test('$event argument', async () => {
-	await requestCompletionItemToTsServer('fixture.vue', 'vue', `<template><div @click="console.log($eve|)"></div></template>`, 'event');
+	await requestCompletionItemToTsServer('fixture.vue', 'vue', `<template><div @click="console.log($eve|)"></div></template>`, '$event');
 });
 
 test('<script setup>', async () => {

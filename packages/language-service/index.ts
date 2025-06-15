@@ -1,9 +1,11 @@
 /// <reference types="@volar/typescript" />
 
 export * from '@volar/language-service';
+// for @vue/language-server usage
+export * from '@volar/language-service/lib/utils/featureWorkers';
 
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
-import { parse, type VueCompilerOptions } from '@vue/language-core';
+import type { VueCompilerOptions } from '@vue/language-core';
 import type * as ts from 'typescript';
 
 import { create as createEmmetPlugin } from 'volar-service-emmet';
@@ -86,20 +88,5 @@ function getCommonLanguageServicePlugins(
 				'postcss': 'scss',
 			},
 		}),
-		{
-			name: 'vue-parse-sfc',
-			capabilities: {
-				executeCommandProvider: {
-					commands: ['vue.parseSfc'],
-				},
-			},
-			create() {
-				return {
-					executeCommand(_command, [source]) {
-						return parse(source);
-					},
-				};
-			},
-		},
 	];
 }
