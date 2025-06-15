@@ -1,6 +1,7 @@
 import { defineConfig } from '@tsslint/config';
 import { convertRules } from '@tsslint/eslint';
 import * as path from 'node:path';
+import type * as ts from 'typescript';
 
 export default defineConfig({
 	rules: {
@@ -66,6 +67,64 @@ export default defineConfig({
 		},
 	},
 	formatting: [
+		function trailingComma({ typescript: ts, sourceFile, insert, remove }) {
+			const { text } = sourceFile;
+			ts.forEachChild(sourceFile, function visit(node) {
+				let lastNode: ts.Node | undefined;
+				let end: number | undefined;
+				let allow = true;
+
+				if (ts.isObjectLiteralExpression(node)) {
+					lastNode = node.properties[node.properties.length - 1];
+					end = node.end;
+				}
+				else if (
+					ts.isArrayLiteralExpression(node)
+					|| ts.isObjectBindingPattern(node)
+					|| ts.isArrayBindingPattern(node)
+					|| ts.isNamedImports(node)
+					|| ts.isNamedExports(node)
+					|| ts.isImportAttributes(node)
+					|| ts.isTupleTypeNode(node)
+				) {
+					lastNode = node.elements[node.elements.length - 1];
+					end = node.end;
+				}
+				else if (ts.isCallExpression(node)) {
+					lastNode = node.arguments[node.arguments.length - 1];
+					end = node.end;
+					allow = false;
+				}
+				else if (ts.isFunctionLike(node)) {
+					lastNode = node.parameters[node.parameters.length - 1];
+					if (lastNode) {
+						const right = 'body' in node && node.body?.getStart(sourceFile) || Infinity;
+						const parenIndex = text.indexOf(')', lastNode.end);
+						if (parenIndex !== -1 && parenIndex < right) {
+							end = parenIndex + 1;
+						}
+					}
+					allow = false;
+				}
+
+				if (lastNode && end) {
+					const trailings = text.slice(lastNode.end, end - 1);
+					if (allow && trailings.includes('\n')) {
+						if (!trailings.includes(',')) {
+							insert(lastNode.end, ',');
+						}
+					}
+					else {
+						const commaIndex = trailings.indexOf(',');
+						if (commaIndex !== -1) {
+							const start = lastNode.end + commaIndex;
+							remove(start, start + 1);
+						}
+					}
+				}
+				ts.forEachChild(node, visit);
+			});
+		},
 		/**
 		 * @example
 		 * ```diff
@@ -116,37 +175,6 @@ export default defineConfig({
 					) {
 						remove(parameter.getStart(sourceFile) - 1, parameter.getStart(sourceFile));
 						remove(parameter.getEnd(), parameter.getEnd() + 1);
-					}
-				}
-				ts.forEachChild(node, visit);
-			});
-		},
-		function noTrailingCommaInFunction({ typescript: ts, sourceFile, remove }) {
-			const { text } = sourceFile;
-			ts.forEachChild(sourceFile, function visit(node) {
-				if (ts.isFunctionDeclaration(node) || ts.isArrowFunction(node) || ts.isMethodDeclaration(node)) {
-					const parameters = node.parameters;
-					if (parameters.length > 0) {
-						const lastParameter = parameters[parameters.length - 1];
-						const nextCharIndex = lastParameter.end;
-						if (text[nextCharIndex] === ',') {
-							remove(nextCharIndex, nextCharIndex + 1);
-						}
-					}
-				}
-				ts.forEachChild(node, visit);
-			});
-		},
-		function noTrailingCommaInFunctionCall({ typescript: ts, sourceFile, remove }) {
-			const { text } = sourceFile;
-			ts.forEachChild(sourceFile, function visit(node) {
-				if (ts.isCallExpression(node)) {
-					if (node.arguments.length > 0) {
-						const lastArgument = node.arguments[node.arguments.length - 1];
-						const nextCharIndex = lastArgument.end;
-						if (text[nextCharIndex] === ',') {
-							remove(nextCharIndex, nextCharIndex + 1);
-						}
 					}
 				}
 				ts.forEachChild(node, visit);

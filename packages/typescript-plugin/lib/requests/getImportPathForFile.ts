@@ -22,7 +22,7 @@ export function getImportPathForFile(
 		importingSourceFile: ts.SourceFile,
 		host: any,
 		userPreferences: ts.UserPreferences,
-		options?: {},
+		options?: {}
 	) => {
 		moduleSpecifiers: readonly string[];
 		computedWithoutCache: boolean;

@@ -54,7 +54,7 @@ export class VueVirtualCode implements VirtualCode {
 		public initSnapshot: ts.IScriptSnapshot,
 		public vueCompilerOptions: VueCompilerOptions,
 		public plugins: VueLanguagePluginReturn[],
-		public ts: typeof import('typescript'),
+		public ts: typeof import('typescript')
 	) {
 		this._snapshot(initSnapshot);
 	}

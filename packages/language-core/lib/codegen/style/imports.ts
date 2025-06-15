@@ -7,7 +7,7 @@ export function* generateStyleImports(
 ): Generator<Code> {
 	const features: VueCodeInformation = {
 		navigation: true,
-		verification: true
+		verification: true,
 	};
 	if (typeof style.src === 'object') {
 		yield `${newLine} & typeof import(`;
@@ -28,7 +28,7 @@ export function* generateStyleImports(
 			text,
 			style.name,
 			offset,
-			features
+			features,
 		];
 		yield `').default`;
 	}

@@ -232,7 +232,7 @@ export function parseScriptSetupRanges(
 				defineProps = {
 					...parseCallExpressionAssignment(node, parent),
 					statement: getStatementRange(ts, parents, node, ast),
-					argNode: node.arguments[0]
+					argNode: node.arguments[0],
 				};
 				if (ts.isVariableDeclaration(parent) && ts.isObjectBindingPattern(parent.name)) {
 					defineProps.destructured = new Map();
@@ -263,13 +263,13 @@ export function parseScriptSetupRanges(
 					callExp: _getStartEnd(node),
 					exp: _getStartEnd(node.expression),
 					arg: arg ? _getStartEnd(arg) : undefined,
-					argNode: arg
+					argNode: arg,
 				};
 			}
 			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
 				defineEmits = {
 					...parseCallExpressionAssignment(node, parent),
-					statement: getStatementRange(ts, parents, node, ast)
+					statement: getStatementRange(ts, parents, node, ast),
 				};
 				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0])) {
 					for (const member of node.typeArguments[0].members) {
@@ -286,7 +286,7 @@ export function parseScriptSetupRanges(
 			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
 				defineSlots = {
 					...parseCallExpressionAssignment(node, parent),
-					statement: getStatementRange(ts, parents, node, ast)
+					statement: getStatementRange(ts, parents, node, ast),
 				};
 			}
 			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
@@ -381,20 +381,20 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && ts.isIdentifier(node.name)) {
 				bindings.push({
-					range: _getStartEnd(node.name)
+					range: _getStartEnd(node.name),
 				});
 			}
 		}
 		else if (ts.isClassDeclaration(node)) {
 			if (node.name) {
 				bindings.push({
-					range: _getStartEnd(node.name)
+					range: _getStartEnd(node.name),
 				});
 			}
 		}
 		else if (ts.isEnumDeclaration(node)) {
 			bindings.push({
-				range: _getStartEnd(node.name)
+				range: _getStartEnd(node.name),
 			});
 		}
 
@@ -408,7 +408,7 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 					bindings.push({
 						range: _getStartEnd(name),
 						moduleName,
-						isDefaultImport: true
+						isDefaultImport: true,
 					});
 				}
 				if (namedBindings) {
@@ -420,7 +420,7 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 							bindings.push({
 								range: _getStartEnd(element.name),
 								moduleName,
-								isDefaultImport: element.propertyName?.text === 'default'
+								isDefaultImport: element.propertyName?.text === 'default',
 							});
 						}
 					}
@@ -428,7 +428,7 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 						bindings.push({
 							range: _getStartEnd(namedBindings.name),
 							moduleName,
-							isNamespace: true
+							isNamespace: true,
 						});
 					}
 				}

@@ -364,7 +364,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 							sideEffectInfo: {
 								isEffect: true,
 								handler: effectCallback.body,
-							}
+							},
 						});
 					}
 				}

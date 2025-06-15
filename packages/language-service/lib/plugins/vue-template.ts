@@ -406,7 +406,7 @@ export function create(
 							for (const directive of directives) {
 								const name = hyphenateAttr(directive);
 								attributes.push({
-									name
+									name,
 								});
 							}
 
@@ -455,7 +455,7 @@ export function create(
 					async sync() {
 						await Promise.all(promises);
 						return version;
-					}
+					},
 				};
 			}
 
@@ -586,7 +586,7 @@ export function create(
 								tag: '^',
 								prop: propName,
 								deprecated: false,
-								leadingSlash: false
+								leadingSlash: false,
 							};
 						}
 
@@ -733,7 +733,7 @@ function parseLabel(label: string) {
 	const name = label.slice(leadingSlash ? 1 : 0);
 	return {
 		name,
-		leadingSlash
+		leadingSlash,
 	};
 }
 
@@ -754,7 +754,7 @@ function parseItemKey(key: string) {
 			tag: strs[1],
 			prop: strs[2],
 			deprecated: strs[3] === '1',
-			leadingSlash
+			leadingSlash,
 		};
 	}
 }
@@ -765,7 +765,7 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 			return {
 				item: item,
 				textEdit: item.textEdit,
-				text: doc.getText(item.textEdit.range)
+				text: doc.getText(item.textEdit.range),
 			};
 		}
 	}

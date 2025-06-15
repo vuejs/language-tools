@@ -178,11 +178,11 @@ function* generateSetupFunction(
 			setupCodeModifies.push([
 				[`(`],
 				callExp.start,
-				callExp.start
+				callExp.start,
 			], [
 				[` as typeof __VLS_dollars.$attrs)`],
 				callExp.end,
-				callExp.end
+				callExp.end,
 			]);
 		}
 	}
@@ -190,12 +190,12 @@ function* generateSetupFunction(
 		setupCodeModifies.push([
 			[`(`],
 			callExp.start,
-			callExp.start
+			callExp.start,
 		], [
 			arg ? [
 				` as Omit<__VLS_StyleModules, '$style'>[`,
 				generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
-				`])`
+				`])`,
 			] : [
 				` as __VLS_StyleModules[`,
 				...wrapWith(
@@ -205,16 +205,16 @@ function* generateSetupFunction(
 					codeFeatures.verification,
 					`'$style'`
 				),
-				`])`
+				`])`,
 			],
 			callExp.end,
-			callExp.end
+			callExp.end,
 		]);
 		if (arg) {
 			setupCodeModifies.push([
 				[`__VLS_placeholder`],
 				arg.start,
-				arg.end
+				arg.end,
 			]);
 		}
 	}
@@ -223,11 +223,11 @@ function* generateSetupFunction(
 			setupCodeModifies.push([
 				[`(`],
 				callExp.start,
-				callExp.start
+				callExp.start,
 			], [
 				[` as typeof __VLS_dollars.$slots)`],
 				callExp.end,
-				callExp.end
+				callExp.end,
 			]);
 		}
 	}
@@ -237,7 +237,7 @@ function* generateSetupFunction(
 			? [
 				`__VLS_TemplateRefs[`,
 				generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic),
-				`]`
+				`]`,
 			]
 			: [`unknown`];
 		if (isTs) {
@@ -245,32 +245,32 @@ function* generateSetupFunction(
 				[
 					`<`,
 					...templateRefType,
-					`>`
+					`>`,
 				],
 				exp.end,
-				exp.end
+				exp.end,
 			]);
 		}
 		else {
 			setupCodeModifies.push([
 				[`(`],
 				callExp.start,
-				callExp.start
+				callExp.start,
 			], [
 				[
 					` as __VLS_UseTemplateRef<`,
 					...templateRefType,
-					`>)`
+					`>)`,
 				],
 				callExp.end,
-				callExp.end
+				callExp.end,
 			]);
 		}
 		if (arg) {
 			setupCodeModifies.push([
 				[`__VLS_placeholder`],
 				arg.start,
-				arg.end
+				arg.end,
 			]);
 		}
 	}
@@ -367,13 +367,13 @@ function* generateDefineWithType(
 		else if (typeArg) {
 			yield [[
 				`const ${defaultName} = `,
-				generateSfcBlockSection(scriptSetup, callExp.start, typeArg.start, codeFeatures.all)
+				generateSfcBlockSection(scriptSetup, callExp.start, typeArg.start, codeFeatures.all),
 			], statement.start, typeArg.start];
 			yield [[
 				generateSfcBlockSection(scriptSetup, typeArg.end, callExp.end, codeFeatures.all),
 				endOfLine,
 				generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
-				defaultName
+				defaultName,
 			], typeArg.end, callExp.end];
 		}
 		else {
@@ -382,7 +382,7 @@ function* generateDefineWithType(
 				generateSfcBlockSection(scriptSetup, callExp.start, callExp.end, codeFeatures.all),
 				endOfLine,
 				generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
-				defaultName
+				defaultName,
 			], statement.start, callExp.end];
 		}
 	}

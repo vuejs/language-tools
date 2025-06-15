@@ -174,7 +174,7 @@ export function collectStyleScopedClassReferences(
 				ctx.scopedClasses.push({
 					source: 'template',
 					className: text,
-					offset: node.end - text.length + startOffset
+					offset: node.end - text.length + startOffset,
 				});
 			}
 		}
@@ -196,7 +196,7 @@ function collectClasses(content: string, startOffset = 0) {
 				classes.push({
 					source: 'template',
 					className: currentClassName,
-					offset: offset + startOffset
+					offset: offset + startOffset,
 				});
 				offset += currentClassName.length;
 				currentClassName = '';

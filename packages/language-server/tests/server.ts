@@ -78,9 +78,9 @@ export async function getLanguageServer(): Promise<{
 						{
 							file: URI.parse(uri).fsPath,
 							fileContent: content,
-						}
-					]
-				}
+						},
+					],
+				},
 			});
 			if (!res.success) {
 				throw new Error(res.body);
@@ -95,8 +95,8 @@ export async function getLanguageServer(): Promise<{
 				arguments: {
 					changedFiles: [],
 					closedFiles: [URI.parse(uri).fsPath],
-					openFiles: []
-				}
+					openFiles: [],
+				},
 			});
 			if (!res.success) {
 				throw new Error(res.body);

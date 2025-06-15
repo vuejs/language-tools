@@ -64,7 +64,7 @@ export function create(): LanguageServicePlugin {
 
 					return {
 						isIncomplete: false,
-						items: result
+						items: result,
 					};
 
 					function addDefineCompletionItem(
@@ -96,9 +96,9 @@ export function create(): LanguageServicePlugin {
 								newText: `const ${name} = `,
 								range: {
 									start: pos,
-									end: pos
-								}
-							}]
+									end: pos,
+								},
+							}],
 						});
 					}
 				},

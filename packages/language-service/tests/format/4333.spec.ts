@@ -10,5 +10,5 @@ defineFormatTest({
 	`.trim(),
 	settings: {
 		'typescript.format.semicolons': 'insert',
-	}
+	},
 });

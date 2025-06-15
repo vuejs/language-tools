@@ -42,7 +42,7 @@ export = createLanguageServicePlugin(
 						info.project['program'].__vue__ = { language };
 					}
 				}, 50);
-			}
+			},
 		};
 
 		function getVueCompilerOptions() {

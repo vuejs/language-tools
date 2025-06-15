@@ -61,7 +61,7 @@ export function* generateSlotOutlet(
 						nameProp,
 						nameProp.exp
 					),
-					`]`
+					`]`,
 				];
 			}
 			else {

@@ -148,7 +148,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 				};
 			}
 			return target[key as keyof typeof target];
-		}
+		},
 	});
 	return {
 		host,
@@ -222,7 +222,7 @@ export class CompilerOptionsResolver {
 			},
 			fallthroughComponentNames: [
 				...defaults.fallthroughComponentNames,
-				...this.options.fallthroughComponentNames ?? []
+				...this.options.fallthroughComponentNames ?? [],
 			].map(hyphenateTag),
 			// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
@@ -311,13 +311,13 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		plugins: [],
 		experimentalModelPropName: {
 			'': {
-				input: true
+				input: true,
 			},
 			value: {
 				input: { type: 'text' },
 				textarea: true,
-				select: true
-			}
+				select: true,
+			},
 		},
 	};
 }
