@@ -22,7 +22,7 @@ declare const _default: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<t
 };
 export default _default;
 type __VLS_PrettifyLocal<T> = {
-    [K in keyof T]: T[K];
+    [K in keyof T as K]: T[K];
 } & {};
 "
 `;
@@ -104,7 +104,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
 };
 export default _default;
 type __VLS_PrettifyLocal<T> = {
-    [K in keyof T]: T[K];
+    [K in keyof T as K]: T[K];
 } & {};
 "
 `;
@@ -134,7 +134,7 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
 };
 export default _default;
 type __VLS_PrettifyLocal<T> = {
-    [K in keyof T]: T[K];
+    [K in keyof T as K]: T[K];
 } & {};
 "
 `;
