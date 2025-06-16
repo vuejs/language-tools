@@ -21,7 +21,7 @@ export function* generateInterpolation(
 	start: number | undefined,
 	astHolder: any = {},
 	prefix: string = '',
-	suffix: string = ''
+	suffix: string = '',
 ): Generator<Code> {
 	for (let [section, offset, type] of forEachInterpolationSegment(
 		options.ts,
@@ -32,7 +32,7 @@ export function* generateInterpolation(
 		start,
 		astHolder,
 		prefix,
-		suffix
+		suffix,
 	)) {
 		if (offset === undefined) {
 			yield section;
@@ -95,7 +95,7 @@ function* forEachInterpolationSegment(
 	start: number | undefined,
 	astHolder: any,
 	prefix: string,
-	suffix: string
+	suffix: string,
 ): Generator<Segment> {
 	const code = prefix + originalCode + suffix;
 	const offset = start !== undefined ? start - prefix.length : undefined;
@@ -155,7 +155,7 @@ function* generateVar(
 	ctx: TemplateCodegenContext,
 	code: string,
 	offset: number | undefined,
-	curVar: CtxVar
+	curVar: CtxVar,
 ): Generator<Segment> {
 	// fix https://github.com/vuejs/language-tools/issues/1205
 	// fix https://github.com/vuejs/language-tools/issues/1264
@@ -192,7 +192,7 @@ function walkIdentifiers(
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	ctx: TemplateCodegenContext,
 	blockVars: string[] = [],
-	isRoot: boolean = true
+	isRoot: boolean = true,
 ) {
 
 	if (ts.isIdentifier(node)) {
@@ -273,7 +273,7 @@ function processFunction(
 	node: ts.ArrowFunction | ts.FunctionExpression | ts.AccessorDeclaration | ts.MethodDeclaration,
 	ast: ts.SourceFile,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
-	ctx: TemplateCodegenContext
+	ctx: TemplateCodegenContext,
 ) {
 	const functionArgs: string[] = [];
 	for (const param of node.parameters) {
@@ -296,7 +296,7 @@ function processFunction(
 function walkIdentifiersInTypeReference(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	cb: (varNode: ts.Identifier, isShorthand: boolean) => void
+	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 ) {
 	if (ts.isTypeQueryNode(node) && ts.isIdentifier(node.exprName)) {
 		cb(node.exprName, false);
@@ -309,7 +309,7 @@ function walkIdentifiersInTypeReference(
 function shouldIdentifierSkipped(
 	ctx: TemplateCodegenContext,
 	text: string,
-	destructuredPropNames: Set<string> | undefined
+	destructuredPropNames: Set<string> | undefined,
 ) {
 	return ctx.hasLocalVariable(text)
 		// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352

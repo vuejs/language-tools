@@ -13,7 +13,7 @@ export function* generateVSlot(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-	slotDir: CompilerDOM.DirectiveNode | undefined
+	slotDir: CompilerDOM.DirectiveNode | undefined,
 ): Generator<Code> {
 	if (!ctx.currentComponent) {
 		return;
@@ -39,7 +39,7 @@ export function* generateVSlot(
 					slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
 					slotDir.arg.loc,
 					false,
-					true
+					true,
 				);
 			}
 			else {
@@ -47,7 +47,7 @@ export function* generateVSlot(
 					slotDir.loc.start.offset,
 					slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
 					ctx.codeFeatures.withoutHighlightAndCompletion,
-					`default`
+					`default`,
 				);
 			}
 		}
@@ -58,7 +58,7 @@ export function* generateVSlot(
 				start,
 				end,
 				ctx.codeFeatures.navigation,
-				`default`
+				`default`,
 			);
 		}
 		yield `: ${slotVar} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
@@ -89,7 +89,7 @@ export function* generateVSlot(
 			ctx.codeFeatures.verification,
 			`{} as [`,
 			...ctx.currentComponent.childTypes.map(name => `${name}, `),
-			`]`
+			`]`,
 		);
 		yield `)${endOfLine}`;
 	}
@@ -124,7 +124,7 @@ function* generateSlotParameters(
 	ctx: TemplateCodegenContext,
 	ast: ts.SourceFile,
 	exp: CompilerDOM.SimpleExpressionNode,
-	slotVar: string
+	slotVar: string,
 ): Generator<Code> {
 	const { ts } = options;
 
@@ -170,7 +170,7 @@ function* generateSlotParameters(
 			ctx.codeFeatures.verification,
 			`(`,
 			...types.flatMap(type => type ? [`_: `, type, `, `] : `_, `),
-			`) => [] as any`
+			`) => [] as any`,
 		);
 	}
 	yield `)${endOfLine}`;
@@ -187,7 +187,7 @@ function* generateSlotParameters(
 
 function getElementInnerLoc(
 	options: TemplateCodegenOptions,
-	node: CompilerDOM.ElementNode
+	node: CompilerDOM.ElementNode,
 ) {
 	if (node.children.length) {
 		let start = node.children[0].loc.start.offset;

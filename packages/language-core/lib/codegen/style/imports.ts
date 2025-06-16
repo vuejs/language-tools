@@ -3,7 +3,7 @@ import { combineLastMapping, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 
 export function* generateStyleImports(
-	style: Sfc['styles'][number]
+	style: Sfc['styles'][number],
 ): Generator<Code> {
 	const features: VueCodeInformation = {
 		navigation: true,
@@ -18,7 +18,7 @@ export function* generateStyleImports(
 			features,
 			`'`,
 			[style.src.text, 'main', style.src.offset, combineLastMapping],
-			`'`
+			`'`,
 		);
 		yield `).default`;
 	}

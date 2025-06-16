@@ -16,7 +16,7 @@ export function* generateElementEvents(
 	componentOriginalVar: string,
 	componentFunctionalVar: string,
 	componentVNodeVar: string,
-	componentCtxVar: string
+	componentCtxVar: string,
 ): Generator<Code> {
 	let emitsVar: string | undefined;
 	let propsVar: string | undefined;
@@ -87,7 +87,7 @@ export function* generateEventArg(
 	features: VueCodeInformation = {
 		...ctx.codeFeatures.withoutHighlightAndCompletion,
 		...ctx.codeFeatures.navigationWithoutRename,
-	}
+	},
 ): Generator<Code> {
 	if (directive.length) {
 		name = capitalize(name);
@@ -105,7 +105,7 @@ export function* generateEventArg(
 			`'`,
 			directive,
 			...generateCamelized(name, 'template', start, combineLastMapping),
-			`'`
+			`'`,
 		);
 	}
 }
@@ -113,7 +113,7 @@ export function* generateEventArg(
 export function* generateEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		let prefix = `(`;
@@ -156,7 +156,7 @@ export function* generateEventExpression(
 			prop.exp.loc.start.offset,
 			prop.exp.loc,
 			prefix,
-			suffix
+			suffix,
 		);
 
 		if (_isCompoundExpression) {
@@ -175,7 +175,7 @@ export function* generateEventExpression(
 export function* generateModelEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		yield `(...[$event]) => {${newLine}`;
@@ -187,7 +187,7 @@ export function* generateModelEventExpression(
 			ctx.codeFeatures.verification,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
-			prop.exp.loc
+			prop.exp.loc,
 		);
 		yield ` = $event${endOfLine}`;
 		yield `}`;

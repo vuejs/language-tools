@@ -13,7 +13,7 @@ import { generatePropertyAccess } from './propertyAccess';
 export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.SlotOutletNode
+	node: CompilerDOM.SlotOutletNode,
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
 	const startTagEndOffset = startTagOffset + node.tag.length;
@@ -46,7 +46,7 @@ export function* generateSlotOutlet(
 					ctx,
 					source,
 					offset,
-					ctx.codeFeatures.navigationAndVerification
+					ctx.codeFeatures.navigationAndVerification,
 				);
 			}
 			else if (
@@ -59,7 +59,7 @@ export function* generateSlotOutlet(
 						options,
 						ctx,
 						nameProp,
-						nameProp.exp
+						nameProp.exp,
 					),
 					`]`,
 				];
@@ -73,7 +73,7 @@ export function* generateSlotOutlet(
 				nameProp.loc.end.offset,
 				ctx.codeFeatures.verification,
 				`${options.slotsAssignName ?? '__VLS_slots'}`,
-				...codes
+				...codes,
 			);
 		}
 		else {
@@ -86,9 +86,9 @@ export function* generateSlotOutlet(
 					startTagOffset,
 					startTagEndOffset,
 					ctx.codeFeatures.verification,
-					`'default'`
+					`'default'`,
 				),
-				`]`
+				`]`,
 			);
 		}
 		yield `)(`;
@@ -103,9 +103,9 @@ export function* generateSlotOutlet(
 				node,
 				node.props.filter(prop => prop !== nameProp),
 				true,
-				true
+				true,
 			),
-			`}`
+			`}`,
 		);
 		yield `)${endOfLine}`;
 	}
@@ -117,7 +117,7 @@ export function* generateSlotOutlet(
 			node,
 			node.props.filter(prop => prop !== nameProp),
 			options.vueCompilerOptions.checkUnknownProps,
-			true
+			true,
 		);
 		yield `}${endOfLine}`;
 
@@ -150,7 +150,7 @@ export function* generateSlotOutlet(
 				ctx.codeFeatures.all,
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,
-				nameProp.exp
+				nameProp.exp,
 			);
 			yield `)${endOfLine}`;
 			ctx.dynamicSlots.push({

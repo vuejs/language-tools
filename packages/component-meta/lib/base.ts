@@ -22,7 +22,7 @@ export function createCheckerByJsonConfigBase(
 	ts: typeof import('typescript'),
 	rootDir: string,
 	json: any,
-	checkerOptions: MetaCheckerOptions = {}
+	checkerOptions: MetaCheckerOptions = {},
 ) {
 	rootDir = rootDir.replace(windowsPathReg, '/');
 	return baseCreate(
@@ -30,14 +30,14 @@ export function createCheckerByJsonConfigBase(
 		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json, undefined, true),
 		checkerOptions,
 		rootDir,
-		path.join(rootDir, 'jsconfig.json.global.vue')
+		path.join(rootDir, 'jsconfig.json.global.vue'),
 	);
 }
 
 export function createCheckerBase(
 	ts: typeof import('typescript'),
 	tsconfig: string,
-	checkerOptions: MetaCheckerOptions = {}
+	checkerOptions: MetaCheckerOptions = {},
 ) {
 	tsconfig = tsconfig.replace(windowsPathReg, '/');
 	return baseCreate(
@@ -45,7 +45,7 @@ export function createCheckerBase(
 		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig, true),
 		checkerOptions,
 		path.dirname(tsconfig),
-		tsconfig + '.global.vue'
+		tsconfig + '.global.vue',
 	);
 }
 
@@ -54,7 +54,7 @@ export function baseCreate(
 	getCommandLine: () => vue.ParsedCommandLine,
 	checkerOptions: MetaCheckerOptions,
 	rootPath: string,
-	globalComponentName: string
+	globalComponentName: string,
 ) {
 	let commandLine = getCommandLine();
 	let fileNames = commandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
@@ -85,7 +85,7 @@ export function baseCreate(
 		ts,
 		projectHost.getCompilationSettings(),
 		commandLine.vueOptions,
-		id => id
+		id => id,
 	);
 	const language = vue.createLanguage(
 		[
@@ -128,7 +128,7 @@ export function baseCreate(
 			else {
 				language.scripts.delete(fileName);
 			}
-		}
+		},
 	);
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
@@ -337,11 +337,11 @@ interface ComponentMeta<T> {
 				ts.createSourceFile(
 					'/tmp.' + componentPath.slice(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
 					snapshot.getText(0, snapshot.getLength()),
-					ts.ScriptTarget.Latest
+					ts.ScriptTarget.Latest,
 				),
 				exportName,
 				printer,
-				ts
+				ts,
 			) : {};
 
 			for (const [propName, defaultExp] of Object.entries({
@@ -414,7 +414,7 @@ interface ComponentMeta<T> {
 				const type = typeChecker.getTypeOfSymbolAtLocation($exposed, symbolNode);
 				const properties = type.getProperties().filter(prop =>
 					// only exposed props will not have a valueDeclaration
-					!prop.valueDeclaration
+					!prop.valueDeclaration,
 				);
 
 				return properties.map(prop => {
@@ -433,7 +433,7 @@ interface ComponentMeta<T> {
 	function _getExports(
 		program: ts.Program,
 		typeChecker: ts.TypeChecker,
-		componentPath: string
+		componentPath: string,
 	) {
 
 		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
@@ -479,7 +479,7 @@ function createSchemaResolvers(
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
 	ts: typeof import('typescript'),
-	language: vue.Language<string>
+	language: vue.Language<string>,
 ) {
 	const visited = new Set<ts.Type>();
 
@@ -741,7 +741,7 @@ function createSchemaResolvers(
 function readVueComponentDefaultProps(
 	root: vue.VueVirtualCode,
 	printer: ts.Printer | undefined,
-	ts: typeof import('typescript')
+	ts: typeof import('typescript'),
 ) {
 	let result: Record<string, {
 		default?: string;
@@ -842,7 +842,7 @@ function readTsComponentDefaultProps(
 	ast: ts.SourceFile,
 	exportName: string,
 	printer: ts.Printer | undefined,
-	ts: typeof import('typescript')
+	ts: typeof import('typescript'),
 ) {
 	const props = getPropsNode();
 
@@ -918,7 +918,7 @@ function resolvePropsOption(
 	ast: ts.SourceFile,
 	props: ts.ObjectLiteralExpression,
 	printer: ts.Printer | undefined,
-	ts: typeof import('typescript')
+	ts: typeof import('typescript'),
 ) {
 
 	const result: Record<string, { default?: string, required?: boolean; }> = {};
@@ -953,7 +953,7 @@ function resolveModelOption(
 	ast: ts.SourceFile,
 	options: ts.ObjectLiteralExpression,
 	printer: ts.Printer | undefined,
-	ts: typeof import('typescript')
+	ts: typeof import('typescript'),
 ) {
 	const result: { default?: string; } = {};
 
@@ -973,7 +973,7 @@ function resolveModelOption(
 
 function resolveDefaultOptionExpression(
 	_default: ts.Expression,
-	ts: typeof import('typescript')
+	ts: typeof import('typescript'),
 ) {
 	if (ts.isArrowFunction(_default)) {
 		if (ts.isBlock(_default.body)) {

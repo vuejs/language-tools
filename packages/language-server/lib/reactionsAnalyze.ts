@@ -27,7 +27,7 @@ export function analyze(
 	ts: typeof import('typescript'),
 	languageService: ts.LanguageService,
 	fileName: string,
-	position: number
+	position: number,
 ) {
 	const sourceFile = languageService.getProgram()!.getSourceFile(fileName)!;
 	const { signals, dotValueAccesses, dotAnyAccesses, functionCalls } = collect(ts, sourceFile);

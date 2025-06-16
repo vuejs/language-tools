@@ -216,7 +216,7 @@ export function create(): LanguageServicePlugin {
 					result.items = result.items.filter(item =>
 						item.label !== '!DOCTYPE' &&
 						item.label !== 'Custom Blocks' &&
-						item.label !== 'data-'
+						item.label !== 'data-',
 					);
 
 					const tags = sfcDataProvider?.provideTags();
@@ -249,7 +249,7 @@ export function create(): LanguageServicePlugin {
 							result.items.push(
 								getStyleCompletionItem(styleItem, lang),
 								getStyleCompletionItem(styleItem, lang, 'scoped'),
-								getStyleCompletionItem(styleItem, lang, 'module')
+								getStyleCompletionItem(styleItem, lang, 'module'),
 							);
 						}
 					}
@@ -305,7 +305,7 @@ export function create(): LanguageServicePlugin {
 function getStyleCompletionItem(
 	styleItem: CompletionItem,
 	lang: string,
-	attr?: string
+	attr?: string,
 ): CompletionItem {
 	return {
 		...styleItem,

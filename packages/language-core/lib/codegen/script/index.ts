@@ -130,7 +130,7 @@ export function* generateScriptSectionPartiallyEnding(
 	source: string,
 	end: number,
 	mark: string,
-	delimiter = 'debugger'
+	delimiter = 'debugger',
 ): Generator<Code> {
 	yield delimiter;
 	yield ['', source, end, codeFeatures.verification];

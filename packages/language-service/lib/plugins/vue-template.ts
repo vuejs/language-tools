@@ -34,7 +34,7 @@ let modelData: html.HTMLDataV1;
 
 export function create(
 	mode: 'html' | 'pug',
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
@@ -183,7 +183,7 @@ export function create(
 							const embeddedDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, virtualCode.id);
 							afterHtmlCompletion(
 								htmlComplete,
-								context.documents.get(embeddedDocumentUri, virtualCode.languageId, virtualCode.snapshot)
+								context.documents.get(embeddedDocumentUri, virtualCode.languageId, virtualCode.snapshot),
 							);
 						}
 					}
@@ -256,7 +256,7 @@ export function create(
 											&& name !== 'TransitionGroup'
 											&& name !== 'KeepAlive'
 											&& name !== 'Suspense'
-											&& name !== 'Teleport'
+											&& name !== 'Teleport',
 										);
 									lastCompletionComponentNames = new Set(components);
 									version++;
@@ -307,7 +307,7 @@ export function create(
 									tagInfos.set(tag, {
 										attrs,
 										propInfos: propInfos.filter(prop =>
-											!prop.name.startsWith('ref_')
+											!prop.name.startsWith('ref_'),
 										),
 										events,
 										directives,
@@ -352,7 +352,7 @@ export function create(
 										{
 											name: '@' + propNameBase,
 											description: propKey,
-										}
+										},
 									);
 								}
 								else {
@@ -381,7 +381,7 @@ export function create(
 										{
 											name: 'v-bind:' + propName,
 											description: propKey,
-										}
+										},
 									);
 								}
 							}
@@ -399,7 +399,7 @@ export function create(
 									{
 										name: '@' + name,
 										description: propKey,
-									}
+									},
 								);
 							}
 
@@ -772,7 +772,7 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 }
 
 function getPropName(
-	parsedItem: ReturnType<typeof parseItemKey> & {}
+	parsedItem: ReturnType<typeof parseItemKey> & {},
 ) {
 	const name = hyphenateAttr(parsedItem.prop);
 	if (name.startsWith('on-')) {

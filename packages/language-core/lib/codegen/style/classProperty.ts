@@ -7,7 +7,7 @@ export function* generateClassProperty(
 	styleIndex: number,
 	classNameWithDot: string,
 	offset: number,
-	propertyType: string
+	propertyType: string,
 ): Generator<Code> {
 	yield `${newLine} & { `;
 	yield* wrapWith(
@@ -22,7 +22,7 @@ export function* generateClassProperty(
 			offset + 1,
 			combineLastMapping,
 		],
-		`'`
+		`'`,
 	);
 	yield `: ${propertyType}`;
 	yield ` }`;

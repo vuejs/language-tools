@@ -57,7 +57,7 @@ export default defineConfig({
 							reportError(
 								`Module '${moduleName}' should be in the dependencies.`,
 								node.getStart(sourceFile),
-								node.getEnd()
+								node.getEnd(),
 							);
 						}
 					}
@@ -97,18 +97,17 @@ export default defineConfig({
 				else if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
 					lastNode = node.arguments?.[node.arguments.length - 1];
 					end = node.end;
-					allow = false;
 				}
 				else if (ts.isFunctionLike(node)) {
-					lastNode = node.parameters[node.parameters.length - 1];
-					if (lastNode) {
+					const last = node.parameters[node.parameters.length - 1];
+					if (last && !last.dotDotDotToken) {
+						lastNode = last;
 						const right = 'body' in node && node.body?.getStart(sourceFile) || Infinity;
 						const parenIndex = text.indexOf(')', lastNode.end);
 						if (parenIndex !== -1 && parenIndex < right) {
 							end = parenIndex + 1;
 						}
 					}
-					allow = false;
 				}
 
 				if (lastNode && end) {

@@ -1063,18 +1063,18 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		const a = meta.slots.find(slot =>
 			slot.name === 'default'
-			&& slot.type === '{ num: number; }'
+			&& slot.type === '{ num: number; }',
 		);
 		const b = meta.slots.find(slot =>
 			slot.name === 'named-slot'
-			&& slot.type === '{ str: string; }'
+			&& slot.type === '{ str: string; }',
 		);
 		const c = meta.slots.find(slot =>
 			slot.name === 'vbind'
-			&& slot.type === '{ num: number; str: string; }'
+			&& slot.type === '{ num: number; str: string; }',
 		);
 		const d = meta.slots.find(slot =>
-			slot.name === 'no-bind'
+			slot.name === 'no-bind',
 		);
 
 		expect(a).toBeDefined();
@@ -1091,18 +1091,18 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		const a = meta.slots.find(slot =>
 			slot.name === 'default'
-			&& slot.type === '{ num: number; }'
+			&& slot.type === '{ num: number; }',
 		);
 		const b = meta.slots.find(slot =>
 			slot.name === 'named-slot'
-			&& slot.type === '{ str: string; }'
+			&& slot.type === '{ str: string; }',
 		);
 		const c = meta.slots.find(slot =>
 			slot.name === 'vbind'
-			&& slot.type === '{ num: number; str: string; }'
+			&& slot.type === '{ num: number; str: string; }',
 		);
 		const d = meta.slots.find(slot =>
-			slot.name === 'no-bind'
+			slot.name === 'no-bind',
 		);
 
 		expect(a).toBeDefined();
@@ -1119,7 +1119,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 
 		expect(meta.slots.find(slot =>
 			slot.name === 'default'
-			&& slot.type === '{ foo: number; }'
+			&& slot.type === '{ foo: number; }',
 		)).toBeDefined();
 	});
 
@@ -1158,12 +1158,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const a = meta.props.find(prop =>
 			prop.name === 'foo'
 			&& prop.required === true
-			&& prop.type === 'string'
+			&& prop.type === 'string',
 		);
 		const b = meta.props.find(prop =>
 			prop.name === 'bar'
 			&& prop.required === false
-			&& prop.type === 'number | undefined'
+			&& prop.type === 'number | undefined',
 		);
 
 		expect(a).toBeDefined();
@@ -1179,12 +1179,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const a = meta.props.find(prop =>
 			prop.name === 'foo'
 			&& prop.required === true
-			&& prop.type === 'string'
+			&& prop.type === 'string',
 		);
 		const b = meta.props.find(prop =>
 			prop.name === 'bar'
 			&& prop.required === false
-			&& prop.type === 'number | undefined'
+			&& prop.type === 'number | undefined',
 		);
 
 		expect(a).toBeDefined();
@@ -1206,12 +1206,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) => describ
 		const a = Foo.props.find(prop =>
 			prop.name === 'foo'
 			&& prop.required === true
-			&& prop.type === 'string'
+			&& prop.type === 'string',
 		);
 		const b = Bar.props.find(prop =>
 			prop.name === 'bar'
 			&& prop.required === false
-			&& prop.type === 'number | undefined'
+			&& prop.type === 'number | undefined',
 		);
 
 		expect(a).toBeDefined();
@@ -1354,7 +1354,7 @@ const checkerOptions: MetaCheckerOptions = {
 };
 const tsconfigChecker = createChecker(
 	path.resolve(__dirname, '../../../test-workspace/component-meta/tsconfig.json'),
-	checkerOptions
+	checkerOptions,
 );
 const noTsConfigChecker = createCheckerByJson(
 	path.resolve(__dirname, '../../../test-workspace/component-meta'),
@@ -1364,7 +1364,7 @@ const noTsConfigChecker = createCheckerByJson(
 			"**/*",
 		],
 	},
-	checkerOptions
+	checkerOptions,
 );
 
 worker(tsconfigChecker, true);

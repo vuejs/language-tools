@@ -72,7 +72,7 @@ export interface ScriptSetupRanges extends ReturnType<typeof parseScriptSetupRan
 export function parseScriptSetupRanges(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
-	vueCompilerOptions: VueCompilerOptions
+	vueCompilerOptions: VueCompilerOptions,
 ) {
 	const defineModel: DefineModel[] = [];
 	let defineProps: DefineProps | undefined;
@@ -89,7 +89,7 @@ export function parseScriptSetupRanges(
 
 	const leadingCommentRanges = ts.getLeadingCommentRanges(text, 0)?.reverse() ?? [];
 	const leadingCommentEndOffset = leadingCommentRanges.find(
-		range => tsCheckReg.test(text.slice(range.pos, range.end))
+		range => tsCheckReg.test(text.slice(range.pos, range.end)),
 	)?.end ?? 0;
 
 	let bindings = parseBindingRanges(ts, ast);
@@ -454,7 +454,7 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 export function findBindingVars(
 	ts: typeof import('typescript'),
 	left: ts.BindingName,
-	ast: ts.SourceFile
+	ast: ts.SourceFile,
 ) {
 	const vars: TextRange[] = [];
 	worker(left);
@@ -492,7 +492,7 @@ function getStatementRange(
 	ts: typeof import('typescript'),
 	parents: ts.Node[],
 	node: ts.Node,
-	ast: ts.SourceFile
+	ast: ts.SourceFile,
 ) {
 	let statementRange: TextRange | undefined;
 	for (let i = parents.length - 1; i >= 0; i--) {
@@ -516,7 +516,7 @@ function getClosestMultiLineCommentRange(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	parents: ts.Node[],
-	ast: ts.SourceFile
+	ast: ts.SourceFile,
 ) {
 	for (let i = parents.length - 1; i >= 0; i--) {
 		if (ts.isStatement(node)) {

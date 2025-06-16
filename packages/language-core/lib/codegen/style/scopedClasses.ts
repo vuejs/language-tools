@@ -7,7 +7,7 @@ import { generateStyleImports } from './imports';
 
 export function* generateStyleScopedClasses(
 	options: ScriptCodegenOptions,
-	ctx: TemplateCodegenContext
+	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	const option = options.vueCompilerOptions.resolveStyleClassNames;
 	const styles = options.sfc.styles
@@ -37,7 +37,7 @@ export function* generateStyleScopedClasses(
 				i,
 				className.text,
 				className.offset,
-				'boolean'
+				'boolean',
 			);
 		}
 	}

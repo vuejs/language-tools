@@ -13,7 +13,7 @@ const builtInDirectives = new Set([
 
 export function getComponentDirectives(
 	this: RequestContext,
-	fileName: string
+	fileName: string,
 ) {
 	const { typescript: ts, language, languageService, asScriptId } = this;
 	const volarFile = language.scripts.get(asScriptId(fileName));

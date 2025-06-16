@@ -6,7 +6,7 @@ describe(`vue-tsc`, () => {
 
 	test(`TypeScript - Stable`, () => {
 		expect(
-			getTscOutput().sort()
+			getTscOutput().sort(),
 		).toMatchInlineSnapshot(`
 			[
 			  "test-workspace/tsc/failureFixtures/#3632/both.vue(3,1): error TS1109: Expression expected.",
@@ -41,7 +41,7 @@ function getTscOutput() {
 	try {
 		const tscPath = require.resolve(
 			`typescript/lib/tsc`,
-			{ paths: [path.resolve(__dirname, '../../../test-workspace')] }
+			{ paths: [path.resolve(__dirname, '../../../test-workspace')] },
 		);
 		run(tscPath);
 	} catch { }

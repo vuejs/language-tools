@@ -5,7 +5,7 @@ export function* generateCamelized(
 	code: string,
 	source: string,
 	offset: number,
-	features: VueCodeInformation
+	features: VueCodeInformation,
 ): Generator<Code> {
 	const parts = code.split('-');
 	const startCombineOffset = features.__combineOffset ?? 0;

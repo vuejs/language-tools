@@ -6,7 +6,7 @@ import { isTsDocument, sleep } from './utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
@@ -106,7 +106,7 @@ function isCharacterTyping(document: TextDocument, change: { text: string; range
 	const lastCharacter = change.text[change.text.length - 1];
 	const nextCharacter = document.getText().slice(
 		change.rangeOffset + change.text.length,
-		change.rangeOffset + change.text.length + 1
+		change.rangeOffset + change.text.length + 1,
 	);
 	if (lastCharacter === undefined) { // delete text
 		return false;

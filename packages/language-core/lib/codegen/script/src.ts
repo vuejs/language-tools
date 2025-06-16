@@ -35,7 +35,7 @@ export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 		`'`,
 		[text.slice(0, src.text.length), 'main', src.offset, combineLastMapping],
 		text.slice(src.text.length),
-		`'`
+		`'`,
 	);
 	yield endOfLine;
 	yield `export { default } from '${text}'${endOfLine}`;

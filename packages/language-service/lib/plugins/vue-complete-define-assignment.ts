@@ -49,17 +49,17 @@ export function create(): LanguageServicePlugin {
 					addDefineCompletionItem(
 						scriptSetupRanges.defineProps?.statement,
 						scriptSetupRanges.withDefaults?.exp ?? scriptSetupRanges.defineProps?.exp,
-						'props'
+						'props',
 					);
 					addDefineCompletionItem(
 						scriptSetupRanges.defineEmits?.statement,
 						scriptSetupRanges.defineEmits?.exp,
-						'emit'
+						'emit',
 					);
 					addDefineCompletionItem(
 						scriptSetupRanges.defineSlots?.statement,
 						scriptSetupRanges.defineSlots?.exp,
-						'slots'
+						'slots',
 					);
 
 					return {
@@ -70,7 +70,7 @@ export function create(): LanguageServicePlugin {
 					function addDefineCompletionItem(
 						statement: TextRange | undefined,
 						exp: TextRange | undefined,
-						name: string
+						name: string,
 					) {
 						if (!exp || exp.start !== statement?.start) {
 							return;

@@ -15,7 +15,7 @@ export interface ComponentPropInfo {
 export function getComponentProps(
 	this: RequestContext,
 	fileName: string,
-	tag: string
+	tag: string,
 ) {
 	const { typescript: ts, language, languageService, asScriptId } = this;
 	const volarFile = language.scripts.get(asScriptId(fileName));

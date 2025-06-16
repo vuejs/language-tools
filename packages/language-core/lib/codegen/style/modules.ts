@@ -6,7 +6,7 @@ import { generateClassProperty } from './classProperty';
 import { generateStyleImports } from './imports';
 
 export function* generateStyleModules(
-	options: ScriptCodegenOptions
+	options: ScriptCodegenOptions,
 ): Generator<Code> {
 	const styles = options.sfc.styles.map((style, i) => [style, i] as const).filter(([style]) => style.module);
 	if (!styles.length && !options.scriptSetupRanges?.useCssModule.length) {
@@ -39,7 +39,7 @@ export function* generateStyleModules(
 				i,
 				className.text,
 				className.offset,
-				'string'
+				'string',
 			);
 		}
 		yield `>${endOfLine}`;

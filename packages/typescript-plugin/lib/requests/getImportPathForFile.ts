@@ -5,7 +5,7 @@ export function getImportPathForFile(
 	this: RequestContext,
 	fileName: string,
 	incomingFileName: string,
-	preferences: ts.UserPreferences
+	preferences: ts.UserPreferences,
 ) {
 	const { typescript: ts, languageService, languageServiceHost } = this;
 	const program = languageService.getProgram();
@@ -22,7 +22,7 @@ export function getImportPathForFile(
 		importingSourceFile: ts.SourceFile,
 		host: any,
 		userPreferences: ts.UserPreferences,
-		options?: {}
+		options?: {},
 	) => {
 		moduleSpecifiers: readonly string[];
 		computedWithoutCache: boolean;
@@ -34,7 +34,7 @@ export function getImportPathForFile(
 		languageServiceHost.getCompilationSettings(),
 		sourceFile,
 		resolutionHost,
-		preferences
+		preferences,
 	);
 
 	for (const moduleSpecifier of moduleSpecifiers.moduleSpecifiers) {

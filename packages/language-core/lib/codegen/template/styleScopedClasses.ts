@@ -12,7 +12,7 @@ const classNameEscapeRegex = /([\\'])/;
 
 export function* generateStyleScopedClassReferences(
 	ctx: TemplateCodegenContext,
-	withDot = false
+	withDot = false,
 ): Generator<Code> {
 	for (const offset of ctx.emptyClassOffsets) {
 		yield `/** @type {__VLS_StyleScopedClasses['`;
@@ -37,9 +37,9 @@ export function* generateStyleScopedClassReferences(
 				source,
 				offset,
 				ctx.codeFeatures.navigationAndAdditionalCompletion,
-				classNameEscapeRegex
+				classNameEscapeRegex,
 			),
-			`'`
+			`'`,
 		);
 		yield `]} */${endOfLine}`;
 	}
@@ -48,7 +48,7 @@ export function* generateStyleScopedClassReferences(
 export function collectStyleScopedClassReferences(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
+	node: CompilerDOM.ElementNode,
 ) {
 	for (const prop of node.props) {
 		if (
@@ -124,7 +124,7 @@ export function collectStyleScopedClassReferences(
 				if (literal.text) {
 					const classes = collectClasses(
 						literal.text,
-						literal.end - literal.text.length - 1 + startOffset
+						literal.end - literal.text.length - 1 + startOffset,
 					);
 					ctx.scopedClasses.push(...classes);
 				}

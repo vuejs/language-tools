@@ -53,7 +53,7 @@ connection.onInitialize(params => {
 							{
 								file: fileName,
 								needFileNameList: false,
-							} satisfies ts.server.protocol.ProjectInfoRequestArgs
+							} satisfies ts.server.protocol.ProjectInfoRequestArgs,
 						);
 						file2ProjectInfo.set(fileName, projectInfoPromise);
 					}
@@ -122,7 +122,7 @@ connection.onInitialize(params => {
 						file: fileName,
 						...{ position } as unknown as { line: number; offset: number; },
 						filesToSearch: [fileName],
-					} satisfies ts.server.protocol.DocumentHighlightsRequestArgs
+					} satisfies ts.server.protocol.DocumentHighlightsRequestArgs,
 				);
 			},
 			async getQuickInfoAtPosition(fileName, { line, character }) {
@@ -132,11 +132,11 @@ connection.onInitialize(params => {
 						file: fileName,
 						line: line + 1,
 						offset: character + 1,
-					} satisfies ts.server.protocol.FileLocationRequestArgs
+					} satisfies ts.server.protocol.FileLocationRequestArgs,
 				);
 				return ts.displayPartsToString(result?.displayParts ?? []);
 			},
-		})
+		}),
 	);
 
 	async function sendTsRequest<T>(command: string, args: any): Promise<T | null> {
@@ -163,7 +163,7 @@ connection.onInitialize(params => {
 					ts,
 					commonLine.options,
 					commonLine.vueOptions,
-					uri => uri.fsPath.replace(/\\/g, '/')
+					uri => uri.fsPath.replace(/\\/g, '/'),
 				),
 			],
 			createUriMap(),
@@ -175,13 +175,13 @@ connection.onInitialize(params => {
 				else {
 					language.scripts.delete(uri);
 				}
-			}
+			},
 		);
 		return createLanguageService(
 			language,
 			server.languageServicePlugins,
 			createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
-			{ vue: { compilerOptions: commonLine.vueOptions } }
+			{ vue: { compilerOptions: commonLine.vueOptions } },
 		);
 	}
 });

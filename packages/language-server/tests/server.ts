@@ -27,7 +27,7 @@ export async function getLanguageServer(): Promise<{
 				'--suppressDiagnosticEvents',
 				// '--logVerbosity', 'verbose',
 				// '--logFile', path.join(__dirname, 'tsserver.log'),
-			]
+			],
 		);
 
 		tsserver.on('exit', code => console.log(code ? `Exited with code ${code}` : `Terminated`));
@@ -59,7 +59,7 @@ export async function getLanguageServer(): Promise<{
 				workspace: {
 					configuration: true,
 				},
-			}
+			},
 		);
 	}
 	return {

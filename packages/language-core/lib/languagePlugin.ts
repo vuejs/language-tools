@@ -17,7 +17,7 @@ function getVueFileRegistry(key: string, plugins: VueLanguagePlugin[]) {
 	let fileRegistry = fileRegistries.find(r =>
 		r.key === key
 		&& r.plugins.length === plugins.length
-		&& r.plugins.every(plugin => plugins.includes(plugin))
+		&& r.plugins.every(plugin => plugins.includes(plugin)),
 	)?.files;
 	if (!fileRegistry) {
 		fileRegistry = new Map();
@@ -33,7 +33,7 @@ function getVueFileRegistry(key: string, plugins: VueLanguagePlugin[]) {
 function getFileRegistryKey(
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	plugins: VueLanguagePluginReturn[]
+	plugins: VueLanguagePluginReturn[],
 ) {
 	const values = [
 		...Object.keys(vueCompilerOptions)
@@ -51,7 +51,7 @@ export function createVueLanguagePlugin<T>(
 	ts: typeof import('typescript'),
 	compilerOptions: ts.CompilerOptions,
 	vueCompilerOptions: VueCompilerOptions,
-	asFileName: (scriptId: T) => string
+	asFileName: (scriptId: T) => string,
 ): LanguagePlugin<T, VueVirtualCode> {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
@@ -64,7 +64,7 @@ export function createVueLanguagePlugin<T>(
 	const plugins = createPlugins(pluginContext);
 	const fileRegistry = getVueFileRegistry(
 		getFileRegistryKey(compilerOptions, vueCompilerOptions, plugins),
-		vueCompilerOptions.plugins
+		vueCompilerOptions.plugins,
 	);
 
 	return {
@@ -92,7 +92,7 @@ export function createVueLanguagePlugin<T>(
 						snapshot,
 						vueCompilerOptions,
 						plugins,
-						ts
+						ts,
 					);
 					fileRegistry.set(fileName, code);
 					return code;

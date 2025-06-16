@@ -12,7 +12,7 @@ export function createVueLanguageServiceProxy<T>(
 	language: Language<T>,
 	languageService: ts.LanguageService,
 	vueOptions: VueCompilerOptions,
-	asScriptId: (fileName: string) => T
+	asScriptId: (fileName: string) => T,
 ) {
 	const proxyCache = new Map<string | symbol, Function | undefined>();
 	const getProxyMethod = (target: ts.LanguageService, p: string | symbol): Function | undefined => {
@@ -51,7 +51,7 @@ function getCompletionsAtPosition<T>(
 	language: Language<T>,
 	vueOptions: VueCompilerOptions,
 	asScriptId: (fileName: string) => T,
-	getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition']
+	getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
 ): ts.LanguageService['getCompletionsAtPosition'] {
 	return (filePath, position, options, formattingSettings) => {
 		const fileName = filePath.replace(windowsPathReg, '/');
@@ -60,7 +60,7 @@ function getCompletionsAtPosition<T>(
 			// filter __VLS_
 			result.entries = result.entries.filter(
 				entry => !entry.name.includes('__VLS_')
-					&& !entry.labelDetails?.description?.includes('__VLS_')
+					&& !entry.labelDetails?.description?.includes('__VLS_'),
 			);
 
 			// filter global variables in template and styles
@@ -89,7 +89,7 @@ function getCompletionsAtPosition<T>(
 							entry.kind !== 'var' && entry.kind !== 'function'
 							|| !sortTexts.has(entry.sortText)
 							|| isGloballyAllowed(entry.name)
-						)
+						),
 					);
 				}
 			}
@@ -134,7 +134,7 @@ function getCompletionsAtPosition<T>(
 function getCompletionEntryDetails<T>(
 	language: Language<T>,
 	asScriptId: (fileName: string) => T,
-	getCompletionEntryDetails: ts.LanguageService['getCompletionEntryDetails']
+	getCompletionEntryDetails: ts.LanguageService['getCompletionEntryDetails'],
 ): ts.LanguageService['getCompletionEntryDetails'] {
 	return (...args) => {
 		const details = getCompletionEntryDetails(...args);
@@ -177,7 +177,7 @@ function getCompletionEntryDetails<T>(
 }
 
 function getCodeFixesAtPosition(
-	getCodeFixesAtPosition: ts.LanguageService['getCodeFixesAtPosition']
+	getCodeFixesAtPosition: ts.LanguageService['getCodeFixesAtPosition'],
 ): ts.LanguageService['getCodeFixesAtPosition'] {
 	return (...args) => {
 		let result = getCodeFixesAtPosition(...args);
@@ -193,7 +193,7 @@ function getDefinitionAndBoundSpan<T>(
 	languageService: ts.LanguageService,
 	vueOptions: VueCompilerOptions,
 	asScriptId: (fileName: string) => T,
-	getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan']
+	getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan'],
 ): ts.LanguageService['getDefinitionAndBoundSpan'] {
 	return (fileName, position) => {
 		const result = getDefinitionAndBoundSpan(fileName, position);
@@ -260,7 +260,7 @@ function getDefinitionAndBoundSpan<T>(
 		function visit(
 			node: ts.Node,
 			definition: ts.DefinitionInfo,
-			sourceFile: ts.SourceFile
+			sourceFile: ts.SourceFile,
 		) {
 			if (ts.isPropertySignature(node) && node.type) {
 				proxy(node.name, node.type, definition, sourceFile);
@@ -277,7 +277,7 @@ function getDefinitionAndBoundSpan<T>(
 			name: ts.PropertyName,
 			type: ts.TypeNode,
 			definition: ts.DefinitionInfo,
-			sourceFile: ts.SourceFile
+			sourceFile: ts.SourceFile,
 		) {
 			const { textSpan, fileName } = definition;
 			const start = name.getStart(sourceFile);
@@ -306,7 +306,7 @@ function getDefinitionAndBoundSpan<T>(
 function getQuickInfoAtPosition(
 	ts: typeof import('typescript'),
 	languageService: ts.LanguageService,
-	getQuickInfoAtPosition: ts.LanguageService['getQuickInfoAtPosition']
+	getQuickInfoAtPosition: ts.LanguageService['getQuickInfoAtPosition'],
 ): ts.LanguageService['getQuickInfoAtPosition'] {
 	return (...args) => {
 		const result = getQuickInfoAtPosition(...args);
@@ -355,7 +355,7 @@ function getEncodedSemanticClassifications<T>(
 	language: Language<T>,
 	languageService: ts.LanguageService,
 	asScriptId: (fileName: string) => T,
-	getEncodedSemanticClassifications: ts.LanguageService['getEncodedSemanticClassifications']
+	getEncodedSemanticClassifications: ts.LanguageService['getEncodedSemanticClassifications'],
 ): ts.LanguageService['getEncodedSemanticClassifications'] {
 	return (filePath, span, format) => {
 		const fileName = filePath.replace(windowsPathReg, '/');
@@ -372,12 +372,12 @@ function getEncodedSemanticClassifications<T>(
 					{
 						start: span.start - template.startTagEnd,
 						length: span.length,
-					}
+					},
 				)) {
 					result.spans.push(
 						componentSpan.start + template.startTagEnd,
 						componentSpan.length,
-						256 // class
+						256, // class
 					);
 				}
 			}
@@ -390,7 +390,7 @@ function getComponentSpans(
 	this: Pick<RequestContext, 'typescript' | 'languageService'>,
 	vueCode: VueVirtualCode,
 	template: NonNullable<VueVirtualCode['_sfc']['template']>,
-	spanTemplateRange: ts.TextSpan
+	spanTemplateRange: ts.TextSpan,
 ) {
 	const { typescript: ts, languageService } = this;
 	const result: ts.TextSpan[] = [];

@@ -5,7 +5,7 @@ import { getLanguageServer, testWorkspacePath } from './server.js';
 
 test('Vue tags', async () => {
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<|`)).items.map(item => item.label)
+		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<|`)).items.map(item => item.label),
 	).toMatchInlineSnapshot(`
 			[
 			  "template",
@@ -45,7 +45,7 @@ test('Vue tags', async () => {
 
 test('#4670', async () => {
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><div click| /></template>`)).items.map(item => item.label).filter(label => label.includes('click'))
+		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><div click| /></template>`)).items.map(item => item.label).filter(label => label.includes('click')),
 	).toMatchInlineSnapshot(`
 		[
 		  "onclick",
@@ -62,7 +62,7 @@ test('#4670', async () => {
 
 test('HTML tags and built-in components', async () => {
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items.map(item => item.label)
+		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items.map(item => item.label),
 	).toMatchInlineSnapshot(`
 		[
 		  "!DOCTYPE",
@@ -214,7 +214,7 @@ test.skip('Directive Modifiers', async () => {
 
 			let vFoo!: FunctionDirective<any, any, 'attr' | 'prop'>;
 			</script>
-		`)).items.map(item => item.label)
+		`)).items.map(item => item.label),
 	).toMatchInlineSnapshot(`
 			[
 			  "attr",
@@ -274,7 +274,7 @@ test.skip('#2511', async () => {
 			<script setup lang="ts">
 			import componentFor|
 			</script>
-		`, 'ComponentForAutoImport'))
+		`, 'ComponentForAutoImport')),
 	).toMatchInlineSnapshot(`
 			{
 			  "newText": "import componentForAutoImport$1 from './component-for-auto-import.vue';",
@@ -334,7 +334,7 @@ test.skip('Component auto import', async () => {
 			<template>
 				<Emp| />
 			</template>
-		`, 'Empty'))
+		`, 'Empty')),
 	).toMatchInlineSnapshot(`
 			{
 			  "additionalTextEdits": [
@@ -425,7 +425,7 @@ test('#4796', async () => {
 				}
 			})
 			</script>
-		`, ':msg'))
+		`, ':msg')),
 	).toMatchInlineSnapshot(`
 		{
 		  "documentation": {
@@ -462,7 +462,7 @@ test('Auto insert defines', async () => {
 			}>();
 			props|
 			</script>
-		`, 'props'))
+		`, 'props')),
 	).toMatchInlineSnapshot(`
 		{
 		  "additionalTextEdits": [

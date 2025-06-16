@@ -5,7 +5,7 @@ import { getSelfComponentName, getVariableType } from './utils';
 
 export function getComponentNames(
 	this: RequestContext,
-	fileName: string
+	fileName: string,
 ) {
 	const { typescript: ts, language, languageService, asScriptId } = this;
 	const volarFile = language.scripts.get(asScriptId(fileName));
@@ -19,7 +19,7 @@ export function getComponentNames(
 export function _getComponentNames(
 	ts: typeof import('typescript'),
 	tsLs: ts.LanguageService,
-	vueCode: VueVirtualCode
+	vueCode: VueVirtualCode,
 ) {
 	const names = getVariableType(ts, tsLs, vueCode, '__VLS_components')
 		?.type

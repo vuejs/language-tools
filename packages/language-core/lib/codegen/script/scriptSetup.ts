@@ -13,7 +13,7 @@ import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges
+	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	yield [
 		scriptSetup.content.slice(0, Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset)),
@@ -27,7 +27,7 @@ export function* generateScriptSetup(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges
+	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (scriptSetup.generic) {
 		if (!options.scriptRanges?.exportDefault) {
@@ -94,7 +94,7 @@ function* generateSetupFunction(
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
-	syntax: 'return' | 'export default' | undefined
+	syntax: 'return' | 'export default' | undefined,
 ): Generator<Code> {
 	let setupCodeModifies: [Code[], number, number][] = [];
 	if (scriptSetupRanges.defineProps) {
@@ -106,7 +106,7 @@ function* generateSetupFunction(
 			typeArg,
 			name,
 			`__VLS_props`,
-			`__VLS_Props`
+			`__VLS_Props`,
 		));
 	}
 	if (scriptSetupRanges.defineEmits) {
@@ -118,7 +118,7 @@ function* generateSetupFunction(
 			typeArg,
 			name,
 			`__VLS_emit`,
-			`__VLS_Emit`
+			`__VLS_Emit`,
 		));
 	}
 	if (scriptSetupRanges.defineSlots) {
@@ -130,7 +130,7 @@ function* generateSetupFunction(
 			typeArg,
 			name,
 			`__VLS_slots`,
-			`__VLS_Slots`
+			`__VLS_Slots`,
 		));
 	}
 	if (scriptSetupRanges.defineExpose) {
@@ -203,7 +203,7 @@ function* generateSetupFunction(
 					exp.end,
 					scriptSetup.name,
 					codeFeatures.verification,
-					`'$style'`
+					`'$style'`,
 				),
 				`])`,
 			],
@@ -294,7 +294,7 @@ function* generateSetupFunction(
 			scriptSetup,
 			scriptSetupRanges.withDefaults.arg.start,
 			scriptSetupRanges.withDefaults.arg.end,
-			codeFeatures.navigation
+			codeFeatures.navigation,
 		);
 		yield `)${endOfLine}`;
 	}
@@ -329,7 +329,7 @@ function* generateSetupFunction(
 
 function* generateMacros(
 	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext
+	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	if (options.vueCompilerOptions.target >= 3.3) {
 		yield `// @ts-ignore${newLine}`;
@@ -350,7 +350,7 @@ function* generateDefineWithType(
 	typeArg: TextRange | undefined,
 	name: string | undefined,
 	defaultName: string,
-	typeName: string
+	typeName: string,
 ): Generator<[Code[], number, number]> {
 	if (typeArg) {
 		yield [[
@@ -392,7 +392,7 @@ function* generateComponentProps(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges
+	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (scriptSetup.generic) {
 		yield `const __VLS_fnComponent = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
@@ -403,7 +403,7 @@ function* generateComponentProps(
 				scriptSetup,
 				scriptSetupRanges.defineProps.arg.start,
 				scriptSetupRanges.defineProps.arg.end,
-				codeFeatures.navigation
+				codeFeatures.navigation,
 			);
 			yield `,${newLine}`;
 		}
@@ -474,7 +474,7 @@ function* generateComponentProps(
 					getRangeText(scriptSetup, defineModel.name),
 					scriptSetup.name,
 					defineModel.name.start,
-					codeFeatures.navigation
+					codeFeatures.navigation,
 				);
 			}
 			else {
@@ -501,7 +501,7 @@ function* generateComponentProps(
 
 function* generateModelEmit(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges
+	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (scriptSetupRanges.defineModel.length) {
 		yield `type __VLS_ModelEmit = {${newLine}`;
@@ -523,7 +523,7 @@ function* generateDefineModelType(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	propName: string | undefined,
 	localName: string | undefined,
-	defineModel: ScriptSetupRanges['defineModel'][number]
+	defineModel: ScriptSetupRanges['defineModel'][number],
 ) {
 	if (defineModel.type) {
 		// Infer from defineModel<T>
@@ -544,7 +544,7 @@ function* generateDefineModelType(
 
 function getPropAndLocalName(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	defineModel: ScriptSetupRanges['defineModel'][number]
+	defineModel: ScriptSetupRanges['defineModel'][number],
 ) {
 	const localName = defineModel.localName
 		? getRangeText(scriptSetup, defineModel.localName)
@@ -557,7 +557,7 @@ function getPropAndLocalName(
 
 function getRangeText(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	range: TextRange
+	range: TextRange,
 ) {
 	return scriptSetup.content.slice(range.start, range.end);
 }

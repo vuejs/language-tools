@@ -12,7 +12,7 @@ export function collectVars(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
-	results: string[] = []
+	results: string[] = [],
 ) {
 	const identifiers = collectIdentifiers(ts, node, []);
 	for (const { id } of identifiers) {
@@ -30,7 +30,7 @@ export function collectIdentifiers(
 		initializer: ts.Expression | undefined;
 	}[] = [],
 	isRest = false,
-	initializer: ts.Expression | undefined = undefined
+	initializer: ts.Expression | undefined = undefined,
 ) {
 	if (ts.isIdentifier(node)) {
 		results.push({ id: node, isRest, initializer });

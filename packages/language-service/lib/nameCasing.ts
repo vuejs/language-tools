@@ -41,7 +41,7 @@ const cache = new WeakMap<VirtualCode, Tags | undefined>();
 
 function detect(
 	context: LanguageServiceContext,
-	uri: URI
+	uri: URI,
 ): {
 	tag: TagNameCasing[],
 	attr: AttrNameCasing[],
