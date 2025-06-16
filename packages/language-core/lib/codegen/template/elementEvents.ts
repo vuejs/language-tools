@@ -58,7 +58,7 @@ export function* generateElementEvents(
 			const emitName = emitPrefix + source;
 			const camelizedEmitName = camelize(emitName);
 
-			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> => (${newLine}`;
+			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
 			if (prop.name === 'on') {
 				yield `{ `;
 				yield* generateEventArg(ctx, source, start!, emitPrefix.slice(0, -1), ctx.codeFeatures.navigation);
@@ -121,10 +121,12 @@ export function* generateEventExpression(
 		let isFirstMapping = true;
 
 		const ast = createTsAst(options.ts, prop.exp, prop.exp.content);
-		const _isCompoundExpression = isCompoundExpression(options.ts, ast);
-		if (_isCompoundExpression) {
-			yield `(...[$event]) => {${newLine}`;
+		const isCompound = isCompoundExpression(options.ts, ast);
+
+		if (isCompound) {
 			ctx.addLocalVariable('$event');
+
+			yield `(...[$event]) => {${newLine}`;
 			yield* ctx.generateConditionGuards();
 			prefix = ``;
 			suffix = ``;
@@ -135,7 +137,7 @@ export function* generateEventExpression(
 			ctx,
 			'template',
 			offset => {
-				if (_isCompoundExpression && isFirstMapping) {
+				if (isCompound && isFirstMapping) {
 					isFirstMapping = false;
 					ctx.inlayHints.push({
 						blockName: 'template',
@@ -159,7 +161,7 @@ export function* generateEventExpression(
 			suffix
 		);
 
-		if (_isCompoundExpression) {
+		if (isCompound) {
 			ctx.removeLocalVariable('$event');
 
 			yield endOfLine;
