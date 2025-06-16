@@ -45,12 +45,12 @@ export function create(): LanguageServicePlugin {
 					return worker(document, (stylesheet, cssLs) => {
 						return cssLs.prepareRename(document, position, stylesheet);
 					});
-				}
+				},
 			};
 
 			function isWithinNavigationVirtualCode(
 				document: TextDocument,
-				position: css.Position
+				position: css.Position,
 			) {
 				const uri = URI.parse(document.uri);
 				const decoded = context.decodeEmbeddedDocumentUri(uri);
@@ -103,7 +103,7 @@ export function create(): LanguageServicePlugin {
 
 			function worker<T>(
 				document: TextDocument,
-				callback: (stylesheet: css.Stylesheet, cssLs: css.LanguageService) => T
+				callback: (stylesheet: css.Stylesheet, cssLs: css.LanguageService) => T,
 			) {
 				const cssLs = getCssLs(document);
 				if (!cssLs) {

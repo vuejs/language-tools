@@ -25,7 +25,7 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 					ts,
 					options.options,
 					vueOptions,
-					id => id
+					id => id,
 				);
 				return { languagePlugins: [vueLanguagePlugin] };
 			}
@@ -33,7 +33,7 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 				runExtensions = allExtensions;
 				throw extensionsChangedException = new Error('extensions changed');
 			}
-		}
+		},
 	);
 
 	try {

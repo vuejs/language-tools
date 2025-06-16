@@ -3,11 +3,11 @@ import { combineLastMapping, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 
 export function* generateStyleImports(
-	style: Sfc['styles'][number]
+	style: Sfc['styles'][number],
 ): Generator<Code> {
 	const features: VueCodeInformation = {
 		navigation: true,
-		verification: true
+		verification: true,
 	};
 	if (typeof style.src === 'object') {
 		yield `${newLine} & typeof import(`;
@@ -18,7 +18,7 @@ export function* generateStyleImports(
 			features,
 			`'`,
 			[style.src.text, 'main', style.src.offset, combineLastMapping],
-			`'`
+			`'`,
 		);
 		yield `).default`;
 	}
@@ -28,7 +28,7 @@ export function* generateStyleImports(
 			text,
 			style.name,
 			offset,
-			features
+			features,
 		];
 		yield `').default`;
 	}

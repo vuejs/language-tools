@@ -21,7 +21,7 @@ describe('vue-tsc-dts', () => {
 	const options: ts.CreateProgramOptions = {
 		host,
 		rootNames: readFilesRecursive(workspace),
-		options: compilerOptions
+		options: compilerOptions,
 	};
 
 	let vueOptions: vue.VueCompilerOptions;
@@ -40,7 +40,7 @@ describe('vue-tsc-dts', () => {
 			ts,
 			options.options,
 			vueOptions,
-			id => id
+			id => id,
 		);
 		return [vueLanguagePlugin];
 	});
@@ -63,7 +63,7 @@ describe('vue-tsc-dts', () => {
 					outputText = text;
 				},
 				undefined,
-				true
+				true,
 			);
 			expect(outputText ? normalizeNewline(outputText) : undefined).toMatchSnapshot();
 		});

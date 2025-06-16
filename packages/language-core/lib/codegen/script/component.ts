@@ -9,7 +9,7 @@ export function* generateComponent(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
-	scriptSetupRanges: ScriptSetupRanges
+	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (options.sfc.script && options.scriptRanges?.exportDefault && options.scriptRanges.exportDefault.expression.start !== options.scriptRanges.exportDefault.args.start) {
 		// use defineComponent() from user space code if it exist
@@ -71,7 +71,7 @@ export function* generateComponentSetupReturns(scriptSetupRanges: ScriptSetupRan
 
 export function* generateEmitsOption(
 	options: ScriptCodegenOptions,
-	scriptSetupRanges: ScriptSetupRanges
+	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	const codes: {
 		// undefined means the emit source cannot be explained by expression
@@ -134,7 +134,7 @@ export function* generatePropsOption(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
-	inheritAttrs: boolean
+	inheritAttrs: boolean,
 ): Generator<Code> {
 	const codes: {
 		optionExp: Code,

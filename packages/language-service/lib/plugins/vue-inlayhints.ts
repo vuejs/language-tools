@@ -43,7 +43,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 							for (const [prop, isShorthand] of findDestructuredProps(
 								ts,
 								virtualCode.sfc.scriptSetup.ast,
-								scriptSetupRanges.defineProps.destructured.keys()
+								scriptSetupRanges.defineProps.destructured.keys(),
 							)) {
 								const name = prop.text;
 								const end = prop.getEnd();
@@ -115,7 +115,7 @@ type Scope = Record<string, boolean>;
 export function findDestructuredProps(
 	ts: typeof import('typescript'),
 	ast: ts.SourceFile,
-	props: MapIterator<string>
+	props: MapIterator<string>,
 ) {
 	const rootScope: Scope = Object.create(null);
 	const scopeStack: Scope[] = [rootScope];
@@ -296,7 +296,7 @@ export function findDestructuredProps(
 	// TODO: more conditions
 	function isReferencedIdentifier(
 		id: ts.Identifier,
-		parent: ts.Node | null
+		parent: ts.Node | null,
 	) {
 		if (!parent) {
 			return false;

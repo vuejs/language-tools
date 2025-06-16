@@ -26,7 +26,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 	const { stop } = watch(activeTextEditor, () => {
 
 		if (!visibleTextEditors.value.some(
-			editor => config.server.includeLanguages.includes(editor.document.languageId)
+			editor => config.server.includeLanguages.includes(editor.document.languageId),
 		)) {
 			return;
 		}
@@ -36,7 +36,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 		watch(() => config.server.includeLanguages, async () => {
 			const reload = await vscode.window.showInformationMessage(
 				'Please restart extension host to apply the new language settings.',
-				'Restart Extension Host'
+				'Restart Extension Host',
 			);
 			if (reload) {
 				executeCommand('workbench.action.restartExtensionHost');
@@ -87,7 +87,7 @@ function launch(context: vscode.ExtensionContext) {
 				module: serverModule.fsPath,
 				transport: lsp.TransportKind.ipc,
 				options: { execArgv: ['--nolazy', '--inspect=' + 6009] },
-			}
+			},
 		},
 		{
 			middleware: {
@@ -106,10 +106,10 @@ function launch(context: vscode.ExtensionContext) {
 			documentSelector: config.server.includeLanguages,
 			markdown: {
 				isTrusted: true,
-				supportHtml: true
+				supportHtml: true,
 			},
 			outputChannel: useOutputChannel('Vue Language Server'),
-		}
+		},
 	);
 
 	client.onNotification('tsserver/request', async ([id, command, args]) => {
@@ -155,14 +155,14 @@ try {
 					`e.name==='vue-typescript-plugin-pack'?[${config.server.includeLanguages
 						.map(lang => `'${lang}'`)
 						.join(',')}]`,
-					':Array.isArray(e.languages)'
-				].join('')
+					':Array.isArray(e.languages)',
+				].join(''),
 			);
 
 			// Expose tsserver process in SingleTsServer constructor
 			text = text.replace(
 				',this._callbacks.destroy("server errored")}))',
-				s => s + ',globalThis.__TSSERVER__||={},globalThis.__TSSERVER__[arguments[1]]=this'
+				s => s + ',globalThis.__TSSERVER__||={},globalThis.__TSSERVER__[arguments[1]]=this',
 			);
 
 			/**
@@ -172,12 +172,12 @@ try {
 			// patch jsTsLanguageModes
 			text = text.replace(
 				't.jsTsLanguageModes=[t.javascript,t.javascriptreact,t.typescript,t.typescriptreact]',
-				s => s + '.concat("vue")'
+				s => s + '.concat("vue")',
 			);
 			// patch isSupportedLanguageMode
 			text = text.replace(
 				'.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]',
-				s => s + '.concat("vue")'
+				s => s + '.concat("vue")',
 			);
 
 			return text;

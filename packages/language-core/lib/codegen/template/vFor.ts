@@ -9,7 +9,7 @@ import { generateInterpolation } from './interpolation';
 export function* generateVFor(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ForNode
+	node: CompilerDOM.ForNode,
 ): Generator<Code> {
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
@@ -38,7 +38,7 @@ export function* generateVFor(
 			source.loc.start.offset,
 			source.loc,
 			`(`,
-			`)`
+			`)`,
 		);
 		yield `!)`; // #3102
 	}
@@ -76,7 +76,7 @@ export function* generateVFor(
 						prop.value.loc.start.offset,
 						prop.value.loc,
 						`(`,
-						`)`
+						`)`,
 					);
 					yield endOfLine;
 				}
@@ -106,7 +106,7 @@ export function parseVForNode(node: CompilerDOM.ForNode) {
 	const leftExpressionText = leftExpressionRange
 		? node.loc.source.slice(
 			leftExpressionRange.start - node.loc.start.offset,
-			leftExpressionRange.end - node.loc.start.offset
+			leftExpressionRange.end - node.loc.start.offset,
 		)
 		: undefined;
 	return {

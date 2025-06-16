@@ -16,7 +16,7 @@ export function hyphenateAttr(str: string) {
 export function getStartEnd(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	ast: ts.SourceFile
+	ast: ts.SourceFile,
 ): TextRange {
 	return {
 		start: (ts as any).getTokenPosOfNode(node, ast) as number,
@@ -27,7 +27,7 @@ export function getStartEnd(
 export function getNodeText(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	ast: ts.SourceFile
+	ast: ts.SourceFile,
 ) {
 	const { start, end } = getStartEnd(ts, node, ast);
 	return ast.text.slice(start, end);

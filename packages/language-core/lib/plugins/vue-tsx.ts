@@ -65,7 +65,7 @@ function createTsx(
 	fileName: string,
 	sfc: Sfc,
 	ctx: Parameters<VueLanguagePlugin>[0],
-	appendGlobalTypes: boolean
+	appendGlobalTypes: boolean,
 ) {
 	const ts = ctx.modules.typescript;
 
@@ -102,13 +102,13 @@ function createTsx(
 	const getScriptRanges = computed(() =>
 		sfc.script && validLangs.has(sfc.script.lang)
 			? parseScriptRanges(ts, sfc.script.ast, !!sfc.scriptSetup)
-			: undefined
+			: undefined,
 	);
 
 	const getScriptSetupRanges = computed(() =>
 		sfc.scriptSetup && validLangs.has(sfc.scriptSetup.lang)
 			? parseScriptSetupRanges(ts, sfc.scriptSetup.ast, getResolvedOptions())
-			: undefined
+			: undefined,
 	);
 
 	const getSetupBindingNames = computedSet(() => {
@@ -153,7 +153,7 @@ function createTsx(
 		const newNames = new Set(
 			getScriptSetupRanges()?.useTemplateRef
 				.map(({ name }) => name)
-				.filter(name => name !== undefined)
+				.filter(name => name !== undefined),
 		);
 		return newNames;
 	});

@@ -13,7 +13,7 @@ export function* generateStringLiteralKey(code: string, offset?: number, info?: 
 			info,
 			`'`,
 			[code, 'template', offset, combineLastMapping],
-			`'`
+			`'`,
 		);
 	}
 }

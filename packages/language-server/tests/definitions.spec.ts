@@ -5,7 +5,7 @@ import { getLanguageServer, testWorkspacePath } from './server.js';
 
 test('TS to vue', async () => {
 	expect(
-		await requestDefinition('tsconfigProject/fixture1.ts', 'typescript', `import C|omponent from './empty.vue';`)
+		await requestDefinition('tsconfigProject/fixture1.ts', 'typescript', `import C|omponent from './empty.vue';`),
 	).toMatchInlineSnapshot(`
 		[
 		  {
@@ -22,7 +22,7 @@ test('TS to vue', async () => {
 		]
 	`);
 	expect(
-		await requestDefinition('tsconfigProject/fixture2.ts', 'typescript', `import Component from '|./empty.vue';`)
+		await requestDefinition('tsconfigProject/fixture2.ts', 'typescript', `import Component from '|./empty.vue';`),
 	).toMatchInlineSnapshot(`
 		[
 		  {
@@ -47,7 +47,7 @@ test('Alias path', async () => {
 			<script setup lang="ts">
 			import { foo| } from '@/foo';
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		[
 		  {
@@ -88,7 +88,7 @@ test('#2600', async () => {
 			<script setup lang="ts">
 			import Foo from '|@/foo.vue';
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		[
 		  {

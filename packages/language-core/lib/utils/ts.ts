@@ -18,7 +18,7 @@ export function createParsedCommandLineByJson(
 	rootDir: string,
 	json: any,
 	configFileName = rootDir + '/jsconfig.json',
-	skipGlobalTypesSetup = false
+	skipGlobalTypesSetup = false,
 ): ParsedCommandLine {
 
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
@@ -55,7 +55,7 @@ export function createParsedCommandLineByJson(
 				extension: extension.slice(1),
 				isMixedContent: true,
 				scriptKind: ts.ScriptKind.Deferred,
-			}))
+			})),
 	);
 
 	// fix https://github.com/vuejs/language-tools/issues/1786
@@ -73,7 +73,7 @@ export function createParsedCommandLine(
 	ts: typeof import('typescript'),
 	parseConfigHost: ts.ParseConfigHost,
 	tsConfigPath: string,
-	skipGlobalTypesSetup = false
+	skipGlobalTypesSetup = false,
 ): ParsedCommandLine {
 	try {
 		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
@@ -111,7 +111,7 @@ export function createParsedCommandLine(
 					extension: extension.slice(1),
 					isMixedContent: true,
 					scriptKind: ts.ScriptKind.Deferred,
-				}))
+				})),
 		);
 
 		// fix https://github.com/vuejs/language-tools/issues/1786
@@ -148,7 +148,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 				};
 			}
 			return target[key as keyof typeof target];
-		}
+		},
 	});
 	return {
 		host,
@@ -222,12 +222,12 @@ export class CompilerOptionsResolver {
 			},
 			fallthroughComponentNames: [
 				...defaults.fallthroughComponentNames,
-				...this.options.fallthroughComponentNames ?? []
+				...this.options.fallthroughComponentNames ?? [],
 			].map(hyphenateTag),
 			// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 			experimentalModelPropName: Object.fromEntries(Object.entries(
-				this.options.experimentalModelPropName ?? defaults.experimentalModelPropName
+				this.options.experimentalModelPropName ?? defaults.experimentalModelPropName,
 			).map(([k, v]) => [camelize(k), v])),
 		};
 	}
@@ -311,13 +311,13 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		plugins: [],
 		experimentalModelPropName: {
 			'': {
-				input: true
+				input: true,
 			},
 			value: {
 				input: { type: 'text' },
 				textarea: true,
-				select: true
-			}
+				select: true,
+			},
 		},
 	};
 }

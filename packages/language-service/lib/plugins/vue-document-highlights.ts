@@ -4,7 +4,7 @@ import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 
 export function create(
-	getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>
+	getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-highlights',

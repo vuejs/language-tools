@@ -10,6 +10,6 @@ defineFormatTest({
 	`.trim(),
 	settings: {
 		'javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets': true,
-		'typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets': true
+		'typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets': true,
 	},
 });

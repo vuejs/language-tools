@@ -359,7 +359,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 							shouldReport: () => data.expectError!.token === 0,
 						},
 					},
-					`// @ts-expect-error`
+					`// @ts-expect-error`,
 				);
 				yield `${newLine}${endOfLine}`;
 			}

@@ -9,7 +9,7 @@ export function getComponentType(
 	vueCode: VueVirtualCode,
 	components: NonNullable<ReturnType<typeof getVariableType>>,
 	fileName: string,
-	tag: string
+	tag: string,
 ) {
 	const program = languageService.getProgram()!;
 	const checker = program.getTypeChecker();
@@ -48,7 +48,7 @@ export function getVariableType(
 	ts: typeof import('typescript'),
 	languageService: ts.LanguageService,
 	vueCode: VueVirtualCode,
-	name: string
+	name: string,
 ) {
 	const program = languageService.getProgram()!;
 
@@ -68,7 +68,7 @@ export function getVariableType(
 function searchVariableDeclarationNode(
 	ts: typeof import('typescript'),
 	sourceFile: ts.SourceFile,
-	name: string
+	name: string,
 ) {
 	let result: ts.Node | undefined;
 	walk(sourceFile);

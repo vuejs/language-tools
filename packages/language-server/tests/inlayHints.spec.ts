@@ -13,7 +13,7 @@ test('Inline handler leading', async () => {
 			<template>
 				<div @click="a = 1"></div>
 			</template>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		"
 					<script setup lang="ts">
@@ -41,7 +41,7 @@ test('Missing props', async () => {
 			<template>
 				<Foo></Foo>
 			</template>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		"
 					<script setup lang="ts">
@@ -65,7 +65,7 @@ test('Options wrapper', async () => {
 			<script>
 			export default {};
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		"
 					<script>
@@ -120,7 +120,7 @@ test('Destructured props', async () => {
 				console.log(foo, bar, props.baz);
 			});
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		"
 					<script setup lang="ts">
@@ -175,7 +175,7 @@ test('#4720', async () => {
 			<template>
 				<div :foo.attr></div>
 			</template>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		"
 					<template>
@@ -194,7 +194,7 @@ test('#4855', async () => {
 			const { foo } = defineProps<{ foo: string }>();
 			console.log(foo);
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		"
 					<script setup lang="ts">

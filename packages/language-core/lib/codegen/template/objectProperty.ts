@@ -16,7 +16,7 @@ export function* generateObjectProperty(
 	features: VueCodeInformation,
 	astHolder?: any,
 	shouldCamelize = false,
-	shouldBeConstant = false
+	shouldBeConstant = false,
 ): Generator<Code> {
 	if (code.startsWith('[') && code.endsWith(']') && astHolder) {
 		if (shouldBeConstant) {
@@ -29,7 +29,7 @@ export function* generateObjectProperty(
 				offset + 1,
 				astHolder,
 				`[__VLS_tryAsConstant(`,
-				`)]`
+				`)]`,
 			);
 		}
 		else {
@@ -40,7 +40,7 @@ export function* generateObjectProperty(
 				features,
 				code,
 				offset,
-				astHolder
+				astHolder,
 			);
 		}
 	}
@@ -55,7 +55,7 @@ export function* generateObjectProperty(
 				features,
 				`'`,
 				...generateCamelized(code, 'template', offset, combineLastMapping),
-				`'`
+				`'`,
 			);
 		}
 	}

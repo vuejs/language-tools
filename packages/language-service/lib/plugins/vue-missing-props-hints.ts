@@ -5,7 +5,7 @@ import { URI } from 'vscode-uri';
 import { AttrNameCasing, checkCasing } from '../nameCasing';
 
 export function create(
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-missing-props-hints',
@@ -57,7 +57,7 @@ export function create(
 					const componentProps: Record<string, string[]> = {};
 
 					intrinsicElementNames ??= new Set(
-						await tsPluginClient?.getElementNames(root.fileName) ?? []
+						await tsPluginClient?.getElementNames(root.fileName) ?? [],
 					);
 
 					let token: html.TokenType;

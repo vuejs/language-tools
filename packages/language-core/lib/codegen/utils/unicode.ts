@@ -7,7 +7,7 @@ export function* generateUnicode(code: string, offset: number, info: VueCodeInfo
 			offset,
 			offset + code.length,
 			info,
-			toUnicode(code)
+			toUnicode(code),
 		);
 	}
 	else {

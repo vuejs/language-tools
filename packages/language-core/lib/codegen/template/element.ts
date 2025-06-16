@@ -23,7 +23,7 @@ const colonReg = /:/g;
 export function* generateComponent(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
+	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	const tagOffsets = [node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag)];
 	if (!node.isSelfClosing && options.template.lang === 'html') {
@@ -104,7 +104,7 @@ export function* generateComponent(
 					shouldCapitalize ? capitalize(node.tag) : node.tag,
 					'template',
 					tagOffset,
-					ctx.codeFeatures.withoutHighlightAndCompletion
+					ctx.codeFeatures.withoutHighlightAndCompletion,
 				);
 			}
 			yield `, `;
@@ -122,7 +122,7 @@ export function* generateComponent(
 			dynamicTagInfo.offsets[0],
 			dynamicTagInfo.astHolder,
 			`(`,
-			`)`
+			`)`,
 		);
 		if (dynamicTagInfo.offsets[1] !== undefined) {
 			yield `,`;
@@ -135,7 +135,7 @@ export function* generateComponent(
 				dynamicTagInfo.offsets[1],
 				dynamicTagInfo.astHolder,
 				`(`,
-				`)`
+				`)`,
 			);
 		}
 		yield `)${endOfLine}`;
@@ -155,7 +155,7 @@ export function* generateComponent(
 		yield* generateCanonicalComponentName(
 			node.tag,
 			tagOffsets[0],
-			ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation
+			ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
 		);
 		yield `${endOfLine}`;
 
@@ -170,7 +170,7 @@ export function* generateComponent(
 						shouldCapitalize ? capitalize(node.tag) : node.tag,
 						'template',
 						tagOffset,
-						codeFeatures.navigation
+						codeFeatures.navigation,
 					);
 					yield `, `;
 				}
@@ -188,7 +188,7 @@ export function* generateComponent(
 						isAdditional: true,
 						onlyImport: true,
 					},
-				}
+				},
 			);
 			yield `${endOfLine}`;
 		}
@@ -205,7 +205,7 @@ export function* generateComponent(
 		node,
 		props,
 		options.vueCompilerOptions.checkUnknownProps,
-		false
+		false,
 	);
 	yield `}))${endOfLine}`;
 
@@ -219,9 +219,9 @@ export function* generateComponent(
 					// https://typescript.tv/errors/#ts6133
 					return String(code) !== '6133';
 				},
-			}
+			},
 		}),
-		componentVNodeVar
+		componentVNodeVar,
 	);
 	yield ` = ${componentFunctionalVar}`;
 	yield* generateComponentGeneric(ctx);
@@ -238,9 +238,9 @@ export function* generateComponent(
 			props,
 			options.vueCompilerOptions.checkUnknownProps,
 			true,
-			failedPropExps
+			failedPropExps,
 		),
-		`}`
+		`}`,
 	);
 	yield `, ...__VLS_functionalComponentArgsRest(${componentFunctionalVar}))${endOfLine}`;
 
@@ -289,7 +289,7 @@ export function* generateComponent(
 export function* generateElement(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
+	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	const startTagOffset = node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
 	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
@@ -305,7 +305,7 @@ export function* generateElement(
 		ctx,
 		node.tag,
 		startTagOffset,
-		ctx.codeFeatures.withoutHighlightAndCompletion
+		ctx.codeFeatures.withoutHighlightAndCompletion,
 	);
 	if (endTagOffset !== undefined) {
 		yield `, __VLS_elements`;
@@ -314,7 +314,7 @@ export function* generateElement(
 			ctx,
 			node.tag,
 			endTagOffset,
-			ctx.codeFeatures.withoutHighlightAndCompletion
+			ctx.codeFeatures.withoutHighlightAndCompletion,
 		);
 	}
 	yield `)(`;
@@ -330,9 +330,9 @@ export function* generateElement(
 			node.props,
 			options.vueCompilerOptions.checkUnknownProps,
 			true,
-			failedPropExps
+			failedPropExps,
 		),
-		`}`
+		`}`,
 	);
 	yield `)${endOfLine}`;
 
@@ -366,7 +366,7 @@ export function* generateElement(
 function* generateFailedPropExps(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	failedPropExps: FailedPropExpression[]
+	failedPropExps: FailedPropExpression[],
 ): Generator<Code> {
 	for (const failedExp of failedPropExps) {
 		yield* generateInterpolation(
@@ -378,7 +378,7 @@ function* generateFailedPropExps(
 			failedExp.node.loc.start.offset,
 			failedExp.node.loc,
 			failedExp.prefix,
-			failedExp.suffix
+			failedExp.suffix,
 		);
 		yield endOfLine;
 	}
@@ -413,13 +413,13 @@ function* generateCanonicalComponentName(tagText: string, offset: number, featur
 			capitalize(tagText.replace(colonReg, '-')),
 			'template',
 			offset,
-			features
+			features,
 		);
 	}
 }
 
 function* generateComponentGeneric(
-	ctx: TemplateCodegenContext
+	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	if (ctx.currentInfo.generic) {
 		const { content, offset } = ctx.currentInfo.generic;
@@ -432,9 +432,9 @@ function* generateComponentGeneric(
 				content,
 				'template',
 				offset,
-				ctx.codeFeatures.all
+				ctx.codeFeatures.all,
 			],
-			`>`
+			`>`,
 		);
 	}
 }
@@ -442,7 +442,7 @@ function* generateComponentGeneric(
 function* generateElementReference(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
+	node: CompilerDOM.ElementNode,
 ): Generator<Code, [refName: string, offset: number] | []> {
 	for (const prop of node.props) {
 		if (
@@ -460,7 +460,7 @@ function* generateElementReference(
 				content,
 				startOffset,
 				ctx.codeFeatures.navigation,
-				prop.value.loc
+				prop.value.loc,
 			);
 			yield `} */${endOfLine}`;
 
@@ -477,14 +477,14 @@ function* generateElementReference(
 function hasVBindAttrs(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
+	node: CompilerDOM.ElementNode,
 ) {
 	return options.vueCompilerOptions.fallthroughAttributes && (
 		(options.inheritAttrs && ctx.singleRootNodes.has(node)) ||
 		node.props.some(prop =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'bind'
-			&& prop.exp?.loc.source === '$attrs'
+			&& prop.exp?.loc.source === '$attrs',
 		)
 	);
 }

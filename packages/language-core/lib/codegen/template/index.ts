@@ -58,7 +58,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		['$slots', yield* generateSlots(options, ctx)],
 		['$attrs', yield* generateInheritedAttrs(options, ctx)],
 		['$refs', yield* generateTemplateRefs(options, ctx)],
-		['$el', yield* generateRootEl(ctx)]
+		['$el', yield* generateRootEl(ctx)],
 	];
 
 	yield `var __VLS_dollars!: {${newLine}`;
@@ -72,7 +72,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 
 function* generateSlots(
 	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext
+	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	if (!options.hasDefineSlots) {
 		yield `type __VLS_Slots = {}`;
@@ -88,7 +88,7 @@ function* generateSlots(
 					slot.name,
 					slot.offset,
 					ctx.codeFeatures.withoutHighlightAndCompletion,
-					slot.nodeLoc
+					slot.nodeLoc,
 				);
 			}
 			else {
@@ -96,7 +96,7 @@ function* generateSlots(
 					slot.tagRange[0],
 					slot.tagRange[1],
 					ctx.codeFeatures.withoutHighlightAndCompletion,
-					`default`
+					`default`,
 				);
 			}
 			yield `?: (props: typeof ${slot.propsVar}) => any }`;
@@ -108,7 +108,7 @@ function* generateSlots(
 
 function* generateInheritedAttrs(
 	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext
+	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	yield `type __VLS_InheritedAttrs = {}`;
 	for (const varName of ctx.inheritedAttrVars) {
@@ -124,7 +124,7 @@ function* generateInheritedAttrs(
 				loc.source,
 				'template',
 				loc.start.offset,
-				ctx.codeFeatures.all
+				ctx.codeFeatures.all,
 			];
 			yield `,`;
 		}
@@ -135,7 +135,7 @@ function* generateInheritedAttrs(
 
 function* generateTemplateRefs(
 	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext
+	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	yield `type __VLS_TemplateRefs = {}`;
 	for (const [name, refs] of ctx.templateRefs) {
@@ -154,7 +154,7 @@ function* generateTemplateRefs(
 				ctx,
 				name,
 				offset,
-				ctx.codeFeatures.navigation
+				ctx.codeFeatures.navigation,
 			);
 			yield `: ${typeExp} }`;
 		}
@@ -167,7 +167,7 @@ function* generateTemplateRefs(
 }
 
 function* generateRootEl(
-	ctx: TemplateCodegenContext
+	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	yield `type __VLS_RootEl = `;
 	if (ctx.singleRootElTypes.length && !ctx.singleRootNodes.has(null)) {

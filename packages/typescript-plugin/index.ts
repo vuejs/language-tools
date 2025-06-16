@@ -23,7 +23,7 @@ export = createLanguageServicePlugin(
 			ts,
 			info.languageServiceHost.getCompilationSettings(),
 			vueOptions,
-			id => id
+			id => id,
 		);
 
 		addVueCommands();
@@ -42,7 +42,7 @@ export = createLanguageServicePlugin(
 						info.project['program'].__vue__ = { language };
 					}
 				}, 50);
-			}
+			},
 		};
 
 		function getVueCompilerOptions() {
@@ -146,5 +146,5 @@ export = createLanguageServicePlugin(
 				asScriptId: (fileName: string) => fileName,
 			};
 		}
-	}
+	},
 );

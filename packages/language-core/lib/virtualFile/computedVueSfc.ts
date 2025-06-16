@@ -7,7 +7,7 @@ export function computedVueSfc(
 	plugins: VueLanguagePluginReturn[],
 	fileName: string,
 	languageId: string,
-	getSnapshot: () => ts.IScriptSnapshot
+	getSnapshot: () => ts.IScriptSnapshot,
 ) {
 	let cache: {
 		snapshot: ts.IScriptSnapshot,

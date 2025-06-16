@@ -5,7 +5,7 @@ import { getLanguageServer, testWorkspacePath } from './server.js';
 
 test('#2410', async () => {
 	expect(
-		await requestRenameToVueServer('fixture.vue', 'vue', `<template><|h1></h1></template>`, 'h2')
+		await requestRenameToVueServer('fixture.vue', 'vue', `<template><|h1></h1></template>`, 'h2'),
 	).toMatchInlineSnapshot(`
 			{
 			  "changes": {
@@ -41,7 +41,7 @@ test('#2410', async () => {
 			}
 		`);
 	expect(
-		await requestRenameToVueServer('fixture.vue', 'vue', `<template><h1|></h1></template>`, 'h2')
+		await requestRenameToVueServer('fixture.vue', 'vue', `<template><h1|></h1></template>`, 'h2'),
 	).toMatchInlineSnapshot(`
 			{
 			  "changes": {
@@ -93,7 +93,7 @@ test('CSS', async () => {
 			<style module lang="scss">
 			// .foo { }
 			</style>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -151,7 +151,7 @@ test('CSS', async () => {
 			<style scoped>
 			.foo { }
 			</style>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -219,7 +219,7 @@ test('CSS', async () => {
 			<style lang="scss">
 			// .bar { color: v-bind(foo); }
 			</style>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -358,7 +358,7 @@ test('Component props', async () => {
 			<script lang="ts" setup>
 			defineProps({ aaaBbb|: String });
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -462,7 +462,7 @@ test('Component type props', async () => {
 			<script lang="ts" setup>
 			defineProps<{ aaaBbb|: String }>();
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -556,7 +556,7 @@ test('Component dynamic props', async () => {
 			<script lang="ts" setup>
 			const foo = 'foo';
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -633,7 +633,7 @@ test('Component returns', async () => {
 				},
 			});
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -702,7 +702,7 @@ test('<script setup>', async () => {
 			<script lang="ts" setup>
 			const foo = 1;
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -772,7 +772,7 @@ test('Component tags', async () => {
 			<script lang="ts" setup>
 			import AaBb| from './empty.vue';
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -881,7 +881,7 @@ test('#4673', async () => {
 			<style module="styl">
 			.foo { }
 			</style>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -953,7 +953,7 @@ test('Scoped Classes', async () => {
 			<style scoped>
 			.foo { }
 			</style>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -1045,7 +1045,7 @@ test('Ref', async () => {
 			import { ref } from 'vue';
 			const foo| = ref();
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -1115,7 +1115,7 @@ test('Template Ref', async () => {
 			import { useTemplateRef } from 'vue';
 			const el = useTemplateRef('foo|');
 			</script>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {

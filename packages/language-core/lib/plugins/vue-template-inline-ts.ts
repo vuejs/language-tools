@@ -82,7 +82,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					addFormatCodes(
 						content,
 						node.loc.start.offset + node.loc.source.indexOf('{') + 1,
-						formatBrackets.generic
+						formatBrackets.generic,
 					);
 				}
 			}
@@ -99,7 +99,7 @@ const plugin: VueLanguagePlugin = ctx => {
 						addFormatCodes(
 							prop.arg.loc.source,
 							prop.arg.loc.start.offset,
-							formatBrackets.normal
+							formatBrackets.normal,
 						);
 					}
 					if (
@@ -112,7 +112,7 @@ const plugin: VueLanguagePlugin = ctx => {
 								addFormatCodes(
 									prop.exp.loc.source,
 									prop.exp.loc.start.offset,
-									formatBrackets.event
+									formatBrackets.event,
 								);
 							}
 							else {
@@ -123,14 +123,14 @@ const plugin: VueLanguagePlugin = ctx => {
 									addFormatCodes(
 										prop.exp.loc.source,
 										prop.exp.loc.start.offset,
-										formatBrackets.normal
+										formatBrackets.normal,
 									);
 								}
 								else {
 									addFormatCodes(
 										prop.exp.loc.source,
 										prop.exp.loc.start.offset,
-										['(', ');']
+										['(', ');'],
 									);
 								}
 							}
@@ -139,7 +139,7 @@ const plugin: VueLanguagePlugin = ctx => {
 							addFormatCodes(
 								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
-								formatBrackets.params
+								formatBrackets.params,
 							);
 						}
 						else if (prop.rawName === 'v-for') {
@@ -147,14 +147,14 @@ const plugin: VueLanguagePlugin = ctx => {
 							addFormatCodes(
 								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
-								formatBrackets.for
+								formatBrackets.for,
 							);
 						}
 						else {
 							addFormatCodes(
 								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
-								formatBrackets.normal
+								formatBrackets.normal,
 							);
 						}
 					}
@@ -170,7 +170,7 @@ const plugin: VueLanguagePlugin = ctx => {
 						addFormatCodes(
 							branch.condition.loc.source,
 							branch.condition.loc.start.offset,
-							formatBrackets.if
+							formatBrackets.if,
 						);
 					}
 
@@ -194,7 +194,7 @@ const plugin: VueLanguagePlugin = ctx => {
 					addFormatCodes(
 						templateContent.slice(start, end),
 						start,
-						formatBrackets.for
+						formatBrackets.for,
 					);
 				}
 				for (const child of node.children) {
@@ -225,14 +225,14 @@ const plugin: VueLanguagePlugin = ctx => {
 						addFormatCodes(
 							content,
 							start,
-							formatBrackets.normal
+							formatBrackets.normal,
 						);
 					}
 					else {
 						addFormatCodes(
 							content,
 							start,
-							['(', ');']
+							['(', ');'],
 						);
 					}
 				}
@@ -241,7 +241,7 @@ const plugin: VueLanguagePlugin = ctx => {
 						addFormatCodes(
 							content,
 							start,
-							formatBrackets.curly
+							formatBrackets.curly,
 						);
 					}
 					else {
@@ -250,8 +250,8 @@ const plugin: VueLanguagePlugin = ctx => {
 							start,
 							[
 								firstLineEmpty ? '(' : '(0 +',
-								lastLineEmpty ? ');' : '+ 0);'
-							]
+								lastLineEmpty ? ');' : '+ 0);',
+							],
 						);
 					}
 				}

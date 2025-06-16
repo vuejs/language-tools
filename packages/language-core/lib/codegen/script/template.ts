@@ -12,7 +12,7 @@ import type { ScriptCodegenOptions } from './index';
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext
+	ctx: ScriptCodegenContext,
 ): Generator<Code, TemplateCodegenContext> {
 	ctx.generatedTemplate = true;
 
@@ -113,7 +113,7 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 
 function* generateTemplateBody(
 	options: ScriptCodegenOptions,
-	templateCodegenCtx: TemplateCodegenContext
+	templateCodegenCtx: TemplateCodegenContext,
 ): Generator<Code> {
 	yield* generateStyleScopedClasses(options, templateCodegenCtx);
 	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
@@ -147,7 +147,7 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 				style.name,
 				codeFeatures.all,
 				cssBind.text,
-				cssBind.offset
+				cssBind.offset,
 			);
 			yield endOfLine;
 		}

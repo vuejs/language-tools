@@ -2,7 +2,7 @@ import { computed } from 'alien-signals';
 
 export function computedArray<I, O>(
 	arr: () => I[],
-	getGetter: (item: () => I, index: number) => () => O
+	getGetter: (item: () => I, index: number) => () => O,
 ) {
 	const length = computed(() => arr().length);
 	const keys = computed(
@@ -12,7 +12,7 @@ export function computedArray<I, O>(
 				keys.push(String(i));
 			}
 			return keys;
-		}
+		},
 	);
 	const items = computed<(() => O)[]>(
 		array => {
@@ -26,7 +26,7 @@ export function computedArray<I, O>(
 				array.length = length();
 			}
 			return array;
-		}
+		},
 	);
 
 	return new Proxy({}, {
@@ -56,13 +56,13 @@ export function computedSet<T>(source: () => Set<T>): () => Set<T> {
 				return oldValue;
 			}
 			return newValue;
-		}
+		},
 	);
 }
 
 export function computedItems<T>(
 	source: () => T[],
-	compareFn: (oldItem: T, newItem: T) => boolean
+	compareFn: (oldItem: T, newItem: T) => boolean,
 ) {
 	return computed<T[]>(
 		oldArr => {
@@ -72,6 +72,6 @@ export function computedItems<T>(
 				return oldArr;
 			}
 			return newArr;
-		}
+		},
 	);
 }
