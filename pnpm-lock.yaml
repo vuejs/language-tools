@@ -26,6 +26,9 @@ importers:
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.19.0
         version: 8.31.0(@typescript-eslint/parser@8.31.0(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)(typescript@5.8.3)
+      oxlint:
+        specifier: ^1.0.0
+        version: 1.0.0
       typescript:
         specifier: latest
         version: 5.8.3
@@ -54,10 +57,10 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/language-server':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../../packages/typescript-plugin
       reactive-vscode:
         specifier: ^0.2.9
@@ -81,7 +84,7 @@ importers:
         specifier: 2.4.14
         version: 2.4.14
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
@@ -98,7 +101,7 @@ importers:
         version: 1.0.3
       vue-component-type-helpers:
         specifier: 3.0.0-beta.1
-        version: link:../component-type-helpers
+        version: 3.0.0-beta.1
 
   packages/component-type-helpers: {}
 
@@ -158,7 +161,7 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
 
   packages/language-server:
@@ -167,11 +170,14 @@ importers:
         specifier: 2.4.14
         version: 2.4.14
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
       '@vue/language-service':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-service
+      '@vue/typescript-plugin':
+        specifier: 3.0.0-beta.2
+        version: link:../typescript-plugin
       typescript:
         specifier: '*'
         version: 5.8.3
@@ -192,7 +198,7 @@ importers:
         specifier: 2.4.14
         version: 2.4.14
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
@@ -247,7 +253,7 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/typescript-plugin':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../typescript-plugin
       vscode-css-languageservice:
         specifier: ^6.3.1
@@ -259,7 +265,7 @@ importers:
         specifier: 2.4.14
         version: 2.4.14
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
       typescript:
         specifier: '>=5.0.0'
@@ -275,7 +281,7 @@ importers:
         specifier: 2.4.14
         version: 2.4.14
       '@vue/language-core':
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
@@ -300,7 +306,7 @@ importers:
         specifier: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72
         version: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72(typescript@5.8.3)
       vue-component-type-helpers:
-        specifier: 3.0.0-beta.1
+        specifier: 3.0.0-beta.2
         version: link:../packages/component-type-helpers
       vue3.4:
         specifier: npm:vue@3.4.38
@@ -1031,6 +1037,46 @@ packages:
 
   '@oxc-project/types@0.65.0':
     resolution: {integrity: sha512-7MpMzyXCcwxrTxJ4L0siy63Ds/LA8LAM4szumTFiynxTJkfrIZEV4PyR4Th0CqFZQ+oNi8WvW3Dr1MLy7o9qPQ==}
+
+  '@oxlint/darwin-arm64@1.0.0':
+    resolution: {integrity: sha512-Ei8wLh65Th/si5EY6mfQIXVpdXbJWOoh56FaxxPgVxTeJaj3NHUIlxICHkvTZ5dz8bnOFcbS/+9MaW8Qkzfm9g==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@oxlint/darwin-x64@1.0.0':
+    resolution: {integrity: sha512-dbdtQ+rJTUb4jFKTzV+j08yYcR8lZssLF10n7MggK/jI7pBtoQN04cupzYdkxOWSy6uDXjDmWYFDIqlTqV7zOg==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oxlint/linux-arm64-gnu@1.0.0':
+    resolution: {integrity: sha512-71wy9zMxsAeRhCFQjUkDLT8N5tm10L5FxNxsUcEsezgM187X9tPGP1gwlFpYig7F+bg2X1dijFuTA/FSe0YpKg==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oxlint/linux-arm64-musl@1.0.0':
+    resolution: {integrity: sha512-UbD4+2k7aGZOFtKK/yeESX7Fv0w9gQbcjrjr1HGY7QOYg7XlFlqzycZdPS6XbAuKA5oOXFpafaYOD4AyX3p2AA==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oxlint/linux-x64-gnu@1.0.0':
+    resolution: {integrity: sha512-0NXWqsm65I3VaLgADW4y9r7Pwurqgs2fr1lqoTyTIlidD18LQ3UMAWp8NzBPMCYzw8c/rTgOzsFf0gLtxzMtwg==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oxlint/linux-x64-musl@1.0.0':
+    resolution: {integrity: sha512-AY1NLnVQI+tBeuaB8KCriWfiD6O1zZFAQHphRDcZiqSz4mauNq9FFuffW0N9RSR9hYttGr0UVdQ6eK72RhzOYg==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oxlint/win32-arm64@1.0.0':
+    resolution: {integrity: sha512-X9y2KAdoqT/jy/sITGDZNMJHJAmhDhofItBnCf2DWS1HPakdtCAKGX9KMx6SivTbtPn1+JpZgfHn4Y7rNMvujQ==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@oxlint/win32-x64@1.0.0':
+    resolution: {integrity: sha512-x2eQwZCfRUi6GG0lhRuC54O6TK2uW7UbIvERh83vPi0ftd+rtGUuJauNdyC+pPx+iwFToFVet43/5MBMu4bMWg==}
+    cpu: [x64]
+    os: [win32]
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -2883,6 +2929,11 @@ packages:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
 
+  oxlint@1.0.0:
+    resolution: {integrity: sha512-yyeryHnd21wPBLBEF4Uf8hvzJlftrIGHxyUaqFaP2JYiZ9cbiColygZhrezvv/Z/aThCmYu3j6iJMxlVPxNt6g==}
+    engines: {node: '>=8.*'}
+    hasBin: true
+
   p-limit@2.3.0:
     resolution: {integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==}
     engines: {node: '>=6'}
@@ -3715,6 +3766,9 @@ packages:
 
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
+
+  vue-component-type-helpers@3.0.0-beta.1:
+    resolution: {integrity: sha512-XZ/9c02NsBSDFK5epnbl7nwpjbYYstYzCgAjfV02sRy4b1hhCvFkZ/+8W1WX+/hOjYXDfUyqgjvkxUkSAm05Ng==}
 
   vue@3.4.38:
     resolution: {integrity: sha512-f0ZgN+mZ5KFgVv9wz0f4OgVKukoXtS3nwET4c2vLBGQR50aI8G0cqbFtLlX9Yiyg3LFGBitruPHt2PxwTduJEw==}
@@ -4662,6 +4716,30 @@ snapshots:
       '@octokit/openapi-types': 25.0.0
 
   '@oxc-project/types@0.65.0': {}
+
+  '@oxlint/darwin-arm64@1.0.0':
+    optional: true
+
+  '@oxlint/darwin-x64@1.0.0':
+    optional: true
+
+  '@oxlint/linux-arm64-gnu@1.0.0':
+    optional: true
+
+  '@oxlint/linux-arm64-musl@1.0.0':
+    optional: true
+
+  '@oxlint/linux-x64-gnu@1.0.0':
+    optional: true
+
+  '@oxlint/linux-x64-musl@1.0.0':
+    optional: true
+
+  '@oxlint/win32-arm64@1.0.0':
+    optional: true
+
+  '@oxlint/win32-x64@1.0.0':
+    optional: true
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -6690,6 +6768,17 @@ snapshots:
       type-check: 0.4.0
       word-wrap: 1.2.5
 
+  oxlint@1.0.0:
+    optionalDependencies:
+      '@oxlint/darwin-arm64': 1.0.0
+      '@oxlint/darwin-x64': 1.0.0
+      '@oxlint/linux-arm64-gnu': 1.0.0
+      '@oxlint/linux-arm64-musl': 1.0.0
+      '@oxlint/linux-x64-gnu': 1.0.0
+      '@oxlint/linux-x64-musl': 1.0.0
+      '@oxlint/win32-arm64': 1.0.0
+      '@oxlint/win32-x64': 1.0.0
+
   p-limit@2.3.0:
     dependencies:
       p-try: 2.2.0
@@ -7560,6 +7649,8 @@ snapshots:
       vscode-textmate: 9.2.0
 
   vscode-uri@3.1.0: {}
+
+  vue-component-type-helpers@3.0.0-beta.1: {}
 
   vue@3.4.38(typescript@5.8.3):
     dependencies:
