@@ -25,7 +25,7 @@ export function* generateInterpolation(
 		destructuredPropNames,
 		templateRefNames,
 	} = options;
-	const template = 'template' in options ? options.template : options.sfc.template!;
+	const template = 'template' in options ? options.template : options.sfc.template;
 
 	for (let [section, offset, type] of forEachInterpolationSegment(
 		ts,
@@ -92,7 +92,7 @@ type Segment = [
 
 function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
-	template: NonNullable<Sfc['template']>,
+	template: Sfc['template'],
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
@@ -112,7 +112,7 @@ function* forEachInterpolationSegment(
 		});
 	}
 	else {
-		const ast = createTsAst(ts, template.ast, code);
+		const ast = createTsAst(ts, template?.ast, code);
 		const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 			const text = getNodeText(ts, id, ast);
 			if (!shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
