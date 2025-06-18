@@ -1,11 +1,11 @@
 import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { TemplateCodegenOptions } from '.';
 import type { Code, Sfc, VueCodeInformation } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import type { ScriptCodegenOptions } from '../script';
 import { collectVars, createTsAst, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
 
 // https://github.com/vuejs/core/blob/fb0c3ca519f1fccf52049cd6b8db3a67a669afe9/packages/compiler-core/src/transforms/transformExpression.ts#L47
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
