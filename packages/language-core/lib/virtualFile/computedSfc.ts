@@ -176,7 +176,7 @@ export function computedSfc(
 				return {
 					errors: [],
 					warnings: [],
-					ast: cache?.result.ast,
+					ast: cache.result.ast,
 				};
 			}
 
@@ -200,6 +200,7 @@ export function computedSfc(
 						cache.template = base.content;
 						cache.snapshot = getUntrackedSnapshot();
 						cache.result = newResult;
+						updateInlineTsAsts(newResult.ast, cache.result.ast);
 						return {
 							errors: [],
 							warnings: [],
@@ -229,6 +230,9 @@ export function computedSfc(
 
 				try {
 					result = plugin.compileSFCTemplate?.(base.lang, base.content, options);
+					if (result) {
+						updateInlineTsAsts(result.ast, cache?.result.ast);
+					}
 				}
 				catch (e) {
 					const err = e as CompilerDOM.CompilerError;
@@ -325,4 +329,22 @@ export function computedSfc(
 
 function mergeObject<T, K>(a: T, b: K): T & K {
 	return Object.defineProperties(a, Object.getOwnPropertyDescriptors(b)) as T & K;
+}
+
+function updateInlineTsAsts(newAst: CompilerDOM.RootNode, oldAst?: CompilerDOM.RootNode) {
+	const newTsAsts: Map<string, any> = (newAst as any).__volar_inlineTsAsts ??= new Map();
+	const oldTsAsts: Map<string, any> = (oldAst as any)?.__volar_inlineTsAsts;
+	if (!oldTsAsts) {
+		return;
+	}
+
+	for (const [text, ast] of oldTsAsts) {
+		if (!ast.__volar_used) {
+			oldTsAsts.delete(text);
+		}
+		else {
+			newTsAsts.set(text, ast);
+			ast.__volar_used = false;
+		}
+	}
 }

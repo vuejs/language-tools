@@ -150,7 +150,6 @@ export function* generateSlotOutlet(
 				ctx.codeFeatures.all,
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,
-				nameProp.exp,
 			);
 			yield `)${endOfLine}`;
 			ctx.dynamicSlots.push({

@@ -120,7 +120,6 @@ export function* generateComponent(
 			ctx.codeFeatures.all,
 			dynamicTagInfo.tag,
 			dynamicTagInfo.offsets[0],
-			dynamicTagInfo.astHolder,
 			`(`,
 			`)`,
 		);
@@ -133,7 +132,6 @@ export function* generateComponent(
 				ctx.codeFeatures.withoutCompletion,
 				dynamicTagInfo.tag,
 				dynamicTagInfo.offsets[1],
-				dynamicTagInfo.astHolder,
 				`(`,
 				`)`,
 			);
@@ -376,7 +374,6 @@ function* generateFailedPropExps(
 			ctx.codeFeatures.all,
 			failedExp.node.loc.source,
 			failedExp.node.loc.start.offset,
-			failedExp.node.loc,
 			failedExp.prefix,
 			failedExp.suffix,
 		);
@@ -460,7 +457,6 @@ function* generateElementReference(
 				content,
 				startOffset,
 				ctx.codeFeatures.navigation,
-				prop.value.loc,
 			);
 			yield `} */${endOfLine}`;
 

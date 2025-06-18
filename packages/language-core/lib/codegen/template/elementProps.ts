@@ -130,7 +130,6 @@ export function* generateElementProps(
 							propName,
 							prop.arg.loc.start.offset,
 							codeInfo,
-							(prop.loc as any).name_2 ??= {},
 							shouldCamelize,
 						)
 						: wrapWith(
@@ -208,7 +207,6 @@ export function* generateElementProps(
 					prop.name,
 					prop.loc.start.offset,
 					codeInfo,
-					(prop.loc as any).name_1 ??= {},
 					shouldCamelize,
 				),
 				`: `,
@@ -287,7 +285,6 @@ export function* generatePropExp(
 				features,
 				exp.loc.source,
 				exp.loc.start.offset,
-				exp.loc,
 				`(`,
 				`)`,
 			);

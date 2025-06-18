@@ -124,7 +124,6 @@ function* generateTemplateBody(
 		yield* options.templateCodegen.codes;
 	}
 	else {
-		yield `// no template${newLine}`;
 		if (!options.scriptSetupRanges?.defineSlots) {
 			yield `type __VLS_Slots = {}${endOfLine}`;
 		}

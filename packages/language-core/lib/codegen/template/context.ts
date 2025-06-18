@@ -281,7 +281,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 							offset,
 							{
 								...codeFeatures.additionalCompletion,
-								...codeFeatures.withoutHighlightAndCompletionAndNavigation,
+								...codeFeatures.semanticWithoutHighlight,
 							},
 						];
 					}

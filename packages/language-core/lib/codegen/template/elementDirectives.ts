@@ -111,7 +111,6 @@ function* generateArg(
 			ctx.codeFeatures.all,
 			arg.content,
 			startOffset,
-			arg.loc,
 			`(`,
 			`)`,
 		);
