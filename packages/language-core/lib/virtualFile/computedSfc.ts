@@ -170,6 +170,26 @@ export function computedSfc(
 			plugin: VueLanguagePluginReturn,
 		} | undefined;
 
+		let inlineTsAsts: Map<string, any> | undefined;
+
+		function updateInlineTsAsts(newAst: CompilerDOM.RootNode, oldAst?: CompilerDOM.RootNode) {
+			const newTsAsts: Map<string, any> = (newAst as any).__volar_inlineTsAsts ??= new Map();
+			const oldTsAsts: Map<string, any> = (oldAst as any)?.__volar_inlineTsAsts ?? inlineTsAsts;
+
+			if (oldTsAsts) {
+				for (const [text, ast] of oldTsAsts) {
+					if (!ast.__volar_used) {
+						oldTsAsts.delete(text);
+					}
+					else {
+						newTsAsts.set(text, ast);
+						ast.__volar_used = false;
+					}
+				}
+			}
+			inlineTsAsts = new Map(newTsAsts);
+		}
+
 		return computed(() => {
 
 			if (cache?.template === base.content) {
@@ -329,22 +349,4 @@ export function computedSfc(
 
 function mergeObject<T, K>(a: T, b: K): T & K {
 	return Object.defineProperties(a, Object.getOwnPropertyDescriptors(b)) as T & K;
-}
-
-function updateInlineTsAsts(newAst: CompilerDOM.RootNode, oldAst?: CompilerDOM.RootNode) {
-	const newTsAsts: Map<string, any> = (newAst as any).__volar_inlineTsAsts ??= new Map();
-	const oldTsAsts: Map<string, any> = (oldAst as any)?.__volar_inlineTsAsts;
-	if (!oldTsAsts) {
-		return;
-	}
-
-	for (const [text, ast] of oldTsAsts) {
-		if (!ast.__volar_used) {
-			oldTsAsts.delete(text);
-		}
-		else {
-			newTsAsts.set(text, ast);
-			ast.__volar_used = false;
-		}
-	}
 }
