@@ -217,10 +217,10 @@ export function computedSfc(
 						newText,
 					});
 					if (newResult) {
+						updateInlineTsAsts(newResult.ast, cache.result.ast);
 						cache.template = base.content;
 						cache.snapshot = getUntrackedSnapshot();
 						cache.result = newResult;
-						updateInlineTsAsts(newResult.ast, cache.result.ast);
 						return {
 							errors: [],
 							warnings: [],
