@@ -52,7 +52,6 @@ export function* generateComponent(
 	let dynamicTagInfo: {
 		tag: string;
 		offsets: number[];
-		astHolder: CompilerDOM.SourceLocation;
 	} | undefined;
 
 	if (isComponentTag) {
@@ -69,7 +68,6 @@ export function* generateComponent(
 				dynamicTagInfo = {
 					tag: prop.exp.content,
 					offsets: [prop.exp.loc.start.offset],
-					astHolder: prop.exp.loc,
 				};
 				props = props.filter(p => p !== prop);
 				break;
@@ -81,7 +79,6 @@ export function* generateComponent(
 		dynamicTagInfo = {
 			tag: node.tag,
 			offsets: tagOffsets,
-			astHolder: node.loc,
 		};
 	}
 
