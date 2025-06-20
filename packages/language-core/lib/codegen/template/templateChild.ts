@@ -101,7 +101,6 @@ export function* generateTemplateChild(
 			ctx.codeFeatures.all,
 			content,
 			start,
-			node.content.loc,
 			`(`,
 			`)${endOfLine}`,
 		);

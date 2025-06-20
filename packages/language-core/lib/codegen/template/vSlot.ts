@@ -37,7 +37,6 @@ export function* generateVSlot(
 					slotDir.arg.loc.source,
 					slotDir.arg.loc.start.offset,
 					slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
-					slotDir.arg.loc,
 					false,
 					true,
 				);
@@ -65,7 +64,7 @@ export function* generateVSlot(
 	}
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const slotAst = createTsAst(options.ts, slotDir, `(${slotDir.exp.content}) => {}`);
+		const slotAst = createTsAst(options.ts, options.template.ast, `(${slotDir.exp.content}) => {}`);
 		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
 	}

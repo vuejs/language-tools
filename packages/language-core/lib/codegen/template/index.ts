@@ -88,7 +88,6 @@ function* generateSlots(
 					slot.name,
 					slot.offset,
 					ctx.codeFeatures.withoutHighlightAndCompletion,
-					slot.nodeLoc,
 				);
 			}
 			else {

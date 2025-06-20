@@ -1,36 +1,40 @@
 import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, Sfc, VueCodeInformation } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
+import type { ScriptCodegenOptions } from '../script';
 import { collectVars, createTsAst, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
+import type { TemplateCodegenOptions } from './index';
 
 // https://github.com/vuejs/core/blob/fb0c3ca519f1fccf52049cd6b8db3a67a669afe9/packages/compiler-core/src/transforms/transformExpression.ts#L47
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	options: {
-		ts: typeof ts,
-		destructuredPropNames: Set<string> | undefined,
-		templateRefNames: Set<string> | undefined;
-	},
+	options: TemplateCodegenOptions | ScriptCodegenOptions,
 	ctx: TemplateCodegenContext,
 	source: string,
 	data: VueCodeInformation | ((offset: number) => VueCodeInformation) | undefined,
 	code: string,
 	start: number | undefined,
-	astHolder: any = {},
 	prefix: string = '',
 	suffix: string = '',
 ): Generator<Code> {
+	const {
+		ts,
+		destructuredPropNames,
+		templateRefNames,
+	} = options;
+	const template = 'template' in options ? options.template : options.sfc.template;
+
 	for (let [section, offset, type] of forEachInterpolationSegment(
-		options.ts,
-		options.destructuredPropNames,
-		options.templateRefNames,
+		ts,
+		template,
+		destructuredPropNames,
+		templateRefNames,
 		ctx,
 		code,
 		start,
-		astHolder,
 		prefix,
 		suffix,
 	)) {
@@ -88,12 +92,12 @@ type Segment = [
 
 function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
+	template: Sfc['template'],
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
 	originalCode: string,
 	start: number | undefined,
-	astHolder: any,
 	prefix: string,
 	suffix: string,
 ): Generator<Segment> {
@@ -108,7 +112,7 @@ function* forEachInterpolationSegment(
 		});
 	}
 	else {
-		const ast = createTsAst(ts, astHolder, code);
+		const ast = createTsAst(ts, template?.ast, code);
 		const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 			const text = getNodeText(ts, id, ast);
 			if (!shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {

@@ -39,7 +39,6 @@ export function* generateVIf(
 				ctx.codeFeatures.all,
 				branch.condition.content,
 				branch.condition.loc.start.offset,
-				branch.condition.loc,
 				`(`,
 				`)`,
 			)];

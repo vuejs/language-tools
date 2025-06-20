@@ -170,13 +170,33 @@ export function computedSfc(
 			plugin: VueLanguagePluginReturn,
 		} | undefined;
 
+		let inlineTsAsts: Map<string, any> | undefined;
+
+		function updateInlineTsAsts(newAst: CompilerDOM.RootNode, oldAst?: CompilerDOM.RootNode) {
+			const newTsAsts: Map<string, any> = (newAst as any).__volar_inlineTsAsts ??= new Map();
+			const oldTsAsts: Map<string, any> = (oldAst as any)?.__volar_inlineTsAsts ?? inlineTsAsts;
+
+			if (oldTsAsts) {
+				for (const [text, ast] of oldTsAsts) {
+					if (!ast.__volar_used) {
+						oldTsAsts.delete(text);
+					}
+					else {
+						newTsAsts.set(text, ast);
+						ast.__volar_used = false;
+					}
+				}
+			}
+			inlineTsAsts = new Map(newTsAsts);
+		}
+
 		return computed(() => {
 
 			if (cache?.template === base.content) {
 				return {
 					errors: [],
 					warnings: [],
-					ast: cache?.result.ast,
+					ast: cache.result.ast,
 				};
 			}
 
@@ -197,6 +217,7 @@ export function computedSfc(
 						newText,
 					});
 					if (newResult) {
+						updateInlineTsAsts(newResult.ast, cache.result.ast);
 						cache.template = base.content;
 						cache.snapshot = getUntrackedSnapshot();
 						cache.result = newResult;
@@ -229,6 +250,9 @@ export function computedSfc(
 
 				try {
 					result = plugin.compileSFCTemplate?.(base.lang, base.content, options);
+					if (result) {
+						updateInlineTsAsts(result.ast, cache?.result.ast);
+					}
 				}
 				catch (e) {
 					const err = e as CompilerDOM.CompilerError;

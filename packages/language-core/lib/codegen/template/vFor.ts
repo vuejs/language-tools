@@ -17,7 +17,7 @@ export function* generateVFor(
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
-		const collectAst = createTsAst(options.ts, node.parseResult, `const [${leftExpressionText}]`);
+		const collectAst = createTsAst(options.ts, options.template.ast, `const [${leftExpressionText}]`);
 		collectVars(options.ts, collectAst, collectAst, forBlockVars);
 		yield [
 			leftExpressionText,
@@ -36,7 +36,6 @@ export function* generateVFor(
 			ctx.codeFeatures.all,
 			source.content,
 			source.loc.start.offset,
-			source.loc,
 			`(`,
 			`)`,
 		);
@@ -74,7 +73,6 @@ export function* generateVFor(
 						ctx.codeFeatures.all,
 						prop.value.content,
 						prop.value.loc.start.offset,
-						prop.value.loc,
 						`(`,
 						`)`,
 					);
