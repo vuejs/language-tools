@@ -58,6 +58,10 @@ export function baseCreate(
 ) {
 	let commandLine = getCommandLine();
 	let fileNames = commandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
+	/**
+	 * Used to lookup if a file is referenced.
+	 */
+	let fileNamesMap = Object.fromEntries(fileNames.map(name => [name, true]));
 	let projectVersion = 0;
 
 	const projectHost: TypeScriptProjectHost = {
@@ -188,16 +192,23 @@ export function baseCreate(
 		updateFile(fileName: string, text: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
+			// Add the file if it is not referenced yet
+			if (!fileNamesMap[fileName]) {
+				fileNames.push(fileName);
+				fileNamesMap[fileName] = true;
+			}
 			projectVersion++;
 		},
 		deleteFile(fileName: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
 			fileNames = fileNames.filter(f => f !== fileName);
+			delete fileNamesMap[fileName];
 			projectVersion++;
 		},
 		reload() {
 			commandLine = getCommandLine();
 			fileNames = commandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
+			fileNamesMap = Object.fromEntries(fileNames.map(name => [name, true]));
 			this.clearCache();
 		},
 		clearCache() {
