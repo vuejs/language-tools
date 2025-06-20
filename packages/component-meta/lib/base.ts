@@ -57,18 +57,17 @@ export function baseCreate(
 	globalComponentName: string,
 ) {
 	let commandLine = getCommandLine();
-	let fileNames = commandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
 	/**
 	 * Used to lookup if a file is referenced.
 	 */
-	let fileNamesMap = Object.fromEntries(fileNames.map(name => [name, true]));
+	let fileNames = new Set(commandLine.fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
 
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
 		getCompilationSettings: () => commandLine.options,
-		getScriptFileNames: () => fileNames,
+		getScriptFileNames: () => [...fileNames],
 		getProjectReferences: () => commandLine.projectReferences,
 	};
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
@@ -192,23 +191,18 @@ export function baseCreate(
 		updateFile(fileName: string, text: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
-			// Add the file if it is not referenced yet
-			if (!fileNamesMap[fileName]) {
-				fileNames.push(fileName);
-				fileNamesMap[fileName] = true;
-			}
+			// Ensure the file is referenced
+			fileNames.add(fileName);
 			projectVersion++;
 		},
 		deleteFile(fileName: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
-			fileNames = fileNames.filter(f => f !== fileName);
-			delete fileNamesMap[fileName];
+			fileNames.delete(fileName);
 			projectVersion++;
 		},
 		reload() {
 			commandLine = getCommandLine();
-			fileNames = commandLine.fileNames.map(path => path.replace(windowsPathReg, '/'));
-			fileNamesMap = Object.fromEntries(fileNames.map(name => [name, true]));
+			fileNames = new Set(commandLine.fileNames.map(path => path.replace(windowsPathReg, '/')));
 			this.clearCache();
 		},
 		clearCache() {
