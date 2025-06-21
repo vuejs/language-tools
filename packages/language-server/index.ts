@@ -49,7 +49,7 @@ connection.onInitialize(params => {
 					let projectInfoPromise = file2ProjectInfo.get(fileName);
 					if (!projectInfoPromise) {
 						projectInfoPromise = sendTsRequest<ts.server.protocol.ProjectInfo>(
-							ts.server.protocol.CommandTypes.ProjectInfo,
+							'_vue:' + ts.server.protocol.CommandTypes.ProjectInfo,
 							{
 								file: fileName,
 								needFileNameList: false,
@@ -89,35 +89,35 @@ connection.onInitialize(params => {
 		},
 		createVueLanguageServicePlugins(ts, {
 			collectExtractProps(...args) {
-				return sendTsRequest('vue:collectExtractProps', args);
+				return sendTsRequest('_vue:collectExtractProps', args);
 			},
 			getComponentDirectives(...args) {
-				return sendTsRequest('vue:getComponentDirectives', args);
+				return sendTsRequest('_vue:getComponentDirectives', args);
 			},
 			getComponentEvents(...args) {
-				return sendTsRequest('vue:getComponentEvents', args);
+				return sendTsRequest('_vue:getComponentEvents', args);
 			},
 			getComponentNames(...args) {
-				return sendTsRequest('vue:getComponentNames', args);
+				return sendTsRequest('_vue:getComponentNames', args);
 			},
 			getComponentProps(...args) {
-				return sendTsRequest('vue:getComponentProps', args);
+				return sendTsRequest('_vue:getComponentProps', args);
 			},
 			getElementAttrs(...args) {
-				return sendTsRequest('vue:getElementAttrs', args);
+				return sendTsRequest('_vue:getElementAttrs', args);
 			},
 			getElementNames(...args) {
-				return sendTsRequest('vue:getElementNames', args);
+				return sendTsRequest('_vue:getElementNames', args);
 			},
 			getImportPathForFile(...args) {
-				return sendTsRequest('vue:getImportPathForFile', args);
+				return sendTsRequest('_vue:getImportPathForFile', args);
 			},
 			getPropertiesAtLocation(...args) {
-				return sendTsRequest('vue:getPropertiesAtLocation', args);
+				return sendTsRequest('_vue:getPropertiesAtLocation', args);
 			},
 			getDocumentHighlights(fileName, position) {
 				return sendTsRequest(
-					'documentHighlights-full', // internal command
+					'_vue:documentHighlights-full',
 					{
 						file: fileName,
 						...{ position } as unknown as { line: number; offset: number; },
@@ -127,7 +127,7 @@ connection.onInitialize(params => {
 			},
 			async getQuickInfoAtPosition(fileName, { line, character }) {
 				const result = await sendTsRequest<ts.QuickInfo>(
-					ts.server.protocol.CommandTypes.Quickinfo,
+					'_vue:' + ts.server.protocol.CommandTypes.Quickinfo,
 					{
 						file: fileName,
 						line: line + 1,
