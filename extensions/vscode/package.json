@@ -430,7 +430,15 @@
 				},
 				{
 					"command": "typescript.goToProjectConfig",
-					"when": "editorLangId == vue"
+					"when": "editorLangId == vue && typescript.isManagedFile"
+				},
+				{
+					"command": "typescript.sortImports",
+					"when": "supportedCodeAction =~ /(\\s|^)source\\.sortImports\\b/ && editorLangId =~ /^vue$/"
+				},
+				{
+					"command": "typescript.removeUnusedImports",
+					"when": "supportedCodeAction =~ /(\\s|^)source\\.removeUnusedImports\\b/ && editorLangId =~ /^vue?$/"
 				},
 				{
 					"command": "vue.action.splitEditors",
