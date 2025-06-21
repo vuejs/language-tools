@@ -112,22 +112,14 @@ function launch(context: vscode.ExtensionContext) {
 		},
 	);
 
-	client.onNotification('tsserver/request', async ([id, command, args]) => {
-		const tsserver = (globalThis as any).__TSSERVER__?.semantic;
-		if (!tsserver) {
-			return;
-		}
-		try {
-			const res = await tsserver.executeImpl(command, args, {
-				isAsync: true,
-				expectsResult: true,
-				lowPriority: true,
-				requireSemantic: true,
-			})[0];
-			client.sendNotification('tsserver/response', [id, res.body]);
-		} catch {
-			// noop
-		}
+	client.onNotification('tsserver/request', async ([seq, command, args]) => {
+		const res = await vscode.commands.executeCommand<{ body: { result: unknown; }; } | undefined>(
+			'typescript.tsserverRequest',
+			command,
+			args,
+			{ lowPriority: true, requireSemantic: true },
+		);
+		client.sendNotification('tsserver/response', [seq, res?.body]);
 	});
 	client.start();
 
@@ -158,16 +150,6 @@ try {
 					':Array.isArray(e.languages)',
 				].join(''),
 			);
-
-			// Expose tsserver process in SingleTsServer constructor
-			text = text.replace(
-				',this._callbacks.destroy("server errored")}))',
-				s => s + ',globalThis.__TSSERVER__||={},globalThis.__TSSERVER__[arguments[1]]=this',
-			);
-
-			/**
-			 * VSCode >= 1.87.0
-			 */
 
 			// patch jsTsLanguageModes
 			text = text.replace(
