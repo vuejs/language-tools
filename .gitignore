@@ -2,7 +2,6 @@ dist
 node_modules
 *.tsbuildinfo
 *.vsix
-generated-meta.ts
 
 packages/*/*.d.ts
 packages/*/*.js
