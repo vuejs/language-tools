@@ -9,7 +9,7 @@ import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vu
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined
+	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',

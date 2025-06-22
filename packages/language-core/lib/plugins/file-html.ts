@@ -98,7 +98,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			};
 
 			return sfc;
-		}
+		},
 	};
 };
 

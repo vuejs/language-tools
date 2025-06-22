@@ -5,7 +5,7 @@ export function* generateEscaped(
 	source: string,
 	offset: number,
 	features: VueCodeInformation,
-	escapeTarget: RegExp
+	escapeTarget: RegExp,
 ): Generator<Code> {
 	const parts = text.split(escapeTarget);
 	const startCombineOffset = features.__combineOffset ?? 0;

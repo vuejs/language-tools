@@ -49,28 +49,28 @@ export function create(): LanguageServicePlugin {
 					addDefineCompletionItem(
 						scriptSetupRanges.defineProps?.statement,
 						scriptSetupRanges.withDefaults?.exp ?? scriptSetupRanges.defineProps?.exp,
-						'props'
+						'props',
 					);
 					addDefineCompletionItem(
 						scriptSetupRanges.defineEmits?.statement,
 						scriptSetupRanges.defineEmits?.exp,
-						'emit'
+						'emit',
 					);
 					addDefineCompletionItem(
 						scriptSetupRanges.defineSlots?.statement,
 						scriptSetupRanges.defineSlots?.exp,
-						'slots'
+						'slots',
 					);
 
 					return {
 						isIncomplete: false,
-						items: result
+						items: result,
 					};
 
 					function addDefineCompletionItem(
 						statement: TextRange | undefined,
 						exp: TextRange | undefined,
-						name: string
+						name: string,
 					) {
 						if (!exp || exp.start !== statement?.start) {
 							return;
@@ -96,9 +96,9 @@ export function create(): LanguageServicePlugin {
 								newText: `const ${name} = `,
 								range: {
 									start: pos,
-									end: pos
-								}
-							}]
+									end: pos,
+								},
+							}],
 						});
 					}
 				},

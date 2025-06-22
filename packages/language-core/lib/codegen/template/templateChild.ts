@@ -32,7 +32,7 @@ export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
-	enterNode: boolean = true
+	enterNode: boolean = true,
 ): Generator<Code> {
 	if (enterNode && !ctx.enter(node)) {
 		return;
@@ -101,9 +101,8 @@ export function* generateTemplateChild(
 			ctx.codeFeatures.all,
 			content,
 			start,
-			node.content.loc,
 			`(`,
-			`)${endOfLine}`
+			`)${endOfLine}`,
 		);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.IF) {
@@ -125,7 +124,7 @@ export function* generateTemplateChild(
 
 function* collectSingleRootNodes(
 	options: TemplateCodegenOptions,
-	children: CompilerDOM.TemplateChildNode[]
+	children: CompilerDOM.TemplateChildNode[],
 ): Generator<CompilerDOM.ElementNode | null> {
 	if (children.length !== 1) {
 		// "null" is used to determine whether the component is not always has a single root
@@ -158,7 +157,7 @@ export function getVForNode(node: CompilerDOM.ElementNode) {
 	const forDirective = node.props.find(
 		(prop): prop is CompilerDOM.DirectiveNode =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'for'
+			&& prop.name === 'for',
 	);
 	if (forDirective) {
 		let forNode: CompilerDOM.ForNode | undefined;
@@ -180,7 +179,7 @@ function getVIfNode(node: CompilerDOM.ElementNode) {
 	const ifDirective = node.props.find(
 		(prop): prop is CompilerDOM.DirectiveNode =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'if'
+			&& prop.name === 'if',
 	);
 	if (ifDirective) {
 		let ifNode: CompilerDOM.IfNode | undefined;

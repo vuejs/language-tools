@@ -5,7 +5,7 @@ import { getVariableType } from './utils';
 export function getElementAttrs(
 	this: RequestContext,
 	fileName: string,
-	tagName: string
+	tagName: string,
 ) {
 	const { typescript: ts, language, languageService, asScriptId } = this;
 	const volarFile = language.scripts.get(asScriptId(fileName));

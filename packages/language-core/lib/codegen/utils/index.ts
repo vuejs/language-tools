@@ -12,7 +12,7 @@ export function collectVars(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
-	results: string[] = []
+	results: string[] = [],
 ) {
 	const identifiers = collectIdentifiers(ts, node, []);
 	for (const { id } of identifiers) {
@@ -30,7 +30,7 @@ export function collectIdentifiers(
 		initializer: ts.Expression | undefined;
 	}[] = [],
 	isRest = false,
-	initializer: ts.Expression | undefined = undefined
+	initializer: ts.Expression | undefined = undefined,
 ) {
 	if (ts.isIdentifier(node)) {
 		results.push({ id: node, isRest, initializer });
@@ -66,12 +66,19 @@ export function normalizeAttributeValue(node: CompilerDOM.TextNode): [string, nu
 	return [content, offset];
 }
 
-export function createTsAst(ts: typeof import('typescript'), astHolder: any, text: string) {
-	if (astHolder.__volar_ast_text !== text) {
-		astHolder.__volar_ast_text = text;
-		astHolder.__volar_ast = ts.createSourceFile('/a.ts', text, 99 satisfies ts.ScriptTarget.ESNext);
+export function createTsAst(
+	ts: typeof import('typescript'),
+	templateAst: CompilerDOM.RootNode | undefined,
+	text: string,
+) {
+	const inlineTsAsts = (templateAst as any)?.__volar_inlineTsAsts;
+	let ast = inlineTsAsts?.get(text);
+	if (!ast) {
+		ast = ts.createSourceFile('/a.ts', text, 99 satisfies ts.ScriptTarget.ESNext);
+		inlineTsAsts?.set(text, ast);
 	}
-	return astHolder.__volar_ast as ts.SourceFile;
+	ast.__volar_used = true;
+	return ast as ts.SourceFile;
 }
 
 export function generateSfcBlockSection(block: SfcBlock, start: number, end: number, features: VueCodeInformation): Code {

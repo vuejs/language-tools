@@ -90,7 +90,7 @@ function createBlock(node: ElementNode, source: string) {
 			start = {
 				line: start.line,
 				column: start.column + offset,
-				offset: start.offset + offset
+				offset: start.offset + offset,
 			};
 		}
 		end = Object.assign({}, start);
@@ -98,14 +98,14 @@ function createBlock(node: ElementNode, source: string) {
 	const loc: SourceLocation = {
 		source: content,
 		start,
-		end
+		end,
 	};
 	const attrs: Record<string, any> = {};
 	const block: SFCBlock = {
 		type,
 		content,
 		loc,
-		attrs
+		attrs,
 	};
 	node.props.forEach(p => {
 		if (p.type === CompilerDOM.NodeTypes.ATTRIBUTE) {

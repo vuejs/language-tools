@@ -30,7 +30,7 @@ export function* generateElementProps(
 	props: CompilerDOM.ElementNode['props'],
 	strictPropsCheck: boolean,
 	enableCodeFeatures: boolean,
-	failedPropExps?: FailedPropExpression[]
+	failedPropExps?: FailedPropExpression[],
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -130,14 +130,13 @@ export function* generateElementProps(
 							propName,
 							prop.arg.loc.start.offset,
 							codeInfo,
-							(prop.loc as any).name_2 ??= {},
-							shouldCamelize
+							shouldCamelize,
 						)
 						: wrapWith(
 							prop.loc.start.offset,
 							prop.loc.start.offset + 'v-model'.length,
 							ctx.codeFeatures.withoutHighlightAndCompletion,
-							propName
+							propName,
 						)
 				),
 				`: `,
@@ -150,9 +149,9 @@ export function* generateElementProps(
 						ctx,
 						prop,
 						prop.exp,
-						enableCodeFeatures
-					)
-				)
+						enableCodeFeatures,
+					),
+				),
 			)];
 			if (enableCodeFeatures) {
 				yield* codes;
@@ -175,7 +174,7 @@ export function* generateElementProps(
 					options,
 					ctx,
 					prop,
-					propertyName
+					propertyName,
 				)];
 				if (enableCodeFeatures) {
 					yield* codes;
@@ -208,15 +207,14 @@ export function* generateElementProps(
 					prop.name,
 					prop.loc.start.offset,
 					codeInfo,
-					(prop.loc as any).name_1 ??= {},
-					shouldCamelize
+					shouldCamelize,
 				),
 				`: `,
 				...(
 					prop.value
 						? generateAttrValue(prop.value, ctx.codeFeatures.withoutNavigation)
 						: [`true`]
-				)
+				),
 			)];
 			if (enableCodeFeatures) {
 				yield* codes;
@@ -251,8 +249,8 @@ export function* generateElementProps(
 						ctx,
 						prop,
 						prop.exp,
-						enableCodeFeatures
-					)
+						enableCodeFeatures,
+					),
 				)];
 				if (enableCodeFeatures) {
 					yield* codes;
@@ -271,7 +269,7 @@ export function* generatePropExp(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
-	enableCodeFeatures: boolean = true
+	enableCodeFeatures: boolean = true,
 ): Generator<Code> {
 	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
 	const features = isShorthand
@@ -287,9 +285,8 @@ export function* generatePropExp(
 				features,
 				exp.loc.source,
 				exp.loc.start.offset,
-				exp.loc,
 				`(`,
-				`)`
+				`)`,
 			);
 		}
 		else {
@@ -303,7 +300,7 @@ export function* generatePropExp(
 					exp.loc.source,
 					'template',
 					exp.loc.start.offset,
-					features
+					features,
 				);
 
 				if (ctx.hasLocalVariable(propVariableName) || isDestructuredProp) {
@@ -336,7 +333,7 @@ export function* generatePropExp(
 
 function* generateAttrValue(
 	attrNode: CompilerDOM.TextNode,
-	features: VueCodeInformation
+	features: VueCodeInformation,
 ): Generator<Code> {
 	const quote = attrNode.loc.source.startsWith("'") ? "'" : '"';
 	yield quote;
@@ -356,7 +353,7 @@ function* generateAttrValue(
 function getShouldCamelize(
 	options: TemplateCodegenOptions,
 	prop: CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode,
-	propName: string
+	propName: string,
 ) {
 	return (
 		prop.type !== CompilerDOM.NodeTypes.DIRECTIVE
@@ -369,7 +366,7 @@ function getShouldCamelize(
 
 function getPropsCodeInfo(
 	ctx: TemplateCodegenContext,
-	strictPropsCheck: boolean
+	strictPropsCheck: boolean,
 ): VueCodeInformation {
 	return ctx.resolveCodeFeatures({
 		...codeFeatures.withoutHighlightAndCompletion,
@@ -399,7 +396,7 @@ function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: Vue
 						let failed = false;
 						for (const attr in attrs) {
 							const attrNode = node.props.find(
-								prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === attr
+								prop => prop.type === CompilerDOM.NodeTypes.ATTRIBUTE && prop.name === attr,
 							) as CompilerDOM.AttributeNode | undefined;
 							if (!attrNode || attrNode.value?.content !== attrs[attr]) {
 								failed = true;

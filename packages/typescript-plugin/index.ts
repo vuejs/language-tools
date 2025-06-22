@@ -23,7 +23,7 @@ export = createLanguageServicePlugin(
 			ts,
 			info.languageServiceHost.getCompilationSettings(),
 			vueOptions,
-			id => id
+			id => id,
 		);
 
 		addVueCommands();
@@ -42,7 +42,7 @@ export = createLanguageServicePlugin(
 						info.project['program'].__vue__ = { language };
 					}
 				}, 50);
-			}
+			},
 		};
 
 		function getVueCompilerOptions() {
@@ -76,47 +76,56 @@ export = createLanguageServicePlugin(
 
 			(session as any).vueCommandsAdded = true;
 
-			session.addProtocolHandler('vue:collectExtractProps', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:projectInfo', ({ arguments: args }) => {
+				return (session as any).handlers.get('projectInfo')?.({ arguments: args });
+			});
+			session.addProtocolHandler('_vue:documentHighlights-full', ({ arguments: args }) => {
+				return (session as any).handlers.get('documentHighlights-full')?.({ arguments: args });
+			});
+			session.addProtocolHandler('_vue:quickinfo', ({ arguments: args }) => {
+				return (session as any).handlers.get('quickinfo')?.({ arguments: args });
+			});
+			session.addProtocolHandler('_vue:collectExtractProps', ({ arguments: args }) => {
 				return {
 					response: collectExtractProps.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('vue:getImportPathForFile', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:getImportPathForFile', ({ arguments: args }) => {
 				return {
 					response: getImportPathForFile.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('vue:getPropertiesAtLocation', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:getPropertiesAtLocation', ({ arguments: args }) => {
 				return {
 					response: getPropertiesAtLocation.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('vue:getComponentNames', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:getComponentNames', ({ arguments: args }) => {
 				return {
 					response: getComponentNames.apply(getRequestContext(args[0]), args) ?? [],
 				};
 			});
-			session.addProtocolHandler('vue:getComponentProps', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:getComponentProps', ({ arguments: args }) => {
 				return {
 					response: getComponentProps.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('vue:getComponentEvents', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:getComponentEvents', ({ arguments: args }) => {
 				return {
 					response: getComponentEvents.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('vue:getComponentDirectives', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:getComponentDirectives', ({ arguments: args }) => {
 				return {
 					response: getComponentDirectives.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('vue:getElementAttrs', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:getElementAttrs', ({ arguments: args }) => {
 				return {
 					response: getElementAttrs.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('vue:getElementNames', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:getElementNames', ({ arguments: args }) => {
 				return {
 					response: getElementNames.apply(getRequestContext(args[0]), args),
 				};
@@ -146,5 +155,5 @@ export = createLanguageServicePlugin(
 				asScriptId: (fileName: string) => fileName,
 			};
 		}
-	}
+	},
 );

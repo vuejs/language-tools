@@ -11,7 +11,7 @@ import { getTemplateUsageVars } from './template';
 export function* generateComponentSelf(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	templateCodegenCtx: TemplateCodegenContext
+	templateCodegenCtx: TemplateCodegenContext,
 ): Generator<Code> {
 	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;

@@ -27,7 +27,7 @@ test('Document links', async () => {
 				color: red;
 			}
 			</style>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		[
 		  {

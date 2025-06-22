@@ -14,11 +14,10 @@ export function* generateObjectProperty(
 	code: string,
 	offset: number,
 	features: VueCodeInformation,
-	astHolder?: any,
 	shouldCamelize = false,
-	shouldBeConstant = false
+	shouldBeConstant = false,
 ): Generator<Code> {
-	if (code.startsWith('[') && code.endsWith(']') && astHolder) {
+	if (code.startsWith('[') && code.endsWith(']')) {
 		if (shouldBeConstant) {
 			yield* generateInterpolation(
 				options,
@@ -27,9 +26,8 @@ export function* generateObjectProperty(
 				features,
 				code.slice(1, -1),
 				offset + 1,
-				astHolder,
 				`[__VLS_tryAsConstant(`,
-				`)]`
+				`)]`,
 			);
 		}
 		else {
@@ -40,7 +38,6 @@ export function* generateObjectProperty(
 				features,
 				code,
 				offset,
-				astHolder
 			);
 		}
 	}
@@ -55,7 +52,7 @@ export function* generateObjectProperty(
 				features,
 				`'`,
 				...generateCamelized(code, 'template', offset, combineLastMapping),
-				`'`
+				`'`,
 			);
 		}
 	}

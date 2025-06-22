@@ -44,7 +44,7 @@ const plugin: VueLanguagePlugin = () => {
 						block.endTagStart,
 						sfc.content.slice(
 							block.startTagEnd,
-							block.startTagEnd + offset
+							block.startTagEnd + offset,
 						),
 						[
 							'',
@@ -54,8 +54,8 @@ const plugin: VueLanguagePlugin = () => {
 						],
 						sfc.content.slice(
 							block.startTagEnd + offset,
-							block.endTagStart
-						)
+							block.endTagStart,
+						),
 					);
 				}
 			}

@@ -46,7 +46,7 @@ export function create(): LanguageServicePlugin {
 			diagnosticProvider: {
 				interFileDependencies: false,
 				workspaceDiagnostics: false,
-			}
+			},
 		},
 		create(context) {
 			const htmlServiceInstance = htmlService.create(context);
@@ -91,7 +91,7 @@ export function create(): LanguageServicePlugin {
 
 						const {
 							startTagEnd = Infinity,
-							endTagStart = -Infinity
+							endTagStart = -Infinity,
 						} = template ?? {};
 
 						for (const error of vueSfc.errors) {
@@ -115,7 +115,7 @@ export function create(): LanguageServicePlugin {
 
 						return [
 							...originalResult ?? [],
-							...sfcErrors
+							...sfcErrors,
 						];
 					});
 				},
@@ -216,7 +216,7 @@ export function create(): LanguageServicePlugin {
 					result.items = result.items.filter(item =>
 						item.label !== '!DOCTYPE' &&
 						item.label !== 'Custom Blocks' &&
-						item.label !== 'data-'
+						item.label !== 'data-',
 					);
 
 					const tags = sfcDataProvider?.provideTags();
@@ -249,7 +249,7 @@ export function create(): LanguageServicePlugin {
 							result.items.push(
 								getStyleCompletionItem(styleItem, lang),
 								getStyleCompletionItem(styleItem, lang, 'scoped'),
-								getStyleCompletionItem(styleItem, lang, 'module')
+								getStyleCompletionItem(styleItem, lang, 'module'),
 							);
 						}
 					}
@@ -305,7 +305,7 @@ export function create(): LanguageServicePlugin {
 function getStyleCompletionItem(
 	styleItem: CompletionItem,
 	lang: string,
-	attr?: string
+	attr?: string,
 ): CompletionItem {
 	return {
 		...styleItem,
@@ -315,6 +315,6 @@ function getStyleCompletionItem(
 		textEdit: styleItem.textEdit ? {
 			...styleItem.textEdit,
 			newText: styleItem.textEdit.newText + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
-		} : undefined
+		} : undefined,
 	};
 }

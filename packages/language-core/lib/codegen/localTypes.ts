@@ -10,7 +10,7 @@ export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions) {
 type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any
 	? Pick<T, Exclude<keyof T, K>>
 	: never;
-`.trimStart()
+`.trimStart(),
 	);
 	const WithDefaults = defineHelper(
 		`__VLS_WithDefaults`,
@@ -20,7 +20,7 @@ type __VLS_WithDefaults<P, D> = {
 		? ${PrettifyLocal.name}<P[K] & { default: D[K] }>
 		: P[K]
 };
-`.trimStart()
+`.trimStart(),
 	);
 	const PrettifyLocal = defineHelper(
 		`__VLS_PrettifyLocal`,
@@ -35,7 +35,7 @@ type __VLS_WithSlots<T, S> = T & {
 		${vueCompilerOptions.jsxSlots ? `$props: ${PropsChildren.name}<S>;` : ''}
 	}
 };
-`.trimStart()
+`.trimStart(),
 	);
 	const PropsChildren = defineHelper(
 		`__VLS_PropsChildren`,
@@ -53,7 +53,7 @@ type __VLS_PropsChildren<S> = {
 			: JSX.ElementChildrenAttribute
 	)]?: S;
 };
-`.trimStart()
+`.trimStart(),
 	);
 	const TypePropsToOption = defineHelper(
 		`__VLS_TypePropsToOption`,
@@ -63,11 +63,11 @@ type __VLS_TypePropsToOption<T> = {
 		? { type: import('${vueCompilerOptions.lib}').PropType<Required<T>[K]> }
 		: { type: import('${vueCompilerOptions.lib}').PropType<T[K]>, required: true }
 };
-`.trimStart()
+`.trimStart(),
 	);
 	const OmitIndexSignature = defineHelper(
 		`__VLS_OmitIndexSignature`,
-		() => `type __VLS_OmitIndexSignature<T> = { [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K]; }${endOfLine}`
+		() => `type __VLS_OmitIndexSignature<T> = { [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K]; }${endOfLine}`,
 	);
 	const helpers = {
 		[PrettifyLocal.name]: PrettifyLocal,

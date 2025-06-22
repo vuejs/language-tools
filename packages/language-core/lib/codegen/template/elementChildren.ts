@@ -8,7 +8,7 @@ export function* generateElementChildren(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	children: (CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode)[],
-	enterNode = true
+	enterNode = true,
 ): Generator<Code> {
 	yield* ctx.generateAutoImportCompletion();
 	for (const childNode of children) {

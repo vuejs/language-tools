@@ -16,7 +16,7 @@ export function* generateElementEvents(
 	componentOriginalVar: string,
 	componentFunctionalVar: string,
 	componentVNodeVar: string,
-	componentCtxVar: string
+	componentCtxVar: string,
 ): Generator<Code> {
 	let emitsVar: string | undefined;
 	let propsVar: string | undefined;
@@ -58,7 +58,7 @@ export function* generateElementEvents(
 			const emitName = emitPrefix + source;
 			const camelizedEmitName = camelize(emitName);
 
-			yield `(): __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> => (${newLine}`;
+			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
 			if (prop.name === 'on') {
 				yield `{ `;
 				yield* generateEventArg(ctx, source, start!, emitPrefix.slice(0, -1), ctx.codeFeatures.navigation);
@@ -87,7 +87,7 @@ export function* generateEventArg(
 	features: VueCodeInformation = {
 		...ctx.codeFeatures.withoutHighlightAndCompletion,
 		...ctx.codeFeatures.navigationWithoutRename,
-	}
+	},
 ): Generator<Code> {
 	if (directive.length) {
 		name = capitalize(name);
@@ -105,7 +105,7 @@ export function* generateEventArg(
 			`'`,
 			directive,
 			...generateCamelized(name, 'template', start, combineLastMapping),
-			`'`
+			`'`,
 		);
 	}
 }
@@ -113,18 +113,20 @@ export function* generateEventArg(
 export function* generateEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		let prefix = `(`;
 		let suffix = `)`;
 		let isFirstMapping = true;
 
-		const ast = createTsAst(options.ts, prop.exp, prop.exp.content);
-		const _isCompoundExpression = isCompoundExpression(options.ts, ast);
-		if (_isCompoundExpression) {
-			yield `(...[$event]) => {${newLine}`;
+		const ast = createTsAst(options.ts, options.template.ast, prop.exp.content);
+		const isCompound = isCompoundExpression(options.ts, ast);
+
+		if (isCompound) {
 			ctx.addLocalVariable('$event');
+
+			yield `(...[$event]) => {${newLine}`;
 			yield* ctx.generateConditionGuards();
 			prefix = ``;
 			suffix = ``;
@@ -135,7 +137,7 @@ export function* generateEventExpression(
 			ctx,
 			'template',
 			offset => {
-				if (_isCompoundExpression && isFirstMapping) {
+				if (isCompound && isFirstMapping) {
 					isFirstMapping = false;
 					ctx.inlayHints.push({
 						blockName: 'template',
@@ -154,12 +156,11 @@ export function* generateEventExpression(
 			},
 			prop.exp.content,
 			prop.exp.loc.start.offset,
-			prop.exp.loc,
 			prefix,
-			suffix
+			suffix,
 		);
 
-		if (_isCompoundExpression) {
+		if (isCompound) {
 			ctx.removeLocalVariable('$event');
 
 			yield endOfLine;
@@ -175,7 +176,7 @@ export function* generateEventExpression(
 export function* generateModelEventExpression(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		yield `(...[$event]) => {${newLine}`;
@@ -187,7 +188,6 @@ export function* generateModelEventExpression(
 			ctx.codeFeatures.verification,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
-			prop.exp.loc
 		);
 		yield ` = $event${endOfLine}`;
 		yield `}`;

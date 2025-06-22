@@ -24,7 +24,7 @@ const builtInDirectives = new Set([
 export function* generateElementDirectives(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode
+	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	for (const prop of node.props) {
 		if (
@@ -48,7 +48,7 @@ export function* generateElementDirectives(
 			...generateArg(options, ctx, prop),
 			...generateModifiers(options, ctx, prop),
 			...generateValue(options, ctx, prop),
-			` }, null!, null!)`
+			` }, null!, null!)`,
 		);
 		yield endOfLine;
 	}
@@ -57,7 +57,7 @@ export function* generateElementDirectives(
 function* generateIdentifier(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	const rawName = 'v-' + prop.name;
 	yield* wrapWith(
@@ -72,15 +72,15 @@ function* generateIdentifier(
 			ctx.resolveCodeFeatures({
 				...codeFeatures.withoutHighlightAndCompletion,
 				verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
-			})
-		)
+			}),
+		),
 	);
 }
 
 function* generateArg(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	const { arg } = prop;
 	if (arg?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -93,14 +93,14 @@ function* generateArg(
 		startOffset,
 		startOffset + arg.content.length,
 		ctx.codeFeatures.verification,
-		`arg`
+		`arg`,
 	);
 	yield `: `;
 	if (arg.isStatic) {
 		yield* generateStringLiteralKey(
 			arg.content,
 			startOffset,
-			ctx.codeFeatures.all
+			ctx.codeFeatures.all,
 		);
 	}
 	else {
@@ -111,9 +111,8 @@ function* generateArg(
 			ctx.codeFeatures.all,
 			arg.content,
 			startOffset,
-			arg.loc,
 			`(`,
-			`)`
+			`)`,
 		);
 	}
 	yield `, `;
@@ -123,7 +122,7 @@ export function* generateModifiers(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
-	propertyName: string = 'modifiers'
+	propertyName: string = 'modifiers',
 ): Generator<Code> {
 	const { modifiers } = prop;
 	if (!modifiers.length) {
@@ -137,7 +136,7 @@ export function* generateModifiers(
 		startOffset,
 		endOffset,
 		ctx.codeFeatures.verification,
-		propertyName
+		propertyName,
 	);
 	yield `: { `;
 	for (const mod of modifiers) {
@@ -146,7 +145,7 @@ export function* generateModifiers(
 			ctx,
 			mod.content,
 			mod.loc.start.offset,
-			ctx.codeFeatures.withoutHighlightAndNavigation
+			ctx.codeFeatures.withoutHighlightAndNavigation,
 		);
 		yield `: true, `;
 	}
@@ -156,7 +155,7 @@ export function* generateModifiers(
 function* generateValue(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	prop: CompilerDOM.DirectiveNode
+	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	const { exp } = prop;
 	if (exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -167,13 +166,13 @@ function* generateValue(
 		exp.loc.start.offset,
 		exp.loc.end.offset,
 		ctx.codeFeatures.verification,
-		`value`
+		`value`,
 	);
 	yield `: `;
 	yield* generatePropExp(
 		options,
 		ctx,
 		prop,
-		exp
+		exp,
 	);
 }

@@ -9,7 +9,7 @@ import { VueEmbeddedCode } from './embeddedFile';
 export function computedEmbeddedCodes(
 	plugins: VueLanguagePluginReturn[],
 	fileName: string,
-	sfc: Sfc
+	sfc: Sfc,
 ) {
 	const getNameToBlockMap = computed(() => {
 		const blocks: Record<string, SfcBlock> = {};
@@ -36,8 +36,8 @@ export function computedEmbeddedCodes(
 			plugin,
 			fileName,
 			sfc,
-			name => getNameToBlockMap()[name]
-		)
+			name => getNameToBlockMap()[name],
+		),
 	);
 	const getFlatResult = computed(() => getPluginsResult.map(r => r()).flat());
 	const getStructuredResult = computed(() => {
@@ -112,7 +112,7 @@ function computedPluginEmbeddedCodes(
 	plugin: VueLanguagePluginReturn,
 	fileName: string,
 	sfc: Sfc,
-	getBlockByName: (name: string) => SfcBlock | undefined
+	getBlockByName: (name: string) => SfcBlock | undefined,
 ) {
 	const computeds = new Map<string, () => { code: VueEmbeddedCode; snapshot: ts.IScriptSnapshot; }>();
 	const getComputedKey = (code: {

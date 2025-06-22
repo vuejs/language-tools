@@ -10,7 +10,7 @@ import { generateInterpolation } from './interpolation';
 export function* generateVIf(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	node: CompilerDOM.IfNode
+	node: CompilerDOM.IfNode,
 ): Generator<Code> {
 
 	const originalBlockConditionsLength = ctx.blockConditions.length;
@@ -39,9 +39,8 @@ export function* generateVIf(
 				ctx.codeFeatures.all,
 				branch.condition.content,
 				branch.condition.loc.start.offset,
-				branch.condition.loc,
 				`(`,
-				`)`
+				`)`,
 			)];
 			yield* codes;
 			ctx.blockConditions.push(toString(codes));

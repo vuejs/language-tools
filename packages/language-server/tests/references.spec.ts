@@ -20,7 +20,7 @@ test('Default slot', async () => {
 			<template>
 				<slot|></slot>
 			</template>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "refs": [
@@ -75,7 +75,7 @@ test('Named slot', async () => {
 		<template>
 			<slot name="|foo"></slot>
 		</template>
-	`)
+	`),
 	).toMatchInlineSnapshot(`
 		{
 		  "refs": [
@@ -125,7 +125,7 @@ test('v-bind shorthand', async () => {
 			<template>
 				<Foo :foo></Foo>
 			</template>
-		`)
+		`),
 	).toMatchInlineSnapshot(`
 		{
 		  "refs": [
