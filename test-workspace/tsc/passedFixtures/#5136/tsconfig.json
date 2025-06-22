@@ -1,7 +1,7 @@
 {
 	"extends": "../../../tsconfig.base.json",
-    "vueCompilerOptions": {
-        "resolveStyleImports": true
-    },
-	"include": [ "**/*" ]
+	"vueCompilerOptions": {
+		"resolveStyleImports": true
+	},
+	"include": ["**/*"]
 }

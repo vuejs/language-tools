@@ -1,4 +1,4 @@
-import { VueVirtualCode, isSemanticTokensEnabled } from '@vue/language-core';
+import { isSemanticTokensEnabled, VueVirtualCode } from '@vue/language-core';
 import type { RequestContext } from './types';
 
 export function collectExtractProps(
@@ -40,7 +40,9 @@ export function collectExtractProps(
 			const { name } = node;
 			for (const map of maps) {
 				let mapped = false;
-				for (const source of map.toSourceLocation(name.getEnd() - (isTsPlugin ? sourceScript.snapshot.getLength() : 0))) {
+				for (
+					const source of map.toSourceLocation(name.getEnd() - (isTsPlugin ? sourceScript.snapshot.getLength() : 0))
+				) {
 					if (
 						source[0] >= sfc.template!.startTagEnd + templateCodeRange[0]
 						&& source[0] <= sfc.template!.startTagEnd + templateCodeRange[1]

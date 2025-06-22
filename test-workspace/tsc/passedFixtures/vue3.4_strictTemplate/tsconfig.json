@@ -3,7 +3,7 @@
 	"vueCompilerOptions": {
 		"target": 3.3,
 		"lib": "vue3.4",
-		"strictTemplates": true,
+		"strictTemplates": true
 	},
-	"include": [ "**/*" ],
+	"include": ["**/*"]
 }

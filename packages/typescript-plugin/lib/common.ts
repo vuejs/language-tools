@@ -1,4 +1,10 @@
-import { forEachElementNode, hyphenateTag, type Language, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
+import {
+	forEachElementNode,
+	hyphenateTag,
+	type Language,
+	type VueCompilerOptions,
+	VueVirtualCode,
+} from '@vue/language-core';
 import { capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 import { _getComponentNames } from './requests/getComponentNames';
@@ -17,13 +23,19 @@ export function createVueLanguageServiceProxy<T>(
 	const proxyCache = new Map<string | symbol, Function | undefined>();
 	const getProxyMethod = (target: ts.LanguageService, p: string | symbol): Function | undefined => {
 		switch (p) {
-			case 'getCompletionsAtPosition': return getCompletionsAtPosition(ts, language, vueOptions, asScriptId, target[p]);
-			case 'getCompletionEntryDetails': return getCompletionEntryDetails(language, asScriptId, target[p]);
-			case 'getCodeFixesAtPosition': return getCodeFixesAtPosition(target[p]);
-			case 'getDefinitionAndBoundSpan': return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
-			case 'getQuickInfoAtPosition': return getQuickInfoAtPosition(ts, target, target[p]);
+			case 'getCompletionsAtPosition':
+				return getCompletionsAtPosition(ts, language, vueOptions, asScriptId, target[p]);
+			case 'getCompletionEntryDetails':
+				return getCompletionEntryDetails(language, asScriptId, target[p]);
+			case 'getCodeFixesAtPosition':
+				return getCodeFixesAtPosition(target[p]);
+			case 'getDefinitionAndBoundSpan':
+				return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
+			case 'getQuickInfoAtPosition':
+				return getQuickInfoAtPosition(ts, target, target[p]);
 			// TS plugin only
-			case 'getEncodedSemanticClassifications': return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
+			case 'getEncodedSemanticClassifications':
+				return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
 		}
 	};
 
@@ -59,7 +71,8 @@ function getCompletionsAtPosition<T>(
 		if (result) {
 			// filter __VLS_
 			result.entries = result.entries.filter(
-				entry => !entry.name.includes('__VLS_')
+				entry =>
+					!entry.name.includes('__VLS_')
 					&& !entry.labelDetails?.description?.includes('__VLS_'),
 			);
 
@@ -89,7 +102,7 @@ function getCompletionsAtPosition<T>(
 							entry.kind !== 'var' && entry.kind !== 'function'
 							|| !sortTexts.has(entry.sortText)
 							|| isGloballyAllowed(entry.name)
-						),
+						)
 					);
 				}
 			}
@@ -146,7 +159,10 @@ function getCompletionEntryDetails<T>(
 			for (const codeAction of details?.codeActions ?? []) {
 				for (const change of codeAction.changes) {
 					for (const textChange of change.textChanges) {
-						textChange.newText = textChange.newText.replace('import ' + originalName + ' from ', 'import ' + newName + ' from ');
+						textChange.newText = textChange.newText.replace(
+							'import ' + originalName + ' from ',
+							'import ' + newName + ' from ',
+						);
 					}
 				}
 			}
@@ -264,11 +280,9 @@ function getDefinitionAndBoundSpan<T>(
 		) {
 			if (ts.isPropertySignature(node) && node.type) {
 				proxy(node.name, node.type, definition, sourceFile);
-			}
-			else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type && !node.initializer) {
+			} else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type && !node.initializer) {
 				proxy(node.name, node.type, definition, sourceFile);
-			}
-			else {
+			} else {
 				ts.forEachChild(node, child => visit(child, definition, sourceFile));
 			}
 		}
@@ -336,7 +350,8 @@ function getQuickInfoAtPosition(
 					const type = typeChecker.getTypeOfSymbolAtLocation(emitSymbol, symbolNode);
 					const calls = type.getCallSignatures();
 					for (const call of calls) {
-						const callEventName = (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value;
+						const callEventName =
+							(typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value;
 						call.getJsDocTags();
 						if (callEventName === eventName) {
 							result.documentation = call.getDocumentationComment(typeChecker);
@@ -365,15 +380,17 @@ function getEncodedSemanticClassifications<T>(
 		if (root instanceof VueVirtualCode) {
 			const { template } = root.sfc;
 			if (template) {
-				for (const componentSpan of getComponentSpans.call(
-					{ typescript: ts, languageService },
-					root,
-					template,
-					{
-						start: span.start - template.startTagEnd,
-						length: span.length,
-					},
-				)) {
+				for (
+					const componentSpan of getComponentSpans.call(
+						{ typescript: ts, languageService },
+						root,
+						template,
+						{
+							start: span.start - template.startTagEnd,
+							length: span.length,
+						},
+					)
+				) {
 					result.spans.push(
 						componentSpan.start + template.startTagEnd,
 						componentSpan.length,
@@ -402,7 +419,10 @@ function getComponentSpans(
 	]);
 	if (template.ast) {
 		for (const node of forEachElementNode(template.ast)) {
-			if (node.loc.end.offset <= spanTemplateRange.start || node.loc.start.offset >= (spanTemplateRange.start + spanTemplateRange.length)) {
+			if (
+				node.loc.end.offset <= spanTemplateRange.start
+				|| node.loc.start.offset >= (spanTemplateRange.start + spanTemplateRange.length)
+			) {
 				continue;
 			}
 			if (components.has(node.tag) && !elements.has(node.tag)) {

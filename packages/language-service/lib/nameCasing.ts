@@ -16,19 +16,25 @@ export enum AttrNameCasing {
 export async function checkCasing(context: LanguageServiceContext, uri: URI) {
 	const detected = detect(context, uri);
 	const [attr, tag] = await Promise.all([
-		context.env.getConfiguration?.<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>('vue.complete.casing.props', uri.toString()),
-		context.env.getConfiguration?.<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>('vue.complete.casing.tags', uri.toString()),
+		context.env.getConfiguration<'autoKebab' | 'autoCamel' | 'kebab' | 'camel'>?.(
+			'vue.complete.casing.props',
+			uri.toString(),
+		),
+		context.env.getConfiguration<'autoKebab' | 'autoPascal' | 'kebab' | 'pascal'>?.(
+			'vue.complete.casing.tags',
+			uri.toString(),
+		),
 	]);
 	const tagNameCasing = detected.tag.length === 1 && (tag === 'autoPascal' || tag === 'autoKebab')
 		? detected.tag[0]
 		: (tag === 'autoKebab' || tag === 'kebab')
-			? TagNameCasing.Kebab
-			: TagNameCasing.Pascal;
+		? TagNameCasing.Kebab
+		: TagNameCasing.Pascal;
 	const attrNameCasing = detected.attr.length === 1 && (attr === 'autoCamel' || attr === 'autoKebab')
 		? detected.attr[0]
 		: (attr === 'autoCamel' || attr === 'camel')
-			? AttrNameCasing.Camel
-			: AttrNameCasing.Kebab;
+		? AttrNameCasing.Camel
+		: AttrNameCasing.Kebab;
 	return {
 		tag: tagNameCasing,
 		attr: attrNameCasing,
@@ -43,8 +49,8 @@ function detect(
 	context: LanguageServiceContext,
 	uri: URI,
 ): {
-	tag: TagNameCasing[],
-	attr: AttrNameCasing[],
+	tag: TagNameCasing[];
+	attr: AttrNameCasing[];
 } {
 	const root = context.language.scripts.get(uri)?.generated?.root;
 	if (!(root instanceof VueVirtualCode)) {
@@ -97,8 +103,7 @@ function detectTagCasing(code: VueVirtualCode): TagNameCasing[] {
 		if (tag !== hyphenateTag(tag)) {
 			// TagName
 			result.add(TagNameCasing.Pascal);
-		}
-		else {
+		} else {
 			// tag-name
 			result.add(TagNameCasing.Kebab);
 		}
@@ -128,8 +133,7 @@ function collectTags(root: VirtualCode) {
 				&& prop.arg.isStatic
 			) {
 				name = prop.arg.content;
-			}
-			else if (
+			} else if (
 				prop.type === 6 satisfies NodeTypes.ATTRIBUTE
 			) {
 				name = prop.name;

@@ -22,10 +22,13 @@ export function getLanguageService(ts: typeof import('typescript'), snapshot: ts
 	if (currentSnapshot !== snapshot) {
 		currentSnapshot = snapshot;
 		currentFileName = '/tmp.' + (
-			languageId === 'javascript' ? 'js' :
-				languageId === 'typescriptreact' ? 'tsx' :
-					languageId === 'javascriptreact' ? 'jsx' :
-						'ts'
+			languageId === 'javascript'
+				? 'js'
+				: languageId === 'typescriptreact'
+				? 'tsx'
+				: languageId === 'javascriptreact'
+				? 'jsx'
+				: 'ts'
 		);
 		currentProjectVersion++;
 	}

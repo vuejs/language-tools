@@ -2,11 +2,11 @@
 	"extends": "../../../tsconfig.base.json",
 	"vueCompilerOptions": {
 		"target": 3.3,
-		"lib": "vue3.4",
+		"lib": "vue3.4"
 	},
 	"include": [
 		"**/*",
-		"../vue3",
+		"../vue3"
 	],
 	"exclude": [
 		"../vue3/#3820",
@@ -20,6 +20,6 @@
 		"../vue3/components",
 		"../vue3/defineModel",
 		"../vue3/defineProp_B",
-		"../vue3/directives/arg-modifiers.vue",
-	],
+		"../vue3/directives/arg-modifiers.vue"
+	]
 }

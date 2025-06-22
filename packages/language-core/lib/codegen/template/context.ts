@@ -24,7 +24,7 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  * a diagnostic when it is annotating a piece of code that doesn't actually have any errors/warning/diagnostics).
  *
  * Given .vue code:
- * 
+ *
  * ```vue
  *   <script setup lang="ts">
  *   defineProps<{
@@ -34,7 +34,7 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  *     knownProp4_will_trigger_unused_expect_error: string;
  *   }>();
  *   </script>
- *   
+ *
  *   <template>
  *     {{ knownProp1 }}
  *     {{ error_unknownProp }} <!-- ERROR: Property 'error_unknownProp' does not exist on type [...] -->
@@ -46,17 +46,17 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  *     {{ knownProp4_will_trigger_unused_expect_error }}
  *   </template>
  * ```
- * 
+ *
  * The above code should raise two diagnostics:
- * 
+ *
  * 1. Property 'error_unknownProp' does not exist on type [...]
  * 2. Unused '@ts-expect-error' directive.ts(2578) -- this is the bottom `@vue-expect-error` directive
  *    that covers code that doesn't actually raise an error -- note that all `@vue-...` directives
  *    will ultimately translate into `@ts-...` diagnostics.
- * 
+ *
  * The above code will produce the following type-checkable TS code (note: omitting asterisks
  * to prevent VSCode syntax double-greying out double-commented code).
- * 
+ *
  * ```ts
  *   ( __VLS_ctx.knownProp1 );
  *   ( __VLS_ctx.error_unknownProp ); // ERROR: Property 'error_unknownProp' does not exist on type [...]
@@ -77,32 +77,32 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  * In the generated code, there are actually 3 diagnostic errors that'll be raised in the first
  * pass on this generated code (but through cleverness described below, not all of them will be
  * propagated back to the original .vue file):
- * 
+ *
  * 1. Property 'error_unknownProp' does not exist on type [...]
  * 2. Unused '@ts-expect-error' directive.ts(2578) from the 1st `@ts-expect-error __VLS_TS_EXPECT_ERROR`
  * 3. Unused '@ts-expect-error' directive.ts(2578) from the 2nd `@ts-expect-error __VLS_TS_EXPECT_ERROR`
- * 
+ *
  * Be sure to pay careful attention to the mixture of `@vue-expect-error` and `@ts-expect-error`;
  * Within the TS file, the only "real" directives recognized by TS are going to be prefixed with `@ts-`;
  * any `@vue-` prefixed directives in the comments are only for debugging purposes.
  *
  * As mentioned above, there are 3 diagnostics errors that'll be generated for the above code, but
  * only 2 should be propagated back to the original .vue file.
- * 
+ *
  * (The reason we structure things this way is somewhat complicated, but in short it allows us
  * to lean on TS as much as possible to generate actual `unused @ts-expect-error directive` errors
  * while covering a number of edge cases.)
- * 
+ *
  * So, we need a way to dynamically decide whether each of the `@ts-expect-error __VLS_TS_EXPECT_ERROR`
  * directives should be reported as an unused directive or not.
- * 
+ *
  * To do this, we'll make use of the `shouldReport` callback that'll optionally be provided to the
  * `verification` property of the `CodeInformation` object attached to the mapping between source .vue
  * and generated .ts code. The `verification` property determines whether "verification" (which includes
  * semantic diagnostics) should be performed on the generated .ts code, and `shouldReport`, if provided,
  * can be used to determine whether a given diagnostic should be reported back "upwards" to the original
  * .vue file or not.
- * 
+ *
  * See the comments in the code below for how and where we use this hook to keep track of whether
  * an error/diagnostic was encountered for a region of code covered by a `@vue-expect-error` directive,
  * and additionally how we use that to determine whether to propagate diagnostics back upward.
@@ -179,7 +179,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 		generic?: {
 			content: string;
 			offset: number;
-		},
+		};
 	}[] = [];
 	const commentBuffer: CompilerDOM.CommentNode[] = [];
 
@@ -248,7 +248,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 			}
 			return name;
 		},
-		* generateHoistVariables() {
+		*generateHoistVariables() {
 			// trick to avoid TS 4081 (#5186)
 			if (hoistVars.size) {
 				yield `// @ts-ignore${newLine}`;
@@ -259,12 +259,12 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 				yield endOfLine;
 			}
 		},
-		* generateConditionGuards() {
+		*generateConditionGuards() {
 			for (const condition of blockConditions) {
 				yield `if (!${condition}) return${endOfLine}`;
 			}
 		},
-		* generateAutoImportCompletion(): Generator<Code> {
+		*generateAutoImportCompletion(): Generator<Code> {
 			const all = [...accessExternalVariables.entries()];
 			if (!all.some(([_, offsets]) => offsets.size)) {
 				return;
@@ -284,8 +284,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 								...codeFeatures.semanticWithoutHighlight,
 							},
 						];
-					}
-					else {
+					} else {
 						yield [
 							varName,
 							'template',
@@ -344,7 +343,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 			stack.push(data);
 			return true;
 		},
-		* exit(): Generator<Code> {
+		*exit(): Generator<Code> {
 			const data = stack.pop()!;
 			commentBuffer.length = 0;
 			if (data.expectError !== undefined) {

@@ -33,7 +33,13 @@ export = createLanguageServicePlugin(
 			setup: language => {
 				project2Service.set(info.project, [language, info.languageServiceHost, info.languageService]);
 
-				info.languageService = createVueLanguageServiceProxy(ts, language, info.languageService, vueOptions, fileName => fileName);
+				info.languageService = createVueLanguageServiceProxy(
+					ts,
+					language,
+					info.languageService,
+					vueOptions,
+					fileName => fileName,
+				);
 
 				// #3963
 				const timer = setInterval(() => {
@@ -49,25 +55,25 @@ export = createLanguageServicePlugin(
 			if (info.project.projectKind === ts.server.ProjectKind.Configured) {
 				const tsconfig = info.project.getProjectName();
 				return vue.createParsedCommandLine(ts, ts.sys, tsconfig.replace(windowsPathReg, '/')).vueOptions;
-			}
-			else {
-				return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {}).vueOptions;
+			} else {
+				return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {})
+					.vueOptions;
 			}
 		}
 
 		// https://github.com/JetBrains/intellij-plugins/blob/6435723ad88fa296b41144162ebe3b8513f4949b/Angular/src-js/angular-service/src/index.ts#L69
 		function addVueCommands() {
 			const projectService = info.project.projectService;
-			projectService.logger.info("Vue: called handler processing " + info.project.projectKind);
+			projectService.logger.info('Vue: called handler processing ' + info.project.projectKind);
 
 			const session = info.session;
 			if (session == undefined) {
-				projectService.logger.info("Vue: there is no session in info.");
+				projectService.logger.info('Vue: there is no session in info.');
 				return;
 			}
 			if (session.addProtocolHandler == undefined) {
 				// addProtocolHandler was introduced in TS 4.4 or 4.5 in 2021, see https://github.com/microsoft/TypeScript/issues/43893
-				projectService.logger.info("Vue: there is no addProtocolHandler method.");
+				projectService.logger.info('Vue: there is no addProtocolHandler method.');
 				return;
 			}
 			if ((session as any).vueCommandsAdded) {

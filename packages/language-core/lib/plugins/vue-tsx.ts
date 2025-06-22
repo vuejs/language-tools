@@ -15,11 +15,9 @@ export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
 const plugin: VueLanguagePlugin = ctx => {
-
 	let appendedGlobalTypes = false;
 
 	return {
-
 		version: 2.1,
 
 		requiredCompilerOptions: [
@@ -73,8 +71,7 @@ function createTsx(
 		if (sfc.script && sfc.scriptSetup) {
 			if (sfc.scriptSetup.lang !== 'js') {
 				return sfc.scriptSetup.lang;
-			}
-			else {
+			} else {
 				return sfc.script.lang;
 			}
 		}
@@ -102,13 +99,13 @@ function createTsx(
 	const getScriptRanges = computed(() =>
 		sfc.script && validLangs.has(sfc.script.lang)
 			? parseScriptRanges(ts, sfc.script.ast, !!sfc.scriptSetup)
-			: undefined,
+			: undefined
 	);
 
 	const getScriptSetupRanges = computed(() =>
 		sfc.scriptSetup && validLangs.has(sfc.scriptSetup.lang)
 			? parseScriptSetupRanges(ts, sfc.scriptSetup.ast, getResolvedOptions())
-			: undefined,
+			: undefined
 	);
 
 	const getSetupBindingNames = computedSet(() => {
@@ -165,7 +162,8 @@ function createTsx(
 	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
 
 	const getSetupInheritAttrs = computed(() => {
-		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs ?? getScriptRanges()?.exportDefault?.inheritAttrsOption;
+		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
+			?? getScriptRanges()?.exportDefault?.inheritAttrsOption;
 		return value !== 'false';
 	});
 

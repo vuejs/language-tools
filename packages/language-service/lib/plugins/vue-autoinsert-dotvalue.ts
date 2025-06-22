@@ -6,7 +6,9 @@ import { isTsDocument, sleep } from './utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	getTsPluginClient?: (
+		context: LanguageServiceContext,
+	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
@@ -41,7 +43,7 @@ export function create(
 						return;
 					}
 
-					const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.dotValue') ?? true;
+					const enabled = await context.env.getConfiguration<boolean>?.('vue.autoInsert.dotValue') ?? true;
 					if (!enabled) {
 						return;
 					}
@@ -102,7 +104,7 @@ export function create(
 
 const charReg = /\w/;
 
-function isCharacterTyping(document: TextDocument, change: { text: string; rangeOffset: number; rangeLength: number; }) {
+function isCharacterTyping(document: TextDocument, change: { text: string; rangeOffset: number; rangeLength: number }) {
 	const lastCharacter = change.text[change.text.length - 1];
 	const nextCharacter = document.getText().slice(
 		change.rangeOffset + change.text.length,
@@ -120,40 +122,35 @@ function isCharacterTyping(document: TextDocument, change: { text: string; range
 function isBlacklistNode(ts: typeof import('typescript'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
 	if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
-	}
-	else if (ts.isFunctionDeclaration(node) && node.name && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+	} else if (
+		ts.isFunctionDeclaration(node) && node.name && pos >= node.name.getFullStart() && pos <= node.name.getEnd()
+	) {
 		return true;
-	}
-	else if (ts.isParameter(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+	} else if (ts.isParameter(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
-	}
-	else if (ts.isPropertyAssignment(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+	} else if (ts.isPropertyAssignment(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
-	}
-	else if (ts.isShorthandPropertyAssignment(node)) {
+	} else if (ts.isShorthandPropertyAssignment(node)) {
 		return true;
-	}
-	else if (ts.isImportDeclaration(node)) {
+	} else if (ts.isImportDeclaration(node)) {
 		return true;
-	}
-	else if (ts.isLiteralTypeNode(node)) {
+	} else if (ts.isLiteralTypeNode(node)) {
 		return true;
-	}
-	else if (ts.isTypeReferenceNode(node)) {
+	} else if (ts.isTypeReferenceNode(node)) {
 		return true;
-	}
-	else if (!allowAccessDotValue && ts.isPropertyAccessExpression(node) && node.expression.end === pos && node.name.text === 'value') {
+	} else if (
+		!allowAccessDotValue && ts.isPropertyAccessExpression(node) && node.expression.end === pos
+		&& node.name.text === 'value'
+	) {
 		return true;
-	}
-	else if (
+	} else if (
 		ts.isCallExpression(node)
 		&& ts.isIdentifier(node.expression)
 		&& isWatchOrUseFunction(node.expression.text)
 		&& isTopLevelArgOrArrayTopLevelItemItem(node)
 	) {
 		return true;
-	}
-	else {
+	} else {
 		let _isBlacklistNode = false;
 		node.forEachChild(node => {
 			if (_isBlacklistNode) {

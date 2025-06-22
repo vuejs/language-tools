@@ -3,5 +3,5 @@
 	"vueCompilerOptions": {
 		"jsxSlots": true
 	},
-	"include": [ "**/*" ]
+	"include": ["**/*"]
 }

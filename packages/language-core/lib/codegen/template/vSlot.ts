@@ -40,8 +40,7 @@ export function* generateVSlot(
 					false,
 					true,
 				);
-			}
-			else {
+			} else {
 				yield* wrapWith(
 					slotDir.loc.start.offset,
 					slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
@@ -49,8 +48,7 @@ export function* generateVSlot(
 					`default`,
 				);
 			}
-		}
-		else {
+		} else {
 			// #932: reference for implicit default slot
 			const { start, end } = getElementInnerLoc(options, node);
 			yield* wrapWith(
@@ -107,8 +105,8 @@ export function* generateVSlot(
 					slotDir.loc.source.startsWith('#')
 						? '#'.length
 						: slotDir.loc.source.startsWith('v-slot:')
-							? 'v-slot:'.length
-							: 0
+						? 'v-slot:'.length
+						: 0
 				),
 				ctx.codeFeatures.completion,
 			];
@@ -145,8 +143,7 @@ function* generateSlotParameters(
 				type.end,
 			]);
 			types.push(chunk(getStartEnd(ts, type, ast).start, type.end));
-		}
-		else {
+		} else {
 			types.push(null);
 		}
 	}
@@ -201,8 +198,7 @@ function getElementInnerLoc(
 			start,
 			end,
 		};
-	}
-	else {
+	} else {
 		return {
 			start: node.loc.start.offset,
 			end: node.loc.end.offset,

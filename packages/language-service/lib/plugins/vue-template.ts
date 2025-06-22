@@ -1,4 +1,12 @@
-import type { CompletionItemKind, CompletionItemTag, CompletionList, Disposable, LanguageServiceContext, LanguageServicePlugin, TextDocument } from '@volar/language-service';
+import type {
+	CompletionItemKind,
+	CompletionItemTag,
+	CompletionList,
+	Disposable,
+	LanguageServiceContext,
+	LanguageServicePlugin,
+	TextDocument,
+} from '@volar/language-service';
 import { hyphenateAttr, hyphenateTag, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
@@ -34,7 +42,9 @@ let modelData: html.HTMLDataV1;
 
 export function create(
 	mode: 'html' | 'pug',
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	getTsPluginClient?: (
+		context: LanguageServiceContext,
+	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
@@ -123,7 +133,9 @@ export function create(
 			}
 			if (vModel) {
 				for (const modifier of modelData.globalAttributes ?? []) {
-					const description = typeof modifier.description === 'object' ? modifier.description.value : modifier.description;
+					const description = typeof modifier.description === 'object'
+						? modifier.description.value
+						: modifier.description;
 					const references = modifier.references?.map(ref => `[${ref.name}](${ref.url})`).join(' | ');
 					vModelModifiers[modifier.name] = description + '\n\n' + references;
 				}
@@ -134,7 +146,6 @@ export function create(
 			let initializing: Promise<void> | undefined;
 
 			return {
-
 				...baseServiceInstance,
 
 				dispose() {
@@ -143,7 +154,6 @@ export function create(
 				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
-
 					if (!isSupportedDocument(document)) {
 						return;
 					}
@@ -161,7 +171,6 @@ export function create(
 					const root = sourceScript?.generated?.root;
 
 					if (root instanceof VueVirtualCode) {
-
 						// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
 						baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
 
@@ -169,9 +178,19 @@ export function create(
 						currentVersion = await sync();
 					}
 
-					let htmlComplete = await baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
+					let htmlComplete = await baseServiceInstance.provideCompletionItems?.(
+						document,
+						position,
+						completionContext,
+						token,
+					);
 					while (currentVersion !== (currentVersion = await sync?.())) {
-						htmlComplete = await baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
+						htmlComplete = await baseServiceInstance.provideCompletionItems?.(
+							document,
+							position,
+							completionContext,
+							token,
+						);
 					}
 					if (!htmlComplete) {
 						return;
@@ -192,7 +211,6 @@ export function create(
 				},
 
 				provideHover(document, position, token) {
-
 					if (!isSupportedDocument(document)) {
 						return;
 					}
@@ -206,7 +224,6 @@ export function create(
 			};
 
 			async function provideHtmlData(sourceDocumentUri: URI, vueCode: VueVirtualCode) {
-
 				await (initializing ??= initialize());
 
 				const casing = await checkCasing(context, sourceDocumentUri);
@@ -219,11 +236,9 @@ export function create(
 
 						if (specialTags.has(tag.name)) {
 							tag.name = generateItemKey('specialTag', tag.name, '');
-						}
-						else if (casing.tag === TagNameCasing.Kebab) {
+						} else if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
-						}
-						else {
+						} else {
 							tag.name = camelize(capitalize(tag.name));
 						}
 					}
@@ -256,7 +271,7 @@ export function create(
 											&& name !== 'TransitionGroup'
 											&& name !== 'KeepAlive'
 											&& name !== 'Suspense'
-											&& name !== 'Teleport',
+											&& name !== 'Teleport'
 										);
 									lastCompletionComponentNames = new Set(components);
 									version++;
@@ -270,8 +285,7 @@ export function create(
 							for (const tag of components) {
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(tag));
-								}
-								else if (casing.tag === TagNameCasing.Pascal) {
+								} else if (casing.tag === TagNameCasing.Pascal) {
 									names.add(tag);
 								}
 							}
@@ -280,8 +294,7 @@ export function create(
 								const name = vueCode.sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
-								}
-								else if (casing.tag === TagNameCasing.Pascal) {
+								} else if (casing.tag === TagNameCasing.Pascal) {
 									names.add(name);
 								}
 							}
@@ -306,9 +319,7 @@ export function create(
 									const directives = await tsPluginClient?.getComponentDirectives(vueCode.fileName) ?? [];
 									tagInfos.set(tag, {
 										attrs,
-										propInfos: propInfos.filter(prop =>
-											!prop.name.startsWith('ref_'),
-										),
+										propInfos: propInfos.filter(prop => !prop.name.startsWith('ref_')),
 										events,
 										directives,
 									});
@@ -328,17 +339,17 @@ export function create(
 							const attributes: html.IAttributeData[] = [];
 							const propsSet = new Set(propInfos.map(prop => prop.name));
 
-							for (const prop of [
-								...propInfos,
-								...attrs.map<ComponentPropInfo>(attr => ({ name: attr })),
-							]) {
-
+							for (
+								const prop of [
+									...propInfos,
+									...attrs.map<ComponentPropInfo>(attr => ({ name: attr })),
+								]
+							) {
 								const isGlobal = prop.isAttribute || !propsSet.has(prop.name);
 								const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 								const isEvent = hyphenateAttr(name).startsWith('on-');
 
 								if (isEvent) {
-
 									const propNameBase = name.startsWith('on-')
 										? name.slice('on-'.length)
 										: (name['on'.length].toLowerCase() + name.slice('onX'.length));
@@ -354,15 +365,18 @@ export function create(
 											description: propKey,
 										},
 									);
-								}
-								else {
-
+								} else {
 									const propName = name;
 									const propInfo = propInfos.find(prop => {
 										const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === propName;
 									});
-									const propKey = generateItemKey('componentProp', isGlobal ? '*' : tag, propName, propInfo?.deprecated);
+									const propKey = generateItemKey(
+										'componentProp',
+										isGlobal ? '*' : tag,
+										propName,
+										propInfo?.deprecated,
+									);
 
 									if (propInfo) {
 										cachedPropInfos.set(propName, propInfo);
@@ -387,7 +401,6 @@ export function create(
 							}
 
 							for (const event of events) {
-
 								const name = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
 								const propKey = generateItemKey('componentEvent', tag, name);
 
@@ -412,10 +425,12 @@ export function create(
 
 							const models: [boolean, string][] = [];
 
-							for (const prop of [
-								...propInfos,
-								...attrs.map(attr => ({ name: attr })),
-							]) {
+							for (
+								const prop of [
+									...propInfos,
+									...attrs.map(attr => ({ name: attr })),
+								]
+							) {
 								if (prop.name.startsWith('onUpdate:')) {
 									const isGlobal = !propsSet.has(prop.name);
 									models.push([isGlobal, prop.name.slice('onUpdate:'.length)]);
@@ -428,7 +443,6 @@ export function create(
 							}
 
 							for (const [isGlobal, model] of models) {
-
 								const name = casing.attr === AttrNameCasing.Camel ? model : hyphenateAttr(model);
 								const propKey = generateItemKey('componentProp', isGlobal ? '*' : tag, name);
 
@@ -460,7 +474,6 @@ export function create(
 			}
 
 			function afterHtmlCompletion(completionList: CompletionList, document: TextDocument) {
-
 				addDirectiveModifiers();
 
 				function addDirectiveModifiers() {
@@ -473,11 +486,13 @@ export function create(
 					const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
 					const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
 					const isVModel = text.startsWith('v-model:') || text === 'v-model';
-					const currentModifiers =
-						isVOn ? vOnModifiers
-							: isVBind ? vBindModifiers
-								: isVModel ? vModelModifiers
-									: undefined;
+					const currentModifiers = isVOn
+						? vOnModifiers
+						: isVBind
+						? vBindModifiers
+						: isVModel
+						? vModelModifiers
+						: undefined;
 
 					if (!currentModifiers) {
 						return;
@@ -529,7 +544,7 @@ export function create(
 						const text = parsedLabel.leadingSlash ? `/${name}>` : name;
 						if (item.textEdit) {
 							item.textEdit.newText = text;
-						};
+						}
 						if (item.insertText) {
 							item.insertText = text;
 						}
@@ -564,12 +579,10 @@ export function create(
 								kind: 'markdown',
 								value: documentations.join('\n\n'),
 							};
-						}
-						else {
+						} else {
 							item.documentation = undefined;
 						}
-					}
-					else {
+					} else {
 						let propName = item.label;
 
 						for (const str of ['v-bind:', ':']) {
@@ -592,7 +605,9 @@ export function create(
 
 						propInfo = cachedPropInfos.get(propName);
 						if (propInfo?.commentMarkdown) {
-							const originalDocumentation = typeof item.documentation === 'string' ? item.documentation : item.documentation?.value;
+							const originalDocumentation = typeof item.documentation === 'string'
+								? item.documentation
+								: item.documentation?.value;
 							item.documentation = {
 								kind: 'markdown',
 								value: [
@@ -615,9 +630,7 @@ export function create(
 					) {
 						item.kind = 6 satisfies typeof CompletionItemKind.Variable;
 						tokens.push('\u0000');
-					}
-					else if (parsedItem) {
-
+					} else if (parsedItem) {
 						const isComponent = parsedItem.tag !== '*';
 						const { isEvent, propName } = getPropName(parsedItem);
 
@@ -625,8 +638,7 @@ export function create(
 							if (isComponent || specialProps.has(propName)) {
 								item.kind = 5 satisfies typeof CompletionItemKind.Field;
 							}
-						}
-						else if (isEvent) {
+						} else if (isEvent) {
 							item.kind = 23 satisfies typeof CompletionItemKind.Event;
 							if (propName.startsWith('vue:')) {
 								tokens.push('\u0004');
@@ -638,32 +650,25 @@ export function create(
 
 							if (item.label.startsWith(':')) {
 								tokens.push('\u0001');
-							}
-							else if (item.label.startsWith('@')) {
+							} else if (item.label.startsWith('@')) {
 								tokens.push('\u0002');
-							}
-							else if (item.label.startsWith('v-bind:')) {
+							} else if (item.label.startsWith('v-bind:')) {
 								tokens.push('\u0003');
-							}
-							else if (item.label.startsWith('v-model:')) {
+							} else if (item.label.startsWith('v-model:')) {
 								tokens.push('\u0004');
-							}
-							else if (item.label.startsWith('v-on:')) {
+							} else if (item.label.startsWith('v-on:')) {
 								tokens.push('\u0005');
-							}
-							else {
+							} else {
 								tokens.push('\u0000');
 							}
 
 							if (specialProps.has(propName)) {
 								tokens.push('\u0001');
-							}
-							else {
+							} else {
 								tokens.push('\u0000');
 							}
 						}
-					}
-					else if (
+					} else if (
 						item.label === 'v-if'
 						|| item.label === 'v-else-if'
 						|| item.label === 'v-else'
@@ -671,12 +676,10 @@ export function create(
 					) {
 						item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
 						tokens.push('\u0003');
-					}
-					else if (item.label.startsWith('v-')) {
+					} else if (item.label.startsWith('v-')) {
 						item.kind = 3 satisfies typeof CompletionItemKind.Function;
 						tokens.push('\u0002');
-					}
-					else {
+					} else {
 						tokens.push('\u0001');
 					}
 
@@ -701,8 +704,7 @@ export function create(
 							try {
 								const data = JSON.parse(json);
 								newData.push(html.newHTMLDataProvider(customDataPath, data));
-							}
-							catch (error) {
+							} catch (error) {
 								console.error(error);
 							}
 						}
@@ -721,8 +723,7 @@ export function create(
 	function isSupportedDocument(document: TextDocument) {
 		if (mode === 'pug') {
 			return document.languageId === 'jade';
-		}
-		else {
+		} else {
 			return document.languageId === 'html';
 		}
 	}
@@ -777,8 +778,7 @@ function getPropName(
 	const name = hyphenateAttr(parsedItem.prop);
 	if (name.startsWith('on-')) {
 		return { isEvent: true, propName: name.slice('on-'.length) };
-	}
-	else if (parsedItem.type === 'componentEvent') {
+	} else if (parsedItem.type === 'componentEvent') {
 		return { isEvent: true, propName: name };
 	}
 	return { isEvent: false, propName: name };

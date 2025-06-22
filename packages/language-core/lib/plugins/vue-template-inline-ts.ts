@@ -23,11 +23,9 @@ const formatBrackets = {
 };
 
 const plugin: VueLanguagePlugin = ctx => {
-
 	const parseds = new WeakMap<Sfc, ReturnType<typeof parse>>();
 
 	return {
-
 		version: 2.1,
 
 		getEmbeddedCodes(_fileName, sfc) {
@@ -85,8 +83,7 @@ const plugin: VueLanguagePlugin = ctx => {
 						formatBrackets.generic,
 					);
 				}
-			}
-			else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
+			} else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 				for (const prop of node.props) {
 					if (prop.type !== CompilerDOM.NodeTypes.DIRECTIVE) {
 						continue;
@@ -114,8 +111,7 @@ const plugin: VueLanguagePlugin = ctx => {
 									prop.exp.loc.start.offset,
 									formatBrackets.event,
 								);
-							}
-							else {
+							} else {
 								const lines = prop.exp.content.split('\n');
 								const firstLineEmpty = lines[0].trim() === '';
 								const lastLineEmpty = lines[lines.length - 1].trim() === '';
@@ -125,8 +121,7 @@ const plugin: VueLanguagePlugin = ctx => {
 										prop.exp.loc.start.offset,
 										formatBrackets.normal,
 									);
-								}
-								else {
+								} else {
 									addFormatCodes(
 										prop.exp.loc.source,
 										prop.exp.loc.start.offset,
@@ -134,23 +129,20 @@ const plugin: VueLanguagePlugin = ctx => {
 									);
 								}
 							}
-						}
-						else if (prop.name === 'slot') {
+						} else if (prop.name === 'slot') {
 							addFormatCodes(
 								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
 								formatBrackets.params,
 							);
-						}
-						else if (prop.rawName === 'v-for') {
+						} else if (prop.rawName === 'v-for') {
 							// #2586
 							addFormatCodes(
 								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
 								formatBrackets.for,
 							);
-						}
-						else {
+						} else {
 							addFormatCodes(
 								prop.exp.loc.source,
 								prop.exp.loc.start.offset,
@@ -162,8 +154,7 @@ const plugin: VueLanguagePlugin = ctx => {
 				for (const child of node.children) {
 					visit(child);
 				}
-			}
-			else if (node.type === CompilerDOM.NodeTypes.IF) {
+			} else if (node.type === CompilerDOM.NodeTypes.IF) {
 				for (let i = 0; i < node.branches.length; i++) {
 					const branch = node.branches[i];
 					if (branch.condition?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -178,8 +169,7 @@ const plugin: VueLanguagePlugin = ctx => {
 						visit(childNode);
 					}
 				}
-			}
-			else if (node.type === CompilerDOM.NodeTypes.FOR) {
+			} else if (node.type === CompilerDOM.NodeTypes.FOR) {
 				const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
 				const { source } = node.parseResult;
 				if (leftExpressionRange && leftExpressionText && source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
@@ -200,20 +190,17 @@ const plugin: VueLanguagePlugin = ctx => {
 				for (const child of node.children) {
 					visit(child);
 				}
-			}
-			else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
+			} else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 				// {{ var }}
 				visit(node.content);
-			}
-			else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
+			} else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 				// {{ ... }} {{ ... }}
 				for (const childNode of node.children) {
 					if (typeof childNode === 'object') {
 						visit(childNode);
 					}
 				}
-			}
-			else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
+			} else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 				// {{ ... }}
 				const [content, start] = parseInterpolationNode(node, templateContent);
 				const lines = content.split('\n');
@@ -227,24 +214,21 @@ const plugin: VueLanguagePlugin = ctx => {
 							start,
 							formatBrackets.normal,
 						);
-					}
-					else {
+					} else {
 						addFormatCodes(
 							content,
 							start,
 							['(', ');'],
 						);
 					}
-				}
-				else {
+				} else {
 					if (lines.length <= 1 || (!firstLineEmpty && !lastLineEmpty)) {
 						addFormatCodes(
 							content,
 							start,
 							formatBrackets.curly,
 						);
-					}
-					else {
+					} else {
 						addFormatCodes(
 							content,
 							start,

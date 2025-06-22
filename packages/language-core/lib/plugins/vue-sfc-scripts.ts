@@ -1,9 +1,7 @@
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = () => {
-
 	return {
-
 		version: 2.1,
 
 		getEmbeddedCodes(_fileName, sfc) {
@@ -21,9 +19,11 @@ const plugin: VueLanguagePlugin = () => {
 		},
 
 		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
-			const script = embeddedFile.id === 'script_raw' ? sfc.script
-				: embeddedFile.id === 'scriptsetup_raw' ? sfc.scriptSetup
-					: undefined;
+			const script = embeddedFile.id === 'script_raw'
+				? sfc.script
+				: embeddedFile.id === 'scriptsetup_raw'
+				? sfc.scriptSetup
+				: undefined;
 			if (script) {
 				embeddedFile.content.push([
 					script.content,

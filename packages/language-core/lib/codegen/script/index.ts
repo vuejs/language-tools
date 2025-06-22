@@ -22,7 +22,7 @@ export interface ScriptCodegenOptions {
 	lang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	templateCodegen: TemplateCodegenContext & { codes: Code[]; } | undefined;
+	templateCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
 	destructuredPropNames: Set<string>;
 	templateRefNames: Set<string>;
 	appendGlobalTypes: boolean;
@@ -35,16 +35,18 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		const globalTypes = options.vueCompilerOptions.__setupedGlobalTypes;
 		if (typeof globalTypes === 'object') {
 			let relativePath = path.relative(path.dirname(options.fileName), globalTypes.absolutePath);
-			if (relativePath !== globalTypes.absolutePath && !relativePath.startsWith('./') && !relativePath.startsWith('../')) {
+			if (
+				relativePath !== globalTypes.absolutePath && !relativePath.startsWith('./') && !relativePath.startsWith('../')
+			) {
 				relativePath = './' + relativePath;
 			}
 			yield `/// <reference types="${relativePath}" />${newLine}`;
+		} else {
+			yield `/// <reference types=".vue-global-types/${
+				getGlobalTypesFileName(options.vueCompilerOptions)
+			}" />${newLine}`;
 		}
-		else {
-			yield `/// <reference types=".vue-global-types/${getGlobalTypesFileName(options.vueCompilerOptions)}" />${newLine}`;
-		}
-	}
-	else {
+	} else {
 		yield `/// <reference path="./__VLS_fake.d.ts" />`;
 	}
 
@@ -62,15 +64,22 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			if (exportDefault) {
 				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
-				yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.end, options.sfc.script.content.length, codeFeatures.all);
-			}
-			else {
+				yield generateSfcBlockSection(
+					options.sfc.script,
+					exportDefault.expression.end,
+					options.sfc.script.content.length,
+					codeFeatures.all,
+				);
+			} else {
 				yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
-				yield* generateScriptSectionPartiallyEnding(options.sfc.script.name, options.sfc.script.content.length, '#3632/both.vue');
+				yield* generateScriptSectionPartiallyEnding(
+					options.sfc.script.name,
+					options.sfc.script.content.length,
+					'#3632/both.vue',
+				);
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 			}
-		}
-		else if (exportDefault && isExportRawObject && options.vueCompilerOptions.optionsWrapper.length) {
+		} else if (exportDefault && isExportRawObject && options.vueCompilerOptions.optionsWrapper.length) {
 			ctx.inlayHints.push({
 				blockName: options.sfc.script.name,
 				offset: exportDefault.expression.start,
@@ -92,21 +101,38 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			});
 			yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 			yield options.vueCompilerOptions.optionsWrapper[0];
-			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.start, exportDefault.expression.end, codeFeatures.all);
+			yield generateSfcBlockSection(
+				options.sfc.script,
+				exportDefault.expression.start,
+				exportDefault.expression.end,
+				codeFeatures.all,
+			);
 			yield options.vueCompilerOptions.optionsWrapper[1];
-			yield generateSfcBlockSection(options.sfc.script, exportDefault.expression.end, options.sfc.script.content.length, codeFeatures.all);
-		}
-		else {
+			yield generateSfcBlockSection(
+				options.sfc.script,
+				exportDefault.expression.end,
+				options.sfc.script.content.length,
+				codeFeatures.all,
+			);
+		} else {
 			yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
-			yield* generateScriptSectionPartiallyEnding(options.sfc.script.name, options.sfc.script.content.length, '#3632/script.vue');
+			yield* generateScriptSectionPartiallyEnding(
+				options.sfc.script.name,
+				options.sfc.script.content.length,
+				'#3632/script.vue',
+			);
 		}
-	}
-	else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
+	} else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 
 	if (options.sfc.scriptSetup) {
-		yield* generateScriptSectionPartiallyEnding(options.sfc.scriptSetup.name, options.sfc.scriptSetup.content.length, '#4569/main.vue', ';');
+		yield* generateScriptSectionPartiallyEnding(
+			options.sfc.scriptSetup.name,
+			options.sfc.scriptSetup.content.length,
+			'#4569/main.vue',
+			';',
+		);
 	}
 
 	if (!ctx.generatedTemplate) {

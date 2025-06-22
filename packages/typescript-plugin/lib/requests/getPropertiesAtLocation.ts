@@ -57,15 +57,13 @@ export function getPropertiesAtLocation(
 	return props.map(prop => prop.name);
 
 	function findPositionIdentifier(sourceFile: ts.SourceFile, node: ts.Node, offset: number) {
-
 		let result: ts.Node | undefined;
 
 		node.forEachChild(child => {
 			if (!result) {
 				if (child.end === offset && ts.isIdentifier(child)) {
 					result = child;
-				}
-				else if (child.end >= offset && child.getStart(sourceFile) < offset) {
+				} else if (child.end >= offset && child.getStart(sourceFile) < offset) {
 					result = findPositionIdentifier(sourceFile, child, offset);
 				}
 			}

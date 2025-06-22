@@ -4,7 +4,10 @@ import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server.js';
 
 test('Default slot', async () => {
-	await prepareDocument('tsconfigProject/foo.vue', 'vue', `
+	await prepareDocument(
+		'tsconfigProject/foo.vue',
+		'vue',
+		`
 		<script setup lang="ts">
 		import Fixture from './fixture.vue';
 		</script>
@@ -14,13 +17,18 @@ test('Default slot', async () => {
 				<div></div>
 			</Fixture>
 		</template>
-	`);
+	`,
+	);
 	expect(
-		await requestReferences('tsconfigProject/fixture.vue', 'vue', `
+		await requestReferences(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				<slot|></slot>
 			</template>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "refs": [
@@ -61,7 +69,10 @@ test('Default slot', async () => {
 });
 
 test('Named slot', async () => {
-	await prepareDocument('tsconfigProject/foo.vue', 'vue', `
+	await prepareDocument(
+		'tsconfigProject/foo.vue',
+		'vue',
+		`
 		<script setup lang="ts">
 		import Fixture from './fixture.vue';
 		</script>
@@ -69,13 +80,18 @@ test('Named slot', async () => {
 		<template>
 			<Fixture #foo></Fixture>
 		</template>
-	`);
+	`,
+	);
 	expect(
-		await requestReferences('tsconfigProject/fixture.vue', 'vue', `
+		await requestReferences(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 		<template>
 			<slot name="|foo"></slot>
 		</template>
-	`),
+	`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "refs": [
@@ -117,7 +133,10 @@ test('Named slot', async () => {
 
 test('v-bind shorthand', async () => {
 	expect(
-		await requestReferences('tsconfigProject/fixture.vue', 'vue', `
+		await requestReferences(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<script setup lang="ts">
 			const |foo = 1;
 			</script>
@@ -125,7 +144,8 @@ test('v-bind shorthand', async () => {
 			<template>
 				<Foo :foo></Foo>
 			</template>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "refs": [

@@ -10,5 +10,5 @@ export type Requests = {
 	getComponentDirectives: ToRequest<typeof import('./getComponentDirectives.js')['getComponentDirectives']>;
 	getElementAttrs: ToRequest<typeof import('./getElementAttrs.js')['getElementAttrs']>;
 	getElementNames: ToRequest<typeof import('./getElementNames.js')['getElementNames']>;
-	getQuickInfoAtPosition: ToRequest<(fileName: string, position: { line: number; character: number; }) => string>;
+	getQuickInfoAtPosition: ToRequest<(fileName: string, position: { line: number; character: number }) => string>;
 };

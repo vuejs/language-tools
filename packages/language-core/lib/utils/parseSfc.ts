@@ -1,6 +1,14 @@
 import type { ElementNode, SourceLocation } from '@vue/compiler-dom';
 import * as CompilerDOM from '@vue/compiler-dom';
-import type { CompilerError, SFCBlock, SFCDescriptor, SFCParseResult, SFCScriptBlock, SFCStyleBlock, SFCTemplateBlock } from '@vue/compiler-sfc';
+import type {
+	CompilerError,
+	SFCBlock,
+	SFCDescriptor,
+	SFCParseResult,
+	SFCScriptBlock,
+	SFCStyleBlock,
+	SFCTemplateBlock,
+} from '@vue/compiler-sfc';
 
 declare module '@vue/compiler-sfc' {
 	interface SFCDescriptor {
@@ -9,7 +17,6 @@ declare module '@vue/compiler-sfc' {
 }
 
 export function parse(source: string): SFCParseResult {
-
 	const errors: CompilerError[] = [];
 	const ast = CompilerDOM.parse(source, {
 		// there are no components at SFC parsing level
@@ -39,8 +46,7 @@ export function parse(source: string): SFCParseResult {
 		if (node.type === CompilerDOM.NodeTypes.COMMENT) {
 			descriptor.comments.push(node.content);
 			return;
-		}
-		else if (node.type !== CompilerDOM.NodeTypes.ELEMENT) {
+		} else if (node.type !== CompilerDOM.NodeTypes.ELEMENT) {
 			return;
 		}
 		switch (node.tag) {
@@ -83,8 +89,7 @@ function createBlock(node: ElementNode, source: string) {
 		start = node.children[0].loc.start;
 		end = node.children[node.children.length - 1].loc.end;
 		content = source.slice(start.offset, end.offset);
-	}
-	else {
+	} else {
 		const offset = node.loc.source.indexOf(`</`);
 		if (offset > -1) {
 			start = {
@@ -112,23 +117,18 @@ function createBlock(node: ElementNode, source: string) {
 			attrs[p.name] = p.value ? p.value.content || true : true;
 			if (p.name === 'lang') {
 				block.lang = p.value?.content;
-			}
-			else if (p.name === 'src') {
+			} else if (p.name === 'src') {
 				block.__src = parseAttr(p, node);
-			}
-			else if (isScriptBlock(block)) {
+			} else if (isScriptBlock(block)) {
 				if (p.name === 'setup' || p.name === 'vapor') {
 					block.setup = attrs[p.name];
-				}
-				else if (p.name === 'generic') {
+				} else if (p.name === 'generic') {
 					block.__generic = parseAttr(p, node);
 				}
-			}
-			else if (isStyleBlock(block)) {
+			} else if (isStyleBlock(block)) {
 				if (p.name === 'scoped') {
 					block.scoped = true;
-				}
-				else if (p.name === 'module') {
+				} else if (p.name === 'module') {
 					block.__module = parseAttr(p, node);
 				}
 			}

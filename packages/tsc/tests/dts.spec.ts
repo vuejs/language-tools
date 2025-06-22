@@ -30,11 +30,14 @@ describe('vue-tsc-dts', () => {
 		const { configFilePath } = options.options;
 		if (typeof configFilePath === 'string') {
 			vueOptions = vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
-		}
-		else {
+		} else {
 			vueOptions = vue.getDefaultCompilerOptions();
 			vueOptions.extensions = ['.vue', '.cext'];
-			vueOptions.__setupedGlobalTypes = vue.setupGlobalTypes(workspace.replace(windowsPathReg, '/'), vueOptions, ts.sys);
+			vueOptions.__setupedGlobalTypes = vue.setupGlobalTypes(
+				workspace.replace(windowsPathReg, '/'),
+				vueOptions,
+				ts.sys,
+			);
 		}
 		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
@@ -47,12 +50,11 @@ describe('vue-tsc-dts', () => {
 	const program = createProgram(options);
 
 	for (const intputFile of options.rootNames) {
-
 		const expectedOutputFile = intputFile.endsWith('.ts')
 			? intputFile.slice(0, -'.ts'.length) + '.d.ts'
 			: intputFile.endsWith('.tsx')
-				? intputFile.slice(0, -'.tsx'.length) + '.d.ts'
-				: intputFile + '.d.ts';
+			? intputFile.slice(0, -'.tsx'.length) + '.d.ts'
+			: intputFile + '.d.ts';
 		it(`Input: ${shortenPath(intputFile)}, Output: ${shortenPath(expectedOutputFile)}`, () => {
 			let outputText: string | undefined;
 			const sourceFile = program.getSourceFile(intputFile);

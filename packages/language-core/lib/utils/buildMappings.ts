@@ -7,8 +7,7 @@ export function buildMappings<T>(chunks: Segment<T>[]) {
 	for (const segment of chunks) {
 		if (typeof segment === 'string') {
 			length += segment.length;
-		}
-		else {
+		} else {
 			mappings.push({
 				sourceOffsets: [segment[2]],
 				generatedOffsets: [length],

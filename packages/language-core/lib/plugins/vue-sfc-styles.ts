@@ -2,9 +2,7 @@ import type { VueLanguagePlugin } from '../types';
 import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
-
 	return {
-
 		version: 2.1,
 
 		getEmbeddedCodes(_fileName, sfc) {
@@ -48,8 +46,7 @@ const plugin: VueLanguagePlugin = () => {
 							');\n',
 						);
 					}
-				}
-				else {
+				} else {
 					embeddedFile.content.push([
 						style.content,
 						style.name,

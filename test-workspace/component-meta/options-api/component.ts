@@ -21,7 +21,7 @@ export default defineComponent({
 				console.warn('Invalid submit event payload!');
 				return false;
 			}
-		}
+		},
 	},
 	props: {
 		/**
@@ -29,7 +29,7 @@ export default defineComponent({
 		 */
 		numberDefault: {
 			type: Number,
-			default: 42
+			default: 42,
 		},
 		/**
 		 * Default function Object
@@ -37,15 +37,15 @@ export default defineComponent({
 		objectDefault: {
 			type: Object,
 			default: () => ({
-				foo: 'bar'
-			})
+				foo: 'bar',
+			}),
 		},
 		/**
 		 * Default function Array
 		 */
 		arrayDefault: {
 			type: Array,
-			default: () => [1, 2, 3]
+			default: () => [1, 2, 3],
 		},
 		/**
 		 * Default function more complex
@@ -58,7 +58,7 @@ export default defineComponent({
 				} else {
 					return undefined;
 				}
-			}
+			},
 		},
 	},
 });

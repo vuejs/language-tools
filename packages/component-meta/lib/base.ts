@@ -105,20 +105,17 @@ export function baseCreate(
 
 			if (fileName === globalComponentName) {
 				snapshot = globalComponentSnapshot;
-			}
-			else if (isMetaFileName(fileName)) {
+			} else if (isMetaFileName(fileName)) {
 				if (!metaSnapshots.has(fileName)) {
 					metaSnapshots.set(fileName, ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName)));
 				}
 				snapshot = metaSnapshots.get(fileName);
-			}
-			else {
+			} else {
 				if (!scriptSnapshots.has(fileName)) {
 					const fileText = ts.sys.readFile(fileName);
 					if (fileText !== undefined) {
 						scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(fileText));
-					}
-					else {
+					} else {
 						scriptSnapshots.set(fileName, undefined);
 					}
 				}
@@ -127,8 +124,7 @@ export function baseCreate(
 
 			if (snapshot) {
 				language.scripts.set(fileName, snapshot);
-			}
-			else {
+			} else {
 				language.scripts.delete(fileName);
 			}
 		},
@@ -155,13 +151,17 @@ export function baseCreate(
 		};
 	}
 	languageServiceHost.fileExists = path => {
-		if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
+		if (
+			path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)
+		) {
 			return true;
 		}
 		return fileExists(path);
 	};
 	languageServiceHost.getScriptSnapshot = path => {
-		if (path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)) {
+		if (
+			path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)
+		) {
 			return globalTypesSnapshot;
 		}
 		return getScriptSnapshot(path);
@@ -251,7 +251,6 @@ interface ComponentMeta<T> {
 	}
 
 	function getComponentMeta(componentPath: string, exportName = 'default'): ComponentMeta {
-
 		const program = tsLs.getProgram()!;
 		const typeChecker = program.getTypeChecker();
 		const { symbolNode, exports } = _getExports(program, typeChecker, componentPath);
@@ -289,7 +288,6 @@ interface ComponentMeta<T> {
 		};
 
 		function getType() {
-
 			const $type = symbolProperties.find(prop => prop.escapedName === 'type');
 
 			if ($type) {
@@ -301,7 +299,6 @@ interface ComponentMeta<T> {
 		}
 
 		function getProps() {
-
 			const $props = symbolProperties.find(prop => prop.escapedName === 'props');
 			const vnodeEventRegex = /^onVnode[A-Z]/;
 			let result: PropertyMeta[] = [];
@@ -338,21 +335,25 @@ interface ComponentMeta<T> {
 			const vueDefaults = vueFile && exportName === 'default'
 				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts) : {})
 				: {};
-			const tsDefaults = !vueFile ? readTsComponentDefaultProps(
-				ts.createSourceFile(
-					'/tmp.' + componentPath.slice(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
-					snapshot.getText(0, snapshot.getLength()),
-					ts.ScriptTarget.Latest,
-				),
-				exportName,
-				printer,
-				ts,
-			) : {};
+			const tsDefaults = !vueFile
+				? readTsComponentDefaultProps(
+					ts.createSourceFile(
+						'/tmp.' + componentPath.slice(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
+						snapshot.getText(0, snapshot.getLength()),
+						ts.ScriptTarget.Latest,
+					),
+					exportName,
+					printer,
+					ts,
+				)
+				: {};
 
-			for (const [propName, defaultExp] of Object.entries({
-				...vueDefaults,
-				...tsDefaults,
-			})) {
+			for (
+				const [propName, defaultExp] of Object.entries({
+					...vueDefaults,
+					...tsDefaults,
+				})
+			) {
 				const prop = result.find(p => p.name === propName);
 				if (prop) {
 					prop.default = defaultExp.default;
@@ -371,7 +372,6 @@ interface ComponentMeta<T> {
 		}
 
 		function getEvents() {
-
 			const $emit = symbolProperties.find(prop => prop.escapedName === 'emit');
 
 			if ($emit) {
@@ -379,7 +379,6 @@ interface ComponentMeta<T> {
 				const calls = type.getCallSignatures();
 
 				return calls.map(call => {
-
 					const {
 						resolveEventSignature,
 					} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
@@ -392,7 +391,6 @@ interface ComponentMeta<T> {
 		}
 
 		function getSlots() {
-
 			const $slots = symbolProperties.find(prop => prop.escapedName === 'slots');
 
 			if ($slots) {
@@ -412,14 +410,13 @@ interface ComponentMeta<T> {
 		}
 
 		function getExposed() {
-
 			const $exposed = symbolProperties.find(prop => prop.escapedName === 'exposed');
 
 			if ($exposed) {
 				const type = typeChecker.getTypeOfSymbolAtLocation($exposed, symbolNode);
 				const properties = type.getProperties().filter(prop =>
 					// only exposed props will not have a valueDeclaration
-					!prop.valueDeclaration,
+					!prop.valueDeclaration
 				);
 
 				return properties.map(prop => {
@@ -440,7 +437,6 @@ interface ComponentMeta<T> {
 		typeChecker: ts.TypeChecker,
 		componentPath: string,
 	) {
-
 		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
 		if (!sourceFile) {
 			throw 'Could not find main source file';
@@ -456,7 +452,6 @@ interface ComponentMeta<T> {
 		let symbolNode: ts.Expression | undefined;
 
 		for (const symbol of exportedSymbols) {
-
 			const [declaration] = symbol.getDeclarations() ?? [];
 
 			if (ts.isExportAssignment(declaration)) {
@@ -477,7 +472,6 @@ interface ComponentMeta<T> {
 		};
 	}
 }
-
 
 function createSchemaResolvers(
 	typeChecker: ts.TypeChecker,
@@ -505,8 +499,7 @@ function createSchemaResolvers(
 					if (typeof result === 'boolean') {
 						return result;
 					}
-				}
-				else if (name === item) {
+				} else if (name === item) {
 					return true;
 				}
 			}
@@ -595,11 +588,11 @@ function createSchemaResolvers(
 			if ((call.parameters[1].valueDeclaration as any)?.dotDotDotToken) {
 				subtypeStr = getFullyQualifiedName(subtype);
 				getSchema = () => typeChecker.getTypeArguments(subtype! as ts.TypeReference).map(resolveSchema);
-			}
-			else {
+			} else {
 				subtypeStr = '[';
 				for (let i = 1; i < call.parameters.length; i++) {
-					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode)) + ', ';
+					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode))
+						+ ', ';
 				}
 				subtypeStr = subtypeStr.slice(0, -2) + ']';
 				getSchema = () => {
@@ -639,7 +632,9 @@ function createSchemaResolvers(
 			get schema() {
 				return schema ??= signature.parameters.length > 0
 					? typeChecker
-						.getTypeArguments(typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference)
+						.getTypeArguments(
+							typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference,
+						)
 						.map(resolveSchema)
 					: undefined;
 			},
@@ -663,9 +658,7 @@ function createSchemaResolvers(
 					return schema ??= subtype.types.map(resolveSchema);
 				},
 			};
-		}
-
-		else if (typeChecker.isArrayLikeType(subtype)) {
+		} else if (typeChecker.isArrayLikeType(subtype)) {
 			let schema: PropertyMetaSchema[];
 			return {
 				kind: 'array',
@@ -674,11 +667,10 @@ function createSchemaResolvers(
 					return schema ??= typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema);
 				},
 			};
-		}
-
-		else if (
-			subtype.getCallSignatures().length === 0 &&
-			(subtype.isClassOrInterface() || subtype.isIntersection() || (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
+		} else if (
+			subtype.getCallSignatures().length === 0
+			&& (subtype.isClassOrInterface() || subtype.isIntersection()
+				|| (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
 		) {
 			let schema: Record<string, PropertyMeta>;
 			return {
@@ -688,16 +680,18 @@ function createSchemaResolvers(
 					return schema ??= subtype.getProperties().map(resolveNestedProperties).reduce(reducer, {});
 				},
 			};
-		}
-
-		else if (subtype.getCallSignatures().length === 1) {
+		} else if (subtype.getCallSignatures().length === 1) {
 			return resolveCallbackSchema(subtype.getCallSignatures()[0]);
 		}
 
 		return type;
 	}
 	function getFullyQualifiedName(type: ts.Type) {
-		const str = typeChecker.typeToString(type, undefined, ts.TypeFormatFlags.UseFullyQualifiedType | ts.TypeFormatFlags.NoTruncation);
+		const str = typeChecker.typeToString(
+			type,
+			undefined,
+			ts.TypeFormatFlags.UseFullyQualifiedType | ts.TypeFormatFlags.NoTruncation,
+		);
 		if (str.includes('import(')) {
 			return str.replace(/import\(.*?\)\./g, '');
 		}
@@ -760,7 +754,6 @@ function readVueComponentDefaultProps(
 	return result;
 
 	function scriptSetupWorker() {
-
 		if (!sfc.scriptSetup) {
 			return;
 		}
@@ -784,8 +777,7 @@ function readVueComponentDefaultProps(
 					}
 				}
 			}
-		}
-		else if (scriptSetupRanges?.defineProps?.argNode) {
+		} else if (scriptSetupRanges?.defineProps?.argNode) {
 			const obj = findObjectLiteralExpression(scriptSetupRanges.defineProps.argNode);
 			if (obj) {
 				result = {
@@ -793,8 +785,7 @@ function readVueComponentDefaultProps(
 					...resolvePropsOption(ast, obj, printer, ts),
 				};
 			}
-		}
-		else if (scriptSetupRanges?.defineProps?.destructured) {
+		} else if (scriptSetupRanges?.defineProps?.destructured) {
 			for (const [name, initializer] of scriptSetupRanges.defineProps.destructured) {
 				if (initializer) {
 					const expText = printer?.printNode(ts.EmitHint.Expression, initializer, ast) ?? initializer.getText(ast);
@@ -809,7 +800,9 @@ function readVueComponentDefaultProps(
 			for (const defineModel of scriptSetupRanges.defineModel) {
 				const obj = defineModel.argNode ? findObjectLiteralExpression(defineModel.argNode) : undefined;
 				if (obj) {
-					const name = defineModel.name ? sfc.scriptSetup.content.slice(defineModel.name.start, defineModel.name.end).slice(1, -1) : 'modelValue';
+					const name = defineModel.name
+						? sfc.scriptSetup.content.slice(defineModel.name.start, defineModel.name.end).slice(1, -1)
+						: 'modelValue';
 					result[name] = resolveModelOption(ast, obj, printer, ts);
 				}
 			}
@@ -830,7 +823,6 @@ function readVueComponentDefaultProps(
 	}
 
 	function scriptWorker() {
-
 		if (!sfc.script) {
 			return;
 		}
@@ -858,7 +850,6 @@ function readTsComponentDefaultProps(
 	return {};
 
 	function getComponentNode() {
-
 		let result: ts.Node | undefined;
 
 		if (exportName === 'default') {
@@ -867,8 +858,7 @@ function readTsComponentDefaultProps(
 					result = child.expression;
 				}
 			});
-		}
-		else {
+		} else {
 			ast.forEachChild(child => {
 				if (
 					ts.isVariableStatement(child)
@@ -887,16 +877,13 @@ function readTsComponentDefaultProps(
 	}
 
 	function getComponentOptionsNode() {
-
 		const component = getComponentNode();
 
 		if (component) {
-
 			// export default { ... }
 			if (ts.isObjectLiteralExpression(component)) {
 				return component;
-			}
-			// export default defineComponent({ ... })
+			} // export default defineComponent({ ... })
 			else if (ts.isCallExpression(component)) {
 				if (component.arguments.length) {
 					const arg = component.arguments[0];
@@ -925,16 +912,18 @@ function resolvePropsOption(
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript'),
 ) {
-
-	const result: Record<string, { default?: string, required?: boolean; }> = {};
+	const result: Record<string, { default?: string; required?: boolean }> = {};
 
 	for (const prop of props.properties) {
 		if (ts.isPropertyAssignment(prop)) {
 			const name = prop.name?.getText(ast);
 			if (ts.isObjectLiteralExpression(prop.initializer)) {
-
-				const defaultProp = prop.initializer.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(ast) === 'default') as ts.PropertyAssignment | undefined;
-				const requiredProp = prop.initializer.properties.find(p => ts.isPropertyAssignment(p) && p.name.getText(ast) === 'required') as ts.PropertyAssignment | undefined;
+				const defaultProp = prop.initializer.properties.find(p =>
+					ts.isPropertyAssignment(p) && p.name.getText(ast) === 'default'
+				) as ts.PropertyAssignment | undefined;
+				const requiredProp = prop.initializer.properties.find(p =>
+					ts.isPropertyAssignment(p) && p.name.getText(ast) === 'required'
+				) as ts.PropertyAssignment | undefined;
 
 				result[name] = {};
 
@@ -960,7 +949,7 @@ function resolveModelOption(
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript'),
 ) {
-	const result: { default?: string; } = {};
+	const result: { default?: string } = {};
 
 	for (const prop of options.properties) {
 		if (ts.isPropertyAssignment(prop)) {
@@ -983,11 +972,9 @@ function resolveDefaultOptionExpression(
 	if (ts.isArrowFunction(_default)) {
 		if (ts.isBlock(_default.body)) {
 			return _default; // TODO
-		}
-		else if (ts.isParenthesizedExpression(_default.body)) {
+		} else if (ts.isParenthesizedExpression(_default.body)) {
 			return _default.body.expression;
-		}
-		else {
+		} else {
 			return _default.body;
 		}
 	}

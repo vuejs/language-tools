@@ -43,11 +43,15 @@ test('TS to vue', async () => {
 test('Alias path', async () => {
 	await prepareDocument('tsconfigProject/foo.ts', 'typescript', `export const foo = 'foo';`);
 	expect(
-		await requestDefinition('tsconfigProject/fixture.vue', 'vue', `
+		await requestDefinition(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<script setup lang="ts">
 			import { foo| } from '@/foo';
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		[
 		  {
@@ -74,7 +78,10 @@ test('Alias path', async () => {
 });
 
 test('#2600', async () => {
-	await prepareDocument('tsconfigProject/foo.vue', 'vue', `
+	await prepareDocument(
+		'tsconfigProject/foo.vue',
+		'vue',
+		`
 		<template>
 			<h1>{{ msg }}</h1>
 		</template>
@@ -82,13 +89,18 @@ test('#2600', async () => {
 		<script lang="ts">
 		export default defineProps<{ msg: string }>()
 		</script>
-	`);
+	`,
+	);
 	expect(
-		await requestDefinition('tsconfigProject/fixture.vue', 'vue', `
+		await requestDefinition(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<script setup lang="ts">
 			import Foo from '|@/foo.vue';
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		[
 		  {

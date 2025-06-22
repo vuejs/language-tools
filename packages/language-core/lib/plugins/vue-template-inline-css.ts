@@ -10,9 +10,7 @@ const codeFeatures = {
 };
 
 const plugin: VueLanguagePlugin = () => {
-
 	return {
-
 		version: 2.1,
 
 		getEmbeddedCodes(_fileName, sfc) {

@@ -16,7 +16,6 @@ import { validVersions, type VueLanguagePlugin } from './types';
 export * from './plugins/shared';
 
 export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
-
 	const plugins: VueLanguagePlugin[] = [
 		useVueFilePlugin,
 		useMdFilePlugin,
@@ -60,7 +59,11 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 
 	return pluginInstances.filter(plugin => {
 		if (!validVersions.includes(plugin.version)) {
-			console.warn(`[Vue] Plugin ${plugin.name} is not compatible with the current Vue language tools version. (version: ${plugin.version}, supported versions: ${JSON.stringify(validVersions)})`);
+			console.warn(
+				`[Vue] Plugin ${plugin.name} is not compatible with the current Vue language tools version. (version: ${plugin.version}, supported versions: ${
+					JSON.stringify(validVersions)
+				})`,
+			);
 			return false;
 		}
 		return true;

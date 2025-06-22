@@ -2,9 +2,7 @@ import type * as ts from 'typescript';
 import type { VueLanguagePlugin } from '../types';
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
-
 	return {
-
 		version: 2.1,
 
 		compileSFCScript(lang, script) {

@@ -8,7 +8,6 @@ import { computedSfc } from './computedSfc';
 import { computedVueSfc } from './computedVueSfc';
 
 export class VueVirtualCode implements VirtualCode {
-
 	// sources
 
 	id = 'main';

@@ -3,7 +3,7 @@ import { hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
-import { type TemplateCodegenContext, createTemplateCodegenContext } from '../template/context';
+import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
 import { endOfLine, newLine } from '../utils';
@@ -43,8 +43,7 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 	if (exps.length === 1) {
 		yield exps[0];
 		yield `${endOfLine}`;
-	}
-	else {
+	} else {
 		yield `{${newLine}`;
 		for (const exp of exps) {
 			yield `...`;
@@ -122,8 +121,7 @@ function* generateTemplateBody(
 
 	if (options.templateCodegen) {
 		yield* options.templateCodegen.codes;
-	}
-	else {
+	} else {
 		if (!options.scriptSetupRanges?.defineSlots) {
 			yield `type __VLS_Slots = {}${endOfLine}`;
 		}
@@ -155,7 +153,6 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 }
 
 export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptCodegenContext) {
-
 	const usageVars = new Set<string>();
 	const components = new Set(options.sfc.template?.ast?.components);
 

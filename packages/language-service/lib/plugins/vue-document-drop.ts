@@ -1,5 +1,10 @@
-import type { InsertTextFormat, LanguageServiceContext, LanguageServicePlugin, WorkspaceEdit } from '@volar/language-service';
-import { VueVirtualCode, forEachEmbeddedCode } from '@vue/language-core';
+import type {
+	InsertTextFormat,
+	LanguageServiceContext,
+	LanguageServicePlugin,
+	WorkspaceEdit,
+} from '@volar/language-service';
+import { forEachEmbeddedCode, VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
@@ -9,7 +14,9 @@ import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vu
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	getTsPluginClient?: (
+		context: LanguageServiceContext,
+	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
@@ -28,7 +35,6 @@ export function create(
 
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
-
 					if (document.languageId !== 'html') {
 						return;
 					}
@@ -66,7 +72,9 @@ export function create(
 					const newName = capitalize(camelize(baseName));
 
 					const additionalEdit: WorkspaceEdit = {};
-					const code = [...forEachEmbeddedCode(root)].find(code => code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw'))!;
+					const code = [...forEachEmbeddedCode(root)].find(code =>
+						code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw')
+					)!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 					const incomingFileName = context.project.typescript?.uriConverter.asFileName(URI.parse(importUri))
 						?? URI.parse(importUri).fsPath.replace(/\\/g, '/');
@@ -76,9 +84,17 @@ export function create(
 					const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(root);
 					if (tsPluginClient && serviceScript) {
 						const tsDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, serviceScript.code.id);
-						const tsDocument = context.documents.get(tsDocumentUri, serviceScript.code.languageId, serviceScript.code.snapshot);
+						const tsDocument = context.documents.get(
+							tsDocumentUri,
+							serviceScript.code.languageId,
+							serviceScript.code.snapshot,
+						);
 						const preferences = await getUserPreferences(context, tsDocument);
-						const importPathRequest = await tsPluginClient.getImportPathForFile(root.fileName, incomingFileName, preferences);
+						const importPathRequest = await tsPluginClient.getImportPathForFile(
+							root.fileName,
+							incomingFileName,
+							preferences,
+						);
 						if (importPathRequest) {
 							importPath = importPathRequest;
 						}
@@ -98,13 +114,15 @@ export function create(
 					additionalEdit.changes ??= {};
 					additionalEdit.changes[embeddedDocumentUriStr] = [];
 					additionalEdit.changes[embeddedDocumentUriStr].push({
-						range: lastImportNode ? {
-							start: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
-							end: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
-						} : {
-							start: script.ast.getLineAndCharacterOfPosition(0),
-							end: script.ast.getLineAndCharacterOfPosition(0),
-						},
+						range: lastImportNode
+							? {
+								start: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
+								end: script.ast.getLineAndCharacterOfPosition(lastImportNode.end),
+							}
+							: {
+								start: script.ast.getLineAndCharacterOfPosition(0),
+								end: script.ast.getLineAndCharacterOfPosition(0),
+							},
 						newText: `\nimport ${newName} from '${importPath}'`
 							+ (lastImportNode ? '' : '\n'),
 					});

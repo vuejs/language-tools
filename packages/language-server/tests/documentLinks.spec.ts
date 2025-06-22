@@ -5,7 +5,10 @@ import { getLanguageServer, testWorkspacePath } from './server.js';
 
 test('Document links', async () => {
 	expect(
-		await requestDocumentLinks('fixture.vue', 'vue', `
+		await requestDocumentLinks(
+			'fixture.vue',
+			'vue',
+			`
 			<script setup>
 			import { useTemplateRef } from 'vue';
 			const ref1 = useTemplateRef("single-ref") // Expect 1 document link to template
@@ -27,7 +30,8 @@ test('Document links', async () => {
 				color: red;
 			}
 			</style>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		[
 		  {
@@ -118,7 +122,8 @@ async function requestDocumentLinks(fileName: string, languageId: string, conten
 	expect(documentLinks!.length).greaterThan(0);
 
 	for (const documentLink of documentLinks!) {
-		documentLink.target = 'file://${testWorkspacePath}' + documentLink.target!.slice(URI.file(testWorkspacePath).toString().length);
+		documentLink.target = 'file://${testWorkspacePath}'
+			+ documentLink.target!.slice(URI.file(testWorkspacePath).toString().length);
 	}
 
 	return documentLinks!;

@@ -2,8 +2,23 @@ import type { LanguageServer, Position, TextDocumentIdentifier } from '@volar/la
 import { type Range, TextDocument } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer } from '@volar/language-server/node';
-import { createLanguage, createParsedCommandLine, createVueLanguagePlugin, forEachEmbeddedCode, getDefaultCompilerOptions, isReferencesEnabled, parse } from '@vue/language-core';
-import { createLanguageService, createUriMap, createVueLanguageServicePlugins, type DocumentsAndMap, getSourceRange, type LanguageService } from '@vue/language-service';
+import {
+	createLanguage,
+	createParsedCommandLine,
+	createVueLanguagePlugin,
+	forEachEmbeddedCode,
+	getDefaultCompilerOptions,
+	isReferencesEnabled,
+	parse,
+} from '@vue/language-core';
+import {
+	createLanguageService,
+	createUriMap,
+	createVueLanguageServicePlugins,
+	type DocumentsAndMap,
+	getSourceRange,
+	type LanguageService,
+} from '@vue/language-service';
 import * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 import { analyze } from './lib/reactionsAnalyze';
@@ -42,7 +57,7 @@ connection.onInitialize(params => {
 	return server.initialize(
 		params,
 		{
-			setup() { },
+			setup() {},
 			async getLanguageService(uri) {
 				if (uri.scheme === 'file') {
 					const fileName = uri.fsPath.replace(/\\/g, '/');
@@ -120,7 +135,7 @@ connection.onInitialize(params => {
 					'_vue:documentHighlights-full',
 					{
 						file: fileName,
-						...{ position } as unknown as { line: number; offset: number; },
+						...{ position } as unknown as { line: number; offset: number },
 						filesToSearch: [fileName],
 					} satisfies ts.server.protocol.DocumentHighlightsRequestArgs,
 				);
@@ -171,8 +186,7 @@ connection.onInitialize(params => {
 				const document = server.documents.get(uri);
 				if (document) {
 					language.scripts.set(uri, document.getSnapshot(), document.languageId);
-				}
-				else {
+				} else {
 					language.scripts.delete(uri);
 				}
 			},
@@ -243,12 +257,19 @@ connection.onRequest('vue/reactionsAnalyze', async (params: {
 		content: string;
 		languageId: string;
 	};
-}): Promise<{
-	subscribers: Range[];
-	dependencies: Range[];
-} | undefined> => {
+}): Promise<
+	{
+		subscribers: Range[];
+		dependencies: Range[];
+	} | undefined
+> => {
 	if (params.syncDocument) {
-		const document = TextDocument.create(params.textDocument.uri, params.syncDocument.languageId, 0, params.syncDocument.content);
+		const document = TextDocument.create(
+			params.textDocument.uri,
+			params.syncDocument.languageId,
+			0,
+			params.syncDocument.content,
+		);
 		const snapshot = ts.ScriptSnapshot.fromString(params.syncDocument.content);
 		cacheDocuments.set(params.textDocument.uri, [document, snapshot]);
 	}
@@ -260,8 +281,7 @@ connection.onRequest('vue/reactionsAnalyze', async (params: {
 	if (sourceScript) {
 		document = languageService.context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
 		snapshot = sourceScript.snapshot;
-	}
-	else if (cacheDocuments.has(params.textDocument.uri)) {
+	} else if (cacheDocuments.has(params.textDocument.uri)) {
 		const [doc, snap] = cacheDocuments.get(params.textDocument.uri)!;
 		document = doc;
 		snapshot = snap;
@@ -271,7 +291,9 @@ connection.onRequest('vue/reactionsAnalyze', async (params: {
 	}
 	let offset = document.offsetAt(params.position);
 	if (sourceScript?.generated) {
-		const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(sourceScript.generated.root);
+		const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(
+			sourceScript.generated.root,
+		);
 		if (!serviceScript) {
 			return;
 		}
@@ -289,7 +311,11 @@ connection.onRequest('vue/reactionsAnalyze', async (params: {
 		offset = embeddedOffset;
 
 		const embeddedUri = languageService.context.encodeEmbeddedDocumentUri(sourceScript.id, serviceScript.code.id);
-		document = languageService.context.documents.get(embeddedUri, serviceScript.code.languageId, serviceScript.code.snapshot);
+		document = languageService.context.documents.get(
+			embeddedUri,
+			serviceScript.code.languageId,
+			serviceScript.code.snapshot,
+		);
 		snapshot = serviceScript.code.snapshot;
 	}
 	const { languageService: tsLs, fileName } = getLanguageService(ts, snapshot, document.languageId);
@@ -300,7 +326,9 @@ connection.onRequest('vue/reactionsAnalyze', async (params: {
 	const subscribers: Range[] = [];
 	const dependencies: Range[] = [];
 	if (sourceScript?.generated) {
-		const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(sourceScript.generated.root);
+		const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(
+			sourceScript.generated.root,
+		);
 		if (!serviceScript) {
 			return;
 		}
@@ -338,8 +366,7 @@ connection.onRequest('vue/reactionsAnalyze', async (params: {
 				subscribers.push(sourceRange);
 			}
 		}
-	}
-	else {
+	} else {
 		for (const dependency of result.dependencies) {
 			let start = document.positionAt(dependency.getStart(result.sourceFile));
 			let end = document.positionAt(dependency.getEnd());

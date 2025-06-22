@@ -27,21 +27,22 @@ export function* generateInterpolation(
 	} = options;
 	const template = 'template' in options ? options.template : options.sfc.template;
 
-	for (let [section, offset, type] of forEachInterpolationSegment(
-		ts,
-		template,
-		destructuredPropNames,
-		templateRefNames,
-		ctx,
-		code,
-		start,
-		prefix,
-		suffix,
-	)) {
+	for (
+		let [section, offset, type] of forEachInterpolationSegment(
+			ts,
+			template,
+			destructuredPropNames,
+			templateRefNames,
+			ctx,
+			code,
+			start,
+			prefix,
+			suffix,
+		)
+	) {
 		if (offset === undefined) {
 			yield section;
-		}
-		else {
+		} else {
 			offset -= prefix.length;
 			let addSuffix = '';
 			const overLength = offset + section.length - code.length;
@@ -66,10 +67,11 @@ export function* generateInterpolation(
 						start + offset,
 						type === 'errorMappingOnly'
 							? ctx.codeFeatures.verification
-							: typeof data === 'function' ? data(start + offset) : data,
+							: typeof data === 'function'
+							? data(start + offset)
+							: data,
 					];
-				}
-				else {
+				} else {
 					yield section;
 				}
 			}
@@ -82,7 +84,7 @@ interface CtxVar {
 	text: string;
 	offset: number;
 	isShorthand?: boolean;
-};
+}
 
 type Segment = [
 	fragment: string,
@@ -110,8 +112,7 @@ function* forEachInterpolationSegment(
 			text: originalCode,
 			offset: prefix.length,
 		});
-	}
-	else {
+	} else {
 		const ast = createTsAst(ts, template?.ast, code);
 		const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 			const text = getNodeText(ts, id, ast);
@@ -137,8 +138,7 @@ function* forEachInterpolationSegment(
 			if (curVar.isShorthand) {
 				yield [code.slice(lastVarEnd, curVar.offset + curVar.text.length), lastVarEnd];
 				yield [': ', undefined];
-			}
-			else {
+			} else {
 				yield [code.slice(lastVarEnd, curVar.offset), lastVarEnd, i ? undefined : 'startText'];
 			}
 			yield* generateVar(templateRefNames, ctx, code, offset, curVar);
@@ -148,8 +148,7 @@ function* forEachInterpolationSegment(
 		if (lastVar.offset + lastVar.text.length < code.length) {
 			yield [code.slice(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length, 'endText'];
 		}
-	}
-	else {
+	} else {
 		yield [code, 0];
 	}
 }
@@ -170,19 +169,16 @@ function* generateVar(
 		yield [`__VLS_unref(`, undefined];
 		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 		yield [`)`, undefined];
-	}
-	else {
+	} else {
 		if (offset !== undefined) {
 			ctx.accessExternalVariable(curVar.text, offset + curVar.offset);
-		}
-		else {
+		} else {
 			ctx.accessExternalVariable(curVar.text);
 		}
 
 		if (ctx.dollarVars.has(curVar.text)) {
 			yield [`__VLS_dollars.`, undefined];
-		}
-		else {
+		} else {
 			yield [`__VLS_ctx.`, undefined];
 		}
 		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
@@ -198,18 +194,13 @@ function walkIdentifiers(
 	blockVars: string[] = [],
 	isRoot: boolean = true,
 ) {
-
 	if (ts.isIdentifier(node)) {
 		cb(node, false);
-	}
-	else if (ts.isShorthandPropertyAssignment(node)) {
+	} else if (ts.isShorthandPropertyAssignment(node)) {
 		cb(node.name, true);
-	}
-	else if (ts.isPropertyAccessExpression(node)) {
+	} else if (ts.isPropertyAccessExpression(node)) {
 		walkIdentifiers(ts, node.expression, ast, cb, ctx, blockVars, false);
-	}
-	else if (ts.isVariableDeclaration(node)) {
-
+	} else if (ts.isVariableDeclaration(node)) {
 		collectVars(ts, node.name, ast, blockVars);
 
 		for (const varName of blockVars) {
@@ -219,11 +210,9 @@ function walkIdentifiers(
 		if (node.initializer) {
 			walkIdentifiers(ts, node.initializer, ast, cb, ctx, blockVars, false);
 		}
-	}
-	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
+	} else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
 		processFunction(ts, node, ast, cb, ctx);
-	}
-	else if (ts.isObjectLiteralExpression(node)) {
+	} else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
 			if (ts.isPropertyAssignment(prop)) {
 				// fix https://github.com/vuejs/language-tools/issues/1176
@@ -231,27 +220,22 @@ function walkIdentifiers(
 					walkIdentifiers(ts, prop.name.expression, ast, cb, ctx, blockVars, false);
 				}
 				walkIdentifiers(ts, prop.initializer, ast, cb, ctx, blockVars, false);
-			}
-			// fix https://github.com/vuejs/language-tools/issues/1156
+			} // fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
 				walkIdentifiers(ts, prop, ast, cb, ctx, blockVars, false);
-			}
-			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
+			} // fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
 				walkIdentifiers(ts, prop.expression, ast, cb, ctx, blockVars, false);
-			}
-			// fix https://github.com/vuejs/language-tools/issues/4604
+			} // fix https://github.com/vuejs/language-tools/issues/4604
 			else if (ts.isFunctionLike(prop) && prop.body) {
 				processFunction(ts, prop, ast, cb, ctx);
 			}
 		}
-	}
-	else if (ts.isTypeReferenceNode(node)) {
+	} else if (ts.isTypeReferenceNode(node)) {
 		// fix https://github.com/vuejs/language-tools/issues/1422
 		ts.forEachChild(node, node => walkIdentifiersInTypeReference(ts, node, cb));
-	}
-	else {
+	} else {
 		const _blockVars = blockVars;
 		if (ts.isBlock(node)) {
 			blockVars = [];
@@ -304,8 +288,7 @@ function walkIdentifiersInTypeReference(
 ) {
 	if (ts.isTypeQueryNode(node) && ts.isIdentifier(node.exprName)) {
 		cb(node.exprName, false);
-	}
-	else {
+	} else {
 		ts.forEachChild(node, node => walkIdentifiersInTypeReference(ts, node, cb));
 	}
 }

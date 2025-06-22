@@ -36,17 +36,17 @@ type MyCategories = typeof categories[number];
 
 export interface MyProps {
 	/**
-   * string foo
-   *
-   * @default "rounded"
-   * @since v1.0.0
-   * @see https://vuejs.org/
-   * @example
-   * ```vue
-   * <template>
-   *   <component foo="straight" />
-   * </template>
-   * ```
+	 * string foo
+	 *
+	 * @default "rounded"
+	 * @since v1.0.0
+	 * @see https://vuejs.org/
+	 * @example
+	 * ```vue
+	 * <template>
+	 *   <component foo="straight" />
+	 * </template>
+	 * ```
 	 */
 	foo: string;
 	/**
@@ -102,7 +102,7 @@ export interface MyProps {
 	 * literal type alias that require context
 	 */
 	literalFromContext: MyCategories;
-	inlined: { foo: string; };
+	inlined: { foo: string };
 	recursive: MyNestedRecursiveProps;
 }
 

@@ -1,4 +1,4 @@
-import type { Code, VueCodeInformation } from "../../types";
+import type { Code, VueCodeInformation } from '../../types';
 
 export function* generateEscaped(
 	text: string,

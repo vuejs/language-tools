@@ -1,5 +1,5 @@
 declare namespace JSX {
-    interface ElementChildrenAttribute {
-        $children: {};
-    }
+	interface ElementChildrenAttribute {
+		$children: {};
+	}
 }

@@ -20,8 +20,7 @@ export function* generateCamelized(
 					offset,
 					features,
 				];
-			}
-			else {
+			} else {
 				yield [
 					capitalize(part),
 					source,

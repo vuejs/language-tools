@@ -2,9 +2,7 @@ import type { VueLanguagePlugin } from '../types';
 import { parse } from '../utils/parseSfc';
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
-
 	return {
-
 		version: 2.1,
 
 		getLanguageId(fileName) {
@@ -25,7 +23,6 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 		},
 
 		updateSFC(sfc, change) {
-
 			const blocks = [
 				sfc.descriptor.template,
 				sfc.descriptor.script,
@@ -34,14 +31,15 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				...sfc.descriptor.customBlocks,
 			].filter(block => !!block);
 
-			const hitBlock = blocks.find(block => change.start >= block.loc.start.offset && change.end <= block.loc.end.offset);
+			const hitBlock = blocks.find(block =>
+				change.start >= block.loc.start.offset && change.end <= block.loc.end.offset
+			);
 			if (!hitBlock) {
 				return;
 			}
 
 			const oldContent = hitBlock.content;
-			const newContent = hitBlock.content =
-				hitBlock.content.slice(0, change.start - hitBlock.loc.start.offset)
+			const newContent = hitBlock.content = hitBlock.content.slice(0, change.start - hitBlock.loc.start.offset)
 				+ change.newText
 				+ hitBlock.content.slice(change.end - hitBlock.loc.start.offset);
 

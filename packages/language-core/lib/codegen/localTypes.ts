@@ -6,7 +6,8 @@ export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions) {
 
 	const OmitKeepDiscriminatedUnion = defineHelper(
 		`__VLS_OmitKeepDiscriminatedUnion`,
-		() => `
+		() =>
+			`
 type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any
 	? Pick<T, Exclude<keyof T, K>>
 	: never;
@@ -14,7 +15,8 @@ type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any
 	);
 	const WithDefaults = defineHelper(
 		`__VLS_WithDefaults`,
-		() => `
+		() =>
+			`
 type __VLS_WithDefaults<P, D> = {
 	[K in keyof Pick<P, keyof P>]: K extends keyof D
 		? ${PrettifyLocal.name}<P[K] & { default: D[K] }>
@@ -28,7 +30,8 @@ type __VLS_WithDefaults<P, D> = {
 	);
 	const WithSlots = defineHelper(
 		`__VLS_WithSlots`,
-		() => `
+		() =>
+			`
 type __VLS_WithSlots<T, S> = T & {
 	new(): {
 		$slots: S;
@@ -39,7 +42,8 @@ type __VLS_WithSlots<T, S> = T & {
 	);
 	const PropsChildren = defineHelper(
 		`__VLS_PropsChildren`,
-		() => `
+		() =>
+			`
 type __VLS_PropsChildren<S> = {
 	[K in keyof (
 		boolean extends (
@@ -57,7 +61,8 @@ type __VLS_PropsChildren<S> = {
 	);
 	const TypePropsToOption = defineHelper(
 		`__VLS_TypePropsToOption`,
-		() => `
+		() =>
+			`
 type __VLS_TypePropsToOption<T> = {
 	[K in keyof T]-?: {} extends Pick<T, K>
 		? { type: import('${vueCompilerOptions.lib}').PropType<Required<T>[K]> }
@@ -67,7 +72,8 @@ type __VLS_TypePropsToOption<T> = {
 	);
 	const OmitIndexSignature = defineHelper(
 		`__VLS_OmitIndexSignature`,
-		() => `type __VLS_OmitIndexSignature<T> = { [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K]; }${endOfLine}`,
+		() =>
+			`type __VLS_OmitIndexSignature<T> = { [K in keyof T as {} extends Record<K, unknown> ? never : K]: T[K]; }${endOfLine}`,
 	);
 	const helpers = {
 		[PrettifyLocal.name]: PrettifyLocal,
@@ -85,13 +91,27 @@ type __VLS_TypePropsToOption<T> = {
 		getUsedNames() {
 			return used;
 		},
-		get PrettifyLocal() { return PrettifyLocal.name; },
-		get OmitKeepDiscriminatedUnion() { return OmitKeepDiscriminatedUnion.name; },
-		get WithDefaults() { return WithDefaults.name; },
-		get WithSlots() { return WithSlots.name; },
-		get PropsChildren() { return PropsChildren.name; },
-		get TypePropsToOption() { return TypePropsToOption.name; },
-		get OmitIndexSignature() { return OmitIndexSignature.name; },
+		get PrettifyLocal() {
+			return PrettifyLocal.name;
+		},
+		get OmitKeepDiscriminatedUnion() {
+			return OmitKeepDiscriminatedUnion.name;
+		},
+		get WithDefaults() {
+			return WithDefaults.name;
+		},
+		get WithSlots() {
+			return WithSlots.name;
+		},
+		get PropsChildren() {
+			return PropsChildren.name;
+		},
+		get TypePropsToOption() {
+			return TypePropsToOption.name;
+		},
+		get OmitIndexSignature() {
+			return OmitIndexSignature.name;
+		},
 	};
 
 	function* generate(names: string[]) {

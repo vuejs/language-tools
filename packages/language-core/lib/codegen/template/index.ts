@@ -89,8 +89,7 @@ function* generateSlots(
 					slot.offset,
 					ctx.codeFeatures.withoutHighlightAndCompletion,
 				);
-			}
-			else {
+			} else {
 				yield* wrapWith(
 					slot.tagRange[0],
 					slot.tagRange[1],
@@ -173,33 +172,31 @@ function* generateRootEl(
 		for (const type of ctx.singleRootElTypes) {
 			yield `${newLine}| ${type}`;
 		}
-	}
-	else {
+	} else {
 		yield `any`;
 	}
 	yield endOfLine;
 	return `__VLS_RootEl`;
 }
 
-export function* forEachElementNode(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode): Generator<CompilerDOM.ElementNode> {
+export function* forEachElementNode(
+	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode,
+): Generator<CompilerDOM.ElementNode> {
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		for (const child of node.children) {
 			yield* forEachElementNode(child);
 		}
-	}
-	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
+	} else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 		const patchForNode = getVForNode(node);
 		if (patchForNode) {
 			yield* forEachElementNode(patchForNode);
-		}
-		else {
+		} else {
 			yield node;
 			for (const child of node.children) {
 				yield* forEachElementNode(child);
 			}
 		}
-	}
-	else if (node.type === CompilerDOM.NodeTypes.IF) {
+	} else if (node.type === CompilerDOM.NodeTypes.IF) {
 		// v-if / v-else-if / v-else
 		for (let i = 0; i < node.branches.length; i++) {
 			const branch = node.branches[i];
@@ -207,8 +204,7 @@ export function* forEachElementNode(node: CompilerDOM.RootNode | CompilerDOM.Tem
 				yield* forEachElementNode(childNode);
 			}
 		}
-	}
-	else if (node.type === CompilerDOM.NodeTypes.FOR) {
+	} else if (node.type === CompilerDOM.NodeTypes.FOR) {
 		// v-for
 		for (const child of node.children) {
 			yield* forEachElementNode(child);

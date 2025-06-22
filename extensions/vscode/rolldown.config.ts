@@ -28,12 +28,21 @@ const config: RolldownOptions = {
 			name: 'redirect',
 			buildEnd() {
 				fs.mkdirSync(resolve('./node_modules/vue-typescript-plugin-pack'), { recursive: true });
-				fs.writeFileSync(resolve('./node_modules/vue-typescript-plugin-pack/index.js'), `module.exports = require('../../dist/typescript-plugin.js');`);
+				fs.writeFileSync(
+					resolve('./node_modules/vue-typescript-plugin-pack/index.js'),
+					`module.exports = require('../../dist/typescript-plugin.js');`,
+				);
 
 				if (isDev) {
 					fs.mkdirSync(resolve('./dist'), { recursive: true });
-					fs.writeFileSync(resolve('./dist/language-server.js'), `module.exports = require('../node_modules/@vue/language-server/index.js');`);
-					fs.writeFileSync(resolve('./dist/typescript-plugin.js'), `module.exports = require('../node_modules/@vue/typescript-plugin/index.js');`);
+					fs.writeFileSync(
+						resolve('./dist/language-server.js'),
+						`module.exports = require('../node_modules/@vue/language-server/index.js');`,
+					);
+					fs.writeFileSync(
+						resolve('./dist/typescript-plugin.js'),
+						`module.exports = require('../node_modules/@vue/typescript-plugin/index.js');`,
+					);
 				}
 			},
 		},

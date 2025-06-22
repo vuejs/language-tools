@@ -5,7 +5,9 @@ import { URI } from 'vscode-uri';
 const twoslashReg = /<!--\s*\^\?\s*-->/g;
 
 export function create(
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	getTsPluginClient?: (
+		context: LanguageServiceContext,
+	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-twoslash-queries',
@@ -16,7 +18,6 @@ export function create(
 			const tsPluginClient = getTsPluginClient?.(context);
 			return {
 				async provideInlayHints(document, range) {
-
 					const uri = URI.parse(document.uri);
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
@@ -36,16 +37,22 @@ export function create(
 					for (const pointer of document.getText(range).matchAll(twoslashReg)) {
 						const offset = pointer.index + pointer[0].indexOf('^?') + document.offsetAt(range.start);
 						const position = document.positionAt(offset);
-						hoverOffsets.push([position, document.offsetAt({
-							line: position.line - 1,
-							character: position.character,
-						})]);
+						hoverOffsets.push([
+							position,
+							document.offsetAt({
+								line: position.line - 1,
+								character: position.character,
+							}),
+						]);
 					}
 
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 						const map = context.language.maps.get(virtualCode, sourceScript);
 						for (const [sourceOffset] of map.toSourceLocation(hoverOffset)) {
-							const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(root.fileName, document.positionAt(sourceOffset));
+							const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(
+								root.fileName,
+								document.positionAt(sourceOffset),
+							);
 							if (quickInfo) {
 								inlayHints.push({
 									position: { line: pointerPosition.line, character: pointerPosition.character + 2 },

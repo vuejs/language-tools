@@ -80,7 +80,10 @@ test('#2410', async () => {
 
 test('CSS', async () => {
 	expect(
-		await requestRenameToTsServer('fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'fixture.vue',
+			'vue',
+			`
 			<template>
 				<div :class="$style.foo|"></div>
 			</template>
@@ -93,7 +96,8 @@ test('CSS', async () => {
 			<style module lang="scss">
 			// .foo { }
 			</style>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -143,7 +147,10 @@ test('CSS', async () => {
 		}
 	`);
 	expect(
-		await requestRenameToTsServer('fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'fixture.vue',
+			'vue',
+			`
 			<template>
 				<div class="foo|"></div>
 			</template>
@@ -151,7 +158,8 @@ test('CSS', async () => {
 			<style scoped>
 			.foo { }
 			</style>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -201,7 +209,10 @@ test('CSS', async () => {
 		}
 	`);
 	expect(
-		await requestRenameToTsServer('fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'fixture.vue',
+			'vue',
+			`
 			<script lang="ts" setup>
 			const foo = 1;
 			</script>
@@ -219,7 +230,8 @@ test('CSS', async () => {
 			<style lang="scss">
 			// .bar { color: v-bind(foo); }
 			</style>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -339,7 +351,10 @@ test('CSS', async () => {
 });
 
 test('Component props', async () => {
-	await prepareDocument('tsconfigProject/foo.vue', 'vue', `
+	await prepareDocument(
+		'tsconfigProject/foo.vue',
+		'vue',
+		`
 		<template>
 			<Comp :aaa-bbb="'foo'"></Comp>
 			<Comp :aaaBbb="'foo'"></Comp>
@@ -348,9 +363,13 @@ test('Component props', async () => {
 		<script lang="ts" setup>
 		import Comp from './fixture.vue';
 		</script>
-	`);
+	`,
+	);
 	expect(
-		await requestRenameToTsServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				{{ aaaBbb }}
 			</template>
@@ -358,7 +377,8 @@ test('Component props', async () => {
 			<script lang="ts" setup>
 			defineProps({ aaaBbb|: String });
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -443,7 +463,10 @@ test('Component props', async () => {
 });
 
 test('Component type props', async () => {
-	await prepareDocument('tsconfigProject/foo.vue', 'vue', `
+	await prepareDocument(
+		'tsconfigProject/foo.vue',
+		'vue',
+		`
 		<template>
 			<Comp :aaa-bbb="'foo'"></Comp>
 			<Comp :aaaBbb="'foo'"></Comp>
@@ -452,9 +475,13 @@ test('Component type props', async () => {
 		<script lang="ts" setup>
 		import Comp from './fixture.vue';
 		</script>
-	`);
+	`,
+	);
 	expect(
-		await requestRenameToTsServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				{{ aaaBbb }}
 			</template>
@@ -462,7 +489,8 @@ test('Component type props', async () => {
 			<script lang="ts" setup>
 			defineProps<{ aaaBbb|: String }>();
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -548,7 +576,10 @@ test('Component type props', async () => {
 
 test('Component dynamic props', async () => {
 	expect(
-		await requestRenameToTsServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				<div :[foo|]="123"></div>
 			</template>
@@ -556,7 +587,8 @@ test('Component dynamic props', async () => {
 			<script lang="ts" setup>
 			const foo = 'foo';
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -617,7 +649,10 @@ test('Component dynamic props', async () => {
 
 test('Component returns', async () => {
 	expect(
-		await requestRenameToTsServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				{{ foo| }}
 			</template>
@@ -633,7 +668,8 @@ test('Component returns', async () => {
 				},
 			});
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -694,7 +730,10 @@ test('Component returns', async () => {
 
 test('<script setup>', async () => {
 	expect(
-		await requestRenameToTsServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				{{ foo| }}
 			</template>
@@ -702,7 +741,8 @@ test('<script setup>', async () => {
 			<script lang="ts" setup>
 			const foo = 1;
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -763,7 +803,10 @@ test('<script setup>', async () => {
 
 test('Component tags', async () => {
 	expect(
-		await requestRenameToTsServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				<AaBb></AaBb>
 				<aa-bb></aa-bb>
@@ -772,7 +815,8 @@ test('Component tags', async () => {
 			<script lang="ts" setup>
 			import AaBb| from './empty.vue';
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -863,7 +907,10 @@ test('Component tags', async () => {
 
 test('#4673', async () => {
 	expect(
-		await requestRenameToTsServer('fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'fixture.vue',
+			'vue',
+			`
 			<script setup lang="ts">
 			import { useCssModule } from 'vue';
 			const $style = useCssModule();
@@ -881,7 +928,8 @@ test('#4673', async () => {
 			<style module="styl">
 			.foo { }
 			</style>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -944,7 +992,10 @@ test('#4673', async () => {
 
 test('Scoped Classes', async () => {
 	expect(
-		await requestRenameToTsServer('fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'fixture.vue',
+			'vue',
+			`
 			<template>
 				<div :class="'foo|'"></div>
 				<div :class="['foo', { 'foo': true }]"></div>
@@ -953,7 +1004,8 @@ test('Scoped Classes', async () => {
 			<style scoped>
 			.foo { }
 			</style>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -1036,7 +1088,10 @@ test('Scoped Classes', async () => {
 
 test('Ref', async () => {
 	expect(
-		await requestRenameToTsServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				<a ref="foo"></a>
 			</template>
@@ -1045,7 +1100,8 @@ test('Ref', async () => {
 			import { ref } from 'vue';
 			const foo| = ref();
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {
@@ -1106,7 +1162,10 @@ test('Ref', async () => {
 
 test('Template Ref', async () => {
 	expect(
-		await requestRenameToTsServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				<a ref="foo"></a>
 			</template>
@@ -1115,7 +1174,8 @@ test('Template Ref', async () => {
 			import { useTemplateRef } from 'vue';
 			const el = useTemplateRef('foo|');
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "info": {

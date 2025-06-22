@@ -1,5 +1,5 @@
 {
-	"include": [ ],
+	"include": [],
 	"references": [
 		{ "path": "./failureFixtures/#3632" },
 		// { "path": "./failureFixtures/#4569" }, // TODO: not working with --build flag
@@ -22,6 +22,6 @@
 		{ "path": "./passedFixtures/pug" },
 		{ "path": "./passedFixtures/vue3" },
 		{ "path": "./passedFixtures/vue3_strictTemplate" },
-		{ "path": "./passedFixtures/vue3.4" },
+		{ "path": "./passedFixtures/vue3.4" }
 	]
 }

@@ -5,8 +5,8 @@ export function sleep(ms: number) {
 }
 
 export function isTsDocument(document: TextDocument) {
-	return document.languageId === 'javascript' ||
-		document.languageId === 'typescript' ||
-		document.languageId === 'javascriptreact' ||
-		document.languageId === 'typescriptreact';
+	return document.languageId === 'javascript'
+		|| document.languageId === 'typescript'
+		|| document.languageId === 'javascriptreact'
+		|| document.languageId === 'typescriptreact';
 }

@@ -11,12 +11,11 @@ export function create(): LanguageServicePlugin {
 		create(context) {
 			return {
 				provideDocumentLinks(document) {
-
 					const uri = URI.parse(document.uri);
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript?.generated || (virtualCode?.id !== 'template' && virtualCode?.id !== "scriptsetup_raw")) {
+					if (!sourceScript?.generated || (virtualCode?.id !== 'template' && virtualCode?.id !== 'scriptsetup_raw')) {
 						return;
 					}
 
@@ -63,7 +62,11 @@ export function create(): LanguageServicePlugin {
 									if (!styleVirtualCode) {
 										continue;
 									}
-									const styleDocument = context.documents.get(styleDocumentUri, styleVirtualCode.languageId, styleVirtualCode.snapshot);
+									const styleDocument = context.documents.get(
+										styleDocumentUri,
+										styleVirtualCode.languageId,
+										styleVirtualCode.snapshot,
+									);
 									const start = styleDocument.positionAt(style.classOffset);
 									const end = styleDocument.positionAt(style.classOffset + className.length + 1);
 									result.push({
@@ -71,13 +74,13 @@ export function create(): LanguageServicePlugin {
 											start: document.positionAt(offset),
 											end: document.positionAt(offset + className.length),
 										},
-										target: context.encodeEmbeddedDocumentUri(decoded![0], 'style_' + style.index) + `#L${start.line + 1},${start.character + 1}-L${end.line + 1},${end.character + 1}`,
+										target: context.encodeEmbeddedDocumentUri(decoded![0], 'style_' + style.index)
+											+ `#L${start.line + 1},${start.character + 1}-L${end.line + 1},${end.character + 1}`,
 									});
 								}
 							}
 						}
-					}
-					else if (virtualCode.id === 'scriptsetup_raw') {
+					} else if (virtualCode.id === 'scriptsetup_raw') {
 						if (!sfc.scriptSetup) {
 							return;
 						}
@@ -87,7 +90,11 @@ export function create(): LanguageServicePlugin {
 							return;
 						}
 						const templateDocumentUri = context.encodeEmbeddedDocumentUri(decoded![0], 'template');
-						const templateDocument = context.documents.get(templateDocumentUri, templateVirtualCode.languageId, templateVirtualCode.snapshot);
+						const templateDocument = context.documents.get(
+							templateDocumentUri,
+							templateVirtualCode.languageId,
+							templateVirtualCode.snapshot,
+						);
 
 						const templateRefs = codegen?.getGeneratedTemplate()?.templateRefs;
 						const useTemplateRefs = codegen?.getScriptSetupRanges()?.useTemplateRef ?? [];
@@ -108,7 +115,8 @@ export function create(): LanguageServicePlugin {
 										start: document.positionAt(arg.start + 1),
 										end: document.positionAt(arg.end - 1),
 									},
-									target: templateDocumentUri + `#L${start.line + 1},${start.character + 1}-L${end.line + 1},${end.character + 1}`,
+									target: templateDocumentUri
+										+ `#L${start.line + 1},${start.character + 1}-L${end.line + 1},${end.character + 1}`,
 								});
 							}
 						}

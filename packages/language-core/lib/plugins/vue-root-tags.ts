@@ -3,9 +3,7 @@ import type { VueLanguagePlugin } from '../types';
 import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
-
 	return {
-
 		version: 2.1,
 
 		getEmbeddedCodes() {
@@ -18,21 +16,22 @@ const plugin: VueLanguagePlugin = () => {
 		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
 			if (embeddedFile.id === 'root_tags') {
 				embeddedFile.content.push([sfc.content, undefined, 0, allCodeFeatures]);
-				for (const block of [
-					sfc.script,
-					sfc.scriptSetup,
-					sfc.template,
-					...sfc.styles,
-					...sfc.customBlocks,
-				]) {
+				for (
+					const block of [
+						sfc.script,
+						sfc.scriptSetup,
+						sfc.template,
+						...sfc.styles,
+						...sfc.customBlocks,
+					]
+				) {
 					if (!block) {
 						continue;
 					}
 					let content = block.content;
 					if (content.endsWith('\r\n')) {
 						content = content.slice(0, -2);
-					}
-					else if (content.endsWith('\n')) {
+					} else if (content.endsWith('\n')) {
 						content = content.slice(0, -1);
 					}
 					const offset = content.lastIndexOf('\n') + 1;
@@ -58,8 +57,7 @@ const plugin: VueLanguagePlugin = () => {
 						),
 					);
 				}
-			}
-			else {
+			} else {
 				embeddedFile.parentCodeId ??= 'root_tags';
 			}
 		},

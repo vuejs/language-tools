@@ -9,8 +9,7 @@ export function* generateUnicode(code: string, offset: number, info: VueCodeInfo
 			info,
 			toUnicode(code),
 		);
-	}
-	else {
+	} else {
 		yield [code, 'template', offset, info];
 	}
 }

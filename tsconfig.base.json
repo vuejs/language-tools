@@ -1,7 +1,7 @@
 {
 	"compilerOptions": {
 		"target": "ES2021",
-		"lib": [ "ES2021" ],
+		"lib": ["ES2021"],
 		"module": "Node16",
 		"sourceMap": true,
 		"composite": true,
@@ -10,7 +10,7 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"esModuleInterop": false,
-		"forceConsistentCasingInFileNames": true,
+		"forceConsistentCasingInFileNames": true
 	},
-	"include": [ ],
+	"include": []
 }

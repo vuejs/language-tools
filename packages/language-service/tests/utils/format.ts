@@ -23,9 +23,7 @@ export function defineFormatTest(options: {
 	settings?: any;
 }) {
 	describe(`format: ${options.title}`, () => {
-
 		it(`format`, async () => {
-
 			formatter.settings = options.settings ?? {};
 
 			const formatted = await formatter.format(

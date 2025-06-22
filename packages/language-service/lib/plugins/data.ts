@@ -1,41 +1,31 @@
 import type * as html from 'vscode-html-languageservice';
 
-let locale: { name: string, url: string; }[];
+let locale: { name: string; url: string }[];
 
 export function loadTemplateData(lang: string) {
-
 	lang = lang.toLowerCase();
 
 	let data: html.HTMLDataV1;
 
 	if (lang === 'ja') {
 		data = require('../../data/template/ja.json');
-	}
-	else if (lang === 'fr') {
+	} else if (lang === 'fr') {
 		data = require('../../data/template/fr.json');
-	}
-	else if (lang === 'ko') {
+	} else if (lang === 'ko') {
 		data = require('../../data/template/ko.json');
-	}
-	else if (lang === 'pt-br') {
+	} else if (lang === 'pt-br') {
 		data = require('../../data/template/pt.json');
-	}
-	else if (lang === 'zh-cn') {
+	} else if (lang === 'zh-cn') {
 		data = require('../../data/template/zh-cn.json');
-	}
-	else if (lang === 'zh-tw') {
+	} else if (lang === 'zh-tw') {
 		data = require('../../data/template/zh-hk.json');
-	}
-	else if (lang === 'it') {
+	} else if (lang === 'it') {
 		data = require('../../data/template/it.json');
-	}
-	else if (lang === 'cs') {
+	} else if (lang === 'cs') {
 		data = require('../../data/template/cs.json');
-	}
-	else if (lang === 'ru') {
+	} else if (lang === 'ru') {
 		data = require('../../data/template/ru.json');
-	}
-	else {
+	} else {
 		data = require('../../data/template/en.json');
 	}
 
@@ -69,39 +59,29 @@ export function loadTemplateData(lang: string) {
 }
 
 export function loadLanguageBlocks(lang: string): html.HTMLDataV1 {
-
 	lang = lang.toLowerCase();
 
 	let data: html.HTMLDataV1;
 
 	if (lang === 'ja') {
 		data = require('../../data/language-blocks/ja.json');
-	}
-	else if (lang === 'fr') {
+	} else if (lang === 'fr') {
 		data = require('../../data/language-blocks/fr.json');
-	}
-	else if (lang === 'ko') {
+	} else if (lang === 'ko') {
 		data = require('../../data/language-blocks/ko.json');
-	}
-	else if (lang === 'pt-br') {
+	} else if (lang === 'pt-br') {
 		data = require('../../data/language-blocks/pt.json');
-	}
-	else if (lang === 'zh-cn') {
+	} else if (lang === 'zh-cn') {
 		data = require('../../data/language-blocks/zh-cn.json');
-	}
-	else if (lang === 'zh-tw') {
+	} else if (lang === 'zh-tw') {
 		data = require('../../data/language-blocks/zh-hk.json');
-	}
-	else if (lang === 'it') {
+	} else if (lang === 'it') {
 		data = require('../../data/language-blocks/it.json');
-	}
-	else if (lang === 'cs') {
+	} else if (lang === 'cs') {
 		data = require('../../data/language-blocks/cs.json');
-	}
-	else if (lang === 'ru') {
+	} else if (lang === 'ru') {
 		data = require('../../data/language-blocks/ru.json');
-	}
-	else {
+	} else {
 		data = require('../../data/language-blocks/en.json');
 	}
 
@@ -111,39 +91,29 @@ export function loadLanguageBlocks(lang: string): html.HTMLDataV1 {
 }
 
 export function loadModelModifiersData(lang: string): html.HTMLDataV1 {
-
 	lang = lang.toLowerCase();
 
 	let data: html.HTMLDataV1;
 
 	if (lang === 'ja') {
 		data = require('../../data/model-modifiers/ja.json');
-	}
-	else if (lang === 'fr') {
+	} else if (lang === 'fr') {
 		data = require('../../data/model-modifiers/fr.json');
-	}
-	else if (lang === 'ko') {
+	} else if (lang === 'ko') {
 		data = require('../../data/model-modifiers/ko.json');
-	}
-	else if (lang === 'pt-br') {
+	} else if (lang === 'pt-br') {
 		data = require('../../data/model-modifiers/pt.json');
-	}
-	else if (lang === 'zh-cn') {
+	} else if (lang === 'zh-cn') {
 		data = require('../../data/model-modifiers/zh-cn.json');
-	}
-	else if (lang === 'zh-tw') {
+	} else if (lang === 'zh-tw') {
 		data = require('../../data/model-modifiers/zh-hk.json');
-	}
-	else if (lang === 'it') {
+	} else if (lang === 'it') {
 		data = require('../../data/model-modifiers/it.json');
-	}
-	else if (lang === 'cs') {
+	} else if (lang === 'cs') {
 		data = require('../../data/model-modifiers/cs.json');
-	}
-	else if (lang === 'ru') {
+	} else if (lang === 'ru') {
 		data = require('../../data/model-modifiers/ru.json');
-	}
-	else {
+	} else {
 		data = require('../../data/model-modifiers/en.json');
 	}
 
@@ -155,10 +125,12 @@ export function loadModelModifiersData(lang: string): html.HTMLDataV1 {
 function resolveReferences(data: html.HTMLDataV1) {
 	locale ??= require('../../data/locale.json');
 
-	for (const item of [
-		...data.globalAttributes ?? [],
-		...data.tags?.flatMap(tag => [tag, ...tag.attributes]) ?? [],
-	]) {
+	for (
+		const item of [
+			...data.globalAttributes ?? [],
+			...data.tags?.flatMap(tag => [tag, ...tag.attributes]) ?? [],
+		]
+	) {
 		if (typeof item.references === 'string') {
 			const relativeUrl = item.references as string;
 			item.references = locale.map(({ name, url }) => ({

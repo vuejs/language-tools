@@ -12,20 +12,16 @@ export function* generateVIf(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.IfNode,
 ): Generator<Code> {
-
 	const originalBlockConditionsLength = ctx.blockConditions.length;
 
 	for (let i = 0; i < node.branches.length; i++) {
-
 		const branch = node.branches[i];
 
 		if (i === 0) {
 			yield `if `;
-		}
-		else if (branch.condition) {
+		} else if (branch.condition) {
 			yield `else if `;
-		}
-		else {
+		} else {
 			yield `else `;
 		}
 

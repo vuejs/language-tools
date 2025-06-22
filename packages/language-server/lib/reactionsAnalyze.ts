@@ -106,8 +106,9 @@ export function analyze(
 						hasRef ||= deps.length > 0;
 					}
 				}
-			}
-			else if (ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node) || ts.isCallExpression(node)) {
+			} else if (
+				ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node) || ts.isCallExpression(node)
+			) {
 				const definition = languageService.getDefinitionAtPosition(fileName, node.expression.getStart(sourceFile));
 				for (const info of definition ?? []) {
 					if (info.fileName !== fileName) {
@@ -129,14 +130,12 @@ export function analyze(
 									nodes.push(signal.bindingInfo.name);
 									hasRef ||= signal.bindingInfo.isRef;
 								}
-							}
-							else if (ts.isElementAccessExpression(node)) {
+							} else if (ts.isElementAccessExpression(node)) {
 								if (trackKind === TrackKind.AccessAnyValue) {
 									nodes.push(signal.bindingInfo.name);
 									hasRef ||= signal.bindingInfo.isRef;
 								}
-							}
-							else if (ts.isCallExpression(node)) {
+							} else if (ts.isCallExpression(node)) {
 								if (trackKind === TrackKind.Call) {
 									nodes.push(signal.bindingInfo.name);
 									hasRef ||= signal.bindingInfo.isRef;
@@ -155,8 +154,10 @@ export function analyze(
 					}
 				}
 			}
-			node.forEachChild(child => visit(child, needToUse, ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node)));
-		};
+			node.forEachChild(child =>
+				visit(child, needToUse, ts.isPropertyAccessExpression(node) || ts.isElementAccessExpression(node))
+			);
+		}
 	}
 
 	function findSubscribers(refName: ts.BindingName, trackKinds: TrackKind[], visited = new Set<number>()) {
@@ -188,11 +189,9 @@ export function analyze(
 						for (const trackKind of trackKinds) {
 							if (trackKind === TrackKind.AccessAnyValue) {
 								match = dotAnyAccesses.has(reference2.textSpan.start + reference2.textSpan.length);
-							}
-							else if (trackKind === TrackKind.AccessDotValue) {
+							} else if (trackKind === TrackKind.AccessDotValue) {
 								match = dotValueAccesses.has(reference2.textSpan.start + reference2.textSpan.length);
-							}
-							else if (trackKind === TrackKind.Call) {
+							} else if (trackKind === TrackKind.Call) {
 								match = functionCalls.has(reference2.textSpan.start + reference2.textSpan.length);
 							}
 							if (match) {
@@ -219,15 +218,24 @@ export function analyze(
 	}
 
 	function findSignalByNamePosition(position: number) {
-		return signals.find(ref => ref.bindingInfo && ref.bindingInfo.name.getStart(sourceFile) <= position && ref.bindingInfo.name.getEnd() >= position);
+		return signals.find(ref =>
+			ref.bindingInfo && ref.bindingInfo.name.getStart(sourceFile) <= position
+			&& ref.bindingInfo.name.getEnd() >= position
+		);
 	}
 
 	function findEffectByEffectHandlerPosition(position: number) {
-		return signals.find(ref => ref.sideEffectInfo && ref.sideEffectInfo.handler.getStart(sourceFile) <= position && ref.sideEffectInfo.handler.getEnd() >= position);
+		return signals.find(ref =>
+			ref.sideEffectInfo && ref.sideEffectInfo.handler.getStart(sourceFile) <= position
+			&& ref.sideEffectInfo.handler.getEnd() >= position
+		);
 	}
 
 	function findEffectByDepsHandlerPosition(position: number) {
-		return signals.find(ref => ref.trackInfo && ref.trackInfo.depsHandler.getStart(sourceFile) <= position && ref.trackInfo.depsHandler.getEnd() >= position);
+		return signals.find(ref =>
+			ref.trackInfo && ref.trackInfo.depsHandler.getStart(sourceFile) <= position
+			&& ref.trackInfo.depsHandler.getEnd() >= position
+		);
 	}
 }
 
@@ -243,7 +251,10 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 				const call = node.initializer;
 				if (ts.isIdentifier(call.expression)) {
 					const callName = call.expression.escapedText as string;
-					if (callName === 'ref' || callName === 'shallowRef' || callName === 'toRef' || callName === 'useTemplateRef' || callName === 'defineModel') {
+					if (
+						callName === 'ref' || callName === 'shallowRef' || callName === 'toRef' || callName === 'useTemplateRef'
+						|| callName === 'defineModel'
+					) {
 						signals.push({
 							bindingInfo: {
 								isRef: true,
@@ -251,8 +262,10 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 								trackKinds: [TrackKind.AccessDotValue],
 							},
 						});
-					}
-					else if (callName === 'reactive' || callName === 'shallowReactive' || callName === 'defineProps' || callName === 'withDefaults') {
+					} else if (
+						callName === 'reactive' || callName === 'shallowReactive' || callName === 'defineProps'
+						|| callName === 'withDefaults'
+					) {
 						signals.push({
 							bindingInfo: {
 								isRef: true,
@@ -264,8 +277,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 					// TODO: toRefs
 				}
 			}
-		}
-		else if (ts.isFunctionDeclaration(node)) {
+		} else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && node.body) {
 				signals.push({
 					bindingInfo: {
@@ -283,8 +295,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 					},
 				});
 			}
-		}
-		else if (ts.isVariableStatement(node)) {
+		} else if (ts.isVariableStatement(node)) {
 			for (const declaration of node.declarationList.declarations) {
 				const name = declaration.name;
 				const callback = declaration.initializer;
@@ -306,8 +317,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 					});
 				}
 			}
-		}
-		else if (ts.isParameter(node)) {
+		} else if (ts.isParameter(node)) {
 			if (node.type && ts.isTypeReferenceNode(node.type)) {
 				const typeName = node.type.typeName.getText(sourceFile);
 				if (typeName.endsWith('Ref')) {
@@ -320,8 +330,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 					});
 				}
 			}
-		}
-		else if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+		} else if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
 			const call = node;
 			const callName = node.expression.escapedText as string;
 			if ((callName === 'effect' || callName === 'watchEffect') && call.arguments.length) {
@@ -354,8 +363,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 								handler: effectCallback.body,
 							},
 						});
-					}
-					else {
+					} else {
 						signals.push({
 							trackInfo: {
 								depsHandler: depsCallback,
@@ -368,8 +376,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 						});
 					}
 				}
-			}
-			else if (hyphenateAttr(callName).startsWith('use-')) {
+			} else if (hyphenateAttr(callName).startsWith('use-')) {
 				signals.push({
 					bindingInfo: ts.isVariableDeclaration(call.parent)
 						? {
@@ -383,8 +390,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 						needToUse: false,
 					},
 				});
-			}
-			else if ((callName === 'computed' || hyphenateAttr(callName).endsWith('-computed')) && call.arguments.length) {
+			} else if ((callName === 'computed' || hyphenateAttr(callName).endsWith('-computed')) && call.arguments.length) {
 				const arg = call.arguments[0];
 				if (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) {
 					signals.push({
@@ -404,8 +410,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 							handler: arg.body,
 						},
 					});
-				}
-				else if (ts.isIdentifier(arg)) {
+				} else if (ts.isIdentifier(arg)) {
 					signals.push({
 						bindingInfo: ts.isVariableDeclaration(call.parent)
 							? {
@@ -419,8 +424,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 							needToUse: false,
 						},
 					});
-				}
-				else if (ts.isObjectLiteralExpression(arg)) {
+				} else if (ts.isObjectLiteralExpression(arg)) {
 					for (const prop of arg.properties) {
 						if (prop.name?.getText(sourceFile) === 'get') {
 							if (ts.isPropertyAssignment(prop)) {
@@ -444,8 +448,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 										},
 									});
 								}
-							}
-							else if (ts.isMethodDeclaration(prop) && prop.body) {
+							} else if (ts.isMethodDeclaration(prop) && prop.body) {
 								signals.push({
 									bindingInfo: ts.isVariableDeclaration(call.parent)
 										? {
@@ -477,15 +480,12 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 			if (node.name.text === 'value') {
 				dotValueAccesses.add(node.expression.getEnd());
 				dotAnyAccesses.add(node.expression.getEnd());
-			}
-			else if (node.name.text !== '') {
+			} else if (node.name.text !== '') {
 				dotAnyAccesses.add(node.expression.getEnd());
 			}
-		}
-		else if (ts.isElementAccessExpression(node)) {
+		} else if (ts.isElementAccessExpression(node)) {
 			dotAnyAccesses.add(node.expression.getEnd());
-		}
-		else if (ts.isCallExpression(node)) {
+		} else if (ts.isCallExpression(node)) {
 			functionCalls.add(node.expression.getEnd());
 		}
 		node.forEachChild(visit);

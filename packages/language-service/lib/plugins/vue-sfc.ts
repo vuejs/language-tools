@@ -1,4 +1,14 @@
-import type { CompletionItem, CompletionItemKind, Diagnostic, DiagnosticSeverity, DocumentSymbol, LanguageServiceContext, LanguageServicePlugin, SymbolKind, TextDocument } from '@volar/language-service';
+import type {
+	CompletionItem,
+	CompletionItemKind,
+	Diagnostic,
+	DiagnosticSeverity,
+	DocumentSymbol,
+	LanguageServiceContext,
+	LanguageServicePlugin,
+	SymbolKind,
+	TextDocument,
+} from '@volar/language-service';
 import { VueVirtualCode } from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
@@ -17,8 +27,7 @@ export function create(): LanguageServicePlugin {
 		},
 		async getFormattingOptions(document, options, context) {
 			return await worker(document, context, async root => {
-
-				const formatSettings = await context.env.getConfiguration?.<html.HTMLFormatConfiguration>('html.format') ?? {};
+				const formatSettings = await context.env.getConfiguration<html.HTMLFormatConfiguration>?.('html.format') ?? {};
 				const blockTypes = ['template', 'script', 'style'];
 
 				for (const customBlock of root.sfc.customBlocks) {
@@ -28,12 +37,14 @@ export function create(): LanguageServicePlugin {
 				return {
 					...options,
 					...formatSettings,
-					wrapAttributes: await context.env.getConfiguration?.<string>('vue.format.wrapAttributes') ?? 'auto',
+					wrapAttributes: await context.env.getConfiguration<string>?.('vue.format.wrapAttributes') ?? 'auto',
 					unformatted: '',
 					contentUnformatted: blockTypes.join(','),
-					endWithNewline: options.insertFinalNewline ? true
-						: options.trimFinalNewlines ? false
-							: document.getText().endsWith('\n'),
+					endWithNewline: options.insertFinalNewline
+						? true
+						: options.trimFinalNewlines
+						? false
+						: document.getText().endsWith('\n'),
 				};
 			}) ?? {};
 		},
@@ -52,7 +63,6 @@ export function create(): LanguageServicePlugin {
 			const htmlServiceInstance = htmlService.create(context);
 
 			return {
-
 				...htmlServiceInstance,
 
 				provideDocumentLinks: undefined,
@@ -63,13 +73,11 @@ export function create(): LanguageServicePlugin {
 							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
-						}
-						else if (virtualCode.id.startsWith('style_')) {
+						} else if (virtualCode.id.startsWith('style_')) {
 							if (await context.env.getConfiguration?.('vue.format.style.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
-						}
-						else if (virtualCode.id === 'template') {
+						} else if (virtualCode.id === 'template') {
 							if (await context.env.getConfiguration?.('vue.format.template.initialIndent') ?? true) {
 								options.initialIndentLevel++;
 							}
@@ -122,7 +130,6 @@ export function create(): LanguageServicePlugin {
 
 				provideDocumentSymbols(document) {
 					return worker(document, context, root => {
-
 						const result: DocumentSymbol[] = [];
 						const { sfc } = root;
 
@@ -214,9 +221,9 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 					result.items = result.items.filter(item =>
-						item.label !== '!DOCTYPE' &&
-						item.label !== 'Custom Blocks' &&
-						item.label !== 'data-',
+						item.label !== '!DOCTYPE'
+						&& item.label !== 'Custom Blocks'
+						&& item.label !== 'data-'
 					);
 
 					const tags = sfcDataProvider?.provideTags();
@@ -232,10 +239,12 @@ export function create(): LanguageServicePlugin {
 								detail: `.${lang}`,
 								kind: 17 satisfies typeof CompletionItemKind.File,
 								label: scriptItem.label + ' lang="' + lang + '"',
-								textEdit: scriptItem.textEdit ? {
-									...scriptItem.textEdit,
-									newText: scriptItem.textEdit.newText + ' lang="' + lang + '"',
-								} : undefined,
+								textEdit: scriptItem.textEdit
+									? {
+										...scriptItem.textEdit,
+										newText: scriptItem.textEdit.newText + ' lang="' + lang + '"',
+									}
+									: undefined,
 							});
 						}
 					}
@@ -268,10 +277,12 @@ export function create(): LanguageServicePlugin {
 								kind: 17 satisfies typeof CompletionItemKind.File,
 								detail: `.${lang}`,
 								label: templateItem.label + ' lang="' + lang + '"',
-								textEdit: templateItem.textEdit ? {
-									...templateItem.textEdit,
-									newText: templateItem.textEdit.newText + ' lang="' + lang + '"',
-								} : undefined,
+								textEdit: templateItem.textEdit
+									? {
+										...templateItem.textEdit,
+										newText: templateItem.textEdit.newText + ' lang="' + lang + '"',
+									}
+									: undefined,
 							});
 						}
 					}
@@ -312,9 +323,11 @@ function getStyleCompletionItem(
 		kind: 17 satisfies typeof CompletionItemKind.File,
 		detail: lang === 'postcss' ? '.css' : `.${lang}`,
 		label: styleItem.label + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
-		textEdit: styleItem.textEdit ? {
-			...styleItem.textEdit,
-			newText: styleItem.textEdit.newText + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
-		} : undefined,
+		textEdit: styleItem.textEdit
+			? {
+				...styleItem.textEdit,
+				newText: styleItem.textEdit.newText + ' lang="' + lang + '"' + (attr ? ` ${attr}` : ''),
+			}
+			: undefined,
 	};
 }

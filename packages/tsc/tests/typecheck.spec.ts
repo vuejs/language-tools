@@ -3,7 +3,6 @@ import { describe, expect, test } from 'vitest';
 import { run } from '..';
 
 describe(`vue-tsc`, () => {
-
 	test(`TypeScript - Stable`, () => {
 		expect(
 			getTscOutput().sort(),
@@ -44,7 +43,7 @@ function getTscOutput() {
 			{ paths: [path.resolve(__dirname, '../../../test-workspace')] },
 		);
 		run(tscPath);
-	} catch { }
+	} catch {}
 	process.stdout.write = originalConsoleLog;
 	process.argv = originalArgv;
 	return consoleOutput;

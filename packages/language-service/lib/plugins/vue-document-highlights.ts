@@ -40,8 +40,8 @@ export function create(
 							kind: kind === 'reference'
 								? 2 satisfies typeof DocumentHighlightKind.Read
 								: kind === 'writtenReference'
-									? 3 satisfies typeof DocumentHighlightKind.Write
-									: 1 satisfies typeof DocumentHighlightKind.Text,
+								? 3 satisfies typeof DocumentHighlightKind.Write
+								: 1 satisfies typeof DocumentHighlightKind.Text,
 						}));
 				},
 			};

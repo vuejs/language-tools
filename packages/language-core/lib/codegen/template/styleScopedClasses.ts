@@ -71,20 +71,17 @@ export function collectStyleScopedClassReferences(
 					}
 					startOffset += className.length + 1;
 				}
-			}
-			else {
+			} else {
 				let isWrapped = false;
 				const [content, startOffset] = normalizeAttributeValue(prop.value);
 				if (content) {
 					const classes = collectClasses(content, startOffset + (isWrapped ? 1 : 0));
 					ctx.scopedClasses.push(...classes);
-				}
-				else {
+				} else {
 					ctx.emptyClassOffsets.push(startOffset);
 				}
 			}
-		}
-		else if (
+		} else if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
@@ -99,8 +96,8 @@ export function collectStyleScopedClassReferences(
 
 			ts.forEachChild(ast, node => {
 				if (
-					!ts.isExpressionStatement(node) ||
-					!isTemplateExpression(node.expression)
+					!ts.isExpressionStatement(node)
+					|| !isTemplateExpression(node.expression)
 				) {
 					return;
 				}
@@ -127,8 +124,7 @@ export function collectStyleScopedClassReferences(
 						literal.end - literal.text.length - 1 + startOffset,
 					);
 					ctx.scopedClasses.push(...classes);
-				}
-				else {
+				} else {
 					ctx.emptyClassOffsets.push(literal.end - 1 + startOffset);
 				}
 			}
@@ -138,8 +134,7 @@ export function collectStyleScopedClassReferences(
 				for (const element of elements) {
 					if (ts.isStringLiteralLike(element)) {
 						literals.push(element);
-					}
-					else if (ts.isObjectLiteralExpression(element)) {
+					} else if (ts.isObjectLiteralExpression(element)) {
 						walkObjectLiteral(element);
 					}
 				}
@@ -152,18 +147,15 @@ export function collectStyleScopedClassReferences(
 						const { name } = property;
 						if (ts.isIdentifier(name)) {
 							walkIdentifier(name);
-						}
-						else if (ts.isStringLiteral(name)) {
+						} else if (ts.isStringLiteral(name)) {
 							literals.push(name);
-						}
-						else if (ts.isComputedPropertyName(name)) {
+						} else if (ts.isComputedPropertyName(name)) {
 							const { expression } = name;
 							if (ts.isStringLiteralLike(expression)) {
 								literals.push(expression);
 							}
 						}
-					}
-					else if (ts.isShorthandPropertyAssignment(property)) {
+					} else if (ts.isShorthandPropertyAssignment(property)) {
 						walkIdentifier(property.name);
 					}
 				}
@@ -202,8 +194,7 @@ function collectClasses(content: string, startOffset = 0) {
 				currentClassName = '';
 			}
 			offset += char.length;
-		}
-		else {
+		} else {
 			currentClassName += char;
 		}
 	}

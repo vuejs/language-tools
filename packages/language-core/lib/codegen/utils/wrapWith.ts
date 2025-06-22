@@ -1,4 +1,4 @@
-import type { Code, VueCodeInformation } from "../../types";
+import type { Code, VueCodeInformation } from '../../types';
 
 export function wrapWith(
 	startOffset: number,
@@ -25,8 +25,7 @@ export function* wrapWith(
 	let codes: Code[];
 	if (typeof args[0] === 'string') {
 		[source, features, ...codes] = args;
-	}
-	else {
+	} else {
 		[features, ...codes] = args;
 	}
 

@@ -22,12 +22,14 @@ export function* generateComponentSelf(
 		}
 		// bindings
 		const templateUsageVars = getTemplateUsageVars(options, ctx);
-		for (const [content, bindings] of [
-			[options.sfc.scriptSetup.content, options.scriptSetupRanges.bindings] as const,
-			options.sfc.script && options.scriptRanges
-				? [options.sfc.script.content, options.scriptRanges.bindings] as const
-				: ['', []] as const,
-		]) {
+		for (
+			const [content, bindings] of [
+				[options.sfc.scriptSetup.content, options.scriptSetupRanges.bindings] as const,
+				options.sfc.script && options.scriptRanges
+					? [options.sfc.script.content, options.scriptRanges.bindings] as const
+					: ['', []] as const,
+			]
+		) {
 			for (const { range } of bindings) {
 				const varName = content.slice(range.start, range.end);
 				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
@@ -46,18 +48,23 @@ export function* generateComponentSelf(
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
 			const emitOptionCodes = [...generateEmitsOption(options, options.scriptSetupRanges)];
 			yield* emitOptionCodes;
-			yield* generatePropsOption(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges, !!emitOptionCodes.length, false);
+			yield* generatePropsOption(
+				options,
+				ctx,
+				options.sfc.scriptSetup,
+				options.scriptSetupRanges,
+				!!emitOptionCodes.length,
+				false,
+			);
 		}
 		if (options.sfc.script && options.scriptRanges?.exportDefault?.args) {
 			const { args } = options.scriptRanges.exportDefault;
 			yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
 		}
 		yield `})${endOfLine}`; // defineComponent {
-	}
-	else if (options.sfc.script) {
+	} else if (options.sfc.script) {
 		yield `let __VLS_self!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
-	}
-	else {
+	} else {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 	}
 }

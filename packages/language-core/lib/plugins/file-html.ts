@@ -5,9 +5,7 @@ const sfcBlockReg = /<(script|style)\b([\s\S]*?)>([\s\S]*?)<\/\1>/g;
 const langReg = /\blang\s*=\s*(['"]?)(\S*)\b\1/;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
-
 	return {
-
 		version: 2.1,
 
 		getLanguageId(fileName) {
@@ -45,7 +43,6 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			let templateContent = content;
 
 			for (const match of content.matchAll(sfcBlockReg)) {
-
 				const matchText = match[0];
 				const tag = match[1];
 				const attrs = match[2];
@@ -65,8 +62,7 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 						type: 'style',
 						lang,
 					});
-				}
-				// ignore `<script src="...">`
+				} // ignore `<script src="...">`
 				else if (tag === 'script' && !attrs.includes('src=')) {
 					let type: 'script' | 'scriptSetup' = attrs.includes('type=') ? 'scriptSetup' : 'script';
 					sfc.descriptor[type] = {
@@ -82,7 +78,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					};
 				}
 
-				templateContent = templateContent.slice(0, match.index) + ' '.repeat(matchText.length) + templateContent.slice(match.index + matchText.length);
+				templateContent = templateContent.slice(0, match.index) + ' '.repeat(matchText.length)
+					+ templateContent.slice(match.index + matchText.length);
 			}
 
 			sfc.descriptor.template = {

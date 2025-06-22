@@ -5,7 +5,10 @@ import { getLanguageServer, testWorkspacePath } from './server.js';
 
 test('Inline handler leading', async () => {
 	expect(
-		await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
+		await requestInlayHintsResult(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<script setup lang="ts">
 			let a = 0;
 			</script>
@@ -13,7 +16,8 @@ test('Inline handler leading', async () => {
 			<template>
 				<div @click="a = 1"></div>
 			</template>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		"
 					<script setup lang="ts">
@@ -29,7 +33,10 @@ test('Inline handler leading', async () => {
 
 test('Missing props', async () => {
 	expect(
-		await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
+		await requestInlayHintsResult(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<script setup lang="ts">
 			declare const Foo: new () => {
 				$props: {
@@ -41,7 +48,8 @@ test('Missing props', async () => {
 			<template>
 				<Foo></Foo>
 			</template>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		"
 					<script setup lang="ts">
@@ -61,11 +69,15 @@ test('Missing props', async () => {
 
 test('Options wrapper', async () => {
 	expect(
-		await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
+		await requestInlayHintsResult(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<script>
 			export default {};
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		"
 					<script>
@@ -77,7 +89,10 @@ test('Options wrapper', async () => {
 
 test('Destructured props', async () => {
 	expect(
-		await requestInlayHintsResult('tsconfigProject/fixture.vue', 'vue', `
+		await requestInlayHintsResult(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<script setup lang="ts">
 			import { watch } from 'vue';
 
@@ -120,7 +135,8 @@ test('Destructured props', async () => {
 				console.log(foo, bar, props.baz);
 			});
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		"
 					<script setup lang="ts">
@@ -171,11 +187,15 @@ test('Destructured props', async () => {
 
 test('#4720', async () => {
 	expect(
-		await requestInlayHintsResult('fixture.vue', 'vue', `
+		await requestInlayHintsResult(
+			'fixture.vue',
+			'vue',
+			`
 			<template>
 				<div :foo.attr></div>
 			</template>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		"
 					<template>
@@ -187,14 +207,18 @@ test('#4720', async () => {
 
 test('#4855', async () => {
 	expect(
-		await requestInlayHintsResult('fixture.vue', 'vue', `
+		await requestInlayHintsResult(
+			'fixture.vue',
+			'vue',
+			`
 			<script setup lang="ts">
 			import { toString } from './utils';
 
 			const { foo } = defineProps<{ foo: string }>();
 			console.log(foo);
 			</script>
-		`),
+		`,
+		),
 	).toMatchInlineSnapshot(`
 		"
 					<script setup lang="ts">
@@ -221,7 +245,10 @@ async function requestInlayHintsResult(fileName: string, languageId: string, con
 	const server = await getLanguageServer();
 	let document = await prepareDocument(fileName, languageId, content);
 
-	const inlayHints = await server.vueserver.sendInlayHintRequest(document.uri, { start: document.positionAt(0), end: document.positionAt(content.length) });
+	const inlayHints = await server.vueserver.sendInlayHintRequest(document.uri, {
+		start: document.positionAt(0),
+		end: document.positionAt(content.length),
+	});
 	expect(inlayHints).toBeDefined();
 	expect(inlayHints!.length).greaterThan(0);
 

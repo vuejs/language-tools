@@ -1,4 +1,10 @@
-import type { CreateFile, LanguageServiceContext, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
+import type {
+	CreateFile,
+	LanguageServiceContext,
+	LanguageServicePlugin,
+	TextDocumentEdit,
+	TextEdit,
+} from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
 import { type Sfc, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
@@ -14,7 +20,9 @@ const unicodeReg = /\\u/g;
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	getTsPluginClient?: (
+		context: LanguageServiceContext,
+	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-extract-file',
@@ -28,7 +36,6 @@ export function create(
 			const tsPluginClient = getTsPluginClient?.(context);
 			return {
 				provideCodeActions(document, range, ctx) {
-
 					if (ctx.only && !ctx.only.includes('refactor')) {
 						return;
 					}
@@ -77,7 +84,6 @@ export function create(
 				},
 
 				async resolveCodeAction(codeAction) {
-
 					const { uri, range, newName } = codeAction.data as ActionData;
 					const [startOffset, endOffset]: [number, number] = range;
 
@@ -110,8 +116,10 @@ export function create(
 						return codeAction;
 					}
 
-					const templateInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
-					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.script.initialIndent') ?? false;
+					const templateInitialIndent =
+						await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
+					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.script.initialIndent')
+						?? false;
 
 					const document = context.documents.get(parsedUri, virtualCode.languageId, virtualCode.snapshot);
 					const sfcDocument = context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
@@ -121,7 +129,12 @@ export function create(
 					let newFileTags = [];
 
 					newFileTags.push(
-						constructTag('template', [], templateInitialIndent, sfc.template.content.slice(templateCodeRange[0], templateCodeRange[1])),
+						constructTag(
+							'template',
+							[],
+							templateInitialIndent,
+							sfc.template.content.slice(templateCodeRange[0], templateCodeRange[1]),
+						),
 					);
 
 					if (toExtract.length) {
@@ -145,13 +158,15 @@ export function create(
 
 					const sfcEdits: TextEdit[] = [
 						{
-							range: lastImportNode ? {
-								start: sfcDocument.positionAt(script.startTagEnd + lastImportNode.end),
-								end: sfcDocument.positionAt(script.startTagEnd + lastImportNode.end),
-							} : {
-								start: sfcDocument.positionAt(script.startTagEnd),
-								end: sfcDocument.positionAt(script.startTagEnd),
-							},
+							range: lastImportNode
+								? {
+									start: sfcDocument.positionAt(script.startTagEnd + lastImportNode.end),
+									end: sfcDocument.positionAt(script.startTagEnd + lastImportNode.end),
+								}
+								: {
+									start: sfcDocument.positionAt(script.startTagEnd),
+									end: sfcDocument.positionAt(script.startTagEnd),
+								},
 							newText: `\nimport ${newName} from './${newName}.vue'`,
 						},
 					];
@@ -244,8 +259,11 @@ export function create(
 	};
 }
 
-function selectTemplateCode(startOffset: number, endOffset: number, templateBlock: NonNullable<Sfc['template']>): [number, number] | undefined {
-
+function selectTemplateCode(
+	startOffset: number,
+	endOffset: number,
+	templateBlock: NonNullable<Sfc['template']>,
+): [number, number] | undefined {
 	const insideNodes: (TemplateChildNode | ExpressionNode)[] = [];
 
 	templateBlock.ast?.children.forEach(function visit(node: TemplateChildNode | ExpressionNode) {
@@ -261,11 +279,9 @@ function selectTemplateCode(startOffset: number, endOffset: number, templateBloc
 					visit(node);
 				}
 			});
-		}
-		else if ('branches' in node) {
+		} else if ('branches' in node) {
 			node.branches.forEach(visit);
-		}
-		else if ('content' in node) {
+		} else if ('content' in node) {
 			if (typeof node.content === 'object') {
 				visit(node.content);
 			}
@@ -288,14 +304,12 @@ function constructTag(name: string, attributes: string[], initialIndent: boolean
 }
 
 export function getLastImportNode(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
-
 	let lastImportNode: ts.Node | undefined;
 
 	for (const statement of sourceFile.statements) {
 		if (ts.isImportDeclaration(statement)) {
 			lastImportNode = statement;
-		}
-		else {
+		} else {
 			break;
 		}
 	}
@@ -303,8 +317,12 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 	return lastImportNode;
 }
 
-export function createAddComponentToOptionEdit(ts: typeof import('typescript'), sfc: Sfc, ast: ts.SourceFile, componentName: string) {
-
+export function createAddComponentToOptionEdit(
+	ts: typeof import('typescript'),
+	sfc: Sfc,
+	ast: ts.SourceFile,
+	componentName: string,
+) {
 	const scriptRanges = tsCodegen.get(sfc)?.getScriptRanges();
 	if (!scriptRanges?.exportDefault) {
 		return;
@@ -326,8 +344,7 @@ export function createAddComponentToOptionEdit(ts: typeof import('typescript'), 
 			range: exportDefault.componentsOption,
 			newText: unescape(printText.replace(unicodeReg, '%u')),
 		};
-	}
-	else if (exportDefault.args && exportDefault.argsNode) {
+	} else if (exportDefault.args && exportDefault.argsNode) {
 		const newNode: typeof exportDefault.argsNode = {
 			...exportDefault.argsNode,
 			properties: [

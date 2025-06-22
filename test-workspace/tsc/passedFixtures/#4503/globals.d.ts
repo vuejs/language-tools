@@ -2,8 +2,8 @@ import type globalcomp from './globalcomp.vue';
 
 declare module 'vue' {
 	export interface GlobalComponents {
-		globalcomp: typeof globalcomp
+		globalcomp: typeof globalcomp;
 	}
 }
 
-export { };
+export {};

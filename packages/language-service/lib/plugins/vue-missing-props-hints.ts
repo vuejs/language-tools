@@ -1,11 +1,19 @@
-import type { InlayHint, InlayHintKind, LanguageServiceContext, LanguageServicePlugin, TextDocument } from '@volar/language-service';
-import { VueVirtualCode, hyphenateAttr, hyphenateTag } from '@vue/language-core';
+import type {
+	InlayHint,
+	InlayHintKind,
+	LanguageServiceContext,
+	LanguageServicePlugin,
+	TextDocument,
+} from '@volar/language-service';
+import { hyphenateAttr, hyphenateTag, VueVirtualCode } from '@vue/language-core';
 import * as html from 'vscode-html-languageservice';
 import { URI } from 'vscode-uri';
 import { AttrNameCasing, checkCasing } from '../nameCasing';
 
 export function create(
-	getTsPluginClient?: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	getTsPluginClient?: (
+		context: LanguageServiceContext,
+	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-missing-props-hints',
@@ -17,9 +25,7 @@ export function create(
 			let intrinsicElementNames: Set<string>;
 
 			return {
-
 				async provideInlayHints(document, range, cancellationToken) {
-
 					if (!isSupportedDocument(document)) {
 						return;
 					}
@@ -28,7 +34,7 @@ export function create(
 						return;
 					}
 
-					const enabled = await context.env.getConfiguration?.<boolean>('vue.inlayHints.missingProps') ?? false;
+					const enabled = await context.env.getConfiguration<boolean>?.('vue.inlayHints.missingProps') ?? false;
 					if (!enabled) {
 						return;
 					}
@@ -68,7 +74,6 @@ export function create(
 
 					while ((token = scanner.scan()) !== html.TokenType.EOS) {
 						if (token === html.TokenType.StartTag) {
-
 							const tagName = scanner.getTokenText();
 							const tagOffset = scanner.getTokenOffset();
 							const checkTag = tagName.includes('.')
@@ -98,15 +103,13 @@ export function create(
 								unburnedRequiredProps: [...componentProps[checkTag]],
 								labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
 							};
-						}
-						else if (token === html.TokenType.AttributeName) {
+						} else if (token === html.TokenType.AttributeName) {
 							if (current) {
 								let attrText = scanner.getTokenText();
 
 								if (attrText === 'v-bind') {
 									current.unburnedRequiredProps = [];
-								}
-								else {
+								} else {
 									// remove modifiers
 									if (attrText.includes('.')) {
 										attrText = attrText.split('.')[0];
@@ -114,20 +117,15 @@ export function create(
 									// normalize
 									if (attrText.startsWith('v-bind:')) {
 										attrText = attrText.slice('v-bind:'.length);
-									}
-									else if (attrText.startsWith(':')) {
+									} else if (attrText.startsWith(':')) {
 										attrText = attrText.slice(':'.length);
-									}
-									else if (attrText.startsWith('v-model:')) {
+									} else if (attrText.startsWith('v-model:')) {
 										attrText = attrText.slice('v-model:'.length);
-									}
-									else if (attrText === 'v-model') {
+									} else if (attrText === 'v-model') {
 										attrText = 'modelValue'; // TODO: support for experimentalModelPropName?
-									}
-									else if (attrText.startsWith('v-on:')) {
+									} else if (attrText.startsWith('v-on:')) {
 										attrText = 'on-' + hyphenateAttr(attrText.slice('v-on:'.length));
-									}
-									else if (attrText.startsWith('@')) {
+									} else if (attrText.startsWith('@')) {
 										attrText = 'on-' + hyphenateAttr(attrText.slice('@'.length));
 									}
 
@@ -137,8 +135,7 @@ export function create(
 									});
 								}
 							}
-						}
-						else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
+						} else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
 							if (current) {
 								for (const requiredProp of current.unburnedRequiredProps) {
 									result.push({
@@ -151,7 +148,9 @@ export function create(
 												start: document.positionAt(current.labelOffset),
 												end: document.positionAt(current.labelOffset),
 											},
-											newText: ` :${casing.attr === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp}=`,
+											newText: ` :${
+												casing.attr === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp
+											}=`,
 										}],
 									});
 								}
@@ -169,8 +168,7 @@ export function create(
 	function getScanner(context: LanguageServiceContext, document: TextDocument): html.Scanner | undefined {
 		if (document.languageId === 'html') {
 			return context.inject('html/languageService').createScanner(document.getText());
-		}
-		else {
+		} else {
 			const pugDocument = context.inject('pug/pugDocument', document);
 			if (pugDocument) {
 				return context.inject('pug/languageService').createScanner(pugDocument);

@@ -6,9 +6,7 @@ import * as pug from 'volar-service-pug/lib/languageService';
 const classRegex = /^class\s*=/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
-
 	return {
-
 		name: require('./package.json').name,
 
 		version: 2.1,
@@ -46,17 +44,14 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 		},
 
 		compileSFCTemplate(lang, template, options) {
-
 			if (lang === 'pug') {
-
 				let pugFile: ReturnType<typeof pug.baseParse>;
 				let baseOffset = 0;
 
 				const minIndent = calculateMinIndent(template);
 				if (minIndent === 0) {
 					pugFile = pug?.baseParse(template);
-				}
-				else {
+				} else {
 					pugFile = pug?.baseParse(`template\n${template}`);
 					baseOffset = 'template\n'.length;
 					pugFile.htmlCode = ' '.repeat('<template>'.length)
@@ -97,7 +92,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 									// class=" foo bar"
 									//         ^^^ ^^^
 									// NOTE: we need to expose source offset getter
-									return function (startOffset: number) {
+									return function(startOffset: number) {
 										return getOffset(target.offset + startOffset);
 									};
 								}
@@ -136,7 +131,7 @@ export = plugin;
 
 function calculateMinIndent(s: string) {
 	const lines = s.split('\n');
-	const minIndent = lines.reduce(function (minIndent, line) {
+	const minIndent = lines.reduce(function(minIndent, line) {
 		if (line.trim() === '') {
 			return minIndent;
 		}

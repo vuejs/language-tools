@@ -2,24 +2,25 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { VueLanguagePlugin } from '../types';
 
 interface Loc {
-	start: { offset: number; };
-	end: { offset: number; };
+	start: { offset: number };
+	end: { offset: number };
 	source: string;
 }
-type Node = CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.ExpressionNode | CompilerDOM.AttributeNode | CompilerDOM.DirectiveNode;
+type Node =
+	| CompilerDOM.RootNode
+	| CompilerDOM.TemplateChildNode
+	| CompilerDOM.ExpressionNode
+	| CompilerDOM.AttributeNode
+	| CompilerDOM.DirectiveNode;
 
 const shouldAddSuffix = /(?<=<[^>/]+)$/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
-
 	return {
-
 		version: 2.1,
 
 		compileSFCTemplate(lang, template, options) {
-
 			if (lang === 'html' || lang === 'md') {
-
 				const compiler = modules['@vue/compiler-dom'];
 
 				let addedSuffix = false;
@@ -67,21 +68,18 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 			}
 
 			function tryUpdateNode(node: Node) {
-
 				if (withinChangeRange(node.loc)) {
 					hitNodes.push(node);
 				}
 
 				if (tryUpdateNodeLoc(node.loc)) {
-
 					if (node.type === CompilerDOM.NodeTypes.ROOT) {
 						for (const child of node.children) {
 							if (!tryUpdateNode(child)) {
 								return false;
 							}
 						}
-					}
-					else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
+					} else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 						if (withinChangeRange(node.loc)) {
 							// if not self closing, should not hit tag name
 							const start = node.loc.start.offset + 2;
@@ -100,13 +98,11 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								return false;
 							}
 						}
-					}
-					else if (node.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
+					} else if (node.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
 						if (node.value && !tryUpdateNode(node.value)) {
 							return false;
 						}
-					}
-					else if (node.type === CompilerDOM.NodeTypes.DIRECTIVE) {
+					} else if (node.type === CompilerDOM.NodeTypes.DIRECTIVE) {
 						if (node.arg && withinChangeRange(node.arg.loc) && node.name === 'slot') {
 							return false;
 						}
@@ -119,13 +115,11 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						if (node.exp && !tryUpdateNode(node.exp)) {
 							return false;
 						}
-					}
-					else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
+					} else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
 						if (!tryUpdateNode(node.content)) {
 							return false;
 						}
-					}
-					else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
+					} else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 						for (const childNode of node.children) {
 							if (typeof childNode === 'object') {
 								if (!tryUpdateNode(childNode as CompilerDOM.TemplateChildNode)) {
@@ -133,8 +127,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								}
 							}
 						}
-					}
-					else if (node.type === CompilerDOM.NodeTypes.IF) {
+					} else if (node.type === CompilerDOM.NodeTypes.IF) {
 						for (const branch of node.branches) {
 							if (branch.condition && !tryUpdateNode(branch.condition)) {
 								return false;
@@ -145,14 +138,15 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								}
 							}
 						}
-					}
-					else if (node.type === CompilerDOM.NodeTypes.FOR) {
-						for (const child of [
-							node.parseResult.source,
-							node.parseResult.value,
-							node.parseResult.key,
-							node.parseResult.index,
-						]) {
+					} else if (node.type === CompilerDOM.NodeTypes.FOR) {
+						for (
+							const child of [
+								node.parseResult.source,
+								node.parseResult.value,
+								node.parseResult.key,
+								node.parseResult.index,
+							]
+						) {
 							if (child) {
 								if (!tryUpdateNode(child)) {
 									return false;
@@ -170,22 +164,18 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 								return false;
 							}
 						}
-					}
-					else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
+					} else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 						if (!tryUpdateNode(node.content)) {
 							return false;
 						}
-					}
-					else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
+					} else if (node.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 						if (withinChangeRange(node.loc)) { // TODO: review this (slot name?)
 							if (node.isStatic) {
 								return false;
-							}
-							else if (!node.loc.source) {
+							} else if (!node.loc.source) {
 								// :class="..." -> :class=""
 								return false;
-							}
-							else {
+							} else {
 								node.content = node.loc.source;
 							}
 						}
@@ -197,25 +187,21 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 				return false;
 			}
 			function tryUpdateNodeLoc(loc: Loc) {
-
 				delete (loc as any).__endOffset;
 
 				if (withinChangeRange(loc)) {
-					loc.source =
-						loc.source.slice(0, change.start - loc.start.offset)
+					loc.source = loc.source.slice(0, change.start - loc.start.offset)
 						+ change.newText
 						+ loc.source.slice(change.end - loc.start.offset);
 					(loc as any).__endOffset = loc.end.offset;
 					loc.end.offset += lengthDiff;
 					return true;
-				}
-				else if (change.end <= loc.start.offset) {
+				} else if (change.end <= loc.start.offset) {
 					(loc as any).__endOffset = loc.end.offset;
 					loc.start.offset += lengthDiff;
 					loc.end.offset += lengthDiff;
 					return true;
-				}
-				else if (change.start >= loc.end.offset) {
+				} else if (change.start >= loc.end.offset) {
 					return true; // no need update
 				}
 

@@ -12,7 +12,6 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 		create(context) {
 			return {
 				async provideInlayHints(document, range) {
-
 					const uri = URI.parse(document.uri);
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
@@ -23,7 +22,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 
 					const settings: Record<string, boolean> = {};
 					async function getSettingEnabled(key: string) {
-						return settings[key] ??= await context.env.getConfiguration?.<boolean>(key) ?? false;
+						return settings[key] ??= await context.env.getConfiguration<boolean>?.(key) ?? false;
 					}
 
 					const result: InlayHint[] = [];
@@ -40,11 +39,13 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 						const enabled = await getSettingEnabled(setting);
 
 						if (enabled) {
-							for (const [prop, isShorthand] of findDestructuredProps(
-								ts,
-								virtualCode.sfc.scriptSetup.ast,
-								scriptSetupRanges.defineProps.destructured.keys(),
-							)) {
+							for (
+								const [prop, isShorthand] of findDestructuredProps(
+									ts,
+									virtualCode.sfc.scriptSetup.ast,
+									scriptSetupRanges.defineProps.destructured.keys(),
+								)
+							) {
 								const name = prop.text;
 								const end = prop.getEnd();
 								const pos = isShorthand ? end : end - name.length;
@@ -89,10 +90,12 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 							paddingLeft: hint.paddingLeft,
 							position: document.positionAt(hintOffset),
 							kind: 2 satisfies typeof InlayHintKind.Parameter,
-							tooltip: hint.tooltip ? {
-								kind: 'markdown',
-								value: hint.tooltip,
-							} : undefined,
+							tooltip: hint.tooltip
+								? {
+									kind: 'markdown',
+									value: hint.tooltip,
+								}
+								: undefined,
 						});
 					}
 
@@ -128,7 +131,7 @@ export function findDestructuredProps(
 	}
 
 	function pushScope() {
-		scopeStack.push((currentScope = Object.create(currentScope)));
+		scopeStack.push(currentScope = Object.create(currentScope));
 	}
 
 	function popScope() {
@@ -156,26 +159,23 @@ export function findDestructuredProps(
 				for (const decl of stmt.declarationList.declarations) {
 					walkVariableDeclaration(decl, isRoot);
 				}
-			}
-			else if (
-				ts.isFunctionDeclaration(stmt) ||
-				ts.isClassDeclaration(stmt)
+			} else if (
+				ts.isFunctionDeclaration(stmt)
+				|| ts.isClassDeclaration(stmt)
 			) {
 				const declare = ts.getModifiers(stmt)?.find(modifier => modifier.kind === ts.SyntaxKind.DeclareKeyword);
 				if (!stmt.name || declare) {
 					return;
 				}
 				registerLocalBinding(stmt.name);
-			}
-			else if (
-				(ts.isForOfStatement(stmt) || ts.isForInStatement(stmt)) &&
-				ts.isVariableDeclarationList(stmt.initializer)
+			} else if (
+				(ts.isForOfStatement(stmt) || ts.isForInStatement(stmt))
+				&& ts.isVariableDeclarationList(stmt.initializer)
 			) {
 				walkVariableDeclaration(stmt.initializer.declarations[0], isRoot);
-			}
-			else if (
-				ts.isLabeledStatement(stmt) &&
-				ts.isVariableDeclaration(stmt.statement)
+			} else if (
+				ts.isLabeledStatement(stmt)
+				&& ts.isVariableDeclaration(stmt.statement)
 			) {
 				walkVariableDeclaration(stmt.statement, isRoot);
 			}
@@ -184,8 +184,7 @@ export function findDestructuredProps(
 
 	function walkVariableDeclaration(decl: ts.VariableDeclaration, isRoot = false) {
 		const { initializer, name } = decl;
-		const isDefineProps =
-			isRoot
+		const isDefineProps = isRoot
 			&& initializer
 			&& ts.isCallExpression(initializer)
 			&& initializer.expression.getText(ast) === 'defineProps';
@@ -226,8 +225,8 @@ export function findDestructuredProps(
 			}
 
 			if (
-				ts.isTypeLiteralNode(node) ||
-				ts.isTypeReferenceNode(node)
+				ts.isTypeLiteralNode(node)
+				|| ts.isTypeReferenceNode(node)
 			) {
 				return false;
 			}
@@ -307,18 +306,18 @@ export function findDestructuredProps(
 		}
 
 		if (
-			ts.isExpressionWithTypeArguments(parent) ||
-			ts.isInterfaceDeclaration(parent) ||
-			ts.isTypeAliasDeclaration(parent) ||
-			ts.isPropertySignature(parent)
+			ts.isExpressionWithTypeArguments(parent)
+			|| ts.isInterfaceDeclaration(parent)
+			|| ts.isTypeAliasDeclaration(parent)
+			|| ts.isPropertySignature(parent)
 		) {
 			return false;
 		}
 
 		if (
-			ts.isPropertyAccessExpression(parent) ||
-			ts.isPropertyAssignment(parent) ||
-			ts.isPropertyDeclaration(parent)
+			ts.isPropertyAccessExpression(parent)
+			|| ts.isPropertyAssignment(parent)
+			|| ts.isPropertyDeclaration(parent)
 		) {
 			if (parent.name === id) {
 				return false;

@@ -14,7 +14,6 @@ export function create(): LanguageServicePlugin {
 		create(context) {
 			return {
 				provideDiagnostics(document) {
-
 					if (!isSupportedDocument(document)) {
 						return;
 					}
@@ -36,7 +35,6 @@ export function create(): LanguageServicePlugin {
 					const { template } = root.sfc;
 
 					if (template) {
-
 						for (const error of template.errors) {
 							onCompilerError(error, 1 satisfies typeof DiagnosticSeverity.Error);
 						}
@@ -45,8 +43,10 @@ export function create(): LanguageServicePlugin {
 							onCompilerError(warning, 2 satisfies typeof DiagnosticSeverity.Warning);
 						}
 
-						function onCompilerError(error: NonNullable<typeof template>['errors'][number], severity: DiagnosticSeverity) {
-
+						function onCompilerError(
+							error: NonNullable<typeof template>['errors'][number],
+							severity: DiagnosticSeverity,
+						) {
 							const templateHtmlRange = {
 								start: error.loc?.start.offset ?? 0,
 								end: error.loc?.end.offset ?? 0,

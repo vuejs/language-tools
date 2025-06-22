@@ -5,5 +5,5 @@
 		"module": "CommonJS",
 		"moduleResolution": "Node"
 	},
-	"include": [ "*", "lib/**/*" ],
+	"include": ["*", "lib/**/*"]
 }

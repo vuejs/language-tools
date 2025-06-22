@@ -92,7 +92,6 @@ for (const lang of langs) {
 }
 
 function localeWorker() {
-
 	const data = langs.map(({ name, url }) => ({ name, url }));
 
 	const writePath = path.resolve(__dirname, '../data/locale.json');
@@ -101,7 +100,6 @@ function localeWorker() {
 }
 
 async function sfcWorker(lang) {
-
 	const sfcDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/sfc-spec.md', lang.url);
 	const cssFeaturesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/sfc-css-features.md', lang.url);
 
@@ -142,7 +140,7 @@ async function sfcWorker(lang) {
 		.split('\n## ')[2]
 		.split('\n### ')
 		.slice(1)
-		.map((section) => {
+		.map(section => {
 			const lines = section.split('\n');
 			const name = normalizeTagName(lines[0]);
 			/**
@@ -241,13 +239,12 @@ async function sfcWorker(lang) {
 }
 
 async function modelWorker(lang) {
-
 	const formsDoc = await fetchText(lang.repoUrl + 'HEAD/src/guide/essentials/forms.md', lang.url);
 	const modifiers = formsDoc
 		.split('\n## ')[3]
 		.split('\n### ')
 		.slice(1)
-		.map((section) => {
+		.map(section => {
 			const lines = section.split('\n');
 			let name = normalizeAttrName(lines[0]);
 			name = name.split('.')[1];
@@ -279,7 +276,6 @@ async function modelWorker(lang) {
 }
 
 async function templateWorker(lang) {
-
 	const componentsDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-components.md', lang.url);
 	const elementsDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-special-elements.md', lang.url);
 	const directivesDoc = await fetchText(lang.repoUrl + 'HEAD/src/api/built-in-directives.md', lang.url);
@@ -289,7 +285,7 @@ async function templateWorker(lang) {
 	const components = componentsDoc
 		.split('\n## ')
 		.slice(1)
-		.map((section) => {
+		.map(section => {
 			const lines = section.split('\n');
 			const name = normalizeTagName(lines[0]);
 			/**
@@ -309,7 +305,7 @@ async function templateWorker(lang) {
 	const elements = elementsDoc
 		.split('\n## ')
 		.slice(1)
-		.map((section) => {
+		.map(section => {
 			const lines = section.split('\n');
 			const name = normalizeTagName(lines[0]);
 			/**
@@ -329,7 +325,7 @@ async function templateWorker(lang) {
 	const directives = directivesDoc
 		.split('\n## ')
 		.slice(1)
-		.map((section) => {
+		.map(section => {
 			const lines = section.split('\n');
 			const name = normalizeAttrName(lines[0]);
 			/**
@@ -337,12 +333,12 @@ async function templateWorker(lang) {
 			 */
 			const data = {
 				name,
-				valueSet:
-					name === 'v-cloak' ||
-					name === 'v-else' ||
-					name === 'v-once' ||
-					name === 'v-pre'
-					? 'v' : undefined,
+				valueSet: name === 'v-cloak'
+						|| name === 'v-else'
+						|| name === 'v-once'
+						|| name === 'v-pre'
+					? 'v'
+					: undefined,
 				description: {
 					kind: 'markdown',
 					value: lines.slice(1).join('\n').trim(),
@@ -354,7 +350,7 @@ async function templateWorker(lang) {
 	const attributes = attributesDoc
 		.split('\n## ')
 		.slice(1)
-		.map((section) => {
+		.map(section => {
 			const lines = section.split('\n');
 			const name = normalizeAttrName(lines[0]);
 			/**
@@ -373,7 +369,7 @@ async function templateWorker(lang) {
 	const dataAllowMismatch = ssrDoc
 		.split(/## data-allow-mismatch.*\n/)
 		.slice(1)
-		.map((section) => {
+		.map(section => {
 			const lines = section.split('\n');
 			const name = 'data-allow-mismatch';
 			/**
@@ -417,7 +413,7 @@ async function templateWorker(lang) {
 async function fetchText(url, baseUrl) {
 	let text = await (await fetch(url)).text();
 	text = text.replace(/```vue-html/g, '```html');
-	text = text.replace(/\{#.*?\}/g, '')
+	text = text.replace(/\{#.*?\}/g, '');
 	text = resolveMarkdownLinks(text, baseUrl);
 	return text;
 }

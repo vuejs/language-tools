@@ -23,7 +23,8 @@ export async function getLanguageServer(): Promise<{
 			path.join(__dirname, '..', '..', '..', 'node_modules', 'typescript', 'lib', 'tsserver.js'),
 			[
 				'--disableAutomaticTypingAcquisition',
-				'--globalPlugins', '@vue/typescript-plugin',
+				'--globalPlugins',
+				'@vue/typescript-plugin',
 				'--suppressDiagnosticEvents',
 				// '--logVerbosity', 'verbose',
 				// '--logFile', path.join(__dirname, 'tsserver.log'),
@@ -34,7 +35,7 @@ export async function getLanguageServer(): Promise<{
 		// tsserver.on('event', e => console.log(e));
 
 		serverHandle = startLanguageServer(require.resolve('../bin/vue-language-server.js'), testWorkspacePath);
-		serverHandle.connection.onNotification(PublishDiagnosticsNotification.type, () => { });
+		serverHandle.connection.onNotification(PublishDiagnosticsNotification.type, () => {});
 		serverHandle.connection.onRequest(ConfigurationRequest.type, ({ items }) => {
 			return items.map(({ section }) => {
 				if (section?.startsWith('vue.inlayHints.')) {

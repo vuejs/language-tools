@@ -1,4 +1,4 @@
-import { type CodeInformation, type Mapping, defaultMapperFactory } from '@volar/language-core';
+import { type CodeInformation, defaultMapperFactory, type Mapping } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
 import { type Segment, toString } from 'muggle-string';
 import type { VueLanguagePlugin } from '../types';
@@ -16,9 +16,7 @@ const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
 const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
-
 	return {
-
 		version: 2.1,
 
 		getLanguageId(fileName) {
@@ -57,7 +55,8 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 					const matchText = match[0];
 					codes.push([matchText, undefined, match.index]);
 					codes.push('\n\n');
-					content = content.slice(0, match.index) + ' '.repeat(matchText.length) + content.slice(match.index + matchText.length);
+					content = content.slice(0, match.index) + ' '.repeat(matchText.length)
+						+ content.slice(match.index + matchText.length);
 				}
 			}
 

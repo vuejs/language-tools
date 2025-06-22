@@ -68,7 +68,10 @@ export interface VueCompilerOptions {
 	plugins: VueLanguagePlugin[];
 
 	// experimental
-	experimentalModelPropName: Record<string, Record<string, boolean | Record<string, string> | Record<string, string>[]>>;
+	experimentalModelPropName: Record<
+		string,
+		Record<string, boolean | Record<string, string> | Record<string, string>[]>
+	>;
 
 	// internal
 	__setupedGlobalTypes?: true | {
@@ -87,12 +90,22 @@ export type VueLanguagePluginReturn = {
 	isValidFile?(fileName: string, languageId: string): boolean;
 	parseSFC?(fileName: string, content: string): SFCParseResult | undefined;
 	parseSFC2?(fileName: string, languageId: string, content: string): SFCParseResult | undefined;
-	updateSFC?(oldResult: SFCParseResult, textChange: { start: number, end: number, newText: string; }): SFCParseResult | undefined;
+	updateSFC?(
+		oldResult: SFCParseResult,
+		textChange: { start: number; end: number; newText: string },
+	): SFCParseResult | undefined;
 	resolveTemplateCompilerOptions?(options: CompilerDOM.CompilerOptions): CompilerDOM.CompilerOptions;
 	compileSFCScript?(lang: string, script: string): ts.SourceFile | undefined;
-	compileSFCTemplate?(lang: string, template: string, options: CompilerDOM.CompilerOptions): CompilerDOM.CodegenResult | undefined;
-	updateSFCTemplate?(oldResult: CompilerDOM.CodegenResult, textChange: { start: number, end: number, newText: string; }): CompilerDOM.CodegenResult | undefined;
-	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string; }[];
+	compileSFCTemplate?(
+		lang: string,
+		template: string,
+		options: CompilerDOM.CompilerOptions,
+	): CompilerDOM.CodegenResult | undefined;
+	updateSFCTemplate?(
+		oldResult: CompilerDOM.CodegenResult,
+		textChange: { start: number; end: number; newText: string },
+	): CompilerDOM.CodegenResult | undefined;
+	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string }[];
 	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
 };
 
@@ -125,20 +138,26 @@ export type SfcBlockAttr = true | {
 export interface Sfc {
 	content: string;
 	comments: string[];
-	template: SfcBlock & {
-		ast: CompilerDOM.RootNode | undefined;
-		errors: CompilerDOM.CompilerError[];
-		warnings: CompilerDOM.CompilerError[];
-	} | undefined;
-	script: (SfcBlock & {
-		src: SfcBlockAttr | undefined;
-		ast: ts.SourceFile;
-	}) | undefined;
-	scriptSetup: SfcBlock & {
-		// https://github.com/vuejs/rfcs/discussions/436
-		generic: SfcBlockAttr | undefined;
-		ast: ts.SourceFile;
-	} | undefined;
+	template:
+		| SfcBlock & {
+			ast: CompilerDOM.RootNode | undefined;
+			errors: CompilerDOM.CompilerError[];
+			warnings: CompilerDOM.CompilerError[];
+		}
+		| undefined;
+	script:
+		| (SfcBlock & {
+			src: SfcBlockAttr | undefined;
+			ast: ts.SourceFile;
+		})
+		| undefined;
+	scriptSetup:
+		| SfcBlock & {
+			// https://github.com/vuejs/rfcs/discussions/436
+			generic: SfcBlockAttr | undefined;
+			ast: ts.SourceFile;
+		}
+		| undefined;
 	styles: readonly (SfcBlock & {
 		src: SfcBlockAttr | undefined;
 		module: SfcBlockAttr | undefined;
@@ -146,7 +165,7 @@ export interface Sfc {
 		imports: {
 			text: string;
 			offset: number;
-		}[],
+		}[];
 		cssVars: {
 			text: string;
 			offset: number;

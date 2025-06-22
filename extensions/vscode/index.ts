@@ -2,7 +2,18 @@ import { activateAutoInsertion, activateDocumentDropEdit, createLabsInfo, middle
 import * as lsp from '@volar/vscode/node';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { defineExtension, executeCommand, extensionContext, nextTick, onDeactivate, useActiveTextEditor, useCommand, useOutputChannel, useVisibleTextEditors, watch } from 'reactive-vscode';
+import {
+	defineExtension,
+	executeCommand,
+	extensionContext,
+	nextTick,
+	onDeactivate,
+	useActiveTextEditor,
+	useCommand,
+	useOutputChannel,
+	useVisibleTextEditors,
+	watch,
+} from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './lib/config';
 import { activate as activateSplitEditors } from './lib/splitEditors';
@@ -24,10 +35,11 @@ export const { activate, deactivate } = defineExtension(async () => {
 	const activeTextEditor = useActiveTextEditor();
 	const visibleTextEditors = useVisibleTextEditors();
 	const { stop } = watch(activeTextEditor, () => {
-
-		if (!visibleTextEditors.value.some(
-			editor => config.server.includeLanguages.includes(editor.document.languageId),
-		)) {
+		if (
+			!visibleTextEditors.value.some(
+				editor => config.server.includeLanguages.includes(editor.document.languageId),
+			)
+		) {
 			return;
 		}
 
@@ -45,7 +57,12 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 		// Setup typescript.js in production mode
 		if (fs.existsSync(path.join(__dirname, 'language-server.js'))) {
-			fs.writeFileSync(path.join(__dirname, 'typescript.js'), `module.exports = require("${vscode.env.appRoot.replace(/\\/g, '/')}/extensions/node_modules/typescript/lib/typescript.js");`);
+			fs.writeFileSync(
+				path.join(__dirname, 'typescript.js'),
+				`module.exports = require("${
+					vscode.env.appRoot.replace(/\\/g, '/')
+				}/extensions/node_modules/typescript/lib/typescript.js");`,
+			);
 		}
 
 		volarLabs.addLanguageClient(client = launch(context));
@@ -55,7 +72,6 @@ export const { activate, deactivate } = defineExtension(async () => {
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
 		activateSplitEditors(client);
-
 	}, { immediate: true });
 
 	useCommand('vue.action.restartServer', async () => {
@@ -113,7 +129,7 @@ function launch(context: vscode.ExtensionContext) {
 	);
 
 	client.onNotification('tsserver/request', async ([seq, command, args]) => {
-		const res = await vscode.commands.executeCommand<{ body: { result: unknown; }; } | undefined>(
+		const res = await vscode.commands.executeCommand<{ body: { result: unknown } } | undefined>(
 			'typescript.tsserverRequest',
 			command,
 			args,
@@ -144,9 +160,11 @@ try {
 				'languages:Array.isArray(e.languages)',
 				[
 					'languages:',
-					`e.name==='vue-typescript-plugin-pack'?[${config.server.includeLanguages
-						.map(lang => `'${lang}'`)
-						.join(',')}]`,
+					`e.name==='vue-typescript-plugin-pack'?[${
+						config.server.includeLanguages
+							.map(lang => `'${lang}'`)
+							.join(',')
+					}]`,
 					':Array.isArray(e.languages)',
 				].join(''),
 			);
@@ -177,4 +195,4 @@ try {
 	if (tsExtension.isActive) {
 		vscode.commands.executeCommand('workbench.action.restartExtensionHost');
 	}
-} catch { }
+} catch {}

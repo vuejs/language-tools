@@ -11,12 +11,19 @@ export function* generateComponent(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
-	if (options.sfc.script && options.scriptRanges?.exportDefault && options.scriptRanges.exportDefault.expression.start !== options.scriptRanges.exportDefault.args.start) {
+	if (
+		options.sfc.script && options.scriptRanges?.exportDefault
+		&& options.scriptRanges.exportDefault.expression.start !== options.scriptRanges.exportDefault.args.start
+	) {
 		// use defineComponent() from user space code if it exist
-		yield generateSfcBlockSection(options.sfc.script, options.scriptRanges.exportDefault.expression.start, options.scriptRanges.exportDefault.args.start, codeFeatures.all);
+		yield generateSfcBlockSection(
+			options.sfc.script,
+			options.scriptRanges.exportDefault.expression.start,
+			options.scriptRanges.exportDefault.args.start,
+			codeFeatures.all,
+		);
 		yield `{${newLine}`;
-	}
-	else {
+	} else {
 		yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 	}
 
@@ -75,9 +82,9 @@ export function* generateEmitsOption(
 ): Generator<Code> {
 	const codes: {
 		// undefined means the emit source cannot be explained by expression
-		optionExp?: Code,
+		optionExp?: Code;
 		// undefined means the emit source cannot be explained by type
-		typeOptionType?: Code,
+		typeOptionType?: Code;
 	}[] = [];
 	if (scriptSetupRanges.defineModel.length) {
 		codes.push({
@@ -99,8 +106,7 @@ export function* generateEmitsOption(
 			yield `__typeEmits: {} as `;
 			yield codes[0].typeOptionType!;
 			yield `,${newLine}`;
-		}
-		else if (codes.length >= 2) {
+		} else if (codes.length >= 2) {
 			yield `__typeEmits: {} as `;
 			yield codes[0].typeOptionType!;
 			for (let i = 1; i < codes.length; i++) {
@@ -109,14 +115,12 @@ export function* generateEmitsOption(
 			}
 			yield `,${newLine}`;
 		}
-	}
-	else if (codes.every(code => code.optionExp)) {
+	} else if (codes.every(code => code.optionExp)) {
 		if (codes.length === 1) {
 			yield `emits: `;
 			yield codes[0].optionExp!;
 			yield `,${newLine}`;
-		}
-		else if (codes.length >= 2) {
+		} else if (codes.length >= 2) {
 			yield `emits: {${newLine}`;
 			for (const code of codes) {
 				yield `...`;
@@ -137,9 +141,9 @@ export function* generatePropsOption(
 	inheritAttrs: boolean,
 ): Generator<Code> {
 	const codes: {
-		optionExp: Code,
+		optionExp: Code;
 		// undefined means the prop source cannot be explained by type
-		typeOptionExp?: Code,
+		typeOptionExp?: Code;
 	}[] = [];
 
 	if (ctx.generatedPropsType) {
@@ -148,8 +152,7 @@ export function* generatePropsOption(
 				optionExp: '{}',
 				typeOptionExp: `{} as __VLS_PublicProps`,
 			});
-		}
-		else {
+		} else {
 			codes.push({
 				optionExp: [
 					`{} as `,
@@ -198,8 +201,7 @@ export function* generatePropsOption(
 			yield `__typeProps: `;
 			yield codes[0].typeOptionExp!;
 			yield `,${newLine}`;
-		}
-		else if (codes.length >= 2) {
+		} else if (codes.length >= 2) {
 			yield `__typeProps: {${newLine}`;
 			for (const { typeOptionExp } of codes) {
 				yield `...`;
@@ -214,8 +216,7 @@ export function* generatePropsOption(
 			yield `props: `;
 			yield codes[0].optionExp;
 			yield `,${newLine}`;
-		}
-		else if (codes.length >= 2) {
+		} else if (codes.length >= 2) {
 			yield `props: {${newLine}`;
 			for (const { optionExp } of codes) {
 				yield `...`;

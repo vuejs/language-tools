@@ -12,10 +12,8 @@ export function create(): LanguageServicePlugin {
 		create(context) {
 			return {
 				async provideAutoInsertSnippet(document, selection, change) {
-
 					if (document.languageId === 'html' || document.languageId === 'jade') {
-
-						const enabled = await context.env.getConfiguration?.<boolean>('vue.autoInsert.bracketSpacing') ?? true;
+						const enabled = await context.env.getConfiguration<boolean>?.('vue.autoInsert.bracketSpacing') ?? true;
 						if (!enabled) {
 							return;
 						}

@@ -24,7 +24,6 @@ export function create(): LanguageServicePlugin {
 		create() {
 			return {
 				provideCompletionItems(document, position) {
-
 					if (document.languageId !== 'html') {
 						return;
 					}

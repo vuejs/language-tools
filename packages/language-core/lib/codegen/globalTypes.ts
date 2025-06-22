@@ -23,7 +23,9 @@ export function generateGlobalTypes({
 	checkUnknownEvents,
 	checkUnknownComponents,
 }: VueCompilerOptions) {
-	const fnPropsType = `(T extends { $props: infer Props } ? Props : {})${checkUnknownProps ? '' : ' & Record<string, unknown>'}`;
+	const fnPropsType = `(T extends { $props: infer Props } ? Props : {})${
+		checkUnknownProps ? '' : ' & Record<string, unknown>'
+	}`;
 	let text = ``;
 	if (target < 3.5) {
 		text += `
@@ -40,20 +42,20 @@ export function generateGlobalTypes({
 
 	type __VLS_NativeElements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_IntrinsicElements = ${
-			target >= 3.3
-				? `import('${lib}/jsx-runtime').JSX.IntrinsicElements;`
-				: `globalThis.JSX.IntrinsicElements;`
-		}
+		target >= 3.3
+			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements;`
+			: `globalThis.JSX.IntrinsicElements;`
+	}
 	type __VLS_Element = ${
-			target >= 3.3
-				? `import('${lib}/jsx-runtime').JSX.Element;`
-				: `globalThis.JSX.Element;`
-		}
+		target >= 3.3
+			? `import('${lib}/jsx-runtime').JSX.Element;`
+			: `globalThis.JSX.Element;`
+	}
 	type __VLS_GlobalComponents = ${
-			target >= 3.5
-				? `import('${lib}').GlobalComponents;`
-				: `import('${lib}').GlobalComponents & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
-		}
+		target >= 3.5
+			? `import('${lib}').GlobalComponents;`
+			: `import('${lib}').GlobalComponents & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
+	}
 	type __VLS_GlobalDirectives = import('${lib}').GlobalDirectives;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
@@ -134,7 +136,11 @@ export function generateGlobalTypes({
 	type __VLS_ResolveEmits<
 		Comp,
 		Emits,
-		TypeEmits = ${target >= 3.6 ? `Comp extends { __typeEmits?: infer T } ? unknown extends T ? {} : import('${lib}').ShortEmitsToObject<T> : {}` : `{}`},
+		TypeEmits = ${
+		target >= 3.6
+			? `Comp extends { __typeEmits?: infer T } ? unknown extends T ? {} : import('${lib}').ShortEmitsToObject<T> : {}`
+			: `{}`
+	},
 		NormalizedEmits = __VLS_NormalizeEmits<Emits> extends infer E ? string extends keyof E ? {} : E : never,
 	> = __VLS_SpreadMerge<NormalizedEmits, TypeEmits>;
 	type __VLS_ResolveDirectives<T> = {
@@ -170,10 +176,12 @@ export function generateGlobalTypes({
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent<{}>;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
-	function __VLS_asFunctionalElement<T>(tag: T, endTag?: T): (attrs: T${checkUnknownComponents ? '' : ' & Record<string, unknown>'}) => void;
+	function __VLS_asFunctionalElement<T>(tag: T, endTag?: T): (attrs: T${
+		checkUnknownComponents ? '' : ' & Record<string, unknown>'
+	}) => void;
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
 }
 `;
 	return text;
-};
+}

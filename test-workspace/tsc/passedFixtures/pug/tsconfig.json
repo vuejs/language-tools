@@ -7,5 +7,5 @@
 		"plugins": [
 			"../../../../packages/language-plugin-pug"
 		]
-	},
+	}
 }

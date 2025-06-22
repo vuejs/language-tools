@@ -17,7 +17,7 @@ function getVueFileRegistry(key: string, plugins: VueLanguagePlugin[]) {
 	let fileRegistry = fileRegistries.find(r =>
 		r.key === key
 		&& r.plugins.length === plugins.length
-		&& r.plugins.every(plugin => plugins.includes(plugin)),
+		&& r.plugins.every(plugin => plugins.includes(plugin))
 	)?.files;
 	if (!fileRegistry) {
 		fileRegistry = new Map();
@@ -84,8 +84,7 @@ export function createVueLanguagePlugin<T>(
 				if (code) {
 					code.update(snapshot);
 					return code;
-				}
-				else {
+				} else {
 					const code = new VueVirtualCode(
 						fileName,
 						languageId,
@@ -117,10 +116,13 @@ export function createVueLanguagePlugin<T>(
 						return {
 							code,
 							extension: '.' + lang,
-							scriptKind: lang === 'js' ? ts.ScriptKind.JS
-								: lang === 'jsx' ? ts.ScriptKind.JSX
-									: lang === 'tsx' ? ts.ScriptKind.TSX
-										: ts.ScriptKind.TS,
+							scriptKind: lang === 'js'
+								? ts.ScriptKind.JS
+								: lang === 'jsx'
+								? ts.ScriptKind.JSX
+								: lang === 'tsx'
+								? ts.ScriptKind.TSX
+								: ts.ScriptKind.TS,
 						};
 					}
 				}

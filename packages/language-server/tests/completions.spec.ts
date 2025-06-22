@@ -45,7 +45,9 @@ test('Vue tags', async () => {
 
 test('#4670', async () => {
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><div click| /></template>`)).items.map(item => item.label).filter(label => label.includes('click')),
+		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><div click| /></template>`)).items.map(
+			item => item.label,
+		).filter(label => label.includes('click')),
 	).toMatchInlineSnapshot(`
 		[
 		  "onclick",
@@ -62,7 +64,9 @@ test('#4670', async () => {
 
 test('HTML tags and built-in components', async () => {
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items.map(item => item.label),
+		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items.map(item =>
+			item.label
+		),
 	).toMatchInlineSnapshot(`
 		[
 		  "!DOCTYPE",
@@ -204,7 +208,10 @@ test('Directives', async () => {
 // FIXME:
 test.skip('Directive Modifiers', async () => {
 	expect(
-		(await requestCompletionListToVueServer('fixture.vue', 'vue', `
+		(await requestCompletionListToVueServer(
+			'fixture.vue',
+			'vue',
+			`
 			<template>
 				<div v-foo.|></div>
 			</template>
@@ -214,7 +221,8 @@ test.skip('Directive Modifiers', async () => {
 
 			let vFoo!: FunctionDirective<any, any, 'attr' | 'prop'>;
 			</script>
-		`)).items.map(item => item.label),
+		`,
+		)).items.map(item => item.label),
 	).toMatchInlineSnapshot(`
 			[
 			  "attr",
@@ -224,21 +232,34 @@ test.skip('Directive Modifiers', async () => {
 });
 
 test('$event argument', async () => {
-	await requestCompletionItemToTsServer('fixture.vue', 'vue', `<template><div @click="console.log($eve|)"></div></template>`, '$event');
+	await requestCompletionItemToTsServer(
+		'fixture.vue',
+		'vue',
+		`<template><div @click="console.log($eve|)"></div></template>`,
+		'$event',
+	);
 });
 
 test('<script setup>', async () => {
-	await requestCompletionItemToTsServer('fixture.vue', 'vue', `
+	await requestCompletionItemToTsServer(
+		'fixture.vue',
+		'vue',
+		`
 		<template>{{ f| }}</template>
 
 		<script lang="ts" setup>
 		const foo = 1;
 		</script>
-	`, 'foo');
+	`,
+		'foo',
+	);
 });
 
 test('Slot name', async () => {
-	await requestCompletionItemToTsServer('fixture.vue', 'vue', `
+	await requestCompletionItemToTsServer(
+		'fixture.vue',
+		'vue',
+		`
 		<template>
 			<Foo>
 				<template #|></template>
@@ -252,11 +273,16 @@ test('Slot name', async () => {
 			};
 		};
 		</script>
-	`, 'default');
+	`,
+		'default',
+	);
 });
 
 test('#2454', async () => {
-	await requestCompletionItemToVueServer('fixture.vue', 'vue', `
+	await requestCompletionItemToVueServer(
+		'fixture.vue',
+		'vue',
+		`
 		<script setup lang="ts">
 		let vLoading: any;
 		</script>
@@ -264,17 +290,24 @@ test('#2454', async () => {
 		<template>
 		<div v-load|="vLoading"></div>
 		</template>
-	`, 'v-loading');
+	`,
+		'v-loading',
+	);
 });
 
 test.skip('#2511', async () => {
 	await prepareDocument('tsconfigProject/component-for-auto-import.vue', 'vue', `<script setup lang="ts"></script>`);
 	expect(
-		(await requestCompletionItemToTsServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestCompletionItemToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<script setup lang="ts">
 			import componentFor|
 			</script>
-		`, 'ComponentForAutoImport')),
+		`,
+			'ComponentForAutoImport',
+		),
 	).toMatchInlineSnapshot(`
 			{
 			  "newText": "import componentForAutoImport$1 from './component-for-auto-import.vue';",
@@ -293,7 +326,10 @@ test.skip('#2511', async () => {
 });
 
 test('#3658', async () => {
-	await requestCompletionItemToTsServer('fixture.vue', 'vue', `
+	await requestCompletionItemToTsServer(
+		'fixture.vue',
+		'vue',
+		`
 		<template>
 			<Comp>
 				<template #foo="foo">
@@ -301,40 +337,62 @@ test('#3658', async () => {
 				</template>
 			</Comp>
 		</template>
-	`, 'foo');
+	`,
+		'foo',
+	);
 });
 
 test('#4639', async () => {
-	await requestCompletionItemToVueServer('fixture.vue', 'vue', `
+	await requestCompletionItemToVueServer(
+		'fixture.vue',
+		'vue',
+		`
 		<template>
 			<div @click.| />
 		</template>
-	`, 'capture');
+	`,
+		'capture',
+	);
 });
 
 test('Alias path', async () => {
-	await requestCompletionItemToTsServer('tsconfigProject/fixture.vue', 'vue', `
+	await requestCompletionItemToTsServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
 		<script setup lang="ts">
 		import Component from '@/|';
 		</script>
-	`, 'empty.vue');
+	`,
+		'empty.vue',
+	);
 });
 
 test('Relative path', async () => {
-	await requestCompletionItemToTsServer('tsconfigProject/fixture.vue', 'vue', `
+	await requestCompletionItemToTsServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
 		<script setup lang="ts">
 		import Component from './|';
 		</script>
-	`, 'empty.vue');
+	`,
+		'empty.vue',
+	);
 });
 
 test.skip('Component auto import', async () => {
 	expect(
-		(await requestCompletionItemToTsServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestCompletionItemToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				<Emp| />
 			</template>
-		`, 'Empty')),
+		`,
+			'Empty',
+		),
 	).toMatchInlineSnapshot(`
 			{
 			  "additionalTextEdits": [
@@ -391,7 +449,10 @@ test.skip('Component auto import', async () => {
 });
 
 test('core#8811', async () => {
-	await requestCompletionItemToVueServer('tsconfigProject/fixture.vue', 'vue', `
+	await requestCompletionItemToVueServer(
+		'tsconfigProject/fixture.vue',
+		'vue',
+		`
 		<script setup lang="ts">
 		declare const Foo: new () => {
 			$props: {
@@ -403,12 +464,17 @@ test('core#8811', async () => {
 		<template>
 			<Foo :-| ></Foo>
 		</template>
-	`, ':-foo-bar');
+	`,
+		':-foo-bar',
+	);
 });
 
 test('#4796', async () => {
 	expect(
-		(await requestCompletionItemToVueServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestCompletionItemToVueServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<template>
 				<HelloWorld :msg| />
 			</template>
@@ -425,7 +491,9 @@ test('#4796', async () => {
 				}
 			})
 			</script>
-		`, ':msg')),
+		`,
+			':msg',
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "documentation": {
@@ -455,14 +523,19 @@ test('#4796', async () => {
 
 test('Auto insert defines', async () => {
 	expect(
-		(await requestCompletionItemToVueServer('tsconfigProject/fixture.vue', 'vue', `
+		await requestCompletionItemToVueServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
 			<script lang="ts" setup>
 			defineProps<{
 				foo: string;
 			}>();
 			props|
 			</script>
-		`, 'props')),
+		`,
+			'props',
+		),
 	).toMatchInlineSnapshot(`
 		{
 		  "additionalTextEdits": [
@@ -501,7 +574,12 @@ afterEach(async () => {
 	openedDocuments.length = 0;
 });
 
-async function requestCompletionItemToVueServer(fileName: string, languageId: string, content: string, itemLabel: string) {
+async function requestCompletionItemToVueServer(
+	fileName: string,
+	languageId: string,
+	content: string,
+	itemLabel: string,
+) {
 	const completions = await requestCompletionListToVueServer(fileName, languageId, content);
 	let completion = completions.items.find(item => item.label === itemLabel);
 	expect(completion).toBeDefined();
@@ -528,7 +606,12 @@ async function requestCompletionListToVueServer(fileName: string, languageId: st
 	return completions!;
 }
 
-async function requestCompletionItemToTsServer(fileName: string, languageId: string, content: string, itemLabel: string) {
+async function requestCompletionItemToTsServer(
+	fileName: string,
+	languageId: string,
+	content: string,
+	itemLabel: string,
+) {
 	const completions = await requestCompletionListToTsServer(fileName, languageId, content);
 	let completion = completions.find((item: any) => item.name === itemLabel);
 	expect(completion).toBeDefined();

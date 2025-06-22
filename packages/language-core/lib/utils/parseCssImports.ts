@@ -5,7 +5,7 @@ export function* parseCssImports(css: string) {
 	for (const match of matches) {
 		let text = match[0];
 		let offset = match.index;
-		if (text.startsWith('\'') || text.startsWith('"')) {
+		if (text.startsWith("'") || text.startsWith('"')) {
 			text = text.slice(1, -1);
 			offset += 1;
 		}

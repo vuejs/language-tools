@@ -1,9 +1,9 @@
 {
 	"extends": "../../../tsconfig.base.json",
-	"include": [ "**/*" ],
+	"include": ["**/*"],
 	"compilerOptions": {
 		"noEmit": false,
 		"emitDeclarationOnly": true,
-		"declaration": true,
+		"declaration": true
 	}
 }

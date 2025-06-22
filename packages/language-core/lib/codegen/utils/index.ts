@@ -25,8 +25,8 @@ export function collectIdentifiers(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	results: {
-		id: ts.Identifier,
-		isRest: boolean,
+		id: ts.Identifier;
+		isRest: boolean;
 		initializer: ts.Expression | undefined;
 	}[] = [],
 	isRest = false,
@@ -34,20 +34,17 @@ export function collectIdentifiers(
 ) {
 	if (ts.isIdentifier(node)) {
 		results.push({ id: node, isRest, initializer });
-	}
-	else if (ts.isObjectBindingPattern(node)) {
+	} else if (ts.isObjectBindingPattern(node)) {
 		for (const el of node.elements) {
 			collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken, el.initializer);
 		}
-	}
-	else if (ts.isArrayBindingPattern(node)) {
+	} else if (ts.isArrayBindingPattern(node)) {
 		for (const el of node.elements) {
 			if (ts.isBindingElement(el)) {
 				collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken);
 			}
 		}
-	}
-	else {
+	} else {
 		ts.forEachChild(node, node => collectIdentifiers(ts, node, results, false));
 	}
 	return results;
@@ -81,7 +78,12 @@ export function createTsAst(
 	return ast as ts.SourceFile;
 }
 
-export function generateSfcBlockSection(block: SfcBlock, start: number, end: number, features: VueCodeInformation): Code {
+export function generateSfcBlockSection(
+	block: SfcBlock,
+	start: number,
+	end: number,
+	features: VueCodeInformation,
+): Code {
 	return [
 		block.content.slice(start, end),
 		block.name,

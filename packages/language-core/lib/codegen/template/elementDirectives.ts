@@ -102,8 +102,7 @@ function* generateArg(
 			startOffset,
 			ctx.codeFeatures.all,
 		);
-	}
-	else {
+	} else {
 		yield* generateInterpolation(
 			options,
 			ctx,

@@ -5,7 +5,6 @@ import * as vscode from 'vscode';
 import { config } from './config';
 
 export function activate(client: BaseLanguageClient) {
-
 	const astMap = new WeakMap<vscode.TextDocument, [version: number, Promise<SFCParseResult | undefined>]>();
 	const activeTextEditor = useActiveTextEditor();
 
@@ -78,21 +77,21 @@ export function activate(client: BaseLanguageClient) {
 			await foldingBlocks(doc, leftBlocks);
 			await executeCommand('workbench.action.toggleSplitEditorInGroup');
 			await foldingBlocks(doc, rightBlocks);
-		}
-		else {
+		} else {
 			await executeCommand('editor.unfoldAll');
 		}
 	});
 
 	async function foldingBlocks(doc: vscode.TextDocument, blocks: SFCBlock[]) {
-
 		const editor = activeTextEditor.value;
 		if (!editor) {
 			return;
 		}
 
 		editor.selections = blocks.length
-			? blocks.map(block => new vscode.Selection(doc.positionAt(block.loc.start.offset), doc.positionAt(block.loc.start.offset)))
+			? blocks.map(block =>
+				new vscode.Selection(doc.positionAt(block.loc.start.offset), doc.positionAt(block.loc.start.offset))
+			)
 			: [new vscode.Selection(doc.positionAt(doc.getText().length), doc.positionAt(doc.getText().length))];
 
 		await executeCommand('editor.unfoldAll');
@@ -100,7 +99,13 @@ export function activate(client: BaseLanguageClient) {
 
 		const firstBlock = blocks.sort((a, b) => a.loc.start.offset - b.loc.start.offset)[0];
 		if (firstBlock) {
-			editor.revealRange(new vscode.Range(doc.positionAt(firstBlock.loc.start.offset), new vscode.Position(editor.document.lineCount, 0)), vscode.TextEditorRevealType.AtTop);
+			editor.revealRange(
+				new vscode.Range(
+					doc.positionAt(firstBlock.loc.start.offset),
+					new vscode.Position(editor.document.lineCount, 0),
+				),
+				vscode.TextEditorRevealType.AtTop,
+			);
 		}
 	}
 }

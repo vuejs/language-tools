@@ -40,9 +40,11 @@ declare module '@volar/language-service' {
 
 export function createVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests & {
-		getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>;
-	} | undefined,
+	tsPluginClient:
+		| import('@vue/typescript-plugin/lib/requests').Requests & {
+			getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>;
+		}
+		| undefined,
 ) {
 	const plugins = [
 		createTypeScriptSyntacticPlugin(ts),
@@ -61,7 +63,9 @@ export function createVueLanguageServicePlugins(
 
 function getCommonLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	getTsPluginClient: (context: LanguageServiceContext) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	getTsPluginClient: (
+		context: LanguageServiceContext,
+	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin[] {
 	return [
 		createTypeScriptTwoslashQueriesPlugin(ts),

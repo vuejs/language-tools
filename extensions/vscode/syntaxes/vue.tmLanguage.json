@@ -1023,7 +1023,7 @@
 			"end": "(?=\\s*[^=\\s])",
 			"name": "meta.attribute.directive.vue",
 			"patterns": [
-			    {
+				{
 					"match": "(\\.)([\\w-]*)",
 					"1": {
 						"name": "punctuation.separator.key-value.html.vue"
