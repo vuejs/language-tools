@@ -460,7 +460,7 @@
 		"watch": "rolldown --watch --config",
 		"pack": "pnpm run build:prod && vsce package",
 		"release": "pnpm run build:prod && vsce publish",
-		"gen-ext-meta": "vscode-ext-gen --scope vue --output lib/generated-meta.ts && tsslint --project tsconfig.json --fix --vscode-settings ../../.vscode/settings.json"
+		"gen-ext-meta": "vscode-ext-gen --scope vue --output lib/generated-meta.ts && cd ../.. && pnpm run format"
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.4",

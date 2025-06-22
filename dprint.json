@@ -1,0 +1,18 @@
+{
+	"useTabs": true,
+	"typescript": {
+		"quoteStyle": "preferSingle",
+		"arrowFunction.useParentheses": "preferNone"
+	},
+	"json": {
+	},
+	"excludes": [
+		"**/node_modules",
+		"**/*-lock.json",
+		"packages/language-service/data"
+	],
+	"plugins": [
+		"https://plugins.dprint.dev/typescript-0.95.7.wasm",
+		"https://plugins.dprint.dev/json-0.20.0.wasm"
+	]
+}
