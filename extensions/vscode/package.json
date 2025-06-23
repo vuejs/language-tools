@@ -13,7 +13,7 @@
 	"sponsor": {
 		"url": "https://github.com/sponsors/johnsoncodehk"
 	},
-	"icon": "images/icon.png",
+	"icon": "icon.png",
 	"displayName": "Vue (Official)",
 	"description": "Language Support for Vue",
 	"author": "johnsoncodehk",
@@ -251,34 +251,6 @@
 					],
 					"markdownDescription": "%configuration.server.includeLanguages%"
 				},
-				"vue.splitEditors.icon": {
-					"type": "boolean",
-					"default": false,
-					"markdownDescription": "%configuration.splitEditors.icon%"
-				},
-				"vue.splitEditors.layout.left": {
-					"type": "array",
-					"items": {
-						"type": "string"
-					},
-					"default": [
-						"script",
-						"scriptSetup",
-						"styles"
-					],
-					"markdownDescription": "%configuration.splitEditors.layout.left%"
-				},
-				"vue.splitEditors.layout.right": {
-					"type": "array",
-					"items": {
-						"type": "string"
-					},
-					"default": [
-						"template",
-						"customBlocks"
-					],
-					"markdownDescription": "%configuration.splitEditors.layout.right%"
-				},
 				"vue.codeActions.askNewComponentName": {
 					"type": "boolean",
 					"default": true,
@@ -394,12 +366,6 @@
 				"command": "vue.action.restartServer",
 				"title": "%command.action.restartServer%",
 				"category": "Vue"
-			},
-			{
-				"command": "vue.action.splitEditors",
-				"title": "%command.action.splitEditors%",
-				"category": "Vue",
-				"icon": "images/split-editors.png"
 			}
 		],
 		"menus": {
@@ -439,17 +405,6 @@
 				{
 					"command": "typescript.removeUnusedImports",
 					"when": "supportedCodeAction =~ /(\\s|^)source\\.removeUnusedImports\\b/ && editorLangId =~ /^vue$/"
-				},
-				{
-					"command": "vue.action.splitEditors",
-					"when": "editorLangId == vue"
-				}
-			],
-			"editor/title": [
-				{
-					"command": "vue.action.splitEditors",
-					"when": "resourceLangId == vue && config.vue.splitEditors.icon",
-					"group": "navigation"
 				}
 			]
 		}
