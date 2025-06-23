@@ -76,11 +76,9 @@ export = createLanguageServicePlugin(
 				projectService.logger.info('Vue: there is no addProtocolHandler method.');
 				return;
 			}
-			if ((session as any).vueCommandsAdded) {
+			if ((session as any).handlers.has('_vue:projectInfo')) {
 				return;
 			}
-
-			(session as any).vueCommandsAdded = true;
 
 			session.addProtocolHandler('_vue:projectInfo', ({ arguments: args }) => {
 				return (session as any).handlers.get('projectInfo')?.({ arguments: args });
