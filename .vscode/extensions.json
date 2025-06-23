@@ -1,5 +1,6 @@
 {
 	"recommendations": [
-		"dprint.dprint"
+		"dprint.dprint",
+		"johnsoncodehk.vscode-tsslint"
 	]
 }
