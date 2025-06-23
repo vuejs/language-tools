@@ -1327,28 +1327,28 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 
 			const propObjectDefault = meta.props.find(prop => prop.name === 'objectDefault');
 			expect(propObjectDefault).toMatchInlineSnapshot(`
-			{
-			  "declarations": [],
-			  "default": "{
-			    foo: "bar"
-			}",
-			  "description": "Default function Object",
-			  "global": false,
-			  "name": "objectDefault",
-			  "rawType": undefined,
-			  "required": false,
-			  "schema": {
-			    "kind": "enum",
-			    "schema": [
-			      "undefined",
-			      "Record<string, any>",
-			    ],
-			    "type": "Record<string, any> | undefined",
-			  },
-			  "tags": [],
-			  "type": "Record<string, any> | undefined",
-			}
-		`);
+				{
+				  "declarations": [],
+				  "default": "{
+				    foo: "bar",
+				}",
+				  "description": "Default function Object",
+				  "global": false,
+				  "name": "objectDefault",
+				  "rawType": undefined,
+				  "required": false,
+				  "schema": {
+				    "kind": "enum",
+				    "schema": [
+				      "undefined",
+				      "Record<string, any>",
+				    ],
+				    "type": "Record<string, any> | undefined",
+				  },
+				  "tags": [],
+				  "type": "Record<string, any> | undefined",
+				}
+			`);
 
 			const propArrayDefault = meta.props.find(prop => prop.name === 'arrayDefault');
 			expect(propArrayDefault).toMatchInlineSnapshot(`
