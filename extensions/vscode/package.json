@@ -13,7 +13,7 @@
 	"sponsor": {
 		"url": "https://github.com/sponsors/johnsoncodehk"
 	},
-	"icon": "images/icon.png",
+	"icon": "icon.png",
 	"displayName": "Vue (Official)",
 	"description": "Language Support for Vue",
 	"author": "johnsoncodehk",
