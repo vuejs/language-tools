@@ -9,7 +9,6 @@ import {
 	forEachEmbeddedCode,
 	getDefaultCompilerOptions,
 	isReferencesEnabled,
-	parse,
 } from '@vue/language-core';
 import {
 	createLanguageService,
@@ -203,15 +202,6 @@ connection.onInitialize(params => {
 connection.onInitialized(server.initialized);
 
 connection.onShutdown(server.shutdown);
-
-connection.onRequest('vue/parseSfc', (params: {
-	textDocument: TextDocumentIdentifier;
-}) => {
-	const document = server.documents.get(URI.parse(params.textDocument.uri));
-	if (document) {
-		return parse(document.getText());
-	}
-});
 
 connection.onRequest('vue/interpolationRanges', async (params: {
 	textDocument: TextDocumentIdentifier;
