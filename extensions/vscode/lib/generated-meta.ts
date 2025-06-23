@@ -12,9 +12,7 @@ export const extensionId = `${publisher}.${name}`;
 /**
  * Type union of all commands
  */
-export type CommandKey =
-	| 'vue.action.restartServer'
-	| 'vue.action.splitEditors';
+export type CommandKey = 'vue.action.restartServer';
 
 /**
  * Commands map registed by `Vue.volar`
@@ -25,11 +23,6 @@ export const commands = {
 	 * @value `vue.action.restartServer`
 	 */
 	actionRestartServer: 'vue.action.restartServer',
-	/**
-	 * %command.action.splitEditors%
-	 * @value `vue.action.splitEditors`
-	 */
-	actionSplitEditors: 'vue.action.splitEditors',
 } satisfies Record<string, CommandKey>;
 
 /**
@@ -38,9 +31,6 @@ export const commands = {
 export type ConfigKey =
 	| 'vue.trace.server'
 	| 'vue.server.includeLanguages'
-	| 'vue.splitEditors.icon'
-	| 'vue.splitEditors.layout.left'
-	| 'vue.splitEditors.layout.right'
 	| 'vue.codeActions.askNewComponentName'
 	| 'vue.complete.casing.tags'
 	| 'vue.complete.casing.props'
@@ -60,9 +50,6 @@ export type ConfigKey =
 export interface ConfigKeyTypeMap {
 	'vue.trace.server': 'off' | 'messages' | 'verbose';
 	'vue.server.includeLanguages': string[];
-	'vue.splitEditors.icon': boolean;
-	'vue.splitEditors.layout.left': string[];
-	'vue.splitEditors.layout.right': string[];
 	'vue.codeActions.askNewComponentName': boolean;
 	'vue.complete.casing.tags': 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
 	'vue.complete.casing.props': 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
@@ -90,9 +77,6 @@ export interface ConfigKeyTypeMap {
 export interface ConfigShorthandMap {
 	traceServer: 'vue.trace.server';
 	serverIncludeLanguages: 'vue.server.includeLanguages';
-	splitEditorsIcon: 'vue.splitEditors.icon';
-	splitEditorsLayoutLeft: 'vue.splitEditors.layout.left';
-	splitEditorsLayoutRight: 'vue.splitEditors.layout.right';
 	codeActionsAskNewComponentName: 'vue.codeActions.askNewComponentName';
 	completeCasingTags: 'vue.complete.casing.tags';
 	completeCasingProps: 'vue.complete.casing.props';
@@ -113,9 +97,6 @@ export interface ConfigShorthandMap {
 export interface ConfigShorthandTypeMap {
 	traceServer: 'off' | 'messages' | 'verbose';
 	serverIncludeLanguages: string[];
-	splitEditorsIcon: boolean;
-	splitEditorsLayoutLeft: string[];
-	splitEditorsLayoutRight: string[];
 	codeActionsAskNewComponentName: boolean;
 	completeCasingTags: 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
 	completeCasingProps: 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
@@ -167,33 +148,6 @@ export const configs = {
 		key: 'vue.server.includeLanguages',
 		default: ['vue'],
 	} as ConfigItem<'vue.server.includeLanguages'>,
-	/**
-	 * @key `vue.splitEditors.icon`
-	 * @default `false`
-	 * @type `boolean`
-	 */
-	splitEditorsIcon: {
-		key: 'vue.splitEditors.icon',
-		default: false,
-	} as ConfigItem<'vue.splitEditors.icon'>,
-	/**
-	 * @key `vue.splitEditors.layout.left`
-	 * @default `["script","scriptSetup","styles"]`
-	 * @type `array`
-	 */
-	splitEditorsLayoutLeft: {
-		key: 'vue.splitEditors.layout.left',
-		default: ['script', 'scriptSetup', 'styles'],
-	} as ConfigItem<'vue.splitEditors.layout.left'>,
-	/**
-	 * @key `vue.splitEditors.layout.right`
-	 * @default `["template","customBlocks"]`
-	 * @type `array`
-	 */
-	splitEditorsLayoutRight: {
-		key: 'vue.splitEditors.layout.right',
-		default: ['template', 'customBlocks'],
-	} as ConfigItem<'vue.splitEditors.layout.right'>,
 	/**
 	 * @key `vue.codeActions.askNewComponentName`
 	 * @default `true`
@@ -334,9 +288,6 @@ export const configs = {
 export interface ScopedConfigKeyTypeMap {
 	'trace.server': 'off' | 'messages' | 'verbose';
 	'server.includeLanguages': string[];
-	'splitEditors.icon': boolean;
-	'splitEditors.layout.left': string[];
-	'splitEditors.layout.right': string[];
 	'codeActions.askNewComponentName': boolean;
 	'complete.casing.tags': 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
 	'complete.casing.props': 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
@@ -366,9 +317,6 @@ export const scopedConfigs = {
 	defaults: {
 		'trace.server': 'off',
 		'server.includeLanguages': ['vue'],
-		'splitEditors.icon': false,
-		'splitEditors.layout.left': ['script', 'scriptSetup', 'styles'],
-		'splitEditors.layout.right': ['template', 'customBlocks'],
 		'codeActions.askNewComponentName': true,
 		'complete.casing.tags': 'autoPascal',
 		'complete.casing.props': 'autoKebab',
@@ -394,13 +342,6 @@ export interface NestedConfigs {
 		};
 		'server': {
 			'includeLanguages': string[];
-		};
-		'splitEditors': {
-			'icon': boolean;
-			'layout': {
-				'left': string[];
-				'right': string[];
-			};
 		};
 		'codeActions': {
 			'askNewComponentName': boolean;
@@ -451,13 +392,6 @@ export interface NestedScopedConfigs {
 	};
 	'server': {
 		'includeLanguages': string[];
-	};
-	'splitEditors': {
-		'icon': boolean;
-		'layout': {
-			'left': string[];
-			'right': string[];
-		};
 	};
 	'codeActions': {
 		'askNewComponentName': boolean;

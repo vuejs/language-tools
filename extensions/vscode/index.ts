@@ -16,7 +16,6 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './lib/config';
-import { activate as activateSplitEditors } from './lib/splitEditors';
 
 let client: lsp.BaseLanguageClient | undefined;
 
@@ -71,7 +70,6 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
-		activateSplitEditors(client);
 	}, { immediate: true });
 
 	useCommand('vue.action.restartServer', async () => {
