@@ -1,4 +1,13 @@
 packages:
-  - 'extensions/*'
-  - 'packages/*'
-  - 'test-workspace'
+  - extensions/*
+  - packages/*
+  - test-workspace
+
+onlyBuiltDependencies:
+  - '@tsslint/core'
+  - '@tsslint/eslint'
+  - '@vscode/vsce-sign'
+  - dprint
+  - esbuild
+  - keytar
+  - rolldown
