@@ -4,7 +4,6 @@
   <a href="https://marketplace.visualstudio.com/items?itemName=Vue.volar"><img src="https://img.shields.io/visual-studio-marketplace/v/Vue.volar?labelColor=18181B&color=1584FC" alt="Version"></a>
   <a href="https://marketplace.visualstudio.com/items?itemName=Vue.volar"><img src="https://img.shields.io/visual-studio-marketplace/i/Vue.volar?labelColor=18181B&color=1584FC" alt="Downloads"></a>
   <a href="https://github.com/vuejs/language-tools/tree/master/LICENSE"><img src="https://img.shields.io/github/license/vuejs/language-tools.svg?labelColor=18181B&color=1584FC" alt="License"></a>
-  <a href="https://nightly.link/vuejs/language-tools/workflows/extension-build/master/extensions.zip"><img src="https://img.shields.io/badge/Nightly%20Build-18181B" alt="Nightly Build"></a>
 </p>
 
 > ⚡ High-performance Vue language tooling based-on [Volar.js](https://volarjs.dev/)
