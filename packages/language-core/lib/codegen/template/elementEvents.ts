@@ -117,7 +117,7 @@ export function* generateEventExpression(
 		let suffix = `)`;
 		let isFirstMapping = true;
 
-		const ast = createTsAst(options.ts, options.template.ast, prop.exp.content);
+		const ast = createTsAst(options.ts, ctx.inlineTsAsts, prop.exp.content);
 		const isCompound = isCompoundExpression(options.ts, ast);
 
 		if (isCompound) {

@@ -65,17 +65,16 @@ export function normalizeAttributeValue(node: CompilerDOM.TextNode): [string, nu
 
 export function createTsAst(
 	ts: typeof import('typescript'),
-	templateAst: CompilerDOM.RootNode | undefined,
+	inlineTsAsts: Map<string, ts.SourceFile> | undefined,
 	text: string,
 ) {
-	const inlineTsAsts = (templateAst as any)?.__volar_inlineTsAsts;
 	let ast = inlineTsAsts?.get(text);
 	if (!ast) {
 		ast = ts.createSourceFile('/a.ts', text, 99 satisfies ts.ScriptTarget.ESNext);
 		inlineTsAsts?.set(text, ast);
 	}
-	ast.__volar_used = true;
-	return ast as ts.SourceFile;
+	(ast as any).__volar_used = true;
+	return ast;
 }
 
 export function generateSfcBlockSection(

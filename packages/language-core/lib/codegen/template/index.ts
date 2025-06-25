@@ -25,7 +25,7 @@ export interface TemplateCodegenOptions {
 }
 
 export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
-	const ctx = createTemplateCodegenContext(options);
+	const ctx = createTemplateCodegenContext(options, options.template.ast);
 
 	if (options.slotsAssignName) {
 		ctx.addLocalVariable(options.slotsAssignName);

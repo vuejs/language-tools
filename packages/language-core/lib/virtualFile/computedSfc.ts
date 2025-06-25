@@ -8,6 +8,8 @@ import { parseCssImports } from '../utils/parseCssImports';
 import { parseCssVars } from '../utils/parseCssVars';
 import { computedArray, computedItems } from '../utils/signals';
 
+export const templateInlineTsAsts = new WeakMap<CompilerDOM.RootNode, Map<string, ts.SourceFile>>();
+
 export function computedSfc(
 	ts: typeof import('typescript'),
 	plugins: VueLanguagePluginReturn[],
@@ -215,8 +217,11 @@ export function computedSfc(
 		let inlineTsAsts: Map<string, any> | undefined;
 
 		function updateInlineTsAsts(newAst: CompilerDOM.RootNode, oldAst?: CompilerDOM.RootNode) {
-			const newTsAsts: Map<string, any> = (newAst as any).__volar_inlineTsAsts ??= new Map();
-			const oldTsAsts: Map<string, any> = (oldAst as any)?.__volar_inlineTsAsts ?? inlineTsAsts;
+			let newTsAsts = templateInlineTsAsts.get(newAst);
+			if (!newTsAsts) {
+				templateInlineTsAsts.set(newAst, newTsAsts = new Map());
+			}
+			const oldTsAsts = oldAst && templateInlineTsAsts.get(oldAst) || inlineTsAsts;
 
 			if (oldTsAsts) {
 				for (const [text, ast] of oldTsAsts) {
