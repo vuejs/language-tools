@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-server",
-	"version": "3.0.0-beta.3",
+	"version": "3.0.0-beta.4",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -17,9 +17,9 @@
 	},
 	"dependencies": {
 		"@volar/language-server": "2.4.15",
-		"@vue/language-core": "3.0.0-beta.3",
-		"@vue/language-service": "3.0.0-beta.3",
-		"@vue/typescript-plugin": "3.0.0-beta.3",
+		"@vue/language-core": "3.0.0-beta.4",
+		"@vue/language-service": "3.0.0-beta.4",
+		"@vue/typescript-plugin": "3.0.0-beta.4",
 		"vscode-uri": "^3.0.8"
 	},
 	"peerDependencies": {
