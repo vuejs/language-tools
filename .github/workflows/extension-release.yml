@@ -2,9 +2,6 @@ name: extension
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - '*'
 
 jobs:
   release:
