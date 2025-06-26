@@ -5,7 +5,7 @@
 	"configuration.splitEditors.layout.left": "Blocks in the left split editor.",
 	"configuration.splitEditors.layout.right": "Blocks in the right split editor.",
 	"configuration.codeActions.askNewComponentName": "Ask for new component name when extract component.",
-	"configuration.suggest.componentNameCasing": "Preferred tag name case.",
+	"configuration.suggest.componentNameCasing": "Preferred component name case.",
 	"configuration.suggest.propNameCasing": "Preferred attr name case.",
 	"configuration.suggest.defineAssignment": "Auto add `const props = ` before `defineProps` when selecting the completion item `props`. (also `emit` and `slots`)",
 	"configuration.autoInsert.dotValue": "Auto-complete Ref value with `.value`.",
