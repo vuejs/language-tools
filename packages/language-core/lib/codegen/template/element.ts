@@ -272,7 +272,7 @@ export function* generateComponent(
 
 	if (hasVBindAttrs(options, ctx, node)) {
 		const attrsVar = ctx.getInternalVariable();
-		yield `let ${attrsVar}!: Parameters<typeof ${componentFunctionalVar}>[0]${endOfLine}`;
+		yield `var ${attrsVar}!: Parameters<typeof ${componentFunctionalVar}>[0]${endOfLine}`;
 		ctx.inheritedAttrVars.add(attrsVar);
 	}
 
