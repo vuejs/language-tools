@@ -288,7 +288,9 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		],
 		dataAttributes: [],
 		htmlAttributes: ['aria-*'],
-		optionsWrapper: [`(await import('${lib}')).defineComponent(`, `)`],
+		optionsWrapper: target >= 2.7
+			? [`(await import('${lib}')).defineComponent(`, `)`]
+			: [`(await import('${lib}')).default.extend(`, `)`],
 		macros: {
 			defineProps: ['defineProps'],
 			defineSlots: ['defineSlots'],

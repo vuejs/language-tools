@@ -122,7 +122,7 @@ export function create(
 									} else if (attrText.startsWith('v-model:')) {
 										attrText = attrText.slice('v-model:'.length);
 									} else if (attrText === 'v-model') {
-										attrText = 'modelValue'; // TODO: support for experimentalModelPropName?
+										attrText = context.project.vue.compilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
 									} else if (attrText.startsWith('v-on:')) {
 										attrText = 'on-' + hyphenateAttr(attrText.slice('v-on:'.length));
 									} else if (attrText.startsWith('@')) {

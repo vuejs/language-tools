@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
+import { getSlotsPropertyName } from '../../utils/shared';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
@@ -34,8 +35,9 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		ctx.addLocalVariable(options.propsAssignName);
 	}
 
+	const slotsPropertyName = getSlotsPropertyName(options.vueCompilerOptions.target);
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
-		ctx.dollarVars.add('$slots');
+		ctx.dollarVars.add(slotsPropertyName);
 	}
 	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
 		ctx.dollarVars.add('$attrs');
@@ -55,7 +57,7 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 	yield* ctx.generateHoistVariables();
 
 	const speicalTypes = [
-		['$slots', yield* generateSlots(options, ctx)],
+		[slotsPropertyName, yield* generateSlots(options, ctx)],
 		['$attrs', yield* generateInheritedAttrs(options, ctx)],
 		['$refs', yield* generateTemplateRefs(options, ctx)],
 		['$el', yield* generateRootEl(ctx)],

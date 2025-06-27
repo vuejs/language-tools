@@ -5,6 +5,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { createPlugins } from './plugins';
 import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
+import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 import { VueVirtualCode } from './virtualFile/vueFile';
 
 const fileRegistries: {
@@ -55,7 +56,12 @@ export function createVueLanguagePlugin<T>(
 ): LanguagePlugin<T, VueVirtualCode> {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
-			'@vue/compiler-dom': CompilerDOM,
+			'@vue/compiler-dom': vueCompilerOptions.target < 3
+				? {
+					...CompilerDOM,
+					compile: CompilerVue2.compile,
+				}
+				: CompilerDOM,
 			typescript: ts,
 		},
 		compilerOptions,

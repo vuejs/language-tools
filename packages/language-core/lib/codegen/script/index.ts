@@ -6,7 +6,7 @@ import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { generateGlobalTypes, getGlobalTypesFileName } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
-import { generateSfcBlockSection, newLine } from '../utils';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
@@ -57,7 +57,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 	if (options.sfc.script && options.scriptRanges) {
-		const { exportDefault } = options.scriptRanges;
+		const { exportDefault, classBlockEnd } = options.scriptRanges;
 		const isExportRawObject = exportDefault
 			&& options.sfc.script.content[exportDefault.expression.start] === '{';
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
@@ -114,6 +114,22 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				options.sfc.script.content.length,
 				codeFeatures.all,
 			);
+		} else if (classBlockEnd !== undefined) {
+			if (options.vueCompilerOptions.skipTemplateCodegen) {
+				yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
+			} else {
+				yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
+				yield `__VLS_template = () => {${newLine}`;
+				const templateCodegenCtx = yield* generateTemplate(options, ctx);
+				yield* generateComponentSelf(options, ctx, templateCodegenCtx);
+				yield `}${endOfLine}`;
+				yield generateSfcBlockSection(
+					options.sfc.script,
+					classBlockEnd,
+					options.sfc.script.content.length,
+					codeFeatures.all,
+				);
+			}
 		} else {
 			yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
 			yield* generateScriptSectionPartiallyEnding(
