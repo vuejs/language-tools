@@ -1,7 +1,5 @@
 # Changelog
 
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
-
 ## 3.0.0 (2025-06-25)
 
 ### Features
