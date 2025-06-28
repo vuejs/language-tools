@@ -15,6 +15,7 @@
 - feat(language-core): add `strictCssModules` option (#5164) - Thanks to @KazariEX!
 - feat(component-type-helpers): add `ComponentAttrs` type for attribute extraction
 - feat(vscode): add support for `typescript.sortImports`, `typescript.removeUnusedImports` commands (#5444)
+- feat(vscode): i18n support of configurations and commands with `zh-CN`, `zh-TW`, `ru` and `ja` (#5330, #5340, #5404) - Thanks to @KazariEX, @PurplePlanen and @zyoshoka!
 
 ### Bug Fixes
 
@@ -63,7 +64,6 @@
 - refactor(vscode, language-server): remove hybrid mode configuration (#5248)
 - refactor(vscode): remove write virtual files command
 - chore(vscode): correct `directory` path in package.json (#5283) - Thanks to @zyoshoka!
-- docs(vscode): i18n support of configurations and commands with `zh-CN`, `zh-TW`, `ru` and `ja` (#5330, #5340, #5404) - Thanks to @KazariEX, @PurplePlanen and @zyoshoka!
 - chore(vscode): use rolldown for bundling (#5337) - Thanks to @KazariEX!
 - refactor(vscode): remove doctor - Thanks to @KazariEX!
 - docs: update instructions for neovim lsp configuration (#5361) - Thanks to @kshksdrt!
