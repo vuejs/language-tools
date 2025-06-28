@@ -1,4 +1,4 @@
-name: extension
+name: extension-build
 
 on:
   push:
@@ -23,9 +23,3 @@ jobs:
 
       - name: Build
         run: pnpm run build && pnpm --filter volar run pack
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: extensions
-          path: ./extensions/vscode/volar-*.vsix
