@@ -196,7 +196,7 @@ function* generateSetupFunction(
 			arg
 				? [
 					` as Omit<__VLS_StyleModules, '$style'>[`,
-					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic),
 					`])`,
 				]
 				: [
