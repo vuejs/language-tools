@@ -54,6 +54,7 @@
 - fix(language-core): do not generate redundant function scopes to affect type narrowing (#5430) - Thanks to @KazariEX!
 - fix(component-meta): add new file name in `updateFile` (#5438) - Thanks to @Akryum!
 - fix(language-core): `Prettify<T>` breaks generics inferencing (#5424) - Thanks to @so1ve!
+- fix(language-core): use `var` instead of `let` to declare `attrsVar` that may be hoisted - Thanks to @KazariEX!
 
 ### Performance
 
@@ -68,7 +69,6 @@
 - chore(vscode): use rolldown for bundling (#5337) - Thanks to @KazariEX!
 - refactor(vscode): remove doctor - Thanks to @KazariEX!
 - docs: update instructions for neovim lsp configuration (#5361) - Thanks to @kshksdrt!
-- refactor: drop Vue 2 support (#5365) - Thanks to @KazariEX!
 - refactor(vscode): remove Vite problem matcher (#5375)
 - chore(docs): update vue language package name (#5376) - Thanks to @marktlinn!
 - chore(ci): set pre-release status when publishing to Open VSX (#5377) - Thanks to @lukashass!
@@ -85,6 +85,7 @@
 - refactor(language-server): move in server code from insiders edition (#5423)
 - chore: introduce oxlint for faster linting (#5416) - Thanks to @KazariEX!
 - refactor(vscode): remove split editor feature (#5446)
+- refactor(vscode): rename configuration keys from `complete` to `suggest` for clarity
 
 ## 2.2.10 <sup>official</sup> (2025-04-22)
 
