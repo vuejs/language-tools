@@ -7,18 +7,15 @@
 - [petite](https://github.com/JessicaSachs/petite)
 - [volar-starter](https://github.com/johnsoncodehk/volar-starter) (For bug report and experiment features testing)
 
-## Insiders Program 🚀
 
-This project is community-driven. If you would like to support this project, consider joining the [Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) to improve the sustainability of this project and unlock more features.
+## ❤️ Thanks to Our Sponsors
+
+This project is made possible thanks to our generous sponsors:
 
 <p align="center">
 	<a href="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg">
 		<img src="https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.png"/>
 	</a>
-</p>
-
-<p align="center">
-	<a href="https://github.com/sponsors/johnsoncodehk">Become a sponsor</a>
 </p>
 
 ## Credits
