@@ -131,7 +131,7 @@ function launch(context: vscode.ExtensionContext) {
 			'typescript.tsserverRequest',
 			command,
 			args,
-			{ isAsync: true, lowPriority: true, requireSemantic: true },
+			{ isAsync: true, lowPriority: true },
 		);
 		client.sendNotification('tsserver/response', [seq, res?.body]);
 	});
