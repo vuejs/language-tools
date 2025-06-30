@@ -196,7 +196,7 @@ function* generateSetupFunction(
 			arg
 				? [
 					` as Omit<__VLS_StyleModules, '$style'>[`,
-					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic),
 					`])`,
 				]
 				: [
@@ -430,9 +430,11 @@ function* generateComponentProps(
 		yield `type __VLS_BuiltInPublicProps = ${
 			options.vueCompilerOptions.target >= 3.4
 				? `import('${options.vueCompilerOptions.lib}').PublicProps`
-				: `import('${options.vueCompilerOptions.lib}').VNodeProps`
+				: options.vueCompilerOptions.target >= 3
+				? `import('${options.vueCompilerOptions.lib}').VNodeProps`
 					+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
 					+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
+				: `globalThis.JSX.IntrinsicAttributes`
 		}`;
 		yield endOfLine;
 

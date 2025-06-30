@@ -17,7 +17,7 @@ export function* generateVFor(
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
-		const collectAst = createTsAst(options.ts, options.template.ast, `const [${leftExpressionText}]`);
+		const collectAst = createTsAst(options.ts, ctx.inlineTsAsts, `const [${leftExpressionText}]`);
 		collectVars(options.ts, collectAst, collectAst, forBlockVars);
 		yield [
 			leftExpressionText,

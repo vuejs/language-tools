@@ -5,6 +5,7 @@ import { parseInterpolationNode } from '../codegen/template/templateChild';
 import { parseVForNode } from '../codegen/template/vFor';
 import { createTsAst } from '../codegen/utils';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
+import { templateInlineTsAsts } from '../virtualFile/computedSfc';
 
 const codeFeatures: CodeInformation = {
 	format: true,
@@ -68,6 +69,7 @@ const plugin: VueLanguagePlugin = ctx => {
 			return data;
 		}
 		const templateContent = sfc.template.content;
+		const inlineTsAsts = sfc.template.ast && templateInlineTsAsts.get(sfc.template.ast);
 		let i = 0;
 		sfc.template.ast.children.forEach(visit);
 		return data;
@@ -104,7 +106,7 @@ const plugin: VueLanguagePlugin = ctx => {
 						&& prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY // style='z-index: 2' will compile to {'z-index':'2'}
 					) {
 						if (prop.name === 'on' && prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-							const ast = createTsAst(ctx.modules.typescript, sfc.template!.ast, prop.exp.content);
+							const ast = createTsAst(ctx.modules.typescript, inlineTsAsts, prop.exp.content);
 							if (isCompoundExpression(ctx.modules.typescript, ast)) {
 								addFormatCodes(
 									prop.exp.loc.source,

@@ -31,8 +31,6 @@ export function createVueLanguageServiceProxy<T>(
 				return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan':
 				return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
-			case 'getQuickInfoAtPosition':
-				return getQuickInfoAtPosition(ts, target, target[p]);
 			// TS plugin only
 			case 'getEncodedSemanticClassifications':
 				return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
@@ -314,54 +312,6 @@ function getDefinitionAndBoundSpan<T>(
 				skippedDefinitions.push(definition);
 			}
 		}
-	};
-}
-
-function getQuickInfoAtPosition(
-	ts: typeof import('typescript'),
-	languageService: ts.LanguageService,
-	getQuickInfoAtPosition: ts.LanguageService['getQuickInfoAtPosition'],
-): ts.LanguageService['getQuickInfoAtPosition'] {
-	return (...args) => {
-		const result = getQuickInfoAtPosition(...args);
-		if (result && result.documentation?.length === 1 && result.documentation[0].text.startsWith('__VLS_emit,')) {
-			const [_, emitVarName, eventName] = result.documentation[0].text.split(',');
-			const program = languageService.getProgram()!;
-			const typeChecker = program.getTypeChecker();
-			const sourceFile = program.getSourceFile(args[0]);
-
-			result.documentation = undefined;
-
-			let symbolNode: ts.Identifier | undefined;
-
-			sourceFile?.forEachChild(function visit(node) {
-				if (ts.isIdentifier(node) && node.text === emitVarName) {
-					symbolNode = node;
-				}
-				if (symbolNode) {
-					return;
-				}
-				ts.forEachChild(node, visit);
-			});
-
-			if (symbolNode) {
-				const emitSymbol = typeChecker.getSymbolAtLocation(symbolNode);
-				if (emitSymbol) {
-					const type = typeChecker.getTypeOfSymbolAtLocation(emitSymbol, symbolNode);
-					const calls = type.getCallSignatures();
-					for (const call of calls) {
-						const callEventName =
-							(typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value;
-						call.getJsDocTags();
-						if (callEventName === eventName) {
-							result.documentation = call.getDocumentationComment(typeChecker);
-							result.tags = call.getJsDocTags();
-						}
-					}
-				}
-			}
-		}
-		return result;
 	};
 }
 

@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
+import { templateInlineTsAsts } from '../../virtualFile/computedSfc';
 import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
@@ -107,7 +108,10 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  * an error/diagnostic was encountered for a region of code covered by a `@vue-expect-error` directive,
  * and additionally how we use that to determine whether to propagate diagnostics back upward.
  */
-export function createTemplateCodegenContext(options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames'>) {
+export function createTemplateCodegenContext(
+	options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames'>,
+	templateAst?: CompilerDOM.RootNode,
+) {
 	let variableId = 0;
 
 	function resolveCodeFeatures(features: VueCodeInformation) {
@@ -194,6 +198,7 @@ export function createTemplateCodegenContext(options: Pick<TemplateCodegenOption
 			},
 		}),
 		resolveCodeFeatures,
+		inlineTsAsts: templateAst && templateInlineTsAsts.get(templateAst),
 		inVFor: false,
 		slots,
 		dynamicSlots,

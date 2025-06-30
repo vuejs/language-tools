@@ -17,7 +17,7 @@ export function create(): LanguageServicePlugin {
 						return;
 					}
 
-					const enabled = await context.env.getConfiguration<boolean>?.('vue.complete.defineAssignment') ?? true;
+					const enabled = await context.env.getConfiguration<boolean>?.('vue.suggest.defineAssignment') ?? true;
 					if (!enabled) {
 						return;
 					}

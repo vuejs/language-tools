@@ -62,7 +62,7 @@ export function* generateVSlot(
 	}
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const slotAst = createTsAst(options.ts, options.template.ast, `(${slotDir.exp.content}) => {}`);
+		const slotAst = createTsAst(options.ts, ctx.inlineTsAsts, `(${slotDir.exp.content}) => {}`);
 		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
 	}

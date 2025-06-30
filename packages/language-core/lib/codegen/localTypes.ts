@@ -1,4 +1,5 @@
 import type { VueCompilerOptions } from '../types';
+import { getSlotsPropertyName } from '../utils/shared';
 import { endOfLine } from './utils';
 
 export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions) {
@@ -34,7 +35,7 @@ type __VLS_WithDefaults<P, D> = {
 			`
 type __VLS_WithSlots<T, S> = T & {
 	new(): {
-		$slots: S;
+		${getSlotsPropertyName(vueCompilerOptions.target)}: S;
 		${vueCompilerOptions.jsxSlots ? `$props: ${PropsChildren.name}<S>;` : ''}
 	}
 };

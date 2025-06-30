@@ -1,6 +1,6 @@
 import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Code, Sfc, VueCodeInformation } from '../../types';
+import type { Code, VueCodeInformation } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import type { ScriptCodegenOptions } from '../script';
 import { collectVars, createTsAst, identifierRegex } from '../utils';
@@ -25,12 +25,11 @@ export function* generateInterpolation(
 		destructuredPropNames,
 		templateRefNames,
 	} = options;
-	const template = 'template' in options ? options.template : options.sfc.template;
 
 	for (
 		let [section, offset, type] of forEachInterpolationSegment(
 			ts,
-			template,
+			ctx.inlineTsAsts,
 			destructuredPropNames,
 			templateRefNames,
 			ctx,
@@ -94,7 +93,7 @@ type Segment = [
 
 function* forEachInterpolationSegment(
 	ts: typeof import('typescript'),
-	template: Sfc['template'],
+	inlineTsAsts: Map<string, ts.SourceFile> | undefined,
 	destructuredPropNames: Set<string> | undefined,
 	templateRefNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
@@ -113,7 +112,7 @@ function* forEachInterpolationSegment(
 			offset: prefix.length,
 		});
 	} else {
-		const ast = createTsAst(ts, template?.ast, code);
+		const ast = createTsAst(ts, inlineTsAsts, code);
 		const varCb = (id: ts.Identifier, isShorthand: boolean) => {
 			const text = getNodeText(ts, id, ast);
 			if (!shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {

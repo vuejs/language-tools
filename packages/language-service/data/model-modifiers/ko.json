@@ -5,7 +5,7 @@
       "name": "lazy",
       "description": {
         "kind": "markdown",
-        "value": "기본적으로 `v-model`은 각 `input` 이벤트 이후 데이터와 입력을 동기화합니다([위에 언급된 IME 구성 제외](#vmodel-ime-tip)).\n대신 `change` 이벤트 이후에 동기화하기 위해 `.lazy` 수식어를 추가할 수 있습니다.\n\n```html\n<!-- \"input\" 대신 \"change\" 이벤트 후에 동기화됨 -->\n<input v-model.lazy=\"msg\" />\n```"
+        "value": "기본적으로, `v-model`은 각 `input` 이벤트 후에 입력과 데이터를 동기화합니다([위에서 언급한 IME 조합 제외](#vmodel-ime-tip)). 대신 `change` 이벤트 후에 동기화하려면 `lazy` 수식어를 추가할 수 있습니다:\n\n```html\n<!-- \"input\" 대신 \"change\" 후에 동기화됨 -->\n<input v-model.lazy=\"msg\" />\n```"
       },
       "references": "guide/essentials/forms.html#lazy"
     },
@@ -13,7 +13,7 @@
       "name": "number",
       "description": {
         "kind": "markdown",
-        "value": "사용자 입력이 자동으로 숫자로 유형 변환되도록 하려면, `v-model` 수식어로 `.number`를 추가하면 됩니다:\n\n```html\n<input v-model.number=\"age\" />\n```\n\n값을 `parseFloat()`로 파싱할 수 없으면 원래 값이 대신 사용됩니다.\n\n인풋에 `type=\"number\"`가 있으면 `.number` 수식어가 자동으로 적용됩니다."
+        "value": "사용자 입력을 자동으로 숫자 타입으로 변환하려면, `v-model`이 적용된 입력에 `number` 수식어를 추가할 수 있습니다:\n\n```html\n<input v-model.number=\"age\" />\n```\n\n값이 `parseFloat()`로 파싱될 수 없으면, 원래(문자열) 값이 대신 사용됩니다. 특히 입력이 비어 있으면(예: 사용자가 입력 필드를 지운 경우), 빈 문자열이 반환됩니다. 이 동작은 [DOM 속성 `valueAsNumber`](https://developer.mozilla.org/ko/docs/Web/API/HTMLInputElement#valueasnumber)와 다릅니다.\n\n입력에 `type=\"number\"`가 있으면 `number` 수식어가 자동으로 적용됩니다."
       },
       "references": "guide/essentials/forms.html#number"
     },
@@ -21,7 +21,7 @@
       "name": "trim",
       "description": {
         "kind": "markdown",
-        "value": "사용자 입력의 공백이 자동으로 트리밍되도록 하려면 `v-model` 수식어로 `.trim`을 추가하면 됩니다:\n\n```html\n<input v-model.trim=\"msg\" />\n```"
+        "value": "사용자 입력의 공백을 자동으로 제거하려면, `v-model`이 적용된 입력에 `trim` 수식어를 추가할 수 있습니다:\n\n```html\n<input v-model.trim=\"msg\" />\n```"
       },
       "references": "guide/essentials/forms.html#trim"
     }

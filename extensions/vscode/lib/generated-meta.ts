@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = 'Vue';
 export const name = 'volar';
-export const version = '3.0.0-beta.3';
+export const version = '3.0.0-beta.4';
 export const displayName = 'Vue (Official)';
 export const description = 'Language Support for Vue';
 export const extensionId = `${publisher}.${name}`;
@@ -32,9 +32,9 @@ export type ConfigKey =
 	| 'vue.trace.server'
 	| 'vue.server.includeLanguages'
 	| 'vue.codeActions.askNewComponentName'
-	| 'vue.complete.casing.tags'
-	| 'vue.complete.casing.props'
-	| 'vue.complete.defineAssignment'
+	| 'vue.suggest.componentNameCasing'
+	| 'vue.suggest.propNameCasing'
+	| 'vue.suggest.defineAssignment'
 	| 'vue.autoInsert.dotValue'
 	| 'vue.autoInsert.bracketSpacing'
 	| 'vue.inlayHints.destructuredProps'
@@ -51,9 +51,9 @@ export interface ConfigKeyTypeMap {
 	'vue.trace.server': 'off' | 'messages' | 'verbose';
 	'vue.server.includeLanguages': string[];
 	'vue.codeActions.askNewComponentName': boolean;
-	'vue.complete.casing.tags': 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
-	'vue.complete.casing.props': 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
-	'vue.complete.defineAssignment': boolean;
+	'vue.suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
+	'vue.suggest.propNameCasing': 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
+	'vue.suggest.defineAssignment': boolean;
 	'vue.autoInsert.dotValue': boolean;
 	'vue.autoInsert.bracketSpacing': boolean;
 	'vue.inlayHints.destructuredProps': boolean;
@@ -78,9 +78,9 @@ export interface ConfigShorthandMap {
 	traceServer: 'vue.trace.server';
 	serverIncludeLanguages: 'vue.server.includeLanguages';
 	codeActionsAskNewComponentName: 'vue.codeActions.askNewComponentName';
-	completeCasingTags: 'vue.complete.casing.tags';
-	completeCasingProps: 'vue.complete.casing.props';
-	completeDefineAssignment: 'vue.complete.defineAssignment';
+	suggestComponentNameCasing: 'vue.suggest.componentNameCasing';
+	suggestPropNameCasing: 'vue.suggest.propNameCasing';
+	suggestDefineAssignment: 'vue.suggest.defineAssignment';
 	autoInsertDotValue: 'vue.autoInsert.dotValue';
 	autoInsertBracketSpacing: 'vue.autoInsert.bracketSpacing';
 	inlayHintsDestructuredProps: 'vue.inlayHints.destructuredProps';
@@ -98,9 +98,9 @@ export interface ConfigShorthandTypeMap {
 	traceServer: 'off' | 'messages' | 'verbose';
 	serverIncludeLanguages: string[];
 	codeActionsAskNewComponentName: boolean;
-	completeCasingTags: 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
-	completeCasingProps: 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
-	completeDefineAssignment: boolean;
+	suggestComponentNameCasing: 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
+	suggestPropNameCasing: 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
+	suggestDefineAssignment: boolean;
 	autoInsertDotValue: boolean;
 	autoInsertBracketSpacing: boolean;
 	inlayHintsDestructuredProps: boolean;
@@ -158,32 +158,32 @@ export const configs = {
 		default: true,
 	} as ConfigItem<'vue.codeActions.askNewComponentName'>,
 	/**
-	 * @key `vue.complete.casing.tags`
-	 * @default `"autoPascal"`
+	 * @key `vue.suggest.componentNameCasing`
+	 * @default `"preferPascalCase"`
 	 * @type `string`
 	 */
-	completeCasingTags: {
-		key: 'vue.complete.casing.tags',
-		default: 'autoPascal',
-	} as ConfigItem<'vue.complete.casing.tags'>,
+	suggestComponentNameCasing: {
+		key: 'vue.suggest.componentNameCasing',
+		default: 'preferPascalCase',
+	} as ConfigItem<'vue.suggest.componentNameCasing'>,
 	/**
-	 * @key `vue.complete.casing.props`
-	 * @default `"autoKebab"`
+	 * @key `vue.suggest.propNameCasing`
+	 * @default `"preferKebabCase"`
 	 * @type `string`
 	 */
-	completeCasingProps: {
-		key: 'vue.complete.casing.props',
-		default: 'autoKebab',
-	} as ConfigItem<'vue.complete.casing.props'>,
+	suggestPropNameCasing: {
+		key: 'vue.suggest.propNameCasing',
+		default: 'preferKebabCase',
+	} as ConfigItem<'vue.suggest.propNameCasing'>,
 	/**
-	 * @key `vue.complete.defineAssignment`
+	 * @key `vue.suggest.defineAssignment`
 	 * @default `true`
 	 * @type `boolean`
 	 */
-	completeDefineAssignment: {
-		key: 'vue.complete.defineAssignment',
+	suggestDefineAssignment: {
+		key: 'vue.suggest.defineAssignment',
 		default: true,
-	} as ConfigItem<'vue.complete.defineAssignment'>,
+	} as ConfigItem<'vue.suggest.defineAssignment'>,
 	/**
 	 * @key `vue.autoInsert.dotValue`
 	 * @default `false`
@@ -289,9 +289,9 @@ export interface ScopedConfigKeyTypeMap {
 	'trace.server': 'off' | 'messages' | 'verbose';
 	'server.includeLanguages': string[];
 	'codeActions.askNewComponentName': boolean;
-	'complete.casing.tags': 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
-	'complete.casing.props': 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
-	'complete.defineAssignment': boolean;
+	'suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
+	'suggest.propNameCasing': 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
+	'suggest.defineAssignment': boolean;
 	'autoInsert.dotValue': boolean;
 	'autoInsert.bracketSpacing': boolean;
 	'inlayHints.destructuredProps': boolean;
@@ -318,9 +318,9 @@ export const scopedConfigs = {
 		'trace.server': 'off',
 		'server.includeLanguages': ['vue'],
 		'codeActions.askNewComponentName': true,
-		'complete.casing.tags': 'autoPascal',
-		'complete.casing.props': 'autoKebab',
-		'complete.defineAssignment': true,
+		'suggest.componentNameCasing': 'preferPascalCase',
+		'suggest.propNameCasing': 'preferKebabCase',
+		'suggest.defineAssignment': true,
 		'autoInsert.dotValue': false,
 		'autoInsert.bracketSpacing': true,
 		'inlayHints.destructuredProps': false,
@@ -346,11 +346,9 @@ export interface NestedConfigs {
 		'codeActions': {
 			'askNewComponentName': boolean;
 		};
-		'complete': {
-			'casing': {
-				'tags': 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
-				'props': 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
-			};
+		'suggest': {
+			'componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
+			'propNameCasing': 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
 			'defineAssignment': boolean;
 		};
 		'autoInsert': {
@@ -396,11 +394,9 @@ export interface NestedScopedConfigs {
 	'codeActions': {
 		'askNewComponentName': boolean;
 	};
-	'complete': {
-		'casing': {
-			'tags': 'autoKebab' | 'autoPascal' | 'kebab' | 'pascal';
-			'props': 'autoKebab' | 'autoCamel' | 'kebab' | 'camel';
-		};
+	'suggest': {
+		'componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
+		'propNameCasing': 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
 		'defineAssignment': boolean;
 	};
 	'autoInsert': {

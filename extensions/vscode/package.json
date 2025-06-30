@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "3.0.0-beta.3",
+	"version": "3.0.0-beta.5",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -256,44 +256,44 @@
 					"default": true,
 					"markdownDescription": "%configuration.codeActions.askNewComponentName%"
 				},
-				"vue.complete.casing.tags": {
+				"vue.suggest.componentNameCasing": {
 					"type": "string",
 					"enum": [
-						"autoKebab",
-						"autoPascal",
-						"kebab",
-						"pascal"
+						"preferKebabCase",
+						"preferPascalCase",
+						"alwaysKebabCase",
+						"alwaysPascalCase"
 					],
 					"enumDescriptions": [
-						"Auto Detect from Content (Fallback to <kebab-case> if detect failed)",
-						"Auto Detect from Content  (Fallback to <PascalCase> if detect failed)",
-						"<kebab-case>",
-						"<PascalCase>"
+						"Prefer kebab-case (lowercase with hyphens, e.g. my-component)",
+						"Prefer PascalCase (UpperCamelCase, e.g. MyComponent)",
+						"Always kebab-case (enforce kebab-case, e.g. my-component)",
+						"Always PascalCase (enforce PascalCase, e.g. MyComponent)"
 					],
-					"default": "autoPascal",
-					"markdownDescription": "%configuration.complete.casing.tags%"
+					"default": "preferPascalCase",
+					"markdownDescription": "%configuration.suggest.componentNameCasing%"
 				},
-				"vue.complete.casing.props": {
+				"vue.suggest.propNameCasing": {
 					"type": "string",
 					"enum": [
-						"autoKebab",
-						"autoCamel",
-						"kebab",
-						"camel"
+						"preferKebabCase",
+						"preferCamelCase",
+						"alwaysKebabCase",
+						"alwaysCamelCase"
 					],
 					"enumDescriptions": [
-						"Auto Detect from Content (Fallback to :kebab-case=\"...\" if detect failed)",
-						"Auto Detect from Content (Fallback to :camelCase=\"...\" if detect failed)",
-						":kebab-case=\"...\"",
-						":camelCase=\"...\""
+						"Prefer kebab-case (lowercase with hyphens, e.g. my-prop)",
+						"Prefer camelCase (lowerCamelCase, e.g. myProp)",
+						"Always kebab-case (enforce kebab-case, e.g. my-prop)",
+						"Always camelCase (enforce camelCase, e.g. myProp)"
 					],
-					"default": "autoKebab",
-					"markdownDescription": "%configuration.complete.casing.props%"
+					"default": "preferKebabCase",
+					"markdownDescription": "%configuration.suggest.propNameCasing%"
 				},
-				"vue.complete.defineAssignment": {
+				"vue.suggest.defineAssignment": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "%configuration.complete.defineAssignment%"
+					"markdownDescription": "%configuration.suggest.defineAssignment%"
 				},
 				"vue.autoInsert.dotValue": {
 					"type": "boolean",
@@ -424,8 +424,8 @@
 		"@volar/vscode": "2.4.15",
 		"@vscode/vsce": "^3.2.1",
 		"@vue/compiler-sfc": "^3.5.0",
-		"@vue/language-server": "3.0.0-beta.3",
-		"@vue/typescript-plugin": "3.0.0-beta.3",
+		"@vue/language-server": "3.0.0-beta.5",
+		"@vue/typescript-plugin": "3.0.0-beta.5",
 		"reactive-vscode": "^0.2.9",
 		"rolldown": "1.0.0-beta.8",
 		"semver": "^7.5.4",
