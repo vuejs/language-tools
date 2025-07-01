@@ -1,6 +1,6 @@
 {
 	"name": "@vue/typescript-plugin",
-	"version": "3.0.0-beta.5",
+	"version": "3.0.0",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@volar/typescript": "2.4.16",
-		"@vue/language-core": "3.0.0-beta.5",
+		"@vue/language-core": "3.0.0",
 		"@vue/shared": "^3.5.0",
 		"path-browserify": "^1.0.1"
 	},

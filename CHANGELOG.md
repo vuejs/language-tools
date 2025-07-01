@@ -1,6 +1,89 @@
 # Changelog
 
-> [Join the Insiders Program](https://github.com/vuejs/language-tools/wiki/Get-Insiders-Edition) for more exclusive features and updates.
+## 3.0.0 (2025-06-25)
+
+### Features
+
+- feat(typescript-plugin): skip declaration files in goto components definition (#5221) - Thanks to @KazariEX!
+- feat(language-core): introduce `strictVModel` option (#5229) - Thanks to @KazariEX!
+- feat(vscode, language-server, typescript-plugin): communicate with tsserver based on request forwarding (#5252, #5395, #5443)
+- feat(language-core): support navigation of events with `v-on` syntax (#5275) - Thanks to @KazariEX!
+- feat(language-core): type support of slot children (#5137) - Thanks to @KazariEX!
+- feat(language-service): autocomplete for props with union type
+- feat(language-service): document links for template refs (#5385) - Thanks to @alex-snezhko!
+- feat(language-core): resolve external stylesheets (#5136) - Thanks to @KazariEX!
+- feat(language-core): add `strictCssModules` option (#5164) - Thanks to @KazariEX!
+- feat(component-type-helpers): add `ComponentAttrs` type for attribute extraction
+- feat(vscode): add support for `typescript.sortImports`, `typescript.removeUnusedImports` commands (#5444)
+- feat(vscode): i18n support of configurations and commands with `zh-CN`, `zh-TW`, `ru` and `ja` (#5330, #5340, #5404) - Thanks to @KazariEX, @PurplePlanen and @zyoshoka!
+
+### Bug Fixes
+
+- fix(language-core): generate condition guards for model events (#5225) - Thanks to @KazariEX!
+- fix(language-core): prevent global types generation in declaration files (#5239) - Thanks to @KazariEX!
+- fix(language-core): prevent eager inference of slot props from generics (#5247) - Thanks to @KazariEX!
+- fix(typescript-plugin): prevent highlighting native element tags with same name as components (#5253) - Thanks to @KazariEX!
+- fix(language-service): do not provide required props inlay hints for intrinsic elements (#5258) - Thanks to @KazariEX!
+- fix(vscode): handle `typescript-language-features` module loading race condition (#5260)
+- fix(component-meta): update event type representation to include array notation
+- fix(language-core): correct error mapping when prop exp is arrow function (#5262) - Thanks to @KazariEX!
+- fix(language-service): add document highlights support (#5263) - Thanks to @KazariEX!
+- fix(language-core): correct type inference of multiple template refs with same name (#5271) - Thanks to @KazariEX!
+- fix(language-core): skip AST parsing when the expression is an identifier (#5268) - Thanks to @KazariEX!
+- fix(language-core): do not drop leading comments of `defineModels` (#5273) - Thanks to @KazariEX!
+- fix(language-core): improve fault tolerance for unsupported script languages
+- fix(language-core): avoid invalid auto import edit position when setup global types fails
+- fix(language-core): transform slot parameter list into equivalent binding pattern (#5245) - Thanks to @KazariEX!
+- fix(language-core): correct codegen when src path does not match the generated length - Thanks to @KazariEX!
+- fix(language-service): exclude `data-` attribute completion from sfc level nodes - Thanks to @KazariEX!
+- fix(language-core): remove semantic highlight of v-bind shorthand (#5321) - Thanks to @KazariEX!
+- fix(vscode): inline html comment pattern in Vue syntax definition (#5327) - Thanks to @zyoshoka!
+- fix(language-core): avoid unrelated virtual code recomputes on style and template change - Thanks to @KazariEX!
+- fix(component-meta): attach namespace prefix correctly on generated types (#5326) - Thanks to @KazariEX!
+- fix(language-core): drop `undefined` from optional prop type with default in template (#5339) - Thanks to @Dylancyclone!
+- fix: depend on exact volar version (#5345) - Thanks to @tomblachut!
+- fix(language-core): ignore frontmatter block in markdown files (#5362) - Thanks to @brc-dd!
+- fix(component-meta): only exclude vnode events from props (#5369) - Thanks to @KazariEX!
+- fix(language-core): skip css references for position within virtual code with `navigation: true` (#5378) - Thanks to @KazariEX!
+- fix(language-core): hoist export declarations from generic script block (#5398) - Thanks to @KazariEX!
+- fix(vscode): correct syntax highlight for directives starting with `v-for` (#5399) - Thanks to @KazariEX!
+- fix(language-core): correct support for flatten plugins (#5392) - Thanks to @zhiyuanzmj!
+- fix(language-core): remove `semantic` code feature on first argument of `useCssModule` and `useTemplateRef` - Thanks to @KazariEX!
+- fix(typescript-plugin): filter completion items of macros and global variables in template and styles (#5425) - Thanks to @KazariEX!
+- fix(language-core): do not generate redundant function scopes to affect type narrowing (#5430) - Thanks to @KazariEX!
+- fix(component-meta): add new file name in `updateFile` (#5438) - Thanks to @Akryum!
+- fix(language-core): `Prettify<T>` breaks generics inferencing (#5424) - Thanks to @so1ve!
+- fix(language-core): use `var` instead of `let` to declare `attrsVar` that may be hoisted - Thanks to @KazariEX!
+
+### Performance
+
+- perf(language-core): cache and reuse inline ts asts during full updates (#5435) - Thanks to @KazariEX!
+
+### Other Changes
+
+- refactor(vscode, language-server): remove hybrid mode configuration (#5248)
+- refactor(vscode): remove write virtual files command
+- chore(vscode): correct `directory` path in package.json (#5283) - Thanks to @zyoshoka!
+- chore(vscode): use rolldown for bundling (#5337) - Thanks to @KazariEX!
+- refactor(vscode): remove doctor - Thanks to @KazariEX!
+- docs: update instructions for neovim lsp configuration (#5361) - Thanks to @kshksdrt!
+- refactor(vscode): remove Vite problem matcher (#5375)
+- chore(docs): update vue language package name (#5376) - Thanks to @marktlinn!
+- chore(ci): set pre-release status when publishing to Open VSX (#5377) - Thanks to @lukashass!
+- docs: fallback workaround of `vue_language_server_path` in nvim setup example (#5391) - Thanks to @menuRivera!
+- test(component-meta): simplify code with snapshots (#5403) - Thanks to @KazariEX!
+- docs(nvim): move neovim lspconfig docs to wiki page (#5408) - Thanks to @RayGuo-ergou!
+- refactor(language-server): drop `typescript.tsdk` initialization option (#5409)
+- refactor(language-service): drop name casing convertion and its language status item (#5411) - Thanks to @KazariEX!
+- refactor(language-core): drop `defineProp` support (#5415) - Thanks to @KazariEX!
+- chore(vscode): change display name to "Vue (Official)"
+- refactor: cleanup dependencies relationship (#5421)
+- refactor(component-meta): use type-helpers as a peer dependency
+- refactor(vscode): cleanup extension client (#5422)
+- refactor(language-server): move in server code from insiders edition (#5423)
+- chore: introduce oxlint for faster linting (#5416) - Thanks to @KazariEX!
+- refactor(vscode): remove split editor feature (#5446)
+- refactor(vscode): rename configuration keys from `complete` to `suggest` for clarity
 
 ## 2.2.10 <sup>official</sup> (2025-04-22)
 
