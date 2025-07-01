@@ -1,9 +1,6 @@
 {
 	"configuration.trace.server": "VS Code と Vue 言語サーバー間の通信をトレースします。",
 	"configuration.server.includeLanguages": "拡張機能を有効にする言語を指定します。",
-	"configuration.splitEditors.icon": "エディターのタイトル領域にエディター分割ボタンを表示します。",
-	"configuration.splitEditors.layout.left": "左側の分割されたエディターに含めるブロック。",
-	"configuration.splitEditors.layout.right": "右側の分割されたエディターに含めるブロック。",
 	"configuration.codeActions.askNewComponentName": "コンポーネントを抽出する時に新しいコンポーネント名を尋ねます。",
 	"configuration.suggest.componentNameCasing": "コンポーネント名の命名規則。",
 	"configuration.suggest.propNameCasing": "属性名の命名規則。",
@@ -19,6 +16,5 @@
 	"configuration.format.script.initialIndent": "`<script>` ブロックの初期インデント。",
 	"configuration.format.style.initialIndent": "`<style>` ブロックの初期インデント。",
 	"configuration.format.wrapAttributes": "属性を折り返します。",
-	"command.action.restartServer": "Vue と TS サーバーを再起動",
-	"command.action.splitEditors": "<script>、<template>、<style> エディターを分割"
+	"command.action.restartServer": "Vue と TS サーバーを再起動"
 }

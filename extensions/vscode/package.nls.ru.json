@@ -1,9 +1,6 @@
 {
 	"configuration.trace.server": "Отслеживать коммуникацию между VS Code и языковым сервером Vue.",
 	"configuration.server.includeLanguages": "Языки, для которых будет включено расширение.",
-	"configuration.splitEditors.icon": "Отображать иконку разделенного редактора в области заголовка редактора.",
-	"configuration.splitEditors.layout.left": "Блоки в левой панели редактора.",
-	"configuration.splitEditors.layout.right": "Блоки в правой панели редактора.",
 	"configuration.codeActions.askNewComponentName": "Запрашивать новое имя компонента при извлечении компонента.",
 	"configuration.suggest.componentNameCasing": "Предпочитаемый формат имени компонента.",
 	"configuration.suggest.propNameCasing": "Предпочитаемый формат имени атрибута.",
@@ -19,6 +16,5 @@
 	"configuration.format.script.initialIndent": "Начальный отступ для блока `<script>`.",
 	"configuration.format.style.initialIndent": "Начальный отступ для блока `<style>`.",
 	"configuration.format.wrapAttributes": "Переносить атрибуты.",
-	"command.action.restartServer": "Перезапустить Vue и TS серверы",
-	"command.action.splitEditors": "Разделить `<script>`, `<template>`, `<style>` редакторы"
+	"command.action.restartServer": "Перезапустить Vue и TS серверы"
 }
