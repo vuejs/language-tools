@@ -48,7 +48,7 @@
 - fix(language-core): hoist export declarations from generic script block (#5398) - Thanks to @KazariEX!
 - fix(vscode): correct syntax highlight for directives starting with `v-for` (#5399) - Thanks to @KazariEX!
 - fix(language-core): correct support for flatten plugins (#5392) - Thanks to @zhiyuanzmj!
-- fix(language-core): remove `semantic` code feature on first argument of `useTemplateRef` - Thanks to @KazariEX!
+- fix(language-core): remove `semantic` code feature on first argument of `useCssModule` and `useTemplateRef` - Thanks to @KazariEX!
 - fix(typescript-plugin): filter completion items of macros and global variables in template and styles (#5425) - Thanks to @KazariEX!
 - fix(language-core): do not generate redundant function scopes to affect type narrowing (#5430) - Thanks to @KazariEX!
 - fix(component-meta): add new file name in `updateFile` (#5438) - Thanks to @Akryum!
