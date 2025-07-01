@@ -49,7 +49,7 @@ test('Default slot', async () => {
 		    {
 		      "end": {
 		        "line": 9,
-		        "offset": 4,
+		        "offset": 14,
 		      },
 		      "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
 		      "isDefinition": false,
@@ -57,7 +57,7 @@ test('Default slot', async () => {
 		      "lineText": "			<Fixture>",
 		      "start": {
 		        "line": 7,
-		        "offset": 13,
+		        "offset": 4,
 		      },
 		    },
 		  ],
