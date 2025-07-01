@@ -421,7 +421,7 @@
 		"@types/node": "^22.10.4",
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "1.88.0",
-		"@volar/vscode": "2.4.15",
+		"@volar/vscode": "2.4.16",
 		"@vscode/vsce": "^3.2.1",
 		"@vue/compiler-sfc": "^3.5.0",
 		"@vue/language-server": "3.0.0-beta.5",

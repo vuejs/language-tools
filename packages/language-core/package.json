@@ -13,7 +13,7 @@
 		"directory": "packages/language-core"
 	},
 	"dependencies": {
-		"@volar/language-core": "2.4.15",
+		"@volar/language-core": "2.4.16",
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/compiler-vue2": "^2.7.16",
 		"@vue/shared": "^3.5.0",
@@ -25,7 +25,7 @@
 	"devDependencies": {
 		"@types/node": "^22.10.4",
 		"@types/path-browserify": "^1.0.1",
-		"@volar/typescript": "2.4.15",
+		"@volar/typescript": "2.4.16",
 		"@vue/compiler-sfc": "^3.5.0"
 	},
 	"peerDependencies": {
