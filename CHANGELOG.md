@@ -1,6 +1,19 @@
 # Changelog
 
-## 3.0.0 (2025-06-25)
+## 3.0.1 (2025-07-02)
+
+### Bug Fixes
+
+- fix(language-core): remove calculation logic of element inner loc (#5460) - Thanks to @KazariEX!
+- fix(vscode): correct syntax highlight of `v-else` (#5470) - Thanks to @KazariEX!
+
+### Other Changes
+
+- docs(vscode): update Russian translation for VS Code extension (#5461) - Thanks to @AndreyYolkin!
+- chore: update volar to 2.4.17
+  - typescript: correctly use `getModeForUsageLocation` to calculate the resolution mode
+
+## 3.0.0 (2025-07-01)
 
 ### Features
 
