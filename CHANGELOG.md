@@ -5,6 +5,7 @@
 ### Bug Fixes
 
 - fix(language-core): remove calculation logic of element inner loc (#5460) - Thanks to @KazariEX!
+- fix(vscode): correct syntax highlight of `v-else` (#5470) - Thanks to @KazariEX!
 
 ### Other Changes
 
