@@ -13,7 +13,7 @@
 		"directory": "packages/component-meta"
 	},
 	"dependencies": {
-		"@volar/typescript": "2.4.16",
+		"@volar/typescript": "2.4.17",
 		"@vue/language-core": "3.0.0",
 		"path-browserify": "^1.0.1"
 	},
