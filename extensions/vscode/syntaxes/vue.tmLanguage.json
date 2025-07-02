@@ -1038,7 +1038,7 @@
 			]
 		},
 		"vue-directives-control": {
-			"begin": "(?:(v-for)|(v-if|v-else-if|v-else))(?==)",
+			"begin": "(?:(v-for)|(v-if|v-else-if|v-else))(?=[=>\\s])",
 			"beginCaptures": {
 				"1": {
 					"name": "keyword.control.loop.vue"
