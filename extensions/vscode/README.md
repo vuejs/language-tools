@@ -1,4 +1,4 @@
-# Vue - Official
+# Vue (Official)
 
 ## Quick Start
 
