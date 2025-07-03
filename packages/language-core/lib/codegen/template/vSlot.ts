@@ -154,7 +154,7 @@ function* generateSlotParameters(
 		nextStart = end;
 	}
 	yield chunk(nextStart, expression.equalsGreaterThanToken.pos - 1);
-	yield `] = __VLS_getSlotParameters(${slotVar}`;
+	yield `] = __VLS_getSlotParameters(${slotVar}!`;
 
 	if (types.some(t => t)) {
 		yield `, `;
