@@ -66,8 +66,8 @@ importers:
         specifier: 3.0.1
         version: link:../../packages/typescript-plugin
       reactive-vscode:
-        specifier: ^0.2.9
-        version: 0.2.14(@types/vscode@1.88.0)
+        specifier: ^0.3.1
+        version: 0.3.1(@types/vscode@1.88.0)
       rolldown:
         specifier: 1.0.0-beta.8
         version: 1.0.0-beta.8(typescript@5.8.3)
@@ -1133,8 +1133,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@reactive-vscode/reactivity@0.2.14':
-    resolution: {integrity: sha512-Rb3+kBX9A55C+4OKqVe4XGWtG7eGWo+E/8n0eSmbpmOEdZq3r5+SNEfEe3U0OdaCMT2r59R6kkK2QVfZpdBKhA==}
+  '@reactive-vscode/reactivity@0.3.1':
+    resolution: {integrity: sha512-9Q8ThxVPo5qm78OQeZSOGd8ZtW4xi9O5TCCvzhx8sjcS42AsIsIvyAtIvbZyiWbcTmARuxWY8ejahCSF/Murvg==}
 
   '@rolldown/binding-darwin-arm64@1.0.0-beta.8':
     resolution: {integrity: sha512-4cwzBnUvPUVdjUMo9uFkcTvj+Z6IXaN/YJSz1RuI/DG5+vlQ9wYfKeDkvb1nsrhi4ZJ99OInOw1Vh/n2ReX8rA==}
@@ -3218,10 +3218,10 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  reactive-vscode@0.2.14:
-    resolution: {integrity: sha512-F4HgF9gDwGZJPTglGjxspJNWrYeOMLDyeFSccOMjfB6CWXoQWpw7WrcPb61wuMuNDbHi+5Txn9DIY1GfmV3pGw==}
+  reactive-vscode@0.3.1:
+    resolution: {integrity: sha512-uTMKdAHa9/Ax95VbswZsIOXH3k8fb45BKkLxU5RHaXOFbpudHlA9tecXQpKqPGkuyGFGZyPrjLBIGNBvB/qOYg==}
     peerDependencies:
-      '@types/vscode': ^1.89.0
+      '@types/vscode': ^1.101.0
 
   read-cmd-shim@5.0.0:
     resolution: {integrity: sha512-SEbJV7tohp3DAAILbEMPXavBjAnMN0tVnh4+9G8ihV4Pq3HYF9h8QNez9zkJ1ILkv9G2BjdzwctznGZXgu/HGw==}
@@ -4836,7 +4836,7 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@reactive-vscode/reactivity@0.2.14': {}
+  '@reactive-vscode/reactivity@0.3.1': {}
 
   '@rolldown/binding-darwin-arm64@1.0.0-beta.8':
     optional: true
@@ -7125,9 +7125,9 @@ snapshots:
       strip-json-comments: 2.0.1
     optional: true
 
-  reactive-vscode@0.2.14(@types/vscode@1.88.0):
+  reactive-vscode@0.3.1(@types/vscode@1.88.0):
     dependencies:
-      '@reactive-vscode/reactivity': 0.2.14
+      '@reactive-vscode/reactivity': 0.3.1
       '@types/vscode': 1.88.0
 
   read-cmd-shim@5.0.0: {}

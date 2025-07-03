@@ -1,9 +1,9 @@
-import { extensionContext, useCommand, useWebviewPanel } from 'reactive-vscode';
+import { computed, defineExtension, extensionContext, useCommand, useWebviewPanel } from 'reactive-vscode';
 import * as vscode from 'vscode';
 
-export function activate() {
+const { activate, deactivate } = defineExtension(() => {
 	useCommand('vue.welcome', () => {
-		useWebviewPanel('vue.welcome', 'Welcome to Vue', getWelcomeHtml(), vscode.ViewColumn.One, {
+		useWebviewPanel('vue.welcome', 'Welcome to Vue', welcomeHtml, vscode.ViewColumn.One, {
 			webviewOptions: {
 				enableScripts: true,
 			},
@@ -21,9 +21,11 @@ export function activate() {
 			},
 		});
 	});
-}
+});
 
-function getWelcomeHtml() {
+export { activate, deactivate };
+
+const welcomeHtml = computed(() => {
 	const version = extensionContext.value?.extension.packageJSON.version;
 
 	return /* HTML */ `
@@ -490,4 +492,4 @@ function getWelcomeHtml() {
 </body>
 
 </html>`;
-}
+});
