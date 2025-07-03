@@ -16,5 +16,6 @@
 	"configuration.format.script.initialIndent": "`<script>` ブロックの初期インデント。",
 	"configuration.format.style.initialIndent": "`<style>` ブロックの初期インデント。",
 	"configuration.format.wrapAttributes": "属性を折り返します。",
-	"command.action.restartServer": "Vue と TS サーバーを再起動"
+	"command.action.restartServer": "Vue と TS サーバーを再起動",
+	"command.welcome": "ウェルカムページを開く"
 }

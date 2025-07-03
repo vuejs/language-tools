@@ -16,5 +16,6 @@
 	"configuration.format.script.initialIndent": "Начальный отступ для блока `<script>`.",
 	"configuration.format.style.initialIndent": "Начальный отступ для блока `<style>`.",
 	"configuration.format.wrapAttributes": "Переносить атрибуты.",
-	"command.action.restartServer": "Перезапустить Vue и TS серверы"
+	"command.action.restartServer": "Перезапустить Vue и TS серверы",
+	"command.welcome": "Открыть страницу приветствия"
 }

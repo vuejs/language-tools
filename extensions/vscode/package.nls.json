@@ -16,5 +16,6 @@
 	"configuration.format.script.initialIndent": "Initial indent for `<script>` block.",
 	"configuration.format.style.initialIndent": "Initial indent for `<style>` block.",
 	"configuration.format.wrapAttributes": "Wrap attributes.",
-	"command.action.restartServer": "Restart Vue and TS servers"
+	"command.action.restartServer": "Restart Vue and TS servers",
+	"command.welcome": "Open welcome page"
 }

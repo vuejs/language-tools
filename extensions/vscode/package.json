@@ -366,6 +366,11 @@
 				"command": "vue.action.restartServer",
 				"title": "%command.action.restartServer%",
 				"category": "Vue"
+			},
+			{
+				"command": "vue.welcome",
+				"title": "%command.welcome%",
+				"category": "Vue"
 			}
 		],
 		"menus": {

@@ -16,6 +16,7 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './lib/config';
+import { activate as activateWelcome } from './lib/welcome';
 
 const incompatibleExtensionIds = [
 	'johnsoncodehk.vscode-typescript-vue-plugin',
@@ -89,6 +90,7 @@ export const { activate, deactivate } = defineExtension(async () => {
 
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
+		activateWelcome();
 	}, { immediate: true });
 
 	useCommand('vue.action.restartServer', async () => {
