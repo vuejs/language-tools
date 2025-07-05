@@ -67,10 +67,6 @@
 			{
 				"id": "jade",
 				"configuration": "./languages/sfc-template-language-configuration.json"
-			},
-			{
-				"id": "plaintext",
-				"configuration": "./languages/sfc-template-language-configuration.json"
 			}
 		],
 		"typescriptServerPlugins": [
