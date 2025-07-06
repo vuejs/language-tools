@@ -131,7 +131,7 @@ export function* generateComponent(
 			);
 		}
 		yield `)${endOfLine}`;
-	} else if (!isComponentTag) {
+	} else {
 		yield `const ${componentOriginalVar} = ({} as __VLS_WithComponent<'${
 			getCanonicalComponentName(node.tag)
 		}', __VLS_LocalComponents, `;
@@ -186,8 +186,6 @@ export function* generateComponent(
 			);
 			yield `${endOfLine}`;
 		}
-	} else {
-		yield `const ${componentOriginalVar} = {} as any${endOfLine}`;
 	}
 
 	yield `// @ts-ignore${newLine}`;
