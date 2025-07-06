@@ -200,10 +200,10 @@ try {
 			);
 
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
+			const vuePluginName = require('./package.json').contributes.typescriptServerPlugins[0].name;
 			text = text.replace(
 				'"--globalPlugins",i.plugins',
-				s =>
-					s + '.sort((a,b)=>(b.name==="vue-typescript-plugin-pack"?-1:0)-(a.name==="vue-typescript-plugin-pack"?-1:0))',
+				s => s + `.sort((a,b)=>(b.name==="${vuePluginName}"?-1:0)-(a.name==="${vuePluginName}"?-1:0))`,
 			);
 
 			return text;
