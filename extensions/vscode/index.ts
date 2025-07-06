@@ -199,6 +199,13 @@ try {
 				s => s + '.concat("vue")',
 			);
 
+			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
+			const vuePluginName = require('./package.json').contributes.typescriptServerPlugins[0].name;
+			text = text.replace(
+				'"--globalPlugins",i.plugins',
+				s => s + `.sort((a,b)=>(b.name==="${vuePluginName}"?-1:0)-(a.name==="${vuePluginName}"?-1:0))`,
+			);
+
 			return text;
 		}
 		return readFileSync(...args);
