@@ -89,13 +89,13 @@ function* generateSlots(
 					ctx,
 					slot.name,
 					slot.offset,
-					ctx.codeFeatures.withoutHighlightAndCompletion,
+					ctx.codeFeatures.navigation,
 				);
 			} else {
 				yield* wrapWith(
 					slot.tagRange[0],
 					slot.tagRange[1],
-					ctx.codeFeatures.withoutHighlightAndCompletion,
+					ctx.codeFeatures.navigation,
 					`default`,
 				);
 			}
