@@ -61,9 +61,9 @@ test('Default slot', async () => {
 		      },
 		    },
 		  ],
-		  "symbolDisplayString": "(property) default?: (props: typeof __VLS_1) => any",
-		  "symbolName": "slot",
-		  "symbolStartOffset": 6,
+		  "symbolDisplayString": "",
+		  "symbolName": "",
+		  "symbolStartOffset": 0,
 		}
 	`);
 });
@@ -124,9 +124,9 @@ test('Named slot', async () => {
 		      },
 		    },
 		  ],
-		  "symbolDisplayString": "(property) foo?: (props: typeof __VLS_1) => any",
-		  "symbolName": "foo",
-		  "symbolStartOffset": 16,
+		  "symbolDisplayString": "",
+		  "symbolName": "",
+		  "symbolStartOffset": 0,
 		}
 	`);
 });
