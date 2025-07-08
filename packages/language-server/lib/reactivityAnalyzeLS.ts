@@ -10,7 +10,9 @@ const host: ts.LanguageServiceHost = {
 	getScriptFileNames: () => [currentFileName],
 	getScriptVersion: () => currentProjectVersion.toString(),
 	getScriptSnapshot: fileName => fileName === currentFileName ? currentSnapshot : undefined,
-	getCompilationSettings: () => ({}),
+	getCompilationSettings: () => ({
+		allowJs: true,
+	}),
 	getCurrentDirectory: () => '',
 	getDefaultLibFileName: () => '',
 	readFile: () => undefined,
