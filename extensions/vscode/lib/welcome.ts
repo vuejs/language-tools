@@ -1,24 +1,38 @@
-import { extensionContext, useCommand, useWebviewPanel } from 'reactive-vscode';
+import { extensionContext, useCommand } from 'reactive-vscode';
 import * as vscode from 'vscode';
+
+let panel: vscode.WebviewPanel | undefined;
 
 export function activate() {
 	useCommand('vue.welcome', () => {
-		useWebviewPanel('vue.welcome', 'Welcome to Vue', getWelcomeHtml(), vscode.ViewColumn.One, {
-			webviewOptions: {
-				enableScripts: true,
-			},
-			onDidReceiveMessage(message) {
-				switch (message.command) {
-					case 'verifySponsor':
-						vscode.commands.executeCommand('vue.action.verify');
-						break;
-					case 'openVideo':
-						vscode.env.openExternal(
-							vscode.Uri.parse(`https://www.youtube.com/watch?v=${message.id}`),
-						);
-						break;
-				}
-			},
+		if (panel) {
+			panel.reveal(vscode.ViewColumn.One);
+			return;
+		}
+
+		panel = vscode.window.createWebviewPanel(
+			'vue.welcome',
+			'Welcome to Vue',
+			vscode.ViewColumn.One,
+			{ enableScripts: true },
+		);
+
+		panel.webview.html = getWelcomeHtml();
+		panel.webview.onDidReceiveMessage(message => {
+			switch (message.command) {
+				case 'verifySponsor':
+					vscode.commands.executeCommand('vue.action.verify');
+					break;
+				case 'openVideo':
+					vscode.env.openExternal(
+						vscode.Uri.parse(`https://www.youtube.com/watch?v=${message.id}`),
+					);
+					break;
+			}
+		});
+
+		panel.onDidDispose(() => {
+			panel = undefined;
 		});
 	});
 }
@@ -351,7 +365,7 @@ function getWelcomeHtml() {
 			></iframe>
 		</a>
 	</div>
-	<p id="video-reminder" style="margin-top:0.5rem; text-align:center; color:var(--vscode-foreground);">
+	<p id="video-reminder" style="margin-top: 0.5rem; text-align: center; color: var(--vscode-foreground);">
 		⚠️ Unable to load the video? <a href="https://www.youtube.com/watch?v=RcPcO4_Ct_U">Watch on YouTube</a>
 	</p>
 	<script>
@@ -403,7 +417,7 @@ function getWelcomeHtml() {
 		</div>
 	</div>
 
-	<div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+	<div id="verify-container" style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
 		<p>Support the development and unlock these features:</p>
 		<a href="https://github.com/sponsors/johnsoncodehk" target="_blank"
 			style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background-color: var(--vscode-button-background); color: var(--vscode-button-foreground); border-radius: 4px; text-decoration: none;">
@@ -470,17 +484,17 @@ function getWelcomeHtml() {
 	<h2>❤️ Thanks to Our Sponsors</h2>
 	<div class="card sponsors-card" style="text-align: center; padding: 1.5rem;">
 		<p style="margin-top: 0;">This project is made possible thanks to our generous sponsors:</p>
-		<div id="sponsors-container" style="max-width:100%;margin:0 auto;"></div>
-		<script>
-			fetch('https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg')
-				.then(r => r.text())
-				.then(svg => {
-					const wrap = document.getElementById('sponsors-container');
-					wrap.innerHTML = svg;
-				})
-				.catch(() => {
-					document.getElementById('sponsors-container').textContent = 'Failed to load sponsors';
-				});
+		<div id="sponsors-container" style="max-width: 100%; margin: 0 auto;"></div>
+		<script type="module">
+			const container = document.getElementById('sponsors-container');
+			try {
+				const res = await fetch('https://cdn.jsdelivr.net/gh/johnsoncodehk/sponsors/sponsors.svg');
+				const svg = await res.text();
+				container.innerHTML = svg;
+			}
+			catch {
+				container.textContent = 'Failed to load sponsors';
+			}
 		</script>
 		<p style="margin-bottom: 0;">
 			<a href="https://github.com/sponsors/johnsoncodehk" target="_blank">Become a sponsor</a> to support Vue
