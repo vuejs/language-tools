@@ -23,11 +23,6 @@ export function activate() {
 				case 'verifySponsor':
 					vscode.commands.executeCommand('vue.action.verify');
 					break;
-				case 'openVideo':
-					vscode.env.openExternal(
-						vscode.Uri.parse(`https://www.youtube.com/watch?v=${message.id}`),
-					);
-					break;
 			}
 		});
 
