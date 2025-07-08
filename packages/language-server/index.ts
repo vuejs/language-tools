@@ -20,8 +20,8 @@ import {
 } from '@vue/language-service';
 import * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { analyze } from './lib/reactionsAnalyze';
-import { getLanguageService } from './lib/reactionsAnalyzeLS';
+import { analyze } from './lib/reactivityAnalyze';
+import { getLanguageService } from './lib/reactivityAnalyzeLS';
 
 const connection = createConnection();
 const server = createServer(connection);
@@ -240,7 +240,7 @@ connection.onRequest('vue/interpolationRanges', async (params: {
 
 const cacheDocuments = new Map<string, [TextDocument, import('typescript').IScriptSnapshot]>();
 
-connection.onRequest('vue/reactionsAnalyze', async (params: {
+connection.onRequest('vue/reactivityAnalyze', async (params: {
 	textDocument: TextDocumentIdentifier;
 	position: Position;
 	syncDocument?: {
