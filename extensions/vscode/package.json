@@ -237,6 +237,21 @@
 					"default": "off",
 					"markdownDescription": "%configuration.trace.server%"
 				},
+				"vue.editor.focusMode": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+				},
+				"vue.editor.reactivityVisualization": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+				},
+				"vue.editor.templateInterpolationDecorators": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+				},
 				"vue.server.includeLanguages": {
 					"type": "array",
 					"items": {
@@ -359,13 +374,13 @@
 		},
 		"commands": [
 			{
-				"command": "vue.action.restartServer",
-				"title": "%command.action.restartServer%",
+				"command": "vue.welcome",
+				"title": "%command.welcome%",
 				"category": "Vue"
 			},
 			{
-				"command": "vue.welcome",
-				"title": "%command.welcome%",
+				"command": "vue.action.restartServer",
+				"title": "%command.action.restartServer%",
 				"category": "Vue"
 			}
 		],
