@@ -15,15 +15,10 @@ export function create(
 			return {
 				async provideDocumentHighlights(document, position) {
 					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript?.generated || virtualCode?.id !== 'main') {
-						return;
-					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
+					const sourceFile = context.language.scripts.get(uri);
+					const isScriptBlock = sourceFile?.generated?.embeddedCodes.has('script');
+					const root = sourceFile?.generated?.root;
+					if (!isScriptBlock || !(root instanceof VueVirtualCode)) {
 						return;
 					}
 
