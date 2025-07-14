@@ -1,4 +1,4 @@
-import { type CodeInformation, defaultMapperFactory, type Mapping } from '@volar/language-core';
+import { SourceMap } from '@volar/language-core';
 import type { SFCBlock } from '@vue/compiler-sfc';
 import { type Segment, toString } from 'muggle-string';
 import type { VueLanguagePlugin } from '../types';
@@ -10,9 +10,9 @@ const codeblockReg = /(`{3,})[\s\S]+?\1/g;
 const inlineCodeblockReg = /`[^\n`]+?`/g;
 const latexBlockReg = /(\${2,})[\s\S]+?\1/g;
 const scriptSetupReg = /\\<[\s\S]+?>\n?/g;
-const sfcBlockReg = /<(script|style)\b[\s\S]*?>([\s\S]*?)<\/\1>/g;
 const angleBracketReg = /<\S*:\S*>/g;
 const linkReg = /\[[\s\S]*?\]\([\s\S]*?\)/g;
+const sfcBlockReg = /<(script|style)\b[\s\S]*?>([\s\S]*?)<\/\1>/g;
 const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
@@ -46,48 +46,42 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				// # \<script setup>
 				.replace(scriptSetupReg, match => ' '.repeat(match.length))
 				// <<< https://vitepress.dev/guide/markdown#import-code-snippets
-				.replace(codeSnippetImportReg, match => ' '.repeat(match.length));
-
-			const codes: Segment[] = [];
-
-			for (const match of content.matchAll(sfcBlockReg)) {
-				if (match.index !== undefined) {
-					const matchText = match[0];
-					codes.push([matchText, undefined, match.index]);
-					codes.push('\n\n');
-					content = content.slice(0, match.index) + ' '.repeat(matchText.length)
-						+ content.slice(match.index + matchText.length);
-				}
-			}
-
-			content = content
+				.replace(codeSnippetImportReg, match => ' '.repeat(match.length))
 				// angle bracket: <http://foo.com>
 				.replace(angleBracketReg, match => ' '.repeat(match.length))
 				// [foo](http://foo.com)
 				.replace(linkReg, match => ' '.repeat(match.length));
 
+			const codes: Segment[] = [];
+
+			for (const match of content.matchAll(sfcBlockReg)) {
+				const matchText = match[0];
+				codes.push([matchText, undefined, match.index]);
+				codes.push('\n\n');
+				content = content.slice(0, match.index) + ' '.repeat(matchText.length)
+					+ content.slice(match.index + matchText.length);
+			}
+
 			codes.push('<template>\n');
 			codes.push([content, undefined, 0]);
 			codes.push('\n</template>');
 
-			const file2VueSourceMap = defaultMapperFactory(buildMappings(codes) as unknown as Mapping<CodeInformation>[]);
+			const mappings = buildMappings(codes);
+			const mapper = new SourceMap(mappings);
 			const sfc = parse(toString(codes));
 
-			if (sfc.descriptor.template) {
-				sfc.descriptor.template.lang = 'md';
-				transformRange(sfc.descriptor.template);
-			}
-			if (sfc.descriptor.script) {
-				transformRange(sfc.descriptor.script);
-			}
-			if (sfc.descriptor.scriptSetup) {
-				transformRange(sfc.descriptor.scriptSetup);
-			}
-			for (const style of sfc.descriptor.styles) {
-				transformRange(style);
-			}
-			for (const customBlock of sfc.descriptor.customBlocks) {
-				transformRange(customBlock);
+			for (
+				const block of [
+					sfc.descriptor.script,
+					sfc.descriptor.scriptSetup,
+					sfc.descriptor.template,
+					...sfc.descriptor.styles,
+					...sfc.descriptor.customBlocks,
+				]
+			) {
+				if (block) {
+					transformRange(block);
+				}
 			}
 
 			return sfc;
@@ -98,11 +92,11 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 				const endOffset = end.offset;
 				start.offset = -1;
 				end.offset = -1;
-				for (const [offset] of file2VueSourceMap.toSourceLocation(startOffset)) {
+				for (const [offset] of mapper.toSourceLocation(startOffset)) {
 					start.offset = offset;
 					break;
 				}
-				for (const [offset] of file2VueSourceMap.toSourceLocation(endOffset)) {
+				for (const [offset] of mapper.toSourceLocation(endOffset)) {
 					end.offset = offset;
 					break;
 				}
