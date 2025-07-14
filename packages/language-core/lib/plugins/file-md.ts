@@ -72,9 +72,9 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 
 			for (
 				const block of [
+					sfc.descriptor.template,
 					sfc.descriptor.script,
 					sfc.descriptor.scriptSetup,
-					sfc.descriptor.template,
 					...sfc.descriptor.styles,
 					...sfc.descriptor.customBlocks,
 				]
