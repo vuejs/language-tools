@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
-import { minimatch } from 'minimatch';
 import { toString } from 'muggle-string';
+import { isMatch } from 'picomatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
@@ -92,7 +92,7 @@ export function* generateElementProps(
 
 			if (
 				propName === undefined
-				|| options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(propName!, pattern))
+				|| options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(propName!, pattern))
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
 					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
@@ -180,7 +180,7 @@ export function* generateElementProps(
 			}
 		} else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
 			if (
-				options.vueCompilerOptions.dataAttributes.some(pattern => minimatch(prop.name, pattern))
+				options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))
 				// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom` always adds it (#3881)
 				|| (
 					options.vueCompilerOptions.target < 3
@@ -354,7 +354,7 @@ function getShouldCamelize(
 		|| (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 	)
 		&& hyphenateAttr(propName) === propName
-		&& !options.vueCompilerOptions.htmlAttributes.some(pattern => minimatch(propName, pattern));
+		&& !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern));
 }
 
 function getPropsCodeInfo(

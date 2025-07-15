@@ -73,7 +73,7 @@ importers:
         version: 1.0.0-beta.8(typescript@5.8.3)
       semver:
         specifier: ^7.5.4
-        version: 7.7.1
+        version: 7.7.2
       vscode-ext-gen:
         specifier: ^1.0.2
         version: 1.0.2
@@ -125,15 +125,15 @@ importers:
       alien-signals:
         specifier: ^2.0.5
         version: 2.0.5
-      minimatch:
-        specifier: ^10.0.1
-        version: 10.0.1
       muggle-string:
         specifier: ^0.4.1
         version: 0.4.1
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
+      picomatch:
+        specifier: ^4.0.2
+        version: 4.0.2
       typescript:
         specifier: '*'
         version: 5.8.3
@@ -144,6 +144,9 @@ importers:
       '@types/path-browserify':
         specifier: ^1.0.1
         version: 1.0.3
+      '@types/picomatch':
+        specifier: ^4.0.0
+        version: 4.0.0
       '@volar/typescript':
         specifier: 2.4.18
         version: 2.4.18
@@ -1373,6 +1376,9 @@ packages:
 
   '@types/path-browserify@1.0.3':
     resolution: {integrity: sha512-ZmHivEbNCBtAfcrFeBCiTjdIc2dey0l7oCGNGpSuRTy8jP6UVND7oUowlvDujBy8r2Hoa8bfFUOCiPWfmtkfxw==}
+
+  '@types/picomatch@4.0.0':
+    resolution: {integrity: sha512-J1Bng+wlyEERWSgJQU1Pi0HObCLVcr994xT/M+1wcl/yNRTGBupsCxthgkdYG+GCOMaQH7iSVUY3LJVBBqG7MQ==}
 
   '@types/semver@7.7.0':
     resolution: {integrity: sha512-k107IF4+Xr7UHjwDc7Cfd6PRQfbdkiRabXGRjo07b4WyPahFBZCZ1sE+BNxYIJPPg73UkfOsVOLwqVc/6ETrIA==}
@@ -3308,11 +3314,6 @@ packages:
     resolution: {integrity: sha512-cBznnQ9KjJqU67B52RMC65CMarK2600WFnbkcaiwWq3xy/5haFJlshgnpjovMVJ+Hff49d8GEn0b87C5pDQ10g==}
     hasBin: true
 
-  semver@7.7.1:
-    resolution: {integrity: sha512-hlq8tAfn0m/61p4BVRcPzIGr6LKiMwo4VM6dGi6pt4qcRkmNzTcWq6eCEjEh+qXjkMDvPlOFFSGwQjoEa6gyMA==}
-    engines: {node: '>=10'}
-    hasBin: true
-
   semver@7.7.2:
     resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
     engines: {node: '>=10'}
@@ -5035,6 +5036,8 @@ snapshots:
 
   '@types/path-browserify@1.0.3': {}
 
+  '@types/picomatch@4.0.0': {}
+
   '@types/semver@7.7.0': {}
 
   '@types/vscode@1.88.0': {}
@@ -5094,7 +5097,7 @@ snapshots:
       fast-glob: 3.3.3
       is-glob: 4.0.3
       minimatch: 9.0.5
-      semver: 7.7.1
+      semver: 7.7.2
       ts-api-utils: 2.1.0(typescript@5.8.3)
       typescript: 5.8.3
     transitivePeerDependencies:
@@ -5283,7 +5286,7 @@ snapshots:
       minimatch: 3.1.2
       parse-semver: 1.1.1
       read: 1.0.7
-      semver: 7.7.1
+      semver: 7.7.2
       tmp: 0.2.3
       typed-rest-client: 1.8.11
       url-join: 4.0.1
@@ -6517,7 +6520,7 @@ snapshots:
       lodash.isstring: 4.0.1
       lodash.once: 4.1.1
       ms: 2.1.3
-      semver: 7.7.1
+      semver: 7.7.2
 
   just-diff-apply@5.5.0: {}
 
@@ -6767,7 +6770,7 @@ snapshots:
 
   node-abi@3.74.0:
     dependencies:
-      semver: 7.7.1
+      semver: 7.7.2
     optional: true
 
   node-addon-api@4.3.0:
@@ -7239,8 +7242,6 @@ snapshots:
   sax@1.4.1: {}
 
   semver@5.7.2: {}
-
-  semver@7.7.1: {}
 
   semver@7.7.2: {}
 
