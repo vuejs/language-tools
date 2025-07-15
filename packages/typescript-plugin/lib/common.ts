@@ -88,6 +88,7 @@ function getCompletionsAtPosition<T>(
 				]);
 
 				if (ranges.some(([start, end]) => position >= start && position <= end)) {
+					const globalKinds = new Set(['var', 'function', 'module']);
 					const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
 					const sortTexts = new Set([
 						globalsOrKeywords,
@@ -97,7 +98,7 @@ function getCompletionsAtPosition<T>(
 
 					result.entries = result.entries.filter(entry =>
 						!(entry.kind === 'const' && entry.name in vueOptions.macros) && (
-							entry.kind !== 'var' && entry.kind !== 'function'
+							!globalKinds.has(entry.kind)
 							|| !sortTexts.has(entry.sortText)
 							|| isGloballyAllowed(entry.name)
 						)
