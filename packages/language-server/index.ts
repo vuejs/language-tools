@@ -140,7 +140,7 @@ connection.onInitialize(params => {
 				);
 			},
 			async getQuickInfoAtPosition(fileName, { line, character }) {
-				const result = await sendTsServerRequest<ts.QuickInfo>(
+				const result = await sendTsServerRequest<ts.server.protocol.QuickInfoResponseBody>(
 					'_vue:' + ts.server.protocol.CommandTypes.Quickinfo,
 					{
 						file: fileName,
@@ -148,7 +148,7 @@ connection.onInitialize(params => {
 						offset: character + 1,
 					} satisfies ts.server.protocol.FileLocationRequestArgs,
 				);
-				return ts.displayPartsToString(result?.displayParts ?? []);
+				return result?.displayString;
 			},
 		}),
 	);
