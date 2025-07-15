@@ -46,12 +46,13 @@ export function create(
 						]);
 					}
 
+					const sourceDocument = context.documents.get(decoded![0], sourceScript.languageId, sourceScript.snapshot);
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 						const map = context.language.maps.get(virtualCode, sourceScript);
 						for (const [sourceOffset] of map.toSourceLocation(hoverOffset)) {
 							const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(
 								root.fileName,
-								document.positionAt(sourceOffset),
+								sourceDocument.positionAt(sourceOffset),
 							);
 							if (quickInfo) {
 								inlayHints.push({
