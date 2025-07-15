@@ -231,9 +231,9 @@ function walkIdentifiers(
 				processFunction(ts, prop, ast, cb, ctx);
 			}
 		}
-	} else if (ts.isTypeReferenceNode(node)) {
+	} else if (ts.isTypeNode(node)) {
 		// fix https://github.com/vuejs/language-tools/issues/1422
-		ts.forEachChild(node, node => walkIdentifiersInTypeReference(ts, node, cb));
+		walkIdentifiersInTypeNode(ts, node, cb);
 	} else {
 		const _blockVars = blockVars;
 		if (ts.isBlock(node)) {
@@ -280,15 +280,19 @@ function processFunction(
 	}
 }
 
-function walkIdentifiersInTypeReference(
+function walkIdentifiersInTypeNode(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 ) {
-	if (ts.isTypeQueryNode(node) && ts.isIdentifier(node.exprName)) {
-		cb(node.exprName, false);
+	if (ts.isTypeQueryNode(node)) {
+		let id = node.exprName;
+		while (!ts.isIdentifier(id)) {
+			id = id.left;
+		}
+		cb(id, false);
 	} else {
-		ts.forEachChild(node, node => walkIdentifiersInTypeReference(ts, node, cb));
+		ts.forEachChild(node, node => walkIdentifiersInTypeNode(ts, node, cb));
 	}
 }
 
