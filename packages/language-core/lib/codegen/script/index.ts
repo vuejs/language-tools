@@ -47,7 +47,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			}" />${newLine}`;
 		}
 	} else {
-		yield `/// <reference path="./__VLS_fake.d.ts" />`;
+		yield `/// <reference path="./__VLS_fake.d.ts" />${newLine}`;
 	}
 
 	if (options.sfc.script?.src) {
