@@ -4,7 +4,6 @@ import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { generateGlobalTypes } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
@@ -25,7 +24,6 @@ export interface ScriptCodegenOptions {
 	templateCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
 	destructuredPropNames: Set<string>;
 	templateRefNames: Set<string>;
-	appendGlobalTypes: boolean;
 }
 
 export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
@@ -157,9 +155,6 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 
 	yield* ctx.localTypes.generate([...ctx.localTypes.getUsedNames()]);
-	if (options.appendGlobalTypes) {
-		yield generateGlobalTypes(options.vueCompilerOptions);
-	}
 
 	if (options.sfc.scriptSetup) {
 		yield ['', 'scriptSetup', options.sfc.scriptSetup.content.length, codeFeatures.verification];
