@@ -33,7 +33,7 @@ export function createParsedCommandLineByJson(
 		} catch {}
 	}
 
-	const resolvedVueOptions = resolver.build(parseConfigHost);
+	const resolvedVueOptions = resolver.build(undefined, parseConfigHost);
 	const parsed = ts.parseJsonConfigFileContent(
 		json,
 		proxyHost.host,
@@ -81,7 +81,7 @@ export function createParsedCommandLine(
 			} catch {}
 		}
 
-		const resolvedVueOptions = resolver.build(parseConfigHost);
+		const resolvedVueOptions = resolver.build(undefined, parseConfigHost);
 		const parsed = ts.parseJsonSourceFileConfigFileContent(
 			config,
 			proxyHost.host,
@@ -190,11 +190,11 @@ export class CompilerOptionsResolver {
 	}
 
 	build(
+		defaults?: VueCompilerOptions,
 		host?: {
 			fileExists(path: string): boolean;
 			writeFile?(path: string, data: string): void;
 		},
-		defaults?: VueCompilerOptions,
 	): VueCompilerOptions {
 		let target = this.target;
 		if (target === undefined) {
@@ -254,15 +254,15 @@ export class CompilerOptionsResolver {
 							getGlobalTypesFileName(resolvedOptions),
 						);
 						break;
-					} catch {
-						continue;
-					}
+					} catch {}
 				}
 			}
-			if (globalTypesPath && host.writeFile) {
+			if (globalTypesPath) {
 				resolvedOptions.globalTypesPath = globalTypesPath;
-				const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(resolvedOptions);
-				host.writeFile(globalTypesPath, globalTypesContents);
+				host.writeFile?.(
+					globalTypesPath,
+					`// @ts-nocheck\nexport {};\n` + generateGlobalTypes(resolvedOptions),
+				);
 			}
 		}
 

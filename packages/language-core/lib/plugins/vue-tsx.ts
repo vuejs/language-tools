@@ -83,7 +83,7 @@ function createTsx(
 		if (options) {
 			const resolver = new CompilerOptionsResolver();
 			resolver.addConfig(options, path.dirname(fileName));
-			return resolver.build(undefined, ctx.vueCompilerOptions);
+			return resolver.build(ctx.vueCompilerOptions);
 		}
 		return ctx.vueCompilerOptions;
 	});
