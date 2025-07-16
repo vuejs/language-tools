@@ -158,10 +158,7 @@ export class CompilerOptionsResolver {
 			switch (key) {
 				case 'target':
 					if (options[key] === 'auto') {
-						const target = findVueVersion(rootDir);
-						if (target !== undefined) {
-							this.target = target;
-						}
+						this.target = findVueVersion(rootDir);
 					} else {
 						this.target = options[key];
 					}
@@ -194,6 +191,9 @@ export class CompilerOptionsResolver {
 					this.options[key] = options[key];
 					break;
 			}
+		}
+		if (options.target === undefined) {
+			this.target ??= findVueVersion(rootDir);
 		}
 	}
 
