@@ -22,7 +22,7 @@ export function createParsedCommandLineByJson(
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
 	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, configFileName);
 
-	const resolver = new CompilerOptionsResolver(parseConfigHost);
+	const resolver = new CompilerOptionsResolver(rootDir, parseConfigHost);
 
 	for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
 		try {
@@ -66,11 +66,12 @@ export function createParsedCommandLine(
 	tsConfigPath: string,
 ): ParsedCommandLine {
 	try {
+		const rootDir = path.dirname(tsConfigPath);
 		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
 		const config = ts.readJsonConfigFile(tsConfigPath, proxyHost.host.readFile);
-		ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, path.dirname(tsConfigPath), {}, tsConfigPath);
+		ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, rootDir, {}, tsConfigPath);
 
-		const resolver = new CompilerOptionsResolver(parseConfigHost);
+		const resolver = new CompilerOptionsResolver(rootDir, parseConfigHost);
 
 		for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
 			try {
@@ -146,13 +147,16 @@ export class CompilerOptionsResolver {
 	plugins: VueLanguagePlugin[] = [];
 
 	constructor(
-		private host?: {
+		public rootDir: string,
+		public host?: {
 			fileExists(path: string): boolean;
 			writeFile?(path: string, data: string): void;
 		},
-	) {}
+	) {
+		this.configRoots.add(rootDir);
+	}
 
-	addConfig(options: RawVueCompilerOptions, rootDir: string) {
+	addConfig(options: RawVueCompilerOptions, rootDir = this.rootDir) {
 		this.configRoots.add(rootDir);
 		for (const key in options) {
 			switch (key) {
@@ -197,7 +201,7 @@ export class CompilerOptionsResolver {
 		}
 	}
 
-	build(defaults?: VueCompilerOptions): VueCompilerOptions {
+	build(defaults?: VueCompilerOptions) {
 		defaults ??= getDefaultCompilerOptions(this.target, this.options.lib, this.options.strictTemplates);
 
 		const resolvedOptions: VueCompilerOptions = {
