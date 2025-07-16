@@ -25,7 +25,7 @@ export type Code = Segment<VueCodeInformation>;
 export interface VueCompilerOptions {
 	target: number;
 	lib: string;
-	globalTypesPath: string;
+	globalTypesPath?: string;
 	extensions: string[];
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
