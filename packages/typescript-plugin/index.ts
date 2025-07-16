@@ -19,6 +19,12 @@ const project2Service = new WeakMap<ts.server.Project, [vue.Language, ts.Languag
 export = createLanguageServicePlugin(
 	(ts, info) => {
 		const vueOptions = getVueCompilerOptions();
+		if (vueOptions.globalTypesPath !== undefined) {
+			ts.sys.writeFile(
+				vueOptions.globalTypesPath,
+				vue.generateGlobalTypes(vueOptions),
+			);
+		}
 		const languagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
 			info.languageServiceHost.getCompilationSettings(),

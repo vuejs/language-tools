@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
-import { generateGlobalTypes, getGlobalTypesFileName } from '../codegen/globalTypes';
+import { getGlobalTypesFileName } from '../codegen/globalTypes';
 import { getAllExtensions } from '../languagePlugin';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { hyphenateTag } from './shared';
@@ -22,7 +22,7 @@ export function createParsedCommandLineByJson(
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
 	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, configFileName);
 
-	const resolver = new CompilerOptionsResolver(parseConfigHost);
+	const resolver = new CompilerOptionsResolver(parseConfigHost.fileExists);
 
 	for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
 		try {
@@ -74,7 +74,7 @@ export function createParsedCommandLine(
 		const config = ts.readJsonConfigFile(tsConfigPath, proxyHost.host.readFile);
 		ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, rootDir, {}, tsConfigPath);
 
-		const resolver = new CompilerOptionsResolver(parseConfigHost);
+		const resolver = new CompilerOptionsResolver(parseConfigHost.fileExists);
 
 		for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
 			try {
@@ -150,10 +150,7 @@ export class CompilerOptionsResolver {
 	plugins: VueLanguagePlugin[] = [];
 
 	constructor(
-		public host?: {
-			fileExists(path: string): boolean;
-			writeFile?(path: string, data: string): void;
-		},
+		public fileExists?: (path: string) => boolean,
 	) {}
 
 	addConfig(options: RawVueCompilerOptions, rootDir: string) {
@@ -229,33 +226,23 @@ export class CompilerOptionsResolver {
 			),
 		};
 
-		if (this.host) {
-			let globalTypesPath = this.globalTypesPath;
-			if (globalTypesPath === undefined) {
-				root: for (const rootDir of [...this.configRoots].reverse()) {
-					let dir = rootDir;
-					while (!this.host.fileExists(path.join(dir, 'node_modules', resolvedOptions.lib, 'package.json'))) {
-						const parentDir = path.dirname(dir);
-						if (dir === parentDir) {
-							continue root;
-						}
-						dir = parentDir;
+		if (this.fileExists && this.globalTypesPath === undefined) {
+			root: for (const rootDir of [...this.configRoots].reverse()) {
+				let dir = rootDir;
+				while (!this.fileExists(path.join(dir, 'node_modules', resolvedOptions.lib, 'package.json'))) {
+					const parentDir = path.dirname(dir);
+					if (dir === parentDir) {
+						continue root;
 					}
-					globalTypesPath = path.join(
-						dir,
-						'node_modules',
-						'.vue-global-types',
-						getGlobalTypesFileName(resolvedOptions),
-					);
-					break;
+					dir = parentDir;
 				}
-			}
-			if (globalTypesPath) {
-				resolvedOptions.globalTypesPath = globalTypesPath;
-				this.host.writeFile?.(
-					globalTypesPath,
-					`// @ts-nocheck\nexport {};\n` + generateGlobalTypes(resolvedOptions),
+				resolvedOptions.globalTypesPath = path.join(
+					dir,
+					'node_modules',
+					'.vue-global-types',
+					getGlobalTypesFileName(resolvedOptions),
 				);
+				break;
 			}
 		}
 

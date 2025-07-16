@@ -27,7 +27,7 @@ export function generateGlobalTypes({
 	const fnPropsType = `(T extends { $props: infer Props } ? Props : {})${
 		checkUnknownProps ? '' : ' & Record<string, unknown>'
 	}`;
-	let text = ``;
+	let text = `// @ts-nocheck\nexport {};\n`;
 	if (target < 3.5) {
 		text += `
 ; declare module '${lib}' {

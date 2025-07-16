@@ -151,19 +151,13 @@ export function baseCreate(
 		};
 	}
 	languageServiceHost.fileExists = path => {
-		if (
-			path.endsWith(`.vue-global-types/${globalTypesName}`)
-			|| path.endsWith(`.vue-global-types\\${globalTypesName}`)
-		) {
+		if (path.replace(/\\/g, '/').endsWith(`.vue-global-types/${globalTypesName}`)) {
 			return true;
 		}
 		return fileExists(path);
 	};
 	languageServiceHost.getScriptSnapshot = path => {
-		if (
-			path.endsWith(`.vue-global-types/${globalTypesName}`)
-			|| path.endsWith(`.vue-global-types\\${globalTypesName}`)
-		) {
+		if (path.replace(/\\/g, '/').endsWith(`.vue-global-types/${globalTypesName}`)) {
 			return globalTypesSnapshot;
 		}
 		return getScriptSnapshot(path);
