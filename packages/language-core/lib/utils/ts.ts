@@ -244,6 +244,8 @@ export class CompilerOptionsResolver {
 				);
 				break;
 			}
+		} else {
+			resolvedOptions.globalTypesPath = this.globalTypesPath;
 		}
 
 		return resolvedOptions;
