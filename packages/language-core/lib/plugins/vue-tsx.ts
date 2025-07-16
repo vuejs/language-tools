@@ -81,8 +81,8 @@ function createTsx(
 	const getResolvedOptions = computed(() => {
 		const options = parseVueCompilerOptions(sfc.comments);
 		if (options) {
-			const resolver = new CompilerOptionsResolver(path.dirname(fileName));
-			resolver.addConfig(options);
+			const resolver = new CompilerOptionsResolver();
+			resolver.addConfig(options, path.dirname(fileName));
 			return resolver.build(ctx.vueCompilerOptions);
 		}
 		return ctx.vueCompilerOptions;

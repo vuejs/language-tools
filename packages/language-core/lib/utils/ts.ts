@@ -22,7 +22,7 @@ export function createParsedCommandLineByJson(
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
 	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, configFileName);
 
-	const resolver = new CompilerOptionsResolver(rootDir, parseConfigHost);
+	const resolver = new CompilerOptionsResolver(parseConfigHost);
 
 	for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
 		try {
@@ -32,6 +32,9 @@ export function createParsedCommandLineByJson(
 			resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
 		} catch {}
 	}
+
+	// ensure the rootDir is added to the config roots
+	resolver.addConfig({}, rootDir);
 
 	const resolvedVueOptions = resolver.build();
 	const parsed = ts.parseJsonConfigFileContent(
@@ -71,7 +74,7 @@ export function createParsedCommandLine(
 		const config = ts.readJsonConfigFile(tsConfigPath, proxyHost.host.readFile);
 		ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, rootDir, {}, tsConfigPath);
 
-		const resolver = new CompilerOptionsResolver(rootDir, parseConfigHost);
+		const resolver = new CompilerOptionsResolver(parseConfigHost);
 
 		for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
 			try {
@@ -147,16 +150,13 @@ export class CompilerOptionsResolver {
 	plugins: VueLanguagePlugin[] = [];
 
 	constructor(
-		public rootDir: string,
 		public host?: {
 			fileExists(path: string): boolean;
 			writeFile?(path: string, data: string): void;
 		},
-	) {
-		this.configRoots.add(rootDir);
-	}
+	) {}
 
-	addConfig(options: RawVueCompilerOptions, rootDir = this.rootDir) {
+	addConfig(options: RawVueCompilerOptions, rootDir: string) {
 		this.configRoots.add(rootDir);
 		for (const key in options) {
 			switch (key) {
