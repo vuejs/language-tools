@@ -35,6 +35,12 @@ describe('vue-tsc-dts', () => {
 			vueOptions.target = 99;
 			vueOptions.extensions = ['vue', 'cext'];
 		}
+		if (vueOptions.globalTypesPath) {
+			ts.sys.writeFile(
+				vueOptions.globalTypesPath,
+				vue.generateGlobalTypes(vueOptions),
+			);
+		}
 		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
 			options.options,
