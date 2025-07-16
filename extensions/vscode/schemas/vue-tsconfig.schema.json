@@ -20,6 +20,10 @@
 					"default": "vue",
 					"markdownDescription": "Specify module name for import regular types."
 				},
+				"globalTypesPath": {
+					"type": "string",
+					"markdownDescription": "Path to the global types file. Manual configuration is required when `node_modules` does not exist in the environment."
+				},
 				"extensions": {
 					"type": "array",
 					"default": [".vue"],
@@ -205,10 +209,6 @@
 						}
 					},
 					"markdownDescription": "https://github.com/vuejs/language-tools/issues/1969"
-				},
-				"globalTypesPath": {
-					"type": "string",
-					"markdownDescription": "Path to the global types file. Manual configuration is required when `node_modules` does not exist in the environment."
 				}
 			}
 		}
