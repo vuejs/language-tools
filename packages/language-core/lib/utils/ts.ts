@@ -87,9 +87,7 @@ export function createParsedCommandLine(
 
 		const resolvedVueOptions = resolver.build();
 
-		if (!skipGlobalTypesSetup) {
-			setupGlobalTypes(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost);
-		}
+		setupGlobalTypes(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost, skipGlobalTypesSetup);
 		const parsed = ts.parseJsonSourceFileConfigFileContent(
 			config,
 			proxyHost.host,
