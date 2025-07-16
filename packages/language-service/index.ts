@@ -24,6 +24,7 @@ import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-documen
 import { create as createVueDocumentHighlightsPlugin } from './lib/plugins/vue-document-highlights';
 import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-document-links';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
+import { create as createVueGlobalTypesErrorPlugin } from './lib/plugins/vue-global-types-error';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 import { create as createVueMissingPropsHintsPlugin } from './lib/plugins/vue-missing-props-hints';
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
@@ -86,6 +87,7 @@ function getCommonLanguageServicePlugins(
 		createVueInlayHintsPlugin(ts),
 		createVueDirectiveCommentsPlugin(),
 		createVueExtractFilePlugin(ts, getTsPluginClient),
+		createVueGlobalTypesErrorPlugin(),
 		createEmmetPlugin({
 			mappedLanguages: {
 				'vue-root-tags': 'html',
