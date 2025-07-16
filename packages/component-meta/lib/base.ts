@@ -63,6 +63,13 @@ export function baseCreate(
 	let fileNames = new Set(commandLine.fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
 
+	if (commandLine.vueOptions.globalTypesPath) {
+		ts.sys.writeFile(
+			commandLine.vueOptions.globalTypesPath,
+			vue.generateGlobalTypes(commandLine.vueOptions),
+		);
+	}
+
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
@@ -131,37 +138,6 @@ export function baseCreate(
 	);
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
-
-	const directoryExists = languageServiceHost.directoryExists?.bind(languageServiceHost);
-	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
-	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
-	const globalTypesName = vue.getGlobalTypesFileName(commandLine.vueOptions);
-	const globalTypesContents = vue.generateGlobalTypes(commandLine.vueOptions);
-	const globalTypesSnapshot: ts.IScriptSnapshot = {
-		getText: (start, end) => globalTypesContents.slice(start, end),
-		getLength: () => globalTypesContents.length,
-		getChangeRange: () => undefined,
-	};
-	if (directoryExists) {
-		languageServiceHost.directoryExists = path => {
-			if (path.endsWith('.vue-global-types')) {
-				return true;
-			}
-			return directoryExists(path);
-		};
-	}
-	languageServiceHost.fileExists = path => {
-		if (path.replace(/\\/g, '/').endsWith(`.vue-global-types/${globalTypesName}`)) {
-			return true;
-		}
-		return fileExists(path);
-	};
-	languageServiceHost.getScriptSnapshot = path => {
-		if (path.replace(/\\/g, '/').endsWith(`.vue-global-types/${globalTypesName}`)) {
-			return globalTypesSnapshot;
-		}
-		return getScriptSnapshot(path);
-	};
 
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
