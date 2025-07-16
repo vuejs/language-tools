@@ -31,13 +31,9 @@ describe('vue-tsc-dts', () => {
 		if (typeof configFilePath === 'string') {
 			vueOptions = vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
 		} else {
-			vueOptions = vue.getDefaultCompilerOptions();
-			vueOptions.extensions = ['.vue', '.cext'];
-			vue.setupGlobalTypes(
-				workspace.replace(windowsPathReg, '/'),
-				vueOptions,
-				ts.sys,
-			);
+			const resolver = new vue.CompilerOptionsResolver();
+			resolver.addConfig({ extensions: ['.vue', '.cext'] }, workspace.replace(windowsPathReg, '/'));
+			vueOptions = resolver.build(ts.sys);
 		}
 		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,

@@ -18,7 +18,6 @@ export function createParsedCommandLineByJson(
 	rootDir: string,
 	json: any,
 	configFileName = rootDir + '/jsconfig.json',
-	skipGlobalTypesSetup = false,
 ): ParsedCommandLine {
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
 	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, configFileName);
@@ -34,9 +33,7 @@ export function createParsedCommandLineByJson(
 		} catch {}
 	}
 
-	const resolvedVueOptions = resolver.build();
-
-	setupGlobalTypes(rootDir, resolvedVueOptions, parseConfigHost, skipGlobalTypesSetup);
+	const resolvedVueOptions = resolver.build(parseConfigHost);
 	const parsed = ts.parseJsonConfigFileContent(
 		json,
 		proxyHost.host,
@@ -67,7 +64,6 @@ export function createParsedCommandLine(
 	ts: typeof import('typescript'),
 	parseConfigHost: ts.ParseConfigHost,
 	tsConfigPath: string,
-	skipGlobalTypesSetup = false,
 ): ParsedCommandLine {
 	try {
 		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
@@ -85,9 +81,7 @@ export function createParsedCommandLine(
 			} catch {}
 		}
 
-		const resolvedVueOptions = resolver.build();
-
-		setupGlobalTypes(path.dirname(tsConfigPath), resolvedVueOptions, parseConfigHost, skipGlobalTypesSetup);
+		const resolvedVueOptions = resolver.build(parseConfigHost);
 		const parsed = ts.parseJsonSourceFileConfigFileContent(
 			config,
 			proxyHost.host,
@@ -145,12 +139,14 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 }
 
 export class CompilerOptionsResolver {
+	configRoots = new Set<string>();
 	options: Omit<RawVueCompilerOptions, 'target' | 'plugin'> = {};
-	fallbackTarget: number | undefined;
 	target: number | undefined;
+	globalTypesPath: string | undefined;
 	plugins: VueLanguagePlugin[] = [];
 
 	addConfig(options: RawVueCompilerOptions, rootDir: string) {
+		this.configRoots.add(rootDir);
 		for (const key in options) {
 			switch (key) {
 				case 'target':
@@ -159,6 +155,12 @@ export class CompilerOptionsResolver {
 						this.target = findVueVersion(rootDir);
 					} else {
 						this.target = target;
+					}
+					break;
+				case 'globalTypesPath':
+					const globalTypesPath = options.globalTypesPath;
+					if (typeof globalTypesPath === 'string') {
+						this.globalTypesPath = path.join(rootDir, globalTypesPath);
 					}
 					break;
 				case 'plugins':
@@ -185,15 +187,28 @@ export class CompilerOptionsResolver {
 					break;
 			}
 		}
-		if (this.target === undefined) {
-			this.fallbackTarget = findVueVersion(rootDir);
-		}
 	}
 
-	build(defaults?: VueCompilerOptions): VueCompilerOptions {
-		const target = this.target ?? this.fallbackTarget;
+	build(
+		host?: {
+			fileExists(path: string): boolean;
+			writeFile?(path: string, data: string): void;
+		},
+		defaults?: VueCompilerOptions,
+	): VueCompilerOptions {
+		let target = this.target;
+		if (target === undefined) {
+			for (const configRoot of [...this.configRoots].reverse()) {
+				target = findVueVersion(configRoot);
+				if (target !== undefined) {
+					break;
+				}
+			}
+		}
+
 		defaults ??= getDefaultCompilerOptions(target, this.options.lib, this.options.strictTemplates);
-		return {
+
+		const resolvedOptions: VueCompilerOptions = {
 			...defaults,
 			...this.options,
 			plugins: this.plugins,
@@ -217,6 +232,41 @@ export class CompilerOptionsResolver {
 				).map(([k, v]) => [camelize(k), v]),
 			),
 		};
+
+		let globalTypesPath = this.globalTypesPath;
+
+		if (host) {
+			if (globalTypesPath === undefined) {
+				for (const rootDir of [...this.configRoots].reverse()) {
+					try {
+						let dir = rootDir;
+						while (!host.fileExists(path.join(dir, 'node_modules', resolvedOptions.lib, 'package.json'))) {
+							const parentDir = path.dirname(dir);
+							if (dir === parentDir) {
+								throw 0;
+							}
+							dir = parentDir;
+						}
+						globalTypesPath = path.join(
+							dir,
+							'node_modules',
+							'.vue-global-types',
+							getGlobalTypesFileName(resolvedOptions),
+						);
+						break;
+					} catch {
+						continue;
+					}
+				}
+			}
+			if (globalTypesPath && host.writeFile) {
+				resolvedOptions.globalTypesPath = globalTypesPath;
+				const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(resolvedOptions);
+				host.writeFile(globalTypesPath, globalTypesContents);
+			}
+		}
+
+		return resolvedOptions;
 	}
 }
 
@@ -247,6 +297,7 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 	return {
 		target,
 		lib,
+		globalTypesPath: 'NOT_FOUND',
 		extensions: ['.vue'],
 		vitePressExtensions: [],
 		petiteVueExtensions: [],
@@ -306,46 +357,4 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 			},
 		},
 	};
-}
-
-export function setupGlobalTypes(
-	rootDir: string,
-	vueOptions: VueCompilerOptions,
-	host: {
-		fileExists(path: string): boolean;
-		writeFile?(path: string, data: string): void;
-	},
-	skip = false,
-) {
-	if (!host.writeFile) {
-		return;
-	}
-
-	if (skip) {
-		vueOptions.globalTypesPath = path.join('.vue-global-types', getGlobalTypesFileName(vueOptions));
-		return;
-	} else if (vueOptions.globalTypesPath) {
-		vueOptions.globalTypesPath = path.join(rootDir, vueOptions.globalTypesPath);
-	} else {
-		try {
-			let dir = rootDir;
-			while (!host.fileExists(path.join(dir, 'node_modules', vueOptions.lib, 'package.json'))) {
-				const parentDir = path.dirname(dir);
-				if (dir === parentDir) {
-					throw 0;
-				}
-				dir = parentDir;
-			}
-			vueOptions.globalTypesPath = path.join(
-				dir,
-				'node_modules',
-				'.vue-global-types',
-				getGlobalTypesFileName(vueOptions),
-			);
-		} catch {
-			return;
-		}
-	}
-	const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions);
-	host.writeFile(vueOptions.globalTypesPath, globalTypesContents);
 }
