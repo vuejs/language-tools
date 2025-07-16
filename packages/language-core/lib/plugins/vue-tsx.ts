@@ -47,7 +47,7 @@ const plugin: VueLanguagePlugin = ctx => {
 	function useCodegen(fileName: string, sfc: Sfc) {
 		if (!tsCodegen.has(sfc)) {
 			let appendGlobalTypes = false;
-			if (!ctx.vueCompilerOptions.__setupedGlobalTypes && !appendedGlobalTypes) {
+			if (!ctx.vueCompilerOptions.globalTypesPath && !appendedGlobalTypes) {
 				appendGlobalTypes = true;
 				appendedGlobalTypes = true;
 			}

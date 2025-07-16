@@ -152,7 +152,8 @@ export function baseCreate(
 	}
 	languageServiceHost.fileExists = path => {
 		if (
-			path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)
+			path.endsWith(`.vue-global-types/${globalTypesName}`)
+			|| path.endsWith(`.vue-global-types\\${globalTypesName}`)
 		) {
 			return true;
 		}
@@ -160,7 +161,8 @@ export function baseCreate(
 	};
 	languageServiceHost.getScriptSnapshot = path => {
 		if (
-			path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)
+			path.endsWith(`.vue-global-types/${globalTypesName}`)
+			|| path.endsWith(`.vue-global-types\\${globalTypesName}`)
 		) {
 			return globalTypesSnapshot;
 		}

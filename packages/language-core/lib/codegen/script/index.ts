@@ -4,7 +4,7 @@ import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { generateGlobalTypes, getGlobalTypesFileName } from '../globalTypes';
+import { generateGlobalTypes } from '../globalTypes';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
@@ -31,20 +31,20 @@ export interface ScriptCodegenOptions {
 export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
 	const ctx = createScriptCodegenContext(options);
 
-	if (options.vueCompilerOptions.__setupedGlobalTypes) {
-		const globalTypes = options.vueCompilerOptions.__setupedGlobalTypes;
-		if (typeof globalTypes === 'object') {
-			let relativePath = path.relative(path.dirname(options.fileName), globalTypes.absolutePath);
+	if (options.vueCompilerOptions.globalTypesPath) {
+		const globalTypesPath = options.vueCompilerOptions.globalTypesPath;
+		if (path.isAbsolute(globalTypesPath)) {
+			let relativePath = path.relative(path.dirname(options.fileName), globalTypesPath);
 			if (
-				relativePath !== globalTypes.absolutePath && !relativePath.startsWith('./') && !relativePath.startsWith('../')
+				relativePath !== globalTypesPath
+				&& !relativePath.startsWith('./')
+				&& !relativePath.startsWith('../')
 			) {
 				relativePath = './' + relativePath;
 			}
 			yield `/// <reference types="${relativePath}" />${newLine}`;
 		} else {
-			yield `/// <reference types=".vue-global-types/${
-				getGlobalTypesFileName(options.vueCompilerOptions)
-			}" />${newLine}`;
+			yield `/// <reference types="${globalTypesPath}" />${newLine}`;
 		}
 	} else {
 		yield `/* placeholder */${newLine}`;

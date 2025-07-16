@@ -33,7 +33,7 @@ describe('vue-tsc-dts', () => {
 		} else {
 			vueOptions = vue.getDefaultCompilerOptions();
 			vueOptions.extensions = ['.vue', '.cext'];
-			vueOptions.__setupedGlobalTypes = vue.setupGlobalTypes(
+			vue.setupGlobalTypes(
 				workspace.replace(windowsPathReg, '/'),
 				vueOptions,
 				ts.sys,

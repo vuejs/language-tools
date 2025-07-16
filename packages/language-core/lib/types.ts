@@ -74,9 +74,7 @@ export interface VueCompilerOptions {
 	>;
 
 	// internal
-	__setupedGlobalTypes?: true | {
-		absolutePath: string;
-	};
+	globalTypesPath?: string;
 }
 
 export const validVersions = [2, 2.1] as const;
