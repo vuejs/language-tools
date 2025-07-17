@@ -2,7 +2,8 @@
 	"useTabs": true,
 	"typescript": {
 		"quoteStyle": "preferSingle",
-		"arrowFunction.useParentheses": "preferNone"
+		"arrowFunction.useParentheses": "preferNone",
+		"nextControlFlowPosition": "nextLine"
 	},
 	"json": {
 	},
