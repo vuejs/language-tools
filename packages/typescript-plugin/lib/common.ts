@@ -1,15 +1,6 @@
-import {
-	forEachElementNode,
-	hyphenateTag,
-	type Language,
-	type VueCompilerOptions,
-	VueVirtualCode,
-} from '@vue/language-core';
+import { type Language, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
-import { _getComponentNames } from './requests/getComponentNames';
-import { _getElementNames } from './requests/getElementNames';
-import type { RequestContext } from './requests/types';
 
 const windowsPathReg = /\\/g;
 
@@ -31,9 +22,6 @@ export function createVueLanguageServiceProxy<T>(
 				return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan':
 				return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
-			// TS plugin only
-			case 'getEncodedSemanticClassifications':
-				return getEncodedSemanticClassifications(ts, language, target, asScriptId, target[p]);
 		}
 	};
 
@@ -316,85 +304,4 @@ function getDefinitionAndBoundSpan<T>(
 			}
 		}
 	};
-}
-
-function getEncodedSemanticClassifications<T>(
-	ts: typeof import('typescript'),
-	language: Language<T>,
-	languageService: ts.LanguageService,
-	asScriptId: (fileName: string) => T,
-	getEncodedSemanticClassifications: ts.LanguageService['getEncodedSemanticClassifications'],
-): ts.LanguageService['getEncodedSemanticClassifications'] {
-	return (filePath, span, format) => {
-		const fileName = filePath.replace(windowsPathReg, '/');
-		const result = getEncodedSemanticClassifications(fileName, span, format);
-		const sourceScript = language.scripts.get(asScriptId(fileName));
-		const root = sourceScript?.generated?.root;
-		if (root instanceof VueVirtualCode) {
-			const { template } = root.sfc;
-			if (template) {
-				for (
-					const componentSpan of getComponentSpans.call(
-						{ typescript: ts, languageService },
-						root,
-						template,
-						{
-							start: span.start - template.startTagEnd,
-							length: span.length,
-						},
-					)
-				) {
-					result.spans.push(
-						componentSpan.start + template.startTagEnd,
-						componentSpan.length,
-						256, // class
-					);
-				}
-			}
-		}
-		return result;
-	};
-}
-
-function getComponentSpans(
-	this: Pick<RequestContext, 'typescript' | 'languageService'>,
-	vueCode: VueVirtualCode,
-	template: NonNullable<VueVirtualCode['_sfc']['template']>,
-	spanTemplateRange: ts.TextSpan,
-) {
-	const { typescript: ts, languageService } = this;
-	const result: ts.TextSpan[] = [];
-	const validComponentNames = _getComponentNames(ts, languageService, vueCode);
-	const elements = new Set(_getElementNames(ts, languageService, vueCode));
-	const components = new Set([
-		...validComponentNames,
-		...validComponentNames.map(hyphenateTag),
-	]);
-	if (template.ast) {
-		for (const node of forEachElementNode(template.ast)) {
-			if (
-				node.loc.end.offset <= spanTemplateRange.start
-				|| node.loc.start.offset >= (spanTemplateRange.start + spanTemplateRange.length)
-			) {
-				continue;
-			}
-			if (components.has(node.tag) && !elements.has(node.tag)) {
-				let start = node.loc.start.offset;
-				if (template.lang === 'html') {
-					start += '<'.length;
-				}
-				result.push({
-					start,
-					length: node.tag.length,
-				});
-				if (template.lang === 'html' && !node.isSelfClosing) {
-					result.push({
-						start: node.loc.start.offset + node.loc.source.lastIndexOf(node.tag),
-						length: node.tag.length,
-					});
-				}
-			}
-		}
-	}
-	return result;
 }

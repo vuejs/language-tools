@@ -93,6 +93,9 @@ export = createLanguageServicePlugin(
 			session.addProtocolHandler('_vue:documentHighlights-full', ({ arguments: args }) => {
 				return (session as any).handlers.get('documentHighlights-full')?.({ arguments: args });
 			});
+			session.addProtocolHandler('_vue:encodedSemanticClassifications-full', ({ arguments: args }) => {
+				return (session as any).handlers.get('encodedSemanticClassifications-full')?.({ arguments: args });
+			});
 			session.addProtocolHandler('_vue:quickinfo', ({ arguments: args }) => {
 				return (session as any).handlers.get('quickinfo')?.({ arguments: args });
 			});
