@@ -236,7 +236,7 @@ export function parseScriptSetupRanges(
 				};
 				if (ts.isVariableDeclaration(parent) && ts.isObjectBindingPattern(parent.name)) {
 					defineProps.destructured = new Map();
-					const identifiers = collectIdentifiers(ts, parent.name, []);
+					const identifiers = collectIdentifiers(ts, parent.name);
 					for (const { id, isRest, initializer } of identifiers) {
 						const name = _getNodeText(id);
 						if (isRest) {

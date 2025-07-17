@@ -249,8 +249,8 @@ function walkIdentifiers(
 			}
 		}
 	}
+	// fix https://github.com/vuejs/language-tools/issues/1422
 	else if (ts.isTypeNode(node)) {
-		// fix https://github.com/vuejs/language-tools/issues/1422
 		walkIdentifiersInTypeNode(ts, node, cb);
 	}
 	else {
@@ -283,9 +283,9 @@ function walkIdentifiersInFunction(
 ) {
 	const functionArgs: string[] = [];
 	for (const param of node.parameters) {
-		collectBindingNames(ts, param.name, ast, functionArgs);
+		functionArgs.push(...collectBindingNames(ts, param.name, ast));
 		if (param.type) {
-			walkIdentifiers(ts, param.type, ast, cb, ctx, [], true);
+			walkIdentifiersInTypeNode(ts, param.type, cb);
 		}
 	}
 	for (const varName of functionArgs) {

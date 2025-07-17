@@ -12,13 +12,8 @@ export function collectBindingNames(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
-	results: string[] = [],
 ) {
-	const identifiers = collectIdentifiers(ts, node, []);
-	for (const { id } of identifiers) {
-		results.push(getNodeText(ts, id, ast));
-	}
-	return results;
+	return collectIdentifiers(ts, node).map(({ id }) => getNodeText(ts, id, ast));
 }
 
 export function collectIdentifiers(
