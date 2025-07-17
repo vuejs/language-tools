@@ -5,7 +5,7 @@ import { isTsDocument } from './utils';
 
 export function create(): LanguageServicePlugin {
 	return {
-		name: 'vue-complete-define-assignment',
+		name: 'vue-suggest-define-assignment',
 		capabilities: {
 			completionProvider: {},
 		},

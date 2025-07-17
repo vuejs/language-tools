@@ -2,7 +2,8 @@ import type { InlayHint, LanguageServiceContext, LanguageServicePlugin, Position
 import { VueVirtualCode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 
-const twoslashReg = /<!--\s*\^\?\s*-->/g;
+const twoslashTemplateReg = /<!--\s*\^\?\s*-->/g;
+const twoslashScriptReg = /(?<=^|\n)\s*\/\/\s*\^\?/g;
 
 export function create(
 	getTsPluginClient?: (
@@ -22,7 +23,10 @@ export function create(
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript?.generated || virtualCode?.id !== 'template') {
+					if (
+						!sourceScript?.generated
+						|| (virtualCode?.id !== 'template' && !virtualCode?.id.startsWith('script_'))
+					) {
 						return;
 					}
 
@@ -34,6 +38,7 @@ export function create(
 					const hoverOffsets: [Position, number][] = [];
 					const inlayHints: InlayHint[] = [];
 
+					const twoslashReg = virtualCode.id === 'template' ? twoslashTemplateReg : twoslashScriptReg;
 					for (const pointer of document.getText(range).matchAll(twoslashReg)) {
 						const offset = pointer.index + pointer[0].indexOf('^?') + document.offsetAt(range.start);
 						const position = document.positionAt(offset);

@@ -236,9 +236,6 @@ importers:
       volar-service-typescript:
         specifier: 0.0.64
         version: 0.0.64(@volar/language-service@2.4.19)
-      volar-service-typescript-twoslash-queries:
-        specifier: 0.0.64
-        version: 0.0.64(@volar/language-service@2.4.19)
       vscode-html-languageservice:
         specifier: ^5.2.0
         version: 5.4.0
@@ -3767,14 +3764,6 @@ packages:
 
   volar-service-pug@0.0.64:
     resolution: {integrity: sha512-rVJ2ySENJFPzzEr4fVlC81ANR4dTh3Axr6Az56KyZ5GV0C9yRk5QqCj5+eOYb2GSoVtnEbzOyYpDTRSuH++lfA==}
-
-  volar-service-typescript-twoslash-queries@0.0.64:
-    resolution: {integrity: sha512-DQlArCVUwbH3Ym0Uc/qSrgus/ngQa4LbTNbLsIkWMovxwziPA1c2yCFFY7a6s4Qs8pPXO757ryu99IeX0UK+4w==}
-    peerDependencies:
-      '@volar/language-service': ~2.4.0
-    peerDependenciesMeta:
-      '@volar/language-service':
-        optional: true
 
   volar-service-typescript@0.0.64:
     resolution: {integrity: sha512-FN2H97iqjR1id8AM4fH7lTXuTx2on9zD6QlUFllaiHKqgNrEITlQwm/9Ujrd9ST7MUzhgIKyUsa2WlanX9kkMg==}
@@ -7683,12 +7672,6 @@ snapshots:
       volar-service-html: 0.0.64(@volar/language-service@2.4.19)
       vscode-html-languageservice: 5.4.0
       vscode-languageserver-textdocument: 1.0.12
-
-  volar-service-typescript-twoslash-queries@0.0.64(@volar/language-service@2.4.19):
-    dependencies:
-      vscode-uri: 3.1.0
-    optionalDependencies:
-      '@volar/language-service': 2.4.19
 
   volar-service-typescript@0.0.64(@volar/language-service@2.4.19):
     dependencies:
