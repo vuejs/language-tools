@@ -17,7 +17,8 @@ export default defineComponent({
 		submit: ({ email, password }: SubmitPayload) => {
 			if (email && password) {
 				return true;
-			} else {
+			}
+			else {
 				console.warn('Invalid submit event payload!');
 				return false;
 			}
@@ -55,7 +56,8 @@ export default defineComponent({
 			default: (props: any) => {
 				if (props.arrayDefault.length > props.numberDefault) {
 					return [];
-				} else {
+				}
+				else {
 					return undefined;
 				}
 			},

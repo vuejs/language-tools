@@ -28,7 +28,8 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 						id => id,
 					);
 					return { languagePlugins: [vueLanguagePlugin] };
-				} else {
+				}
+				else {
 					runExtensions = allExtensions;
 					throw extensionsChangedException = new Error('extensions changed');
 				}
@@ -37,10 +38,12 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 
 	try {
 		main();
-	} catch (err) {
+	}
+	catch (err) {
 		if (err === extensionsChangedException) {
 			main();
-		} else {
+		}
+		else {
 			throw err;
 		}
 	}

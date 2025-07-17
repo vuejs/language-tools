@@ -46,7 +46,8 @@ const plugin: VueLanguagePlugin = () => {
 							');\n',
 						);
 					}
-				} else {
+				}
+				else {
 					embeddedFile.content.push([
 						style.content,
 						style.name,

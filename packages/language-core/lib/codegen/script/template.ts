@@ -43,7 +43,8 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 	if (exps.length === 1) {
 		yield exps[0];
 		yield `${endOfLine}`;
-	} else {
+	}
+	else {
 		yield `{${newLine}`;
 		for (const exp of exps) {
 			yield `...`;
@@ -121,7 +122,8 @@ function* generateTemplateBody(
 
 	if (options.templateCodegen) {
 		yield* options.templateCodegen.codes;
-	} else {
+	}
+	else {
 		if (!options.scriptSetupRanges?.defineSlots) {
 			yield `type __VLS_Slots = {}${endOfLine}`;
 		}

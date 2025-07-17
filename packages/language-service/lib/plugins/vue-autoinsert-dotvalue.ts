@@ -122,35 +122,45 @@ function isCharacterTyping(document: TextDocument, change: { text: string; range
 function isBlacklistNode(ts: typeof import('typescript'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
 	if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
-	} else if (
+	}
+	else if (
 		ts.isFunctionDeclaration(node) && node.name && pos >= node.name.getFullStart() && pos <= node.name.getEnd()
 	) {
 		return true;
-	} else if (ts.isParameter(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+	}
+	else if (ts.isParameter(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
-	} else if (ts.isPropertyAssignment(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
+	}
+	else if (ts.isPropertyAssignment(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
-	} else if (ts.isShorthandPropertyAssignment(node)) {
+	}
+	else if (ts.isShorthandPropertyAssignment(node)) {
 		return true;
-	} else if (ts.isImportDeclaration(node)) {
+	}
+	else if (ts.isImportDeclaration(node)) {
 		return true;
-	} else if (ts.isLiteralTypeNode(node)) {
+	}
+	else if (ts.isLiteralTypeNode(node)) {
 		return true;
-	} else if (ts.isTypeReferenceNode(node)) {
+	}
+	else if (ts.isTypeReferenceNode(node)) {
 		return true;
-	} else if (
+	}
+	else if (
 		!allowAccessDotValue && ts.isPropertyAccessExpression(node) && node.expression.end === pos
 		&& node.name.text === 'value'
 	) {
 		return true;
-	} else if (
+	}
+	else if (
 		ts.isCallExpression(node)
 		&& ts.isIdentifier(node.expression)
 		&& isWatchOrUseFunction(node.expression.text)
 		&& isTopLevelArgOrArrayTopLevelItemItem(node)
 	) {
 		return true;
-	} else {
+	}
+	else {
 		let _isBlacklistNode = false;
 		node.forEachChild(node => {
 			if (_isBlacklistNode) {

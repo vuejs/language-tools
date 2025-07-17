@@ -31,14 +31,16 @@ export function createParsedCommandLineByJson(
 			const obj = ts.convertToObject(configFile, []);
 			const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
 			resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
-		} catch {}
+		}
+		catch {}
 	}
 
 	const resolvedVueOptions = resolver.build();
 
 	if (skipGlobalTypesSetup) {
 		resolvedVueOptions.__setupedGlobalTypes = true;
-	} else {
+	}
+	else {
 		resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(rootDir, resolvedVueOptions, parseConfigHost);
 	}
 	const parsed = ts.parseJsonConfigFileContent(
@@ -86,14 +88,16 @@ export function createParsedCommandLine(
 				const obj = ts.convertToObject(configFile, []);
 				const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
 				resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
-			} catch {}
+			}
+			catch {}
 		}
 
 		const resolvedVueOptions = resolver.build();
 
 		if (skipGlobalTypesSetup) {
 			resolvedVueOptions.__setupedGlobalTypes = true;
-		} else {
+		}
+		else {
 			resolvedVueOptions.__setupedGlobalTypes = setupGlobalTypes(
 				path.dirname(tsConfigPath),
 				resolvedVueOptions,
@@ -124,7 +128,8 @@ export function createParsedCommandLine(
 			...parsed,
 			vueOptions: resolvedVueOptions,
 		};
-	} catch {
+	}
+	catch {
 		// console.warn('Failed to resolve tsconfig path:', tsConfigPath, err);
 		return {
 			fileNames: [],
@@ -169,7 +174,8 @@ export class CompilerOptionsResolver {
 					const target = options.target!;
 					if (typeof target === 'string') {
 						this.target = findVueVersion(rootDir);
-					} else {
+					}
+					else {
 						this.target = target;
 					}
 					break;
@@ -182,10 +188,12 @@ export class CompilerOptionsResolver {
 									const plugin = require(resolvedPath);
 									plugin.__moduleName = pluginPath;
 									return plugin;
-								} else {
+								}
+								else {
 									console.warn('[Vue] Load plugin failed:', pluginPath);
 								}
-							} catch (error) {
+							}
+							catch (error) {
 								console.warn('[Vue] Resolve plugin path failed:', pluginPath, error);
 							}
 							return [];
@@ -238,7 +246,8 @@ function findVueVersion(rootDir: string) {
 		const vuePackageJson = require(resolvedPath);
 		const versionNumbers = vuePackageJson.version.split('.');
 		return Number(versionNumbers[0] + '.' + versionNumbers[1]);
-	} else {
+	}
+	else {
 		// console.warn('Load vue/package.json failed from', folder);
 	}
 }
@@ -247,10 +256,12 @@ function resolvePath(scriptPath: string, root: string) {
 	try {
 		if (require?.resolve) {
 			return require.resolve(scriptPath, { paths: [root] });
-		} else {
+		}
+		else {
 			// console.warn('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
 		}
-	} catch {
+	}
+	catch {
 		// console.warn(error);
 	}
 }
@@ -340,5 +351,6 @@ export function setupGlobalTypes(rootDir: string, vueOptions: VueCompilerOptions
 		const globalTypesContents = `// @ts-nocheck\nexport {};\n` + generateGlobalTypes(vueOptions);
 		host.writeFile(globalTypesPath, globalTypesContents);
 		return { absolutePath: globalTypesPath };
-	} catch {}
+	}
+	catch {}
 }

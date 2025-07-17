@@ -25,7 +25,8 @@ export function* wrapWith(
 	let codes: Code[];
 	if (typeof args[0] === 'string') {
 		[source, features, ...codes] = args;
-	} else {
+	}
+	else {
 		[features, ...codes] = args;
 	}
 

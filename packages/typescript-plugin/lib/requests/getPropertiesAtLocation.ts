@@ -63,7 +63,8 @@ export function getPropertiesAtLocation(
 			if (!result) {
 				if (child.end === offset && ts.isIdentifier(child)) {
 					result = child;
-				} else if (child.end >= offset && child.getStart(sourceFile) < offset) {
+				}
+				else if (child.end >= offset && child.getStart(sourceFile) < offset) {
 					result = findPositionIdentifier(sourceFile, child, offset);
 				}
 			}

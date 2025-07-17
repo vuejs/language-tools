@@ -16,7 +16,8 @@ export function* generateStyleModules(
 	for (const [style, i] of styles) {
 		if (style.module === true) {
 			yield `$style`;
-		} else {
+		}
+		else {
 			const { text, offset } = style.module!;
 			yield [
 				text,

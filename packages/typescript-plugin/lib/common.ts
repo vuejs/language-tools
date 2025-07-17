@@ -279,9 +279,11 @@ function getDefinitionAndBoundSpan<T>(
 		) {
 			if (ts.isPropertySignature(node) && node.type) {
 				proxy(node.name, node.type, definition, sourceFile);
-			} else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type && !node.initializer) {
+			}
+			else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type && !node.initializer) {
 				proxy(node.name, node.type, definition, sourceFile);
-			} else {
+			}
+			else {
 				ts.forEachChild(node, child => visit(child, definition, sourceFile));
 			}
 		}

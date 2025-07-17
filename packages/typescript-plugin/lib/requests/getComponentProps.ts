@@ -142,7 +142,8 @@ function _jsDocTagInfoToMarkdown(jsDocTags: ts.JSDocTagInfo[]) {
 		const tagText = tag.text?.map(t => {
 			if (t.kind === 'parameterName') {
 				return `\`${t.text}\``;
-			} else {
+			}
+			else {
 				return t.text;
 			}
 		}).join('') || '';

@@ -79,10 +79,12 @@ export function* generateScriptSetup(
 			+ `}${endOfLine}`;
 		yield `})(),${newLine}`; // __VLS_setup = (async () => {
 		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))`;
-	} else if (!options.sfc.script) {
+	}
+	else if (!options.sfc.script) {
 		// no script block, generate script setup code at root
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default');
-	} else {
+	}
+	else {
 		if (!options.scriptRanges?.exportDefault) {
 			yield `export default `;
 		}
@@ -152,7 +154,8 @@ function* generateSetupFunction(
 				typeArg.start,
 				typeArg.end,
 			]);
-		} else if (arg) {
+		}
+		else if (arg) {
 			setupCodeModifies.push([
 				[
 					`const __VLS_exposed = `,
@@ -166,7 +169,8 @@ function* generateSetupFunction(
 				arg.start,
 				arg.end,
 			]);
-		} else {
+		}
+		else {
 			setupCodeModifies.push([
 				[`const __VLS_exposed = {}${endOfLine}`],
 				callExp.start,
@@ -253,7 +257,8 @@ function* generateSetupFunction(
 				exp.end,
 				exp.end,
 			]);
-		} else {
+		}
+		else {
 			setupCodeModifies.push([
 				[`(`],
 				callExp.start,
@@ -320,7 +325,8 @@ function* generateSetupFunction(
 			yield endOfLine;
 			yield `${syntax} `;
 			yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_component, __VLS_Slots>${endOfLine}`;
-		} else {
+		}
+		else {
 			yield `${syntax} `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
@@ -368,7 +374,8 @@ function* generateDefineWithType(
 	if (!name) {
 		if (statement.start === callExp.start && statement.end === callExp.end) {
 			yield [[`const ${defaultName} = `], callExp.start, callExp.start];
-		} else if (typeArg) {
+		}
+		else if (typeArg) {
 			yield [
 				[
 					`const ${defaultName} = `,
@@ -387,7 +394,8 @@ function* generateDefineWithType(
 				typeArg.end,
 				callExp.end,
 			];
-		} else {
+		}
+		else {
 			yield [
 				[
 					`const ${defaultName} = `,
@@ -494,7 +502,8 @@ function* generateComponentProps(
 					defineModel.name.start,
 					codeFeatures.navigation,
 				);
-			} else {
+			}
+			else {
 				yield propName;
 			}
 
@@ -545,13 +554,16 @@ function* generateDefineModelType(
 	if (defineModel.type) {
 		// Infer from defineModel<T>
 		yield getRangeText(scriptSetup, defineModel.type);
-	} else if (defineModel.runtimeType && localName) {
+	}
+	else if (defineModel.runtimeType && localName) {
 		// Infer from actual prop declaration code
 		yield `typeof ${localName}['value']`;
-	} else if (defineModel.defaultValue && propName) {
+	}
+	else if (defineModel.defaultValue && propName) {
 		// Infer from defineModel({default: T})
 		yield `typeof __VLS_defaults['${propName}']`;
-	} else {
+	}
+	else {
 		yield `any`;
 	}
 }

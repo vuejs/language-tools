@@ -51,7 +51,8 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 				const minIndent = calculateMinIndent(template);
 				if (minIndent === 0) {
 					pugFile = pug?.baseParse(template);
-				} else {
+				}
+				else {
 					pugFile = pug?.baseParse(`template\n${template}`);
 					baseOffset = 'template\n'.length;
 					pugFile.htmlCode = ' '.repeat('<template>'.length)

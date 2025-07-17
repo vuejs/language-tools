@@ -50,11 +50,13 @@ export function* generateElementProps(
 					yield `: `;
 					yield* generateEventExpression(options, ctx, prop);
 					yield `},`;
-				} else {
+				}
+				else {
 					yield `...{ '${camelize('on-' + prop.arg.loc.source)}': {} as any },`;
 				}
 				yield newLine;
-			} else if (
+			}
+			else if (
 				prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 				&& prop.arg.loc.source.startsWith('[')
@@ -62,7 +64,8 @@ export function* generateElementProps(
 			) {
 				failedPropExps?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
 				failedPropExps?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
-			} else if (
+			}
+			else if (
 				!prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
@@ -86,7 +89,8 @@ export function* generateElementProps(
 				propName = prop.arg.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
 					? prop.arg.content
 					: prop.arg.loc.source;
-			} else {
+			}
+			else {
 				propName = getModelPropName(node, options.vueCompilerOptions);
 			}
 
@@ -151,7 +155,8 @@ export function* generateElementProps(
 			)];
 			if (enableCodeFeatures) {
 				yield* codes;
-			} else {
+			}
+			else {
 				yield toString(codes);
 			}
 			if (shouldSpread) {
@@ -173,12 +178,14 @@ export function* generateElementProps(
 				)];
 				if (enableCodeFeatures) {
 					yield* codes;
-				} else {
+				}
+				else {
 					yield toString(codes);
 				}
 				yield newLine;
 			}
-		} else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
+		}
+		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
 			if (
 				options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))
 				// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom` always adds it (#3881)
@@ -219,14 +226,16 @@ export function* generateElementProps(
 			)];
 			if (enableCodeFeatures) {
 				yield* codes;
-			} else {
+			}
+			else {
 				yield toString(codes);
 			}
 			if (shouldSpread) {
 				yield ` }`;
 			}
 			yield `,${newLine}`;
-		} else if (
+		}
+		else if (
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& prop.name === 'bind'
 			&& !prop.arg
@@ -236,7 +245,8 @@ export function* generateElementProps(
 				if (enableCodeFeatures) {
 					ctx.bindingAttrLocs.push(prop.exp.loc);
 				}
-			} else {
+			}
+			else {
 				const codes = [...wrapWith(
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
@@ -252,7 +262,8 @@ export function* generateElementProps(
 				)];
 				if (enableCodeFeatures) {
 					yield* codes;
-				} else {
+				}
+				else {
 					yield toString(codes);
 				}
 				yield `,${newLine}`;
@@ -285,7 +296,8 @@ export function* generatePropExp(
 				`(`,
 				`)`,
 			);
-		} else {
+		}
+		else {
 			const propVariableName = camelize(exp.loc.source);
 
 			if (identifierRegex.test(propVariableName)) {
@@ -301,14 +313,16 @@ export function* generatePropExp(
 
 				if (ctx.hasLocalVariable(propVariableName) || isDestructuredProp) {
 					yield* codes;
-				} else {
+				}
+				else {
 					ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
 
 					if (isTemplateRef) {
 						yield `__VLS_unref(`;
 						yield* codes;
 						yield `)`;
-					} else {
+					}
+					else {
 						yield `__VLS_ctx.`;
 						yield* codes;
 					}
@@ -319,7 +333,8 @@ export function* generatePropExp(
 				}
 			}
 		}
-	} else {
+	}
+	else {
 		yield `{}`;
 	}
 }

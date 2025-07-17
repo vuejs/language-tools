@@ -30,7 +30,8 @@ describe('vue-tsc-dts', () => {
 		const { configFilePath } = options.options;
 		if (typeof configFilePath === 'string') {
 			vueOptions = vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
-		} else {
+		}
+		else {
 			vueOptions = vue.getDefaultCompilerOptions();
 			vueOptions.extensions = ['.vue', '.cext'];
 			vueOptions.__setupedGlobalTypes = vue.setupGlobalTypes(
@@ -83,7 +84,8 @@ function readFilesRecursive(dir: string) {
 		const stat = fs.statSync(filepath);
 		if (stat.isDirectory()) {
 			result.push(...readFilesRecursive(filepath));
-		} else {
+		}
+		else {
 			result.push(filepath);
 		}
 	}

@@ -90,7 +90,8 @@ export function createVueLanguagePlugin<T>(
 				if (code) {
 					code.update(snapshot);
 					return code;
-				} else {
+				}
+				else {
 					const code = new VueVirtualCode(
 						fileName,
 						languageId,

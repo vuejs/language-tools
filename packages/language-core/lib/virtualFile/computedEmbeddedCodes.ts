@@ -72,7 +72,8 @@ export function computedEmbeddedCodes(
 						embeddedCodes: [],
 					});
 					remain.splice(i, 1);
-				} else {
+				}
+				else {
 					const parent = findParentStructure(code.parentCodeId, embeddedCodes);
 					if (parent) {
 						parent.embeddedCodes ??= [];
@@ -141,7 +142,8 @@ function computedPluginEmbeddedCodes(
 								}
 								try {
 									plugin.resolveEmbeddedCode(fileName, sfc, code);
-								} catch (e) {
+								}
+								catch (e) {
 									console.error(e);
 								}
 							}
@@ -170,7 +172,8 @@ function computedPluginEmbeddedCodes(
 					);
 				}
 			}
-		} catch (e) {
+		}
+		catch (e) {
 			console.error(e);
 		}
 		return [...computeds.values()];
@@ -227,7 +230,8 @@ function computedPluginEmbeddedCodes(
 							lengths: [Number(token.description)],
 							data: undefined,
 						});
-					} else {
+					}
+					else {
 						tokenMappings.set(token, mapping);
 					}
 					continue;

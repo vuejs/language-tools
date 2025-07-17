@@ -227,7 +227,8 @@ export function computedSfc(
 				for (const [text, ast] of oldTsAsts) {
 					if (!ast.__volar_used) {
 						oldTsAsts.delete(text);
-					} else {
+					}
+					else {
 						newTsAsts.set(text, ast);
 						ast.__volar_used = false;
 					}
@@ -295,7 +296,8 @@ export function computedSfc(
 					if (result) {
 						updateInlineTsAsts(result.ast, cache?.result.ast);
 					}
-				} catch (e) {
+				}
+				catch (e) {
 					const err = e as CompilerDOM.CompilerError;
 					errors.push(err);
 				}
@@ -308,7 +310,8 @@ export function computedSfc(
 							result: result,
 							plugin,
 						};
-					} else {
+					}
+					else {
 						cache = undefined;
 					}
 

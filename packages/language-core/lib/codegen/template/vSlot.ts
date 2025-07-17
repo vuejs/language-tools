@@ -40,7 +40,8 @@ export function* generateVSlot(
 					false,
 					true,
 				);
-			} else {
+			}
+			else {
 				yield* wrapWith(
 					slotDir.loc.start.offset,
 					slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
@@ -48,7 +49,8 @@ export function* generateVSlot(
 					`default`,
 				);
 			}
-		} else {
+		}
+		else {
 			// #932: reference for implicit default slot
 			yield* wrapWith(
 				node.loc.start.offset,
@@ -141,7 +143,8 @@ function* generateSlotParameters(
 				type.end,
 			]);
 			types.push(chunk(getStartEnd(ts, type, ast).start, type.end));
-		} else {
+		}
+		else {
 			types.push(null);
 		}
 	}

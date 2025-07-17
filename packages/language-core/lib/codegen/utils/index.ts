@@ -34,17 +34,20 @@ export function collectIdentifiers(
 ) {
 	if (ts.isIdentifier(node)) {
 		results.push({ id: node, isRest, initializer });
-	} else if (ts.isObjectBindingPattern(node)) {
+	}
+	else if (ts.isObjectBindingPattern(node)) {
 		for (const el of node.elements) {
 			collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken, el.initializer);
 		}
-	} else if (ts.isArrayBindingPattern(node)) {
+	}
+	else if (ts.isArrayBindingPattern(node)) {
 		for (const el of node.elements) {
 			if (ts.isBindingElement(el)) {
 				collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken);
 			}
 		}
-	} else {
+	}
+	else {
 		ts.forEachChild(node, node => collectIdentifiers(ts, node, results, false));
 	}
 	return results;

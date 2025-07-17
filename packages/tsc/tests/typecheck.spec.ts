@@ -43,7 +43,8 @@ function getTscOutput() {
 			{ paths: [path.resolve(__dirname, '../../../test-workspace')] },
 		);
 		run(tscPath);
-	} catch {}
+	}
+	catch {}
 	process.stdout.write = originalConsoleLog;
 	process.argv = originalArgv;
 	return consoleOutput;

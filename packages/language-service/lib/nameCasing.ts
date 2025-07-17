@@ -66,7 +66,8 @@ function detectAttrCasing(code: VirtualCode) {
 	let tags: Tags | undefined;
 	if (cache.has(code)) {
 		tags = cache.get(code);
-	} else {
+	}
+	else {
 		cache.set(code, tags = collectTags(code));
 	}
 	const result = new Set<AttrNameCasing>();
@@ -94,7 +95,8 @@ function detectTagCasing(code: VueVirtualCode): TagNameCasing[] {
 	let tags: Tags | undefined;
 	if (cache.has(code)) {
 		tags = cache.get(code);
-	} else {
+	}
+	else {
 		cache.set(code, tags = collectTags(code));
 	}
 	const result = new Set<TagNameCasing>();
@@ -103,7 +105,8 @@ function detectTagCasing(code: VueVirtualCode): TagNameCasing[] {
 		if (tag !== hyphenateTag(tag)) {
 			// TagName
 			result.add(TagNameCasing.Pascal);
-		} else {
+		}
+		else {
 			// tag-name
 			result.add(TagNameCasing.Kebab);
 		}
@@ -133,7 +136,8 @@ function collectTags(root: VirtualCode) {
 				&& prop.arg.isStatic
 			) {
 				name = prop.arg.content;
-			} else if (
+			}
+			else if (
 				prop.type === 6 satisfies NodeTypes.ATTRIBUTE
 			) {
 				name = prop.name;

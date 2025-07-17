@@ -159,7 +159,8 @@ export function findDestructuredProps(
 				for (const decl of stmt.declarationList.declarations) {
 					walkVariableDeclaration(decl, isRoot);
 				}
-			} else if (
+			}
+			else if (
 				ts.isFunctionDeclaration(stmt)
 				|| ts.isClassDeclaration(stmt)
 			) {
@@ -168,12 +169,14 @@ export function findDestructuredProps(
 					return;
 				}
 				registerLocalBinding(stmt.name);
-			} else if (
+			}
+			else if (
 				(ts.isForOfStatement(stmt) || ts.isForInStatement(stmt))
 				&& ts.isVariableDeclarationList(stmt.initializer)
 			) {
 				walkVariableDeclaration(stmt.initializer.declarations[0], isRoot);
-			} else if (
+			}
+			else if (
 				ts.isLabeledStatement(stmt)
 				&& ts.isVariableDeclaration(stmt.statement)
 			) {
@@ -192,7 +195,8 @@ export function findDestructuredProps(
 		for (const { id } of collectIdentifiers(ts, name)) {
 			if (isDefineProps) {
 				excludedIds.add(id);
-			} else {
+			}
+			else {
 				registerLocalBinding(id);
 			}
 		}

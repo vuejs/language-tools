@@ -40,7 +40,8 @@ export function* generateVFor(
 			`)`,
 		);
 		yield `!)`; // #3102
-	} else {
+	}
+	else {
 		yield `{} as any`;
 	}
 	yield `) {${newLine}`;

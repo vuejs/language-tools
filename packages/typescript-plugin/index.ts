@@ -55,7 +55,8 @@ export = createLanguageServicePlugin(
 			if (info.project.projectKind === ts.server.ProjectKind.Configured) {
 				const tsconfig = info.project.getProjectName();
 				return vue.createParsedCommandLine(ts, ts.sys, tsconfig.replace(windowsPathReg, '/')).vueOptions;
-			} else {
+			}
+			else {
 				return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {})
 					.vueOptions;
 			}

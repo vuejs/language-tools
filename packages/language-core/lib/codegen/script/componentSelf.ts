@@ -62,9 +62,11 @@ export function* generateComponentSelf(
 			yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
 		}
 		yield `})${endOfLine}`; // defineComponent {
-	} else if (options.sfc.script) {
+	}
+	else if (options.sfc.script) {
 		yield `let __VLS_self!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
-	} else {
+	}
+	else {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 	}
 }

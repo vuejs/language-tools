@@ -19,9 +19,11 @@ export function* generateVIf(
 
 		if (i === 0) {
 			yield `if `;
-		} else if (branch.condition) {
+		}
+		else if (branch.condition) {
 			yield `else if `;
-		} else {
+		}
+		else {
 			yield `else `;
 		}
 

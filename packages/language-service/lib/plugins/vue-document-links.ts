@@ -80,7 +80,8 @@ export function create(): LanguageServicePlugin {
 								}
 							}
 						}
-					} else if (virtualCode.id === 'scriptsetup_raw') {
+					}
+					else if (virtualCode.id === 'scriptsetup_raw') {
 						if (!sfc.scriptSetup) {
 							return;
 						}
