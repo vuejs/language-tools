@@ -63,7 +63,8 @@ function createTsx(
 		if (sfc.script && sfc.scriptSetup) {
 			if (sfc.scriptSetup.lang !== 'js') {
 				return sfc.scriptSetup.lang;
-			} else {
+			}
+			else {
 				return sfc.script.lang;
 			}
 		}

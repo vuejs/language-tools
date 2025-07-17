@@ -42,11 +42,13 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 					for (let i = 0; i < instance.length; i++) {
 						instance[i].name ??= `${moduleName} (${i})`;
 					}
-				} else {
+				}
+				else {
 					instance.name ??= moduleName;
 				}
 				return instance;
-			} catch (err) {
+			}
+			catch (err) {
 				console.warn('[Vue] Failed to create plugin', err);
 			}
 		})

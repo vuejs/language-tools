@@ -49,7 +49,8 @@ export function* generateSlotOutlet(
 					offset,
 					ctx.codeFeatures.navigationAndVerification,
 				);
-			} else if (
+			}
+			else if (
 				nameProp.type === CompilerDOM.NodeTypes.DIRECTIVE
 				&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
@@ -63,7 +64,8 @@ export function* generateSlotOutlet(
 					),
 					`]`,
 				];
-			} else {
+			}
+			else {
 				codes = [`['default']`];
 			}
 
@@ -74,7 +76,8 @@ export function* generateSlotOutlet(
 				`${options.slotsAssignName ?? '__VLS_slots'}`,
 				...codes,
 			);
-		} else {
+		}
+		else {
 			yield* wrapWith(
 				startTagOffset,
 				startTagEndOffset,
@@ -106,7 +109,8 @@ export function* generateSlotOutlet(
 			`}`,
 		);
 		yield `)${endOfLine}`;
-	} else {
+	}
+	else {
 		yield `var ${propsVar} = {${newLine}`;
 		yield* generateElementProps(
 			options,
@@ -129,7 +133,8 @@ export function* generateSlotOutlet(
 				nodeLoc: node.loc,
 				propsVar: ctx.getHoistVariable(propsVar),
 			});
-		} else if (
+		}
+		else if (
 			nameProp?.type === CompilerDOM.NodeTypes.DIRECTIVE
 			&& nameProp.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
@@ -152,7 +157,8 @@ export function* generateSlotOutlet(
 				expVar: ctx.getHoistVariable(expVar),
 				propsVar: ctx.getHoistVariable(propsVar),
 			});
-		} else {
+		}
+		else {
 			ctx.slots.push({
 				name: 'default',
 				tagRange: [startTagOffset, startTagEndOffset],

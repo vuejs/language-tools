@@ -221,4 +221,5 @@ try {
 	if (tsExtension.isActive) {
 		vscode.commands.executeCommand('workbench.action.restartExtensionHost');
 	}
-} catch {}
+}
+catch {}

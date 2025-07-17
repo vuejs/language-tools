@@ -32,7 +32,8 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 			let obj: ts.ObjectLiteralExpression | undefined;
 			if (ts.isObjectLiteralExpression(node.expression)) {
 				obj = node.expression;
-			} else if (ts.isCallExpression(node.expression) && node.expression.arguments.length) {
+			}
+			else if (ts.isCallExpression(node.expression) && node.expression.arguments.length) {
 				const arg0 = node.expression.arguments[0];
 				if (ts.isObjectLiteralExpression(arg0)) {
 					obj = arg0;
@@ -48,11 +49,14 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 						const name = _getNodeText(node.name);
 						if (name === 'components' && ts.isObjectLiteralExpression(node.initializer)) {
 							componentsOptionNode = node.initializer;
-						} else if (name === 'directives' && ts.isObjectLiteralExpression(node.initializer)) {
+						}
+						else if (name === 'directives' && ts.isObjectLiteralExpression(node.initializer)) {
 							directivesOptionNode = node.initializer;
-						} else if (name === 'name') {
+						}
+						else if (name === 'name') {
 							nameOptionNode = node.initializer;
-						} else if (name === 'inheritAttrs') {
+						}
+						else if (name === 'inheritAttrs') {
 							inheritAttrsOption = _getNodeText(node.initializer);
 						}
 					}

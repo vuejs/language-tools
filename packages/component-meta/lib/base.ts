@@ -112,17 +112,20 @@ export function baseCreate(
 
 			if (fileName === globalComponentName) {
 				snapshot = globalComponentSnapshot;
-			} else if (isMetaFileName(fileName)) {
+			}
+			else if (isMetaFileName(fileName)) {
 				if (!metaSnapshots.has(fileName)) {
 					metaSnapshots.set(fileName, ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName)));
 				}
 				snapshot = metaSnapshots.get(fileName);
-			} else {
+			}
+			else {
 				if (!scriptSnapshots.has(fileName)) {
 					const fileText = ts.sys.readFile(fileName);
 					if (fileText !== undefined) {
 						scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(fileText));
-					} else {
+					}
+					else {
 						scriptSnapshots.set(fileName, undefined);
 					}
 				}
@@ -131,7 +134,8 @@ export function baseCreate(
 
 			if (snapshot) {
 				language.scripts.set(fileName, snapshot);
-			} else {
+			}
+			else {
 				language.scripts.delete(fileName);
 			}
 		},
@@ -471,7 +475,8 @@ function createSchemaResolvers(
 					if (typeof result === 'boolean') {
 						return result;
 					}
-				} else if (name === item) {
+				}
+				else if (name === item) {
 					return true;
 				}
 			}
@@ -560,7 +565,8 @@ function createSchemaResolvers(
 			if ((call.parameters[1].valueDeclaration as any)?.dotDotDotToken) {
 				subtypeStr = getFullyQualifiedName(subtype);
 				getSchema = () => typeChecker.getTypeArguments(subtype! as ts.TypeReference).map(resolveSchema);
-			} else {
+			}
+			else {
 				subtypeStr = '[';
 				for (let i = 1; i < call.parameters.length; i++) {
 					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode))
@@ -630,7 +636,8 @@ function createSchemaResolvers(
 					return schema ??= subtype.types.map(resolveSchema);
 				},
 			};
-		} else if (typeChecker.isArrayLikeType(subtype)) {
+		}
+		else if (typeChecker.isArrayLikeType(subtype)) {
 			let schema: PropertyMetaSchema[];
 			return {
 				kind: 'array',
@@ -639,7 +646,8 @@ function createSchemaResolvers(
 					return schema ??= typeChecker.getTypeArguments(subtype as ts.TypeReference).map(resolveSchema);
 				},
 			};
-		} else if (
+		}
+		else if (
 			subtype.getCallSignatures().length === 0
 			&& (subtype.isClassOrInterface() || subtype.isIntersection()
 				|| (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
@@ -652,7 +660,8 @@ function createSchemaResolvers(
 					return schema ??= subtype.getProperties().map(resolveNestedProperties).reduce(reducer, {});
 				},
 			};
-		} else if (subtype.getCallSignatures().length === 1) {
+		}
+		else if (subtype.getCallSignatures().length === 1) {
 			return resolveCallbackSchema(subtype.getCallSignatures()[0]);
 		}
 
@@ -749,7 +758,8 @@ function readVueComponentDefaultProps(
 					}
 				}
 			}
-		} else if (scriptSetupRanges?.defineProps?.argNode) {
+		}
+		else if (scriptSetupRanges?.defineProps?.argNode) {
 			const obj = findObjectLiteralExpression(scriptSetupRanges.defineProps.argNode);
 			if (obj) {
 				result = {
@@ -757,7 +767,8 @@ function readVueComponentDefaultProps(
 					...resolvePropsOption(ast, obj, printer, ts),
 				};
 			}
-		} else if (scriptSetupRanges?.defineProps?.destructured) {
+		}
+		else if (scriptSetupRanges?.defineProps?.destructured) {
 			for (const [name, initializer] of scriptSetupRanges.defineProps.destructured) {
 				if (initializer) {
 					const expText = printer?.printNode(ts.EmitHint.Expression, initializer, ast) ?? initializer.getText(ast);
@@ -830,7 +841,8 @@ function readTsComponentDefaultProps(
 					result = child.expression;
 				}
 			});
-		} else {
+		}
+		else {
 			ast.forEachChild(child => {
 				if (
 					ts.isVariableStatement(child)
@@ -855,7 +867,8 @@ function readTsComponentDefaultProps(
 			// export default { ... }
 			if (ts.isObjectLiteralExpression(component)) {
 				return component;
-			} // export default defineComponent({ ... })
+			}
+			// export default defineComponent({ ... })
 			else if (ts.isCallExpression(component)) {
 				if (component.arguments.length) {
 					const arg = component.arguments[0];
@@ -944,9 +957,11 @@ function resolveDefaultOptionExpression(
 	if (ts.isArrowFunction(_default)) {
 		if (ts.isBlock(_default.body)) {
 			return _default; // TODO
-		} else if (ts.isParenthesizedExpression(_default.body)) {
+		}
+		else if (ts.isParenthesizedExpression(_default.body)) {
 			return _default.body.expression;
-		} else {
+		}
+		else {
 			return _default.body;
 		}
 	}

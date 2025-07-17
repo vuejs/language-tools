@@ -17,7 +17,8 @@ export function* generatePropertyAccess(
 		yield offset !== undefined && features
 			? [code, 'template', offset, features]
 			: code;
-	} else if (code.startsWith('[') && code.endsWith(']')) {
+	}
+	else if (code.startsWith('[') && code.endsWith(']')) {
 		yield* generateInterpolation(
 			options,
 			ctx,
@@ -26,7 +27,8 @@ export function* generatePropertyAccess(
 			code,
 			offset,
 		);
-	} else {
+	}
+	else {
 		yield `[`;
 		yield* generateStringLiteralKey(code, offset, features);
 		yield `]`;

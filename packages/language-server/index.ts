@@ -182,7 +182,8 @@ connection.onInitialize(params => {
 				const document = server.documents.get(uri);
 				if (document) {
 					language.scripts.set(uri, document.getSnapshot(), document.languageId);
-				} else {
+				}
+				else {
 					language.scripts.delete(uri);
 				}
 			},
@@ -268,7 +269,8 @@ connection.onRequest('vue/reactivityAnalyze', async (params: {
 	if (sourceScript) {
 		document = languageService.context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
 		snapshot = sourceScript.snapshot;
-	} else if (cacheDocuments.has(params.textDocument.uri)) {
+	}
+	else if (cacheDocuments.has(params.textDocument.uri)) {
 		const [doc, snap] = cacheDocuments.get(params.textDocument.uri)!;
 		document = doc;
 		snapshot = snap;
@@ -353,7 +355,8 @@ connection.onRequest('vue/reactivityAnalyze', async (params: {
 				subscribers.push(sourceRange);
 			}
 		}
-	} else {
+	}
+	else {
 		for (const dependency of result.dependencies) {
 			let start = document.positionAt(dependency.getStart(result.sourceFile));
 			let end = document.positionAt(dependency.getEnd());

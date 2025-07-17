@@ -279,9 +279,11 @@ function selectTemplateCode(
 					visit(node);
 				}
 			});
-		} else if ('branches' in node) {
+		}
+		else if ('branches' in node) {
 			node.branches.forEach(visit);
-		} else if ('content' in node) {
+		}
+		else if ('content' in node) {
 			if (typeof node.content === 'object') {
 				visit(node.content);
 			}
@@ -309,7 +311,8 @@ export function getLastImportNode(ts: typeof import('typescript'), sourceFile: t
 	for (const statement of sourceFile.statements) {
 		if (ts.isImportDeclaration(statement)) {
 			lastImportNode = statement;
-		} else {
+		}
+		else {
 			break;
 		}
 	}
@@ -344,7 +347,8 @@ export function createAddComponentToOptionEdit(
 			range: exportDefault.componentsOption,
 			newText: unescape(printText.replace(unicodeReg, '%u')),
 		};
-	} else if (exportDefault.args && exportDefault.argsNode) {
+	}
+	else if (exportDefault.args && exportDefault.argsNode) {
 		const newNode: typeof exportDefault.argsNode = {
 			...exportDefault.argsNode,
 			properties: [

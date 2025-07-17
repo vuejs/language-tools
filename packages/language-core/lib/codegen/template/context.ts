@@ -289,7 +289,8 @@ export function createTemplateCodegenContext(
 								...codeFeatures.semanticWithoutHighlight,
 							},
 						];
-					} else {
+					}
+					else {
 						yield [
 							varName,
 							'template',

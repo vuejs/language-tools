@@ -5,7 +5,8 @@ import { wrapWith } from './wrapWith';
 export function* generateStringLiteralKey(code: string, offset?: number, info?: VueCodeInformation): Generator<Code> {
 	if (offset === undefined || !info) {
 		yield `'${code}'`;
-	} else {
+	}
+	else {
 		yield* wrapWith(
 			offset,
 			offset + code.length,

@@ -73,11 +73,13 @@ export function create(): LanguageServicePlugin {
 							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
-						} else if (virtualCode.id.startsWith('style_')) {
+						}
+						else if (virtualCode.id.startsWith('style_')) {
 							if (await context.env.getConfiguration?.('vue.format.style.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
-						} else if (virtualCode.id === 'template') {
+						}
+						else if (virtualCode.id === 'template') {
 							if (await context.env.getConfiguration?.('vue.format.template.initialIndent') ?? true) {
 								options.initialIndentLevel++;
 							}

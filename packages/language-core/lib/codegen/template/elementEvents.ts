@@ -47,7 +47,8 @@ export function* generateElementEvents(
 			if (prop.name === 'model') {
 				propPrefix = 'onUpdate:';
 				emitPrefix = 'update:';
-			} else if (source.startsWith('vue:')) {
+			}
+			else if (source.startsWith('vue:')) {
 				source = source.slice('vue:'.length);
 				start = start! + 'vue:'.length;
 				propPrefix = 'onVnode-';
@@ -68,7 +69,8 @@ export function* generateElementEvents(
 				yield* generateEventArg(ctx, source, start!, propPrefix.slice(0, -1));
 				yield `: `;
 				yield* generateEventExpression(options, ctx, prop);
-			} else {
+			}
+			else {
 				yield `'${propName}': `;
 				yield* generateModelEventExpression(options, ctx, prop);
 			}
@@ -94,7 +96,8 @@ export function* generateEventArg(
 		yield ['', 'template', start, features];
 		yield directive;
 		yield* generateCamelized(name, 'template', start, combineLastMapping);
-	} else {
+	}
+	else {
 		yield* wrapWith(
 			start,
 			start + name.length,
@@ -164,7 +167,8 @@ export function* generateEventExpression(
 			yield* ctx.generateAutoImportCompletion();
 			yield `}`;
 		}
-	} else {
+	}
+	else {
 		yield `() => {}`;
 	}
 }
@@ -187,7 +191,8 @@ export function* generateModelEventExpression(
 		);
 		yield ` = $event${endOfLine}`;
 		yield `}`;
-	} else {
+	}
+	else {
 		yield `() => {}`;
 	}
 }
@@ -196,17 +201,20 @@ export function isCompoundExpression(ts: typeof import('typescript'), ast: ts.So
 	let result = true;
 	if (ast.statements.length === 0) {
 		result = false;
-	} else if (ast.statements.length === 1) {
+	}
+	else if (ast.statements.length === 1) {
 		ts.forEachChild(ast, child_1 => {
 			if (ts.isExpressionStatement(child_1)) {
 				ts.forEachChild(child_1, child_2 => {
 					if (ts.isArrowFunction(child_2)) {
 						result = false;
-					} else if (isPropertyAccessOrId(ts, child_2)) {
+					}
+					else if (isPropertyAccessOrId(ts, child_2)) {
 						result = false;
 					}
 				});
-			} else if (ts.isFunctionDeclaration(child_1)) {
+			}
+			else if (ts.isFunctionDeclaration(child_1)) {
 				result = false;
 			}
 		});

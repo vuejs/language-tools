@@ -25,7 +25,8 @@ export function getComponentType(
 		if (name === capitalize(camelize(tag))) {
 			componentType = getVariableType(ts, languageService, vueCode, '__VLS_self')?.type;
 		}
-	} else {
+	}
+	else {
 		componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 		for (let i = 1; i < name.length; i++) {
 			componentSymbol = componentType.getProperty(name[i]);
@@ -76,9 +77,11 @@ function searchVariableDeclarationNode(
 	function walk(node: ts.Node) {
 		if (result) {
 			return;
-		} else if (ts.isVariableDeclaration(node) && node.name.getText() === name) {
+		}
+		else if (ts.isVariableDeclaration(node) && node.name.getText() === name) {
 			result = node;
-		} else {
+		}
+		else {
 			node.forEachChild(walk);
 		}
 	}

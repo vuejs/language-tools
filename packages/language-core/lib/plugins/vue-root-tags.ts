@@ -31,7 +31,8 @@ const plugin: VueLanguagePlugin = () => {
 					let content = block.content;
 					if (content.endsWith('\r\n')) {
 						content = content.slice(0, -2);
-					} else if (content.endsWith('\n')) {
+					}
+					else if (content.endsWith('\n')) {
 						content = content.slice(0, -1);
 					}
 					const offset = content.lastIndexOf('\n') + 1;
@@ -57,7 +58,8 @@ const plugin: VueLanguagePlugin = () => {
 						),
 					);
 				}
-			} else {
+			}
+			else {
 				embeddedFile.parentCodeId ??= 'root_tags';
 			}
 		},

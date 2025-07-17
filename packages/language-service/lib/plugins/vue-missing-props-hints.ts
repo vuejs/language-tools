@@ -103,13 +103,15 @@ export function create(
 								unburnedRequiredProps: [...componentProps[checkTag]],
 								labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
 							};
-						} else if (token === html.TokenType.AttributeName) {
+						}
+						else if (token === html.TokenType.AttributeName) {
 							if (current) {
 								let attrText = scanner.getTokenText();
 
 								if (attrText === 'v-bind') {
 									current.unburnedRequiredProps = [];
-								} else {
+								}
+								else {
 									// remove modifiers
 									if (attrText.includes('.')) {
 										attrText = attrText.split('.')[0];
@@ -117,15 +119,20 @@ export function create(
 									// normalize
 									if (attrText.startsWith('v-bind:')) {
 										attrText = attrText.slice('v-bind:'.length);
-									} else if (attrText.startsWith(':')) {
+									}
+									else if (attrText.startsWith(':')) {
 										attrText = attrText.slice(':'.length);
-									} else if (attrText.startsWith('v-model:')) {
+									}
+									else if (attrText.startsWith('v-model:')) {
 										attrText = attrText.slice('v-model:'.length);
-									} else if (attrText === 'v-model') {
+									}
+									else if (attrText === 'v-model') {
 										attrText = context.project.vue.compilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
-									} else if (attrText.startsWith('v-on:')) {
+									}
+									else if (attrText.startsWith('v-on:')) {
 										attrText = 'on-' + hyphenateAttr(attrText.slice('v-on:'.length));
-									} else if (attrText.startsWith('@')) {
+									}
+									else if (attrText.startsWith('@')) {
 										attrText = 'on-' + hyphenateAttr(attrText.slice('@'.length));
 									}
 
@@ -135,7 +142,8 @@ export function create(
 									});
 								}
 							}
-						} else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
+						}
+						else if (token === html.TokenType.StartTagSelfClose || token === html.TokenType.StartTagClose) {
 							if (current) {
 								for (const requiredProp of current.unburnedRequiredProps) {
 									result.push({
@@ -168,7 +176,8 @@ export function create(
 	function getScanner(context: LanguageServiceContext, document: TextDocument): html.Scanner | undefined {
 		if (document.languageId === 'html') {
 			return context.inject('html/languageService').createScanner(document.getText());
-		} else {
+		}
+		else {
 			const pugDocument = context.inject('pug/pugDocument', document);
 			if (pugDocument) {
 				return context.inject('pug/languageService').createScanner(pugDocument);

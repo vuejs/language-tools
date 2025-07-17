@@ -23,7 +23,8 @@ export function* generateComponent(
 			codeFeatures.all,
 		);
 		yield `{${newLine}`;
-	} else {
+	}
+	else {
 		yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 	}
 
@@ -92,14 +93,16 @@ export function* generateEmitsOption(
 		optionCodes.push(`{} as __VLS_NormalizeEmits<typeof ${name ?? '__VLS_emit'}>`);
 		if (typeArg && !hasUnionTypeArg) {
 			typeOptionCodes.push(`__VLS_Emit`);
-		} else {
+		}
+		else {
 			typeOptionCodes.length = 0;
 		}
 	}
 
 	if (options.vueCompilerOptions.target >= 3.5 && typeOptionCodes.length) {
 		yield* generateIntersectMerge('__typeEmits', typeOptionCodes);
-	} else if (optionCodes.length) {
+	}
+	else if (optionCodes.length) {
 		yield* generateSpreadMerge('emits', optionCodes);
 	}
 }
@@ -177,7 +180,8 @@ function* generateSpreadMerge(key: string, codes: Code[]): Generator<Code> {
 	yield `${key}: `;
 	if (codes.length === 1) {
 		yield codes[0];
-	} else {
+	}
+	else {
 		yield `{${newLine}`;
 		for (const code of codes) {
 			yield `...`;

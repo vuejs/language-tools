@@ -236,9 +236,11 @@ export function create(
 
 						if (specialTags.has(tag.name)) {
 							tag.name = generateItemKey('specialTag', tag.name, '');
-						} else if (casing.tag === TagNameCasing.Kebab) {
+						}
+						else if (casing.tag === TagNameCasing.Kebab) {
 							tag.name = hyphenateTag(tag.name);
-						} else {
+						}
+						else {
 							tag.name = camelize(capitalize(tag.name));
 						}
 					}
@@ -285,7 +287,8 @@ export function create(
 							for (const tag of components) {
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(tag));
-								} else if (casing.tag === TagNameCasing.Pascal) {
+								}
+								else if (casing.tag === TagNameCasing.Pascal) {
 									names.add(tag);
 								}
 							}
@@ -294,7 +297,8 @@ export function create(
 								const name = vueCode.sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
-								} else if (casing.tag === TagNameCasing.Pascal) {
+								}
+								else if (casing.tag === TagNameCasing.Pascal) {
 									names.add(name);
 								}
 							}
@@ -365,7 +369,8 @@ export function create(
 											description: propKey,
 										},
 									);
-								} else {
+								}
+								else {
 									const propName = name;
 									const propInfo = propInfos.find(prop => {
 										const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
@@ -579,10 +584,12 @@ export function create(
 								kind: 'markdown',
 								value: documentations.join('\n\n'),
 							};
-						} else {
+						}
+						else {
 							item.documentation = undefined;
 						}
-					} else {
+					}
+					else {
 						let propName = item.label;
 
 						for (const str of ['v-bind:', ':']) {
@@ -630,7 +637,8 @@ export function create(
 					) {
 						item.kind = 6 satisfies typeof CompletionItemKind.Variable;
 						tokens.push('\u0000');
-					} else if (parsedItem) {
+					}
+					else if (parsedItem) {
 						const isComponent = parsedItem.tag !== '*';
 						const { isEvent, propName } = getPropName(parsedItem);
 
@@ -638,7 +646,8 @@ export function create(
 							if (isComponent || specialProps.has(propName)) {
 								item.kind = 5 satisfies typeof CompletionItemKind.Field;
 							}
-						} else if (isEvent) {
+						}
+						else if (isEvent) {
 							item.kind = 23 satisfies typeof CompletionItemKind.Event;
 							if (propName.startsWith('vue:')) {
 								tokens.push('\u0004');
@@ -650,25 +659,32 @@ export function create(
 
 							if (item.label.startsWith(':')) {
 								tokens.push('\u0001');
-							} else if (item.label.startsWith('@')) {
+							}
+							else if (item.label.startsWith('@')) {
 								tokens.push('\u0002');
-							} else if (item.label.startsWith('v-bind:')) {
+							}
+							else if (item.label.startsWith('v-bind:')) {
 								tokens.push('\u0003');
-							} else if (item.label.startsWith('v-model:')) {
+							}
+							else if (item.label.startsWith('v-model:')) {
 								tokens.push('\u0004');
-							} else if (item.label.startsWith('v-on:')) {
+							}
+							else if (item.label.startsWith('v-on:')) {
 								tokens.push('\u0005');
-							} else {
+							}
+							else {
 								tokens.push('\u0000');
 							}
 
 							if (specialProps.has(propName)) {
 								tokens.push('\u0001');
-							} else {
+							}
+							else {
 								tokens.push('\u0000');
 							}
 						}
-					} else if (
+					}
+					else if (
 						item.label === 'v-if'
 						|| item.label === 'v-else-if'
 						|| item.label === 'v-else'
@@ -676,10 +692,12 @@ export function create(
 					) {
 						item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
 						tokens.push('\u0003');
-					} else if (item.label.startsWith('v-')) {
+					}
+					else if (item.label.startsWith('v-')) {
 						item.kind = 3 satisfies typeof CompletionItemKind.Function;
 						tokens.push('\u0002');
-					} else {
+					}
+					else {
 						tokens.push('\u0001');
 					}
 
@@ -704,7 +722,8 @@ export function create(
 							try {
 								const data = JSON.parse(json);
 								newData.push(html.newHTMLDataProvider(customDataPath, data));
-							} catch (error) {
+							}
+							catch (error) {
 								console.error(error);
 							}
 						}
@@ -723,7 +742,8 @@ export function create(
 	function isSupportedDocument(document: TextDocument) {
 		if (mode === 'pug') {
 			return document.languageId === 'jade';
-		} else {
+		}
+		else {
 			return document.languageId === 'html';
 		}
 	}
@@ -778,7 +798,8 @@ function getPropName(
 	const name = hyphenateAttr(parsedItem.prop);
 	if (name.startsWith('on-')) {
 		return { isEvent: true, propName: name.slice('on-'.length) };
-	} else if (parsedItem.type === 'componentEvent') {
+	}
+	else if (parsedItem.type === 'componentEvent') {
 		return { isEvent: true, propName: name };
 	}
 	return { isEvent: false, propName: name };

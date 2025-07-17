@@ -19,7 +19,8 @@ export const compile: typeof CompilerDOM.compile = (template, options = {}) => {
 		}
 		if (onError) {
 			onError(error);
-		} else {
+		}
+		else {
 			throw error;
 		}
 	};

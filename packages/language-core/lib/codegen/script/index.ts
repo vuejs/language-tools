@@ -41,10 +41,12 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				relativePath = './' + relativePath;
 			}
 			yield `/// <reference types="${relativePath}" />${newLine}`;
-		} else {
+		}
+    else {
 			yield `/// <reference types="${globalTypesPath}" />${newLine}`;
 		}
-	} else {
+	}
+	else {
 		yield `/* placeholder */${newLine}`;
 	}
 
@@ -68,7 +70,8 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 					options.sfc.script.content.length,
 					codeFeatures.all,
 				);
-			} else {
+			}
+			else {
 				yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
 				yield* generateScriptSectionPartiallyEnding(
 					options.sfc.script.name,
@@ -77,7 +80,8 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				);
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 			}
-		} else if (exportDefault && isExportRawObject && options.vueCompilerOptions.optionsWrapper.length) {
+		}
+		else if (exportDefault && isExportRawObject && options.vueCompilerOptions.optionsWrapper.length) {
 			ctx.inlayHints.push({
 				blockName: options.sfc.script.name,
 				offset: exportDefault.expression.start,
@@ -112,10 +116,12 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				options.sfc.script.content.length,
 				codeFeatures.all,
 			);
-		} else if (classBlockEnd !== undefined) {
+		}
+		else if (classBlockEnd !== undefined) {
 			if (options.vueCompilerOptions.skipTemplateCodegen) {
 				yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
-			} else {
+			}
+			else {
 				yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
 				yield `__VLS_template = () => {${newLine}`;
 				const templateCodegenCtx = yield* generateTemplate(options, ctx);
@@ -128,7 +134,8 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 					codeFeatures.all,
 				);
 			}
-		} else {
+		}
+		else {
 			yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
 			yield* generateScriptSectionPartiallyEnding(
 				options.sfc.script.name,
@@ -136,7 +143,8 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 				'#3632/script.vue',
 			);
 		}
-	} else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
+	}
+	else if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 

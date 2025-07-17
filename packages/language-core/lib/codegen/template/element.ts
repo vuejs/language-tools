@@ -73,7 +73,8 @@ export function* generateComponent(
 				break;
 			}
 		}
-	} else if (node.tag.includes('.')) {
+	}
+	else if (node.tag.includes('.')) {
 		// namespace tag
 		dynamicTagInfo = {
 			tag: node.tag,
@@ -93,7 +94,8 @@ export function* generateComponent(
 					tagOffset,
 					ctx.codeFeatures.withoutHighlightAndCompletion,
 				];
-			} else {
+			}
+			else {
 				const shouldCapitalize = matchImportName[0].toUpperCase() === matchImportName[0];
 				yield* generateCamelized(
 					shouldCapitalize ? capitalize(node.tag) : node.tag,
@@ -105,7 +107,8 @@ export function* generateComponent(
 			yield `, `;
 		}
 		yield `]} */${endOfLine}`;
-	} else if (dynamicTagInfo) {
+	}
+	else if (dynamicTagInfo) {
 		yield `const ${componentOriginalVar} = (`;
 		yield* generateInterpolation(
 			options,
@@ -131,7 +134,8 @@ export function* generateComponent(
 			);
 		}
 		yield `)${endOfLine}`;
-	} else {
+	}
+	else {
 		yield `const ${componentOriginalVar} = ({} as __VLS_WithComponent<'${
 			getCanonicalComponentName(node.tag)
 		}', __VLS_LocalComponents, `;
@@ -139,7 +143,8 @@ export function* generateComponent(
 			yield `typeof __VLS_self & (new () => { `
 				+ getSlotsPropertyName(options.vueCompilerOptions.target)
 				+ `: __VLS_Slots }), `;
-		} else {
+		}
+		else {
 			yield `void, `;
 		}
 		yield getPossibleOriginalComponentNames(node.tag, false)
@@ -413,7 +418,8 @@ function* generateCanonicalComponentName(
 ): Generator<Code> {
 	if (identifierRegex.test(tagText)) {
 		yield [tagText, 'template', offset, features];
-	} else {
+	}
+	else {
 		yield* generateCamelized(
 			capitalize(tagText.replace(colonReg, '-')),
 			'template',

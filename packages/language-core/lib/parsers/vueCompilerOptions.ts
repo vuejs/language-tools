@@ -11,7 +11,8 @@ export function parseVueCompilerOptions(comments: string[]): RawVueCompilerOptio
 					const { key, value } = match.groups ?? {};
 					return [key, JSON.parse(value)] as const;
 				}
-			} catch {}
+			}
+			catch {}
 		})
 		.filter(item => !!item);
 

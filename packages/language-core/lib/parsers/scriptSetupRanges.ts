@@ -119,7 +119,8 @@ export function parseScriptSetupRanges(
 		if (commentRanges?.length) {
 			const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
 			importSectionEndOffset = commentRange.pos;
-		} else {
+		}
+		else {
 			importSectionEndOffset = getStartEnd(ts, node, ast).start;
 		}
 		foundNonImportExportNode = true;
@@ -182,10 +183,12 @@ export function parseScriptSetupRanges(
 				if (node.arguments.length >= 2) {
 					propName = node.arguments[0];
 					options = node.arguments[1];
-				} else if (node.arguments.length >= 1) {
+				}
+				else if (node.arguments.length >= 1) {
 					if (ts.isStringLiteralLike(node.arguments[0])) {
 						propName = node.arguments[0];
-					} else {
+					}
+					else {
 						options = node.arguments[0];
 					}
 				}
@@ -198,9 +201,11 @@ export function parseScriptSetupRanges(
 						const text = _getNodeText(property.name);
 						if (text === 'type') {
 							runtimeType = _getStartEnd(property.initializer);
-						} else if (text === 'default') {
+						}
+						else if (text === 'default') {
 							defaultValue = _getStartEnd(property.initializer);
-						} else if (text === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
+						}
+						else if (text === 'required' && property.initializer.kind === ts.SyntaxKind.TrueKeyword) {
 							required = true;
 						}
 					}
@@ -222,7 +227,8 @@ export function parseScriptSetupRanges(
 					comments: getClosestMultiLineCommentRange(ts, node, parents, ast),
 					argNode: options,
 				});
-			} else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
+			}
+			else if (vueCompilerOptions.macros.defineProps.includes(callText)) {
 				defineProps = {
 					...parseCallExpressionAssignment(node, parent),
 					statement: getStatementRange(ts, parents, node, ast),
@@ -230,16 +236,18 @@ export function parseScriptSetupRanges(
 				};
 				if (ts.isVariableDeclaration(parent) && ts.isObjectBindingPattern(parent.name)) {
 					defineProps.destructured = new Map();
-					const identifiers = collectIdentifiers(ts, parent.name, []);
+					const identifiers = collectIdentifiers(ts, parent.name);
 					for (const { id, isRest, initializer } of identifiers) {
 						const name = _getNodeText(id);
 						if (isRest) {
 							defineProps.destructuredRest = name;
-						} else {
+						}
+						else {
 							defineProps.destructured.set(name, initializer);
 						}
 					}
-				} else if (
+				}
+				else if (
 					ts.isCallExpression(parent)
 					&& vueCompilerOptions.macros.withDefaults.includes(_getNodeText(parent.expression))
 				) {
@@ -248,7 +256,8 @@ export function parseScriptSetupRanges(
 						defineProps.name = _getNodeText(grand.name);
 					}
 				}
-			} else if (vueCompilerOptions.macros.withDefaults.includes(callText)) {
+			}
+			else if (vueCompilerOptions.macros.withDefaults.includes(callText)) {
 				const [, arg] = node.arguments;
 				withDefaults = {
 					callExp: _getStartEnd(node),
@@ -256,7 +265,8 @@ export function parseScriptSetupRanges(
 					arg: arg ? _getStartEnd(arg) : undefined,
 					argNode: arg,
 				};
-			} else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
+			}
+			else if (vueCompilerOptions.macros.defineEmits.includes(callText)) {
 				defineEmits = {
 					...parseCallExpressionAssignment(node, parent),
 					statement: getStatementRange(ts, parents, node, ast),
@@ -272,14 +282,17 @@ export function parseScriptSetupRanges(
 						}
 					}
 				}
-			} else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
+			}
+			else if (vueCompilerOptions.macros.defineSlots.includes(callText)) {
 				defineSlots = {
 					...parseCallExpressionAssignment(node, parent),
 					statement: getStatementRange(ts, parents, node, ast),
 				};
-			} else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
+			}
+			else if (vueCompilerOptions.macros.defineExpose.includes(callText)) {
 				defineExpose = parseCallExpression(node);
-			} else if (
+			}
+			else if (
 				vueCompilerOptions.macros.defineOptions.includes(callText)
 				&& node.arguments.length
 				&& ts.isObjectLiteralExpression(node.arguments[0])
@@ -291,18 +304,23 @@ export function parseScriptSetupRanges(
 						const name = _getNodeText(prop.name);
 						if (name === 'inheritAttrs') {
 							defineOptions.inheritAttrs = _getNodeText(prop.initializer);
-						} else if (name === 'name' && ts.isStringLiteral(prop.initializer)) {
+						}
+						else if (name === 'name' && ts.isStringLiteral(prop.initializer)) {
 							defineOptions.name = prop.initializer.text;
 						}
 					}
 				}
-			} else if (vueCompilerOptions.composables.useAttrs.includes(callText)) {
+			}
+			else if (vueCompilerOptions.composables.useAttrs.includes(callText)) {
 				useAttrs.push(parseCallExpression(node));
-			} else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
+			}
+			else if (vueCompilerOptions.composables.useCssModule.includes(callText)) {
 				useCssModule.push(parseCallExpression(node));
-			} else if (vueCompilerOptions.composables.useSlots.includes(callText)) {
+			}
+			else if (vueCompilerOptions.composables.useSlots.includes(callText)) {
 				useSlots.push(parseCallExpression(node));
-			} else if (
+			}
+			else if (
 				vueCompilerOptions.composables.useTemplateRef.includes(callText)
 				&& !node.typeArguments?.length
 			) {
@@ -359,19 +377,22 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 				const vars = _findBindingVars(decl.name);
 				bindings.push(...vars.map(range => ({ range })));
 			}
-		} else if (ts.isFunctionDeclaration(node)) {
+		}
+		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && ts.isIdentifier(node.name)) {
 				bindings.push({
 					range: _getStartEnd(node.name),
 				});
 			}
-		} else if (ts.isClassDeclaration(node)) {
+		}
+		else if (ts.isClassDeclaration(node)) {
 			if (node.name) {
 				bindings.push({
 					range: _getStartEnd(node.name),
 				});
 			}
-		} else if (ts.isEnumDeclaration(node)) {
+		}
+		else if (ts.isEnumDeclaration(node)) {
 			bindings.push({
 				range: _getStartEnd(node.name),
 			});
@@ -402,7 +423,8 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 								isDefaultImport: element.propertyName?.text === 'default',
 							});
 						}
-					} else {
+					}
+					else {
 						bindings.push({
 							range: _getStartEnd(namedBindings.name),
 							moduleName,
@@ -440,7 +462,8 @@ export function findBindingVars(
 	function worker(node: ts.Node) {
 		if (ts.isIdentifier(node)) {
 			vars.push(getStartEnd(ts, node, ast));
-		} // { ? } = ...
+		}
+		// { ? } = ...
 		// [ ? ] = ...
 		else if (ts.isObjectBindingPattern(node) || ts.isArrayBindingPattern(node)) {
 			for (const property of node.elements) {
@@ -448,13 +471,16 @@ export function findBindingVars(
 					worker(property.name);
 				}
 			}
-		} // { foo: ? } = ...
+		}
+		// { foo: ? } = ...
 		else if (ts.isPropertyAssignment(node)) {
 			worker(node.initializer);
-		} // { foo } = ...
+		}
+		// { foo } = ...
 		else if (ts.isShorthandPropertyAssignment(node)) {
 			vars.push(getStartEnd(ts, node.name, ast));
-		} // { ...? } = ...
+		}
+		// { ...? } = ...
 		// [ ...? ] = ...
 		else if (ts.isSpreadAssignment(node) || ts.isSpreadElement(node)) {
 			worker(node.expression);

@@ -29,7 +29,8 @@ export function* generateObjectProperty(
 				`[__VLS_tryAsConstant(`,
 				`)]`,
 			);
-		} else {
+		}
+		else {
 			yield* generateInterpolation(
 				options,
 				ctx,
@@ -39,10 +40,12 @@ export function* generateObjectProperty(
 				offset,
 			);
 		}
-	} else if (shouldCamelize) {
+	}
+	else if (shouldCamelize) {
 		if (identifierRegex.test(camelize(code))) {
 			yield* generateCamelized(code, 'template', offset, features);
-		} else {
+		}
+		else {
 			yield* wrapWith(
 				offset,
 				offset + code.length,
@@ -52,10 +55,12 @@ export function* generateObjectProperty(
 				`'`,
 			);
 		}
-	} else {
+	}
+	else {
 		if (identifierRegex.test(code)) {
 			yield [code, 'template', offset, features];
-		} else {
+		}
+		else {
 			yield* generateStringLiteralKey(code, offset, features);
 		}
 	}
