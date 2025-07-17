@@ -1,3 +1,5 @@
+import type * as ts from 'typescript';
+
 type ToRequest<T extends (...args: any) => any> = (...args: Parameters<T>) => Promise<ReturnType<T> | null | undefined>;
 
 export type Requests = {
@@ -10,5 +12,6 @@ export type Requests = {
 	getComponentDirectives: ToRequest<typeof import('./getComponentDirectives.js')['getComponentDirectives']>;
 	getElementAttrs: ToRequest<typeof import('./getElementAttrs.js')['getElementAttrs']>;
 	getElementNames: ToRequest<typeof import('./getElementNames.js')['getElementNames']>;
-	getQuickInfoAtPosition: ToRequest<(fileName: string, position: { line: number; character: number }) => string>;
+	getEncodedSemanticClassifications: ToRequest<(fileName: string, span: ts.TextSpan) => ts.Classifications>;
+	getQuickInfoAtPosition: ToRequest<(fileName: string, position: ts.LineAndCharacter) => string>;
 };

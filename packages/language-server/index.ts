@@ -139,6 +139,16 @@ connection.onInitialize(params => {
 					} satisfies ts.server.protocol.DocumentHighlightsRequestArgs,
 				);
 			},
+			getEncodedSemanticClassifications(fileName, span) {
+				return sendTsServerRequest(
+					'_vue:encodedSemanticClassifications-full',
+					{
+						file: fileName,
+						...span,
+						format: ts.SemanticClassificationFormat.TwentyTwenty,
+					} satisfies ts.server.protocol.EncodedSemanticClassificationsRequestArgs,
+				);
+			},
 			async getQuickInfoAtPosition(fileName, { line, character }) {
 				const result = await sendTsServerRequest<ts.server.protocol.QuickInfoResponseBody>(
 					'_vue:' + ts.server.protocol.CommandTypes.Quickinfo,
