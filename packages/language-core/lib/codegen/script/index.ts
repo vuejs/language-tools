@@ -42,7 +42,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			}
 			yield `/// <reference types="${relativePath}" />${newLine}`;
 		}
-    else {
+		else {
 			yield `/// <reference types="${globalTypesPath}" />${newLine}`;
 		}
 	}

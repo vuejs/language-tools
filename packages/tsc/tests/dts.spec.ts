@@ -31,7 +31,7 @@ describe('vue-tsc-dts', () => {
 		if (typeof configFilePath === 'string') {
 			vueOptions = vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
 		}
-    else {
+		else {
 			vueOptions = vue.createParsedCommandLineByJson(ts, ts.sys, workspace.replace(windowsPathReg, '/'), {}).vueOptions;
 			vueOptions.target = 99;
 			vueOptions.extensions = ['vue', 'cext'];

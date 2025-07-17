@@ -164,7 +164,7 @@ export class CompilerOptionsResolver {
 					if (options[key] === 'auto') {
 						this.target = findVueVersion(rootDir);
 					}
-          else {
+					else {
 						this.target = options[key];
 					}
 					break;
@@ -250,7 +250,8 @@ export class CompilerOptionsResolver {
 				);
 				break;
 			}
-		} else {
+		}
+		else {
 			resolvedOptions.globalTypesPath = this.globalTypesPath;
 		}
 
