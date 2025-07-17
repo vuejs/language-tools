@@ -213,7 +213,6 @@ export function createTemplateCodegenContext(
 		templateRefs,
 		currentComponent: undefined as {
 			ctxVar: string;
-			childTypes: string[];
 			used: boolean;
 		} | undefined,
 		singleRootElTypes: [] as string[],
