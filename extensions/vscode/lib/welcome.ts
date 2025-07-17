@@ -128,6 +128,12 @@ function getWelcomeHtml() {
 			box-shadow: 0 2px 8px var(--vscode-widget-shadow);
 		}
 
+		.whats-new-card {
+			max-height: 250px;
+			overflow-y: auto;
+			overflow-x: hidden;
+		}
+
 		.sponsors-card #sponsors-container svg {
 			width: 100% !important;
 			height: auto !important;
