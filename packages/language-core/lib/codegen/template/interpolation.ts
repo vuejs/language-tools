@@ -223,7 +223,7 @@ function walkIdentifiers(
 		}
 	}
 	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
-		processFunction(ts, node, ast, cb, ctx);
+		walkIdentifiersInFunction(ts, node, ast, cb, ctx);
 	}
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
@@ -245,7 +245,7 @@ function walkIdentifiers(
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
 			else if (ts.isFunctionLike(prop) && prop.body) {
-				processFunction(ts, prop, ast, cb, ctx);
+				walkIdentifiersInFunction(ts, prop, ast, cb, ctx);
 			}
 		}
 	}
@@ -274,7 +274,7 @@ function walkIdentifiers(
 	}
 }
 
-function processFunction(
+function walkIdentifiersInFunction(
 	ts: typeof import('typescript'),
 	node: ts.ArrowFunction | ts.FunctionExpression | ts.AccessorDeclaration | ts.MethodDeclaration,
 	ast: ts.SourceFile,
