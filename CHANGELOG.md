@@ -1,5 +1,38 @@
 # Changelog
 
+## 3.0.2 (2025-07-18)
+
+### Features
+
+- feat(language-core): introduce `globalTypesPath` option for non-npm like environment (#5505) - Thanks to @KazariEX!
+- feat: forward tsserver's semantic tokens via language server (#5512) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(vscode): correct syntax highlight of control directives ending with `/` or `)` - Thanks to @KazariEX!
+- fix(language-core): infer parameter type of union slots to be union instead of intersection (#5475) - Thanks to @KazariEX!
+- fix(vscode): remove `colorizedBracketPairs` config for plaintext
+- fix(language-core): avoid early access to local types to skip unnecessary type generation - Thanks to @KazariEX!
+- fix(language-core): treat `<component>` without `is` prop as normal component - Thanks to @KazariEX!
+- fix(vscode): make sure tsserver loads `@vue/typescript-plugin` last (#5483)
+- fix(language-core): only keep navigation code feature on static `name` value of `<slot>` - Thanks to @KazariEX!
+- fix(language-server): add `allowJs` to reactivity analyze host - Thanks to @KazariEX!
+- fix(language-core): do not set template lang to `md` for markdown (#5497) - Thanks to @KazariEX!
+- fix(typescript-plugin): exclude items of kind `module` from template completion - Thanks to @KazariEX!
+- fix(language-core): walk identifiers correctly within type nodes in interpolation (#5501) - Thanks to @KazariEX!
+- fix(language-service): correct position calculation of twoslash queries (#5503) - Thanks to @KazariEX!
+- fix(language-core): avoid redundant increment of block variable depth (#5511) - Thanks to @KazariEX!
+- fix(language-service): re-implement twoslash queries in script - Thanks to @KazariEX!
+
+### Other Changes
+
+- refactor(vscode): make welcome page code public - Thanks to @KazariEX!
+- refactor(vscode): add premium feature settings
+- chore: migrate from `minimatch` to `picomatch` (#5499) - Thanks to @KazariEX!
+- chore: update volar to 2.4.19
+  - fix(typescript): skip source file search when `.d.${ext}.ts` file exists (#277)
+- revert: type support of slot children (#5137) (#5514) - Thanks to @KazariEX!
+
 ## 3.0.1 (2025-07-02)
 
 ### Bug Fixes

@@ -128,6 +128,12 @@ function getWelcomeHtml() {
 			box-shadow: 0 2px 8px var(--vscode-widget-shadow);
 		}
 
+		.whats-new-card {
+			max-height: 250px;
+			overflow-y: auto;
+			overflow-x: hidden;
+		}
+
 		.sponsors-card #sponsors-container svg {
 			width: 100% !important;
 			height: auto !important;
@@ -313,8 +319,31 @@ function getWelcomeHtml() {
 	</header>
 	<hr>
 
-	<h2>📣 What's New in ${version}</h2>
+	<h2>📣 What's New</h2>
 	<div class="card whats-new-card">
+		<h3>3.0.2</h3>
+		<ul style="margin: 0; padding-left: 1.25rem;">
+			<li>🚀 Improve memory usage in extreme cases</li>
+			<li>🐛 15+ bug fixes</li>
+		</ul>
+		<div
+			style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+			<a href="https://github.com/vuejs/language-tools/releases/tag/v3.0.2" target="_blank"
+				style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--vscode-textLink-foreground);">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+					<path
+						d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+				</svg>
+				Full Release Notes
+			</a>
+			<div style="display: flex; gap: 0.5rem; font-size: 0.9em; color: var(--vscode-descriptionForeground);">
+				<span>Released: July 2025</span>
+				<span>•</span>
+				<span>v3.0.2</span>
+			</div>
+		</div>
+		<br>
+		<h3>3.0.0</h3>
 		<ul style="margin: 0; padding-left: 1.25rem;">
 			<li>🚀 Significantly improved Hybrid Mode stability</li>
 			<li>✨ Introduced several new DX enhancement features</li>
