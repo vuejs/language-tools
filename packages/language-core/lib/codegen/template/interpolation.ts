@@ -211,10 +211,11 @@ function walkIdentifiers(
 		walkIdentifiers(ts, node.expression, ast, cb, ctx, blockVars, false);
 	}
 	else if (ts.isVariableDeclaration(node)) {
-		collectVars(ts, node.name, ast, blockVars);
+		const bindingNames = collectVars(ts, node.name, ast);
 
-		for (const varName of blockVars) {
-			ctx.addLocalVariable(varName);
+		for (const name of bindingNames) {
+			ctx.addLocalVariable(name);
+			blockVars.push(name);
 		}
 
 		if (node.initializer) {
