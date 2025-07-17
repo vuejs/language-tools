@@ -31,6 +31,7 @@
 - chore: migrate from `minimatch` to `picomatch` (#5499) - Thanks to @KazariEX!
 - chore: update volar to 2.4.19
   - fix(typescript): skip source file search when `.d.${ext}.ts` file exists (#277)
+- revert: type support of slot children (#5137) (#5514) - Thanks to @KazariEX!
 
 ## 3.0.1 (2025-07-02)
 
