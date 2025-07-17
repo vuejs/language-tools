@@ -3,7 +3,7 @@ import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import type { ScriptCodegenOptions } from '../script';
-import { collectVars, createTsAst, identifierRegex } from '../utils';
+import { collectBindingNames, createTsAst, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 
@@ -126,7 +126,7 @@ function* forEachInterpolationSegment(
 				});
 			}
 		};
-		ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, ctx));
+		ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, ctx, [], true));
 	}
 
 	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
@@ -198,8 +198,8 @@ function walkIdentifiers(
 	ast: ts.SourceFile,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	ctx: TemplateCodegenContext,
-	blockVars: string[] = [],
-	isRoot: boolean = true,
+	blockVars: string[],
+	isRoot: boolean = false,
 ) {
 	if (ts.isIdentifier(node)) {
 		cb(node, false);
@@ -208,48 +208,49 @@ function walkIdentifiers(
 		cb(node.name, true);
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		walkIdentifiers(ts, node.expression, ast, cb, ctx, blockVars, false);
+		walkIdentifiers(ts, node.expression, ast, cb, ctx, blockVars);
 	}
 	else if (ts.isVariableDeclaration(node)) {
-		collectVars(ts, node.name, ast, blockVars);
+		const bindingNames = collectBindingNames(ts, node.name, ast);
 
-		for (const varName of blockVars) {
-			ctx.addLocalVariable(varName);
+		for (const name of bindingNames) {
+			ctx.addLocalVariable(name);
+			blockVars.push(name);
 		}
 
 		if (node.initializer) {
-			walkIdentifiers(ts, node.initializer, ast, cb, ctx, blockVars, false);
+			walkIdentifiers(ts, node.initializer, ast, cb, ctx, blockVars);
 		}
 	}
 	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
-		processFunction(ts, node, ast, cb, ctx);
+		walkIdentifiersInFunction(ts, node, ast, cb, ctx);
 	}
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
 			if (ts.isPropertyAssignment(prop)) {
 				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
-					walkIdentifiers(ts, prop.name.expression, ast, cb, ctx, blockVars, false);
+					walkIdentifiers(ts, prop.name.expression, ast, cb, ctx, blockVars);
 				}
-				walkIdentifiers(ts, prop.initializer, ast, cb, ctx, blockVars, false);
+				walkIdentifiers(ts, prop.initializer, ast, cb, ctx, blockVars);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				walkIdentifiers(ts, prop, ast, cb, ctx, blockVars, false);
+				walkIdentifiers(ts, prop, ast, cb, ctx, blockVars);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
-				walkIdentifiers(ts, prop.expression, ast, cb, ctx, blockVars, false);
+				walkIdentifiers(ts, prop.expression, ast, cb, ctx, blockVars);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
 			else if (ts.isFunctionLike(prop) && prop.body) {
-				processFunction(ts, prop, ast, cb, ctx);
+				walkIdentifiersInFunction(ts, prop, ast, cb, ctx);
 			}
 		}
 	}
+	// fix https://github.com/vuejs/language-tools/issues/1422
 	else if (ts.isTypeNode(node)) {
-		// fix https://github.com/vuejs/language-tools/issues/1422
 		walkIdentifiersInTypeNode(ts, node, cb);
 	}
 	else {
@@ -257,7 +258,7 @@ function walkIdentifiers(
 		if (ts.isBlock(node)) {
 			blockVars = [];
 		}
-		ts.forEachChild(node, node => walkIdentifiers(ts, node, ast, cb, ctx, blockVars, false));
+		ts.forEachChild(node, node => walkIdentifiers(ts, node, ast, cb, ctx, blockVars));
 		if (ts.isBlock(node)) {
 			for (const varName of blockVars) {
 				ctx.removeLocalVariable(varName);
@@ -273,7 +274,7 @@ function walkIdentifiers(
 	}
 }
 
-function processFunction(
+function walkIdentifiersInFunction(
 	ts: typeof import('typescript'),
 	node: ts.ArrowFunction | ts.FunctionExpression | ts.AccessorDeclaration | ts.MethodDeclaration,
 	ast: ts.SourceFile,
@@ -282,16 +283,16 @@ function processFunction(
 ) {
 	const functionArgs: string[] = [];
 	for (const param of node.parameters) {
-		collectVars(ts, param.name, ast, functionArgs);
+		functionArgs.push(...collectBindingNames(ts, param.name, ast));
 		if (param.type) {
-			walkIdentifiers(ts, param.type, ast, cb, ctx);
+			walkIdentifiersInTypeNode(ts, param.type, cb);
 		}
 	}
 	for (const varName of functionArgs) {
 		ctx.addLocalVariable(varName);
 	}
 	if (node.body) {
-		walkIdentifiers(ts, node.body, ast, cb, ctx);
+		walkIdentifiers(ts, node.body, ast, cb, ctx, [], true);
 	}
 	for (const varName of functionArgs) {
 		ctx.removeLocalVariable(varName);
