@@ -25,6 +25,7 @@ export type Code = Segment<VueCodeInformation>;
 export interface VueCompilerOptions {
 	target: number;
 	lib: string;
+	globalTypesPath?: string;
 	extensions: string[];
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
@@ -72,11 +73,6 @@ export interface VueCompilerOptions {
 		string,
 		Record<string, boolean | Record<string, string> | Record<string, string>[]>
 	>;
-
-	// internal
-	__setupedGlobalTypes?: true | {
-		absolutePath: string;
-	};
 }
 
 export const validVersions = [2, 2.1] as const;

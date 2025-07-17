@@ -16,6 +16,14 @@
 					],
 					"markdownDescription": "Target version of Vue."
 				},
+				"lib": {
+					"default": "vue",
+					"markdownDescription": "Specify module name for import regular types."
+				},
+				"globalTypesPath": {
+					"type": "string",
+					"markdownDescription": "Path to the global types file. Manual configuration is required when `node_modules` does not exist in the environment."
+				},
 				"extensions": {
 					"type": "array",
 					"default": [".vue"],
@@ -30,10 +38,6 @@
 					"type": "array",
 					"default": [".html"],
 					"markdownDescription": "Valid file extensions that should be considered as regular PetiteVue SFC."
-				},
-				"lib": {
-					"default": "vue",
-					"markdownDescription": "Specify module name for import regular types."
 				},
 				"jsxSlots": {
 					"type": "boolean",

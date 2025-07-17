@@ -32,12 +32,14 @@ describe('vue-tsc-dts', () => {
 			vueOptions = vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
 		}
 		else {
-			vueOptions = vue.getDefaultCompilerOptions();
-			vueOptions.extensions = ['.vue', '.cext'];
-			vueOptions.__setupedGlobalTypes = vue.setupGlobalTypes(
-				workspace.replace(windowsPathReg, '/'),
-				vueOptions,
-				ts.sys,
+			vueOptions = vue.createParsedCommandLineByJson(ts, ts.sys, workspace.replace(windowsPathReg, '/'), {}).vueOptions;
+			vueOptions.target = 99;
+			vueOptions.extensions = ['vue', 'cext'];
+		}
+		if (vueOptions.globalTypesPath) {
+			ts.sys.writeFile(
+				vueOptions.globalTypesPath,
+				vue.generateGlobalTypes(vueOptions),
 			);
 		}
 		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(

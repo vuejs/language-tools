@@ -5,9 +5,9 @@ import { createConnection, createServer } from '@volar/language-server/node';
 import {
 	createLanguage,
 	createParsedCommandLine,
+	createParsedCommandLineByJson,
 	createVueLanguagePlugin,
 	forEachEmbeddedCode,
-	getDefaultCompilerOptions,
 	isReferencesEnabled,
 } from '@vue/language-core';
 import {
@@ -162,12 +162,9 @@ connection.onInitialize(params => {
 	}
 
 	function createProjectLanguageService(server: LanguageServer, tsconfig: string | undefined) {
-		const commonLine = tsconfig
+		const commonLine = tsconfig && !ts.server.isInferredProjectName(tsconfig)
 			? createParsedCommandLine(ts, ts.sys, tsconfig)
-			: {
-				options: ts.getDefaultCompilerOptions(),
-				vueOptions: getDefaultCompilerOptions(),
-			};
+			: createParsedCommandLineByJson(ts, ts.sys, ts.sys.getCurrentDirectory(), {});
 		const language = createLanguage<URI>(
 			[
 				{

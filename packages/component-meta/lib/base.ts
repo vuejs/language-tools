@@ -27,7 +27,7 @@ export function createCheckerByJsonConfigBase(
 	rootDir = rootDir.replace(windowsPathReg, '/');
 	return baseCreate(
 		ts,
-		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json, undefined, true),
+		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json),
 		checkerOptions,
 		rootDir,
 		path.join(rootDir, 'jsconfig.json.global.vue'),
@@ -42,7 +42,7 @@ export function createCheckerBase(
 	tsconfig = tsconfig.replace(windowsPathReg, '/');
 	return baseCreate(
 		ts,
-		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig, true),
+		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig),
 		checkerOptions,
 		path.dirname(tsconfig),
 		tsconfig + '.global.vue',
@@ -62,6 +62,13 @@ export function baseCreate(
 	 */
 	let fileNames = new Set(commandLine.fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
+
+	if (commandLine.vueOptions.globalTypesPath) {
+		ts.sys.writeFile(
+			commandLine.vueOptions.globalTypesPath,
+			vue.generateGlobalTypes(commandLine.vueOptions),
+		);
+	}
 
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
@@ -135,41 +142,6 @@ export function baseCreate(
 	);
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
-
-	const directoryExists = languageServiceHost.directoryExists?.bind(languageServiceHost);
-	const fileExists = languageServiceHost.fileExists.bind(languageServiceHost);
-	const getScriptSnapshot = languageServiceHost.getScriptSnapshot.bind(languageServiceHost);
-	const globalTypesName = vue.getGlobalTypesFileName(commandLine.vueOptions);
-	const globalTypesContents = `// @ts-nocheck\nexport {};\n` + vue.generateGlobalTypes(commandLine.vueOptions);
-	const globalTypesSnapshot: ts.IScriptSnapshot = {
-		getText: (start, end) => globalTypesContents.slice(start, end),
-		getLength: () => globalTypesContents.length,
-		getChangeRange: () => undefined,
-	};
-	if (directoryExists) {
-		languageServiceHost.directoryExists = path => {
-			if (path.endsWith('.vue-global-types')) {
-				return true;
-			}
-			return directoryExists(path);
-		};
-	}
-	languageServiceHost.fileExists = path => {
-		if (
-			path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)
-		) {
-			return true;
-		}
-		return fileExists(path);
-	};
-	languageServiceHost.getScriptSnapshot = path => {
-		if (
-			path.endsWith(`.vue-global-types/${globalTypesName}`) || path.endsWith(`.vue-global-types\\${globalTypesName}`)
-		) {
-			return globalTypesSnapshot;
-		}
-		return getScriptSnapshot(path);
-	};
 
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);

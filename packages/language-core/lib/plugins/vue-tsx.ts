@@ -15,8 +15,6 @@ export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
 const plugin: VueLanguagePlugin = ctx => {
-	let appendedGlobalTypes = false;
-
 	return {
 		version: 2.1,
 
@@ -46,12 +44,7 @@ const plugin: VueLanguagePlugin = ctx => {
 
 	function useCodegen(fileName: string, sfc: Sfc) {
 		if (!tsCodegen.has(sfc)) {
-			let appendGlobalTypes = false;
-			if (!ctx.vueCompilerOptions.__setupedGlobalTypes && !appendedGlobalTypes) {
-				appendGlobalTypes = true;
-				appendedGlobalTypes = true;
-			}
-			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx, appendGlobalTypes));
+			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx));
 		}
 		return tsCodegen.get(sfc)!;
 	}
@@ -63,7 +56,6 @@ function createTsx(
 	fileName: string,
 	sfc: Sfc,
 	ctx: Parameters<VueLanguagePlugin>[0],
-	appendGlobalTypes: boolean,
 ) {
 	const ts = ctx.modules.typescript;
 
@@ -231,7 +223,6 @@ function createTsx(
 			templateCodegen: getGeneratedTemplate(),
 			destructuredPropNames: getSetupDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
-			appendGlobalTypes,
 		});
 
 		let current = codegen.next();
