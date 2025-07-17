@@ -8,7 +8,7 @@ export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
 export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
-export function collectVars(
+export function collectBindingNames(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,

@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
+import { collectBindingNames, createTsAst, endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
@@ -18,7 +18,7 @@ export function* generateVFor(
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
 		const collectAst = createTsAst(options.ts, ctx.inlineTsAsts, `const [${leftExpressionText}]`);
-		collectVars(options.ts, collectAst, collectAst, forBlockVars);
+		collectBindingNames(options.ts, collectAst, collectAst, forBlockVars);
 		yield [
 			leftExpressionText,
 			'template',

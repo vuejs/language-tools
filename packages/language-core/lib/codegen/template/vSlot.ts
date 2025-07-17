@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { getStartEnd } from '../../utils/shared';
-import { collectVars, createTsAst, endOfLine, newLine } from '../utils';
+import { collectBindingNames, createTsAst, endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
@@ -64,7 +64,7 @@ export function* generateVSlot(
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, ctx.inlineTsAsts, `(${slotDir.exp.content}) => {}`);
-		collectVars(options.ts, slotAst, slotAst, slotBlockVars);
+		collectBindingNames(options.ts, slotAst, slotAst, slotBlockVars);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
 	}
 

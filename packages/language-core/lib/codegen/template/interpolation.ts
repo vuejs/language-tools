@@ -3,7 +3,7 @@ import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import type { ScriptCodegenOptions } from '../script';
-import { collectVars, createTsAst, identifierRegex } from '../utils';
+import { collectBindingNames, createTsAst, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 
@@ -211,7 +211,7 @@ function walkIdentifiers(
 		walkIdentifiers(ts, node.expression, ast, cb, ctx, blockVars, false);
 	}
 	else if (ts.isVariableDeclaration(node)) {
-		const bindingNames = collectVars(ts, node.name, ast);
+		const bindingNames = collectBindingNames(ts, node.name, ast);
 
 		for (const name of bindingNames) {
 			ctx.addLocalVariable(name);
@@ -283,7 +283,7 @@ function processFunction(
 ) {
 	const functionArgs: string[] = [];
 	for (const param of node.parameters) {
-		collectVars(ts, param.name, ast, functionArgs);
+		collectBindingNames(ts, param.name, ast, functionArgs);
 		if (param.type) {
 			walkIdentifiers(ts, param.type, ast, cb, ctx);
 		}
