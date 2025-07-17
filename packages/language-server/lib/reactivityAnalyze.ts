@@ -230,17 +230,19 @@ export function analyze(
 	}
 
 	function findEffectByEffectHandlerPosition(position: number) {
-		return signals.find(ref =>
+		return signals.filter(ref =>
 			ref.sideEffectInfo && ref.sideEffectInfo.handler.getStart(sourceFile) <= position
 			&& ref.sideEffectInfo.handler.getEnd() >= position
-		);
+		).sort((a, b) =>
+			a.sideEffectInfo!.handler.getWidth(sourceFile) - b.sideEffectInfo!.handler.getWidth(sourceFile)
+		)[0];
 	}
 
 	function findEffectByDepsHandlerPosition(position: number) {
-		return signals.find(ref =>
+		return signals.filter(ref =>
 			ref.trackInfo && ref.trackInfo.depsHandler.getStart(sourceFile) <= position
 			&& ref.trackInfo.depsHandler.getEnd() >= position
-		);
+		).sort((a, b) => a.trackInfo!.depsHandler.getWidth(sourceFile) - b.trackInfo!.depsHandler.getWidth(sourceFile))[0];
 	}
 }
 
