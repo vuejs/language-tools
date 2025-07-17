@@ -78,19 +78,6 @@ export function* generateVSlot(
 		ctx.removeLocalVariable(varName);
 	}
 
-	if (options.vueCompilerOptions.strictSlotChildren && node.children.length) {
-		yield `(): __VLS_NormalizeSlotReturns<typeof ${slotVar}> => (`;
-		yield* wrapWith(
-			node.loc.start.offset,
-			node.loc.end.offset,
-			ctx.codeFeatures.verification,
-			`{} as [`,
-			...ctx.currentComponent.childTypes.map(name => `${name}, `),
-			`]`,
-		);
-		yield `)${endOfLine}`;
-	}
-
 	if (slotDir) {
 		let isStatic = true;
 		if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {

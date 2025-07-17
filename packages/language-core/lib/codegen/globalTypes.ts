@@ -87,14 +87,6 @@ export function generateGlobalTypes({
 			expose?: (exposed: T) => void,
 		}
 	};
-	type __VLS_NormalizeSlotReturns<S, R = NonNullable<S> extends (...args: any) => infer K ? K : any> = R extends any[] ? {
-		[K in keyof R]: R[K] extends infer V
-			? V extends Element ? V
-			: V extends new (...args: any) => infer R ? ReturnType<__VLS_FunctionalComponent<R>>
-			: V extends (...args: any) => infer R ? R
-			: any
-			: never
-	} : R;
 	type __VLS_IsFunction<T, K> = K extends keyof T
 		? __VLS_IsAny<T[K]> extends false
 		? unknown extends T[K]

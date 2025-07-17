@@ -41,10 +41,8 @@ export function* generateComponent(
 	const componentCtxVar = ctx.getInternalVariable();
 	const isComponentTag = node.tag.toLowerCase() === 'component';
 
-	ctx.currentComponent?.childTypes.push(`typeof ${componentVNodeVar}`);
 	ctx.currentComponent = {
 		ctxVar: componentCtxVar,
-		childTypes: [],
 		used: false,
 	};
 
@@ -304,8 +302,6 @@ export function* generateElement(
 		? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
-
-	ctx.currentComponent?.childTypes.push(`__VLS_NativeElements['${node.tag}']`);
 
 	yield `__VLS_asFunctionalElement(__VLS_elements`;
 	yield* generatePropertyAccess(
