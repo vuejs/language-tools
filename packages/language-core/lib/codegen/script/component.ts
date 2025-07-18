@@ -32,10 +32,16 @@ export function* generateComponent(
 	yield `setup() {${newLine}`;
 	const returns: Code[] = [];
 	if (ctx.bypassDefineComponent) {
-		yield* `const __VLS_returns = {${newLine}`;
-		yield* generateComponentSetupReturns(scriptSetupRanges);
-		yield `}${endOfLine}`;
-		returns.push(`typeof __VLS_returns`);
+		// fill $props
+		if (scriptSetupRanges.defineProps) {
+			const name = scriptSetupRanges.defineProps.name ?? `__VLS_props`;
+			// NOTE: defineProps is inaccurate for $props
+			returns.push(`typeof ${name} & { $props: Partial<typeof ${name}> }`);
+		}
+		// fill $emit
+		if (scriptSetupRanges.defineEmits) {
+			returns.push(`{ $emit: typeof ${scriptSetupRanges.defineEmits.name ?? '__VLS_emit'} }`);
+		}
 	}
 	if (scriptSetupRanges.defineExpose) {
 		returns.push(`typeof __VLS_exposed`);
@@ -71,19 +77,6 @@ export function* generateComponent(
 		yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
 	}
 	yield `})`;
-}
-
-export function* generateComponentSetupReturns(scriptSetupRanges: ScriptSetupRanges): Generator<Code> {
-	// fill $props
-	if (scriptSetupRanges.defineProps) {
-		// NOTE: defineProps is inaccurate for $props
-		yield `$props: __VLS_makeOptional(${scriptSetupRanges.defineProps.name ?? `__VLS_props`}),${newLine}`;
-		yield `...${scriptSetupRanges.defineProps.name ?? `__VLS_props`},${newLine}`;
-	}
-	// fill $emit
-	if (scriptSetupRanges.defineEmits) {
-		yield `$emit: ${scriptSetupRanges.defineEmits.name ?? '__VLS_emit'},${newLine}`;
-	}
 }
 
 export function* generateEmitsOption(
