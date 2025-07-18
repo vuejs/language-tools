@@ -7,7 +7,6 @@ import { codeFeatures } from '../codeFeatures';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
-import { generateComponentSelf } from './componentSelf';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
@@ -93,6 +92,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			if (wrapRight) {
 				yield wrapRight;
 			}
+			yield endOfLine;
 		}
 		else if (classBlockEnd !== undefined) {
 			if (options.vueCompilerOptions.skipTemplateCodegen) {
@@ -101,8 +101,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 			else {
 				yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
 				yield `__VLS_template = () => {${newLine}`;
-				const templateCodegenCtx = yield* generateTemplate(options, ctx);
-				yield* generateComponentSelf(options, ctx, templateCodegenCtx);
+				yield* generateTemplate(options, ctx);
 				yield `}${endOfLine}`;
 				yield generateSfcBlockSection(
 					options.sfc.script,
@@ -126,8 +125,7 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 
 	if (!ctx.generatedTemplate) {
-		const templateCodegenCtx = yield* generateTemplate(options, ctx);
-		yield* generateComponentSelf(options, ctx, templateCodegenCtx);
+		yield* generateTemplate(options, ctx);
 	}
 
 	yield* generateExportDefault(options);
