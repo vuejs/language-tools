@@ -77,11 +77,10 @@ function* generateTemplateCtx(
 		emitTypes.push(`typeof __VLS_modelEmit`);
 	}
 	if (emitTypes.length) {
-		yield `type __VLS_ResolvedEmit = ${emitTypes.join(' & ')}${endOfLine}`;
-		exps.push(`{} as { $emit: __VLS_ResolvedEmit }`);
+		exps.push(`{} as { $emit: ${emitTypes.join(' & ')} }`);
 	}
 
-	exps.push(`{} as import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<typeof __VLS_bindings>`);
+	exps.push(`{} as __VLS_Bindings`);
 
 	yield `const __VLS_ctx = `;
 	yield* generateSpreadMerge(exps);
@@ -185,7 +184,7 @@ function* generateBindings(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
-	yield `const __VLS_bindings = {${newLine}`;
+	yield `type __VLS_Bindings = __VLS_ProxyRefs<{${newLine}`;
 	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		const templateUsageVars = getTemplateUsageVars(options, ctx);
 		for (
@@ -204,13 +203,13 @@ function* generateBindings(
 
 				const token = Symbol(varName.length);
 				yield ['', undefined, 0, { __linkedToken: token }];
-				yield `${varName}: ${varName} as typeof `;
+				yield `${varName}: typeof `;
 				yield ['', undefined, 0, { __linkedToken: token }];
 				yield `${varName},${newLine}`;
 			}
 		}
 	}
-	yield `}${endOfLine}`;
+	yield `}>${endOfLine}`;
 }
 
 function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptCodegenContext) {
