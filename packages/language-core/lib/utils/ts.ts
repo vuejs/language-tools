@@ -1,7 +1,7 @@
 import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
-import { getGlobalTypesFileName } from '../codegen/globalTypes';
+import { generateGlobalTypes, getGlobalTypesFileName } from '../codegen/globalTypes';
 import { getAllExtensions } from '../languagePlugin';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { hyphenateTag } from './shared';
@@ -147,7 +147,7 @@ function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfi
 
 export class CompilerOptionsResolver {
 	configRoots = new Set<string>();
-	options: Omit<RawVueCompilerOptions, 'target' | 'plugin'> = {};
+	options: Omit<RawVueCompilerOptions, 'target' | 'globalTypesPath' | 'plugins'> = {};
 	target: number | undefined;
 	globalTypesPath: string | undefined;
 	plugins: VueLanguagePlugin[] = [];
@@ -233,29 +233,43 @@ export class CompilerOptionsResolver {
 		};
 
 		if (this.fileExists && this.globalTypesPath === undefined) {
-			root: for (const rootDir of [...this.configRoots].reverse()) {
-				let dir = rootDir;
-				while (!this.fileExists(path.join(dir, 'node_modules', resolvedOptions.lib, 'package.json'))) {
-					const parentDir = path.dirname(dir);
-					if (dir === parentDir) {
-						continue root;
-					}
-					dir = parentDir;
+			const fileDirToGlobalTypesPath = new Map<string, string | undefined>();
+			resolvedOptions.globalTypesPath = fileName => {
+				const fileDir = path.dirname(fileName);
+				if (fileDirToGlobalTypesPath.has(fileDir)) {
+					return fileDirToGlobalTypesPath.get(fileDir);
 				}
-				resolvedOptions.globalTypesPath = path.join(
-					dir,
-					'node_modules',
-					'.vue-global-types',
-					getGlobalTypesFileName(resolvedOptions),
-				);
-				break;
-			}
+
+				const root = this.findNodeModulesRoot(fileDir, resolvedOptions.lib);
+				const result = root
+					? path.join(
+						root,
+						'node_modules',
+						'.vue-global-types',
+						getGlobalTypesFileName(resolvedOptions),
+					)
+					: undefined;
+
+				fileDirToGlobalTypesPath.set(fileDir, result);
+				return result;
+			};
 		}
 		else {
-			resolvedOptions.globalTypesPath = this.globalTypesPath;
+			resolvedOptions.globalTypesPath = () => this.globalTypesPath;
 		}
 
 		return resolvedOptions;
+	}
+
+	private findNodeModulesRoot(dir: string, lib: string) {
+		while (!this.fileExists!(path.join(dir, 'node_modules', lib, 'package.json'))) {
+			const parentDir = path.dirname(dir);
+			if (dir === parentDir) {
+				return;
+			}
+			dir = parentDir;
+		}
+		return dir;
 	}
 }
 
@@ -289,6 +303,7 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 	return {
 		target,
 		lib,
+		globalTypesPath: () => undefined,
 		extensions: ['.vue'],
 		vitePressExtensions: [],
 		petiteVueExtensions: [],
@@ -346,5 +361,24 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 				select: true,
 			},
 		},
+	};
+}
+
+export function writeGlobalTypes(
+	vueOptions: VueCompilerOptions,
+	writeFile: (fileName: string, data: string) => void,
+) {
+	const originalFn = vueOptions.globalTypesPath;
+	if (!originalFn) {
+		return;
+	}
+	const writed = new Set<string>();
+	vueOptions.globalTypesPath = (fileName: string) => {
+		const result = originalFn(fileName);
+		if (result && !writed.has(result)) {
+			writed.add(result);
+			writeFile(result, generateGlobalTypes(vueOptions));
+		}
+		return result;
 	};
 }
