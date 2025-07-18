@@ -8,7 +8,6 @@ export function getComponentType(
 	languageService: ts.LanguageService,
 	vueCode: VueVirtualCode,
 	components: NonNullable<ReturnType<typeof getVariableType>>,
-	fileName: string,
 	tag: string,
 ) {
 	const program = languageService.getProgram()!;
@@ -21,9 +20,9 @@ export function getComponentType(
 	let componentType: ts.Type | undefined;
 
 	if (!componentSymbol) {
-		const name = getSelfComponentName(fileName);
+		const name = getSelfComponentName(vueCode.fileName);
 		if (name === capitalize(camelize(tag))) {
-			componentType = getVariableType(ts, languageService, vueCode, '__VLS_self')?.type;
+			componentType = getVariableType(ts, languageService, vueCode, '__VLS_export')?.type;
 		}
 	}
 	else {

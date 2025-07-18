@@ -115,7 +115,7 @@ type __VLS_TypePropsToOption<T> = {
 		},
 	};
 
-	function* generate(names: string[]) {
+	function* generate(...names: string[]) {
 		const generated = new Set<string>();
 		while (names.length) {
 			used.clear();
@@ -123,7 +123,7 @@ type __VLS_TypePropsToOption<T> = {
 				if (generated.has(name)) {
 					continue;
 				}
-				const helper = helpers[name as keyof typeof helpers];
+				const helper = helpers[name];
 				yield helper.generate();
 				generated.add(name);
 			}
