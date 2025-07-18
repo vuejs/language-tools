@@ -5,7 +5,7 @@ import { URI } from 'vscode-uri';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
-		name: 'vue-inlay-hints',
+		name: 'vue-inlayhints',
 		capabilities: {
 			inlayHintProvider: {},
 		},
@@ -16,7 +16,12 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
 					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!(virtualCode instanceof VueVirtualCode)) {
+					if (!sourceScript?.generated || virtualCode?.id !== 'main') {
+						return;
+					}
+
+					const root = sourceScript.generated.root;
+					if (!(root instanceof VueVirtualCode)) {
 						return;
 					}
 
@@ -26,15 +31,16 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					}
 
 					const result: InlayHint[] = [];
+					const { sfc } = root;
 
-					const codegen = tsCodegen.get(virtualCode.sfc);
+					const codegen = tsCodegen.get(sfc);
 					const inlayHints = [
 						...codegen?.getGeneratedTemplate()?.inlayHints ?? [],
 						...codegen?.getGeneratedScript()?.inlayHints ?? [],
 					];
 					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 
-					if (scriptSetupRanges?.defineProps?.destructured && virtualCode.sfc.scriptSetup?.ast) {
+					if (scriptSetupRanges?.defineProps?.destructured && sfc.scriptSetup?.ast) {
 						const setting = 'vue.inlayHints.destructuredProps';
 						const enabled = await getSettingEnabled(setting);
 
@@ -42,7 +48,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 							for (
 								const [prop, isShorthand] of findDestructuredProps(
 									ts,
-									virtualCode.sfc.scriptSetup.ast,
+									sfc.scriptSetup.ast,
 									scriptSetupRanges.defineProps.destructured.keys(),
 								)
 							) {
@@ -61,9 +67,9 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					}
 
 					const blocks = [
-						virtualCode.sfc.template,
-						virtualCode.sfc.script,
-						virtualCode.sfc.scriptSetup,
+						sfc.template,
+						sfc.script,
+						sfc.scriptSetup,
 					];
 					const start = document.offsetAt(range.start);
 					const end = document.offsetAt(range.end);

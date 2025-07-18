@@ -235,7 +235,7 @@ export function create(
 						const props = toExtract.filter(p => !p.model);
 						const models = toExtract.filter(p => p.model);
 						if (props.length) {
-							lines.push(`defineProps<{ \n\t${props.map(p => `${p.name}: ${p.type};`).join('\n\t')}\n}>()`);
+							lines.push(`defineProps<{\n\t${props.map(p => `${p.name}: ${p.type};`).join('\n\t')}\n}>()`);
 						}
 						for (const model of models) {
 							lines.push(`const ${model.name} = defineModel<${model.type}>('${model.name}', { required: true })`);

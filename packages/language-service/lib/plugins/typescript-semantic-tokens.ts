@@ -9,7 +9,7 @@ export function create(
 	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
-		name: 'typescript-highlights',
+		name: 'typescript-semantic-tokens',
 		capabilities: {
 			semanticTokensProvider: {
 				legend: {

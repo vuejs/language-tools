@@ -2,7 +2,7 @@ import type { DiagnosticSeverity, LanguageServicePlugin } from '@volar/language-
 
 export function create(): LanguageServicePlugin {
 	return {
-		name: 'vue-compiler-dom-errors',
+		name: 'vue-global-types-error',
 		capabilities: {
 			diagnosticProvider: {
 				interFileDependencies: false,
