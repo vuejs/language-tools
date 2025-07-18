@@ -63,12 +63,7 @@ export function baseCreate(
 	let fileNames = new Set(commandLine.fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
 
-	if (commandLine.vueOptions.globalTypesPath) {
-		ts.sys.writeFile(
-			commandLine.vueOptions.globalTypesPath,
-			vue.generateGlobalTypes(commandLine.vueOptions),
-		);
-	}
+	vue.writeGlobalTypes(commandLine.vueOptions, ts.sys.writeFile);
 
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,

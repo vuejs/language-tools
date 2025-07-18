@@ -29,26 +29,7 @@ export interface ScriptCodegenOptions {
 export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
 	const ctx = createScriptCodegenContext(options);
 
-	if (options.vueCompilerOptions.globalTypesPath) {
-		const globalTypesPath = options.vueCompilerOptions.globalTypesPath;
-		if (path.isAbsolute(globalTypesPath)) {
-			let relativePath = path.relative(path.dirname(options.fileName), globalTypesPath);
-			if (
-				relativePath !== globalTypesPath
-				&& !relativePath.startsWith('./')
-				&& !relativePath.startsWith('../')
-			) {
-				relativePath = './' + relativePath;
-			}
-			yield `/// <reference types="${relativePath}" />${newLine}`;
-		}
-		else {
-			yield `/// <reference types="${globalTypesPath}" />${newLine}`;
-		}
-	}
-	else {
-		yield `/* placeholder */${newLine}`;
-	}
+	yield* generateGlobalTypesPath(options);
 
 	if (options.sfc.script?.src) {
 		yield* generateSrc(options.sfc.script.src);
@@ -169,6 +150,30 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	}
 
 	return ctx;
+}
+
+function* generateGlobalTypesPath(
+	options: ScriptCodegenOptions,
+): Generator<Code> {
+	const globalTypesPath = options.vueCompilerOptions.globalTypesPath(options.fileName);
+
+	if (!globalTypesPath) {
+		yield `/* placeholder */${newLine}`;
+	}
+	else if (path.isAbsolute(globalTypesPath)) {
+		let relativePath = path.relative(path.dirname(options.fileName), globalTypesPath);
+		if (
+			relativePath !== globalTypesPath
+			&& !relativePath.startsWith('./')
+			&& !relativePath.startsWith('../')
+		) {
+			relativePath = './' + relativePath;
+		}
+		yield `/// <reference types="${relativePath}" />${newLine}`;
+	}
+	else {
+		yield `/// <reference types="${globalTypesPath}" />${newLine}`;
+	}
 }
 
 export function* generateScriptSectionPartiallyEnding(

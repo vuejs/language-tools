@@ -9,9 +9,10 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 
 export { VueEmbeddedCode };
 
-export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
+export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'globalTypesPath' | 'plugins'>> & {
 	strictTemplates?: boolean;
 	target?: 'auto' | 2 | 2.7 | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
+	globalTypesPath?: string;
 	plugins?: string[];
 };
 
@@ -25,7 +26,7 @@ export type Code = Segment<VueCodeInformation>;
 export interface VueCompilerOptions {
 	target: number;
 	lib: string;
-	globalTypesPath?: string;
+	globalTypesPath: (fileName: string) => string | undefined;
 	extensions: string[];
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
