@@ -28,7 +28,7 @@ export function getComponentProps(
 		return [];
 	}
 
-	const componentType = getComponentType(ts, languageService, vueCode, components, fileName, tag);
+	const componentType = getComponentType(ts, languageService, vueCode, components, tag);
 	if (!componentType) {
 		return [];
 	}

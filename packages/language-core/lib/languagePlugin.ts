@@ -139,16 +139,11 @@ export function createVueLanguagePlugin<T>(
 }
 
 export function getAllExtensions(options: VueCompilerOptions) {
-	const result = new Set<string>();
-	for (const key in options) {
-		if (key === 'extensions' || key.endsWith('Extensions')) {
-			const value = options[key as keyof VueCompilerOptions];
-			if (Array.isArray(value) && value.every(v => typeof v === 'string')) {
-				for (const ext of value) {
-					result.add(ext);
-				}
-			}
-		}
-	}
-	return [...result];
+	return [
+		...new Set(([
+			'extensions',
+			'vitePressExtensions',
+			'petiteVueExtensions',
+		] as const).flatMap(key => options[key])),
+	];
 }

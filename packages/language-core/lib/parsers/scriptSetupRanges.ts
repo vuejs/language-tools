@@ -3,7 +3,7 @@ import type { TextRange, VueCompilerOptions } from '../types';
 import { collectBindingIdentifiers, collectBindingRanges } from '../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../utils/shared';
 
-const tsCheckReg = /^\/\/\s*@ts-(?:no)?check($|\s)/;
+const tsCheckReg = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
 
 type CallExpressionRange = {
 	callExp: TextRange;

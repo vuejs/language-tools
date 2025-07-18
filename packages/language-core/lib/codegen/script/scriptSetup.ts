@@ -8,7 +8,7 @@ import { wrapWith } from '../utils/wrapWith';
 import { generateComponent, generateEmitsOption } from './component';
 import { generateComponentSelf } from './componentSelf';
 import type { ScriptCodegenContext } from './context';
-import { generateScriptSectionPartiallyEnding, type ScriptCodegenOptions } from './index';
+import { generateConstExport, generateScriptSectionPartiallyEnding, type ScriptCodegenOptions } from './index';
 import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
@@ -33,11 +33,7 @@ export function* generateScriptSetup(
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (scriptSetup.generic) {
-		if (!options.scriptRanges?.exportDefault) {
-			// #4569
-			yield ['', 'scriptSetup', 0, codeFeatures.verification];
-			yield `export default `;
-		}
+		yield* generateConstExport(scriptSetup);
 		yield `(`;
 		if (typeof scriptSetup.generic === 'object') {
 			yield `<`;
@@ -78,19 +74,17 @@ export function* generateScriptSetup(
 			+ `	emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
 			+ `}${endOfLine}`;
 		yield `})(),${newLine}`; // __VLS_setup = (async () => {
-		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))`;
+		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))${endOfLine}`;
 	}
 	else if (!options.sfc.script) {
 		// no script block, generate script setup code at root
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default');
 	}
 	else {
-		if (!options.scriptRanges?.exportDefault) {
-			yield `export default `;
-		}
+		yield* generateConstExport(scriptSetup);
 		yield `await (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'return');
-		yield `})()`;
+		yield `})()${endOfLine}`;
 	}
 }
 
@@ -312,19 +306,22 @@ function* generateSetupFunction(
 	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
 
 	if (syntax) {
+		const prefix = syntax === 'return'
+			? [`return `]
+			: generateConstExport(scriptSetup);
 		if (
 			scriptSetupRanges.defineSlots
 			|| options.templateCodegen?.slots.length
 			|| options.templateCodegen?.dynamicSlots.length
 		) {
-			yield `const __VLS_component = `;
+			yield `const __VLS_base = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
-			yield `${syntax} `;
-			yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_component, __VLS_Slots>${endOfLine}`;
+			yield* prefix;
+			yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_base, __VLS_Slots>${endOfLine}`;
 		}
 		else {
-			yield `${syntax} `;
+			yield* prefix;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 		}
