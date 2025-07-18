@@ -1,3 +1,3 @@
-import { run } from '.'
+import { run } from '.';
 
-export default run(require.resolve('typescript/lib/typescript'))
+export = run(require.resolve('typescript/lib/typescript'))
