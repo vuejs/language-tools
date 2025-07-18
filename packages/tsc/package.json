@@ -20,7 +20,7 @@
 		"typescript": ">=5.0.0"
 	},
 	"dependencies": {
-		"@volar/typescript": "2.4.19",
+		"@volar/typescript": "2.4.20",
 		"@vue/language-core": "3.0.2"
 	},
 	"devDependencies": {
