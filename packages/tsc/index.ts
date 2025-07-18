@@ -44,11 +44,11 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 		);
 
 	try {
-		main();
+		return main();
 	}
 	catch (err) {
 		if (err === extensionsChangedException) {
-			main();
+			return main();
 		}
 		else {
 			throw err;
