@@ -349,7 +349,9 @@ export function parseScriptSetupRanges(
 
 	function parseCallExpressionAssignment(node: ts.CallExpression, parent: ts.Node) {
 		return {
-			name: ts.isVariableDeclaration(parent) ? _getNodeText(parent.name) : undefined,
+			name: ts.isVariableDeclaration(parent) && ts.isIdentifier(parent.name)
+				? _getNodeText(parent.name)
+				: undefined,
 			...parseCallExpression(node),
 		};
 	}

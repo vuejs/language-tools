@@ -150,9 +150,9 @@ function createTsx(
 
 	const setupHasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
-	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
-
 	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
+
+	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
 
 	const getSetupInheritAttrs = computed(() => {
 		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
@@ -198,8 +198,8 @@ function createTsx(
 			destructuredPropNames: getSetupDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
 			hasDefineSlots: setupHasDefineSlots(),
-			slotsAssignName: getSetupSlotsAssignName(),
 			propsAssignName: getSetupPropsAssignName(),
+			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getSetupInheritAttrs(),
 			selfComponentName: getComponentSelfName(),
 		});

@@ -19,8 +19,8 @@ export interface TemplateCodegenOptions {
 	destructuredPropNames: Set<string>;
 	templateRefNames: Set<string>;
 	hasDefineSlots?: boolean;
-	slotsAssignName?: string;
 	propsAssignName?: string;
+	slotsAssignName?: string;
 	inheritAttrs: boolean;
 	selfComponentName?: string;
 }

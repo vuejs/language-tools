@@ -2,11 +2,10 @@ import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { wrapWith } from '../utils/wrapWith';
 import { generateComponent, generateEmitsOption } from './component';
-import { generateComponentSelf } from './componentSelf';
 import type { ScriptCodegenContext } from './context';
 import { generateConstExport, generateScriptSectionPartiallyEnding, type ScriptCodegenOptions } from './index';
 import { generateTemplate } from './template';
@@ -302,8 +301,7 @@ function* generateSetupFunction(
 
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* generateModelEmit(scriptSetup, scriptSetupRanges);
-	const templateCodegenCtx = yield* generateTemplate(options, ctx);
-	yield* generateComponentSelf(options, ctx, templateCodegenCtx);
+	yield* generateTemplate(options, ctx);
 
 	if (syntax) {
 		const prefix = syntax === 'return'
@@ -402,6 +400,18 @@ function* generateDefineWithType(
 				callExp.end,
 			];
 		}
+	}
+	else if (!identifierRegex.test(name)) {
+		yield [[`const ${defaultName} = `], statement.start, callExp.start];
+		yield [
+			[
+				endOfLine,
+				generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
+				defaultName,
+			],
+			statement.end,
+			statement.end,
+		];
 	}
 }
 
