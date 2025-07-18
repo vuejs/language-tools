@@ -2,6 +2,7 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 
@@ -29,15 +30,23 @@ export function* generateComponent(
 	}
 
 	yield `setup() {${newLine}`;
-	yield `return {${newLine}`;
+	const returns: Code[] = [];
 	if (ctx.bypassDefineComponent) {
+		yield* `const __VLS_returns = {${newLine}`;
 		yield* generateComponentSetupReturns(scriptSetupRanges);
+		yield `}${endOfLine}`;
+		returns.push(`typeof __VLS_returns`);
 	}
 	if (scriptSetupRanges.defineExpose) {
-		yield `...__VLS_exposed,${newLine}`;
+		returns.push(`typeof __VLS_exposed`);
 	}
-	yield `}${endOfLine}`;
+	if (returns.length) {
+		yield `return {} as `;
+		yield* generateIntersectMerge(returns);
+		yield endOfLine;
+	}
 	yield `},${newLine}`;
+
 	if (!ctx.bypassDefineComponent) {
 		const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
 		yield* emitOptionCodes;
@@ -100,10 +109,14 @@ export function* generateEmitsOption(
 	}
 
 	if (options.vueCompilerOptions.target >= 3.5 && typeOptionCodes.length) {
-		yield* generateIntersectMerge('__typeEmits', typeOptionCodes);
+		yield `__typeEmits: {} as `;
+		yield* generateIntersectMerge(typeOptionCodes);
+		yield `,${newLine}`;
 	}
 	else if (optionCodes.length) {
-		yield* generateSpreadMerge('emits', optionCodes);
+		yield `emits: `;
+		yield* generateSpreadMerge(optionCodes);
+		yield `,${newLine}`;
 	}
 }
 
@@ -159,36 +172,13 @@ export function* generatePropsOption(
 		) {
 			yield `__defaults: __VLS_withDefaultsArg,${newLine}`;
 		}
-		yield* generateSpreadMerge('__typeProps', typeOptionCodes);
+		yield `__typeProps: `;
+		yield* generateSpreadMerge(typeOptionCodes);
+		yield `,${newLine}`;
 	}
 	if (useOption) {
-		yield* generateSpreadMerge('props', getOptionCodes.map(fn => fn()));
+		yield `props: `;
+		yield* generateSpreadMerge(getOptionCodes.map(fn => fn()));
+		yield `,${newLine}`;
 	}
-}
-
-function* generateIntersectMerge(key: string, codes: Code[]): Generator<Code> {
-	yield `${key}: {} as `;
-	yield codes[0];
-	for (let i = 1; i < codes.length; i++) {
-		yield ` & `;
-		yield codes[i];
-	}
-	yield `,${newLine}`;
-}
-
-function* generateSpreadMerge(key: string, codes: Code[]): Generator<Code> {
-	yield `${key}: `;
-	if (codes.length === 1) {
-		yield codes[0];
-	}
-	else {
-		yield `{${newLine}`;
-		for (const code of codes) {
-			yield `...`;
-			yield code;
-			yield `,${newLine}`;
-		}
-		yield `}`;
-	}
-	yield `,${newLine}`;
 }
