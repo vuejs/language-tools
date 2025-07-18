@@ -7,6 +7,7 @@ import { createTemplateCodegenContext, type TemplateCodegenContext } from '../te
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
 import { endOfLine, newLine } from '../utils';
+import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 
@@ -40,19 +41,8 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 	}
 
 	yield `const __VLS_ctx = `;
-	if (exps.length === 1) {
-		yield exps[0];
-		yield `${endOfLine}`;
-	}
-	else {
-		yield `{${newLine}`;
-		for (const exp of exps) {
-			yield `...`;
-			yield exp;
-			yield `,${newLine}`;
-		}
-		yield `}${endOfLine}`;
-	}
+	yield* generateSpreadMerge(exps);
+	yield endOfLine;
 }
 
 function* generateTemplateElements(): Generator<Code> {
@@ -76,10 +66,7 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 	}
 
 	yield `type __VLS_LocalComponents =`;
-	for (const type of types) {
-		yield ` & `;
-		yield type;
-	}
+	yield* generateIntersectMerge(types);
 	yield endOfLine;
 
 	yield `let __VLS_components!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
@@ -102,10 +89,7 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 	}
 
 	yield `type __VLS_LocalDirectives =`;
-	for (const type of types) {
-		yield ` & `;
-		yield type;
-	}
+	yield* generateIntersectMerge(types);
 	yield endOfLine;
 
 	yield `let __VLS_directives!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
