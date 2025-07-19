@@ -156,7 +156,7 @@ export function* generateComponent(
 				...codeFeatures.semanticWithoutHighlight,
 				...options.vueCompilerOptions.checkUnknownComponents
 					? codeFeatures.verification
-					: codeFeatures.doNotReportTs2339,
+					: codeFeatures.doNotReportTs2339AndTs2551,
 			}),
 		);
 		yield `${endOfLine}`;
