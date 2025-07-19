@@ -41,23 +41,23 @@ function* generateTemplateCtx(
 ): Generator<Code> {
 	const exps: Code[] = [];
 
+	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
+		exps.push(`globalThis`);
+	}
 	if (options.sfc.script && options.scriptRanges?.exportDefault) {
 		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
 	}
 	else {
 		exps.push(`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`);
 	}
-
-	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
-		exps.push(`globalThis`);
-	}
 	if (options.sfc.styles.some(style => style.module)) {
 		exps.push(`{} as __VLS_StyleModules`);
 	}
 
-	const emitTypes: Code[] = [];
+	const emitTypes: string[] = [];
 	if (options.scriptSetupRanges?.defineEmits) {
-		emitTypes.push(`typeof ${options.scriptSetupRanges.defineEmits.name ?? `__VLS_emit`}`);
+		const { defineEmits } = options.scriptSetupRanges;
+		emitTypes.push(`typeof ${defineEmits.name ?? `__VLS_emit`}`);
 	}
 	if (options.scriptSetupRanges?.defineModel.length) {
 		emitTypes.push(`typeof __VLS_modelEmit`);
@@ -67,19 +67,19 @@ function* generateTemplateCtx(
 		exps.push(`{} as { $emit: ${emitTypes.join(' & ')} }`);
 	}
 
-	if (options.scriptSetupRanges?.defineProps || ctx.generatedPropsType || emitTypes.length) {
-		yield `type __VLS_InternalProps =`;
-		const { defineProps } = options.scriptSetupRanges ?? {};
-		if (defineProps) {
-			yield ` __VLS_SpreadMerge<__VLS_PublicProps, typeof ${defineProps.name ?? `__VLS_props`}>`;
-		}
-		else if (ctx.generatedPropsType) {
-			yield ` __VLS_PublicProps`;
-		}
-		if (emitTypes.length) {
-			yield ` & __VLS_EmitProps`;
-		}
-		yield endOfLine;
+	const propTypes: string[] = [];
+	if (options.scriptSetupRanges?.defineProps) {
+		const { defineProps } = options.scriptSetupRanges;
+		propTypes.push(`__VLS_SpreadMerge<__VLS_PublicProps, typeof ${defineProps.name ?? `__VLS_props`}>`);
+	}
+	else if (ctx.generatedPropsType) {
+		propTypes.push(`__VLS_PublicProps`);
+	}
+	if (emitTypes.length) {
+		propTypes.push(`__VLS_EmitProps`);
+	}
+	if (propTypes.length) {
+		yield `type __VLS_InternalProps = ${propTypes.join(' & ')}${endOfLine}`;
 		exps.push(`{} as { $props: __VLS_InternalProps }`);
 		exps.push(`{} as __VLS_InternalProps`);
 	}
