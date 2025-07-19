@@ -68,12 +68,12 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		: {};
 	type __VLS_FunctionalComponent<T> = (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
 		__ctx?: {
-			attrs?: any,
-			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : Record<string, any>,
-			emit?: T extends { $emit: infer Emit } ? Emit : {},
-			props?: ${fnPropsType},
-			expose?: (exposed: T) => void,
-		}
+			attrs?: any;
+			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : Record<string, any>;
+			emit?: T extends { $emit: infer Emit } ? Emit : {};
+			props?: ${fnPropsType};
+			expose?: (exposed: T) => void;
+		};
 	};
 	type __VLS_IsFunction<T, K> = K extends keyof T
 		? __VLS_IsAny<T[K]> extends false
@@ -87,7 +87,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		Emits,
 		onEvent extends keyof Props,
 		Event extends keyof Emits,
-		CamelizedEvent extends keyof Emits
+		CamelizedEvent extends keyof Emits,
 	> = __VLS_IsFunction<Props, onEvent> extends true
 		? Props
 		: __VLS_IsFunction<Emits, Event> extends true
