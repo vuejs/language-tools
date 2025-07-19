@@ -60,7 +60,7 @@ declare const ScriptSetupGenericExact: <T, >(
 	_expose?: NonNullable<Awaited<typeof _setup>>['expose'],
 	_setup?: Promise<{
 		props: {
-			readonly onBar?: ((data: T) => any) | undefined;
+			onBar?: ((data: T) => any) | undefined;
 			foo: T;
 		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
 		attrs: any,

@@ -118,6 +118,10 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 			}
 		>
 	>;
+	type __VLS_EmitsToProps<T> = __VLS_PrettifyGlobal<{
+		[K in string & keyof T as \`on\${Capitalize<K>}\`]?:
+			(...args: T[K] extends (...args: infer P) => any ? P : T[K] extends null ? any[] : never) => any;
+	}>;
 	type __VLS_ResolveEmits<
 		Comp,
 		Emits,
