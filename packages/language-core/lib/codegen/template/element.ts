@@ -152,7 +152,12 @@ export function* generateComponent(
 		yield* generateCanonicalComponentName(
 			node.tag,
 			tagOffsets[0],
-			ctx.codeFeatures.withoutHighlightAndCompletionAndNavigation,
+			ctx.resolveCodeFeatures({
+				...codeFeatures.semanticWithoutHighlight,
+				...options.vueCompilerOptions.checkUnknownComponents
+					? codeFeatures.verification
+					: codeFeatures.doNotReportTs2339AndTs2551,
+			}),
 		);
 		yield `${endOfLine}`;
 
@@ -207,14 +212,7 @@ export function* generateComponent(
 	yield* wrapWith(
 		node.loc.start.offset,
 		node.loc.end.offset,
-		ctx.resolveCodeFeatures({
-			verification: {
-				shouldReport(_source, code) {
-					// https://typescript.tv/errors/#ts6133
-					return String(code) !== '6133';
-				},
-			},
-		}),
+		ctx.codeFeatures.doNotReportTs6133,
 		componentVNodeVar,
 	);
 	yield ` = ${componentFunctionalVar}`;

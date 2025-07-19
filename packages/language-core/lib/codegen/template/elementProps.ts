@@ -46,7 +46,7 @@ export function* generateElementProps(
 			) {
 				if (!isComponent) {
 					yield `...{ `;
-					yield* generateEventArg(ctx, prop.arg.loc.source, prop.arg.loc.start.offset);
+					yield* generateEventArg(options, ctx, prop.arg.loc.source, prop.arg.loc.start.offset);
 					yield `: `;
 					yield* generateEventExpression(options, ctx, prop);
 					yield `},`;
@@ -378,16 +378,9 @@ function getPropsCodeInfo(
 ): VueCodeInformation {
 	return ctx.resolveCodeFeatures({
 		...codeFeatures.withoutHighlightAndCompletion,
-		verification: strictPropsCheck || {
-			shouldReport(_source, code) {
-				// https://typescript.tv/errors/#ts2353
-				// https://typescript.tv/errors/#ts2561
-				if (String(code) === '2353' || String(code) === '2561') {
-					return false;
-				}
-				return true;
-			},
-		},
+		...strictPropsCheck
+			? codeFeatures.verification
+			: codeFeatures.doNotReportTs2353AndTs2561,
 	});
 }
 

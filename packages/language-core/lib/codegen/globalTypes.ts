@@ -1,29 +1,17 @@
 import type { VueCompilerOptions } from '../types';
 import { getSlotsPropertyName } from '../utils/shared';
 
-export function getGlobalTypesFileName({
-	lib,
-	target,
-	checkUnknownProps,
-	checkUnknownEvents,
-	checkUnknownComponents,
-}: VueCompilerOptions) {
+export function getGlobalTypesFileName(options: VueCompilerOptions) {
 	return [
-		lib,
-		target,
-		checkUnknownProps,
-		checkUnknownEvents,
-		checkUnknownComponents,
+		options.lib,
+		options.target,
+		options.checkUnknownProps,
 	].map(v => (typeof v === 'boolean' ? Number(v) : v)).join('_') + '.d.ts';
 }
 
-export function generateGlobalTypes({
-	lib,
-	target,
-	checkUnknownProps,
-	checkUnknownEvents,
-	checkUnknownComponents,
-}: VueCompilerOptions) {
+export function generateGlobalTypes(options: VueCompilerOptions) {
+	const { lib, target, checkUnknownProps } = options;
+
 	const fnPropsType = `(T extends { $props: infer Props } ? Props : {})${
 		checkUnknownProps ? '' : ' & Record<string, unknown>'
 	}`;
@@ -69,7 +57,7 @@ export function generateGlobalTypes({
 		N1 extends keyof __VLS_GlobalComponents ? N1 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N1] } :
 		N2 extends keyof __VLS_GlobalComponents ? N2 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N2] } :
 		N3 extends keyof __VLS_GlobalComponents ? N3 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N3] } :
-		${checkUnknownComponents ? '{}' : '{ [K in N0]: unknown }'};
+		{};
 	type __VLS_FunctionalComponentCtx<T, K> = __VLS_PickNotAny<'__ctx' extends keyof __VLS_PickNotAny<K, {}>
 		? K extends { __ctx?: infer Ctx } ? NonNullable<Ctx> : never : any
 		, T extends (props: any, ctx: infer Ctx) => any ? Ctx : any
@@ -80,12 +68,12 @@ export function generateGlobalTypes({
 		: {};
 	type __VLS_FunctionalComponent<T> = (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
 		__ctx?: {
-			attrs?: any,
-			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : Record<string, any>,
-			emit?: T extends { $emit: infer Emit } ? Emit : {},
-			props?: ${fnPropsType},
-			expose?: (exposed: T) => void,
-		}
+			attrs?: any;
+			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : Record<string, any>;
+			emit?: T extends { $emit: infer Emit } ? Emit : {};
+			props?: ${fnPropsType};
+			expose?: (exposed: T) => void;
+		};
 	};
 	type __VLS_IsFunction<T, K> = K extends keyof T
 		? __VLS_IsAny<T[K]> extends false
@@ -94,15 +82,19 @@ export function generateGlobalTypes({
 		: true
 		: false
 		: false;
-	type __VLS_NormalizeComponentEvent<Props, Emits, onEvent extends keyof Props, Event extends keyof Emits, CamelizedEvent extends keyof Emits> = (
-		__VLS_IsFunction<Props, onEvent> extends true
-			? Props
-			: __VLS_IsFunction<Emits, Event> extends true
-				? { [K in onEvent]?: Emits[Event] }
-				: __VLS_IsFunction<Emits, CamelizedEvent> extends true
-					? { [K in onEvent]?: Emits[CamelizedEvent] }
-					: Props
-	)${checkUnknownEvents ? '' : ' & Record<string, unknown>'};
+	type __VLS_NormalizeComponentEvent<
+		Props,
+		Emits,
+		onEvent extends keyof Props,
+		Event extends keyof Emits,
+		CamelizedEvent extends keyof Emits,
+	> = __VLS_IsFunction<Props, onEvent> extends true
+		? Props
+		: __VLS_IsFunction<Emits, Event> extends true
+			? { [K in onEvent]?: Emits[Event] }
+			: __VLS_IsFunction<Emits, CamelizedEvent> extends true
+				? { [K in onEvent]?: Emits[CamelizedEvent] }
+				: Props;
 	// fix https://github.com/vuejs/language-tools/issues/926
 	type __VLS_UnionToIntersection<U> = (U extends unknown ? (arg: U) => unknown : never) extends ((arg: infer P) => unknown) ? P : never;
 	type __VLS_OverloadUnionInner<T, U = unknown> = U & T extends (...args: infer A) => infer R
@@ -174,7 +166,7 @@ export function generateGlobalTypes({
 		: __VLS_FunctionalComponent<{}>;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
 	function __VLS_asFunctionalElement<T>(tag: T, endTag?: T): (attrs: T${
-		checkUnknownComponents ? '' : ' & Record<string, unknown>'
+		checkUnknownProps ? '' : ' & Record<string, unknown>'
 	}) => void;
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
