@@ -165,7 +165,9 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent<{}>;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
-	function __VLS_asFunctionalElement<T>(tag: T, endTag?: T): (attrs: T) => void;
+	function __VLS_asFunctionalElement<T>(tag: T, endTag?: T): (attrs: T${
+		checkUnknownProps ? '' : ' & Record<string, unknown>'
+	}) => void;
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
 }
