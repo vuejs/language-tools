@@ -5,15 +5,6 @@ import { endOfLine } from './utils';
 export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions) {
 	const used = new Set<string>();
 
-	const OmitKeepDiscriminatedUnion = defineHelper(
-		`__VLS_OmitKeepDiscriminatedUnion`,
-		() =>
-			`
-type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any
-	? Pick<T, Exclude<keyof T, K>>
-	: never;
-`.trimStart(),
-	);
 	const WithDefaults = defineHelper(
 		`__VLS_WithDefaults`,
 		() =>
@@ -78,7 +69,6 @@ type __VLS_TypePropsToOption<T> = {
 	);
 	const helpers = {
 		[PrettifyLocal.name]: PrettifyLocal,
-		[OmitKeepDiscriminatedUnion.name]: OmitKeepDiscriminatedUnion,
 		[WithDefaults.name]: WithDefaults,
 		[WithSlots.name]: WithSlots,
 		[PropsChildren.name]: PropsChildren,
@@ -94,9 +84,6 @@ type __VLS_TypePropsToOption<T> = {
 		},
 		get PrettifyLocal() {
 			return PrettifyLocal.name;
-		},
-		get OmitKeepDiscriminatedUnion() {
-			return OmitKeepDiscriminatedUnion.name;
 		},
 		get WithDefaults() {
 			return WithDefaults.name;

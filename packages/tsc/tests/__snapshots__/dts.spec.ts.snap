@@ -5,7 +5,7 @@ exports[`vue-tsc-dts > Input: #4577/main.vue, Output: #4577/main.vue.d.ts 1`] = 
     value: string;
 };
 declare const __VLS_export: <Row extends BaseRow>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{} & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, never> & {
+    props: __VLS_PrettifyLocal<{
         nonGeneric: string;
         rows: Row[];
     } & Partial<{}>> & import("vue").PublicProps;
@@ -84,10 +84,10 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
 "declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
-        readonly "onUpdate:title"?: (value: string) => any;
-        readonly onBar?: (data: number) => any;
-    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onUpdate:title" | "onBar"> & ({
+    props: __VLS_PrettifyLocal<{
+        "onUpdate:title"?: (value: string) => any;
+        onBar?: (data: number) => any;
+    } & ({
         foo: number;
     } & {
         title?: string;
@@ -115,10 +115,10 @@ type __VLS_PrettifyLocal<T> = {
 
 exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: generic/custom-extension-component.cext.d.ts 1`] = `
 "declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_PrettifyLocal<Pick<Partial<{}> & Omit<{
-        readonly "onUpdate:title"?: (value: string) => any;
-        readonly onBar?: (data: number) => any;
-    } & import("vue").VNodeProps & import("vue").AllowedComponentProps & import("vue").ComponentCustomProps, never>, "onUpdate:title" | "onBar"> & ({
+    props: __VLS_PrettifyLocal<{
+        "onUpdate:title"?: (value: string) => any;
+        onBar?: (data: number) => any;
+    } & ({
         foo: number;
     } & {
         title?: string;

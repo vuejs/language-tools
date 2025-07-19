@@ -55,20 +55,6 @@ function* generateTemplateCtx(
 		exps.push(`{} as __VLS_StyleModules`);
 	}
 
-	if (ctx.generatedPropsType || options.scriptSetupRanges?.defineProps) {
-		yield `type __VLS_InternalProps = `;
-		const { defineProps } = options.scriptSetupRanges ?? {};
-		if (defineProps) {
-			yield `__VLS_SpreadMerge<__VLS_PublicProps, typeof ${defineProps.name ?? `__VLS_props`}>`;
-		}
-		else {
-			yield `__VLS_PublicProps`;
-		}
-		yield endOfLine;
-		exps.push(`{} as __VLS_InternalProps`);
-		exps.push(`{} as { $props: __VLS_InternalProps }`);
-	}
-
 	const emitTypes: Code[] = [];
 	if (options.scriptSetupRanges?.defineEmits) {
 		emitTypes.push(`typeof ${options.scriptSetupRanges.defineEmits.name ?? `__VLS_emit`}`);
@@ -77,7 +63,25 @@ function* generateTemplateCtx(
 		emitTypes.push(`typeof __VLS_modelEmit`);
 	}
 	if (emitTypes.length) {
+		yield `type __VLS_EmitProps = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(' & ')}>>${endOfLine};`;
 		exps.push(`{} as { $emit: ${emitTypes.join(' & ')} }`);
+	}
+
+	if (options.scriptSetupRanges?.defineProps || ctx.generatedPropsType || emitTypes.length) {
+		yield `type __VLS_InternalProps =`;
+		const { defineProps } = options.scriptSetupRanges ?? {};
+		if (defineProps) {
+			yield ` __VLS_SpreadMerge<__VLS_PublicProps, typeof ${defineProps.name ?? `__VLS_props`}>`;
+		}
+		else if (ctx.generatedPropsType) {
+			yield ` __VLS_PublicProps`;
+		}
+		if (emitTypes.length) {
+			yield ` & __VLS_EmitProps`;
+		}
+		yield endOfLine;
+		exps.push(`{} as { $props: __VLS_InternalProps }`);
+		exps.push(`{} as __VLS_InternalProps`);
 	}
 
 	exps.push(`{} as __VLS_Bindings`);
