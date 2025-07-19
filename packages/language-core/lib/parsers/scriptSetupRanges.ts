@@ -3,7 +3,7 @@ import { collectIdentifiers } from '../codegen/utils';
 import type { TextRange, VueCompilerOptions } from '../types';
 import { getNodeText, getStartEnd } from '../utils/shared';
 
-const tsCheckReg = /^\/\/\s*@ts-(?:no)?check($|\s)/;
+const tsCheckReg = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
 
 type CallExpressionRange = {
 	callExp: TextRange;
@@ -349,7 +349,9 @@ export function parseScriptSetupRanges(
 
 	function parseCallExpressionAssignment(node: ts.CallExpression, parent: ts.Node) {
 		return {
-			name: ts.isVariableDeclaration(parent) ? _getNodeText(parent.name) : undefined,
+			name: ts.isVariableDeclaration(parent) && ts.isIdentifier(parent.name)
+				? _getNodeText(parent.name)
+				: undefined,
 			...parseCallExpression(node),
 		};
 	}

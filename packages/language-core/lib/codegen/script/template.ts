@@ -6,7 +6,7 @@ import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
-import { endOfLine, newLine } from '../utils';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
@@ -14,31 +14,77 @@ import type { ScriptCodegenOptions } from './index';
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-): Generator<Code, TemplateCodegenContext> {
+): Generator<Code> {
 	ctx.generatedTemplate = true;
 
 	const templateCodegenCtx = createTemplateCodegenContext({
 		scriptSetupBindingNames: new Set(),
 	});
-	yield* generateTemplateCtx(options);
+	yield* generateTemplateCtx(options, ctx);
 	yield* generateTemplateElements();
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, templateCodegenCtx);
-	return templateCodegenCtx;
+	yield* generateBindings(options, ctx, templateCodegenCtx);
+
+	if (options.sfc.script && options.scriptRanges?.exportDefault) {
+		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
+		const { args } = options.scriptRanges.exportDefault;
+		yield generateSfcBlockSection(options.sfc.script, args.start, args.end, codeFeatures.all);
+		yield `)${endOfLine}`;
+	}
 }
 
-function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
-	const exps = [];
-
-	exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
+function* generateTemplateCtx(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+): Generator<Code> {
+	const exps: Code[] = [];
 
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
 		exps.push(`globalThis`);
 	}
+	if (options.sfc.script && options.scriptRanges?.exportDefault) {
+		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
+	}
+	else {
+		exps.push(`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`);
+	}
 	if (options.sfc.styles.some(style => style.module)) {
 		exps.push(`{} as __VLS_StyleModules`);
 	}
+
+	const emitTypes: string[] = [];
+	if (options.scriptSetupRanges?.defineEmits) {
+		const { defineEmits } = options.scriptSetupRanges;
+		emitTypes.push(`typeof ${defineEmits.name ?? `__VLS_emit`}`);
+	}
+	if (options.scriptSetupRanges?.defineModel.length) {
+		emitTypes.push(`typeof __VLS_modelEmit`);
+	}
+	if (emitTypes.length) {
+		yield `type __VLS_EmitProps = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(' & ')}>>${endOfLine};`;
+		exps.push(`{} as { $emit: ${emitTypes.join(' & ')} }`);
+	}
+
+	const propTypes: string[] = [];
+	if (options.scriptSetupRanges?.defineProps) {
+		const { defineProps } = options.scriptSetupRanges;
+		propTypes.push(`__VLS_SpreadMerge<__VLS_PublicProps, typeof ${defineProps.name ?? `__VLS_props`}>`);
+	}
+	else if (ctx.generatedPropsType) {
+		propTypes.push(`__VLS_PublicProps`);
+	}
+	if (emitTypes.length) {
+		propTypes.push(`__VLS_EmitProps`);
+	}
+	if (propTypes.length) {
+		yield `type __VLS_InternalProps = ${propTypes.join(' & ')}${endOfLine}`;
+		exps.push(`{} as { $props: __VLS_InternalProps }`);
+		exps.push(`{} as __VLS_InternalProps`);
+	}
+
+	exps.push(`{} as __VLS_Bindings`);
 
 	yield `const __VLS_ctx = `;
 	yield* generateSpreadMerge(exps);
@@ -65,14 +111,14 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		types.push(`typeof __VLS_componentsOption`);
 	}
 
-	yield `type __VLS_LocalComponents =`;
+	yield `type __VLS_LocalComponents = `;
 	yield* generateIntersectMerge(types);
 	yield endOfLine;
 
 	yield `let __VLS_components!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
-export function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
+function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
 	const types: Code[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
@@ -88,7 +134,7 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 		types.push(`__VLS_ResolveDirectives<typeof __VLS_directivesOption>`);
 	}
 
-	yield `type __VLS_LocalDirectives =`;
+	yield `type __VLS_LocalDirectives = `;
 	yield* generateIntersectMerge(types);
 	yield endOfLine;
 
@@ -138,7 +184,40 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 	yield `// CSS variable injection end ${newLine}`;
 }
 
-export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptCodegenContext) {
+function* generateBindings(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+	templateCodegenCtx: TemplateCodegenContext,
+): Generator<Code> {
+	yield `type __VLS_Bindings = __VLS_ProxyRefs<{${newLine}`;
+	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
+		const templateUsageVars = getTemplateUsageVars(options, ctx);
+		for (
+			const [content, bindings] of [
+				[options.sfc.scriptSetup.content, options.scriptSetupRanges.bindings] as const,
+				options.sfc.script && options.scriptRanges
+					? [options.sfc.script.content, options.scriptRanges.bindings] as const
+					: ['', []] as const,
+			]
+		) {
+			for (const { range } of bindings) {
+				const varName = content.slice(range.start, range.end);
+				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
+					continue;
+				}
+
+				const token = Symbol(varName.length);
+				yield ['', undefined, 0, { __linkedToken: token }];
+				yield `${varName}: typeof `;
+				yield ['', undefined, 0, { __linkedToken: token }];
+				yield `${varName},${newLine}`;
+			}
+		}
+	}
+	yield `}>${endOfLine}`;
+}
+
+function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptCodegenContext) {
 	const usageVars = new Set<string>();
 	const components = new Set(options.sfc.template?.ast?.components);
 

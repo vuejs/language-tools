@@ -118,6 +118,10 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 			}
 		>
 	>;
+	type __VLS_EmitsToProps<T> = __VLS_PrettifyGlobal<{
+		[K in string & keyof T as \`on\${Capitalize<K>}\`]?:
+			(...args: T[K] extends (...args: infer P) => any ? P : T[K] extends null ? any[] : never) => any;
+	}>;
 	type __VLS_ResolveEmits<
 		Comp,
 		Emits,
@@ -133,6 +137,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	};
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T as K]: T[K]; } & {};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
+	type __VLS_ProxyRefs<T> = import('${lib}').ShallowUnwrapRef<T>;
 
 	function __VLS_getVForSourceType<T extends number | string | any[] | Iterable<any>>(source: T): [
 		item: T extends number ? number
@@ -154,7 +159,6 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		: T extends (...args: any) => any
 			? T
 			: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
-	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 	function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 		T extends new (...args: any) => any ? __VLS_FunctionalComponent<K>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>${
