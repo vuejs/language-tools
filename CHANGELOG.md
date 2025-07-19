@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.0.3 (2025-07-18)
+
+### Bug Fixes
+
+- fix(language-core): find `node_modules` based on file's directory (#5525) - Thanks to @KazariEX!
+- fix(language-core): do not spread exposed object (#5526) - Thanks to @KazariEX!
+- fix(vscode): prompt manual reload in remote envs (#5530)
+
+### Other Changes
+
+- refactor(tsc): return the result of runTsc (#5517) - Thanks to @escaton!
+
 ## 3.0.2 (2025-07-18)
 
 ### Features
@@ -30,7 +42,7 @@
 - refactor(vscode): add premium feature settings
 - chore: migrate from `minimatch` to `picomatch` (#5499) - Thanks to @KazariEX!
 - chore: update volar to 2.4.19
-  - fix(typescript): skip source file search when `.d.${ext}.ts` file exists (#277)
+  - fix(typescript): skip source file search when `.d.${ext}.ts` file exists (volarjs/volar.js#277)
 - revert: type support of slot children (#5137) (#5514) - Thanks to @KazariEX!
 
 ## 3.0.1 (2025-07-02)

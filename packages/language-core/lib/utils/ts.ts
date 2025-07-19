@@ -1,4 +1,4 @@
-import { camelize } from '@vue/shared';
+import { camelize, NOOP as noop } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
 import { generateGlobalTypes, getGlobalTypesFileName } from '../codegen/globalTypes';
@@ -232,30 +232,32 @@ export class CompilerOptionsResolver {
 			),
 		};
 
-		if (this.fileExists && this.globalTypesPath === undefined) {
-			const fileDirToGlobalTypesPath = new Map<string, string | undefined>();
-			resolvedOptions.globalTypesPath = fileName => {
-				const fileDir = path.dirname(fileName);
-				if (fileDirToGlobalTypesPath.has(fileDir)) {
-					return fileDirToGlobalTypesPath.get(fileDir);
-				}
+		if (resolvedOptions.globalTypesPath === noop) {
+			if (this.fileExists && this.globalTypesPath === undefined) {
+				const fileDirToGlobalTypesPath = new Map<string, string | undefined>();
+				resolvedOptions.globalTypesPath = fileName => {
+					const fileDir = path.dirname(fileName);
+					if (fileDirToGlobalTypesPath.has(fileDir)) {
+						return fileDirToGlobalTypesPath.get(fileDir);
+					}
 
-				const root = this.findNodeModulesRoot(fileDir, resolvedOptions.lib);
-				const result = root
-					? path.join(
-						root,
-						'node_modules',
-						'.vue-global-types',
-						getGlobalTypesFileName(resolvedOptions),
-					)
-					: undefined;
+					const root = this.findNodeModulesRoot(fileDir, resolvedOptions.lib);
+					const result = root
+						? path.join(
+							root,
+							'node_modules',
+							'.vue-global-types',
+							getGlobalTypesFileName(resolvedOptions),
+						)
+						: undefined;
 
-				fileDirToGlobalTypesPath.set(fileDir, result);
-				return result;
-			};
-		}
-		else {
-			resolvedOptions.globalTypesPath = () => this.globalTypesPath;
+					fileDirToGlobalTypesPath.set(fileDir, result);
+					return result;
+				};
+			}
+			else {
+				resolvedOptions.globalTypesPath = () => this.globalTypesPath;
+			}
 		}
 
 		return resolvedOptions;
@@ -303,7 +305,7 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 	return {
 		target,
 		lib,
-		globalTypesPath: () => undefined,
+		globalTypesPath: noop,
 		extensions: ['.vue'],
 		vitePressExtensions: [],
 		petiteVueExtensions: [],

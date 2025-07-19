@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { combineLastMapping, createTsAst, endOfLine, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { wrapWith } from '../utils/wrapWith';
@@ -61,12 +62,12 @@ export function* generateElementEvents(
 			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
 			if (prop.name === 'on') {
 				yield `{ `;
-				yield* generateEventArg(ctx, source, start!, emitPrefix.slice(0, -1), ctx.codeFeatures.navigation);
+				yield* generateEventArg(options, ctx, source, start!, emitPrefix.slice(0, -1), ctx.codeFeatures.navigation);
 				yield `: {} as any } as typeof ${emitsVar},${newLine}`;
 			}
 			yield `{ `;
 			if (prop.name === 'on') {
-				yield* generateEventArg(ctx, source, start!, propPrefix.slice(0, -1));
+				yield* generateEventArg(options, ctx, source, start!, propPrefix.slice(0, -1));
 				yield `: `;
 				yield* generateEventExpression(options, ctx, prop);
 			}
@@ -80,15 +81,21 @@ export function* generateElementEvents(
 }
 
 export function* generateEventArg(
+	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	name: string,
 	start: number,
 	directive = 'on',
-	features: VueCodeInformation = {
-		...ctx.codeFeatures.withoutHighlightAndCompletion,
-		...ctx.codeFeatures.navigationWithoutRename,
-	},
+	features?: VueCodeInformation,
 ): Generator<Code> {
+	features ??= ctx.resolveCodeFeatures({
+		...codeFeatures.semanticWithoutHighlight,
+		...codeFeatures.navigationWithoutRename,
+		...options.vueCompilerOptions.checkUnknownEvents
+			? codeFeatures.verification
+			: codeFeatures.doNotReportTs2353AndTs2561,
+	});
+
 	if (directive.length) {
 		name = capitalize(name);
 	}

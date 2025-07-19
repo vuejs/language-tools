@@ -18,6 +18,8 @@ import * as vscode from 'vscode';
 import { config } from './lib/config';
 import { activate as activateWelcome } from './lib/welcome';
 
+let needRestart = false;
+
 const incompatibleExtensionIds = [
 	'johnsoncodehk.vscode-typescript-vue-plugin',
 	'Vue.vscode-typescript-vue-plugin',
@@ -63,6 +65,27 @@ export const { activate, deactivate } = defineExtension(async () => {
 		}
 
 		nextTick(() => stop());
+
+		if (needRestart) {
+			if (vscode.env.remoteName) {
+				vscode.window.showInformationMessage(
+					'Please restart the extension host to activate Vue support in remote environments.',
+					'Restart Extension Host',
+					'Reload Window',
+				).then(action => {
+					if (action === 'Restart Extension Host') {
+						vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+					}
+					else if (action === 'Reload Window') {
+						vscode.commands.executeCommand('workbench.action.reloadWindow');
+					}
+				});
+			}
+			else {
+				vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+			}
+			return;
+		}
 
 		watch(() => config.server.includeLanguages, async () => {
 			const reload = await vscode.window.showInformationMessage(
@@ -219,7 +242,7 @@ try {
 	}
 
 	if (tsExtension.isActive) {
-		vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+		needRestart = true;
 	}
 }
 catch {}
