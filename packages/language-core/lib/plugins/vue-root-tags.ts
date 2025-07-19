@@ -18,9 +18,9 @@ const plugin: VueLanguagePlugin = () => {
 				embeddedFile.content.push([sfc.content, undefined, 0, allCodeFeatures]);
 				for (
 					const block of [
+						sfc.template,
 						sfc.script,
 						sfc.scriptSetup,
-						sfc.template,
 						...sfc.styles,
 						...sfc.customBlocks,
 					]
@@ -28,14 +28,7 @@ const plugin: VueLanguagePlugin = () => {
 					if (!block) {
 						continue;
 					}
-					let content = block.content;
-					if (content.endsWith('\r\n')) {
-						content = content.slice(0, -2);
-					}
-					else if (content.endsWith('\n')) {
-						content = content.slice(0, -1);
-					}
-					const offset = content.lastIndexOf('\n') + 1;
+					const offset = block.content.lastIndexOf('\n', block.content.lastIndexOf('\n') - 1) + 1;
 					// fix folding range end position failed to mapping
 					replaceSourceRange(
 						embeddedFile.content,

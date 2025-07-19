@@ -42,12 +42,11 @@ export function create(
 					const uri = URI.parse(document.uri);
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!virtualCode) {
+					if (!sourceScript?.generated) {
 						return;
 					}
 
-					const root = sourceScript?.generated?.root;
+					const root = sourceScript.generated.root;
 					if (!(root instanceof VueVirtualCode)) {
 						return;
 					}
@@ -58,7 +57,7 @@ export function create(
 					}
 
 					const result: InlayHint[] = [];
-					const casing = await checkCasing(context, decoded[0]);
+					const casing = await checkCasing(context, decoded![0]);
 					const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
 					const componentProps: Record<string, string[]> = {};
 

@@ -1,5 +1,5 @@
 import type { LanguageServicePlugin, TextDocument, VirtualCode } from '@volar/language-service';
-import { VueVirtualCode } from '@vue/language-core';
+import { isRenameEnabled, VueVirtualCode } from '@vue/language-core';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
 import { URI } from 'vscode-uri';
@@ -20,9 +20,11 @@ export function create(): LanguageServicePlugin {
 				async provideDiagnostics(document, token) {
 					let diagnostics = await baseInstance.provideDiagnostics?.(document, token) ?? [];
 					if (document.languageId === 'postcss') {
-						diagnostics = diagnostics.filter(diag => diag.code !== 'css-semicolonexpected');
-						diagnostics = diagnostics.filter(diag => diag.code !== 'css-ruleorselectorexpected');
-						diagnostics = diagnostics.filter(diag => diag.code !== 'unknownAtRules');
+						diagnostics = diagnostics.filter(diag =>
+							diag.code !== 'css-semicolonexpected'
+							&& diag.code !== 'css-ruleorselectorexpected'
+							&& diag.code !== 'unknownAtRules'
+						);
 					}
 					return diagnostics;
 				},
@@ -83,11 +85,7 @@ export function create(): LanguageServicePlugin {
 
 				const offset = document.offsetAt(position) + block.startTagEnd;
 				for (const { sourceOffsets, lengths, data } of script.mappings) {
-					if (
-						!sourceOffsets.length
-						|| !data.navigation
-						|| typeof data.navigation === 'object' && !data.navigation.shouldRename
-					) {
+					if (!sourceOffsets.length || !isRenameEnabled(data)) {
 						continue;
 					}
 

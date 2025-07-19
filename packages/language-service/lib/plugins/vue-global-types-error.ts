@@ -4,7 +4,7 @@ import { URI } from 'vscode-uri';
 
 export function create(): LanguageServicePlugin {
 	return {
-		name: 'vue-compiler-dom-errors',
+		name: 'vue-global-types-error',
 		capabilities: {
 			diagnosticProvider: {
 				interFileDependencies: false,

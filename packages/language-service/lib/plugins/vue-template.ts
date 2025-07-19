@@ -110,7 +110,9 @@ export function create(
 			const vModel = builtInData.globalAttributes?.find(x => x.name === 'v-model');
 
 			if (vOn) {
-				const markdown = (typeof vOn.description === 'string' ? vOn.description : vOn.description?.value) ?? '';
+				const markdown = typeof vOn.description === 'object'
+					? vOn.description.value
+					: vOn.description ?? '';
 				const modifiers = markdown
 					.split('\n- ')[4]
 					.split('\n').slice(2, -1);
@@ -121,7 +123,9 @@ export function create(
 				}
 			}
 			if (vBind) {
-				const markdown = (typeof vBind.description === 'string' ? vBind.description : vBind.description?.value) ?? '';
+				const markdown = typeof vBind.description === 'object'
+					? vBind.description.value
+					: vBind.description ?? '';
 				const modifiers = markdown
 					.split('\n- ')[4]
 					.split('\n').slice(2, -1);
@@ -135,7 +139,7 @@ export function create(
 				for (const modifier of modelData.globalAttributes ?? []) {
 					const description = typeof modifier.description === 'object'
 						? modifier.description.value
-						: modifier.description;
+						: modifier.description ?? '';
 					const references = modifier.references?.map(ref => `[${ref.name}](${ref.url})`).join(' | ');
 					vModelModifiers[modifier.name] = description + '\n\n' + references;
 				}
@@ -162,52 +166,38 @@ export function create(
 						return;
 					}
 
-					let sync: (() => Promise<number>) | undefined;
-					let currentVersion: number | undefined;
-
 					const uri = URI.parse(document.uri);
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const root = sourceScript?.generated?.root;
-
-					if (root instanceof VueVirtualCode) {
-						// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
-						baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
-
-						sync = (await provideHtmlData(sourceScript!.id, root)).sync;
-						currentVersion = await sync();
+					if (!sourceScript?.generated) {
+						return;
 					}
 
-					let htmlComplete = await baseServiceInstance.provideCompletionItems?.(
-						document,
-						position,
-						completionContext,
-						token,
-					);
+					const root = sourceScript.generated.root;
+					if (!(root instanceof VueVirtualCode)) {
+						return;
+					}
+
+					// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
+					baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
+
+					let sync = (await provideHtmlData(sourceScript.id, root)).sync;
+					let currentVersion: number | undefined;
+					let completionList: CompletionList | null | undefined;
+
 					while (currentVersion !== (currentVersion = await sync?.())) {
-						htmlComplete = await baseServiceInstance.provideCompletionItems?.(
+						completionList = await baseServiceInstance.provideCompletionItems?.(
 							document,
 							position,
 							completionContext,
 							token,
 						);
 					}
-					if (!htmlComplete) {
-						return;
-					}
 
-					if (sourceScript?.generated) {
-						const virtualCode = sourceScript.generated.embeddedCodes.get('template');
-						if (virtualCode) {
-							const embeddedDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, virtualCode.id);
-							afterHtmlCompletion(
-								htmlComplete,
-								context.documents.get(embeddedDocumentUri, virtualCode.languageId, virtualCode.snapshot),
-							);
-						}
+					if (completionList) {
+						transformCompletionList(completionList, document);
+						return completionList;
 					}
-
-					return htmlComplete;
 				},
 
 				provideHover(document, position, token) {
@@ -478,7 +468,7 @@ export function create(
 				};
 			}
 
-			function afterHtmlCompletion(completionList: CompletionList, document: TextDocument) {
+			function transformCompletionList(completionList: CompletionList, document: TextDocument) {
 				addDirectiveModifiers();
 
 				function addDirectiveModifiers() {
