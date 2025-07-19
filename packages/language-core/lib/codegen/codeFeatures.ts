@@ -72,6 +72,25 @@ const raw = {
 		navigation: true,
 		completion: true,
 	},
+	doNotReportTs2339: {
+		verification: {
+			// https://typescript.tv/errors/#ts2339
+			shouldReport: (_source, code) => String(code) !== '2339',
+		},
+	},
+	doNotReportTs2353AndTs2561: {
+		verification: {
+			// https://typescript.tv/errors/#ts2353
+			// https://typescript.tv/errors/#ts2561
+			shouldReport: (_source, code) => String(code) !== '2353' && String(code) !== '2561',
+		},
+	},
+	doNotReportTs6133: {
+		verification: {
+			// https://typescript.tv/errors/#ts6133
+			shouldReport: (_source, code) => String(code) !== '6133',
+		},
+	},
 } satisfies Record<string, VueCodeInformation>;
 
 export const codeFeatures = raw as {
