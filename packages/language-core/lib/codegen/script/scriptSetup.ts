@@ -55,7 +55,7 @@ export function* generateScriptSetup(
 			+ `	__VLS_setup = (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined);
 
-		const propTypes: Code[] = [];
+		const propTypes: string[] = [];
 		if (ctx.generatedPropsType) {
 			propTypes.push(`__VLS_PublicProps`);
 		}
@@ -64,7 +64,7 @@ export function* generateScriptSetup(
 		}
 		propTypes.push(`Partial<__VLS_InheritedAttrs>`);
 
-		const emitTypes: Code[] = [];
+		const emitTypes: string[] = [];
 		if (scriptSetupRanges.defineEmits) {
 			emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? '__VLS_emit'}`);
 		}
