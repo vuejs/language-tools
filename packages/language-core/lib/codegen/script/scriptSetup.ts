@@ -301,7 +301,7 @@ function* generateSetupFunction(
 
 	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
 		// fix https://github.com/vuejs/language-tools/issues/1187
-		yield `const __VLS_withDefaultsArg = (function <T>(t: T) { return t })(`;
+		yield `const __VLS_defaults = (function <T>(t: T) { return t })(`;
 		yield generateSfcBlockSection(
 			scriptSetup,
 			scriptSetupRanges.withDefaults.arg.start,
@@ -434,7 +434,7 @@ function* generateComponentProps(
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (scriptSetupRanges.defineModel.length) {
-		yield `const __VLS_defaults = {${newLine}`;
+		yield `const __VLS_defaultModels = {${newLine}`;
 		for (const defineModel of scriptSetupRanges.defineModel) {
 			if (!defineModel.defaultValue) {
 				continue;
@@ -543,7 +543,7 @@ function* generateDefineModelType(
 	}
 	else if (defineModel.defaultValue && propName) {
 		// Infer from defineModel({default: T})
-		yield `typeof __VLS_defaults['${propName}']`;
+		yield `typeof __VLS_defaultModels['${propName}']`;
 	}
 	else {
 		yield `any`;

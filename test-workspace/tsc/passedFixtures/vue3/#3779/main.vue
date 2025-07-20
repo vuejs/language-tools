@@ -6,5 +6,5 @@ defineProps<{
 </script>
 
 <template>
-	<h1>{{ exactType(optionalBoolean, {} as boolean) }}</h1>
+	<h1>{{ exactType(optionalBoolean, {} as boolean | undefined) }}</h1>
 </template>

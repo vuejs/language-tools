@@ -136,6 +136,11 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		[K in Exclude<keyof T, keyof __VLS_GlobalDirectives> & string as \`v\${Capitalize<K>}\`]: T[K];
 	};
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T as K]: T[K]; } & {};
+	type __VLS_WithDefaultsGlobal<P, D> = {
+		[K in keyof P as K extends keyof D ? K : never]-?: P[K];
+	} & {
+		[K in keyof P as K extends keyof D ? never : K]: P[K];
+	};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
 	type __VLS_ProxyRefs<T> = import('${lib}').ShallowUnwrapRef<T>;
 

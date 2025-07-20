@@ -67,13 +67,24 @@ function* generateTemplateCtx(
 		exps.push(`{} as { $emit: ${emitTypes.join(' & ')} }`);
 	}
 
+	const { defineProps, withDefaults } = options.scriptSetupRanges ?? {};
+	const props = defineProps?.arg
+		? `typeof ${defineProps.name ?? `__VLS_props`}`
+		: defineProps?.typeArg && withDefaults?.arg
+		? `__VLS_WithDefaultsGlobal<__VLS_Props, typeof __VLS_defaults>`
+		: undefined;
+
 	const propTypes: string[] = [];
-	if (options.scriptSetupRanges?.defineProps) {
-		const { defineProps } = options.scriptSetupRanges;
-		propTypes.push(`__VLS_SpreadMerge<__VLS_PublicProps, typeof ${defineProps.name ?? `__VLS_props`}>`);
+	if (ctx.generatedPropsType) {
+		if (props) {
+			propTypes.push(`__VLS_SpreadMerge<__VLS_PublicProps, ${props}>`);
+		}
+		else {
+			propTypes.push(`__VLS_PublicProps`);
+		}
 	}
-	else if (ctx.generatedPropsType) {
-		propTypes.push(`__VLS_PublicProps`);
+	else if (props) {
+		propTypes.push(props);
 	}
 	if (emitTypes.length) {
 		propTypes.push(`__VLS_EmitProps`);

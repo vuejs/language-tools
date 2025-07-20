@@ -142,7 +142,7 @@ export function* generatePropsOption(
 				const propsType = `${ctx.localTypes.TypePropsToOption}<__VLS_PublicProps>`;
 				return `{} as ` + (
 					scriptSetupRanges.withDefaults?.arg
-						? `${ctx.localTypes.WithDefaults}<${propsType}, typeof __VLS_withDefaultsArg>`
+						? `${ctx.localTypes.WithDefaultsLocal}<${propsType}, typeof __VLS_defaults>`
 						: propsType
 				);
 			});
@@ -163,7 +163,7 @@ export function* generatePropsOption(
 			options.vueCompilerOptions.target >= 3.6
 			&& scriptSetupRanges.withDefaults?.arg
 		) {
-			yield `__defaults: __VLS_withDefaultsArg,${newLine}`;
+			yield `__defaults: __VLS_defaults,${newLine}`;
 		}
 		yield `__typeProps: `;
 		yield* generateSpreadMerge(typeOptionCodes);
