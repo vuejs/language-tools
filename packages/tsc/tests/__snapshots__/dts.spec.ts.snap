@@ -84,14 +84,14 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
 "declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_PrettifyLocal<{
-        "onUpdate:title"?: (value: string) => any;
-        onBar?: (data: number) => any;
-    } & ({
+    props: __VLS_PrettifyLocal<({
         foo: number;
     } & {
         title?: string;
-    }) & Partial<{}>> & import("vue").PublicProps;
+    }) & {
+        "onUpdate:title"?: (value: string) => any;
+        onBar?: (data: number) => any;
+    } & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
@@ -115,14 +115,14 @@ type __VLS_PrettifyLocal<T> = {
 
 exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: generic/custom-extension-component.cext.d.ts 1`] = `
 "declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_PrettifyLocal<{
-        "onUpdate:title"?: (value: string) => any;
-        onBar?: (data: number) => any;
-    } & ({
+    props: __VLS_PrettifyLocal<({
         foo: number;
     } & {
         title?: string;
-    }) & Partial<{}>> & import("vue").PublicProps;
+    }) & {
+        "onUpdate:title"?: (value: string) => any;
+        onBar?: (data: number) => any;
+    } & Partial<{}>> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
@@ -326,7 +326,7 @@ export default _default;
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
-"type __VLS_PublicProps = {
+"type __VLS_ModelProps = {
     /**
      * required number modelValue
      */
@@ -361,7 +361,7 @@ declare const __VLS_export: import("vue").DefineComponent2<{
     directives: {};
     provide: {};
     expose: string;
-    __typeProps: __VLS_PublicProps;
+    __typeProps: __VLS_ModelProps;
     __typeEmits: __VLS_ModelEmit;
     __typeRefs: {};
     __typeEl: any;

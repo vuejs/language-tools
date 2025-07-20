@@ -55,8 +55,16 @@ export function* generateScriptSetup(
 			+ `	__VLS_setup = (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined);
 
-		const emitTypes: string[] = [];
+		const propTypes: Code[] = [];
+		if (ctx.generatedPropsType) {
+			propTypes.push(`__VLS_PublicProps`);
+		}
+		if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
+			propTypes.push(`__VLS_EmitProps`);
+		}
+		propTypes.push(`Partial<__VLS_InheritedAttrs>`);
 
+		const emitTypes: Code[] = [];
 		if (scriptSetupRanges.defineEmits) {
 			emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? '__VLS_emit'}`);
 		}
@@ -65,11 +73,7 @@ export function* generateScriptSetup(
 		}
 
 		yield `return {} as {${newLine}`
-			+ `	props: ${ctx.localTypes.PrettifyLocal}<${
-				scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length
-					? `__VLS_EmitProps & `
-					: ``
-			}__VLS_PublicProps & Partial<__VLS_InheritedAttrs>> & ${
+			+ `	props: ${ctx.localTypes.PrettifyLocal}<${propTypes.join(' & ')}> & ${
 				options.vueCompilerOptions.target >= 3.4
 					? `import('${options.vueCompilerOptions.lib}').PublicProps`
 					: options.vueCompilerOptions.target >= 3
