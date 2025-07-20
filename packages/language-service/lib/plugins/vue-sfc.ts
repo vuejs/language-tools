@@ -231,7 +231,7 @@ export function create(): LanguageServicePlugin {
 					const tags = sfcDataProvider?.provideTags();
 
 					const scriptLangs = getLangs('script');
-					const scriptItems = result.items.filter(item => item.label === 'script' || item.label === 'script setup');
+					const scriptItems = result.items.filter(item => item.label === 'script' || item.label === 'script setup' || item.label === 'script setup vapor');
 					for (const scriptItem of scriptItems) {
 						scriptItem.kind = 17 satisfies typeof CompletionItemKind.File;
 						scriptItem.detail = '.js';
