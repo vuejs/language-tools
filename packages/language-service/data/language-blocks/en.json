@@ -79,15 +79,6 @@
             "value": "\n- Each `*.vue` file can contain at most one `<script setup>` block (excluding normal `<script>`).\n\n- The script is pre-processed and used as the component's `setup()` function, which means it will be executed **for each instance of the component**. Top-level bindings in `<script setup>` are automatically exposed to the template. For more details, see [dedicated documentation on `<script setup>`](https://vuejs.org/api/sfc-script-setup.html).\n"
           },
           "references": "api/sfc-spec.html#script-setup"
-        },
-				{
-          "name": "setup vapor",
-          "valueSet": "v",
-          "description": {
-            "kind": "markdown",
-						"value": "\n- Each `*.vue` file can contain at most one `<script setup>` block (excluding normal `<script>`).\n\n- The `vapor` attribute enables Vue 3.6+ Vapor Mode compilation for better performance and smaller bundle sizes.\n\n- Vapor Mode provides optimized compilation that generates more efficient runtime code with reduced overhead.\n\n- The script is pre-processed and used as the component's `setup()` function, which means it will be executed **for each instance of the component**. Top-level bindings in `<script setup vapor>` are automatically exposed to the template. For more details, see [dedicated documentation on `<script setup>`](https://vuejs.org/api/sfc-script-setup.html).\n"
-          },
-          "references": "api/sfc-spec.html#script-setup"
         }
       ],
       "description": {
@@ -102,15 +93,6 @@
       "description": {
         "kind": "markdown",
         "value": "\n- Each `*.vue` file can contain at most one `<script setup>` block (excluding normal `<script>`).\n\n- The script is pre-processed and used as the component's `setup()` function, which means it will be executed **for each instance of the component**. Top-level bindings in `<script setup>` are automatically exposed to the template. For more details, see [dedicated documentation on `<script setup>`](https://vuejs.org/api/sfc-script-setup.html).\n"
-      },
-      "references": "api/sfc-spec.html#script-setup"
-    },
-		{
-      "name": "script setup vapor",
-      "attributes": [],
-      "description": {
-        "kind": "markdown",
-				"value": "\n- Each `*.vue` file can contain at most one `<script setup>` block (excluding normal `<script>`).\n\n- The `vapor` attribute enables Vue 3.6+ Vapor Mode compilation for enhanced performance and optimized bundle sizes.\n\n- Vapor Mode is Vue's new compilation strategy that generates more efficient runtime code with reduced virtual DOM overhead and better tree-shaking capabilities.\n\n- The script is pre-processed and used as the component's `setup()` function, which means it will be executed **for each instance of the component**. Top-level bindings in `<script setup vapor>` are automatically exposed to the template. For more details, see [dedicated documentation on `<script setup>`](https://vuejs.org/api/sfc-script-setup.html).\n"
       },
       "references": "api/sfc-spec.html#script-setup"
     },
