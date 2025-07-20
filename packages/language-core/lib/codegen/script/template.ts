@@ -20,7 +20,7 @@ export function* generateTemplate(
 	const templateCodegenCtx = createTemplateCodegenContext({
 		scriptSetupBindingNames: new Set(),
 	});
-	yield* generateTemplateCtx(options, ctx);
+	yield* generateTemplateCtx(options);
 	yield* generateTemplateElements();
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
@@ -35,10 +35,7 @@ export function* generateTemplate(
 	}
 }
 
-function* generateTemplateCtx(
-	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
-): Generator<Code> {
+function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 	const exps: Code[] = [];
 
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
@@ -63,28 +60,24 @@ function* generateTemplateCtx(
 		emitTypes.push(`typeof __VLS_modelEmit`);
 	}
 	if (emitTypes.length) {
-		yield `type __VLS_EmitProps = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(' & ')}>>${endOfLine};`;
+		yield `type __VLS_EmitProps = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(' & ')}>>${endOfLine}`;
 		exps.push(`{} as { $emit: ${emitTypes.join(' & ')} }`);
 	}
 
+	const propTypes: string[] = [];
 	const { defineProps, withDefaults } = options.scriptSetupRanges ?? {};
 	const props = defineProps?.arg
 		? `typeof ${defineProps.name ?? `__VLS_props`}`
-		: defineProps?.typeArg && withDefaults?.arg
-		? `__VLS_WithDefaultsGlobal<__VLS_Props, typeof __VLS_defaults>`
+		: defineProps?.typeArg
+		? withDefaults?.arg
+			? `__VLS_WithDefaultsGlobal<__VLS_Props, typeof __VLS_defaults>`
+			: `__VLS_Props`
 		: undefined;
-
-	const propTypes: string[] = [];
-	if (ctx.generatedPropsType) {
-		if (props) {
-			propTypes.push(`__VLS_SpreadMerge<__VLS_PublicProps, ${props}>`);
-		}
-		else {
-			propTypes.push(`__VLS_PublicProps`);
-		}
-	}
-	else if (props) {
+	if (props) {
 		propTypes.push(props);
+	}
+	if (options.scriptSetupRanges?.defineModel.length) {
+		propTypes.push(`__VLS_ModelProps`);
 	}
 	if (emitTypes.length) {
 		propTypes.push(`__VLS_EmitProps`);

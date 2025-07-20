@@ -4,6 +4,7 @@ import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
+import { generateIntersectMerge } from '../utils/merge';
 import { wrapWith } from '../utils/wrapWith';
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
@@ -448,27 +449,15 @@ function* generateComponentProps(
 		yield `}${endOfLine}`;
 	}
 
-	yield `type __VLS_PublicProps = `;
+	const propTypes: Code[] = [];
 	if (scriptSetupRanges.defineSlots && options.vueCompilerOptions.jsxSlots) {
-		if (ctx.generatedPropsType) {
-			yield ` & `;
-		}
-		ctx.generatedPropsType = true;
-		yield `${ctx.localTypes.PropsChildren}<__VLS_Slots>`;
+		propTypes.push(`${ctx.localTypes.PropsChildren}<__VLS_Slots>`);
 	}
 	if (scriptSetupRanges.defineProps?.typeArg) {
-		if (ctx.generatedPropsType) {
-			yield ` & `;
-		}
-		ctx.generatedPropsType = true;
-		yield `__VLS_Props`;
+		propTypes.push(`__VLS_Props`);
 	}
 	if (scriptSetupRanges.defineModel.length) {
-		if (ctx.generatedPropsType) {
-			yield ` & `;
-		}
-		ctx.generatedPropsType = true;
-		yield `{${newLine}`;
+		yield `type __VLS_ModelProps = {${newLine}`;
 		for (const defineModel of scriptSetupRanges.defineModel) {
 			const [propName, localName] = getPropAndLocalName(scriptSetup, defineModel);
 
@@ -499,12 +488,15 @@ function* generateComponentProps(
 				yield `'${modifierName}'?: Partial<Record<${modifierType}, true>>,${newLine}`;
 			}
 		}
-		yield `}`;
+		yield `}${endOfLine}`;
+		propTypes.push(`__VLS_ModelProps`);
 	}
-	if (!ctx.generatedPropsType) {
-		yield `{}`;
+	if (propTypes.length) {
+		ctx.generatedPropsType = true;
+		yield `type __VLS_PublicProps = `;
+		yield* generateIntersectMerge(propTypes);
+		yield endOfLine;
 	}
-	yield endOfLine;
 }
 
 function* generateModelEmit(
