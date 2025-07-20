@@ -466,6 +466,10 @@ function* generateComponentProps(
 		yield `}${endOfLine}`;
 	}
 
+	yield `type OverrideClassToAny<T> = {
+    [P in keyof T]: P extends 'class' ? unknown : T[P];
+  };`;
+
 	yield `type __VLS_PublicProps = `;
 	if (scriptSetupRanges.defineSlots && options.vueCompilerOptions.jsxSlots) {
 		if (ctx.generatedPropsType) {
@@ -479,7 +483,7 @@ function* generateComponentProps(
 			yield ` & `;
 		}
 		ctx.generatedPropsType = true;
-		yield `__VLS_Props`;
+		yield `OverrideClassToAny<__VLS_Props>`;
 	}
 	if (scriptSetupRanges.defineModel.length) {
 		if (ctx.generatedPropsType) {
