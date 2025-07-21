@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
-import { collectIdentifiers } from '../codegen/utils';
 import type { TextRange, VueCompilerOptions } from '../types';
+import { collectBindingIdentifiers, collectBindingRanges } from '../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../utils/shared';
 
 const tsCheckReg = /^\/\/\s*@ts-(?:no)?check($|\s)/;
@@ -236,7 +236,7 @@ export function parseScriptSetupRanges(
 				};
 				if (ts.isVariableDeclaration(parent) && ts.isObjectBindingPattern(parent.name)) {
 					defineProps.destructured = new Map();
-					const identifiers = collectIdentifiers(ts, parent.name);
+					const identifiers = collectBindingIdentifiers(ts, parent.name);
 					for (const { id, isRest, initializer } of identifiers) {
 						const name = _getNodeText(id);
 						if (isRest) {
@@ -374,8 +374,8 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 	ts.forEachChild(ast, node => {
 		if (ts.isVariableStatement(node)) {
 			for (const decl of node.declarationList.declarations) {
-				const vars = _findBindingVars(decl.name);
-				bindings.push(...vars.map(range => ({ range })));
+				const ranges = collectBindingRanges(ts, decl.name, ast);
+				bindings.push(...ranges.map(range => ({ range })));
 			}
 		}
 		else if (ts.isFunctionDeclaration(node)) {
@@ -444,47 +444,6 @@ export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.Sour
 
 	function _getNodeText(node: ts.Node) {
 		return getNodeText(ts, node, ast);
-	}
-
-	function _findBindingVars(left: ts.BindingName) {
-		return findBindingVars(ts, left, ast);
-	}
-}
-
-export function findBindingVars(
-	ts: typeof import('typescript'),
-	left: ts.BindingName,
-	ast: ts.SourceFile,
-) {
-	const vars: TextRange[] = [];
-	worker(left);
-	return vars;
-	function worker(node: ts.Node) {
-		if (ts.isIdentifier(node)) {
-			vars.push(getStartEnd(ts, node, ast));
-		}
-		// { ? } = ...
-		// [ ? ] = ...
-		else if (ts.isObjectBindingPattern(node) || ts.isArrayBindingPattern(node)) {
-			for (const property of node.elements) {
-				if (ts.isBindingElement(property)) {
-					worker(property.name);
-				}
-			}
-		}
-		// { foo: ? } = ...
-		else if (ts.isPropertyAssignment(node)) {
-			worker(node.initializer);
-		}
-		// { foo } = ...
-		else if (ts.isShorthandPropertyAssignment(node)) {
-			vars.push(getStartEnd(ts, node.name, ast));
-		}
-		// { ...? } = ...
-		// [ ...? ] = ...
-		else if (ts.isSpreadAssignment(node) || ts.isSpreadElement(node)) {
-			worker(node.expression);
-		}
 	}
 }
 

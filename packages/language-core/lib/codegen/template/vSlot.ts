@@ -1,8 +1,9 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
+import { collectBindingNames } from '../../utils/collectBindings';
 import { getStartEnd } from '../../utils/shared';
-import { collectBindingNames, createTsAst, endOfLine, newLine } from '../utils';
+import { createTsAst, endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';

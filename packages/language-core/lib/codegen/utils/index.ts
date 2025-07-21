@@ -1,52 +1,11 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
-import { getNodeText } from '../../utils/shared';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
 export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
-
-export function collectBindingNames(
-	ts: typeof import('typescript'),
-	node: ts.Node,
-	ast: ts.SourceFile,
-) {
-	return collectIdentifiers(ts, node).map(({ id }) => getNodeText(ts, id, ast));
-}
-
-export function collectIdentifiers(
-	ts: typeof import('typescript'),
-	node: ts.Node,
-	results: {
-		id: ts.Identifier;
-		isRest: boolean;
-		initializer: ts.Expression | undefined;
-	}[] = [],
-	isRest = false,
-	initializer: ts.Expression | undefined = undefined,
-) {
-	if (ts.isIdentifier(node)) {
-		results.push({ id: node, isRest, initializer });
-	}
-	else if (ts.isObjectBindingPattern(node)) {
-		for (const el of node.elements) {
-			collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken, el.initializer);
-		}
-	}
-	else if (ts.isArrayBindingPattern(node)) {
-		for (const el of node.elements) {
-			if (ts.isBindingElement(el)) {
-				collectIdentifiers(ts, el.name, results, !!el.dotDotDotToken);
-			}
-		}
-	}
-	else {
-		ts.forEachChild(node, node => collectIdentifiers(ts, node, results, false));
-	}
-	return results;
-}
 
 export function normalizeAttributeValue(node: CompilerDOM.TextNode): [string, number] {
 	let offset = node.loc.start.offset;

@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { collectBindingNames, createTsAst, endOfLine, newLine } from '../utils';
+import { collectBindingNames } from '../../utils/collectBindings';
+import { createTsAst, endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';

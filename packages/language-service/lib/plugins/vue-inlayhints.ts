@@ -1,5 +1,5 @@
 import type { InlayHint, InlayHintKind, LanguageServicePlugin } from '@volar/language-service';
-import { collectIdentifiers, tsCodegen, VueVirtualCode } from '@vue/language-core';
+import { collectBindingIdentifiers, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 
@@ -198,7 +198,7 @@ export function findDestructuredProps(
 			&& ts.isCallExpression(initializer)
 			&& initializer.expression.getText(ast) === 'defineProps';
 
-		for (const { id } of collectIdentifiers(ts, name)) {
+		for (const { id } of collectBindingIdentifiers(ts, name)) {
 			if (isDefineProps) {
 				excludedIds.add(id);
 			}
@@ -215,7 +215,7 @@ export function findDestructuredProps(
 		}
 
 		for (const p of parameters) {
-			for (const { id } of collectIdentifiers(ts, p)) {
+			for (const { id } of collectBindingIdentifiers(ts, p)) {
 				registerLocalBinding(id);
 			}
 		}

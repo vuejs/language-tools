@@ -1,4 +1,4 @@
-import { findBindingVars, hyphenateAttr, type TextRange } from '@vue/language-core';
+import { collectBindingRanges, hyphenateAttr, type TextRange } from '@vue/language-core';
 import type * as ts from 'typescript';
 
 const enum TrackKind {
@@ -164,8 +164,8 @@ export function analyze(
 	}
 
 	function findSubscribers(refName: ts.BindingName, trackKinds: TrackKind[], visited = new Set<number>()) {
-		return findBindingVars(ts, refName, sourceFile)
-			.map(binding => findSubscribersWorker(binding, trackKinds, visited))
+		return collectBindingRanges(ts, refName, sourceFile)
+			.map(range => findSubscribersWorker(range, trackKinds, visited))
 			.flat();
 	}
 
