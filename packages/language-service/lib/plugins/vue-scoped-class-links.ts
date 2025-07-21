@@ -1,5 +1,5 @@
-import type { DocumentLink, LanguageServicePlugin } from '@volar/language-service';
-import { type Sfc, tsCodegen, VueVirtualCode } from '@vue/language-core';
+import type { LanguageServicePlugin } from '@volar/language-service';
+import { tsCodegen, VueVirtualCode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 
 export function create(): LanguageServicePlugin {
@@ -26,58 +26,50 @@ export function create(): LanguageServicePlugin {
 
 					const { sfc } = root;
 					const codegen = tsCodegen.get(sfc);
-					const result: DocumentLink[] = [];
 
-					const scopedClasses = codegen?.getGeneratedTemplate()?.scopedClasses ?? [];
-					const styleClasses = new Map<string, {
-						index: number;
-						style: Sfc['styles'][number];
-						classOffset: number;
-					}[]>();
 					const option = root.vueCompilerOptions.resolveStyleClassNames;
+					const scopedClasses = codegen?.getGeneratedTemplate()?.scopedClasses ?? [];
+					const styleClasses = new Map<string, string[]>();
 
 					for (let i = 0; i < sfc.styles.length; i++) {
 						const style = sfc.styles[i];
-						if (option === true || (option === 'scoped' && style.scoped)) {
-							for (const className of style.classNames) {
-								if (!styleClasses.has(className.text.slice(1))) {
-									styleClasses.set(className.text.slice(1), []);
-								}
-								styleClasses.get(className.text.slice(1))!.push({
-									index: i,
-									style,
-									classOffset: className.offset,
-								});
+						if (option !== true && !(option === 'scoped' && style.scoped)) {
+							continue;
+						}
+
+						const styleDocumentUri = context.encodeEmbeddedDocumentUri(decoded![0], 'style_' + i);
+						const styleVirtualCode = sourceScript.generated.embeddedCodes.get('style_' + i);
+						if (!styleVirtualCode) {
+							continue;
+						}
+						const styleDocument = context.documents.get(
+							styleDocumentUri,
+							styleVirtualCode.languageId,
+							styleVirtualCode.snapshot,
+						);
+
+						for (const { text, offset } of style.classNames) {
+							const start = styleDocument.positionAt(offset);
+							const end = styleDocument.positionAt(offset + text.length);
+							const target = styleDocumentUri
+								+ `#L${start.line + 1},${start.character + 1}-L${end.line + 1},${end.character + 1}`;
+							if (!styleClasses.has(text)) {
+								styleClasses.set(text, []);
 							}
+							styleClasses.get(text)!.push(target);
 						}
 					}
 
-					for (const { className, offset } of scopedClasses) {
-						for (const style of styleClasses.get(className) ?? []) {
-							const styleDocumentUri = context.encodeEmbeddedDocumentUri(decoded![0], 'style_' + style.index);
-							const styleVirtualCode = sourceScript.generated.embeddedCodes.get('style_' + style.index);
-							if (!styleVirtualCode) {
-								continue;
-							}
-							const styleDocument = context.documents.get(
-								styleDocumentUri,
-								styleVirtualCode.languageId,
-								styleVirtualCode.snapshot,
-							);
-							const start = styleDocument.positionAt(style.classOffset);
-							const end = styleDocument.positionAt(style.classOffset + className.length + 1);
-							result.push({
-								range: {
-									start: document.positionAt(offset),
-									end: document.positionAt(offset + className.length),
-								},
-								target: context.encodeEmbeddedDocumentUri(decoded![0], 'style_' + style.index)
-									+ `#L${start.line + 1},${start.character + 1}-L${end.line + 1},${end.character + 1}`,
-							});
-						}
-					}
-
-					return result;
+					return scopedClasses.flatMap(({ className, offset }) => {
+						const range = {
+							start: document.positionAt(offset),
+							end: document.positionAt(offset + className.length),
+						};
+						return styleClasses.get('.' + className)?.map(target => ({
+							range,
+							target,
+						})) ?? [];
+					});
 				},
 			};
 		},

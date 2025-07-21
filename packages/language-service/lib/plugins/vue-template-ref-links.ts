@@ -1,4 +1,4 @@
-import type { DocumentLink, LanguageServicePlugin } from '@volar/language-service';
+import type { LanguageServicePlugin } from '@volar/language-service';
 import { tsCodegen, VueVirtualCode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 
@@ -26,7 +26,6 @@ export function create(): LanguageServicePlugin {
 
 					const { sfc } = root;
 					const codegen = tsCodegen.get(sfc);
-					const result: DocumentLink[] = [];
 
 					if (!sfc.scriptSetup) {
 						return;
@@ -46,29 +45,26 @@ export function create(): LanguageServicePlugin {
 					const templateRefs = codegen?.getGeneratedTemplate()?.templateRefs;
 					const useTemplateRefs = codegen?.getScriptSetupRanges()?.useTemplateRef ?? [];
 
-					for (const { arg } of useTemplateRefs) {
+					return useTemplateRefs.flatMap(({ arg }) => {
 						if (!arg) {
-							continue;
+							return [];
 						}
+						const name = sfc.scriptSetup!.content.slice(arg.start + 1, arg.end - 1);
+						const range = {
+							start: document.positionAt(arg.start + 1),
+							end: document.positionAt(arg.end - 1),
+						};
 
-						const name = sfc.scriptSetup.content.slice(arg.start + 1, arg.end - 1);
-
-						for (const { offset } of templateRefs?.get(name) ?? []) {
+						return templateRefs?.get(name)?.map(({ offset }) => {
 							const start = templateDocument.positionAt(offset);
 							const end = templateDocument.positionAt(offset + name.length);
-
-							result.push({
-								range: {
-									start: document.positionAt(arg.start + 1),
-									end: document.positionAt(arg.end - 1),
-								},
+							return {
+								range,
 								target: templateDocumentUri
 									+ `#L${start.line + 1},${start.character + 1}-L${end.line + 1},${end.character + 1}`,
-							});
-						}
-					}
-
-					return result;
+							};
+						}) ?? [];
+					});
 				},
 			};
 		},
