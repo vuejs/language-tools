@@ -21,6 +21,7 @@ export function create(
 		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
 			let currentReq = 0;
+
 			return {
 				async provideAutoInsertSnippet(document, selection, change) {
 					// selection must at end of change
@@ -67,32 +68,26 @@ export function create(
 						return;
 					}
 
-					let sourceCodeOffset = document.offsetAt(selection);
-					let mapped = false;
-					for (const [, map] of context.language.maps.forEach(virtualCode)) {
-						for (const [sourceOffset] of map.toSourceLocation(sourceCodeOffset)) {
-							sourceCodeOffset = sourceOffset;
-							mapped = true;
-							break;
-						}
-						if (mapped) {
-							break;
-						}
+					let sourceOffset: number | undefined;
+					const map = context.language.maps.get(virtualCode, sourceScript);
+					for (const [offset] of map.toSourceLocation(document.offsetAt(selection))) {
+						sourceOffset = offset;
+						break;
 					}
-					if (!mapped) {
+					if (sourceOffset === undefined) {
 						return;
 					}
 
 					for (const { ast, startTagEnd, endTagStart } of blocks) {
-						if (sourceCodeOffset < startTagEnd || sourceCodeOffset > endTagStart) {
+						if (sourceOffset < startTagEnd || sourceOffset > endTagStart) {
 							continue;
 						}
-						if (isBlacklistNode(ts, ast, sourceCodeOffset - startTagEnd, false)) {
+						if (isBlacklistNode(ts, ast, sourceOffset - startTagEnd, false)) {
 							return;
 						}
 					}
 
-					const props = await tsPluginClient?.getPropertiesAtLocation(root.fileName, sourceCodeOffset) ?? [];
+					const props = await tsPluginClient?.getPropertiesAtLocation(root.fileName, sourceOffset) ?? [];
 					if (props.some(prop => prop === 'value')) {
 						return '${1:.value}';
 					}

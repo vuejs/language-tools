@@ -21,10 +21,6 @@ export function create(): LanguageServicePlugin {
 					const uri = URI.parse(document.uri);
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!virtualCode) {
-						return;
-					}
 
 					const root = sourceScript?.generated?.root;
 					if (!(root instanceof VueVirtualCode)) {

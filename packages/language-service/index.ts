@@ -15,20 +15,21 @@ import { create as createTypeScriptSyntacticPlugin } from 'volar-service-typescr
 import { create as createCssPlugin } from './lib/plugins/css';
 import { create as createTypescriptSemanticTokensPlugin } from './lib/plugins/typescript-semantic-tokens';
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
-import { create as createVueAutoAddSpacePlugin } from './lib/plugins/vue-autoinsert-space';
+import { create as createVueAutoSpacePlugin } from './lib/plugins/vue-autoinsert-space';
 import { create as createVueCompilerDomErrorsPlugin } from './lib/plugins/vue-compiler-dom-errors';
 import { create as createVueComponentSemanticTokensPlugin } from './lib/plugins/vue-component-semantic-tokens';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
 import { create as createVueDocumentHighlightsPlugin } from './lib/plugins/vue-document-highlights';
-import { create as createVueDocumentLinksPlugin } from './lib/plugins/vue-document-links';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
 import { create as createVueGlobalTypesErrorPlugin } from './lib/plugins/vue-global-types-error';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 import { create as createVueMissingPropsHintsPlugin } from './lib/plugins/vue-missing-props-hints';
+import { create as createVueScopedClassLinksPlugin } from './lib/plugins/vue-scoped-class-links';
 import { create as createVueSfcPlugin } from './lib/plugins/vue-sfc';
 import { create as createVueSuggestDefineAssignmentPlugin } from './lib/plugins/vue-suggest-define-assignment';
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
+import { create as createVueTemplateRefLinksPlugin } from './lib/plugins/vue-template-ref-links';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 
 declare module '@volar/language-service' {
@@ -55,21 +56,22 @@ export function createVueLanguageServicePlugins(
 		createTypeScriptDocCommentTemplatePlugin(ts),
 		createTypescriptSemanticTokensPlugin(getTsPluginClient),
 		createTypeScriptSyntacticPlugin(ts),
-		createVueAutoAddSpacePlugin(),
+		createVueAutoSpacePlugin(),
 		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueCompilerDomErrorsPlugin(),
 		createVueComponentSemanticTokensPlugin(getTsPluginClient),
 		createVueDocumentDropPlugin(ts, getTsPluginClient),
-		createVueDocumentLinksPlugin(),
 		createVueDirectiveCommentsPlugin(),
 		createVueExtractFilePlugin(ts, getTsPluginClient),
 		createVueGlobalTypesErrorPlugin(),
 		createVueInlayHintsPlugin(ts),
 		createVueMissingPropsHintsPlugin(getTsPluginClient),
+		createVueScopedClassLinksPlugin(),
 		createVueSfcPlugin(),
 		createVueSuggestDefineAssignmentPlugin(),
 		createVueTemplatePlugin('html', getTsPluginClient),
 		createVueTemplatePlugin('pug', getTsPluginClient),
+		createVueTemplateRefLinksPlugin(),
 		createVueTwoslashQueriesPlugin(getTsPluginClient),
 		createEmmetPlugin({
 			mappedLanguages: {
