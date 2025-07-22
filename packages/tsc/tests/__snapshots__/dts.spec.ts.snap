@@ -27,6 +27,39 @@ type __VLS_PrettifyLocal<T> = {
 "
 `;
 
+exports[`vue-tsc-dts > Input: #5546/main.vue, Output: #5546/main.vue.d.ts 1`] = `
+"type __VLS_Props = {
+    title: string;
+    onCompleted: () => void;
+};
+type __VLS_Emit = {
+    close: [];
+};
+declare const _default: import("vue").DefineComponent2<{
+    setup(): void;
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: __VLS_Props;
+    __typeEmits: __VLS_Emit;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+export default _default;
+"
+`;
+
 exports[`vue-tsc-dts > Input: empty-component/component.vue, Output: empty-component/component.vue.d.ts 1`] = `
 "declare const _default: import("vue").DefineComponent2<{
     setup(): void;
