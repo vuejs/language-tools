@@ -1168,6 +1168,21 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 		`);
 		});
 
+		test('component with both props and events', () => {
+			const componentPath = path.resolve(__dirname, '../../../test-workspace/component-meta/#5546/main.vue');
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.type).toEqual(TypeMeta.Class);
+
+			// Nothing special about this prop
+			expect(meta.props.find(prop => prop.name === 'title')).toBeDefined();
+			// Event
+			expect(meta.props.find(prop => prop.name === 'onClose')).toBeUndefined();
+			expect(meta.events.find(event => event.name === 'close')).toBeDefined();
+			// Prop that starts with `on`
+			expect(meta.props.find(prop => prop.name === 'onCompleted')).toBeDefined();
+		});
+
 		test('non-component', () => {
 			const componentPath = path.resolve(
 				__dirname,

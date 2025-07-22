@@ -240,7 +240,7 @@ interface ComponentMeta<T> {
 		let _slots: ReturnType<typeof getSlots> | undefined;
 		let _exposed: ReturnType<typeof getExposed> | undefined;
 
-		return {
+		const meta = {
 			get type() {
 				return _type ?? (_type = getType());
 			},
@@ -256,7 +256,9 @@ interface ComponentMeta<T> {
 			get exposed() {
 				return _exposed ?? (_exposed = getExposed());
 			},
-		};
+		}
+
+		return meta;
 
 		function getType() {
 			const $type = symbolProperties.find(prop => prop.escapedName === 'type');
@@ -278,6 +280,8 @@ interface ComponentMeta<T> {
 				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode);
 				const properties = type.getProperties();
 
+				const eventProps = new Set(meta.events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`));
+
 				result = properties
 					.map(prop => {
 						const {
@@ -286,7 +290,7 @@ interface ComponentMeta<T> {
 
 						return resolveNestedProperties(prop);
 					})
-					.filter(prop => !vnodeEventRegex.test(prop.name));
+					.filter(prop => !vnodeEventRegex.test(prop.name) && !eventProps.has(prop.name));
 			}
 
 			// fill global
