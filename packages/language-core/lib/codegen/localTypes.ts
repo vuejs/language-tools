@@ -27,7 +27,6 @@ type __VLS_WithDefaultsLocal<P, D> = {
 type __VLS_WithSlots<T, S> = T & {
 	new(): {
 		${getSlotsPropertyName(vueCompilerOptions.target)}: S;
-		${vueCompilerOptions.jsxSlots ? `$props: ${PropsChildren.name}<S>;` : ''}
 	}
 };
 `.trimStart(),

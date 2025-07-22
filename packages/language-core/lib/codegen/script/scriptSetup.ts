@@ -318,7 +318,13 @@ function* generateSetupFunction(
 	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
 	yield* generateMacros(options, ctx);
 
-	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges);
+	const hasSlots = !!(
+		scriptSetupRanges.defineSlots
+		|| options.templateCodegen?.slots.length
+		|| options.templateCodegen?.dynamicSlots.length
+	);
+
+	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges, hasSlots);
 	yield* generateModelEmit(scriptSetup, scriptSetupRanges);
 	yield* generateTemplate(options, ctx);
 
@@ -326,11 +332,7 @@ function* generateSetupFunction(
 		const prefix = syntax === 'return'
 			? [`return `]
 			: generateConstExport(scriptSetup);
-		if (
-			scriptSetupRanges.defineSlots
-			|| options.templateCodegen?.slots.length
-			|| options.templateCodegen?.dynamicSlots.length
-		) {
+		if (hasSlots) {
 			yield `const __VLS_base = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
@@ -439,6 +441,7 @@ function* generateComponentProps(
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
+	hasSlots: boolean,
 ): Generator<Code> {
 	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
 		yield `const __VLS_defaults = `;
@@ -467,7 +470,7 @@ function* generateComponentProps(
 	}
 
 	const propTypes: string[] = [];
-	if (scriptSetupRanges.defineSlots && options.vueCompilerOptions.jsxSlots) {
+	if (options.vueCompilerOptions.jsxSlots && hasSlots) {
 		propTypes.push(`${ctx.localTypes.PropsChildren}<__VLS_Slots>`);
 	}
 	if (scriptSetupRanges.defineProps?.typeArg) {
