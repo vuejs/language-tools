@@ -256,7 +256,7 @@ interface ComponentMeta<T> {
 			get exposed() {
 				return _exposed ?? (_exposed = getExposed());
 			},
-		}
+		};
 
 		return meta;
 
@@ -280,7 +280,9 @@ interface ComponentMeta<T> {
 				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode);
 				const properties = type.getProperties();
 
-				const eventProps = new Set(meta.events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`));
+				const eventProps = new Set(
+					meta.events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`),
+				);
 
 				result = properties
 					.map(prop => {
