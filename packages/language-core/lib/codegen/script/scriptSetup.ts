@@ -318,18 +318,6 @@ function* generateSetupFunction(
 	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
 	yield* generateMacros(options, ctx);
 
-	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
-		// fix https://github.com/vuejs/language-tools/issues/1187
-		yield `const __VLS_defaults = (function <T>(t: T) { return t })(`;
-		yield generateSfcBlockSection(
-			scriptSetup,
-			scriptSetupRanges.withDefaults.arg.start,
-			scriptSetupRanges.withDefaults.arg.end,
-			codeFeatures.navigation,
-		);
-		yield `)${endOfLine}`;
-	}
-
 	yield* generateComponentProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* generateModelEmit(scriptSetup, scriptSetupRanges);
 	yield* generateTemplate(options, ctx);
@@ -452,6 +440,17 @@ function* generateComponentProps(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
+	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
+		yield `const __VLS_defaults = `;
+		yield generateSfcBlockSection(
+			scriptSetup,
+			scriptSetupRanges.withDefaults.arg.start,
+			scriptSetupRanges.withDefaults.arg.end,
+			codeFeatures.navigation,
+		);
+		yield endOfLine;
+	}
+
 	if (scriptSetupRanges.defineModel.length) {
 		yield `const __VLS_defaultModels = {${newLine}`;
 		for (const defineModel of scriptSetupRanges.defineModel) {
