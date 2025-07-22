@@ -4,7 +4,6 @@ import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
-import { generateIntersectMerge } from '../utils/merge';
 import { wrapWith } from '../utils/wrapWith';
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
@@ -86,7 +85,7 @@ export function* generateScriptSetup(
 		}
 
 		yield `return {} as {${newLine}`
-			+ `	props: ${ctx.localTypes.PrettifyLocal}<${propTypes.join(' & ')}> & ${
+			+ `	props: ${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}> & ${
 				options.vueCompilerOptions.target >= 3.4
 					? `import('${options.vueCompilerOptions.lib}').PublicProps`
 					: options.vueCompilerOptions.target >= 3
@@ -100,7 +99,7 @@ export function* generateScriptSetup(
 			}>): void,${newLine}`
 			+ `	attrs: any,${newLine}`
 			+ `	slots: __VLS_Slots,${newLine}`
-			+ `	emit: ${emitTypes.length ? emitTypes.join(' & ') : `{}`},${newLine}`
+			+ `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`},${newLine}`
 			+ `}${endOfLine}`;
 		yield `})(),${newLine}`; // __VLS_setup = (async () => {
 		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))${endOfLine}`;
@@ -466,7 +465,7 @@ function* generateComponentProps(
 		yield `}${endOfLine}`;
 	}
 
-	const propTypes: Code[] = [];
+	const propTypes: string[] = [];
 	if (scriptSetupRanges.defineSlots && options.vueCompilerOptions.jsxSlots) {
 		propTypes.push(`${ctx.localTypes.PropsChildren}<__VLS_Slots>`);
 	}
@@ -510,9 +509,7 @@ function* generateComponentProps(
 	}
 	if (propTypes.length) {
 		ctx.generatedPropsType = true;
-		yield `type __VLS_PublicProps = `;
-		yield* generateIntersectMerge(propTypes);
-		yield endOfLine;
+		yield `type __VLS_PublicProps = ${propTypes.join(` & `)}${endOfLine}`;
 	}
 }
 

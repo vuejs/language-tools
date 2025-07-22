@@ -7,7 +7,7 @@ import { createTemplateCodegenContext, type TemplateCodegenContext } from '../te
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
-import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
+import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 
@@ -60,8 +60,8 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 		emitTypes.push(`typeof __VLS_modelEmit`);
 	}
 	if (emitTypes.length) {
-		yield `type __VLS_EmitProps = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(' & ')}>>${endOfLine}`;
-		exps.push(`{} as { $emit: ${emitTypes.join(' & ')} }`);
+		yield `type __VLS_EmitProps = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(` & `)}>>${endOfLine}`;
+		exps.push(`{} as { $emit: ${emitTypes.join(` & `)} }`);
 	}
 
 	const propTypes: string[] = [];
@@ -83,7 +83,7 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 		propTypes.push(`__VLS_EmitProps`);
 	}
 	if (propTypes.length) {
-		yield `type __VLS_InternalProps = ${propTypes.join(' & ')}${endOfLine}`;
+		yield `type __VLS_InternalProps = ${propTypes.join(` & `)}${endOfLine}`;
 		exps.push(`{} as { $props: __VLS_InternalProps }`);
 		exps.push(`{} as __VLS_InternalProps`);
 	}
@@ -100,7 +100,7 @@ function* generateTemplateElements(): Generator<Code> {
 }
 
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
-	const types: Code[] = [`typeof __VLS_ctx`];
+	const types: string[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
 		const { componentsOption } = options.scriptRanges.exportDefault;
@@ -115,15 +115,12 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		types.push(`typeof __VLS_componentsOption`);
 	}
 
-	yield `type __VLS_LocalComponents = `;
-	yield* generateIntersectMerge(types);
-	yield endOfLine;
-
+	yield `type __VLS_LocalComponents = ${types.join(` & `)}${endOfLine}`;
 	yield `let __VLS_components!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
 function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
-	const types: Code[] = [`typeof __VLS_ctx`];
+	const types: string[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
 		const { directivesOption } = options.scriptRanges.exportDefault;
@@ -138,10 +135,7 @@ function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<C
 		types.push(`__VLS_ResolveDirectives<typeof __VLS_directivesOption>`);
 	}
 
-	yield `type __VLS_LocalDirectives = `;
-	yield* generateIntersectMerge(types);
-	yield endOfLine;
-
+	yield `type __VLS_LocalDirectives = ${types.join(` & `)}${endOfLine}`;
 	yield `let __VLS_directives!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 

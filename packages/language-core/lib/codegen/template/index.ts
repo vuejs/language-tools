@@ -113,7 +113,7 @@ function* generateInheritedAttrs(
 ): Generator<Code> {
 	yield `type __VLS_InheritedAttrs = ${
 		ctx.inheritedAttrVars.size
-			? `Partial<${[...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(' & ')}>`
+			? `Partial<${[...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `)}>`
 			: `{}`
 	}`;
 	yield endOfLine;
