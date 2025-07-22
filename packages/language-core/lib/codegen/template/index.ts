@@ -111,10 +111,11 @@ function* generateInheritedAttrs(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	yield `type __VLS_InheritedAttrs = {}`;
-	for (const varName of ctx.inheritedAttrVars) {
-		yield ` & typeof ${varName}`;
-	}
+	yield `type __VLS_InheritedAttrs = ${
+		ctx.inheritedAttrVars.size
+			? `Partial<${[...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(' & ')}>`
+			: `{}`
+	}`;
 	yield endOfLine;
 
 	if (ctx.bindingAttrLocs.length) {
@@ -131,7 +132,7 @@ function* generateInheritedAttrs(
 		}
 		yield `]${endOfLine}`;
 	}
-	return `import('${options.vueCompilerOptions.lib}').ComponentPublicInstance['$attrs'] & Partial<__VLS_InheritedAttrs>`;
+	return `import('${options.vueCompilerOptions.lib}').ComponentPublicInstance['$attrs'] & __VLS_InheritedAttrs`;
 }
 
 function* generateTemplateRefs(

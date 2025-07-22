@@ -56,7 +56,7 @@ export function* generateComponent(
 	if (!ctx.bypassDefineComponent) {
 		const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
 		yield* emitOptionCodes;
-		yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length, true);
+		yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
 	}
 	if (
 		options.vueCompilerOptions.target >= 3.5
@@ -119,13 +119,12 @@ export function* generatePropsOption(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
-	inheritAttrs: boolean,
 ): Generator<Code> {
 	const getOptionCodes: (() => Code)[] = [];
 	const typeOptionCodes: Code[] = [];
 
-	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
-		let attrsType = `Partial<__VLS_InheritedAttrs>`;
+	if (options.templateCodegen?.inheritedAttrVars.size) {
+		let attrsType = `__VLS_InheritedAttrs`;
 		if (hasEmitsOption) {
 			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
 		}

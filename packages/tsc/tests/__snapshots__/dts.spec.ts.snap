@@ -8,7 +8,7 @@ declare const __VLS_export: <Row extends BaseRow>(__VLS_props: NonNullable<Await
     props: __VLS_PrettifyLocal<{
         nonGeneric: string;
         rows: Row[];
-    } & Partial<{}>> & import("vue").PublicProps;
+    }> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{}>): void;
     attrs: any;
     slots: {
@@ -91,7 +91,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
     }) & {
         "onUpdate:title"?: (value: string) => any;
         onBar?: (data: number) => any;
-    } & Partial<{}>> & import("vue").PublicProps;
+    }> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
@@ -122,7 +122,7 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
     }) & {
         "onUpdate:title"?: (value: string) => any;
         onBar?: (data: number) => any;
-    } & Partial<{}>> & import("vue").PublicProps;
+    }> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;

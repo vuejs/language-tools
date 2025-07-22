@@ -73,7 +73,9 @@ export function* generateScriptSetup(
 		if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
 			propTypes.push(`__VLS_EmitProps`);
 		}
-		propTypes.push(`Partial<__VLS_InheritedAttrs>`);
+		if (options.templateCodegen?.inheritedAttrVars.size) {
+			propTypes.push(`__VLS_InheritedAttrs`);
+		}
 
 		const emitTypes: string[] = [];
 		if (scriptSetupRanges.defineEmits) {
