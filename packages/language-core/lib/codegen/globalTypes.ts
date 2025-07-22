@@ -144,6 +144,9 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
 	type __VLS_ProxyRefs<T> = import('${lib}').ShallowUnwrapRef<T>;
 
+	function __VLS_definePublicProps<T>(options: T): import('${lib}').${
+		target >= 3.3 ? `ExtractPublicPropTypes` : `ExtractPropTypes`
+	}<T>;
 	function __VLS_getVForSourceType<T extends number | string | any[] | Iterable<any>>(source: T): [
 		item: T extends number ? number
 			: T extends string ? string

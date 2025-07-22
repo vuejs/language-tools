@@ -59,6 +59,17 @@ export function* generateScriptSetup(
 		if (ctx.generatedPropsType) {
 			propTypes.push(`__VLS_PublicProps`);
 		}
+		if (scriptSetupRanges.defineProps?.arg) {
+			yield `const __VLS_publicProps = __VLS_definePublicProps(`;
+			yield generateSfcBlockSection(
+				scriptSetup,
+				scriptSetupRanges.defineProps.arg.start,
+				scriptSetupRanges.defineProps.arg.end,
+				codeFeatures.navigation,
+			);
+			yield `)${endOfLine}`;
+			propTypes.push(`typeof __VLS_publicProps`);
+		}
 		if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
 			propTypes.push(`__VLS_EmitProps`);
 		}
