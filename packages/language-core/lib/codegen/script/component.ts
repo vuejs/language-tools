@@ -1,7 +1,7 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { generateSfcBlockSection, newLine } from '../utils';
 import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
@@ -29,8 +29,7 @@ export function* generateComponent(
 		yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 	}
 
-	yield `setup() {${newLine}`;
-	const returns: Code[] = [];
+	const returns: string[] = [];
 	if (ctx.bypassDefineComponent) {
 		// fill $props
 		if (scriptSetupRanges.defineProps) {
@@ -47,11 +46,8 @@ export function* generateComponent(
 		returns.push(`typeof __VLS_exposed`);
 	}
 	if (returns.length) {
-		yield `return {} as `;
-		yield* generateIntersectMerge(returns);
-		yield endOfLine;
+		yield `setup: () => ({} as ${returns.join(` & `)}),${newLine}`;
 	}
-	yield `},${newLine}`;
 
 	if (!ctx.bypassDefineComponent) {
 		const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
@@ -79,7 +75,7 @@ export function* generateComponent(
 	yield `})`;
 }
 
-export function* generateEmitsOption(
+function* generateEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
@@ -113,7 +109,7 @@ export function* generateEmitsOption(
 	}
 }
 
-export function* generatePropsOption(
+function* generatePropsOption(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,

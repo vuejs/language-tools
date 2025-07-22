@@ -30,7 +30,7 @@ type __VLS_PrettifyLocal<T> = {
 
 exports[`vue-tsc-dts > Input: empty-component/component.vue, Output: empty-component/component.vue.d.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {};
     computed: {};
@@ -57,7 +57,7 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: empty-component/custom-extension-component.cext, Output: empty-component/custom-extension-component.cext.d.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {};
     computed: {};
@@ -146,7 +146,7 @@ type __VLS_PrettifyLocal<T> = {
 
 exports[`vue-tsc-dts > Input: generic/main.vue, Output: generic/main.vue.d.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {};
     computed: {};
@@ -249,7 +249,7 @@ export default _default;
 exports[`vue-tsc-dts > Input: reference-type-events/component.vue, Output: reference-type-events/component.vue.d.ts 1`] = `
 "import type { MyEvents } from './my-events';
 declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {};
     computed: {};
@@ -347,7 +347,7 @@ type __VLS_ModelEmit = {
     'update:bar': [value: string | undefined];
 };
 declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {};
     computed: {};
@@ -375,7 +375,7 @@ export default _default;
 exports[`vue-tsc-dts > Input: reference-type-props/component.vue, Output: reference-type-props/component.vue.d.ts 1`] = `
 "import { MyProps } from './my-props';
 declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {};
     computed: {};
@@ -408,7 +408,7 @@ exports[`vue-tsc-dts > Input: reference-type-props/component-destructure.vue, Ou
     text: string;
 };
 declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {};
     computed: {};
@@ -485,7 +485,7 @@ export default _default;
 
 exports[`vue-tsc-dts > Input: reference-type-props/component-js-setup.vue, Output: reference-type-props/component-js-setup.vue.d.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {
         foo: {
@@ -680,7 +680,7 @@ type __VLS_Slots = {} & {
     vbind?: (props: typeof __VLS_7) => any;
 };
 declare const __VLS_base: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {};
     computed: {};
@@ -727,7 +727,7 @@ type __VLS_Slots = {
     'no-bind': () => VNode[];
 };
 declare const __VLS_base: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {};
     computed: {};
@@ -777,7 +777,7 @@ type __VLS_Slots = {} & {
     vbind?: (props: typeof __VLS_7) => any;
 };
 declare const __VLS_base: import("vue").DefineComponent2<{
-    setup(): void;
+    setup(): {};
     data(): {};
     props: {};
     computed: {};
