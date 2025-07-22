@@ -93,13 +93,15 @@ export function* generateScriptSetup(
 						+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
 						+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
 					: `globalThis.JSX.IntrinsicAttributes`
-			},${newLine}`
-			+ `	expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${
-				scriptSetupRanges.defineExpose ? 'typeof __VLS_exposed' : '{}'
-			}>): void,${newLine}`
-			+ `	attrs: any,${newLine}`
-			+ `	slots: __VLS_Slots,${newLine}`
-			+ `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`},${newLine}`
+			}${endOfLine}`
+			+ `	expose: (exposed: ${
+				scriptSetupRanges.defineExpose
+					? `import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<typeof __VLS_exposed>`
+					: `{}`
+			}) => void${endOfLine}`
+			+ `	attrs: any${endOfLine}`
+			+ `	slots: __VLS_Slots${endOfLine}`
+			+ `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`
 			+ `}${endOfLine}`;
 		yield `})(),${newLine}`; // __VLS_setup = (async () => {
 		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))${endOfLine}`;
