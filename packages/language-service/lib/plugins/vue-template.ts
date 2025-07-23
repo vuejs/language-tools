@@ -349,6 +349,7 @@ export function create(
 
 				let version = 0;
 				let components: string[] | undefined;
+				let values: string[] | undefined;
 
 				const tasks: Promise<void>[] = [];
 				const tagMap = new Map<string, {
@@ -375,7 +376,14 @@ export function create(
 							return tags;
 						},
 						provideAttributes(tag) {
-							return htmlDataProvider.provideAttributes(tag);
+							let attrs = htmlDataProvider.provideAttributes(tag);
+							if (tag === 'slot') {
+								const nameAttr = attrs.find(attr => attr.name === 'name');
+								if (nameAttr) {
+									nameAttr.valueSet = 'slot';
+								}
+							}
+							return attrs;
 						},
 						provideValues(tag, attr) {
 							return htmlDataProvider.provideValues(tag, attr);
@@ -591,7 +599,20 @@ export function create(
 
 							return attributes;
 						},
-						provideValues: () => [],
+						provideValues: (tag, attr) => {
+							if (!values) {
+								values = [];
+								tasks.push((async () => {
+									if (tag === 'slot' && attr === 'name') {
+										values = await tsPluginClient?.getComponentSlots(root.fileName) ?? [];
+									}
+									version++;
+								})());
+							}
+							return values.map(value => ({
+								name: value,
+							}));
+						},
 					},
 				]);
 
