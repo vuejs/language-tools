@@ -311,6 +311,10 @@ export function create(
 						}
 
 						item.sortText = tokens.join('') + (item.sortText ?? item.label);
+
+						if (item.label === 'v-for') {
+							item.textEdit!.newText = item.label + '="$1 in $2"';
+						}
 					}
 				},
 
