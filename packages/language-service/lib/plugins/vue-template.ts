@@ -55,6 +55,7 @@ export function create(
 	};
 	const baseService = mode === 'pug'
 		? createPugService({
+			useDefaultDataProvider: false,
 			getCustomData() {
 				return [
 					...customData,
@@ -65,6 +66,7 @@ export function create(
 		})
 		: createHtmlService({
 			documentSelector: ['html', 'markdown'],
+			useDefaultDataProvider: false,
 			getCustomData() {
 				return [
 					...customData,
@@ -365,7 +367,24 @@ export function create(
 					info?: ComponentPropInfo;
 				}>();
 
+				const htmlDataProvider = html.getDefaultHTMLDataProvider();
+
 				updateExtraCustomData([
+					{
+						getId: () => htmlDataProvider.getId(),
+						isApplicable: () => true,
+						provideTags() {
+							let tags = htmlDataProvider.provideTags();
+							tags = tags.filter(tag => !specialTags.has(tag.name));
+							return tags;
+						},
+						provideAttributes(tag) {
+							return htmlDataProvider.provideAttributes(tag);
+						},
+						provideValues(tag, attr) {
+							return htmlDataProvider.provideValues(tag, attr);
+						},
+					},
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
 					{
 						getId: () => 'vue-template',
