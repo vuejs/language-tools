@@ -309,15 +309,11 @@ export function create(
 								};
 								tagMap.set(tag, tagInfo);
 								tasks.push((async () => {
-									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
-									const propInfos = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
-									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
-									const directives = await tsPluginClient?.getComponentDirectives(vueCode.fileName) ?? [];
 									tagMap.set(tag, {
-										attrs,
-										propInfos: propInfos.filter(prop => !prop.name.startsWith('ref_')),
-										events,
-										directives,
+										attrs: await tsPluginClient?.getElementAttrs(root.fileName, tag) ?? [],
+										propInfos: await tsPluginClient?.getComponentProps(root.fileName, tag) ?? [],
+										events: await tsPluginClient?.getComponentEvents(root.fileName, tag) ?? [],
+										directives: await tsPluginClient?.getComponentDirectives(root.fileName) ?? [],
 									});
 									version++;
 								})());
@@ -325,9 +321,15 @@ export function create(
 
 							const { attrs, propInfos, events, directives } = tagInfo;
 
-							for (const prop of propInfos) {
+							for (let i = 0; i < propInfos.length; i++) {
+								const prop = propInfos[i];
+								if (prop.name.startsWith('ref_')) {
+									propInfos.splice(i--, 1);
+									continue;
+								}
 								if (hyphenateTag(prop.name).startsWith('on-vnode-')) {
-									prop.name = 'onVue:' + prop.name.slice('onVnode'.length);
+									prop.name = 'onVue:' + prop.name['onVnode'.length].toLowerCase()
+										+ prop.name.slice('onVnodeX'.length);
 								}
 							}
 
@@ -345,9 +347,9 @@ export function create(
 								const isEvent = hyphenateAttr(propName).startsWith('on-');
 
 								if (isEvent) {
-									const eventName = propName.startsWith('on-')
-										? propName.slice('on-'.length)
-										: (propName['on'.length].toLowerCase() + propName.slice('onX'.length));
+									const eventName = casing.attr === AttrNameCasing.Camel
+										? propName['on'.length].toLowerCase() + propName.slice('onX'.length)
+										: propName.slice('on-'.length);
 
 									for (
 										const name of [
