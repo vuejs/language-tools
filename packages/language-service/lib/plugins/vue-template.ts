@@ -167,7 +167,7 @@ export function create(
 						return;
 					}
 
-					const {result:completionList,postprocess} = await runWithVueData(
+					const { result: completionList, postprocess } = await runWithVueData(
 						sourceScript.id,
 						root,
 						() =>
@@ -208,7 +208,7 @@ export function create(
 				while (lastVersion !== (lastVersion = await sync())) {
 					result = await fn();
 				}
-				return {result, postprocess};
+				return { result, postprocess };
 			}
 
 			async function provideHtmlData(sourceDocumentUri: URI, vueCode: VueVirtualCode) {
