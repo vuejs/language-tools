@@ -19,8 +19,7 @@ import { loadModelModifiersData, loadTemplateData } from './data';
 
 type InternalItemId =
 	| 'componentEvent'
-	| 'componentProp'
-	| 'specialTag';
+	| 'componentProp';
 
 const specialTags = new Set([
 	'slot',
@@ -174,24 +173,20 @@ export function create(
 						return;
 					}
 
-					// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
-					baseServiceInstance.provideCompletionItems?.(document, position, completionContext, token);
-
-					let sync = (await provideHtmlData(sourceScript.id, root)).sync;
-					let currentVersion: number | undefined;
-					let completionList: CompletionList | null | undefined;
-
-					while (currentVersion !== (currentVersion = await sync?.())) {
-						completionList = await baseServiceInstance.provideCompletionItems?.(
-							document,
-							position,
-							completionContext,
-							token,
-						);
-					}
+					const completionList = await runWithVueData(
+						sourceScript.id,
+						root,
+						() =>
+							baseServiceInstance.provideCompletionItems!(
+								document,
+								position,
+								completionContext,
+								token,
+							),
+					);
 
 					if (completionList) {
-						transformCompletionList(completionList, document);
+						postProcessCompletionList(completionList, document);
 						return completionList;
 					}
 				},
@@ -209,30 +204,37 @@ export function create(
 				},
 			};
 
+			async function runWithVueData<T>(sourceDocumentUri: URI, vueCode: VueVirtualCode, fn: () => T) {
+				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
+				await fn();
+
+				const { sync } = await provideHtmlData(sourceDocumentUri, vueCode);
+				let lastVersion = await sync();
+				let result = await fn();
+				while (lastVersion !== (lastVersion = await sync())) {
+					result = await fn();
+				}
+				return result;
+			}
+
 			async function provideHtmlData(sourceDocumentUri: URI, vueCode: VueVirtualCode) {
 				await (initializing ??= initialize());
 
 				const casing = await checkCasing(context, sourceDocumentUri);
 
-				if (builtInData.tags) {
-					for (const tag of builtInData.tags) {
-						if (isItemKey(tag.name)) {
-							continue;
-						}
-
-						if (specialTags.has(tag.name)) {
-							tag.name = generateItemKey('specialTag', tag.name, '');
-						}
-						else if (casing.tag === TagNameCasing.Kebab) {
-							tag.name = hyphenateTag(tag.name);
-						}
-						else {
-							tag.name = camelize(capitalize(tag.name));
-						}
+				for (const tag of builtInData.tags ?? []) {
+					if (specialTags.has(tag.name)) {
+						continue;
+					}
+					if (casing.tag === TagNameCasing.Kebab) {
+						tag.name = hyphenateTag(tag.name);
+					}
+					else {
+						tag.name = camelize(capitalize(tag.name));
 					}
 				}
 
-				const promises: Promise<void>[] = [];
+				const tasks: Promise<void>[] = [];
 				const tagInfos = new Map<string, {
 					attrs: string[];
 					propInfos: ComponentPropInfo[];
@@ -252,7 +254,8 @@ export function create(
 						isApplicable: () => true,
 						provideTags: () => {
 							if (!components) {
-								promises.push((async () => {
+								components = [];
+								tasks.push((async () => {
 									components = (await tsPluginClient?.getComponentNames(vueCode.fileName) ?? [])
 										.filter(name =>
 											name !== 'Transition'
@@ -264,7 +267,6 @@ export function create(
 									lastCompletionComponentNames = new Set(components);
 									version++;
 								})());
-								return [];
 							}
 							const scriptSetupRanges = tsCodegen.get(vueCode.sfc)?.getScriptSetupRanges();
 							const names = new Set<string>();
@@ -299,10 +301,16 @@ export function create(
 							return tags;
 						},
 						provideAttributes: tag => {
-							const tagInfo = tagInfos.get(tag);
-
+							let tagInfo = tagInfos.get(tag);
 							if (!tagInfo) {
-								promises.push((async () => {
+								tagInfo = {
+									attrs: [],
+									propInfos: [],
+									events: [],
+									directives: [],
+								};
+								tagInfos.set(tag, tagInfo);
+								tasks.push((async () => {
 									const attrs = await tsPluginClient?.getElementAttrs(vueCode.fileName, tag) ?? [];
 									const propInfos = await tsPluginClient?.getComponentProps(vueCode.fileName, tag) ?? [];
 									const events = await tsPluginClient?.getComponentEvents(vueCode.fileName, tag) ?? [];
@@ -315,7 +323,6 @@ export function create(
 									});
 									version++;
 								})());
-								return [];
 							}
 
 							const { attrs, propInfos, events, directives } = tagInfo;
@@ -458,63 +465,26 @@ export function create(
 
 				return {
 					async sync() {
-						await Promise.all(promises);
+						await Promise.all(tasks);
 						return version;
 					},
 				};
 			}
 
-			function transformCompletionList(completionList: CompletionList, document: TextDocument) {
-				addDirectiveModifiers();
+			function postProcessCompletionList(completionList: CompletionList, document: TextDocument) {
+				addDirectiveModifiers(completionList, document);
 
-				function addDirectiveModifiers() {
-					const replacement = getReplacement(completionList, document);
-					if (!replacement?.text.includes('.')) {
-						return;
+				const tagMap = new Map<string, html.CompletionItem>();
+
+				completionList.items = completionList.items.filter(item => {
+					const key = item.kind + '_' + item.label;
+					if (!tagMap.has(key)) {
+						tagMap.set(key, item);
+						return true;
 					}
-
-					const [text, ...modifiers] = replacement.text.split('.');
-					const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
-					const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
-					const isVModel = text.startsWith('v-model:') || text === 'v-model';
-					const currentModifiers = isVOn
-						? vOnModifiers
-						: isVBind
-						? vBindModifiers
-						: isVModel
-						? vModelModifiers
-						: undefined;
-
-					if (!currentModifiers) {
-						return;
-					}
-
-					for (const modifier in currentModifiers) {
-						if (modifiers.includes(modifier)) {
-							continue;
-						}
-
-						const description = currentModifiers[modifier];
-						const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
-						const newItem: html.CompletionItem = {
-							label: modifier,
-							filterText: insertText,
-							documentation: {
-								kind: 'markdown',
-								value: description,
-							},
-							textEdit: {
-								range: replacement.textEdit.range,
-								newText: insertText,
-							},
-							kind: 20 satisfies typeof CompletionItemKind.EnumMember,
-						};
-
-						completionList.items.push(newItem);
-					}
-				}
-
-				completionList.items = completionList.items.filter(item => !specialTags.has(parseLabel(item.label).name));
+					tagMap.get(key)!.documentation = item.documentation;
+					return false;
+				});
 
 				const htmlDocumentations = new Map<string, string>();
 
@@ -691,6 +661,53 @@ export function create(
 				}
 
 				updateExtraCustomData([]);
+			}
+
+			function addDirectiveModifiers(completionList: CompletionList, document: TextDocument) {
+				const replacement = getReplacement(completionList, document);
+				if (!replacement?.text.includes('.')) {
+					return;
+				}
+
+				const [text, ...modifiers] = replacement.text.split('.');
+				const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
+				const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
+				const isVModel = text.startsWith('v-model:') || text === 'v-model';
+				const currentModifiers = isVOn
+					? vOnModifiers
+					: isVBind
+					? vBindModifiers
+					: isVModel
+					? vModelModifiers
+					: undefined;
+
+				if (!currentModifiers) {
+					return;
+				}
+
+				for (const modifier in currentModifiers) {
+					if (modifiers.includes(modifier)) {
+						continue;
+					}
+
+					const description = currentModifiers[modifier];
+					const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
+					const newItem: html.CompletionItem = {
+						label: modifier,
+						filterText: insertText,
+						documentation: {
+							kind: 'markdown',
+							value: description,
+						},
+						textEdit: {
+							range: replacement.textEdit.range,
+							newText: insertText,
+						},
+						kind: 20 satisfies typeof CompletionItemKind.EnumMember,
+					};
+
+					completionList.items.push(newItem);
+				}
 			}
 
 			async function initialize() {
