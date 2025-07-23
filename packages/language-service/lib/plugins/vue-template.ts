@@ -167,7 +167,13 @@ export function create(
 						return;
 					}
 
-					const { result: completionList, postprocess } = await runWithVueData(
+					const {
+						result: completionList,
+						info: {
+							components,
+							propMap,
+						},
+					} = await runWithVueData(
 						sourceScript.id,
 						root,
 						() =>
@@ -179,10 +185,120 @@ export function create(
 							),
 					);
 
-					if (completionList) {
-						postprocess(completionList, document);
-						return completionList;
+					if (!completionList) {
+						return;
 					}
+
+					addDirectiveModifiers(completionList, document);
+
+					for (const item of completionList.items) {
+						let prop = propMap.get(item.label);
+
+						if (prop) {
+							if (prop.info?.documentation) {
+								item.documentation = {
+									kind: 'markdown',
+									value: prop.info.documentation,
+								};
+							}
+
+							if (prop.info?.deprecated) {
+								item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
+							}
+						}
+						else {
+							let name = item.label;
+							for (const str of ['v-bind:', ':']) {
+								if (name.startsWith(str) && name !== str) {
+									name = name.slice(str.length);
+									break;
+								}
+							}
+							if (specialProps.has(name)) {
+								prop = {
+									name,
+									isProp: true,
+									isGlobal: true,
+								};
+							}
+						}
+
+						const tokens: string[] = [];
+
+						if (
+							item.kind === 10 satisfies typeof CompletionItemKind.Property
+							&& components?.includes(hyphenateTag(item.label))
+						) {
+							item.kind = 6 satisfies typeof CompletionItemKind.Variable;
+							tokens.push('\u0000');
+						}
+						else if (prop) {
+							const { isEvent, propName } = getPropName(prop.name, !!prop.isEvent);
+
+							if (prop.isProp) {
+								if (!prop.isGlobal || specialProps.has(propName)) {
+									item.kind = 5 satisfies typeof CompletionItemKind.Field;
+								}
+							}
+							else if (isEvent) {
+								item.kind = 23 satisfies typeof CompletionItemKind.Event;
+								if (propName.startsWith('vue:')) {
+									tokens.push('\u0004');
+								}
+							}
+
+							if (!prop.isGlobal || specialProps.has(propName)) {
+								tokens.push('\u0000');
+
+								if (item.label.startsWith(':')) {
+									tokens.push('\u0001');
+								}
+								else if (item.label.startsWith('@')) {
+									tokens.push('\u0002');
+								}
+								else if (item.label.startsWith('v-bind:')) {
+									tokens.push('\u0003');
+								}
+								else if (item.label.startsWith('v-model:')) {
+									tokens.push('\u0004');
+								}
+								else if (item.label.startsWith('v-on:')) {
+									tokens.push('\u0005');
+								}
+								else {
+									tokens.push('\u0000');
+								}
+
+								if (specialProps.has(propName)) {
+									tokens.push('\u0001');
+								}
+								else {
+									tokens.push('\u0000');
+								}
+							}
+						}
+						else if (
+							item.label === 'v-if'
+							|| item.label === 'v-else-if'
+							|| item.label === 'v-else'
+							|| item.label === 'v-for'
+						) {
+							item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
+							tokens.push('\u0003');
+						}
+						else if (item.label.startsWith('v-')) {
+							item.kind = 3 satisfies typeof CompletionItemKind.Function;
+							tokens.push('\u0002');
+						}
+						else {
+							tokens.push('\u0001');
+						}
+
+						item.sortText = tokens.join('') + (item.sortText ?? item.label);
+					}
+
+					updateExtraCustomData([]);
+					return completionList;
 				},
 
 				provideHover(document, position, token) {
@@ -198,20 +314,23 @@ export function create(
 				},
 			};
 
-			async function runWithVueData<T>(sourceDocumentUri: URI, vueCode: VueVirtualCode, fn: () => T) {
+			async function runWithVueData<T>(sourceDocumentUri: URI, root: VueVirtualCode, fn: () => T) {
 				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
 				await fn();
 
-				const { sync, postprocess } = await provideHtmlData(sourceDocumentUri, vueCode);
+				const { sync, getInfo } = await provideHtmlData(sourceDocumentUri, root);
 				let lastVersion = await sync();
 				let result = await fn();
 				while (lastVersion !== (lastVersion = await sync())) {
 					result = await fn();
 				}
-				return { result, postprocess };
+				return {
+					result,
+					info: getInfo(),
+				};
 			}
 
-			async function provideHtmlData(sourceDocumentUri: URI, vueCode: VueVirtualCode) {
+			async function provideHtmlData(sourceDocumentUri: URI, root: VueVirtualCode) {
 				await (initializing ??= initialize());
 
 				const casing = await checkCasing(context, sourceDocumentUri);
@@ -228,6 +347,7 @@ export function create(
 					}
 				}
 
+				let version = 0;
 				const tasks: Promise<void>[] = [];
 				const tagMap = new Map<string, {
 					attrs: string[];
@@ -235,6 +355,8 @@ export function create(
 					events: string[];
 					directives: string[];
 				}>();
+
+				let components: string[] | undefined;
 				const propMap = new Map<string, {
 					name: string;
 					isProp?: boolean;
@@ -242,9 +364,6 @@ export function create(
 					isGlobal?: boolean;
 					info?: ComponentPropInfo;
 				}>();
-
-				let version = 0;
-				let components: string[] | undefined;
 
 				updateExtraCustomData([
 					html.newHTMLDataProvider('vue-template-built-in', builtInData),
@@ -255,7 +374,7 @@ export function create(
 							if (!components) {
 								components = [];
 								tasks.push((async () => {
-									components = (await tsPluginClient?.getComponentNames(vueCode.fileName) ?? [])
+									components = (await tsPluginClient?.getComponentNames(root.fileName) ?? [])
 										.filter(name =>
 											name !== 'Transition'
 											&& name !== 'TransitionGroup'
@@ -266,7 +385,7 @@ export function create(
 									version++;
 								})());
 							}
-							const scriptSetupRanges = tsCodegen.get(vueCode.sfc)?.getScriptSetupRanges();
+							const scriptSetupRanges = tsCodegen.get(root.sfc)?.getScriptSetupRanges();
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
 
@@ -280,7 +399,7 @@ export function create(
 							}
 
 							for (const binding of scriptSetupRanges?.bindings ?? []) {
-								const name = vueCode.sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
+								const name = root.sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}
@@ -462,135 +581,15 @@ export function create(
 				]);
 
 				return {
-					postprocess,
+					getInfo: () => ({
+						components,
+						propMap,
+					}),
 					async sync() {
 						await Promise.all(tasks);
 						return version;
 					},
 				};
-
-				function postprocess(completionList: CompletionList, document: TextDocument) {
-					addDirectiveModifiers(completionList, document);
-
-					if (completionList.items[0]?.kind === 10 satisfies typeof CompletionItemKind.Property) {
-						const seenTags = new Set<string>();
-						for (let i = completionList.items.length - 1; i >= 0; i--) {
-							const { label } = completionList.items[i];
-							if (seenTags.has(label)) {
-								completionList.items.splice(i, 1);
-							}
-							seenTags.add(label);
-						}
-					}
-
-					for (const item of completionList.items) {
-						let prop = propMap.get(item.label);
-
-						if (prop) {
-							if (prop.info?.documentation) {
-								item.documentation = {
-									kind: 'markdown',
-									value: prop.info.documentation,
-								};
-							}
-
-							if (prop.info?.deprecated) {
-								item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
-							}
-						}
-						else {
-							let name = item.label;
-							for (const str of ['v-bind:', ':']) {
-								if (name.startsWith(str) && name !== str) {
-									name = name.slice(str.length);
-									break;
-								}
-							}
-							if (specialProps.has(name)) {
-								prop = {
-									name,
-									isProp: true,
-									isGlobal: true,
-								};
-							}
-						}
-
-						const tokens: string[] = [];
-
-						if (
-							item.kind === 10 satisfies typeof CompletionItemKind.Property
-							&& components?.includes(hyphenateTag(item.label))
-						) {
-							item.kind = 6 satisfies typeof CompletionItemKind.Variable;
-							tokens.push('\u0000');
-						}
-						else if (prop) {
-							const { isEvent, propName } = getPropName(prop.name, !!prop.isEvent);
-
-							if (prop.isProp) {
-								if (!prop.isGlobal || specialProps.has(propName)) {
-									item.kind = 5 satisfies typeof CompletionItemKind.Field;
-								}
-							}
-							else if (isEvent) {
-								item.kind = 23 satisfies typeof CompletionItemKind.Event;
-								if (propName.startsWith('vue:')) {
-									tokens.push('\u0004');
-								}
-							}
-
-							if (!prop.isGlobal || specialProps.has(propName)) {
-								tokens.push('\u0000');
-
-								if (item.label.startsWith(':')) {
-									tokens.push('\u0001');
-								}
-								else if (item.label.startsWith('@')) {
-									tokens.push('\u0002');
-								}
-								else if (item.label.startsWith('v-bind:')) {
-									tokens.push('\u0003');
-								}
-								else if (item.label.startsWith('v-model:')) {
-									tokens.push('\u0004');
-								}
-								else if (item.label.startsWith('v-on:')) {
-									tokens.push('\u0005');
-								}
-								else {
-									tokens.push('\u0000');
-								}
-
-								if (specialProps.has(propName)) {
-									tokens.push('\u0001');
-								}
-								else {
-									tokens.push('\u0000');
-								}
-							}
-						}
-						else if (
-							item.label === 'v-if'
-							|| item.label === 'v-else-if'
-							|| item.label === 'v-else'
-							|| item.label === 'v-for'
-						) {
-							item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
-							tokens.push('\u0003');
-						}
-						else if (item.label.startsWith('v-')) {
-							item.kind = 3 satisfies typeof CompletionItemKind.Function;
-							tokens.push('\u0002');
-						}
-						else {
-							tokens.push('\u0001');
-						}
-
-						item.sortText = tokens.join('') + (item.sortText ?? item.label);
-					}
-
-					updateExtraCustomData([]);
-				}
 			}
 
 			function addDirectiveModifiers(completionList: CompletionList, document: TextDocument) {
