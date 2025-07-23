@@ -7,6 +7,7 @@ import { getComponentDirectives } from './lib/requests/getComponentDirectives';
 import { getComponentEvents } from './lib/requests/getComponentEvents';
 import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
+import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
@@ -109,6 +110,16 @@ export = createLanguageServicePlugin(
 					response: getPropertiesAtLocation.apply(getRequestContext(args[0]), args),
 				};
 			});
+			session.addProtocolHandler('_vue:getComponentDirectives', ({ arguments: args }) => {
+				return {
+					response: getComponentDirectives.apply(getRequestContext(args[0]), args),
+				};
+			});
+			session.addProtocolHandler('_vue:getComponentEvents', ({ arguments: args }) => {
+				return {
+					response: getComponentEvents.apply(getRequestContext(args[0]), args),
+				};
+			});
 			session.addProtocolHandler('_vue:getComponentNames', ({ arguments: args }) => {
 				return {
 					response: getComponentNames.apply(getRequestContext(args[0]), args) ?? [],
@@ -119,14 +130,9 @@ export = createLanguageServicePlugin(
 					response: getComponentProps.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('_vue:getComponentEvents', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:getComponentSlots', ({ arguments: args }) => {
 				return {
-					response: getComponentEvents.apply(getRequestContext(args[0]), args),
-				};
-			});
-			session.addProtocolHandler('_vue:getComponentDirectives', ({ arguments: args }) => {
-				return {
-					response: getComponentDirectives.apply(getRequestContext(args[0]), args),
+					response: getComponentSlots.apply(getRequestContext(args[0]), args),
 				};
 			});
 			session.addProtocolHandler('_vue:getElementAttrs', ({ arguments: args }) => {
