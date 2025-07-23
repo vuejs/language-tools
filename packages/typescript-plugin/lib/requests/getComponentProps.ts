@@ -8,7 +8,7 @@ export interface ComponentPropInfo {
 	required?: boolean;
 	deprecated?: boolean;
 	isAttribute?: boolean;
-	commentMarkdown?: string;
+	documentation?: string;
 	values?: string[];
 }
 
@@ -69,9 +69,9 @@ export function getComponentProps(
 		const name = prop.name;
 		const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
 		const {
-			content: commentMarkdown,
+			documentation,
 			deprecated,
-		} = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
+		} = generateDocumentation(prop.getDocumentationComment(checker), prop.getJsDocTags());
 		const values: any[] = [];
 		const type = checker.getTypeOfSymbol(prop);
 		const subTypes: ts.Type[] | undefined = (type as any).types;
@@ -106,19 +106,19 @@ export function getComponentProps(
 			required,
 			deprecated,
 			isAttribute,
-			commentMarkdown,
+			documentation,
 			values,
 		});
 	}
 }
 
-function generateCommentMarkdown(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JSDocTagInfo[]) {
+function generateDocumentation(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JSDocTagInfo[]) {
 	const parsedComment = _symbolDisplayPartsToMarkdown(parts);
 	const parsedJsDoc = _jsDocTagInfoToMarkdown(jsDocTags);
-	const content = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
+	const documentation = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
 	const deprecated = jsDocTags.some(tag => tag.name === 'deprecated');
 	return {
-		content,
+		documentation,
 		deprecated,
 	};
 }
