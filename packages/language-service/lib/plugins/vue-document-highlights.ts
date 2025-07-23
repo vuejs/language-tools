@@ -32,6 +32,17 @@ export function create(
 					return result
 						?.filter(({ fileName }) => fileName === root.fileName)
 						.flatMap(({ highlightSpans }) => highlightSpans)
+						.filter(({ textSpan }) => {
+							const highlightText = document.getText({
+								start: document.positionAt(textSpan.start),
+								end: document.positionAt(textSpan.start + textSpan.length),
+							});
+							const tagNameMatch = highlightText.match(/<\/?([^\s>]+)/);
+							if (!tagNameMatch) return false;
+							const tagName = tagNameMatch[1];
+							return highlightText.startsWith(`</${tagName}>`) || 
+							       highlightText.startsWith(`<${tagName}/>`);
+						})
 						.map(({ textSpan, kind }) => ({
 							range: {
 								start: document.positionAt(textSpan.start),
