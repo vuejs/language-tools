@@ -171,8 +171,11 @@ export function create(
 
 					const {
 						result: completionList,
-						components,
-						propMap,
+						target,
+						info: {
+							components,
+							propMap,
+						},
 					} = await runWithVueData(
 						sourceScript.id,
 						root,
@@ -189,9 +192,30 @@ export function create(
 						return;
 					}
 
-					addDirectiveModifiers(completionList, document);
+					switch (target) {
+						case 'tag': {
+							completionList.items.forEach(transformTag);
+							break;
+						}
+						case 'attribute': {
+							addDirectiveModifiers(completionList, document);
+							completionList.items.forEach(transformAttribute);
+							break;
+						}
+					}
 
-					for (const item of completionList.items) {
+					updateExtraCustomData([]);
+					return completionList;
+
+					function transformTag(item: html.CompletionItem) {
+						const tagName = capitalize(camelize(item.label));
+						if (components?.includes(tagName)) {
+							item.kind = 6 satisfies typeof CompletionItemKind.Variable;
+							item.sortText = '\u0000' + (item.sortText ?? item.label);
+						}
+					}
+
+					function transformAttribute(item: html.CompletionItem) {
 						let prop = propMap.get(item.label);
 
 						if (prop) {
@@ -201,7 +225,6 @@ export function create(
 									value: prop.info.documentation,
 								};
 							}
-
 							if (prop.info?.deprecated) {
 								item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 							}
@@ -225,14 +248,7 @@ export function create(
 
 						const tokens: string[] = [];
 
-						if (
-							item.kind === 10 satisfies typeof CompletionItemKind.Property
-							&& components?.includes(hyphenateTag(item.label))
-						) {
-							item.kind = 6 satisfies typeof CompletionItemKind.Variable;
-							tokens.push('\u0000');
-						}
-						else if (prop) {
+						if (prop) {
 							const { isEvent, propName } = getPropName(prop.name, prop.kind === 'event');
 
 							if (prop.kind === 'prop') {
@@ -296,9 +312,6 @@ export function create(
 
 						item.sortText = tokens.join('') + (item.sortText ?? item.label);
 					}
-
-					updateExtraCustomData([]);
-					return completionList;
 				},
 
 				provideHover(document, position, token) {
@@ -324,10 +337,7 @@ export function create(
 				while (lastSync.version !== (lastSync = await sync()).version) {
 					result = await fn();
 				}
-				return {
-					result,
-					...lastSync,
-				};
+				return { result, ...lastSync };
 			}
 
 			async function provideHtmlData(sourceDocumentUri: URI, root: VueVirtualCode) {
@@ -348,6 +358,7 @@ export function create(
 				}
 
 				let version = 0;
+				let target: 'tag' | 'attribute' | 'value';
 				let components: string[] | undefined;
 				let values: string[] | undefined;
 
@@ -371,12 +382,13 @@ export function create(
 						getId: () => htmlDataProvider.getId(),
 						isApplicable: () => true,
 						provideTags() {
-							let tags = htmlDataProvider.provideTags();
-							tags = tags.filter(tag => !specialTags.has(tag.name));
-							return tags;
+							target = 'tag';
+							return htmlDataProvider.provideTags()
+								.filter(tag => !specialTags.has(tag.name));
 						},
 						provideAttributes(tag) {
-							let attrs = htmlDataProvider.provideAttributes(tag);
+							target = 'attribute';
+							const attrs = htmlDataProvider.provideAttributes(tag);
 							if (tag === 'slot') {
 								const nameAttr = attrs.find(attr => attr.name === 'name');
 								if (nameAttr) {
@@ -386,6 +398,7 @@ export function create(
 							return attrs;
 						},
 						provideValues(tag, attr) {
+							target = 'value';
 							return htmlDataProvider.provideValues(tag, attr);
 						},
 					},
@@ -619,7 +632,14 @@ export function create(
 				return {
 					async sync() {
 						await Promise.all(tasks);
-						return { version, components, propMap };
+						return {
+							version,
+							target,
+							info: {
+								components,
+								propMap,
+							},
+						};
 					},
 				};
 			}
