@@ -162,10 +162,6 @@ export function create(
 						return;
 					}
 
-					if (!context.project.vue) {
-						return;
-					}
-
 					const uri = URI.parse(document.uri);
 					const decoded = context.decodeEmbeddedDocumentUri(uri);
 					const sourceScript = decoded && context.language.scripts.get(decoded[0]);

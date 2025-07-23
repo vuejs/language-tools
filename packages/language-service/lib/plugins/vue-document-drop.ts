@@ -24,14 +24,8 @@ export function create(
 			documentDropEditsProvider: true,
 		},
 		create(context) {
-			if (!context.project.vue) {
-				return {};
-			}
-
-			let casing = TagNameCasing.Pascal as TagNameCasing; // TODO
-
 			const tsPluginClient = getTsPluginClient?.(context);
-			const vueCompilerOptions = context.project.vue.compilerOptions;
+			let casing = TagNameCasing.Pascal as TagNameCasing; // TODO
 
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
@@ -57,7 +51,7 @@ export function create(
 							importUri = item.value as string;
 						}
 					}
-					if (!importUri || !vueCompilerOptions.extensions.some(ext => importUri.endsWith(ext))) {
+					if (!importUri || !root.vueCompilerOptions.extensions.some(ext => importUri.endsWith(ext))) {
 						return;
 					}
 
@@ -76,8 +70,7 @@ export function create(
 						code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw')
 					)!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
-					const incomingFileName = context.project.typescript?.uriConverter.asFileName(URI.parse(importUri))
-						?? URI.parse(importUri).fsPath.replace(/\\/g, '/');
+					const incomingFileName = URI.parse(importUri).fsPath.replace(/\\/g, '/');
 
 					let importPath: string | undefined;
 

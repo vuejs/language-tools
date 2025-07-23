@@ -202,7 +202,7 @@ connection.onInitialize(params => {
 			language,
 			server.languageServicePlugins,
 			createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
-			{ vue: { compilerOptions: commonLine.vueOptions } },
+			{},
 		);
 	}
 });

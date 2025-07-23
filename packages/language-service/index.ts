@@ -4,7 +4,6 @@ export * from '@volar/language-service';
 // for @vue/language-server usage
 export * from '@volar/language-service/lib/utils/featureWorkers';
 
-import type { VueCompilerOptions } from '@vue/language-core';
 import type * as ts from 'typescript';
 
 import { create as createEmmetPlugin } from 'volar-service-emmet';
@@ -31,14 +30,6 @@ import { create as createVueSuggestDefineAssignmentPlugin } from './lib/plugins/
 import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTemplateRefLinksPlugin } from './lib/plugins/vue-template-ref-links';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
-
-declare module '@volar/language-service' {
-	export interface ProjectContext {
-		vue?: {
-			compilerOptions: VueCompilerOptions;
-		};
-	}
-}
 
 export function createVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
