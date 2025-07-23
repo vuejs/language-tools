@@ -1,17 +1,15 @@
-import {
-	type CompletionItemKind,
-	type CompletionItemTag,
-	type CompletionList,
-	type Disposable,
-	type LanguageServiceContext,
-	type LanguageServicePlugin,
-	type TextDocument,
-	transformCompletionList,
+import type {
+	CompletionItemKind,
+	CompletionItemTag,
+	CompletionList,
+	Disposable,
+	LanguageServiceContext,
+	LanguageServicePlugin,
+	TextDocument,
 } from '@volar/language-service';
 import { hyphenateAttr, hyphenateTag, tsCodegen, VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
-import type { promises } from 'dns';
 import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
@@ -45,7 +43,6 @@ export function create(
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
-	let lastCompletionComponentNames = new Set<string>();
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
@@ -170,21 +167,26 @@ export function create(
 						return;
 					}
 
-					const { result: completionList, postProcessCompletionList } = await runWithVueData(
-						sourceScript.id,
-						root,
-						() =>
-							baseServiceInstance.provideCompletionItems!(
-								document,
-								position,
-								completionContext,
-								token,
-							),
-					);
+					const fn = () =>
+						baseServiceInstance.provideCompletionItems!(
+							document,
+							position,
+							completionContext,
+							token,
+						);
 
-					if (completionList) {
-						transformCompletionList(completionList, document);
-						return completionList;
+					// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
+					await fn();
+
+					const { sync, postprocess } = await provideHtmlData(sourceScript.id, root);
+					let lastVersion = await sync();
+					let result = await fn();
+					while (lastVersion !== (lastVersion = await sync())) {
+						result = await fn();
+					}
+					if (result) {
+						postprocess(result, document);
+						return result;
 					}
 				},
 
@@ -201,39 +203,20 @@ export function create(
 				},
 			};
 
-			async function runWithVueData<T>(sourceDocumentUri: URI, vueCode: VueVirtualCode, fn: () => T) {
-				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
-				await fn();
-
-				const { sync, postProcessCompletionList } = await provideHtmlData(sourceDocumentUri, vueCode);
-				let lastVersion = await sync();
-				let result = await fn();
-				while (lastVersion !== (lastVersion = await sync())) {
-					result = await fn();
-				}
-				return { result, postProcessCompletionList };
-			}
-
 			async function provideHtmlData(sourceDocumentUri: URI, vueCode: VueVirtualCode) {
 				await (initializing ??= initialize());
 
 				const casing = await checkCasing(context, sourceDocumentUri);
 
-				if (builtInData.tags) {
-					for (const tag of builtInData.tags) {
-						if (isItemKey(tag.name)) {
-							continue;
-						}
-
-						if (specialTags.has(tag.name)) {
-							tag.name = generateItemKey('specialTag', tag.name, '');
-						}
-						else if (casing.tag === TagNameCasing.Kebab) {
-							tag.name = hyphenateTag(tag.name);
-						}
-						else {
-							tag.name = camelize(capitalize(tag.name));
-						}
+				for (const tag of builtInData.tags ?? []) {
+					if (specialTags.has(tag.name)) {
+						continue;
+					}
+					if (casing.tag === TagNameCasing.Kebab) {
+						tag.name = hyphenateTag(tag.name);
+					}
+					else {
+						tag.name = camelize(capitalize(tag.name));
 					}
 				}
 
@@ -245,8 +228,10 @@ export function create(
 					directives: string[];
 				}>();
 				const propMap = new Map<string, {
-					isEvent: boolean;
-					isGlobal: boolean;
+					name: string;
+					isProp?: boolean;
+					isEvent?: boolean;
+					isGlobal?: boolean;
 					info?: ComponentPropInfo;
 				}>();
 
@@ -260,7 +245,8 @@ export function create(
 						isApplicable: () => true,
 						provideTags: () => {
 							if (!components) {
-								promises.push((async () => {
+								components = [];
+								tasks.push((async () => {
 									components = (await tsPluginClient?.getComponentNames(vueCode.fileName) ?? [])
 										.filter(name =>
 											name !== 'Transition'
@@ -269,10 +255,8 @@ export function create(
 											&& name !== 'Suspense'
 											&& name !== 'Teleport'
 										);
-									lastCompletionComponentNames = new Set(components);
 									version++;
 								})());
-								return [];
 							}
 							const scriptSetupRanges = tsCodegen.get(vueCode.sfc)?.getScriptSetupRanges();
 							const names = new Set<string>();
@@ -329,7 +313,6 @@ export function create(
 									});
 									version++;
 								})());
-								return [];
 							}
 
 							const { attrs, propInfos, events, directives } = tagInfo;
@@ -341,7 +324,7 @@ export function create(
 							}
 
 							const attributes: html.IAttributeData[] = [];
-							const propsSet = new Set(propInfos.map(prop => prop.name));
+							const propNameSet = new Set(propInfos.map(prop => prop.name));
 
 							for (
 								const prop of [
@@ -349,23 +332,24 @@ export function create(
 									...attrs.map<ComponentPropInfo>(attr => ({ name: attr })),
 								]
 							) {
-								const isGlobal = prop.isAttribute || !propsSet.has(prop.name);
-								const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
-								const isEvent = hyphenateAttr(name).startsWith('on-');
+								const isGlobal = prop.isAttribute || !propNameSet.has(prop.name);
+								const propName = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
+								const isEvent = hyphenateAttr(propName).startsWith('on-');
 
 								if (isEvent) {
-									const propNameBase = name.startsWith('on-')
-										? name.slice('on-'.length)
-										: (name['on'.length].toLowerCase() + name.slice('onX'.length));
+									const eventName = propName.startsWith('on-')
+										? propName.slice('on-'.length)
+										: (propName['on'.length].toLowerCase() + propName.slice('onX'.length));
 
 									for (
 										const name of [
-											'v-on:' + propNameBase,
-											'@' + propNameBase,
+											'v-on:' + eventName,
+											'@' + eventName,
 										]
 									) {
 										attributes.push({ name });
 										propMap.set(name, {
+											name: propName,
 											isEvent: true,
 											isGlobal,
 											info: prop,
@@ -373,7 +357,6 @@ export function create(
 									}
 								}
 								else {
-									const propName = name;
 									const propInfo = propInfos.find(prop => {
 										const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === propName;
@@ -391,7 +374,8 @@ export function create(
 											valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
 										});
 										propMap.set(name, {
-											isEvent: false,
+											name: propName,
+											isProp: true,
 											isGlobal,
 											info: propInfo,
 										});
@@ -400,19 +384,18 @@ export function create(
 							}
 
 							for (const event of events) {
-								const baseName = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
+								const eventName = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
 
 								for (
 									const name of [
-										'v-on:' + baseName,
-										'@' + baseName,
+										'v-on:' + eventName,
+										'@' + eventName,
 									]
 								) {
 									attributes.push({ name });
 									propMap.set(name, {
+										name: eventName,
 										isEvent: true,
-										isGlobal: false,
-										info: undefined,
 									});
 								}
 							}
@@ -433,7 +416,7 @@ export function create(
 								]
 							) {
 								if (prop.name.startsWith('onUpdate:')) {
-									const isGlobal = !propsSet.has(prop.name);
+									const isGlobal = !propNameSet.has(prop.name);
 									models.push([isGlobal, prop.name.slice('onUpdate:'.length)]);
 								}
 							}
@@ -447,10 +430,18 @@ export function create(
 								const name = casing.attr === AttrNameCasing.Camel ? model : hyphenateAttr(model);
 
 								attributes.push({ name: 'v-model:' + name });
-								propMap.set('v-model:' + name, { isEvent: false, isGlobal });
+								propMap.set('v-model:' + name, {
+									name,
+									isProp: true,
+									isGlobal,
+								});
 
 								if (model === 'modelValue') {
-									propMap.set('v-model', { isEvent: false, isGlobal });
+									propMap.set('v-model', {
+										name,
+										isProp: true,
+										isGlobal,
+									});
 								}
 							}
 
@@ -461,15 +452,15 @@ export function create(
 				]);
 
 				return {
-					postProcessCompletionList,
+					postprocess,
 					async sync() {
-						await Promise.all(promises);
+						await Promise.all(tasks);
 						return version;
 					},
 				};
 
-				function transformCompletionList(completionList: CompletionList, document: TextDocument) {
-					addDirectiveModifiers();
+				function postprocess(completionList: CompletionList, document: TextDocument) {
+					addDirectiveModifiers(completionList, document);
 
 					// const tagMap = new Map<string, html.CompletionItem>();
 
@@ -497,69 +488,14 @@ export function create(
 					for (const item of completionList.items) {
 						const prop = propMap.get(item.label);
 
-						if (prop) {
-							const documentations: string[] = [];
-
-							if (prop.info?.commentMarkdown) {
-								documentations.push(prop.info.commentMarkdown);
-							}
-
-							let { isEvent, propName } = getPropName(prop.info?.name, prop.isEvent);
-							if (isEvent) {
-								// click -> onclick
-								propName = 'on' + propName;
-							}
-							if (htmlDocumentations.has(propName)) {
-								documentations.push(htmlDocumentations.get(propName)!);
-							}
-
-							if (documentations.length) {
-								item.documentation = {
-									kind: 'markdown',
-									value: documentations.join('\n\n'),
-								};
-							}
-							else {
-								item.documentation = undefined;
-							}
-						}
-						else {
-							let propName = item.label;
-
-							for (const str of ['v-bind:', ':']) {
-								if (propName.startsWith(str) && propName !== str) {
-									propName = propName.slice(str.length);
-									break;
-								}
-							}
-
-							// for special props without internal item key
-							if (specialProps.has(propName)) {
-								parsedItem = {
-									type: 'componentProp',
-									tag: '^',
-									prop: propName,
-									deprecated: false,
-									leadingSlash: false,
-								};
-							}
-
-							propInfo = cachedPropInfos.get(propName);
-							if (propInfo?.commentMarkdown) {
-								const originalDocumentation = typeof item.documentation === 'string'
-									? item.documentation
-									: item.documentation?.value;
-								item.documentation = {
-									kind: 'markdown',
-									value: [
-										propInfo.commentMarkdown,
-										originalDocumentation,
-									].filter(str => !!str).join('\n\n'),
-								};
-							}
+						if (prop?.info?.documentation) {
+							item.documentation = {
+								kind: 'markdown',
+								value: prop.info.documentation,
+							};
 						}
 
-						if (propInfo?.deprecated) {
+						if (prop?.info?.deprecated) {
 							item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 						}
 
@@ -567,17 +503,16 @@ export function create(
 
 						if (
 							item.kind === 10 satisfies typeof CompletionItemKind.Property
-							&& lastCompletionComponentNames.has(hyphenateTag(item.label))
+							&& components?.includes(hyphenateTag(item.label))
 						) {
 							item.kind = 6 satisfies typeof CompletionItemKind.Variable;
 							tokens.push('\u0000');
 						}
-						else if (parsedItem) {
-							const isComponent = parsedItem.tag !== '*';
-							const { isEvent, propName } = getPropName(parsedItem);
+						else if (prop) {
+							const { isEvent, propName } = getPropName(prop.name, !!prop.isEvent);
 
-							if (parsedItem.type === 'componentProp') {
-								if (isComponent || specialProps.has(propName)) {
+							if (prop.isProp) {
+								if (!prop.isGlobal || specialProps.has(propName)) {
 									item.kind = 5 satisfies typeof CompletionItemKind.Field;
 								}
 							}
@@ -588,7 +523,7 @@ export function create(
 								}
 							}
 
-							if (isComponent || specialProps.has(propName)) {
+							if (!prop.isGlobal || specialProps.has(propName)) {
 								tokens.push('\u0000');
 
 								if (item.label.startsWith(':')) {
@@ -639,6 +574,53 @@ export function create(
 					}
 
 					updateExtraCustomData([]);
+				}
+			}
+
+			function addDirectiveModifiers(completionList: CompletionList, document: TextDocument) {
+				const replacement = getReplacement(completionList, document);
+				if (!replacement?.text.includes('.')) {
+					return;
+				}
+
+				const [text, ...modifiers] = replacement.text.split('.');
+				const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
+				const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
+				const isVModel = text.startsWith('v-model:') || text === 'v-model';
+				const currentModifiers = isVOn
+					? vOnModifiers
+					: isVBind
+					? vBindModifiers
+					: isVModel
+					? vModelModifiers
+					: undefined;
+
+				if (!currentModifiers) {
+					return;
+				}
+
+				for (const modifier in currentModifiers) {
+					if (modifiers.includes(modifier)) {
+						continue;
+					}
+
+					const description = currentModifiers[modifier];
+					const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
+					const newItem: html.CompletionItem = {
+						label: modifier,
+						filterText: insertText,
+						documentation: {
+							kind: 'markdown',
+							value: description,
+						},
+						textEdit: {
+							range: replacement.textEdit.range,
+							newText: insertText,
+						},
+						kind: 20 satisfies typeof CompletionItemKind.EnumMember,
+					};
+
+					completionList.items.push(newItem);
 				}
 			}
 
