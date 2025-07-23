@@ -462,7 +462,7 @@ export function create(
 				function postprocess(completionList: CompletionList, document: TextDocument) {
 					addDirectiveModifiers(completionList, document);
 
-					if (completionList.items[0].kind === 10 satisfies typeof CompletionItemKind.Property) {
+					if (completionList.items[0]?.kind === 10 satisfies typeof CompletionItemKind.Property) {
 						const seenTags = new Set<string>();
 						for (let i = completionList.items.length - 1; i >= 0; i--) {
 							const { label } = completionList.items[i];
