@@ -9,7 +9,7 @@ import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 import { URI } from 'vscode-uri';
-import { TagNameCasing } from '../nameCasing';
+import { checkCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
 
 export function create(
@@ -25,7 +25,6 @@ export function create(
 		},
 		create(context) {
 			const tsPluginClient = getTsPluginClient?.(context);
-			let casing = TagNameCasing.Pascal as TagNameCasing; // TODO
 
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
@@ -61,9 +60,9 @@ export function create(
 						return;
 					}
 
-					let baseName = importUri.slice(importUri.lastIndexOf('/') + 1);
-					baseName = baseName.slice(0, baseName.lastIndexOf('.'));
-					const newName = capitalize(camelize(baseName));
+					const casing = await checkCasing(context, decoded![0]);
+					const baseName = path.basename(importUri);
+					const newName = capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
 
 					const additionalEdit: WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(root)].find(code =>
@@ -134,7 +133,7 @@ export function create(
 					}
 
 					return {
-						insertText: `<${casing === TagNameCasing.Kebab ? hyphenate(newName) : newName}$0 />`,
+						insertText: `<${casing.tag === TagNameCasing.Kebab ? hyphenate(newName) : newName}$0 />`,
 						insertTextFormat: 2 satisfies typeof InsertTextFormat.Snippet,
 						additionalEdit,
 					};
