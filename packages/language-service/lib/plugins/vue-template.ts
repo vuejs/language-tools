@@ -219,7 +219,7 @@ export function create(
 							if (specialProps.has(name)) {
 								prop = {
 									name,
-									isProp: true,
+									kind: 'prop',
 									isGlobal: true,
 								};
 							}
@@ -235,9 +235,9 @@ export function create(
 							tokens.push('\u0000');
 						}
 						else if (prop) {
-							const { isEvent, propName } = getPropName(prop.name, !!prop.isEvent);
+							const { isEvent, propName } = getPropName(prop.name, prop.kind === 'event');
 
-							if (prop.isProp) {
+							if (prop.kind === 'prop') {
 								if (!prop.isGlobal || specialProps.has(propName)) {
 									item.kind = 5 satisfies typeof CompletionItemKind.Field;
 								}
@@ -361,8 +361,7 @@ export function create(
 				}>();
 				const propMap = new Map<string, {
 					name: string;
-					isProp?: boolean;
-					isEvent?: boolean;
+					kind: 'prop' | 'event';
 					isGlobal?: boolean;
 					info?: ComponentPropInfo;
 				}>();
@@ -497,7 +496,7 @@ export function create(
 										attributes.push({ name });
 										propMap.set(name, {
 											name: propName,
-											isEvent: true,
+											kind: 'event',
 											isGlobal,
 											info: prop,
 										});
@@ -522,7 +521,7 @@ export function create(
 										});
 										propMap.set(name, {
 											name: propName,
-											isProp: true,
+											kind: 'prop',
 											isGlobal,
 											info: propInfo,
 										});
@@ -542,7 +541,7 @@ export function create(
 									attributes.push({ name });
 									propMap.set(name, {
 										name: eventName,
-										isEvent: true,
+										kind: 'event',
 									});
 								}
 							}
@@ -579,14 +578,14 @@ export function create(
 								attributes.push({ name: 'v-model:' + name });
 								propMap.set('v-model:' + name, {
 									name,
-									isProp: true,
+									kind: 'prop',
 									isGlobal,
 								});
 
 								if (model === 'modelValue') {
 									propMap.set('v-model', {
 										name,
-										isProp: true,
+										kind: 'prop',
 										isGlobal,
 									});
 								}
