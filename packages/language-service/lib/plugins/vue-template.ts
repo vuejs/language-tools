@@ -167,26 +167,21 @@ export function create(
 						return;
 					}
 
-					const fn = () =>
-						baseServiceInstance.provideCompletionItems!(
-							document,
-							position,
-							completionContext,
-							token,
-						);
+					const {result:completionList,postprocess} = await runWithVueData(
+						sourceScript.id,
+						root,
+						() =>
+							baseServiceInstance.provideCompletionItems!(
+								document,
+								position,
+								completionContext,
+								token,
+							),
+					);
 
-					// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
-					await fn();
-
-					const { sync, postprocess } = await provideHtmlData(sourceScript.id, root);
-					let lastVersion = await sync();
-					let result = await fn();
-					while (lastVersion !== (lastVersion = await sync())) {
-						result = await fn();
-					}
-					if (result) {
-						postprocess(result, document);
-						return result;
+					if (completionList) {
+						postprocess(completionList, document);
+						return completionList;
 					}
 				},
 
@@ -202,6 +197,19 @@ export function create(
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
 			};
+
+			async function runWithVueData<T>(sourceDocumentUri: URI, vueCode: VueVirtualCode, fn: () => T) {
+				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
+				await fn();
+
+				const { sync, postprocess } = await provideHtmlData(sourceDocumentUri, vueCode);
+				let lastVersion = await sync();
+				let result = await fn();
+				while (lastVersion !== (lastVersion = await sync())) {
+					result = await fn();
+				}
+				return {result, postprocess};
+			}
 
 			async function provideHtmlData(sourceDocumentUri: URI, vueCode: VueVirtualCode) {
 				await (initializing ??= initialize());
