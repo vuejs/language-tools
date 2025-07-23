@@ -350,6 +350,8 @@ export function create(
 				}
 
 				let version = 0;
+				let components: string[] | undefined;
+
 				const tasks: Promise<void>[] = [];
 				const tagMap = new Map<string, {
 					attrs: string[];
@@ -357,8 +359,6 @@ export function create(
 					events: string[];
 					directives: string[];
 				}>();
-
-				let components: string[] | undefined;
 				const propMap = new Map<string, {
 					name: string;
 					isProp?: boolean;
@@ -366,7 +366,6 @@ export function create(
 					isGlobal?: boolean;
 					info?: ComponentPropInfo;
 				}>();
-
 				const htmlDataProvider = html.getDefaultHTMLDataProvider();
 
 				updateExtraCustomData([
