@@ -17,7 +17,7 @@ const plugin: VueLanguagePlugin = () => {
 						id: 'style_' + i,
 						lang: style.lang,
 					});
-					if (style.cssVars.length) {
+					if (style.bindings.length) {
 						result.push({
 							id: 'style_' + i + '_inline_ts',
 							lang: 'ts',
@@ -34,13 +34,13 @@ const plugin: VueLanguagePlugin = () => {
 				const style = sfc.styles[index];
 				if (embeddedFile.id.endsWith('_inline_ts')) {
 					embeddedFile.parentCodeId = 'style_' + index;
-					for (const cssVar of style.cssVars) {
+					for (const binding of style.bindings) {
 						embeddedFile.content.push(
 							'(',
 							[
-								cssVar.text,
+								binding.text,
 								style.name,
-								cssVar.offset,
+								binding.offset,
 								allCodeFeatures,
 							],
 							');\n',

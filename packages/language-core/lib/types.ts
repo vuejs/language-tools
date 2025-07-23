@@ -97,6 +97,11 @@ export type VueLanguagePluginReturn = {
 		template: string,
 		options: CompilerDOM.CompilerOptions,
 	): CompilerDOM.CodegenResult | undefined;
+	compileSFCStyle?(lang: string, style: string): {
+		imports?: Sfc['styles'][number]['imports'];
+		bindings?: Sfc['styles'][number]['bindings'];
+		classNames?: Sfc['styles'][number]['classNames'];
+	} | undefined;
 	updateSFCTemplate?(
 		oldResult: CompilerDOM.CodegenResult,
 		textChange: { start: number; end: number; newText: string },
@@ -162,7 +167,7 @@ export interface Sfc {
 			text: string;
 			offset: number;
 		}[];
-		cssVars: {
+		bindings: {
 			text: string;
 			offset: number;
 		}[];
