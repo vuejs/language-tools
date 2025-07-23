@@ -474,17 +474,35 @@ export function create(
 					}
 
 					for (const item of completionList.items) {
-						const prop = propMap.get(item.label);
+						let prop = propMap.get(item.label);
 
-						if (prop?.info?.documentation) {
-							item.documentation = {
-								kind: 'markdown',
-								value: prop.info.documentation,
-							};
+						if (prop) {
+							if (prop.info?.documentation) {
+								item.documentation = {
+									kind: 'markdown',
+									value: prop.info.documentation,
+								};
+							}
+
+							if (prop.info?.deprecated) {
+								item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
+							}
 						}
-
-						if (prop?.info?.deprecated) {
-							item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
+						else {
+							let name = item.label;
+							for (const str of ['v-bind:', ':']) {
+								if (name.startsWith(str) && name !== str) {
+									name = name.slice(str.length);
+									break;
+								}
+							}
+							if (specialProps.has(name)) {
+								prop = {
+									name,
+									isProp: true,
+									isGlobal: true,
+								};
+							}
 						}
 
 						const tokens: string[] = [];
