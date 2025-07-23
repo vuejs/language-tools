@@ -38,7 +38,7 @@ export function create(
 								end: document.positionAt(textSpan.start + textSpan.length),
 							});
 							const tagNameMatch = highlightText.match(/<\/?([^\s>]+)/);
-							if (!tagNameMatch) return false;
+							if (!tagNameMatch) {return false;}
 							const tagName = tagNameMatch[1];
 							return highlightText.startsWith(`</${tagName}>`) || 
 							       highlightText.startsWith(`<${tagName}/>`);
