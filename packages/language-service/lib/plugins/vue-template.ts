@@ -462,26 +462,14 @@ export function create(
 				function postprocess(completionList: CompletionList, document: TextDocument) {
 					addDirectiveModifiers(completionList, document);
 
-					// const tagMap = new Map<string, html.CompletionItem>();
-
-					// completionList.items = completionList.items.filter(item => {
-					// 	const key = item.kind + '_' + item.label;
-					// 	if (!tagMap.has(key)) {
-					// 		tagMap.set(key, item);
-					// 		return true;
-					// 	}
-					// 	tagMap.get(key)!.documentation = item.documentation;
-					// 	return false;
-					// });
-
-					const htmlDocumentations = new Map<string, string>();
-
-					for (const item of completionList.items) {
-						const documentation = typeof item.documentation === 'string'
-							? item.documentation
-							: item.documentation?.value;
-						if (documentation?.trim()) {
-							htmlDocumentations.set(item.label, documentation);
+					if (completionList.items[0].kind === 10 satisfies typeof CompletionItemKind.Property) {
+						const seenTags = new Set<string>();
+						for (let i = completionList.items.length - 1; i >= 0; i--) {
+							const { label } = completionList.items[i];
+							if (seenTags.has(label)) {
+								completionList.items.splice(i, 1);
+							}
+							seenTags.add(label);
 						}
 					}
 
