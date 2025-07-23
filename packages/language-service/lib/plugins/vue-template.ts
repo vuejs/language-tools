@@ -326,8 +326,7 @@ export function create(
 				}
 				return {
 					result,
-					components: lastSync.components,
-					propMap: lastSync.propMap,
+					...lastSync,
 				};
 			}
 
