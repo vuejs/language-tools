@@ -171,10 +171,8 @@ export function create(
 
 					const {
 						result: completionList,
-						info: {
-							components,
-							propMap,
-						},
+						components,
+						propMap,
 					} = await runWithVueData(
 						sourceScript.id,
 						root,
@@ -320,15 +318,16 @@ export function create(
 				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
 				await fn();
 
-				const { sync, getInfo } = await provideHtmlData(sourceDocumentUri, root);
-				let lastVersion = await sync();
+				const { sync } = await provideHtmlData(sourceDocumentUri, root);
+				let lastSync = await sync();
 				let result = await fn();
-				while (lastVersion !== (lastVersion = await sync())) {
+				while (lastSync.version !== (lastSync = await sync()).version) {
 					result = await fn();
 				}
 				return {
 					result,
-					info: getInfo(),
+					components: lastSync.components,
+					propMap: lastSync.propMap,
 				};
 			}
 
@@ -598,13 +597,9 @@ export function create(
 				]);
 
 				return {
-					getInfo: () => ({
-						components,
-						propMap,
-					}),
 					async sync() {
 						await Promise.all(tasks);
-						return version;
+						return { version, components, propMap };
 					},
 				};
 			}
