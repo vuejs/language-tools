@@ -30,10 +30,6 @@ export function create(
 						return;
 					}
 
-					if (!context.project.vue) {
-						return;
-					}
-
 					const enabled = await context.env.getConfiguration<boolean>?.('vue.inlayHints.missingProps') ?? false;
 					if (!enabled) {
 						return;
@@ -126,7 +122,7 @@ export function create(
 										attrText = attrText.slice('v-model:'.length);
 									}
 									else if (attrText === 'v-model') {
-										attrText = context.project.vue.compilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
+										attrText = root.vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
 									}
 									else if (attrText.startsWith('v-on:')) {
 										attrText = 'on-' + hyphenateAttr(attrText.slice('v-on:'.length));

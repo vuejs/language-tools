@@ -41,11 +41,19 @@ export function create(): LanguageServicePlugin {
 							start: document.positionAt(0),
 							end: document.positionAt(0),
 						},
-						severity: 1 satisfies typeof DiagnosticSeverity.Error,
+						severity: 2 satisfies typeof DiagnosticSeverity.Warning,
 						code: 404,
 						source: 'vue',
-						message:
-							`Write global types file failed. Please ensure that "node_modules" exists and "${vueCompilerOptions.lib}" is a direct dependency, or set "vueCompilerOptions.globalTypesPath" in "tsconfig.json" manually.`,
+						message: `
+Failed to write the global types file. Make sure that:
+
+1. "node_modules" directory exists.
+2. "${vueCompilerOptions.lib}" is installed as a direct dependency.
+
+Alternatively, you can manually set "vueCompilerOptions.globalTypesPath" in your "tsconfig.json".
+
+If all dependencies are installed, try running the "vue.action.restartServer" command to restart Vue and TS servers.
+						`.trim(),
 					}];
 				},
 			};

@@ -9,7 +9,7 @@ import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 import { URI } from 'vscode-uri';
-import { TagNameCasing } from '../nameCasing';
+import { checkCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
 
 export function create(
@@ -24,14 +24,7 @@ export function create(
 			documentDropEditsProvider: true,
 		},
 		create(context) {
-			if (!context.project.vue) {
-				return {};
-			}
-
-			let casing = TagNameCasing.Pascal as TagNameCasing; // TODO
-
 			const tsPluginClient = getTsPluginClient?.(context);
-			const vueCompilerOptions = context.project.vue.compilerOptions;
 
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
@@ -57,7 +50,7 @@ export function create(
 							importUri = item.value as string;
 						}
 					}
-					if (!importUri || !vueCompilerOptions.extensions.some(ext => importUri.endsWith(ext))) {
+					if (!importUri || !root.vueCompilerOptions.extensions.some(ext => importUri.endsWith(ext))) {
 						return;
 					}
 
@@ -67,17 +60,16 @@ export function create(
 						return;
 					}
 
-					let baseName = importUri.slice(importUri.lastIndexOf('/') + 1);
-					baseName = baseName.slice(0, baseName.lastIndexOf('.'));
-					const newName = capitalize(camelize(baseName));
+					const casing = await checkCasing(context, decoded![0]);
+					const baseName = path.basename(importUri);
+					const newName = capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
 
 					const additionalEdit: WorkspaceEdit = {};
 					const code = [...forEachEmbeddedCode(root)].find(code =>
 						code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw')
 					)!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
-					const incomingFileName = context.project.typescript?.uriConverter.asFileName(URI.parse(importUri))
-						?? URI.parse(importUri).fsPath.replace(/\\/g, '/');
+					const incomingFileName = URI.parse(importUri).fsPath.replace(/\\/g, '/');
 
 					let importPath: string | undefined;
 
@@ -141,7 +133,7 @@ export function create(
 					}
 
 					return {
-						insertText: `<${casing === TagNameCasing.Kebab ? hyphenate(newName) : newName}$0 />`,
+						insertText: `<${casing.tag === TagNameCasing.Kebab ? hyphenate(newName) : newName}$0 />`,
 						insertTextFormat: 2 satisfies typeof InsertTextFormat.Snippet,
 						additionalEdit,
 					};
