@@ -71,6 +71,9 @@ describe('vue-tsc-dts', () => {
 });
 
 function readFilesRecursive(dir: string) {
+	if (path.relative(workspace, dir).startsWith('#')) {
+		return [];
+	}
 	const result: string[] = [];
 
 	for (const file of fs.readdirSync(dir)) {
@@ -86,7 +89,6 @@ function readFilesRecursive(dir: string) {
 			result.push(filepath);
 		}
 	}
-
 	return result;
 }
 
