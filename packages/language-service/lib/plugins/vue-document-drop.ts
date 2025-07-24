@@ -1,9 +1,4 @@
-import type {
-	InsertTextFormat,
-	LanguageServiceContext,
-	LanguageServicePlugin,
-	WorkspaceEdit,
-} from '@volar/language-service';
+import type { InsertTextFormat, LanguageServicePlugin, WorkspaceEdit } from '@volar/language-service';
 import { forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
@@ -15,9 +10,7 @@ import { getEmbeddedInfo } from './utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (
-		context: LanguageServiceContext,
-	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
@@ -25,8 +18,6 @@ export function create(
 			documentDropEditsProvider: true,
 		},
 		create(context) {
-			const tsPluginClient = getTsPluginClient?.(context);
-
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
 					const info = getEmbeddedInfo(context, document, 'template', 'html');

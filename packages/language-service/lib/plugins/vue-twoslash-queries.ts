@@ -1,13 +1,11 @@
-import type { InlayHint, LanguageServiceContext, LanguageServicePlugin, Position } from '@volar/language-service';
+import type { InlayHint, LanguageServicePlugin, Position } from '@volar/language-service';
 import { getEmbeddedInfo } from './utils';
 
 const twoslashTemplateReg = /<!--\s*\^\?\s*-->/g;
 const twoslashScriptReg = /(?<=^|\n)\s*\/\/\s*\^\?/g;
 
 export function create(
-	getTsPluginClient?: (
-		context: LanguageServiceContext,
-	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-twoslash-queries',
@@ -15,7 +13,6 @@ export function create(
 			inlayHintProvider: {},
 		},
 		create(context) {
-			const tsPluginClient = getTsPluginClient?.(context);
 			return {
 				async provideInlayHints(document, range) {
 					const info = getEmbeddedInfo(

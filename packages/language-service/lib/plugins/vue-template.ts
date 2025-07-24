@@ -3,7 +3,6 @@ import type {
 	CompletionItemTag,
 	CompletionList,
 	Disposable,
-	LanguageServiceContext,
 	LanguageServicePlugin,
 	TextDocument,
 } from '@volar/language-service';
@@ -38,9 +37,7 @@ let modelData: html.HTMLDataV1;
 
 export function create(
 	mode: 'html' | 'pug',
-	getTsPluginClient?: (
-		context: LanguageServiceContext,
-	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
@@ -92,7 +89,6 @@ export function create(
 			hoverProvider: true,
 		},
 		create(context) {
-			const tsPluginClient = getTsPluginClient?.(context);
 			const baseServiceInstance = baseService.create(context);
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');

@@ -11,9 +11,7 @@ import { AttrNameCasing, checkCasing } from '../nameCasing';
 import { getEmbeddedInfo } from './utils';
 
 export function create(
-	getTsPluginClient?: (
-		context: LanguageServiceContext,
-	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-missing-props-hints',
@@ -21,7 +19,6 @@ export function create(
 			inlayHintProvider: {},
 		},
 		create(context) {
-			const tsPluginClient = getTsPluginClient?.(context);
 			let intrinsicElementNames: Set<string>;
 
 			return {

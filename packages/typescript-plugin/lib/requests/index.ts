@@ -13,6 +13,7 @@ export type Requests = {
 	getComponentSlots: ToRequest<typeof import('./getComponentSlots.js')['getComponentSlots']>;
 	getElementAttrs: ToRequest<typeof import('./getElementAttrs.js')['getElementAttrs']>;
 	getElementNames: ToRequest<typeof import('./getElementNames.js')['getElementNames']>;
+	getDocumentHighlights: ToRequest<(fileName: string, position: number) => ts.DocumentHighlights[]>;
 	getEncodedSemanticClassifications: ToRequest<(fileName: string, span: ts.TextSpan) => ts.Classifications>;
 	getQuickInfoAtPosition: ToRequest<(fileName: string, position: ts.LineAndCharacter) => string>;
 };

@@ -1,9 +1,8 @@
 import type { DocumentHighlightKind, LanguageServicePlugin } from '@volar/language-service';
-import type * as ts from 'typescript';
 import { getEmbeddedInfo } from './utils';
 
 export function create(
-	getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>,
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-highlights',
@@ -19,7 +18,7 @@ export function create(
 					}
 					const { root } = info;
 
-					const result = await getDocumentHighlights(root.fileName, document.offsetAt(position));
+					const result = await tsPluginClient?.getDocumentHighlights(root.fileName, document.offsetAt(position));
 
 					return result
 						?.filter(({ fileName }) => fileName === root.fileName)

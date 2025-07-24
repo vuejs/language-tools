@@ -4,8 +4,6 @@ export * from '@volar/language-service';
 // for @vue/language-server usage
 export * from '@volar/language-service/lib/utils/featureWorkers';
 
-import type * as ts from 'typescript';
-
 import { create as createEmmetPlugin } from 'volar-service-emmet';
 import { create as createJsonPlugin } from 'volar-service-json';
 import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';
@@ -33,37 +31,33 @@ import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twos
 
 export function createVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	tsPluginClient:
-		| import('@vue/typescript-plugin/lib/requests').Requests & {
-			getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>;
-		}
-		| undefined,
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ) {
-	const getTsPluginClient = () => tsPluginClient;
 	const plugins = [
 		createCssPlugin(),
 		createJsonPlugin(),
 		createPugFormatPlugin(),
 		createTypeScriptDocCommentTemplatePlugin(ts),
-		createTypescriptSemanticTokensPlugin(getTsPluginClient),
+		createTypescriptSemanticTokensPlugin(tsPluginClient),
 		createTypeScriptSyntacticPlugin(ts),
 		createVueAutoSpacePlugin(),
-		createVueAutoDotValuePlugin(ts, getTsPluginClient),
+		createVueAutoDotValuePlugin(ts, tsPluginClient),
 		createVueCompilerDomErrorsPlugin(),
-		createVueComponentSemanticTokensPlugin(getTsPluginClient),
-		createVueDocumentDropPlugin(ts, getTsPluginClient),
+		createVueComponentSemanticTokensPlugin(tsPluginClient),
+		createVueDocumentDropPlugin(ts, tsPluginClient),
+		createVueDocumentHighlightsPlugin(tsPluginClient),
 		createVueDirectiveCommentsPlugin(),
-		createVueExtractFilePlugin(ts, getTsPluginClient),
+		createVueExtractFilePlugin(ts, tsPluginClient),
 		createVueGlobalTypesErrorPlugin(),
 		createVueInlayHintsPlugin(ts),
-		createVueMissingPropsHintsPlugin(getTsPluginClient),
+		createVueMissingPropsHintsPlugin(tsPluginClient),
 		createVueScopedClassLinksPlugin(),
 		createVueSfcPlugin(),
 		createVueSuggestDefineAssignmentPlugin(),
-		createVueTemplatePlugin('html', getTsPluginClient),
-		createVueTemplatePlugin('pug', getTsPluginClient),
+		createVueTemplatePlugin('html', tsPluginClient),
+		createVueTemplatePlugin('pug', tsPluginClient),
 		createVueTemplateRefLinksPlugin(),
-		createVueTwoslashQueriesPlugin(getTsPluginClient),
+		createVueTwoslashQueriesPlugin(tsPluginClient),
 		createEmmetPlugin({
 			mappedLanguages: {
 				'vue-root-tags': 'html',
@@ -71,8 +65,5 @@ export function createVueLanguageServicePlugins(
 			},
 		}),
 	];
-	if (tsPluginClient) {
-		plugins.push(createVueDocumentHighlightsPlugin(tsPluginClient.getDocumentHighlights));
-	}
 	return plugins;
 }

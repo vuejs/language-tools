@@ -1,10 +1,4 @@
-import type {
-	CreateFile,
-	LanguageServiceContext,
-	LanguageServicePlugin,
-	TextDocumentEdit,
-	TextEdit,
-} from '@volar/language-service';
+import type { CreateFile, LanguageServicePlugin, TextDocumentEdit, TextEdit } from '@volar/language-service';
 import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
 import { type Sfc, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
@@ -21,9 +15,7 @@ const unicodeReg = /\\u/g;
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (
-		context: LanguageServiceContext,
-	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-extract-file',
@@ -34,7 +26,6 @@ export function create(
 			},
 		},
 		create(context) {
-			const tsPluginClient = getTsPluginClient?.(context);
 			return {
 				provideCodeActions(document, range, ctx) {
 					if (ctx.only && !ctx.only.includes('refactor')) {
@@ -99,9 +90,6 @@ export function create(
 					}
 
 					const toExtract = await tsPluginClient?.collectExtractProps(root.fileName, templateCodeRange) ?? [];
-					if (!toExtract) {
-						return codeAction;
-					}
 
 					const templateInitialIndent =
 						await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
