@@ -7,7 +7,7 @@ import type {
 	LanguageServicePlugin,
 	TextDocument,
 } from '@volar/language-service';
-import { hyphenateAttr, hyphenateTag, tsCodegen, VueVirtualCode } from '@vue/language-core';
+import { hyphenateAttr, hyphenateTag, tsCodegen, type VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService } from 'volar-service-html';
@@ -16,6 +16,7 @@ import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
 import { loadModelModifiersData, loadTemplateData } from './data';
+import { getEmbeddedInfo } from './utils';
 
 const specialTags = new Set([
 	'slot',
@@ -75,6 +76,7 @@ export function create(
 			},
 			onDidChangeCustomData,
 		});
+	const languageId = mode === 'pug' ? 'jade' : 'html';
 
 	return {
 		name: `vue-template (${mode})`,
@@ -153,21 +155,11 @@ export function create(
 				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
-					if (!isSupportedDocument(document)) {
+					const info = getEmbeddedInfo(context, document, 'template', languageId);
+					if (!info) {
 						return;
 					}
-
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					if (!sourceScript?.generated) {
-						return;
-					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
-						return;
-					}
+					const { sourceScript, root } = info;
 
 					const {
 						result: completionList,
@@ -315,7 +307,8 @@ export function create(
 				},
 
 				provideHover(document, position, token) {
-					if (!isSupportedDocument(document)) {
+					const info = getEmbeddedInfo(context, document, 'template', languageId);
+					if (!info) {
 						return;
 					}
 
@@ -721,15 +714,6 @@ export function create(
 	function updateExtraCustomData(extraData: html.IHTMLDataProvider[]) {
 		extraCustomData = extraData;
 		onDidChangeCustomDataListeners.forEach(l => l());
-	}
-
-	function isSupportedDocument(document: TextDocument) {
-		if (mode === 'pug') {
-			return document.languageId === 'jade';
-		}
-		else {
-			return document.languageId === 'html';
-		}
 	}
 }
 

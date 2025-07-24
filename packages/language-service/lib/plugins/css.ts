@@ -1,8 +1,8 @@
 import type { LanguageServicePlugin, TextDocument, VirtualCode } from '@volar/language-service';
-import { isRenameEnabled, VueVirtualCode } from '@vue/language-core';
+import { isRenameEnabled } from '@vue/language-core';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
-import { URI } from 'vscode-uri';
+import { getEmbeddedInfo } from './utils';
 
 export function create(): LanguageServicePlugin {
 	const base = baseCreate({ scssDocumentSelector: ['scss', 'postcss'] });
@@ -54,20 +54,13 @@ export function create(): LanguageServicePlugin {
 				document: TextDocument,
 				position: css.Position,
 			) {
-				const uri = URI.parse(document.uri);
-				const decoded = context.decodeEmbeddedDocumentUri(uri);
-				const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-				const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-				if (!sourceScript?.generated || !virtualCode?.id.startsWith('style_')) {
+				const info = getEmbeddedInfo(context, document, id => id.startsWith('style_'));
+				if (!info) {
 					return false;
 				}
+				const { sourceScript, virtualCode, root } = info;
 
-				const root = sourceScript.generated.root;
-				if (!(root instanceof VueVirtualCode)) {
-					return false;
-				}
-
-				const block = root.sfc.styles.find(style => style.name === decoded![1]);
+				const block = root.sfc.styles.find(style => style.name === virtualCode.id);
 				if (!block) {
 					return false;
 				}

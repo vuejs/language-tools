@@ -1,6 +1,5 @@
 import type { DiagnosticSeverity, LanguageServicePlugin } from '@volar/language-service';
-import { VueVirtualCode } from '@vue/language-core';
-import { URI } from 'vscode-uri';
+import { getEmbeddedInfo } from './utils';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -14,21 +13,11 @@ export function create(): LanguageServicePlugin {
 		create(context) {
 			return {
 				provideDiagnostics(document) {
-					if (document.languageId !== 'vue-root-tags') {
+					const info = getEmbeddedInfo(context, document, 'root_tags');
+					if (!info) {
 						return;
 					}
-
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					if (!sourceScript?.generated) {
-						return;
-					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
-						return;
-					}
+					const { root } = info;
 
 					const { vueCompilerOptions } = root;
 					const globalTypesPath = vueCompilerOptions.globalTypesPath(root.fileName);

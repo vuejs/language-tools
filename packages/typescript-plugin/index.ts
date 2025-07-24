@@ -15,7 +15,10 @@ import { getPropertiesAtLocation } from './lib/requests/getPropertiesAtLocation'
 import type { RequestContext } from './lib/requests/types';
 
 const windowsPathReg = /\\/g;
-const project2Service = new WeakMap<ts.server.Project, [vue.Language, ts.LanguageServiceHost, ts.LanguageService]>();
+const project2Service = new WeakMap<
+	ts.server.Project,
+	[vue.Language<string>, ts.LanguageServiceHost, ts.LanguageService]
+>();
 
 export = createLanguageServicePlugin(
 	(ts, info) => {

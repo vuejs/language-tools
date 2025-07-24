@@ -1,7 +1,6 @@
 import type { DocumentHighlightKind, LanguageServicePlugin } from '@volar/language-service';
-import { VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { URI } from 'vscode-uri';
+import { getEmbeddedInfo } from './utils';
 
 export function create(
 	getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>,
@@ -14,18 +13,11 @@ export function create(
 		create(context) {
 			return {
 				async provideDocumentHighlights(document, position) {
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript?.generated || virtualCode?.id !== 'main') {
+					const info = getEmbeddedInfo(context, document, 'main');
+					if (!info) {
 						return;
 					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
-						return;
-					}
+					const { root } = info;
 
 					const result = await getDocumentHighlights(root.fileName, document.offsetAt(position));
 
