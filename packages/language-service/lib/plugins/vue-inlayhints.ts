@@ -1,7 +1,7 @@
 import type { InlayHint, InlayHintKind, LanguageServicePlugin } from '@volar/language-service';
 import { collectBindingIdentifiers, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {

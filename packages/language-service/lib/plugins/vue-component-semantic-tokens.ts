@@ -1,7 +1,7 @@
 import type { LanguageServicePlugin, SemanticToken } from '@volar/language-service';
 import { forEachElementNode, hyphenateTag } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(
 	{ getComponentNames, getElementNames }: import('@vue/typescript-plugin/lib/requests').Requests,

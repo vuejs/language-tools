@@ -1,6 +1,6 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { convertClassificationsToSemanticTokens } from 'volar-service-typescript/lib/semanticFeatures/semanticTokens';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(
 	{ getEncodedSemanticClassifications }: import('@vue/typescript-plugin/lib/requests').Requests,

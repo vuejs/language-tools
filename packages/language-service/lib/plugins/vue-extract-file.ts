@@ -3,7 +3,7 @@ import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
 import { type Sfc, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 interface ActionData {
 	uri: string;

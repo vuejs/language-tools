@@ -10,8 +10,8 @@ import type {
 import { VueVirtualCode } from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
-import { loadLanguageBlocks } from './data';
-import { getEmbeddedInfo } from './utils';
+import { loadLanguageBlocks } from '../data';
+import { getEmbeddedInfo } from '../utils';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 

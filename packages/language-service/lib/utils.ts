@@ -2,10 +2,6 @@ import { type LanguageServiceContext, type SourceScript, type TextDocument } fro
 import { VueVirtualCode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 
-export function sleep(ms: number) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 export function getEmbeddedInfo(
 	context: LanguageServiceContext,
 	document: TextDocument,

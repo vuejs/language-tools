@@ -1,5 +1,5 @@
 import type { DocumentHighlightKind, LanguageServicePlugin } from '@volar/language-service';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(
 	{ getDocumentHighlights }: import('@vue/typescript-plugin/lib/requests').Requests,

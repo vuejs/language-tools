@@ -2,7 +2,7 @@ import type { LanguageServicePlugin, TextDocument, VirtualCode } from '@volar/la
 import { isRenameEnabled } from '@vue/language-core';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(): LanguageServicePlugin {
 	const base = baseCreate({ scssDocumentSelector: ['scss', 'postcss'] });

@@ -6,7 +6,7 @@ import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUser
 import { URI } from 'vscode-uri';
 import { checkCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),

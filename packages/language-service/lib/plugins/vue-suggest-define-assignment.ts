@@ -1,6 +1,6 @@
 import type { CompletionItem, CompletionItemKind, LanguageServicePlugin } from '@volar/language-service';
 import { type TextRange, tsCodegen } from '@vue/language-core';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(): LanguageServicePlugin {
 	return {

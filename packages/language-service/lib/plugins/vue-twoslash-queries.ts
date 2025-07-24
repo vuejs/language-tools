@@ -1,5 +1,5 @@
 import type { InlayHint, LanguageServicePlugin, Position } from '@volar/language-service';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 const twoslashTemplateReg = /<!--\s*\^\?\s*-->/g;
 const twoslashScriptReg = /(?<=^|\n)\s*\/\/\s*\^\?/g;

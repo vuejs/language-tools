@@ -1,7 +1,7 @@
 import type { LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getEmbeddedInfo, sleep } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -16,8 +16,6 @@ export function create(
 			},
 		},
 		create(context) {
-			let currentReq = 0;
-
 			return {
 				async provideAutoInsertSnippet(document, selection, change) {
 					const info = getEmbeddedInfo(context, document, id => id.startsWith('script_'));
@@ -34,37 +32,27 @@ export function create(
 						return;
 					}
 
-					const req = ++currentReq;
-					// Wait for tsserver to sync
-					await sleep(250);
-					if (req !== currentReq) {
-						return;
-					}
-
-					const enabled = await context.env.getConfiguration<boolean>?.('vue.autoInsert.dotValue') ?? true;
-					if (!enabled) {
-						return;
-					}
+					let sourceOffset: number | undefined;
 
 					const { sourceScript, virtualCode, root } = info;
-
 					const { sfc } = root;
-					const blocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);
-					if (!blocks.length) {
+					const scriptBlocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);
+					const map = context.language.maps.get(virtualCode, sourceScript);
+
+					if (!scriptBlocks.length) {
 						return;
 					}
 
-					let sourceOffset: number | undefined;
-					const map = context.language.maps.get(virtualCode, sourceScript);
 					for (const [offset] of map.toSourceLocation(document.offsetAt(selection))) {
 						sourceOffset = offset;
 						break;
 					}
+
 					if (sourceOffset === undefined) {
 						return;
 					}
 
-					for (const { ast, startTagEnd, endTagStart } of blocks) {
+					for (const { ast, startTagEnd, endTagStart } of scriptBlocks) {
 						if (sourceOffset < startTagEnd || sourceOffset > endTagStart) {
 							continue;
 						}

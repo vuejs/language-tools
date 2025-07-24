@@ -8,7 +8,7 @@ import type {
 import { hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import * as html from 'vscode-html-languageservice';
 import { AttrNameCasing, checkCasing } from '../nameCasing';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(
 	{ getComponentNames, getElementNames, getComponentProps }: import('@vue/typescript-plugin/lib/requests').Requests,

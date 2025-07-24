@@ -13,9 +13,9 @@ import { create as createHtmlService } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
+import { loadModelModifiersData, loadTemplateData } from '../data';
 import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
-import { loadModelModifiersData, loadTemplateData } from './data';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 const specialTags = new Set([
 	'slot',

@@ -1,5 +1,5 @@
 import type { Diagnostic, DiagnosticSeverity, LanguageServicePlugin } from '@volar/language-service';
-import { getEmbeddedInfo } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(): LanguageServicePlugin {
 	return {
