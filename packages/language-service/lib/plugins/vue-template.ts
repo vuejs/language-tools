@@ -36,7 +36,7 @@ let builtInData: html.HTMLDataV1;
 let modelData: html.HTMLDataV1;
 
 export function create(
-	mode: 'html' | 'pug',
+	languageId: 'html' | 'jade',
 	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
@@ -51,7 +51,7 @@ export function create(
 			},
 		};
 	};
-	const baseService = mode === 'pug'
+	const baseService = languageId === 'jade'
 		? createPugService({
 			useDefaultDataProvider: false,
 			getCustomData() {
@@ -74,10 +74,9 @@ export function create(
 			onDidChangeCustomData,
 		});
 	const htmlDataProvider = html.getDefaultHTMLDataProvider();
-	const languageId = mode === 'pug' ? 'jade' : 'html';
 
 	return {
-		name: `vue-template (${mode})`,
+		name: `vue-template (${languageId})`,
 		capabilities: {
 			...baseService.capabilities,
 			completionProvider: {

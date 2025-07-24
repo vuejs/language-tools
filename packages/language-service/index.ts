@@ -55,7 +55,7 @@ export function createVueLanguageServicePlugins(
 		createVueSfcPlugin(),
 		createVueSuggestDefineAssignmentPlugin(),
 		createVueTemplatePlugin('html', tsPluginClient),
-		createVueTemplatePlugin('pug', tsPluginClient),
+		createVueTemplatePlugin('jade', tsPluginClient),
 		createVueTemplateRefLinksPlugin(),
 		createVueTwoslashQueriesPlugin(tsPluginClient),
 		createEmmetPlugin({
