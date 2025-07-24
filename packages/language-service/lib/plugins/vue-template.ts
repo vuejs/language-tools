@@ -76,6 +76,7 @@ export function create(
 			},
 			onDidChangeCustomData,
 		});
+	const htmlDataProvider = html.getDefaultHTMLDataProvider();
 	const languageId = mode === 'pug' ? 'jade' : 'html';
 
 	return {
@@ -313,7 +314,9 @@ export function create(
 					}
 
 					if (context.decodeEmbeddedDocumentUri(URI.parse(document.uri))) {
-						updateExtraCustomData([]);
+						updateExtraCustomData([
+							htmlDataProvider,
+						]);
 					}
 
 					return baseServiceInstance.provideHover?.(document, position, token);
@@ -368,7 +371,6 @@ export function create(
 					isGlobal?: boolean;
 					info?: ComponentPropInfo;
 				}>();
-				const htmlDataProvider = html.getDefaultHTMLDataProvider();
 
 				updateExtraCustomData([
 					{
