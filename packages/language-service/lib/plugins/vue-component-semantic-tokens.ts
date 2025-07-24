@@ -4,7 +4,7 @@ import type * as ts from 'typescript';
 import { getEmbeddedInfo } from './utils';
 
 export function create(
-	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	{ getComponentNames, getElementNames }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-component-semantic-tokens',
@@ -34,8 +34,8 @@ export function create(
 					const start = document.offsetAt(range.start);
 					const end = document.offsetAt(range.end);
 
-					const validComponentNames = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
-					const elements = new Set(await tsPluginClient?.getElementNames(root.fileName) ?? []);
+					const validComponentNames = await getComponentNames(root.fileName) ?? [];
+					const elements = new Set(await getElementNames(root.fileName) ?? []);
 					const components = new Set([
 						...validComponentNames,
 						...validComponentNames.map(hyphenateTag),

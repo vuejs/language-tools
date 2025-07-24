@@ -15,7 +15,7 @@ const unicodeReg = /\\u/g;
 
 export function create(
 	ts: typeof import('typescript'),
-	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	{ collectExtractProps }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-extract-file',
@@ -89,7 +89,7 @@ export function create(
 						return codeAction;
 					}
 
-					const toExtract = await tsPluginClient?.collectExtractProps(root.fileName, templateCodeRange) ?? [];
+					const toExtract = await collectExtractProps(root.fileName, templateCodeRange) ?? [];
 
 					const templateInitialIndent =
 						await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;

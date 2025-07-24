@@ -11,7 +11,7 @@ import { AttrNameCasing, checkCasing } from '../nameCasing';
 import { getEmbeddedInfo } from './utils';
 
 export function create(
-	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	{ getComponentNames, getElementNames, getComponentProps }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-missing-props-hints',
@@ -41,11 +41,11 @@ export function create(
 
 					const result: InlayHint[] = [];
 					const casing = await checkCasing(context, sourceScript.id);
-					const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+					const components = await getComponentNames(root.fileName) ?? [];
 					const componentProps: Record<string, string[]> = {};
 
 					intrinsicElementNames ??= new Set(
-						await tsPluginClient?.getElementNames(root.fileName) ?? [],
+						await getElementNames(root.fileName) ?? [],
 					);
 
 					let token: html.TokenType;
@@ -76,7 +76,7 @@ export function create(
 								if (cancellationToken.isCancellationRequested) {
 									break;
 								}
-								componentProps[checkTag] = (await tsPluginClient?.getComponentProps(root.fileName, checkTag) ?? [])
+								componentProps[checkTag] = (await getComponentProps(root.fileName, checkTag) ?? [])
 									.filter(prop => prop.required)
 									.map(prop => prop.name);
 							}

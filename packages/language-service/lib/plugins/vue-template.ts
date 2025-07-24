@@ -37,7 +37,14 @@ let modelData: html.HTMLDataV1;
 
 export function create(
 	languageId: 'html' | 'jade',
-	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	{
+		getComponentNames,
+		getElementAttrs,
+		getComponentProps,
+		getComponentEvents,
+		getComponentDirectives,
+		getComponentSlots,
+	}: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
@@ -400,7 +407,7 @@ export function create(
 							if (!components) {
 								components = [];
 								tasks.push((async () => {
-									components = (await tsPluginClient?.getComponentNames(root.fileName) ?? [])
+									components = (await getComponentNames(root.fileName) ?? [])
 										.filter(name =>
 											name !== 'Transition'
 											&& name !== 'TransitionGroup'
@@ -455,10 +462,10 @@ export function create(
 								tagMap.set(tag, tagInfo);
 								tasks.push((async () => {
 									tagMap.set(tag, {
-										attrs: await tsPluginClient?.getElementAttrs(root.fileName, tag) ?? [],
-										propInfos: await tsPluginClient?.getComponentProps(root.fileName, tag) ?? [],
-										events: await tsPluginClient?.getComponentEvents(root.fileName, tag) ?? [],
-										directives: await tsPluginClient?.getComponentDirectives(root.fileName) ?? [],
+										attrs: await getElementAttrs(root.fileName, tag) ?? [],
+										propInfos: await getComponentProps(root.fileName, tag) ?? [],
+										events: await getComponentEvents(root.fileName, tag) ?? [],
+										directives: await getComponentDirectives(root.fileName) ?? [],
 									});
 									version++;
 								})());
@@ -607,7 +614,7 @@ export function create(
 								values = [];
 								tasks.push((async () => {
 									if (tag === 'slot' && attr === 'name') {
-										values = await tsPluginClient?.getComponentSlots(root.fileName) ?? [];
+										values = await getComponentSlots(root.fileName) ?? [];
 									}
 									version++;
 								})());

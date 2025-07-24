@@ -5,7 +5,7 @@ const twoslashTemplateReg = /<!--\s*\^\?\s*-->/g;
 const twoslashScriptReg = /(?<=^|\n)\s*\/\/\s*\^\?/g;
 
 export function create(
-	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	{ getQuickInfoAtPosition }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-twoslash-queries',
@@ -45,7 +45,7 @@ export function create(
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
 						const map = context.language.maps.get(virtualCode, sourceScript);
 						for (const [sourceOffset] of map.toSourceLocation(hoverOffset)) {
-							const quickInfo = await tsPluginClient?.getQuickInfoAtPosition(
+							const quickInfo = await getQuickInfoAtPosition(
 								root.fileName,
 								sourceDocument.positionAt(sourceOffset),
 							);

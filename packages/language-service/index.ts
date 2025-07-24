@@ -31,39 +31,56 @@ import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twos
 
 export function createVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests = {
+		collectExtractProps: () => undefined,
+		getImportPathForFile: () => undefined,
+		getPropertiesAtLocation: () => undefined,
+		getComponentDirectives: () => undefined,
+		getComponentEvents: () => undefined,
+		getComponentNames: () => undefined,
+		getComponentProps: () => undefined,
+		getComponentSlots: () => undefined,
+		getElementAttrs: () => undefined,
+		getElementNames: () => undefined,
+		getDocumentHighlights: () => undefined,
+		getEncodedSemanticClassifications: () => undefined,
+		getQuickInfoAtPosition: () => undefined,
+	},
 ) {
-	const plugins = [
+	return [
 		createCssPlugin(),
 		createJsonPlugin(),
 		createPugFormatPlugin(),
-		createTypeScriptDocCommentTemplatePlugin(ts),
-		createTypescriptSemanticTokensPlugin(tsPluginClient),
-		createTypeScriptSyntacticPlugin(ts),
 		createVueAutoSpacePlugin(),
-		createVueAutoDotValuePlugin(ts, tsPluginClient),
 		createVueCompilerDomErrorsPlugin(),
-		createVueComponentSemanticTokensPlugin(tsPluginClient),
-		createVueDocumentDropPlugin(ts, tsPluginClient),
-		createVueDocumentHighlightsPlugin(tsPluginClient),
 		createVueDirectiveCommentsPlugin(),
-		createVueExtractFilePlugin(ts, tsPluginClient),
 		createVueGlobalTypesErrorPlugin(),
-		createVueInlayHintsPlugin(ts),
-		createVueMissingPropsHintsPlugin(tsPluginClient),
 		createVueScopedClassLinksPlugin(),
 		createVueSfcPlugin(),
 		createVueSuggestDefineAssignmentPlugin(),
-		createVueTemplatePlugin('html', tsPluginClient),
-		createVueTemplatePlugin('jade', tsPluginClient),
 		createVueTemplateRefLinksPlugin(),
-		createVueTwoslashQueriesPlugin(tsPluginClient),
 		createEmmetPlugin({
 			mappedLanguages: {
 				'vue-root-tags': 'html',
 				'postcss': 'scss',
 			},
 		}),
+
+		// TS related plugins
+		createTypeScriptDocCommentTemplatePlugin(ts),
+		createTypeScriptSyntacticPlugin(ts),
+		createVueInlayHintsPlugin(ts),
+
+		// type aware plugins
+		createTypescriptSemanticTokensPlugin(tsPluginClient),
+		createVueAutoDotValuePlugin(ts, tsPluginClient),
+		createVueComponentSemanticTokensPlugin(tsPluginClient),
+		createVueDocumentDropPlugin(ts, tsPluginClient),
+		createVueDocumentHighlightsPlugin(tsPluginClient),
+		createVueExtractFilePlugin(ts, tsPluginClient),
+		createVueMissingPropsHintsPlugin(tsPluginClient),
+		createVueTemplatePlugin('html', tsPluginClient),
+		createVueTemplatePlugin('jade', tsPluginClient),
+		createVueTwoslashQueriesPlugin(tsPluginClient),
 	];
-	return plugins;
 }

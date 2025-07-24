@@ -2,7 +2,7 @@ import type { DocumentHighlightKind, LanguageServicePlugin } from '@volar/langua
 import { getEmbeddedInfo } from './utils';
 
 export function create(
-	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	{ getDocumentHighlights }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-highlights',
@@ -18,7 +18,7 @@ export function create(
 					}
 					const { root } = info;
 
-					const result = await tsPluginClient?.getDocumentHighlights(root.fileName, document.offsetAt(position));
+					const result = await getDocumentHighlights(root.fileName, document.offsetAt(position));
 
 					return result
 						?.filter(({ fileName }) => fileName === root.fileName)

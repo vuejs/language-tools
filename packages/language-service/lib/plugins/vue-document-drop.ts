@@ -10,7 +10,7 @@ import { getEmbeddedInfo } from './utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	{ getImportPathForFile }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
@@ -56,7 +56,7 @@ export function create(
 					let importPath: string | undefined;
 
 					const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(root);
-					if (tsPluginClient && serviceScript) {
+					if (serviceScript) {
 						const tsDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, serviceScript.code.id);
 						const tsDocument = context.documents.get(
 							tsDocumentUri,
@@ -64,7 +64,7 @@ export function create(
 							serviceScript.code.snapshot,
 						);
 						const preferences = await getUserPreferences(context, tsDocument);
-						const importPathRequest = await tsPluginClient.getImportPathForFile(
+						const importPathRequest = await getImportPathForFile(
 							root.fileName,
 							incomingFileName,
 							preferences,
