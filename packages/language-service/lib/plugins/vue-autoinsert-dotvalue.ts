@@ -1,8 +1,7 @@
 import type { LanguageServiceContext, LanguageServicePlugin, TextDocument } from '@volar/language-service';
-import { hyphenateAttr, VueVirtualCode } from '@vue/language-core';
+import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { URI } from 'vscode-uri';
-import { isTsDocument, sleep } from './utils';
+import { getEmbeddedInfo, sleep } from './utils';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -24,12 +23,13 @@ export function create(
 
 			return {
 				async provideAutoInsertSnippet(document, selection, change) {
-					// selection must at end of change
-					if (document.offsetAt(selection) !== change.rangeOffset + change.text.length) {
+					const info = getEmbeddedInfo(context, document, id => id.startsWith('script_'));
+					if (!info) {
 						return;
 					}
 
-					if (!isTsDocument(document)) {
+					// selection must at end of change
+					if (document.offsetAt(selection) !== change.rangeOffset + change.text.length) {
 						return;
 					}
 
@@ -49,18 +49,7 @@ export function create(
 						return;
 					}
 
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript?.generated || !virtualCode) {
-						return;
-					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
-						return;
-					}
+					const { sourceScript, virtualCode, root } = info;
 
 					const { sfc } = root;
 					const blocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);

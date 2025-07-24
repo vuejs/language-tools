@@ -1,7 +1,6 @@
 import type { LanguageServiceContext, LanguageServicePlugin } from '@volar/language-service';
-import { VueVirtualCode } from '@vue/language-core';
 import { convertClassificationsToSemanticTokens } from 'volar-service-typescript/lib/semanticFeatures/semanticTokens';
-import { URI } from 'vscode-uri';
+import { getEmbeddedInfo } from './utils';
 
 export function create(
 	getTsPluginClient?: (
@@ -43,18 +42,11 @@ export function create(
 
 			return {
 				async provideDocumentSemanticTokens(document, range, legend) {
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript?.generated || virtualCode?.id !== 'main') {
+					const info = getEmbeddedInfo(context, document, 'main');
+					if (!info) {
 						return;
 					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
-						return;
-					}
+					const { root } = info;
 
 					const start = document.offsetAt(range.start);
 					const end = document.offsetAt(range.end);

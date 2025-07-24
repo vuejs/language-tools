@@ -5,10 +5,10 @@ import type {
 	LanguageServicePlugin,
 	TextDocument,
 } from '@volar/language-service';
-import { hyphenateAttr, hyphenateTag, VueVirtualCode } from '@vue/language-core';
+import { hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import * as html from 'vscode-html-languageservice';
-import { URI } from 'vscode-uri';
 import { AttrNameCasing, checkCasing } from '../nameCasing';
+import { getEmbeddedInfo } from './utils';
 
 export function create(
 	getTsPluginClient?: (
@@ -26,24 +26,14 @@ export function create(
 
 			return {
 				async provideInlayHints(document, range, cancellationToken) {
-					if (!isSupportedDocument(document)) {
+					const info = getEmbeddedInfo(context, document, 'template');
+					if (!info) {
 						return;
 					}
+					const { sourceScript, root } = info;
 
 					const enabled = await context.env.getConfiguration<boolean>?.('vue.inlayHints.missingProps') ?? false;
 					if (!enabled) {
-						return;
-					}
-
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					if (!sourceScript?.generated) {
-						return;
-					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
 						return;
 					}
 
@@ -53,7 +43,7 @@ export function create(
 					}
 
 					const result: InlayHint[] = [];
-					const casing = await checkCasing(context, decoded![0]);
+					const casing = await checkCasing(context, sourceScript.id);
 					const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
 					const componentProps: Record<string, string[]> = {};
 
@@ -178,9 +168,5 @@ export function create(
 				return context.inject('pug/languageService').createScanner(pugDocument);
 			}
 		}
-	}
-
-	function isSupportedDocument(document: TextDocument) {
-		return document.languageId === 'jade' || document.languageId === 'html';
 	}
 }
