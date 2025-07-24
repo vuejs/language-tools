@@ -17,8 +17,8 @@ export function getComponentProps(
 	fileName: string,
 	tag: string,
 ) {
-	const { typescript: ts, language, languageService, asScriptId } = this;
-	const volarFile = language.scripts.get(asScriptId(fileName));
+	const { typescript: ts, language, languageService } = this;
+	const volarFile = language.scripts.get(fileName);
 	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
 		return;
 	}

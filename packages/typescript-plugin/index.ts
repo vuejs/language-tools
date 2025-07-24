@@ -40,7 +40,6 @@ export = createLanguageServicePlugin(
 					language,
 					info.languageService,
 					vueOptions,
-					fileName => fileName,
 				);
 
 				// #3963
@@ -166,8 +165,6 @@ export = createLanguageServicePlugin(
 				languageService: service[2],
 				languageServiceHost: service[1],
 				language: service[0],
-				isTsPlugin: true,
-				asScriptId: (fileName: string) => fileName,
 			};
 		}
 	},

@@ -4,24 +4,23 @@ import type * as ts from 'typescript';
 
 const windowsPathReg = /\\/g;
 
-export function createVueLanguageServiceProxy<T>(
+export function createVueLanguageServiceProxy(
 	ts: typeof import('typescript'),
-	language: Language<T>,
+	language: Language<string>,
 	languageService: ts.LanguageService,
 	vueOptions: VueCompilerOptions,
-	asScriptId: (fileName: string) => T,
 ) {
 	const proxyCache = new Map<string | symbol, Function | undefined>();
 	const getProxyMethod = (target: ts.LanguageService, p: string | symbol): Function | undefined => {
 		switch (p) {
 			case 'getCompletionsAtPosition':
-				return getCompletionsAtPosition(ts, language, vueOptions, asScriptId, target[p]);
+				return getCompletionsAtPosition(ts, language, vueOptions, target[p]);
 			case 'getCompletionEntryDetails':
-				return getCompletionEntryDetails(language, asScriptId, target[p]);
+				return getCompletionEntryDetails(language, target[p]);
 			case 'getCodeFixesAtPosition':
 				return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan':
-				return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, asScriptId, target[p]);
+				return getDefinitionAndBoundSpan(ts, language, languageService, vueOptions, target[p]);
 		}
 	};
 
@@ -44,11 +43,10 @@ export function createVueLanguageServiceProxy<T>(
 	});
 }
 
-function getCompletionsAtPosition<T>(
+function getCompletionsAtPosition(
 	ts: typeof import('typescript'),
-	language: Language<T>,
+	language: Language<string>,
 	vueOptions: VueCompilerOptions,
-	asScriptId: (fileName: string) => T,
 	getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
 ): ts.LanguageService['getCompletionsAtPosition'] {
 	return (filePath, position, options, formattingSettings) => {
@@ -63,7 +61,7 @@ function getCompletionsAtPosition<T>(
 			);
 
 			// filter global variables in template and styles
-			const sourceScript = language.scripts.get(asScriptId(fileName));
+			const sourceScript = language.scripts.get(fileName);
 			const root = sourceScript?.generated?.root;
 			if (root instanceof VueVirtualCode) {
 				const blocks = [
@@ -131,9 +129,8 @@ function getCompletionsAtPosition<T>(
 	};
 }
 
-function getCompletionEntryDetails<T>(
-	language: Language<T>,
-	asScriptId: (fileName: string) => T,
+function getCompletionEntryDetails(
+	language: Language<string>,
 	getCompletionEntryDetails: ts.LanguageService['getCompletionEntryDetails'],
 ): ts.LanguageService['getCompletionEntryDetails'] {
 	return (...args) => {
@@ -158,7 +155,7 @@ function getCompletionEntryDetails<T>(
 		if (args[6]?.__isAutoImport) {
 			// @ts-expect-error
 			const { fileName } = args[6].__isAutoImport;
-			const sourceScript = language.scripts.get(asScriptId(fileName));
+			const sourceScript = language.scripts.get(fileName);
 			if (sourceScript?.generated?.root instanceof VueVirtualCode) {
 				const sfc = sourceScript.generated.root.vueSfc;
 				if (!sfc?.descriptor.script && !sfc?.descriptor.scriptSetup) {
@@ -190,12 +187,11 @@ function getCodeFixesAtPosition(
 	};
 }
 
-function getDefinitionAndBoundSpan<T>(
+function getDefinitionAndBoundSpan(
 	ts: typeof import('typescript'),
-	language: Language<T>,
+	language: Language<string>,
 	languageService: ts.LanguageService,
 	vueOptions: VueCompilerOptions,
-	asScriptId: (fileName: string) => T,
 	getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan'],
 ): ts.LanguageService['getDefinitionAndBoundSpan'] {
 	return (fileName, position) => {
@@ -205,7 +201,7 @@ function getDefinitionAndBoundSpan<T>(
 		}
 
 		const program = languageService.getProgram()!;
-		const sourceScript = language.scripts.get(asScriptId(fileName));
+		const sourceScript = language.scripts.get(fileName);
 		if (!sourceScript?.generated) {
 			return result;
 		}
