@@ -17,7 +17,10 @@ export function create(): LanguageServicePlugin {
 					if (!info) {
 						return;
 					}
-					const { root } = info;
+					const { sourceScript, root } = info;
+					if (sourceScript.id.scheme !== 'file') {
+						return;
+					}
 
 					const { vueCompilerOptions } = root;
 					const globalTypesPath = vueCompilerOptions.globalTypesPath(root.fileName);
