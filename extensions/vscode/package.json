@@ -67,6 +67,11 @@
 			{
 				"id": "jade",
 				"configuration": "./languages/sfc-template-language-configuration.json"
+			},
+			{
+				"id": "plaintext",
+				"configuration": "./languages/stub.json",
+				"//": "Make sure Vue extension is loaded immediately when VSCode starts."
 			}
 		],
 		"typescriptServerPlugins": [
