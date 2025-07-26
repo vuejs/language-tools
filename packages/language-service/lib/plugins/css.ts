@@ -2,23 +2,31 @@ import type { LanguageServicePlugin, TextDocument, VirtualCode } from '@volar/la
 import { isRenameEnabled } from '@vue/language-core';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
-import { getEmbeddedInfo } from '../utils';
+import { createTsAliasDocumentLinksProviders, getEmbeddedInfo } from '../utils';
 
-export function create(): LanguageServicePlugin {
-	const base = baseCreate({ scssDocumentSelector: ['scss', 'postcss'] });
+export function create(
+	{ resolveModuleName }: import('@vue/typescript-plugin/lib/requests').Requests,
+): LanguageServicePlugin {
+	const baseService = baseCreate({ scssDocumentSelector: ['scss', 'postcss'] });
 	return {
-		...base,
+		...baseService,
+		capabilities: {
+			...baseService.capabilities,
+			documentLinkProvider: {
+				resolveProvider: true,
+			},
+		},
 		create(context) {
-			const baseInstance = base.create(context);
+			const baseServiceInstance = baseService.create(context);
 			const {
 				'css/languageService': getCssLs,
 				'css/stylesheet': getStylesheet,
-			} = baseInstance.provide as Provide;
+			} = baseServiceInstance.provide as Provide;
 
 			return {
-				...baseInstance,
+				...baseServiceInstance,
 				async provideDiagnostics(document, token) {
-					let diagnostics = await baseInstance.provideDiagnostics?.(document, token) ?? [];
+					let diagnostics = await baseServiceInstance.provideDiagnostics?.(document, token) ?? [];
 					if (document.languageId === 'postcss') {
 						diagnostics = diagnostics.filter(diag =>
 							diag.code !== 'css-semicolonexpected'
@@ -48,6 +56,13 @@ export function create(): LanguageServicePlugin {
 						return cssLs.prepareRename(document, position, stylesheet);
 					});
 				},
+
+				...createTsAliasDocumentLinksProviders(
+					context,
+					baseServiceInstance,
+					id => id.startsWith('style_'),
+					resolveModuleName,
+				),
 			};
 
 			function isWithinNavigationVirtualCode(

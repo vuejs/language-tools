@@ -15,7 +15,7 @@ import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
-import { getEmbeddedInfo } from '../utils';
+import { createTsAliasDocumentLinksProviders, getEmbeddedInfo } from '../utils';
 
 const specialTags = new Set([
 	'slot',
@@ -328,47 +328,12 @@ export function create(
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
 
-				async provideDocumentLinks(document, token) {
-					const info = getEmbeddedInfo(context, document, 'template', languageId);
-					if (!info) {
-						return;
-					}
-					const { root } = info;
-
-					const documentLinks = await baseServiceInstance.provideDocumentLinks?.(document, token);
-
-					for (const link of documentLinks ?? []) {
-						if (!link.target) {
-							continue;
-						}
-						const text = document.getText(link.range);
-						if (text.startsWith('./') || text.startsWith('../')) {
-							continue;
-						}
-						link.data = {
-							fileName: root.fileName,
-							text: text,
-							originalTarget: link.target,
-						};
-						delete link.target;
-					}
-
-					return documentLinks;
-				},
-
-				async resolveDocumentLink(link) {
-					const { fileName, text, originalTarget } = link.data;
-
-					const { name } = await resolveModuleName(
-						fileName,
-						text,
-					) ?? {};
-
-					return {
-						...link,
-						target: name ?? originalTarget,
-					};
-				},
+				...createTsAliasDocumentLinksProviders(
+					context,
+					baseServiceInstance,
+					'template',
+					resolveModuleName,
+				),
 			};
 
 			async function runWithVueData<T>(sourceDocumentUri: URI, root: VueVirtualCode, fn: () => T) {
