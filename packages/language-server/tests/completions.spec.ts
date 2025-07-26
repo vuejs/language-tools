@@ -177,9 +177,7 @@ test('HTML tags and built-in components', async () => {
 		  "dialog",
 		  "script",
 		  "noscript",
-		  "template",
 		  "canvas",
-		  "slot",
 		  "data",
 		  "hgroup",
 		  "menu",
@@ -192,6 +190,8 @@ test('HTML tags and built-in components', async () => {
 		  "Teleport",
 		  "Suspense",
 		  "component",
+		  "slot",
+		  "template",
 		  "BaseTransition",
 		  "Fixture",
 		]

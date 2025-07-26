@@ -688,53 +688,6 @@ export function create(
 				}
 			}
 
-			function addDirectiveModifiers(completionList: CompletionList, document: TextDocument) {
-				const replacement = getReplacement(completionList, document);
-				if (!replacement?.text.includes('.')) {
-					return;
-				}
-
-				const [text, ...modifiers] = replacement.text.split('.');
-				const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
-				const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
-				const isVModel = text.startsWith('v-model:') || text === 'v-model';
-				const currentModifiers = isVOn
-					? vOnModifiers
-					: isVBind
-					? vBindModifiers
-					: isVModel
-					? vModelModifiers
-					: undefined;
-
-				if (!currentModifiers) {
-					return;
-				}
-
-				for (const modifier in currentModifiers) {
-					if (modifiers.includes(modifier)) {
-						continue;
-					}
-
-					const description = currentModifiers[modifier];
-					const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
-					const newItem: html.CompletionItem = {
-						label: modifier,
-						filterText: insertText,
-						documentation: {
-							kind: 'markdown',
-							value: description,
-						},
-						textEdit: {
-							range: replacement.textEdit.range,
-							newText: insertText,
-						},
-						kind: 20 satisfies typeof CompletionItemKind.EnumMember,
-					};
-
-					completionList.items.push(newItem);
-				}
-			}
-
 			async function initialize() {
 				customData = await getHtmlCustomData();
 			}
