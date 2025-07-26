@@ -5,20 +5,11 @@ import { endOfLine } from './utils';
 export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions) {
 	const used = new Set<string>();
 
-	const OmitKeepDiscriminatedUnion = defineHelper(
-		`__VLS_OmitKeepDiscriminatedUnion`,
+	const WithDefaultsLocal = defineHelper(
+		`__VLS_WithDefaultsLocal`,
 		() =>
 			`
-type __VLS_OmitKeepDiscriminatedUnion<T, K extends keyof any> = T extends any
-	? Pick<T, Exclude<keyof T, K>>
-	: never;
-`.trimStart(),
-	);
-	const WithDefaults = defineHelper(
-		`__VLS_WithDefaults`,
-		() =>
-			`
-type __VLS_WithDefaults<P, D> = {
+type __VLS_WithDefaultsLocal<P, D> = {
 	[K in keyof Pick<P, keyof P>]: K extends keyof D
 		? ${PrettifyLocal.name}<P[K] & { default: D[K] }>
 		: P[K]
@@ -36,7 +27,6 @@ type __VLS_WithDefaults<P, D> = {
 type __VLS_WithSlots<T, S> = T & {
 	new(): {
 		${getSlotsPropertyName(vueCompilerOptions.target)}: S;
-		${vueCompilerOptions.jsxSlots ? `$props: ${PropsChildren.name}<S>;` : ''}
 	}
 };
 `.trimStart(),
@@ -78,8 +68,7 @@ type __VLS_TypePropsToOption<T> = {
 	);
 	const helpers = {
 		[PrettifyLocal.name]: PrettifyLocal,
-		[OmitKeepDiscriminatedUnion.name]: OmitKeepDiscriminatedUnion,
-		[WithDefaults.name]: WithDefaults,
+		[WithDefaultsLocal.name]: WithDefaultsLocal,
 		[WithSlots.name]: WithSlots,
 		[PropsChildren.name]: PropsChildren,
 		[TypePropsToOption.name]: TypePropsToOption,
@@ -95,11 +84,8 @@ type __VLS_TypePropsToOption<T> = {
 		get PrettifyLocal() {
 			return PrettifyLocal.name;
 		},
-		get OmitKeepDiscriminatedUnion() {
-			return OmitKeepDiscriminatedUnion.name;
-		},
-		get WithDefaults() {
-			return WithDefaults.name;
+		get WithDefaultsLocal() {
+			return WithDefaultsLocal.name;
 		},
 		get WithSlots() {
 			return WithSlots.name;
@@ -115,7 +101,7 @@ type __VLS_TypePropsToOption<T> = {
 		},
 	};
 
-	function* generate(names: string[]) {
+	function* generate(...names: string[]) {
 		const generated = new Set<string>();
 		while (names.length) {
 			used.clear();
@@ -123,7 +109,7 @@ type __VLS_TypePropsToOption<T> = {
 				if (generated.has(name)) {
 					continue;
 				}
-				const helper = helpers[name as keyof typeof helpers];
+				const helper = helpers[name];
 				yield helper.generate();
 				generated.add(name);
 			}

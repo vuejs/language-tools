@@ -1,3 +1,4 @@
+<!-- @fallthroughAttributes true -->
 <!-- @inferTemplateDollarAttrs true -->
 
 <script setup lang="ts">

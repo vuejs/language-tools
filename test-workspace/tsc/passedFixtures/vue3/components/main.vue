@@ -16,7 +16,6 @@ const ScriptSetupExact = defineComponent({
 		change(..._payload: any[]) { },
 		delete(..._payload: any[]) { },
 	},
-	setup() {},
 });
 // https://vuejs.org/api/sfc-script-setup.html#defineexpose
 const ScriptSetupExposeExact = defineComponent({
@@ -39,7 +38,6 @@ const ScriptSetupTypeOnlyExact = defineComponent({
 		(e: 'change', id: number): void;
 		(e: 'update', value: string): void;
 	},
-	setup() {},
 });
 // https://vuejs.org/api/sfc-script-setup.html#default-props-values-when-using-type-declaration
 const ScriptSetupDefaultPropsExact = defineComponent({
@@ -51,7 +49,6 @@ const ScriptSetupDefaultPropsExact = defineComponent({
 		msg: 'hello',
 		labels: () => ['one', 'two']
 	},
-	setup() {},
 });
 // vue 3.3 generic
 declare const ScriptSetupGenericExact: <T, >(
@@ -60,7 +57,7 @@ declare const ScriptSetupGenericExact: <T, >(
 	_expose?: NonNullable<Awaited<typeof _setup>>['expose'],
 	_setup?: Promise<{
 		props: {
-			readonly onBar?: ((data: T) => any) | undefined;
+			onBar?: ((data: T) => any) | undefined;
 			foo: T;
 		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps,
 		attrs: any,
