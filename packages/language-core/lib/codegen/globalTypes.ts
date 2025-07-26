@@ -50,13 +50,13 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 	type __VLS_SpreadMerge<A, B> = Omit<A, keyof B> & B;
 	type __VLS_WithComponent<N0 extends string, LocalComponents, Self, N1 extends string, N2 extends string, N3 extends string> =
-		N1 extends keyof LocalComponents ? N1 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N1] } :
-		N2 extends keyof LocalComponents ? N2 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N2] } :
-		N3 extends keyof LocalComponents ? N3 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N3] } :
+		N1 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N1] } :
+		N2 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N2] } :
+		N3 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N3] } :
 		Self extends object ? { [K in N0]: Self } :
-		N1 extends keyof __VLS_GlobalComponents ? N1 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N1] } :
-		N2 extends keyof __VLS_GlobalComponents ? N2 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N2] } :
-		N3 extends keyof __VLS_GlobalComponents ? N3 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N3] } :
+		N1 extends keyof __VLS_GlobalComponents ? { [K in N0]: __VLS_GlobalComponents[N1] } :
+		N2 extends keyof __VLS_GlobalComponents ? { [K in N0]: __VLS_GlobalComponents[N2] } :
+		N3 extends keyof __VLS_GlobalComponents ? { [K in N0]: __VLS_GlobalComponents[N3] } :
 		{};
 	type __VLS_FunctionalComponentCtx<T, K> = __VLS_PickNotAny<'__ctx' extends keyof __VLS_PickNotAny<K, {}>
 		? K extends { __ctx?: infer Ctx } ? NonNullable<Ctx> : never : any
@@ -133,7 +133,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		NormalizedEmits = __VLS_NormalizeEmits<Emits> extends infer E ? string extends keyof E ? {} : E : never,
 	> = __VLS_SpreadMerge<NormalizedEmits, TypeEmits>;
 	type __VLS_ResolveDirectives<T> = {
-		[K in Exclude<keyof T, keyof __VLS_GlobalDirectives> & string as \`v\${Capitalize<K>}\`]: T[K];
+		[K in keyof T & string as \`v\${Capitalize<K>}\`]: T[K];
 	};
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T as K]: T[K]; } & {};
 	type __VLS_WithDefaultsGlobal<P, D> = {
