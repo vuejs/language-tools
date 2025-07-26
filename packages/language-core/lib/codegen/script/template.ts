@@ -25,7 +25,7 @@ export function* generateTemplate(
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, templateCodegenCtx);
-	yield* generateBindings(options, ctx, templateCodegenCtx);
+	yield* generateBindings(options, ctx);
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault) {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
@@ -185,31 +185,21 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 function* generateBindings(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	templateCodegenCtx: TemplateCodegenContext,
 ): Generator<Code> {
 	yield `type __VLS_Bindings = __VLS_ProxyRefs<{${newLine}`;
 	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		const templateUsageVars = getTemplateUsageVars(options, ctx);
-		for (
-			const [content, bindings] of [
-				[options.sfc.scriptSetup.content, options.scriptSetupRanges.bindings] as const,
-				options.sfc.script && options.scriptRanges
-					? [options.sfc.script.content, options.scriptRanges.bindings] as const
-					: ['', []] as const,
-			]
-		) {
-			for (const { range } of bindings) {
-				const varName = content.slice(range.start, range.end);
-				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
-					continue;
-				}
-
-				const token = Symbol(varName.length);
-				yield ['', undefined, 0, { __linkedToken: token }];
-				yield `${varName}: typeof `;
-				yield ['', undefined, 0, { __linkedToken: token }];
-				yield `${varName},${newLine}`;
+		for (const varName of ctx.bindingNames) {
+			if (!templateUsageVars.has(varName)) {
+				continue;
 			}
+
+			const token = Symbol(varName.length);
+			yield ['', undefined, 0, { __linkedToken: token }];
+			yield `${varName}: typeof `;
+			yield ['', undefined, 0, { __linkedToken: token }];
+			yield varName;
+			yield endOfLine;
 		}
 	}
 	yield `}>${endOfLine}`;
