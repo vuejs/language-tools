@@ -12,6 +12,7 @@ import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
 import { getPropertiesAtLocation } from './lib/requests/getPropertiesAtLocation';
+import { resolveModuleName } from './lib/requests/resolveModuleName';
 import type { RequestContext } from './lib/requests/types';
 
 const windowsPathReg = /\\/g;
@@ -145,6 +146,11 @@ export = createLanguageServicePlugin(
 			session.addProtocolHandler('_vue:getElementNames', ({ arguments: args }) => {
 				return {
 					response: getElementNames.apply(getRequestContext(args[0]), args),
+				};
+			});
+			session.addProtocolHandler('_vue:resolveModuleName', ({ arguments: args }) => {
+				return {
+					response: resolveModuleName.apply(getRequestContext(args[0]), args),
 				};
 			});
 

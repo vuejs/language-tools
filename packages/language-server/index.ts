@@ -132,6 +132,9 @@ connection.onInitialize(params => {
 			getPropertiesAtLocation(...args) {
 				return sendTsServerRequest('_vue:getPropertiesAtLocation', args);
 			},
+			resolveModuleName(...args) {
+				return sendTsServerRequest('_vue:resolveModuleName', args);
+			},
 			getDocumentHighlights(fileName, position) {
 				return sendTsServerRequest(
 					'_vue:documentHighlights-full',

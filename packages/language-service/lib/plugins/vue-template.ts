@@ -39,11 +39,12 @@ export function create(
 	languageId: 'html' | 'jade',
 	{
 		getComponentNames,
-		getElementAttrs,
 		getComponentProps,
 		getComponentEvents,
 		getComponentDirectives,
 		getComponentSlots,
+		getElementAttrs,
+		resolveModuleName,
 	}: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
@@ -93,6 +94,9 @@ export function create(
 				],
 			},
 			hoverProvider: true,
+			documentLinkProvider: {
+				resolveProvider: true,
+			},
 		},
 		create(context) {
 			const baseServiceInstance = baseService.create(context);
@@ -322,6 +326,48 @@ export function create(
 					}
 
 					return baseServiceInstance.provideHover?.(document, position, token);
+				},
+
+				async provideDocumentLinks(document, token) {
+					const info = getEmbeddedInfo(context, document, 'template', languageId);
+					if (!info) {
+						return;
+					}
+					const { root } = info;
+
+					const documentLinks = await baseServiceInstance.provideDocumentLinks?.(document, token);
+
+					for (const link of documentLinks ?? []) {
+						if (!link.target) {
+							continue;
+						}
+						const text = document.getText(link.range);
+						if (text.startsWith('./') || text.startsWith('../')) {
+							continue;
+						}
+						link.data = {
+							fileName: root.fileName,
+							text: text,
+							originalTarget: link.target,
+						};
+						delete link.target;
+					}
+
+					return documentLinks;
+				},
+
+				async resolveDocumentLink(link) {
+					const { fileName, text, originalTarget } = link.data;
+
+					const { name } = await resolveModuleName(
+						fileName,
+						text,
+					) ?? {};
+
+					return {
+						...link,
+						target: name ?? originalTarget,
+					};
 				},
 			};
 
