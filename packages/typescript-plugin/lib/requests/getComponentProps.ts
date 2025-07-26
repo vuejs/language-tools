@@ -16,7 +16,7 @@ export function getComponentProps(
 	this: RequestContext,
 	fileName: string,
 	tag: string,
-) {
+): ComponentPropInfo[] {
 	const { typescript: ts, language, languageService } = this;
 
 	const sourceScript = language.scripts.get(fileName);

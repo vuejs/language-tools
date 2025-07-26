@@ -5,7 +5,7 @@ import { getSelfComponentName, getVariableType } from './utils';
 export function getComponentNames(
 	this: RequestContext,
 	fileName: string,
-) {
+): string[] {
 	const { typescript: ts, language, languageService } = this;
 
 	const sourceScript = language.scripts.get(fileName);

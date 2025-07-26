@@ -6,7 +6,7 @@ export function getComponentEvents(
 	this: RequestContext,
 	fileName: string,
 	tag: string,
-) {
+): string[] {
 	const { typescript: ts, language, languageService } = this;
 
 	const sourceScript = language.scripts.get(fileName);

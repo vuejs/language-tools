@@ -14,7 +14,7 @@ const builtInDirectives = new Set([
 export function getComponentDirectives(
 	this: RequestContext,
 	fileName: string,
-) {
+): string[] {
 	const { typescript: ts, language, languageService } = this;
 
 	const sourceScript = language.scripts.get(fileName);

@@ -6,7 +6,7 @@ export function getElementAttrs(
 	this: RequestContext,
 	fileName: string,
 	tagName: string,
-) {
+): string[] {
 	const { typescript: ts, language, languageService } = this;
 
 	const sourceScript = language.scripts.get(fileName);

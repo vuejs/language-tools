@@ -5,7 +5,7 @@ import { getVariableType } from './utils';
 export function getComponentSlots(
 	this: RequestContext,
 	fileName: string,
-) {
+): string[] {
 	const { typescript: ts, language, languageService } = this;
 
 	const sourceScript = language.scripts.get(fileName);
@@ -16,7 +16,7 @@ export function getComponentSlots(
 
 	const codegen = tsCodegen.get(root.sfc);
 	if (!codegen) {
-		return;
+		return [];
 	}
 
 	const assignName = codegen.getSetupSlotsAssignName() ?? `__VLS_slots`;

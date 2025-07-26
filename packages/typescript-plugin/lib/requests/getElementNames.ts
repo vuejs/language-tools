@@ -5,7 +5,7 @@ import { getVariableType } from './utils';
 export function getElementNames(
 	this: RequestContext,
 	fileName: string,
-) {
+): string[] {
 	const { typescript: ts, language, languageService } = this;
 
 	const sourceScript = language.scripts.get(fileName);

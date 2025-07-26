@@ -8,7 +8,7 @@ export function getPropertiesAtLocation(
 	this: RequestContext,
 	fileName: string,
 	position: number,
-) {
+): string[] {
 	const { languageService, language, typescript: ts } = this;
 
 	// mapping

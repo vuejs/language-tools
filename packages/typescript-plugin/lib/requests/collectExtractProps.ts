@@ -1,11 +1,17 @@
 import { isSemanticTokensEnabled, VueVirtualCode } from '@vue/language-core';
 import type { RequestContext } from './types';
 
+interface ExtractPropsInfo {
+	name: string;
+	type: string;
+	model: boolean;
+}
+
 export function collectExtractProps(
 	this: RequestContext,
 	fileName: string,
 	templateCodeRange: [number, number],
-) {
+): ExtractPropsInfo[] {
 	const { typescript: ts, languageService, language } = this;
 
 	const sourceScript = language.scripts.get(fileName);
@@ -14,11 +20,7 @@ export function collectExtractProps(
 		return [];
 	}
 
-	const result = new Map<string, {
-		name: string;
-		type: string;
-		model: boolean;
-	}>();
+	const result = new Map<string, ExtractPropsInfo>();
 	const program = languageService.getProgram()!;
 	const sourceFile = program.getSourceFile(fileName)!;
 	const checker = program.getTypeChecker();
