@@ -562,7 +562,7 @@ function* generateModelProp(
 	yield endOfLine;
 
 	if (defineModel.modifierType) {
-		const modifierName = `${defineModel.name ? propName : `model`}Modifiers`;
+		const modifierName = `${propName === 'modelValue' ? 'model' : propName}Modifiers`;
 		const modifierType = getRangeText(scriptSetup, defineModel.modifierType);
 		yield `'${modifierName}'?: Partial<Record<${modifierType}, true>>${endOfLine}`;
 	}

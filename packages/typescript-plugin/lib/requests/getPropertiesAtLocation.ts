@@ -9,10 +9,10 @@ export function getPropertiesAtLocation(
 	fileName: string,
 	position: number,
 ) {
-	const { languageService, language, typescript: ts, isTsPlugin, asScriptId } = this;
+	const { languageService, language, typescript: ts } = this;
 
 	// mapping
-	const file = language.scripts.get(asScriptId(fileName));
+	const file = language.scripts.get(fileName);
 	if (file?.generated) {
 		const virtualScript = file.generated.languagePlugin.typescript?.getServiceScript(file.generated.root);
 		if (!virtualScript) {
@@ -34,9 +34,7 @@ export function getPropertiesAtLocation(
 		if (!mapped) {
 			return;
 		}
-		if (isTsPlugin) {
-			position += file.snapshot.getLength();
-		}
+		position += file.snapshot.getLength();
 	}
 
 	const program = languageService.getProgram()!;

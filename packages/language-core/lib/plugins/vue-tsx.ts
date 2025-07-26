@@ -247,9 +247,10 @@ function createTsx(
 	});
 
 	return {
+		getLang,
 		getScriptRanges,
 		getScriptSetupRanges,
-		getLang,
+		getSetupSlotsAssignName,
 		getGeneratedScript,
 		getGeneratedTemplate,
 	};

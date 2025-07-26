@@ -6,9 +6,9 @@ export function collectExtractProps(
 	fileName: string,
 	templateCodeRange: [number, number],
 ) {
-	const { typescript: ts, languageService, language, isTsPlugin, asScriptId } = this;
+	const { typescript: ts, languageService, language } = this;
 
-	const sourceScript = language.scripts.get(asScriptId(fileName));
+	const sourceScript = language.scripts.get(fileName);
 	if (!sourceScript?.generated) {
 		return;
 	}
@@ -41,7 +41,7 @@ export function collectExtractProps(
 			for (const map of maps) {
 				let mapped = false;
 				for (
-					const source of map.toSourceLocation(name.getEnd() - (isTsPlugin ? sourceScript.snapshot.getLength() : 0))
+					const source of map.toSourceLocation(name.getEnd() - sourceScript.snapshot.getLength())
 				) {
 					if (
 						source[0] >= sfc.template!.startTagEnd + templateCodeRange[0]

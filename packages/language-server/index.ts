@@ -117,6 +117,9 @@ connection.onInitialize(params => {
 			getComponentProps(...args) {
 				return sendTsServerRequest('_vue:getComponentProps', args);
 			},
+			getComponentSlots(...args) {
+				return sendTsServerRequest('_vue:getComponentSlots', args);
+			},
 			getElementAttrs(...args) {
 				return sendTsServerRequest('_vue:getElementAttrs', args);
 			},
@@ -202,7 +205,7 @@ connection.onInitialize(params => {
 			language,
 			server.languageServicePlugins,
 			createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
-			{ vue: { compilerOptions: commonLine.vueOptions } },
+			{},
 		);
 	}
 });

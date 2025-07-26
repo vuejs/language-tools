@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.0.4 (2025-07-25)
+
+### Features
+
+- feat(language-service): check casing when dropping component into template - Thanks to @KazariEX!
+- feat(language-service): native completion experience for slot names (#5552) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(language-core): avoid clearing global types path when local compiler options is present - Thanks to @KazariEX!
+- fix(language-core): do not evaluate `skipTemplateCodegen` when exposing `$slots` - Thanks to @KazariEX!
+- fix(language-service): correct kind and order of component completion items - Thanks to @KazariEX!
+- fix(component-meta): filter events out of props (#5547) - Thanks to @Akryum!
+
+### Other Changes
+
+- refactor(language-core): allow configuring `checkUnknownEvents` and `checkUnknownComponents` in sfc (#5537) - Thanks to @KazariEX!
+- chore(language-service): add restart server hint to global types warning - Thanks to @KazariEX!
+
 ## 3.0.3 (2025-07-18)
 
 ### Bug Fixes
