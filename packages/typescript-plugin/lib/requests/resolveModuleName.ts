@@ -20,7 +20,7 @@ export function resolveModuleName(
 		{
 			fileExists(fileName) {
 				fileName = transformFileName(fileName, ext);
-				return languageServiceHost.fileExists?.(fileName);
+				return languageServiceHost.fileExists(fileName);
 			},
 		} as ts.ModuleResolutionHost,
 	);
@@ -33,7 +33,7 @@ export function resolveModuleName(
 
 function transformFileName(fileName: string, ext: string | undefined) {
 	if (ext && fileName.endsWith(`.d.${ext}.ts`)) {
-		return fileName.slice(0, -(`.d.${ext}.ts`.length)) + `.${ext}`;
+		return fileName.slice(0, -`.d.${ext}.ts`.length) + `.${ext}`;
 	}
 	return fileName;
 }
