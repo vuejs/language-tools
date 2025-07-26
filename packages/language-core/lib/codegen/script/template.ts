@@ -25,7 +25,7 @@ export function* generateTemplate(
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, templateCodegenCtx);
-	yield* generateBindings(options, ctx);
+	yield* generateBindings(options, ctx, templateCodegenCtx);
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault) {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
@@ -185,12 +185,13 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 function* generateBindings(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
+	templateCodegenCtx: TemplateCodegenContext,
 ): Generator<Code> {
 	yield `type __VLS_Bindings = __VLS_ProxyRefs<{${newLine}`;
 	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		const templateUsageVars = getTemplateUsageVars(options, ctx);
 		for (const varName of ctx.bindingNames) {
-			if (!templateUsageVars.has(varName)) {
+			if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
 				continue;
 			}
 
