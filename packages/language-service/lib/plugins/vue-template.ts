@@ -15,7 +15,7 @@ import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
-import { getEmbeddedInfo } from '../utils';
+import { createTsAliasDocumentLinksProviders, getEmbeddedInfo } from '../utils';
 
 const specialTags = new Set([
 	'slot',
@@ -39,11 +39,12 @@ export function create(
 	languageId: 'html' | 'jade',
 	{
 		getComponentNames,
-		getElementAttrs,
 		getComponentProps,
 		getComponentEvents,
 		getComponentDirectives,
 		getComponentSlots,
+		getElementAttrs,
+		resolveModuleName,
 	}: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
@@ -93,6 +94,9 @@ export function create(
 				],
 			},
 			hoverProvider: true,
+			documentLinkProvider: {
+				resolveProvider: true,
+			},
 		},
 		create(context) {
 			const baseServiceInstance = baseService.create(context);
@@ -323,6 +327,13 @@ export function create(
 
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
+
+				...createTsAliasDocumentLinksProviders(
+					context,
+					baseServiceInstance,
+					'template',
+					resolveModuleName,
+				),
 			};
 
 			async function runWithVueData<T>(sourceDocumentUri: URI, root: VueVirtualCode, fn: () => T) {
