@@ -12,7 +12,7 @@ const vueLanguagePlugin = createVueLanguagePlugin<URI>(
 	resolvedVueOptions,
 	() => '',
 );
-const vueServicePLugins = createVueLanguageServicePlugins(ts, undefined);
+const vueServicePLugins = createVueLanguageServicePlugins(ts);
 const formatter = kit.createFormatter([vueLanguagePlugin], vueServicePLugins);
 
 export function defineFormatTest(options: {

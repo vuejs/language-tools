@@ -1,6 +1,6 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
-import { tsCodegen, VueVirtualCode } from '@vue/language-core';
-import { URI } from 'vscode-uri';
+import { tsCodegen } from '@vue/language-core';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -11,18 +11,11 @@ export function create(): LanguageServicePlugin {
 		create(context) {
 			return {
 				provideDocumentLinks(document) {
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript?.generated || virtualCode?.id !== 'scriptsetup_raw') {
+					const info = getEmbeddedInfo(context, document, 'scriptsetup_raw');
+					if (!info) {
 						return;
 					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
-						return;
-					}
+					const { sourceScript, root } = info;
 
 					const { sfc } = root;
 					const codegen = tsCodegen.get(sfc);
@@ -35,7 +28,7 @@ export function create(): LanguageServicePlugin {
 					if (!templateVirtualCode) {
 						return;
 					}
-					const templateDocumentUri = context.encodeEmbeddedDocumentUri(decoded![0], 'template');
+					const templateDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, 'template');
 					const templateDocument = context.documents.get(
 						templateDocumentUri,
 						templateVirtualCode.languageId,

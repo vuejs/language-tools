@@ -1,7 +1,6 @@
 import type { CompletionItem, CompletionItemKind, LanguageServicePlugin } from '@volar/language-service';
-import { type TextRange, tsCodegen, VueVirtualCode } from '@vue/language-core';
-import { URI } from 'vscode-uri';
-import { isTsDocument } from './utils';
+import { type TextRange, tsCodegen } from '@vue/language-core';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -13,25 +12,14 @@ export function create(): LanguageServicePlugin {
 			return {
 				isAdditionalCompletion: true,
 				async provideCompletionItems(document) {
-					if (!isTsDocument(document)) {
+					const info = getEmbeddedInfo(context, document, id => id.startsWith('script_'));
+					if (!info) {
 						return;
 					}
+					const { virtualCode, root } = info;
 
 					const enabled = await context.env.getConfiguration<boolean>?.('vue.suggest.defineAssignment') ?? true;
 					if (!enabled) {
-						return;
-					}
-
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript?.generated || !virtualCode) {
-						return;
-					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
 						return;
 					}
 

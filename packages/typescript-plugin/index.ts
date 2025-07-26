@@ -7,6 +7,7 @@ import { getComponentDirectives } from './lib/requests/getComponentDirectives';
 import { getComponentEvents } from './lib/requests/getComponentEvents';
 import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
+import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
@@ -14,7 +15,10 @@ import { getPropertiesAtLocation } from './lib/requests/getPropertiesAtLocation'
 import type { RequestContext } from './lib/requests/types';
 
 const windowsPathReg = /\\/g;
-const project2Service = new WeakMap<ts.server.Project, [vue.Language, ts.LanguageServiceHost, ts.LanguageService]>();
+const project2Service = new WeakMap<
+	ts.server.Project,
+	[vue.Language<string>, ts.LanguageServiceHost, ts.LanguageService]
+>();
 
 export = createLanguageServicePlugin(
 	(ts, info) => {
@@ -39,7 +43,6 @@ export = createLanguageServicePlugin(
 					language,
 					info.languageService,
 					vueOptions,
-					fileName => fileName,
 				);
 
 				// #3963
@@ -109,6 +112,16 @@ export = createLanguageServicePlugin(
 					response: getPropertiesAtLocation.apply(getRequestContext(args[0]), args),
 				};
 			});
+			session.addProtocolHandler('_vue:getComponentDirectives', ({ arguments: args }) => {
+				return {
+					response: getComponentDirectives.apply(getRequestContext(args[0]), args),
+				};
+			});
+			session.addProtocolHandler('_vue:getComponentEvents', ({ arguments: args }) => {
+				return {
+					response: getComponentEvents.apply(getRequestContext(args[0]), args),
+				};
+			});
 			session.addProtocolHandler('_vue:getComponentNames', ({ arguments: args }) => {
 				return {
 					response: getComponentNames.apply(getRequestContext(args[0]), args) ?? [],
@@ -119,14 +132,9 @@ export = createLanguageServicePlugin(
 					response: getComponentProps.apply(getRequestContext(args[0]), args),
 				};
 			});
-			session.addProtocolHandler('_vue:getComponentEvents', ({ arguments: args }) => {
+			session.addProtocolHandler('_vue:getComponentSlots', ({ arguments: args }) => {
 				return {
-					response: getComponentEvents.apply(getRequestContext(args[0]), args),
-				};
-			});
-			session.addProtocolHandler('_vue:getComponentDirectives', ({ arguments: args }) => {
-				return {
-					response: getComponentDirectives.apply(getRequestContext(args[0]), args),
+					response: getComponentSlots.apply(getRequestContext(args[0]), args),
 				};
 			});
 			session.addProtocolHandler('_vue:getElementAttrs', ({ arguments: args }) => {
@@ -160,8 +168,6 @@ export = createLanguageServicePlugin(
 				languageService: service[2],
 				languageServiceHost: service[1],
 				language: service[0],
-				isTsPlugin: true,
-				asScriptId: (fileName: string) => fileName,
 			};
 		}
 	},

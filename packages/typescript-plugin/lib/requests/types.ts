@@ -1,11 +1,9 @@
 import type { Language } from '@vue/language-core';
 import type * as ts from 'typescript';
 
-export interface RequestContext<T = any> {
+export interface RequestContext {
 	typescript: typeof ts;
 	languageService: ts.LanguageService;
 	languageServiceHost: ts.LanguageServiceHost;
-	language: Language<T>;
-	isTsPlugin: boolean;
-	asScriptId: (fileName: string) => T;
+	language: Language<string>;
 }

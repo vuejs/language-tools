@@ -5,15 +5,13 @@ import type {
 	LanguageServicePlugin,
 	TextDocument,
 } from '@volar/language-service';
-import { hyphenateAttr, hyphenateTag, VueVirtualCode } from '@vue/language-core';
+import { hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import * as html from 'vscode-html-languageservice';
-import { URI } from 'vscode-uri';
 import { AttrNameCasing, checkCasing } from '../nameCasing';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(
-	getTsPluginClient?: (
-		context: LanguageServiceContext,
-	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	{ getComponentNames, getElementNames, getComponentProps }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-missing-props-hints',
@@ -21,29 +19,18 @@ export function create(
 			inlayHintProvider: {},
 		},
 		create(context) {
-			const tsPluginClient = getTsPluginClient?.(context);
 			let intrinsicElementNames: Set<string>;
 
 			return {
 				async provideInlayHints(document, range, cancellationToken) {
-					if (!isSupportedDocument(document)) {
+					const info = getEmbeddedInfo(context, document, 'template');
+					if (!info) {
 						return;
 					}
+					const { sourceScript, root } = info;
 
 					const enabled = await context.env.getConfiguration<boolean>?.('vue.inlayHints.missingProps') ?? false;
 					if (!enabled) {
-						return;
-					}
-
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					if (!sourceScript?.generated) {
-						return;
-					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
 						return;
 					}
 
@@ -53,12 +40,12 @@ export function create(
 					}
 
 					const result: InlayHint[] = [];
-					const casing = await checkCasing(context, decoded![0]);
-					const components = await tsPluginClient?.getComponentNames(root.fileName) ?? [];
+					const casing = await checkCasing(context, sourceScript.id);
+					const components = await getComponentNames(root.fileName) ?? [];
 					const componentProps: Record<string, string[]> = {};
 
 					intrinsicElementNames ??= new Set(
-						await tsPluginClient?.getElementNames(root.fileName) ?? [],
+						await getElementNames(root.fileName) ?? [],
 					);
 
 					let token: html.TokenType;
@@ -89,7 +76,7 @@ export function create(
 								if (cancellationToken.isCancellationRequested) {
 									break;
 								}
-								componentProps[checkTag] = (await tsPluginClient?.getComponentProps(root.fileName, checkTag) ?? [])
+								componentProps[checkTag] = (await getComponentProps(root.fileName, checkTag) ?? [])
 									.filter(prop => prop.required)
 									.map(prop => prop.name);
 							}
@@ -178,9 +165,5 @@ export function create(
 				return context.inject('pug/languageService').createScanner(pugDocument);
 			}
 		}
-	}
-
-	function isSupportedDocument(document: TextDocument) {
-		return document.languageId === 'jade' || document.languageId === 'html';
 	}
 }

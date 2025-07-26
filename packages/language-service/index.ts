@@ -4,8 +4,6 @@ export * from '@volar/language-service';
 // for @vue/language-server usage
 export * from '@volar/language-service/lib/utils/featureWorkers';
 
-import type * as ts from 'typescript';
-
 import { create as createEmmetPlugin } from 'volar-service-emmet';
 import { create as createJsonPlugin } from 'volar-service-json';
 import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';
@@ -33,46 +31,48 @@ import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twos
 
 export function createVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	tsPluginClient:
-		| import('@vue/typescript-plugin/lib/requests').Requests & {
-			getDocumentHighlights: (fileName: string, position: number) => Promise<ts.DocumentHighlights[] | null>;
-		}
-		| undefined,
+	tsPluginClient?: import('@vue/typescript-plugin/lib/requests').Requests,
 ) {
-	const getTsPluginClient = () => tsPluginClient;
-	const plugins = [
+	tsPluginClient ??= new Proxy({}, {
+		get() {
+			return () => undefined;
+		},
+	}) as NonNullable<typeof tsPluginClient>;
+
+	return [
 		createCssPlugin(),
 		createJsonPlugin(),
 		createPugFormatPlugin(),
-		createTypeScriptDocCommentTemplatePlugin(ts),
-		createTypescriptSemanticTokensPlugin(getTsPluginClient),
-		createTypeScriptSyntacticPlugin(ts),
 		createVueAutoSpacePlugin(),
-		createVueAutoDotValuePlugin(ts, getTsPluginClient),
 		createVueCompilerDomErrorsPlugin(),
-		createVueComponentSemanticTokensPlugin(getTsPluginClient),
-		createVueDocumentDropPlugin(ts, getTsPluginClient),
 		createVueDirectiveCommentsPlugin(),
-		createVueExtractFilePlugin(ts, getTsPluginClient),
 		createVueGlobalTypesErrorPlugin(),
-		createVueInlayHintsPlugin(ts),
-		createVueMissingPropsHintsPlugin(getTsPluginClient),
 		createVueScopedClassLinksPlugin(),
 		createVueSfcPlugin(),
 		createVueSuggestDefineAssignmentPlugin(),
-		createVueTemplatePlugin('html', getTsPluginClient),
-		createVueTemplatePlugin('pug', getTsPluginClient),
 		createVueTemplateRefLinksPlugin(),
-		createVueTwoslashQueriesPlugin(getTsPluginClient),
 		createEmmetPlugin({
 			mappedLanguages: {
 				'vue-root-tags': 'html',
 				'postcss': 'scss',
 			},
 		}),
+
+		// TS related plugins
+		createTypeScriptDocCommentTemplatePlugin(ts),
+		createTypeScriptSyntacticPlugin(ts),
+		createVueInlayHintsPlugin(ts),
+
+		// type aware plugins
+		createTypescriptSemanticTokensPlugin(tsPluginClient),
+		createVueAutoDotValuePlugin(ts, tsPluginClient),
+		createVueComponentSemanticTokensPlugin(tsPluginClient),
+		createVueDocumentDropPlugin(ts, tsPluginClient),
+		createVueDocumentHighlightsPlugin(tsPluginClient),
+		createVueExtractFilePlugin(ts, tsPluginClient),
+		createVueMissingPropsHintsPlugin(tsPluginClient),
+		createVueTemplatePlugin('html', tsPluginClient),
+		createVueTemplatePlugin('jade', tsPluginClient),
+		createVueTwoslashQueriesPlugin(tsPluginClient),
 	];
-	if (tsPluginClient) {
-		plugins.push(createVueDocumentHighlightsPlugin(tsPluginClient.getDocumentHighlights));
-	}
-	return plugins;
 }

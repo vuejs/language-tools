@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "3.0.3",
+	"version": "3.0.4",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -67,6 +67,11 @@
 			{
 				"id": "jade",
 				"configuration": "./languages/sfc-template-language-configuration.json"
+			},
+			{
+				"id": "plaintext",
+				"configuration": "./languages/stub.json",
+				"//": "Make sure Vue extension is loaded immediately when VSCode starts."
 			}
 		],
 		"typescriptServerPlugins": [
@@ -222,7 +227,8 @@
 				"language": "vue",
 				"scopes": {
 					"component": [
-						"support.class.component.vue"
+						"support.class.component.vue",
+						"entity.name.type.class.vue"
 					]
 				}
 			},
@@ -230,7 +236,8 @@
 				"language": "markdown",
 				"scopes": {
 					"component": [
-						"support.class.component.vue"
+						"support.class.component.vue",
+						"entity.name.type.class.vue"
 					]
 				}
 			},
@@ -238,7 +245,8 @@
 				"language": "html",
 				"scopes": {
 					"component": [
-						"support.class.component.vue"
+						"support.class.component.vue",
+						"entity.name.type.class.vue"
 					]
 				}
 			}
@@ -466,8 +474,8 @@
 		"@volar/vscode": "2.4.20",
 		"@vscode/vsce": "^3.2.1",
 		"@vue/compiler-sfc": "^3.5.0",
-		"@vue/language-server": "3.0.3",
-		"@vue/typescript-plugin": "3.0.3",
+		"@vue/language-server": "3.0.4",
+		"@vue/typescript-plugin": "3.0.4",
 		"reactive-vscode": "^0.2.9",
 		"rolldown": "1.0.0-beta.8",
 		"semver": "^7.5.4",

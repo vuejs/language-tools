@@ -8,7 +8,7 @@ export interface ComponentPropInfo {
 	required?: boolean;
 	deprecated?: boolean;
 	isAttribute?: boolean;
-	commentMarkdown?: string;
+	documentation?: string;
 	values?: string[];
 }
 
@@ -16,19 +16,21 @@ export function getComponentProps(
 	this: RequestContext,
 	fileName: string,
 	tag: string,
-) {
-	const { typescript: ts, language, languageService, asScriptId } = this;
-	const volarFile = language.scripts.get(asScriptId(fileName));
-	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
-		return;
+): ComponentPropInfo[] {
+	const { typescript: ts, language, languageService } = this;
+
+	const sourceScript = language.scripts.get(fileName);
+	const root = sourceScript?.generated?.root;
+	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
+		return [];
 	}
-	const vueCode = volarFile.generated.root;
-	const components = getVariableType(ts, languageService, vueCode, '__VLS_components');
+
+	const components = getVariableType(ts, languageService, root, '__VLS_components');
 	if (!components) {
 		return [];
 	}
 
-	const componentType = getComponentType(ts, languageService, vueCode, components, fileName, tag);
+	const componentType = getComponentType(ts, languageService, root, components, fileName, tag);
 	if (!componentType) {
 		return [];
 	}
@@ -69,9 +71,9 @@ export function getComponentProps(
 		const name = prop.name;
 		const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
 		const {
-			content: commentMarkdown,
+			documentation,
 			deprecated,
-		} = generateCommentMarkdown(prop.getDocumentationComment(checker), prop.getJsDocTags());
+		} = generateDocumentation(prop.getDocumentationComment(checker), prop.getJsDocTags());
 		const values: any[] = [];
 		const type = checker.getTypeOfSymbol(prop);
 		const subTypes: ts.Type[] | undefined = (type as any).types;
@@ -106,19 +108,19 @@ export function getComponentProps(
 			required,
 			deprecated,
 			isAttribute,
-			commentMarkdown,
+			documentation,
 			values,
 		});
 	}
 }
 
-function generateCommentMarkdown(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JSDocTagInfo[]) {
+function generateDocumentation(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JSDocTagInfo[]) {
 	const parsedComment = _symbolDisplayPartsToMarkdown(parts);
 	const parsedJsDoc = _jsDocTagInfoToMarkdown(jsDocTags);
-	const content = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
+	const documentation = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
 	const deprecated = jsDocTags.some(tag => tag.name === 'deprecated');
 	return {
-		content,
+		documentation,
 		deprecated,
 	};
 }

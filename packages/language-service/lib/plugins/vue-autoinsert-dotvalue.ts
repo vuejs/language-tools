@@ -1,14 +1,11 @@
-import type { LanguageServiceContext, LanguageServicePlugin, TextDocument } from '@volar/language-service';
-import { hyphenateAttr, VueVirtualCode } from '@vue/language-core';
+import type { LanguageServicePlugin, TextDocument } from '@volar/language-service';
+import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { URI } from 'vscode-uri';
-import { isTsDocument, sleep } from './utils';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (
-		context: LanguageServiceContext,
-	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	{ getPropertiesAtLocation }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
@@ -19,17 +16,15 @@ export function create(
 			},
 		},
 		create(context) {
-			const tsPluginClient = getTsPluginClient?.(context);
-			let currentReq = 0;
-
 			return {
 				async provideAutoInsertSnippet(document, selection, change) {
-					// selection must at end of change
-					if (document.offsetAt(selection) !== change.rangeOffset + change.text.length) {
+					const info = getEmbeddedInfo(context, document, id => id.startsWith('script_'));
+					if (!info) {
 						return;
 					}
 
-					if (!isTsDocument(document)) {
+					// selection must at end of change
+					if (document.offsetAt(selection) !== change.rangeOffset + change.text.length) {
 						return;
 					}
 
@@ -37,48 +32,27 @@ export function create(
 						return;
 					}
 
-					const req = ++currentReq;
-					// Wait for tsserver to sync
-					await sleep(250);
-					if (req !== currentReq) {
-						return;
-					}
-
-					const enabled = await context.env.getConfiguration<boolean>?.('vue.autoInsert.dotValue') ?? true;
-					if (!enabled) {
-						return;
-					}
-
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					const virtualCode = decoded && sourceScript?.generated?.embeddedCodes.get(decoded[1]);
-					if (!sourceScript?.generated || !virtualCode) {
-						return;
-					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
-						return;
-					}
-
-					const { sfc } = root;
-					const blocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);
-					if (!blocks.length) {
-						return;
-					}
-
 					let sourceOffset: number | undefined;
+
+					const { sourceScript, virtualCode, root } = info;
+					const { sfc } = root;
+					const scriptBlocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);
 					const map = context.language.maps.get(virtualCode, sourceScript);
+
+					if (!scriptBlocks.length) {
+						return;
+					}
+
 					for (const [offset] of map.toSourceLocation(document.offsetAt(selection))) {
 						sourceOffset = offset;
 						break;
 					}
+
 					if (sourceOffset === undefined) {
 						return;
 					}
 
-					for (const { ast, startTagEnd, endTagStart } of blocks) {
+					for (const { ast, startTagEnd, endTagStart } of scriptBlocks) {
 						if (sourceOffset < startTagEnd || sourceOffset > endTagStart) {
 							continue;
 						}
@@ -87,7 +61,7 @@ export function create(
 						}
 					}
 
-					const props = await tsPluginClient?.getPropertiesAtLocation(root.fileName, sourceOffset) ?? [];
+					const props = await getPropertiesAtLocation(root.fileName, sourceOffset) ?? [];
 					if (props.some(prop => prop === 'value')) {
 						return '${1:.value}';
 					}

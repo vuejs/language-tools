@@ -171,13 +171,16 @@ function launch(context: vscode.ExtensionContext) {
 	);
 
 	client.onNotification('tsserver/request', async ([seq, command, args]) => {
-		const res = await vscode.commands.executeCommand<{ body: unknown } | undefined>(
+		vscode.commands.executeCommand<{ body: unknown } | undefined>(
 			'typescript.tsserverRequest',
 			command,
 			args,
 			{ isAsync: true, lowPriority: true },
-		);
-		client.sendNotification('tsserver/response', [seq, res?.body]);
+		).then(res => {
+			client.sendNotification('tsserver/response', [seq, res?.body]);
+		}, () => {
+			client.sendNotification('tsserver/response', [seq, undefined]);
+		});
 	});
 	client.start();
 

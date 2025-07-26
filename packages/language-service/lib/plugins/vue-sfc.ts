@@ -4,16 +4,14 @@ import type {
 	Diagnostic,
 	DiagnosticSeverity,
 	DocumentSymbol,
-	LanguageServiceContext,
 	LanguageServicePlugin,
 	SymbolKind,
-	TextDocument,
 } from '@volar/language-service';
 import { VueVirtualCode } from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
-import { URI } from 'vscode-uri';
-import { loadLanguageBlocks } from './data';
+import { loadLanguageBlocks } from '../data';
+import { getEmbeddedInfo } from '../utils';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
@@ -26,27 +24,31 @@ export function create(): LanguageServicePlugin {
 			return [sfcDataProvider];
 		},
 		async getFormattingOptions(document, options, context) {
-			return await worker(document, context, async root => {
-				const formatSettings = await context.env.getConfiguration<html.HTMLFormatConfiguration>?.('html.format') ?? {};
-				const blockTypes = ['template', 'script', 'style'];
+			const info = getEmbeddedInfo(context, document, 'root_tags');
+			if (!info) {
+				return {};
+			}
+			const { root } = info;
 
-				for (const customBlock of root.sfc.customBlocks) {
-					blockTypes.push(customBlock.type);
-				}
+			const formatSettings = await context.env.getConfiguration<html.HTMLFormatConfiguration>?.('html.format') ?? {};
+			const blockTypes = ['template', 'script', 'style'];
 
-				return {
-					...options,
-					...formatSettings,
-					wrapAttributes: await context.env.getConfiguration<string>?.('vue.format.wrapAttributes') ?? 'auto',
-					unformatted: '',
-					contentUnformatted: blockTypes.join(','),
-					endWithNewline: options.insertFinalNewline
-						? true
-						: options.trimFinalNewlines
-						? false
-						: document.getText().endsWith('\n'),
-				};
-			}) ?? {};
+			for (const customBlock of root.sfc.customBlocks) {
+				blockTypes.push(customBlock.type);
+			}
+
+			return {
+				...options,
+				...formatSettings,
+				wrapAttributes: await context.env.getConfiguration<string>?.('vue.format.wrapAttributes') ?? 'auto',
+				unformatted: '',
+				contentUnformatted: blockTypes.join(','),
+				endWithNewline: options.insertFinalNewline
+					? true
+					: options.trimFinalNewlines
+					? false
+					: document.getText().endsWith('\n'),
+			};
 		},
 	});
 	return {
@@ -88,133 +90,141 @@ export function create(): LanguageServicePlugin {
 					return options;
 				},
 
-				provideDiagnostics(document, token) {
-					return worker(document, context, async root => {
-						const { vueSfc, sfc } = root;
-						if (!vueSfc) {
-							return;
-						}
+				async provideDiagnostics(document, token) {
+					const info = getEmbeddedInfo(context, document, 'root_tags');
+					if (!info) {
+						return [];
+					}
+					const { root } = info;
 
-						const originalResult = await htmlServiceInstance.provideDiagnostics?.(document, token);
-						const sfcErrors: Diagnostic[] = [];
-						const { template } = sfc;
+					const { vueSfc, sfc } = root;
+					if (!vueSfc) {
+						return;
+					}
 
-						const {
-							startTagEnd = Infinity,
-							endTagStart = -Infinity,
-						} = template ?? {};
+					const originalResult = await htmlServiceInstance.provideDiagnostics?.(document, token);
+					const sfcErrors: Diagnostic[] = [];
+					const { template } = sfc;
 
-						for (const error of vueSfc.errors) {
-							if ('code' in error) {
-								const start = error.loc?.start.offset ?? 0;
-								const end = error.loc?.end.offset ?? 0;
-								if (end < startTagEnd || start >= endTagStart) {
-									sfcErrors.push({
-										range: {
-											start: document.positionAt(start),
-											end: document.positionAt(end),
-										},
-										severity: 1 satisfies typeof DiagnosticSeverity.Error,
-										code: error.code,
-										source: 'vue',
-										message: error.message,
-									});
-								}
+					const {
+						startTagEnd = Infinity,
+						endTagStart = -Infinity,
+					} = template ?? {};
+
+					for (const error of vueSfc.errors) {
+						if ('code' in error) {
+							const start = error.loc?.start.offset ?? 0;
+							const end = error.loc?.end.offset ?? 0;
+							if (end < startTagEnd || start >= endTagStart) {
+								sfcErrors.push({
+									range: {
+										start: document.positionAt(start),
+										end: document.positionAt(end),
+									},
+									severity: 1 satisfies typeof DiagnosticSeverity.Error,
+									code: error.code,
+									source: 'vue',
+									message: error.message,
+								});
 							}
 						}
+					}
 
-						return [
-							...originalResult ?? [],
-							...sfcErrors,
-						];
-					});
+					return [
+						...originalResult ?? [],
+						...sfcErrors,
+					];
 				},
 
 				provideDocumentSymbols(document) {
-					return worker(document, context, root => {
-						const result: DocumentSymbol[] = [];
-						const { sfc } = root;
+					const info = getEmbeddedInfo(context, document, 'root_tags');
+					if (!info) {
+						return;
+					}
+					const { root } = info;
 
-						if (sfc.template) {
-							result.push({
-								name: 'template',
-								kind: 2 satisfies typeof SymbolKind.Module,
-								range: {
-									start: document.positionAt(sfc.template.start),
-									end: document.positionAt(sfc.template.end),
-								},
-								selectionRange: {
-									start: document.positionAt(sfc.template.start),
-									end: document.positionAt(sfc.template.startTagEnd),
-								},
-							});
-						}
-						if (sfc.script) {
-							result.push({
-								name: 'script',
-								kind: 2 satisfies typeof SymbolKind.Module,
-								range: {
-									start: document.positionAt(sfc.script.start),
-									end: document.positionAt(sfc.script.end),
-								},
-								selectionRange: {
-									start: document.positionAt(sfc.script.start),
-									end: document.positionAt(sfc.script.startTagEnd),
-								},
-							});
-						}
-						if (sfc.scriptSetup) {
-							result.push({
-								name: 'script setup',
-								kind: 2 satisfies typeof SymbolKind.Module,
-								range: {
-									start: document.positionAt(sfc.scriptSetup.start),
-									end: document.positionAt(sfc.scriptSetup.end),
-								},
-								selectionRange: {
-									start: document.positionAt(sfc.scriptSetup.start),
-									end: document.positionAt(sfc.scriptSetup.startTagEnd),
-								},
-							});
-						}
-						for (const style of sfc.styles) {
-							let name = 'style';
-							if (style.scoped) {
-								name += ' scoped';
-							}
-							if (style.module) {
-								name += ' module';
-							}
-							result.push({
-								name,
-								kind: 2 satisfies typeof SymbolKind.Module,
-								range: {
-									start: document.positionAt(style.start),
-									end: document.positionAt(style.end),
-								},
-								selectionRange: {
-									start: document.positionAt(style.start),
-									end: document.positionAt(style.startTagEnd),
-								},
-							});
-						}
-						for (const customBlock of sfc.customBlocks) {
-							result.push({
-								name: `${customBlock.type}`,
-								kind: 2 satisfies typeof SymbolKind.Module,
-								range: {
-									start: document.positionAt(customBlock.start),
-									end: document.positionAt(customBlock.end),
-								},
-								selectionRange: {
-									start: document.positionAt(customBlock.start),
-									end: document.positionAt(customBlock.startTagEnd),
-								},
-							});
-						}
+					const result: DocumentSymbol[] = [];
+					const { sfc } = root;
 
-						return result;
-					});
+					if (sfc.template) {
+						result.push({
+							name: 'template',
+							kind: 2 satisfies typeof SymbolKind.Module,
+							range: {
+								start: document.positionAt(sfc.template.start),
+								end: document.positionAt(sfc.template.end),
+							},
+							selectionRange: {
+								start: document.positionAt(sfc.template.start),
+								end: document.positionAt(sfc.template.startTagEnd),
+							},
+						});
+					}
+					if (sfc.script) {
+						result.push({
+							name: 'script',
+							kind: 2 satisfies typeof SymbolKind.Module,
+							range: {
+								start: document.positionAt(sfc.script.start),
+								end: document.positionAt(sfc.script.end),
+							},
+							selectionRange: {
+								start: document.positionAt(sfc.script.start),
+								end: document.positionAt(sfc.script.startTagEnd),
+							},
+						});
+					}
+					if (sfc.scriptSetup) {
+						result.push({
+							name: 'script setup',
+							kind: 2 satisfies typeof SymbolKind.Module,
+							range: {
+								start: document.positionAt(sfc.scriptSetup.start),
+								end: document.positionAt(sfc.scriptSetup.end),
+							},
+							selectionRange: {
+								start: document.positionAt(sfc.scriptSetup.start),
+								end: document.positionAt(sfc.scriptSetup.startTagEnd),
+							},
+						});
+					}
+					for (const style of sfc.styles) {
+						let name = 'style';
+						if (style.scoped) {
+							name += ' scoped';
+						}
+						if (style.module) {
+							name += ' module';
+						}
+						result.push({
+							name,
+							kind: 2 satisfies typeof SymbolKind.Module,
+							range: {
+								start: document.positionAt(style.start),
+								end: document.positionAt(style.end),
+							},
+							selectionRange: {
+								start: document.positionAt(style.start),
+								end: document.positionAt(style.startTagEnd),
+							},
+						});
+					}
+					for (const customBlock of sfc.customBlocks) {
+						result.push({
+							name: `${customBlock.type}`,
+							kind: 2 satisfies typeof SymbolKind.Module,
+							range: {
+								start: document.positionAt(customBlock.start),
+								end: document.positionAt(customBlock.end),
+							},
+							selectionRange: {
+								start: document.positionAt(customBlock.start),
+								end: document.positionAt(customBlock.startTagEnd),
+							},
+						});
+					}
+
+					return result;
 				},
 
 				async provideCompletionItems(document, position, context, token) {
@@ -300,19 +310,6 @@ export function create(): LanguageServicePlugin {
 			};
 		},
 	};
-
-	function worker<T>(document: TextDocument, context: LanguageServiceContext, callback: (root: VueVirtualCode) => T) {
-		if (document.languageId !== 'vue-root-tags') {
-			return;
-		}
-		const uri = URI.parse(document.uri);
-		const decoded = context.decodeEmbeddedDocumentUri(uri);
-		const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-		const root = sourceScript?.generated?.root;
-		if (root instanceof VueVirtualCode) {
-			return callback(root);
-		}
-	}
 }
 
 function getStyleCompletionItem(

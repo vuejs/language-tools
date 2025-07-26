@@ -1,22 +1,16 @@
-import type {
-	InsertTextFormat,
-	LanguageServiceContext,
-	LanguageServicePlugin,
-	WorkspaceEdit,
-} from '@volar/language-service';
-import { forEachEmbeddedCode, VueVirtualCode } from '@vue/language-core';
+import type { InsertTextFormat, LanguageServicePlugin, WorkspaceEdit } from '@volar/language-service';
+import { forEachEmbeddedCode } from '@vue/language-core';
 import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 import { URI } from 'vscode-uri';
 import { checkCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	getTsPluginClient?: (
-		context: LanguageServiceContext,
-	) => import('@vue/typescript-plugin/lib/requests').Requests | undefined,
+	{ getImportPathForFile }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-document-drop',
@@ -24,25 +18,13 @@ export function create(
 			documentDropEditsProvider: true,
 		},
 		create(context) {
-			const tsPluginClient = getTsPluginClient?.(context);
-
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
-					if (document.languageId !== 'html') {
+					const info = getEmbeddedInfo(context, document, 'template', 'html');
+					if (!info) {
 						return;
 					}
-
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-					if (!sourceScript?.generated) {
-						return;
-					}
-
-					const root = sourceScript.generated.root;
-					if (!(root instanceof VueVirtualCode)) {
-						return;
-					}
+					const { sourceScript, root } = info;
 
 					let importUri: string | undefined;
 					for (const [mimeType, item] of dataTransfer) {
@@ -60,7 +42,7 @@ export function create(
 						return;
 					}
 
-					const casing = await checkCasing(context, decoded![0]);
+					const casing = await checkCasing(context, sourceScript.id);
 					const baseName = path.basename(importUri);
 					const newName = capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
 
@@ -73,8 +55,8 @@ export function create(
 
 					let importPath: string | undefined;
 
-					const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(root);
-					if (tsPluginClient && serviceScript) {
+					const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(root);
+					if (serviceScript) {
 						const tsDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, serviceScript.code.id);
 						const tsDocument = context.documents.get(
 							tsDocumentUri,
@@ -82,14 +64,13 @@ export function create(
 							serviceScript.code.snapshot,
 						);
 						const preferences = await getUserPreferences(context, tsDocument);
-						const importPathRequest = await tsPluginClient.getImportPathForFile(
-							root.fileName,
-							incomingFileName,
-							preferences,
-						);
-						if (importPathRequest) {
-							importPath = importPathRequest;
-						}
+						importPath = (
+							await getImportPathForFile(
+								root.fileName,
+								incomingFileName,
+								preferences,
+							) ?? {}
+						).path;
 					}
 
 					if (!importPath) {

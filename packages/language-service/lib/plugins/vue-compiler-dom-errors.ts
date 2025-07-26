@@ -1,6 +1,5 @@
-import type { Diagnostic, DiagnosticSeverity, LanguageServicePlugin, TextDocument } from '@volar/language-service';
-import { VueVirtualCode } from '@vue/language-core';
-import { URI } from 'vscode-uri';
+import type { Diagnostic, DiagnosticSeverity, LanguageServicePlugin } from '@volar/language-service';
+import { getEmbeddedInfo } from '../utils';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -14,61 +13,42 @@ export function create(): LanguageServicePlugin {
 		create(context) {
 			return {
 				provideDiagnostics(document) {
-					if (!isSupportedDocument(document)) {
+					const info = getEmbeddedInfo(context, document, 'template');
+					if (!info) {
 						return;
 					}
+					const { root } = info;
 
-					const uri = URI.parse(document.uri);
-					const decoded = context.decodeEmbeddedDocumentUri(uri);
-					const sourceScript = decoded && context.language.scripts.get(decoded[0]);
-
-					const root = sourceScript?.generated?.root;
-					if (!(root instanceof VueVirtualCode)) {
-						return;
-					}
-
-					const templateErrors: Diagnostic[] = [];
 					const { template } = root.sfc;
+					if (!template) {
+						return;
+					}
 
-					if (template) {
-						for (const error of template.errors) {
-							onCompilerError(error, 1 satisfies typeof DiagnosticSeverity.Error);
-						}
+					const diagnostics: Diagnostic[] = [];
 
-						for (const warning of template.warnings) {
-							onCompilerError(warning, 2 satisfies typeof DiagnosticSeverity.Warning);
-						}
-
-						function onCompilerError(
-							error: NonNullable<typeof template>['errors'][number],
-							severity: DiagnosticSeverity,
-						) {
-							const templateHtmlRange = {
-								start: error.loc?.start.offset ?? 0,
-								end: error.loc?.end.offset ?? 0,
-							};
-							let errorMessage = error.message;
-
-							templateErrors.push({
+					for (
+						const [errors, severity] of [
+							[template.errors, 1 satisfies typeof DiagnosticSeverity.Error],
+							[template.warnings, 2 satisfies typeof DiagnosticSeverity.Warning],
+						] as const
+					) {
+						for (const error of errors) {
+							diagnostics.push({
 								range: {
-									start: document.positionAt(templateHtmlRange.start),
-									end: document.positionAt(templateHtmlRange.end),
+									start: document.positionAt(error.loc?.start.offset ?? 0),
+									end: document.positionAt(error.loc?.end.offset ?? 0),
 								},
 								severity,
 								code: error.code,
 								source: 'vue',
-								message: errorMessage,
+								message: error.message,
 							});
 						}
 					}
 
-					return templateErrors;
+					return diagnostics;
 				},
 			};
 		},
 	};
-
-	function isSupportedDocument(document: TextDocument) {
-		return document.languageId === 'jade' || document.languageId === 'html';
-	}
 }
