@@ -31,22 +31,14 @@ import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twos
 
 export function createVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	tsPluginClient: import('@vue/typescript-plugin/lib/requests').Requests = {
-		collectExtractProps: () => undefined,
-		getImportPathForFile: () => undefined,
-		getPropertiesAtLocation: () => undefined,
-		getComponentDirectives: () => undefined,
-		getComponentEvents: () => undefined,
-		getComponentNames: () => undefined,
-		getComponentProps: () => undefined,
-		getComponentSlots: () => undefined,
-		getElementAttrs: () => undefined,
-		getElementNames: () => undefined,
-		getDocumentHighlights: () => undefined,
-		getEncodedSemanticClassifications: () => undefined,
-		getQuickInfoAtPosition: () => undefined,
-	},
+	tsPluginClient?: import('@vue/typescript-plugin/lib/requests').Requests,
 ) {
+	tsPluginClient ??= new Proxy({}, {
+		get() {
+			return () => undefined;
+		},
+	}) as NonNullable<typeof tsPluginClient>;
+
 	return [
 		createCssPlugin(),
 		createJsonPlugin(),

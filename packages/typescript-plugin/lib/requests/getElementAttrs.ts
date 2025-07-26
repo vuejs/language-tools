@@ -8,15 +8,16 @@ export function getElementAttrs(
 	tagName: string,
 ) {
 	const { typescript: ts, language, languageService } = this;
-	const volarFile = language.scripts.get(fileName);
-	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
-		return;
+
+	const sourceScript = language.scripts.get(fileName);
+	const root = sourceScript?.generated?.root;
+	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
+		return [];
 	}
-	const vueCode = volarFile.generated.root;
 
 	const program = languageService.getProgram()!;
 	const checker = program.getTypeChecker();
-	const elements = getVariableType(ts, languageService, vueCode, '__VLS_elements');
+	const elements = getVariableType(ts, languageService, root, '__VLS_elements');
 	if (!elements) {
 		return [];
 	}

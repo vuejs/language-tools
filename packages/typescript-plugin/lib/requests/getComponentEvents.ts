@@ -8,19 +8,21 @@ export function getComponentEvents(
 	tag: string,
 ) {
 	const { typescript: ts, language, languageService } = this;
-	const volarFile = language.scripts.get(fileName);
-	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
-		return;
+
+	const sourceScript = language.scripts.get(fileName);
+	const root = sourceScript?.generated?.root;
+	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
+		return [];
 	}
-	const vueCode = volarFile.generated.root;
+
 	const program = languageService.getProgram()!;
 	const checker = program.getTypeChecker();
-	const components = getVariableType(ts, languageService, vueCode, '__VLS_components');
+	const components = getVariableType(ts, languageService, root, '__VLS_components');
 	if (!components) {
 		return [];
 	}
 
-	const componentType = getComponentType(ts, languageService, vueCode, components, fileName, tag);
+	const componentType = getComponentType(ts, languageService, root, components, fileName, tag);
 	if (!componentType) {
 		return [];
 	}

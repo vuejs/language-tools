@@ -1,5 +1,4 @@
 import { VueVirtualCode } from '@vue/language-core';
-import type * as ts from 'typescript';
 import type { RequestContext } from './types';
 import { getVariableType } from './utils';
 
@@ -8,20 +7,14 @@ export function getElementNames(
 	fileName: string,
 ) {
 	const { typescript: ts, language, languageService } = this;
-	const volarFile = language.scripts.get(fileName);
-	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
-		return;
-	}
-	const vueCode = volarFile.generated.root;
-	return _getElementNames(ts, languageService, vueCode);
-}
 
-export function _getElementNames(
-	ts: typeof import('typescript'),
-	tsLs: ts.LanguageService,
-	vueCode: VueVirtualCode,
-) {
-	return getVariableType(ts, tsLs, vueCode, '__VLS_elements')
+	const sourceScript = language.scripts.get(fileName);
+	const root = sourceScript?.generated?.root;
+	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
+		return [];
+	}
+
+	return getVariableType(ts, languageService, root, '__VLS_elements')
 		?.type
 		?.getProperties()
 		.map(c => c.name)

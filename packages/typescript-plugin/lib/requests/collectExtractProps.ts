@@ -9,13 +9,9 @@ export function collectExtractProps(
 	const { typescript: ts, languageService, language } = this;
 
 	const sourceScript = language.scripts.get(fileName);
-	if (!sourceScript?.generated) {
-		return;
-	}
-
-	const root = sourceScript.generated.root;
-	if (!(root instanceof VueVirtualCode)) {
-		return;
+	const root = sourceScript?.generated?.root;
+	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
+		return [];
 	}
 
 	const result = new Map<string, {
@@ -26,8 +22,8 @@ export function collectExtractProps(
 	const program = languageService.getProgram()!;
 	const sourceFile = program.getSourceFile(fileName)!;
 	const checker = program.getTypeChecker();
-	const script = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(root);
-	const maps = script ? [...language.maps.forEach(script.code)].map(([_sourceScript, map]) => map) : [];
+	const script = sourceScript.generated.languagePlugin.typescript?.getServiceScript(root);
+	const maps = script ? [...language.maps.forEach(script.code)].map(([, map]) => map) : [];
 	const { sfc } = root;
 
 	sourceFile.forEachChild(function visit(node) {

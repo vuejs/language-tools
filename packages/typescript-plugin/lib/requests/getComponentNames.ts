@@ -1,5 +1,4 @@
 import { VueVirtualCode } from '@vue/language-core';
-import type * as ts from 'typescript';
 import type { RequestContext } from './types';
 import { getSelfComponentName, getVariableType } from './utils';
 
@@ -8,26 +7,20 @@ export function getComponentNames(
 	fileName: string,
 ) {
 	const { typescript: ts, language, languageService } = this;
-	const volarFile = language.scripts.get(fileName);
-	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
-		return;
-	}
-	const vueCode = volarFile.generated.root;
-	return _getComponentNames(ts, languageService, vueCode);
-}
 
-export function _getComponentNames(
-	ts: typeof import('typescript'),
-	tsLs: ts.LanguageService,
-	vueCode: VueVirtualCode,
-) {
-	const names = getVariableType(ts, tsLs, vueCode, '__VLS_components')
+	const sourceScript = language.scripts.get(fileName);
+	const root = sourceScript?.generated?.root;
+	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
+		return [];
+	}
+
+	const names = getVariableType(ts, languageService, root, '__VLS_components')
 		?.type
 		?.getProperties()
 		.map(c => c.name)
 		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];
 
-	names.push(getSelfComponentName(vueCode.fileName));
+	names.push(getSelfComponentName(fileName));
 	return names;
 }

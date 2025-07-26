@@ -7,19 +7,20 @@ export function getComponentSlots(
 	fileName: string,
 ) {
 	const { typescript: ts, language, languageService } = this;
-	const volarFile = language.scripts.get(fileName);
-	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
-		return;
-	}
-	const vueCode = volarFile.generated.root;
 
-	const codegen = tsCodegen.get(vueCode.sfc);
+	const sourceScript = language.scripts.get(fileName);
+	const root = sourceScript?.generated?.root;
+	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
+		return [];
+	}
+
+	const codegen = tsCodegen.get(root.sfc);
 	if (!codegen) {
 		return;
 	}
 
 	const assignName = codegen.getSetupSlotsAssignName() ?? `__VLS_slots`;
-	const slots = getVariableType(ts, languageService, vueCode, assignName);
+	const slots = getVariableType(ts, languageService, root, assignName);
 	if (!slots) {
 		return [];
 	}
