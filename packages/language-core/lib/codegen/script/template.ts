@@ -123,14 +123,14 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 	}
 	yield `// CSS variable injection ${newLine}`;
 	for (const style of options.sfc.styles) {
-		for (const cssBind of style.cssVars) {
+		for (const binding of style.bindings) {
 			yield* generateInterpolation(
 				options,
 				ctx,
 				style.name,
 				codeFeatures.all,
-				cssBind.text,
-				cssBind.offset,
+				binding.text,
+				binding.offset,
 			);
 			yield endOfLine;
 		}
