@@ -78,9 +78,6 @@ type __VLS_TypePropsToOption<T> = {
 
 	return {
 		generate,
-		getUsedNames() {
-			return used;
-		},
 		get PrettifyLocal() {
 			return PrettifyLocal.name;
 		},
@@ -101,20 +98,11 @@ type __VLS_TypePropsToOption<T> = {
 		},
 	};
 
-	function* generate(...names: string[]) {
-		const generated = new Set<string>();
-		while (names.length) {
-			used.clear();
-			for (const name of names) {
-				if (generated.has(name)) {
-					continue;
-				}
-				const helper = helpers[name];
-				yield helper.generate();
-				generated.add(name);
-			}
-			names = [...used].filter(name => !generated.has(name));
+	function* generate() {
+		for (const name of used) {
+			yield helpers[name].generate();
 		}
+		used.clear();
 	}
 
 	function defineHelper(name: string, generate: () => string) {

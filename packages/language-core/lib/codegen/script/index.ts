@@ -133,7 +133,7 @@ export function* generateScript(
 
 	yield* generateExportDefault(options);
 
-	yield* ctx.localTypes.generate(...ctx.localTypes.getUsedNames());
+	yield* ctx.localTypes.generate();
 
 	if (options.sfc.scriptSetup) {
 		yield ['', 'scriptSetup', options.sfc.scriptSetup.content.length, codeFeatures.verification];
