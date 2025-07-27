@@ -301,10 +301,10 @@ export function* generateElement(
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
 
-	const features = ctx.resolveCodeFeatures({
+	const features = {
 		...codeFeatures.semanticWithoutHighlight,
 		...codeFeatures.navigationWithoutHighlight,
-	});
+	};
 
 	yield `__VLS_asFunctionalElement(__VLS_elements`;
 	yield* generatePropertyAccess(
