@@ -16,7 +16,7 @@
 		"directory": "packages/language-server"
 	},
 	"dependencies": {
-		"@volar/language-server": "2.4.20",
+		"@volar/language-server": "2.4.22",
 		"@vue/language-core": "3.0.4",
 		"@vue/language-service": "3.0.4",
 		"@vue/typescript-plugin": "3.0.4",
@@ -27,6 +27,6 @@
 	},
 	"devDependencies": {
 		"@typescript/server-harness": "latest",
-		"@volar/test-utils": "2.4.20"
+		"@volar/test-utils": "2.4.22"
 	}
 }
