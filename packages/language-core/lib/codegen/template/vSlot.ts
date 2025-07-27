@@ -3,6 +3,7 @@ import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getStartEnd } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { createTsAst, endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
@@ -37,7 +38,7 @@ export function* generateVSlot(
 					ctx,
 					slotDir.arg.loc.source,
 					slotDir.arg.loc.start.offset,
-					slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
+					slotDir.arg.isStatic ? codeFeatures.withoutHighlight : codeFeatures.all,
 					false,
 					true,
 				);
@@ -46,7 +47,7 @@ export function* generateVSlot(
 				yield* wrapWith(
 					slotDir.loc.start.offset,
 					slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
-					ctx.codeFeatures.withoutHighlightAndCompletion,
+					codeFeatures.withoutHighlightAndCompletion,
 					`default`,
 				);
 			}
@@ -56,7 +57,7 @@ export function* generateVSlot(
 			yield* wrapWith(
 				node.loc.start.offset,
 				node.loc.end.offset,
-				ctx.codeFeatures.navigation,
+				codeFeatures.navigation,
 				`default`,
 			);
 		}
@@ -66,7 +67,7 @@ export function* generateVSlot(
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, ctx.inlineTsAsts, `(${slotDir.exp.content}) => {}`);
 		slotBlockVars.push(...collectBindingNames(options.ts, slotAst, slotAst));
-		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
+		yield* generateSlotParameters(options, slotAst, slotDir.exp, slotVar);
 	}
 
 	for (const varName of slotBlockVars) {
@@ -96,7 +97,7 @@ export function* generateVSlot(
 						? 'v-slot:'.length
 						: 0
 				),
-				ctx.codeFeatures.completion,
+				codeFeatures.completion,
 			];
 			yield `'/* empty slot name completion */]${endOfLine}`;
 		}
@@ -106,7 +107,6 @@ export function* generateVSlot(
 
 function* generateSlotParameters(
 	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
 	ast: ts.SourceFile,
 	exp: CompilerDOM.SimpleExpressionNode,
 	slotVar: string,
@@ -152,7 +152,7 @@ function* generateSlotParameters(
 		yield* wrapWith(
 			exp.loc.start.offset,
 			exp.loc.end.offset,
-			ctx.codeFeatures.verification,
+			codeFeatures.verification,
 			`(`,
 			...types.flatMap(type => type ? [`_: `, type, `, `] : `_, `),
 			`) => [] as any`,
@@ -165,7 +165,7 @@ function* generateSlotParameters(
 			ast.text.slice(start, end),
 			'template',
 			startOffset + start,
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 		];
 	}
 }
