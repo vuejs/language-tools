@@ -144,7 +144,7 @@ export function* generateModifiers(
 			ctx,
 			mod.content,
 			mod.loc.start.offset,
-			codeFeatures.withoutHighlightAndNavigation,
+			codeFeatures.withoutHighlight,
 		);
 		yield `: true, `;
 	}
