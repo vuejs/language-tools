@@ -2,13 +2,6 @@ import type { InlayHintInfo } from '../inlayHints';
 import { getLocalTypesGenerator } from '../localTypes';
 import type { ScriptCodegenOptions } from './index';
 
-export interface HelperType {
-	name: string;
-	used?: boolean;
-	generated?: boolean;
-	code: string;
-}
-
 export type ScriptCodegenContext = ReturnType<typeof createScriptCodegenContext>;
 
 export function createScriptCodegenContext(options: ScriptCodegenOptions) {

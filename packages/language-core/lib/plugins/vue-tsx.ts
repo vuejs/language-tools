@@ -1,10 +1,8 @@
 import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
 import * as path from 'path-browserify';
-import { generateScript, type ScriptCodegenOptions } from '../codegen/script';
-import { createScriptCodegenContext } from '../codegen/script/context';
-import { generateTemplate, type TemplateCodegenOptions } from '../codegen/template';
-import { createTemplateCodegenContext } from '../codegen/template/context';
+import { createScriptCodegenContext, generateScript, type ScriptCodegenOptions } from '../codegen/script';
+import { createTemplateCodegenContext, generateTemplate, type TemplateCodegenOptions } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';

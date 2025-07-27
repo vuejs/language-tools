@@ -10,6 +10,8 @@ import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild, getVForNode } from './templateChild';
 
+export * from './context';
+
 export interface TemplateCodegenOptions {
 	ts: typeof ts;
 	compilerOptions: ts.CompilerOptions;
