@@ -26,9 +26,10 @@ export interface ScriptCodegenOptions {
 	templateRefNames: Set<string>;
 }
 
-export function* generateScript(options: ScriptCodegenOptions): Generator<Code, ScriptCodegenContext> {
-	const ctx = createScriptCodegenContext(options);
-
+export function* generateScript(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext = createScriptCodegenContext(options),
+): Generator<Code> {
 	yield* generateGlobalTypesPath(options);
 
 	if (options.sfc.script?.src) {
@@ -148,8 +149,6 @@ export function* generateScript(options: ScriptCodegenOptions): Generator<Code, 
 	if (options.sfc.scriptSetup) {
 		yield ['', 'scriptSetup', options.sfc.scriptSetup.content.length, codeFeatures.verification];
 	}
-
-	return ctx;
 }
 
 function* generateGlobalTypesPath(

@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
@@ -47,7 +48,7 @@ export function* generateSlotOutlet(
 					ctx,
 					source,
 					offset,
-					ctx.codeFeatures.navigationAndVerification,
+					codeFeatures.navigationAndVerification,
 				);
 			}
 			else if (
@@ -72,7 +73,7 @@ export function* generateSlotOutlet(
 			yield* wrapWith(
 				nameProp.loc.start.offset,
 				nameProp.loc.end.offset,
-				ctx.codeFeatures.verification,
+				codeFeatures.verification,
 				`${options.slotsAssignName ?? '__VLS_slots'}`,
 				...codes,
 			);
@@ -81,12 +82,12 @@ export function* generateSlotOutlet(
 			yield* wrapWith(
 				startTagOffset,
 				startTagEndOffset,
-				ctx.codeFeatures.verification,
+				codeFeatures.verification,
 				`${options.slotsAssignName ?? '__VLS_slots'}[`,
 				...wrapWith(
 					startTagOffset,
 					startTagEndOffset,
-					ctx.codeFeatures.verification,
+					codeFeatures.verification,
 					`'default'`,
 				),
 				`]`,
@@ -96,7 +97,7 @@ export function* generateSlotOutlet(
 		yield* wrapWith(
 			startTagOffset,
 			startTagEndOffset,
-			ctx.codeFeatures.verification,
+			codeFeatures.verification,
 			`{${newLine}`,
 			...generateElementProps(
 				options,
@@ -148,7 +149,7 @@ export function* generateSlotOutlet(
 				options,
 				ctx,
 				'template',
-				ctx.codeFeatures.all,
+				codeFeatures.all,
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,
 			);

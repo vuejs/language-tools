@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { toString } from 'muggle-string';
 import type { Code } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
@@ -34,7 +35,7 @@ export function* generateVIf(
 				options,
 				ctx,
 				'template',
-				ctx.codeFeatures.all,
+				codeFeatures.all,
 				branch.condition.content,
 				branch.condition.loc.start.offset,
 				`(`,
