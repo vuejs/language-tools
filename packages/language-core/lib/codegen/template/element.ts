@@ -301,13 +301,18 @@ export function* generateElement(
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
 
+	const features = {
+		...codeFeatures.semanticWithoutHighlight,
+		...codeFeatures.navigationWithoutHighlight,
+	};
+
 	yield `__VLS_asFunctionalElement(__VLS_elements`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
 		node.tag,
 		startTagOffset,
-		ctx.codeFeatures.withoutHighlightAndCompletion,
+		features,
 	);
 	if (endTagOffset !== undefined) {
 		yield `, __VLS_elements`;
@@ -316,7 +321,7 @@ export function* generateElement(
 			ctx,
 			node.tag,
 			endTagOffset,
-			ctx.codeFeatures.withoutHighlightAndCompletion,
+			features,
 		);
 	}
 	yield `)(`;

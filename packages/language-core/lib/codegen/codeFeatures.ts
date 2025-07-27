@@ -24,12 +24,11 @@ const raw = {
 	navigation: {
 		navigation: true,
 	},
+	navigationWithoutHighlight: {
+		navigation: { shouldHighlight: () => false },
+	},
 	navigationWithoutRename: {
 		navigation: { shouldRename: () => false },
-	},
-	navigationAndCompletion: {
-		navigation: true,
-		completion: true,
 	},
 	navigationAndAdditionalCompletion: {
 		navigation: true,
@@ -62,10 +61,6 @@ const raw = {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
 		navigation: true,
-	},
-	withoutHighlightAndCompletionAndNavigation: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
 	},
 	withoutSemantic: {
 		verification: true,
