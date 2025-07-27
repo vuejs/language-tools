@@ -64,14 +64,13 @@ export function create(
 							serviceScript.code.snapshot,
 						);
 						const preferences = await getUserPreferences(context, tsDocument);
-						const importPathRequest = await getImportPathForFile(
-							root.fileName,
-							incomingFileName,
-							preferences,
-						);
-						if (importPathRequest) {
-							importPath = importPathRequest;
-						}
+						importPath = (
+							await getImportPathForFile(
+								root.fileName,
+								incomingFileName,
+								preferences,
+							) ?? {}
+						).path;
 					}
 
 					if (!importPath) {

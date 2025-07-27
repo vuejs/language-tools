@@ -2,7 +2,7 @@
 	"include": [],
 	"references": [
 		{ "path": "./failureFixtures/#3632" },
-		// { "path": "./failureFixtures/#4569" }, // TODO: not working with --build flag
+		{ "path": "./failureFixtures/#4569" },
 		{ "path": "./failureFixtures/#5071" },
 		{ "path": "./failureFixtures/directives" },
 
@@ -14,6 +14,10 @@
 		{ "path": "./passedFixtures/#3592" },
 		{ "path": "./passedFixtures/#3819" },
 		{ "path": "./passedFixtures/#4503" },
+		{ "path": "./passedFixtures/#5106" },
+		{ "path": "./passedFixtures/#5111" },
+		{ "path": "./passedFixtures/#5136" },
+		{ "path": "./passedFixtures/#5338" },
 		{ "path": "./passedFixtures/core#9923" },
 		{ "path": "./passedFixtures/fallthroughAttributes" },
 		{ "path": "./passedFixtures/fallthroughAttributes_strictTemplate" },

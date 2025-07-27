@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { getNodeText } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { endOfLine, normalizeAttributeValue } from '../utils';
 import { generateEscaped } from '../utils/escaped';
 import { wrapWith } from '../utils/wrapWith';
@@ -20,7 +21,7 @@ export function* generateStyleScopedClassReferences(
 			'',
 			'template',
 			offset,
-			ctx.codeFeatures.additionalCompletion,
+			codeFeatures.additionalCompletion,
 		];
 		yield `']} */${endOfLine}`;
 	}
@@ -30,13 +31,13 @@ export function* generateStyleScopedClassReferences(
 			offset - (withDot ? 1 : 0),
 			offset + className.length,
 			source,
-			ctx.codeFeatures.navigation,
+			codeFeatures.navigation,
 			`'`,
 			...generateEscaped(
 				className,
 				source,
 				offset,
-				ctx.codeFeatures.navigationAndAdditionalCompletion,
+				codeFeatures.navigationAndAdditionalCompletion,
 				classNameEscapeRegex,
 			),
 			`'`,

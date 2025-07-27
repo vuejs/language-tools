@@ -90,7 +90,7 @@ export function* generateComponent(
 					componentOriginalVar,
 					'template',
 					tagOffset,
-					ctx.codeFeatures.withoutHighlightAndCompletion,
+					codeFeatures.withoutHighlightAndCompletion,
 				];
 			}
 			else {
@@ -99,7 +99,7 @@ export function* generateComponent(
 					shouldCapitalize ? capitalize(node.tag) : node.tag,
 					'template',
 					tagOffset,
-					ctx.codeFeatures.withoutHighlightAndCompletion,
+					codeFeatures.withoutHighlightAndCompletion,
 				);
 			}
 			yield `, `;
@@ -112,7 +112,7 @@ export function* generateComponent(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 			dynamicTagInfo.tag,
 			dynamicTagInfo.offsets[0],
 			`(`,
@@ -124,7 +124,7 @@ export function* generateComponent(
 				options,
 				ctx,
 				'template',
-				ctx.codeFeatures.withoutCompletion,
+				codeFeatures.withoutCompletion,
 				dynamicTagInfo.tag,
 				dynamicTagInfo.offsets[1],
 				`(`,
@@ -150,12 +150,12 @@ export function* generateComponent(
 		yield* generateCanonicalComponentName(
 			node.tag,
 			tagOffsets[0],
-			ctx.resolveCodeFeatures({
+			{
 				...codeFeatures.semanticWithoutHighlight,
 				...options.vueCompilerOptions.checkUnknownComponents
 					? codeFeatures.verification
 					: codeFeatures.doNotReportTs2339AndTs2551,
-			}),
+			},
 		);
 		yield `${endOfLine}`;
 
@@ -210,7 +210,7 @@ export function* generateComponent(
 	yield* wrapWith(
 		node.loc.start.offset,
 		node.loc.end.offset,
-		ctx.codeFeatures.doNotReportTs6133,
+		codeFeatures.doNotReportTs6133,
 		componentVNodeVar,
 	);
 	yield ` = ${componentFunctionalVar}`;
@@ -219,7 +219,7 @@ export function* generateComponent(
 	yield* wrapWith(
 		tagOffsets[0],
 		tagOffsets[0] + node.tag.length,
-		ctx.codeFeatures.verification,
+		codeFeatures.verification,
 		`{${newLine}`,
 		...generateElementProps(
 			options,
@@ -299,13 +299,18 @@ export function* generateElement(
 		: undefined;
 	const failedPropExps: FailedPropExpression[] = [];
 
+	const features = {
+		...codeFeatures.semanticWithoutHighlight,
+		...codeFeatures.navigationWithoutHighlight,
+	};
+
 	yield `__VLS_asFunctionalElement(__VLS_elements`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
 		node.tag,
 		startTagOffset,
-		ctx.codeFeatures.withoutHighlightAndCompletion,
+		features,
 	);
 	if (endTagOffset !== undefined) {
 		yield `, __VLS_elements`;
@@ -314,14 +319,14 @@ export function* generateElement(
 			ctx,
 			node.tag,
 			endTagOffset,
-			ctx.codeFeatures.withoutHighlightAndCompletion,
+			features,
 		);
 	}
 	yield `)(`;
 	yield* wrapWith(
 		startTagOffset,
 		startTagOffset + node.tag.length,
-		ctx.codeFeatures.verification,
+		codeFeatures.verification,
 		`{${newLine}`,
 		...generateElementProps(
 			options,
@@ -373,7 +378,7 @@ function* generateFailedPropExps(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 			failedExp.node.loc.source,
 			failedExp.node.loc.start.offset,
 			failedExp.prefix,
@@ -429,13 +434,13 @@ function* generateComponentGeneric(
 		yield* wrapWith(
 			offset,
 			offset + content.length,
-			ctx.codeFeatures.verification,
+			codeFeatures.verification,
 			`<`,
 			[
 				content,
 				'template',
 				offset,
-				ctx.codeFeatures.all,
+				codeFeatures.all,
 			],
 			`>`,
 		);
@@ -462,7 +467,7 @@ function* generateElementReference(
 				ctx,
 				content,
 				startOffset,
-				ctx.codeFeatures.navigation,
+				codeFeatures.navigation,
 			);
 			yield `} */${endOfLine}`;
 

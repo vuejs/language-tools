@@ -3,6 +3,7 @@ import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import type { ScriptCodegenOptions } from '../script';
 import { createTsAst, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -67,7 +68,7 @@ export function* generateInterpolation(
 						source,
 						start + offset,
 						type === 'errorMappingOnly'
-							? ctx.codeFeatures.verification
+							? codeFeatures.verification
 							: typeof data === 'function'
 							? data(start + offset)
 							: data,

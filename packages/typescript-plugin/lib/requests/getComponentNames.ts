@@ -5,20 +5,22 @@ import { getSelfComponentName, getVariableType } from './utils';
 export function getComponentNames(
 	this: RequestContext,
 	fileName: string,
-) {
+): string[] {
 	const { typescript: ts, language, languageService } = this;
-	const volarFile = language.scripts.get(fileName);
-	if (!(volarFile?.generated?.root instanceof VueVirtualCode)) {
-		return;
+
+	const sourceScript = language.scripts.get(fileName);
+	const root = sourceScript?.generated?.root;
+	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
+		return [];
 	}
-	const vueCode = volarFile.generated.root;
-	const names = getVariableType(ts, languageService, vueCode, '__VLS_components')
+
+	const names = getVariableType(ts, languageService, root, '__VLS_components')
 		?.type
 		?.getProperties()
 		.map(c => c.name)
 		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];
 
-	names.push(getSelfComponentName(vueCode.fileName));
+	names.push(getSelfComponentName(fileName));
 	return names;
 }

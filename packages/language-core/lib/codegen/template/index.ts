@@ -2,12 +2,15 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { getSlotsPropertyName } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
-import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
+import type { TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild, getVForNode } from './templateChild';
+
+export * from './context';
 
 export interface TemplateCodegenOptions {
 	ts: typeof ts;
@@ -25,9 +28,10 @@ export interface TemplateCodegenOptions {
 	selfComponentName?: string;
 }
 
-export function* generateTemplate(options: TemplateCodegenOptions): Generator<Code, TemplateCodegenContext> {
-	const ctx = createTemplateCodegenContext(options, options.template.ast);
-
+export function* generateTemplate(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+): Generator<Code> {
 	if (options.slotsAssignName) {
 		ctx.addLocalVariable(options.slotsAssignName);
 	}
@@ -70,8 +74,6 @@ export function* generateTemplate(options: TemplateCodegenOptions): Generator<Co
 		}
 		yield `} & { [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 	}
-
-	return ctx;
 }
 
 function* generateSlots(
@@ -91,14 +93,14 @@ function* generateSlots(
 					ctx,
 					slot.name,
 					slot.offset,
-					ctx.codeFeatures.navigation,
+					codeFeatures.navigation,
 				);
 			}
 			else {
 				yield* wrapWith(
 					slot.tagRange[0],
 					slot.tagRange[1],
-					ctx.codeFeatures.navigation,
+					codeFeatures.navigation,
 					`default`,
 				);
 			}
@@ -128,7 +130,7 @@ function* generateInheritedAttrs(
 				loc.source,
 				'template',
 				loc.start.offset,
-				ctx.codeFeatures.all,
+				codeFeatures.all,
 			];
 			yield `,`;
 		}
@@ -158,7 +160,7 @@ function* generateTemplateRefs(
 				ctx,
 				name,
 				offset,
-				ctx.codeFeatures.navigation,
+				codeFeatures.navigation,
 			);
 			yield `: ${typeExp} }`;
 		}

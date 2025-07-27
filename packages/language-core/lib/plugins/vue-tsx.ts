@@ -1,8 +1,8 @@
 import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
 import * as path from 'path-browserify';
-import { generateScript } from '../codegen/script';
-import { generateTemplate } from '../codegen/template';
+import { createScriptCodegenContext, generateScript, type ScriptCodegenOptions } from '../codegen/script';
+import { createTemplateCodegenContext, generateTemplate, type TemplateCodegenOptions } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
@@ -187,8 +187,7 @@ function createTsx(
 			return;
 		}
 
-		const codes: Code[] = [];
-		const codegen = generateTemplate({
+		const options: TemplateCodegenOptions = {
 			ts,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
@@ -202,24 +201,26 @@ function createTsx(
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getSetupInheritAttrs(),
 			selfComponentName: getComponentSelfName(),
-		});
+		};
+		const context = createTemplateCodegenContext(options, sfc.template.ast);
+		const codegen = generateTemplate(options, context);
 
-		let current = codegen.next();
-		while (!current.done) {
-			const code = current.value;
+		const codes: Code[] = [];
+		for (const code of codegen) {
+			if (typeof code === 'object') {
+				code[3] = context.resolveCodeFeatures(code[3]);
+			}
 			codes.push(code);
-			current = codegen.next();
 		}
 
 		return {
-			...current.value,
+			...context,
 			codes,
 		};
 	});
 
 	const getGeneratedScript = computed(() => {
-		const codes: Code[] = [];
-		const codegen = generateScript({
+		const options: ScriptCodegenOptions = {
 			ts,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
@@ -231,18 +232,13 @@ function createTsx(
 			templateCodegen: getGeneratedTemplate(),
 			destructuredPropNames: getSetupDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
-		});
-
-		let current = codegen.next();
-		while (!current.done) {
-			const code = current.value;
-			codes.push(code);
-			current = codegen.next();
-		}
+		};
+		const context = createScriptCodegenContext(options);
+		const codegen = generateScript(options, context);
 
 		return {
-			...current.value,
-			codes,
+			...context,
+			codes: [...codegen],
 		};
 	});
 

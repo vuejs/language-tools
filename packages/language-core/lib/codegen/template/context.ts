@@ -191,12 +191,6 @@ export function createTemplateCodegenContext(
 		get currentInfo() {
 			return stack[stack.length - 1];
 		},
-		codeFeatures: new Proxy(codeFeatures, {
-			get(target, key: keyof typeof codeFeatures) {
-				const data = target[key];
-				return resolveCodeFeatures(data);
-			},
-		}),
 		resolveCodeFeatures,
 		inlineTsAsts: templateAst && templateInlineTsAsts.get(templateAst),
 		inVFor: false,
