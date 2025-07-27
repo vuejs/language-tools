@@ -48,9 +48,7 @@ class _LanguageClient extends lsp.LanguageClient {
 	}
 }
 
-export const { activate, deactivate } = defineExtension(async () => {
-	await vscode.extensions.getExtension('vscode.typescript-language-features')?.activate();
-
+export const { activate, deactivate } = defineExtension(() => {
 	const context = extensionContext.value!;
 	const volarLabs = createLabsInfo();
 	const activeTextEditor = useActiveTextEditor();
@@ -67,23 +65,18 @@ export const { activate, deactivate } = defineExtension(async () => {
 		nextTick(() => stop());
 
 		if (needRestart) {
-			if (vscode.env.remoteName) {
-				vscode.window.showInformationMessage(
-					'Please restart the extension host to activate Vue support in remote environments.',
-					'Restart Extension Host',
-					'Reload Window',
-				).then(action => {
-					if (action === 'Restart Extension Host') {
-						vscode.commands.executeCommand('workbench.action.restartExtensionHost');
-					}
-					else if (action === 'Reload Window') {
-						vscode.commands.executeCommand('workbench.action.reloadWindow');
-					}
-				});
-			}
-			else {
-				vscode.commands.executeCommand('workbench.action.restartExtensionHost');
-			}
+			vscode.window.showInformationMessage(
+				'Please restart the extension host to activate Vue support in remote environments.',
+				'Restart Extension Host',
+				'Reload Window',
+			).then(action => {
+				if (action === 'Restart Extension Host') {
+					vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+				}
+				else if (action === 'Reload Window') {
+					vscode.commands.executeCommand('workbench.action.reloadWindow');
+				}
+			});
 			return;
 		}
 
@@ -245,7 +238,12 @@ try {
 	}
 
 	if (tsExtension.isActive) {
-		needRestart = true;
+		if (!vscode.env.remoteName) {
+			vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+		}
+		else {
+			needRestart = true;
+		}
 	}
 }
 catch {}
