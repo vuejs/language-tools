@@ -19,7 +19,24 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			if (languageId !== 'vue') {
 				return;
 			}
-			return parse(content);
+			const sfc = parse(content);
+			for (const error of sfc.errors) {
+				// Handle 'Element is missing end tag.' error, see #4893
+				if (
+					'code' in error && error.code === 24 && sfc.descriptor.template
+					&& error.loc?.start.line === sfc.descriptor.template.loc.start.line
+				) {
+					const template = sfc.descriptor.template;
+					const templateText = template.content;
+					const endTagOffset = templateText.lastIndexOf('<');
+					const endTagText = templateText.slice(endTagOffset).trimEnd();
+					if ('</template>'.startsWith(endTagText)) {
+						sfc.descriptor.template.loc.end.offset = template.loc.start.offset + endTagOffset;
+						template.content = templateText.slice(0, endTagOffset);
+					}
+				}
+			}
+			return sfc;
 		},
 
 		updateSFC(sfc, change) {
