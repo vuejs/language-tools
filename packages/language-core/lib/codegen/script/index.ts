@@ -136,10 +136,6 @@ export function* generateScript(
 	}
 
 	yield* ctx.localTypes.generate();
-
-	if (options.sfc.scriptSetup) {
-		yield ['', 'scriptSetup', options.sfc.scriptSetup.content.length, codeFeatures.verification];
-	}
 }
 
 function* generateGlobalTypesReference(
