@@ -1,6 +1,6 @@
+import { camelize, capitalize } from '@vue/shared';
 import * as path from 'path-browserify';
 import type { Code } from '../../types';
-import { hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
@@ -18,16 +18,12 @@ export function* generateTemplate(
 ): Generator<Code> {
 	ctx.generatedTemplate = true;
 
-	const templateCodegenCtx = createTemplateCodegenContext({
-		scriptSetupBindingNames: new Set(),
-	});
 	yield* generateSelf(options);
 	yield* generateTemplateCtx(options, ctx);
 	yield* generateTemplateElements();
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
-	yield* generateTemplateBody(options, templateCodegenCtx);
-	yield* generateBindings(options, ctx, templateCodegenCtx);
+	yield* generateTemplateBody(options, ctx);
 }
 
 function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
@@ -153,12 +149,17 @@ function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<C
 
 function* generateTemplateBody(
 	options: ScriptCodegenOptions,
-	templateCodegenCtx: TemplateCodegenContext,
+	ctx: ScriptCodegenContext,
 ): Generator<Code> {
+	const templateCodegenCtx = createTemplateCodegenContext({
+		scriptSetupBindingNames: new Set(),
+	});
+
 	yield* generateStyleScopedClasses(options, templateCodegenCtx);
 	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
 	yield* generateStyleModules(options);
 	yield* generateCssVars(options, templateCodegenCtx);
+	yield* generateBindings(options, ctx, templateCodegenCtx);
 
 	if (options.templateCodegen) {
 		yield* options.templateCodegen.codes;
@@ -173,7 +174,10 @@ function* generateTemplateBody(
 	}
 }
 
-function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
+function* generateCssVars(
+	options: ScriptCodegenOptions,
+	ctx: TemplateCodegenContext,
+): Generator<Code> {
 	for (const style of options.sfc.styles) {
 		for (const cssBind of style.cssVars) {
 			yield* generateInterpolation(
@@ -200,10 +204,15 @@ function* generateBindings(
 		return;
 	}
 
+	const usageVars = new Set([
+		...options.sfc.template?.ast?.components.flatMap(c => [camelize(c), capitalize(camelize(c))]) ?? [],
+		...options.templateCodegen?.accessExternalVariables.keys() ?? [],
+		...templateCodegenCtx.accessExternalVariables.keys(),
+	]);
+
 	yield `type __VLS_Bindings = __VLS_ProxyRefs<{${newLine}`;
-	const templateUsageVars = getTemplateUsageVars(options, ctx);
 	for (const varName of ctx.bindingNames) {
-		if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
+		if (!usageVars.has(varName)) {
 			continue;
 		}
 
@@ -215,28 +224,4 @@ function* generateBindings(
 		yield endOfLine;
 	}
 	yield `}>${endOfLine}`;
-}
-
-function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptCodegenContext) {
-	const usageVars = new Set<string>();
-	const components = new Set(options.sfc.template?.ast?.components);
-
-	if (options.templateCodegen) {
-		// fix import components unused report
-		for (const varName of ctx.bindingNames) {
-			if (components.has(varName) || components.has(hyphenateTag(varName))) {
-				usageVars.add(varName);
-			}
-		}
-		for (const component of components) {
-			if (component.includes('.')) {
-				usageVars.add(component.split('.')[0]);
-			}
-		}
-		for (const [varName] of options.templateCodegen.accessExternalVariables) {
-			usageVars.add(varName);
-		}
-	}
-
-	return usageVars;
 }
