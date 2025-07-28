@@ -131,7 +131,9 @@ export function* generateScript(
 		yield* generateTemplate(options, ctx);
 	}
 
-	yield* generateExportDefault(options);
+	if (!options.scriptRanges?.classBlockEnd) {
+		yield* generateExportDefault(options);
+	}
 
 	yield* ctx.localTypes.generate();
 

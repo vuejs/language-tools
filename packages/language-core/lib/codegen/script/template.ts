@@ -1,3 +1,4 @@
+import * as path from 'path-browserify';
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
@@ -20,28 +21,37 @@ export function* generateTemplate(
 	const templateCodegenCtx = createTemplateCodegenContext({
 		scriptSetupBindingNames: new Set(),
 	});
-	yield* generateTemplateCtx(options);
+	yield* generateSelf(options);
+	yield* generateTemplateCtx(options, ctx);
 	yield* generateTemplateElements();
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, templateCodegenCtx);
 	yield* generateBindings(options, ctx, templateCodegenCtx);
+}
 
+function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
 	if (options.sfc.script && options.scriptRanges?.exportDefault) {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
 		const { args } = options.scriptRanges.exportDefault;
 		yield generateSfcBlockSection(options.sfc.script, args.start, args.end, codeFeatures.all);
 		yield `)${endOfLine}`;
 	}
+	else if (options.scriptRanges?.classBlockEnd) {
+		yield `let __VLS_self!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
+	}
 }
 
-function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
+function* generateTemplateCtx(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+): Generator<Code> {
 	const exps: Code[] = [];
 
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
 		exps.push(`globalThis`);
 	}
-	if (options.sfc.script && options.scriptRanges?.exportDefault) {
+	if (options.scriptRanges?.exportDefault || options.scriptRanges?.classBlockEnd) {
 		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
 	}
 	else {
@@ -88,7 +98,9 @@ function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
 		exps.push(`{} as __VLS_InternalProps`);
 	}
 
-	exps.push(`{} as __VLS_Bindings`);
+	if (options.scriptSetupRanges && ctx.bindingNames.size) {
+		exps.push(`{} as __VLS_Bindings`);
+	}
 
 	yield `const __VLS_ctx = `;
 	yield* generateSpreadMerge(exps);
@@ -162,10 +174,6 @@ function* generateTemplateBody(
 }
 
 function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
-	if (!options.sfc.styles.length) {
-		return;
-	}
-	yield `// CSS variable injection ${newLine}`;
 	for (const style of options.sfc.styles) {
 		for (const cssBind of style.cssVars) {
 			yield* generateInterpolation(
@@ -175,11 +183,12 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 				codeFeatures.all,
 				cssBind.text,
 				cssBind.offset,
+				`(`,
+				`)`,
 			);
 			yield endOfLine;
 		}
 	}
-	yield `// CSS variable injection end ${newLine}`;
 }
 
 function* generateBindings(
@@ -187,21 +196,23 @@ function* generateBindings(
 	ctx: ScriptCodegenContext,
 	templateCodegenCtx: TemplateCodegenContext,
 ): Generator<Code> {
-	yield `type __VLS_Bindings = __VLS_ProxyRefs<{${newLine}`;
-	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
-		const templateUsageVars = getTemplateUsageVars(options, ctx);
-		for (const varName of ctx.bindingNames) {
-			if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
-				continue;
-			}
+	if (!options.sfc.scriptSetup || !ctx.bindingNames.size) {
+		return;
+	}
 
-			const token = Symbol(varName.length);
-			yield ['', undefined, 0, { __linkedToken: token }];
-			yield `${varName}: typeof `;
-			yield ['', undefined, 0, { __linkedToken: token }];
-			yield varName;
-			yield endOfLine;
+	yield `type __VLS_Bindings = __VLS_ProxyRefs<{${newLine}`;
+	const templateUsageVars = getTemplateUsageVars(options, ctx);
+	for (const varName of ctx.bindingNames) {
+		if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
+			continue;
 		}
+
+		const token = Symbol(varName.length);
+		yield ['', undefined, 0, { __linkedToken: token }];
+		yield `${varName}: typeof `;
+		yield ['', undefined, 0, { __linkedToken: token }];
+		yield varName;
+		yield endOfLine;
 	}
 	yield `}>${endOfLine}`;
 }
