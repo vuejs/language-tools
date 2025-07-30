@@ -180,7 +180,6 @@ export function* generateModelEventExpression(
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		yield `(...[$event]) => {${newLine}`;
-		ctx.addLocalVariable('$event');
 		yield* ctx.generateConditionGuards();
 		yield* generateInterpolation(
 			options,
@@ -191,8 +190,6 @@ export function* generateModelEventExpression(
 			prop.exp.loc.start.offset,
 		);
 		yield ` = $event${endOfLine}`;
-		ctx.removeLocalVariable('$event');
-		yield* ctx.generateAutoImportCompletion();
 		yield `}`;
 	}
 	else {
