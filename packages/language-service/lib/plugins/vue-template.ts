@@ -236,7 +236,6 @@ export function create(
 								prop = {
 									name,
 									kind: 'prop',
-									isGlobal: true,
 								};
 							}
 						}
@@ -247,7 +246,7 @@ export function create(
 							const { isEvent, propName } = getPropName(prop.name, prop.kind === 'event');
 
 							if (prop.kind === 'prop') {
-								if (!prop.isGlobal || specialProps.has(propName)) {
+								if (!prop.isGlobal) {
 									item.kind = 5 satisfies typeof CompletionItemKind.Field;
 								}
 							}
@@ -258,7 +257,7 @@ export function create(
 								}
 							}
 
-							if (!prop.isGlobal || specialProps.has(propName)) {
+							if (!prop.isGlobal) {
 								tokens.push('\u0000');
 
 								if (item.label.startsWith(':')) {
@@ -573,7 +572,7 @@ export function create(
 								});
 							}
 
-							const models: [boolean, string][] = [];
+							const models: string[] = [];
 
 							for (
 								const prop of [
@@ -582,31 +581,28 @@ export function create(
 								]
 							) {
 								if (prop.name.startsWith('onUpdate:')) {
-									const isGlobal = !propNameSet.has(prop.name);
-									models.push([isGlobal, prop.name.slice('onUpdate:'.length)]);
+									models.push(prop.name.slice('onUpdate:'.length));
 								}
 							}
 							for (const event of events) {
 								if (event.startsWith('update:')) {
-									models.push([false, event.slice('update:'.length)]);
+									models.push(event.slice('update:'.length));
 								}
 							}
 
-							for (const [isGlobal, model] of models) {
+							for (const model of models) {
 								const name = casing.attr === AttrNameCasing.Camel ? model : hyphenateAttr(model);
 
 								attributes.push({ name: 'v-model:' + name });
 								propMap.set('v-model:' + name, {
 									name,
 									kind: 'prop',
-									isGlobal,
 								});
 
 								if (model === 'modelValue') {
 									propMap.set('v-model', {
 										name,
 										kind: 'prop',
-										isGlobal,
 									});
 								}
 							}
