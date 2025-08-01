@@ -9,7 +9,7 @@
 - fix(vscode): add `class` scope fallback for `component` semantic tokens (#5559) - Thanks to @KazariEX!
 - fix(vscode): make sure extension is loaded immediately
 - fix(language-service): only check `globalTypesPath` for FS files
-- fix(vscode): handle fail tsserver requests to avlid memory leak
+- fix(vscode): handle fail tsserver requests to avoid memory leak
 - fix(vscode): do not delay the execution of `restartExtensionHost`
 - fix(language-core): avoid references highlight of unrelated native element tags (#5563) - Thanks to @KazariEX!
 - fix(language-core): tolerance for incomplete root template tag
