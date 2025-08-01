@@ -7,14 +7,12 @@
 	},
 	"exact": true,
 	"forcePublish": true,
-	"noGitTagVersion": true,
-	"noPush": true,
 	"npmClient": "pnpm",
 	"packages": [
 		"extensions/**",
 		"packages/**",
 		"test-workspace"
 	],
-	"version": "3.0.4",
+	"version": "3.0.5",
 	"yes": true
 }
