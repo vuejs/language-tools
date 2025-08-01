@@ -61,7 +61,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         foo: number;
     } & {
         title?: string;
-    }) & Partial<{}>> & import("vue").PublicProps;
+    }) & {}> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;
@@ -91,7 +91,7 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
         foo: number;
     } & {
         title?: string;
-    }) & Partial<{}>> & import("vue").PublicProps;
+    }) & {}> & import("vue").PublicProps;
     expose(exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
     }>): void;

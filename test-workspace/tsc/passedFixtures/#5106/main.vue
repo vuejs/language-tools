@@ -12,7 +12,7 @@ declare module 'vue' {
 	}
 }
 
-type AttrsExact = Record<string, unknown> & { class: string } & Partial<{}>;
+type AttrsExact = Record<string, unknown> & { class: string };
 
 const attrs = useAttrs();
 exactType(attrs, {} as AttrsExact);
