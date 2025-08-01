@@ -7,7 +7,7 @@
 		"watch:base": "tsc -b -w",
 		"watch:vue": "cd ./extensions/vscode && pnpm run watch",
 		"prerelease": "pnpm run build && pnpm run test",
-		"release": "lerna publish --exact --force-publish --yes --sync-workspace-lock",
+		"release": "lerna publish",
 		"release:next": "pnpm run release --dist-tag next",
 		"test": "vitest run",
 		"test:update": "vitest run --update",
