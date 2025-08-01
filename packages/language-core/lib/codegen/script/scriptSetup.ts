@@ -2,12 +2,12 @@ import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
+import { endOfLine, generatePartiallyEnding, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { wrapWith } from '../utils/wrapWith';
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
-import { generateConstExport, generateScriptSectionPartiallyEnding, type ScriptCodegenOptions } from './index';
+import { generateConstExport, type ScriptCodegenOptions } from './index';
 import { generateTemplate } from './template';
 
 export function* generateScriptSetupImports(
@@ -32,7 +32,7 @@ export function* generateScriptSetup(
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (scriptSetup.generic) {
-		yield* generateConstExport(scriptSetup);
+		yield* generateConstExport(options, scriptSetup);
 		yield `(`;
 		if (typeof scriptSetup.generic === 'object') {
 			yield `<`;
@@ -115,7 +115,7 @@ export function* generateScriptSetup(
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default');
 	}
 	else {
-		yield* generateConstExport(scriptSetup);
+		yield* generateConstExport(options, scriptSetup);
 		yield `await (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'return');
 		yield `})()${endOfLine}`;
@@ -319,7 +319,7 @@ function* generateSetupFunction(
 	}
 	yield generateSfcBlockSection(scriptSetup, nextStart, scriptSetup.content.length, codeFeatures.all);
 
-	yield* generateScriptSectionPartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
+	yield* generatePartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
 	yield* generateMacros(options, ctx);
 
 	const hasSlots = !!(
@@ -335,7 +335,7 @@ function* generateSetupFunction(
 	if (syntax) {
 		const prefix = syntax === 'return'
 			? [`return `]
-			: generateConstExport(scriptSetup);
+			: generateConstExport(options, scriptSetup);
 		if (hasSlots) {
 			yield `const __VLS_base = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);

@@ -33,7 +33,7 @@ function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
 		yield generateSfcBlockSection(options.sfc.script, args.start, args.end, codeFeatures.all);
 		yield `)${endOfLine}`;
 	}
-	else if (options.scriptRanges?.classBlockEnd) {
+	else if (options.sfc.script?.src || options.scriptRanges?.classBlockEnd) {
 		yield `let __VLS_self!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
 	}
 }
@@ -47,7 +47,7 @@ function* generateTemplateCtx(
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
 		exps.push(`globalThis`);
 	}
-	if (options.scriptRanges?.exportDefault || options.scriptRanges?.classBlockEnd) {
+	if (options.sfc.script?.src || options.scriptRanges?.exportDefault || options.scriptRanges?.classBlockEnd) {
 		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
 	}
 	else {
