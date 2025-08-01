@@ -3,7 +3,7 @@ import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.1,
+		version: 2.2,
 
 		getEmbeddedCodes(_fileName, sfc) {
 			return sfc.customBlocks.map((customBlock, i) => ({

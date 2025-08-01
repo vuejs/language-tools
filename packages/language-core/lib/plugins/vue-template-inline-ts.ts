@@ -27,7 +27,7 @@ const plugin: VueLanguagePlugin = ctx => {
 	const parseds = new WeakMap<Sfc, ReturnType<typeof parse>>();
 
 	return {
-		version: 2.1,
+		version: 2.2,
 
 		getEmbeddedCodes(_fileName, sfc) {
 			if (!sfc.template?.ast) {
