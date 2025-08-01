@@ -6,7 +6,7 @@ const langReg = /\blang\s*=\s*(['"]?)(\S*)\b\1/;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
-		version: 2.1,
+		version: 2.2,
 
 		getLanguageId(fileName) {
 			if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {

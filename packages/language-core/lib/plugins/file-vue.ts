@@ -3,7 +3,7 @@ import { parse } from '../utils/parseSfc';
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
-		version: 2.1,
+		version: 2.2,
 
 		getLanguageId(fileName) {
 			if (vueCompilerOptions.extensions.some(ext => fileName.endsWith(ext))) {

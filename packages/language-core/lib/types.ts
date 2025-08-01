@@ -75,7 +75,7 @@ export interface VueCompilerOptions {
 	>;
 }
 
-export const validVersions = [2, 2.1] as const;
+export const validVersions = [2, 2.1, 2.2] as const;
 
 export type VueLanguagePluginReturn = {
 	version: typeof validVersions[number];
