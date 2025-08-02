@@ -1,3 +1,4 @@
+import { camelize, capitalize } from '@vue/shared';
 import * as path from 'path-browserify';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
@@ -6,7 +7,6 @@ import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSetupReturns, generateEmitsOption, generatePropsOption } from './component';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
-import { getTemplateUsageVars } from './template';
 
 export function* generateComponentSelf(
 	options: ScriptCodegenOptions,
@@ -15,36 +15,29 @@ export function* generateComponentSelf(
 ): Generator<Code> {
 	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
-		yield `setup() {${newLine}`;
-		yield `return {${newLine}`;
+		yield `setup: () => ({${newLine}`;
 		if (ctx.bypassDefineComponent) {
-			yield* generateComponentSetupReturns(options.scriptSetupRanges);
-		}
-		// bindings
-		const templateUsageVars = getTemplateUsageVars(options, ctx);
-		for (
-			const [content, bindings] of [
-				[options.sfc.scriptSetup.content, options.scriptSetupRanges.bindings] as const,
-				options.sfc.script && options.scriptRanges
-					? [options.sfc.script.content, options.scriptRanges.bindings] as const
-					: ['', []] as const,
-			]
-		) {
-			for (const { range } of bindings) {
-				const varName = content.slice(range.start, range.end);
-				if (!templateUsageVars.has(varName) && !templateCodegenCtx.accessExternalVariables.has(varName)) {
-					continue;
-				}
-
-				const token = Symbol(varName.length);
-				yield ['', undefined, 0, { __linkedToken: token }];
-				yield `${varName}: ${varName} as typeof `;
-				yield ['', undefined, 0, { __linkedToken: token }];
-				yield `${varName},${newLine}`;
+			for (const code of generateComponentSetupReturns(options.scriptSetupRanges)) {
+				yield `...${code},${newLine}`;
 			}
 		}
-		yield `}${endOfLine}`; // return {
-		yield `},${newLine}`; // setup() {
+		// bindings
+		const templateUsageVars = new Set([
+			...options.sfc.template?.ast?.components.flatMap(c => [camelize(c), capitalize(camelize(c))]) ?? [],
+			...options.templateCodegen?.accessExternalVariables.keys() ?? [],
+			...templateCodegenCtx.accessExternalVariables.keys(),
+		]);
+		for (const varName of ctx.bindingNames) {
+			if (!templateUsageVars.has(varName)) {
+				continue;
+			}
+			const token = Symbol(varName.length);
+			yield ['', undefined, 0, { __linkedToken: token }];
+			yield `${varName}: ${varName} as typeof `;
+			yield ['', undefined, 0, { __linkedToken: token }];
+			yield `${varName},${newLine}`;
+		}
+		yield `}),${newLine}`;
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
 			const emitOptionCodes = [...generateEmitsOption(options, options.scriptSetupRanges)];
 			yield* emitOptionCodes;

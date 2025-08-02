@@ -1,7 +1,7 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { generateSfcBlockSection, newLine } from '../utils';
 import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
@@ -29,23 +29,18 @@ export function* generateComponent(
 		yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 	}
 
-	yield `setup() {${newLine}`;
 	const returns: Code[] = [];
 	if (ctx.bypassDefineComponent) {
-		yield* `const __VLS_returns = {${newLine}`;
-		yield* generateComponentSetupReturns(scriptSetupRanges);
-		yield `}${endOfLine}`;
-		returns.push(`typeof __VLS_returns`);
+		returns.push(...generateComponentSetupReturns(scriptSetupRanges));
 	}
 	if (scriptSetupRanges.defineExpose) {
-		returns.push(`typeof __VLS_exposed`);
+		returns.push(`__VLS_exposed`);
 	}
 	if (returns.length) {
-		yield `return {} as `;
-		yield* generateIntersectMerge(returns);
-		yield endOfLine;
+		yield `setup: () => (`;
+		yield* generateSpreadMerge(returns);
+		yield `),${newLine}`;
 	}
-	yield `},${newLine}`;
 
 	if (!ctx.bypassDefineComponent) {
 		const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
@@ -76,13 +71,14 @@ export function* generateComponent(
 export function* generateComponentSetupReturns(scriptSetupRanges: ScriptSetupRanges): Generator<Code> {
 	// fill $props
 	if (scriptSetupRanges.defineProps) {
+		const name = scriptSetupRanges.defineProps.name ?? `__VLS_props`;
 		// NOTE: defineProps is inaccurate for $props
-		yield `$props: __VLS_makeOptional(${scriptSetupRanges.defineProps.name ?? `__VLS_props`}),${newLine}`;
-		yield `...${scriptSetupRanges.defineProps.name ?? `__VLS_props`},${newLine}`;
+		yield name;
+		yield `{} as { $props: Partial<typeof ${name}> }`;
 	}
 	// fill $emit
 	if (scriptSetupRanges.defineEmits) {
-		yield `$emit: ${scriptSetupRanges.defineEmits.name ?? '__VLS_emit'},${newLine}`;
+		yield `{} as { $emit: typeof ${scriptSetupRanges.defineEmits.name ?? `__VLS_emit`} }`;
 	}
 }
 
