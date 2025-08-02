@@ -16,6 +16,7 @@ export interface Requests {
 	getComponentSlots: Request<typeof import('./getComponentSlots.js')['getComponentSlots']>;
 	getElementAttrs: Request<typeof import('./getElementAttrs.js')['getElementAttrs']>;
 	getElementNames: Request<typeof import('./getElementNames.js')['getElementNames']>;
+	resolveModuleName: Request<typeof import('./resolveModuleName.js')['resolveModuleName']>;
 	getDocumentHighlights: Request<(fileName: string, position: number) => ts.DocumentHighlights[]>;
 	getEncodedSemanticClassifications: Request<(fileName: string, span: ts.TextSpan) => ts.Classifications>;
 	getQuickInfoAtPosition: Request<(fileName: string, position: ts.LineAndCharacter) => string>;
