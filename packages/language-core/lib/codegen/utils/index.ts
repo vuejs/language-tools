@@ -1,6 +1,7 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
@@ -46,4 +47,15 @@ export function generateSfcBlockSection(
 		start,
 		features,
 	];
+}
+
+export function* generatePartiallyEnding(
+	source: string,
+	end: number,
+	mark: string,
+	delimiter = 'debugger',
+): Generator<Code> {
+	yield delimiter;
+	yield [``, source, end, codeFeatures.verification];
+	yield `/* PartiallyEnd: ${mark} */${newLine}`;
 }

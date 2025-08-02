@@ -22,7 +22,7 @@ export function getComponentEvents(
 		return [];
 	}
 
-	const componentType = getComponentType(ts, languageService, root, components, fileName, tag);
+	const componentType = getComponentType(ts, languageService, root, components, tag);
 	if (!componentType) {
 		return [];
 	}
