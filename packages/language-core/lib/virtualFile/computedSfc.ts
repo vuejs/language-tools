@@ -3,9 +3,6 @@ import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, setCurrentSub } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
-import { parseCssClassNames } from '../utils/parseCssClassNames';
-import { parseCssImports } from '../utils/parseCssImports';
-import { parseCssVars } from '../utils/parseCssVars';
 import { computedArray, computedItems } from '../utils/signals';
 
 export const templateInlineTsAsts = new WeakMap<CompilerDOM.RootNode, Map<string, ts.SourceFile>>();
@@ -133,16 +130,24 @@ export function computedSfc(
 			const getSrc = computedAttrValue('__src', base, getBlock);
 			const getModule = computedAttrValue('__module', base, getBlock);
 			const getScoped = computed(() => !!getBlock().scoped);
+			const getIr = computed(() => {
+				for (const plugin of plugins) {
+					const ast = plugin.compileSFCStyle?.(base.lang, base.content);
+					if (ast) {
+						return ast;
+					}
+				}
+			});
 			const getImports = computedItems(
-				() => [...parseCssImports(base.content)],
+				() => getIr()?.imports ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
 			);
-			const getCssVars = computedItems(
-				() => [...parseCssVars(base.content)],
+			const getBindings = computedItems(
+				() => getIr()?.bindings ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
 			);
 			const getClassNames = computedItems(
-				() => [...parseCssClassNames(base.content)],
+				() => getIr()?.classNames ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
 			);
 			return () =>
@@ -159,8 +164,8 @@ export function computedSfc(
 					get imports() {
 						return getImports();
 					},
-					get cssVars() {
-						return getCssVars();
+					get bindings() {
+						return getBindings();
 					},
 					get classNames() {
 						return getClassNames();

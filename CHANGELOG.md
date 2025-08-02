@@ -1,5 +1,29 @@
 # Changelog
 
+## 3.0.5 (2025-08-01)
+
+### Features
+
+- feat(language-core): introduce `compileSFCStyle` to provide style related infomation (#5548) - Thanks to @KazariEX!
+- feat(language-service): completion snippet for `v-for` (#5553) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(language-core): generate `modelModifiers` for explicitly declared default model name (#5558) - Thanks to @KazariEX!
+- fix(language-service): more responsive `.value` insertion
+- fix(vscode): add `class` scope fallback for `component` semantic tokens (#5559) - Thanks to @KazariEX!
+- fix(vscode): make sure extension is loaded immediately
+- fix(language-service): only check `globalTypesPath` for FS files
+- fix(vscode): handle fail tsserver requests to avoid memory leak
+- fix(vscode): do not delay the execution of `restartExtensionHost`
+- fix(language-core): avoid references highlight of unrelated native element tags (#5563) - Thanks to @KazariEX!
+- fix(language-core): tolerance for incomplete root template tag
+- fix(language-core): enable navigation code feature on directive modifiers - Thanks to @KazariEX!
+
+### Other Changes
+
+- chore(language-service): improve global types error message for JS projects (#5574) - Thanks to @Ciallo-Chiaki!
+
 ## 3.0.4 (2025-07-25)
 
 ### Features

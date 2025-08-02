@@ -132,7 +132,7 @@ export function* generatePropsOption(
 	const typeOptionCodes: Code[] = [];
 
 	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
-		let attrsType = `Partial<__VLS_InheritedAttrs>`;
+		let attrsType = `__VLS_InheritedAttrs`;
 		if (hasEmitsOption) {
 			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
 		}

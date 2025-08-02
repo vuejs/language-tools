@@ -42,7 +42,7 @@ Failed to write the global types file. Make sure that:
 1. "node_modules" directory exists.
 2. "${vueCompilerOptions.lib}" is installed as a direct dependency.
 
-Alternatively, you can manually set "vueCompilerOptions.globalTypesPath" in your "tsconfig.json" or "jsconfig.json". If creating a new config file and your project might have node_modules in the future, add "exclude": ["node_modules"] to maintain performance.
+Alternatively, you can manually set "vueCompilerOptions.globalTypesPath" in your "tsconfig.json" or "jsconfig.json". To prevent potential performance issues, consider adding \`"exclude": ["node_modules"]\` when creating a new config file.
 
 If all dependencies are installed, try running the "vue.action.restartServer" command to restart Vue and TS servers.
 						`.trim(),

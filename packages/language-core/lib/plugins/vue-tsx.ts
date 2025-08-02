@@ -16,7 +16,7 @@ const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
 const plugin: VueLanguagePlugin = ctx => {
 	return {
-		version: 2.1,
+		version: 2.2,
 
 		requiredCompilerOptions: [
 			'noPropertyAccessFromIndexSignature',

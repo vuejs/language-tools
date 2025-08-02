@@ -69,7 +69,7 @@ export function* generateScriptSetup(
 		}
 
 		yield `return {} as {${newLine}`
-			+ `	props: ${ctx.localTypes.PrettifyLocal}<__VLS_OwnProps & __VLS_PublicProps & Partial<__VLS_InheritedAttrs>> & __VLS_BuiltInPublicProps,${newLine}`
+			+ `	props: ${ctx.localTypes.PrettifyLocal}<__VLS_OwnProps & __VLS_PublicProps & __VLS_InheritedAttrs> & __VLS_BuiltInPublicProps,${newLine}`
 			+ `	expose(exposed: import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${
 				scriptSetupRanges.defineExpose ? 'typeof __VLS_exposed' : '{}'
 			}>): void,${newLine}`

@@ -17,7 +17,7 @@ const codeSnippetImportReg = /^\s*<<<\s*.+/gm;
 
 const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 	return {
-		version: 2.1,
+		version: 2.2,
 
 		getLanguageId(fileName) {
 			if (vueCompilerOptions.vitePressExtensions.some(ext => fileName.endsWith(ext))) {
