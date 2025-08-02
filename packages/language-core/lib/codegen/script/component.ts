@@ -35,18 +35,20 @@ export function* generateComponent(
 		if (scriptSetupRanges.defineProps) {
 			const name = scriptSetupRanges.defineProps.name ?? `__VLS_props`;
 			// NOTE: defineProps is inaccurate for $props
-			returns.push(`typeof ${name} & { $props: Partial<typeof ${name}> }`);
+			returns.push(name, `{} as { $props: Partial<typeof ${name}> }`);
 		}
 		// fill $emit
 		if (scriptSetupRanges.defineEmits) {
-			returns.push(`{ $emit: typeof ${scriptSetupRanges.defineEmits.name ?? '__VLS_emit'} }`);
+			returns.push(`{} as { $emit: typeof ${scriptSetupRanges.defineEmits.name ?? `__VLS_emit`} }`);
 		}
 	}
 	if (scriptSetupRanges.defineExpose) {
-		returns.push(`typeof __VLS_exposed`);
+		returns.push(`__VLS_exposed`);
 	}
 	if (returns.length) {
-		yield `setup: () => ({} as ${returns.join(` & `)}),${newLine}`;
+		yield `setup: () => (`;
+		yield* generateSpreadMerge(returns);
+		yield `),${newLine}`;
 	}
 
 	if (!ctx.bypassDefineComponent) {

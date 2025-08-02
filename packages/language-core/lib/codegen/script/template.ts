@@ -113,12 +113,12 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
 		const { componentsOption } = options.scriptRanges.exportDefault;
 		yield `const __VLS_componentsOption = `;
-		yield [
-			options.sfc.script.content.slice(componentsOption.start, componentsOption.end),
-			'script',
+		yield generateSfcBlockSection(
+			options.sfc.script,
 			componentsOption.start,
+			componentsOption.end,
 			codeFeatures.navigation,
-		];
+		);
 		yield endOfLine;
 		types.push(`typeof __VLS_componentsOption`);
 	}
@@ -133,12 +133,12 @@ function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<C
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
 		const { directivesOption } = options.scriptRanges.exportDefault;
 		yield `const __VLS_directivesOption = `;
-		yield [
-			options.sfc.script.content.slice(directivesOption.start, directivesOption.end),
-			'script',
+		yield generateSfcBlockSection(
+			options.sfc.script,
 			directivesOption.start,
+			directivesOption.end,
 			codeFeatures.navigation,
-		];
+		);
 		yield endOfLine;
 		types.push(`__VLS_ResolveDirectives<typeof __VLS_directivesOption>`);
 	}
@@ -179,14 +179,14 @@ function* generateCssVars(
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	for (const style of options.sfc.styles) {
-		for (const cssBind of style.cssVars) {
+		for (const binding of style.bindings) {
 			yield* generateInterpolation(
 				options,
 				ctx,
 				style.name,
 				codeFeatures.all,
-				cssBind.text,
-				cssBind.offset,
+				binding.text,
+				binding.offset,
 				`(`,
 				`)`,
 			);

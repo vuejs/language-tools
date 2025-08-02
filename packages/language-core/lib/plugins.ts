@@ -7,6 +7,7 @@ import vueSfcCustomBlocks from './plugins/vue-sfc-customblocks';
 import vueSfcScriptsFormat from './plugins/vue-sfc-scripts';
 import vueSfcStyles from './plugins/vue-sfc-styles';
 import vueSfcTemplate from './plugins/vue-sfc-template';
+import vueStyleCss from './plugins/vue-style-css';
 import vueTemplateHtmlPlugin from './plugins/vue-template-html';
 import vueTemplateInlineCssPlugin from './plugins/vue-template-inline-css';
 import vueTemplateInlineTsPlugin from './plugins/vue-template-inline-ts';
@@ -22,6 +23,7 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		useHtmlFilePlugin,
 		vueRootTagsPlugin,
 		vueScriptJsPlugin,
+		vueStyleCss,
 		vueTemplateHtmlPlugin,
 		vueTemplateInlineCssPlugin,
 		vueTemplateInlineTsPlugin,

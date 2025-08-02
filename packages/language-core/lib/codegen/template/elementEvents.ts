@@ -122,23 +122,11 @@ export function* generateEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		let prefix = `(`;
-		let suffix = `)`;
 		let isFirstMapping = true;
 
 		const ast = createTsAst(options.ts, ctx.inlineTsAsts, prop.exp.content);
 		const isCompound = isCompoundExpression(options.ts, ast);
-
-		if (isCompound) {
-			ctx.addLocalVariable('$event');
-
-			yield `(...[$event]) => {${newLine}`;
-			yield* ctx.generateConditionGuards();
-			prefix = ``;
-			suffix = ``;
-		}
-
-		yield* generateInterpolation(
+		const interpolation = generateInterpolation(
 			options,
 			ctx,
 			'template',
@@ -162,16 +150,22 @@ export function* generateEventExpression(
 			},
 			prop.exp.content,
 			prop.exp.loc.start.offset,
-			prefix,
-			suffix,
+			isCompound ? `` : `(`,
+			isCompound ? `` : `)`,
 		);
 
 		if (isCompound) {
-			ctx.removeLocalVariable('$event');
-
+			yield `(...[$event]) => {${newLine}`;
+			ctx.addLocalVariable('$event');
+			yield* ctx.generateConditionGuards();
+			yield* interpolation;
 			yield endOfLine;
+			ctx.removeLocalVariable('$event');
 			yield* ctx.generateAutoImportCompletion();
 			yield `}`;
+		}
+		else {
+			yield* interpolation;
 		}
 	}
 	else {

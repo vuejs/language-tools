@@ -91,8 +91,8 @@ export function collectStyleScopedClassReferences(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			&& prop.arg.content === 'class'
 		) {
-			const content = '`${' + prop.exp.content + '}`';
-			const startOffset = prop.exp.loc.start.offset - 3;
+			const content = '(' + prop.exp.content + ')';
+			const startOffset = prop.exp.loc.start.offset - 1;
 
 			const { ts } = options;
 			const ast = ts.createSourceFile('', content, 99 satisfies ts.ScriptTarget.Latest);
@@ -101,22 +101,19 @@ export function collectStyleScopedClassReferences(
 			ts.forEachChild(ast, node => {
 				if (
 					!ts.isExpressionStatement(node)
-					|| !isTemplateExpression(node.expression)
+					|| !ts.isParenthesizedExpression(node.expression)
 				) {
 					return;
 				}
-
-				const expression = node.expression.templateSpans[0].expression;
+				const { expression } = node.expression;
 
 				if (ts.isStringLiteralLike(expression)) {
 					literals.push(expression);
 				}
-
-				if (ts.isArrayLiteralExpression(expression)) {
+				else if (ts.isArrayLiteralExpression(expression)) {
 					walkArrayLiteral(expression);
 				}
-
-				if (ts.isObjectLiteralExpression(expression)) {
+				else if (ts.isObjectLiteralExpression(expression)) {
 					walkObjectLiteral(expression);
 				}
 			});
@@ -209,9 +206,4 @@ function collectClasses(content: string, startOffset = 0) {
 		}
 	}
 	return classes;
-}
-
-// isTemplateExpression is missing in tsc
-function isTemplateExpression(node: ts.Node): node is ts.TemplateExpression {
-	return node.kind === 228 satisfies ts.SyntaxKind.TemplateExpression;
 }
