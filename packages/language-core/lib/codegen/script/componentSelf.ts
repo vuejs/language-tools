@@ -15,10 +15,11 @@ export function* generateComponentSelf(
 ): Generator<Code> {
 	if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
-		yield `setup() {${newLine}`;
-		yield `return {${newLine}`;
+		yield `setup: () => ({${newLine}`;
 		if (ctx.bypassDefineComponent) {
-			yield* generateComponentSetupReturns(options.scriptSetupRanges);
+			for (const code of generateComponentSetupReturns(options.scriptSetupRanges)) {
+				yield `...${code},${newLine}`;
+			}
 		}
 		// bindings
 		const templateUsageVars = new Set([
@@ -36,8 +37,7 @@ export function* generateComponentSelf(
 			yield ['', undefined, 0, { __linkedToken: token }];
 			yield `${varName},${newLine}`;
 		}
-		yield `}${endOfLine}`; // return {
-		yield `},${newLine}`; // setup() {
+		yield `}),${newLine}`;
 		if (options.sfc.scriptSetup && options.scriptSetupRanges && !ctx.bypassDefineComponent) {
 			const emitOptionCodes = [...generateEmitsOption(options, options.scriptSetupRanges)];
 			yield* emitOptionCodes;

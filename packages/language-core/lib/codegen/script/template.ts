@@ -5,8 +5,8 @@ import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
-import { endOfLine, newLine } from '../utils';
-import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 
@@ -49,48 +49,42 @@ function* generateTemplateElements(): Generator<Code> {
 }
 
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
-	const types: Code[] = [`typeof __VLS_ctx`];
+	const types: string[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
 		const { componentsOption } = options.scriptRanges.exportDefault;
 		yield `const __VLS_componentsOption = `;
-		yield [
-			options.sfc.script.content.slice(componentsOption.start, componentsOption.end),
-			'script',
+		yield generateSfcBlockSection(
+			options.sfc.script,
 			componentsOption.start,
+			componentsOption.end,
 			codeFeatures.navigation,
-		];
+		);
 		yield endOfLine;
 		types.push(`typeof __VLS_componentsOption`);
 	}
 
-	yield `type __VLS_LocalComponents =`;
-	yield* generateIntersectMerge(types);
-	yield endOfLine;
-
+	yield `type __VLS_LocalComponents = ${types.join(` & `)}${endOfLine}`;
 	yield `let __VLS_components!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
 export function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
-	const types: Code[] = [`typeof __VLS_ctx`];
+	const types: string[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
 		const { directivesOption } = options.scriptRanges.exportDefault;
 		yield `const __VLS_directivesOption = `;
-		yield [
-			options.sfc.script.content.slice(directivesOption.start, directivesOption.end),
-			'script',
+		yield generateSfcBlockSection(
+			options.sfc.script,
 			directivesOption.start,
+			directivesOption.end,
 			codeFeatures.navigation,
-		];
+		);
 		yield endOfLine;
 		types.push(`__VLS_ResolveDirectives<typeof __VLS_directivesOption>`);
 	}
 
-	yield `type __VLS_LocalDirectives =`;
-	yield* generateIntersectMerge(types);
-	yield endOfLine;
-
+	yield `type __VLS_LocalDirectives = ${types.join(` & `)}${endOfLine}`;
 	yield `let __VLS_directives!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
