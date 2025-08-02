@@ -1,5 +1,4 @@
 import type { Code } from '../../types';
-import { hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
@@ -136,28 +135,4 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 		}
 	}
 	yield `// CSS variable injection end ${newLine}`;
-}
-
-export function getTemplateUsageVars(options: ScriptCodegenOptions, ctx: ScriptCodegenContext) {
-	const usageVars = new Set<string>();
-	const components = new Set(options.sfc.template?.ast?.components);
-
-	if (options.templateCodegen) {
-		// fix import components unused report
-		for (const varName of ctx.bindingNames) {
-			if (components.has(varName) || components.has(hyphenateTag(varName))) {
-				usageVars.add(varName);
-			}
-		}
-		for (const component of components) {
-			if (component.includes('.')) {
-				usageVars.add(component.split('.')[0]);
-			}
-		}
-		for (const [varName] of options.templateCodegen.accessExternalVariables) {
-			usageVars.add(varName);
-		}
-	}
-
-	return usageVars;
 }
