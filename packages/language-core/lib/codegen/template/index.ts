@@ -22,8 +22,8 @@ export interface TemplateCodegenOptions {
 	destructuredPropNames: Set<string>;
 	templateRefNames: Set<string>;
 	hasDefineSlots?: boolean;
-	slotsAssignName?: string;
 	propsAssignName?: string;
+	slotsAssignName?: string;
 	inheritAttrs: boolean;
 	selfComponentName?: string;
 }
@@ -60,24 +60,26 @@ export function* generateTemplate(
 	yield* generateStyleScopedClassReferences(ctx);
 	yield* ctx.generateHoistVariables();
 
-	const speicalTypes = [
+	const dollarTypes = [
 		[slotsPropertyName, yield* generateSlots(options, ctx)],
 		['$attrs', yield* generateInheritedAttrs(options, ctx)],
 		['$refs', yield* generateTemplateRefs(options, ctx)],
 		['$el', yield* generateRootEl(ctx)],
-	];
+	].filter(([name]) => ctx.dollarVars.has(name));
 
-	yield `var __VLS_dollars!: {${newLine}`;
-	for (const [name, type] of speicalTypes) {
-		yield `${name}: ${type}${endOfLine}`;
+	if (dollarTypes.length) {
+		yield `var __VLS_dollars!: {${newLine}`;
+		for (const [name, type] of dollarTypes) {
+			yield `${name}: ${type}${endOfLine}`;
+		}
+		yield `} & { [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 	}
-	yield `} & { [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 }
 
 function* generateSlots(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<Code, string> {
 	if (!options.hasDefineSlots) {
 		yield `type __VLS_Slots = {}`;
 		for (const { expVar, propsVar } of ctx.dynamicSlots) {
@@ -112,7 +114,7 @@ function* generateSlots(
 function* generateInheritedAttrs(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<Code, string> {
 	yield `type __VLS_InheritedAttrs = ${
 		ctx.inheritedAttrVars.size
 			? `Partial<${[...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `)}>`
@@ -140,7 +142,7 @@ function* generateInheritedAttrs(
 function* generateTemplateRefs(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<Code, string> {
 	yield `type __VLS_TemplateRefs = {}`;
 	for (const [name, refs] of ctx.templateRefs) {
 		yield `${newLine}& `;
@@ -172,7 +174,7 @@ function* generateTemplateRefs(
 
 function* generateRootEl(
 	ctx: TemplateCodegenContext,
-): Generator<Code> {
+): Generator<Code, string> {
 	yield `type __VLS_RootEl = `;
 	if (ctx.singleRootElTypes.length && !ctx.singleRootNodes.has(null)) {
 		for (const type of ctx.singleRootElTypes) {
