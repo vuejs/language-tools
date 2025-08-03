@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
-import { getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
+import { getElementTagOffsets, getSlotsPropertyName, hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, identifierRegex, newLine, normalizeAttributeValue } from '../utils';
@@ -25,13 +25,7 @@ export function* generateComponent(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
-	const tagOffsets = [node.loc.start.offset + options.template.content.slice(node.loc.start.offset).indexOf(node.tag)];
-	if (!node.isSelfClosing && options.template.lang === 'html') {
-		const endTagOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
-		if (endTagOffset > tagOffsets[0]) {
-			tagOffsets.push(endTagOffset);
-		}
-	}
+	const tagOffsets = getElementTagOffsets(node, options.template);
 	const failedPropExps: FailedPropExpression[] = [];
 	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
 	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
@@ -294,17 +288,8 @@ export function* generateElement(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
-	const startTagOffset = node.loc.start.offset
-		+ options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
-	const endTagOffset = !node.isSelfClosing && options.template.lang === 'html'
-		? node.loc.start.offset + node.loc.source.lastIndexOf(node.tag)
-		: undefined;
+	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	const failedPropExps: FailedPropExpression[] = [];
-
-	const features = {
-		...codeFeatures.semanticWithoutHighlight,
-		...codeFeatures.navigationWithoutHighlight,
-	};
 
 	yield `__VLS_asFunctionalElement(__VLS_elements`;
 	yield* generatePropertyAccess(
@@ -312,7 +297,7 @@ export function* generateElement(
 		ctx,
 		node.tag,
 		startTagOffset,
-		features,
+		codeFeatures.withoutHighlightAndCompletion,
 	);
 	if (endTagOffset !== undefined) {
 		yield `, __VLS_elements`;
@@ -321,7 +306,7 @@ export function* generateElement(
 			ctx,
 			node.tag,
 			endTagOffset,
-			features,
+			codeFeatures.withoutHighlightAndCompletion,
 		);
 	}
 	yield `)(`;
