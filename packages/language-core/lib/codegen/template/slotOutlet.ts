@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
+import { getElementTagOffsets } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
@@ -16,8 +17,7 @@ export function* generateSlotOutlet(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.SlotOutletNode,
 ): Generator<Code> {
-	const startTagOffset = node.loc.start.offset
-		+ options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
+	const [startTagOffset] = getElementTagOffsets(node, options.template);
 	const startTagEndOffset = startTagOffset + node.tag.length;
 	const propsVar = ctx.getInternalVariable();
 	const nameProp = node.props.find(prop => {

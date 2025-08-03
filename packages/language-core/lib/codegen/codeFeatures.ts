@@ -24,9 +24,6 @@ const raw = {
 	navigation: {
 		navigation: true,
 	},
-	navigationWithoutHighlight: {
-		navigation: { shouldHighlight: () => false },
-	},
 	navigationWithoutRename: {
 		navigation: { shouldRename: () => false },
 	},
