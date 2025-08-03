@@ -42,7 +42,7 @@ function getWelcomeHtml() {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Vue (Official)</title>
+	<title>Vue.js</title>
 	<script>
 		const vscode = acquireVsCodeApi();
 		function verifySponsor() {
@@ -282,7 +282,7 @@ function getWelcomeHtml() {
 			</g>
 		</svg>
 		<div>
-			<h1>Vue (Official) <sup><small>${version}</small></sup></h1>
+			<h1>Vue.js <sup><small>${version}</small></sup></h1>
 			<div class="links">
 				<a href="https://github.com/vuejs/language-tools" target="_blank">
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;">
