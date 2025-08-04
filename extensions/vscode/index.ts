@@ -21,13 +21,6 @@ import { activate as activateWelcome } from './lib/welcome';
 let client: lsp.BaseLanguageClient | undefined;
 let needRestart = false;
 
-class _LanguageClient extends lsp.LanguageClient {
-	fillInitializeParams(params: lsp.InitializeParams) {
-		// fix https://github.com/vuejs/language-tools/issues/1959
-		params.locale = vscode.env.language;
-	}
-}
-
 export const { activate, deactivate } = defineExtension(() => {
 	const context = extensionContext.value!;
 	const volarLabs = createLabsInfo();
@@ -124,7 +117,7 @@ export const { activate, deactivate } = defineExtension(() => {
 
 function launch(context: vscode.ExtensionContext) {
 	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js');
-	const client = new _LanguageClient(
+	const client = new lsp.LanguageClient(
 		'vue',
 		'Vue',
 		{
