@@ -18,28 +18,8 @@ import * as vscode from 'vscode';
 import { config } from './lib/config';
 import { activate as activateWelcome } from './lib/welcome';
 
-let needRestart = false;
-
-const incompatibleExtensionIds = [
-	'johnsoncodehk.vscode-typescript-vue-plugin',
-	'Vue.vscode-typescript-vue-plugin',
-];
-
-for (const extensionId of incompatibleExtensionIds) {
-	const extension = vscode.extensions.getExtension(extensionId);
-	if (extension) {
-		vscode.window.showErrorMessage(
-			`The "${extensionId}" extension is incompatible with the Vue extension. Please uninstall it.`,
-			'Show Extension',
-		).then(action => {
-			if (action === 'Show Extension') {
-				vscode.commands.executeCommand('workbench.extensions.search', '@id:' + extensionId);
-			}
-		});
-	}
-}
-
 let client: lsp.BaseLanguageClient | undefined;
+let needRestart = false;
 
 class _LanguageClient extends lsp.LanguageClient {
 	fillInitializeParams(params: lsp.InitializeParams) {
@@ -63,6 +43,25 @@ export const { activate, deactivate } = defineExtension(() => {
 		}
 
 		nextTick(() => stop());
+
+		for (
+			const extensionId of [
+				'johnsoncodehk.vscode-typescript-vue-plugin',
+				'Vue.vscode-typescript-vue-plugin',
+			]
+		) {
+			const extension = vscode.extensions.getExtension(extensionId);
+			if (extension) {
+				vscode.window.showErrorMessage(
+					`The "${extensionId}" extension is incompatible with the Vue extension. Please uninstall it.`,
+					'Show Extension',
+				).then(action => {
+					if (action === 'Show Extension') {
+						vscode.commands.executeCommand('workbench.extensions.search', '@id:' + extensionId);
+					}
+				});
+			}
+		}
 
 		if (needRestart) {
 			vscode.window.showInformationMessage(
