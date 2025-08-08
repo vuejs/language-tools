@@ -40,7 +40,6 @@ export function createVueLanguageServicePlugins(
 	}) as NonNullable<typeof tsPluginClient>;
 
 	return [
-		createCssPlugin(),
 		createJsonPlugin(),
 		createPugFormatPlugin(),
 		createVueAutoSpacePlugin(),
@@ -64,6 +63,7 @@ export function createVueLanguageServicePlugins(
 		createVueInlayHintsPlugin(ts),
 
 		// type aware plugins
+		createCssPlugin(tsPluginClient),
 		createTypescriptSemanticTokensPlugin(tsPluginClient),
 		createVueAutoDotValuePlugin(ts, tsPluginClient),
 		createVueComponentSemanticTokensPlugin(tsPluginClient),
