@@ -94,7 +94,7 @@ importers:
         version: 1.0.1
       typescript:
         specifier: '*'
-        version: 5.8.3
+        version: 5.9.2
     devDependencies:
       '@types/node':
         specifier: ^22.10.4
@@ -136,7 +136,7 @@ importers:
         version: 4.0.2
       typescript:
         specifier: '*'
-        version: 5.8.3
+        version: 5.9.2
     devDependencies:
       '@types/node':
         specifier: ^22.10.4
@@ -189,7 +189,7 @@ importers:
         version: link:../typescript-plugin
       typescript:
         specifier: '*'
-        version: 5.8.3
+        version: 5.9.2
       vscode-uri:
         specifier: ^3.0.8
         version: 3.1.0
@@ -275,7 +275,7 @@ importers:
         version: link:../language-core
       typescript:
         specifier: '>=5.0.0'
-        version: 5.8.3
+        version: 5.9.2
     devDependencies:
       '@types/node':
         specifier: ^22.10.4
@@ -3598,11 +3598,6 @@ packages:
 
   typescript-auto-import-cache@0.3.6:
     resolution: {integrity: sha512-RpuHXrknHdVdK7wv/8ug3Fr0WNsNi5l5aB8MYYuXhq2UH5lnEB1htJ1smhtD5VeCsGr2p8mUDtd83LCQDFVgjQ==}
-
-  typescript@5.8.3:
-    resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
-    engines: {node: '>=14.17'}
-    hasBin: true
 
   typescript@5.9.2:
     resolution: {integrity: sha512-CWBzXQrc/qOkhidw1OzBTQuYRbfyxDXJMVJ1XNwUHGROVmuaeiEm3OslpZ1RV96d7SKKjZKrSJu3+t/xlw3R9A==}
@@ -7531,8 +7526,6 @@ snapshots:
   typescript-auto-import-cache@0.3.6:
     dependencies:
       semver: 7.7.2
-
-  typescript@5.8.3: {}
 
   typescript@5.9.2: {}
 
