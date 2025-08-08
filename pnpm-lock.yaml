@@ -103,8 +103,8 @@ importers:
         specifier: ^1.0.1
         version: 1.0.3
       vue-component-type-helpers:
-        specifier: 3.0.2
-        version: 3.0.2
+        specifier: 3.0.5
+        version: link:../component-type-helpers
 
   packages/component-type-helpers: {}
 
@@ -3816,9 +3816,6 @@ packages:
 
   vscode-uri@3.1.0:
     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
-
-  vue-component-type-helpers@3.0.2:
-    resolution: {integrity: sha512-pbzPt5TlLZijRXt+/uhYRxTkIQkY09Ylx9t9lSk2ZjCv+bqyDRWH0RDUso7kOYQhG7m6SHXPhXEjD27LxKFryA==}
 
   vue@3.4.38:
     resolution: {integrity: sha512-f0ZgN+mZ5KFgVv9wz0f4OgVKukoXtS3nwET4c2vLBGQR50aI8G0cqbFtLlX9Yiyg3LFGBitruPHt2PxwTduJEw==}
@@ -7739,8 +7736,6 @@ snapshots:
       vscode-textmate: 9.2.0
 
   vscode-uri@3.1.0: {}
-
-  vue-component-type-helpers@3.0.2: {}
 
   vue@3.4.38(typescript@5.9.2):
     dependencies:
