@@ -7,6 +7,7 @@
 	},
 	"exact": true,
 	"forcePublish": true,
+	"allowPeerDependenciesUpdate": true,
 	"npmClient": "pnpm",
 	"packages": [
 		"extensions/**",
