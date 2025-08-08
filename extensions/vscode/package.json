@@ -22,9 +22,7 @@
 		"vscode": "^1.88.0"
 	},
 	"activationEvents": [
-		"onLanguage:vue",
-		"onLanguage:markdown",
-		"onLanguage:html"
+		"onLanguage"
 	],
 	"main": "./dist/extension.js",
 	"browser": "./web.js",
@@ -67,11 +65,6 @@
 			{
 				"id": "jade",
 				"configuration": "./languages/sfc-template-language-configuration.json"
-			},
-			{
-				"id": "plaintext",
-				"configuration": "./languages/stub.json",
-				"//": "Make sure Vue extension is loaded immediately when VSCode starts."
 			}
 		],
 		"typescriptServerPlugins": [
