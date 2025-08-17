@@ -15,14 +15,14 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2(@types/node@22.15.2)(conventional-commits-filter@5.0.0)(typescript@5.9.2)
       '@tsslint/cli':
-        specifier: ^1.5.0
-        version: 1.5.16(typescript@5.9.2)
+        specifier: ^2.0.1
+        version: 2.0.1(typescript@5.9.2)
       '@tsslint/config':
-        specifier: ^1.5.0
-        version: 1.5.16(typescript@5.9.2)
+        specifier: ^2.0.1
+        version: 2.0.1(typescript@5.9.2)
       '@tsslint/eslint':
-        specifier: ^1.5.0
-        version: 1.5.16(typescript@5.9.2)
+        specifier: ^2.0.1
+        version: 2.0.1(typescript@5.9.2)
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.19.0
         version: 8.31.0(@typescript-eslint/parser@8.31.0(eslint@9.25.1)(typescript@5.9.2))(eslint@9.25.1)(typescript@5.9.2)
@@ -1327,23 +1327,23 @@ packages:
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
 
-  '@tsslint/cli@1.5.16':
-    resolution: {integrity: sha512-t67y5/w2t1XoOrPoLKYtAw53y84fQumC+6hIMUjwiTOuNV7SkyE3xvnDnI0BP7FjwPB63glpuz29HeN6XLbCBQ==}
+  '@tsslint/cli@2.0.1':
+    resolution: {integrity: sha512-7g+jVQrs9d3D9kMpT1TBlLBQhmQriDGekyywwvrBnmocA1KJvVskms7t3xHxkGupNrF5dH+TZaQVacwCKw93Sg==}
     hasBin: true
     peerDependencies:
       typescript: '*'
 
-  '@tsslint/config@1.5.16':
-    resolution: {integrity: sha512-yBn0ixoU4Gu3aQb6F7M7IP+ruqFYANpZq3bplXvUaFbOiKfKaOQZtmai6HiYLWkbF8Qb3+jNjMbH14ZtP1XJug==}
+  '@tsslint/config@2.0.1':
+    resolution: {integrity: sha512-al2vj06aenhqMs2/Vm3p2gVNAFCbpuw7C3E+DFWXVpKH3+g48cJaPymRI3Ma4mQqmvSMIPF5VFN/H1SSYzdwNw==}
 
-  '@tsslint/core@1.5.16':
-    resolution: {integrity: sha512-8liDXDp7NjmcLvR/R5OH3wLBIp9K9BbyS9j06AQlzeXpn9a0f3DWIjbqvewnGciJBCEl+SaMR8hKkm/8lxzD4A==}
+  '@tsslint/core@2.0.1':
+    resolution: {integrity: sha512-Freonkuz+cuIyMahmDgz3xLxfgKON79Y/K7LcKexJVqRnIYMIQcA0wxRKjk0eCNOj59PlzV8RYwYGvFaxDd8Qw==}
 
-  '@tsslint/eslint@1.5.16':
-    resolution: {integrity: sha512-aAeCcOl4AlQ7LXJMTLkTfUCHX3w7hzqaJm/Xn3tvl/IxS+JQeS7j1aTlHzlAeQE1x2tDk21aEmbRQl8KeInIPA==}
+  '@tsslint/eslint@2.0.1':
+    resolution: {integrity: sha512-g5VU/BwFFHT7GAs7M1nzEguGWO7MeebYobzmr3nQlQFfJAgfRf52Ffl779KL+IMY9EdeDA6is9Wgg/bGug/Qvg==}
 
-  '@tsslint/types@1.5.16':
-    resolution: {integrity: sha512-1E1LiSmwaQ0/Z3U04fkyqTdSPpBH93Xx/QP6QBRUrxKOZOGZYWxE3VdlTP+izJgj7gJtVnzlcymnom1rExhFGQ==}
+  '@tsslint/types@2.0.1':
+    resolution: {integrity: sha512-0XllhTjC3eVmbVNPAIAGlmAsIOymKbi5IzAk5QnreBDBxBA9jCPGl1NB0ijtBMrUai6zWiRB3/hPvikeEGs3hQ==}
 
   '@tufjs/canonical-json@2.0.0':
     resolution: {integrity: sha512-yVtV8zsdo8qFHe+/3kw81dSLyF7D576A5cCFCi4X7B39tWT7SekaEFUnvnWJHz+9qO7qJTah1JbrDjWKqFtdWA==}
@@ -1474,6 +1474,9 @@ packages:
 
   '@volar/language-core@2.4.22':
     resolution: {integrity: sha512-gp4M7Di5KgNyIyO903wTClYBavRt6UyFNpc5LWfyZr1lBsTUY+QrVZfmbNF2aCyfklBOVk9YC4p+zkwoyT7ECg==}
+
+  '@volar/language-hub@0.0.1':
+    resolution: {integrity: sha512-2eOUnlMKTyjtlXIVd+6pfAtcuVugxCOgpNgcLWmlPuncQTG5C1E5mTDL/PUMw7aEnLySUOtMTIp8lT3vk/7w6Q==}
 
   '@volar/language-server@2.4.22':
     resolution: {integrity: sha512-THIGWcQsEJKZU7SjVKPcy4MIamX4qpusKErj33ru7fi2WcD+FmFjYY/F2LIk/C15xEcb34JT1uZBlbO2dfzYSQ==}
@@ -2142,9 +2145,6 @@ packages:
 
   error-ex@1.3.2:
     resolution: {integrity: sha512-7dFHNmqeFSEt2ZBsCriorKnn3Z2pj+fd9kmI6QoWw4//DL+icEBfc0U7qJCisqrTsKTjw4fNFy2pW9OqStD84g==}
-
-  error-stack-parser@2.1.4:
-    resolution: {integrity: sha512-Sk5V6wVazPhq5MhpO+AUxJn5x7XSXGl1R93Vn7i+zS15KDVxQijejNCrz8340/2bgLBjR9GtEG8ZVKONDjcqGQ==}
 
   es-define-property@1.0.1:
     resolution: {integrity: sha512-e3nRfgfUZ4rNGL232gUgX06QNyyez04KdjFrF+LTRoOXmrOgFKDg4BCdsjW8EnT69eqdYGmRpJwiPVYNrCaW3g==}
@@ -3416,9 +3416,6 @@ packages:
 
   stackback@0.0.2:
     resolution: {integrity: sha512-1XMJE5fQo1jGH6Y/7ebnwPOBEkIEnT4QF32d5R1+VXdXveM0IBMJt8zfaxX1P3QhVwrYe+576+jkANtSS2mBbw==}
-
-  stackframe@1.3.4:
-    resolution: {integrity: sha512-oeVtt7eWQS+Na6F//S4kJ2K2VbRlS9D43mAlMyVpVWovy9o+jfgH8O9agzANzaiLjclA0oYzUXEM4PurhSUChw==}
 
   std-env@3.9.0:
     resolution: {integrity: sha512-UGvjygr6F6tpH7o2qyqR6QYpwraIjKSdtzyBdyytFOHmPZY917kwdwLG0RbOjWOnKmnm3PeHjaoLLMie7kPLQw==}
@@ -4954,34 +4951,34 @@ snapshots:
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
-  '@tsslint/cli@1.5.16(typescript@5.9.2)':
+  '@tsslint/cli@2.0.1(typescript@5.9.2)':
     dependencies:
       '@clack/prompts': 0.8.2
-      '@tsslint/config': 1.5.16(typescript@5.9.2)
-      '@tsslint/core': 1.5.16
+      '@tsslint/config': 2.0.1(typescript@5.9.2)
+      '@tsslint/core': 2.0.1
       '@volar/language-core': 2.4.22
+      '@volar/language-hub': 0.0.1
       '@volar/typescript': 2.4.22
       glob: 10.4.5
       json5: 2.2.3
       typescript: 5.9.2
 
-  '@tsslint/config@1.5.16(typescript@5.9.2)':
+  '@tsslint/config@2.0.1(typescript@5.9.2)':
     dependencies:
-      '@tsslint/types': 1.5.16
+      '@tsslint/types': 2.0.1
       ts-api-utils: 2.1.0(typescript@5.9.2)
     transitivePeerDependencies:
       - typescript
 
-  '@tsslint/core@1.5.16':
+  '@tsslint/core@2.0.1':
     dependencies:
-      '@tsslint/types': 1.5.16
-      error-stack-parser: 2.1.4
+      '@tsslint/types': 2.0.1
       esbuild: 0.25.3
       minimatch: 10.0.1
 
-  '@tsslint/eslint@1.5.16(typescript@5.9.2)':
+  '@tsslint/eslint@2.0.1(typescript@5.9.2)':
     dependencies:
-      '@tsslint/config': 1.5.16(typescript@5.9.2)
+      '@tsslint/config': 2.0.1(typescript@5.9.2)
       '@typescript-eslint/parser': 8.31.0(eslint@9.25.1)(typescript@5.9.2)
       eslint: 9.25.1
     transitivePeerDependencies:
@@ -4989,7 +4986,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@tsslint/types@1.5.16': {}
+  '@tsslint/types@2.0.1': {}
 
   '@tufjs/canonical-json@2.0.0': {}
 
@@ -5158,6 +5155,8 @@ snapshots:
   '@volar/language-core@2.4.22':
     dependencies:
       '@volar/source-map': 2.4.22
+
+  '@volar/language-hub@0.0.1': {}
 
   '@volar/language-server@2.4.22':
     dependencies:
@@ -5922,10 +5921,6 @@ snapshots:
   error-ex@1.3.2:
     dependencies:
       is-arrayish: 0.2.1
-
-  error-stack-parser@2.1.4:
-    dependencies:
-      stackframe: 1.3.4
 
   es-define-property@1.0.1: {}
 
@@ -7339,8 +7334,6 @@ snapshots:
       minipass: 7.1.2
 
   stackback@0.0.2: {}
-
-  stackframe@1.3.4: {}
 
   std-env@3.9.0: {}
 

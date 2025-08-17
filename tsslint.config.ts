@@ -1,25 +1,25 @@
 import { defineConfig } from '@tsslint/config';
-import { convertRules } from '@tsslint/eslint';
+import { defineRules } from '@tsslint/eslint';
 import * as path from 'node:path';
 
 export default defineConfig({
 	rules: {
 		semantic: {
-			...await convertRules({
-				'@typescript-eslint/consistent-type-imports': ['warn', {
+			...await defineRules({
+				'@typescript-eslint/consistent-type-imports': [{
 					disallowTypeAnnotations: false,
 					fixStyle: 'inline-type-imports',
 				}],
-				'@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+				'@typescript-eslint/no-unnecessary-type-assertion': true,
 			}),
 		},
 		workspace: {
-			'missing-dependency'({ typescript: ts, sourceFile, reportError, languageServiceHost }) {
-				const { noEmit } = languageServiceHost.getCompilationSettings();
+			'missing-dependency'({ typescript: ts, file, program, report }) {
+				const { noEmit } = program.getCompilerOptions();
 				if (noEmit) {
 					return;
 				}
-				const packageJsonPath = ts.findConfigFile(sourceFile.fileName, ts.sys.fileExists, 'package.json');
+				const packageJsonPath = ts.findConfigFile(file.fileName, ts.sys.fileExists, 'package.json');
 				if (!packageJsonPath) {
 					return;
 				}
@@ -35,7 +35,7 @@ export default defineConfig({
 				const parentPackageJson = !!parentPackageJsonPath && parentPackageJsonPath !== packageJsonPath
 					? JSON.parse(ts.sys.readFile(parentPackageJsonPath) ?? '')
 					: {};
-				ts.forEachChild(sourceFile, function visit(node) {
+				ts.forEachChild(file, function visit(node) {
 					if (
 						ts.isImportDeclaration(node)
 						&& !node.importClause?.isTypeOnly
@@ -57,9 +57,9 @@ export default defineConfig({
 							&& !packageJson.dependencies?.[moduleName]
 							&& !packageJson.peerDependencies?.[moduleName]
 						) {
-							reportError(
+							report(
 								`Module '${moduleName}' should be in the dependencies.`,
-								node.getStart(sourceFile),
+								node.getStart(file),
 								node.getEnd(),
 							);
 						}
