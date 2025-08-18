@@ -4,7 +4,7 @@ import * as path from 'node:path';
 
 export default defineConfig({
 	rules: {
-		// oxlint's default rules, but with unicorn. See https://oxc.rs/docs/guide/usage/linter/rules.html
+		// oxlint's default rules, but without unicorn. See https://oxc.rs/docs/guide/usage/linter/rules.html
 		...await defineRules({
 			'for-direction': true,
 			'no-async-promise-executor': true,
