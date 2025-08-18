@@ -40,7 +40,6 @@ export function loadTemplateData(lang: string) {
 
 	resolveReferences(data);
 
-	// oxlint-disable-next-line no-useless-spread
 	for (const attr of [...data.globalAttributes ?? []]) {
 		if (!attr.name.startsWith('v-')) {
 			data.globalAttributes?.push(
