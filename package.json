@@ -12,12 +12,8 @@
 		"test": "vitest run",
 		"test:update": "vitest run --update",
 		"format": "dprint fmt",
-		"lint": "pnpm run oxlint && pnpm run tsslint",
-		"lint:fix": "pnpm run oxlint:fix && pnpm run tsslint:fix && npm run format",
-		"oxlint": "oxlint",
-		"oxlint:fix": "oxlint --fix",
-		"tsslint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
-		"tsslint:fix": "pnpm run lint -- --fix"
+		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
+		"lint:fix": "pnpm run lint -- --fix"
 	},
 	"devDependencies": {
 		"@lerna-lite/cli": "^4.1.2",
@@ -27,7 +23,6 @@
 		"@tsslint/eslint": "^2.0.1",
 		"@typescript-eslint/eslint-plugin": "^8.19.0",
 		"dprint": "^0.50.0",
-		"oxlint": "^1.0.0",
 		"typescript": "latest",
 		"vitest": "^3.1.3"
 	}
