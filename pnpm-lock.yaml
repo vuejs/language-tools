@@ -92,6 +92,9 @@ importers:
       typescript:
         specifier: '*'
         version: 5.9.2
+      vue-component-type-helpers:
+        specifier: 3.0.5
+        version: link:../component-type-helpers
     devDependencies:
       '@types/node':
         specifier: ^22.10.4
@@ -99,9 +102,6 @@ importers:
       '@types/path-browserify':
         specifier: ^1.0.1
         version: 1.0.3
-      vue-component-type-helpers:
-        specifier: 3.0.5
-        version: link:../component-type-helpers
 
   packages/component-type-helpers: {}
 
@@ -308,9 +308,9 @@ importers:
       vue:
         specifier: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72
         version: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72(typescript@5.9.2)
-      vue-component-type-helpers:
+      vue-component-meta:
         specifier: 3.0.5
-        version: link:../packages/component-type-helpers
+        version: link:../packages/component-meta
       vue3.4:
         specifier: npm:vue@3.4.38
         version: vue@3.4.38(typescript@5.9.2)

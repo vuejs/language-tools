@@ -199,8 +199,8 @@ export function baseCreate(
 
 	function getMetaScriptContent(fileName: string) {
 		let code = `
-import type { ComponentType, ComponentProps, ComponentEmit, ComponentSlots, ComponentExposed } from 'vue-component-type-helpers';
-import * as Components from '${fileName.slice(0, -'.meta.ts'.length)}';
+import type { ComponentType, ComponentProps, ComponentEmit, ComponentSlots, ComponentExposed } from 'vue-component-meta/lib/helpers';
+import type * as Components from '${fileName.slice(0, -'.meta.ts'.length)}';
 
 export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
 
