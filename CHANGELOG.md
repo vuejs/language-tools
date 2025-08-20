@@ -17,9 +17,6 @@
 ### Other Changes
 
 - feat(lint): update tsslint config (#5602)
-- refactor(language-service): remove redundant `isGlobal` checks for models and special props - Thanks to @KazariEX!
-- refactor(language-core): wrap `__VLS_InheritedAttrs` with `Partial` at definition - Thanks to @KazariEX!
-- refactor(language-core): simplify bindings iteration - Thanks to @KazariEX!
 - refactor(language-core): generate setup returns on demand - Thanks to @KazariEX!
 - chore(language-service): remove `exclude` config suggestion from global types error message (#5579) - Thanks to @Ciallo-Chiaki
 - chore(vscode): update extension display name "Vue.js" (#5582)
