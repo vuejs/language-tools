@@ -98,9 +98,9 @@ export const { activate, deactivate } = defineExtension(() => {
 
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
-		activateWelcome();
 	}, { immediate: true });
 
+	activateWelcome(context);
 	useCommand('vue.action.restartServer', async () => {
 		await executeCommand('typescript.restartTsServer');
 		await client?.stop();

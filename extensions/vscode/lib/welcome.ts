@@ -1,9 +1,11 @@
-import { extensionContext, useCommand } from 'reactive-vscode';
+import { useCommand } from 'reactive-vscode';
 import * as vscode from 'vscode';
+
+const welcomeVersion = '3.0.6';
 
 let panel: vscode.WebviewPanel | undefined;
 
-export function activate() {
+export function activate(context: vscode.ExtensionContext) {
 	useCommand('vue.welcome', () => {
 		if (panel) {
 			panel.reveal(vscode.ViewColumn.One);
@@ -17,11 +19,14 @@ export function activate() {
 			{ enableScripts: true },
 		);
 
-		panel.webview.html = getWelcomeHtml();
+		panel.webview.html = getWelcomeHtml(context);
 		panel.webview.onDidReceiveMessage(message => {
 			switch (message.command) {
 				case 'verifySponsor':
 					vscode.commands.executeCommand('vue.action.verify');
+					break;
+				case 'toggleShowUpdates':
+					context.globalState.update('vue.showUpdates', message.value);
 					break;
 			}
 		});
@@ -30,11 +35,18 @@ export function activate() {
 			panel = undefined;
 		});
 	});
+
+	if (
+		context.globalState.get('vue.showUpdates', true)
+		&& context.globalState.get('vue-welcome') !== welcomeVersion
+	) {
+		context.globalState.update('vue-welcome', welcomeVersion);
+		vscode.commands.executeCommand('vue.welcome');
+	}
 }
 
-function getWelcomeHtml() {
-	const version = extensionContext.value?.extension.packageJSON.version;
-
+function getWelcomeHtml(context: vscode.ExtensionContext) {
+	const version = context.extension.packageJSON.version;
 	return /* HTML */ `
 <!DOCTYPE html>
 <html lang="en">
@@ -47,6 +59,9 @@ function getWelcomeHtml() {
 		const vscode = acquireVsCodeApi();
 		function verifySponsor() {
 			vscode.postMessage({ command: 'verifySponsor' });
+		}
+		function toggleShowUpdates(value) {
+			vscode.postMessage({ command: 'toggleShowUpdates', value });
 		}
 	</script>
 	<style>
@@ -319,8 +334,40 @@ function getWelcomeHtml() {
 	</header>
 	<hr>
 
-	<h2>📣 What's New</h2>
+	<div style="display: flex; justify-content: center; margin: 1.5rem 0;">
+		<label>
+			<input type="checkbox" onchange="toggleShowUpdates(this.checked)" ${
+		context.globalState.get('vue.showUpdates', true) ? 'checked' : ''
+	}>
+			<span>Show release notes on every significant update</span>
+		</label>
+	</div>
+
 	<div class="card whats-new-card">
+		<h3>3.0.6</h3>
+		<ul style="margin: 0; padding-left: 1.25rem;">
+			<li>✨ The official extension has now been renamed to "Vue.js"</li>
+			<li>🚀 Expandable Hovers support for TypeScript (<a href="https://code.visualstudio.com/updates/v1_100#_expandable-hovers-for-javascript-and-typescript-experimental" target="_blank">Learn More</a>)</li>
+			<li>🐛 8+ bug fixes</li>
+		</ul>
+		<div
+			style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+			<a href="https://github.com/vuejs/language-tools/releases/tag/v3.0.6" target="_blank"
+				style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--vscode-textLink-foreground);">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+					<path
+						d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+				</svg>
+				Full Release Notes
+			</a>
+			<div style="display: flex; gap: 0.5rem; font-size: 0.9em; color: var(--vscode-descriptionForeground);">
+				<span>Released: August 2025</span>
+				<span>•</span>
+				<span>v3.0.6</span>
+			</div>
+		</div>
+		<br>
+
 		<h3>3.0.2</h3>
 		<ul style="margin: 0; padding-left: 1.25rem;">
 			<li>🚀 Improve memory usage in extreme cases</li>
@@ -343,6 +390,7 @@ function getWelcomeHtml() {
 			</div>
 		</div>
 		<br>
+
 		<h3>3.0.0</h3>
 		<ul style="margin: 0; padding-left: 1.25rem;">
 			<li>🚀 Significantly improved Hybrid Mode stability</li>
@@ -418,7 +466,7 @@ function getWelcomeHtml() {
 		</div>
 	</div>
 
-	<h2>💎 Premium Features</h2>
+	<h2>🚀 Premium Features</h2>
 	<div class="features" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin: 1.5rem 0;">
 		<div class="feature">
 			<div class="feature-icon">🧩</div>
@@ -432,7 +480,7 @@ function getWelcomeHtml() {
 		</div>
 		<div class="feature">
 			<div class="feature-icon">🧩</div>
-			<h4>Reactivity Visualization 🌟🌟🌟🌟</h4>
+			<h4>Reactivity Visualization 🌟🌟🌟</h4>
 			<p>Visualize Vue's reactivity system in component scripts</p>
 		</div>
 		<div class="feature">
