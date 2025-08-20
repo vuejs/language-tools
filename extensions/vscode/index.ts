@@ -19,6 +19,7 @@ import { config } from './lib/config';
 import { activate as activateWelcome } from './lib/welcome';
 
 let client: lsp.BaseLanguageClient | undefined;
+let needRestart = false;
 
 for (
 	const incompatibleExtensionId of [
@@ -54,6 +55,22 @@ export const { activate, deactivate } = defineExtension(() => {
 		}
 
 		nextTick(() => stop());
+
+		if (needRestart) {
+			vscode.window.showInformationMessage(
+				'Please restart the extension host to activate Vue support.',
+				'Restart Extension Host',
+				'Reload Window',
+			).then(action => {
+				if (action === 'Restart Extension Host') {
+					vscode.commands.executeCommand('workbench.action.restartExtensionHost');
+				}
+				else if (action === 'Reload Window') {
+					vscode.commands.executeCommand('workbench.action.reloadWindow');
+				}
+			});
+			return;
+		}
 
 		watch(() => config.server.includeLanguages, async () => {
 			const reload = await vscode.window.showInformationMessage(
@@ -155,9 +172,7 @@ function launch(context: vscode.ExtensionContext) {
 	return client;
 }
 
-patchTypescriptExtension();
-
-function patchTypescriptExtension() {
+try {
 	const fs = require('node:fs');
 	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
 	const readFileSync = fs.readFileSync;
@@ -206,4 +221,16 @@ function patchTypescriptExtension() {
 		}
 		return readFileSync(...args);
 	};
+
+	const loadedModule = require.cache[extensionJsPath];
+	if (loadedModule) {
+		delete require.cache[extensionJsPath];
+		const patchedModule = require(extensionJsPath);
+		Object.assign(loadedModule.exports, patchedModule);
+	}
+
+	if (tsExtension.isActive) {
+		needRestart = true;
+	}
 }
+catch {}
