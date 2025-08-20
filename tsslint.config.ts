@@ -87,6 +87,7 @@ export default defineConfig({
 		// Project-specific rules
 		...await defineRules({
 			'curly': true,
+			'eqeqeq': true,
 			'no-unused-expressions': true,
 			'require-await': true,
 			'@typescript-eslint/consistent-type-imports': [{

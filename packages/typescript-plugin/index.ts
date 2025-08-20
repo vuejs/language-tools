@@ -72,11 +72,11 @@ export = createLanguageServicePlugin(
 			projectService.logger.info('Vue: called handler processing ' + info.project.projectKind);
 
 			const session = info.session;
-			if (session == undefined) {
+			if (!session) {
 				projectService.logger.info('Vue: there is no session in info.');
 				return;
 			}
-			if (session.addProtocolHandler == undefined) {
+			if (!session.addProtocolHandler) {
 				// addProtocolHandler was introduced in TS 4.4 or 4.5 in 2021, see https://github.com/microsoft/TypeScript/issues/43893
 				projectService.logger.info('Vue: there is no addProtocolHandler method.');
 				return;
