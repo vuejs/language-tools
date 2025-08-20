@@ -443,7 +443,7 @@ function getWelcomeHtml() {
 		</div>
 	</div>
 
-	<h2>💎 Premium Features</h2>
+	<h2>🚀 Premium Features</h2>
 	<div class="features" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin: 1.5rem 0;">
 		<div class="feature">
 			<div class="feature-icon">🧩</div>
