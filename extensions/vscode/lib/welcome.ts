@@ -23,6 +23,10 @@ export function activate() {
 				case 'verifySponsor':
 					vscode.commands.executeCommand('vue.action.verify');
 					break;
+				case 'toggleShowUpdates':
+					const showUpdates = message.value;
+					extensionContext.value!.globalState.update('vue.showUpdates', showUpdates);
+					break;
 			}
 		});
 
@@ -47,6 +51,9 @@ function getWelcomeHtml() {
 		const vscode = acquireVsCodeApi();
 		function verifySponsor() {
 			vscode.postMessage({ command: 'verifySponsor' });
+		}
+		function toggleShowUpdates(value) {
+			vscode.postMessage({ command: 'toggleShowUpdates', value });
 		}
 	</script>
 	<style>
@@ -319,11 +326,20 @@ function getWelcomeHtml() {
 	</header>
 	<hr>
 
-	<h2>📣 What's New</h2>
+	<div style="display: flex; justify-content: center; margin: 1.5rem 0;">
+		<label>
+			<input type="checkbox" onchange="toggleShowUpdates(this.checked)" ${
+		extensionContext.value!.globalState.get('vue.showUpdates', true) ? 'checked' : ''
+	}>
+			<span>Show release notes on every significant update</span>
+		</label>
+	</div>
+
+	<h2>📣 Release Notes</h2>
 	<div class="card whats-new-card">
 		<h3>3.0.6</h3>
 		<ul style="margin: 0; padding-left: 1.25rem;">
-			<li>✨ The official extension has now been renamed to "Vue.js"!</li>
+			<li>✨ The official extension has now been renamed to "Vue.js"</li>
 			<li>🚀 Expandable Hovers support for TypeScript</li>
 			<li>🐛 8+ bug fixes</li>
 		</ul>
