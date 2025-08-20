@@ -58,7 +58,7 @@ export const { activate, deactivate } = defineExtension(() => {
 
 		if (needRestart) {
 			vscode.window.showInformationMessage(
-				'Please restart the extension host to activate Vue support in remote environments.',
+				'Please restart the extension host to activate Vue support.',
 				'Restart Extension Host',
 				'Reload Window',
 			).then(action => {
@@ -230,12 +230,7 @@ try {
 	}
 
 	if (tsExtension.isActive) {
-		if (!vscode.env.remoteName) {
-			vscode.commands.executeCommand('workbench.action.restartExtensionHost');
-		}
-		else {
-			needRestart = true;
-		}
+		needRestart = true;
 	}
 }
 catch {}
