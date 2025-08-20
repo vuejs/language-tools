@@ -457,7 +457,7 @@ function getWelcomeHtml() {
 		</div>
 		<div class="feature">
 			<div class="feature-icon">🧩</div>
-			<h4>Reactivity Visualization 🌟🌟🌟🌟</h4>
+			<h4>Reactivity Visualization 🌟🌟🌟</h4>
 			<p>Visualize Vue's reactivity system in component scripts</p>
 		</div>
 		<div class="feature">
