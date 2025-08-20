@@ -17,7 +17,7 @@ export function createParsedCommandLineByJson(
 	},
 	rootDir: string,
 	json: any,
-	configFileName = rootDir + '/jsconfig.json',
+	configFileName?: string,
 ): ParsedCommandLine {
 	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
 	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, configFileName);
