@@ -68,7 +68,7 @@ export function* generateComponent(
 	yield `})`;
 }
 
-export function* generateComponentSetupReturns(scriptSetupRanges: ScriptSetupRanges): Generator<Code> {
+export function* generateComponentSetupReturns(scriptSetupRanges: ScriptSetupRanges): Generator<string> {
 	// fill $props
 	if (scriptSetupRanges.defineProps) {
 		const name = scriptSetupRanges.defineProps.name ?? `__VLS_props`;

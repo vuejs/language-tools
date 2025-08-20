@@ -2,31 +2,41 @@ import { camelize, NOOP as noop } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
 import { generateGlobalTypes, getGlobalTypesFileName } from '../codegen/globalTypes';
-import { getAllExtensions } from '../languagePlugin';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
 import { hyphenateTag } from './shared';
 
-export type ParsedCommandLine = ts.ParsedCommandLine & {
+interface ParseConfigHost extends Omit<ts.ParseConfigHost, 'readDirectory'> {}
+
+export interface ParsedCommandLine extends Omit<ts.ParsedCommandLine, 'fileNames'> {
 	vueOptions: VueCompilerOptions;
-};
+}
 
 export function createParsedCommandLineByJson(
 	ts: typeof import('typescript'),
-	parseConfigHost: ts.ParseConfigHost & {
-		writeFile?(path: string, data: string): void;
-	},
+	host: ParseConfigHost,
 	rootDir: string,
 	json: any,
-	configFileName = rootDir + '/jsconfig.json',
+	configFileName?: string,
 ): ParsedCommandLine {
-	const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
-	ts.parseJsonConfigFileContent(json, proxyHost.host, rootDir, {}, configFileName);
+	const extendedPaths = new Set<string>();
+	const proxyHost = {
+		...host,
+		readFile(fileName: string) {
+			if (!fileName.endsWith('/package.json')) {
+				extendedPaths.add(fileName);
+			}
+			return host.readFile(fileName);
+		},
+		readDirectory() {
+			return [];
+		},
+	};
+	const parsed = ts.parseJsonConfigFileContent(json, proxyHost, rootDir, {}, configFileName);
+	const resolver = new CompilerOptionsResolver(host.fileExists);
 
-	const resolver = new CompilerOptionsResolver(parseConfigHost.fileExists);
-
-	for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
+	for (const extendPath of [...extendedPaths].reverse()) {
 		try {
-			const configFile = ts.readJsonConfigFile(extendPath, proxyHost.host.readFile);
+			const configFile = ts.readJsonConfigFile(extendPath, host.readFile);
 			const obj = ts.convertToObject(configFile, []);
 			const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
 			resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
@@ -37,49 +47,44 @@ export function createParsedCommandLineByJson(
 	// ensure the rootDir is added to the config roots
 	resolver.addConfig({}, rootDir);
 
-	const resolvedVueOptions = resolver.build();
-	const parsed = ts.parseJsonConfigFileContent(
-		json,
-		proxyHost.host,
-		rootDir,
-		{},
-		configFileName,
-		undefined,
-		getAllExtensions(resolvedVueOptions)
-			.map(extension => ({
-				extension: extension.slice(1),
-				isMixedContent: true,
-				scriptKind: ts.ScriptKind.Deferred,
-			})),
-	);
-
-	// fix https://github.com/vuejs/language-tools/issues/1786
-	// https://github.com/microsoft/TypeScript/issues/30457
-	// patching ts server broke with outDir + rootDir + composite/incremental
-	parsed.options.outDir = undefined;
-
 	return {
 		...parsed,
-		vueOptions: resolvedVueOptions,
+		vueOptions: resolver.build(),
 	};
 }
 
 export function createParsedCommandLine(
 	ts: typeof import('typescript'),
-	parseConfigHost: ts.ParseConfigHost,
-	tsConfigPath: string,
+	host: ParseConfigHost,
+	configFileName: string,
 ): ParsedCommandLine {
 	try {
-		const rootDir = path.dirname(tsConfigPath);
-		const proxyHost = proxyParseConfigHostForExtendConfigPaths(parseConfigHost);
-		const config = ts.readJsonConfigFile(tsConfigPath, proxyHost.host.readFile);
-		ts.parseJsonSourceFileConfigFileContent(config, proxyHost.host, rootDir, {}, tsConfigPath);
+		const extendedPaths = new Set<string>();
+		const proxyHost = {
+			...host,
+			readFile(fileName: string) {
+				if (!fileName.endsWith('/package.json')) {
+					extendedPaths.add(fileName);
+				}
+				return host.readFile(fileName);
+			},
+			readDirectory() {
+				return [];
+			},
+		};
+		const config = ts.readJsonConfigFile(configFileName, proxyHost.readFile);
+		const parsed = ts.parseJsonSourceFileConfigFileContent(
+			config,
+			proxyHost,
+			path.dirname(configFileName),
+			{},
+			configFileName,
+		);
+		const resolver = new CompilerOptionsResolver(host.fileExists);
 
-		const resolver = new CompilerOptionsResolver(parseConfigHost.fileExists);
-
-		for (const extendPath of proxyHost.extendConfigPaths.reverse()) {
+		for (const extendPath of [...extendedPaths].reverse()) {
 			try {
-				const configFile = ts.readJsonConfigFile(extendPath, proxyHost.host.readFile);
+				const configFile = ts.readJsonConfigFile(extendPath, host.readFile);
 				const obj = ts.convertToObject(configFile, []);
 				const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
 				resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
@@ -87,61 +92,17 @@ export function createParsedCommandLine(
 			catch {}
 		}
 
-		const resolvedVueOptions = resolver.build();
-		const parsed = ts.parseJsonSourceFileConfigFileContent(
-			config,
-			proxyHost.host,
-			path.dirname(tsConfigPath),
-			{},
-			tsConfigPath,
-			undefined,
-			getAllExtensions(resolvedVueOptions)
-				.map(extension => ({
-					extension: extension.slice(1),
-					isMixedContent: true,
-					scriptKind: ts.ScriptKind.Deferred,
-				})),
-		);
-
-		// fix https://github.com/vuejs/language-tools/issues/1786
-		// https://github.com/microsoft/TypeScript/issues/30457
-		// patching ts server broke with outDir + rootDir + composite/incremental
-		parsed.options.outDir = undefined;
-
 		return {
 			...parsed,
-			vueOptions: resolvedVueOptions,
+			vueOptions: resolver.build(),
 		};
 	}
-	catch {
-		// console.warn('Failed to resolve tsconfig path:', tsConfigPath, err);
-		return {
-			fileNames: [],
-			options: {},
-			vueOptions: getDefaultCompilerOptions(),
-			errors: [],
-		};
-	}
-}
+	catch {}
 
-function proxyParseConfigHostForExtendConfigPaths(parseConfigHost: ts.ParseConfigHost) {
-	const extendConfigPaths: string[] = [];
-	const host = new Proxy(parseConfigHost, {
-		get(target, key) {
-			if (key === 'readFile') {
-				return (fileName: string) => {
-					if (!fileName.endsWith('/package.json') && !extendConfigPaths.includes(fileName)) {
-						extendConfigPaths.push(fileName);
-					}
-					return target.readFile(fileName);
-				};
-			}
-			return target[key as keyof typeof target];
-		},
-	});
 	return {
-		host,
-		extendConfigPaths,
+		options: {},
+		errors: [],
+		vueOptions: getDefaultCompilerOptions(),
 	};
 }
 

@@ -27,7 +27,24 @@ export function createCheckerByJsonConfigBase(
 	rootDir = rootDir.replace(windowsPathReg, '/');
 	return baseCreate(
 		ts,
-		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json),
+		() => {
+			const commandLine = vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json);
+			const { fileNames } = ts.parseJsonConfigFileContent(
+				json,
+				ts.sys,
+				rootDir,
+				{},
+				undefined,
+				undefined,
+				vue.getAllExtensions(commandLine.vueOptions)
+					.map(extension => ({
+						extension: extension.slice(1),
+						isMixedContent: true,
+						scriptKind: ts.ScriptKind.Deferred,
+					})),
+			);
+			return [commandLine, fileNames];
+		},
 		checkerOptions,
 		rootDir,
 		path.join(rootDir, 'jsconfig.json.global.vue'),
@@ -42,25 +59,45 @@ export function createCheckerBase(
 	tsconfig = tsconfig.replace(windowsPathReg, '/');
 	return baseCreate(
 		ts,
-		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig),
+		() => {
+			const commandLine = vue.createParsedCommandLine(ts, ts.sys, tsconfig);
+			const { fileNames } = ts.parseJsonSourceFileConfigFileContent(
+				ts.readJsonConfigFile(tsconfig, ts.sys.readFile),
+				ts.sys,
+				path.dirname(tsconfig),
+				{},
+				tsconfig,
+				undefined,
+				vue.getAllExtensions(commandLine.vueOptions)
+					.map(extension => ({
+						extension: extension.slice(1),
+						isMixedContent: true,
+						scriptKind: ts.ScriptKind.Deferred,
+					})),
+			);
+			return [commandLine, fileNames];
+		},
 		checkerOptions,
 		path.dirname(tsconfig),
 		tsconfig + '.global.vue',
 	);
 }
 
-export function baseCreate(
+function baseCreate(
 	ts: typeof import('typescript'),
-	getCommandLine: () => vue.ParsedCommandLine,
+	getConfigAndFiles: () => [
+		commandLine: vue.ParsedCommandLine,
+		fileNames: string[],
+	],
 	checkerOptions: MetaCheckerOptions,
 	rootPath: string,
 	globalComponentName: string,
 ) {
-	let commandLine = getCommandLine();
+	let [commandLine, _fileNames] = getConfigAndFiles();
 	/**
 	 * Used to lookup if a file is referenced.
 	 */
-	let fileNames = new Set(commandLine.fileNames.map(path => path.replace(windowsPathReg, '/')));
+	let fileNames = new Set(_fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
 
 	vue.writeGlobalTypes(commandLine.vueOptions, ts.sys.writeFile);
@@ -172,8 +209,8 @@ export function baseCreate(
 			projectVersion++;
 		},
 		reload() {
-			commandLine = getCommandLine();
-			fileNames = new Set(commandLine.fileNames.map(path => path.replace(windowsPathReg, '/')));
+			[commandLine, _fileNames] = getConfigAndFiles();
+			fileNames = new Set(_fileNames.map(path => path.replace(windowsPathReg, '/')));
 			this.clearCache();
 		},
 		clearCache() {
@@ -199,8 +236,8 @@ export function baseCreate(
 
 	function getMetaScriptContent(fileName: string) {
 		let code = `
-import type { ComponentType, ComponentProps, ComponentEmit, ComponentSlots, ComponentExposed } from 'vue-component-type-helpers';
-import * as Components from '${fileName.slice(0, -'.meta.ts'.length)}';
+import type { ComponentType, ComponentProps, ComponentEmit, ComponentSlots, ComponentExposed } from 'vue-component-meta/lib/helpers';
+import type * as Components from '${fileName.slice(0, -'.meta.ts'.length)}';
 
 export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
 
