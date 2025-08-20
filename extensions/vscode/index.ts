@@ -41,8 +41,6 @@ for (
 }
 
 export const { activate, deactivate } = defineExtension(() => {
-	activateWelcome();
-
 	const context = extensionContext.value!;
 	const volarLabs = createLabsInfo();
 	const activeTextEditor = useActiveTextEditor();
@@ -102,6 +100,7 @@ export const { activate, deactivate } = defineExtension(() => {
 		activateDocumentDropEdit(selectors, client);
 	}, { immediate: true });
 
+	activateWelcome();
 	useCommand('vue.action.restartServer', async () => {
 		await executeCommand('typescript.restartTsServer');
 		await client?.stop();
