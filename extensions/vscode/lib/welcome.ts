@@ -347,7 +347,7 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 		<h3>3.0.6</h3>
 		<ul style="margin: 0; padding-left: 1.25rem;">
 			<li>✨ The official extension has now been renamed to "Vue.js"</li>
-			<li>🚀 Expandable Hovers support for TypeScript</li>
+			<li>🚀 Expandable Hovers support for TypeScript (<a href="https://code.visualstudio.com/updates/v1_100#_expandable-hovers-for-javascript-and-typescript-experimental" target="_blank">Learn More</a>)</li>
 			<li>🐛 8+ bug fixes</li>
 		</ul>
 		<div
