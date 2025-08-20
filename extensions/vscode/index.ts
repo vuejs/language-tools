@@ -41,6 +41,8 @@ for (
 }
 
 export const { activate, deactivate } = defineExtension(() => {
+	activateWelcome();
+
 	const context = extensionContext.value!;
 	const volarLabs = createLabsInfo();
 	const activeTextEditor = useActiveTextEditor();
@@ -98,7 +100,6 @@ export const { activate, deactivate } = defineExtension(() => {
 
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
-		activateWelcome();
 	}, { immediate: true });
 
 	useCommand('vue.action.restartServer', async () => {
