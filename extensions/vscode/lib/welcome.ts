@@ -1,9 +1,11 @@
-import { extensionContext, useCommand } from 'reactive-vscode';
+import { useCommand } from 'reactive-vscode';
 import * as vscode from 'vscode';
+
+const welcomeVersion = '3.0.6';
 
 let panel: vscode.WebviewPanel | undefined;
 
-export function activate() {
+export function activate(context: vscode.ExtensionContext) {
 	useCommand('vue.welcome', () => {
 		if (panel) {
 			panel.reveal(vscode.ViewColumn.One);
@@ -17,15 +19,14 @@ export function activate() {
 			{ enableScripts: true },
 		);
 
-		panel.webview.html = getWelcomeHtml();
+		panel.webview.html = getWelcomeHtml(context);
 		panel.webview.onDidReceiveMessage(message => {
 			switch (message.command) {
 				case 'verifySponsor':
 					vscode.commands.executeCommand('vue.action.verify');
 					break;
 				case 'toggleShowUpdates':
-					const showUpdates = message.value;
-					extensionContext.value!.globalState.update('vue.showUpdates', showUpdates);
+					context.globalState.update('vue.showUpdates', message.value);
 					break;
 			}
 		});
@@ -34,11 +35,18 @@ export function activate() {
 			panel = undefined;
 		});
 	});
+
+	if (
+		context.globalState.get('vue.showUpdates', true)
+		&& context.globalState.get('vue-welcome') !== welcomeVersion
+	) {
+		context.globalState.update('vue-welcome', welcomeVersion);
+		vscode.commands.executeCommand('vue.welcome');
+	}
 }
 
-function getWelcomeHtml() {
-	const version = extensionContext.value?.extension.packageJSON.version;
-
+function getWelcomeHtml(context: vscode.ExtensionContext) {
+	const version = context.extension.packageJSON.version;
 	return /* HTML */ `
 <!DOCTYPE html>
 <html lang="en">
@@ -329,13 +337,12 @@ function getWelcomeHtml() {
 	<div style="display: flex; justify-content: center; margin: 1.5rem 0;">
 		<label>
 			<input type="checkbox" onchange="toggleShowUpdates(this.checked)" ${
-		extensionContext.value!.globalState.get('vue.showUpdates', true) ? 'checked' : ''
+		context.globalState.get('vue.showUpdates', true) ? 'checked' : ''
 	}>
 			<span>Show release notes on every significant update</span>
 		</label>
 	</div>
 
-	<h2>📣 Release Notes</h2>
 	<div class="card whats-new-card">
 		<h3>3.0.6</h3>
 		<ul style="margin: 0; padding-left: 1.25rem;">
