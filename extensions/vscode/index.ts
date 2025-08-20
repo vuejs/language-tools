@@ -172,9 +172,12 @@ function launch(context: vscode.ExtensionContext) {
 	return client;
 }
 
-try {
+const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
+if (tsExtension.isActive) {
+	needRestart = true;
+}
+else {
 	const fs = require('node:fs');
-	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
 	const readFileSync = fs.readFileSync;
 	const extensionJsPath = require.resolve('./dist/extension.js', {
 		paths: [tsExtension.extensionPath],
@@ -228,9 +231,4 @@ try {
 		const patchedModule = require(extensionJsPath);
 		Object.assign(loadedModule.exports, patchedModule);
 	}
-
-	if (tsExtension.isActive) {
-		needRestart = true;
-	}
 }
-catch {}
