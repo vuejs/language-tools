@@ -120,7 +120,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"]?)stylus\\b\\2)",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=(?:[^>\\n]*\\n)*[^>]*\\blang\\s*=\\s*(['\"]?)stylus\\b\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -152,7 +152,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"]?)postcss\\b\\2)",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=(?:[^>\\n]*\\n)*[^>]*\\blang\\s*=\\s*(['\"]?)postcss\\b\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -184,7 +184,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"]?)sass\\b\\2)",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=(?:[^>\\n]*\\n)*[^>]*\\blang\\s*=\\s*(['\"]?)sass\\b\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -216,7 +216,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"]?)css\\b\\2)",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=(?:[^>\\n]*\\n)*[^>]*\\blang\\s*=\\s*(['\"]?)css\\b\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -280,7 +280,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"]?)less\\b\\2)",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=(?:[^>\\n]*\\n)*[^>]*\\blang\\s*=\\s*(['\"]?)less\\b\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -312,7 +312,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"]?)js\\b\\2)",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=(?:[^>\\n]*\\n)*[^>]*\\blang\\s*=\\s*(['\"]?)js\\b\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -376,7 +376,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"]?)jsx\\b\\2)",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=(?:[^>\\n]*\\n)*[^>]*\\blang\\s*=\\s*(['\"]?)jsx\\b\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -408,7 +408,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"]?)tsx\\b\\2)",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=(?:[^>\\n]*\\n)*[^>]*\\blang\\s*=\\s*(['\"]?)tsx\\b\\2)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
