@@ -16,6 +16,9 @@
 	"configuration.format.script.initialIndent": "Initial indent for `<script>` block.",
 	"configuration.format.style.initialIndent": "Initial indent for `<style>` block.",
 	"configuration.format.wrapAttributes": "Wrap attributes.",
+	"configuration.editor.focusMode": "Isolate and focus on specific SFC blocks during development",
+	"configuration.editor.reactivityVisualization": "Visualize Vue's reactivity system in component scripts",
+	"configuration.editor.templateInterpolationDecorators": "Enhanced highlighting for template interpolations and expressions",
 	"command.action.restartServer": "Restart Vue and TS servers",
 	"command.welcome": "Open welcome page"
 }

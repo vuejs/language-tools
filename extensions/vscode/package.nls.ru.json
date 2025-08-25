@@ -16,6 +16,9 @@
 	"configuration.format.script.initialIndent": "Начальный отступ для блока `<script>`.",
 	"configuration.format.style.initialIndent": "Начальный отступ для блока `<style>`.",
 	"configuration.format.wrapAttributes": "Переносить атрибуты.",
+	"configuration.editor.focusMode": "Изолировать и сосредоточиться на определенных блоках SFC во время разработки",
+	"configuration.editor.reactivityVisualization": "Визуализировать систему реактивности Vue в скриптах компонентов",
+	"configuration.editor.templateInterpolationDecorators": "Улучшенная подсветка интерполяций и выражений в шаблонах",
 	"command.action.restartServer": "Перезапустить Vue и TS серверы",
 	"command.welcome": "Открыть страницу приветствия"
 }

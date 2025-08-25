@@ -16,6 +16,9 @@
 	"configuration.format.script.initialIndent": "`<script>` 块的初始缩进。",
 	"configuration.format.style.initialIndent": "`<style>` 块的初始缩进。",
 	"configuration.format.wrapAttributes": "对属性进行换行。",
+	"configuration.editor.focusMode": "在开发过程中隔离并专注于特定的 SFC 块",
+	"configuration.editor.reactivityVisualization": "在组件脚本中可视化 Vue 的响应式系统",
+	"configuration.editor.templateInterpolationDecorators": "增强模板插值和表达式的高亮显示",
 	"command.action.restartServer": "重启 Vue 和 TS 服务器",
 	"command.welcome": "打开欢迎页面"
 }
