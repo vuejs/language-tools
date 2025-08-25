@@ -266,7 +266,7 @@
 				},
 				"vue.editor.focusMode": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"markdownDescription": "%configuration.editor.focusMode%"
 				},
 				"vue.editor.reactivityVisualization": {
