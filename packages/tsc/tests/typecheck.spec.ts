@@ -17,6 +17,8 @@ describe(`vue-tsc`, () => {
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<Readonly<{} & {} & {}>, { exist: {}; }, {}, {}, {}, {}, {}, {}, PublicProps, {}, true, {}, {}, GlobalComponents, GlobalDirectives, ... 12 more ..., {}>'.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type 'CreateComponentPublicInstanceWithMixins<Readonly<{} & {} & {}>, { exist: {}; }, {}, {}, {}, {}, {}, {}, PublicProps, {}, true, {}, {}, GlobalComponents, GlobalDirectives, ... 12 more ..., {}>'.",
+			  "test-workspace/tsc/passedFixtures/pug/#4774.vue(6,7): error TS6133: 'msg' is declared but its value is never read.",
+			  "test-workspace/tsc/passedFixtures/pug/main.vue(6,7): error TS6133: 'msg' is declared but its value is never read.",
 			]
 		`);
 	});
