@@ -17,8 +17,8 @@
 	"configuration.format.style.initialIndent": "`<style>` ブロックの初期インデント。",
 	"configuration.format.wrapAttributes": "属性を折り返します。",
 	"configuration.editor.focusMode": "トップレベル SFC タグをフェード",
-	"configuration.editor.reactivityVisualization": "コンポーネントスクリプトで Vue のリアクティブシステムを可視化",
-	"configuration.editor.templateInterpolationDecorators": "テンプレート補間と式の強化されたハイライト表示",
+	"configuration.editor.reactivityVisualization": "リアクティブシステムの可視化",
+	"configuration.editor.templateInterpolationDecorators": "テンプレート補間のハイライト強化",
 	"command.action.restartServer": "Vue と TS サーバーを再起動",
 	"command.welcome": "ウェルカムページを開く"
 }
