@@ -16,6 +16,9 @@
 	"configuration.format.script.initialIndent": "Начальный отступ для блока `<script>`.",
 	"configuration.format.style.initialIndent": "Начальный отступ для блока `<style>`.",
 	"configuration.format.wrapAttributes": "Переносить атрибуты.",
+	"configuration.editor.focusMode": "💎 Затемнить теги SFC верхнего уровня.",
+	"configuration.editor.reactivityVisualization": "💎 Визуализация системы реактивности.",
+	"configuration.editor.templateInterpolationDecorators": "💎 Усиленная подсветка интерполяций шаблонов.",
 	"command.action.restartServer": "Перезапустить Vue и TS серверы",
 	"command.welcome": "Открыть страницу приветствия"
 }

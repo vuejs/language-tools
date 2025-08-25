@@ -267,17 +267,17 @@
 				"vue.editor.focusMode": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+					"markdownDescription": "%configuration.editor.focusMode%"
 				},
 				"vue.editor.reactivityVisualization": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+					"markdownDescription": "%configuration.editor.reactivityVisualization%"
 				},
 				"vue.editor.templateInterpolationDecorators": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+					"markdownDescription": "%configuration.editor.templateInterpolationDecorators%"
 				},
 				"vue.server.includeLanguages": {
 					"type": "array",
