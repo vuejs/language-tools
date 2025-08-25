@@ -160,12 +160,12 @@ export const configs = {
 	} as ConfigItem<'vue.trace.server'>,
 	/**
 	 * @key `vue.editor.focusMode`
-	 * @default `false`
+	 * @default `true`
 	 * @type `boolean`
 	 */
 	editorFocusMode: {
 		key: 'vue.editor.focusMode',
-		default: false,
+		default: true,
 	} as ConfigItem<'vue.editor.focusMode'>,
 	/**
 	 * @key `vue.editor.reactivityVisualization`
@@ -365,7 +365,7 @@ export const scopedConfigs = {
 	scope: 'vue',
 	defaults: {
 		'trace.server': 'off',
-		'editor.focusMode': false,
+		'editor.focusMode': true,
 		'editor.reactivityVisualization': true,
 		'editor.templateInterpolationDecorators': true,
 		'server.includeLanguages': ['vue'],
