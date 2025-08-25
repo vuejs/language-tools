@@ -272,12 +272,12 @@
 				"vue.editor.reactivityVisualization": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+					"markdownDescription": "Visualize Vue's reactivity system in component scripts"
 				},
 				"vue.editor.templateInterpolationDecorators": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+					"markdownDescription": "Enhanced highlighting for template interpolations and expressions"
 				},
 				"vue.server.includeLanguages": {
 					"type": "array",
