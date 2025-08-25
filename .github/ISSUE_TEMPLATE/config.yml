@@ -3,3 +3,6 @@ contact_links:
   - name: Questions & Discussions
     url: https://github.com/vuejs/language-tools/discussions
     about: Use GitHub discussions for message-board style questions and discussions.
+  - name: Extension Signature Verification Failed
+    url: https://github.com/vuejs/language-tools/blob/master/EXTENSION_SIGNATURE_ISSUE.md
+    about: Getting "Extension signature verification failed" error? This is a VS Code platform issue - see our troubleshooting guide.

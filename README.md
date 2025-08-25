@@ -10,6 +10,10 @@
 
 💬 **#language-tools** on our [Discord Server](https://discord.gg/vue)
 
+## ⚠️ Extension Installation Issues
+
+If you encounter "Extension signature verification failed" errors when installing the Vue extension, please see our [troubleshooting guide](./EXTENSION_SIGNATURE_ISSUE.md). This is a known VS Code platform issue affecting many extensions, not specific to Vue.
+
 ## Packages
 
 - [Vue (Official)](https://github.com/vuejs/language-tools/tree/master/extensions/vscode) \

@@ -1,5 +1,9 @@
 # Vue (Official)
 
+## Installation Issues?
+
+If you're getting "Extension signature verification failed" errors, this is a **VS Code platform issue**, not a problem with the Vue extension. See our [troubleshooting guide](../../EXTENSION_SIGNATURE_ISSUE.md) for workarounds.
+
 ## Quick Start
 
 - [create-vue](https://github.com/vuejs/create-vue)
