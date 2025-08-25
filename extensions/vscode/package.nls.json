@@ -17,8 +17,8 @@
 	"configuration.format.style.initialIndent": "Initial indent for `<style>` block.",
 	"configuration.format.wrapAttributes": "Wrap attributes.",
 	"configuration.editor.focusMode": "Fade top-level SFC tags",
-	"configuration.editor.reactivityVisualization": "Visualize Vue's reactivity system in component scripts",
-	"configuration.editor.templateInterpolationDecorators": "Enhanced highlighting for template interpolations and expressions",
+	"configuration.editor.reactivityVisualization": "Reactivity system visualization",
+	"configuration.editor.templateInterpolationDecorators": "Enhanced template interpolation highlighting",
 	"command.action.restartServer": "Restart Vue and TS servers",
 	"command.welcome": "Open welcome page"
 }
