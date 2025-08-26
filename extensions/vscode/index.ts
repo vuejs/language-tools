@@ -16,7 +16,7 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './lib/config';
-import { activate as activateWelcome } from './lib/welcome';
+import { activate as activateWelcome, executeWelcome } from './lib/welcome';
 
 let client: lsp.BaseLanguageClient | undefined;
 let needRestart = false;
@@ -98,9 +98,10 @@ export const { activate, deactivate } = defineExtension(() => {
 
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
+		activateWelcome(context);
 	}, { immediate: true });
 
-	activateWelcome(context);
+	useCommand('vue.welcome', () => executeWelcome(context));
 	useCommand('vue.action.restartServer', async () => {
 		await executeCommand('typescript.restartTsServer');
 		await client?.stop();

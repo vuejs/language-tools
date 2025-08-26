@@ -1,4 +1,3 @@
-import { useCommand } from 'reactive-vscode';
 import * as vscode from 'vscode';
 
 const welcomeVersion = '3.0.6';
@@ -6,36 +5,6 @@ const welcomeVersion = '3.0.6';
 let panel: vscode.WebviewPanel | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
-	useCommand('vue.welcome', () => {
-		if (panel) {
-			panel.reveal(vscode.ViewColumn.One);
-			return;
-		}
-
-		panel = vscode.window.createWebviewPanel(
-			'vue.welcome',
-			'Welcome to Vue',
-			vscode.ViewColumn.One,
-			{ enableScripts: true },
-		);
-
-		panel.webview.html = getWelcomeHtml(context);
-		panel.webview.onDidReceiveMessage(message => {
-			switch (message.command) {
-				case 'verifySponsor':
-					vscode.commands.executeCommand('vue.action.verify');
-					break;
-				case 'toggleShowUpdates':
-					context.globalState.update('vue.showUpdates', message.value);
-					break;
-			}
-		});
-
-		panel.onDidDispose(() => {
-			panel = undefined;
-		});
-	});
-
 	if (
 		context.globalState.get('vue.showUpdates', true)
 		&& context.globalState.get('vue-welcome') !== welcomeVersion
@@ -43,6 +12,31 @@ export function activate(context: vscode.ExtensionContext) {
 		context.globalState.update('vue-welcome', welcomeVersion);
 		vscode.commands.executeCommand('vue.welcome');
 	}
+}
+
+export function executeWelcome(context: vscode.ExtensionContext) {
+	if (panel) {
+		panel.reveal(vscode.ViewColumn.One);
+		return;
+	}
+	panel = vscode.window.createWebviewPanel(
+		'vue.welcome',
+		'Welcome to Vue',
+		vscode.ViewColumn.One,
+		{ enableScripts: true },
+	);
+	panel.webview.html = getWelcomeHtml(context);
+	panel.webview.onDidReceiveMessage(message => {
+		switch (message.command) {
+			case 'verifySponsor':
+				vscode.commands.executeCommand('vue.action.verify');
+				break;
+			case 'toggleShowUpdates':
+				context.globalState.update('vue.showUpdates', message.value);
+				break;
+		}
+	});
+	panel.onDidDispose(() => panel = undefined);
 }
 
 function getWelcomeHtml(context: vscode.ExtensionContext) {
@@ -339,7 +333,7 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 			<input type="checkbox" onchange="toggleShowUpdates(this.checked)" ${
 		context.globalState.get('vue.showUpdates', true) ? 'checked' : ''
 	}>
-			<span>Show release notes on every significant update</span>
+			<span>Show release notes on update</span>
 		</label>
 	</div>
 
