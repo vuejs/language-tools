@@ -122,7 +122,7 @@ function* generateSlotParameters(
 
 	const { expression } = statement;
 	const startOffset = exp.loc.start.offset - 1;
-	const types: (Code | undefined)[] = [];
+	const types: (Code | null)[] = [];
 
 	const interpolation = [...generateInterpolation(
 		options,
@@ -152,7 +152,7 @@ function* generateSlotParameters(
 			replaceSourceRange(interpolation, 'template', startOffset + name.end, startOffset + type.end);
 		}
 		else {
-			types.push(undefined);
+			types.push(null);
 		}
 	}
 
