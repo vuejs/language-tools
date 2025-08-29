@@ -36,7 +36,10 @@ export function* generateElementDirectives(
 		) {
 			continue;
 		}
-		ctx.accessExternalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
+
+		if (!builtInDirectives.has(prop.name)) {
+			ctx.accessExternalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
+		}
 
 		yield* wrapWith(
 			prop.loc.start.offset,
