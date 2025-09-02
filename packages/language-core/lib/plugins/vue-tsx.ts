@@ -1,12 +1,12 @@
 import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
 import * as path from 'path-browserify';
-import { createScriptCodegenContext, generateScript, type ScriptCodegenOptions } from '../codegen/script';
-import { createTemplateCodegenContext, generateTemplate, type TemplateCodegenOptions } from '../codegen/template';
+import { generateScript } from '../codegen/script';
+import { generateTemplate } from '../codegen/template';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
-import type { Code, Sfc, VueLanguagePlugin } from '../types';
+import type { Sfc, VueLanguagePlugin } from '../types';
 import { computedSet } from '../utils/signals';
 import { CompilerOptionsResolver } from '../utils/ts';
 
@@ -178,8 +178,7 @@ function createTsx(
 		if (getResolvedOptions().skipTemplateCodegen || !sfc.template) {
 			return;
 		}
-
-		const options: TemplateCodegenOptions = {
+		return generateTemplate({
 			ts,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
@@ -193,26 +192,11 @@ function createTsx(
 			propsAssignName: getSetupPropsAssignName(),
 			inheritAttrs: getSetupInheritAttrs(),
 			selfComponentName: getComponentSelfName(),
-		};
-		const context = createTemplateCodegenContext(options, sfc.template.ast);
-		const codegen = generateTemplate(options, context);
-
-		const codes: Code[] = [];
-		for (const code of codegen) {
-			if (typeof code === 'object') {
-				code[3] = context.resolveCodeFeatures(code[3]);
-			}
-			codes.push(code);
-		}
-
-		return {
-			...context,
-			codes,
-		};
+		});
 	});
 
 	const getGeneratedScript = computed(() => {
-		const options: ScriptCodegenOptions = {
+		return generateScript({
 			ts,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
@@ -224,14 +208,7 @@ function createTsx(
 			templateCodegen: getGeneratedTemplate(),
 			destructuredPropNames: getSetupDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
-		};
-		const context = createScriptCodegenContext(options);
-		const codegen = generateScript(options, context);
-
-		return {
-			...context,
-			codes: [...codegen],
-		};
+		});
 	});
 
 	return {
