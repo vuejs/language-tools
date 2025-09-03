@@ -43,6 +43,7 @@ export = createLanguageServicePlugin(
 					language,
 					info.languageService,
 					vueOptions,
+					fileName => fileName,
 				);
 
 				// #3963
