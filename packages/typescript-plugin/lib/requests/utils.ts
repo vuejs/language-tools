@@ -1,17 +1,14 @@
-import type { VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 
 export function getComponentType(
 	ts: typeof import('typescript'),
-	languageService: ts.LanguageService,
-	vueCode: VueVirtualCode,
-	components: NonNullable<ReturnType<typeof getVariableType>>,
+	program: ts.Program,
 	fileName: string,
+	components: NonNullable<ReturnType<typeof getVariableType>>,
 	tag: string,
 ) {
-	const program = languageService.getProgram()!;
 	const checker = program.getTypeChecker();
 	const name = tag.split('.');
 
@@ -23,7 +20,7 @@ export function getComponentType(
 	if (!componentSymbol) {
 		const name = getSelfComponentName(fileName);
 		if (name === capitalize(camelize(tag))) {
-			componentType = getVariableType(ts, languageService, vueCode, '__VLS_self')?.type;
+			componentType = getVariableType(ts, program, fileName, '__VLS_self')?.type;
 		}
 	}
 	else {
@@ -46,13 +43,11 @@ export function getSelfComponentName(fileName: string) {
 
 export function getVariableType(
 	ts: typeof import('typescript'),
-	languageService: ts.LanguageService,
-	vueCode: VueVirtualCode,
+	program: ts.Program,
+	fileName: string,
 	name: string,
 ) {
-	const program = languageService.getProgram()!;
-
-	const tsSourceFile = program.getSourceFile(vueCode.fileName);
+	const tsSourceFile = program.getSourceFile(fileName);
 	if (tsSourceFile) {
 		const checker = program.getTypeChecker();
 		const node = searchVariableDeclarationNode(ts, tsSourceFile, name);
