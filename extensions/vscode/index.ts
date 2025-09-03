@@ -162,11 +162,10 @@ function launch(context: vscode.ExtensionContext) {
 			command,
 			args,
 			{ isAsync: true, lowPriority: true },
-		).then(res => {
-			client.sendNotification('tsserver/response', [seq, res?.body]);
-		}, () => {
-			client.sendNotification('tsserver/response', [seq, undefined]);
-		});
+		).then(
+			res => client.sendNotification('tsserver/response', [seq, res?.body]),
+			() => client.sendNotification('tsserver/response', [seq, undefined]),
+		);
 	});
 	client.start();
 
