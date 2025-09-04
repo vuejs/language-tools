@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.0.7 (2025-09-02)
+
+### Bug Fixes
+
+- fix(vscode): show welcome page only when opening a Vue file
+- fix(language-core): generate slot parameters in the same way as interpolation (#5618) - Thanks to @KazariEX!
+- fix(language-core): do not generate variables for builtin directives - Thanks to @KazariEX!
+
+### Other Changes
+
+- docs(vscode): add descriptions for premium feature configurations (#5612) - Thanks to @KazariEX!
+
 ## 3.0.6 (2025-08-20)
 
 ### Bug Fixes
