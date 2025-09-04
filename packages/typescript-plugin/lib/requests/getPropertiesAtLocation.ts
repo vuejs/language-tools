@@ -10,6 +10,7 @@ export function getPropertiesAtLocation(
 	sourceScript: SourceScript,
 	virtualCode: VueVirtualCode,
 	position: number,
+	isTsPlugin: boolean,
 ): string[] {
 	const virtualScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
 	if (!virtualScript) {
@@ -32,7 +33,7 @@ export function getPropertiesAtLocation(
 	if (!mapped) {
 		return [];
 	}
-	position += sourceScript.snapshot.getLength();
+	position += isTsPlugin ? sourceScript.snapshot.getLength() : 0;
 
 	const sourceFile = program.getSourceFile(virtualCode.fileName);
 	if (!sourceFile) {

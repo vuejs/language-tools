@@ -104,7 +104,7 @@ export = createLanguageServicePlugin(
 					const [fileName, templateCodeRange]: Parameters<Requests['collectExtractProps']> = request.arguments;
 					const { language, program, sourceScript, virtualCode } = getLanguageServiceAndVirtualCode(fileName);
 					return {
-						response: collectExtractProps(ts, language, program, sourceScript, virtualCode, templateCodeRange),
+						response: collectExtractProps(ts, language, program, sourceScript, virtualCode, templateCodeRange, true),
 					};
 				},
 			);
@@ -120,7 +120,7 @@ export = createLanguageServicePlugin(
 				const [fileName, position]: Parameters<Requests['getPropertiesAtLocation']> = request.arguments;
 				const { language, program, sourceScript, virtualCode } = getLanguageServiceAndVirtualCode(fileName);
 				return {
-					response: getPropertiesAtLocation(ts, language, program, sourceScript, virtualCode, position),
+					response: getPropertiesAtLocation(ts, language, program, sourceScript, virtualCode, position, true),
 				};
 			});
 			session.addProtocolHandler('_vue:getComponentDirectives', request => {
