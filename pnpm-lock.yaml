@@ -15,14 +15,14 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2(@types/node@22.15.2)(conventional-commits-filter@5.0.0)(typescript@5.9.2)
       '@tsslint/cli':
-        specifier: ^2.0.1
-        version: 2.0.1(typescript@5.9.2)
+        specifier: ^2.0.4
+        version: 2.0.4(typescript@5.9.2)
       '@tsslint/config':
-        specifier: ^2.0.1
-        version: 2.0.1(typescript@5.9.2)
+        specifier: ^2.0.4
+        version: 2.0.4(typescript@5.9.2)
       '@tsslint/eslint':
-        specifier: ^2.0.1
-        version: 2.0.1(typescript@5.9.2)
+        specifier: ^2.0.4
+        version: 2.0.4(typescript@5.9.2)
       '@typescript-eslint/eslint-plugin':
         specifier: ^8.19.0
         version: 8.39.1(@typescript-eslint/parser@8.39.1(eslint@9.27.0)(typescript@5.9.2))(eslint@9.27.0)(typescript@5.9.2)
@@ -1138,23 +1138,23 @@ packages:
     resolution: {integrity: sha512-tlqY9xq5ukxTUZBmoOp+m61cqwQD5pHJtFY3Mn8CA8ps6yghLH/Hw8UPdqg4OLmFW3IFlcXnQNmo/dh8HzXYIQ==}
     engines: {node: '>=18'}
 
-  '@tsslint/cli@2.0.1':
-    resolution: {integrity: sha512-7g+jVQrs9d3D9kMpT1TBlLBQhmQriDGekyywwvrBnmocA1KJvVskms7t3xHxkGupNrF5dH+TZaQVacwCKw93Sg==}
+  '@tsslint/cli@2.0.4':
+    resolution: {integrity: sha512-TT+vWaWE5OYFT1kvPwD4UQo4ngX9KIGNed1D4Ji6QoL2+RcTLa18i5Hml4j2pKaaivmNl225MZtsgO3neeyhZQ==}
     hasBin: true
     peerDependencies:
       typescript: '*'
 
-  '@tsslint/config@2.0.1':
-    resolution: {integrity: sha512-al2vj06aenhqMs2/Vm3p2gVNAFCbpuw7C3E+DFWXVpKH3+g48cJaPymRI3Ma4mQqmvSMIPF5VFN/H1SSYzdwNw==}
+  '@tsslint/config@2.0.4':
+    resolution: {integrity: sha512-s5SJlEB/Pd7EKNnGirSY2VjcpWwj1HDg8oNUJ37nJnEJ4KqHOybpuIshRckYRctAE1UV5uzRyQWQXNecNX+s3w==}
 
-  '@tsslint/core@2.0.1':
-    resolution: {integrity: sha512-Freonkuz+cuIyMahmDgz3xLxfgKON79Y/K7LcKexJVqRnIYMIQcA0wxRKjk0eCNOj59PlzV8RYwYGvFaxDd8Qw==}
+  '@tsslint/core@2.0.4':
+    resolution: {integrity: sha512-1aYlKG3VoV2sobr70Nzt9mlNS76yWhssCmEQ0L41kZnASLVgIoVrwFcYR6U+4gnkugK1Q3ThzjT17eV4TxoNpg==}
 
-  '@tsslint/eslint@2.0.1':
-    resolution: {integrity: sha512-g5VU/BwFFHT7GAs7M1nzEguGWO7MeebYobzmr3nQlQFfJAgfRf52Ffl779KL+IMY9EdeDA6is9Wgg/bGug/Qvg==}
+  '@tsslint/eslint@2.0.4':
+    resolution: {integrity: sha512-9syUwbfnrlxUP7KzMPtNwPTvupSiAk6MJEEfOWXNxGoaz+o4MUMA9cRSGjrseCVKiTg4hPUcwy0mgUNVfNvqcw==}
 
-  '@tsslint/types@2.0.1':
-    resolution: {integrity: sha512-0XllhTjC3eVmbVNPAIAGlmAsIOymKbi5IzAk5QnreBDBxBA9jCPGl1NB0ijtBMrUai6zWiRB3/hPvikeEGs3hQ==}
+  '@tsslint/types@2.0.4':
+    resolution: {integrity: sha512-+2CQVAw+pgU+wk+Y+fb65dEobjsv1fdCOxACo9WgVuKEteodQLtAofQfYthhd3UAkUlTKC6RVDUB4UArtgRDVw==}
 
   '@tufjs/canonical-json@2.0.0':
     resolution: {integrity: sha512-yVtV8zsdo8qFHe+/3kw81dSLyF7D576A5cCFCi4X7B39tWT7SekaEFUnvnWJHz+9qO7qJTah1JbrDjWKqFtdWA==}
@@ -4673,11 +4673,11 @@ snapshots:
 
   '@sindresorhus/merge-streams@4.0.0': {}
 
-  '@tsslint/cli@2.0.1(typescript@5.9.2)':
+  '@tsslint/cli@2.0.4(typescript@5.9.2)':
     dependencies:
       '@clack/prompts': 0.8.2
-      '@tsslint/config': 2.0.1(typescript@5.9.2)
-      '@tsslint/core': 2.0.1
+      '@tsslint/config': 2.0.4(typescript@5.9.2)
+      '@tsslint/core': 2.0.4
       '@volar/language-core': 2.4.23
       '@volar/language-hub': 0.0.1
       '@volar/typescript': 2.4.23
@@ -4685,22 +4685,23 @@ snapshots:
       json5: 2.2.3
       typescript: 5.9.2
 
-  '@tsslint/config@2.0.1(typescript@5.9.2)':
+  '@tsslint/config@2.0.4(typescript@5.9.2)':
     dependencies:
-      '@tsslint/types': 2.0.1
+      '@tsslint/types': 2.0.4
+      minimatch: 10.0.1
       ts-api-utils: 2.1.0(typescript@5.9.2)
     transitivePeerDependencies:
       - typescript
 
-  '@tsslint/core@2.0.1':
+  '@tsslint/core@2.0.4':
     dependencies:
-      '@tsslint/types': 2.0.1
+      '@tsslint/types': 2.0.4
       esbuild: 0.21.5
       minimatch: 10.0.1
 
-  '@tsslint/eslint@2.0.1(typescript@5.9.2)':
+  '@tsslint/eslint@2.0.4(typescript@5.9.2)':
     dependencies:
-      '@tsslint/config': 2.0.1(typescript@5.9.2)
+      '@tsslint/config': 2.0.4(typescript@5.9.2)
       '@typescript-eslint/parser': 8.39.1(eslint@9.27.0)(typescript@5.9.2)
       eslint: 9.27.0
     transitivePeerDependencies:
@@ -4708,7 +4709,7 @@ snapshots:
       - supports-color
       - typescript
 
-  '@tsslint/types@2.0.1': {}
+  '@tsslint/types@2.0.4': {}
 
   '@tufjs/canonical-json@2.0.0': {}
 

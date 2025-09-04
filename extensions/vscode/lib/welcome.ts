@@ -10,11 +10,11 @@ export function activate(context: vscode.ExtensionContext) {
 		&& context.globalState.get('vue-welcome') !== welcomeVersion
 	) {
 		context.globalState.update('vue-welcome', welcomeVersion);
-		vscode.commands.executeCommand('vue.welcome');
+		execute(context);
 	}
 }
 
-export function executeWelcome(context: vscode.ExtensionContext) {
+export function execute(context: vscode.ExtensionContext) {
 	if (panel) {
 		panel.reveal(vscode.ViewColumn.One);
 		return;

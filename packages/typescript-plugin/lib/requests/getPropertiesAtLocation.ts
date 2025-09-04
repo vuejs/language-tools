@@ -1,24 +1,18 @@
 /// <reference types="@volar/typescript" />
 
-import { isCompletionEnabled, VueVirtualCode } from '@vue/language-core';
+import { isCompletionEnabled, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
-import type { RequestContext } from './types';
 
 export function getPropertiesAtLocation(
-	this: RequestContext,
-	fileName: string,
+	ts: typeof import('typescript'),
+	language: Language,
+	program: ts.Program,
+	sourceScript: SourceScript,
+	virtualCode: VueVirtualCode,
 	position: number,
+	isTsPlugin: boolean,
 ): string[] {
-	const { languageService, language, typescript: ts } = this;
-
-	// mapping
-	const sourceScript = language.scripts.get(fileName);
-	const root = sourceScript?.generated?.root;
-	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
-		return [];
-	}
-
-	const virtualScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(root);
+	const virtualScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
 	if (!virtualScript) {
 		return [];
 	}
@@ -39,10 +33,9 @@ export function getPropertiesAtLocation(
 	if (!mapped) {
 		return [];
 	}
-	position += sourceScript.snapshot.getLength();
+	position += isTsPlugin ? sourceScript.snapshot.getLength() : 0;
 
-	const program = languageService.getProgram()!;
-	const sourceFile = program.getSourceFile(fileName);
+	const sourceFile = program.getSourceFile(virtualCode.fileName);
 	if (!sourceFile) {
 		return [];
 	}

@@ -5,12 +5,10 @@ import { getSlotsPropertyName } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
-import type { TemplateCodegenContext } from './context';
+import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild, getVForNode } from './templateChild';
-
-export * from './context';
 
 export interface TemplateCodegenOptions {
 	ts: typeof ts;
@@ -28,7 +26,27 @@ export interface TemplateCodegenOptions {
 	selfComponentName?: string;
 }
 
-export function* generateTemplate(
+export { generate as generateTemplate };
+
+function generate(options: TemplateCodegenOptions) {
+	const context = createTemplateCodegenContext(options, options.template.ast);
+	const codegen = generateTemplate(options, context);
+
+	const codes: Code[] = [];
+	for (const code of codegen) {
+		if (typeof code === 'object') {
+			code[3] = context.resolveCodeFeatures(code[3]);
+		}
+		codes.push(code);
+	}
+
+	return {
+		...context,
+		codes,
+	};
+}
+
+function* generateTemplate(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {

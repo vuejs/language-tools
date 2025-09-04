@@ -44,13 +44,15 @@ export async function getLanguageServer(): Promise<{
 				return null;
 			});
 		});
-		serverHandle.connection.onNotification('tsserver/request', async ([id, command, args]) => {
-			const res = await tsserver.message({
+		serverHandle.connection.onNotification('tsserver/request', ([id, command, args]) => {
+			tsserver.message({
 				seq: seq++,
 				command: command,
 				arguments: args,
-			});
-			serverHandle!.connection.sendNotification('tsserver/response', [id, res.body]);
+			}).then(
+				res => serverHandle!.connection.sendNotification('tsserver/response', [id, res?.body]),
+				() => serverHandle!.connection.sendNotification('tsserver/response', [id, undefined]),
+			);
 		});
 
 		await serverHandle.initialize(

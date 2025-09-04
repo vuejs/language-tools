@@ -7,12 +7,10 @@ import { codeFeatures } from '../codeFeatures';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
-import { type ScriptCodegenContext } from './context';
+import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';
-
-export * from './context';
 
 export interface ScriptCodegenOptions {
 	ts: typeof ts;
@@ -28,7 +26,19 @@ export interface ScriptCodegenOptions {
 	templateRefNames: Set<string>;
 }
 
-export function* generateScript(
+export { generate as generateScript };
+
+function generate(options: ScriptCodegenOptions) {
+	const context = createScriptCodegenContext(options);
+	const codegen = generateScript(options, context);
+
+	return {
+		...context,
+		codes: [...codegen],
+	};
+}
+
+function* generateScript(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
