@@ -40,7 +40,7 @@ export function execute(context: vscode.ExtensionContext) {
 }
 
 function getWelcomeHtml(context: vscode.ExtensionContext) {
-	const version = context.extension.packageJSON.version;
+	const { version, displayName } = context.extension.packageJSON;
 	return /* HTML */ `
 <!DOCTYPE html>
 <html lang="en">
@@ -48,7 +48,7 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Vue.js</title>
+	<title>${displayName}</title>
 	<script>
 		const vscode = acquireVsCodeApi();
 		function verifySponsor() {
@@ -291,7 +291,7 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 			</g>
 		</svg>
 		<div>
-			<h1>Vue.js <sup><small>${version}</small></sup></h1>
+			<h1>${displayName} <sup><small>${version}</small></sup></h1>
 			<div class="links">
 				<a href="https://github.com/vuejs/language-tools" target="_blank">
 					<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align: middle;">
@@ -340,7 +340,6 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 	<div class="card whats-new-card">
 		<h3>3.0.6</h3>
 		<ul style="margin: 0; padding-left: 1.25rem;">
-			<li>✨ The official extension has now been renamed to "Vue.js"</li>
 			<li>🚀 Expandable Hovers support for TypeScript (<a href="https://code.visualstudio.com/updates/v1_100#_expandable-hovers-for-javascript-and-typescript-experimental" target="_blank">Learn More</a>)</li>
 			<li>🐛 8+ bug fixes</li>
 		</ul>
