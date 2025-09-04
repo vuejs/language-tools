@@ -15,7 +15,7 @@ import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 const specialTags = new Set([
 	'slot',
@@ -158,11 +158,13 @@ export function create(
 				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
-					const info = getEmbeddedInfo(context, document, 'template', languageId);
-					if (!info) {
+					if (document.languageId !== languageId) {
 						return;
 					}
-					const { sourceScript, root } = info;
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
+						return;
+					}
 
 					const {
 						result: completionList,
@@ -172,8 +174,8 @@ export function create(
 							propMap,
 						},
 					} = await runWithVueData(
-						sourceScript.id,
-						root,
+						info.script.id,
+						info.root,
 						() =>
 							baseServiceInstance.provideCompletionItems!(
 								document,
@@ -313,8 +315,11 @@ export function create(
 				},
 
 				provideHover(document, position, token) {
-					const info = getEmbeddedInfo(context, document, 'template', languageId);
-					if (!info) {
+					if (document.languageId !== languageId) {
+						return;
+					}
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
 						return;
 					}
 

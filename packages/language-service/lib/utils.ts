@@ -1,52 +1,21 @@
-import { type LanguageServiceContext, type SourceScript, type TextDocument } from '@volar/language-service';
-import { VueVirtualCode } from '@vue/language-core';
+import type { LanguageServiceContext, SourceScript } from '@volar/language-service';
+import type { VueVirtualCode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 
-export function getEmbeddedInfo(
+export function resolveEmbeddedCode(
 	context: LanguageServiceContext,
-	document: TextDocument,
-	embeddedCodeId?: string | ((id: string) => boolean),
-	languageId?: string,
+	uriStr: string,
 ) {
-	const uri = URI.parse(document.uri);
+	const uri = URI.parse(uriStr);
 	const decoded = context.decodeEmbeddedDocumentUri(uri);
 	if (!decoded) {
 		return;
 	}
-
-	if (embeddedCodeId) {
-		if (typeof embeddedCodeId === 'string') {
-			if (decoded[1] !== embeddedCodeId) {
-				return;
-			}
-		}
-		else if (!embeddedCodeId(decoded[1])) {
-			return;
-		}
-	}
-
-	if (languageId && document.languageId !== languageId) {
-		return;
-	}
-
-	const sourceScript = context.language.scripts.get(decoded[0]);
-	if (!sourceScript?.generated) {
-		return;
-	}
-
-	const virtualCode = sourceScript.generated.embeddedCodes.get(decoded[1]);
-	if (!virtualCode) {
-		return;
-	}
-
-	const root = sourceScript.generated.root;
-	if (!(root instanceof VueVirtualCode)) {
-		return;
-	}
-
+	const sourceScript = context.language.scripts.get(decoded[0])!;
+	const code = sourceScript.generated!.embeddedCodes.get(decoded[1])!;
 	return {
-		sourceScript: sourceScript as Required<SourceScript<URI>>,
-		virtualCode,
-		root,
+		script: sourceScript as Required<SourceScript<URI>>,
+		code,
+		root: sourceScript.generated!.root as VueVirtualCode,
 	};
 }

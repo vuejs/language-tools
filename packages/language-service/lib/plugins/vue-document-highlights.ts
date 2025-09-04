@@ -1,6 +1,6 @@
 import type { DocumentHighlightKind, LanguageServicePlugin } from '@volar/language-service';
 import { forEachElementNode, getElementTagOffsets } from '@vue/language-core';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(
 	{ getDocumentHighlights }: import('@vue/typescript-plugin/lib/requests').Requests,
@@ -13,13 +13,12 @@ export function create(
 		create(context) {
 			return {
 				async provideDocumentHighlights(document, position) {
-					const info = getEmbeddedInfo(context, document, 'main');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'main') {
 						return;
 					}
-					const { root } = info;
 
-					const { template } = root.sfc;
+					const { template } = info.root.sfc;
 					const offset = document.offsetAt(position);
 
 					if (template?.ast && offset >= template.startTagEnd && offset <= template.endTagStart) {
@@ -36,10 +35,10 @@ export function create(
 						}
 					}
 
-					const result = await getDocumentHighlights(root.fileName, offset);
+					const result = await getDocumentHighlights(info.root.fileName, offset);
 
 					return result
-						?.filter(({ fileName }) => fileName === root.fileName)
+						?.filter(({ fileName }) => fileName === info.root.fileName)
 						.flatMap(({ highlightSpans }) => highlightSpans)
 						.map(({ textSpan, kind }) => ({
 							range: {

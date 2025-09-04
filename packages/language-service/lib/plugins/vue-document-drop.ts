@@ -6,7 +6,7 @@ import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUser
 import { URI } from 'vscode-uri';
 import { checkCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
@@ -20,11 +20,13 @@ export function create(
 		create(context) {
 			return {
 				async provideDocumentDropEdits(document, _position, dataTransfer) {
-					const info = getEmbeddedInfo(context, document, 'template', 'html');
-					if (!info) {
+					if (document.languageId !== 'html') {
 						return;
 					}
-					const { sourceScript, root } = info;
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
+						return;
+					}
 
 					let importUri: string | undefined;
 					for (const [mimeType, item] of dataTransfer) {
@@ -32,22 +34,22 @@ export function create(
 							importUri = item.value as string;
 						}
 					}
-					if (!importUri || !root.vueCompilerOptions.extensions.some(ext => importUri.endsWith(ext))) {
+					if (!importUri || !info.root.vueCompilerOptions.extensions.some(ext => importUri.endsWith(ext))) {
 						return;
 					}
 
-					const { sfc } = root;
+					const { sfc } = info.root;
 					const script = sfc.scriptSetup ?? sfc.script;
 					if (!script) {
 						return;
 					}
 
-					const casing = await checkCasing(context, sourceScript.id);
+					const casing = await checkCasing(context, info.script.id);
 					const baseName = path.basename(importUri);
 					const newName = capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
 
 					const additionalEdit: WorkspaceEdit = {};
-					const code = [...forEachEmbeddedCode(root)].find(code =>
+					const code = [...forEachEmbeddedCode(info.root)].find(code =>
 						code.id === (sfc.scriptSetup ? 'scriptsetup_raw' : 'script_raw')
 					)!;
 					const lastImportNode = getLastImportNode(ts, script.ast);
@@ -55,9 +57,9 @@ export function create(
 
 					let importPath: string | undefined;
 
-					const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(root);
+					const serviceScript = info.script.generated.languagePlugin.typescript?.getServiceScript(info.root);
 					if (serviceScript) {
-						const tsDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, serviceScript.code.id);
+						const tsDocumentUri = context.encodeEmbeddedDocumentUri(info.script.id, serviceScript.code.id);
 						const tsDocument = context.documents.get(
 							tsDocumentUri,
 							serviceScript.code.languageId,
@@ -66,7 +68,7 @@ export function create(
 						const preferences = await getUserPreferences(context, tsDocument);
 						importPath = (
 							await getImportPathForFile(
-								root.fileName,
+								info.root.fileName,
 								incomingFileName,
 								preferences,
 							) ?? {}
@@ -74,7 +76,7 @@ export function create(
 					}
 
 					if (!importPath) {
-						importPath = path.relative(path.dirname(root.fileName), incomingFileName)
+						importPath = path.relative(path.dirname(info.root.fileName), incomingFileName)
 							|| importUri.slice(importUri.lastIndexOf('/') + 1);
 
 						if (!importPath.startsWith('./') && !importPath.startsWith('../')) {
@@ -82,7 +84,7 @@ export function create(
 						}
 					}
 
-					const embeddedDocumentUriStr = context.encodeEmbeddedDocumentUri(sourceScript.id, code.id).toString();
+					const embeddedDocumentUriStr = context.encodeEmbeddedDocumentUri(info.script.id, code.id).toString();
 
 					additionalEdit.changes ??= {};
 					additionalEdit.changes[embeddedDocumentUriStr] = [];

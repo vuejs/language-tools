@@ -1,7 +1,7 @@
 import type { LanguageServicePlugin, SemanticToken } from '@volar/language-service';
 import { forEachElementNode, hyphenateTag } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(
 	{ getComponentNames, getElementNames }: import('@vue/typescript-plugin/lib/requests').Requests,
@@ -19,13 +19,12 @@ export function create(
 		create(context) {
 			return {
 				async provideDocumentSemanticTokens(document, range, legend) {
-					const info = getEmbeddedInfo(context, document, 'template');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
 						return;
 					}
-					const { root } = info;
 
-					const { template } = root.sfc;
+					const { template } = info.root.sfc;
 					if (!template?.ast) {
 						return;
 					}
@@ -34,8 +33,8 @@ export function create(
 					const start = document.offsetAt(range.start);
 					const end = document.offsetAt(range.end);
 
-					const validComponentNames = await getComponentNames(root.fileName) ?? [];
-					const elements = new Set(await getElementNames(root.fileName) ?? []);
+					const validComponentNames = await getComponentNames(info.root.fileName) ?? [];
+					const elements = new Set(await getElementNames(info.root.fileName) ?? []);
 					const components = new Set([
 						...validComponentNames,
 						...validComponentNames.map(hyphenateTag),

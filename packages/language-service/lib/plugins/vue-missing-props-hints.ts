@@ -8,7 +8,7 @@ import type {
 import { hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import * as html from 'vscode-html-languageservice';
 import { AttrNameCasing, checkCasing } from '../nameCasing';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(
 	{ getComponentNames, getElementNames, getComponentProps }: import('@vue/typescript-plugin/lib/requests').Requests,
@@ -23,11 +23,10 @@ export function create(
 
 			return {
 				async provideInlayHints(document, range, cancellationToken) {
-					const info = getEmbeddedInfo(context, document, 'template');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
 						return;
 					}
-					const { sourceScript, root } = info;
 
 					const enabled = await context.env.getConfiguration<boolean>?.('vue.inlayHints.missingProps') ?? false;
 					if (!enabled) {
@@ -40,12 +39,12 @@ export function create(
 					}
 
 					const result: InlayHint[] = [];
-					const casing = await checkCasing(context, sourceScript.id);
-					const components = await getComponentNames(root.fileName) ?? [];
+					const casing = await checkCasing(context, info.script.id);
+					const components = await getComponentNames(info.root.fileName) ?? [];
 					const componentProps: Record<string, string[]> = {};
 
 					intrinsicElementNames ??= new Set(
-						await getElementNames(root.fileName) ?? [],
+						await getElementNames(info.root.fileName) ?? [],
 					);
 
 					let token: html.TokenType;
@@ -76,7 +75,7 @@ export function create(
 								if (cancellationToken.isCancellationRequested) {
 									break;
 								}
-								componentProps[checkTag] = (await getComponentProps(root.fileName, checkTag) ?? [])
+								componentProps[checkTag] = (await getComponentProps(info.root.fileName, checkTag) ?? [])
 									.filter(prop => prop.required)
 									.map(prop => prop.name);
 							}
@@ -109,7 +108,7 @@ export function create(
 										attrText = attrText.slice('v-model:'.length);
 									}
 									else if (attrText === 'v-model') {
-										attrText = root.vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
+										attrText = info.root.vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
 									}
 									else if (attrText.startsWith('v-on:')) {
 										attrText = 'on-' + hyphenateAttr(attrText.slice('v-on:'.length));

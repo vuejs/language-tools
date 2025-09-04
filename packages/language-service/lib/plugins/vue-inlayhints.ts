@@ -1,7 +1,7 @@
 import type { InlayHint, InlayHintKind, LanguageServicePlugin } from '@volar/language-service';
 import { collectBindingIdentifiers, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
@@ -12,11 +12,10 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 		create(context) {
 			return {
 				async provideInlayHints(document, range) {
-					const info = getEmbeddedInfo(context, document, 'main');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'main') {
 						return;
 					}
-					const { root } = info;
 
 					const settings: Record<string, boolean> = {};
 					async function getSettingEnabled(key: string) {
@@ -24,7 +23,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					}
 
 					const result: InlayHint[] = [];
-					const { sfc } = root;
+					const { sfc } = info.root;
 
 					const codegen = tsCodegen.get(sfc);
 					const inlayHints = [
