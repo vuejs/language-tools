@@ -1,5 +1,4 @@
-import { VueVirtualCode } from '@vue/language-core';
-import type { RequestContext } from './types';
+import type * as ts from 'typescript';
 import { getVariableType } from './utils';
 
 const builtInDirectives = new Set([
@@ -12,18 +11,11 @@ const builtInDirectives = new Set([
 ]);
 
 export function getComponentDirectives(
-	this: RequestContext,
+	ts: typeof import('typescript'),
+	program: ts.Program,
 	fileName: string,
 ): string[] {
-	const { typescript: ts, language, languageService } = this;
-
-	const sourceScript = language.scripts.get(fileName);
-	const root = sourceScript?.generated?.root;
-	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
-		return [];
-	}
-
-	const directives = getVariableType(ts, languageService, root, '__VLS_directives');
+	const directives = getVariableType(ts, program, fileName, '__VLS_directives');
 	if (!directives) {
 		return [];
 	}

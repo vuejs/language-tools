@@ -1,26 +1,19 @@
-import { tsCodegen, VueVirtualCode } from '@vue/language-core';
-import type { RequestContext } from './types';
+import { tsCodegen, type VueVirtualCode } from '@vue/language-core';
+import type * as ts from 'typescript';
 import { getVariableType } from './utils';
 
 export function getComponentSlots(
-	this: RequestContext,
-	fileName: string,
+	ts: typeof import('typescript'),
+	program: ts.Program,
+	virtualCode: VueVirtualCode,
 ): string[] {
-	const { typescript: ts, language, languageService } = this;
-
-	const sourceScript = language.scripts.get(fileName);
-	const root = sourceScript?.generated?.root;
-	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
-		return [];
-	}
-
-	const codegen = tsCodegen.get(root.sfc);
+	const codegen = tsCodegen.get(virtualCode.sfc);
 	if (!codegen) {
 		return [];
 	}
 
 	const assignName = codegen.getSetupSlotsAssignName() ?? `__VLS_slots`;
-	const slots = getVariableType(ts, languageService, root, assignName);
+	const slots = getVariableType(ts, program, virtualCode.fileName, assignName);
 	if (!slots) {
 		return [];
 	}

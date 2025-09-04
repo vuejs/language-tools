@@ -1,16 +1,15 @@
 import type * as ts from 'typescript';
-import type { RequestContext } from './types';
 
 export function getImportPathForFile(
-	this: RequestContext,
+	ts: typeof import('typescript'),
+	languageServiceHost: ts.LanguageServiceHost,
+	program: ts.Program,
 	fileName: string,
 	incomingFileName: string,
 	preferences: ts.UserPreferences,
 ): { path?: string } {
-	const { typescript: ts, languageService, languageServiceHost } = this;
-	const program = languageService.getProgram();
-	const incomingFile = program?.getSourceFile(incomingFileName);
-	const sourceFile = program?.getSourceFile(fileName);
+	const incomingFile = program.getSourceFile(incomingFileName);
+	const sourceFile = program.getSourceFile(fileName);
 	if (!program || !sourceFile || !incomingFile) {
 		return {};
 	}

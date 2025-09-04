@@ -1,28 +1,19 @@
-import { VueVirtualCode } from '@vue/language-core';
-import type { RequestContext } from './types';
+import type * as ts from 'typescript';
 import { getVariableType } from './utils';
 
 export function getElementAttrs(
-	this: RequestContext,
+	ts: typeof import('typescript'),
+	program: ts.Program,
 	fileName: string,
-	tagName: string,
+	tag: string,
 ): string[] {
-	const { typescript: ts, language, languageService } = this;
-
-	const sourceScript = language.scripts.get(fileName);
-	const root = sourceScript?.generated?.root;
-	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
-		return [];
-	}
-
-	const program = languageService.getProgram()!;
 	const checker = program.getTypeChecker();
-	const elements = getVariableType(ts, languageService, root, '__VLS_elements');
+	const elements = getVariableType(ts, program, fileName, '__VLS_elements');
 	if (!elements) {
 		return [];
 	}
 
-	const elementType = elements.type.getProperty(tagName);
+	const elementType = elements.type.getProperty(tag);
 	if (!elementType) {
 		return [];
 	}
