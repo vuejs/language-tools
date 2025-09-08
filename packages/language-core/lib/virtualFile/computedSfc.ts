@@ -352,10 +352,10 @@ export function computedSfc(
 		});
 	}
 
-	function computedSfcBlock<T extends SFCBlock>(
+	function computedSfcBlock(
 		name: string,
 		defaultLang: string,
-		getBlock: () => T,
+		getBlock: () => SFCBlock,
 	) {
 		const getLang = computed(() => getBlock().lang ?? defaultLang);
 		const getAttrs = computed(() => getBlock().attrs); // TODO: computed it

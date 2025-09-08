@@ -1201,12 +1201,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 
 			const a = meta.props.find(prop =>
 				prop.name === 'foo'
-				&& prop.required === true
+				&& prop.required
 				&& prop.type === 'string'
 			);
 			const b = meta.props.find(prop =>
 				prop.name === 'bar'
-				&& prop.required === false
+				&& !prop.required
 				&& prop.type === 'number | undefined'
 			);
 
@@ -1225,12 +1225,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 
 			const a = meta.props.find(prop =>
 				prop.name === 'foo'
-				&& prop.required === true
+				&& prop.required
 				&& prop.type === 'string'
 			);
 			const b = meta.props.find(prop =>
 				prop.name === 'bar'
-				&& prop.required === false
+				&& !prop.required
 				&& prop.type === 'number | undefined'
 			);
 
@@ -1255,12 +1255,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 
 			const a = Foo.props.find(prop =>
 				prop.name === 'foo'
-				&& prop.required === true
+				&& prop.required
 				&& prop.type === 'string'
 			);
 			const b = Bar.props.find(prop =>
 				prop.name === 'bar'
-				&& prop.required === false
+				&& !prop.required
 				&& prop.type === 'number | undefined'
 			);
 

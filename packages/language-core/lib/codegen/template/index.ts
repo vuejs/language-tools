@@ -122,7 +122,7 @@ function* generateSlots(
 			}
 			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}
-		yield `${endOfLine}`;
+		yield endOfLine;
 	}
 	return `__VLS_Slots`;
 }

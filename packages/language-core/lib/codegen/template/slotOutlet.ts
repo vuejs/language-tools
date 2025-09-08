@@ -73,7 +73,7 @@ export function* generateSlotOutlet(
 				nameProp.loc.start.offset,
 				nameProp.loc.end.offset,
 				codeFeatures.verification,
-				`${options.slotsAssignName ?? '__VLS_slots'}`,
+				options.slotsAssignName ?? '__VLS_slots',
 				...codes,
 			);
 		}

@@ -208,7 +208,7 @@ export function create(): LanguageServicePlugin {
 					}
 					for (const customBlock of sfc.customBlocks) {
 						result.push({
-							name: `${customBlock.type}`,
+							name: customBlock.type,
 							kind: 2 satisfies typeof SymbolKind.Module,
 							range: {
 								start: document.positionAt(customBlock.start),
