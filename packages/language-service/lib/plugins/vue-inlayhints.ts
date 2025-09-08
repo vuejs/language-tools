@@ -122,7 +122,6 @@ export function findDestructuredProps(
 	const scopeStack: Scope[] = [rootScope];
 	let currentScope: Scope | null = rootScope;
 	const excludedIds = new WeakSet<ts.Identifier>();
-	const parentStack: ts.Node[] = [];
 
 	for (const prop of props) {
 		rootScope[prop] = true;
@@ -222,10 +221,6 @@ export function findDestructuredProps(
 		});
 
 		function enter(node: ts.Node) {
-			if (parent) {
-				parentStack.push(parent);
-			}
-
 			if (
 				ts.isTypeLiteralNode(node)
 				|| ts.isTypeReferenceNode(node)
@@ -276,10 +271,6 @@ export function findDestructuredProps(
 		}
 
 		function leave(node: ts.Node) {
-			if (parent) {
-				parentStack.pop();
-			}
-
 			if (
 				ts.isFunctionLike(node)
 				|| ts.isCatchClause(node)

@@ -35,7 +35,7 @@ export const compile: typeof CompilerDOM.compile = (template, options = {}) => {
 			loc: {
 				source: '',
 				start: { column: -1, line: -1, offset: error.start },
-				end: { column: -1, line: -1, offset: error.end ?? error.start },
+				end: { column: -1, line: -1, offset: error.end },
 			},
 		});
 	}
@@ -47,7 +47,7 @@ export const compile: typeof CompilerDOM.compile = (template, options = {}) => {
 			loc: {
 				source: '',
 				start: { column: -1, line: -1, offset: error.start },
-				end: { column: -1, line: -1, offset: error.end ?? error.start },
+				end: { column: -1, line: -1, offset: error.end },
 			},
 		});
 	}

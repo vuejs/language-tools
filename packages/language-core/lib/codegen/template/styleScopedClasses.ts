@@ -74,10 +74,9 @@ export function collectStyleScopedClassReferences(
 				}
 			}
 			else {
-				let isWrapped = false;
 				const [content, startOffset] = normalizeAttributeValue(prop.value);
 				if (content) {
-					const classes = collectClasses(content, startOffset + (isWrapped ? 1 : 0));
+					const classes = collectClasses(content, startOffset);
 					ctx.scopedClasses.push(...classes);
 				}
 				else {
