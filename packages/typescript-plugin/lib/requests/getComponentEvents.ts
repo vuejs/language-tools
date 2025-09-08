@@ -33,8 +33,8 @@ export function getComponentEvents(
 		if (emitSymbol) {
 			const emitType = checker.getTypeOfSymbolAtLocation(emitSymbol, components.node);
 			for (const call of emitType.getCallSignatures()) {
-				const eventNameParamSymbol = call.parameters[0];
-				if (eventNameParamSymbol) {
+				if (call.parameters.length) {
+					const eventNameParamSymbol = call.parameters[0]!;
 					const eventNameParamType = checker.getTypeOfSymbolAtLocation(eventNameParamSymbol, components.node);
 					if (eventNameParamType.isStringLiteral()) {
 						result.add(eventNameParamType.value);

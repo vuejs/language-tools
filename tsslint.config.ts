@@ -95,6 +95,7 @@ export default defineConfig({
 				fixStyle: 'inline-type-imports',
 			}],
 			'@typescript-eslint/no-unnecessary-type-assertion': true,
+			'@typescript-eslint/no-unnecessary-condition': true,
 		}),
 		'missing-dependency'({ typescript: ts, file, program, report }) {
 			const { noEmit } = program.getCompilerOptions();

@@ -71,17 +71,17 @@ export function create(): LanguageServicePlugin {
 				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
 					if (sourceScript.generated?.root instanceof VueVirtualCode) {
 						if (virtualCode.id === 'script_raw' || virtualCode.id === 'scriptsetup_raw') {
-							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
+							if (await context.env.getConfiguration<boolean>?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
 						else if (virtualCode.id.startsWith('style_')) {
-							if (await context.env.getConfiguration?.('vue.format.style.initialIndent') ?? false) {
+							if (await context.env.getConfiguration<boolean>?.('vue.format.style.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
 						else if (virtualCode.id === 'template') {
-							if (await context.env.getConfiguration?.('vue.format.template.initialIndent') ?? true) {
+							if (await context.env.getConfiguration<boolean>?.('vue.format.template.initialIndent') ?? true) {
 								options.initialIndentLevel++;
 							}
 						}
@@ -208,7 +208,7 @@ export function create(): LanguageServicePlugin {
 					}
 					for (const customBlock of sfc.customBlocks) {
 						result.push({
-							name: `${customBlock.type}`,
+							name: customBlock.type,
 							kind: 2 satisfies typeof SymbolKind.Module,
 							range: {
 								start: document.positionAt(customBlock.start),

@@ -41,11 +41,9 @@ export function analyze(
 	if (!signal) {
 		return;
 	}
+	const dependencies = findDependencies(signal);
 	const subscribers = signal.bindingInfo
 		? findSubscribers(signal.bindingInfo.name, signal.bindingInfo.trackKinds)
-		: [];
-	const dependencies = signal
-		? findDependencies(signal)
 		: [];
 
 	if (
@@ -196,7 +194,7 @@ export function analyze(
 							else if (trackKind === TrackKind.AccessDotValue) {
 								match = dotValueAccesses.has(reference2.textSpan.start + reference2.textSpan.length);
 							}
-							else if (trackKind === TrackKind.Call) {
+							else {
 								match = functionCalls.has(reference2.textSpan.start + reference2.textSpan.length);
 							}
 							if (match) {
@@ -222,14 +220,14 @@ export function analyze(
 		return result;
 	}
 
-	function findSignalByNamePosition(position: number) {
+	function findSignalByNamePosition(position: number): SignalNode | undefined {
 		return signals.find(ref =>
 			ref.bindingInfo && ref.bindingInfo.name.getStart(sourceFile) <= position
 			&& ref.bindingInfo.name.getEnd() >= position
 		);
 	}
 
-	function findEffectByEffectHandlerPosition(position: number) {
+	function findEffectByEffectHandlerPosition(position: number): SignalNode | undefined {
 		return signals.filter(ref =>
 			ref.sideEffectInfo && ref.sideEffectInfo.handler.getStart(sourceFile) <= position
 			&& ref.sideEffectInfo.handler.getEnd() >= position
@@ -238,7 +236,7 @@ export function analyze(
 		)[0];
 	}
 
-	function findEffectByDepsHandlerPosition(position: number) {
+	function findEffectByDepsHandlerPosition(position: number): SignalNode | undefined {
 		return signals.filter(ref =>
 			ref.trackInfo && ref.trackInfo.depsHandler.getStart(sourceFile) <= position
 			&& ref.trackInfo.depsHandler.getEnd() >= position

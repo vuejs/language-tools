@@ -8,7 +8,7 @@ export function getElementNames(
 ): string[] {
 	return getVariableType(ts, program, fileName, '__VLS_elements')
 		?.type
-		?.getProperties()
+		.getProperties()
 		.map(c => c.name)
 		?? [];
 }

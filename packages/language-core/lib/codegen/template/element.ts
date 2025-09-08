@@ -153,7 +153,7 @@ export function* generateComponent(
 					: codeFeatures.doNotReportTs2339AndTs2551,
 			},
 		);
-		yield `${endOfLine}`;
+		yield endOfLine;
 
 		const camelizedTag = camelize(node.tag);
 		if (identifierRegex.test(camelizedTag)) {
@@ -186,7 +186,7 @@ export function* generateComponent(
 					},
 				},
 			);
-			yield `${endOfLine}`;
+			yield endOfLine;
 		}
 	}
 
@@ -255,7 +255,7 @@ export function* generateComponent(
 		if (ctx.inVFor) {
 			yield `[]`;
 		}
-		yield `${endOfLine}`;
+		yield endOfLine;
 
 		if (refName && offset) {
 			ctx.addTemplateRef(refName, `typeof ${ctx.getHoistVariable(componentInstanceVar)}`, offset);

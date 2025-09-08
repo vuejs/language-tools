@@ -248,7 +248,7 @@ function findVueVersion(rootDir: string) {
 
 function resolvePath(scriptPath: string, root: string) {
 	try {
-		if (require?.resolve) {
+		if ((require as NodeJS.Require | undefined)?.resolve) {
 			return require.resolve(scriptPath, { paths: [root] });
 		}
 		else {
@@ -329,13 +329,10 @@ export function writeGlobalTypes(
 	vueOptions: VueCompilerOptions,
 	writeFile: (fileName: string, data: string) => void,
 ) {
-	const originalFn = vueOptions.globalTypesPath;
-	if (!originalFn) {
-		return;
-	}
 	const writed = new Set<string>();
+	const { globalTypesPath } = vueOptions;
 	vueOptions.globalTypesPath = (fileName: string) => {
-		const result = originalFn(fileName);
+		const result = globalTypesPath(fileName);
 		if (result && !writed.has(result)) {
 			writed.add(result);
 			writeFile(result, generateGlobalTypes(vueOptions));

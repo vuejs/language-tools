@@ -77,7 +77,7 @@ export = createLanguageServicePlugin(
 				return;
 			}
 			const session = info.session;
-			if (!session.addProtocolHandler) {
+			if (!(session.addProtocolHandler as Function | undefined)) {
 				// addProtocolHandler was introduced in TS 4.4 or 4.5 in 2021, see https://github.com/microsoft/TypeScript/issues/43893
 				projectService.logger.info('Vue: there is no addProtocolHandler method.');
 				return;
@@ -173,7 +173,7 @@ export = createLanguageServicePlugin(
 
 			function getLanguageServiceAndVirtualCode(fileName: string) {
 				const service = getLanguageService(fileName);
-				const sourceScript = service?.language.scripts.get(fileName);
+				const sourceScript = service.language.scripts.get(fileName);
 				if (!sourceScript) {
 					throw new Error('No source script found for file: ' + fileName);
 				}

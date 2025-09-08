@@ -6,7 +6,7 @@ let panel: vscode.WebviewPanel | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
 	if (
-		context.globalState.get('vue.showUpdates', true)
+		context.globalState.get<boolean>('vue.showUpdates', true)
 		&& context.globalState.get('vue-welcome') !== welcomeVersion
 	) {
 		context.globalState.update('vue-welcome', welcomeVersion);
@@ -331,7 +331,7 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 	<div style="display: flex; justify-content: center; margin: 1.5rem 0;">
 		<label>
 			<input type="checkbox" onchange="toggleShowUpdates(this.checked)" ${
-		context.globalState.get('vue.showUpdates', true) ? 'checked' : ''
+		context.globalState.get<boolean>('vue.showUpdates', true) ? 'checked' : ''
 	}>
 			<span>Show release notes on update</span>
 		</label>

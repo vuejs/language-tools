@@ -30,8 +30,8 @@ export function getComponentProps(
 	const checker = program.getTypeChecker();
 
 	for (const sig of componentType.getCallSignatures()) {
-		const propParam = sig.parameters[0];
-		if (propParam) {
+		if (sig.parameters.length) {
+			const propParam = sig.parameters[0]!;
 			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.node);
 			const props = propsType.getProperties();
 			for (const prop of props) {
