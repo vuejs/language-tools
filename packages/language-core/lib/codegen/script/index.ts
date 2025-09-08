@@ -75,14 +75,12 @@ function* generateScript(
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 			}
 		}
-		else if (exportDefault && isExportRawObject) {
+		else if (exportDefault && isExportRawObject && options.vueCompilerOptions.optionsWrapper.length) {
 			ctx.inlayHints.push({
 				blockName: options.sfc.script.name,
 				offset: exportDefault.expression.start,
 				setting: 'vue.inlayHints.optionsWrapper',
-				label: options.vueCompilerOptions.optionsWrapper.length
-					? options.vueCompilerOptions.optionsWrapper[0]
-					: '[Missing optionsWrapper[0]]',
+				label: options.vueCompilerOptions.optionsWrapper[0],
 				tooltip: [
 					'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
 					'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
@@ -91,23 +89,17 @@ function* generateScript(
 				blockName: options.sfc.script.name,
 				offset: exportDefault.expression.end,
 				setting: 'vue.inlayHints.optionsWrapper',
-				label: options.vueCompilerOptions.optionsWrapper.length >= 2
-					? options.vueCompilerOptions.optionsWrapper[1]!
-					: '[Missing optionsWrapper[1]]',
+				label: options.vueCompilerOptions.optionsWrapper[1],
 			});
 			yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
-			if (options.vueCompilerOptions.optionsWrapper.length) {
-				yield options.vueCompilerOptions.optionsWrapper[0];
-			}
+			yield options.vueCompilerOptions.optionsWrapper[0];
 			yield generateSfcBlockSection(
 				options.sfc.script,
 				exportDefault.expression.start,
 				exportDefault.expression.end,
 				codeFeatures.all,
 			);
-			if (options.vueCompilerOptions.optionsWrapper.length >= 2) {
-				yield options.vueCompilerOptions.optionsWrapper[1]!;
-			}
+			yield options.vueCompilerOptions.optionsWrapper[1];
 			yield generateSfcBlockSection(
 				options.sfc.script,
 				exportDefault.expression.end,
