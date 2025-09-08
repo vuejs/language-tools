@@ -24,7 +24,7 @@ export function create(): LanguageServicePlugin {
 					const styleClasses = new Map<string, string[]>();
 
 					for (let i = 0; i < sfc.styles.length; i++) {
-						const style = sfc.styles[i];
+						const style = sfc.styles[i]!;
 						if (option !== true && !(option === 'scoped' && style.scoped)) {
 							continue;
 						}

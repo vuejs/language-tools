@@ -8,7 +8,7 @@ export { hyphenate as hyphenateTag } from '@vue/shared';
 export function hyphenateAttr(str: string) {
 	let hyphencase = hyphenate(str);
 	// fix https://github.com/vuejs/core/issues/8811
-	if (str.length && str[0] !== str[0].toLowerCase()) {
+	if (str.length && str[0] !== str[0]!.toLowerCase()) {
 		hyphencase = '-' + hyphencase;
 	}
 	return hyphencase;
@@ -27,11 +27,11 @@ export function getElementTagOffsets(
 	];
 	if (!node.isSelfClosing && template.lang === 'html') {
 		const endTagOffset = node.loc.start.offset + node.loc.source.lastIndexOf(node.tag);
-		if (endTagOffset > tagOffsets[0]) {
+		if (endTagOffset > tagOffsets[0]!) {
 			tagOffsets.push(endTagOffset);
 		}
 	}
-	return tagOffsets;
+	return tagOffsets as [number] | [number, number];
 }
 
 export function getStartEnd(

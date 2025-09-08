@@ -116,7 +116,7 @@ export function createTemplateCodegenContext(
 
 	function resolveCodeFeatures(features: VueCodeInformation) {
 		if (features.verification && stack.length) {
-			const data = stack[stack.length - 1];
+			const data = stack[stack.length - 1]!;
 			if (data.ignoreError) {
 				// We are currently in a region of code covered by a @vue-ignore directive, so don't
 				// even bother performing any type-checking: set verification to false.
@@ -189,7 +189,7 @@ export function createTemplateCodegenContext(
 
 	return {
 		get currentInfo() {
-			return stack[stack.length - 1];
+			return stack[stack.length - 1]!;
 		},
 		resolveCodeFeatures,
 		inlineTsAsts: templateAst && templateInlineTsAsts.get(templateAst),
@@ -327,7 +327,7 @@ export function createTemplateCodegenContext(
 							break;
 						}
 						case 'generic': {
-							const text = content.trim();
+							const text = content!.trim();
 							if (text.startsWith('{') && text.endsWith('}')) {
 								data.generic = {
 									content: text.slice(1, -1),

@@ -89,8 +89,8 @@ function baseCompile(
 	const [nodeTransforms, directiveTransforms] = CompilerDOM.getBaseTransformPreset(prefixIdentifiers);
 
 	// v-for > v-if in vue 2
-	const transformIf = nodeTransforms[1];
-	const transformFor = nodeTransforms[3];
+	const transformIf = nodeTransforms[1]!;
+	const transformFor = nodeTransforms[3]!;
 	nodeTransforms[1] = transformFor;
 	nodeTransforms[3] = transformIf;
 

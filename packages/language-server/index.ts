@@ -236,8 +236,8 @@ connection.onRequest('vue/interpolationRanges', async (params: {
 					for (const mapping of code.mappings) {
 						for (let i = 0; i < mapping.sourceOffsets.length; i++) {
 							ranges.push([
-								mapping.sourceOffsets[i],
-								mapping.sourceOffsets[i] + mapping.lengths[i],
+								mapping.sourceOffsets[i]!,
+								mapping.sourceOffsets[i]! + mapping.lengths[i]!,
 							]);
 						}
 					}
@@ -344,8 +344,8 @@ connection.onRequest('vue/reactivityAnalyze', async (params: {
 			let end = document.positionAt(dependency.getEnd());
 			if (ts.isBlock(dependency) && dependency.statements.length) {
 				const { statements } = dependency;
-				start = document.positionAt(statements[0].getStart(result.sourceFile));
-				end = document.positionAt(statements[statements.length - 1].getEnd());
+				start = document.positionAt(statements[0]!.getStart(result.sourceFile));
+				end = document.positionAt(statements[statements.length - 1]!.getEnd());
 			}
 			const sourceRange = getSourceRange(docs, { start, end });
 			if (sourceRange) {
@@ -360,8 +360,8 @@ connection.onRequest('vue/reactivityAnalyze', async (params: {
 			let end = document.positionAt(subscriber.sideEffectInfo.handler.getEnd());
 			if (ts.isBlock(subscriber.sideEffectInfo.handler) && subscriber.sideEffectInfo.handler.statements.length) {
 				const { statements } = subscriber.sideEffectInfo.handler;
-				start = document.positionAt(statements[0].getStart(result.sourceFile));
-				end = document.positionAt(statements[statements.length - 1].getEnd());
+				start = document.positionAt(statements[0]!.getStart(result.sourceFile));
+				end = document.positionAt(statements[statements.length - 1]!.getEnd());
 			}
 			const sourceRange = getSourceRange(docs, { start, end });
 			if (sourceRange) {
@@ -375,8 +375,8 @@ connection.onRequest('vue/reactivityAnalyze', async (params: {
 			let end = document.positionAt(dependency.getEnd());
 			if (ts.isBlock(dependency) && dependency.statements.length) {
 				const { statements } = dependency;
-				start = document.positionAt(statements[0].getStart(result.sourceFile));
-				end = document.positionAt(statements[statements.length - 1].getEnd());
+				start = document.positionAt(statements[0]!.getStart(result.sourceFile));
+				end = document.positionAt(statements[statements.length - 1]!.getEnd());
 			}
 			dependencies.push({ start, end });
 		}
@@ -388,8 +388,8 @@ connection.onRequest('vue/reactivityAnalyze', async (params: {
 			let end = document.positionAt(subscriber.sideEffectInfo.handler.getEnd());
 			if (ts.isBlock(subscriber.sideEffectInfo.handler) && subscriber.sideEffectInfo.handler.statements.length) {
 				const { statements } = subscriber.sideEffectInfo.handler;
-				start = document.positionAt(statements[0].getStart(result.sourceFile));
-				end = document.positionAt(statements[statements.length - 1].getEnd());
+				start = document.positionAt(statements[0]!.getStart(result.sourceFile));
+				end = document.positionAt(statements[statements.length - 1]!.getEnd());
 			}
 			subscribers.push({ start, end });
 		}

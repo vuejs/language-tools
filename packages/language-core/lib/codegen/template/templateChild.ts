@@ -137,7 +137,7 @@ function* collectSingleRootNodes(
 		return;
 	}
 
-	const child = children[0];
+	const child = children[0]!;
 	if (child.type === CompilerDOM.NodeTypes.IF) {
 		for (const branch of child.branches) {
 			yield* collectSingleRootNodes(options, branch.children);

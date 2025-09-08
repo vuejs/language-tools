@@ -10,7 +10,7 @@ export function getComponentType(
 	tag: string,
 ) {
 	const checker = program.getTypeChecker();
-	const name = tag.split('.');
+	const name = tag.split('.') as [string, ...string[]];
 
 	let componentSymbol = components.type.getProperty(name[0])
 		?? components.type.getProperty(camelize(name[0]))
@@ -26,7 +26,7 @@ export function getComponentType(
 	else {
 		componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 		for (let i = 1; i < name.length; i++) {
-			componentSymbol = componentType.getProperty(name[i]);
+			componentSymbol = componentType.getProperty(name[i]!);
 			if (componentSymbol) {
 				componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 			}

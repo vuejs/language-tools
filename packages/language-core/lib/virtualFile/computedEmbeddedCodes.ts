@@ -61,7 +61,7 @@ export function computedEmbeddedCodes(
 
 		function consumeRemain() {
 			for (let i = remain.length - 1; i >= 0; i--) {
-				const { code, snapshot, mappings } = remain[i];
+				const { code, snapshot, mappings } = remain[i]!;
 				if (!code.parentCodeId) {
 					embeddedCodes.push({
 						id: code.id,
@@ -206,7 +206,7 @@ function computedPluginEmbeddedCodes(
 			const tokenMappings = new Map<symbol, Mapping>();
 
 			for (let i = 0; i < mappings.length; i++) {
-				const mapping = mappings[i];
+				const mapping = mappings[i]!;
 				if (mapping.data.__combineOffset !== undefined) {
 					const offsetMapping = mappings[i - mapping.data.__combineOffset];
 					if (typeof offsetMapping === 'string' || !offsetMapping) {
@@ -225,8 +225,8 @@ function computedPluginEmbeddedCodes(
 					if (tokenMappings.has(token)) {
 						const prevMapping = tokenMappings.get(token)!;
 						code.linkedCodeMappings.push({
-							sourceOffsets: [prevMapping.generatedOffsets[0]],
-							generatedOffsets: [mapping.generatedOffsets[0]],
+							sourceOffsets: [prevMapping.generatedOffsets[0]!],
+							generatedOffsets: [mapping.generatedOffsets[0]!],
 							lengths: [Number(token.description)],
 							data: undefined,
 						});

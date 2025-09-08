@@ -114,11 +114,11 @@ export function create(
 					? vOn.description.value
 					: vOn.description ?? '';
 				const modifiers = markdown
-					.split('\n- ')[4]
+					.split('\n- ')[4]!
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
 					text = text.slice('  - `.'.length);
-					const [name, desc] = text.split('` - ');
+					const [name, desc] = text.split('` - ') as [string, string];
 					vOnModifiers[name] = desc;
 				}
 			}
@@ -127,11 +127,11 @@ export function create(
 					? vBind.description.value
 					: vBind.description ?? '';
 				const modifiers = markdown
-					.split('\n- ')[4]
+					.split('\n- ')[4]!
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
 					text = text.slice('  - `.'.length);
-					const [name, desc] = text.split('` - ');
+					const [name, desc] = text.split('` - ') as [string, string];
 					vBindModifiers[name] = desc;
 				}
 			}
@@ -482,13 +482,13 @@ export function create(
 							const { attrs, propInfos, events, directives } = tagInfo;
 
 							for (let i = 0; i < propInfos.length; i++) {
-								const prop = propInfos[i];
+								const prop = propInfos[i]!;
 								if (prop.name.startsWith('ref_')) {
 									propInfos.splice(i--, 1);
 									continue;
 								}
 								if (hyphenateTag(prop.name).startsWith('on-vnode-')) {
-									prop.name = 'onVue:' + prop.name['onVnode'.length].toLowerCase()
+									prop.name = 'onVue:' + prop.name['onVnode'.length]!.toLowerCase()
 										+ prop.name.slice('onVnodeX'.length);
 								}
 							}
@@ -508,7 +508,7 @@ export function create(
 
 								if (isEvent) {
 									const eventName = casing.attr === AttrNameCasing.Camel
-										? propName['on'.length].toLowerCase() + propName.slice('onX'.length)
+										? propName['on'.length]!.toLowerCase() + propName.slice('onX'.length)
 										: propName.slice('on-'.length);
 
 									for (
@@ -652,7 +652,7 @@ export function create(
 					return;
 				}
 
-				const [text, ...modifiers] = replacement.text.split('.');
+				const [text, ...modifiers] = replacement.text.split('.') as [string, ...string[]];
 				const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
 				const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
 				const isVModel = text.startsWith('v-model:') || text === 'v-model';
@@ -673,7 +673,7 @@ export function create(
 						continue;
 					}
 
-					const description = currentModifiers[modifier];
+					const description = currentModifiers[modifier]!;
 					const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
 					const newItem: html.CompletionItem = {
 						label: modifier,

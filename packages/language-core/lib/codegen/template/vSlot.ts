@@ -114,9 +114,9 @@ function* generateSlotParameters(
 	slotVar: string,
 ): Generator<Code> {
 	const { ts } = options;
-
 	const statement = ast.statements[0];
-	if (!ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
+
+	if (!statement || !ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
 		return;
 	}
 

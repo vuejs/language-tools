@@ -80,7 +80,7 @@ export function create(): LanguageServicePlugin {
 						continue;
 					}
 
-					const start = sourceOffsets[0];
+					const start = sourceOffsets[0]!;
 					const end = sourceOffsets.at(-1)! + lengths.at(-1)!;
 
 					if (offset >= start && offset <= end) {

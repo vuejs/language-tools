@@ -264,8 +264,8 @@ function selectTemplateCode(
 	});
 
 	if (insideNodes.length) {
-		const first = insideNodes.sort((a, b) => a.loc.start.offset - b.loc.start.offset)[0];
-		const last = insideNodes.sort((a, b) => b.loc.end.offset - a.loc.end.offset)[0];
+		const first = insideNodes.sort((a, b) => a.loc.start.offset - b.loc.start.offset)[0]!;
+		const last = insideNodes.sort((a, b) => b.loc.end.offset - a.loc.end.offset)[0]!;
 		return [first.loc.start.offset, last.loc.end.offset];
 	}
 }

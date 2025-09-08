@@ -95,7 +95,7 @@ export function create(
 								else {
 									// remove modifiers
 									if (attrText.includes('.')) {
-										attrText = attrText.split('.')[0];
+										attrText = attrText.split('.')[0]!;
 									}
 									// normalize
 									if (attrText.startsWith('v-bind:')) {

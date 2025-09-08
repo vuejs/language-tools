@@ -136,7 +136,7 @@ function* forEachInterpolationSegment(
 	if (ctxVars.length) {
 		for (let i = 0; i < ctxVars.length; i++) {
 			const lastVar = ctxVars[i - 1];
-			const curVar = ctxVars[i];
+			const curVar = ctxVars[i]!;
 			const lastVarEnd = lastVar ? lastVar.offset + lastVar.text.length : 0;
 
 			if (curVar.isShorthand) {

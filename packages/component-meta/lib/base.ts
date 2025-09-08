@@ -468,7 +468,7 @@ interface ComponentMeta<T> {
 		for (const symbol of exportedSymbols) {
 			const [declaration] = symbol.getDeclarations() ?? [];
 
-			if (ts.isExportAssignment(declaration)) {
+			if (declaration && ts.isExportAssignment(declaration)) {
 				symbolNode = declaration.expression;
 			}
 		}
@@ -599,22 +599,22 @@ function createSchemaResolvers(
 		let getSchema = () => [] as PropertyMetaSchema[];
 
 		if (call.parameters.length >= 2) {
-			subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode);
-			if ((call.parameters[1].valueDeclaration as any)?.dotDotDotToken) {
+			subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1]!, symbolNode);
+			if ((call.parameters[1]!.valueDeclaration as any)?.dotDotDotToken) {
 				subtypeStr = getFullyQualifiedName(subtype);
 				getSchema = () => typeChecker.getTypeArguments(subtype! as ts.TypeReference).map(resolveSchema);
 			}
 			else {
 				subtypeStr = '[';
 				for (let i = 1; i < call.parameters.length; i++) {
-					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode))
+					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i]!, symbolNode))
 						+ ', ';
 				}
 				subtypeStr = subtypeStr.slice(0, -2) + ']';
 				getSchema = () => {
 					const result: PropertyMetaSchema[] = [];
 					for (let i = 1; i < call.parameters.length; i++) {
-						result.push(resolveSchema(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode)));
+						result.push(resolveSchema(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i]!, symbolNode)));
 					}
 					return result;
 				};
@@ -622,7 +622,7 @@ function createSchemaResolvers(
 		}
 
 		return {
-			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value,
+			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0]!, symbolNode) as ts.StringLiteralType).value,
 			description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
 			tags: call.getJsDocTags().map(tag => ({
 				name: tag.name,
@@ -646,10 +646,10 @@ function createSchemaResolvers(
 			kind: 'event',
 			type: typeChecker.signatureToString(signature),
 			get schema() {
-				return schema ??= signature.parameters.length > 0
+				return schema ??= signature.parameters.length
 					? typeChecker
 						.getTypeArguments(
-							typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference,
+							typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0]!, symbolNode) as ts.TypeReference,
 						)
 						.map(resolveSchema)
 					: undefined;
@@ -700,7 +700,7 @@ function createSchemaResolvers(
 			};
 		}
 		else if (subtype.getCallSignatures().length === 1) {
-			return resolveCallbackSchema(subtype.getCallSignatures()[0]);
+			return resolveCallbackSchema(subtype.getCallSignatures()[0]!);
 		}
 
 		return type;
@@ -909,7 +909,7 @@ function readTsComponentDefaultProps(
 			// export default defineComponent({ ... })
 			else if (ts.isCallExpression(component)) {
 				if (component.arguments.length) {
-					const arg = component.arguments[0];
+					const arg = component.arguments[0]!;
 					if (ts.isObjectLiteralExpression(arg)) {
 						return arg;
 					}

@@ -70,10 +70,12 @@ function getCompletionsAtPosition<T>(
 					root.sfc.template,
 					...root.sfc.styles,
 				];
-				const ranges = blocks.filter(Boolean).map(block => [
-					block!.startTagEnd,
-					block!.endTagStart,
-				]);
+				const ranges = blocks.filter(Boolean).map(block =>
+					[
+						block!.startTagEnd,
+						block!.endTagStart,
+					] as const
+				);
 
 				if (ranges.some(([start, end]) => position >= start && position <= end)) {
 					const globalKinds = new Set(['var', 'function', 'module']);

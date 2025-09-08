@@ -11,7 +11,7 @@ export function* generateCamelized(
 	const startCombineOffset = features.__combineOffset ?? 0;
 
 	for (let i = 0; i < parts.length; i++) {
-		const part = parts[i];
+		const part = parts[i]!;
 		if (part !== '') {
 			if (i === 0) {
 				yield [

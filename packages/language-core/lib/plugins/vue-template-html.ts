@@ -61,7 +61,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 			if (tryUpdateNode(oldResult.ast) && hitNodes.length) {
 				hitNodes = hitNodes.sort((a, b) => a.loc.source.length - b.loc.source.length);
-				const hitNode = hitNodes[0];
+				const hitNode = hitNodes[0]!;
 				if (hitNode.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					return oldResult;
 				}

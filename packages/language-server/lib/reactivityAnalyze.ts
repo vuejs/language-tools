@@ -346,7 +346,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 			const call = node;
 			const callName = node.expression.escapedText as string;
 			if ((callName === 'effect' || callName === 'watchEffect') && call.arguments.length) {
-				const callback = call.arguments[0];
+				const callback = call.arguments[0]!;
 				if (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) {
 					signals.push({
 						trackInfo: {
@@ -361,8 +361,8 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 				}
 			}
 			if (callName === 'watch' && call.arguments.length >= 2) {
-				const depsCallback = call.arguments[0];
-				const effectCallback = call.arguments[1];
+				const depsCallback = call.arguments[0]!;
+				const effectCallback = call.arguments[1]!;
 				if (ts.isArrowFunction(effectCallback) || ts.isFunctionExpression(effectCallback)) {
 					if (ts.isArrowFunction(depsCallback) || ts.isFunctionExpression(depsCallback)) {
 						signals.push({
@@ -406,7 +406,7 @@ function collect(ts: typeof import('typescript'), sourceFile: ts.SourceFile) {
 				});
 			}
 			else if ((callName === 'computed' || hyphenateAttr(callName).endsWith('-computed')) && call.arguments.length) {
-				const arg = call.arguments[0];
+				const arg = call.arguments[0]!;
 				if (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) {
 					signals.push({
 						bindingInfo: ts.isVariableDeclaration(call.parent)

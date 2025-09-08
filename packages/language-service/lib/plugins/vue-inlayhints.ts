@@ -120,7 +120,7 @@ export function findDestructuredProps(
 ) {
 	const rootScope: Scope = Object.create(null);
 	const scopeStack: Scope[] = [rootScope];
-	let currentScope: Scope = rootScope;
+	let currentScope: Scope | null = rootScope;
 	const excludedIds = new WeakSet<ts.Identifier>();
 	const parentStack: ts.Node[] = [];
 
@@ -172,7 +172,7 @@ export function findDestructuredProps(
 				(ts.isForOfStatement(stmt) || ts.isForInStatement(stmt))
 				&& ts.isVariableDeclarationList(stmt.initializer)
 			) {
-				walkVariableDeclaration(stmt.initializer.declarations[0], isRoot);
+				walkVariableDeclaration(stmt.initializer.declarations[0]!, isRoot);
 			}
 			else if (
 				ts.isLabeledStatement(stmt)
@@ -268,7 +268,7 @@ export function findDestructuredProps(
 				&& !excludedIds.has(node)
 			) {
 				const name = node.text;
-				if (currentScope[name]) {
+				if (currentScope![name]) {
 					const isShorthand = ts.isShorthandPropertyAssignment(parent);
 					references.push([node, isShorthand]);
 				}

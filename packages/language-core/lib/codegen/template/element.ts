@@ -88,7 +88,7 @@ export function* generateComponent(
 				];
 			}
 			else {
-				const shouldCapitalize = matchImportName[0].toUpperCase() === matchImportName[0];
+				const shouldCapitalize = matchImportName[0]!.toUpperCase() === matchImportName[0];
 				yield* generateCamelized(
 					shouldCapitalize ? capitalize(node.tag) : node.tag,
 					'template',
@@ -160,7 +160,7 @@ export function* generateComponent(
 			// navigation support
 			yield `/** @type {[`;
 			for (const tagOffset of tagOffsets) {
-				for (const shouldCapitalize of (node.tag[0] === node.tag[0].toUpperCase() ? [false] : [true, false])) {
+				for (const shouldCapitalize of (node.tag[0] === node.tag[0]!.toUpperCase() ? [false] : [true, false])) {
 					yield `typeof __VLS_components.`;
 					yield* generateCamelized(
 						shouldCapitalize ? capitalize(node.tag) : node.tag,

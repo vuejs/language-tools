@@ -22,6 +22,6 @@ export function getComponentDirectives(
 
 	return directives.type.getProperties()
 		.map(({ name }) => name)
-		.filter(name => name.startsWith('v') && name.length >= 2 && name[1] === name[1].toUpperCase())
+		.filter(name => name.startsWith('v') && name.length >= 2 && name[1] === name[1]!.toUpperCase())
 		.filter(name => !builtInDirectives.has(name));
 }
