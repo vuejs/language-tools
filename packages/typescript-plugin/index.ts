@@ -103,77 +103,68 @@ export = createLanguageServicePlugin(
 				request => {
 					const [fileName, templateCodeRange]: Parameters<Requests['collectExtractProps']> = request.arguments;
 					const { language, program, sourceScript, virtualCode } = getLanguageServiceAndVirtualCode(fileName);
-					return {
-						response: collectExtractProps(ts, language, program, sourceScript, virtualCode, templateCodeRange, true),
-					};
+					return createResponse(
+						collectExtractProps(ts, language, program, sourceScript, virtualCode, templateCodeRange, true),
+					);
 				},
 			);
 			session.addProtocolHandler('_vue:getImportPathForFile', request => {
 				const [fileName, incomingFileName, preferences]: Parameters<Requests['getImportPathForFile']> =
 					request.arguments;
 				const { languageServiceHost, program } = getLanguageService(fileName);
-				return {
-					response: getImportPathForFile(ts, languageServiceHost, program, fileName, incomingFileName, preferences),
-				};
+				return createResponse(
+					getImportPathForFile(ts, languageServiceHost, program, fileName, incomingFileName, preferences),
+				);
 			});
 			session.addProtocolHandler('_vue:isRefAtLocation', request => {
 				const [fileName, position]: Parameters<Requests['isRefAtLocation']> = request.arguments;
 				const { language, program, sourceScript, virtualCode } = getLanguageServiceAndVirtualCode(fileName);
-				return {
-					response: isRefAtLocation(ts, language, program, sourceScript, virtualCode, position, true),
-				};
+				return createResponse(isRefAtLocation(ts, language, program, sourceScript, virtualCode, position, true));
 			});
 			session.addProtocolHandler('_vue:getComponentDirectives', request => {
 				const [fileName]: Parameters<Requests['getComponentDirectives']> = request.arguments;
 				const { program } = getLanguageService(fileName);
-				return {
-					response: getComponentDirectives(ts, program, fileName),
-				};
+				return createResponse(getComponentDirectives(ts, program, fileName));
 			});
 			session.addProtocolHandler('_vue:getComponentEvents', request => {
 				const [fileName, tag]: Parameters<Requests['getComponentEvents']> = request.arguments;
 				const { program } = getLanguageService(fileName);
-				return {
-					response: getComponentEvents(ts, program, fileName, tag),
-				};
+				return createResponse(getComponentEvents(ts, program, fileName, tag));
 			});
 			session.addProtocolHandler('_vue:getComponentNames', request => {
 				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;
 				const { program } = getLanguageService(fileName);
-				return {
-					response: getComponentNames(ts, program, fileName),
-				};
+				return createResponse(getComponentNames(ts, program, fileName));
 			});
 			session.addProtocolHandler('_vue:getComponentProps', request => {
 				const [fileName, tag]: Parameters<Requests['getComponentProps']> = request.arguments;
 				const { program } = getLanguageService(fileName);
-				return {
-					response: getComponentProps(ts, program, fileName, tag),
-				};
+				return createResponse(getComponentProps(ts, program, fileName, tag));
 			});
 			session.addProtocolHandler('_vue:getComponentSlots', request => {
 				const [fileName]: Parameters<Requests['getComponentSlots']> = request.arguments;
 				const { program, virtualCode } = getLanguageServiceAndVirtualCode(fileName);
-				return {
-					response: getComponentSlots(ts, program, virtualCode),
-				};
+				return createResponse(getComponentSlots(ts, program, virtualCode));
 			});
 			session.addProtocolHandler('_vue:getElementAttrs', request => {
 				const [fileName, tag]: Parameters<Requests['getElementAttrs']> = request.arguments;
 				const { program } = getLanguageService(fileName);
-				return {
-					response: getElementAttrs(ts, program, fileName, tag),
-				};
+				return createResponse(getElementAttrs(ts, program, fileName, tag));
 			});
 			session.addProtocolHandler('_vue:getElementNames', request => {
 				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
 				const { program } = getLanguageService(fileName);
-				return {
-					response: getElementNames(ts, program, fileName),
-				};
+				return createResponse(getElementNames(ts, program, fileName));
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');
+		}
+
+		function createResponse(res: any): ts.server.HandlerResponse {
+			return {
+				response: res,
+				responseRequired: true,
+			};
 		}
 
 		function getLanguageServiceAndVirtualCode(fileName: string) {
