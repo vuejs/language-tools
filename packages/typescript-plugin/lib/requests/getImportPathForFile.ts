@@ -7,11 +7,11 @@ export function getImportPathForFile(
 	fileName: string,
 	incomingFileName: string,
 	preferences: ts.UserPreferences,
-): { path?: string } {
+): string | undefined {
 	const incomingFile = program.getSourceFile(incomingFileName);
 	const sourceFile = program.getSourceFile(fileName);
 	if (!program || !sourceFile || !incomingFile) {
-		return {};
+		return;
 	}
 
 	const getModuleSpecifiersWithCacheInfo: (
@@ -36,7 +36,5 @@ export function getImportPathForFile(
 		preferences,
 	);
 
-	return {
-		path: moduleSpecifiers[0],
-	};
+	return moduleSpecifiers[0];
 }

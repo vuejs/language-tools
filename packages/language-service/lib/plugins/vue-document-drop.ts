@@ -55,7 +55,7 @@ export function create(
 					const lastImportNode = getLastImportNode(ts, script.ast);
 					const incomingFileName = URI.parse(importUri).fsPath.replace(/\\/g, '/');
 
-					let importPath: string | undefined;
+					let importPath: string | null | undefined;
 
 					const serviceScript = info.script.generated.languagePlugin.typescript?.getServiceScript(info.root);
 					if (serviceScript) {
@@ -66,13 +66,11 @@ export function create(
 							serviceScript.code.snapshot,
 						);
 						const preferences = await getUserPreferences(context, tsDocument);
-						importPath = (
-							await getImportPathForFile(
-								info.root.fileName,
-								incomingFileName,
-								preferences,
-							) ?? {}
-						).path;
+						importPath = await getImportPathForFile(
+							info.root.fileName,
+							incomingFileName,
+							preferences,
+						);
 					}
 
 					if (!importPath) {
