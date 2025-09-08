@@ -10,7 +10,7 @@ export function getImportPathForFile(
 ): string | undefined {
 	const incomingFile = program.getSourceFile(incomingFileName);
 	const sourceFile = program.getSourceFile(fileName);
-	if (!program || !sourceFile || !incomingFile) {
+	if (!sourceFile || !incomingFile) {
 		return;
 	}
 

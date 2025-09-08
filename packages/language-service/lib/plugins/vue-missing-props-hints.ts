@@ -19,7 +19,7 @@ export function create(
 			inlayHintProvider: {},
 		},
 		create(context) {
-			let intrinsicElementNames: Set<string>;
+			let intrinsicElementNames: Set<string> | undefined;
 
 			return {
 				async provideInlayHints(document, range, cancellationToken) {
@@ -41,7 +41,7 @@ export function create(
 					const result: InlayHint[] = [];
 					const casing = await checkCasing(context, info.script.id);
 					const components = await getComponentNames(info.root.fileName) ?? [];
-					const componentProps: Record<string, string[]> = {};
+					const componentProps = new Map<string, string[]>();
 
 					intrinsicElementNames ??= new Set(
 						await getElementNames(info.root.fileName) ?? [],
@@ -71,17 +71,20 @@ export function create(
 								break;
 							}
 
-							if (!componentProps[checkTag]) {
+							if (!componentProps.has(checkTag)) {
 								if (cancellationToken.isCancellationRequested) {
 									break;
 								}
-								componentProps[checkTag] = (await getComponentProps(info.root.fileName, checkTag) ?? [])
-									.filter(prop => prop.required)
-									.map(prop => prop.name);
+								componentProps.set(
+									checkTag,
+									(await getComponentProps(info.root.fileName, checkTag) ?? [])
+										.filter(prop => prop.required)
+										.map(prop => prop.name),
+								);
 							}
 
 							current = {
-								unburnedRequiredProps: [...componentProps[checkTag]],
+								unburnedRequiredProps: [...componentProps.get(checkTag)!],
 								labelOffset: scanner.getTokenOffset() + scanner.getTokenLength(),
 							};
 						}

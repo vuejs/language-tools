@@ -35,9 +35,7 @@ const plugin: VueLanguagePlugin = ctx => {
 			if (/script_(js|jsx|ts|tsx)/.test(embeddedFile.id)) {
 				const codegen = useCodegen(fileName, sfc);
 				const tsx = codegen.getGeneratedScript();
-				if (tsx) {
-					embeddedFile.content = [...tsx.codes];
-				}
+				embeddedFile.content = [...tsx.codes];
 			}
 		},
 	};

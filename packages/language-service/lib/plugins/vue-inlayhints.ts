@@ -28,7 +28,7 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					const codegen = tsCodegen.get(sfc);
 					const inlayHints = [
 						...codegen?.getGeneratedTemplate()?.inlayHints ?? [],
-						...codegen?.getGeneratedScript()?.inlayHints ?? [],
+						...codegen?.getGeneratedScript().inlayHints ?? [],
 					];
 					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 

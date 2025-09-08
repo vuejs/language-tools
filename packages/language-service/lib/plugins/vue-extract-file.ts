@@ -321,7 +321,7 @@ export function createAddComponentToOptionEdit(
 			newText: unescape(printText.replace(unicodeReg, '%u')),
 		};
 	}
-	else if (exportDefault.args && exportDefault.argsNode) {
+	else {
 		const newNode: typeof exportDefault.argsNode = {
 			...exportDefault.argsNode,
 			properties: [

@@ -269,7 +269,7 @@ interface ComponentMeta<T> {
 		}
 
 		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode);
-		const symbolProperties = componentType.getProperties() ?? [];
+		const symbolProperties = componentType.getProperties();
 
 		let _type: ReturnType<typeof getType> | undefined;
 		let _props: ReturnType<typeof getProps> | undefined;
@@ -451,7 +451,7 @@ interface ComponentMeta<T> {
 		typeChecker: ts.TypeChecker,
 		componentPath: string,
 	) {
-		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
+		const sourceFile = program.getSourceFile(getMetaFileName(componentPath));
 		if (!sourceFile) {
 			throw 'Could not find main source file';
 		}
@@ -530,8 +530,8 @@ function createSchemaResolvers(
 
 	function resolveNestedProperties(prop: ts.Symbol): PropertyMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode);
-		let schema: PropertyMetaSchema;
-		let declarations: Declaration[];
+		let schema: PropertyMetaSchema | undefined;
+		let declarations: Declaration[] | undefined;
 
 		return {
 			name: prop.getEscapedName().toString(),
@@ -557,8 +557,8 @@ function createSchemaResolvers(
 		const signatures = propType.getCallSignatures();
 		const paramType = signatures[0]?.parameters[0];
 		const subtype = paramType ? typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode) : typeChecker.getAnyType();
-		let schema: PropertyMetaSchema;
-		let declarations: Declaration[];
+		let schema: PropertyMetaSchema | undefined;
+		let declarations: Declaration[] | undefined;
 
 		return {
 			name: prop.getName(),
@@ -575,8 +575,8 @@ function createSchemaResolvers(
 	}
 	function resolveExposedProperties(expose: ts.Symbol): ExposeMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode);
-		let schema: PropertyMetaSchema;
-		let declarations: Declaration[];
+		let schema: PropertyMetaSchema | undefined;
+		let declarations: Declaration[] | undefined;
 
 		return {
 			name: expose.getName(),
@@ -592,8 +592,8 @@ function createSchemaResolvers(
 		};
 	}
 	function resolveEventSignature(call: ts.Signature): EventMeta {
-		let schema: PropertyMetaSchema[];
-		let declarations: Declaration[];
+		let schema: PropertyMetaSchema[] | undefined;
+		let declarations: Declaration[] | undefined;
 		let subtype = undefined;
 		let subtypeStr = '[]';
 		let getSchema = () => [] as PropertyMetaSchema[];
@@ -666,7 +666,7 @@ function createSchemaResolvers(
 		visited.add(subtype);
 
 		if (subtype.isUnion()) {
-			let schema: PropertyMetaSchema[];
+			let schema: PropertyMetaSchema[] | undefined;
 			return {
 				kind: 'enum',
 				type,
@@ -676,7 +676,7 @@ function createSchemaResolvers(
 			};
 		}
 		else if (typeChecker.isArrayLikeType(subtype)) {
-			let schema: PropertyMetaSchema[];
+			let schema: PropertyMetaSchema[] | undefined;
 			return {
 				kind: 'array',
 				type,
@@ -690,7 +690,7 @@ function createSchemaResolvers(
 			&& (subtype.isClassOrInterface() || subtype.isIntersection()
 				|| (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
 		) {
-			let schema: Record<string, PropertyMeta>;
+			let schema: Record<string, PropertyMeta> | undefined;
 			return {
 				kind: 'object',
 				type,
@@ -939,7 +939,7 @@ function resolvePropsOption(
 
 	for (const prop of props.properties) {
 		if (ts.isPropertyAssignment(prop)) {
-			const name = prop.name?.getText(ast);
+			const name = prop.name.getText(ast);
 			if (ts.isObjectLiteralExpression(prop.initializer)) {
 				const defaultProp = prop.initializer.properties.find(p =>
 					ts.isPropertyAssignment(p) && p.name.getText(ast) === 'default'

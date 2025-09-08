@@ -236,8 +236,7 @@ export function* generateElementProps(
 			yield `,${newLine}`;
 		}
 		else if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'bind'
+			prop.name === 'bind'
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
@@ -301,8 +300,8 @@ export function* generatePropExp(
 			const propVariableName = camelize(exp.loc.source);
 
 			if (identifierRegex.test(propVariableName)) {
-				const isDestructuredProp = options.destructuredPropNames?.has(propVariableName) ?? false;
-				const isTemplateRef = options.templateRefNames?.has(propVariableName) ?? false;
+				const isDestructuredProp = options.destructuredPropNames.has(propVariableName);
+				const isTemplateRef = options.templateRefNames.has(propVariableName);
 
 				const codes = generateCamelized(
 					exp.loc.source,
@@ -366,7 +365,7 @@ function getShouldCamelize(
 	return (
 		prop.type !== CompilerDOM.NodeTypes.DIRECTIVE
 		|| !prop.arg
-		|| (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+		|| (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 	)
 		&& hyphenateAttr(propName) === propName
 		&& !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern));

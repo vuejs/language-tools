@@ -25,8 +25,7 @@ export function* generateSlotOutlet(
 			return prop.name === 'name';
 		}
 		if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'bind'
+			prop.name === 'bind'
 			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			return prop.arg.content === 'name';

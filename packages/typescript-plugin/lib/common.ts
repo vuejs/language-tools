@@ -27,14 +27,12 @@ export function createVueLanguageServiceProxy<T>(
 
 	return new Proxy(languageService, {
 		get(target, p, receiver) {
-			if (getProxyMethod) {
-				if (!proxyCache.has(p)) {
-					proxyCache.set(p, getProxyMethod(target, p));
-				}
-				const proxyMethod = proxyCache.get(p);
-				if (proxyMethod) {
-					return proxyMethod;
-				}
+			if (!proxyCache.has(p)) {
+				proxyCache.set(p, getProxyMethod(target, p));
+			}
+			const proxyMethod = proxyCache.get(p);
+			if (proxyMethod) {
+				return proxyMethod;
 			}
 			return Reflect.get(target, p, receiver);
 		},

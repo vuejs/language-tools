@@ -27,7 +27,7 @@ export function computedSfc(
 		const newValue = getParseResult()?.descriptor.comments ?? [];
 		if (
 			oldValue?.length === newValue.length
-			&& oldValue?.every((v, i) => v === newValue[i])
+			&& oldValue.every((v, i) => v === newValue[i])
 		) {
 			return oldValue;
 		}
@@ -41,13 +41,13 @@ export function computedSfc(
 			const compiledAst = computedTemplateAst(base);
 			return mergeObject(base, {
 				get ast() {
-					return compiledAst()?.ast;
+					return compiledAst().ast;
 				},
 				get errors() {
-					return compiledAst()?.errors;
+					return compiledAst().errors;
 				},
 				get warnings() {
-					return compiledAst()?.warnings;
+					return compiledAst().warnings;
 				},
 			});
 		},

@@ -32,8 +32,8 @@ const specialProps = new Set([
 	'style',
 ]);
 
-let builtInData: html.HTMLDataV1;
-let modelData: html.HTMLDataV1;
+let builtInData: html.HTMLDataV1 | undefined;
+let modelData: html.HTMLDataV1 | undefined;
 
 export function create(
 	languageId: 'html' | 'jade',
@@ -351,7 +351,7 @@ export function create(
 
 				const casing = await checkCasing(context, sourceDocumentUri);
 
-				for (const tag of builtInData.tags ?? []) {
+				for (const tag of builtInData!.tags ?? []) {
 					if (specialTags.has(tag.name)) {
 						continue;
 					}
@@ -407,7 +407,7 @@ export function create(
 							return htmlDataProvider.provideValues(tag, attr);
 						},
 					},
-					html.newHTMLDataProvider('vue-template-built-in', builtInData),
+					html.newHTMLDataProvider('vue-template-built-in', builtInData!),
 					{
 						getId: () => 'vue-template',
 						isApplicable: () => true,
@@ -434,7 +434,7 @@ export function create(
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(tag));
 								}
-								else if (casing.tag === TagNameCasing.Pascal) {
+								else {
 									names.add(tag);
 								}
 							}
@@ -444,7 +444,7 @@ export function create(
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}
-								else if (casing.tag === TagNameCasing.Pascal) {
+								else {
 									names.add(name);
 								}
 							}
@@ -703,7 +703,7 @@ export function create(
 				for (const customDataPath of customData) {
 					for (const workspaceFolder of context.env.workspaceFolders) {
 						const uri = Utils.resolvePath(workspaceFolder, customDataPath);
-						const json = await context.env.fs?.readFile?.(uri);
+						const json = await context.env.fs?.readFile(uri);
 						if (json) {
 							try {
 								const data = JSON.parse(json);

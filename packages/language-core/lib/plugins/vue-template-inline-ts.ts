@@ -69,7 +69,7 @@ const plugin: VueLanguagePlugin = ctx => {
 			return data;
 		}
 		const templateContent = sfc.template.content;
-		const inlineTsAsts = sfc.template.ast && templateInlineTsAsts.get(sfc.template.ast);
+		const inlineTsAsts = templateInlineTsAsts.get(sfc.template.ast);
 		let i = 0;
 		sfc.template.ast.children.forEach(visit);
 		return data;

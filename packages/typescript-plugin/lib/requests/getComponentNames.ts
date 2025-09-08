@@ -8,7 +8,7 @@ export function getComponentNames(
 ): string[] {
 	const names = getVariableType(ts, program, fileName, '__VLS_components')
 		?.type
-		?.getProperties()
+		.getProperties()
 		.map(c => c.name)
 		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];

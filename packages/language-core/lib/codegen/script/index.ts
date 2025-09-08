@@ -75,7 +75,7 @@ function* generateScript(
 				yield* generateScriptSetup(options, ctx, options.sfc.scriptSetup, options.scriptSetupRanges);
 			}
 		}
-		else if (exportDefault && isExportRawObject && options.vueCompilerOptions.optionsWrapper.length) {
+		else if (exportDefault && isExportRawObject) {
 			ctx.inlayHints.push({
 				blockName: options.sfc.script.name,
 				offset: exportDefault.expression.start,
@@ -92,18 +92,22 @@ function* generateScript(
 				offset: exportDefault.expression.end,
 				setting: 'vue.inlayHints.optionsWrapper',
 				label: options.vueCompilerOptions.optionsWrapper.length >= 2
-					? options.vueCompilerOptions.optionsWrapper[1]
+					? options.vueCompilerOptions.optionsWrapper[1]!
 					: '[Missing optionsWrapper[1]]',
 			});
 			yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
-			yield options.vueCompilerOptions.optionsWrapper[0];
+			if (options.vueCompilerOptions.optionsWrapper.length) {
+				yield options.vueCompilerOptions.optionsWrapper[0];
+			}
 			yield generateSfcBlockSection(
 				options.sfc.script,
 				exportDefault.expression.start,
 				exportDefault.expression.end,
 				codeFeatures.all,
 			);
-			yield options.vueCompilerOptions.optionsWrapper[1];
+			if (options.vueCompilerOptions.optionsWrapper.length >= 2) {
+				yield options.vueCompilerOptions.optionsWrapper[1]!;
+			}
 			yield generateSfcBlockSection(
 				options.sfc.script,
 				exportDefault.expression.end,
