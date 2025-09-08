@@ -72,31 +72,36 @@ export = createLanguageServicePlugin(
 			const projectService = info.project.projectService;
 			projectService.logger.info('Vue: called handler processing ' + info.project.projectKind);
 
-			const session = info.session;
-			if (!session) {
+			if (!info.session) {
 				projectService.logger.info('Vue: there is no session in info.');
 				return;
 			}
+			const session = info.session;
 			if (!session.addProtocolHandler) {
 				// addProtocolHandler was introduced in TS 4.4 or 4.5 in 2021, see https://github.com/microsoft/TypeScript/issues/43893
 				projectService.logger.info('Vue: there is no addProtocolHandler method.');
 				return;
 			}
-			if ((session as any).handlers.has('_vue:projectInfo')) {
+			// @ts-expect-error
+			const handlers = session.handlers as Map<
+				string,
+				(request: ts.server.protocol.Request) => ts.server.HandlerResponse
+			>;
+			if (handlers.has('_vue:projectInfo')) {
 				return;
 			}
 
 			session.addProtocolHandler('_vue:projectInfo', request => {
-				return (session as any).handlers.get('projectInfo')?.(request);
+				return handlers.get('projectInfo')!(request);
 			});
 			session.addProtocolHandler('_vue:documentHighlights-full', request => {
-				return (session as any).handlers.get('documentHighlights-full')?.(request);
+				return handlers.get('documentHighlights-full')!(request);
 			});
 			session.addProtocolHandler('_vue:encodedSemanticClassifications-full', request => {
-				return (session as any).handlers.get('encodedSemanticClassifications-full')?.(request);
+				return handlers.get('encodedSemanticClassifications-full')!(request);
 			});
 			session.addProtocolHandler('_vue:quickinfo', request => {
-				return (session as any).handlers.get('quickinfo')?.(request);
+				return handlers.get('quickinfo')!(request);
 			});
 			session.addProtocolHandler(
 				'_vue:collectExtractProps',
@@ -158,51 +163,52 @@ export = createLanguageServicePlugin(
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');
-		}
 
-		function createResponse(res: any): ts.server.HandlerResponse {
-			return {
-				response: res,
-				responseRequired: true,
-			};
-		}
+			function createResponse(res: any): ts.server.HandlerResponse {
+				return {
+					response: res,
+					responseRequired: true,
+				};
+			}
 
-		function getLanguageServiceAndVirtualCode(fileName: string) {
-			const service = getLanguageService(fileName);
-			const sourceScript = service?.language.scripts.get(fileName);
-			if (!sourceScript) {
-				throw new Error('No source script found for file: ' + fileName);
+			function getLanguageServiceAndVirtualCode(fileName: string) {
+				const service = getLanguageService(fileName);
+				const sourceScript = service?.language.scripts.get(fileName);
+				if (!sourceScript) {
+					throw new Error('No source script found for file: ' + fileName);
+				}
+				const virtualCode = sourceScript.generated?.root;
+				if (!(virtualCode instanceof vue.VueVirtualCode)) {
+					throw new Error('No virtual code found for file: ' + fileName);
+				}
+				return {
+					...service,
+					sourceScript,
+					virtualCode,
+				};
 			}
-			const virtualCode = sourceScript.generated?.root;
-			if (!(virtualCode instanceof vue.VueVirtualCode)) {
-				throw new Error('No virtual code found for file: ' + fileName);
-			}
-			return {
-				...service,
-				sourceScript,
-				virtualCode,
-			};
-		}
 
-		function getLanguageService(fileName: string) {
-			const { project } = (info.session as any).getFileAndProject({
-				file: fileName,
-				projectFileName: undefined,
-			}) as {
-				file: ts.server.NormalizedPath;
-				project: ts.server.Project;
-			};
-			const service = project2Service.get(project);
-			if (!service) {
-				throw new Error('No vue service for project: ' + project.getProjectName());
+			function getLanguageService(fileName: string) {
+				// @ts-expect-error
+				const { project } = session.getFileAndProject({
+					file: fileName,
+					projectFileName: undefined,
+				}) as {
+					file: ts.server.NormalizedPath;
+					project: ts.server.Project;
+				};
+				const service = project2Service.get(project);
+				if (!service) {
+					throw new Error('No vue service for project: ' + project.getProjectName());
+				}
+				const [language, languageServiceHost, languageService] = service;
+				return {
+					typescript: ts,
+					program: languageService.getProgram()!,
+					languageServiceHost,
+					language,
+				};
 			}
-			const [language, languageServiceHost, languageService] = service;
-			return {
-				typescript: ts,
-				program: languageService.getProgram()!,
-				languageServiceHost,
-				language,
-			};
 		}
 	},
 );
