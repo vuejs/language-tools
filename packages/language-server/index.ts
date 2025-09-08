@@ -129,8 +129,8 @@ connection.onInitialize(params => {
 			getImportPathForFile(...args) {
 				return sendTsServerRequest('_vue:getImportPathForFile', args);
 			},
-			getPropertiesAtLocation(...args) {
-				return sendTsServerRequest('_vue:getPropertiesAtLocation', args);
+			isRefAtLocation(...args) {
+				return sendTsServerRequest('_vue:isRefAtLocation', args);
 			},
 			getDocumentHighlights(fileName, position) {
 				return sendTsServerRequest(

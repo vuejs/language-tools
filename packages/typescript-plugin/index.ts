@@ -12,7 +12,7 @@ import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
-import { getPropertiesAtLocation } from './lib/requests/getPropertiesAtLocation';
+import { isRefAtLocation } from './lib/requests/isRefAtLocation';
 
 const windowsPathReg = /\\/g;
 const project2Service = new WeakMap<
@@ -116,11 +116,11 @@ export = createLanguageServicePlugin(
 					response: getImportPathForFile(ts, languageServiceHost, program, fileName, incomingFileName, preferences),
 				};
 			});
-			session.addProtocolHandler('_vue:getPropertiesAtLocation', request => {
-				const [fileName, position]: Parameters<Requests['getPropertiesAtLocation']> = request.arguments;
+			session.addProtocolHandler('_vue:isRefAtLocation', request => {
+				const [fileName, position]: Parameters<Requests['isRefAtLocation']> = request.arguments;
 				const { language, program, sourceScript, virtualCode } = getLanguageServiceAndVirtualCode(fileName);
 				return {
-					response: getPropertiesAtLocation(ts, language, program, sourceScript, virtualCode, position, true),
+					response: isRefAtLocation(ts, language, program, sourceScript, virtualCode, position, true),
 				};
 			});
 			session.addProtocolHandler('_vue:getComponentDirectives', request => {

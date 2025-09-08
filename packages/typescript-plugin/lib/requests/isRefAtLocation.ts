@@ -3,7 +3,7 @@
 import { isCompletionEnabled, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 
-export function getPropertiesAtLocation(
+export function isRefAtLocation(
 	ts: typeof import('typescript'),
 	language: Language,
 	program: ts.Program,
@@ -11,14 +11,14 @@ export function getPropertiesAtLocation(
 	virtualCode: VueVirtualCode,
 	position: number,
 	isTsPlugin: boolean,
-): string[] {
-	const virtualScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
-	if (!virtualScript) {
-		return [];
+): boolean {
+	const serviceScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
+	if (!serviceScript) {
+		return false;
 	}
 
 	let mapped = false;
-	for (const [_sourceScript, map] of language.maps.forEach(virtualScript.code)) {
+	for (const [_sourceScript, map] of language.maps.forEach(serviceScript.code)) {
 		for (const [position2, mapping] of map.toGeneratedLocation(position)) {
 			if (isCompletionEnabled(mapping.data)) {
 				position = position2;
@@ -31,25 +31,25 @@ export function getPropertiesAtLocation(
 		}
 	}
 	if (!mapped) {
-		return [];
+		return false;
 	}
 	position += isTsPlugin ? sourceScript.snapshot.getLength() : 0;
 
 	const sourceFile = program.getSourceFile(virtualCode.fileName);
 	if (!sourceFile) {
-		return [];
+		return false;
 	}
 
 	const node = findPositionIdentifier(sourceFile, sourceFile, position);
 	if (!node) {
-		return [];
+		return false;
 	}
 
 	const checker = program.getTypeChecker();
 	const type = checker.getTypeAtLocation(node);
 	const props = type.getProperties();
 
-	return props.map(prop => prop.name);
+	return props.some(prop => prop.name === 'value');
 
 	function findPositionIdentifier(sourceFile: ts.SourceFile, node: ts.Node, offset: number) {
 		let result: ts.Node | undefined;

@@ -5,7 +5,7 @@ import { resolveEmbeddedCode } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	{ getPropertiesAtLocation }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ isRefAtLocation }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
@@ -60,8 +60,7 @@ export function create(
 						}
 					}
 
-					const props = await getPropertiesAtLocation(info.root.fileName, sourceOffset) ?? [];
-					if (props.some(prop => prop === 'value')) {
+					if (await isRefAtLocation(info.root.fileName, sourceOffset)) {
 						return '${1:.value}';
 					}
 				},
