@@ -14,7 +14,7 @@ export function collectExtractProps(
 	sourceScript: SourceScript,
 	virtualCode: VueVirtualCode,
 	templateCodeRange: [number, number],
-	leadingOffset: number,
+	leadingOffset: number = 0,
 ): ExtractPropsInfo[] {
 	const result = new Map<string, ExtractPropsInfo>();
 	const sourceFile = program.getSourceFile(virtualCode.fileName)!;

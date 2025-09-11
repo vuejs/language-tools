@@ -10,7 +10,7 @@ export function isRefAtPosition(
 	sourceScript: SourceScript,
 	virtualCode: VueVirtualCode,
 	position: number,
-	leadingOffset: number,
+	leadingOffset: number = 0,
 ): boolean {
 	const serviceScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
 	if (!serviceScript) {

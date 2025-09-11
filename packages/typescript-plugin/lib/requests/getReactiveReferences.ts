@@ -35,7 +35,7 @@ export function getReactiveReferences(
 	sourceScript: SourceScript | undefined,
 	fileName: string,
 	position: number,
-	leadingOffset: number,
+	leadingOffset: number = 0,
 ) {
 	const serviceScript = sourceScript?.generated?.languagePlugin.typescript?.getServiceScript(
 		sourceScript.generated.root,
