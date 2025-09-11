@@ -191,25 +191,25 @@ export function getReactiveReferences(
 					}
 					const oldSize = nodes.length;
 					if (signal.binding) {
-						for (const trackKind of signal.binding.accessTypes) {
+						for (const accessType of signal.binding.accessTypes) {
 							if (ts.isPropertyAccessExpression(node.ast)) {
-								if (trackKind === ReactiveAccessType.ValueProperty && node.ast.name.text === 'value') {
+								if (accessType === ReactiveAccessType.ValueProperty && node.ast.name.text === 'value') {
 									nodes.push(signal.binding);
 									hasReactiveSource ||= signal.binding.isReactiveSource;
 								}
-								if (trackKind === ReactiveAccessType.AnyProperty && node.ast.name.text !== '') {
+								if (accessType === ReactiveAccessType.AnyProperty && node.ast.name.text !== '') {
 									nodes.push(signal.binding);
 									hasReactiveSource ||= signal.binding.isReactiveSource;
 								}
 							}
 							else if (ts.isElementAccessExpression(node.ast)) {
-								if (trackKind === ReactiveAccessType.AnyProperty) {
+								if (accessType === ReactiveAccessType.AnyProperty) {
 									nodes.push(signal.binding);
 									hasReactiveSource ||= signal.binding.isReactiveSource;
 								}
 							}
 							else if (ts.isCallExpression(node.ast)) {
-								if (trackKind === ReactiveAccessType.Call) {
+								if (accessType === ReactiveAccessType.Call) {
 									nodes.push(signal.binding);
 									hasReactiveSource ||= signal.binding.isReactiveSource;
 								}
