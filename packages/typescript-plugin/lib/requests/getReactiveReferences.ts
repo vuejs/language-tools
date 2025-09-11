@@ -255,7 +255,7 @@ export function getReactiveReferences(
 			.flat();
 	}
 
-	function findSubscribersWorker(pos: number, trackKinds: ReactiveAccessType[], visited = new Set<number>()) {
+	function findSubscribersWorker(pos: number, accessTypes: ReactiveAccessType[], visited = new Set<number>()) {
 		if (visited.has(pos)) {
 			return [];
 		}
@@ -275,11 +275,11 @@ export function getReactiveReferences(
 				if (effect?.accessor) {
 					if (effect.accessor.requiredAccess) {
 						let match = false;
-						for (const trackKind of trackKinds) {
-							if (trackKind === ReactiveAccessType.AnyProperty) {
+						for (const accessType of accessTypes) {
+							if (accessType === ReactiveAccessType.AnyProperty) {
 								match = allPropertyAccess.has(reference2.textSpan.start + reference2.textSpan.length);
 							}
-							else if (trackKind === ReactiveAccessType.ValueProperty) {
+							else if (accessType === ReactiveAccessType.ValueProperty) {
 								match = allValuePropertyAccess.has(reference2.textSpan.start + reference2.textSpan.length);
 							}
 							else {
