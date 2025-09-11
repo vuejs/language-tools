@@ -85,7 +85,7 @@ export function getReactiveReferences(
 		if (ts.isBlock(ast) && ast.statements.length) {
 			const sourceRange = toSourceRange(
 				ast.statements[0]!.getStart(sourceFile),
-				ast.statements[ast.statements.length - 1]!.getEnd(),
+				ast.statements[ast.statements.length - 1]!.end,
 			);
 			if (sourceRange) {
 				dependencyRanges.push({ start: sourceRange.start, end: sourceRange.end });
@@ -103,7 +103,7 @@ export function getReactiveReferences(
 			const { statements } = callback.ast;
 			const sourceRange = toSourceRange(
 				statements[0]!.getStart(sourceFile),
-				statements[statements.length - 1]!.getEnd(),
+				statements[statements.length - 1]!.end,
 			);
 			if (sourceRange) {
 				dependencyRanges.push({ start: sourceRange.start, end: sourceRange.end });
@@ -129,7 +129,7 @@ export function getReactiveReferences(
 			const { requiredAccess } = signal.accessor;
 			visit(signal.accessor, requiredAccess);
 			signal.accessor.ast.forEachChild(child => {
-				const childRange = toSourceRange(child.getStart(sourceFile), child.getEnd());
+				const childRange = toSourceRange(child.getStart(sourceFile), child.end);
 				if (childRange) {
 					visit(
 						{
@@ -228,7 +228,7 @@ export function getReactiveReferences(
 				}
 			}
 			node.ast.forEachChild(child => {
-				const childRange = toSourceRange(child.getStart(sourceFile), child.getEnd());
+				const childRange = toSourceRange(child.getStart(sourceFile), child.end);
 				if (childRange) {
 					visit(
 						{
@@ -346,7 +346,7 @@ function analyze(
 						callName === 'ref' || callName === 'shallowRef' || callName === 'toRef' || callName === 'useTemplateRef'
 						|| callName === 'defineModel'
 					) {
-						const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.getEnd());
+						const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
 						if (nameRange) {
 							signals.push({
 								binding: {
@@ -362,7 +362,7 @@ function analyze(
 						callName === 'reactive' || callName === 'shallowReactive' || callName === 'defineProps'
 						|| callName === 'withDefaults'
 					) {
-						const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.getEnd());
+						const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
 						if (nameRange) {
 							signals.push({
 								binding: {
@@ -380,8 +380,8 @@ function analyze(
 		}
 		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && node.body) {
-				const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.getEnd());
-				const bodyRange = toSourceRange(node.body.getStart(sourceFile), node.body.getEnd());
+				const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
+				const bodyRange = toSourceRange(node.body.getStart(sourceFile), node.body.end);
 				if (nameRange && bodyRange) {
 					signals.push({
 						binding: {
@@ -411,8 +411,8 @@ function analyze(
 				if (
 					callback && ts.isIdentifier(name) && (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback))
 				) {
-					const nameRange = toSourceRange(name.getStart(sourceFile), name.getEnd());
-					const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.getEnd());
+					const nameRange = toSourceRange(name.getStart(sourceFile), name.end);
+					const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.end);
 					if (nameRange && callbackRange) {
 						signals.push({
 							binding: {
@@ -440,7 +440,7 @@ function analyze(
 			if (node.type && ts.isTypeReferenceNode(node.type)) {
 				const typeName = node.type.typeName.getText(sourceFile);
 				if (typeName.endsWith('Ref')) {
-					const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.getEnd());
+					const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
 					if (nameRange) {
 						signals.push({
 							binding: {
@@ -460,7 +460,7 @@ function analyze(
 			if ((callName === 'effect' || callName === 'watchEffect') && call.arguments.length) {
 				const callback = call.arguments[0]!;
 				if (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) {
-					const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.getEnd());
+					const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.end);
 					if (callbackRange) {
 						signals.push({
 							accessor: {
@@ -481,8 +481,8 @@ function analyze(
 				const depsCallback = call.arguments[0]!;
 				const effectCallback = call.arguments[1]!;
 				if (ts.isArrowFunction(effectCallback) || ts.isFunctionExpression(effectCallback)) {
-					const depsRange = toSourceRange(depsCallback.getStart(sourceFile), depsCallback.getEnd());
-					const effectRange = toSourceRange(effectCallback.getStart(sourceFile), effectCallback.getEnd());
+					const depsRange = toSourceRange(depsCallback.getStart(sourceFile), depsCallback.end);
+					const effectRange = toSourceRange(effectCallback.getStart(sourceFile), effectCallback.end);
 					if (depsRange && effectRange) {
 						if (ts.isArrowFunction(depsCallback) || ts.isFunctionExpression(depsCallback)) {
 							signals.push({
@@ -518,7 +518,7 @@ function analyze(
 			else if (hyphenateAttr(callName).startsWith('use-')) {
 				let binding: ReactiveNode['binding'];
 				if (ts.isVariableDeclaration(call.parent)) {
-					const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.getEnd());
+					const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.end);
 					if (nameRange) {
 						binding = {
 							...nameRange,
@@ -528,7 +528,7 @@ function analyze(
 						};
 					}
 				}
-				const callRange = toSourceRange(call.getStart(sourceFile), call.getEnd());
+				const callRange = toSourceRange(call.getStart(sourceFile), call.end);
 				if (callRange) {
 					signals.push({
 						binding,
@@ -545,7 +545,7 @@ function analyze(
 				if (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) {
 					let binding: ReactiveNode['binding'];
 					if (ts.isVariableDeclaration(call.parent)) {
-						const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.getEnd());
+						const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.end);
 						if (nameRange) {
 							binding = {
 								...nameRange,
@@ -555,7 +555,7 @@ function analyze(
 							};
 						}
 					}
-					const argRange = toSourceRange(arg.getStart(sourceFile), arg.getEnd());
+					const argRange = toSourceRange(arg.getStart(sourceFile), arg.end);
 					if (argRange) {
 						signals.push({
 							binding,
@@ -575,7 +575,7 @@ function analyze(
 				else if (ts.isIdentifier(arg)) {
 					let binding: ReactiveNode['binding'];
 					if (ts.isVariableDeclaration(call.parent)) {
-						const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.getEnd());
+						const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.end);
 						if (nameRange) {
 							binding = {
 								...nameRange,
@@ -585,7 +585,7 @@ function analyze(
 							};
 						}
 					}
-					const argRange = toSourceRange(arg.getStart(sourceFile), arg.getEnd());
+					const argRange = toSourceRange(arg.getStart(sourceFile), arg.end);
 					if (argRange) {
 						signals.push({
 							binding,
@@ -602,7 +602,7 @@ function analyze(
 						if (prop.name?.getText(sourceFile) === 'get') {
 							let binding: ReactiveNode['binding'];
 							if (ts.isVariableDeclaration(call.parent)) {
-								const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.getEnd());
+								const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.end);
 								if (nameRange) {
 									binding = {
 										...nameRange,
@@ -615,7 +615,7 @@ function analyze(
 							if (ts.isPropertyAssignment(prop)) {
 								const callback = prop.initializer;
 								if (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) {
-									const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.getEnd());
+									const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.end);
 									if (callbackRange) {
 										signals.push({
 											binding,
@@ -634,7 +634,7 @@ function analyze(
 								}
 							}
 							else if (ts.isMethodDeclaration(prop) && prop.body) {
-								const bodyRange = toSourceRange(prop.body.getStart(sourceFile), prop.body.getEnd());
+								const bodyRange = toSourceRange(prop.body.getStart(sourceFile), prop.body.end);
 								if (bodyRange) {
 									signals.push({
 										binding,
@@ -661,7 +661,7 @@ function analyze(
 
 	sourceFile.forEachChild(function visit(node) {
 		if (ts.isPropertyAccessExpression(node)) {
-			const sourceRange = toSourceRange(node.expression.getEnd(), node.expression.getEnd());
+			const sourceRange = toSourceRange(node.expression.end, node.expression.end);
 			if (sourceRange) {
 				if (node.name.text === 'value') {
 					allValuePropertyAccess.add(sourceRange.end);
@@ -673,13 +673,13 @@ function analyze(
 			}
 		}
 		else if (ts.isElementAccessExpression(node)) {
-			const sourceRange = toSourceRange(node.expression.getEnd(), node.expression.getEnd());
+			const sourceRange = toSourceRange(node.expression.end, node.expression.end);
 			if (sourceRange) {
 				allPropertyAccess.add(sourceRange.end);
 			}
 		}
 		else if (ts.isCallExpression(node)) {
-			const sourceRange = toSourceRange(node.expression.getEnd(), node.expression.getEnd());
+			const sourceRange = toSourceRange(node.expression.end, node.expression.end);
 			if (sourceRange) {
 				allFunctionCalls.add(sourceRange.end);
 			}
