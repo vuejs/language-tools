@@ -14,7 +14,7 @@ export function collectExtractProps(
 	sourceScript: SourceScript,
 	virtualCode: VueVirtualCode,
 	templateCodeRange: [number, number],
-	isTsPlugin: boolean,
+	leadingOffset: number = 0,
 ): ExtractPropsInfo[] {
 	const result = new Map<string, ExtractPropsInfo>();
 	const sourceFile = program.getSourceFile(virtualCode.fileName)!;
@@ -34,7 +34,7 @@ export function collectExtractProps(
 			for (const map of maps) {
 				let mapped = false;
 				for (
-					const source of map.toSourceLocation(name.getEnd() - (isTsPlugin ? sourceScript.snapshot.getLength() : 0))
+					const source of map.toSourceLocation(name.getEnd() - leadingOffset)
 				) {
 					if (
 						source[0] >= sfc.template!.startTagEnd + templateCodeRange[0]

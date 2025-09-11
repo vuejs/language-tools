@@ -10,7 +10,7 @@ export function isRefAtPosition(
 	sourceScript: SourceScript,
 	virtualCode: VueVirtualCode,
 	position: number,
-	isTsPlugin: boolean,
+	leadingOffset: number = 0,
 ): boolean {
 	const serviceScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
 	if (!serviceScript) {
@@ -33,14 +33,13 @@ export function isRefAtPosition(
 	if (!mapped) {
 		return false;
 	}
-	position += isTsPlugin ? sourceScript.snapshot.getLength() : 0;
 
 	const sourceFile = program.getSourceFile(virtualCode.fileName);
 	if (!sourceFile) {
 		return false;
 	}
 
-	const node = findPositionIdentifier(sourceFile, sourceFile, position);
+	const node = findPositionIdentifier(sourceFile, sourceFile, position + leadingOffset);
 	if (!node) {
 		return false;
 	}

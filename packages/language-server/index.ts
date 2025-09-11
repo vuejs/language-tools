@@ -1,5 +1,4 @@
-import type { LanguageServer, Position, TextDocumentIdentifier } from '@volar/language-server';
-import { type Range, TextDocument } from '@volar/language-server';
+import type { LanguageServer, TextDocumentIdentifier } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer } from '@volar/language-server/node';
 import {
@@ -8,20 +7,15 @@ import {
 	createParsedCommandLineByJson,
 	createVueLanguagePlugin,
 	forEachEmbeddedCode,
-	isReferencesEnabled,
 } from '@vue/language-core';
 import {
 	createLanguageService,
 	createUriMap,
 	createVueLanguageServicePlugins,
-	type DocumentsAndMap,
-	getSourceRange,
 	type LanguageService,
 } from '@vue/language-service';
 import * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { analyze } from './lib/reactivityAnalyze';
-import { getLanguageService } from './lib/reactivityAnalyzeLS';
 
 const connection = createConnection();
 const server = createServer(connection);
@@ -128,6 +122,9 @@ connection.onInitialize(params => {
 			},
 			getImportPathForFile(...args) {
 				return sendTsServerRequest('_vue:getImportPathForFile', args);
+			},
+			getReactiveReferences(...args) {
+				return sendTsServerRequest('_vue:getReactiveReferences', args);
 			},
 			isRefAtPosition(...args) {
 				return sendTsServerRequest('_vue:isRefAtPosition', args);
@@ -245,155 +242,4 @@ connection.onRequest('vue/interpolationRanges', async (params: {
 		return ranges;
 	}
 	return [];
-});
-
-const cacheDocuments = new Map<string, [TextDocument, import('typescript').IScriptSnapshot]>();
-
-connection.onRequest('vue/reactivityAnalyze', async (params: {
-	textDocument: TextDocumentIdentifier;
-	position: Position;
-	syncDocument?: {
-		content: string;
-		languageId: string;
-	};
-}): Promise<
-	{
-		subscribers: Range[];
-		dependencies: Range[];
-	} | undefined
-> => {
-	if (params.syncDocument) {
-		const document = TextDocument.create(
-			params.textDocument.uri,
-			params.syncDocument.languageId,
-			0,
-			params.syncDocument.content,
-		);
-		const snapshot = ts.ScriptSnapshot.fromString(params.syncDocument.content);
-		cacheDocuments.set(params.textDocument.uri, [document, snapshot]);
-	}
-	const uri = URI.parse(params.textDocument.uri);
-	const languageService = await server.project.getLanguageService(uri);
-	const sourceScript = languageService.context.language.scripts.get(uri);
-	let document: TextDocument | undefined;
-	let snapshot: import('typescript').IScriptSnapshot | undefined;
-	if (sourceScript) {
-		document = languageService.context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
-		snapshot = sourceScript.snapshot;
-	}
-	else if (cacheDocuments.has(params.textDocument.uri)) {
-		const [doc, snap] = cacheDocuments.get(params.textDocument.uri)!;
-		document = doc;
-		snapshot = snap;
-	}
-	if (!document || !snapshot) {
-		return;
-	}
-	let offset = document.offsetAt(params.position);
-	if (sourceScript?.generated) {
-		const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(
-			sourceScript.generated.root,
-		);
-		if (!serviceScript) {
-			return;
-		}
-		const map = languageService.context.language.maps.get(serviceScript.code, sourceScript);
-		let embeddedOffset: number | undefined;
-		for (const [mapped, mapping] of map.toGeneratedLocation(offset)) {
-			if (isReferencesEnabled(mapping.data)) {
-				embeddedOffset = mapped;
-				break;
-			}
-		}
-		if (embeddedOffset === undefined) {
-			return;
-		}
-		offset = embeddedOffset;
-
-		const embeddedUri = languageService.context.encodeEmbeddedDocumentUri(sourceScript.id, serviceScript.code.id);
-		document = languageService.context.documents.get(
-			embeddedUri,
-			serviceScript.code.languageId,
-			serviceScript.code.snapshot,
-		);
-		snapshot = serviceScript.code.snapshot;
-	}
-	const { languageService: tsLs, fileName } = getLanguageService(ts, snapshot, document.languageId);
-	const result = analyze(ts, tsLs, fileName, offset);
-	if (!result) {
-		return;
-	}
-	const subscribers: Range[] = [];
-	const dependencies: Range[] = [];
-	if (sourceScript?.generated) {
-		const serviceScript = sourceScript.generated.languagePlugin.typescript?.getServiceScript(
-			sourceScript.generated.root,
-		);
-		if (!serviceScript) {
-			return;
-		}
-		const docs: DocumentsAndMap = [
-			languageService.context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot),
-			document,
-			languageService.context.language.maps.get(serviceScript.code, sourceScript),
-		];
-		for (const dependency of result.dependencies) {
-			let start = document.positionAt(dependency.getStart(result.sourceFile));
-			let end = document.positionAt(dependency.getEnd());
-			if (ts.isBlock(dependency) && dependency.statements.length) {
-				const { statements } = dependency;
-				start = document.positionAt(statements[0]!.getStart(result.sourceFile));
-				end = document.positionAt(statements[statements.length - 1]!.getEnd());
-			}
-			const sourceRange = getSourceRange(docs, { start, end });
-			if (sourceRange) {
-				dependencies.push(sourceRange);
-			}
-		}
-		for (const subscriber of result.subscribers) {
-			if (!subscriber.sideEffectInfo) {
-				continue;
-			}
-			let start = document.positionAt(subscriber.sideEffectInfo.handler.getStart(result.sourceFile));
-			let end = document.positionAt(subscriber.sideEffectInfo.handler.getEnd());
-			if (ts.isBlock(subscriber.sideEffectInfo.handler) && subscriber.sideEffectInfo.handler.statements.length) {
-				const { statements } = subscriber.sideEffectInfo.handler;
-				start = document.positionAt(statements[0]!.getStart(result.sourceFile));
-				end = document.positionAt(statements[statements.length - 1]!.getEnd());
-			}
-			const sourceRange = getSourceRange(docs, { start, end });
-			if (sourceRange) {
-				subscribers.push(sourceRange);
-			}
-		}
-	}
-	else {
-		for (const dependency of result.dependencies) {
-			let start = document.positionAt(dependency.getStart(result.sourceFile));
-			let end = document.positionAt(dependency.getEnd());
-			if (ts.isBlock(dependency) && dependency.statements.length) {
-				const { statements } = dependency;
-				start = document.positionAt(statements[0]!.getStart(result.sourceFile));
-				end = document.positionAt(statements[statements.length - 1]!.getEnd());
-			}
-			dependencies.push({ start, end });
-		}
-		for (const subscriber of result.subscribers) {
-			if (!subscriber.sideEffectInfo) {
-				continue;
-			}
-			let start = document.positionAt(subscriber.sideEffectInfo.handler.getStart(result.sourceFile));
-			let end = document.positionAt(subscriber.sideEffectInfo.handler.getEnd());
-			if (ts.isBlock(subscriber.sideEffectInfo.handler) && subscriber.sideEffectInfo.handler.statements.length) {
-				const { statements } = subscriber.sideEffectInfo.handler;
-				start = document.positionAt(statements[0]!.getStart(result.sourceFile));
-				end = document.positionAt(statements[statements.length - 1]!.getEnd());
-			}
-			subscribers.push({ start, end });
-		}
-	}
-	return {
-		subscribers,
-		dependencies,
-	};
 });
