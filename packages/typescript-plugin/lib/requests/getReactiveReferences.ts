@@ -1,3 +1,5 @@
+/// <reference types="@volar/typescript" />
+
 import { collectBindingRanges, hyphenateAttr, type Language, type SourceScript } from '@vue/language-core';
 import type * as ts from 'typescript';
 
