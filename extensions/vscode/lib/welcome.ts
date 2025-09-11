@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
 
-const welcomeVersion = '3.0.6';
+const welcomeVersion = '3.0.7';
 
 let panel: vscode.WebviewPanel | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
 	if (
 		context.globalState.get<boolean>('vue.showUpdates', true)
-		&& context.globalState.get('vue-welcome') !== welcomeVersion
+		&& context.globalState.get('vue.welcome') !== welcomeVersion
 	) {
-		context.globalState.update('vue-welcome', welcomeVersion);
+		context.globalState.update('vue.welcome', welcomeVersion);
 		execute(context);
 	}
 }
@@ -28,9 +28,6 @@ export function execute(context: vscode.ExtensionContext) {
 	panel.webview.html = getWelcomeHtml(context);
 	panel.webview.onDidReceiveMessage(message => {
 		switch (message.command) {
-			case 'verifySponsor':
-				vscode.commands.executeCommand('vue.action.verify');
-				break;
 			case 'toggleShowUpdates':
 				context.globalState.update('vue.showUpdates', message.value);
 				break;
@@ -51,9 +48,6 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 	<title>${displayName}</title>
 	<script>
 		const vscode = acquireVsCodeApi();
-		function verifySponsor() {
-			vscode.postMessage({ command: 'verifySponsor' });
-		}
 		function toggleShowUpdates(value) {
 			vscode.postMessage({ command: 'toggleShowUpdates', value });
 		}
@@ -338,6 +332,33 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 	</div>
 
 	<div class="card whats-new-card">
+		<h3>3.0.7</h3>
+		<ul style="margin: 0; padding-left: 1.25rem;">
+			<li>✨ All 3 premium features are now available to all users</li>
+			<li>🐛 4+ bug fixes</li>
+		</ul>
+		<div
+			style="margin-top: 1rem; padding: 0.75rem; background-color: var(--vscode-inputValidation-warningBackground); border-radius: 4px;">
+			⚠️ Premium features are now disabled by default
+		</div>
+		<div
+			style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+			<a href="https://github.com/vuejs/language-tools/releases/tag/v3.0.7" target="_blank"
+				style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--vscode-textLink-foreground);">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+					<path
+						d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+				</svg>
+				Full Release Notes
+			</a>
+			<div style="display: flex; gap: 0.5rem; font-size: 0.9em; color: var(--vscode-descriptionForeground);">
+				<span>Released: September 2025</span>
+				<span>•</span>
+				<span>v3.0.7</span>
+			</div>
+		</div>
+		<br>
+
 		<h3>3.0.6</h3>
 		<ul style="margin: 0; padding-left: 1.25rem;">
 			<li>🚀 Expandable Hovers support for TypeScript (<a href="https://code.visualstudio.com/updates/v1_100#_expandable-hovers-for-javascript-and-typescript-experimental" target="_blank">Learn More</a>)</li>
@@ -476,38 +497,6 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 			<h4>Reactivity Visualization 🌟🌟🌟</h4>
 			<p>Visualize Vue's reactivity system in component scripts</p>
 		</div>
-		<div class="feature">
-			<div class="feature-icon">🚧</div>
-			<p>More Features Coming Soon</p>
-		</div>
-	</div>
-
-	<div id="verify-container" style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
-		<p>Support the development and unlock these features:</p>
-		<a href="https://github.com/sponsors/johnsoncodehk" target="_blank"
-			style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background-color: var(--vscode-button-background); color: var(--vscode-button-foreground); border-radius: 4px; text-decoration: none;">
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-				<path fill-rule="evenodd" clip-rule="evenodd"
-					d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-			</svg>
-			GitHub Sponsors
-		</a>
-		<a href="https://afdian.com/a/johnsoncodehk" target="_blank"
-			style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background-color: var(--vscode-button-background); color: var(--vscode-button-foreground); border-radius: 4px; text-decoration: none;">
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-				<path
-					d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.39-2.1 1.39-1.6 0-2.23-.72-2.32-1.64H8.04c.1 1.7 1.36 2.66 2.86 2.97V19h2.34v-1.67c1.52-.29 2.72-1.16 2.73-2.77-.01-2.2-1.9-2.96-3.66-3.42z" />
-			</svg>
-			爱发电 (afdian)
-		</a>
-		<button onclick="verifySponsor()"
-			style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background-color: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border: none; border-radius: 4px; cursor: pointer;">
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-				<path
-					d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 6h2v2h-2V7zm0 4h2v6h-2v-6z" />
-			</svg>
-			Verify Sponsor Status
-		</button>
 	</div>
 
 	<h2>📚 Resources</h2>
