@@ -1,4 +1,4 @@
-import type { LanguageServer, TextDocumentIdentifier } from '@volar/language-server';
+import type { LanguageServer } from '@volar/language-server';
 import { createLanguageServiceEnvironment } from '@volar/language-server/lib/project/simpleProject';
 import { createConnection, createServer } from '@volar/language-server/node';
 import {
@@ -6,7 +6,6 @@ import {
 	createParsedCommandLine,
 	createParsedCommandLineByJson,
 	createVueLanguagePlugin,
-	forEachEmbeddedCode,
 } from '@vue/language-core';
 import {
 	createLanguageService,
@@ -210,36 +209,3 @@ connection.onInitialize(params => {
 connection.onInitialized(server.initialized);
 
 connection.onShutdown(server.shutdown);
-
-connection.onRequest('vue/interpolationRanges', async (params: {
-	textDocument: TextDocumentIdentifier;
-}): Promise<[number, number][]> => {
-	const uri = URI.parse(params.textDocument.uri);
-	const languageService = await server.project.getLanguageService(uri);
-	const sourceFile = languageService.context.language.scripts.get(uri);
-	if (sourceFile?.generated) {
-		const ranges: [number, number][] = [];
-		for (const code of forEachEmbeddedCode(sourceFile.generated.root)) {
-			const codeText = code.snapshot.getText(0, code.snapshot.getLength());
-			if (
-				(
-					code.id.startsWith('template_inline_ts_')
-					&& codeText.startsWith('0 +')
-					&& codeText.endsWith('+ 0;')
-				)
-				|| (code.id.startsWith('style_') && code.id.endsWith('_inline_ts'))
-			) {
-				for (const mapping of code.mappings) {
-					for (let i = 0; i < mapping.sourceOffsets.length; i++) {
-						ranges.push([
-							mapping.sourceOffsets[i]!,
-							mapping.sourceOffsets[i]! + mapping.lengths[i]!,
-						]);
-					}
-				}
-			}
-		}
-		return ranges;
-	}
-	return [];
-});
