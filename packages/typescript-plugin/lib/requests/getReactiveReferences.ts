@@ -273,34 +273,30 @@ export function getReactiveReferences(
 				}
 				const effect = findSignalByAccessorRange(reference2.textSpan.start);
 				if (effect?.accessor) {
+					let match = false;
 					if (effect.accessor.requiredAccess) {
-						let match = false;
 						for (const accessType of accessTypes) {
 							if (accessType === ReactiveAccessType.AnyProperty) {
-								match = allPropertyAccess.has(reference2.textSpan.start + reference2.textSpan.length);
+								match ||= allPropertyAccess.has(reference2.textSpan.start + reference2.textSpan.length);
 							}
 							else if (accessType === ReactiveAccessType.ValueProperty) {
-								match = allValuePropertyAccess.has(reference2.textSpan.start + reference2.textSpan.length);
+								match ||= allValuePropertyAccess.has(reference2.textSpan.start + reference2.textSpan.length);
 							}
 							else {
-								match = allFunctionCalls.has(reference2.textSpan.start + reference2.textSpan.length);
-							}
-							if (match) {
-								break;
+								match ||= allFunctionCalls.has(reference2.textSpan.start + reference2.textSpan.length);
 							}
 						}
-						if (!match) {
-							continue;
+					}
+					if (match) {
+						let hasReactiveEffect = !!effect.callback?.isReactiveEffect;
+						if (effect.binding) {
+							const dependents = findDependents(effect.binding.ast, effect.binding.accessTypes, visited);
+							result.push(...dependents);
+							hasReactiveEffect ||= dependents.length > 0;
 						}
-					}
-					let hasReactiveEffect = !!effect.callback?.isReactiveEffect;
-					if (effect.binding) {
-						const dependents = findDependents(effect.binding.ast, effect.binding.accessTypes, visited);
-						result.push(...dependents);
-						hasReactiveEffect ||= dependents.length > 0;
-					}
-					if (hasReactiveEffect) {
-						result.push(effect);
+						if (hasReactiveEffect) {
+							result.push(effect);
+						}
 					}
 				}
 			}
