@@ -16,6 +16,7 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './lib/config';
+import * as focusMode from './lib/focusMode';
 import * as interpolationDecorators from './lib/interpolationDecorators';
 import * as reactivityVisualization from './lib/reactivityVisualization';
 import * as welcome from './lib/welcome';
@@ -101,6 +102,7 @@ export = defineExtension(() => {
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
 
+		focusMode.activate(context, selectors, client);
 		interpolationDecorators.activate(context, selectors, client);
 		reactivityVisualization.activate(context, selectors);
 		welcome.activate(context);
