@@ -12,7 +12,7 @@ import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
-import { isRefAtLocation } from './lib/requests/isRefAtLocation';
+import { isRefAtPosition } from './lib/requests/isRefAtPosition';
 
 const windowsPathReg = /\\/g;
 const project2Service = new WeakMap<
@@ -23,7 +23,6 @@ const project2Service = new WeakMap<
 export = createLanguageServicePlugin(
 	(ts, info) => {
 		const vueOptions = getVueCompilerOptions();
-		vue.writeGlobalTypes(vueOptions, ts.sys.writeFile);
 		const languagePlugin = vue.createVueLanguagePlugin<string>(
 			ts,
 			info.languageServiceHost.getCompilationSettings(),
@@ -31,6 +30,7 @@ export = createLanguageServicePlugin(
 			id => id,
 		);
 
+		vue.writeGlobalTypes(vueOptions, ts.sys.writeFile);
 		addVueCommands();
 
 		return {
@@ -121,10 +121,10 @@ export = createLanguageServicePlugin(
 					getImportPathForFile(ts, languageServiceHost, program, fileName, incomingFileName, preferences),
 				);
 			});
-			session.addProtocolHandler('_vue:isRefAtLocation', request => {
-				const [fileName, position]: Parameters<Requests['isRefAtLocation']> = request.arguments;
+			session.addProtocolHandler('_vue:isRefAtPosition', request => {
+				const [fileName, position]: Parameters<Requests['isRefAtPosition']> = request.arguments;
 				const { language, program, sourceScript, virtualCode } = getLanguageServiceAndVirtualCode(fileName);
-				return createResponse(isRefAtLocation(ts, language, program, sourceScript, virtualCode, position, true));
+				return createResponse(isRefAtPosition(ts, language, program, sourceScript, virtualCode, position, true));
 			});
 			session.addProtocolHandler('_vue:getComponentDirectives', request => {
 				const [fileName]: Parameters<Requests['getComponentDirectives']> = request.arguments;

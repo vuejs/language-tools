@@ -12,11 +12,11 @@ export interface Requests {
 		incomingFileName: string,
 		preferences: ts.UserPreferences,
 	): Response<ReturnType<typeof import('./getImportPathForFile.js')['getImportPathForFile']>>;
-	isRefAtLocation(
+	isRefAtPosition(
 		fileName: string,
 		position: number,
 	): Response<
-		ReturnType<typeof import('./isRefAtLocation.js')['isRefAtLocation']>
+		ReturnType<typeof import('./isRefAtPosition.js')['isRefAtPosition']>
 	>;
 	getComponentDirectives(fileName: string): Response<
 		ReturnType<typeof import('./getComponentDirectives.js')['getComponentDirectives']>

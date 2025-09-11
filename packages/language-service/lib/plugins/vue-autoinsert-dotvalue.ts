@@ -5,7 +5,7 @@ import { resolveEmbeddedCode } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	{ isRefAtLocation }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ isRefAtPosition }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
@@ -60,7 +60,7 @@ export function create(
 						}
 					}
 
-					if (await isRefAtLocation(info.root.fileName, sourceOffset)) {
+					if (await isRefAtPosition(info.root.fileName, sourceOffset)) {
 						return '${1:.value}';
 					}
 				},

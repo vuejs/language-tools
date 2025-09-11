@@ -3,7 +3,7 @@
 import { isCompletionEnabled, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 
-export function isRefAtLocation(
+export function isRefAtPosition(
 	ts: typeof import('typescript'),
 	language: Language,
 	program: ts.Program,
