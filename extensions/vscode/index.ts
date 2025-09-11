@@ -16,6 +16,7 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './lib/config';
+import * as reactivityVisualization from './lib/reactivityVisualization';
 import * as welcome from './lib/welcome';
 
 let client: lsp.BaseLanguageClient | undefined;
@@ -98,6 +99,8 @@ export = defineExtension(() => {
 
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
+
+		reactivityVisualization.activate(context, selectors);
 		welcome.activate(context);
 	}, { immediate: true });
 
@@ -157,7 +160,7 @@ function launch(context: vscode.ExtensionContext) {
 	);
 
 	client.onNotification('tsserver/request', ([seq, command, args]) => {
-		vscode.commands.executeCommand<{ body: unknown } | undefined>(
+		vscode.commands.executeCommand<{ body?: unknown } | undefined>(
 			'typescript.tsserverRequest',
 			command,
 			args,
