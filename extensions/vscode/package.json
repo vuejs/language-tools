@@ -271,12 +271,12 @@
 				},
 				"vue.editor.reactivityVisualization": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"markdownDescription": "%configuration.editor.reactivityVisualization%"
 				},
 				"vue.editor.templateInterpolationDecorators": {
 					"type": "boolean",
-					"default": false,
+					"default": true,
 					"markdownDescription": "%configuration.editor.templateInterpolationDecorators%"
 				},
 				"vue.server.includeLanguages": {

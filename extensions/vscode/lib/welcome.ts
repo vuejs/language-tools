@@ -334,13 +334,14 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 	<div class="card whats-new-card">
 		<h3>3.0.7</h3>
 		<ul style="margin: 0; padding-left: 1.25rem;">
-			<li>✨ All 3 premium features are now available to all users</li>
+			<li>✨ The following features are now available for free:</li>
+			<ul style="margin: 0; padding-left: 1.25rem;">
+				<li>🧩 Interpolation Highlight</li>
+				<li>🧩 Focus Mode (disabled by default)</li>
+				<li>🧩 Reactivity Visualization</li>
+			</ul>
 			<li>🐛 4+ bug fixes</li>
 		</ul>
-		<div
-			style="margin-top: 1rem; padding: 0.75rem; background-color: var(--vscode-inputValidation-warningBackground); border-radius: 4px;">
-			⚠️ Premium features are now disabled by default
-		</div>
 		<div
 			style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
 			<a href="https://github.com/vuejs/language-tools/releases/tag/v3.0.7" target="_blank"
@@ -477,25 +478,6 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 			<div class="feature-icon">🎨</div>
 			<h3>Syntax Highlighting</h3>
 			<p>Comprehensive syntax highlighting for Single File Components and template expressions</p>
-		</div>
-	</div>
-
-	<h2>🚀 Premium Features</h2>
-	<div class="features" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin: 1.5rem 0;">
-		<div class="feature">
-			<div class="feature-icon">🧩</div>
-			<h4>Interpolation Highlight 🌟</h4>
-			<p>Enhanced highlighting for template interpolations and expressions</p>
-		</div>
-		<div class="feature">
-			<div class="feature-icon">🧩</div>
-			<h4>Focus Mode 🌟🌟</h4>
-			<p>Isolate and focus on specific SFC blocks during development</p>
-		</div>
-		<div class="feature">
-			<div class="feature-icon">🧩</div>
-			<h4>Reactivity Visualization 🌟🌟🌟</h4>
-			<p>Visualize Vue's reactivity system in component scripts</p>
 		</div>
 	</div>
 
