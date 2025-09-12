@@ -42,7 +42,7 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 				const moduleName = (plugin as any).__moduleName;
 				if (Array.isArray(instance)) {
 					for (let i = 0; i < instance.length; i++) {
-						instance[i].name ??= `${moduleName} (${i})`;
+						instance[i]!.name ??= `${moduleName} (${i})`;
 					}
 				}
 				else {

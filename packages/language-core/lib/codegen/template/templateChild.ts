@@ -63,9 +63,9 @@ export function* generateTemplateChild(
 			yield* generateSlotOutlet(options, ctx, node);
 		}
 		else {
-			const slotDir = node.props.find(p =>
-				p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot'
-			) as CompilerDOM.DirectiveNode;
+			const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
+				| CompilerDOM.DirectiveNode
+				| undefined;
 			if (
 				node.tagType === CompilerDOM.ElementTypes.TEMPLATE
 				&& ctx.currentComponent
@@ -137,7 +137,7 @@ function* collectSingleRootNodes(
 		return;
 	}
 
-	const child = children[0];
+	const child = children[0]!;
 	if (child.type === CompilerDOM.NodeTypes.IF) {
 		for (const branch of child.branches) {
 			yield* collectSingleRootNodes(options, branch.children);

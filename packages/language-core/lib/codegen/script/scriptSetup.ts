@@ -145,7 +145,7 @@ function* generateSetupFunction(
 				[
 					`let __VLS_exposed!: `,
 					generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
-					`${endOfLine}`,
+					endOfLine,
 				],
 				callExp.start,
 				callExp.start,
@@ -160,7 +160,7 @@ function* generateSetupFunction(
 				[
 					`const __VLS_exposed = `,
 					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
-					`${endOfLine}`,
+					endOfLine,
 				],
 				callExp.start,
 				callExp.start,

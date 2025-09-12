@@ -5,12 +5,10 @@ import { getSlotsPropertyName } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
-import type { TemplateCodegenContext } from './context';
+import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild, getVForNode } from './templateChild';
-
-export * from './context';
 
 export interface TemplateCodegenOptions {
 	ts: typeof ts;
@@ -28,7 +26,27 @@ export interface TemplateCodegenOptions {
 	selfComponentName?: string;
 }
 
-export function* generateTemplate(
+export { generate as generateTemplate };
+
+function generate(options: TemplateCodegenOptions) {
+	const context = createTemplateCodegenContext(options, options.template.ast);
+	const codegen = generateTemplate(options, context);
+
+	const codes: Code[] = [];
+	for (const code of codegen) {
+		if (typeof code === 'object') {
+			code[3] = context.resolveCodeFeatures(code[3]);
+		}
+		codes.push(code);
+	}
+
+	return {
+		...context,
+		codes,
+	};
+}
+
+function* generateTemplate(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
@@ -104,7 +122,7 @@ function* generateSlots(
 			}
 			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}
-		yield `${endOfLine}`;
+		yield endOfLine;
 	}
 	return `__VLS_Slots`;
 }
@@ -148,7 +166,7 @@ function* generateTemplateRefs(
 			yield `(`;
 		}
 		for (let i = 0; i < refs.length; i++) {
-			const { typeExp, offset } = refs[i];
+			const { typeExp, offset } = refs[i]!;
 			if (i) {
 				yield ` | `;
 			}
@@ -208,8 +226,7 @@ export function* forEachElementNode(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.IF) {
 		// v-if / v-else-if / v-else
-		for (let i = 0; i < node.branches.length; i++) {
-			const branch = node.branches[i];
+		for (const branch of node.branches) {
 			for (const childNode of branch.children) {
 				yield* forEachElementNode(childNode);
 			}

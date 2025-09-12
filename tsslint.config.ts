@@ -95,6 +95,7 @@ export default defineConfig({
 				fixStyle: 'inline-type-imports',
 			}],
 			'@typescript-eslint/no-unnecessary-type-assertion': true,
+			'@typescript-eslint/no-unnecessary-condition': true,
 		}),
 		'missing-dependency'({ typescript: ts, file, program, report }) {
 			const { noEmit } = program.getCompilerOptions();
@@ -125,7 +126,7 @@ export default defineConfig({
 					&& !node.moduleSpecifier.text.startsWith('./')
 					&& !node.moduleSpecifier.text.startsWith('../')
 				) {
-					let moduleName = node.moduleSpecifier.text.split('/')[0];
+					let moduleName = node.moduleSpecifier.text.split('/')[0]!;
 					if (moduleName.startsWith('@')) {
 						moduleName += '/' + node.moduleSpecifier.text.split('/')[1];
 					}

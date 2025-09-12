@@ -14,7 +14,7 @@
 		"url": "https://github.com/sponsors/johnsoncodehk"
 	},
 	"icon": "icon.png",
-	"displayName": "Vue.js",
+	"displayName": "Vue (Official)",
 	"description": "Language Support for Vue",
 	"author": "johnsoncodehk",
 	"publisher": "Vue",
@@ -266,7 +266,7 @@
 				},
 				"vue.editor.focusMode": {
 					"type": "boolean",
-					"default": true,
+					"default": false,
 					"markdownDescription": "%configuration.editor.focusMode%"
 				},
 				"vue.editor.reactivityVisualization": {

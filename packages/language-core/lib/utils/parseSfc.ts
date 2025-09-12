@@ -87,8 +87,8 @@ function createBlock(node: ElementNode, source: string) {
 	let { start, end } = node.loc;
 	let content = '';
 	if (node.children.length) {
-		start = node.children[0].loc.start;
-		end = node.children[node.children.length - 1].loc.end;
+		start = node.children[0]!.loc.start;
+		end = node.children[node.children.length - 1]!.loc.end;
 		content = source.slice(start.offset, end.offset);
 	}
 	else {

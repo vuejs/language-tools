@@ -117,7 +117,7 @@ export function parseScriptSetupRanges(
 
 		const commentRanges = ts.getLeadingCommentRanges(text, node.pos);
 		if (commentRanges?.length) {
-			const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
+			const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0]!;
 			importSectionEndOffset = commentRange.pos;
 		}
 		else {
@@ -151,7 +151,7 @@ export function parseScriptSetupRanges(
 	};
 
 	function visitNode(node: ts.Node, parents: ts.Node[]) {
-		const parent = parents[parents.length - 1];
+		const parent = parents[parents.length - 1]!;
 		if (
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
@@ -173,10 +173,10 @@ export function parseScriptSetupRanges(
 
 				if (node.typeArguments) {
 					if (node.typeArguments.length >= 1) {
-						type = _getStartEnd(node.typeArguments[0]);
+						type = _getStartEnd(node.typeArguments[0]!);
 					}
 					if (node.typeArguments.length >= 2) {
-						modifierType = _getStartEnd(node.typeArguments[1]);
+						modifierType = _getStartEnd(node.typeArguments[1]!);
 					}
 				}
 
@@ -185,7 +185,7 @@ export function parseScriptSetupRanges(
 					options = node.arguments[1];
 				}
 				else if (node.arguments.length >= 1) {
-					if (ts.isStringLiteralLike(node.arguments[0])) {
+					if (ts.isStringLiteralLike(node.arguments[0]!)) {
 						propName = node.arguments[0];
 					}
 					else {
@@ -271,7 +271,7 @@ export function parseScriptSetupRanges(
 					...parseCallExpressionAssignment(node, parent),
 					statement: getStatementRange(ts, parents, node, ast),
 				};
-				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0])) {
+				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0]!)) {
 					for (const member of node.typeArguments[0].members) {
 						if (ts.isCallSignatureDeclaration(member)) {
 							const type = member.parameters[0]?.type;
@@ -295,7 +295,7 @@ export function parseScriptSetupRanges(
 			else if (
 				vueCompilerOptions.macros.defineOptions.includes(callText)
 				&& node.arguments.length
-				&& ts.isObjectLiteralExpression(node.arguments[0])
+				&& ts.isObjectLiteralExpression(node.arguments[0]!)
 			) {
 				defineOptions = {};
 				const obj = node.arguments[0];
@@ -342,8 +342,8 @@ export function parseScriptSetupRanges(
 		return {
 			callExp: _getStartEnd(node),
 			exp: _getStartEnd(node.expression),
-			arg: node.arguments.length ? _getStartEnd(node.arguments[0]) : undefined,
-			typeArg: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
+			arg: node.arguments.length ? _getStartEnd(node.arguments[0]!) : undefined,
+			typeArg: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]!) : undefined,
 		};
 	}
 
@@ -455,8 +455,8 @@ function getStatementRange(
 ) {
 	let statementRange: TextRange | undefined;
 	for (let i = parents.length - 1; i >= 0; i--) {
-		if (ts.isStatement(parents[i])) {
-			const statement = parents[i];
+		const statement = parents[i]!;
+		if (ts.isStatement(statement)) {
 			ts.forEachChild(statement, child => {
 				const range = getStartEnd(ts, child, ast);
 				statementRange ??= range;
@@ -481,7 +481,7 @@ function getClosestMultiLineCommentRange(
 		if (ts.isStatement(node)) {
 			break;
 		}
-		node = parents[i];
+		node = parents[i]!;
 	}
 	const comment = ts.getLeadingCommentRanges(ast.text, node.pos)
 		?.reverse()

@@ -11,7 +11,7 @@ import { VueVirtualCode } from '@vue/language-core';
 import { create as createHtmlService } from 'volar-service-html';
 import * as html from 'vscode-html-languageservice';
 import { loadLanguageBlocks } from '../data';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 let sfcDataProvider: html.IHTMLDataProvider | undefined;
 
@@ -24,16 +24,15 @@ export function create(): LanguageServicePlugin {
 			return [sfcDataProvider];
 		},
 		async getFormattingOptions(document, options, context) {
-			const info = getEmbeddedInfo(context, document, 'root_tags');
-			if (!info) {
+			const info = resolveEmbeddedCode(context, document.uri);
+			if (info?.code.id !== 'root_tags') {
 				return {};
 			}
-			const { root } = info;
 
 			const formatSettings = await context.env.getConfiguration<html.HTMLFormatConfiguration>?.('html.format') ?? {};
 			const blockTypes = ['template', 'script', 'style'];
 
-			for (const customBlock of root.sfc.customBlocks) {
+			for (const customBlock of info.root.sfc.customBlocks) {
 				blockTypes.push(customBlock.type);
 			}
 
@@ -72,17 +71,17 @@ export function create(): LanguageServicePlugin {
 				async resolveEmbeddedCodeFormattingOptions(sourceScript, virtualCode, options) {
 					if (sourceScript.generated?.root instanceof VueVirtualCode) {
 						if (virtualCode.id === 'script_raw' || virtualCode.id === 'scriptsetup_raw') {
-							if (await context.env.getConfiguration?.('vue.format.script.initialIndent') ?? false) {
+							if (await context.env.getConfiguration<boolean>?.('vue.format.script.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
 						else if (virtualCode.id.startsWith('style_')) {
-							if (await context.env.getConfiguration?.('vue.format.style.initialIndent') ?? false) {
+							if (await context.env.getConfiguration<boolean>?.('vue.format.style.initialIndent') ?? false) {
 								options.initialIndentLevel++;
 							}
 						}
 						else if (virtualCode.id === 'template') {
-							if (await context.env.getConfiguration?.('vue.format.template.initialIndent') ?? true) {
+							if (await context.env.getConfiguration<boolean>?.('vue.format.template.initialIndent') ?? true) {
 								options.initialIndentLevel++;
 							}
 						}
@@ -91,13 +90,12 @@ export function create(): LanguageServicePlugin {
 				},
 
 				async provideDiagnostics(document, token) {
-					const info = getEmbeddedInfo(context, document, 'root_tags');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'root_tags') {
 						return [];
 					}
-					const { root } = info;
 
-					const { vueSfc, sfc } = root;
+					const { vueSfc, sfc } = info.root;
 					if (!vueSfc) {
 						return;
 					}
@@ -137,14 +135,13 @@ export function create(): LanguageServicePlugin {
 				},
 
 				provideDocumentSymbols(document) {
-					const info = getEmbeddedInfo(context, document, 'root_tags');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'root_tags') {
 						return;
 					}
-					const { root } = info;
 
 					const result: DocumentSymbol[] = [];
-					const { sfc } = root;
+					const { sfc } = info.root;
 
 					if (sfc.template) {
 						result.push({
@@ -211,7 +208,7 @@ export function create(): LanguageServicePlugin {
 					}
 					for (const customBlock of sfc.customBlocks) {
 						result.push({
-							name: `${customBlock.type}`,
+							name: customBlock.type,
 							kind: 2 satisfies typeof SymbolKind.Module,
 							range: {
 								start: document.positionAt(customBlock.start),

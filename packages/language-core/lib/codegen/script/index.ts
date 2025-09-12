@@ -7,12 +7,10 @@ import { codeFeatures } from '../codeFeatures';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateComponentSelf } from './componentSelf';
-import { type ScriptCodegenContext } from './context';
+import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';
-
-export * from './context';
 
 export interface ScriptCodegenOptions {
 	ts: typeof ts;
@@ -28,7 +26,19 @@ export interface ScriptCodegenOptions {
 	templateRefNames: Set<string>;
 }
 
-export function* generateScript(
+export { generate as generateScript };
+
+function generate(options: ScriptCodegenOptions) {
+	const context = createScriptCodegenContext(options);
+	const codegen = generateScript(options, context);
+
+	return {
+		...context,
+		codes: [...codegen],
+	};
+}
+
+function* generateScript(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
@@ -70,9 +80,7 @@ export function* generateScript(
 				blockName: options.sfc.script.name,
 				offset: exportDefault.expression.start,
 				setting: 'vue.inlayHints.optionsWrapper',
-				label: options.vueCompilerOptions.optionsWrapper.length
-					? options.vueCompilerOptions.optionsWrapper[0]
-					: '[Missing optionsWrapper[0]]',
+				label: options.vueCompilerOptions.optionsWrapper[0],
 				tooltip: [
 					'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
 					'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
@@ -81,9 +89,7 @@ export function* generateScript(
 				blockName: options.sfc.script.name,
 				offset: exportDefault.expression.end,
 				setting: 'vue.inlayHints.optionsWrapper',
-				label: options.vueCompilerOptions.optionsWrapper.length >= 2
-					? options.vueCompilerOptions.optionsWrapper[1]
-					: '[Missing optionsWrapper[1]]',
+				label: options.vueCompilerOptions.optionsWrapper[1],
 			});
 			yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.expression.start, codeFeatures.all);
 			yield options.vueCompilerOptions.optionsWrapper[0];

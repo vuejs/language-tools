@@ -1,7 +1,7 @@
 import type { InlayHint, InlayHintKind, LanguageServicePlugin } from '@volar/language-service';
 import { collectBindingIdentifiers, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
@@ -12,11 +12,10 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 		create(context) {
 			return {
 				async provideInlayHints(document, range) {
-					const info = getEmbeddedInfo(context, document, 'main');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'main') {
 						return;
 					}
-					const { root } = info;
 
 					const settings: Record<string, boolean> = {};
 					async function getSettingEnabled(key: string) {
@@ -24,12 +23,12 @@ export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 					}
 
 					const result: InlayHint[] = [];
-					const { sfc } = root;
+					const { sfc } = info.root;
 
 					const codegen = tsCodegen.get(sfc);
 					const inlayHints = [
 						...codegen?.getGeneratedTemplate()?.inlayHints ?? [],
-						...codegen?.getGeneratedScript()?.inlayHints ?? [],
+						...codegen?.getGeneratedScript().inlayHints ?? [],
 					];
 					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 
@@ -121,9 +120,8 @@ export function findDestructuredProps(
 ) {
 	const rootScope: Scope = Object.create(null);
 	const scopeStack: Scope[] = [rootScope];
-	let currentScope: Scope = rootScope;
+	let currentScope: Scope | null = rootScope;
 	const excludedIds = new WeakSet<ts.Identifier>();
-	const parentStack: ts.Node[] = [];
 
 	for (const prop of props) {
 		rootScope[prop] = true;
@@ -173,7 +171,7 @@ export function findDestructuredProps(
 				(ts.isForOfStatement(stmt) || ts.isForInStatement(stmt))
 				&& ts.isVariableDeclarationList(stmt.initializer)
 			) {
-				walkVariableDeclaration(stmt.initializer.declarations[0], isRoot);
+				walkVariableDeclaration(stmt.initializer.declarations[0]!, isRoot);
 			}
 			else if (
 				ts.isLabeledStatement(stmt)
@@ -223,10 +221,6 @@ export function findDestructuredProps(
 		});
 
 		function enter(node: ts.Node) {
-			if (parent) {
-				parentStack.push(parent);
-			}
-
 			if (
 				ts.isTypeLiteralNode(node)
 				|| ts.isTypeReferenceNode(node)
@@ -269,7 +263,7 @@ export function findDestructuredProps(
 				&& !excludedIds.has(node)
 			) {
 				const name = node.text;
-				if (currentScope[name]) {
+				if (currentScope![name]) {
 					const isShorthand = ts.isShorthandPropertyAssignment(parent);
 					references.push([node, isShorthand]);
 				}
@@ -277,10 +271,6 @@ export function findDestructuredProps(
 		}
 
 		function leave(node: ts.Node) {
-			if (parent) {
-				parentStack.pop();
-			}
-
 			if (
 				ts.isFunctionLike(node)
 				|| ts.isCatchClause(node)

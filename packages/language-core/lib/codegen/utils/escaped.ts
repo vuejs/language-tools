@@ -12,7 +12,7 @@ export function* generateEscaped(
 	let isEscapeTarget = false;
 
 	for (let i = 0; i < parts.length; i++) {
-		const part = parts[i];
+		const part = parts[i]!;
 		if (isEscapeTarget) {
 			yield `\\`;
 		}

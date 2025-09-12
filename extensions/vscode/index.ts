@@ -16,7 +16,10 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './lib/config';
-import { activate as activateWelcome, executeWelcome } from './lib/welcome';
+import * as focusMode from './lib/focusMode';
+import * as interpolationDecorators from './lib/interpolationDecorators';
+import * as reactivityVisualization from './lib/reactivityVisualization';
+import * as welcome from './lib/welcome';
 
 let client: lsp.BaseLanguageClient | undefined;
 let needRestart = false;
@@ -40,7 +43,7 @@ for (
 	}
 }
 
-export const { activate, deactivate } = defineExtension(() => {
+export = defineExtension(() => {
 	const context = extensionContext.value!;
 	const volarLabs = createLabsInfo();
 	const activeTextEditor = useActiveTextEditor();
@@ -98,10 +101,14 @@ export const { activate, deactivate } = defineExtension(() => {
 
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
-		activateWelcome(context);
+
+		focusMode.activate(context, selectors, client);
+		interpolationDecorators.activate(context, selectors, client);
+		reactivityVisualization.activate(context, selectors);
+		welcome.activate(context);
 	}, { immediate: true });
 
-	useCommand('vue.welcome', () => executeWelcome(context));
+	useCommand('vue.welcome', () => welcome.execute(context));
 	useCommand('vue.action.restartServer', async () => {
 		await executeCommand('typescript.restartTsServer');
 		await client?.stop();
@@ -157,16 +164,15 @@ function launch(context: vscode.ExtensionContext) {
 	);
 
 	client.onNotification('tsserver/request', ([seq, command, args]) => {
-		vscode.commands.executeCommand<{ body: unknown } | undefined>(
+		vscode.commands.executeCommand<{ body?: unknown } | undefined>(
 			'typescript.tsserverRequest',
 			command,
 			args,
 			{ isAsync: true, lowPriority: true },
-		).then(res => {
-			client.sendNotification('tsserver/response', [seq, res?.body]);
-		}, () => {
-			client.sendNotification('tsserver/response', [seq, undefined]);
-		});
+		).then(
+			res => client.sendNotification('tsserver/response', [seq, res?.body]),
+			() => client.sendNotification('tsserver/response', [seq, undefined]),
+		);
 	});
 	client.start();
 
@@ -183,9 +189,9 @@ else {
 	const extensionJsPath = require.resolve('./dist/extension.js', {
 		paths: [tsExtension.extensionPath],
 	});
+	const vuePluginName = require('./package.json').contributes.typescriptServerPlugins[0].name;
 
-	// @ts-expect-error
-	fs.readFileSync = (...args) => {
+	fs.readFileSync = (...args: any[]) => {
 		if (args[0] === extensionJsPath) {
 			let text = readFileSync(...args) as string;
 
@@ -194,7 +200,7 @@ else {
 				'languages:Array.isArray(e.languages)',
 				[
 					'languages:',
-					`e.name==='vue-typescript-plugin-pack'?[${
+					`e.name==='${vuePluginName}'?[${
 						config.server.includeLanguages
 							.map(lang => `'${lang}'`)
 							.join(',')
@@ -215,7 +221,6 @@ else {
 			);
 
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
-			const vuePluginName = require('./package.json').contributes.typescriptServerPlugins[0].name;
 			text = text.replace(
 				'"--globalPlugins",i.plugins',
 				s => s + `.sort((a,b)=>(b.name==="${vuePluginName}"?-1:0)-(a.name==="${vuePluginName}"?-1:0))`,

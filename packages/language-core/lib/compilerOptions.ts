@@ -1,9 +1,9 @@
 import { camelize, NOOP as noop } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
-import { generateGlobalTypes, getGlobalTypesFileName } from '../codegen/globalTypes';
-import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from '../types';
-import { hyphenateTag } from './shared';
+import { generateGlobalTypes, getGlobalTypesFileName } from './codegen/globalTypes';
+import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
+import { hyphenateTag } from './utils/shared';
 
 interface ParseConfigHost extends Omit<ts.ParseConfigHost, 'readDirectory'> {}
 
@@ -107,7 +107,6 @@ export function createParsedCommandLine(
 }
 
 export class CompilerOptionsResolver {
-	configRoots = new Set<string>();
 	options: Omit<RawVueCompilerOptions, 'target' | 'globalTypesPath' | 'plugins'> = {};
 	target: number | undefined;
 	globalTypesPath: string | undefined;
@@ -118,7 +117,6 @@ export class CompilerOptionsResolver {
 	) {}
 
 	addConfig(options: RawVueCompilerOptions, rootDir: string) {
-		this.configRoots.add(rootDir);
 		for (const key in options) {
 			switch (key) {
 				case 'target':
@@ -250,7 +248,7 @@ function findVueVersion(rootDir: string) {
 
 function resolvePath(scriptPath: string, root: string) {
 	try {
-		if (require?.resolve) {
+		if ((require as NodeJS.Require | undefined)?.resolve) {
 			return require.resolve(scriptPath, { paths: [root] });
 		}
 		else {
@@ -331,13 +329,10 @@ export function writeGlobalTypes(
 	vueOptions: VueCompilerOptions,
 	writeFile: (fileName: string, data: string) => void,
 ) {
-	const originalFn = vueOptions.globalTypesPath;
-	if (!originalFn) {
-		return;
-	}
 	const writed = new Set<string>();
+	const { globalTypesPath } = vueOptions;
 	vueOptions.globalTypesPath = (fileName: string) => {
-		const result = originalFn(fileName);
+		const result = globalTypesPath(fileName);
 		if (result && !writed.has(result)) {
 			writed.add(result);
 			writeFile(result, generateGlobalTypes(vueOptions));

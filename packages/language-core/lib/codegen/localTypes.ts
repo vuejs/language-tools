@@ -123,7 +123,7 @@ type __VLS_TypePropsToOption<T> = {
 				if (generated.has(name)) {
 					continue;
 				}
-				const helper = helpers[name as keyof typeof helpers];
+				const helper = helpers[name as keyof typeof helpers]!;
 				yield helper.generate();
 				generated.add(name);
 			}

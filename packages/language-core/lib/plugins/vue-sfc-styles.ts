@@ -30,8 +30,8 @@ const plugin: VueLanguagePlugin = () => {
 
 		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
 			if (embeddedFile.id.startsWith('style_')) {
-				const index = parseInt(embeddedFile.id.split('_')[1]);
-				const style = sfc.styles[index];
+				const index = parseInt(embeddedFile.id.split('_')[1]!);
+				const style = sfc.styles[index]!;
 				if (embeddedFile.id.endsWith('_inline_ts')) {
 					embeddedFile.parentCodeId = 'style_' + index;
 					for (const binding of style.bindings) {

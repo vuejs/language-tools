@@ -35,7 +35,7 @@ export const compile: typeof CompilerDOM.compile = (template, options = {}) => {
 			loc: {
 				source: '',
 				start: { column: -1, line: -1, offset: error.start },
-				end: { column: -1, line: -1, offset: error.end ?? error.start },
+				end: { column: -1, line: -1, offset: error.end },
 			},
 		});
 	}
@@ -47,7 +47,7 @@ export const compile: typeof CompilerDOM.compile = (template, options = {}) => {
 			loc: {
 				source: '',
 				start: { column: -1, line: -1, offset: error.start },
-				end: { column: -1, line: -1, offset: error.end ?? error.start },
+				end: { column: -1, line: -1, offset: error.end },
 			},
 		});
 	}
@@ -89,8 +89,8 @@ function baseCompile(
 	const [nodeTransforms, directiveTransforms] = CompilerDOM.getBaseTransformPreset(prefixIdentifiers);
 
 	// v-for > v-if in vue 2
-	const transformIf = nodeTransforms[1];
-	const transformFor = nodeTransforms[3];
+	const transformIf = nodeTransforms[1]!;
+	const transformFor = nodeTransforms[3]!;
 	nodeTransforms[1] = transformFor;
 	nodeTransforms[3] = transformIf;
 

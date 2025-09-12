@@ -3,7 +3,7 @@ import type { ExpressionNode, TemplateChildNode } from '@vue/compiler-dom';
 import { type Sfc, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 interface ActionData {
 	uri: string;
@@ -38,13 +38,12 @@ export function create(
 						return;
 					}
 
-					const info = getEmbeddedInfo(context, document, 'template');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
 						return;
 					}
-					const { root } = info;
 
-					const { sfc } = root;
+					const { sfc } = info.root;
 					const script = sfc.scriptSetup ?? sfc.script;
 					if (!sfc.template || !script) {
 						return;
@@ -72,13 +71,12 @@ export function create(
 					const { uri, range, newName } = codeAction.data as ActionData;
 					const [startOffset, endOffset]: [number, number] = range;
 
-					const info = getEmbeddedInfo(context, { uri } as any, 'template');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, uri);
+					if (info?.code.id !== 'template') {
 						return codeAction;
 					}
-					const { sourceScript, virtualCode, root } = info;
 
-					const { sfc } = root;
+					const { sfc } = info.root;
 					const script = sfc.scriptSetup ?? sfc.script;
 					if (!sfc.template || !script) {
 						return codeAction;
@@ -89,15 +87,15 @@ export function create(
 						return codeAction;
 					}
 
-					const toExtract = await collectExtractProps(root.fileName, templateCodeRange) ?? [];
+					const toExtract = await collectExtractProps(info.root.fileName, templateCodeRange) ?? [];
 
 					const templateInitialIndent =
 						await context.env.getConfiguration!<boolean>('vue.format.template.initialIndent') ?? true;
 					const scriptInitialIndent = await context.env.getConfiguration!<boolean>('vue.format.script.initialIndent')
 						?? false;
 
-					const document = context.documents.get(URI.parse(uri), virtualCode.languageId, virtualCode.snapshot);
-					const sfcDocument = context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
+					const document = context.documents.get(URI.parse(uri), info.code.languageId, info.code.snapshot);
+					const sfcDocument = context.documents.get(info.script.id, info.script.languageId, info.script.snapshot);
 					const newUri = sfcDocument.uri.slice(0, sfcDocument.uri.lastIndexOf('/') + 1) + `${newName}.vue`;
 					const lastImportNode = getLastImportNode(ts, script.ast);
 
@@ -175,7 +173,7 @@ export function create(
 								// editing vue sfc
 								{
 									textDocument: {
-										uri: sourceScript.id.toString(),
+										uri: info.script.id.toString(),
 										version: null,
 									},
 									edits: sfcEdits,
@@ -266,8 +264,8 @@ function selectTemplateCode(
 	});
 
 	if (insideNodes.length) {
-		const first = insideNodes.sort((a, b) => a.loc.start.offset - b.loc.start.offset)[0];
-		const last = insideNodes.sort((a, b) => b.loc.end.offset - a.loc.end.offset)[0];
+		const first = insideNodes.sort((a, b) => a.loc.start.offset - b.loc.start.offset)[0]!;
+		const last = insideNodes.sort((a, b) => b.loc.end.offset - a.loc.end.offset)[0]!;
 		return [first.loc.start.offset, last.loc.end.offset];
 	}
 }
@@ -323,7 +321,7 @@ export function createAddComponentToOptionEdit(
 			newText: unescape(printText.replace(unicodeReg, '%u')),
 		};
 	}
-	else if (exportDefault.args && exportDefault.argsNode) {
+	else {
 		const newNode: typeof exportDefault.argsNode = {
 			...exportDefault.argsNode,
 			properties: [

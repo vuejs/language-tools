@@ -18,9 +18,9 @@
 	"devDependencies": {
 		"@lerna-lite/cli": "^4.1.2",
 		"@lerna-lite/publish": "^4.1.2",
-		"@tsslint/cli": "^2.0.1",
-		"@tsslint/config": "^2.0.1",
-		"@tsslint/eslint": "^2.0.1",
+		"@tsslint/cli": "^2.0.4",
+		"@tsslint/config": "^2.0.4",
+		"@tsslint/eslint": "^2.0.4",
 		"@typescript-eslint/eslint-plugin": "^8.19.0",
 		"dprint": "^0.50.0",
 		"typescript": "latest",

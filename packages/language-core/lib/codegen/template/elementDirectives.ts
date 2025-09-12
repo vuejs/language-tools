@@ -131,7 +131,7 @@ export function* generateModifiers(
 		return;
 	}
 
-	const startOffset = modifiers[0].loc.start.offset - 1;
+	const startOffset = modifiers[0]!.loc.start.offset - 1;
 	const endOffset = modifiers.at(-1)!.loc.end.offset;
 
 	yield* wrapWith(

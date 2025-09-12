@@ -1,22 +1,52 @@
 import type * as ts from 'typescript';
 
-type Request<T extends (...args: any) => any> = (
-	...args: Parameters<T>
-) => MaybePromise<ReturnType<T> | null | undefined>;
-type MaybePromise<T> = T | Promise<T>;
+type Response<T> = T | null | undefined | Promise<T | null | undefined>;
 
 export interface Requests {
-	collectExtractProps: Request<typeof import('./collectExtractProps.js')['collectExtractProps']>;
-	getImportPathForFile: Request<typeof import('./getImportPathForFile.js')['getImportPathForFile']>;
-	getPropertiesAtLocation: Request<typeof import('./getPropertiesAtLocation.js')['getPropertiesAtLocation']>;
-	getComponentDirectives: Request<typeof import('./getComponentDirectives.js')['getComponentDirectives']>;
-	getComponentEvents: Request<typeof import('./getComponentEvents.js')['getComponentEvents']>;
-	getComponentNames: Request<typeof import('./getComponentNames.js')['getComponentNames']>;
-	getComponentProps: Request<typeof import('./getComponentProps.js')['getComponentProps']>;
-	getComponentSlots: Request<typeof import('./getComponentSlots.js')['getComponentSlots']>;
-	getElementAttrs: Request<typeof import('./getElementAttrs.js')['getElementAttrs']>;
-	getElementNames: Request<typeof import('./getElementNames.js')['getElementNames']>;
-	getDocumentHighlights: Request<(fileName: string, position: number) => ts.DocumentHighlights[]>;
-	getEncodedSemanticClassifications: Request<(fileName: string, span: ts.TextSpan) => ts.Classifications>;
-	getQuickInfoAtPosition: Request<(fileName: string, position: ts.LineAndCharacter) => string>;
+	collectExtractProps(
+		fileName: string,
+		templateCodeRange: [number, number],
+	): Response<ReturnType<typeof import('./collectExtractProps.js')['collectExtractProps']>>;
+	getImportPathForFile(
+		fileName: string,
+		incomingFileName: string,
+		preferences: ts.UserPreferences,
+	): Response<ReturnType<typeof import('./getImportPathForFile.js')['getImportPathForFile']>>;
+	isRefAtPosition(
+		fileName: string,
+		position: number,
+	): Response<
+		ReturnType<typeof import('./isRefAtPosition.js')['isRefAtPosition']>
+	>;
+	getComponentDirectives(fileName: string): Response<
+		ReturnType<typeof import('./getComponentDirectives.js')['getComponentDirectives']>
+	>;
+	getComponentEvents(
+		fileName: string,
+		tag: string,
+	): Response<ReturnType<typeof import('./getComponentEvents.js')['getComponentEvents']>>;
+	getComponentNames(
+		fileName: string,
+	): Response<ReturnType<typeof import('./getComponentNames.js')['getComponentNames']>>;
+	getComponentProps(
+		fileName: string,
+		tag: string,
+	): Response<ReturnType<typeof import('./getComponentProps.js')['getComponentProps']>>;
+	getComponentSlots(
+		fileName: string,
+	): Response<ReturnType<typeof import('./getComponentSlots.js')['getComponentSlots']>>;
+	getElementAttrs(
+		fileName: string,
+		tag: string,
+	): Response<ReturnType<typeof import('./getElementAttrs.js')['getElementAttrs']>>;
+	getElementNames(fileName: string): Response<ReturnType<typeof import('./getElementNames.js')['getElementNames']>>;
+	getReactiveReferences(
+		fileName: string,
+		position: number,
+	): Response<ReturnType<typeof import('./getReactiveReferences.js')['getReactiveReferences']>>;
+	getDocumentHighlights(fileName: string, position: number): Response<ts.DocumentHighlights[]>;
+	getEncodedSemanticClassifications(fileName: string, span: ts.TextSpan): Response<
+		ts.Classifications
+	>;
+	getQuickInfoAtPosition(fileName: string, position: ts.LineAndCharacter): Response<string>;
 }
