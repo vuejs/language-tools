@@ -9,23 +9,22 @@ const enum ReactiveAccessType {
 	Call,
 }
 
-interface TsNode {
+interface TSNode {
 	ast: ts.Node;
 	start: number;
 	end: number;
 }
 
 interface ReactiveNode {
-	binding?: TsNode & {
-		isReactiveSource: boolean;
+	isDependency: boolean;
+	isDependent: boolean;
+	binding?: TSNode & {
 		accessTypes: ReactiveAccessType[];
 	};
-	accessor?: TsNode & {
+	accessor?: TSNode & {
 		requiredAccess: boolean;
 	};
-	callback?: TsNode & {
-		isReactiveEffect: boolean;
-	};
+	callback?: TSNode;
 }
 
 const analyzeCache = new WeakMap<ts.SourceFile, ReturnType<typeof analyze>>();
@@ -72,10 +71,7 @@ export function getReactiveReferences(
 	const dependents = info.binding ? findDependents(info.binding.ast, info.binding.accessTypes) : [];
 	const dependencies = findDependencies(info);
 
-	if (!info.callback?.isReactiveEffect && !dependents.length) {
-		return;
-	}
-	if (!info.binding?.isReactiveSource && !dependencies.length) {
+	if ((!info.isDependent && !dependents.length) || (!info.isDependency && !dependencies.length)) {
 		return;
 	}
 
@@ -124,8 +120,8 @@ export function getReactiveReferences(
 		}
 		visited.add(signal);
 
-		const nodes: TsNode[] = [];
-		let hasReactiveSource = !!signal.binding?.isReactiveSource;
+		const nodes: TSNode[] = [];
+		let hasDependency = signal.isDependency;
 
 		if (signal.accessor) {
 			const { requiredAccess } = signal.accessor;
@@ -144,13 +140,13 @@ export function getReactiveReferences(
 			});
 		}
 
-		if (!hasReactiveSource) {
+		if (!hasDependency) {
 			return [];
 		}
 
 		return nodes;
 
-		function visit(node: TsNode, requiredAccess: boolean, parentIsPropertyAccess = false) {
+		function visit(node: TSNode, requiredAccess: boolean, parentIsPropertyAccess = false) {
 			if (!requiredAccess) {
 				if (!parentIsPropertyAccess && ts.isIdentifier(node.ast)) {
 					const definition = languageService.getDefinitionAtPosition(sourceFile.fileName, node.start);
@@ -164,14 +160,14 @@ export function getReactiveReferences(
 						}
 						if (signal.binding) {
 							nodes.push(signal.binding);
-							hasReactiveSource ||= signal.binding.isReactiveSource;
+							hasDependency ||= signal.isDependency;
 						}
 						if (signal.callback) {
 							nodes.push(signal.callback);
 						}
 						const deps = findDependencies(signal, visited);
 						nodes.push(...deps);
-						hasReactiveSource ||= deps.length > 0;
+						hasDependency ||= deps.length > 0;
 					}
 				}
 			}
@@ -197,23 +193,23 @@ export function getReactiveReferences(
 							if (ts.isPropertyAccessExpression(node.ast)) {
 								if (accessType === ReactiveAccessType.ValueProperty && node.ast.name.text === 'value') {
 									nodes.push(signal.binding);
-									hasReactiveSource ||= signal.binding.isReactiveSource;
+									hasDependency ||= signal.isDependency;
 								}
 								if (accessType === ReactiveAccessType.AnyProperty && node.ast.name.text !== '') {
 									nodes.push(signal.binding);
-									hasReactiveSource ||= signal.binding.isReactiveSource;
+									hasDependency ||= signal.isDependency;
 								}
 							}
 							else if (ts.isElementAccessExpression(node.ast)) {
 								if (accessType === ReactiveAccessType.AnyProperty) {
 									nodes.push(signal.binding);
-									hasReactiveSource ||= signal.binding.isReactiveSource;
+									hasDependency ||= signal.isDependency;
 								}
 							}
 							else if (ts.isCallExpression(node.ast)) {
 								if (accessType === ReactiveAccessType.Call) {
 									nodes.push(signal.binding);
-									hasReactiveSource ||= signal.binding.isReactiveSource;
+									hasDependency ||= signal.isDependency;
 								}
 							}
 						}
@@ -225,7 +221,7 @@ export function getReactiveReferences(
 						}
 						const deps = findDependencies(signal, visited);
 						nodes.push(...deps);
-						hasReactiveSource ||= deps.length > 0;
+						hasDependency ||= deps.length > 0;
 					}
 				}
 			}
@@ -250,14 +246,14 @@ export function getReactiveReferences(
 			.map(range => {
 				const sourceRange = toSourceRange(range.start, range.end);
 				if (sourceRange) {
-					return findSubscribersWorker(sourceRange.start, trackKinds, visited);
+					return findDependentsWorker(sourceRange.start, trackKinds, visited);
 				}
 				return [];
 			})
 			.flat();
 	}
 
-	function findSubscribersWorker(pos: number, accessTypes: ReactiveAccessType[], visited = new Set<number>()) {
+	function findDependentsWorker(pos: number, accessTypes: ReactiveAccessType[], visited = new Set<number>()) {
 		if (visited.has(pos)) {
 			return [];
 		}
@@ -290,13 +286,13 @@ export function getReactiveReferences(
 						}
 					}
 					if (match) {
-						let hasReactiveEffect = !!effect.callback?.isReactiveEffect;
+						let hasDependent = effect.isDependent;
 						if (effect.binding) {
 							const dependents = findDependents(effect.binding.ast, effect.binding.accessTypes, visited);
 							result.push(...dependents);
-							hasReactiveEffect ||= dependents.length > 0;
+							hasDependent ||= dependents.length > 0;
 						}
-						if (hasReactiveEffect) {
+						if (hasDependent) {
 							result.push(effect);
 						}
 					}
@@ -351,10 +347,11 @@ function analyze(
 						const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
 						if (nameRange) {
 							signals.push({
+								isDependency: true,
+								isDependent: false,
 								binding: {
 									...nameRange,
 									ast: node.name,
-									isReactiveSource: true,
 									accessTypes: [ReactiveAccessType.ValueProperty],
 								},
 							});
@@ -367,10 +364,11 @@ function analyze(
 						const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
 						if (nameRange) {
 							signals.push({
+								isDependency: true,
+								isDependent: false,
 								binding: {
 									...nameRange,
 									ast: node.name,
-									isReactiveSource: true,
 									accessTypes: [ReactiveAccessType.AnyProperty],
 								},
 							});
@@ -386,10 +384,11 @@ function analyze(
 				const bodyRange = toSourceRange(node.body.getStart(sourceFile), node.body.end);
 				if (nameRange && bodyRange) {
 					signals.push({
+						isDependency: false,
+						isDependent: false,
 						binding: {
 							...nameRange,
 							ast: node.name,
-							isReactiveSource: false,
 							accessTypes: [ReactiveAccessType.Call],
 						},
 						accessor: {
@@ -400,7 +399,6 @@ function analyze(
 						callback: {
 							...bodyRange,
 							ast: node.body,
-							isReactiveEffect: false,
 						},
 					});
 				}
@@ -417,10 +415,11 @@ function analyze(
 					const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.end);
 					if (nameRange && callbackRange) {
 						signals.push({
+							isDependency: false,
+							isDependent: false,
 							binding: {
 								...nameRange,
 								ast: name,
-								isReactiveSource: false,
 								accessTypes: [ReactiveAccessType.Call],
 							},
 							accessor: {
@@ -431,7 +430,6 @@ function analyze(
 							callback: {
 								...callbackRange,
 								ast: callback,
-								isReactiveEffect: false,
 							},
 						});
 					}
@@ -445,11 +443,12 @@ function analyze(
 					const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
 					if (nameRange) {
 						signals.push({
+							isDependency: true,
+							isDependent: false,
 							binding: {
 								...nameRange,
 								ast: node.name,
 								accessTypes: [ReactiveAccessType.ValueProperty],
-								isReactiveSource: true,
 							},
 						});
 					}
@@ -465,6 +464,8 @@ function analyze(
 					const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.end);
 					if (callbackRange) {
 						signals.push({
+							isDependency: false,
+							isDependent: true,
 							accessor: {
 								...callbackRange,
 								ast: callback.body,
@@ -473,7 +474,6 @@ function analyze(
 							callback: {
 								...callbackRange,
 								ast: callback.body,
-								isReactiveEffect: true,
 							},
 						});
 					}
@@ -488,6 +488,8 @@ function analyze(
 					if (depsRange && effectRange) {
 						if (ts.isArrowFunction(depsCallback) || ts.isFunctionExpression(depsCallback)) {
 							signals.push({
+								isDependency: false,
+								isDependent: true,
 								accessor: {
 									...depsRange,
 									ast: depsCallback.body,
@@ -496,12 +498,13 @@ function analyze(
 								callback: {
 									...effectRange,
 									ast: effectCallback.body,
-									isReactiveEffect: true,
 								},
 							});
 						}
 						else {
 							signals.push({
+								isDependency: false,
+								isDependent: true,
 								accessor: {
 									...depsRange,
 									ast: depsCallback,
@@ -510,7 +513,6 @@ function analyze(
 								callback: {
 									...effectRange,
 									ast: effectCallback.body,
-									isReactiveEffect: true,
 								},
 							});
 						}
@@ -525,7 +527,6 @@ function analyze(
 						binding = {
 							...nameRange,
 							ast: call.parent.name,
-							isReactiveSource: true,
 							accessTypes: [ReactiveAccessType.AnyProperty, ReactiveAccessType.Call],
 						};
 					}
@@ -533,6 +534,8 @@ function analyze(
 				const callRange = toSourceRange(call.getStart(sourceFile), call.end);
 				if (callRange) {
 					signals.push({
+						isDependency: true,
+						isDependent: false,
 						binding,
 						accessor: {
 							...callRange,
@@ -552,7 +555,6 @@ function analyze(
 							binding = {
 								...nameRange,
 								ast: call.parent.name,
-								isReactiveSource: true,
 								accessTypes: [ReactiveAccessType.ValueProperty],
 							};
 						}
@@ -560,6 +562,8 @@ function analyze(
 					const argRange = toSourceRange(arg.getStart(sourceFile), arg.end);
 					if (argRange) {
 						signals.push({
+							isDependency: true,
+							isDependent: true,
 							binding,
 							accessor: {
 								...argRange,
@@ -569,7 +573,6 @@ function analyze(
 							callback: {
 								...argRange,
 								ast: arg.body,
-								isReactiveEffect: true,
 							},
 						});
 					}
@@ -582,7 +585,6 @@ function analyze(
 							binding = {
 								...nameRange,
 								ast: call.parent.name,
-								isReactiveSource: true,
 								accessTypes: [ReactiveAccessType.ValueProperty],
 							};
 						}
@@ -590,6 +592,8 @@ function analyze(
 					const argRange = toSourceRange(arg.getStart(sourceFile), arg.end);
 					if (argRange) {
 						signals.push({
+							isDependency: true,
+							isDependent: false,
 							binding,
 							accessor: {
 								...argRange,
@@ -609,7 +613,6 @@ function analyze(
 									binding = {
 										...nameRange,
 										ast: call.parent.name,
-										isReactiveSource: true,
 										accessTypes: [ReactiveAccessType.ValueProperty],
 									};
 								}
@@ -620,6 +623,8 @@ function analyze(
 									const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.end);
 									if (callbackRange) {
 										signals.push({
+											isDependency: true,
+											isDependent: true,
 											binding,
 											accessor: {
 												...callbackRange,
@@ -629,7 +634,6 @@ function analyze(
 											callback: {
 												...callbackRange,
 												ast: callback.body,
-												isReactiveEffect: true,
 											},
 										});
 									}
@@ -639,6 +643,8 @@ function analyze(
 								const bodyRange = toSourceRange(prop.body.getStart(sourceFile), prop.body.end);
 								if (bodyRange) {
 									signals.push({
+										isDependency: true,
+										isDependent: true,
 										binding,
 										accessor: {
 											...bodyRange,
@@ -648,7 +654,6 @@ function analyze(
 										callback: {
 											...bodyRange,
 											ast: prop.body,
-											isReactiveEffect: true,
 										},
 									});
 								}
