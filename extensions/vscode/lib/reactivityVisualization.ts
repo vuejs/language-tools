@@ -42,7 +42,7 @@ export function activate(
 			const editor = vscode.window.activeTextEditor;
 			if (editor) {
 				clearTimeout(timeout);
-				timeout = setTimeout(() => updateDecorations(editor), 100);
+				timeout = setTimeout(() => updateDecorations(editor), 250);
 			}
 		}),
 	);
