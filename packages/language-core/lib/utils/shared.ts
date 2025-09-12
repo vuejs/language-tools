@@ -14,10 +14,6 @@ export function hyphenateAttr(str: string) {
 	return hyphencase;
 }
 
-export function getSlotsPropertyName(vueVersion: number) {
-	return vueVersion < 3 ? '$scopedSlots' : '$slots';
-}
-
 export function getElementTagOffsets(
 	node: CompilerDOM.ElementNode,
 	template: NonNullable<Sfc['template']>,

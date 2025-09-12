@@ -18,7 +18,6 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 			inheritAttrsOption: string | undefined;
 		})
 		| undefined;
-	let classBlockEnd: number | undefined;
 
 	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast) : [];
 
@@ -74,19 +73,10 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 				};
 			}
 		}
-
-		if (
-			ts.isClassDeclaration(raw)
-			&& raw.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
-			&& raw.modifiers.some(mod => mod.kind === ts.SyntaxKind.DefaultKeyword)
-		) {
-			classBlockEnd = raw.end - 1;
-		}
 	});
 
 	return {
 		exportDefault,
-		classBlockEnd,
 		bindings,
 	};
 
