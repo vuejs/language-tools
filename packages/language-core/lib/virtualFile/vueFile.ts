@@ -1,4 +1,4 @@
-import type { VirtualCode } from '@volar/language-core';
+import type { CodeInformation, Mapping, VirtualCode } from '@volar/language-core';
 import { computed, signal } from 'alien-signals';
 import type * as ts from 'typescript';
 import { allCodeFeatures } from '../plugins';
@@ -8,37 +8,22 @@ import { computedSfc } from './computedSfc';
 import { computedVueSfc } from './computedVueSfc';
 
 export class VueVirtualCode implements VirtualCode {
-	// sources
+	readonly id = 'main';
+	readonly sfc: ReturnType<typeof computedSfc>;
 
-	id = 'main';
-
-	private _snapshot = signal<ts.IScriptSnapshot>(undefined!);
-
-	// computeds
-
-	private _vueSfc = computedVueSfc(this.plugins, this.fileName, this.languageId, this._snapshot);
-	private _sfc = computedSfc(this.ts, this.plugins, this.fileName, this._snapshot, this._vueSfc);
-	private _embeddedCodes = computedEmbeddedCodes(this.plugins, this.fileName, this._sfc);
-	private _mappings = computed(() => {
-		const snapshot = this._snapshot();
-		return [{
-			sourceOffsets: [0],
-			generatedOffsets: [0],
-			lengths: [snapshot.getLength()],
-			data: allCodeFeatures,
-		}];
-	});
-
-	// others
+	private _snapshot: {
+		(): ts.IScriptSnapshot;
+		(value: ts.IScriptSnapshot): void;
+	};
+	private _vueSfc: ReturnType<typeof computedVueSfc>;
+	private _embeddedCodes: ReturnType<typeof computedEmbeddedCodes>;
+	private _mappings: () => Mapping<CodeInformation>[];
 
 	get snapshot() {
 		return this._snapshot();
 	}
 	get vueSfc() {
 		return this._vueSfc();
-	}
-	get sfc() {
-		return this._sfc;
 	}
 	get embeddedCodes() {
 		return this._embeddedCodes();
@@ -55,7 +40,19 @@ export class VueVirtualCode implements VirtualCode {
 		public plugins: VueLanguagePluginReturn[],
 		public ts: typeof import('typescript'),
 	) {
-		this._snapshot(initSnapshot);
+		this._snapshot = signal(initSnapshot);
+		this._vueSfc = computedVueSfc(this.plugins, this.fileName, this.languageId, this._snapshot);
+		this.sfc = computedSfc(this.ts, this.plugins, this.fileName, this._snapshot, this._vueSfc);
+		this._embeddedCodes = computedEmbeddedCodes(this.plugins, this.fileName, this.sfc);
+		this._mappings = computed(() => {
+			const snapshot = this._snapshot();
+			return [{
+				sourceOffsets: [0],
+				generatedOffsets: [0],
+				lengths: [snapshot.getLength()],
+				data: allCodeFeatures,
+			}];
+		});
 	}
 
 	update(newSnapshot: ts.IScriptSnapshot) {

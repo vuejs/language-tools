@@ -159,8 +159,8 @@ function getCompletionEntryDetails<T>(
 			const { fileName } = args[6].__isAutoImport;
 			const sourceScript = language.scripts.get(fileName);
 			if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-				const sfc = sourceScript.generated.root.vueSfc;
-				if (!sfc?.descriptor.script && !sfc?.descriptor.scriptSetup) {
+				const { vueSfc } = sourceScript.generated.root;
+				if (!vueSfc?.descriptor.script && !vueSfc?.descriptor.scriptSetup) {
 					for (const codeAction of details?.codeActions ?? []) {
 						for (const change of codeAction.changes) {
 							for (const textChange of change.textChanges) {
