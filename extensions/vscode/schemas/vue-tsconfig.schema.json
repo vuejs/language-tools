@@ -8,8 +8,6 @@
 					"default": "auto",
 					"enum": [
 						"auto",
-						2,
-						2.7,
 						3,
 						3.3,
 						3.5,
