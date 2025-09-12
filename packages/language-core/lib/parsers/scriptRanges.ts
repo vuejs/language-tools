@@ -1,7 +1,7 @@
 import type * as ts from 'typescript';
 import type { TextRange } from '../types';
 import { getNodeText, getStartEnd } from '../utils/shared';
-import { parseBindingRanges } from './scriptSetupRanges';
+import { getClosestMultiLineCommentRange, parseBindingRanges } from './utils';
 
 export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> {}
 
@@ -71,6 +71,10 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 					nameOption: nameOptionNode ? _getStartEnd(nameOptionNode) : undefined,
 					inheritAttrsOption,
 				};
+				const comment = getClosestMultiLineCommentRange(ts, raw, [], ast);
+				if (comment) {
+					exportDefault.start = comment.start;
+				}
 			}
 		}
 	});

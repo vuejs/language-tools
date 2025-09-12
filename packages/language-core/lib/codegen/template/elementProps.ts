@@ -363,9 +363,7 @@ function getShouldCamelize(
 		&& !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern));
 }
 
-function getPropsCodeFeatures(
-	strictPropsCheck: boolean,
-): VueCodeInformation {
+function getPropsCodeFeatures(strictPropsCheck: boolean): VueCodeInformation {
 	return {
 		...codeFeatures.withoutHighlightAndCompletion,
 		...strictPropsCheck

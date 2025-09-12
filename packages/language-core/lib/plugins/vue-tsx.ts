@@ -148,9 +148,9 @@ function createTsx(
 
 	const setupHasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
-	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
-
 	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
+
+	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
 
 	const getSetupInheritAttrs = computed(() => {
 		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
@@ -159,17 +159,25 @@ function createTsx(
 	});
 
 	const getComponentSelfName = computed(() => {
+		let name: string;
 		const { exportDefault } = getScriptRanges() ?? {};
 		if (sfc.script && exportDefault?.nameOption) {
-			const { nameOption } = exportDefault;
-			return sfc.script.content.slice(nameOption.start + 1, nameOption.end - 1);
+			name = sfc.script.content.slice(
+				exportDefault.nameOption.start + 1,
+				exportDefault.nameOption.end - 1,
+			);
 		}
-		const { defineOptions } = getScriptSetupRanges() ?? {};
-		if (sfc.scriptSetup && defineOptions?.name) {
-			return defineOptions.name;
+		else {
+			const { defineOptions } = getScriptSetupRanges() ?? {};
+			if (sfc.scriptSetup && defineOptions?.name) {
+				name = defineOptions.name;
+			}
+			else {
+				const baseName = path.basename(fileName);
+				name = baseName.slice(0, baseName.lastIndexOf('.'));
+			}
 		}
-		const baseName = path.basename(fileName);
-		return capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
+		return capitalize(camelize(name));
 	});
 
 	const getGeneratedTemplate = computed(() => {
@@ -186,8 +194,8 @@ function createTsx(
 			destructuredPropNames: getSetupDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
 			hasDefineSlots: setupHasDefineSlots(),
-			slotsAssignName: getSetupSlotsAssignName(),
 			propsAssignName: getSetupPropsAssignName(),
+			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getSetupInheritAttrs(),
 			selfComponentName: getComponentSelfName(),
 		});
@@ -198,7 +206,7 @@ function createTsx(
 			ts,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
-			sfc: sfc,
+			sfc,
 			fileName,
 			lang: getLang(),
 			scriptRanges: getScriptRanges(),
