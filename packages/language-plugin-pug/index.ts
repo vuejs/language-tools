@@ -50,79 +50,77 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 				const minIndent = calculateMinIndent(template);
 				if (minIndent === 0) {
-					pugFile = pug?.baseParse(template);
+					pugFile = pug.baseParse(template);
 				}
 				else {
-					pugFile = pug?.baseParse(`template\n${template}`);
+					pugFile = pug.baseParse(`template\n${template}`);
 					baseOffset = 'template\n'.length;
 					pugFile.htmlCode = ' '.repeat('<template>'.length)
 						+ pugFile.htmlCode.slice('<template>'.length, -'</template>'.length)
 						+ ' '.repeat('</template>'.length);
 				}
 
-				if (pugFile) {
-					const map = new SourceMap(pugFile.mappings);
-					const compiler = modules['@vue/compiler-dom'];
-					const completed = compiler.compile(pugFile.htmlCode, {
-						...options,
-						comments: true,
-						onWarn(warning) {
-							options?.onWarn?.(createProxyObject(warning));
-						},
-						onError(error) {
-							// #5099
-							if (
-								error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
-								&& classRegex.test(pugFile.htmlCode.slice(error.loc?.start.offset))
-							) {
-								return;
+				const map = new SourceMap(pugFile.mappings);
+				const compiler = modules['@vue/compiler-dom'];
+				const completed = compiler.compile(pugFile.htmlCode, {
+					...options,
+					comments: true,
+					onWarn(warning) {
+						options.onWarn?.(createProxyObject(warning));
+					},
+					onError(error) {
+						// #5099
+						if (
+							error.code === 2 satisfies CompilerDOM.ErrorCodes.DUPLICATE_ATTRIBUTE
+							&& classRegex.test(pugFile.htmlCode.slice(error.loc?.start.offset))
+						) {
+							return;
+						}
+						options.onError?.(createProxyObject(error));
+					},
+				});
+
+				return createProxyObject(completed);
+
+				function createProxyObject(target: any) {
+					const proxys = new WeakMap();
+					return new Proxy(target, {
+						get(target, prop, receiver) {
+							if (prop === 'getClassOffset') {
+								// div.foo#baz.bar
+								//     ^^^     ^^^
+								// class=" foo bar"
+								//         ^^^ ^^^
+								// NOTE: we need to expose source offset getter
+								return function(startOffset: number) {
+									return getOffset(target.offset + startOffset);
+								};
 							}
-							options?.onError?.(createProxyObject(error));
-						},
-					});
-
-					return createProxyObject(completed);
-
-					function createProxyObject(target: any) {
-						const proxys = new WeakMap();
-						return new Proxy(target, {
-							get(target, prop, receiver) {
-								if (prop === 'getClassOffset') {
-									// div.foo#baz.bar
-									//     ^^^     ^^^
-									// class=" foo bar"
-									//         ^^^ ^^^
-									// NOTE: we need to expose source offset getter
-									return function(startOffset: number) {
-										return getOffset(target.offset + startOffset);
-									};
-								}
-								if (prop === 'offset') {
-									return getOffset(target.offset);
-								}
-								const value = Reflect.get(target, prop, receiver);
-								if (typeof value === 'object' && value !== null) {
-									let proxyed = proxys.get(value);
-									if (proxyed) {
-										return proxyed;
-									}
-									proxyed = createProxyObject(value);
-									proxys.set(value, proxyed);
+							if (prop === 'offset') {
+								return getOffset(target.offset);
+							}
+							const value = Reflect.get(target, prop, receiver);
+							if (typeof value === 'object' && value !== null) {
+								let proxyed = proxys.get(value);
+								if (proxyed) {
 									return proxyed;
 								}
-								return value;
-							},
-						});
-					}
+								proxyed = createProxyObject(value);
+								proxys.set(value, proxyed);
+								return proxyed;
+							}
+							return value;
+						},
+					});
+				}
 
-					function getOffset(offset: number) {
-						const htmlOffset = offset;
-						const nums: number[] = [];
-						for (const mapped of map.toSourceLocation(htmlOffset)) {
-							nums.push(mapped[0] - baseOffset);
-						}
-						return Math.max(-1, ...nums);
+				function getOffset(offset: number) {
+					const htmlOffset = offset;
+					const nums: number[] = [];
+					for (const mapped of map.toSourceLocation(htmlOffset)) {
+						nums.push(mapped[0] - baseOffset);
 					}
+					return Math.max(-1, ...nums);
 				}
 			}
 		},

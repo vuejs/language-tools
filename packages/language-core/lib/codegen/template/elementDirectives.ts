@@ -36,7 +36,10 @@ export function* generateElementDirectives(
 		) {
 			continue;
 		}
-		ctx.accessExternalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
+
+		if (!builtInDirectives.has(prop.name)) {
+			ctx.accessExternalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
+		}
 
 		yield* wrapWith(
 			prop.loc.start.offset,
@@ -128,7 +131,7 @@ export function* generateModifiers(
 		return;
 	}
 
-	const startOffset = modifiers[0].loc.start.offset - 1;
+	const startOffset = modifiers[0]!.loc.start.offset - 1;
 	const endOffset = modifiers.at(-1)!.loc.end.offset;
 
 	yield* wrapWith(

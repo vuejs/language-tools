@@ -9,7 +9,7 @@ export function parseVueCompilerOptions(comments: string[]): RawVueCompilerOptio
 				const match = text.match(syntaxReg);
 				if (match) {
 					const { key, value } = match.groups ?? {};
-					return [key, JSON.parse(value)] as const;
+					return [key, JSON.parse(value!)] as const;
 				}
 			}
 			catch {}

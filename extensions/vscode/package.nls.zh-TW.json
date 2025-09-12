@@ -16,6 +16,9 @@
 	"configuration.format.script.initialIndent": "`<script>` 區塊的初始縮排。",
 	"configuration.format.style.initialIndent": "`<style>` 區塊的初始縮排。",
 	"configuration.format.wrapAttributes": "對屬性進行換行。",
+	"configuration.editor.focusMode": "淡化頂層 SFC 標籤。",
+	"configuration.editor.reactivityVisualization": "響應性系統視覺化。",
+	"configuration.editor.templateInterpolationDecorators": "增強模板插值的高亮顯示。",
 	"command.action.restartServer": "重新啟動 Vue 和 TS 伺服器",
 	"command.welcome": "打開歡迎頁面"
 }

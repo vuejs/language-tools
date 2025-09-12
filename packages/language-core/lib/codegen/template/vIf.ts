@@ -16,7 +16,7 @@ export function* generateVIf(
 	const originalBlockConditionsLength = ctx.blockConditions.length;
 
 	for (let i = 0; i < node.branches.length; i++) {
-		const branch = node.branches[i];
+		const branch = node.branches[i]!;
 
 		if (i === 0) {
 			yield `if `;

@@ -1,6 +1,4 @@
-import { VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
-import type { RequestContext } from './types';
 import { getComponentType, getVariableType } from './utils';
 
 export interface ComponentPropInfo {
@@ -13,35 +11,27 @@ export interface ComponentPropInfo {
 }
 
 export function getComponentProps(
-	this: RequestContext,
+	ts: typeof import('typescript'),
+	program: ts.Program,
 	fileName: string,
 	tag: string,
 ): ComponentPropInfo[] {
-	const { typescript: ts, language, languageService } = this;
-
-	const sourceScript = language.scripts.get(fileName);
-	const root = sourceScript?.generated?.root;
-	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
-		return [];
-	}
-
-	const components = getVariableType(ts, languageService, root, '__VLS_components');
+	const components = getVariableType(ts, program, fileName, '__VLS_components');
 	if (!components) {
 		return [];
 	}
 
-	const componentType = getComponentType(ts, languageService, root, components, tag);
+	const componentType = getComponentType(ts, program, fileName, components, tag);
 	if (!componentType) {
 		return [];
 	}
 
 	const result = new Map<string, ComponentPropInfo>();
-	const program = languageService.getProgram()!;
 	const checker = program.getTypeChecker();
 
 	for (const sig of componentType.getCallSignatures()) {
-		const propParam = sig.parameters[0];
-		if (propParam) {
+		if (sig.parameters.length) {
+			const propParam = sig.parameters[0]!;
 			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.node);
 			const props = propsType.getProperties();
 			for (const prop of props) {

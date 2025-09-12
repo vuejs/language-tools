@@ -1,5 +1,46 @@
 # Changelog
 
+## 3.0.7 (2025-09-12)
+
+### Bug Fixes
+
+- fix(vscode): show welcome page only when opening a Vue file
+- fix(language-core): generate slot parameters in the same way as interpolation (#5618) - Thanks to @KazariEX!
+- fix(language-core): do not generate variables for builtin directives - Thanks to @KazariEX!
+
+### Other Changes
+
+- docs(vscode): add descriptions for premium feature configurations (#5612) - Thanks to @KazariEX!
+- refactor(typescript-plugin): explicitly request parameters (#5623)
+- chore(lint): enable `@typescript-eslint/no-unnecessary-condition` (#5630)
+- refactor(language-server): reimplement Reactivity Visualization in typescript plugin (#5632)
+- refactor(language-server): parsing interpolations in extension client (#5633)
+- refactor(vscode): reimplement Focus Mode base on folding ranges (#5634)
+- chore(vscode): disable Focus Mode by default (#5578)
+- refactor(vscode): set delay of reactivity visualization updates to 250ms - Thanks to @KazariEX!
+
+## 3.0.6 (2025-08-20)
+
+### Bug Fixes
+
+- fix(language-core): wrap `:class` expression with parens - Thanks to @KazariEX!
+- fix(vscode): revert Vue 2 versions in `target` option (#5583) - Thanks to @gxres042!
+- fix(language-service): skip document highlight from tsserver within element tags (#5584) - Thanks to @KazariEX!
+- fix(component-meta): re-export `vue-component-type-helpers` to `lib/helpers` (#5600)
+- fix(language-core): remove the non-strict `configFileName` default value (#5606)
+- fix(language-core): don't look for input files during evaluation of vueCompilerOptions (#5598)
+- fix(vscode): Improved reliability of handling extension activation contention (#5588)
+- chore: update volar to 2.4.23
+  - Support `js/ts.hover.maximumLength` and `typescript.experimental.expandableHover` (#5577)
+
+### Other Changes
+
+- feat(lint): update tsslint config (#5602)
+- refactor(language-core): generate setup returns on demand - Thanks to @KazariEX!
+- chore(language-service): remove `exclude` config suggestion from global types error message (#5579) - Thanks to @Ciallo-Chiaki
+- chore(vscode): update extension display name "Vue.js" (#5582)
+- chore: update `vue-component-type-helpers` to current version (#5589) - Thanks to @kingyue737!
+
 ## 3.0.5 (2025-08-01)
 
 ### Features

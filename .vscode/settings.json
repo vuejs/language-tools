@@ -13,11 +13,6 @@
 		"editor.defaultFormatter": "dprint.dprint"
 	},
 	"editor.formatOnSave": true,
-	"editor.codeActionsOnSave": {
-		"source.organizeImports": "always"
-	},
-	"editor.detectIndentation": false,
-	"editor.insertSpaces": false,
 	"files.exclude": {
 		"packages/*/*.d.ts": true,
 		"packages/*/*.js": true,
@@ -26,7 +21,5 @@
 		"packages/*/lib/**/*.js": true,
 		"packages/*/lib/**/*.map": true
 	},
-	"json.format.keepLines": true,
-	"typescript.format.semicolons": "insert",
 	"typescript.tsdk": "node_modules/typescript/lib"
 }

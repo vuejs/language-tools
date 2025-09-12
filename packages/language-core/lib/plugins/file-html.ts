@@ -45,9 +45,9 @@ const plugin: VueLanguagePlugin = ({ vueCompilerOptions }) => {
 			for (const match of content.matchAll(sfcBlockReg)) {
 				const matchText = match[0];
 				const tag = match[1];
-				const attrs = match[2];
+				const attrs = match[2]!;
 				const lang = attrs.match(langReg)?.[2];
-				const content = match[3];
+				const content = match[3]!;
 				const contentStart = match.index + matchText.indexOf(content);
 
 				if (tag === 'style') {

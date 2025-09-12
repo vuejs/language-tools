@@ -19,7 +19,7 @@ export function computedArray<I, O>(
 			array ??= [];
 			while (array.length < length()) {
 				const index = array.length;
-				const item = computed(() => arr()[index]);
+				const item = computed(() => arr()[index]!);
 				array.push(computed(getGetter(item, index)));
 			}
 			if (array.length > length()) {
@@ -68,7 +68,7 @@ export function computedItems<T>(
 		oldArr => {
 			oldArr ??= [];
 			const newArr = source();
-			if (oldArr.length === newArr.length && oldArr.every((item, index) => compareFn(item, newArr[index]))) {
+			if (oldArr.length === newArr.length && oldArr.every((item, index) => compareFn(item, newArr[index]!))) {
 				return oldArr;
 			}
 			return newArr;

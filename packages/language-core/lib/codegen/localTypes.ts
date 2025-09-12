@@ -1,5 +1,4 @@
 import type { VueCompilerOptions } from '../types';
-import { getSlotsPropertyName } from '../utils/shared';
 import { endOfLine } from './utils';
 
 export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions) {
@@ -26,7 +25,7 @@ type __VLS_WithDefaultsLocal<P, D> = {
 			`
 type __VLS_WithSlots<T, S> = T & {
 	new(): {
-		${getSlotsPropertyName(vueCompilerOptions.target)}: S;
+		$slots: S;
 	}
 };
 `.trimStart(),
@@ -100,7 +99,7 @@ type __VLS_TypePropsToOption<T> = {
 
 	function* generate() {
 		for (const name of used) {
-			yield helpers[name].generate();
+			yield helpers[name]!.generate();
 		}
 		used.clear();
 	}

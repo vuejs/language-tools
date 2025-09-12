@@ -1,6 +1,6 @@
 import type * as html from 'vscode-html-languageservice';
 
-let locale: { name: string; url: string }[];
+let locale: { name: string; url: string }[] | undefined;
 
 export function loadTemplateData(lang: string) {
 	lang = lang.toLowerCase();
@@ -40,7 +40,6 @@ export function loadTemplateData(lang: string) {
 
 	resolveReferences(data);
 
-	// oxlint-disable-next-line no-useless-spread
 	for (const attr of [...data.globalAttributes ?? []]) {
 		if (!attr.name.startsWith('v-')) {
 			data.globalAttributes?.push(
@@ -160,7 +159,7 @@ function resolveReferences(data: html.HTMLDataV1) {
 	) {
 		if (typeof item.references === 'string') {
 			const relativeUrl = item.references as string;
-			item.references = locale.map(({ name, url }) => ({
+			item.references = locale!.map(({ name, url }) => ({
 				name,
 				url: url + relativeUrl,
 			}));

@@ -136,7 +136,7 @@ function* forEachInterpolationSegment(
 	if (ctxVars.length) {
 		for (let i = 0; i < ctxVars.length; i++) {
 			const lastVar = ctxVars[i - 1];
-			const curVar = ctxVars[i];
+			const curVar = ctxVars[i]!;
 			const lastVarEnd = lastVar ? lastVar.offset + lastVar.text.length : 0;
 
 			if (curVar.isShorthand) {
@@ -214,14 +214,17 @@ function walkIdentifiers(
 	}
 	else if (ts.isVariableDeclaration(node)) {
 		const bindingNames = collectBindingNames(ts, node.name, ast);
-
 		for (const name of bindingNames) {
 			ctx.addLocalVariable(name);
 			blockVars.push(name);
 		}
-
-		if (node.initializer) {
-			walkIdentifiers(ts, node.initializer, ast, cb, ctx, blockVars);
+		walkIdentifiersInBinding(ts, node, ast, cb, ctx, blockVars);
+	}
+	else if (ts.isArrayBindingPattern(node) || ts.isObjectBindingPattern(node)) {
+		for (const element of node.elements) {
+			if (ts.isBindingElement(element)) {
+				walkIdentifiersInBinding(ts, element, ast, cb, ctx, blockVars);
+			}
 		}
 	}
 	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
@@ -276,6 +279,25 @@ function walkIdentifiers(
 	}
 }
 
+function walkIdentifiersInBinding(
+	ts: typeof import('typescript'),
+	node: ts.BindingElement | ts.ParameterDeclaration | ts.VariableDeclaration,
+	ast: ts.SourceFile,
+	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
+	ctx: TemplateCodegenContext,
+	blockVars: string[],
+) {
+	if ('type' in node && node.type) {
+		walkIdentifiersInTypeNode(ts, node.type, cb);
+	}
+	if (!ts.isIdentifier(node.name)) {
+		walkIdentifiers(ts, node.name, ast, cb, ctx, blockVars);
+	}
+	if (node.initializer) {
+		walkIdentifiers(ts, node.initializer, ast, cb, ctx, blockVars);
+	}
+}
+
 function walkIdentifiersInFunction(
 	ts: typeof import('typescript'),
 	node: ts.ArrowFunction | ts.FunctionExpression | ts.AccessorDeclaration | ts.MethodDeclaration,
@@ -286,9 +308,7 @@ function walkIdentifiersInFunction(
 	const functionArgs: string[] = [];
 	for (const param of node.parameters) {
 		functionArgs.push(...collectBindingNames(ts, param.name, ast));
-		if (param.type) {
-			walkIdentifiersInTypeNode(ts, param.type, cb);
-		}
+		walkIdentifiersInBinding(ts, param, ast, cb, ctx, functionArgs);
 	}
 	for (const varName of functionArgs) {
 		ctx.addLocalVariable(varName);

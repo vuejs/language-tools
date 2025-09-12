@@ -2,7 +2,7 @@ import type { LanguageServicePlugin, TextDocument, VirtualCode } from '@volar/la
 import { isRenameEnabled } from '@vue/language-core';
 import { create as baseCreate, type Provide } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(): LanguageServicePlugin {
 	const base = baseCreate({ scssDocumentSelector: ['scss', 'postcss'] });
@@ -54,19 +54,17 @@ export function create(): LanguageServicePlugin {
 				document: TextDocument,
 				position: css.Position,
 			) {
-				const info = getEmbeddedInfo(context, document, id => id.startsWith('style_'));
-				if (!info) {
+				const info = resolveEmbeddedCode(context, document.uri);
+				if (!info?.code.id.startsWith('style_')) {
 					return false;
 				}
-				const { sourceScript, virtualCode, root } = info;
-
-				const block = root.sfc.styles.find(style => style.name === virtualCode.id);
+				const block = info.root.sfc.styles.find(style => style.name === info.code.id);
 				if (!block) {
 					return false;
 				}
 
 				let script: VirtualCode | undefined;
-				for (const [key, value] of sourceScript.generated.embeddedCodes) {
+				for (const [key, value] of info.script.generated.embeddedCodes) {
 					if (key.startsWith('script_')) {
 						script = value;
 						break;
@@ -82,7 +80,7 @@ export function create(): LanguageServicePlugin {
 						continue;
 					}
 
-					const start = sourceOffsets[0];
+					const start = sourceOffsets[0]!;
 					const end = sourceOffsets.at(-1)! + lengths.at(-1)!;
 
 					if (offset >= start && offset <= end) {

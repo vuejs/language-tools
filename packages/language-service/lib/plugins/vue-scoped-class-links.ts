@@ -1,6 +1,6 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
 import { tsCodegen } from '@vue/language-core';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -11,27 +11,26 @@ export function create(): LanguageServicePlugin {
 		create(context) {
 			return {
 				provideDocumentLinks(document) {
-					const info = getEmbeddedInfo(context, document, 'template');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
 						return;
 					}
-					const { sourceScript, root } = info;
 
-					const { sfc } = root;
+					const { sfc } = info.root;
 					const codegen = tsCodegen.get(sfc);
 
-					const option = root.vueCompilerOptions.resolveStyleClassNames;
+					const option = info.root.vueCompilerOptions.resolveStyleClassNames;
 					const scopedClasses = codegen?.getGeneratedTemplate()?.scopedClasses ?? [];
 					const styleClasses = new Map<string, string[]>();
 
 					for (let i = 0; i < sfc.styles.length; i++) {
-						const style = sfc.styles[i];
+						const style = sfc.styles[i]!;
 						if (option !== true && !(option === 'scoped' && style.scoped)) {
 							continue;
 						}
 
-						const styleDocumentUri = context.encodeEmbeddedDocumentUri(sourceScript.id, 'style_' + i);
-						const styleVirtualCode = sourceScript.generated.embeddedCodes.get('style_' + i);
+						const styleDocumentUri = context.encodeEmbeddedDocumentUri(info.script.id, 'style_' + i);
+						const styleVirtualCode = info.script.generated.embeddedCodes.get('style_' + i);
 						if (!styleVirtualCode) {
 							continue;
 						}

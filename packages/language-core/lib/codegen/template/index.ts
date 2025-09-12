@@ -1,16 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
-import { getSlotsPropertyName } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
-import type { TemplateCodegenContext } from './context';
+import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild, getVForNode } from './templateChild';
-
-export * from './context';
 
 export interface TemplateCodegenOptions {
 	ts: typeof ts;
@@ -28,7 +25,27 @@ export interface TemplateCodegenOptions {
 	selfComponentName?: string;
 }
 
-export function* generateTemplate(
+export { generate as generateTemplate };
+
+function generate(options: TemplateCodegenOptions) {
+	const context = createTemplateCodegenContext(options, options.template.ast);
+	const codegen = generateTemplate(options, context);
+
+	const codes: Code[] = [];
+	for (const code of codegen) {
+		if (typeof code === 'object') {
+			code[3] = context.resolveCodeFeatures(code[3]);
+		}
+		codes.push(code);
+	}
+
+	return {
+		...context,
+		codes,
+	};
+}
+
+function* generateTemplate(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
@@ -39,9 +56,8 @@ export function* generateTemplate(
 		ctx.addLocalVariable(options.propsAssignName);
 	}
 
-	const slotsPropertyName = getSlotsPropertyName(options.vueCompilerOptions.target);
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
-		ctx.dollarVars.add(slotsPropertyName);
+		ctx.dollarVars.add('$slots');
 	}
 	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
 		ctx.dollarVars.add('$attrs');
@@ -61,11 +77,11 @@ export function* generateTemplate(
 	yield* ctx.generateHoistVariables();
 
 	const dollarTypes = [
-		[slotsPropertyName, yield* generateSlots(options, ctx)],
+		['$slots', yield* generateSlots(options, ctx)],
 		['$attrs', yield* generateInheritedAttrs(options, ctx)],
 		['$refs', yield* generateTemplateRefs(options, ctx)],
 		['$el', yield* generateRootEl(ctx)],
-	].filter(([name]) => ctx.dollarVars.has(name));
+	].filter(([name]) => ctx.dollarVars.has(name!));
 
 	if (dollarTypes.length) {
 		yield `var __VLS_dollars!: {${newLine}`;
@@ -106,7 +122,7 @@ function* generateSlots(
 			}
 			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}
-		yield `${endOfLine}`;
+		yield endOfLine;
 	}
 	return `__VLS_Slots`;
 }
@@ -150,7 +166,7 @@ function* generateTemplateRefs(
 			yield `(`;
 		}
 		for (let i = 0; i < refs.length; i++) {
-			const { typeExp, offset } = refs[i];
+			const { typeExp, offset } = refs[i]!;
 			if (i) {
 				yield ` | `;
 			}
@@ -210,8 +226,7 @@ export function* forEachElementNode(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.IF) {
 		// v-if / v-else-if / v-else
-		for (let i = 0; i < node.branches.length; i++) {
-			const branch = node.branches[i];
+		for (const branch of node.branches) {
 			for (const childNode of branch.children) {
 				yield* forEachElementNode(childNode);
 			}

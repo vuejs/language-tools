@@ -186,15 +186,7 @@ export function* generateElementProps(
 			}
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
-			if (
-				options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))
-				// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom` always adds it (#3881)
-				|| (
-					options.vueCompilerOptions.target < 3
-					&& prop.name === 'persisted'
-					&& node.tag.toLowerCase() === 'transition'
-				)
-			) {
+			if (options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))) {
 				continue;
 			}
 
@@ -236,8 +228,7 @@ export function* generateElementProps(
 			yield `,${newLine}`;
 		}
 		else if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'bind'
+			prop.name === 'bind'
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
@@ -301,8 +292,8 @@ export function* generatePropExp(
 			const propVariableName = camelize(exp.loc.source);
 
 			if (identifierRegex.test(propVariableName)) {
-				const isDestructuredProp = options.destructuredPropNames?.has(propVariableName) ?? false;
-				const isTemplateRef = options.templateRefNames?.has(propVariableName) ?? false;
+				const isDestructuredProp = options.destructuredPropNames.has(propVariableName);
+				const isTemplateRef = options.templateRefNames.has(propVariableName);
 
 				const codes = generateCamelized(
 					exp.loc.source,
@@ -366,7 +357,7 @@ function getShouldCamelize(
 	return (
 		prop.type !== CompilerDOM.NodeTypes.DIRECTIVE
 		|| !prop.arg
-		|| (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+		|| (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 	)
 		&& hyphenateAttr(propName) === propName
 		&& !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern));
@@ -422,5 +413,5 @@ function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: Vue
 		}
 	}
 
-	return vueCompilerOptions.target < 3 ? 'value' : 'modelValue';
+	return 'modelValue';
 }

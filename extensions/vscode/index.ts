@@ -16,39 +16,34 @@ import {
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './lib/config';
-import { activate as activateWelcome } from './lib/welcome';
+import * as focusMode from './lib/focusMode';
+import * as interpolationDecorators from './lib/interpolationDecorators';
+import * as reactivityVisualization from './lib/reactivityVisualization';
+import * as welcome from './lib/welcome';
 
+let client: lsp.BaseLanguageClient | undefined;
 let needRestart = false;
 
-const incompatibleExtensionIds = [
-	'johnsoncodehk.vscode-typescript-vue-plugin',
-	'Vue.vscode-typescript-vue-plugin',
-];
-
-for (const extensionId of incompatibleExtensionIds) {
-	const extension = vscode.extensions.getExtension(extensionId);
+for (
+	const incompatibleExtensionId of [
+		'johnsoncodehk.vscode-typescript-vue-plugin',
+		'Vue.vscode-typescript-vue-plugin',
+	]
+) {
+	const extension = vscode.extensions.getExtension(incompatibleExtensionId);
 	if (extension) {
 		vscode.window.showErrorMessage(
-			`The "${extensionId}" extension is incompatible with the Vue extension. Please uninstall it.`,
+			`The "${incompatibleExtensionId}" extension is incompatible with the Vue extension. Please uninstall it.`,
 			'Show Extension',
 		).then(action => {
 			if (action === 'Show Extension') {
-				vscode.commands.executeCommand('workbench.extensions.search', '@id:' + extensionId);
+				vscode.commands.executeCommand('workbench.extensions.search', '@id:' + incompatibleExtensionId);
 			}
 		});
 	}
 }
 
-let client: lsp.BaseLanguageClient | undefined;
-
-class _LanguageClient extends lsp.LanguageClient {
-	fillInitializeParams(params: lsp.InitializeParams) {
-		// fix https://github.com/vuejs/language-tools/issues/1959
-		params.locale = vscode.env.language;
-	}
-}
-
-export const { activate, deactivate } = defineExtension(() => {
+export = defineExtension(() => {
 	const context = extensionContext.value!;
 	const volarLabs = createLabsInfo();
 	const activeTextEditor = useActiveTextEditor();
@@ -66,7 +61,7 @@ export const { activate, deactivate } = defineExtension(() => {
 
 		if (needRestart) {
 			vscode.window.showInformationMessage(
-				'Please restart the extension host to activate Vue support in remote environments.',
+				'Please restart the extension host to activate Vue support.',
 				'Restart Extension Host',
 				'Reload Window',
 			).then(action => {
@@ -106,9 +101,14 @@ export const { activate, deactivate } = defineExtension(() => {
 
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
-		activateWelcome();
+
+		focusMode.activate(context, selectors, client);
+		interpolationDecorators.activate(context, selectors, client);
+		reactivityVisualization.activate(context, selectors);
+		welcome.activate(context);
 	}, { immediate: true });
 
+	useCommand('vue.welcome', () => welcome.execute(context));
 	useCommand('vue.action.restartServer', async () => {
 		await executeCommand('typescript.restartTsServer');
 		await client?.stop();
@@ -125,7 +125,7 @@ export const { activate, deactivate } = defineExtension(() => {
 
 function launch(context: vscode.ExtensionContext) {
 	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js');
-	const client = new _LanguageClient(
+	const client = new lsp.LanguageClient(
 		'vue',
 		'Vue',
 		{
@@ -163,33 +163,35 @@ function launch(context: vscode.ExtensionContext) {
 		},
 	);
 
-	client.onNotification('tsserver/request', async ([seq, command, args]) => {
-		vscode.commands.executeCommand<{ body: unknown } | undefined>(
+	client.onNotification('tsserver/request', ([seq, command, args]) => {
+		vscode.commands.executeCommand<{ body?: unknown } | undefined>(
 			'typescript.tsserverRequest',
 			command,
 			args,
 			{ isAsync: true, lowPriority: true },
-		).then(res => {
-			client.sendNotification('tsserver/response', [seq, res?.body]);
-		}, () => {
-			client.sendNotification('tsserver/response', [seq, undefined]);
-		});
+		).then(
+			res => client.sendNotification('tsserver/response', [seq, res?.body]),
+			() => client.sendNotification('tsserver/response', [seq, undefined]),
+		);
 	});
 	client.start();
 
 	return client;
 }
 
-try {
+const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
+if (tsExtension.isActive) {
+	needRestart = true;
+}
+else {
 	const fs = require('node:fs');
-	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
 	const readFileSync = fs.readFileSync;
 	const extensionJsPath = require.resolve('./dist/extension.js', {
 		paths: [tsExtension.extensionPath],
 	});
+	const vuePluginName = require('./package.json').contributes.typescriptServerPlugins[0].name;
 
-	// @ts-expect-error
-	fs.readFileSync = (...args) => {
+	fs.readFileSync = (...args: any[]) => {
 		if (args[0] === extensionJsPath) {
 			let text = readFileSync(...args) as string;
 
@@ -198,7 +200,7 @@ try {
 				'languages:Array.isArray(e.languages)',
 				[
 					'languages:',
-					`e.name==='vue-typescript-plugin-pack'?[${
+					`e.name==='${vuePluginName}'?[${
 						config.server.includeLanguages
 							.map(lang => `'${lang}'`)
 							.join(',')
@@ -219,7 +221,6 @@ try {
 			);
 
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
-			const vuePluginName = require('./package.json').contributes.typescriptServerPlugins[0].name;
 			text = text.replace(
 				'"--globalPlugins",i.plugins',
 				s => s + `.sort((a,b)=>(b.name==="${vuePluginName}"?-1:0)-(a.name==="${vuePluginName}"?-1:0))`,
@@ -236,14 +237,4 @@ try {
 		const patchedModule = require(extensionJsPath);
 		Object.assign(loadedModule.exports, patchedModule);
 	}
-
-	if (tsExtension.isActive) {
-		if (!vscode.env.remoteName) {
-			vscode.commands.executeCommand('workbench.action.restartExtensionHost');
-		}
-		else {
-			needRestart = true;
-		}
-	}
 }
-catch {}

@@ -7,12 +7,10 @@ import { codeFeatures } from '../codeFeatures';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generatePartiallyEnding, generateSfcBlockSection, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
-import type { ScriptCodegenContext } from './context';
+import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';
-
-export * from './context';
 
 export interface ScriptCodegenOptions {
 	ts: typeof ts;
@@ -28,7 +26,19 @@ export interface ScriptCodegenOptions {
 	templateRefNames: Set<string>;
 }
 
-export function* generateScript(
+export { generate as generateScript };
+
+function generate(options: ScriptCodegenOptions) {
+	const context = createScriptCodegenContext(options);
+	const codegen = generateScript(options, context);
+
+	return {
+		...context,
+		codes: [...codegen],
+	};
+}
+
+function* generateScript(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
@@ -38,7 +48,7 @@ export function* generateScript(
 		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 	if (options.sfc.script && options.scriptRanges) {
-		const { exportDefault, classBlockEnd } = options.scriptRanges;
+		const { exportDefault } = options.scriptRanges;
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 			if (exportDefault) {
 				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.start, codeFeatures.all);
@@ -90,23 +100,6 @@ export function* generateScript(
 			}
 			yield endOfLine;
 		}
-		else if (classBlockEnd !== undefined) {
-			if (options.vueCompilerOptions.skipTemplateCodegen) {
-				yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
-			}
-			else {
-				yield generateSfcBlockSection(options.sfc.script, 0, classBlockEnd, codeFeatures.all);
-				yield `__VLS_template = () => {${newLine}`;
-				yield* generateTemplate(options, ctx);
-				yield `}${endOfLine}`;
-				yield generateSfcBlockSection(
-					options.sfc.script,
-					classBlockEnd,
-					options.sfc.script.content.length,
-					codeFeatures.all,
-				);
-			}
-		}
 		else {
 			yield generateSfcBlockSection(options.sfc.script, 0, options.sfc.script.content.length, codeFeatures.all);
 			yield* generateConstExport(options, options.sfc.script);
@@ -121,10 +114,7 @@ export function* generateScript(
 		yield* generateTemplate(options, ctx);
 	}
 
-	if (!options.scriptRanges?.classBlockEnd) {
-		yield* generateExportDefault(options);
-	}
-
+	yield* generateExportDefault(options);
 	yield* ctx.localTypes.generate();
 }
 

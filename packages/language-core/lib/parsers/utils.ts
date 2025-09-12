@@ -97,7 +97,7 @@ export function getClosestMultiLineCommentRange(
 		if (ts.isStatement(node)) {
 			break;
 		}
-		node = parents[i];
+		node = parents[i]!;
 	}
 	const comment = ts.getLeadingCommentRanges(ast.text, node.pos)
 		?.reverse()

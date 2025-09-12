@@ -1,7 +1,7 @@
 {
 	"private": true,
 	"name": "volar",
-	"version": "3.0.5",
+	"version": "3.0.7",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/vuejs/language-tools.git",
@@ -22,9 +22,7 @@
 		"vscode": "^1.88.0"
 	},
 	"activationEvents": [
-		"onLanguage:vue",
-		"onLanguage:markdown",
-		"onLanguage:html"
+		"onLanguage"
 	],
 	"main": "./dist/extension.js",
 	"browser": "./web.js",
@@ -67,11 +65,6 @@
 			{
 				"id": "jade",
 				"configuration": "./languages/sfc-template-language-configuration.json"
-			},
-			{
-				"id": "plaintext",
-				"configuration": "./languages/stub.json",
-				"//": "Make sure Vue extension is loaded immediately when VSCode starts."
 			}
 		],
 		"typescriptServerPlugins": [
@@ -273,18 +266,18 @@
 				},
 				"vue.editor.focusMode": {
 					"type": "boolean",
-					"default": true,
-					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+					"default": false,
+					"markdownDescription": "%configuration.editor.focusMode%"
 				},
 				"vue.editor.reactivityVisualization": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+					"markdownDescription": "%configuration.editor.reactivityVisualization%"
 				},
 				"vue.editor.templateInterpolationDecorators": {
 					"type": "boolean",
 					"default": true,
-					"markdownDescription": "Sponsor this extension to unlock premium features. [Learn more](https://youtu.be/RcPcO4_Ct_U)"
+					"markdownDescription": "%configuration.editor.templateInterpolationDecorators%"
 				},
 				"vue.server.includeLanguages": {
 					"type": "array",
@@ -471,11 +464,11 @@
 		"@types/node": "^22.10.4",
 		"@types/semver": "^7.5.3",
 		"@types/vscode": "1.88.0",
-		"@volar/vscode": "2.4.22",
+		"@volar/vscode": "2.4.23",
 		"@vscode/vsce": "^3.2.1",
 		"@vue/compiler-sfc": "^3.5.0",
-		"@vue/language-server": "3.0.5",
-		"@vue/typescript-plugin": "3.0.5",
+		"@vue/language-server": "3.0.7",
+		"@vue/typescript-plugin": "3.0.7",
 		"reactive-vscode": "^0.2.9",
 		"rolldown": "1.0.0-beta.8",
 		"semver": "^7.5.4",
