@@ -15,7 +15,6 @@
 	"dependencies": {
 		"@volar/language-core": "2.4.23",
 		"@vue/compiler-dom": "^3.5.0",
-		"@vue/compiler-vue2": "^2.7.16",
 		"@vue/shared": "^3.5.0",
 		"alien-signals": "^2.0.5",
 		"muggle-string": "^0.4.1",

@@ -186,15 +186,7 @@ export function* generateElementProps(
 			}
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
-			if (
-				options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))
-				// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom` always adds it (#3881)
-				|| (
-					options.vueCompilerOptions.target < 3
-					&& prop.name === 'persisted'
-					&& node.tag.toLowerCase() === 'transition'
-				)
-			) {
+			if (options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))) {
 				continue;
 			}
 
@@ -423,5 +415,5 @@ function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: Vue
 		}
 	}
 
-	return vueCompilerOptions.target < 3 ? 'value' : 'modelValue';
+	return 'modelValue';
 }

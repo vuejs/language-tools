@@ -111,7 +111,7 @@ export function create(
 										attrText = attrText.slice('v-model:'.length);
 									}
 									else if (attrText === 'v-model') {
-										attrText = info.root.vueCompilerOptions.target >= 3 ? 'modelValue' : 'value'; // TODO: support for experimentalModelPropName?
+										attrText = 'modelValue'; // TODO: support for experimentalModelPropName?
 									}
 									else if (attrText.startsWith('v-on:')) {
 										attrText = 'on-' + hyphenateAttr(attrText.slice('v-on:'.length));
