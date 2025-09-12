@@ -20,7 +20,7 @@ export function getComponentType(
 	if (!componentSymbol) {
 		const name = getSelfComponentName(fileName);
 		if (name === capitalize(camelize(tag))) {
-			componentType = getVariableType(ts, program, fileName, '__VLS_self')?.type;
+			componentType = getVariableType(ts, program, fileName, '__VLS_export')?.type;
 		}
 	}
 	else {

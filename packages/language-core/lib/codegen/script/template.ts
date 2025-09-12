@@ -1,3 +1,5 @@
+import { camelize, capitalize } from '@vue/shared';
+import * as path from 'path-browserify';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { generateStyleModules } from '../style/modules';
@@ -13,30 +15,87 @@ import type { ScriptCodegenOptions } from './index';
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-): Generator<Code, TemplateCodegenContext> {
+): Generator<Code> {
 	ctx.generatedTemplate = true;
 
-	const templateCodegenCtx = createTemplateCodegenContext({
-		scriptSetupBindingNames: new Set(),
-	});
-	yield* generateTemplateCtx(options);
+	yield* generateSelf(options);
+	yield* generateTemplateCtx(options, ctx);
 	yield* generateTemplateElements();
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
-	yield* generateTemplateBody(options, templateCodegenCtx);
-	return templateCodegenCtx;
+	yield* generateTemplateBody(options, ctx);
 }
 
-function* generateTemplateCtx(options: ScriptCodegenOptions): Generator<Code> {
-	const exps = [];
+function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
+	if (options.sfc.script && options.scriptRanges?.exportDefault) {
+		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
+		const { args } = options.scriptRanges.exportDefault;
+		yield generateSfcBlockSection(options.sfc.script, args.start, args.end, codeFeatures.all);
+		yield `)${endOfLine}`;
+	}
+	else if (options.sfc.script?.src) {
+		yield `let __VLS_self!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
+	}
+}
 
-	exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
+function* generateTemplateCtx(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+): Generator<Code> {
+	const exps: Code[] = [];
 
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
 		exps.push(`globalThis`);
 	}
+	if (options.sfc.script?.src || options.scriptRanges?.exportDefault) {
+		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
+	}
+	else {
+		exps.push(`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`);
+	}
 	if (options.sfc.styles.some(style => style.module)) {
 		exps.push(`{} as __VLS_StyleModules`);
+	}
+
+	const emitTypes: string[] = [];
+	if (options.scriptSetupRanges?.defineEmits) {
+		const { defineEmits } = options.scriptSetupRanges;
+		emitTypes.push(`typeof ${defineEmits.name ?? `__VLS_emit`}`);
+	}
+	if (options.scriptSetupRanges?.defineModel.length) {
+		emitTypes.push(`typeof __VLS_modelEmit`);
+	}
+	if (emitTypes.length) {
+		yield `type __VLS_EmitProps = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(` & `)}>>${endOfLine}`;
+		exps.push(`{} as { $emit: ${emitTypes.join(` & `)} }`);
+	}
+
+	const propTypes: string[] = [];
+	const { defineProps, withDefaults } = options.scriptSetupRanges ?? {};
+	const props = defineProps?.arg
+		? `typeof ${defineProps.name ?? `__VLS_props`}`
+		: defineProps?.typeArg
+		? withDefaults?.arg
+			? `__VLS_WithDefaultsGlobal<__VLS_Props, typeof __VLS_defaults>`
+			: `__VLS_Props`
+		: undefined;
+	if (props) {
+		propTypes.push(props);
+	}
+	if (options.scriptSetupRanges?.defineModel.length) {
+		propTypes.push(`__VLS_ModelProps`);
+	}
+	if (emitTypes.length) {
+		propTypes.push(`__VLS_EmitProps`);
+	}
+	if (propTypes.length) {
+		yield `type __VLS_InternalProps = ${propTypes.join(` & `)}${endOfLine}`;
+		exps.push(`{} as { $props: __VLS_InternalProps }`);
+		exps.push(`{} as __VLS_InternalProps`);
+	}
+
+	if (options.scriptSetupRanges && ctx.bindingNames.size) {
+		exps.push(`{} as __VLS_Bindings`);
 	}
 
 	yield `const __VLS_ctx = `;
@@ -68,7 +127,7 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 	yield `let __VLS_components!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
-export function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
+function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
 	const types: string[] = [`typeof __VLS_ctx`];
 
 	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
@@ -90,12 +149,17 @@ export function* generateTemplateDirectives(options: ScriptCodegenOptions): Gene
 
 function* generateTemplateBody(
 	options: ScriptCodegenOptions,
-	templateCodegenCtx: TemplateCodegenContext,
+	ctx: ScriptCodegenContext,
 ): Generator<Code> {
+	const templateCodegenCtx = createTemplateCodegenContext({
+		scriptSetupBindingNames: new Set(),
+	});
+
 	yield* generateStyleScopedClasses(options, templateCodegenCtx);
 	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
 	yield* generateStyleModules(options);
 	yield* generateCssVars(options, templateCodegenCtx);
+	yield* generateBindings(options, ctx, templateCodegenCtx);
 
 	if (options.templateCodegen) {
 		yield* options.templateCodegen.codes;
@@ -110,11 +174,10 @@ function* generateTemplateBody(
 	}
 }
 
-function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenContext): Generator<Code> {
-	if (!options.sfc.styles.length) {
-		return;
-	}
-	yield `// CSS variable injection ${newLine}`;
+function* generateCssVars(
+	options: ScriptCodegenOptions,
+	ctx: TemplateCodegenContext,
+): Generator<Code> {
 	for (const style of options.sfc.styles) {
 		for (const binding of style.bindings) {
 			yield* generateInterpolation(
@@ -124,9 +187,41 @@ function* generateCssVars(options: ScriptCodegenOptions, ctx: TemplateCodegenCon
 				codeFeatures.all,
 				binding.text,
 				binding.offset,
+				`(`,
+				`)`,
 			);
 			yield endOfLine;
 		}
 	}
-	yield `// CSS variable injection end ${newLine}`;
+}
+
+function* generateBindings(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+	templateCodegenCtx: TemplateCodegenContext,
+): Generator<Code> {
+	if (!options.sfc.scriptSetup || !ctx.bindingNames.size) {
+		return;
+	}
+
+	const usageVars = new Set([
+		...options.sfc.template?.ast?.components.flatMap(c => [camelize(c), capitalize(camelize(c))]) ?? [],
+		...options.templateCodegen?.accessExternalVariables.keys() ?? [],
+		...templateCodegenCtx.accessExternalVariables.keys(),
+	]);
+
+	yield `type __VLS_Bindings = __VLS_ProxyRefs<{${newLine}`;
+	for (const varName of ctx.bindingNames) {
+		if (!usageVars.has(varName)) {
+			continue;
+		}
+
+		const token = Symbol(varName.length);
+		yield ['', undefined, 0, { __linkedToken: token }];
+		yield `${varName}: typeof `;
+		yield ['', undefined, 0, { __linkedToken: token }];
+		yield varName;
+		yield endOfLine;
+	}
+	yield `}>${endOfLine}`;
 }

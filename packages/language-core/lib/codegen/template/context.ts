@@ -264,7 +264,7 @@ export function createTemplateCodegenContext(
 		},
 		*generateAutoImportCompletion(): Generator<Code> {
 			const all = [...accessExternalVariables.entries()];
-			if (!all.some(([_, offsets]) => offsets.size)) {
+			if (!all.some(([, offsets]) => offsets.size)) {
 				return;
 			}
 			yield `// @ts-ignore${newLine}`; // #2304

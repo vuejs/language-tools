@@ -132,7 +132,7 @@ export function* generateComponent(
 			getCanonicalComponentName(node.tag)
 		}', __VLS_LocalComponents, `;
 		if (options.selfComponentName && possibleOriginalNames.includes(options.selfComponentName)) {
-			yield `typeof __VLS_self & (new () => { $slots: __VLS_Slots }), `;
+			yield `typeof __VLS_export, `;
 		}
 		else {
 			yield `void, `;
