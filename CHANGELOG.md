@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.0.7 (2025-09-02)
+## 3.0.7 (2025-09-12)
 
 ### Bug Fixes
 
@@ -11,6 +11,13 @@
 ### Other Changes
 
 - docs(vscode): add descriptions for premium feature configurations (#5612) - Thanks to @KazariEX!
+- refactor(typescript-plugin): explicitly request parameters (#5623)
+- chore(lint): enable `@typescript-eslint/no-unnecessary-condition` (#5630)
+- refactor(language-server): reimplement Reactivity Visualization in typescript plugin (#5632)
+- refactor(language-server): parsing interpolations in extension client (#5633)
+- refactor(vscode): reimplement Focus Mode base on folding ranges (#5634)
+- chore(vscode): disable Focus Mode by default (#5578)
+- refactor(vscode): set delay of reactivity visualization updates to 250ms - Thanks to @KazariEX!
 
 ## 3.0.6 (2025-08-20)
 
