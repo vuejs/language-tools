@@ -2,7 +2,7 @@ import type { getReactiveReferences } from '@vue/typescript-plugin/lib/requests/
 import * as vscode from 'vscode';
 import { config } from './config';
 
-const dependenciesDecorations = vscode.window.createTextEditorDecorationType({
+const dependencyDecorations = vscode.window.createTextEditorDecorationType({
 	isWholeLine: true,
 	backgroundColor: 'rgba(120,120,255,0.1)',
 	border: '1px solid rgba(120,120,255,0.6)',
@@ -12,7 +12,7 @@ const dependenciesDecorations = vscode.window.createTextEditorDecorationType({
 	//   color: 'rgba(120,120,255,0.6)',
 	// },
 });
-const subscribersDecorations = vscode.window.createTextEditorDecorationType({
+const dependentDecorations = vscode.window.createTextEditorDecorationType({
 	// outlineColor: 'rgba(80,200,80,0.6)',
 	// outlineStyle: 'dashed',
 	// borderRadius: '3px',
@@ -62,8 +62,8 @@ export function activate(
 			return;
 		}
 		if (!config.editor.reactivityVisualization) {
-			editor.setDecorations(dependenciesDecorations, []);
-			editor.setDecorations(subscribersDecorations, []);
+			editor.setDecorations(dependencyDecorations, []);
+			editor.setDecorations(dependentDecorations, []);
 			return;
 		}
 
@@ -82,27 +82,47 @@ export function activate(
 				{ isAsync: true, lowPriority: true },
 			);
 			editor.setDecorations(
-				dependenciesDecorations,
-				result?.body?.dependencyRanges.map(range =>
-					new vscode.Range(
-						document.positionAt(range.start),
-						document.positionAt(range.end),
-					)
-				) ?? [],
+				dependencyDecorations,
+				getFlatRanges(document, result?.body?.dependencyRanges ?? []),
 			);
 			editor.setDecorations(
-				subscribersDecorations,
-				result?.body?.dependentRanges.map(range =>
-					new vscode.Range(
-						document.positionAt(range.start),
-						document.positionAt(range.end),
-					)
-				) ?? [],
+				dependentDecorations,
+				getFlatRanges(document, result?.body?.dependentRanges ?? []),
 			);
 		}
 		catch {
-			editor.setDecorations(dependenciesDecorations, []);
-			editor.setDecorations(subscribersDecorations, []);
+			editor.setDecorations(dependencyDecorations, []);
+			editor.setDecorations(dependentDecorations, []);
 		}
 	}
+}
+
+function getFlatRanges(document: vscode.TextDocument, ranges: {
+	start: number;
+	end: number;
+}[]) {
+	const documentRanges = ranges
+		.map(range =>
+			new vscode.Range(
+				document.positionAt(range.start),
+				document.positionAt(range.end),
+			)
+		)
+		.sort((a, b) => a.start.compareTo(b.start));
+
+	for (let i = 1; i < documentRanges.length; i++) {
+		const prev = documentRanges[i - 1]!;
+		const curr = documentRanges[i]!;
+
+		if (prev.end.compareTo(curr.start) >= 0) {
+			if (curr.end.compareTo(prev.end) <= 0) {
+				documentRanges.splice(i, 1);
+			}
+			else {
+				documentRanges.splice(i - 1, 2, new vscode.Range(prev.start, curr.end));
+			}
+			i--;
+		}
+	}
+	return documentRanges;
 }
