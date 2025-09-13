@@ -104,7 +104,7 @@ export function getReactiveReferences(
 				statements[statements.length - 1]!.end,
 			);
 			if (sourceRange) {
-				dependencyRanges.push({ start: sourceRange.start, end: sourceRange.end });
+				dependentRanges.push({ start: sourceRange.start, end: sourceRange.end });
 			}
 		}
 		else {
