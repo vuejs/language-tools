@@ -26,6 +26,8 @@ export function activate(
 	context: vscode.ExtensionContext,
 	selector: vscode.DocumentSelector,
 ) {
+	const documentUpdateVersions = new WeakMap<vscode.TextDocument, number>();
+
 	let timeout: ReturnType<typeof setTimeout> | undefined;
 
 	for (const editor of vscode.window.visibleTextEditors) {
@@ -42,10 +44,22 @@ export function activate(
 			const editor = vscode.window.activeTextEditor;
 			if (editor) {
 				clearTimeout(timeout);
-				timeout = setTimeout(() => updateDecorations(editor), 250);
+				timeout = setTimeout(
+					() => updateDecorations(editor),
+					getUpdateInterval(editor.document),
+				);
 			}
 		}),
 	);
+
+	function getUpdateInterval(document: vscode.TextDocument) {
+		const prevVersion = documentUpdateVersions.get(document);
+		if (prevVersion !== document.version) {
+			documentUpdateVersions.set(document, document.version);
+			return 250;
+		}
+		return 100;
+	}
 
 	async function updateDecorations(editor: vscode.TextEditor) {
 		const { document } = editor;
