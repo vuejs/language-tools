@@ -50,10 +50,17 @@ export function getReactiveReferences(
 		}
 		: (start: number, end: number) => ({ start, end });
 
+	const toSourceNode = (node: ts.Node, endNode = node) => {
+		const sourceRange = toSourceRange(node.getStart(sourceFile), endNode.end);
+		if (sourceRange) {
+			return { ...sourceRange, ast: node };
+		}
+	};
+
 	const sourceFile = languageService.getProgram()!.getSourceFile(fileName)!;
 
 	if (!analyzeCache.has(sourceFile)) {
-		analyzeCache.set(sourceFile, analyze(ts, sourceFile, toSourceRange));
+		analyzeCache.set(sourceFile, analyze(ts, sourceFile, toSourceRange, toSourceNode));
 	}
 
 	const {
@@ -81,9 +88,9 @@ export function getReactiveReferences(
 	for (const dependency of dependencies) {
 		let { ast } = dependency;
 		if (ts.isBlock(ast) && ast.statements.length) {
-			const sourceRange = toSourceRange(
-				ast.statements[0]!.getStart(sourceFile),
-				ast.statements[ast.statements.length - 1]!.end,
+			const sourceRange = toSourceNode(
+				ast.statements[0]!,
+				ast.statements[ast.statements.length - 1],
 			);
 			if (sourceRange) {
 				dependencyRanges.push({ start: sourceRange.start, end: sourceRange.end });
@@ -99,9 +106,9 @@ export function getReactiveReferences(
 		}
 		if (ts.isBlock(callback.ast) && callback.ast.statements.length) {
 			const { statements } = callback.ast;
-			const sourceRange = toSourceRange(
-				statements[0]!.getStart(sourceFile),
-				statements[statements.length - 1]!.end,
+			const sourceRange = toSourceNode(
+				statements[0]!,
+				statements[statements.length - 1],
 			);
 			if (sourceRange) {
 				dependentRanges.push({ start: sourceRange.start, end: sourceRange.end });
@@ -127,13 +134,10 @@ export function getReactiveReferences(
 			const { requiredAccess } = signal.accessor;
 			visit(signal.accessor, requiredAccess);
 			signal.accessor.ast.forEachChild(child => {
-				const childRange = toSourceRange(child.getStart(sourceFile), child.end);
+				const childRange = toSourceNode(child);
 				if (childRange) {
 					visit(
-						{
-							...childRange,
-							ast: child,
-						},
+						childRange,
 						requiredAccess,
 					);
 				}
@@ -226,13 +230,10 @@ export function getReactiveReferences(
 				}
 			}
 			node.ast.forEachChild(child => {
-				const childRange = toSourceRange(child.getStart(sourceFile), child.end);
+				const childRange = toSourceNode(child);
 				if (childRange) {
 					visit(
-						{
-							...childRange,
-							ast: child,
-						},
+						childRange,
 						requiredAccess,
 						ts.isPropertyAccessExpression(node.ast) || ts.isElementAccessExpression(node.ast),
 					);
@@ -328,6 +329,7 @@ function analyze(
 	ts: typeof import('typescript'),
 	sourceFile: ts.SourceFile,
 	toSourceRange: (start: number, end: number) => { start: number; end: number } | undefined,
+	toSourceNode: (node: ts.Node) => { ast: ts.Node; start: number; end: number } | undefined,
 ) {
 	const signals: ReactiveNode[] = [];
 	const allValuePropertyAccess = new Set<number>();
@@ -344,14 +346,13 @@ function analyze(
 						callName === 'ref' || callName === 'shallowRef' || callName === 'toRef' || callName === 'useTemplateRef'
 						|| callName === 'defineModel'
 					) {
-						const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
+						const nameRange = toSourceNode(node.name);
 						if (nameRange) {
 							signals.push({
 								isDependency: true,
 								isDependent: false,
 								binding: {
 									...nameRange,
-									ast: node.name,
 									accessTypes: [ReactiveAccessType.ValueProperty],
 								},
 							});
@@ -361,14 +362,13 @@ function analyze(
 						callName === 'reactive' || callName === 'shallowReactive' || callName === 'defineProps'
 						|| callName === 'withDefaults'
 					) {
-						const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
+						const nameRange = toSourceNode(node.name);
 						if (nameRange) {
 							signals.push({
 								isDependency: true,
 								isDependent: false,
 								binding: {
 									...nameRange,
-									ast: node.name,
 									accessTypes: [ReactiveAccessType.AnyProperty],
 								},
 							});
@@ -380,26 +380,21 @@ function analyze(
 		}
 		else if (ts.isFunctionDeclaration(node)) {
 			if (node.name && node.body) {
-				const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
-				const bodyRange = toSourceRange(node.body.getStart(sourceFile), node.body.end);
+				const nameRange = toSourceNode(node.name);
+				const bodyRange = toSourceNode(node.body);
 				if (nameRange && bodyRange) {
 					signals.push({
 						isDependency: false,
 						isDependent: false,
 						binding: {
 							...nameRange,
-							ast: node.name,
 							accessTypes: [ReactiveAccessType.Call],
 						},
 						accessor: {
 							...bodyRange,
-							ast: node.body,
 							requiredAccess: true,
 						},
-						callback: {
-							...bodyRange,
-							ast: node.body,
-						},
+						callback: bodyRange,
 					});
 				}
 			}
@@ -411,26 +406,21 @@ function analyze(
 				if (
 					callback && ts.isIdentifier(name) && (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback))
 				) {
-					const nameRange = toSourceRange(name.getStart(sourceFile), name.end);
-					const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.end);
+					const nameRange = toSourceNode(name);
+					const callbackRange = toSourceNode(callback);
 					if (nameRange && callbackRange) {
 						signals.push({
 							isDependency: false,
 							isDependent: false,
 							binding: {
 								...nameRange,
-								ast: name,
 								accessTypes: [ReactiveAccessType.Call],
 							},
 							accessor: {
 								...callbackRange,
-								ast: callback,
 								requiredAccess: true,
 							},
-							callback: {
-								...callbackRange,
-								ast: callback,
-							},
+							callback: callbackRange,
 						});
 					}
 				}
@@ -440,14 +430,13 @@ function analyze(
 			if (node.type && ts.isTypeReferenceNode(node.type)) {
 				const typeName = node.type.typeName.getText(sourceFile);
 				if (typeName.endsWith('Ref')) {
-					const nameRange = toSourceRange(node.name.getStart(sourceFile), node.name.end);
+					const nameRange = toSourceNode(node.name);
 					if (nameRange) {
 						signals.push({
 							isDependency: true,
 							isDependent: false,
 							binding: {
 								...nameRange,
-								ast: node.name,
 								accessTypes: [ReactiveAccessType.ValueProperty],
 							},
 						});
@@ -461,20 +450,16 @@ function analyze(
 			if ((callName === 'effect' || callName === 'watchEffect') && call.arguments.length) {
 				const callback = call.arguments[0]!;
 				if (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) {
-					const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.end);
-					if (callbackRange) {
+					const bodyRange = toSourceNode(callback.body);
+					if (bodyRange) {
 						signals.push({
 							isDependency: false,
 							isDependent: true,
 							accessor: {
-								...callbackRange,
-								ast: callback.body,
+								...bodyRange,
 								requiredAccess: true,
 							},
-							callback: {
-								...callbackRange,
-								ast: callback.body,
-							},
+							callback: bodyRange,
 						});
 					}
 				}
@@ -483,37 +468,33 @@ function analyze(
 				const depsCallback = call.arguments[0]!;
 				const effectCallback = call.arguments[1]!;
 				if (ts.isArrowFunction(effectCallback) || ts.isFunctionExpression(effectCallback)) {
-					const depsRange = toSourceRange(depsCallback.getStart(sourceFile), depsCallback.end);
-					const effectRange = toSourceRange(effectCallback.getStart(sourceFile), effectCallback.end);
-					if (depsRange && effectRange) {
-						if (ts.isArrowFunction(depsCallback) || ts.isFunctionExpression(depsCallback)) {
+					if (ts.isArrowFunction(depsCallback) || ts.isFunctionExpression(depsCallback)) {
+						const depsBodyRange = toSourceNode(depsCallback.body);
+						const effectBodyRange = toSourceNode(effectCallback.body);
+						if (depsBodyRange && effectBodyRange) {
 							signals.push({
 								isDependency: false,
 								isDependent: true,
 								accessor: {
-									...depsRange,
-									ast: depsCallback.body,
+									...depsBodyRange,
 									requiredAccess: true,
 								},
-								callback: {
-									...effectRange,
-									ast: effectCallback.body,
-								},
+								callback: effectBodyRange,
 							});
 						}
-						else {
+					}
+					else {
+						const depsRange = toSourceNode(depsCallback);
+						const effectBodyRange = toSourceNode(effectCallback.body);
+						if (depsRange && effectBodyRange) {
 							signals.push({
 								isDependency: false,
 								isDependent: true,
 								accessor: {
 									...depsRange,
-									ast: depsCallback,
 									requiredAccess: false,
 								},
-								callback: {
-									...effectRange,
-									ast: effectCallback.body,
-								},
+								callback: effectBodyRange,
 							});
 						}
 					}
@@ -522,16 +503,15 @@ function analyze(
 			else if (hyphenateAttr(callName).startsWith('use-')) {
 				let binding: ReactiveNode['binding'];
 				if (ts.isVariableDeclaration(call.parent)) {
-					const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.end);
+					const nameRange = toSourceNode(call.parent.name);
 					if (nameRange) {
 						binding = {
 							...nameRange,
-							ast: call.parent.name,
 							accessTypes: [ReactiveAccessType.AnyProperty, ReactiveAccessType.Call],
 						};
 					}
 				}
-				const callRange = toSourceRange(call.getStart(sourceFile), call.end);
+				const callRange = toSourceNode(call);
 				if (callRange) {
 					signals.push({
 						isDependency: true,
@@ -539,7 +519,6 @@ function analyze(
 						binding,
 						accessor: {
 							...callRange,
-							ast: call,
 							requiredAccess: false,
 						},
 					});
@@ -550,46 +529,40 @@ function analyze(
 				if (ts.isArrowFunction(arg) || ts.isFunctionExpression(arg)) {
 					let binding: ReactiveNode['binding'];
 					if (ts.isVariableDeclaration(call.parent)) {
-						const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.end);
+						const nameRange = toSourceNode(call.parent.name);
 						if (nameRange) {
 							binding = {
 								...nameRange,
-								ast: call.parent.name,
 								accessTypes: [ReactiveAccessType.ValueProperty],
 							};
 						}
 					}
-					const argRange = toSourceRange(arg.getStart(sourceFile), arg.end);
-					if (argRange) {
+					const bodyRange = toSourceNode(arg.body);
+					if (bodyRange) {
 						signals.push({
 							isDependency: true,
 							isDependent: true,
 							binding,
 							accessor: {
-								...argRange,
-								ast: arg.body,
+								...bodyRange,
 								requiredAccess: true,
 							},
-							callback: {
-								...argRange,
-								ast: arg.body,
-							},
+							callback: bodyRange,
 						});
 					}
 				}
 				else if (ts.isIdentifier(arg)) {
 					let binding: ReactiveNode['binding'];
 					if (ts.isVariableDeclaration(call.parent)) {
-						const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.end);
+						const nameRange = toSourceNode(call.parent.name);
 						if (nameRange) {
 							binding = {
 								...nameRange,
-								ast: call.parent.name,
 								accessTypes: [ReactiveAccessType.ValueProperty],
 							};
 						}
 					}
-					const argRange = toSourceRange(arg.getStart(sourceFile), arg.end);
+					const argRange = toSourceNode(arg);
 					if (argRange) {
 						signals.push({
 							isDependency: true,
@@ -597,7 +570,6 @@ function analyze(
 							binding,
 							accessor: {
 								...argRange,
-								ast: arg,
 								requiredAccess: false,
 							},
 						});
@@ -608,11 +580,10 @@ function analyze(
 						if (prop.name?.getText(sourceFile) === 'get') {
 							let binding: ReactiveNode['binding'];
 							if (ts.isVariableDeclaration(call.parent)) {
-								const nameRange = toSourceRange(call.parent.name.getStart(sourceFile), call.parent.name.end);
+								const nameRange = toSourceNode(call.parent.name);
 								if (nameRange) {
 									binding = {
 										...nameRange,
-										ast: call.parent.name,
 										accessTypes: [ReactiveAccessType.ValueProperty],
 									};
 								}
@@ -620,27 +591,23 @@ function analyze(
 							if (ts.isPropertyAssignment(prop)) {
 								const callback = prop.initializer;
 								if (ts.isArrowFunction(callback) || ts.isFunctionExpression(callback)) {
-									const callbackRange = toSourceRange(callback.getStart(sourceFile), callback.end);
-									if (callbackRange) {
+									const bodyRange = toSourceNode(callback.body);
+									if (bodyRange) {
 										signals.push({
 											isDependency: true,
 											isDependent: true,
 											binding,
 											accessor: {
-												...callbackRange,
-												ast: callback.body,
+												...bodyRange,
 												requiredAccess: true,
 											},
-											callback: {
-												...callbackRange,
-												ast: callback.body,
-											},
+											callback: bodyRange,
 										});
 									}
 								}
 							}
 							else if (ts.isMethodDeclaration(prop) && prop.body) {
-								const bodyRange = toSourceRange(prop.body.getStart(sourceFile), prop.body.end);
+								const bodyRange = toSourceNode(prop.body);
 								if (bodyRange) {
 									signals.push({
 										isDependency: true,
@@ -648,13 +615,9 @@ function analyze(
 										binding,
 										accessor: {
 											...bodyRange,
-											ast: prop.body,
 											requiredAccess: true,
 										},
-										callback: {
-											...bodyRange,
-											ast: prop.body,
-										},
+										callback: bodyRange,
 									});
 								}
 							}
