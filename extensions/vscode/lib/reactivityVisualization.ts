@@ -1,6 +1,7 @@
-import type { getReactiveReferences } from '@vue/typescript-plugin/lib/requests/getReactiveReferences';
+import type { getReactivityAnalysis } from '@vue/typescript-plugin/lib/requests/getReactivityAnalysis';
 import * as vscode from 'vscode';
 import { config } from './config';
+import type ts = require('typescript');
 
 const dependencyDecorations = vscode.window.createTextEditorDecorationType({
 	isWholeLine: true,
@@ -84,11 +85,11 @@ export function activate(
 		try {
 			const result = await vscode.commands.executeCommand<
 				{
-					body?: ReturnType<typeof getReactiveReferences>;
+					body?: ReturnType<typeof getReactivityAnalysis>;
 				} | undefined
 			>(
 				'typescript.tsserverRequest',
-				'_vue:getReactiveReferences',
+				'_vue:getReactivityAnalysis',
 				[
 					document.uri.fsPath.replace(/\\/g, '/'),
 					document.offsetAt(editor.selection.active),
@@ -111,14 +112,11 @@ export function activate(
 	}
 }
 
-function getFlatRanges(document: vscode.TextDocument, ranges: {
-	start: number;
-	end: number;
-}[]) {
+function getFlatRanges(document: vscode.TextDocument, ranges: ts.TextRange[]) {
 	const documentRanges = ranges
 		.map(range =>
 			new vscode.Range(
-				document.positionAt(range.start),
+				document.positionAt(range.pos),
 				document.positionAt(range.end),
 			)
 		)
