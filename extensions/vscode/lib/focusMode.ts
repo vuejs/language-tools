@@ -1,4 +1,3 @@
-import type { BaseLanguageClient } from '@volar/vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
 
@@ -9,13 +8,10 @@ const tagUnfocusDecorations = Array.from({ length: 8 }).map((_, i) =>
 	})
 );
 
-export async function activate(
+export function activate(
 	context: vscode.ExtensionContext,
 	selector: vscode.DocumentSelector,
-	client: BaseLanguageClient,
 ) {
-	await client.start();
-
 	let timeout: ReturnType<typeof setTimeout> | undefined;
 
 	const editor2Decorations = new Map<vscode.TextEditor, {
