@@ -12,7 +12,7 @@ import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
-import { getReactiveReferences } from './lib/requests/getReactiveReferences';
+import { getReactivityAnalysis } from './lib/requests/getReactivityAnalysis';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
 
 const windowsPathReg = /\\/g;
@@ -187,12 +187,12 @@ export = createLanguageServicePlugin(
 				const { languageService } = getLanguageService(fileName);
 				return createResponse(getElementNames(ts, languageService.getProgram()!, fileName));
 			});
-			session.addProtocolHandler('_vue:getReactiveReferences', request => {
-				const [fileName, position]: Parameters<Requests['getReactiveReferences']> = request.arguments;
+			session.addProtocolHandler('_vue:getReactivityAnalysis', request => {
+				const [fileName, position]: Parameters<Requests['getReactivityAnalysis']> = request.arguments;
 				const { languageService, language } = getLanguageService(fileName);
 				const sourceScript = language.scripts.get(fileName);
 				return createResponse(
-					getReactiveReferences(
+					getReactivityAnalysis(
 						ts,
 						language,
 						languageService,

@@ -40,10 +40,10 @@ export interface Requests {
 		tag: string,
 	): Response<ReturnType<typeof import('./getElementAttrs.js')['getElementAttrs']>>;
 	getElementNames(fileName: string): Response<ReturnType<typeof import('./getElementNames.js')['getElementNames']>>;
-	getReactiveReferences(
+	getReactivityAnalysis(
 		fileName: string,
 		position: number,
-	): Response<ReturnType<typeof import('./getReactiveReferences.js')['getReactiveReferences']>>;
+	): Response<ReturnType<typeof import('./getReactivityAnalysis.js')['getReactivityAnalysis']>>;
 	getDocumentHighlights(fileName: string, position: number): Response<ts.DocumentHighlights[]>;
 	getEncodedSemanticClassifications(fileName: string, span: ts.TextSpan): Response<
 		ts.Classifications
