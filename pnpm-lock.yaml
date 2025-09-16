@@ -290,8 +290,8 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       laplacenoma:
-        specifier: ^0.0.2
-        version: 0.0.2
+        specifier: ^0.0.3
+        version: 0.0.3
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -2506,8 +2506,8 @@ packages:
     resolution: {integrity: sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==}
     engines: {node: '>=0.10.0'}
 
-  laplacenoma@0.0.2:
-    resolution: {integrity: sha512-XAIalRKCXZapdVXALGG5y9Jc7d5AMnr5NyrBWGwBvKWjSGi99ftzmdLS8mVQQF07bk8poPl8tSnjOYpkU86P5A==}
+  laplacenoma@0.0.3:
+    resolution: {integrity: sha512-fsQMsMozEzGg/DhQG73nf8Nzx0XvU8RJFRViYuocM6pQSa33lucnHvJzsb4udQUzH5p5zdX63t9qRahKAhWtiQ==}
 
   leven@3.1.0:
     resolution: {integrity: sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A==}
@@ -6244,7 +6244,7 @@ snapshots:
 
   kind-of@6.0.3: {}
 
-  laplacenoma@0.0.2: {}
+  laplacenoma@0.0.3: {}
 
   leven@3.1.0: {}
 
