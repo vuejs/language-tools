@@ -116,8 +116,10 @@ function getFlatRanges(document: vscode.TextDocument, ranges: ts.TextRange[]) {
 	const documentRanges = ranges
 		.map(range =>
 			new vscode.Range(
-				document.positionAt(range.pos),
-				document.positionAt(range.end),
+				document.positionAt(range.pos).line,
+				0,
+				document.positionAt(range.end).line,
+				0,
 			)
 		)
 		.sort((a, b) => a.start.compareTo(b.start));

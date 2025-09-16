@@ -102,8 +102,8 @@ export = defineExtension(() => {
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
 
-		focusMode.activate(context, selectors, client);
-		interpolationDecorators.activate(context, selectors, client);
+		focusMode.activate(context, selectors);
+		interpolationDecorators.activate(context, selectors);
 		reactivityVisualization.activate(context, selectors);
 		welcome.activate(context);
 	}, { immediate: true });
