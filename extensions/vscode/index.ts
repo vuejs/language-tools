@@ -186,28 +186,23 @@ if (tsExtension.isActive) {
 else {
 	const fs = require('node:fs');
 	const readFileSync = fs.readFileSync;
-	const extensionJsPath = require.resolve('./dist/extension.js', {
-		paths: [tsExtension.extensionPath],
-	});
-	const vuePluginName = require('./package.json').contributes.typescriptServerPlugins[0].name;
+	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
+	const { publisher, name } = require('./package.json');
+	const vueExtension = vscode.extensions.getExtension(`${publisher}.${name}`)!;
+	const vuePluginName = 'vue-typescript-plugin-pack';
+
+	vueExtension.packageJSON.contributes.typescriptServerPlugins = [
+		{
+			name: vuePluginName,
+			enableForWorkspaceTypeScriptVersions: true,
+			configNamespace: 'typescript',
+			languages: config.server.includeLanguages,
+		},
+	];
 
 	fs.readFileSync = (...args: any[]) => {
 		if (args[0] === extensionJsPath) {
 			let text = readFileSync(...args) as string;
-
-			// patch readPlugins
-			text = text.replace(
-				'languages:Array.isArray(e.languages)',
-				[
-					'languages:',
-					`e.name==='${vuePluginName}'?[${
-						config.server.includeLanguages
-							.map(lang => `'${lang}'`)
-							.join(',')
-					}]`,
-					':Array.isArray(e.languages)',
-				].join(''),
-			);
 
 			// patch jsTsLanguageModes
 			text = text.replace(
