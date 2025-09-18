@@ -1,5 +1,6 @@
 {
 	"configuration.trace.server": "Traces the communication between VS Code and the language server.",
+	"configuration.server.path": "Path to the `@vue/language-server` module. If not set, the server will be loaded from the extension's bundled.",
 	"configuration.server.includeLanguages": "Configure the languages for which the extension should be activated.",
 	"configuration.codeActions.askNewComponentName": "Ask for new component name when extract component.",
 	"configuration.suggest.componentNameCasing": "Preferred component name case.",

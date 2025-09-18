@@ -1,5 +1,6 @@
 {
 	"configuration.trace.server": "VS Code と Vue 言語サーバー間の通信をトレースします。",
+	"configuration.server.path": "`@vue/language-server` モジュールへのパス。設定しない場合、拡張機能にバンドルされたサーバーが読み込まれます。",
 	"configuration.server.includeLanguages": "拡張機能を有効にする言語を指定します。",
 	"configuration.codeActions.askNewComponentName": "コンポーネントを抽出する時に新しいコンポーネント名を尋ねます。",
 	"configuration.suggest.componentNameCasing": "コンポーネント名の命名規則。",

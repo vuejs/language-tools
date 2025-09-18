@@ -1,5 +1,6 @@
 {
 	"configuration.trace.server": "跟踪 VS Code 和 Vue 语言服务器之间的通信。",
+	"configuration.server.path": "`@vue/language-server` 模块的路径。如果未设置，服务器将从扩展的捆绑包中加载。",
 	"configuration.server.includeLanguages": "配置扩展需要激活的语言类型。",
 	"configuration.codeActions.askNewComponentName": "提取组件时询问新组件名称。",
 	"configuration.suggest.componentNameCasing": "首选组件命名格式。",

@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = 'Vue';
 export const name = 'volar';
-export const version = '3.0.6';
+export const version = '3.0.7';
 export const displayName = 'Vue (Official)';
 export const description = 'Language Support for Vue';
 export const extensionId = `${publisher}.${name}`;
@@ -40,6 +40,7 @@ export type ConfigKey =
 	| 'vue.editor.focusMode'
 	| 'vue.editor.reactivityVisualization'
 	| 'vue.editor.templateInterpolationDecorators'
+	| 'vue.server.path'
 	| 'vue.server.includeLanguages'
 	| 'vue.codeActions.askNewComponentName'
 	| 'vue.suggest.componentNameCasing'
@@ -62,6 +63,7 @@ export interface ConfigKeyTypeMap {
 	'vue.editor.focusMode': boolean;
 	'vue.editor.reactivityVisualization': boolean;
 	'vue.editor.templateInterpolationDecorators': boolean;
+	'vue.server.path': string;
 	'vue.server.includeLanguages': string[];
 	'vue.codeActions.askNewComponentName': boolean;
 	'vue.suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -92,6 +94,7 @@ export interface ConfigShorthandMap {
 	editorFocusMode: 'vue.editor.focusMode';
 	editorReactivityVisualization: 'vue.editor.reactivityVisualization';
 	editorTemplateInterpolationDecorators: 'vue.editor.templateInterpolationDecorators';
+	serverPath: 'vue.server.path';
 	serverIncludeLanguages: 'vue.server.includeLanguages';
 	codeActionsAskNewComponentName: 'vue.codeActions.askNewComponentName';
 	suggestComponentNameCasing: 'vue.suggest.componentNameCasing';
@@ -115,6 +118,7 @@ export interface ConfigShorthandTypeMap {
 	editorFocusMode: boolean;
 	editorReactivityVisualization: boolean;
 	editorTemplateInterpolationDecorators: boolean;
+	serverPath: string;
 	serverIncludeLanguages: string[];
 	codeActionsAskNewComponentName: boolean;
 	suggestComponentNameCasing: 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -160,12 +164,12 @@ export const configs = {
 	} as ConfigItem<'vue.trace.server'>,
 	/**
 	 * @key `vue.editor.focusMode`
-	 * @default `true`
+	 * @default `false`
 	 * @type `boolean`
 	 */
 	editorFocusMode: {
 		key: 'vue.editor.focusMode',
-		default: true,
+		default: false,
 	} as ConfigItem<'vue.editor.focusMode'>,
 	/**
 	 * @key `vue.editor.reactivityVisualization`
@@ -185,6 +189,15 @@ export const configs = {
 		key: 'vue.editor.templateInterpolationDecorators',
 		default: true,
 	} as ConfigItem<'vue.editor.templateInterpolationDecorators'>,
+	/**
+	 * @key `vue.server.path`
+	 * @default `""`
+	 * @type `string`
+	 */
+	serverPath: {
+		key: 'vue.server.path',
+		default: '',
+	} as ConfigItem<'vue.server.path'>,
 	/**
 	 * @key `vue.server.includeLanguages`
 	 * @default `["vue"]`
@@ -336,6 +349,7 @@ export interface ScopedConfigKeyTypeMap {
 	'editor.focusMode': boolean;
 	'editor.reactivityVisualization': boolean;
 	'editor.templateInterpolationDecorators': boolean;
+	'server.path': string;
 	'server.includeLanguages': string[];
 	'codeActions.askNewComponentName': boolean;
 	'suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -365,9 +379,10 @@ export const scopedConfigs = {
 	scope: 'vue',
 	defaults: {
 		'trace.server': 'off',
-		'editor.focusMode': true,
+		'editor.focusMode': false,
 		'editor.reactivityVisualization': true,
 		'editor.templateInterpolationDecorators': true,
+		'server.path': '',
 		'server.includeLanguages': ['vue'],
 		'codeActions.askNewComponentName': true,
 		'suggest.componentNameCasing': 'preferPascalCase',
@@ -398,6 +413,7 @@ export interface NestedConfigs {
 			'templateInterpolationDecorators': boolean;
 		};
 		'server': {
+			'path': string;
 			'includeLanguages': string[];
 		};
 		'codeActions': {
@@ -451,6 +467,7 @@ export interface NestedScopedConfigs {
 		'templateInterpolationDecorators': boolean;
 	};
 	'server': {
+		'path': string;
 		'includeLanguages': string[];
 	};
 	'codeActions': {
