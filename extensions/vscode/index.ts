@@ -77,7 +77,10 @@ export = defineExtension(() => {
 			return;
 		}
 
-		watch(() => [config.server.path, config.server.includeLanguages], async () => {
+		watch(() => [
+			config.server.path,
+			config.server.includeLanguages,
+		], async () => {
 			const reload = await vscode.window.showInformationMessage(
 				'Please restart extension host to apply the new server settings.',
 				'Restart Extension Host',
