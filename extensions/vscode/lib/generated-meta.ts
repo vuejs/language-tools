@@ -63,7 +63,7 @@ export interface ConfigKeyTypeMap {
 	'vue.editor.focusMode': boolean;
 	'vue.editor.reactivityVisualization': boolean;
 	'vue.editor.templateInterpolationDecorators': boolean;
-	'vue.server.path': string;
+	'vue.server.path': string | undefined;
 	'vue.server.includeLanguages': string[];
 	'vue.codeActions.askNewComponentName': boolean;
 	'vue.suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -118,7 +118,7 @@ export interface ConfigShorthandTypeMap {
 	editorFocusMode: boolean;
 	editorReactivityVisualization: boolean;
 	editorTemplateInterpolationDecorators: boolean;
-	serverPath: string;
+	serverPath: string | undefined;
 	serverIncludeLanguages: string[];
 	codeActionsAskNewComponentName: boolean;
 	suggestComponentNameCasing: 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -191,12 +191,12 @@ export const configs = {
 	} as ConfigItem<'vue.editor.templateInterpolationDecorators'>,
 	/**
 	 * @key `vue.server.path`
-	 * @default `""`
+	 * @default `undefined`
 	 * @type `string`
 	 */
 	serverPath: {
 		key: 'vue.server.path',
-		default: '',
+		default: undefined,
 	} as ConfigItem<'vue.server.path'>,
 	/**
 	 * @key `vue.server.includeLanguages`
@@ -349,7 +349,7 @@ export interface ScopedConfigKeyTypeMap {
 	'editor.focusMode': boolean;
 	'editor.reactivityVisualization': boolean;
 	'editor.templateInterpolationDecorators': boolean;
-	'server.path': string;
+	'server.path': string | undefined;
 	'server.includeLanguages': string[];
 	'codeActions.askNewComponentName': boolean;
 	'suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
@@ -382,7 +382,7 @@ export const scopedConfigs = {
 		'editor.focusMode': false,
 		'editor.reactivityVisualization': true,
 		'editor.templateInterpolationDecorators': true,
-		'server.path': '',
+		'server.path': undefined,
 		'server.includeLanguages': ['vue'],
 		'codeActions.askNewComponentName': true,
 		'suggest.componentNameCasing': 'preferPascalCase',
@@ -413,7 +413,7 @@ export interface NestedConfigs {
 			'templateInterpolationDecorators': boolean;
 		};
 		'server': {
-			'path': string;
+			'path': string | undefined;
 			'includeLanguages': string[];
 		};
 		'codeActions': {
@@ -467,7 +467,7 @@ export interface NestedScopedConfigs {
 		'templateInterpolationDecorators': boolean;
 	};
 	'server': {
-		'path': string;
+		'path': string | undefined;
 		'includeLanguages': string[];
 	};
 	'codeActions': {
