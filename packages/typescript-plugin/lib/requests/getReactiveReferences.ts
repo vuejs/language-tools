@@ -92,6 +92,7 @@ function getReactiveReferencesWorker(
 			return { ...sourceRange, ast: node };
 		}
 	};
+
 	const sourceFile = languageService.getProgram()!.getSourceFile(sourceScript.id)!;
 
 	if (!analyzeCache.has(sourceFile)) {
