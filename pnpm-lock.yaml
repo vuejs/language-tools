@@ -289,6 +289,9 @@ importers:
       '@vue/shared':
         specifier: ^3.5.0
         version: 3.5.13
+      laplacenoma:
+        specifier: ^0.0.3
+        version: 0.0.3
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
@@ -2502,6 +2505,9 @@ packages:
   kind-of@6.0.3:
     resolution: {integrity: sha512-dcS1ul+9tmeD95T+x28/ehLgd9mENa3LsvDTtzm3vyBEO7RPptvAD+t44WVXaUjTBRcrpFeFlC8WCruUR456hw==}
     engines: {node: '>=0.10.0'}
+
+  laplacenoma@0.0.3:
+    resolution: {integrity: sha512-fsQMsMozEzGg/DhQG73nf8Nzx0XvU8RJFRViYuocM6pQSa33lucnHvJzsb4udQUzH5p5zdX63t9qRahKAhWtiQ==}
 
   leven@3.1.0:
     resolution: {integrity: sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A==}
@@ -6237,6 +6243,8 @@ snapshots:
       json-buffer: 3.0.1
 
   kind-of@6.0.3: {}
+
+  laplacenoma@0.0.3: {}
 
   leven@3.1.0: {}
 

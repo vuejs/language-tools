@@ -1,4 +1,5 @@
 import type { getReactiveReferences } from '@vue/typescript-plugin/lib/requests/getReactiveReferences';
+import type * as ts from 'typescript';
 import * as vscode from 'vscode';
 import { config } from './config';
 
@@ -111,14 +112,11 @@ export function activate(
 	}
 }
 
-function getFlatRanges(document: vscode.TextDocument, ranges: {
-	start: number;
-	end: number;
-}[]) {
+function getFlatRanges(document: vscode.TextDocument, ranges: ts.TextRange[]) {
 	const documentRanges = ranges
 		.map(range =>
 			new vscode.Range(
-				document.positionAt(range.start).line,
+				document.positionAt(range.pos).line,
 				0,
 				document.positionAt(range.end).line,
 				0,
