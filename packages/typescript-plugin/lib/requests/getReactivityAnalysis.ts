@@ -46,10 +46,10 @@ export function getReactivityAnalysis(
 	}
 
 	const sourceFile = languageService.getProgram()!.getSourceFile(fileName)!;
-	const serviceScript = sourceScript?.generated?.languagePlugin.typescript?.getServiceScript(
+	const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(
 		sourceScript.generated.root,
 	);
-	const map = serviceScript ? language.maps.get(serviceScript.code, sourceScript!) : undefined;
+	const map = serviceScript ? language.maps.get(serviceScript.code, sourceScript) : undefined;
 	const toSourceRange = map
 		? (pos: number, end: number) => {
 			for (const [mappedStart, mappedEnd] of map.toSourceRange(pos - leadingOffset, end - leadingOffset, false)) {
