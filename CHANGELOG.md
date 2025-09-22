@@ -1,5 +1,27 @@
 # Changelog
 
+## 3.0.8 (2025-09-23)
+
+### Features
+
+- feat(vscode): introduce `vue.server.path` setting (#5647)
+
+### Bug Fixes
+
+- fix(language-core): initialize properties of `VueVirtualCode` in constructor (#5635) - Thanks to @KazariEX!
+- fix(vscode): flatten reactivity visualization decorators (#5642) - Thanks to @KazariEX!
+- fix(vscode): normalize reactivity visualization ranges
+- fix(vscode): patch `typescriptServerPlugin` languages without FS hack
+- fix(language-service): do not provide semantic tokens and document highlights for non-`file` scheme files (#5653) - Thanks to @KazariEX!
+
+### Performance
+
+- perf(typescript-plugin): redo single-file language service for reactivity visualization (#5652)
+
+### Other Changes
+
+- refactor(typescript-plugin): externalize reactivity analysis logic (#5645) - Thanks to @KazariEX!
+
 ## 3.0.7 (2025-09-12)
 
 ### Bug Fixes
