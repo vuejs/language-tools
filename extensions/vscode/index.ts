@@ -23,7 +23,25 @@ import * as welcome from './lib/welcome';
 
 const patchedTypeScriptExtension = patchTypeScriptExtension();
 const serverPath = resolveServerPath();
-checkIncompatibleExtensions();
+
+for (
+	const incompatibleExtensionId of [
+		'johnsoncodehk.vscode-typescript-vue-plugin',
+		'Vue.vscode-typescript-vue-plugin',
+	]
+) {
+	const extension = vscode.extensions.getExtension(incompatibleExtensionId);
+	if (extension) {
+		vscode.window.showErrorMessage(
+			`The "${incompatibleExtensionId}" extension is incompatible with the Vue extension. Please uninstall it.`,
+			'Show Extension',
+		).then(action => {
+			if (action === 'Show Extension') {
+				vscode.commands.executeCommand('workbench.extensions.search', '@id:' + incompatibleExtensionId);
+			}
+		});
+	}
+}
 
 export = defineExtension(() => {
 	let client: lsp.BaseLanguageClient | undefined;
@@ -197,27 +215,6 @@ function resolveServerPath() {
 			return serverPath;
 		}
 		catch {}
-	}
-}
-
-function checkIncompatibleExtensions() {
-	for (
-		const incompatibleExtensionId of [
-			'johnsoncodehk.vscode-typescript-vue-plugin',
-			'Vue.vscode-typescript-vue-plugin',
-		]
-	) {
-		const extension = vscode.extensions.getExtension(incompatibleExtensionId);
-		if (extension) {
-			vscode.window.showErrorMessage(
-				`The "${incompatibleExtensionId}" extension is incompatible with the Vue extension. Please uninstall it.`,
-				'Show Extension',
-			).then(action => {
-				if (action === 'Show Extension') {
-					vscode.commands.executeCommand('workbench.extensions.search', '@id:' + incompatibleExtensionId);
-				}
-			});
-		}
 	}
 }
 
