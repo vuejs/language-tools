@@ -39,7 +39,7 @@ export function create(
 			return {
 				async provideDocumentSemanticTokens(document, range, legend) {
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'main') {
+					if (info?.script.id.scheme !== 'file' || info.code.id !== 'main') {
 						return;
 					}
 					const start = document.offsetAt(range.start);
