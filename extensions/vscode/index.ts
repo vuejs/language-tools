@@ -21,8 +21,8 @@ import * as interpolationDecorators from './lib/interpolationDecorators';
 import * as reactivityVisualization from './lib/reactivityVisualization';
 import * as welcome from './lib/welcome';
 
-let client: lsp.BaseLanguageClient | undefined;
-let needRestart = false;
+const serverPath = resolveServerPath();
+const neededRestart = !patchTypeScriptExtension();
 
 for (
 	const incompatibleExtensionId of [
@@ -44,6 +44,8 @@ for (
 }
 
 export = defineExtension(() => {
+	let client: lsp.BaseLanguageClient | undefined;
+
 	const context = extensionContext.value!;
 	const volarLabs = createLabsInfo();
 	const activeTextEditor = useActiveTextEditor();
@@ -59,7 +61,7 @@ export = defineExtension(() => {
 
 		nextTick(() => stop());
 
-		if (needRestart) {
+		if (neededRestart) {
 			vscode.window.showInformationMessage(
 				'Please restart the extension host to activate Vue support.',
 				'Restart Extension Host',
@@ -75,9 +77,12 @@ export = defineExtension(() => {
 			return;
 		}
 
-		watch(() => config.server.includeLanguages, async () => {
+		watch(() => [
+			config.server.path,
+			config.server.includeLanguages,
+		], async () => {
 			const reload = await vscode.window.showInformationMessage(
-				'Please restart extension host to apply the new language settings.',
+				'Please restart extension host to apply the new server settings.',
 				'Restart Extension Host',
 			);
 			if (reload) {
@@ -95,7 +100,14 @@ export = defineExtension(() => {
 			);
 		}
 
-		volarLabs.addLanguageClient(client = launch(context));
+		if (config.server.path && !serverPath) {
+			vscode.window.showErrorMessage('Cannot find @vue/language-server.');
+			return;
+		}
+
+		client = launch(serverPath ?? vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js').fsPath);
+
+		volarLabs.addLanguageClient(client);
 
 		const selectors = config.server.includeLanguages;
 
@@ -123,19 +135,18 @@ export = defineExtension(() => {
 	return volarLabs.extensionExports;
 });
 
-function launch(context: vscode.ExtensionContext) {
-	const serverModule = vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js');
+function launch(serverPath: string) {
 	const client = new lsp.LanguageClient(
 		'vue',
 		'Vue',
 		{
 			run: {
-				module: serverModule.fsPath,
+				module: serverPath,
 				transport: lsp.TransportKind.ipc,
 				options: {},
 			},
 			debug: {
-				module: serverModule.fsPath,
+				module: serverPath,
 				transport: lsp.TransportKind.ipc,
 				options: { execArgv: ['--nolazy', '--inspect=' + 6009] },
 			},
@@ -179,35 +190,61 @@ function launch(context: vscode.ExtensionContext) {
 	return client;
 }
 
-const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
-if (tsExtension.isActive) {
-	needRestart = true;
+function resolveServerPath() {
+	const tsPluginPackPath = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack', 'index.js');
+
+	if (!config.server.path) {
+		fs.writeFileSync(tsPluginPackPath, `module.exports = require("../../dist/typescript-plugin.js");`);
+		return;
+	}
+
+	if (path.isAbsolute(config.server.path)) {
+		const entryFile = require.resolve('./index.js', { paths: [config.server.path] });
+		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
+		fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
+		return entryFile;
+	}
+
+	for (const { uri } of vscode.workspace.workspaceFolders ?? []) {
+		if (uri.scheme !== 'file') {
+			continue;
+		}
+		try {
+			const serverPath = path.join(uri.fsPath, config.server.path);
+			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
+			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
+			fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
+			return entryFile;
+		}
+		catch {}
+	}
 }
-else {
+
+function patchTypeScriptExtension() {
+	const tsExtension = vscode.extensions.getExtension('vscode.typescript-language-features')!;
+	if (tsExtension.isActive) {
+		return false;
+	}
+
 	const fs = require('node:fs');
 	const readFileSync = fs.readFileSync;
-	const extensionJsPath = require.resolve('./dist/extension.js', {
-		paths: [tsExtension.extensionPath],
-	});
-	const vuePluginName = require('./package.json').contributes.typescriptServerPlugins[0].name;
+	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
+	const { publisher, name } = require('./package.json');
+	const vueExtension = vscode.extensions.getExtension(`${publisher}.${name}`)!;
+	const tsPluginName = 'vue-typescript-plugin-pack';
+
+	vueExtension.packageJSON.contributes.typescriptServerPlugins = [
+		{
+			name: tsPluginName,
+			enableForWorkspaceTypeScriptVersions: true,
+			configNamespace: 'typescript',
+			languages: config.server.includeLanguages,
+		},
+	];
 
 	fs.readFileSync = (...args: any[]) => {
 		if (args[0] === extensionJsPath) {
 			let text = readFileSync(...args) as string;
-
-			// patch readPlugins
-			text = text.replace(
-				'languages:Array.isArray(e.languages)',
-				[
-					'languages:',
-					`e.name==='${vuePluginName}'?[${
-						config.server.includeLanguages
-							.map(lang => `'${lang}'`)
-							.join(',')
-					}]`,
-					':Array.isArray(e.languages)',
-				].join(''),
-			);
 
 			// patch jsTsLanguageModes
 			text = text.replace(
@@ -223,7 +260,7 @@ else {
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
 			text = text.replace(
 				'"--globalPlugins",i.plugins',
-				s => s + `.sort((a,b)=>(b.name==="${vuePluginName}"?-1:0)-(a.name==="${vuePluginName}"?-1:0))`,
+				s => s + `.sort((a,b)=>(b.name==="${tsPluginName}"?-1:0)-(a.name==="${tsPluginName}"?-1:0))`,
 			);
 
 			return text;
@@ -237,4 +274,5 @@ else {
 		const patchedModule = require(extensionJsPath);
 		Object.assign(loadedModule.exports, patchedModule);
 	}
+	return true;
 }

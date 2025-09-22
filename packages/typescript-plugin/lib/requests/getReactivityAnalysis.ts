@@ -1,5 +1,4 @@
-/// <reference types="@volar/typescript" />
-
+import { createProxyLanguageService, decorateLanguageServiceHost } from '@volar/typescript';
 import { type Language, type SourceScript } from '@vue/language-core';
 import { createAnalyzer } from 'laplacenoma';
 import * as rulesVue from 'laplacenoma/rules/vue';
@@ -9,15 +8,43 @@ const analyzer = createAnalyzer({
 	rules: rulesVue,
 });
 
+let currentVersion = -1;
+let currentFileName = '';
+let currentSnapshot: ts.IScriptSnapshot | undefined;
+let languageService: ts.LanguageService | undefined;
+let languageServiceHost: ts.LanguageServiceHost | undefined;
+
 export function getReactivityAnalysis(
 	ts: typeof import('typescript'),
-	language: Language,
-	languageService: ts.LanguageService,
-	sourceScript: SourceScript | undefined,
+	language: Language<string>,
+	sourceScript: SourceScript<string>,
 	fileName: string,
 	position: number,
 	leadingOffset: number = 0,
 ) {
+	if (currentSnapshot !== sourceScript.snapshot || currentFileName !== sourceScript.id) {
+		currentSnapshot = sourceScript.snapshot;
+		currentFileName = sourceScript.id;
+		currentVersion++;
+	}
+	if (!languageService) {
+		languageServiceHost = {
+			getProjectVersion: () => currentVersion.toString(),
+			getScriptVersion: () => currentVersion.toString(),
+			getScriptFileNames: () => [currentFileName],
+			getScriptSnapshot: fileName => fileName === currentFileName ? currentSnapshot : undefined,
+			getCompilationSettings: () => ({ allowJs: true, allowNonTsExtensions: true }),
+			getCurrentDirectory: () => '',
+			getDefaultLibFileName: () => '',
+			readFile: () => undefined,
+			fileExists: fileName => fileName === currentFileName,
+		};
+		decorateLanguageServiceHost(ts, language, languageServiceHost);
+		const proxied = createProxyLanguageService(ts.createLanguageService(languageServiceHost));
+		proxied.initialize(language);
+		languageService = proxied.proxy;
+	}
+
 	const sourceFile = languageService.getProgram()!.getSourceFile(fileName)!;
 	const serviceScript = sourceScript?.generated?.languagePlugin.typescript?.getServiceScript(
 		sourceScript.generated.root,

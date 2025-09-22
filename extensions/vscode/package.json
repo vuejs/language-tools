@@ -67,13 +67,6 @@
 				"configuration": "./languages/sfc-template-language-configuration.json"
 			}
 		],
-		"typescriptServerPlugins": [
-			{
-				"name": "vue-typescript-plugin-pack",
-				"enableForWorkspaceTypeScriptVersions": true,
-				"configNamespace": "typescript"
-			}
-		],
 		"grammars": [
 			{
 				"language": "vue",
@@ -278,6 +271,10 @@
 					"type": "boolean",
 					"default": true,
 					"markdownDescription": "%configuration.editor.templateInterpolationDecorators%"
+				},
+				"vue.server.path": {
+					"type": "string",
+					"markdownDescription": "%configuration.server.path%"
 				},
 				"vue.server.includeLanguages": {
 					"type": "array",
