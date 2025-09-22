@@ -1,5 +1,4 @@
-/// <reference types="@volar/typescript" />
-
+import { createProxyLanguageService, decorateLanguageServiceHost } from '@volar/typescript';
 import { collectBindingRanges, hyphenateAttr, type Language, type SourceScript } from '@vue/language-core';
 import type * as ts from 'typescript';
 
@@ -27,21 +26,58 @@ interface ReactiveNode {
 	callback?: TSNode;
 }
 
+let currentVersion = -1;
+let currentFileName = '';
+let currentSnapshot: ts.IScriptSnapshot | undefined;
+let languageService: ts.LanguageService | undefined;
+let languageServiceHost: ts.LanguageServiceHost | undefined;
+
 const analyzeCache = new WeakMap<ts.SourceFile, ReturnType<typeof analyze>>();
 
 export function getReactiveReferences(
 	ts: typeof import('typescript'),
-	language: Language,
-	languageService: ts.LanguageService,
-	sourceScript: SourceScript | undefined,
-	fileName: string,
+	language: Language<string>,
+	sourceScript: SourceScript<string>,
 	position: number,
 	leadingOffset: number = 0,
 ) {
-	const serviceScript = sourceScript?.generated?.languagePlugin.typescript?.getServiceScript(
+	if (currentSnapshot !== sourceScript.snapshot || currentFileName !== sourceScript.id) {
+		currentSnapshot = sourceScript.snapshot;
+		currentFileName = sourceScript.id;
+		currentVersion++;
+	}
+	if (!languageService) {
+		languageServiceHost = {
+			getProjectVersion: () => currentVersion.toString(),
+			getScriptVersion: () => currentVersion.toString(),
+			getScriptFileNames: () => [currentFileName],
+			getScriptSnapshot: fileName => fileName === currentFileName ? currentSnapshot : undefined,
+			getCompilationSettings: () => ({ allowJs: true, allowNonTsExtensions: true }),
+			getCurrentDirectory: () => '',
+			getDefaultLibFileName: () => '',
+			readFile: () => undefined,
+			fileExists: fileName => fileName === currentFileName,
+		};
+		decorateLanguageServiceHost(ts, language, languageServiceHost);
+		const proxied = createProxyLanguageService(ts.createLanguageService(languageServiceHost));
+		proxied.initialize(language);
+		languageService = proxied.proxy;
+	}
+	return getReactiveReferencesWorker(ts, language, languageService, sourceScript, position, leadingOffset);
+}
+
+function getReactiveReferencesWorker(
+	ts: typeof import('typescript'),
+	language: Language<string>,
+	languageService: ts.LanguageService,
+	sourceScript: SourceScript<string>,
+	position: number,
+	leadingOffset: number,
+) {
+	const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(
 		sourceScript.generated.root,
 	);
-	const map = serviceScript ? language.maps.get(serviceScript.code, sourceScript!) : undefined;
+	const map = serviceScript ? language.maps.get(serviceScript.code, sourceScript) : undefined;
 	const toSourceRange = map
 		? (start: number, end: number) => {
 			for (const [mappedStart, mappedEnd] of map.toSourceRange(start - leadingOffset, end - leadingOffset, false)) {
@@ -56,8 +92,7 @@ export function getReactiveReferences(
 			return { ...sourceRange, ast: node };
 		}
 	};
-
-	const sourceFile = languageService.getProgram()!.getSourceFile(fileName)!;
+	const sourceFile = languageService.getProgram()!.getSourceFile(sourceScript.id)!;
 
 	if (!analyzeCache.has(sourceFile)) {
 		analyzeCache.set(sourceFile, analyze(ts, sourceFile, toSourceRange, toSourceNode));
