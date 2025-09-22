@@ -196,7 +196,6 @@ export = createLanguageServicePlugin(
 						ts,
 						language,
 						sourceScript,
-						fileName,
 						position,
 						sourceScript.generated ? sourceScript.snapshot.getLength() : 0,
 					),

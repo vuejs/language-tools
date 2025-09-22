@@ -15,12 +15,10 @@ export interface Requests {
 	isRefAtPosition(
 		fileName: string,
 		position: number,
-	): Response<
-		ReturnType<typeof import('./isRefAtPosition.js')['isRefAtPosition']>
-	>;
-	getComponentDirectives(fileName: string): Response<
-		ReturnType<typeof import('./getComponentDirectives.js')['getComponentDirectives']>
-	>;
+	): Response<ReturnType<typeof import('./isRefAtPosition.js')['isRefAtPosition']>>;
+	getComponentDirectives(
+		fileName: string,
+	): Response<ReturnType<typeof import('./getComponentDirectives.js')['getComponentDirectives']>>;
 	getComponentEvents(
 		fileName: string,
 		tag: string,
@@ -39,14 +37,23 @@ export interface Requests {
 		fileName: string,
 		tag: string,
 	): Response<ReturnType<typeof import('./getElementAttrs.js')['getElementAttrs']>>;
-	getElementNames(fileName: string): Response<ReturnType<typeof import('./getElementNames.js')['getElementNames']>>;
+	getElementNames(
+		fileName: string,
+	): Response<ReturnType<typeof import('./getElementNames.js')['getElementNames']>>;
 	getReactiveReferences(
 		fileName: string,
 		position: number,
 	): Response<ReturnType<typeof import('./getReactiveReferences.js')['getReactiveReferences']>>;
-	getDocumentHighlights(fileName: string, position: number): Response<ts.DocumentHighlights[]>;
-	getEncodedSemanticClassifications(fileName: string, span: ts.TextSpan): Response<
-		ts.Classifications
-	>;
-	getQuickInfoAtPosition(fileName: string, position: ts.LineAndCharacter): Response<string>;
+	getDocumentHighlights(
+		fileName: string,
+		position: number,
+	): Response<ts.DocumentHighlights[]>;
+	getEncodedSemanticClassifications(
+		fileName: string,
+		span: ts.TextSpan,
+	): Response<ts.Classifications>;
+	getQuickInfoAtPosition(
+		fileName: string,
+		position: ts.LineAndCharacter,
+	): Response<string>;
 }

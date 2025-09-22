@@ -18,7 +18,6 @@ export function getReactiveReferences(
 	ts: typeof import('typescript'),
 	language: Language<string>,
 	sourceScript: SourceScript<string>,
-	fileName: string,
 	position: number,
 	leadingOffset: number = 0,
 ) {
@@ -45,7 +44,7 @@ export function getReactiveReferences(
 		languageService = proxied.proxy;
 	}
 
-	const sourceFile = languageService.getProgram()!.getSourceFile(fileName)!;
+	const sourceFile = languageService.getProgram()!.getSourceFile(sourceScript.id)!;
 	const serviceScript = sourceScript.generated?.languagePlugin.typescript?.getServiceScript(
 		sourceScript.generated.root,
 	);
