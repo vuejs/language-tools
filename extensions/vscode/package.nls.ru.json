@@ -1,5 +1,6 @@
 {
 	"configuration.trace.server": "Отслеживать коммуникацию между VS Code и языковым сервером Vue.",
+	"configuration.server.path": "Путь к модулю `@vue/language-server`. Если не установлен, сервер будет загружен из пакета расширения.",
 	"configuration.server.includeLanguages": "Языки, для которых будет включено расширение.",
 	"configuration.codeActions.askNewComponentName": "Запрашивать новое имя компонента при извлечении компонента.",
 	"configuration.suggest.componentNameCasing": "Предпочитаемый формат имени компонента.",

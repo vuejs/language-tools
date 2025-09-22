@@ -272,6 +272,10 @@
 					"default": true,
 					"markdownDescription": "%configuration.editor.templateInterpolationDecorators%"
 				},
+				"vue.server.path": {
+					"type": "string",
+					"markdownDescription": "%configuration.server.path%"
+				},
 				"vue.server.includeLanguages": {
 					"type": "array",
 					"items": {

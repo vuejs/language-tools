@@ -1,5 +1,6 @@
 {
 	"configuration.trace.server": "追蹤 VS Code 和 Vue 語言伺服器之間的通訊。",
+	"configuration.server.path": "`@vue/language-server` 模組的路徑。如果未設定，伺服器將從擴充功能的捆綁包中載入。",
 	"configuration.server.includeLanguages": "配置擴充功能應該啟動的語言類型。",
 	"configuration.codeActions.askNewComponentName": "提取元件時詢問新元件名稱。",
 	"configuration.suggest.componentNameCasing": "首選元件名稱格式。",
