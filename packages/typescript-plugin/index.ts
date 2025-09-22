@@ -189,17 +189,15 @@ export = createLanguageServicePlugin(
 			});
 			session.addProtocolHandler('_vue:getReactiveReferences', request => {
 				const [fileName, position]: Parameters<Requests['getReactiveReferences']> = request.arguments;
-				const { languageService, language } = getLanguageService(fileName);
-				const sourceScript = language.scripts.get(fileName);
+				const { language } = getLanguageService(fileName);
+				const sourceScript = language.scripts.get(fileName)!;
 				return createResponse(
 					getReactiveReferences(
 						ts,
 						language,
-						languageService,
 						sourceScript,
-						fileName,
 						position,
-						sourceScript?.generated ? sourceScript.snapshot.getLength() : 0,
+						sourceScript.generated ? sourceScript.snapshot.getLength() : 0,
 					),
 				);
 			});
