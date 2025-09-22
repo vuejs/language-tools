@@ -1,4 +1,4 @@
-import type { getReactivityAnalysis } from '@vue/typescript-plugin/lib/requests/getReactivityAnalysis';
+import type { getReactiveReferences } from '@vue/typescript-plugin/lib/requests/getReactiveReferences';
 import * as vscode from 'vscode';
 import { config } from './config';
 import type ts = require('typescript');
@@ -85,11 +85,11 @@ export function activate(
 		try {
 			const result = await vscode.commands.executeCommand<
 				{
-					body?: ReturnType<typeof getReactivityAnalysis>;
+					body?: ReturnType<typeof getReactiveReferences>;
 				} | undefined
 			>(
 				'typescript.tsserverRequest',
-				'_vue:getReactivityAnalysis',
+				'_vue:getReactiveReferences',
 				[
 					document.uri.fsPath.replace(/\\/g, '/'),
 					document.offsetAt(editor.selection.active),

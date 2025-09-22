@@ -122,8 +122,8 @@ connection.onInitialize(params => {
 			getImportPathForFile(...args) {
 				return sendTsServerRequest('_vue:getImportPathForFile', args);
 			},
-			getReactivityAnalysis(...args) {
-				return sendTsServerRequest('_vue:getReactivityAnalysis', args);
+			getReactiveReferences(...args) {
+				return sendTsServerRequest('_vue:getReactiveReferences', args);
 			},
 			isRefAtPosition(...args) {
 				return sendTsServerRequest('_vue:isRefAtPosition', args);

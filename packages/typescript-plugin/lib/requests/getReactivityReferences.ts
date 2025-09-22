@@ -14,7 +14,7 @@ let currentSnapshot: ts.IScriptSnapshot | undefined;
 let languageService: ts.LanguageService | undefined;
 let languageServiceHost: ts.LanguageServiceHost | undefined;
 
-export function getReactivityAnalysis(
+export function getReactiveReferences(
 	ts: typeof import('typescript'),
 	language: Language<string>,
 	sourceScript: SourceScript<string>,
