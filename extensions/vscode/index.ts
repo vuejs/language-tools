@@ -199,23 +199,22 @@ function resolveServerPath() {
 	}
 
 	if (path.isAbsolute(config.server.path)) {
-		const serverPath = require.resolve('./index.js', { paths: [config.server.path] });
-		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(serverPath)] });
+		const entryFile = require.resolve('./index.js', { paths: [config.server.path] });
+		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
 		fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
-		return serverPath;
+		return entryFile;
 	}
 
-	for (const workspaceFolder of vscode.workspace.workspaceFolders ?? []) {
-		if (workspaceFolder.uri.scheme !== 'file') {
+	for (const { uri } of vscode.workspace.workspaceFolders ?? []) {
+		if (uri.scheme !== 'file') {
 			continue;
 		}
 		try {
-			const serverPath = require.resolve('./index.js', {
-				paths: [vscode.Uri.joinPath(workspaceFolder.uri, config.server.path).fsPath],
-			});
-			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(serverPath)] });
+			const serverPath = path.join(uri.fsPath, config.server.path);
+			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
+			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
 			fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
-			return serverPath;
+			return entryFile;
 		}
 		catch {}
 	}
