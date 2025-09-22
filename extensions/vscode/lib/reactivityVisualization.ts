@@ -1,7 +1,7 @@
 import type { getReactiveReferences } from '@vue/typescript-plugin/lib/requests/getReactiveReferences';
+import type * as ts from 'typescript';
 import * as vscode from 'vscode';
 import { config } from './config';
-import type ts = require('typescript');
 
 const dependencyDecorations = vscode.window.createTextEditorDecorationType({
 	isWholeLine: true,
