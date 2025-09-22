@@ -199,7 +199,7 @@ function resolveServerPath() {
 	}
 
 	if (path.isAbsolute(config.server.path)) {
-		const serverPath = require.resolve('@vue/language-server', { paths: [config.server.path] });
+		const serverPath = require.resolve('./index.js', { paths: [config.server.path] });
 		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(serverPath)] });
 		fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
 		return serverPath;
@@ -210,7 +210,7 @@ function resolveServerPath() {
 			continue;
 		}
 		try {
-			const serverPath = require.resolve('@vue/language-server', {
+			const serverPath = require.resolve('./index.js', {
 				paths: [vscode.Uri.joinPath(workspaceFolder.uri, config.server.path).fsPath],
 			});
 			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(serverPath)] });
