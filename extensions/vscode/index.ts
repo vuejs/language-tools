@@ -172,30 +172,31 @@ function launch(serverPath: string) {
 function resolveServerPath() {
 	const tsPluginPackPath = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack', 'index.js');
 
-	if (config.server.path) {
-		if (path.isAbsolute(config.server.path)) {
-			const serverPath = require.resolve('@vue/language-server', { paths: [config.server.path] });
+	if (!config.server.path) {
+		fs.writeFileSync(tsPluginPackPath, `module.exports = require("../../dist/typescript-plugin.js");`);
+		return;
+	}
+
+	if (path.isAbsolute(config.server.path)) {
+		const serverPath = require.resolve('@vue/language-server', { paths: [config.server.path] });
+		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(serverPath)] });
+		fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
+		return serverPath;
+	}
+
+	for (const workspaceFolder of vscode.workspace.workspaceFolders ?? []) {
+		if (workspaceFolder.uri.scheme !== 'file') {
+			continue;
+		}
+		try {
+			const serverPath = require.resolve('@vue/language-server', {
+				paths: [vscode.Uri.joinPath(workspaceFolder.uri, config.server.path).fsPath],
+			});
 			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(serverPath)] });
 			fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
 			return serverPath;
 		}
-		for (const workspaceFolder of vscode.workspace.workspaceFolders ?? []) {
-			if (workspaceFolder.uri.scheme !== 'file') {
-				continue;
-			}
-			try {
-				const serverPath = require.resolve('@vue/language-server', {
-					paths: [vscode.Uri.joinPath(workspaceFolder.uri, config.server.path).fsPath],
-				});
-				const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(serverPath)] });
-				fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
-				return serverPath;
-			}
-			catch {}
-		}
-	}
-	else {
-		fs.writeFileSync(tsPluginPackPath, `module.exports = require("../../dist/typescript-plugin.js");`);
+		catch {}
 	}
 }
 
