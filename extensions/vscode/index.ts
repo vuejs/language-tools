@@ -21,8 +21,8 @@ import * as interpolationDecorators from './lib/interpolationDecorators';
 import * as reactivityVisualization from './lib/reactivityVisualization';
 import * as welcome from './lib/welcome';
 
-const patchedTypeScriptExtension = patchTypeScriptExtension();
 const serverPath = resolveServerPath();
+const neededRestart = !patchTypeScriptExtension();
 
 for (
 	const incompatibleExtensionId of [
@@ -61,7 +61,7 @@ export = defineExtension(() => {
 
 		nextTick(() => stop());
 
-		if (!patchedTypeScriptExtension) {
+		if (neededRestart) {
 			vscode.window.showInformationMessage(
 				'Please restart the extension host to activate Vue support.',
 				'Restart Extension Host',
