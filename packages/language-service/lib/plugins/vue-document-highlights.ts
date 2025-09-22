@@ -14,7 +14,7 @@ export function create(
 			return {
 				async provideDocumentHighlights(document, position) {
 					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'main') {
+					if (info?.script.id.scheme !== 'file' || info.code.id !== 'main') {
 						return;
 					}
 
