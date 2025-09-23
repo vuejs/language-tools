@@ -1,5 +1,15 @@
 # Changelog
 
+## 3.1.0 (2025-09-23)
+
+### Performance
+
+- perf(language-core): drop internal component (#5532) - Thanks to @KazariEX!
+
+### Other Changes
+
+- refactor: drop Vue 2 support (#5636) - Thanks to @KazariEX!
+
 ## 3.0.8 (2025-09-23)
 
 ### Features
