@@ -194,13 +194,6 @@ export default defineConfig({
 							},
 						],
 					);
-					console.log(
-						1,
-						file.getFullText().slice(
-							node.importClause.namedBindings.elements[0]?.getFirstToken(file)?.getStart(file),
-							node.importClause.namedBindings.elements[0]?.getFirstToken(file)?.getEnd(),
-						),
-					);
 				}
 				ts.forEachChild(node, visit);
 			});
