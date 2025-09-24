@@ -162,6 +162,7 @@ export default defineConfig({
 					&& node.importClause.namedBindings.elements.every(e => e.isTypeOnly)
 				) {
 					const typeElements = node.importClause.namedBindings.elements;
+
 					report(
 						'This import should use type-only import.',
 						node.getStart(file),
