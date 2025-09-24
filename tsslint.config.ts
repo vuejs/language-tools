@@ -90,10 +90,10 @@ export default defineConfig({
 			'eqeqeq': true,
 			'no-unused-expressions': true,
 			'require-await': true,
-			'@typescript-eslint/consistent-type-imports': [{
-				disallowTypeAnnotations: false,
-				fixStyle: 'inline-type-imports',
-			}],
+			// '@typescript-eslint/consistent-type-imports': [{
+			// 	disallowTypeAnnotations: false,
+			// 	fixStyle: 'inline-type-imports',
+			// }],
 			'@typescript-eslint/no-unnecessary-type-assertion': true,
 			'@typescript-eslint/no-unnecessary-condition': true,
 		}),
@@ -146,6 +146,61 @@ export default defineConfig({
 							node.getEnd(),
 						);
 					}
+				}
+				ts.forEachChild(node, visit);
+			});
+		},
+		'type-imports'({ typescript: ts, file, report }) {
+			ts.forEachChild(file, function visit(node) {
+				if (
+					ts.isImportDeclaration(node)
+					&& node.importClause
+					&& node.importClause.namedBindings
+					&& node.importClause.phaseModifier !== ts.SyntaxKind.TypeKeyword
+					&& !node.importClause.name
+					&& !ts.isNamespaceImport(node.importClause.namedBindings)
+					&& node.importClause.namedBindings.elements.every(e => e.isTypeOnly)
+				) {
+					const typeElements = node.importClause.namedBindings.elements;
+					report(
+						'This import should use type-only import.',
+						node.getStart(file),
+						node.getEnd(),
+					).withFix(
+						'Replace inline type imports with a type-only import.',
+						() => [
+							{
+								fileName: file.fileName,
+								textChanges: [
+									...typeElements.map(element => {
+										const token = element.getFirstToken(file)!;
+
+										return {
+											newText: '',
+											span: {
+												start: token.getStart(file),
+												length: element.name.getStart(file) - token.getStart(file),
+											},
+										};
+									}),
+									{
+										newText: 'type ',
+										span: {
+											start: node.importClause!.getStart(file),
+											length: 0,
+										},
+									},
+								],
+							},
+						],
+					);
+					console.log(
+						1,
+						file.getFullText().slice(
+							node.importClause.namedBindings.elements[0]?.getFirstToken(file)?.getStart(file),
+							node.importClause.namedBindings.elements[0]?.getFirstToken(file)?.getEnd(),
+						),
+					);
 				}
 				ts.forEachChild(node, visit);
 			});
