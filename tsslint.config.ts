@@ -160,7 +160,7 @@ export default defineConfig({
 					const typeElements = node.importClause.namedBindings.elements;
 
 					report(
-						'This import should use type-only import.',
+						'This import statement should use type-only import.',
 						node.getStart(file),
 						node.getEnd(),
 					).withFix(
