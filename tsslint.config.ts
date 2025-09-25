@@ -90,6 +90,10 @@ export default defineConfig({
 			'eqeqeq': true,
 			'no-unused-expressions': true,
 			'require-await': true,
+			'@typescript-eslint/consistent-type-imports': [{
+				disallowTypeAnnotations: false,
+				fixStyle: 'inline-type-imports',
+			}],
 			'@typescript-eslint/no-unnecessary-type-assertion': true,
 			'@typescript-eslint/no-unnecessary-condition': true,
 		}),
