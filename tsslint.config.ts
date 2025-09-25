@@ -162,7 +162,6 @@ export default defineConfig({
 					&& node.importClause.namedBindings.elements.every(e => e.isTypeOnly)
 				) {
 					const typeElements = node.importClause.namedBindings.elements;
-
 					report(
 						'This import statement should use type-only import.',
 						node.getStart(file),
@@ -175,7 +174,6 @@ export default defineConfig({
 								textChanges: [
 									...typeElements.map(element => {
 										const token = element.getFirstToken(file)!;
-
 										return {
 											newText: '',
 											span: {
