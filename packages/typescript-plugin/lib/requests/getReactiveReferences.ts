@@ -1,5 +1,5 @@
 import { createProxyLanguageService, decorateLanguageServiceHost } from '@volar/typescript';
-import { type Language, type SourceScript } from '@vue/language-core';
+import type { Language, SourceScript } from '@vue/language-core';
 import { createAnalyzer } from 'laplacenoma';
 import * as rulesVue from 'laplacenoma/rules/vue';
 import type * as ts from 'typescript';
