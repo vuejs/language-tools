@@ -90,16 +90,6 @@ export = defineExtension(() => {
 			}
 		});
 
-		// Setup typescript.js in production mode
-		if (fs.existsSync(path.join(__dirname, 'language-server.js'))) {
-			fs.writeFileSync(
-				path.join(__dirname, 'typescript.js'),
-				`module.exports = require("${
-					vscode.env.appRoot.replace(/\\/g, '/')
-				}/extensions/node_modules/typescript/lib/typescript.js");`,
-			);
-		}
-
 		if (config.server.path && !serverPath) {
 			vscode.window.showErrorMessage('Cannot find @vue/language-server.');
 			return;
@@ -152,6 +142,11 @@ function launch(serverPath: string) {
 			},
 		},
 		{
+			initializationOptions: {
+				typescript: {
+					tsdk: `${vscode.env.appRoot.replace(/\\/g, '/')}/extensions/node_modules/typescript/lib`,
+				},
+			},
 			middleware: {
 				...middleware,
 				async resolveCodeAction(item, token, next) {
