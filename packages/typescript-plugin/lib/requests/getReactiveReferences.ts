@@ -12,7 +12,6 @@ let currentVersion = -1;
 let currentFileName = '';
 let currentSnapshot: ts.IScriptSnapshot | undefined;
 let languageService: ts.LanguageService | undefined;
-let languageServiceHost: ts.LanguageServiceHost | undefined;
 
 export function getReactiveReferences(
 	ts: typeof import('typescript'),
@@ -27,12 +26,13 @@ export function getReactiveReferences(
 		currentVersion++;
 	}
 	if (!languageService) {
-		languageServiceHost = {
+		const compilerOptions: ts.CompilerOptions = { allowJs: true, allowNonTsExtensions: true };
+		const languageServiceHost: ts.LanguageServiceHost = {
 			getProjectVersion: () => currentVersion.toString(),
 			getScriptVersion: () => currentVersion.toString(),
 			getScriptFileNames: () => [currentFileName],
 			getScriptSnapshot: fileName => fileName === currentFileName ? currentSnapshot : undefined,
-			getCompilationSettings: () => ({ allowJs: true, allowNonTsExtensions: true }),
+			getCompilationSettings: () => compilerOptions,
 			getCurrentDirectory: () => '',
 			getDefaultLibFileName: () => '',
 			readFile: () => undefined,
