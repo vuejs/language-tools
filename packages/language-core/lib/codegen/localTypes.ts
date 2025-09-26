@@ -17,7 +17,7 @@ type __VLS_WithDefaultsLocal<P, D> = {
 	);
 	const PrettifyLocal = defineHelper(
 		`__VLS_PrettifyLocal`,
-		() => `type __VLS_PrettifyLocal<T> = { [K in keyof T as K]: T[K]; } & {}${endOfLine}`,
+		() => `type __VLS_PrettifyLocal<T> = { [K in keyof T]: T[K]; } & {}${endOfLine}`,
 	);
 	const WithSlots = defineHelper(
 		`__VLS_WithSlots`,
