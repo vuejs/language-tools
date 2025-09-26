@@ -79,9 +79,11 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
 };
 declare const _default: typeof __VLS_export;
 export default _default;
-type __VLS_PrettifyLocal<T> = {
+type __VLS_PrettifyLocal<T> = (T extends any ? {
+    [K in keyof T]: T[K];
+} : {
     [K in keyof T as K]: T[K];
-} & {};
+}) & {};
 "
 `;
 
@@ -110,9 +112,11 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
 };
 declare const _default: typeof __VLS_export;
 export default _default;
-type __VLS_PrettifyLocal<T> = {
+type __VLS_PrettifyLocal<T> = (T extends any ? {
+    [K in keyof T]: T[K];
+} : {
     [K in keyof T as K]: T[K];
-} & {};
+}) & {};
 "
 `;
 
