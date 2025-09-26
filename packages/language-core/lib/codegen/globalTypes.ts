@@ -134,7 +134,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	type __VLS_ResolveDirectives<T> = {
 		[K in keyof T & string as \`v\${Capitalize<K>}\`]: T[K];
 	};
-	type __VLS_PrettifyGlobal<T> = { [K in keyof T]: T[K]; } & {};
+	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K]; } : { [K in keyof T as K]: T[K]; }) & {};
 	type __VLS_WithDefaultsGlobal<P, D> = {
 		[K in keyof P as K extends keyof D ? K : never]-?: P[K];
 	} & {
