@@ -13,7 +13,7 @@ import {
 	createVueLanguageServicePlugins,
 	type LanguageService,
 } from '@vue/language-service';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { URI } from 'vscode-uri';
 
 const connection = createConnection();
@@ -30,6 +30,16 @@ connection.onNotification('tsserver/response', ([id, res]) => {
 });
 
 connection.onInitialize(params => {
+	let ts: typeof import('typescript');
+	const tsdk = params.initializationOptions?.typescript?.tsdk;
+	if (tsdk) {
+		const tsPath = require.resolve('./typescript.js', { paths: [tsdk] });
+		ts = require(tsPath);
+	}
+	else {
+		ts = require('typescript');
+	}
+
 	const tsconfigProjects = createUriMap<LanguageService>();
 	const file2ProjectInfo = new Map<string, Promise<ts.server.protocol.ProjectInfo | null>>();
 
