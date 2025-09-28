@@ -100,9 +100,19 @@ export = defineExtension(() => {
 			);
 		}
 
-		if (config.server.path && !serverPath) {
-			vscode.window.showErrorMessage('Cannot find @vue/language-server.');
-			return;
+		if (config.server.path) {
+			if (!serverPath) {
+				vscode.window.showErrorMessage('Cannot find @vue/language-server.');
+				return;
+			}
+			vscode.window.showInformationMessage(
+				`You are using a custom Vue server: ${config.server.path}. If the server fails to start, please check the path in settings.`,
+				'Open Settings',
+			).then(action => {
+				if (action === 'Open Settings') {
+					vscode.commands.executeCommand('workbench.action.openSettings', 'vue.server.path');
+				}
+			});
 		}
 
 		client = launch(serverPath ?? vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js').fsPath);
@@ -239,6 +249,10 @@ function patchTypeScriptExtension() {
 			enableForWorkspaceTypeScriptVersions: true,
 			configNamespace: 'typescript',
 			languages: config.server.includeLanguages,
+		},
+		{
+			name: 'vue-reactivity-analysis-plugin-pack',
+			enableForWorkspaceTypeScriptVersions: true,
 		},
 	];
 

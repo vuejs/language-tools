@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
 
-const welcomeVersion = '3.0.7';
+const popVersion = '3.1.0';
 
 let panel: vscode.WebviewPanel | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
 	if (
 		context.globalState.get<boolean>('vue.showUpdates', true)
-		&& context.globalState.get('vue.welcome') !== welcomeVersion
+		&& context.globalState.get('vue.welcome') !== popVersion
 	) {
-		context.globalState.update('vue.welcome', welcomeVersion);
+		context.globalState.update('vue.welcome', popVersion);
 		execute(context);
 	}
 }
@@ -332,6 +332,32 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 	</div>
 
 	<div class="card whats-new-card">
+		<h3>3.1.0</h3>
+		<ul style="margin: 0; padding-left: 1.25rem;">
+			<li>🚀 Significantly improve the TypeScript performance of virtual code (<a href="https://github.com/vuejs/language-tools/pull/5532" target="_blank">Learn More</a>)</li>
+		</ul>
+		<div
+			style="margin-top: 1rem; padding: 0.75rem; background-color: var(--vscode-inputValidation-warningBackground); border-radius: 4px;">
+			<strong>⚠️ Vue 2 and vue-class-component support has been removed, please refer to <a href="https://github.com/vuejs/language-tools/discussions/5455" target="_blank">Discussion #5455</a> for detail.</strong>
+		</div>
+		<div
+			style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+			<a href="https://github.com/vuejs/language-tools/releases/tag/v3.1.0" target="_blank"
+				style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--vscode-textLink-foreground);">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+					<path
+						d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z" />
+				</svg>
+				Full Release Notes
+			</a>
+			<div style="display: flex; gap: 0.5rem; font-size: 0.9em; color: var(--vscode-descriptionForeground);">
+				<span>Released: October 2025</span>
+				<span>•</span>
+				<span>v3.1.0</span>
+			</div>
+		</div>
+		<br>
+
 		<h3>3.0.7</h3>
 		<ul style="margin: 0; padding-left: 1.25rem;">
 			<li>✨ The following features are now available for free:</li>
@@ -414,12 +440,6 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 			<li>🎨 UI tweaks: removed all Vue-related status bar items</li>
 			<li>🐛 Squashed numerous bugs throughout the extension</li>
 		</ul>
-		<div
-			style="margin-top: 1rem; padding: 0.75rem; background-color: var(--vscode-inputValidation-warningBackground); border-radius: 4px;">
-			<strong>⚠️ Deprecation Notice:</strong> Dropping Vue 2 Support in v3.1
-			(<a href="https://github.com/vuejs/language-tools/discussions/5455" target="_blank">Discussion #5395</a>)
-		</div>
-
 		<div
 			style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
 			<a href="https://github.com/vuejs/language-tools/releases/tag/v3.0.0" target="_blank"
