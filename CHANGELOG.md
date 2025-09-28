@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.1.0 (2025-09-23)
+## 3.1.0 (2025-09-28)
 
 ### Performance
 
@@ -9,6 +9,9 @@
 ### Other Changes
 
 - refactor: drop Vue 2 support (#5636) - Thanks to @KazariEX!
+- chore(lint): enforce use of type-only imports (#5658) - Thanks to @so1ve!
+- ci: upgrade node version (#5668) - Thanks to @so1ve!
+- refactor(typescript-plugin): move reactivity analysis logic to a seperate typescript plugin (#5672) - Thanks to @KazariEX!
 
 ## 3.0.8 (2025-09-23)
 
