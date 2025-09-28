@@ -12,7 +12,6 @@ import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
-import { getReactiveReferences } from './lib/requests/getReactiveReferences';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
 
 const windowsPathReg = /\\/g;
@@ -186,20 +185,6 @@ export = createLanguageServicePlugin(
 				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
 				const { languageService } = getLanguageService(fileName);
 				return createResponse(getElementNames(ts, languageService.getProgram()!, fileName));
-			});
-			session.addProtocolHandler('_vue:getReactiveReferences', request => {
-				const [fileName, position]: Parameters<Requests['getReactiveReferences']> = request.arguments;
-				const { language } = getLanguageService(fileName);
-				const sourceScript = language.scripts.get(fileName)!;
-				return createResponse(
-					getReactiveReferences(
-						ts,
-						language,
-						sourceScript,
-						position,
-						sourceScript.generated ? sourceScript.snapshot.getLength() : 0,
-					),
-				);
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');

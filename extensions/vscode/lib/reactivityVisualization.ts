@@ -1,6 +1,6 @@
-import type { getReactiveReferences } from '@vue/typescript-plugin/lib/requests/getReactiveReferences';
 import type * as ts from 'typescript';
 import * as vscode from 'vscode';
+import type { ReactivityAnalysisReturns } from '../reactivityAnalysis/plugin';
 import { config } from './config';
 
 const dependencyDecorations = vscode.window.createTextEditorDecorationType({
@@ -85,11 +85,11 @@ export function activate(
 		try {
 			const result = await vscode.commands.executeCommand<
 				{
-					body?: ReturnType<typeof getReactiveReferences>;
+					body?: ReactivityAnalysisReturns;
 				} | undefined
 			>(
 				'typescript.tsserverRequest',
-				'_vue:getReactiveReferences',
+				'_vue:getReactivityAnalysis',
 				[
 					document.uri.fsPath.replace(/\\/g, '/'),
 					document.offsetAt(editor.selection.active),

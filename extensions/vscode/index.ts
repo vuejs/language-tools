@@ -240,6 +240,10 @@ function patchTypeScriptExtension() {
 			configNamespace: 'typescript',
 			languages: config.server.includeLanguages,
 		},
+		{
+			name: 'vue-reactivity-analysis-plugin-pack',
+			enableForWorkspaceTypeScriptVersions: true,
+		},
 	];
 
 	fs.readFileSync = (...args: any[]) => {
