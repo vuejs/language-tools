@@ -1,6 +1,6 @@
+import type { Analyzer } from 'laplacenoma';
 import type * as ts from 'typescript';
 import * as vscode from 'vscode';
-import type { ReactivityAnalysisReturns } from '../reactivityAnalysis/plugin';
 import { config } from './config';
 
 const dependencyDecorations = vscode.window.createTextEditorDecorationType({
@@ -85,7 +85,7 @@ export function activate(
 		try {
 			const result = await vscode.commands.executeCommand<
 				{
-					body?: ReactivityAnalysisReturns;
+					body?: ReturnType<Analyzer['analyze']> | undefined;
 				} | undefined
 			>(
 				'typescript.tsserverRequest',

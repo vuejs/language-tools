@@ -214,8 +214,7 @@ export = createLanguageServicePlugin(
 			}
 
 			function getLanguageService(fileName: string) {
-				// @ts-expect-error
-				const { project } = session.getFileAndProject({
+				const { project } = session['getFileAndProject']({
 					file: fileName,
 					projectFileName: undefined,
 				}) as {
