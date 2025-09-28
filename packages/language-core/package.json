@@ -16,7 +16,7 @@
 		"@volar/language-core": "2.4.23",
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/shared": "^3.5.0",
-		"alien-signals": "^2.0.5",
+		"alien-signals": "^3.0.0",
 		"muggle-string": "^0.4.1",
 		"path-browserify": "^1.0.1",
 		"picomatch": "^4.0.2"
