@@ -5,5 +5,5 @@
 		"module": "CommonJS",
 		"moduleResolution": "Node"
 	},
-	"include": ["*", "lib/**/*", "reactivityAnalysis/plugin.ts"]
+	"include": ["*", "lib/**/*", "reactivityAnalysis/**/*"]
 }
