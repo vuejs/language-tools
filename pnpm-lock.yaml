@@ -47,6 +47,9 @@ importers:
       '@types/vscode':
         specifier: 1.88.0
         version: 1.88.0
+      '@volar/typescript':
+        specifier: 2.4.23
+        version: 2.4.23
       '@volar/vscode':
         specifier: 2.4.23
         version: 2.4.23
@@ -56,12 +59,18 @@ importers:
       '@vue/compiler-sfc':
         specifier: ^3.5.0
         version: 3.5.13
+      '@vue/language-core':
+        specifier: 3.0.8
+        version: link:../../packages/language-core
       '@vue/language-server':
         specifier: 3.0.8
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
         specifier: 3.0.8
         version: link:../../packages/typescript-plugin
+      laplacenoma:
+        specifier: ^0.0.3
+        version: 0.0.3
       reactive-vscode:
         specifier: ^0.2.9
         version: 0.2.14(@types/vscode@1.88.0)
@@ -286,9 +295,6 @@ importers:
       '@vue/shared':
         specifier: ^3.5.0
         version: 3.5.13
-      laplacenoma:
-        specifier: ^0.0.3
-        version: 0.0.3
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1

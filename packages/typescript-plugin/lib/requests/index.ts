@@ -40,10 +40,6 @@ export interface Requests {
 	getElementNames(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getElementNames.js')['getElementNames']>>;
-	getReactiveReferences(
-		fileName: string,
-		position: number,
-	): Response<ReturnType<typeof import('./getReactiveReferences.js')['getReactiveReferences']>>;
 	getDocumentHighlights(
 		fileName: string,
 		position: number,
