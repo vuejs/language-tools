@@ -21,5 +21,5 @@
 	"configuration.editor.reactivityVisualization": "Reactivity system visualization.",
 	"configuration.editor.templateInterpolationDecorators": "Enhanced template interpolation highlighting.",
 	"command.action.restartServer": "Restart Vue and TS servers",
-	"command.welcome": "Open welcome page"
+	"command.welcome": "Welcome"
 }
