@@ -13,14 +13,15 @@ export function* generateComponent(
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (
-		options.sfc.script && options.scriptRanges?.exportDefault
-		&& options.scriptRanges.exportDefault.expression.start !== options.scriptRanges.exportDefault.args.start
+		options.sfc.script
+		&& options.scriptRanges?.componentOptions
+		&& options.scriptRanges.componentOptions.expression.start !== options.scriptRanges.componentOptions.args.start
 	) {
 		// use defineComponent() from user space code if it exist
 		yield generateSfcBlockSection(
 			options.sfc.script,
-			options.scriptRanges.exportDefault.expression.start,
-			options.scriptRanges.exportDefault.args.start,
+			options.scriptRanges.componentOptions.expression.start,
+			options.scriptRanges.componentOptions.args.start,
 			codeFeatures.all,
 		);
 		yield `{${newLine}`;
@@ -70,8 +71,8 @@ export function* generateComponent(
 	) {
 		yield `__typeEl: {} as __VLS_RootEl,${newLine}`;
 	}
-	if (options.sfc.script && options.scriptRanges?.exportDefault?.args) {
-		const { args } = options.scriptRanges.exportDefault;
+	if (options.sfc.script && options.scriptRanges?.componentOptions?.args) {
+		const { args } = options.scriptRanges.componentOptions;
 		yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
 	}
 	yield `})`;

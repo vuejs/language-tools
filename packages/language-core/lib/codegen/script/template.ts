@@ -27,11 +27,17 @@ export function* generateTemplate(
 }
 
 function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
-	if (options.sfc.script && options.scriptRanges?.exportDefault) {
+	if (options.sfc.script && options.scriptRanges?.componentOptions) {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
-		const { args } = options.scriptRanges.exportDefault;
+		const { args } = options.scriptRanges.componentOptions;
 		yield generateSfcBlockSection(options.sfc.script, args.start, args.end, codeFeatures.all);
 		yield `)${endOfLine}`;
+	}
+	else if (options.sfc.script && options.scriptRanges?.exportDefault) {
+		yield `const __VLS_self = `;
+		const { expression } = options.scriptRanges.exportDefault;
+		yield generateSfcBlockSection(options.sfc.script, expression.start, expression.end, codeFeatures.all);
+		yield endOfLine;
 	}
 	else if (options.sfc.script?.src) {
 		yield `let __VLS_self!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
@@ -110,13 +116,13 @@ function* generateTemplateElements(): Generator<Code> {
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
 	const types: string[] = [`typeof __VLS_ctx`];
 
-	if (options.sfc.script && options.scriptRanges?.exportDefault?.componentsOption) {
-		const { componentsOption } = options.scriptRanges.exportDefault;
+	if (options.sfc.script && options.scriptRanges?.componentOptions?.components) {
+		const { components } = options.scriptRanges.componentOptions;
 		yield `const __VLS_componentsOption = `;
 		yield generateSfcBlockSection(
 			options.sfc.script,
-			componentsOption.start,
-			componentsOption.end,
+			components.start,
+			components.end,
 			codeFeatures.navigation,
 		);
 		yield endOfLine;
@@ -130,13 +136,13 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
 	const types: string[] = [`typeof __VLS_ctx`];
 
-	if (options.sfc.script && options.scriptRanges?.exportDefault?.directivesOption) {
-		const { directivesOption } = options.scriptRanges.exportDefault;
+	if (options.sfc.script && options.scriptRanges?.componentOptions?.directives) {
+		const { directives } = options.scriptRanges.componentOptions;
 		yield `const __VLS_directivesOption = `;
 		yield generateSfcBlockSection(
 			options.sfc.script,
-			directivesOption.start,
-			directivesOption.end,
+			directives.start,
+			directives.end,
 			codeFeatures.navigation,
 		);
 		yield endOfLine;

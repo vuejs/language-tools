@@ -48,7 +48,7 @@ function* generateScript(
 		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 	if (options.sfc.script && options.scriptRanges) {
-		const { exportDefault } = options.scriptRanges;
+		const exportDefault = options.scriptRanges.componentOptions ?? options.scriptRanges.exportDefault;
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 			if (exportDefault) {
 				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.start, codeFeatures.all);
@@ -149,9 +149,7 @@ export function* generateConstExport(
 	if (options.sfc.script) {
 		yield* generatePartiallyEnding(
 			options.sfc.script.name,
-			options.scriptRanges?.exportDefault
-				? options.scriptRanges.exportDefault.start
-				: options.sfc.script.content.length,
+			options.scriptRanges?.componentOptions?.start ?? options.sfc.script.content.length,
 			'#3632/script.vue',
 		);
 	}
@@ -175,16 +173,16 @@ function* generateExportDefault(options: ScriptCodegenOptions): Generator<Code> 
 	let prefix: Code;
 	let suffix: Code;
 	if (options.sfc.script && options.scriptRanges?.exportDefault) {
-		const { exportDefault } = options.scriptRanges;
+		const { exportDefault, componentOptions } = options.scriptRanges;
 		prefix = generateSfcBlockSection(
 			options.sfc.script,
 			exportDefault.start,
-			exportDefault.expression.start,
+			(componentOptions ?? exportDefault).expression.start,
 			codeFeatures.all,
 		);
 		suffix = generateSfcBlockSection(
 			options.sfc.script,
-			exportDefault.expression.end,
+			(componentOptions ?? exportDefault).expression.end,
 			options.sfc.script.content.length,
 			codeFeatures.all,
 		);
