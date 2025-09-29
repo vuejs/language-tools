@@ -154,17 +154,17 @@ function createTsx(
 
 	const getSetupInheritAttrs = computed(() => {
 		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
-			?? getScriptRanges()?.exportDefault?.inheritAttrsOption;
+			?? getScriptRanges()?.componentOptions?.inheritAttrs;
 		return value !== 'false';
 	});
 
 	const getComponentSelfName = computed(() => {
 		let name: string;
-		const { exportDefault } = getScriptRanges() ?? {};
-		if (sfc.script && exportDefault?.nameOption) {
+		const { componentOptions } = getScriptRanges() ?? {};
+		if (sfc.script && componentOptions?.name) {
 			name = sfc.script.content.slice(
-				exportDefault.nameOption.start + 1,
-				exportDefault.nameOption.end - 1,
+				componentOptions.name.start + 1,
+				componentOptions.name.end - 1,
 			);
 		}
 		else {
