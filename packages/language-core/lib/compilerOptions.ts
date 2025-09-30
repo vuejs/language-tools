@@ -133,24 +133,26 @@ export class CompilerOptionsResolver {
 					}
 					break;
 				case 'plugins':
-					this.plugins = (options.plugins ?? [])
-						.flatMap<VueLanguagePlugin>((pluginPath: string) => {
-							try {
-								const resolvedPath = resolvePath(pluginPath, rootDir);
-								if (resolvedPath) {
-									const plugin = require(resolvedPath);
-									plugin.__moduleName = pluginPath;
-									return plugin;
-								}
-								else {
-									console.warn('[Vue] Load plugin failed:', pluginPath);
+					for (let raw of options.plugins ?? []) {
+						raw = typeof raw === 'string' ? { name: raw } : raw;
+						try {
+							const resolvedPath = resolvePath(raw.name, rootDir);
+							if (resolvedPath) {
+								const plugin = require(resolvedPath);
+								const plugins = Array.isArray(plugin) ? plugin : [plugin];
+								for (const plugin of plugins) {
+									plugin.__moduleConfig = raw;
+									this.plugins.push(plugin);
 								}
 							}
-							catch (error) {
-								console.warn('[Vue] Resolve plugin path failed:', pluginPath, error);
+							else {
+								console.warn('[Vue] Load plugin failed:', raw.name);
 							}
-							return [];
-						});
+						}
+						catch (error) {
+							console.warn('[Vue] Resolve plugin path failed:', raw.name, error);
+						}
+					}
 					break;
 				default:
 					// @ts-expect-error
