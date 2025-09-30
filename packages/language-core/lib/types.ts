@@ -115,7 +115,7 @@ export type VueLanguagePluginReturn = {
 };
 
 export type VueLanguagePlugin = (
-	ctx: RawPlugin & {
+	ctx: Record<string, any> & {
 		modules: {
 			typescript: typeof ts;
 			'@vue/compiler-dom': typeof CompilerDOM;
