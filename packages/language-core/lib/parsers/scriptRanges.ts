@@ -12,7 +12,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 		}
 		| undefined;
 	let componentOptions:
-		| TextRange & {
+		| {
 			expression: TextRange;
 			args: TextRange;
 			argsNode: ts.ObjectLiteralExpression;
@@ -32,6 +32,10 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 				..._getStartEnd(raw),
 				expression: _getStartEnd(raw.expression),
 			};
+			const comment = getClosestMultiLineCommentRange(ts, raw, [], ast);
+			if (comment) {
+				exportDefault.start = comment.start;
+			}
 
 			let node: ts.AsExpression | ts.ExportAssignment | ts.ParenthesizedExpression = raw;
 			while (isAsExpression(node.expression) || ts.isParenthesizedExpression(node.expression)) { // fix https://github.com/vuejs/language-tools/issues/1882
@@ -71,7 +75,6 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 					}
 				});
 				componentOptions = {
-					..._getStartEnd(raw),
 					expression: _getStartEnd(node.expression),
 					args: _getStartEnd(obj),
 					argsNode: obj,
@@ -81,10 +84,6 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 					name: nameOptionNode ? _getStartEnd(nameOptionNode) : undefined,
 					inheritAttrs: inheritAttrsOption,
 				};
-				const comment = getClosestMultiLineCommentRange(ts, raw, [], ast);
-				if (comment) {
-					componentOptions.start = comment.start;
-				}
 			}
 		}
 	});
