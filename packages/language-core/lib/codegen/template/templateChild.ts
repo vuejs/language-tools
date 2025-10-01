@@ -129,6 +129,9 @@ function* collectSingleRootNodes(
 	options: TemplateCodegenOptions,
 	children: CompilerDOM.TemplateChildNode[],
 ): Generator<CompilerDOM.ElementNode | null> {
+	// Exclude the effect of comments on the root node
+	children = children.filter(node => node.type !== CompilerDOM.NodeTypes.COMMENT);
+
 	if (children.length !== 1) {
 		// "null" is used to determine whether the component is not always has a single root
 		if (children.length > 1) {
