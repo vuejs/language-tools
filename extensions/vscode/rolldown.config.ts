@@ -44,7 +44,7 @@ const config: RolldownOptions = {
 					fs.mkdirSync(resolve('./dist'), { recursive: true });
 					fs.writeFileSync(
 						resolve('./dist/language-server.js'),
-						`module.exports = require('../node_modules/@vue/language-server/bin/vue-language-server.js');`,
+						`module.exports = require('../node_modules/@vue/language-server/index.js');`,
 					);
 					fs.writeFileSync(
 						resolve('./dist/typescript-plugin.js'),
@@ -84,7 +84,7 @@ const config: RolldownOptions = {
 if (!isDev) {
 	config.input = {
 		...config.input as Record<string, string>,
-		'language-server': './node_modules/@vue/language-server/bin/vue-language-server.js',
+		'language-server': './node_modules/@vue/language-server/index.js',
 		'typescript-plugin': './node_modules/@vue/typescript-plugin/index.js',
 	};
 }
