@@ -7,5 +7,5 @@ defineProps<{
 </script>
 
 <template>
-	<child foo="..." />
+	<child :foo="bar" />
 </template>
