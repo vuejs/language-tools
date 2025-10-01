@@ -93,21 +93,21 @@ function baseCreate(
 	rootPath: string,
 	globalComponentName: string,
 ) {
-	let [commandLine, _fileNames] = getConfigAndFiles();
+	let [{ vueOptions, options, projectReferences }, fileNames] = getConfigAndFiles();
 	/**
 	 * Used to lookup if a file is referenced.
 	 */
-	let fileNames = new Set(_fileNames.map(path => path.replace(windowsPathReg, '/')));
+	let fileNamesSet = new Set(fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
 
-	vue.writeGlobalTypes(commandLine.vueOptions, ts.sys.writeFile);
+	vueOptions.globalTypesPath = vue.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
-		getCompilationSettings: () => commandLine.options,
-		getScriptFileNames: () => [...fileNames],
-		getProjectReferences: () => commandLine.projectReferences,
+		getCompilationSettings: () => options,
+		getScriptFileNames: () => [...fileNamesSet],
+		getProjectReferences: () => projectReferences,
 	};
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot | undefined>();
@@ -126,7 +126,7 @@ function baseCreate(
 	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
 		ts,
 		projectHost.getCompilationSettings(),
-		commandLine.vueOptions,
+		vueOptions,
 		id => id,
 	);
 	const language = vue.createLanguage(
@@ -179,7 +179,7 @@ function baseCreate(
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
 		languageServiceHost.getScriptKind = fileName => {
 			const scriptKind = getScriptKind!(fileName);
-			if (commandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
+			if (vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
 				if (scriptKind === ts.ScriptKind.JS) {
 					return ts.ScriptKind.TS;
 				}
@@ -200,17 +200,18 @@ function baseCreate(
 			fileName = fileName.replace(windowsPathReg, '/');
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
 			// Ensure the file is referenced
-			fileNames.add(fileName);
+			fileNamesSet.add(fileName);
 			projectVersion++;
 		},
 		deleteFile(fileName: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
-			fileNames.delete(fileName);
+			fileNamesSet.delete(fileName);
 			projectVersion++;
 		},
 		reload() {
-			[commandLine, _fileNames] = getConfigAndFiles();
-			fileNames = new Set(_fileNames.map(path => path.replace(windowsPathReg, '/')));
+			[{ vueOptions, options, projectReferences }, fileNames] = getConfigAndFiles();
+			vueOptions.globalTypesPath = vue.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
+			fileNamesSet = new Set(fileNames.map(path => path.replace(windowsPathReg, '/')));
 			this.clearCache();
 		},
 		clearCache() {
@@ -228,7 +229,7 @@ function baseCreate(
 
 	function getMetaFileName(fileName: string) {
 		return (
-			commandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))
+			vueOptions.extensions.some(ext => fileName.endsWith(ext))
 				? fileName
 				: fileName.slice(0, fileName.lastIndexOf('.'))
 		) + '.meta.ts';

@@ -23,8 +23,7 @@ export = createLanguageServicePlugin(
 			vueOptions,
 			id => id,
 		);
-
-		vue.writeGlobalTypes(vueOptions, ts.sys.writeFile);
+		vueOptions.globalTypesPath = vue.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 		addVueCommands();
 
 		return {

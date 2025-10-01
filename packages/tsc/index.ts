@@ -17,7 +17,7 @@ export function run(tscPath = require.resolve('typescript/lib/tsc')) {
 					? vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions
 					: vue.createParsedCommandLineByJson(ts, ts.sys, (options.host ?? ts.sys).getCurrentDirectory(), {})
 						.vueOptions;
-				vue.writeGlobalTypes(vueOptions, ts.sys.writeFile);
+				vueOptions.globalTypesPath = vue.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 				const allExtensions = vue.getAllExtensions(vueOptions);
 				if (
 					runExtensions.length === allExtensions.length
