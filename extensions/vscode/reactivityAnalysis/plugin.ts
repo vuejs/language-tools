@@ -45,7 +45,7 @@ function getReactivityAnalysis(
 		project: ts.server.Project;
 	};
 
-	const language: Language<string> | undefined = project['program']?.__vue__?.language;
+	const language: Language<string> | undefined = (project as any).__vue__?.language;
 	if (!language) {
 		return;
 	}
