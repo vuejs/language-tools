@@ -240,12 +240,12 @@ export function* generateComponent(
 	);
 	yield* generateElementDirectives(options, ctx, node);
 
-	const [refName, offset] = yield* generateElementReference(options, ctx, node);
+	const reference = yield* generateElementReference(options, ctx, node);
 	const tag = hyphenateTag(node.tag);
 	const isRootNode = ctx.singleRootNodes.has(node)
 		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(tag);
 
-	if (refName || isRootNode) {
+	if (reference || isRootNode) {
 		const componentInstanceVar = ctx.getInternalVariable();
 		ctx.currentComponent.used = true;
 
@@ -255,8 +255,9 @@ export function* generateComponent(
 		}
 		yield endOfLine;
 
-		if (refName && offset) {
-			ctx.addTemplateRef(refName, `typeof ${ctx.getHoistVariable(componentInstanceVar)}`, offset);
+		if (reference) {
+			const typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)}`;
+			ctx.addTemplateRef(reference.name, typeExp, reference.offset);
 		}
 		if (isRootNode) {
 			ctx.singleRootElTypes.push(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
@@ -331,13 +332,13 @@ export function* generateElement(
 	yield* generateFailedPropExps(options, ctx, failedPropExps);
 	yield* generateElementDirectives(options, ctx, node);
 
-	const [refName, offset] = yield* generateElementReference(options, ctx, node);
-	if (refName && offset) {
+	const reference = yield* generateElementReference(options, ctx, node);
+	if (reference) {
 		let typeExp = `__VLS_NativeElements['${node.tag}']`;
 		if (ctx.inVFor) {
 			typeExp += `[]`;
 		}
-		ctx.addTemplateRef(refName, typeExp, offset);
+		ctx.addTemplateRef(reference.name, typeExp, reference.offset);
 	}
 	if (ctx.singleRootNodes.has(node)) {
 		ctx.singleRootElTypes.push(`__VLS_NativeElements['${node.tag}']`);
@@ -438,34 +439,33 @@ function* generateElementReference(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
-): Generator<Code, [refName: string, offset: number] | []> {
+): Generator<Code, { name: string; offset: number } | void> {
 	for (const prop of node.props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 			&& prop.name === 'ref'
 			&& prop.value
 		) {
-			const [content, startOffset] = normalizeAttributeValue(prop.value);
+			const [name, offset] = normalizeAttributeValue(prop.value);
 
 			// navigation support for `const foo = ref()`
 			yield `/** @type {typeof __VLS_ctx`;
 			yield* generatePropertyAccess(
 				options,
 				ctx,
-				content,
-				startOffset,
+				name,
+				offset,
 				codeFeatures.navigation,
 			);
 			yield `} */${endOfLine}`;
 
-			if (identifierRegex.test(content) && !options.templateRefNames.has(content)) {
-				ctx.accessExternalVariable(content, startOffset);
+			if (identifierRegex.test(name) && !options.templateRefNames.has(name)) {
+				ctx.accessExternalVariable(name, offset);
 			}
 
-			return [content, startOffset];
+			return { name, offset };
 		}
 	}
-	return [];
 }
 
 function hasVBindAttrs(
