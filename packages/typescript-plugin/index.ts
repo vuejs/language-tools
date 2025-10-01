@@ -1,5 +1,5 @@
 import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
-import * as vue from '@vue/language-core';
+import * as core from '@vue/language-core';
 import type * as ts from 'typescript';
 import { createVueLanguageServiceProxy } from './lib/common';
 import type { Requests } from './lib/requests';
@@ -17,13 +17,13 @@ import { isRefAtPosition } from './lib/requests/isRefAtPosition';
 export = createLanguageServicePlugin(
 	(ts, info) => {
 		const vueOptions = getVueCompilerOptions();
-		const languagePlugin = vue.createVueLanguagePlugin<string>(
+		const languagePlugin = core.createVueLanguagePlugin<string>(
 			ts,
 			info.languageServiceHost.getCompilationSettings(),
 			vueOptions,
 			id => id,
 		);
-		vueOptions.globalTypesPath = vue.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
+		vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 		addVueCommands();
 
 		return {
@@ -43,10 +43,10 @@ export = createLanguageServicePlugin(
 		function getVueCompilerOptions() {
 			if (info.project.projectKind === ts.server.ProjectKind.Configured) {
 				const tsconfig = info.project.getProjectName();
-				return vue.createParsedCommandLine(ts, ts.sys, tsconfig.replace(/\\/g, '/')).vueOptions;
+				return core.createParsedCommandLine(ts, ts.sys, tsconfig.replace(/\\/g, '/')).vueOptions;
 			}
 			else {
-				return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {})
+				return core.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {})
 					.vueOptions;
 			}
 		}
@@ -187,7 +187,7 @@ export = createLanguageServicePlugin(
 					throw new Error('No source script found for file: ' + fileName);
 				}
 				const virtualCode = sourceScript.generated?.root;
-				if (!(virtualCode instanceof vue.VueVirtualCode)) {
+				if (!(virtualCode instanceof core.VueVirtualCode)) {
 					throw new Error('No virtual code found for file: ' + fileName);
 				}
 				return {
