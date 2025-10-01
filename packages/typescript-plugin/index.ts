@@ -14,12 +14,6 @@ import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
 
-const windowsPathReg = /\\/g;
-const project2Service = new WeakMap<
-	ts.server.Project,
-	[vue.Language<string>, ts.LanguageServiceHost, ts.LanguageService]
->();
-
 export = createLanguageServicePlugin(
 	(ts, info) => {
 		const vueOptions = getVueCompilerOptions();
@@ -36,8 +30,6 @@ export = createLanguageServicePlugin(
 		return {
 			languagePlugins: [languagePlugin],
 			setup: language => {
-				project2Service.set(info.project, [language, info.languageServiceHost, info.languageService]);
-
 				info.languageService = createVueLanguageServiceProxy(
 					ts,
 					language,
@@ -45,21 +37,14 @@ export = createLanguageServicePlugin(
 					vueOptions,
 					fileName => fileName,
 				);
-
-				// #3963
-				const timer = setInterval(() => {
-					if (info.project['program']) {
-						clearInterval(timer);
-						info.project['program'].__vue__ = { language };
-					}
-				}, 50);
+				(info.project as any).__vue__ = { language };
 			},
 		};
 
 		function getVueCompilerOptions() {
 			if (info.project.projectKind === ts.server.ProjectKind.Configured) {
 				const tsconfig = info.project.getProjectName();
-				return vue.createParsedCommandLine(ts, ts.sys, tsconfig.replace(windowsPathReg, '/')).vueOptions;
+				return vue.createParsedCommandLine(ts, ts.sys, tsconfig.replace(/\\/g, '/')).vueOptions;
 			}
 			else {
 				return vue.createParsedCommandLineByJson(ts, ts.sys, info.languageServiceHost.getCurrentDirectory(), {})
@@ -107,12 +92,12 @@ export = createLanguageServicePlugin(
 				'_vue:collectExtractProps',
 				request => {
 					const [fileName, templateCodeRange]: Parameters<Requests['collectExtractProps']> = request.arguments;
-					const { language, languageService, sourceScript, virtualCode } = getLanguageServiceAndVirtualCode(fileName);
+					const { project, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
 					return createResponse(
 						collectExtractProps(
 							ts,
 							language,
-							languageService.getProgram()!,
+							project.getLanguageService().getProgram()!,
 							sourceScript,
 							virtualCode,
 							templateCodeRange,
@@ -124,12 +109,12 @@ export = createLanguageServicePlugin(
 			session.addProtocolHandler('_vue:getImportPathForFile', request => {
 				const [fileName, incomingFileName, preferences]: Parameters<Requests['getImportPathForFile']> =
 					request.arguments;
-				const { languageServiceHost, languageService } = getLanguageService(fileName);
+				const { project } = getProject(fileName);
 				return createResponse(
 					getImportPathForFile(
 						ts,
-						languageServiceHost,
-						languageService.getProgram()!,
+						project,
+						project.getLanguageService().getProgram()!,
 						fileName,
 						incomingFileName,
 						preferences,
@@ -138,12 +123,12 @@ export = createLanguageServicePlugin(
 			});
 			session.addProtocolHandler('_vue:isRefAtPosition', request => {
 				const [fileName, position]: Parameters<Requests['isRefAtPosition']> = request.arguments;
-				const { language, languageService, sourceScript, virtualCode } = getLanguageServiceAndVirtualCode(fileName);
+				const { project, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
 				return createResponse(
 					isRefAtPosition(
 						ts,
 						language,
-						languageService.getProgram()!,
+						project.getLanguageService().getProgram()!,
 						sourceScript,
 						virtualCode,
 						position,
@@ -153,38 +138,38 @@ export = createLanguageServicePlugin(
 			});
 			session.addProtocolHandler('_vue:getComponentDirectives', request => {
 				const [fileName]: Parameters<Requests['getComponentDirectives']> = request.arguments;
-				const { languageService } = getLanguageService(fileName);
-				return createResponse(getComponentDirectives(ts, languageService.getProgram()!, fileName));
+				const { project } = getProject(fileName);
+				return createResponse(getComponentDirectives(ts, project.getLanguageService().getProgram()!, fileName));
 			});
 			session.addProtocolHandler('_vue:getComponentEvents', request => {
 				const [fileName, tag]: Parameters<Requests['getComponentEvents']> = request.arguments;
-				const { languageService } = getLanguageService(fileName);
-				return createResponse(getComponentEvents(ts, languageService.getProgram()!, fileName, tag));
+				const { project } = getProject(fileName);
+				return createResponse(getComponentEvents(ts, project.getLanguageService().getProgram()!, fileName, tag));
 			});
 			session.addProtocolHandler('_vue:getComponentNames', request => {
 				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;
-				const { languageService } = getLanguageService(fileName);
-				return createResponse(getComponentNames(ts, languageService.getProgram()!, fileName));
+				const { project } = getProject(fileName);
+				return createResponse(getComponentNames(ts, project.getLanguageService().getProgram()!, fileName));
 			});
 			session.addProtocolHandler('_vue:getComponentProps', request => {
 				const [fileName, tag]: Parameters<Requests['getComponentProps']> = request.arguments;
-				const { languageService } = getLanguageService(fileName);
-				return createResponse(getComponentProps(ts, languageService.getProgram()!, fileName, tag));
+				const { project } = getProject(fileName);
+				return createResponse(getComponentProps(ts, project.getLanguageService().getProgram()!, fileName, tag));
 			});
 			session.addProtocolHandler('_vue:getComponentSlots', request => {
 				const [fileName]: Parameters<Requests['getComponentSlots']> = request.arguments;
-				const { languageService, virtualCode } = getLanguageServiceAndVirtualCode(fileName);
-				return createResponse(getComponentSlots(ts, languageService.getProgram()!, virtualCode));
+				const { project, virtualCode } = getProjectAndVirtualCode(fileName);
+				return createResponse(getComponentSlots(ts, project.getLanguageService().getProgram()!, virtualCode));
 			});
 			session.addProtocolHandler('_vue:getElementAttrs', request => {
 				const [fileName, tag]: Parameters<Requests['getElementAttrs']> = request.arguments;
-				const { languageService } = getLanguageService(fileName);
-				return createResponse(getElementAttrs(ts, languageService.getProgram()!, fileName, tag));
+				const { project } = getProject(fileName);
+				return createResponse(getElementAttrs(ts, project.getLanguageService().getProgram()!, fileName, tag));
 			});
 			session.addProtocolHandler('_vue:getElementNames', request => {
 				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
-				const { languageService } = getLanguageService(fileName);
-				return createResponse(getElementNames(ts, languageService.getProgram()!, fileName));
+				const { project } = getProject(fileName);
+				return createResponse(getElementNames(ts, project.getLanguageService().getProgram()!, fileName));
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');
@@ -196,8 +181,8 @@ export = createLanguageServicePlugin(
 				};
 			}
 
-			function getLanguageServiceAndVirtualCode(fileName: string) {
-				const service = getLanguageService(fileName);
+			function getProjectAndVirtualCode(fileName: string) {
+				const service = getProject(fileName);
 				const sourceScript = service.language.scripts.get(fileName);
 				if (!sourceScript) {
 					throw new Error('No source script found for file: ' + fileName);
@@ -213,7 +198,7 @@ export = createLanguageServicePlugin(
 				};
 			}
 
-			function getLanguageService(fileName: string) {
+			function getProject(fileName: string) {
 				const { project } = session['getFileAndProject']({
 					file: fileName,
 					projectFileName: undefined,
@@ -221,16 +206,12 @@ export = createLanguageServicePlugin(
 					file: ts.server.NormalizedPath;
 					project: ts.server.Project;
 				};
-				const service = project2Service.get(project);
-				if (!service) {
-					throw new Error('No vue service for project: ' + project.getProjectName());
+				if (!('__vue__' in project)) {
+					throw new Error('No vue project info for project: ' + project.getProjectName());
 				}
-				const [language, languageServiceHost, languageService] = service;
 				return {
-					typescript: ts,
-					languageService,
-					languageServiceHost,
-					language,
+					project,
+					language: (project as any).__vue__.language,
 				};
 			}
 		}
