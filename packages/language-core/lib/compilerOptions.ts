@@ -338,3 +338,13 @@ export function createGlobalTypesWriter(
 		return result;
 	};
 }
+
+/**
+ * @deprecated use `createGlobalTypesWriter` instead
+ */
+export function writeGlobalTypes(
+	vueOptions: VueCompilerOptions,
+	writeFile: (fileName: string, data: string) => void,
+) {
+	vueOptions.globalTypesPath = createGlobalTypesWriter(vueOptions, writeFile);
+}
