@@ -90,16 +90,6 @@ export = defineExtension(() => {
 			}
 		});
 
-		// Setup typescript.js in production mode
-		if (fs.existsSync(path.join(__dirname, 'language-server.js'))) {
-			fs.writeFileSync(
-				path.join(__dirname, 'typescript.js'),
-				`module.exports = require("${
-					vscode.env.appRoot.replace(/\\/g, '/')
-				}/extensions/node_modules/typescript/lib/typescript.js");`,
-			);
-		}
-
 		if (config.server.path) {
 			if (!serverPath) {
 				vscode.window.showErrorMessage('Cannot find @vue/language-server.');
@@ -115,7 +105,10 @@ export = defineExtension(() => {
 			});
 		}
 
-		client = launch(serverPath ?? vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js').fsPath);
+		client = launch(
+			serverPath ?? vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js').fsPath,
+			vscode.env.appRoot.replace(/\\/g, '/') + '/extensions/node_modules/typescript/lib',
+		);
 
 		volarLabs.addLanguageClient(client);
 
@@ -145,18 +138,21 @@ export = defineExtension(() => {
 	return volarLabs.extensionExports;
 });
 
-function launch(serverPath: string) {
+function launch(serverPath: string, tsdk: string) {
+	const args = ['--tsdk=' + tsdk];
 	const client = new lsp.LanguageClient(
 		'vue',
 		'Vue',
 		{
 			run: {
 				module: serverPath,
+				args,
 				transport: lsp.TransportKind.ipc,
 				options: {},
 			},
 			debug: {
 				module: serverPath,
+				args,
 				transport: lsp.TransportKind.ipc,
 				options: { execArgv: ['--nolazy', '--inspect=' + 6009] },
 			},

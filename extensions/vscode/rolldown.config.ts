@@ -74,7 +74,7 @@ const config: RolldownOptions = {
 					id: /^typescript$/,
 				},
 				handler() {
-					return { id: './typescript.js', external: true };
+					return { id: 'typescript', external: true };
 				},
 			},
 		},
