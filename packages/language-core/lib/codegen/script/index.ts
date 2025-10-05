@@ -155,7 +155,7 @@ export function* generateConstExport(
 		0,
 		block.content.length,
 		block.name,
-		codeFeatures.verification,
+		codeFeatures.doNotReportTs6133,
 		`__VLS_export`,
 	);
 	yield ` = `;
