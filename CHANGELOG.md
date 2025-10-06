@@ -1,5 +1,26 @@
 # Changelog
 
+## 3.1.1 (2025-10-07)
+
+### Features
+
+- feat(language-server): support `--tsdk` command line arg (#5691)
+
+### Bug Fixes
+
+- fix(language-core): tolerate non-literal export default (#5675) - Thanks to @KazariEX!
+- fix(language-core): use component instance props as fallthrough attributes (#5686) - Thanks to @KazariEX!
+- fix(typescript-plugin): determine if variable is `Ref` by `RefSymbol` property (#5687) - Thanks to @KazariEX!
+- fix(language-core): exclude effect of comments on root node (#5689) - Thanks to @KazariEX!
+- fix(typescript-plugin): place `__vue__` in project instead of program (#5690)
+- fix(component-type-helpers): remove deprecated `$scopedSlots` support for Vue 2
+- fix(language-core): replace markdown links after sfc blocks processing (#5695) - Thanks to @KazariEX!
+- fix(language-core): do not report unused error on `__VLS_export` (#5696) - Thanks to @KazariEX!
+
+### Other Changes
+
+- refactor(language-core): reimplement `writeGlobalTypes` without side effects
+
 ## 3.1.0 (2025-09-28)
 
 ### Performance
