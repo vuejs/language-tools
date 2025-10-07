@@ -34,6 +34,12 @@
 - ci: upgrade node version (#5668) - Thanks to @so1ve!
 - refactor(typescript-plugin): move reactivity analysis logic to a seperate typescript plugin (#5672) - Thanks to @KazariEX!
 
+## 3.0.9 (2025-10-07)
+
+### Features
+
+- feat(language-server): support `--tsdk` command line arg (#5691)
+
 ## 3.0.8 (2025-09-23)
 
 ### Features
