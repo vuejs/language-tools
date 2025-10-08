@@ -236,8 +236,13 @@ function baseCreate(
 	}
 
 	function getMetaScriptContent(fileName: string) {
+		const helpersPath = require.resolve('vue-component-type-helpers').replace(windowsPathReg, '/');
+		let helpersRelativePath = path.relative(path.dirname(fileName), helpersPath);
+		if (!helpersRelativePath.startsWith('./') && !helpersRelativePath.startsWith('../')) {
+			helpersRelativePath = './' + helpersRelativePath;
+		}
 		let code = `
-import type { ComponentType, ComponentProps, ComponentEmit, ComponentSlots, ComponentExposed } from 'vue-component-meta/lib/helpers';
+import type { ComponentType, ComponentProps, ComponentEmit, ComponentSlots, ComponentExposed } from '${helpersRelativePath}';
 import type * as Components from '${fileName.slice(0, -'.meta.ts'.length)}';
 
 export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };

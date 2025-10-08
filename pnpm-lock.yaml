@@ -317,6 +317,9 @@ importers:
       vue-component-meta:
         specifier: 3.1.1
         version: link:../packages/component-meta
+      vue-component-type-helpers:
+        specifier: 3.1.1
+        version: link:../packages/component-type-helpers
       vue3.4:
         specifier: npm:vue@3.4.38
         version: vue@3.4.38(typescript@5.9.2)
