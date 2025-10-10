@@ -89,7 +89,7 @@ export function* generateScriptSetup(
 		}
 
 		yield `return {} as {${newLine}`
-			+ `	props: ${propTypes.length ? `${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}> & ` : ''}${
+			+ `	props: ${propTypes.length ? `${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}> & ` : ``}${
 				options.vueCompilerOptions.target >= 3.4
 					? `import('${options.vueCompilerOptions.lib}').PublicProps`
 					: options.vueCompilerOptions.target >= 3
