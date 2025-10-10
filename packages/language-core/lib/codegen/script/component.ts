@@ -124,7 +124,7 @@ function* generatePropsOption(
 
 	if (options.templateCodegen?.inheritedAttrVars.size) {
 		let attrsType = `__VLS_InheritedAttrs`;
-		if (hasEmitsOption) {
+		if (hasEmitsOption && !options.vueCompilerOptions.fallthroughAttributes) {
 			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
 		}
 		getOptionCodes.push(() => {
