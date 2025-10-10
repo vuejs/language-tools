@@ -4,5 +4,5 @@ import { exactType } from '../../shared';
 </script>
 
 <template>
-  <child @input="exactType($event, {} as Event)" />
+	<child @input="exactType($event, {} as Event)" />
 </template>
