@@ -124,8 +124,8 @@ function* generatePropsOption(
 
 	if (options.templateCodegen?.inheritedAttrVars.size) {
 		let attrsType = `__VLS_InheritedAttrs`;
-		if (hasEmitsOption && !options.vueCompilerOptions.fallthroughAttributes) {
-			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
+		if (hasEmitsOption) {
+			attrsType = `Omit<${attrsType}, keyof __VLS_EmitProps>`;
 		}
 		getOptionCodes.push(() => {
 			const propsType = `__VLS_PickNotAny<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>`;
