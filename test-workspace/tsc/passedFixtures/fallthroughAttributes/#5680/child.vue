@@ -3,5 +3,5 @@ defineEmits<{ test: [] }>();
 </script>
 
 <template>
-  <input />
+	<input />
 </template>
