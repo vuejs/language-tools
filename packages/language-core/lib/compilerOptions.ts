@@ -323,13 +323,13 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 	};
 }
 
-export function writeGlobalTypes(
+export function createGlobalTypesWriter(
 	vueOptions: VueCompilerOptions,
 	writeFile: (fileName: string, data: string) => void,
 ) {
 	const writed = new Set<string>();
 	const { globalTypesPath } = vueOptions;
-	vueOptions.globalTypesPath = (fileName: string) => {
+	return (fileName: string) => {
 		const result = globalTypesPath(fileName);
 		if (result && !writed.has(result)) {
 			writed.add(result);
@@ -337,4 +337,14 @@ export function writeGlobalTypes(
 		}
 		return result;
 	};
+}
+
+/**
+ * @deprecated use `createGlobalTypesWriter` instead
+ */
+export function writeGlobalTypes(
+	vueOptions: VueCompilerOptions,
+	writeFile: (fileName: string, data: string) => void,
+) {
+	vueOptions.globalTypesPath = createGlobalTypesWriter(vueOptions, writeFile);
 }

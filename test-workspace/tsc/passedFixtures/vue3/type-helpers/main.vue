@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { ComponentEmit, ComponentExposed, ComponentProps, ComponentSlots } from 'vue-component-meta/lib/helpers';
+import type { ComponentEmit, ComponentExposed, ComponentProps, ComponentSlots } from 'vue-component-type-helpers';
 import { exactType } from '../../shared';
 import type scriptSetupGeneric from '../components/script-setup-generic.vue';
 import ScriptSetup from '../components/script-setup.vue';

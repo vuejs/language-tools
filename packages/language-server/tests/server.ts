@@ -34,7 +34,7 @@ export async function getLanguageServer(): Promise<{
 		tsserver.on('exit', code => console.log(code ? `Exited with code ${code}` : `Terminated`));
 		// tsserver.on('event', e => console.log(e));
 
-		serverHandle = startLanguageServer(require.resolve('../bin/vue-language-server.js'), testWorkspacePath);
+		serverHandle = startLanguageServer(require.resolve('../index.js'), testWorkspacePath);
 		serverHandle.connection.onNotification(PublishDiagnosticsNotification.type, () => {});
 		serverHandle.connection.onRequest(ConfigurationRequest.type, ({ items }) => {
 			return items.map(({ section }) => {

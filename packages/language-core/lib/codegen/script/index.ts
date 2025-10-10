@@ -48,7 +48,7 @@ function* generateScript(
 		yield* generateScriptSetupImports(options.sfc.scriptSetup, options.scriptSetupRanges);
 	}
 	if (options.sfc.script && options.scriptRanges) {
-		const { exportDefault } = options.scriptRanges;
+		const { exportDefault, componentOptions } = options.scriptRanges;
 		if (options.sfc.scriptSetup && options.scriptSetupRanges) {
 			if (exportDefault) {
 				yield generateSfcBlockSection(options.sfc.script, 0, exportDefault.start, codeFeatures.all);
@@ -60,16 +60,18 @@ function* generateScript(
 			}
 		}
 		else if (exportDefault) {
+			const { expression } = componentOptions ?? exportDefault;
+
 			let wrapLeft: string | undefined;
 			let wrapRight: string | undefined;
 			if (
-				options.sfc.script.content[exportDefault.expression.start] === '{'
+				options.sfc.script.content[expression.start] === '{'
 				&& options.vueCompilerOptions.optionsWrapper.length
 			) {
 				[wrapLeft, wrapRight] = options.vueCompilerOptions.optionsWrapper;
 				ctx.inlayHints.push({
 					blockName: options.sfc.script.name,
-					offset: exportDefault.expression.start,
+					offset: expression.start,
 					setting: 'vue.inlayHints.optionsWrapper',
 					label: wrapLeft || '[Missing optionsWrapper[0]]',
 					tooltip: [
@@ -78,7 +80,7 @@ function* generateScript(
 					].join('\n\n'),
 				}, {
 					blockName: options.sfc.script.name,
-					offset: exportDefault.expression.end,
+					offset: expression.end,
 					setting: 'vue.inlayHints.optionsWrapper',
 					label: wrapRight || '[Missing optionsWrapper[1]]',
 				});
@@ -89,12 +91,7 @@ function* generateScript(
 			if (wrapLeft) {
 				yield wrapLeft;
 			}
-			yield generateSfcBlockSection(
-				options.sfc.script,
-				exportDefault.expression.start,
-				exportDefault.expression.end,
-				codeFeatures.all,
-			);
+			yield generateSfcBlockSection(options.sfc.script, expression.start, expression.end, codeFeatures.all);
 			if (wrapRight) {
 				yield wrapRight;
 			}
@@ -149,9 +146,7 @@ export function* generateConstExport(
 	if (options.sfc.script) {
 		yield* generatePartiallyEnding(
 			options.sfc.script.name,
-			options.scriptRanges?.exportDefault
-				? options.scriptRanges.exportDefault.start
-				: options.sfc.script.content.length,
+			options.scriptRanges?.exportDefault?.start ?? options.sfc.script.content.length,
 			'#3632/script.vue',
 		);
 	}
@@ -160,7 +155,7 @@ export function* generateConstExport(
 		0,
 		block.content.length,
 		block.name,
-		codeFeatures.verification,
+		codeFeatures.doNotReportTs6133,
 		`__VLS_export`,
 	);
 	yield ` = `;
@@ -175,16 +170,16 @@ function* generateExportDefault(options: ScriptCodegenOptions): Generator<Code> 
 	let prefix: Code;
 	let suffix: Code;
 	if (options.sfc.script && options.scriptRanges?.exportDefault) {
-		const { exportDefault } = options.scriptRanges;
+		const { exportDefault, componentOptions } = options.scriptRanges;
 		prefix = generateSfcBlockSection(
 			options.sfc.script,
 			exportDefault.start,
-			exportDefault.expression.start,
+			(componentOptions ?? exportDefault).expression.start,
 			codeFeatures.all,
 		);
 		suffix = generateSfcBlockSection(
 			options.sfc.script,
-			exportDefault.expression.end,
+			(componentOptions ?? exportDefault).expression.end,
 			options.sfc.script.content.length,
 			codeFeatures.all,
 		);

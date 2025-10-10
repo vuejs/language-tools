@@ -1,5 +1,8 @@
-<script setup lang="ts">
+<script setup lang="ts" generic="T">
 defineProps<{
-	bar?: string;
+	foo?: T;
+}>();
+defineEmits<{
+	foo: [T];
 }>();
 </script>

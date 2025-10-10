@@ -48,7 +48,14 @@ export function isRefAtPosition(
 	const type = checker.getTypeAtLocation(node);
 	const props = type.getProperties();
 
-	return props.some(prop => prop.escapedName === 'value' && prop.flags & ts.SymbolFlags.Accessor);
+	return props.some(prop =>
+		prop.declarations?.some(decl =>
+			ts.isPropertySignature(decl)
+			&& ts.isComputedPropertyName(decl.name)
+			&& ts.isIdentifier(decl.name.expression)
+			&& decl.name.expression.text === 'RefSymbol'
+		)
+	);
 
 	function findPositionIdentifier(sourceFile: ts.SourceFile, node: ts.Node, offset: number) {
 		let result: ts.Node | undefined;
