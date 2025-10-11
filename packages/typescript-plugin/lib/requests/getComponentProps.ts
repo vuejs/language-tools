@@ -88,7 +88,7 @@ export function getComponentProps(
 		);
 		const modifiers = entry.kindModifiers?.split(',') ?? [];
 		result.push({
-			name: entry.name,
+			name: stripQuotes(entry.name),
 			required: !modifiers.includes('optional'),
 			deprecated: modifiers.includes('deprecated'),
 			documentation: details ? [...generateDocumentation(ts, details)].join('') : '',
@@ -97,6 +97,13 @@ export function getComponentProps(
 	map.toGeneratedLocation = original;
 
 	return result;
+}
+
+function stripQuotes(str: string) {
+	if (str.startsWith('"') && str.endsWith('"')) {
+		return str.slice(1, -1);
+	}
+	return str;
 }
 
 function* generateDocumentation(
