@@ -53,19 +53,19 @@ export function getComponentProps(
 	}
 
 	const shadowOffset = 1145141919810;
+	const shadowMapping = {
+		sourceOffsets: [shadowOffset],
+		generatedOffsets: [node.end - 1 - leadingOffset],
+		lengths: [0],
+		data: {
+			completion: true,
+		},
+	};
 
 	const original = map.toGeneratedLocation;
 	map.toGeneratedLocation = function*(sourceOffset, ...args) {
 		if (sourceOffset === shadowOffset) {
-			const generatedOffset = node.end - 1 - leadingOffset;
-			yield [generatedOffset, {
-				sourceOffsets: [sourceOffset],
-				generatedOffsets: [generatedOffset],
-				lengths: [0],
-				data: {
-					completion: true,
-				},
-			}];
+			yield [shadowMapping.generatedOffsets[0]!, shadowMapping];
 		}
 		else {
 			yield* original(sourceOffset, ...args);
