@@ -1,145 +1,124 @@
+import type { Language, SourceScript, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getComponentType, getVariableType } from './utils';
+import { forEachTouchingNode } from './utils';
 
 export interface ComponentPropInfo {
 	name: string;
 	required?: boolean;
 	deprecated?: boolean;
-	isAttribute?: boolean;
 	documentation?: string;
-	values?: string[];
 }
 
 export function getComponentProps(
 	ts: typeof import('typescript'),
-	program: ts.Program,
-	fileName: string,
-	tag: string,
+	language: Language<string>,
+	languageService: ts.LanguageService,
+	sourceScript: SourceScript<string>,
+	virtualCode: VueVirtualCode,
+	position: number,
+	leadingOffset: number = 0,
 ): ComponentPropInfo[] {
-	const components = getVariableType(ts, program, fileName, '__VLS_components');
-	if (!components) {
+	const serviceScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
+	if (!serviceScript) {
 		return [];
 	}
 
-	const componentType = getComponentType(ts, program, fileName, components, tag);
-	if (!componentType) {
+	let mapped = false;
+	const map = language.maps.get(serviceScript.code, sourceScript);
+	for (const [position2, mapping] of map.toGeneratedLocation(position)) {
+		if (mapping.lengths.length === 2 && mapping.lengths.every(length => length === 0)) {
+			position = position2;
+			mapped = true;
+			break;
+		}
+	}
+	if (!mapped) {
 		return [];
 	}
 
-	const result = new Map<string, ComponentPropInfo>();
-	const checker = program.getTypeChecker();
-
-	for (const sig of componentType.getCallSignatures()) {
-		if (sig.parameters.length) {
-			const propParam = sig.parameters[0]!;
-			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.node);
-			const props = propsType.getProperties();
-			for (const prop of props) {
-				handlePropSymbol(prop);
-			}
-		}
+	const program = languageService.getProgram()!;
+	const sourceFile = program.getSourceFile(virtualCode.fileName);
+	if (!sourceFile) {
+		return [];
 	}
 
-	for (const sig of componentType.getConstructSignatures()) {
-		const instanceType = sig.getReturnType();
-		const propsSymbol = instanceType.getProperty('$props');
-		if (propsSymbol) {
-			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, components.node);
-			const props = propsType.getProperties();
-			for (const prop of props) {
-				handlePropSymbol(prop);
-			}
+	let node: ts.ObjectLiteralExpression | undefined;
+	for (const child of forEachTouchingNode(ts, sourceFile, position + leadingOffset)) {
+		if (ts.isObjectLiteralExpression(child)) {
+			node = child;
 		}
 	}
+	if (!node) {
+		return [];
+	}
 
-	return [...result.values()];
+	const shadowOffset = 1145141919810;
 
-	function handlePropSymbol(prop: ts.Symbol) {
-		if (prop.flags & ts.SymbolFlags.Method) { // #2443
-			return;
+	const original = map.toGeneratedLocation;
+	map.toGeneratedLocation = function*(sourceOffset, ...args) {
+		if (sourceOffset === shadowOffset) {
+			const generatedOffset = node.end - 1 - leadingOffset;
+			yield [generatedOffset, {
+				sourceOffsets: [sourceOffset],
+				generatedOffsets: [generatedOffset],
+				lengths: [0],
+				data: {
+					completion: true,
+				},
+			}];
 		}
-		const name = prop.name;
-		const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
-		const {
-			documentation,
-			deprecated,
-		} = generateDocumentation(prop.getDocumentationComment(checker), prop.getJsDocTags());
-		const values: any[] = [];
-		const type = checker.getTypeOfSymbol(prop);
-		const subTypes: ts.Type[] | undefined = (type as any).types;
-
-		if (subTypes) {
-			for (const subType of subTypes) {
-				const value = (subType as any).value;
-				if (value) {
-					values.push(value);
-				}
-			}
+		else {
+			yield* original(sourceOffset, ...args);
 		}
+	};
 
-		let isAttribute: boolean | undefined;
-		for (const { parent } of checker.getRootSymbols(prop).flatMap(root => root.declarations ?? [])) {
-			if (!ts.isInterfaceDeclaration(parent)) {
-				continue;
-			}
-			const { text } = parent.name;
-			if (
-				text.endsWith('HTMLAttributes')
-				|| text === 'AriaAttributes'
-				|| text === 'SVGAttributes'
-			) {
-				isAttribute = true;
-				break;
-			}
-		}
+	const completions = languageService.getCompletionsAtPosition(virtualCode.fileName, shadowOffset, undefined);
+	const properties = completions?.entries.filter(entry => entry.kind === 'property') ?? [];
+	const result: ComponentPropInfo[] = [];
 
-		result.set(name, {
-			name,
-			required,
-			deprecated,
-			isAttribute,
-			documentation,
-			values,
+	for (const entry of properties) {
+		const details = languageService.getCompletionEntryDetails(
+			virtualCode.fileName,
+			shadowOffset,
+			entry.name,
+			undefined,
+			entry.source,
+			undefined,
+			entry.data,
+		);
+		const modifiers = entry.kindModifiers?.split(',') ?? [];
+		result.push({
+			name: entry.name,
+			required: !modifiers.includes('optional'),
+			deprecated: modifiers.includes('deprecated'),
+			documentation: details ? [...generateDocumentation(ts, details)].join('') : '',
 		});
 	}
+	map.toGeneratedLocation = original;
+
+	return result;
 }
 
-function generateDocumentation(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JSDocTagInfo[]) {
-	const parsedComment = _symbolDisplayPartsToMarkdown(parts);
-	const parsedJsDoc = _jsDocTagInfoToMarkdown(jsDocTags);
-	const documentation = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
-	const deprecated = jsDocTags.some(tag => tag.name === 'deprecated');
-	return {
-		documentation,
-		deprecated,
-	};
-}
-
-function _symbolDisplayPartsToMarkdown(parts: ts.SymbolDisplayPart[]) {
-	return parts.map(part => {
-		switch (part.kind) {
-			case 'keyword':
-				return `\`${part.text}\``;
-			case 'functionName':
-				return `**${part.text}**`;
-			default:
-				return part.text;
+function* generateDocumentation(
+	ts: typeof import('typescript'),
+	details: ts.CompletionEntryDetails,
+): Generator<string> {
+	if (details.displayParts.length) {
+		yield `\`\`\`\n`;
+		yield ts.displayPartsToString(details.displayParts);
+		yield `\n\`\`\`\n\n`;
+	}
+	if (details.documentation) {
+		yield ts.displayPartsToString(details.documentation);
+		yield `\n\n`;
+	}
+	if (details.tags?.length) {
+		for (const tag of details.tags) {
+			yield `*@${tag.name}*`;
+			if (tag.text?.length) {
+				yield ` — ${ts.displayPartsToString(tag.text)}`;
+			}
+			yield `\n\n`;
 		}
-	}).join('');
-}
-
-function _jsDocTagInfoToMarkdown(jsDocTags: ts.JSDocTagInfo[]) {
-	return jsDocTags.map(tag => {
-		const tagName = `*@${tag.name}*`;
-		const tagText = tag.text?.map(t => {
-			if (t.kind === 'parameterName') {
-				return `\`${t.text}\``;
-			}
-			else {
-				return t.text;
-			}
-		}).join('') || '';
-
-		return `${tagName} ${tagText}`;
-	}).join('\n\n');
+	}
 }

@@ -33,6 +33,11 @@ export function create(
 						return;
 					}
 
+					const { template } = info.root.sfc;
+					if (!template) {
+						return;
+					}
+
 					const scanner = getScanner(context, document);
 					if (!scanner) {
 						return;
@@ -77,7 +82,7 @@ export function create(
 								}
 								componentProps.set(
 									checkTag,
-									(await getComponentProps(info.root.fileName, checkTag) ?? [])
+									(await getComponentProps(info.root.fileName, tagOffset + template.startTagEnd) ?? [])
 										.filter(prop => prop.required)
 										.map(prop => prop.name),
 								);
