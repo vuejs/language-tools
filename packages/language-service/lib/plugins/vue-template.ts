@@ -6,8 +6,7 @@ import type {
 	LanguageServicePlugin,
 	TextDocument,
 } from '@volar/language-service';
-import type * as CompilerDOM from '@vue/compiler-dom';
-import { getElementTagOffsets, hyphenateAttr, hyphenateTag, tsCodegen, type VueVirtualCode } from '@vue/language-core';
+import { hyphenateAttr, hyphenateTag, tsCodegen, type VueVirtualCode } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService } from 'volar-service-html';
@@ -466,15 +465,6 @@ export function create(
 						provideAttributes: tag => {
 							let tagInfo = tagMap.get(tag);
 							if (!tagInfo) {
-								if (!root.sfc.template?.ast) {
-									return [];
-								}
-								const node = getTouchingNode(root.sfc.template.ast, position);
-								if (!node) {
-									return [];
-								}
-								const offset = getElementTagOffsets(node, root.sfc.template)[0] + root.sfc.template.startTagEnd;
-
 								tagInfo = {
 									attrs: [],
 									propInfos: [],
@@ -484,7 +474,7 @@ export function create(
 								tasks.push((async () => {
 									tagMap.set(tag, {
 										attrs: await getElementAttrs(root.fileName, tag) ?? [],
-										propInfos: await getComponentProps(root.fileName, offset) ?? [],
+										propInfos: await getComponentProps(root.fileName, position) ?? [],
 										directives: await getComponentDirectives(root.fileName) ?? [],
 									});
 									version++;
@@ -736,17 +726,4 @@ function getPropName(
 		return { isEvent: true, propName: name.slice('on-'.length) };
 	}
 	return { isEvent, propName: name };
-}
-
-function getTouchingNode(
-	node: CompilerDOM.ParentNode,
-	position: number,
-): CompilerDOM.ElementNode | undefined {
-	for (const child of node.children) {
-		if (child.type === 1 satisfies CompilerDOM.NodeTypes.ELEMENT) {
-			if (position >= child.loc.start.offset && position <= child.loc.end.offset) {
-				return getTouchingNode(child, position) ?? child;
-			}
-		}
-	}
 }

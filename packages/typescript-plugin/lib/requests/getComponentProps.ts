@@ -1,4 +1,5 @@
-import type { Language, SourceScript, VueVirtualCode } from '@vue/language-core';
+import type * as CompilerDOM from '@vue/compiler-dom';
+import { getElementTagOffsets, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { forEachTouchingNode } from './utils';
 
@@ -23,39 +24,62 @@ export function getComponentProps(
 		return [];
 	}
 
+	const { template } = virtualCode.sfc;
+	if (!template?.ast) {
+		return [];
+	}
+
 	let mapped = false;
 	const map = language.maps.get(serviceScript.code, sourceScript);
-	for (const [position2, mapping] of map.toGeneratedLocation(position)) {
-		if (mapping.lengths.length === 2 && mapping.lengths.every(length => length === 0)) {
-			position = position2;
+
+	for (const [offset, mapping] of map.toGeneratedLocation(position + template.startTagEnd)) {
+		if (mapping.data.semantic && mapping.data.verification && mapping.data.navigation) {
+			position = offset;
 			mapped = true;
 			break;
 		}
 	}
 	if (!mapped) {
-		return [];
-	}
-
-	const program = languageService.getProgram()!;
-	const sourceFile = program.getSourceFile(virtualCode.fileName);
-	if (!sourceFile) {
-		return [];
-	}
-
-	let node: ts.ObjectLiteralExpression | undefined;
-	for (const child of forEachTouchingNode(ts, sourceFile, position + leadingOffset)) {
-		if (ts.isObjectLiteralExpression(child)) {
-			node = child;
+		const templateNode = getTouchingTemplateNode(template.ast, position);
+		if (!templateNode) {
+			return [];
 		}
-	}
-	if (!node) {
-		return [];
+
+		position = getElementTagOffsets(templateNode, template)[0];
+		for (const [offset, mapping] of map.toGeneratedLocation(position + template.startTagEnd)) {
+			if (mapping.lengths.length === 2 && mapping.lengths.every(length => length === 0)) {
+				position = offset;
+				mapped = true;
+				break;
+			}
+		}
+		if (!mapped) {
+			return [];
+		}
+
+		const program = languageService.getProgram()!;
+		const sourceFile = program.getSourceFile(virtualCode.fileName);
+		if (!sourceFile) {
+			return [];
+		}
+
+		let node: ts.ObjectLiteralExpression | undefined;
+		for (const child of forEachTouchingNode(ts, sourceFile, position + leadingOffset)) {
+			if (ts.isObjectLiteralExpression(child)) {
+				node = child;
+			}
+		}
+		if (!node) {
+			return [];
+		}
+
+		position = node.end - 1 - leadingOffset;
 	}
 
 	const shadowOffset = 1145141919810;
 	const shadowMapping = {
 		sourceOffsets: [shadowOffset],
-		generatedOffsets: [node.end - 1 - leadingOffset],
+		generatedOffsets: [position],
 		lengths: [0],
 		data: {
 			completion: true,
@@ -67,36 +91,49 @@ export function getComponentProps(
 		if (sourceOffset === shadowOffset) {
 			yield [shadowMapping.generatedOffsets[0]!, shadowMapping];
 		}
-		else {
-			yield* original(sourceOffset, ...args);
-		}
+		yield* original.call(map, sourceOffset, ...args);
 	};
 
-	const completions = languageService.getCompletionsAtPosition(virtualCode.fileName, shadowOffset, undefined);
-	const properties = completions?.entries.filter(entry => entry.kind === 'property') ?? [];
-	const result: ComponentPropInfo[] = [];
+	try {
+		const completions = languageService.getCompletionsAtPosition(virtualCode.fileName, shadowOffset, undefined);
 
-	for (const entry of properties) {
-		const details = languageService.getCompletionEntryDetails(
-			virtualCode.fileName,
-			shadowOffset,
-			entry.name,
-			undefined,
-			entry.source,
-			undefined,
-			entry.data,
-		);
-		const modifiers = entry.kindModifiers?.split(',') ?? [];
-		result.push({
-			name: stripQuotes(entry.name),
-			required: !modifiers.includes('optional'),
-			deprecated: modifiers.includes('deprecated'),
-			documentation: details ? [...generateDocumentation(ts, details)].join('') : '',
-		});
+		return completions?.entries
+			.filter(entry => entry.kind === 'property')
+			.map(entry => {
+				const modifiers = entry.kindModifiers?.split(',') ?? [];
+				const details = languageService.getCompletionEntryDetails(
+					virtualCode.fileName,
+					shadowOffset,
+					entry.name,
+					undefined,
+					entry.source,
+					undefined,
+					entry.data,
+				);
+				return {
+					name: stripQuotes(entry.name),
+					required: !modifiers.includes('optional'),
+					deprecated: modifiers.includes('deprecated'),
+					documentation: details ? [...generateDocumentation(ts, details)].join('') : '',
+				};
+			}) ?? [];
 	}
-	map.toGeneratedLocation = original;
+	finally {
+		map.toGeneratedLocation = original;
+	}
+}
 
-	return result;
+function getTouchingTemplateNode(
+	node: CompilerDOM.ParentNode,
+	position: number,
+): CompilerDOM.ElementNode | undefined {
+	for (const child of node.children) {
+		if (child.type === 1 satisfies CompilerDOM.NodeTypes.ELEMENT) {
+			if (position >= child.loc.start.offset && position <= child.loc.end.offset) {
+				return getTouchingTemplateNode(child, position) ?? child;
+			}
+		}
+	}
 }
 
 function stripQuotes(str: string) {

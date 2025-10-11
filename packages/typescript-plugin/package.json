@@ -20,6 +20,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.4",
-		"@types/path-browserify": "^1.0.1"
+		"@types/path-browserify": "^1.0.1",
+		"@vue/compiler-dom": "^3.5.13"
 	}
 }
