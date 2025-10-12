@@ -305,6 +305,9 @@ importers:
       '@types/path-browserify':
         specifier: ^1.0.1
         version: 1.0.3
+      '@vue/compiler-dom':
+        specifier: ^3.5.13
+        version: 3.5.13
 
   test-workspace:
     devDependencies:
