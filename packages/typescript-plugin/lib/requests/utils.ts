@@ -2,40 +2,6 @@ import { camelize, capitalize } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript';
 
-export function getComponentType(
-	ts: typeof import('typescript'),
-	program: ts.Program,
-	fileName: string,
-	components: NonNullable<ReturnType<typeof getVariableType>>,
-	tag: string,
-) {
-	const checker = program.getTypeChecker();
-	const name = tag.split('.') as [string, ...string[]];
-
-	let componentSymbol = components.type.getProperty(name[0])
-		?? components.type.getProperty(camelize(name[0]))
-		?? components.type.getProperty(capitalize(camelize(name[0])));
-	let componentType: ts.Type | undefined;
-
-	if (!componentSymbol) {
-		const name = getSelfComponentName(fileName);
-		if (name === capitalize(camelize(tag))) {
-			componentType = getVariableType(ts, program, fileName, '__VLS_export')?.type;
-		}
-	}
-	else {
-		componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
-		for (let i = 1; i < name.length; i++) {
-			componentSymbol = componentType.getProperty(name[i]!);
-			if (componentSymbol) {
-				componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
-			}
-		}
-	}
-
-	return componentType;
-}
-
 export function getSelfComponentName(fileName: string) {
 	const baseName = path.basename(fileName);
 	return capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
