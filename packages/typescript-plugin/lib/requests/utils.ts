@@ -108,7 +108,7 @@ function* binaryVisit(
 		const mid = Math.floor((left + right) / 2);
 		const node = nodes[mid]!;
 
-		if (position > node.getEnd()) {
+		if (position > node.end) {
 			left = mid + 1;
 		}
 		else if (position < node.getStart(sourceFile)) {

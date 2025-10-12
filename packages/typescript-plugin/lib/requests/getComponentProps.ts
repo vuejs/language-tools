@@ -1,5 +1,5 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
-import { getElementTagOffsets, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
+import type { Language, SourceScript, VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { forEachTouchingNode } from './utils';
 
@@ -19,6 +19,12 @@ export function getComponentProps(
 	position: number,
 	leadingOffset: number = 0,
 ): ComponentPropInfo[] {
+	const program = languageService.getProgram()!;
+	const sourceFile = program.getSourceFile(virtualCode.fileName);
+	if (!sourceFile) {
+		return [];
+	}
+
 	const serviceScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
 	if (!serviceScript) {
 		return [];
@@ -32,11 +38,16 @@ export function getComponentProps(
 	let mapped = false;
 	const map = language.maps.get(serviceScript.code, sourceScript);
 
-	for (const [offset, mapping] of map.toGeneratedLocation(position + template.startTagEnd)) {
-		if (mapping.data.semantic && mapping.data.verification && mapping.data.navigation) {
-			position = offset;
-			mapped = true;
-			break;
+	outer: for (const [offset] of map.toGeneratedLocation(position + template.startTagEnd)) {
+		for (const node of forEachTouchingNode(ts, sourceFile, offset + leadingOffset)) {
+			if (ts.isObjectLiteralExpression(node)) {
+				position = offset;
+				if (sourceFile.text[position - 1 + leadingOffset] === "'") {
+					position--;
+				}
+				mapped = true;
+				break outer;
+			}
 		}
 	}
 	if (!mapped) {
@@ -45,40 +56,29 @@ export function getComponentProps(
 			return [];
 		}
 
-		position = getElementTagOffsets(templateNode, template)[0];
-		for (const [offset, mapping] of map.toGeneratedLocation(position + template.startTagEnd)) {
-			if (mapping.lengths.length === 2 && mapping.lengths.every(length => length === 0)) {
-				position = offset;
-				mapped = true;
-				break;
+		position = templateNode.loc.start.offset;
+		outer: for (const [offset] of map.toGeneratedLocation(position + template.startTagEnd)) {
+			for (const node of forEachTouchingNode(ts, sourceFile, offset + leadingOffset)) {
+				if (
+					ts.isVariableDeclaration(node)
+					&& node.initializer
+					&& ts.isCallExpression(node.initializer)
+					&& node.initializer.arguments.length
+				) {
+					position = node.initializer.arguments[0]!.end - 1 - leadingOffset;
+					mapped = true;
+					break outer;
+				}
 			}
 		}
 		if (!mapped) {
 			return [];
 		}
-
-		const program = languageService.getProgram()!;
-		const sourceFile = program.getSourceFile(virtualCode.fileName);
-		if (!sourceFile) {
-			return [];
-		}
-
-		let node: ts.ObjectLiteralExpression | undefined;
-		for (const child of forEachTouchingNode(ts, sourceFile, position + leadingOffset)) {
-			if (ts.isObjectLiteralExpression(child)) {
-				node = child;
-			}
-		}
-		if (!node) {
-			return [];
-		}
-
-		position = node.end - 1 - leadingOffset;
 	}
 
-	const shadowOffset = 1145141919810;
-	const shadowMapping = {
-		sourceOffsets: [shadowOffset],
+	const offset = 1145141919810;
+	const mapping = {
+		sourceOffsets: [offset],
 		generatedOffsets: [position],
 		lengths: [0],
 		data: {
@@ -88,14 +88,14 @@ export function getComponentProps(
 
 	const original = map.toGeneratedLocation;
 	map.toGeneratedLocation = function*(sourceOffset, ...args) {
-		if (sourceOffset === shadowOffset) {
-			yield [shadowMapping.generatedOffsets[0]!, shadowMapping];
+		if (sourceOffset === offset) {
+			yield [mapping.generatedOffsets[0]!, mapping];
 		}
 		yield* original.call(map, sourceOffset, ...args);
 	};
 
 	try {
-		const completions = languageService.getCompletionsAtPosition(virtualCode.fileName, shadowOffset, undefined);
+		const completions = languageService.getCompletionsAtPosition(virtualCode.fileName, offset, undefined);
 
 		return completions?.entries
 			.filter(entry => entry.kind === 'property')
@@ -103,7 +103,7 @@ export function getComponentProps(
 				const modifiers = entry.kindModifiers?.split(',') ?? [];
 				const details = languageService.getCompletionEntryDetails(
 					virtualCode.fileName,
-					shadowOffset,
+					offset,
 					entry.name,
 					undefined,
 					entry.source,
