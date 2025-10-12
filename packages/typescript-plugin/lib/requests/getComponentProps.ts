@@ -1,5 +1,5 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
-import type { Language, SourceScript, VueVirtualCode } from '@vue/language-core';
+import { isDefinitionEnabled, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { forEachTouchingNode } from './utils';
 
@@ -38,15 +38,17 @@ export function getComponentProps(
 	let mapped = false;
 	const map = language.maps.get(serviceScript.code, sourceScript);
 
-	outer: for (const [offset] of map.toGeneratedLocation(position + template.startTagEnd)) {
-		for (const node of forEachTouchingNode(ts, sourceFile, offset + leadingOffset)) {
-			if (ts.isObjectLiteralExpression(node)) {
-				position = offset;
-				if (sourceFile.text[position - 1 + leadingOffset] === "'") {
-					position--;
+	outer: for (const [offset, mapping] of map.toGeneratedLocation(position + template.startTagEnd)) {
+		if (isDefinitionEnabled(mapping.data)) {
+			for (const node of forEachTouchingNode(ts, sourceFile, offset + leadingOffset)) {
+				if (ts.isObjectLiteralExpression(node)) {
+					position = offset;
+					if (sourceFile.text[position - 1 + leadingOffset] === "'") {
+						position--;
+					}
+					mapped = true;
+					break outer;
 				}
-				mapped = true;
-				break outer;
 			}
 		}
 	}
