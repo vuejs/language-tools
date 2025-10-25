@@ -77,7 +77,7 @@ export function create(
 								}
 								componentProps.set(
 									checkTag,
-									(await getComponentProps(info.root.fileName, checkTag) ?? [])
+									(await getComponentProps(info.root.fileName, tagOffset) ?? [])
 										.filter(prop => prop.required)
 										.map(prop => prop.name),
 								);
