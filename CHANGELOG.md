@@ -46,6 +46,12 @@
 - ci: upgrade node version (#5668) - Thanks to @so1ve!
 - refactor(typescript-plugin): move reactivity analysis logic to a seperate typescript plugin (#5672) - Thanks to @KazariEX!
 
+## 3.0.10 (2025-10-25)
+
+### Bug Fixes
+
+- fix(typescript-plugin): place `__vue__` in project instead of program (#5690)
+
 ## 3.0.9 (2025-10-07)
 
 ### Features
