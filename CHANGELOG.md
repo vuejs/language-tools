@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.1.2 (2025-10-25)
+
+### Bug Fixes
+
+- fix(component-meta): import type helpers by relative path
+- fix(language-core): fix syntax error when `propTypes` has no elements (#5704) - Thanks to @so1ve!
+- fix(language-core): omit defined emit props only (#5705) - Thanks to @so1ve!
+
+### Other Changes
+
+- docs: fix `vue-tsc` broken link to example boilerplate in `README.md` (#5721) - Thanks to @heyakyra!
+
 ## 3.1.1 (2025-10-07)
 
 ### Features
@@ -33,6 +45,12 @@
 - chore(lint): enforce use of type-only imports (#5658) - Thanks to @so1ve!
 - ci: upgrade node version (#5668) - Thanks to @so1ve!
 - refactor(typescript-plugin): move reactivity analysis logic to a seperate typescript plugin (#5672) - Thanks to @KazariEX!
+
+## 3.0.10 (2025-10-25)
+
+### Bug Fixes
+
+- fix(typescript-plugin): place `__vue__` in project instead of program (#5690)
 
 ## 3.0.9 (2025-10-07)
 
