@@ -71,19 +71,13 @@
 							"name": "entity.name.tag.$2.html.vue"
 						}
 					},
+					"contentName": "text.html.derivative",
 					"patterns": [
 						{
 							"include": "#tag-stuff"
 						},
 						{
-							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
-							"name": "text.html.derivative",
-							"patterns": [
-								{
-									"include": "#html-stuff"
-								}
-							]
+							"include": "#html-stuff"
 						}
 					]
 				},
