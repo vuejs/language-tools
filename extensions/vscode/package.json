@@ -473,6 +473,6 @@
 		"rolldown": "1.0.0-beta.8",
 		"semver": "^7.5.4",
 		"vscode-ext-gen": "^1.0.2",
-		"vscode-tmlanguage-snapshot": "^0.1.3"
+		"vscode-tmlanguage-snapshot": "^1.0.1"
 	}
 }
