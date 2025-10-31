@@ -163,12 +163,12 @@ export = createLanguageServicePlugin(
 			session.addProtocolHandler('_vue:getElementAttrs', request => {
 				const [fileName, tag]: Parameters<Requests['getElementAttrs']> = request.arguments;
 				const { project } = getProject(fileName);
-				return createResponse(getElementAttrs(ts, project.getLanguageService().getProgram()!, fileName, tag));
+				return createResponse(getElementAttrs(ts, project.getLanguageService().getProgram()!, tag));
 			});
 			session.addProtocolHandler('_vue:getElementNames', request => {
 				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
 				const { project } = getProject(fileName);
-				return createResponse(getElementNames(ts, project.getLanguageService().getProgram()!, fileName));
+				return createResponse(getElementNames(ts, project.getLanguageService().getProgram()!));
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');

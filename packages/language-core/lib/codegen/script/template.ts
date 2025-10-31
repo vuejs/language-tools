@@ -20,7 +20,6 @@ export function* generateTemplate(
 
 	yield* generateSelf(options);
 	yield* generateTemplateCtx(options, ctx);
-	yield* generateTemplateElements();
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, ctx);
@@ -107,10 +106,6 @@ function* generateTemplateCtx(
 	yield `const __VLS_ctx = `;
 	yield* generateSpreadMerge(exps);
 	yield endOfLine;
-}
-
-function* generateTemplateElements(): Generator<Code> {
-	yield `let __VLS_elements!: __VLS_IntrinsicElements${endOfLine}`;
 }
 
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
