@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
+import { codeFeatures } from '../codeFeatures';
 import { createTsAst, endOfLine, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
@@ -24,7 +25,7 @@ export function* generateVFor(
 			leftExpressionText,
 			'template',
 			leftExpressionRange.start,
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 		];
 	}
 	yield `] of `;
@@ -34,7 +35,7 @@ export function* generateVFor(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 			source.content,
 			source.loc.start.offset,
 			`(`,
@@ -56,7 +57,7 @@ export function* generateVFor(
 		if (
 			argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
 			&& argument.returns?.type === CompilerDOM.NodeTypes.VNODE_CALL
-			&& argument.returns?.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
+			&& argument.returns.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
 		) {
 			if (argument.returns.tag !== CompilerDOM.FRAGMENT) {
 				isFragment = false;
@@ -71,7 +72,7 @@ export function* generateVFor(
 						options,
 						ctx,
 						'template',
-						ctx.codeFeatures.all,
+						codeFeatures.all,
 						prop.value.content,
 						prop.value.loc.start.offset,
 						`(`,

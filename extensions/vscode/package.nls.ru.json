@@ -1,5 +1,6 @@
 {
 	"configuration.trace.server": "Отслеживать коммуникацию между VS Code и языковым сервером Vue.",
+	"configuration.server.path": "Путь к модулю `@vue/language-server`. Если не установлен, сервер будет загружен из пакета расширения.",
 	"configuration.server.includeLanguages": "Языки, для которых будет включено расширение.",
 	"configuration.codeActions.askNewComponentName": "Запрашивать новое имя компонента при извлечении компонента.",
 	"configuration.suggest.componentNameCasing": "Предпочитаемый формат имени компонента.",
@@ -16,6 +17,9 @@
 	"configuration.format.script.initialIndent": "Начальный отступ для блока `<script>`.",
 	"configuration.format.style.initialIndent": "Начальный отступ для блока `<style>`.",
 	"configuration.format.wrapAttributes": "Переносить атрибуты.",
+	"configuration.editor.focusMode": "Затемнить теги SFC верхнего уровня.",
+	"configuration.editor.reactivityVisualization": "Визуализация системы реактивности.",
+	"configuration.editor.templateInterpolationDecorators": "Усиленная подсветка интерполяций шаблонов.",
 	"command.action.restartServer": "Перезапустить Vue и TS серверы",
 	"command.welcome": "Открыть страницу приветствия"
 }

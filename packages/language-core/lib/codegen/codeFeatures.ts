@@ -27,10 +27,6 @@ const raw = {
 	navigationWithoutRename: {
 		navigation: { shouldRename: () => false },
 	},
-	navigationAndCompletion: {
-		navigation: true,
-		completion: true,
-	},
 	navigationAndAdditionalCompletion: {
 		navigation: true,
 		completion: { isAdditional: true },
@@ -53,19 +49,10 @@ const raw = {
 		navigation: true,
 		completion: true,
 	},
-	withoutHighlightAndNavigation: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
-		completion: true,
-	},
 	withoutHighlightAndCompletion: {
 		semantic: { shouldHighlight: () => false },
 		verification: true,
 		navigation: true,
-	},
-	withoutHighlightAndCompletionAndNavigation: {
-		semantic: { shouldHighlight: () => false },
-		verification: true,
 	},
 	withoutSemantic: {
 		verification: true,

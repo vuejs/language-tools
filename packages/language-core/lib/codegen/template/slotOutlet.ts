@@ -1,5 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
+import { getElementTagOffsets } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
@@ -15,8 +17,7 @@ export function* generateSlotOutlet(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.SlotOutletNode,
 ): Generator<Code> {
-	const startTagOffset = node.loc.start.offset
-		+ options.template.content.slice(node.loc.start.offset).indexOf(node.tag);
+	const [startTagOffset] = getElementTagOffsets(node, options.template);
 	const startTagEndOffset = startTagOffset + node.tag.length;
 	const propsVar = ctx.getInternalVariable();
 	const nameProp = node.props.find(prop => {
@@ -24,8 +25,7 @@ export function* generateSlotOutlet(
 			return prop.name === 'name';
 		}
 		if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'bind'
+			prop.name === 'bind'
 			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			return prop.arg.content === 'name';
@@ -47,7 +47,7 @@ export function* generateSlotOutlet(
 					ctx,
 					source,
 					offset,
-					ctx.codeFeatures.navigationAndVerification,
+					codeFeatures.navigationAndVerification,
 				);
 			}
 			else if (
@@ -72,8 +72,8 @@ export function* generateSlotOutlet(
 			yield* wrapWith(
 				nameProp.loc.start.offset,
 				nameProp.loc.end.offset,
-				ctx.codeFeatures.verification,
-				`${options.slotsAssignName ?? '__VLS_slots'}`,
+				codeFeatures.verification,
+				options.slotsAssignName ?? '__VLS_slots',
 				...codes,
 			);
 		}
@@ -81,12 +81,12 @@ export function* generateSlotOutlet(
 			yield* wrapWith(
 				startTagOffset,
 				startTagEndOffset,
-				ctx.codeFeatures.verification,
+				codeFeatures.verification,
 				`${options.slotsAssignName ?? '__VLS_slots'}[`,
 				...wrapWith(
 					startTagOffset,
 					startTagEndOffset,
-					ctx.codeFeatures.verification,
+					codeFeatures.verification,
 					`'default'`,
 				),
 				`]`,
@@ -96,7 +96,7 @@ export function* generateSlotOutlet(
 		yield* wrapWith(
 			startTagOffset,
 			startTagEndOffset,
-			ctx.codeFeatures.verification,
+			codeFeatures.verification,
 			`{${newLine}`,
 			...generateElementProps(
 				options,
@@ -148,7 +148,7 @@ export function* generateSlotOutlet(
 				options,
 				ctx,
 				'template',
-				ctx.codeFeatures.all,
+				codeFeatures.all,
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,
 			);

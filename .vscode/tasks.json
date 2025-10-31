@@ -31,7 +31,7 @@
 				},
 				"background": {
 					"activeOnStart": true,
-					"beginsPattern": " ",
+					"beginsPattern": "> rolldown",
 					"endsPattern": "Waiting for changes..."
 				}
 			}

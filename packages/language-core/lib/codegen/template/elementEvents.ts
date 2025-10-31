@@ -62,12 +62,12 @@ export function* generateElementEvents(
 			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
 			if (prop.name === 'on') {
 				yield `{ `;
-				yield* generateEventArg(options, ctx, source, start!, emitPrefix.slice(0, -1), ctx.codeFeatures.navigation);
+				yield* generateEventArg(options, source, start!, emitPrefix.slice(0, -1), codeFeatures.navigation);
 				yield `: {} as any } as typeof ${emitsVar},${newLine}`;
 			}
 			yield `{ `;
 			if (prop.name === 'on') {
-				yield* generateEventArg(options, ctx, source, start!, propPrefix.slice(0, -1));
+				yield* generateEventArg(options, source, start!, propPrefix.slice(0, -1));
 				yield `: `;
 				yield* generateEventExpression(options, ctx, prop);
 			}
@@ -82,19 +82,18 @@ export function* generateElementEvents(
 
 export function* generateEventArg(
 	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
 	name: string,
 	start: number,
 	directive = 'on',
 	features?: VueCodeInformation,
 ): Generator<Code> {
-	features ??= ctx.resolveCodeFeatures({
+	features ??= {
 		...codeFeatures.semanticWithoutHighlight,
 		...codeFeatures.navigationWithoutRename,
 		...options.vueCompilerOptions.checkUnknownEvents
 			? codeFeatures.verification
 			: codeFeatures.doNotReportTs2353AndTs2561,
-	});
+	};
 
 	if (directive.length) {
 		name = capitalize(name);
@@ -123,23 +122,11 @@ export function* generateEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		let prefix = `(`;
-		let suffix = `)`;
 		let isFirstMapping = true;
 
 		const ast = createTsAst(options.ts, ctx.inlineTsAsts, prop.exp.content);
 		const isCompound = isCompoundExpression(options.ts, ast);
-
-		if (isCompound) {
-			ctx.addLocalVariable('$event');
-
-			yield `(...[$event]) => {${newLine}`;
-			yield* ctx.generateConditionGuards();
-			prefix = ``;
-			suffix = ``;
-		}
-
-		yield* generateInterpolation(
+		const interpolation = generateInterpolation(
 			options,
 			ctx,
 			'template',
@@ -159,20 +146,26 @@ export function* generateEventExpression(
 						].join('\n\n'),
 					});
 				}
-				return ctx.codeFeatures.all;
+				return codeFeatures.all;
 			},
 			prop.exp.content,
 			prop.exp.loc.start.offset,
-			prefix,
-			suffix,
+			isCompound ? `` : `(`,
+			isCompound ? `` : `)`,
 		);
 
 		if (isCompound) {
-			ctx.removeLocalVariable('$event');
-
+			yield `(...[$event]) => {${newLine}`;
+			ctx.addLocalVariable('$event');
+			yield* ctx.generateConditionGuards();
+			yield* interpolation;
 			yield endOfLine;
+			ctx.removeLocalVariable('$event');
 			yield* ctx.generateAutoImportCompletion();
 			yield `}`;
+		}
+		else {
+			yield* interpolation;
 		}
 	}
 	else {
@@ -192,7 +185,7 @@ export function* generateModelEventExpression(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.verification,
+			codeFeatures.verification,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
 		);

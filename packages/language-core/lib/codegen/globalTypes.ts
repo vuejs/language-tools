@@ -1,5 +1,4 @@
 import type { VueCompilerOptions } from '../types';
-import { getSlotsPropertyName } from '../utils/shared';
 
 export function getGlobalTypesFileName(options: VueCompilerOptions) {
 	return [
@@ -28,35 +27,30 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 	const __VLS_unref: typeof import('${lib}').unref;
 	const __VLS_placeholder: any;
+	const __VLS_intrinsics: ${
+		target >= 3.3
+			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements`
+			: `globalThis.JSX.IntrinsicElements`
+	};
 
-	type __VLS_NativeElements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
-	type __VLS_IntrinsicElements = ${
-		target >= 3.3
-			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements;`
-			: `globalThis.JSX.IntrinsicElements;`
-	}
-	type __VLS_Element = ${
-		target >= 3.3
-			? `import('${lib}/jsx-runtime').JSX.Element;`
-			: `globalThis.JSX.Element;`
-	}
+	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_GlobalComponents = ${
 		target >= 3.5
-			? `import('${lib}').GlobalComponents;`
-			: `import('${lib}').GlobalComponents & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
-	}
+			? `import('${lib}').GlobalComponents`
+			: `import('${lib}').GlobalComponents & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`
+	};
 	type __VLS_GlobalDirectives = import('${lib}').GlobalDirectives;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 	type __VLS_SpreadMerge<A, B> = Omit<A, keyof B> & B;
 	type __VLS_WithComponent<N0 extends string, LocalComponents, Self, N1 extends string, N2 extends string, N3 extends string> =
-		N1 extends keyof LocalComponents ? N1 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N1] } :
-		N2 extends keyof LocalComponents ? N2 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N2] } :
-		N3 extends keyof LocalComponents ? N3 extends N0 ? Pick<LocalComponents, N0 extends keyof LocalComponents ? N0 : never> : { [K in N0]: LocalComponents[N3] } :
+		N1 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N1] } :
+		N2 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N2] } :
+		N3 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N3] } :
 		Self extends object ? { [K in N0]: Self } :
-		N1 extends keyof __VLS_GlobalComponents ? N1 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N1] } :
-		N2 extends keyof __VLS_GlobalComponents ? N2 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N2] } :
-		N3 extends keyof __VLS_GlobalComponents ? N3 extends N0 ? Pick<__VLS_GlobalComponents, N0 extends keyof __VLS_GlobalComponents ? N0 : never> : { [K in N0]: __VLS_GlobalComponents[N3] } :
+		N1 extends keyof __VLS_GlobalComponents ? { [K in N0]: __VLS_GlobalComponents[N1] } :
+		N2 extends keyof __VLS_GlobalComponents ? { [K in N0]: __VLS_GlobalComponents[N2] } :
+		N3 extends keyof __VLS_GlobalComponents ? { [K in N0]: __VLS_GlobalComponents[N3] } :
 		{};
 	type __VLS_FunctionalComponentCtx<T, K> = __VLS_PickNotAny<'__ctx' extends keyof __VLS_PickNotAny<K, {}>
 		? K extends { __ctx?: infer Ctx } ? NonNullable<Ctx> : never : any
@@ -66,10 +60,14 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P
 		: {};
-	type __VLS_FunctionalComponent<T> = (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
+	type __VLS_FunctionalComponent<T> = (props: ${fnPropsType}, ctx?: any) => ${
+		target >= 3.3
+			? `import('${lib}/jsx-runtime').JSX.Element`
+			: `globalThis.JSX.Element`
+	} & {
 		__ctx?: {
 			attrs?: any;
-			slots?: T extends { ${getSlotsPropertyName(target)}: infer Slots } ? Slots : Record<string, any>;
+			slots?: T extends { $slots: infer Slots } ? Slots : Record<string, any>;
 			emit?: T extends { $emit: infer Emit } ? Emit : {};
 			props?: ${fnPropsType};
 			expose?: (exposed: T) => void;
@@ -118,6 +116,10 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 			}
 		>
 	>;
+	type __VLS_EmitsToProps<T> = __VLS_PrettifyGlobal<{
+		[K in string & keyof T as \`on\${Capitalize<K>}\`]?:
+			(...args: T[K] extends (...args: infer P) => any ? P : T[K] extends null ? any[] : never) => any;
+	}>;
 	type __VLS_ResolveEmits<
 		Comp,
 		Emits,
@@ -129,10 +131,16 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		NormalizedEmits = __VLS_NormalizeEmits<Emits> extends infer E ? string extends keyof E ? {} : E : never,
 	> = __VLS_SpreadMerge<NormalizedEmits, TypeEmits>;
 	type __VLS_ResolveDirectives<T> = {
-		[K in Exclude<keyof T, keyof __VLS_GlobalDirectives> & string as \`v\${Capitalize<K>}\`]: T[K];
+		[K in keyof T & string as \`v\${Capitalize<K>}\`]: T[K];
 	};
 	type __VLS_PrettifyGlobal<T> = { [K in keyof T as K]: T[K]; } & {};
+	type __VLS_WithDefaultsGlobal<P, D> = {
+		[K in keyof P as K extends keyof D ? K : never]-?: P[K];
+	} & {
+		[K in keyof P as K extends keyof D ? never : K]: P[K];
+	};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
+	type __VLS_ProxyRefs<T> = import('${lib}').ShallowUnwrapRef<T>;
 
 	function __VLS_getVForSourceType<T extends number | string | any[] | Iterable<any>>(source: T): [
 		item: T extends number ? number
@@ -154,14 +162,9 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		: T extends (...args: any) => any
 			? T
 			: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
-	function __VLS_makeOptional<T>(t: T): { [K in keyof T]?: T[K] };
 	function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
 		T extends new (...args: any) => any ? __VLS_FunctionalComponent<K>
-		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>${
-		target === 2.7
-			? `: T extends import('${lib}').AsyncComponent ? (props: {}, ctx?: any) => any`
-			: ``
-	}
+		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
 		: __VLS_FunctionalComponent<{}>;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];

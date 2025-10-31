@@ -105,13 +105,13 @@ test('#2600', async () => {
 		[
 		  {
 		    "end": {
-		      "line": 1,
-		      "offset": 1,
+		      "line": 8,
+		      "offset": 3,
 		    },
 		    "file": "\${testWorkspacePath}/tsconfigProject/foo.vue",
 		    "start": {
-		      "line": 1,
-		      "offset": 1,
+		      "line": 7,
+		      "offset": 3,
 		    },
 		  },
 		]

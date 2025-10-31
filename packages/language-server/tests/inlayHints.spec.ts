@@ -255,7 +255,8 @@ async function requestInlayHintsResult(fileName: string, languageId: string, con
 	let text = document.getText();
 	for (const hint of inlayHints!.sort((a, b) => document.offsetAt(b.position) - document.offsetAt(a.position))) {
 		const offset = document.offsetAt(hint.position);
-		text = text.slice(0, offset) + '/* ' + hint.label + ' */' + text.slice(offset);
+		const label = Array.isArray(hint.label) ? hint.label.map(part => part.value).join('') : hint.label;
+		text = text.slice(0, offset) + '/* ' + label + ' */' + text.slice(offset);
 	}
 
 	return text;

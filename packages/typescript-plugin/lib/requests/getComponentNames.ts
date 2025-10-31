@@ -1,26 +1,17 @@
-import { VueVirtualCode } from '@vue/language-core';
-import type { RequestContext } from './types';
+import type * as ts from 'typescript';
 import { getSelfComponentName, getVariableType } from './utils';
 
 export function getComponentNames(
-	this: RequestContext,
+	ts: typeof import('typescript'),
+	program: ts.Program,
 	fileName: string,
 ): string[] {
-	const { typescript: ts, language, languageService } = this;
-
-	const sourceScript = language.scripts.get(fileName);
-	const root = sourceScript?.generated?.root;
-	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
-		return [];
-	}
-
-	const names = getVariableType(ts, languageService, root, '__VLS_components')
+	const names = getVariableType(ts, program, fileName, '__VLS_components')
 		?.type
-		?.getProperties()
+		.getProperties()
 		.map(c => c.name)
 		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];
-
 	names.push(getSelfComponentName(fileName));
 	return names;
 }

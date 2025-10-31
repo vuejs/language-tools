@@ -1,13 +1,14 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
+import { codeFeatures } from '../codeFeatures';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
 export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
-export function normalizeAttributeValue(node: CompilerDOM.TextNode): [string, number] {
+export function normalizeAttributeValue(node: CompilerDOM.TextNode) {
 	let offset = node.loc.start.offset;
 	let content = node.loc.source;
 	if (
@@ -17,7 +18,7 @@ export function normalizeAttributeValue(node: CompilerDOM.TextNode): [string, nu
 		offset++;
 		content = content.slice(1, -1);
 	}
-	return [content, offset];
+	return [content, offset] as const;
 }
 
 export function createTsAst(
@@ -46,4 +47,15 @@ export function generateSfcBlockSection(
 		start,
 		features,
 	];
+}
+
+export function* generatePartiallyEnding(
+	source: string,
+	end: number,
+	mark: string,
+	delimiter = 'debugger',
+): Generator<Code> {
+	yield delimiter;
+	yield [``, source, end, codeFeatures.verification];
+	yield `/* PartiallyEnd: ${mark} */${newLine}`;
 }

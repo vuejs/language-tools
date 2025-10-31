@@ -11,7 +11,7 @@ const codeFeatures = {
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.1,
+		version: 2.2,
 
 		getEmbeddedCodes(_fileName, sfc) {
 			if (!sfc.template?.ast) {
@@ -43,7 +43,7 @@ function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Co
 				&& prop.arg.content === 'style'
 				&& prop.exp.constType === CompilerDOM.ConstantTypes.CAN_STRINGIFY
 			) {
-				const endCrt = prop.arg.loc.source[prop.arg.loc.source.length - 1]; // " | '
+				const endCrt = prop.arg.loc.source[prop.arg.loc.source.length - 1]!; // " | '
 				const start = prop.arg.loc.source.indexOf(endCrt) + 1;
 				const end = prop.arg.loc.source.lastIndexOf(endCrt);
 				const content = prop.arg.loc.source.slice(start, end);

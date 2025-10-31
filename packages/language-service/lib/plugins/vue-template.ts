@@ -15,7 +15,7 @@ import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
-import { createTsAliasDocumentLinksProviders, getEmbeddedInfo } from '../utils';
+import { createTsAliasDocumentLinksProviders, resolveEmbeddedCode } from '../utils';
 
 const specialTags = new Set([
 	'slot',
@@ -32,8 +32,8 @@ const specialProps = new Set([
 	'style',
 ]);
 
-let builtInData: html.HTMLDataV1;
-let modelData: html.HTMLDataV1;
+let builtInData: html.HTMLDataV1 | undefined;
+let modelData: html.HTMLDataV1 | undefined;
 
 export function create(
 	languageId: 'html' | 'jade',
@@ -118,11 +118,11 @@ export function create(
 					? vOn.description.value
 					: vOn.description ?? '';
 				const modifiers = markdown
-					.split('\n- ')[4]
+					.split('\n- ')[4]!
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
 					text = text.slice('  - `.'.length);
-					const [name, desc] = text.split('` - ');
+					const [name, desc] = text.split('` - ') as [string, string];
 					vOnModifiers[name] = desc;
 				}
 			}
@@ -131,11 +131,11 @@ export function create(
 					? vBind.description.value
 					: vBind.description ?? '';
 				const modifiers = markdown
-					.split('\n- ')[4]
+					.split('\n- ')[4]!
 					.split('\n').slice(2, -1);
 				for (let text of modifiers) {
 					text = text.slice('  - `.'.length);
-					const [name, desc] = text.split('` - ');
+					const [name, desc] = text.split('` - ') as [string, string];
 					vBindModifiers[name] = desc;
 				}
 			}
@@ -162,11 +162,13 @@ export function create(
 				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
-					const info = getEmbeddedInfo(context, document, 'template', languageId);
-					if (!info) {
+					if (document.languageId !== languageId) {
 						return;
 					}
-					const { sourceScript, root } = info;
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
+						return;
+					}
 
 					const {
 						result: completionList,
@@ -176,8 +178,8 @@ export function create(
 							propMap,
 						},
 					} = await runWithVueData(
-						sourceScript.id,
-						root,
+						info.script.id,
+						info.root,
 						() =>
 							baseServiceInstance.provideCompletionItems!(
 								document,
@@ -240,7 +242,6 @@ export function create(
 								prop = {
 									name,
 									kind: 'prop',
-									isGlobal: true,
 								};
 							}
 						}
@@ -251,7 +252,7 @@ export function create(
 							const { isEvent, propName } = getPropName(prop.name, prop.kind === 'event');
 
 							if (prop.kind === 'prop') {
-								if (!prop.isGlobal || specialProps.has(propName)) {
+								if (!prop.isGlobal) {
 									item.kind = 5 satisfies typeof CompletionItemKind.Field;
 								}
 							}
@@ -262,7 +263,7 @@ export function create(
 								}
 							}
 
-							if (!prop.isGlobal || specialProps.has(propName)) {
+							if (!prop.isGlobal) {
 								tokens.push('\u0000');
 
 								if (item.label.startsWith(':')) {
@@ -310,12 +311,19 @@ export function create(
 						}
 
 						item.sortText = tokens.join('') + (item.sortText ?? item.label);
+
+						if (item.label === 'v-for') {
+							item.textEdit!.newText = item.label + '="${1:value} in ${2:source}"';
+						}
 					}
 				},
 
 				provideHover(document, position, token) {
-					const info = getEmbeddedInfo(context, document, 'template', languageId);
-					if (!info) {
+					if (document.languageId !== languageId) {
+						return;
+					}
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
 						return;
 					}
 
@@ -354,7 +362,7 @@ export function create(
 
 				const casing = await checkCasing(context, sourceDocumentUri);
 
-				for (const tag of builtInData.tags ?? []) {
+				for (const tag of builtInData!.tags ?? []) {
 					if (specialTags.has(tag.name)) {
 						continue;
 					}
@@ -410,7 +418,7 @@ export function create(
 							return htmlDataProvider.provideValues(tag, attr);
 						},
 					},
-					html.newHTMLDataProvider('vue-template-built-in', builtInData),
+					html.newHTMLDataProvider('vue-template-built-in', builtInData!),
 					{
 						getId: () => 'vue-template',
 						isApplicable: () => true,
@@ -437,7 +445,7 @@ export function create(
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(tag));
 								}
-								else if (casing.tag === TagNameCasing.Pascal) {
+								else {
 									names.add(tag);
 								}
 							}
@@ -447,7 +455,7 @@ export function create(
 								if (casing.tag === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}
-								else if (casing.tag === TagNameCasing.Pascal) {
+								else {
 									names.add(name);
 								}
 							}
@@ -485,13 +493,13 @@ export function create(
 							const { attrs, propInfos, events, directives } = tagInfo;
 
 							for (let i = 0; i < propInfos.length; i++) {
-								const prop = propInfos[i];
+								const prop = propInfos[i]!;
 								if (prop.name.startsWith('ref_')) {
 									propInfos.splice(i--, 1);
 									continue;
 								}
 								if (hyphenateTag(prop.name).startsWith('on-vnode-')) {
-									prop.name = 'onVue:' + prop.name['onVnode'.length].toLowerCase()
+									prop.name = 'onVue:' + prop.name['onVnode'.length]!.toLowerCase()
 										+ prop.name.slice('onVnodeX'.length);
 								}
 							}
@@ -511,7 +519,7 @@ export function create(
 
 								if (isEvent) {
 									const eventName = casing.attr === AttrNameCasing.Camel
-										? propName['on'.length].toLowerCase() + propName.slice('onX'.length)
+										? propName['on'.length]!.toLowerCase() + propName.slice('onX'.length)
 										: propName.slice('on-'.length);
 
 									for (
@@ -580,7 +588,7 @@ export function create(
 								});
 							}
 
-							const models: [boolean, string][] = [];
+							const models: string[] = [];
 
 							for (
 								const prop of [
@@ -589,31 +597,28 @@ export function create(
 								]
 							) {
 								if (prop.name.startsWith('onUpdate:')) {
-									const isGlobal = !propNameSet.has(prop.name);
-									models.push([isGlobal, prop.name.slice('onUpdate:'.length)]);
+									models.push(prop.name.slice('onUpdate:'.length));
 								}
 							}
 							for (const event of events) {
 								if (event.startsWith('update:')) {
-									models.push([false, event.slice('update:'.length)]);
+									models.push(event.slice('update:'.length));
 								}
 							}
 
-							for (const [isGlobal, model] of models) {
+							for (const model of models) {
 								const name = casing.attr === AttrNameCasing.Camel ? model : hyphenateAttr(model);
 
 								attributes.push({ name: 'v-model:' + name });
 								propMap.set('v-model:' + name, {
 									name,
 									kind: 'prop',
-									isGlobal,
 								});
 
 								if (model === 'modelValue') {
 									propMap.set('v-model', {
 										name,
 										kind: 'prop',
-										isGlobal,
 									});
 								}
 							}
@@ -658,7 +663,7 @@ export function create(
 					return;
 				}
 
-				const [text, ...modifiers] = replacement.text.split('.');
+				const [text, ...modifiers] = replacement.text.split('.') as [string, ...string[]];
 				const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
 				const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
 				const isVModel = text.startsWith('v-model:') || text === 'v-model';
@@ -679,7 +684,7 @@ export function create(
 						continue;
 					}
 
-					const description = currentModifiers[modifier];
+					const description = currentModifiers[modifier]!;
 					const insertText = text + modifiers.slice(0, -1).map(m => '.' + m).join('') + '.' + modifier;
 					const newItem: html.CompletionItem = {
 						label: modifier,
@@ -709,7 +714,7 @@ export function create(
 				for (const customDataPath of customData) {
 					for (const workspaceFolder of context.env.workspaceFolders) {
 						const uri = Utils.resolvePath(workspaceFolder, customDataPath);
-						const json = await context.env.fs?.readFile?.(uri);
+						const json = await context.env.fs?.readFile(uri);
 						if (json) {
 							try {
 								const data = JSON.parse(json);

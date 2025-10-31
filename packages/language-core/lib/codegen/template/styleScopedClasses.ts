@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { getNodeText } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { endOfLine, normalizeAttributeValue } from '../utils';
 import { generateEscaped } from '../utils/escaped';
 import { wrapWith } from '../utils/wrapWith';
@@ -20,7 +21,7 @@ export function* generateStyleScopedClassReferences(
 			'',
 			'template',
 			offset,
-			ctx.codeFeatures.additionalCompletion,
+			codeFeatures.additionalCompletion,
 		];
 		yield `']} */${endOfLine}`;
 	}
@@ -30,13 +31,13 @@ export function* generateStyleScopedClassReferences(
 			offset - (withDot ? 1 : 0),
 			offset + className.length,
 			source,
-			ctx.codeFeatures.navigation,
+			codeFeatures.navigation,
 			`'`,
 			...generateEscaped(
 				className,
 				source,
 				offset,
-				ctx.codeFeatures.navigationAndAdditionalCompletion,
+				codeFeatures.navigationAndAdditionalCompletion,
 				classNameEscapeRegex,
 			),
 			`'`,
@@ -73,10 +74,9 @@ export function collectStyleScopedClassReferences(
 				}
 			}
 			else {
-				let isWrapped = false;
 				const [content, startOffset] = normalizeAttributeValue(prop.value);
 				if (content) {
-					const classes = collectClasses(content, startOffset + (isWrapped ? 1 : 0));
+					const classes = collectClasses(content, startOffset);
 					ctx.scopedClasses.push(...classes);
 				}
 				else {
@@ -90,8 +90,8 @@ export function collectStyleScopedClassReferences(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			&& prop.arg.content === 'class'
 		) {
-			const content = '`${' + prop.exp.content + '}`';
-			const startOffset = prop.exp.loc.start.offset - 3;
+			const content = '(' + prop.exp.content + ')';
+			const startOffset = prop.exp.loc.start.offset - 1;
 
 			const { ts } = options;
 			const ast = ts.createSourceFile('', content, 99 satisfies ts.ScriptTarget.Latest);
@@ -100,22 +100,19 @@ export function collectStyleScopedClassReferences(
 			ts.forEachChild(ast, node => {
 				if (
 					!ts.isExpressionStatement(node)
-					|| !isTemplateExpression(node.expression)
+					|| !ts.isParenthesizedExpression(node.expression)
 				) {
 					return;
 				}
-
-				const expression = node.expression.templateSpans[0].expression;
+				const { expression } = node.expression;
 
 				if (ts.isStringLiteralLike(expression)) {
 					literals.push(expression);
 				}
-
-				if (ts.isArrayLiteralExpression(expression)) {
+				else if (ts.isArrayLiteralExpression(expression)) {
 					walkArrayLiteral(expression);
 				}
-
-				if (ts.isObjectLiteralExpression(expression)) {
+				else if (ts.isObjectLiteralExpression(expression)) {
 					walkObjectLiteral(expression);
 				}
 			});
@@ -208,9 +205,4 @@ function collectClasses(content: string, startOffset = 0) {
 		}
 	}
 	return classes;
-}
-
-// isTemplateExpression is missing in tsc
-function isTemplateExpression(node: ts.Node): node is ts.TemplateExpression {
-	return node.kind === 228 satisfies ts.SyntaxKind.TemplateExpression;
 }

@@ -4,6 +4,7 @@ export * from '@volar/language-service';
 // for @vue/language-server usage
 export * from '@volar/language-service/lib/utils/featureWorkers';
 
+import type { Requests } from '@vue/typescript-plugin/lib/requests';
 import { create as createEmmetPlugin } from 'volar-service-emmet';
 import { create as createJsonPlugin } from 'volar-service-json';
 import { create as createPugFormatPlugin } from 'volar-service-pug-beautify';
@@ -29,16 +30,16 @@ import { create as createVueTemplatePlugin } from './lib/plugins/vue-template';
 import { create as createVueTemplateRefLinksPlugin } from './lib/plugins/vue-template-ref-links';
 import { create as createVueTwoslashQueriesPlugin } from './lib/plugins/vue-twoslash-queries';
 
+const noop = () => {};
+
 export function createVueLanguageServicePlugins(
 	ts: typeof import('typescript'),
-	tsPluginClient?: import('@vue/typescript-plugin/lib/requests').Requests,
-) {
-	tsPluginClient ??= new Proxy({}, {
+	client = new Proxy({} as Requests, {
 		get() {
-			return () => undefined;
+			return noop;
 		},
-	}) as NonNullable<typeof tsPluginClient>;
-
+	}),
+) {
 	return [
 		createJsonPlugin(),
 		createPugFormatPlugin(),
@@ -63,16 +64,16 @@ export function createVueLanguageServicePlugins(
 		createVueInlayHintsPlugin(ts),
 
 		// type aware plugins
-		createCssPlugin(tsPluginClient),
-		createTypescriptSemanticTokensPlugin(tsPluginClient),
-		createVueAutoDotValuePlugin(ts, tsPluginClient),
-		createVueComponentSemanticTokensPlugin(tsPluginClient),
-		createVueDocumentDropPlugin(ts, tsPluginClient),
-		createVueDocumentHighlightsPlugin(tsPluginClient),
-		createVueExtractFilePlugin(ts, tsPluginClient),
-		createVueMissingPropsHintsPlugin(tsPluginClient),
-		createVueTemplatePlugin('html', tsPluginClient),
-		createVueTemplatePlugin('jade', tsPluginClient),
-		createVueTwoslashQueriesPlugin(tsPluginClient),
+		createCssPlugin(client),
+		createTypescriptSemanticTokensPlugin(client),
+		createVueAutoDotValuePlugin(ts, client),
+		createVueComponentSemanticTokensPlugin(client),
+		createVueDocumentDropPlugin(ts, client),
+		createVueDocumentHighlightsPlugin(client),
+		createVueExtractFilePlugin(ts, client),
+		createVueMissingPropsHintsPlugin(client),
+		createVueTemplatePlugin('html', client),
+		createVueTemplatePlugin('jade', client),
+		createVueTwoslashQueriesPlugin(client),
 	];
 }

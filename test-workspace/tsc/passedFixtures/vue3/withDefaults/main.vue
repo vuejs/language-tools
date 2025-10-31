@@ -13,6 +13,6 @@ withDefaults(defineProps<Props>(), {
 <template>
 	<div>
 		{{ exactType(actionText, {} as string) }}
-		{{ exactType($props.actionText, {} as string | undefined) }}
+		{{ exactType($props.actionText, {} as string) }}
 	</div>
 </template>

@@ -3,12 +3,12 @@ import { computed } from 'alien-signals';
 import * as path from 'path-browserify';
 import { generateScript } from '../codegen/script';
 import { generateTemplate } from '../codegen/template';
+import { CompilerOptionsResolver } from '../compilerOptions';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
-import type { Code, Sfc, VueLanguagePlugin } from '../types';
+import type { Sfc, VueLanguagePlugin } from '../types';
 import { computedSet } from '../utils/signals';
-import { CompilerOptionsResolver } from '../utils/ts';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
 
@@ -16,7 +16,7 @@ const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
 const plugin: VueLanguagePlugin = ctx => {
 	return {
-		version: 2.1,
+		version: 2.2,
 
 		requiredCompilerOptions: [
 			'noPropertyAccessFromIndexSignature',
@@ -35,9 +35,7 @@ const plugin: VueLanguagePlugin = ctx => {
 			if (/script_(js|jsx|ts|tsx)/.test(embeddedFile.id)) {
 				const codegen = useCodegen(fileName, sfc);
 				const tsx = codegen.getGeneratedScript();
-				if (tsx) {
-					embeddedFile.content = [...tsx.codes];
-				}
+				embeddedFile.content = [...tsx.codes];
 			}
 		},
 	};
@@ -150,37 +148,43 @@ function createTsx(
 
 	const setupHasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
-	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
-
 	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
+
+	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
 
 	const getSetupInheritAttrs = computed(() => {
 		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
-			?? getScriptRanges()?.exportDefault?.inheritAttrsOption;
+			?? getScriptRanges()?.componentOptions?.inheritAttrs;
 		return value !== 'false';
 	});
 
 	const getComponentSelfName = computed(() => {
-		const { exportDefault } = getScriptRanges() ?? {};
-		if (sfc.script && exportDefault?.nameOption) {
-			const { nameOption } = exportDefault;
-			return sfc.script.content.slice(nameOption.start + 1, nameOption.end - 1);
+		let name: string;
+		const { componentOptions } = getScriptRanges() ?? {};
+		if (sfc.script && componentOptions?.name) {
+			name = sfc.script.content.slice(
+				componentOptions.name.start + 1,
+				componentOptions.name.end - 1,
+			);
 		}
-		const { defineOptions } = getScriptSetupRanges() ?? {};
-		if (sfc.scriptSetup && defineOptions?.name) {
-			return defineOptions.name;
+		else {
+			const { defineOptions } = getScriptSetupRanges() ?? {};
+			if (sfc.scriptSetup && defineOptions?.name) {
+				name = defineOptions.name;
+			}
+			else {
+				const baseName = path.basename(fileName);
+				name = baseName.slice(0, baseName.lastIndexOf('.'));
+			}
 		}
-		const baseName = path.basename(fileName);
-		return capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
+		return capitalize(camelize(name));
 	});
 
 	const getGeneratedTemplate = computed(() => {
 		if (getResolvedOptions().skipTemplateCodegen || !sfc.template) {
 			return;
 		}
-
-		const codes: Code[] = [];
-		const codegen = generateTemplate({
+		return generateTemplate({
 			ts,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
@@ -190,32 +194,19 @@ function createTsx(
 			destructuredPropNames: getSetupDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
 			hasDefineSlots: setupHasDefineSlots(),
-			slotsAssignName: getSetupSlotsAssignName(),
 			propsAssignName: getSetupPropsAssignName(),
+			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getSetupInheritAttrs(),
 			selfComponentName: getComponentSelfName(),
 		});
-
-		let current = codegen.next();
-		while (!current.done) {
-			const code = current.value;
-			codes.push(code);
-			current = codegen.next();
-		}
-
-		return {
-			...current.value,
-			codes,
-		};
 	});
 
 	const getGeneratedScript = computed(() => {
-		const codes: Code[] = [];
-		const codegen = generateScript({
+		return generateScript({
 			ts,
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
-			sfc: sfc,
+			sfc,
 			fileName,
 			lang: getLang(),
 			scriptRanges: getScriptRanges(),
@@ -224,18 +215,6 @@ function createTsx(
 			destructuredPropNames: getSetupDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
 		});
-
-		let current = codegen.next();
-		while (!current.done) {
-			const code = current.value;
-			codes.push(code);
-			current = codegen.next();
-		}
-
-		return {
-			...current.value,
-			codes,
-		};
 	});
 
 	return {

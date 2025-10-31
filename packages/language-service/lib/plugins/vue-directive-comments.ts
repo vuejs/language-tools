@@ -1,6 +1,6 @@
 import type { CompletionItem, InsertTextFormat, LanguageServicePlugin } from '@volar/language-service';
 
-const cmds = [
+const cmds: [string, string?][] = [
 	['vue-ignore'],
 	['vue-skip'],
 	['vue-expect-error'],

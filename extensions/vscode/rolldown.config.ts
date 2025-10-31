@@ -8,6 +8,7 @@ const resolve = (...paths: string[]) => path.resolve(__dirname, ...paths);
 const config: RolldownOptions = {
 	input: {
 		'extension': './index.ts',
+		'reactivity-analysis': './reactivityAnalysis/plugin.ts',
 	},
 	output: {
 		format: 'cjs',
@@ -31,6 +32,12 @@ const config: RolldownOptions = {
 				fs.writeFileSync(
 					resolve('./node_modules/vue-typescript-plugin-pack/index.js'),
 					`module.exports = require('../../dist/typescript-plugin.js');`,
+				);
+
+				fs.mkdirSync(resolve('./node_modules/vue-reactivity-analysis-plugin-pack'), { recursive: true });
+				fs.writeFileSync(
+					resolve('./node_modules/vue-reactivity-analysis-plugin-pack/index.js'),
+					`module.exports = require('../../dist/reactivity-analysis.js');`,
 				);
 
 				if (isDev) {
@@ -67,7 +74,7 @@ const config: RolldownOptions = {
 					id: /^typescript$/,
 				},
 				handler() {
-					return { id: './typescript.js', external: true };
+					return { id: 'typescript', external: true };
 				},
 			},
 		},

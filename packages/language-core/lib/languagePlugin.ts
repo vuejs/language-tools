@@ -5,7 +5,6 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { createPlugins } from './plugins';
 import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
-import * as CompilerVue2 from './utils/vue2TemplateCompiler';
 import { VueVirtualCode } from './virtualFile/vueFile';
 
 const fileRegistries: {
@@ -56,12 +55,7 @@ export function createVueLanguagePlugin<T>(
 ): LanguagePlugin<T, VueVirtualCode> {
 	const pluginContext: Parameters<VueLanguagePlugin>[0] = {
 		modules: {
-			'@vue/compiler-dom': vueCompilerOptions.target < 3
-				? {
-					...CompilerDOM,
-					compile: CompilerVue2.compile,
-				}
-				: CompilerDOM,
+			'@vue/compiler-dom': CompilerDOM,
 			typescript: ts,
 		},
 		compilerOptions,
@@ -139,16 +133,11 @@ export function createVueLanguagePlugin<T>(
 }
 
 export function getAllExtensions(options: VueCompilerOptions) {
-	const result = new Set<string>();
-	for (const key in options) {
-		if (key === 'extensions' || key.endsWith('Extensions')) {
-			const value = options[key as keyof VueCompilerOptions];
-			if (Array.isArray(value) && value.every(v => typeof v === 'string')) {
-				for (const ext of value) {
-					result.add(ext);
-				}
-			}
-		}
-	}
-	return [...result];
+	return [
+		...new Set(([
+			'extensions',
+			'vitePressExtensions',
+			'petiteVueExtensions',
+		] as const).flatMap(key => options[key])),
+	];
 }

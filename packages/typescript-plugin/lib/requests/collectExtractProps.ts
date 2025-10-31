@@ -1,5 +1,5 @@
-import { isSemanticTokensEnabled, VueVirtualCode } from '@vue/language-core';
-import type { RequestContext } from './types';
+import { isSemanticTokensEnabled, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
+import type * as ts from 'typescript';
 
 interface ExtractPropsInfo {
 	name: string;
@@ -8,25 +8,20 @@ interface ExtractPropsInfo {
 }
 
 export function collectExtractProps(
-	this: RequestContext,
-	fileName: string,
+	ts: typeof import('typescript'),
+	language: Language,
+	program: ts.Program,
+	sourceScript: SourceScript,
+	virtualCode: VueVirtualCode,
 	templateCodeRange: [number, number],
+	leadingOffset: number = 0,
 ): ExtractPropsInfo[] {
-	const { typescript: ts, languageService, language } = this;
-
-	const sourceScript = language.scripts.get(fileName);
-	const root = sourceScript?.generated?.root;
-	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
-		return [];
-	}
-
 	const result = new Map<string, ExtractPropsInfo>();
-	const program = languageService.getProgram()!;
-	const sourceFile = program.getSourceFile(fileName)!;
+	const sourceFile = program.getSourceFile(virtualCode.fileName)!;
 	const checker = program.getTypeChecker();
-	const script = sourceScript.generated.languagePlugin.typescript?.getServiceScript(root);
-	const maps = script ? [...language.maps.forEach(script.code)].map(([, map]) => map) : [];
-	const { sfc } = root;
+	const serviceScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
+	const maps = serviceScript ? [...language.maps.forEach(serviceScript.code)].map(([, map]) => map) : [];
+	const { sfc } = virtualCode;
 
 	sourceFile.forEachChild(function visit(node) {
 		if (
@@ -39,7 +34,7 @@ export function collectExtractProps(
 			for (const map of maps) {
 				let mapped = false;
 				for (
-					const source of map.toSourceLocation(name.getEnd() - sourceScript.snapshot.getLength())
+					const source of map.toSourceLocation(name.getEnd() - leadingOffset)
 				) {
 					if (
 						source[0] >= sfc.template!.startTagEnd + templateCodeRange[0]

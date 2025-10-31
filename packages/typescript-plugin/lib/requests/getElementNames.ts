@@ -1,22 +1,14 @@
-import { VueVirtualCode } from '@vue/language-core';
-import type { RequestContext } from './types';
-import { getVariableType } from './utils';
+import type * as ts from 'typescript';
 
 export function getElementNames(
-	this: RequestContext,
-	fileName: string,
+	ts: typeof import('typescript'),
+	program: ts.Program,
 ): string[] {
-	const { typescript: ts, language, languageService } = this;
-
-	const sourceScript = language.scripts.get(fileName);
-	const root = sourceScript?.generated?.root;
-	if (!sourceScript?.generated || !(root instanceof VueVirtualCode)) {
+	const checker = program.getTypeChecker();
+	const elements = checker.resolveName('__VLS_intrinsics', undefined, ts.SymbolFlags.Variable, false);
+	if (!elements) {
 		return [];
 	}
 
-	return getVariableType(ts, languageService, root, '__VLS_elements')
-		?.type
-		?.getProperties()
-		.map(c => c.name)
-		?? [];
+	return checker.getTypeOfSymbol(elements).getProperties().map(c => c.name);
 }

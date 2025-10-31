@@ -1,11 +1,11 @@
 import type { LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { hyphenateAttr } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(
 	ts: typeof import('typescript'),
-	{ getPropertiesAtLocation }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ isRefAtPosition }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-autoinsert-dotvalue',
@@ -18,8 +18,8 @@ export function create(
 		create(context) {
 			return {
 				async provideAutoInsertSnippet(document, selection, change) {
-					const info = getEmbeddedInfo(context, document, id => id.startsWith('script_'));
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (!info?.code.id.startsWith('script_')) {
 						return;
 					}
 
@@ -34,10 +34,9 @@ export function create(
 
 					let sourceOffset: number | undefined;
 
-					const { sourceScript, virtualCode, root } = info;
-					const { sfc } = root;
+					const { sfc } = info.root;
 					const scriptBlocks = [sfc.script, sfc.scriptSetup].filter(block => !!block);
-					const map = context.language.maps.get(virtualCode, sourceScript);
+					const map = context.language.maps.get(info.code, info.script);
 
 					if (!scriptBlocks.length) {
 						return;
@@ -61,8 +60,7 @@ export function create(
 						}
 					}
 
-					const props = await getPropertiesAtLocation(root.fileName, sourceOffset) ?? [];
-					if (props.some(prop => prop === 'value')) {
+					if (await isRefAtPosition(info.root.fileName, sourceOffset)) {
 						return '${1:.value}';
 					}
 				},

@@ -2,6 +2,9 @@ name: extension-release
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "*"
 
 jobs:
   release:
@@ -13,7 +16,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install global tools
@@ -41,9 +44,9 @@ jobs:
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
 
-      - name: Publish to VSCode Marketplace
-        if: ${{ !contains(steps.publish_ovsx.outputs.version, '-') }}
-        working-directory: extensions/vscode
-        env:
-          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
-        run: vsce publish
+      # - name: Publish to VSCode Marketplace
+      #   if: ${{ !contains(steps.publish_ovsx.outputs.version, '-') }}
+      #   working-directory: extensions/vscode
+      #   env:
+      #     VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+      #   run: vsce publish

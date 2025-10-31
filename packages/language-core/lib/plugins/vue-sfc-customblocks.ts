@@ -3,7 +3,7 @@ import { allCodeFeatures } from './shared';
 
 const plugin: VueLanguagePlugin = () => {
 	return {
-		version: 2.1,
+		version: 2.2,
 
 		getEmbeddedCodes(_fileName, sfc) {
 			return sfc.customBlocks.map((customBlock, i) => ({
@@ -15,7 +15,7 @@ const plugin: VueLanguagePlugin = () => {
 		resolveEmbeddedCode(_fileName, sfc, embeddedFile) {
 			if (embeddedFile.id.startsWith('custom_block_')) {
 				const index = parseInt(embeddedFile.id.slice('custom_block_'.length));
-				const customBlock = sfc.customBlocks[index];
+				const customBlock = sfc.customBlocks[index]!;
 
 				embeddedFile.content.push([
 					customBlock.content,

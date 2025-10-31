@@ -1,5 +1,5 @@
 import type { InlayHint, LanguageServicePlugin, Position } from '@volar/language-service';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 const twoslashTemplateReg = /<!--\s*\^\?\s*-->/g;
 const twoslashScriptReg = /(?<=^|\n)\s*\/\/\s*\^\?/g;
@@ -15,20 +15,16 @@ export function create(
 		create(context) {
 			return {
 				async provideInlayHints(document, range) {
-					const info = getEmbeddedInfo(
-						context,
-						document,
-						id => id === 'template' || id.startsWith('script_'),
-					);
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template' && !info?.code.id.startsWith('script_')) {
 						return;
 					}
-					const { sourceScript, virtualCode, root } = info;
 
 					const hoverOffsets: [Position, number][] = [];
 					const inlayHints: InlayHint[] = [];
+					const twoslashReg = info.code.id === 'template' ? twoslashTemplateReg : twoslashScriptReg;
+					const sourceDocument = context.documents.get(info.script.id, info.script.languageId, info.script.snapshot);
 
-					const twoslashReg = virtualCode.id === 'template' ? twoslashTemplateReg : twoslashScriptReg;
 					for (const pointer of document.getText(range).matchAll(twoslashReg)) {
 						const offset = pointer.index + pointer[0].indexOf('^?') + document.offsetAt(range.start);
 						const position = document.positionAt(offset);
@@ -41,12 +37,11 @@ export function create(
 						]);
 					}
 
-					const sourceDocument = context.documents.get(sourceScript.id, sourceScript.languageId, sourceScript.snapshot);
 					for (const [pointerPosition, hoverOffset] of hoverOffsets) {
-						const map = context.language.maps.get(virtualCode, sourceScript);
+						const map = context.language.maps.get(info.code, info.script);
 						for (const [sourceOffset] of map.toSourceLocation(hoverOffset)) {
 							const quickInfo = await getQuickInfoAtPosition(
-								root.fileName,
+								info.root.fileName,
 								sourceDocument.positionAt(sourceOffset),
 							);
 							if (quickInfo) {

@@ -46,7 +46,7 @@ export function* generateElementProps(
 			) {
 				if (!isComponent) {
 					yield `...{ `;
-					yield* generateEventArg(options, ctx, prop.arg.loc.source, prop.arg.loc.start.offset);
+					yield* generateEventArg(options, prop.arg.loc.source, prop.arg.loc.start.offset);
 					yield `: `;
 					yield* generateEventExpression(options, ctx, prop);
 					yield `},`;
@@ -113,7 +113,7 @@ export function* generateElementProps(
 
 			const shouldSpread = propName === 'style' || propName === 'class';
 			const shouldCamelize = isComponent && getShouldCamelize(options, prop, propName);
-			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck);
+			const features = getPropsCodeFeatures(strictPropsCheck);
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -121,7 +121,7 @@ export function* generateElementProps(
 			const codes = [...wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				ctx.codeFeatures.verification,
+				codeFeatures.verification,
 				...(
 					prop.arg
 						? generateObjectProperty(
@@ -129,13 +129,13 @@ export function* generateElementProps(
 							ctx,
 							propName,
 							prop.arg.loc.start.offset,
-							codeInfo,
+							features,
 							shouldCamelize,
 						)
 						: wrapWith(
 							prop.loc.start.offset,
 							prop.loc.start.offset + 'v-model'.length,
-							ctx.codeFeatures.withoutHighlightAndCompletion,
+							codeFeatures.withoutHighlightAndCompletion,
 							propName,
 						)
 				),
@@ -143,7 +143,7 @@ export function* generateElementProps(
 				...wrapWith(
 					prop.arg?.loc.start.offset ?? prop.loc.start.offset,
 					prop.arg?.loc.end.offset ?? prop.loc.end.offset,
-					ctx.codeFeatures.verification,
+					codeFeatures.verification,
 					...generatePropExp(
 						options,
 						ctx,
@@ -186,21 +186,13 @@ export function* generateElementProps(
 			}
 		}
 		else if (prop.type === CompilerDOM.NodeTypes.ATTRIBUTE) {
-			if (
-				options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))
-				// Vue 2 Transition doesn't support "persisted" property but `@vue/compiler-dom` always adds it (#3881)
-				|| (
-					options.vueCompilerOptions.target < 3
-					&& prop.name === 'persisted'
-					&& node.tag.toLowerCase() === 'transition'
-				)
-			) {
+			if (options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(prop.name, pattern))) {
 				continue;
 			}
 
 			const shouldSpread = prop.name === 'style' || prop.name === 'class';
 			const shouldCamelize = isComponent && getShouldCamelize(options, prop, prop.name);
-			const codeInfo = getPropsCodeInfo(ctx, strictPropsCheck);
+			const features = getPropsCodeFeatures(strictPropsCheck);
 
 			if (shouldSpread) {
 				yield `...{ `;
@@ -208,19 +200,19 @@ export function* generateElementProps(
 			const codes = [...wrapWith(
 				prop.loc.start.offset,
 				prop.loc.end.offset,
-				ctx.codeFeatures.verification,
+				codeFeatures.verification,
 				...generateObjectProperty(
 					options,
 					ctx,
 					prop.name,
 					prop.loc.start.offset,
-					codeInfo,
+					features,
 					shouldCamelize,
 				),
 				`: `,
 				...(
 					prop.value
-						? generateAttrValue(prop.value, ctx.codeFeatures.withoutNavigation)
+						? generateAttrValue(prop.value, codeFeatures.withoutNavigation)
 						: [`true`]
 				),
 			)];
@@ -236,8 +228,7 @@ export function* generateElementProps(
 			yield `,${newLine}`;
 		}
 		else if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'bind'
+			prop.name === 'bind'
 			&& !prop.arg
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
@@ -250,7 +241,7 @@ export function* generateElementProps(
 				const codes = [...wrapWith(
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
-					ctx.codeFeatures.verification,
+					codeFeatures.verification,
 					`...`,
 					...generatePropExp(
 						options,
@@ -281,8 +272,8 @@ export function* generatePropExp(
 ): Generator<Code> {
 	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
 	const features = isShorthand
-		? ctx.codeFeatures.withoutHighlightAndCompletion
-		: ctx.codeFeatures.all;
+		? codeFeatures.withoutHighlightAndCompletion
+		: codeFeatures.all;
 
 	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
 		if (!isShorthand) { // vue 3.4+
@@ -301,8 +292,8 @@ export function* generatePropExp(
 			const propVariableName = camelize(exp.loc.source);
 
 			if (identifierRegex.test(propVariableName)) {
-				const isDestructuredProp = options.destructuredPropNames?.has(propVariableName) ?? false;
-				const isTemplateRef = options.templateRefNames?.has(propVariableName) ?? false;
+				const isDestructuredProp = options.destructuredPropNames.has(propVariableName);
+				const isTemplateRef = options.templateRefNames.has(propVariableName);
 
 				const codes = generateCamelized(
 					exp.loc.source,
@@ -366,22 +357,19 @@ function getShouldCamelize(
 	return (
 		prop.type !== CompilerDOM.NodeTypes.DIRECTIVE
 		|| !prop.arg
-		|| (prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
+		|| (prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 	)
 		&& hyphenateAttr(propName) === propName
 		&& !options.vueCompilerOptions.htmlAttributes.some(pattern => isMatch(propName, pattern));
 }
 
-function getPropsCodeInfo(
-	ctx: TemplateCodegenContext,
-	strictPropsCheck: boolean,
-): VueCodeInformation {
-	return ctx.resolveCodeFeatures({
+function getPropsCodeFeatures(strictPropsCheck: boolean): VueCodeInformation {
+	return {
 		...codeFeatures.withoutHighlightAndCompletion,
 		...strictPropsCheck
 			? codeFeatures.verification
 			: codeFeatures.doNotReportTs2353AndTs2561,
-	});
+	};
 }
 
 function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: VueCompilerOptions) {
@@ -425,5 +413,5 @@ function getModelPropName(node: CompilerDOM.ElementNode, vueCompilerOptions: Vue
 		}
 	}
 
-	return vueCompilerOptions.target < 3 ? 'value' : 'modelValue';
+	return 'modelValue';
 }

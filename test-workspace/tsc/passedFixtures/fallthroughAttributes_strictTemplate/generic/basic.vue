@@ -2,10 +2,10 @@
 import child from './child.vue';
 
 defineProps<{
-	foo?: T;
+	bar?: T;
 }>();
 </script>
 
 <template>
-	<child />
+	<child :foo="bar" />
 </template>

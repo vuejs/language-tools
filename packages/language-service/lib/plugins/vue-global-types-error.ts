@@ -1,5 +1,5 @@
 import type { DiagnosticSeverity, LanguageServicePlugin } from '@volar/language-service';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -13,17 +13,16 @@ export function create(): LanguageServicePlugin {
 		create(context) {
 			return {
 				provideDiagnostics(document) {
-					const info = getEmbeddedInfo(context, document, 'root_tags');
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'root_tags') {
 						return;
 					}
-					const { sourceScript, root } = info;
-					if (sourceScript.id.scheme !== 'file') {
+					if (info.script.id.scheme !== 'file') {
 						return;
 					}
 
-					const { vueCompilerOptions } = root;
-					const globalTypesPath = vueCompilerOptions.globalTypesPath(root.fileName);
+					const { vueCompilerOptions } = info.root;
+					const globalTypesPath = vueCompilerOptions.globalTypesPath(info.root.fileName);
 					if (globalTypesPath) {
 						return;
 					}
@@ -42,7 +41,7 @@ Failed to write the global types file. Make sure that:
 1. "node_modules" directory exists.
 2. "${vueCompilerOptions.lib}" is installed as a direct dependency.
 
-Alternatively, you can manually set "vueCompilerOptions.globalTypesPath" in your "tsconfig.json".
+Alternatively, you can manually set "vueCompilerOptions.globalTypesPath" in your "tsconfig.json" or "jsconfig.json".
 
 If all dependencies are installed, try running the "vue.action.restartServer" command to restart Vue and TS servers.
 						`.trim(),

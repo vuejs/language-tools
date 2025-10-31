@@ -1,13 +1,15 @@
 import * as CompilerDOM from '@vue/compiler-dom';
+import { replaceSourceRange } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
-import { getStartEnd } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { createTsAst, endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
+import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
 export function* generateVSlot(
@@ -37,7 +39,7 @@ export function* generateVSlot(
 					ctx,
 					slotDir.arg.loc.source,
 					slotDir.arg.loc.start.offset,
-					slotDir.arg.isStatic ? ctx.codeFeatures.withoutHighlight : ctx.codeFeatures.all,
+					slotDir.arg.isStatic ? codeFeatures.withoutHighlight : codeFeatures.all,
 					false,
 					true,
 				);
@@ -46,7 +48,7 @@ export function* generateVSlot(
 				yield* wrapWith(
 					slotDir.loc.start.offset,
 					slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
-					ctx.codeFeatures.withoutHighlightAndCompletion,
+					codeFeatures.withoutHighlightAndCompletion,
 					`default`,
 				);
 			}
@@ -56,7 +58,7 @@ export function* generateVSlot(
 			yield* wrapWith(
 				node.loc.start.offset,
 				node.loc.end.offset,
-				ctx.codeFeatures.navigation,
+				codeFeatures.navigation,
 				`default`,
 			);
 		}
@@ -96,7 +98,7 @@ export function* generateVSlot(
 						? 'v-slot:'.length
 						: 0
 				),
-				ctx.codeFeatures.completion,
+				codeFeatures.completion,
 			];
 			yield `'/* empty slot name completion */]${endOfLine}`;
 		}
@@ -112,25 +114,42 @@ function* generateSlotParameters(
 	slotVar: string,
 ): Generator<Code> {
 	const { ts } = options;
-
 	const statement = ast.statements[0];
-	if (!ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
+
+	if (!statement || !ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
 		return;
 	}
 
 	const { expression } = statement;
 	const startOffset = exp.loc.start.offset - 1;
-	const modifies: [Code[], number, number][] = [];
 	const types: (Code | null)[] = [];
+
+	const interpolation = [...generateInterpolation(
+		options,
+		ctx,
+		'template',
+		codeFeatures.all,
+		ast.text,
+		startOffset,
+	)];
+
+	replaceSourceRange(interpolation, 'template', startOffset, startOffset + `(`.length);
+	replaceSourceRange(
+		interpolation,
+		'template',
+		startOffset + ast.text.length - `) => {}`.length,
+		startOffset + ast.text.length,
+	);
 
 	for (const { name, type } of expression.parameters) {
 		if (type) {
-			modifies.push([
-				[``],
-				name.end,
-				type.end,
+			types.push([
+				ast.text.slice(name.end, type.end),
+				'template',
+				startOffset + name.end,
+				codeFeatures.all,
 			]);
-			types.push(chunk(getStartEnd(ts, type, ast).start, type.end));
+			replaceSourceRange(interpolation, 'template', startOffset + name.end, startOffset + type.end);
 		}
 		else {
 			types.push(null);
@@ -138,13 +157,7 @@ function* generateSlotParameters(
 	}
 
 	yield `const [`;
-	let nextStart = 1;
-	for (const [codes, start, end] of modifies) {
-		yield chunk(nextStart, start);
-		yield* codes;
-		nextStart = end;
-	}
-	yield chunk(nextStart, expression.equalsGreaterThanToken.pos - 1);
+	yield* interpolation;
 	yield `] = __VLS_getSlotParameters(${slotVar}!`;
 
 	if (types.some(t => t)) {
@@ -152,20 +165,11 @@ function* generateSlotParameters(
 		yield* wrapWith(
 			exp.loc.start.offset,
 			exp.loc.end.offset,
-			ctx.codeFeatures.verification,
+			codeFeatures.verification,
 			`(`,
-			...types.flatMap(type => type ? [`_: `, type, `, `] : `_, `),
+			...types.flatMap(type => type ? [`_`, type, `, `] : `_, `),
 			`) => [] as any`,
 		);
 	}
 	yield `)${endOfLine}`;
-
-	function chunk(start: number, end: number): Code {
-		return [
-			ast.text.slice(start, end),
-			'template',
-			startOffset + start,
-			ctx.codeFeatures.all,
-		];
-	}
 }

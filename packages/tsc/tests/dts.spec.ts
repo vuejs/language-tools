@@ -1,5 +1,5 @@
 import { proxyCreateProgram } from '@volar/typescript';
-import * as vue from '@vue/language-core';
+import * as core from '@vue/language-core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as ts from 'typescript';
@@ -24,20 +24,21 @@ describe('vue-tsc-dts', () => {
 		options: compilerOptions,
 	};
 
-	let vueOptions: vue.VueCompilerOptions;
+	let vueOptions: core.VueCompilerOptions;
 
 	const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => {
 		const { configFilePath } = options.options;
 		if (typeof configFilePath === 'string') {
-			vueOptions = vue.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
+			vueOptions = core.createParsedCommandLine(ts, ts.sys, configFilePath.replace(windowsPathReg, '/')).vueOptions;
 		}
 		else {
-			vueOptions = vue.createParsedCommandLineByJson(ts, ts.sys, workspace.replace(windowsPathReg, '/'), {}).vueOptions;
+			vueOptions =
+				core.createParsedCommandLineByJson(ts, ts.sys, workspace.replace(windowsPathReg, '/'), {}).vueOptions;
 			vueOptions.target = 99;
 			vueOptions.extensions = ['vue', 'cext'];
 		}
-		vue.writeGlobalTypes(vueOptions, ts.sys.writeFile);
-		const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
+		vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
+		const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
 			ts,
 			options.options,
 			vueOptions,

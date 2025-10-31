@@ -1,6 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { hyphenateTag } from '../../utils/shared';
+import { codeFeatures } from '../codeFeatures';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
@@ -62,9 +63,9 @@ export function* generateTemplateChild(
 			yield* generateSlotOutlet(options, ctx, node);
 		}
 		else {
-			const slotDir = node.props.find(p =>
-				p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot'
-			) as CompilerDOM.DirectiveNode;
+			const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
+				| CompilerDOM.DirectiveNode
+				| undefined;
 			if (
 				node.tagType === CompilerDOM.ElementTypes.TEMPLATE
 				&& ctx.currentComponent
@@ -100,7 +101,7 @@ export function* generateTemplateChild(
 			options,
 			ctx,
 			'template',
-			ctx.codeFeatures.all,
+			codeFeatures.all,
 			content,
 			start,
 			`(`,
@@ -128,6 +129,9 @@ function* collectSingleRootNodes(
 	options: TemplateCodegenOptions,
 	children: CompilerDOM.TemplateChildNode[],
 ): Generator<CompilerDOM.ElementNode | null> {
+	// Exclude the effect of comments on the root node
+	children = children.filter(node => node.type !== CompilerDOM.NodeTypes.COMMENT);
+
 	if (children.length !== 1) {
 		// "null" is used to determine whether the component is not always has a single root
 		if (children.length > 1) {
@@ -136,7 +140,7 @@ function* collectSingleRootNodes(
 		return;
 	}
 
-	const child = children[0];
+	const child = children[0]!;
 	if (child.type === CompilerDOM.NodeTypes.IF) {
 		for (const branch of child.branches) {
 			yield* collectSingleRootNodes(options, branch.children);

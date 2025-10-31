@@ -1,9 +1,10 @@
 import type * as ts from 'typescript';
 import type { TextRange, VueCompilerOptions } from '../types';
-import { collectBindingIdentifiers, collectBindingRanges } from '../utils/collectBindings';
+import { collectBindingIdentifiers } from '../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../utils/shared';
+import { getClosestMultiLineCommentRange, parseBindingRanges } from './utils';
 
-const tsCheckReg = /^\/\/\s*@ts-(?:no)?check($|\s)/;
+const tsCheckReg = /^\/\/\s*@ts-(?:no)?check(?:$|\s)/;
 
 type CallExpressionRange = {
 	callExp: TextRange;
@@ -117,7 +118,7 @@ export function parseScriptSetupRanges(
 
 		const commentRanges = ts.getLeadingCommentRanges(text, node.pos);
 		if (commentRanges?.length) {
-			const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0];
+			const commentRange = commentRanges.sort((a, b) => a.pos - b.pos)[0]!;
 			importSectionEndOffset = commentRange.pos;
 		}
 		else {
@@ -151,7 +152,7 @@ export function parseScriptSetupRanges(
 	};
 
 	function visitNode(node: ts.Node, parents: ts.Node[]) {
-		const parent = parents[parents.length - 1];
+		const parent = parents[parents.length - 1]!;
 		if (
 			ts.isCallExpression(node)
 			&& ts.isIdentifier(node.expression)
@@ -173,10 +174,10 @@ export function parseScriptSetupRanges(
 
 				if (node.typeArguments) {
 					if (node.typeArguments.length >= 1) {
-						type = _getStartEnd(node.typeArguments[0]);
+						type = _getStartEnd(node.typeArguments[0]!);
 					}
 					if (node.typeArguments.length >= 2) {
-						modifierType = _getStartEnd(node.typeArguments[1]);
+						modifierType = _getStartEnd(node.typeArguments[1]!);
 					}
 				}
 
@@ -185,7 +186,7 @@ export function parseScriptSetupRanges(
 					options = node.arguments[1];
 				}
 				else if (node.arguments.length >= 1) {
-					if (ts.isStringLiteralLike(node.arguments[0])) {
+					if (ts.isStringLiteralLike(node.arguments[0]!)) {
 						propName = node.arguments[0];
 					}
 					else {
@@ -271,7 +272,7 @@ export function parseScriptSetupRanges(
 					...parseCallExpressionAssignment(node, parent),
 					statement: getStatementRange(ts, parents, node, ast),
 				};
-				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0])) {
+				if (node.typeArguments?.length && ts.isTypeLiteralNode(node.typeArguments[0]!)) {
 					for (const member of node.typeArguments[0].members) {
 						if (ts.isCallSignatureDeclaration(member)) {
 							const type = member.parameters[0]?.type;
@@ -295,7 +296,7 @@ export function parseScriptSetupRanges(
 			else if (
 				vueCompilerOptions.macros.defineOptions.includes(callText)
 				&& node.arguments.length
-				&& ts.isObjectLiteralExpression(node.arguments[0])
+				&& ts.isObjectLiteralExpression(node.arguments[0]!)
 			) {
 				defineOptions = {};
 				const obj = node.arguments[0];
@@ -342,101 +343,19 @@ export function parseScriptSetupRanges(
 		return {
 			callExp: _getStartEnd(node),
 			exp: _getStartEnd(node.expression),
-			arg: node.arguments.length ? _getStartEnd(node.arguments[0]) : undefined,
-			typeArg: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]) : undefined,
+			arg: node.arguments.length ? _getStartEnd(node.arguments[0]!) : undefined,
+			typeArg: node.typeArguments?.length ? _getStartEnd(node.typeArguments[0]!) : undefined,
 		};
 	}
 
 	function parseCallExpressionAssignment(node: ts.CallExpression, parent: ts.Node) {
 		return {
-			name: ts.isVariableDeclaration(parent) ? _getNodeText(parent.name) : undefined,
+			name: ts.isVariableDeclaration(parent) && ts.isIdentifier(parent.name)
+				? _getNodeText(parent.name)
+				: undefined,
 			...parseCallExpression(node),
 		};
 	}
-
-	function _getStartEnd(node: ts.Node) {
-		return getStartEnd(ts, node, ast);
-	}
-
-	function _getNodeText(node: ts.Node) {
-		return getNodeText(ts, node, ast);
-	}
-}
-
-export function parseBindingRanges(ts: typeof import('typescript'), ast: ts.SourceFile) {
-	const bindings: {
-		range: TextRange;
-		moduleName?: string;
-		isDefaultImport?: boolean;
-		isNamespace?: boolean;
-	}[] = [];
-
-	ts.forEachChild(ast, node => {
-		if (ts.isVariableStatement(node)) {
-			for (const decl of node.declarationList.declarations) {
-				const ranges = collectBindingRanges(ts, decl.name, ast);
-				bindings.push(...ranges.map(range => ({ range })));
-			}
-		}
-		else if (ts.isFunctionDeclaration(node)) {
-			if (node.name && ts.isIdentifier(node.name)) {
-				bindings.push({
-					range: _getStartEnd(node.name),
-				});
-			}
-		}
-		else if (ts.isClassDeclaration(node)) {
-			if (node.name) {
-				bindings.push({
-					range: _getStartEnd(node.name),
-				});
-			}
-		}
-		else if (ts.isEnumDeclaration(node)) {
-			bindings.push({
-				range: _getStartEnd(node.name),
-			});
-		}
-
-		if (ts.isImportDeclaration(node)) {
-			const moduleName = _getNodeText(node.moduleSpecifier).slice(1, -1);
-
-			if (node.importClause && !node.importClause.isTypeOnly) {
-				const { name, namedBindings } = node.importClause;
-
-				if (name) {
-					bindings.push({
-						range: _getStartEnd(name),
-						moduleName,
-						isDefaultImport: true,
-					});
-				}
-				if (namedBindings) {
-					if (ts.isNamedImports(namedBindings)) {
-						for (const element of namedBindings.elements) {
-							if (element.isTypeOnly) {
-								continue;
-							}
-							bindings.push({
-								range: _getStartEnd(element.name),
-								moduleName,
-								isDefaultImport: element.propertyName?.text === 'default',
-							});
-						}
-					}
-					else {
-						bindings.push({
-							range: _getStartEnd(namedBindings.name),
-							moduleName,
-							isNamespace: true,
-						});
-					}
-				}
-			}
-		}
-	});
-
-	return bindings;
 
 	function _getStartEnd(node: ts.Node) {
 		return getStartEnd(ts, node, ast);
@@ -455,8 +374,8 @@ function getStatementRange(
 ) {
 	let statementRange: TextRange | undefined;
 	for (let i = parents.length - 1; i >= 0; i--) {
-		if (ts.isStatement(parents[i])) {
-			const statement = parents[i];
+		const statement = parents[i]!;
+		if (ts.isStatement(statement)) {
 			ts.forEachChild(statement, child => {
 				const range = getStartEnd(ts, child, ast);
 				statementRange ??= range;
@@ -469,28 +388,4 @@ function getStatementRange(
 		statementRange = getStartEnd(ts, node, ast);
 	}
 	return statementRange;
-}
-
-function getClosestMultiLineCommentRange(
-	ts: typeof import('typescript'),
-	node: ts.Node,
-	parents: ts.Node[],
-	ast: ts.SourceFile,
-) {
-	for (let i = parents.length - 1; i >= 0; i--) {
-		if (ts.isStatement(node)) {
-			break;
-		}
-		node = parents[i];
-	}
-	const comment = ts.getLeadingCommentRanges(ast.text, node.pos)
-		?.reverse()
-		.find(range => range.kind === 3 satisfies ts.SyntaxKind.MultiLineCommentTrivia);
-
-	if (comment) {
-		return {
-			start: comment.pos,
-			end: comment.end,
-		};
-	}
 }

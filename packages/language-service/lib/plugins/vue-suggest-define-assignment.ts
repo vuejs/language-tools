@@ -1,6 +1,6 @@
 import type { CompletionItem, CompletionItemKind, LanguageServicePlugin } from '@volar/language-service';
 import { type TextRange, tsCodegen } from '@vue/language-core';
-import { getEmbeddedInfo } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 export function create(): LanguageServicePlugin {
 	return {
@@ -12,18 +12,17 @@ export function create(): LanguageServicePlugin {
 			return {
 				isAdditionalCompletion: true,
 				async provideCompletionItems(document) {
-					const info = getEmbeddedInfo(context, document, id => id.startsWith('script_'));
-					if (!info) {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (!info?.code.id.startsWith('script_')) {
 						return;
 					}
-					const { virtualCode, root } = info;
 
 					const enabled = await context.env.getConfiguration<boolean>?.('vue.suggest.defineAssignment') ?? true;
 					if (!enabled) {
 						return;
 					}
 
-					const { sfc } = root;
+					const { sfc } = info.root;
 					const codegen = tsCodegen.get(sfc);
 					const scriptSetup = sfc.scriptSetup;
 					const scriptSetupRanges = codegen?.getScriptSetupRanges();
@@ -32,7 +31,7 @@ export function create(): LanguageServicePlugin {
 					}
 
 					const result: CompletionItem[] = [];
-					const mappings = [...context.language.maps.forEach(virtualCode)];
+					const mappings = [...context.language.maps.forEach(info.code)];
 
 					addDefineCompletionItem(
 						scriptSetupRanges.defineProps?.statement,

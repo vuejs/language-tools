@@ -1,7 +1,7 @@
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { generateSfcBlockSection, newLine } from '../utils';
 import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
@@ -13,14 +13,15 @@ export function* generateComponent(
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
 	if (
-		options.sfc.script && options.scriptRanges?.exportDefault
-		&& options.scriptRanges.exportDefault.expression.start !== options.scriptRanges.exportDefault.args.start
+		options.sfc.script
+		&& options.scriptRanges?.componentOptions
+		&& options.scriptRanges.componentOptions.expression.start !== options.scriptRanges.componentOptions.args.start
 	) {
 		// use defineComponent() from user space code if it exist
 		yield generateSfcBlockSection(
 			options.sfc.script,
-			options.scriptRanges.exportDefault.expression.start,
-			options.scriptRanges.exportDefault.args.start,
+			options.scriptRanges.componentOptions.expression.start,
+			options.scriptRanges.componentOptions.args.start,
 			codeFeatures.all,
 		);
 		yield `{${newLine}`;
@@ -29,28 +30,32 @@ export function* generateComponent(
 		yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 	}
 
-	yield `setup() {${newLine}`;
-	const returns: Code[] = [];
+	const returns: string[] = [];
 	if (ctx.bypassDefineComponent) {
-		yield* `const __VLS_returns = {${newLine}`;
-		yield* generateComponentSetupReturns(scriptSetupRanges);
-		yield `}${endOfLine}`;
-		returns.push(`typeof __VLS_returns`);
+		// fill $props
+		if (scriptSetupRanges.defineProps) {
+			const name = scriptSetupRanges.defineProps.name ?? `__VLS_props`;
+			// NOTE: defineProps is inaccurate for $props
+			returns.push(name, `{} as { $props: Partial<typeof ${name}> }`);
+		}
+		// fill $emit
+		if (scriptSetupRanges.defineEmits) {
+			returns.push(`{} as { $emit: typeof ${scriptSetupRanges.defineEmits.name ?? `__VLS_emit`} }`);
+		}
 	}
 	if (scriptSetupRanges.defineExpose) {
-		returns.push(`typeof __VLS_exposed`);
+		returns.push(`__VLS_exposed`);
 	}
 	if (returns.length) {
-		yield `return {} as `;
-		yield* generateIntersectMerge(returns);
-		yield endOfLine;
+		yield `setup: () => (`;
+		yield* generateSpreadMerge(returns);
+		yield `),${newLine}`;
 	}
-	yield `},${newLine}`;
 
 	if (!ctx.bypassDefineComponent) {
 		const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
 		yield* emitOptionCodes;
-		yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length, true);
+		yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
 	}
 	if (
 		options.vueCompilerOptions.target >= 3.5
@@ -66,27 +71,14 @@ export function* generateComponent(
 	) {
 		yield `__typeEl: {} as __VLS_RootEl,${newLine}`;
 	}
-	if (options.sfc.script && options.scriptRanges?.exportDefault?.args) {
-		const { args } = options.scriptRanges.exportDefault;
+	if (options.sfc.script && options.scriptRanges?.componentOptions?.args) {
+		const { args } = options.scriptRanges.componentOptions;
 		yield generateSfcBlockSection(options.sfc.script, args.start + 1, args.end - 1, codeFeatures.all);
 	}
 	yield `})`;
 }
 
-export function* generateComponentSetupReturns(scriptSetupRanges: ScriptSetupRanges): Generator<Code> {
-	// fill $props
-	if (scriptSetupRanges.defineProps) {
-		// NOTE: defineProps is inaccurate for $props
-		yield `$props: __VLS_makeOptional(${scriptSetupRanges.defineProps.name ?? `__VLS_props`}),${newLine}`;
-		yield `...${scriptSetupRanges.defineProps.name ?? `__VLS_props`},${newLine}`;
-	}
-	// fill $emit
-	if (scriptSetupRanges.defineEmits) {
-		yield `$emit: ${scriptSetupRanges.defineEmits.name ?? '__VLS_emit'},${newLine}`;
-	}
-}
-
-export function* generateEmitsOption(
+function* generateEmitsOption(
 	options: ScriptCodegenOptions,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
@@ -120,21 +112,20 @@ export function* generateEmitsOption(
 	}
 }
 
-export function* generatePropsOption(
+function* generatePropsOption(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
-	inheritAttrs: boolean,
 ): Generator<Code> {
 	const getOptionCodes: (() => Code)[] = [];
 	const typeOptionCodes: Code[] = [];
 
-	if (inheritAttrs && options.templateCodegen?.inheritedAttrVars.size) {
-		let attrsType = `Partial<__VLS_InheritedAttrs>`;
+	if (options.templateCodegen?.inheritedAttrVars.size) {
+		let attrsType = `__VLS_InheritedAttrs`;
 		if (hasEmitsOption) {
-			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
+			attrsType = `Omit<${attrsType}, keyof __VLS_EmitProps>`;
 		}
 		getOptionCodes.push(() => {
 			const propsType = `__VLS_PickNotAny<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>`;
@@ -149,7 +140,7 @@ export function* generatePropsOption(
 				const propsType = `${ctx.localTypes.TypePropsToOption}<__VLS_PublicProps>`;
 				return `{} as ` + (
 					scriptSetupRanges.withDefaults?.arg
-						? `${ctx.localTypes.WithDefaults}<${propsType}, typeof __VLS_withDefaultsArg>`
+						? `${ctx.localTypes.WithDefaultsLocal}<${propsType}, typeof __VLS_defaults>`
 						: propsType
 				);
 			});
@@ -170,7 +161,7 @@ export function* generatePropsOption(
 			options.vueCompilerOptions.target >= 3.6
 			&& scriptSetupRanges.withDefaults?.arg
 		) {
-			yield `__defaults: __VLS_withDefaultsArg,${newLine}`;
+			yield `__defaults: __VLS_defaults,${newLine}`;
 		}
 		yield `__typeProps: `;
 		yield* generateSpreadMerge(typeOptionCodes);

@@ -10,7 +10,8 @@
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"esModuleInterop": false,
-		"forceConsistentCasingInFileNames": true
+		"forceConsistentCasingInFileNames": true,
+		"noUncheckedIndexedAccess": true
 	},
 	"include": []
 }

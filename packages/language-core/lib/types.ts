@@ -11,7 +11,7 @@ export { VueEmbeddedCode };
 
 export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'globalTypesPath' | 'plugins'>> & {
 	strictTemplates?: boolean;
-	target?: 'auto' | 2 | 2.7 | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
+	target?: 'auto' | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
 	globalTypesPath?: string;
 	plugins?: string[];
 };
@@ -75,7 +75,7 @@ export interface VueCompilerOptions {
 	>;
 }
 
-export const validVersions = [2, 2.1] as const;
+export const validVersions = [2, 2.1, 2.2] as const;
 
 export type VueLanguagePluginReturn = {
 	version: typeof validVersions[number];
@@ -97,6 +97,9 @@ export type VueLanguagePluginReturn = {
 		template: string,
 		options: CompilerDOM.CompilerOptions,
 	): CompilerDOM.CodegenResult | undefined;
+	compileSFCStyle?(lang: string, style: string):
+		| Pick<Sfc['styles'][number], 'imports' | 'bindings' | 'classNames'>
+		| undefined;
 	updateSFCTemplate?(
 		oldResult: CompilerDOM.CodegenResult,
 		textChange: { start: number; end: number; newText: string },
@@ -162,7 +165,7 @@ export interface Sfc {
 			text: string;
 			offset: number;
 		}[];
-		cssVars: {
+		bindings: {
 			text: string;
 			offset: number;
 		}[];

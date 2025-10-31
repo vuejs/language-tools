@@ -1,11 +1,8 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
-import { computed, setCurrentSub } from 'alien-signals';
+import { computed, setActiveSub } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
-import { parseCssClassNames } from '../utils/parseCssClassNames';
-import { parseCssImports } from '../utils/parseCssImports';
-import { parseCssVars } from '../utils/parseCssVars';
 import { computedArray, computedItems } from '../utils/signals';
 
 export const templateInlineTsAsts = new WeakMap<CompilerDOM.RootNode, Map<string, ts.SourceFile>>();
@@ -18,9 +15,9 @@ export function computedSfc(
 	getParseResult: () => SFCParseResult | undefined,
 ): Sfc {
 	const getUntrackedSnapshot = () => {
-		const pausedSub = setCurrentSub(undefined);
+		const pausedSub = setActiveSub(undefined);
 		const res = getSnapshot();
-		setCurrentSub(pausedSub);
+		setActiveSub(pausedSub);
 		return res;
 	};
 	const getContent = computed(() => {
@@ -30,7 +27,7 @@ export function computedSfc(
 		const newValue = getParseResult()?.descriptor.comments ?? [];
 		if (
 			oldValue?.length === newValue.length
-			&& oldValue?.every((v, i) => v === newValue[i])
+			&& oldValue.every((v, i) => v === newValue[i])
 		) {
 			return oldValue;
 		}
@@ -44,13 +41,13 @@ export function computedSfc(
 			const compiledAst = computedTemplateAst(base);
 			return mergeObject(base, {
 				get ast() {
-					return compiledAst()?.ast;
+					return compiledAst().ast;
 				},
 				get errors() {
-					return compiledAst()?.errors;
+					return compiledAst().errors;
 				},
 				get warnings() {
-					return compiledAst()?.warnings;
+					return compiledAst().warnings;
 				},
 			});
 		},
@@ -133,16 +130,24 @@ export function computedSfc(
 			const getSrc = computedAttrValue('__src', base, getBlock);
 			const getModule = computedAttrValue('__module', base, getBlock);
 			const getScoped = computed(() => !!getBlock().scoped);
+			const getIr = computed(() => {
+				for (const plugin of plugins) {
+					const ast = plugin.compileSFCStyle?.(base.lang, base.content);
+					if (ast) {
+						return ast;
+					}
+				}
+			});
 			const getImports = computedItems(
-				() => [...parseCssImports(base.content)],
+				() => getIr()?.imports ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
 			);
-			const getCssVars = computedItems(
-				() => [...parseCssVars(base.content)],
+			const getBindings = computedItems(
+				() => getIr()?.bindings ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
 			);
 			const getClassNames = computedItems(
-				() => [...parseCssClassNames(base.content)],
+				() => getIr()?.classNames ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
 			);
 			return () =>
@@ -159,8 +164,8 @@ export function computedSfc(
 					get imports() {
 						return getImports();
 					},
-					get cssVars() {
-						return getCssVars();
+					get bindings() {
+						return getBindings();
 					},
 					get classNames() {
 						return getClassNames();
@@ -250,9 +255,9 @@ export function computedSfc(
 			if (cache?.plugin.updateSFCTemplate) {
 				const change = getUntrackedSnapshot().getChangeRange(cache.snapshot);
 				if (change) {
-					const pausedSub = setCurrentSub(undefined);
+					const pausedSub = setActiveSub(undefined);
 					const templateOffset = base.startTagEnd;
-					setCurrentSub(pausedSub);
+					setActiveSub(pausedSub);
 
 					const newText = getUntrackedSnapshot().getText(change.span.start, change.span.start + change.newLength);
 					const newResult = cache.plugin.updateSFCTemplate(cache.result, {
@@ -347,10 +352,10 @@ export function computedSfc(
 		});
 	}
 
-	function computedSfcBlock<T extends SFCBlock>(
+	function computedSfcBlock(
 		name: string,
 		defaultLang: string,
-		getBlock: () => T,
+		getBlock: () => SFCBlock,
 	) {
 		const getLang = computed(() => getBlock().lang ?? defaultLang);
 		const getAttrs = computed(() => getBlock().attrs); // TODO: computed it

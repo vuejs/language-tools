@@ -1,5 +1,5 @@
 import { createLanguageServiceHost, resolveFileLanguageId, type TypeScriptProjectHost } from '@volar/typescript';
-import * as vue from '@vue/language-core';
+import * as core from '@vue/language-core';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
 
@@ -27,7 +27,24 @@ export function createCheckerByJsonConfigBase(
 	rootDir = rootDir.replace(windowsPathReg, '/');
 	return baseCreate(
 		ts,
-		() => vue.createParsedCommandLineByJson(ts, ts.sys, rootDir, json),
+		() => {
+			const commandLine = core.createParsedCommandLineByJson(ts, ts.sys, rootDir, json);
+			const { fileNames } = ts.parseJsonConfigFileContent(
+				json,
+				ts.sys,
+				rootDir,
+				{},
+				undefined,
+				undefined,
+				core.getAllExtensions(commandLine.vueOptions)
+					.map(extension => ({
+						extension: extension.slice(1),
+						isMixedContent: true,
+						scriptKind: ts.ScriptKind.Deferred,
+					})),
+			);
+			return [commandLine, fileNames];
+		},
 		checkerOptions,
 		rootDir,
 		path.join(rootDir, 'jsconfig.json.global.vue'),
@@ -42,35 +59,55 @@ export function createCheckerBase(
 	tsconfig = tsconfig.replace(windowsPathReg, '/');
 	return baseCreate(
 		ts,
-		() => vue.createParsedCommandLine(ts, ts.sys, tsconfig),
+		() => {
+			const commandLine = core.createParsedCommandLine(ts, ts.sys, tsconfig);
+			const { fileNames } = ts.parseJsonSourceFileConfigFileContent(
+				ts.readJsonConfigFile(tsconfig, ts.sys.readFile),
+				ts.sys,
+				path.dirname(tsconfig),
+				{},
+				tsconfig,
+				undefined,
+				core.getAllExtensions(commandLine.vueOptions)
+					.map(extension => ({
+						extension: extension.slice(1),
+						isMixedContent: true,
+						scriptKind: ts.ScriptKind.Deferred,
+					})),
+			);
+			return [commandLine, fileNames];
+		},
 		checkerOptions,
 		path.dirname(tsconfig),
 		tsconfig + '.global.vue',
 	);
 }
 
-export function baseCreate(
+function baseCreate(
 	ts: typeof import('typescript'),
-	getCommandLine: () => vue.ParsedCommandLine,
+	getConfigAndFiles: () => [
+		commandLine: core.ParsedCommandLine,
+		fileNames: string[],
+	],
 	checkerOptions: MetaCheckerOptions,
 	rootPath: string,
 	globalComponentName: string,
 ) {
-	let commandLine = getCommandLine();
+	let [{ vueOptions, options, projectReferences }, fileNames] = getConfigAndFiles();
 	/**
 	 * Used to lookup if a file is referenced.
 	 */
-	let fileNames = new Set(commandLine.fileNames.map(path => path.replace(windowsPathReg, '/')));
+	let fileNamesSet = new Set(fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
 
-	vue.writeGlobalTypes(commandLine.vueOptions, ts.sys.writeFile);
+	vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
-		getCompilationSettings: () => commandLine.options,
-		getScriptFileNames: () => [...fileNames],
-		getProjectReferences: () => commandLine.projectReferences,
+		getCompilationSettings: () => options,
+		getScriptFileNames: () => [...fileNamesSet],
+		getProjectReferences: () => projectReferences,
 	};
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot | undefined>();
@@ -86,13 +123,13 @@ export function baseCreate(
 		];
 	};
 
-	const vueLanguagePlugin = vue.createVueLanguagePlugin<string>(
+	const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
 		ts,
 		projectHost.getCompilationSettings(),
-		commandLine.vueOptions,
+		vueOptions,
 		id => id,
 	);
-	const language = vue.createLanguage(
+	const language = core.createLanguage(
 		[
 			vueLanguagePlugin,
 			{
@@ -101,7 +138,7 @@ export function baseCreate(
 				},
 			},
 		],
-		new vue.FileMap(ts.sys.useCaseSensitiveFileNames),
+		new core.FileMap(ts.sys.useCaseSensitiveFileNames),
 		fileName => {
 			let snapshot = scriptSnapshots.get(fileName);
 
@@ -142,7 +179,7 @@ export function baseCreate(
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
 		languageServiceHost.getScriptKind = fileName => {
 			const scriptKind = getScriptKind!(fileName);
-			if (commandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
+			if (vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
 				if (scriptKind === ts.ScriptKind.JS) {
 					return ts.ScriptKind.TS;
 				}
@@ -163,17 +200,18 @@ export function baseCreate(
 			fileName = fileName.replace(windowsPathReg, '/');
 			scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(text));
 			// Ensure the file is referenced
-			fileNames.add(fileName);
+			fileNamesSet.add(fileName);
 			projectVersion++;
 		},
 		deleteFile(fileName: string) {
 			fileName = fileName.replace(windowsPathReg, '/');
-			fileNames.delete(fileName);
+			fileNamesSet.delete(fileName);
 			projectVersion++;
 		},
 		reload() {
-			commandLine = getCommandLine();
-			fileNames = new Set(commandLine.fileNames.map(path => path.replace(windowsPathReg, '/')));
+			[{ vueOptions, options, projectReferences }, fileNames] = getConfigAndFiles();
+			vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
+			fileNamesSet = new Set(fileNames.map(path => path.replace(windowsPathReg, '/')));
 			this.clearCache();
 		},
 		clearCache() {
@@ -191,16 +229,21 @@ export function baseCreate(
 
 	function getMetaFileName(fileName: string) {
 		return (
-			commandLine.vueOptions.extensions.some(ext => fileName.endsWith(ext))
+			vueOptions.extensions.some(ext => fileName.endsWith(ext))
 				? fileName
 				: fileName.slice(0, fileName.lastIndexOf('.'))
 		) + '.meta.ts';
 	}
 
 	function getMetaScriptContent(fileName: string) {
+		const helpersPath = require.resolve('vue-component-type-helpers').replace(windowsPathReg, '/');
+		let helpersRelativePath = path.relative(path.dirname(fileName), helpersPath);
+		if (!helpersRelativePath.startsWith('./') && !helpersRelativePath.startsWith('../')) {
+			helpersRelativePath = './' + helpersRelativePath;
+		}
 		let code = `
-import type { ComponentType, ComponentProps, ComponentEmit, ComponentSlots, ComponentExposed } from 'vue-component-type-helpers';
-import * as Components from '${fileName.slice(0, -'.meta.ts'.length)}';
+import type { ComponentType, ComponentProps, ComponentEmit, ComponentSlots, ComponentExposed } from '${helpersRelativePath}';
+import type * as Components from '${fileName.slice(0, -'.meta.ts'.length)}';
 
 export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
 
@@ -232,7 +275,7 @@ interface ComponentMeta<T> {
 		}
 
 		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode);
-		const symbolProperties = componentType.getProperties() ?? [];
+		const symbolProperties = componentType.getProperties();
 
 		let _type: ReturnType<typeof getType> | undefined;
 		let _props: ReturnType<typeof getProps> | undefined;
@@ -310,7 +353,7 @@ interface ComponentMeta<T> {
 
 			const vueFile = sourceScript.generated?.root;
 			const vueDefaults = vueFile && exportName === 'default'
-				? (vueFile instanceof vue.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts) : {})
+				? (vueFile instanceof core.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts) : {})
 				: {};
 			const tsDefaults = !vueFile
 				? readTsComponentDefaultProps(
@@ -414,7 +457,7 @@ interface ComponentMeta<T> {
 		typeChecker: ts.TypeChecker,
 		componentPath: string,
 	) {
-		const sourceFile = program?.getSourceFile(getMetaFileName(componentPath));
+		const sourceFile = program.getSourceFile(getMetaFileName(componentPath));
 		if (!sourceFile) {
 			throw 'Could not find main source file';
 		}
@@ -431,7 +474,7 @@ interface ComponentMeta<T> {
 		for (const symbol of exportedSymbols) {
 			const [declaration] = symbol.getDeclarations() ?? [];
 
-			if (ts.isExportAssignment(declaration)) {
+			if (declaration && ts.isExportAssignment(declaration)) {
 				symbolNode = declaration.expression;
 			}
 		}
@@ -455,7 +498,7 @@ function createSchemaResolvers(
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
 	ts: typeof import('typescript'),
-	language: vue.Language<string>,
+	language: core.Language<string>,
 ) {
 	const visited = new Set<ts.Type>();
 
@@ -493,8 +536,8 @@ function createSchemaResolvers(
 
 	function resolveNestedProperties(prop: ts.Symbol): PropertyMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode);
-		let schema: PropertyMetaSchema;
-		let declarations: Declaration[];
+		let schema: PropertyMetaSchema | undefined;
+		let declarations: Declaration[] | undefined;
 
 		return {
 			name: prop.getEscapedName().toString(),
@@ -520,8 +563,8 @@ function createSchemaResolvers(
 		const signatures = propType.getCallSignatures();
 		const paramType = signatures[0]?.parameters[0];
 		const subtype = paramType ? typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode) : typeChecker.getAnyType();
-		let schema: PropertyMetaSchema;
-		let declarations: Declaration[];
+		let schema: PropertyMetaSchema | undefined;
+		let declarations: Declaration[] | undefined;
 
 		return {
 			name: prop.getName(),
@@ -538,8 +581,8 @@ function createSchemaResolvers(
 	}
 	function resolveExposedProperties(expose: ts.Symbol): ExposeMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode);
-		let schema: PropertyMetaSchema;
-		let declarations: Declaration[];
+		let schema: PropertyMetaSchema | undefined;
+		let declarations: Declaration[] | undefined;
 
 		return {
 			name: expose.getName(),
@@ -555,29 +598,29 @@ function createSchemaResolvers(
 		};
 	}
 	function resolveEventSignature(call: ts.Signature): EventMeta {
-		let schema: PropertyMetaSchema[];
-		let declarations: Declaration[];
+		let schema: PropertyMetaSchema[] | undefined;
+		let declarations: Declaration[] | undefined;
 		let subtype = undefined;
 		let subtypeStr = '[]';
 		let getSchema = () => [] as PropertyMetaSchema[];
 
 		if (call.parameters.length >= 2) {
-			subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1], symbolNode);
-			if ((call.parameters[1].valueDeclaration as any)?.dotDotDotToken) {
+			subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1]!, symbolNode);
+			if ((call.parameters[1]!.valueDeclaration as any)?.dotDotDotToken) {
 				subtypeStr = getFullyQualifiedName(subtype);
 				getSchema = () => typeChecker.getTypeArguments(subtype! as ts.TypeReference).map(resolveSchema);
 			}
 			else {
 				subtypeStr = '[';
 				for (let i = 1; i < call.parameters.length; i++) {
-					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode))
+					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i]!, symbolNode))
 						+ ', ';
 				}
 				subtypeStr = subtypeStr.slice(0, -2) + ']';
 				getSchema = () => {
 					const result: PropertyMetaSchema[] = [];
 					for (let i = 1; i < call.parameters.length; i++) {
-						result.push(resolveSchema(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i], symbolNode)));
+						result.push(resolveSchema(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i]!, symbolNode)));
 					}
 					return result;
 				};
@@ -585,7 +628,7 @@ function createSchemaResolvers(
 		}
 
 		return {
-			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0], symbolNode) as ts.StringLiteralType).value,
+			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0]!, symbolNode) as ts.StringLiteralType).value,
 			description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
 			tags: call.getJsDocTags().map(tag => ({
 				name: tag.name,
@@ -609,10 +652,10 @@ function createSchemaResolvers(
 			kind: 'event',
 			type: typeChecker.signatureToString(signature),
 			get schema() {
-				return schema ??= signature.parameters.length > 0
+				return schema ??= signature.parameters.length
 					? typeChecker
 						.getTypeArguments(
-							typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0], symbolNode) as ts.TypeReference,
+							typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0]!, symbolNode) as ts.TypeReference,
 						)
 						.map(resolveSchema)
 					: undefined;
@@ -629,7 +672,7 @@ function createSchemaResolvers(
 		visited.add(subtype);
 
 		if (subtype.isUnion()) {
-			let schema: PropertyMetaSchema[];
+			let schema: PropertyMetaSchema[] | undefined;
 			return {
 				kind: 'enum',
 				type,
@@ -639,7 +682,7 @@ function createSchemaResolvers(
 			};
 		}
 		else if (typeChecker.isArrayLikeType(subtype)) {
-			let schema: PropertyMetaSchema[];
+			let schema: PropertyMetaSchema[] | undefined;
 			return {
 				kind: 'array',
 				type,
@@ -653,7 +696,7 @@ function createSchemaResolvers(
 			&& (subtype.isClassOrInterface() || subtype.isIntersection()
 				|| (subtype as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous)
 		) {
-			let schema: Record<string, PropertyMeta>;
+			let schema: Record<string, PropertyMeta> | undefined;
 			return {
 				kind: 'object',
 				type,
@@ -663,7 +706,7 @@ function createSchemaResolvers(
 			};
 		}
 		else if (subtype.getCallSignatures().length === 1) {
-			return resolveCallbackSchema(subtype.getCallSignatures()[0]);
+			return resolveCallbackSchema(subtype.getCallSignatures()[0]!);
 		}
 
 		return type;
@@ -720,7 +763,7 @@ function createSchemaResolvers(
 }
 
 function readVueComponentDefaultProps(
-	root: vue.VueVirtualCode,
+	root: core.VueVirtualCode,
 	printer: ts.Printer | undefined,
 	ts: typeof import('typescript'),
 ) {
@@ -741,7 +784,7 @@ function readVueComponentDefaultProps(
 		}
 		const { ast } = sfc.scriptSetup;
 
-		const codegen = vue.tsCodegen.get(sfc);
+		const codegen = core.tsCodegen.get(sfc);
 		const scriptSetupRanges = codegen?.getScriptSetupRanges();
 
 		if (scriptSetupRanges?.withDefaults?.argNode) {
@@ -872,7 +915,7 @@ function readTsComponentDefaultProps(
 			// export default defineComponent({ ... })
 			else if (ts.isCallExpression(component)) {
 				if (component.arguments.length) {
-					const arg = component.arguments[0];
+					const arg = component.arguments[0]!;
 					if (ts.isObjectLiteralExpression(arg)) {
 						return arg;
 					}
@@ -902,7 +945,7 @@ function resolvePropsOption(
 
 	for (const prop of props.properties) {
 		if (ts.isPropertyAssignment(prop)) {
-			const name = prop.name?.getText(ast);
+			const name = prop.name.getText(ast);
 			if (ts.isObjectLiteralExpression(prop.initializer)) {
 				const defaultProp = prop.initializer.properties.find(p =>
 					ts.isPropertyAssignment(p) && p.name.getText(ast) === 'default'
