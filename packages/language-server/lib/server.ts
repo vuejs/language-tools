@@ -126,6 +126,9 @@ export function startServer(ts: typeof import('typescript')) {
 				isRefAtPosition(...args) {
 					return sendTsServerRequest('_vue:isRefAtPosition', args);
 				},
+				resolveModuleName(...args) {
+					return sendTsServerRequest('_vue:resolveModuleName', args);
+				},
 				getDocumentHighlights(fileName, position) {
 					return sendTsServerRequest(
 						'_vue:documentHighlights-full',
