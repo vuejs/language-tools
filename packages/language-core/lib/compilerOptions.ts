@@ -18,6 +18,9 @@ export function createParsedCommandLineByJson(
 	json: any,
 	configFileName?: string,
 ): ParsedCommandLine {
+	// manually import here, typescript/lib/tsc doesn't include required functionalities below anymore
+	ts = require('typescript/lib/typescript');
+	
 	const extendedPaths = new Set<string>();
 	const proxyHost = {
 		...host,
@@ -58,6 +61,8 @@ export function createParsedCommandLine(
 	host: ParseConfigHost,
 	configFileName: string,
 ): ParsedCommandLine {
+	// manually import here, typescript/lib/tsc doesn't include required functionalities below anymore
+	ts = require('typescript/lib/typescript');
 	try {
 		const extendedPaths = new Set<string>();
 		const proxyHost = {
