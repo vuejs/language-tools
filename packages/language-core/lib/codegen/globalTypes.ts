@@ -27,13 +27,13 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 	const __VLS_unref: typeof import('${lib}').unref;
 	const __VLS_placeholder: any;
+	const __VLS_elements: ${
+		target >= 3.3
+			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements`
+			: `globalThis.JSX.IntrinsicElements`
+	};
 
 	type __VLS_NativeElements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
-	type __VLS_IntrinsicElements = ${
-		target >= 3.3
-			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements;`
-			: `globalThis.JSX.IntrinsicElements;`
-	}
 	type __VLS_Element = ${
 		target >= 3.3
 			? `import('${lib}/jsx-runtime').JSX.Element;`
