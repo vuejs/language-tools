@@ -1,12 +1,11 @@
 import type * as ts from 'typescript';
-import type { RequestContext } from './types';
 
 export function resolveModuleName(
-	this: RequestContext,
+	ts: typeof import('typescript'),
+	languageServiceHost: ts.LanguageServiceHost,
 	fileName: string,
 	moduleName: string,
 ): { name?: string } {
-	const { typescript: ts, languageServiceHost } = this;
 	const compilerOptions = languageServiceHost.getCompilationSettings();
 
 	const ext = moduleName.split('.').pop();
