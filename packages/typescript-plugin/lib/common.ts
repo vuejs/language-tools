@@ -14,6 +14,8 @@ export function createVueLanguageServiceProxy<T>(
 	const proxyCache = new Map<string | symbol, Function | undefined>();
 	const getProxyMethod = (target: ts.LanguageService, p: string | symbol): Function | undefined => {
 		switch (p) {
+			case 'findReferences':
+				return findReferences(ts, language, languageService, asScriptId, target[p]);
 			case 'getCompletionsAtPosition':
 				return getCompletionsAtPosition(ts, language, asScriptId, vueOptions, target[p]);
 			case 'getCompletionEntryDetails':
@@ -21,7 +23,7 @@ export function createVueLanguageServiceProxy<T>(
 			case 'getCodeFixesAtPosition':
 				return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan':
-				return getDefinitionAndBoundSpan(language, asScriptId, target[p]);
+				return getDefinitionAndBoundSpan(ts, language, asScriptId, target[p]);
 		}
 	};
 
@@ -40,6 +42,56 @@ export function createVueLanguageServiceProxy<T>(
 			return Reflect.set(target, p, value, receiver);
 		},
 	});
+}
+
+function findReferences<T>(
+	ts: typeof import('typescript'),
+	language: Language<T>,
+	languageService: ts.LanguageService,
+	asScriptId: (fileName: string) => T,
+	findReferences: ts.LanguageService['findReferences'],
+): ts.LanguageService['findReferences'] {
+	return (fileName, position) => {
+		const result = findReferences(fileName, position);
+
+		const sourceScript = language.scripts.get(asScriptId(fileName));
+		const root = sourceScript?.generated?.root;
+		if (!(root instanceof VueVirtualCode)) {
+			return result;
+		}
+
+		const { template } = root.sfc;
+		if (template) {
+			const textSpan = {
+				start: template.start + 1,
+				length: 'template'.length,
+			};
+			if (position >= textSpan.start && position <= textSpan.start + textSpan.length) {
+				result?.push({
+					definition: {
+						fileName,
+						textSpan,
+						kind: ts.ScriptElementKind.scriptElement,
+						name: fileName,
+						containerKind: ts.ScriptElementKind.unknown,
+						containerName: '',
+						displayParts: [],
+					},
+					references: [
+						{
+							fileName,
+							textSpan,
+							isDefinition: true,
+							isWriteAccess: false,
+						},
+						...languageService.getFileReferences(fileName),
+					],
+				});
+			}
+		}
+
+		return result;
+	};
 }
 
 function getCompletionsAtPosition<T>(
@@ -190,24 +242,42 @@ function getCodeFixesAtPosition(
 }
 
 function getDefinitionAndBoundSpan<T>(
+	ts: typeof import('typescript'),
 	language: Language<T>,
 	asScriptId: (fileName: string) => T,
 	getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan'],
 ): ts.LanguageService['getDefinitionAndBoundSpan'] {
 	return (fileName, position) => {
 		const result = getDefinitionAndBoundSpan(fileName, position);
-		if (!result?.definitions?.length) {
-			return result;
-		}
 
 		const sourceScript = language.scripts.get(asScriptId(fileName));
-		if (!sourceScript?.generated) {
+		const root = sourceScript?.generated?.root;
+		if (!(root instanceof VueVirtualCode)) {
 			return result;
 		}
 
-		const root = sourceScript.generated.root;
-		if (!(root instanceof VueVirtualCode)) {
-			return result;
+		if (!result?.definitions?.length) {
+			const { template } = root.sfc;
+			if (template) {
+				const textSpan = {
+					start: template.start + 1,
+					length: 'template'.length,
+				};
+				if (position >= textSpan.start && position <= textSpan.start + textSpan.length) {
+					return {
+						textSpan,
+						definitions: [{
+							fileName,
+							textSpan,
+							kind: ts.ScriptElementKind.scriptElement,
+							name: fileName,
+							containerKind: ts.ScriptElementKind.unknown,
+							containerName: '',
+						}],
+					};
+				}
+			}
+			return;
 		}
 
 		if (
@@ -219,7 +289,6 @@ function getDefinitionAndBoundSpan<T>(
 		}
 
 		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
-		const skippedDefinitions: ts.DefinitionInfo[] = [];
 
 		// #5275
 		if (result.definitions.length >= 2) {
@@ -228,13 +297,9 @@ function getDefinitionAndBoundSpan<T>(
 					root.sfc.content[definition.textSpan.start - 1] === '@'
 					|| root.sfc.content.slice(definition.textSpan.start - 5, definition.textSpan.start) === 'v-on:'
 				) {
-					skippedDefinitions.push(definition);
+					definitions.delete(definition);
 				}
 			}
-		}
-
-		for (const definition of skippedDefinitions) {
-			definitions.delete(definition);
 		}
 
 		return {
