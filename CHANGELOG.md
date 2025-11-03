@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.1.3 (2025-11-03)
+
+### Features
+
+- feat(typescript-plugin): allow triggering file references on `<template>` (#5734) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(vscode): correct syntax highlight in template with `lang="html"` (#5728) - Thanks to @serkodev!
+
+### Other Changes
+
+- refactor(language-core): generate intrinsic elements variable into global types (#5730) - Thanks to @KazariEX!
+- refactor(typescript-plugin): remove go to definition trick for auto imported components (#5733) - Thanks to @KazariEX!
+
 ## 3.1.2 (2025-10-25)
 
 ### Bug Fixes
