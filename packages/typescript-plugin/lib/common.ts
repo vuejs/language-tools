@@ -21,7 +21,7 @@ export function createVueLanguageServiceProxy<T>(
 			case 'getCodeFixesAtPosition':
 				return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan':
-				return getDefinitionAndBoundSpan(language, asScriptId, target[p]);
+				return getDefinitionAndBoundSpan(ts, language, asScriptId, target[p]);
 		}
 	};
 
@@ -190,20 +190,42 @@ function getCodeFixesAtPosition(
 }
 
 function getDefinitionAndBoundSpan<T>(
+	ts: typeof import('typescript'),
 	language: Language<T>,
 	asScriptId: (fileName: string) => T,
 	getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan'],
 ): ts.LanguageService['getDefinitionAndBoundSpan'] {
 	return (fileName, position) => {
 		const result = getDefinitionAndBoundSpan(fileName, position);
-		if (!result?.definitions?.length) {
-			return;
-		}
 
 		const sourceScript = language.scripts.get(asScriptId(fileName));
 		const root = sourceScript?.generated?.root;
 		if (!(root instanceof VueVirtualCode)) {
 			return result;
+		}
+
+		if (!result?.definitions?.length) {
+			const { template } = root.sfc;
+			if (template) {
+				const textSpan = {
+					start: template.start + 1,
+					length: 'template'.length,
+				};
+				if (position >= textSpan.start && position <= textSpan.start + textSpan.length) {
+					return {
+						textSpan,
+						definitions: [{
+							fileName,
+							textSpan,
+							kind: ts.ScriptElementKind.scriptElement,
+							name: fileName,
+							containerKind: ts.ScriptElementKind.unknown,
+							containerName: '',
+						}],
+					};
+				}
+			}
+			return;
 		}
 
 		if (

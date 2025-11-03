@@ -15,7 +15,6 @@ import { create as createTypescriptSemanticTokensPlugin } from './lib/plugins/ty
 import { create as createVueAutoDotValuePlugin } from './lib/plugins/vue-autoinsert-dotvalue';
 import { create as createVueAutoSpacePlugin } from './lib/plugins/vue-autoinsert-space';
 import { create as createVueCompilerDomErrorsPlugin } from './lib/plugins/vue-compiler-dom-errors';
-import { create as createVueComponentReferencesPlugin } from './lib/plugins/vue-component-references';
 import { create as createVueComponentSemanticTokensPlugin } from './lib/plugins/vue-component-semantic-tokens';
 import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-directive-comments';
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
@@ -47,7 +46,6 @@ export function createVueLanguageServicePlugins(
 		createPugFormatPlugin(),
 		createVueAutoSpacePlugin(),
 		createVueCompilerDomErrorsPlugin(),
-		createVueComponentReferencesPlugin(),
 		createVueDirectiveCommentsPlugin(),
 		createVueGlobalTypesErrorPlugin(),
 		createVueScopedClassLinksPlugin(),
