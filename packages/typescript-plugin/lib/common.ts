@@ -14,8 +14,6 @@ export function createVueLanguageServiceProxy<T>(
 	const proxyCache = new Map<string | symbol, Function | undefined>();
 	const getProxyMethod = (target: ts.LanguageService, p: string | symbol): Function | undefined => {
 		switch (p) {
-			case 'findReferences':
-				return findReferences(ts, language, languageService, asScriptId, target[p]);
 			case 'getCompletionsAtPosition':
 				return getCompletionsAtPosition(ts, language, asScriptId, vueOptions, target[p]);
 			case 'getCompletionEntryDetails':
@@ -42,56 +40,6 @@ export function createVueLanguageServiceProxy<T>(
 			return Reflect.set(target, p, value, receiver);
 		},
 	});
-}
-
-function findReferences<T>(
-	ts: typeof import('typescript'),
-	language: Language<T>,
-	languageService: ts.LanguageService,
-	asScriptId: (fileName: string) => T,
-	findReferences: ts.LanguageService['findReferences'],
-): ts.LanguageService['findReferences'] {
-	return (fileName, position) => {
-		const result = findReferences(fileName, position);
-
-		const sourceScript = language.scripts.get(asScriptId(fileName));
-		const root = sourceScript?.generated?.root;
-		if (!(root instanceof VueVirtualCode)) {
-			return result;
-		}
-
-		const { template } = root.sfc;
-		if (template) {
-			const textSpan = {
-				start: template.start + 1,
-				length: 'template'.length,
-			};
-			if (position >= textSpan.start && position <= textSpan.start + textSpan.length) {
-				result?.push({
-					definition: {
-						fileName,
-						textSpan,
-						kind: ts.ScriptElementKind.scriptElement,
-						name: fileName,
-						containerKind: ts.ScriptElementKind.unknown,
-						containerName: '',
-						displayParts: [],
-					},
-					references: [
-						{
-							fileName,
-							textSpan,
-							isDefinition: true,
-							isWriteAccess: false,
-						},
-						...languageService.getFileReferences(fileName),
-					],
-				});
-			}
-		}
-
-		return result;
-	};
 }
 
 function getCompletionsAtPosition<T>(
