@@ -314,6 +314,21 @@ export function create(
 					}
 				},
 
+				async provideAutoInsertSnippet(document, selection, lastChange, token) {
+					if (document.languageId !== languageId) {
+						return;
+					}
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
+						return;
+					}
+
+					if (isInsideBracketExpression(document, selection)) {
+						return;
+					}
+					return baseServiceInstance.provideAutoInsertSnippet?.(document, selection, lastChange, token);
+				},
+
 				provideHover(document, position, token) {
 					if (document.languageId !== languageId) {
 						return;
@@ -747,4 +762,17 @@ function getPropName(
 		return { isEvent: true, propName: name.slice('on-'.length) };
 	}
 	return { isEvent, propName: name };
+}
+
+function isInsideBracketExpression(doc: TextDocument, selection: html.Position) {
+	const text = doc.getText({
+		start: { line: 0, character: 0 },
+		end: selection,
+	});
+	const lastOpen = text.lastIndexOf('{{');
+	if (lastOpen === -1) {
+		return false;
+	}
+	const lastClose = text.lastIndexOf('}}');
+	return lastClose < lastOpen;
 }
