@@ -788,6 +788,7 @@ function shouldSkipClosingTagFromInterpolation(
 	const lowerText = textUpToSelection.toLowerCase();
 	const targetTag = `<${tagName.toLowerCase()}`;
 	let searchIndex = lowerText.lastIndexOf(targetTag);
+	let foundInsideInterpolation = false;
 
 	while (searchIndex !== -1) {
 		const nextChar = lowerText.charAt(searchIndex + targetTag.length);
@@ -800,10 +801,15 @@ function shouldSkipClosingTagFromInterpolation(
 		}
 
 		const tagPosition = doc.positionAt(searchIndex);
-		return isInsideBracketExpression(doc, tagPosition);
+		if (!isInsideBracketExpression(doc, tagPosition)) {
+			return false;
+		}
+
+		foundInsideInterpolation = true;
+		searchIndex = lowerText.lastIndexOf(targetTag, searchIndex - 1);
 	}
 
-	return false;
+	return foundInsideInterpolation;
 }
 
 function isInsideBracketExpression(doc: TextDocument, selection: html.Position) {
