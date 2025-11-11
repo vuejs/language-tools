@@ -35,12 +35,13 @@ export function createAutoInserter(
 		},
 	};
 
-	async function autoInsert(textWithCursor: string, insertedText: string, languageId: string) {
-		const cursorIndex = textWithCursor.indexOf('|');
+	async function autoInsert(textWithCursor: string, insertedText: string, languageId: string, cursor = '|') {
+		const cursorIndex = textWithCursor.indexOf(cursor);
 		if (cursorIndex === -1) {
 			throw new Error('Cursor marker not found in input text.');
 		}
-		const content = textWithCursor.slice(0, cursorIndex) + insertedText + textWithCursor.slice(cursorIndex + 1);
+		const content = textWithCursor.slice(0, cursorIndex) + insertedText
+			+ textWithCursor.slice(cursorIndex + cursor.length);
 		const snapshot = ts.ScriptSnapshot.fromString(content);
 		language.scripts.set(fakeUri, snapshot, languageId);
 		const document = languageService.context.documents.get(fakeUri, languageId, snapshot);
@@ -74,6 +75,7 @@ export function defineAutoInsertTest(options: {
 	insertedText: string;
 	output: string | undefined;
 	languageId: string;
+	cursor?: string;
 }) {
 	describe(`auto insert: ${options.title}`, () => {
 		it(`auto insert`, async () => {
@@ -81,6 +83,7 @@ export function defineAutoInsertTest(options: {
 				options.input,
 				options.insertedText,
 				options.languageId,
+				options.cursor,
 			);
 			expect(snippet).toBe(options.output);
 		});
