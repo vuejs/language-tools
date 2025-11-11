@@ -3,6 +3,7 @@
 	"references": [
 		{ "path": "./failureFixtures/#3632" },
 		{ "path": "./failureFixtures/#4569" },
+		{ "path": "./failureFixtures/#4972" },
 		{ "path": "./failureFixtures/#5071" },
 		{ "path": "./failureFixtures/directives" },
 
