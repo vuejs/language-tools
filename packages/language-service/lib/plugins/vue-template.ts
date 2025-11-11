@@ -6,7 +6,14 @@ import type {
 	LanguageServicePlugin,
 	TextDocument,
 } from '@volar/language-service';
-import { hyphenateAttr, hyphenateTag, tsCodegen, type VueVirtualCode } from '@vue/language-core';
+import type * as CompilerDOM from '@vue/compiler-dom';
+import {
+	forEachInterpolationNode,
+	hyphenateAttr,
+	hyphenateTag,
+	tsCodegen,
+	type VueVirtualCode,
+} from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService } from 'volar-service-html';
@@ -155,6 +162,43 @@ export function create(
 				dispose() {
 					baseServiceInstance.dispose?.();
 					disposable?.dispose();
+				},
+
+				provideAutoInsertSnippet(document, position, autoInsertContext, token) {
+					if (document.languageId !== languageId) {
+						return;
+					}
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
+						return;
+					}
+
+					return baseServiceInstance.provideAutoInsertSnippet?.(
+						{
+							...document,
+							getText: () => {
+								if (info.root.sfc.template?.ast) {
+									const locs: CompilerDOM.SourceLocation[] = [];
+									for (const node of forEachInterpolationNode(info.root.sfc.template.ast)) {
+										locs.push(node.loc);
+									}
+									let text = '';
+									let offset = 0;
+									for (const loc of locs) {
+										text += info.root.sfc.template.content.slice(offset, loc.start.offset + 2);
+										text += ' '.repeat(loc.source.length - 4);
+										offset = loc.end.offset - 2;
+									}
+									text += info.root.sfc.template.content.slice(offset);
+									return text;
+								}
+								return document.getText();
+							},
+						},
+						position,
+						autoInsertContext,
+						token,
+					);
 				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
