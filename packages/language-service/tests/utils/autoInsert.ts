@@ -3,8 +3,8 @@ import {
 	createLanguage,
 	createLanguageService,
 	createUriMap,
-	LanguagePlugin,
-	LanguageServicePlugin,
+	type LanguagePlugin,
+	type LanguageServicePlugin,
 } from '@volar/language-service';
 import { createVueLanguagePlugin, getDefaultCompilerOptions } from '@vue/language-core';
 import * as ts from 'typescript';

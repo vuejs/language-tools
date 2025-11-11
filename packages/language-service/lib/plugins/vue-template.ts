@@ -774,7 +774,7 @@ function shouldSkipClosingTagFromInterpolation(
 	if (!snippet || !lastChange || (lastChange.text !== '/' && lastChange.text !== '>')) {
 		return false;
 	}
-	const tagName = /^\$0<\/([^\s>\/]+)>$/.exec(snippet)?.[1] ?? /^([^\s>\/]+)>$/.exec(snippet)?.[1];
+	const tagName = /^\$0<\/([^\s>/]+)>$/.exec(snippet)?.[1] ?? /^([^\s>/]+)>$/.exec(snippet)?.[1];
 	if (!tagName) {
 		return false;
 	}
