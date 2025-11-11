@@ -6,6 +6,7 @@ export * from './lib/parsers/scriptSetupRanges';
 export * from './lib/plugins';
 export * from './lib/types';
 export * from './lib/utils/collectBindings';
+export * from './lib/utils/forEachTemplateNode';
 export * from './lib/utils/parseSfc';
 export * from './lib/utils/shared';
 export * from './lib/virtualFile/vueFile';

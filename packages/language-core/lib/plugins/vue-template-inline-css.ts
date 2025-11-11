@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
-import { forEachElementNode } from '../codegen/template';
 import type { Code, VueLanguagePlugin } from '../types';
+import { forEachElementNode } from '../utils/forEachTemplateNode';
 import { allCodeFeatures } from './shared';
 
 const codeFeatures = {
