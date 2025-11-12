@@ -314,6 +314,22 @@ export function create(
 					}
 				},
 
+				async provideAutoInsertSnippet(document, selection, lastChange, token) {
+					if (document.languageId !== languageId) {
+						return;
+					}
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
+						return;
+					}
+
+					const snippet = await baseServiceInstance.provideAutoInsertSnippet?.(document, selection, lastChange, token);
+					if (shouldSkipClosingTagFromInterpolation(document, selection, lastChange, snippet)) {
+						return;
+					}
+					return snippet;
+				},
+
 				provideHover(document, position, token) {
 					if (document.languageId !== languageId) {
 						return;
@@ -747,4 +763,86 @@ function getPropName(
 		return { isEvent: true, propName: name.slice('on-'.length) };
 	}
 	return { isEvent, propName: name };
+}
+
+function shouldSkipClosingTagFromInterpolation(
+	doc: TextDocument,
+	selection: html.Position,
+	lastChange: { text: string } | undefined,
+	snippet: string | null | undefined,
+) {
+	if (!snippet || !lastChange || (lastChange.text !== '/' && lastChange.text !== '>')) {
+		return false;
+	}
+	const tagName = /^\$0<\/([^\s>/]+)>$/.exec(snippet)?.[1] ?? /^([^\s>/]+)>$/.exec(snippet)?.[1];
+	if (!tagName) {
+		return false;
+	}
+
+	// check if the open tag inside bracket
+	const textUpToSelection = doc.getText({
+		start: { line: 0, character: 0 },
+		end: selection,
+	});
+
+	const lowerText = textUpToSelection.toLowerCase();
+	const targetTag = `<${tagName.toLowerCase()}`;
+	let searchIndex = lowerText.lastIndexOf(targetTag);
+	let foundInsideInterpolation = false;
+
+	while (searchIndex !== -1) {
+		const nextChar = lowerText.charAt(searchIndex + targetTag.length);
+
+		// if the next character continues the tag name, skip this occurrence
+		const isNameContinuation = nextChar && /[0-9a-z:_-]/.test(nextChar);
+		if (isNameContinuation) {
+			searchIndex = lowerText.lastIndexOf(targetTag, searchIndex - 1);
+			continue;
+		}
+
+		const tagPosition = doc.positionAt(searchIndex);
+		if (!isInsideBracketExpression(doc, tagPosition)) {
+			return false;
+		}
+
+		foundInsideInterpolation = true;
+		searchIndex = lowerText.lastIndexOf(targetTag, searchIndex - 1);
+	}
+
+	return foundInsideInterpolation;
+}
+
+function isInsideBracketExpression(doc: TextDocument, selection: html.Position) {
+	const text = doc.getText({
+		start: { line: 0, character: 0 },
+		end: selection,
+	});
+	const tokenMatcher = /<!--|-->|{{|}}/g;
+	let match: RegExpExecArray | null;
+	let inComment = false;
+	let lastOpen = -1;
+	let lastClose = -1;
+
+	while ((match = tokenMatcher.exec(text)) !== null) {
+		switch (match[0]) {
+			case '<!--':
+				inComment = true;
+				break;
+			case '-->':
+				inComment = false;
+				break;
+			case '{{':
+				if (!inComment) {
+					lastOpen = match.index;
+				}
+				break;
+			case '}}':
+				if (!inComment) {
+					lastClose = match.index;
+				}
+				break;
+		}
+	}
+
+	return lastOpen !== -1 && lastClose < lastOpen;
 }
