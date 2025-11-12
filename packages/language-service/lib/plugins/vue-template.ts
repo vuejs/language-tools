@@ -6,7 +6,13 @@ import type {
 	LanguageServicePlugin,
 	TextDocument,
 } from '@volar/language-service';
-import { hyphenateAttr, hyphenateTag, tsCodegen, type VueVirtualCode } from '@vue/language-core';
+import {
+	forEachInterpolationNode,
+	hyphenateAttr,
+	hyphenateTag,
+	tsCodegen,
+	type VueVirtualCode,
+} from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService } from 'volar-service-html';
@@ -96,6 +102,31 @@ export function create(
 		},
 		create(context) {
 			const baseServiceInstance = baseService.create(context);
+
+			if (baseServiceInstance.provide['html/languageService']) {
+				const htmlService: html.LanguageService = baseServiceInstance.provide['html/languageService']();
+				const parseHTMLDocument = htmlService.parseHTMLDocument.bind(htmlService);
+
+				htmlService.parseHTMLDocument = document => {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id === 'template') {
+						const templateAst = info.root.sfc.template?.ast;
+						if (templateAst) {
+							let text = document.getText();
+							for (const node of forEachInterpolationNode(templateAst)) {
+								text = text.substring(0, node.loc.start.offset)
+									+ ' '.repeat(node.loc.end.offset - node.loc.start.offset)
+									+ text.substring(node.loc.end.offset);
+							}
+							return parseHTMLDocument({
+								...document,
+								getText: () => text,
+							});
+						}
+					}
+					return parseHTMLDocument(document);
+				};
+			}
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');
 			modelData ??= loadModelModifiersData(context.env.locale ?? 'en');
@@ -312,22 +343,6 @@ export function create(
 							item.textEdit!.newText = item.label + '="${1:value} in ${2:source}"';
 						}
 					}
-				},
-
-				async provideAutoInsertSnippet(document, selection, lastChange, token) {
-					if (document.languageId !== languageId) {
-						return;
-					}
-					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
-						return;
-					}
-
-					const snippet = await baseServiceInstance.provideAutoInsertSnippet?.(document, selection, lastChange, token);
-					if (shouldSkipClosingTagFromInterpolation(document, selection, lastChange, snippet)) {
-						return;
-					}
-					return snippet;
 				},
 
 				provideHover(document, position, token) {
@@ -763,86 +778,4 @@ function getPropName(
 		return { isEvent: true, propName: name.slice('on-'.length) };
 	}
 	return { isEvent, propName: name };
-}
-
-function shouldSkipClosingTagFromInterpolation(
-	doc: TextDocument,
-	selection: html.Position,
-	lastChange: { text: string } | undefined,
-	snippet: string | null | undefined,
-) {
-	if (!snippet || !lastChange || (lastChange.text !== '/' && lastChange.text !== '>')) {
-		return false;
-	}
-	const tagName = /^\$0<\/([^\s>/]+)>$/.exec(snippet)?.[1] ?? /^([^\s>/]+)>$/.exec(snippet)?.[1];
-	if (!tagName) {
-		return false;
-	}
-
-	// check if the open tag inside bracket
-	const textUpToSelection = doc.getText({
-		start: { line: 0, character: 0 },
-		end: selection,
-	});
-
-	const lowerText = textUpToSelection.toLowerCase();
-	const targetTag = `<${tagName.toLowerCase()}`;
-	let searchIndex = lowerText.lastIndexOf(targetTag);
-	let foundInsideInterpolation = false;
-
-	while (searchIndex !== -1) {
-		const nextChar = lowerText.charAt(searchIndex + targetTag.length);
-
-		// if the next character continues the tag name, skip this occurrence
-		const isNameContinuation = nextChar && /[0-9a-z:_-]/.test(nextChar);
-		if (isNameContinuation) {
-			searchIndex = lowerText.lastIndexOf(targetTag, searchIndex - 1);
-			continue;
-		}
-
-		const tagPosition = doc.positionAt(searchIndex);
-		if (!isInsideBracketExpression(doc, tagPosition)) {
-			return false;
-		}
-
-		foundInsideInterpolation = true;
-		searchIndex = lowerText.lastIndexOf(targetTag, searchIndex - 1);
-	}
-
-	return foundInsideInterpolation;
-}
-
-function isInsideBracketExpression(doc: TextDocument, selection: html.Position) {
-	const text = doc.getText({
-		start: { line: 0, character: 0 },
-		end: selection,
-	});
-	const tokenMatcher = /<!--|-->|{{|}}/g;
-	let match: RegExpExecArray | null;
-	let inComment = false;
-	let lastOpen = -1;
-	let lastClose = -1;
-
-	while ((match = tokenMatcher.exec(text)) !== null) {
-		switch (match[0]) {
-			case '<!--':
-				inComment = true;
-				break;
-			case '-->':
-				inComment = false;
-				break;
-			case '{{':
-				if (!inComment) {
-					lastOpen = match.index;
-				}
-				break;
-			case '}}':
-				if (!inComment) {
-					lastClose = match.index;
-				}
-				break;
-		}
-	}
-
-	return lastOpen !== -1 && lastClose < lastOpen;
 }
