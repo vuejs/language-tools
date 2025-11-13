@@ -97,7 +97,7 @@ export function* generateScriptSetup(
 						+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
 						+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
 					: `globalThis.JSX.IntrinsicAttributes`
-			}${endOfLine}`
+			}${options.vueCompilerOptions.checkUnknownProps ? '' : ' & Record<string, unknown>'}${endOfLine}`
 			+ `	expose: (exposed: ${
 				scriptSetupRanges.defineExpose
 					? `import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<typeof __VLS_exposed>`
