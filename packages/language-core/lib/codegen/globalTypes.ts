@@ -32,7 +32,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements`
 			: `globalThis.JSX.IntrinsicElements`
 	};
-
+	var __VLS_CheckUnknownProps: ${checkUnknownProps ? '{}' : 'Record<string, unknown>'};
 	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_GlobalComponents = ${
 		target >= 3.5
