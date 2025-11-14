@@ -1,3 +1,8 @@
+<script setup lang="ts">
+const exist = {};
+const Comp = () => {};
+</script>
+
 <template>
 	<!-- @vue-ignore -->
 	<div v-if="true">
@@ -11,8 +16,7 @@
 
 	<!-- @vue-expect-error -->
 	<div v-bind="exist"></div>
-</template>
 
-<script setup lang="ts">
-const exist = {};
-</script>
+	<!-- @vue-expect-error -->
+	<Comp unknown="foo" />
+</template>
