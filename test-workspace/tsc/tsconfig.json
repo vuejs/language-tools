@@ -18,6 +18,7 @@
 		{ "path": "./passedFixtures/#5111" },
 		{ "path": "./passedFixtures/#5136" },
 		{ "path": "./passedFixtures/#5338" },
+		{ "path": "./passedFixtures/#5749" },
 		{ "path": "./passedFixtures/core#9923" },
 		{ "path": "./passedFixtures/fallthroughAttributes" },
 		{ "path": "./passedFixtures/fallthroughAttributes_strictTemplate" },
@@ -26,7 +27,6 @@
 		{ "path": "./passedFixtures/pug" },
 		{ "path": "./passedFixtures/vue3" },
 		{ "path": "./passedFixtures/vue3_strictTemplate" },
-		{ "path": "./passedFixtures/vue3.4" },
-		{ "path": "./passedFixtures/vue-expect-error" }
+		{ "path": "./passedFixtures/vue3.4" }
 	]
 }
