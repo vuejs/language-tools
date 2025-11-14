@@ -4,7 +4,6 @@
 		{ "path": "./failureFixtures/#3632" },
 		{ "path": "./failureFixtures/#4569" },
 		{ "path": "./failureFixtures/#5071" },
-		{ "path": "./failureFixtures/#5729" },
 		{ "path": "./failureFixtures/directives" },
 
 		{ "path": "./passedFixtures/#1886" },
@@ -19,6 +18,7 @@
 		{ "path": "./passedFixtures/#5111" },
 		{ "path": "./passedFixtures/#5136" },
 		{ "path": "./passedFixtures/#5338" },
+		{ "path": "./passedFixtures/#5751" },
 		{ "path": "./passedFixtures/core#9923" },
 		{ "path": "./passedFixtures/fallthroughAttributes" },
 		{ "path": "./passedFixtures/fallthroughAttributes_strictTemplate" },
