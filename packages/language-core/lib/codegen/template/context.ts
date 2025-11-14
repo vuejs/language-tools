@@ -130,17 +130,17 @@ export function createTemplateCodegenContext(
 				// keep track of the number of errors encountered within this region so that we can know whether
 				// we will need to propagate an "unused ts-expect-error" diagnostic back to the original
 				// .vue file or not.
-				const featuresVerification = typeof features.verification === 'object' ? features.verification : undefined;
-				const originalShouldReport = featuresVerification?.shouldReport;
 				return {
 					...features,
 					verification: {
-						...(featuresVerification ?? {}),
 						shouldReport: (source, code) => {
-							if (originalShouldReport?.(source, code) === false) {
-								return false;
+							if (
+								typeof features.verification !== 'object'
+								|| !features.verification.shouldReport
+								|| features.verification.shouldReport(source, code) === true
+							) {
+								data.expectError!.token++;
 							}
-							data.expectError!.token++;
 							return false;
 						},
 					},
