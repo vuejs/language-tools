@@ -18,9 +18,7 @@ describe(`vue-tsc`, () => {
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(4,6): error TS2339: Property 'notExist' does not exist on type '{ exist: {}; $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; ... 8 more ...; $watch<T extends string | ((...args: any) => any)>(source: T, cb: T extends (...args: any) => infer R ? (args_0: R, args_1: R, args_2: OnCleanup) => any : (args_0: any, args_1...'.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type '{ exist: {}; $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; ... 8 more ...; $watch<T extends string | ((...args: any) => any)>(source: T, cb: T extends (...args: any) => infer R ? (args_0: R, args_1: R, args_2: OnCleanup) => any : (args_0: any, args_1...'.",
-			  "test-workspace/tsc/passedFixtures/vue-expect-error/main.vue(12,13): error TS2339: Property 'str' does not exist on type '{ Comp: DefineComponent2<{ setup(): {}; data(): {}; props: {}; computed: {}; methods: {}; mixins: {}[]; extends: {}; emits: string[]; slots: {}; inject: {}; components: {}; directives: {}; provide: {}; expose: string; __typeProps: __VLS_Props; __typeEmits: unknown; __typeRefs: {}; __typeEl: any; __defaults: unknown;...'.",
-			  "test-workspace/tsc/passedFixtures/vue-expect-error/main.vue(18,2): error TS2578: Unused '@ts-expect-error' directive.",
-			  "test-workspace/tsc/passedFixtures/vue-expect-error/main.vue(7,9): error TS2322: Type 'number' is not assignable to type 'string'.",
+			  "test-workspace/tsc/passedFixtures/vue-expect-error/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",
 			]
 		`);
 	});
