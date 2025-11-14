@@ -48,7 +48,7 @@ export function* generateVIf(
 		}
 
 		yield `{${newLine}`;
-		yield* generateElementChildren(options, ctx, branch.children, isFragment(node));
+		yield* generateElementChildren(options, ctx, branch.children, isFragment(node) || branch.isTemplateIf);
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {
