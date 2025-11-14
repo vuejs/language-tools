@@ -114,7 +114,7 @@ export function createTemplateCodegenContext(
 ) {
 	let variableId = 0;
 
-	function resolveCodeFeatures(features: VueCodeInformation) {
+	function resolveCodeFeatures(features: VueCodeInformation): VueCodeInformation {
 		if (features.verification && stack.length) {
 			const data = stack[stack.length - 1]!;
 			if (data.ignoreError) {
@@ -130,10 +130,16 @@ export function createTemplateCodegenContext(
 				// keep track of the number of errors encountered within this region so that we can know whether
 				// we will need to propagate an "unused ts-expect-error" diagnostic back to the original
 				// .vue file or not.
+				const featuresVerification = typeof features.verification === 'object' ? features.verification : undefined;
+				const originalShouldReport = featuresVerification?.shouldReport;
 				return {
 					...features,
 					verification: {
-						shouldReport: () => {
+						...(featuresVerification ?? {}),
+						shouldReport: (source, code) => {
+							if (originalShouldReport?.(source, code) === false) {
+								return false;
+							}
 							data.expectError!.token++;
 							return false;
 						},
