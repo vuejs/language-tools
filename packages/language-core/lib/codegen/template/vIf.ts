@@ -47,8 +47,12 @@ export function* generateVIf(
 			yield ` `;
 		}
 
+		const shouldEnter = isFragment(node)
+			|| branch.isTemplateIf
+			|| branch.children.some(child => child.type === CompilerDOM.NodeTypes.COMMENT);
+
 		yield `{${newLine}`;
-		yield* generateElementChildren(options, ctx, branch.children, isFragment(node) || branch.isTemplateIf);
+		yield* generateElementChildren(options, ctx, branch.children, shouldEnter);
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {
