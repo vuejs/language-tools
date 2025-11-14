@@ -4,6 +4,7 @@
 		{ "path": "./failureFixtures/#3632" },
 		{ "path": "./failureFixtures/#4569" },
 		{ "path": "./failureFixtures/#5071" },
+		{ "path": "./failureFixtures/#5729" },
 		{ "path": "./failureFixtures/directives" },
 
 		{ "path": "./passedFixtures/#1886" },
