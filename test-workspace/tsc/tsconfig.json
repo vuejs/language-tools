@@ -3,7 +3,6 @@
 	"references": [
 		{ "path": "./failureFixtures/#3632" },
 		{ "path": "./failureFixtures/#4569" },
-		{ "path": "./failureFixtures/#4972" },
 		{ "path": "./failureFixtures/#5071" },
 		{ "path": "./failureFixtures/directives" },
 
@@ -15,6 +14,7 @@
 		{ "path": "./passedFixtures/#3592" },
 		{ "path": "./passedFixtures/#3819" },
 		{ "path": "./passedFixtures/#4503" },
+		{ "path": "./passedFixtures/#4972" },
 		{ "path": "./passedFixtures/#5106" },
 		{ "path": "./passedFixtures/#5111" },
 		{ "path": "./passedFixtures/#5136" },

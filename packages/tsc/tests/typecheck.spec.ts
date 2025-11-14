@@ -13,10 +13,6 @@ describe(`vue-tsc`, () => {
 			  "test-workspace/tsc/failureFixtures/#3632/script.vue(3,1): error TS1109: Expression expected.",
 			  "test-workspace/tsc/failureFixtures/#3632/scriptSetup.vue(3,1): error TS1109: Expression expected.",
 			  "test-workspace/tsc/failureFixtures/#4569/main.vue(1,41): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.",
-			  "test-workspace/tsc/failureFixtures/#4972/main.vue(10,3): error TS2345: Argument of type '{ whatever: string; }' is not assignable to parameter of type '{ modelValue: unknown; "onUpdate:modelValue"?: ((value: unknown) => any) | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps & Record<...>'.
-			  Property 'modelValue' is missing in type '{ whatever: string; }' but required in type '{ modelValue: unknown; "onUpdate:modelValue"?: ((value: unknown) => any) | undefined; }'.",
-			  "test-workspace/tsc/failureFixtures/#4972/main.vue(9,3): error TS2345: Argument of type '{}' is not assignable to parameter of type '{ modelValue: unknown; "onUpdate:modelValue"?: ((value: unknown) => any) | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps & Record<...>'.
-			  Property 'modelValue' is missing in type '{}' but required in type '{ modelValue: unknown; "onUpdate:modelValue"?: ((value: unknown) => any) | undefined; }'.",
 			  "test-workspace/tsc/failureFixtures/#5071/withScript.vue(1,19): error TS1005: ';' expected.",
 			  "test-workspace/tsc/failureFixtures/#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
 			  "test-workspace/tsc/failureFixtures/directives/main.vue(12,2): error TS2578: Unused '@ts-expect-error' directive.",

@@ -6,6 +6,8 @@ const n = ref(0)
 
 <template>
 	<GenericComp v-model="n" />
+	<!-- @vue-expect-error -->
 	<GenericComp />
+	<!-- @vue-expect-error -->
 	<GenericComp whatever="''" />"
 </template>
