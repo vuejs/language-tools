@@ -1,5 +1,5 @@
 <script setup lang="ts">
 defineProps<{
-    n: number
+    str?: string
 }>()
 </script>
