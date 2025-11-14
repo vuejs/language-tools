@@ -1,3 +1,9 @@
+<script setup lang="ts">
+const exist = {};
+
+declare function Comp(props: { foo: string }): any;
+</script>
+
 <template>
 	<!-- @vue-ignore -->
 	<div v-if="true">
@@ -11,8 +17,7 @@
 
 	<!-- @vue-expect-error -->
 	<div v-bind="exist"></div>
-</template>
 
-<script setup lang="ts">
-const exist = {};
-</script>
+	<!-- @vue-expect-error -->
+	<Comp foo="bar" />
+</template>
