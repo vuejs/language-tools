@@ -1,5 +1,19 @@
 # Changelog
 
+## 3.1.4 (2025-11-16)
+
+### Bug Fixes
+
+- fix(language-service): prevent auto-insertion of html snippets in template interpolation (#5744) - Thanks to @serkodev!
+- fix(language-service): strip interpolations from document passed to html service - Thanks to @KazariEX!
+- fix(language-core): report unused `@ts-expect-error` directive on components with loose props checks (#5750) - Thanks to @serkodev and @KazariEX!
+- fix(language-core): respect directive comments before `v-else` (#5753) - Thanks to @serkodev and @KazariEX!
+
+### Other Changes
+
+- refactor(language-core): re-implement component references by codegen (#5736) - Thanks to @KazariEX!
+- refactor(language-core): simplify calculation of full interpolation content - Thanks to @KazariEX!
+
 ## 3.1.3 (2025-11-03)
 
 ### Features
