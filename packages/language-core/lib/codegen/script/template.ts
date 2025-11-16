@@ -54,6 +54,10 @@ function* generateTemplateCtx(
 	}
 	if (options.sfc.script?.src || options.scriptRanges?.exportDefault) {
 		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
+		const setupReturn = `NonNullable<ReturnType<NonNullable<typeof __VLS_self['setup']>>`;
+		exps.push(
+			`{} as ${`import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<${setupReturn}>`}>`,
+		);
 	}
 	else {
 		exps.push(`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`);
