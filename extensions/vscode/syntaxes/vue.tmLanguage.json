@@ -45,7 +45,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "text.html.markdown",
 							"patterns": [
 								{
@@ -103,7 +103,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "text.pug",
 							"patterns": [
 								{
@@ -135,7 +135,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.stylus",
 							"patterns": [
 								{
@@ -167,7 +167,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.postcss",
 							"patterns": [
 								{
@@ -199,7 +199,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.sass",
 							"patterns": [
 								{
@@ -231,7 +231,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.css",
 							"patterns": [
 								{
@@ -263,7 +263,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.css.scss",
 							"patterns": [
 								{
@@ -295,7 +295,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.css.less",
 							"patterns": [
 								{
@@ -327,7 +327,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.js",
 							"patterns": [
 								{
@@ -359,7 +359,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.ts",
 							"patterns": [
 								{
@@ -391,7 +391,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.js.jsx",
 							"patterns": [
 								{
@@ -423,7 +423,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.tsx",
 							"patterns": [
 								{
@@ -455,7 +455,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.coffee",
 							"patterns": [
 								{
@@ -487,7 +487,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.json",
 							"patterns": [
 								{
@@ -519,7 +519,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.json.comments",
 							"patterns": [
 								{
@@ -551,7 +551,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.json5",
 							"patterns": [
 								{
@@ -583,7 +583,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.yaml",
 							"patterns": [
 								{
@@ -615,7 +615,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.toml",
 							"patterns": [
 								{
@@ -647,7 +647,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.graphql",
 							"patterns": [
 								{
@@ -679,7 +679,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "source.vue",
 							"patterns": [
 								{
@@ -690,7 +690,7 @@
 					]
 				},
 				{
-					"begin": "(template)(?=\\s|\\/?>)",
+					"begin": "(template)(?=\\s|/?>)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -711,7 +711,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/template[\\s>])",
+							"end": "(?=</template[\\s>])",
 							"name": "text.html.derivative",
 							"patterns": [
 								{
@@ -722,7 +722,7 @@
 					]
 				},
 				{
-					"begin": "(script)(?=\\s|\\/?>)",
+					"begin": "(script)(?=\\s|/?>)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -743,7 +743,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/script[\\s>])",
+							"end": "(?=</script[\\s>])",
 							"name": "source.js",
 							"patterns": [
 								{
@@ -754,7 +754,7 @@
 					]
 				},
 				{
-					"begin": "(style)(?=\\s|\\/?>)",
+					"begin": "(style)(?=\\s|/?>)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -775,7 +775,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/style[\\s>])",
+							"end": "(?=</style[\\s>])",
 							"name": "source.css",
 							"patterns": [
 								{
@@ -807,7 +807,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"end": "(?=</)",
 							"name": "text"
 						}
 					]
@@ -891,7 +891,7 @@
 			]
 		},
 		"template-tag-2": {
-			"begin": "(<)(template)(?=\\s|\\/?>)",
+			"begin": "(<)(template)(?=\\s|/?>)",
 			"beginCaptures": {
 				"1": {
 					"name": "punctuation.definition.tag.begin.html.vue"
@@ -1087,11 +1087,11 @@
 							"name": "punctuation.separator.key-value.html.vue"
 						}
 					},
-					"end": "(?=(\\s|>|\\/>))",
+					"end": "(?=\\s|/?>)",
 					"patterns": [
 						{
 							"begin": "(?=[^'\"`])",
-							"end": "(?=(\\s|>|\\/>))",
+							"end": "(?=\\s|/?>)",
 							"name": "source.ts.embedded.html.vue",
 							"patterns": [
 								{
