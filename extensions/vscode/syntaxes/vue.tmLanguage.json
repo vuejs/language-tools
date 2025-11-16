@@ -711,7 +711,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/template(?=\\s|\\/?>))",
+							"end": "(?=<\\/template[\\s>])",
 							"name": "text.html.derivative",
 							"patterns": [
 								{
@@ -872,7 +872,7 @@
 			"patterns": [
 				{
 					"begin": "\\G",
-					"end": "(?=/>)|((</)(template)(?=\\s|\\/?>))",
+					"end": "(?=/>)|((</)(template)(?=[\\s>]))",
 					"endCaptures": {
 						"2": {
 							"name": "punctuation.definition.tag.begin.html.vue"
@@ -910,7 +910,7 @@
 			"patterns": [
 				{
 					"begin": "\\G",
-					"end": "(?=/>)|((</)(template)(?=\\s|\\/?>))",
+					"end": "(?=/>)|((</)(template)(?=[\\s>]))",
 					"endCaptures": {
 						"2": {
 							"name": "punctuation.definition.tag.begin.html.vue"
