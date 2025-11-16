@@ -55,7 +55,7 @@ function* generateTemplateCtx(
 	if (options.sfc.script?.src || options.scriptRanges?.exportDefault) {
 		yield `type __VLS_SelfSetupReturn = NonNullable<Awaited<ReturnType<NonNullable<typeof __VLS_self['setup']>>>>${endOfLine}`
 		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
-		exps.push(`{} as import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<__VLS_SelfSetupReturn>`);
+		exps.push(`{} as __VLS_PickNotAny<__VLS_ProxyRefs<__VLS_SelfSetupReturn>, {}>`);
 	}
 	else {
 		exps.push(`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`);
