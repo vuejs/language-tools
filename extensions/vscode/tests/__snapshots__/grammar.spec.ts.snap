@@ -352,22 +352,18 @@ exports[`grammar > tag-starts-with-template.vue 1`] = `
 #         ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
 >    <template-foo></template-foo>
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
->    <template:bar></template:bar>
+>    <template:foo></template:foo>
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
->    <template-foo />
-#^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
->    <template:bar />
-#^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >    <template-foo bar></template-foo>
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >    <template-foo>{{ 0 }}</template-foo>
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >    <template.foo[0].bar></template.foo[0].bar>
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
->    <template-foo bar />
-#^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >    <template-foo />
 #^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>    <template-foo/>
+#^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 ></template>
 #^^ source.vue punctuation.definition.tag.begin.html.vue
 #  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
