@@ -896,7 +896,6 @@
 					"name": "punctuation.definition.tag.end.html.vue"
 				}
 			},
-			"name": "meta.tag-stuff",
 			"patterns": [
 				{
 					"include": "#vue-directives"
