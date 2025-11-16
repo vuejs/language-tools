@@ -867,7 +867,6 @@
 				{
 					"begin": "(?<=>)",
 					"end": "(?=</template[\\s>])",
-					"name": "text.html.derivative",
 					"patterns": [
 						{
 							"include": "#html-stuff"
