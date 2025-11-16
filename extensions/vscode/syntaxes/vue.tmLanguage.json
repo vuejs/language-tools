@@ -826,13 +826,12 @@
 					"name": "entity.name.tag.html.vue"
 				}
 			},
-			"end": "(/>)",
+			"end": "(?<=/>)",
 			"endCaptures": {
-				"1": {
+				"0": {
 					"name": "punctuation.definition.tag.end.html.vue"
 				}
 			},
-			"name": "self-closing-tag",
 			"patterns": [
 				{
 					"include": "#tag-stuff"
@@ -840,18 +839,17 @@
 			]
 		},
 		"template-tag": {
-			"patterns": [
-				{
-					"include": "#template-tag-1"
-				},
-				{
-					"include": "#template-tag-2"
-				}
-			]
-		},
-		"template-tag-1": {
-			"begin": "(<)(template)\\b(>)",
+			"begin": "(<)(template)(?=\\s|/?>)",
 			"beginCaptures": {
+				"1": {
+					"name": "punctuation.definition.tag.begin.html.vue"
+				},
+				"2": {
+					"name": "entity.name.tag.html.vue"
+				}
+			},
+			"end": "(</)(\\2)\\s*(>)|(?<=/>)",
+			"endCaptures": {
 				"1": {
 					"name": "punctuation.definition.tag.begin.html.vue"
 				},
@@ -862,68 +860,15 @@
 					"name": "punctuation.definition.tag.end.html.vue"
 				}
 			},
-			"end": "(/?>)",
-			"endCaptures": {
-				"1": {
-					"name": "punctuation.definition.tag.end.html.vue"
-				}
-			},
-			"name": "meta.template-tag.start",
 			"patterns": [
 				{
-					"begin": "\\G",
-					"end": "(?=/>)|((</)(template)(?=[\\s>]))",
-					"endCaptures": {
-						"2": {
-							"name": "punctuation.definition.tag.begin.html.vue"
-						},
-						"3": {
-							"name": "entity.name.tag.$3.html.vue"
-						}
-					},
-					"name": "meta.template-tag.end",
-					"patterns": [
-						{
-							"include": "#html-stuff"
-						}
-					]
-				}
-			]
-		},
-		"template-tag-2": {
-			"begin": "(<)(template)(?=\\s|/?>)",
-			"beginCaptures": {
-				"1": {
-					"name": "punctuation.definition.tag.begin.html.vue"
+					"include": "#tag-stuff"
 				},
-				"2": {
-					"name": "entity.name.tag.html.vue"
-				}
-			},
-			"end": "(/?>)",
-			"endCaptures": {
-				"1": {
-					"name": "punctuation.definition.tag.end.html.vue"
-				}
-			},
-			"name": "meta.template-tag.start",
-			"patterns": [
 				{
-					"begin": "\\G",
-					"end": "(?=/>)|((</)(template)(?=[\\s>]))",
-					"endCaptures": {
-						"2": {
-							"name": "punctuation.definition.tag.begin.html.vue"
-						},
-						"3": {
-							"name": "entity.name.tag.$3.html.vue"
-						}
-					},
-					"name": "meta.template-tag.end",
+					"begin": "(?<=>)",
+					"end": "(?=</template[\\s>])",
+					"name": "text.html.derivative",
 					"patterns": [
-						{
-							"include": "#tag-stuff"
-						},
 						{
 							"include": "#html-stuff"
 						}
@@ -946,7 +891,7 @@
 		},
 		"tag-stuff": {
 			"begin": "\\G",
-			"end": "(?=/>)|(>)",
+			"end": "(/?>)",
 			"endCaptures": {
 				"1": {
 					"name": "punctuation.definition.tag.end.html.vue"
