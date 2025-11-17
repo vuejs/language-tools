@@ -64,7 +64,7 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
         "onUpdate:title"?: (value: string) => any;
         onBar?: (data: number) => any;
     }> & import("vue").PublicProps & (typeof globalThis extends {
-        __VLS_CheckUnknownProps: infer P;
+        __VLS_unknownProps: infer P;
     } ? P : {});
     expose: (exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
@@ -97,7 +97,7 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
         "onUpdate:title"?: (value: string) => any;
         onBar?: (data: number) => any;
     }> & import("vue").PublicProps & (typeof globalThis extends {
-        __VLS_CheckUnknownProps: infer P;
+        __VLS_unknownProps: infer P;
     } ? P : {});
     expose: (exposed: import("vue").ShallowUnwrapRef<{
         baz: number;
