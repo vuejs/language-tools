@@ -1,4 +1,4 @@
-import type { LanguageServiceContext, SourceScript } from '@volar/language-service';
+import type { LanguageServiceContext, LanguageServicePluginInstance, SourceScript } from '@volar/language-service';
 import type { VueVirtualCode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 
@@ -17,5 +17,62 @@ export function resolveEmbeddedCode(
 		script: sourceScript as Required<SourceScript<URI>>,
 		code,
 		root: sourceScript.generated!.root as VueVirtualCode,
+	};
+}
+
+export function createTsAliasDocumentLinksProviders(
+	context: LanguageServiceContext,
+	service: LanguageServicePluginInstance,
+	resolveModuleName: import('@vue/typescript-plugin/lib/requests').Requests['resolveModuleName'],
+): Pick<
+	LanguageServicePluginInstance,
+	'provideDocumentLinks' | 'resolveDocumentLink'
+> {
+	return {
+		async provideDocumentLinks(document, token) {
+			const info = resolveEmbeddedCode(context, document.uri);
+			if (!info) {
+				return;
+			}
+
+			const { root } = info;
+
+			const documentLinks = await service.provideDocumentLinks?.(document, token);
+
+			for (const link of documentLinks ?? []) {
+				if (!link.target) {
+					continue;
+				}
+
+				let text = document.getText(link.range);
+
+				if (text.startsWith('./') || text.startsWith('../')) {
+					continue;
+				}
+
+				if (text.startsWith(`'`) || text.startsWith(`"`)) {
+					text = text.slice(1, -1);
+				}
+
+				link.data = {
+					fileName: root.fileName,
+					text: text,
+					originalTarget: link.target,
+				};
+
+				delete link.target;
+			}
+			return documentLinks;
+		},
+
+		async resolveDocumentLink(link) {
+			const { fileName, text, originalTarget } = link.data;
+			const { name } = await resolveModuleName(fileName, text) || {};
+
+			return {
+				...link,
+				target: name ?? originalTarget,
+			};
+		},
 	};
 }

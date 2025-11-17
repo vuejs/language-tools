@@ -13,6 +13,7 @@ import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
 import { getImportPathForFile } from './lib/requests/getImportPathForFile';
 import { isRefAtPosition } from './lib/requests/isRefAtPosition';
+import { resolveModuleName } from './lib/requests/resolveModuleName';
 
 export = createLanguageServicePlugin(
 	(ts, info) => {
@@ -169,6 +170,10 @@ export = createLanguageServicePlugin(
 				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
 				const { project } = getProject(fileName);
 				return createResponse(getElementNames(ts, project.getLanguageService().getProgram()!));
+			});
+			session.addProtocolHandler('_vue:resolveModuleName', request => {
+				const [fileName, moduleName]: Parameters<Requests['resolveModuleName']> = request.arguments;
+				return createResponse(resolveModuleName(ts, info.languageServiceHost, fileName, moduleName));
 			});
 
 			projectService.logger.info('Vue specific commands are successfully added.');
