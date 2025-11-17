@@ -1,10 +1,17 @@
-import * as vscode from 'vscode';
+import type * as vscode from 'vscode';
 import diff = require('fast-diff');
 
+/** for test unit */
+export type FormatableTextDocument = Pick<vscode.TextDocument, 'getText' | 'offsetAt'>;
+
+/** for test unit */
+export type TextEditReplace = (range: vscode.Range, newText: string) => vscode.TextEdit;
+
 export function restrictFormattingEditsToRange(
-	document: vscode.TextDocument,
+	document: FormatableTextDocument,
 	range: vscode.Range,
 	edits: vscode.TextEdit[] | null | undefined,
+	replace: TextEditReplace,
 ) {
 	if (!edits?.length) {
 		return edits;
@@ -39,11 +46,11 @@ export function restrictFormattingEditsToRange(
 		return [];
 	}
 
-	return [vscode.TextEdit.replace(range, selectionText)];
+	return [replace(range, selectionText)];
 }
 
 function getTrimmedNewText(
-	document: vscode.TextDocument,
+	document: FormatableTextDocument,
 	selectionStart: number,
 	selectionEnd: number,
 	edit: vscode.TextEdit,

@@ -174,7 +174,7 @@ function launch(serverPath: string, tsdk: string) {
 				async provideDocumentRangeFormattingEdits(document, range, options, token, next) {
 					const edits = await (middleware.provideDocumentRangeFormattingEdits?.(document, range, options, token, next)
 						?? next(document, range, options, token));
-					return restrictFormattingEditsToRange(document, range, edits);
+					return restrictFormattingEditsToRange(document, range, edits, vscode.TextEdit.replace);
 				},
 			},
 			documentSelector: config.server.includeLanguages,
