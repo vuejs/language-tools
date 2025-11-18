@@ -21,7 +21,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	}
 	text += `
 ; declare global {
-	var __VLS_unknownProps: ${checkUnknownProps ? '{}' : 'Record<string, unknown>'};
+	${checkUnknownProps ? '' : 'var __VLS_PROPS_FALLBACK: Record<string, unknown>;'}
 
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 	const __VLS_unref: typeof import('${lib}').unref;
@@ -111,7 +111,9 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P
 		: {};
-	type __VLS_FunctionalComponent<T> = (props: (T extends { $props: infer Props } ? Props : {}) & typeof __VLS_unknownProps, ctx?: any) => ${
+	type __VLS_FunctionalComponent<T> = (props: (T extends { $props: infer Props } ? Props : {})${
+		checkUnknownProps ? '' : ' & Record<string, unknown>'
+	}, ctx?: any) => ${
 		target >= 3.3
 			? `import('${lib}/jsx-runtime').JSX.Element`
 			: `globalThis.JSX.Element`
