@@ -63,9 +63,9 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 			infer TypeRefs extends Record<string, unknown>,
 			infer TypeEl extends Element,
 			infer Provide extends import('${lib}').ComponentProvideOptions,
-			infer TypeEmits,
-			infer StrictEmits extends boolean,
-			infer Options
+			infer PublicMixin,
+			infer PublicP,
+			infer PublicB
 		>
 			? '' extends Exposed
 				? T
@@ -89,9 +89,9 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 					TypeRefs,
 					TypeEl,
 					Provide,
-					TypeEmits,
-					StrictEmits,
-					Options
+					PublicMixin,
+					PublicP,
+					PublicB
 				>
 			: T;
 	type __VLS_WithComponent<N0 extends string, LocalComponents, Self, N1 extends string, N2 extends string, N3 extends string> =
