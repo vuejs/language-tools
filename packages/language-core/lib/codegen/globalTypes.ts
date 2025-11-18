@@ -42,6 +42,58 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 	type __VLS_SpreadMerge<A, B> = Omit<A, keyof B> & B;
+	type __VLS_PublicInstanceWithoutExpose<T> =
+		T extends import('${lib}').CreateComponentPublicInstanceWithMixins<
+			infer P,
+			infer B,
+			infer D,
+			infer C extends import('${lib}').ComputedOptions,
+			infer M extends import('${lib}').MethodOptions,
+			infer Mixin extends import('${lib}').ComponentOptionsMixin,
+			infer Extends extends import('${lib}').ComponentOptionsMixin,
+			infer E extends import('${lib}').EmitsOptions,
+			infer PublicProps,
+			infer Defaults,
+			infer MakeDefaultsOptional extends boolean,
+			infer I extends import('${lib}').ComponentInjectOptions,
+			infer S extends import('${lib}').SlotsType,
+			infer LC extends Record<string, import('${lib}').Component>,
+			infer Directives extends Record<string, import('${lib}').Directive>,
+			infer Exposed extends string,
+			infer TypeRefs extends Record<string, unknown>,
+			infer TypeEl extends Element,
+			infer Provide extends import('${lib}').ComponentProvideOptions,
+			infer TypeEmits,
+			infer StrictEmits extends boolean,
+			infer Options
+		>
+			? '' extends Exposed
+				? T
+				: import('${lib}').CreateComponentPublicInstanceWithMixins<
+					P,
+					B,
+					D,
+					C,
+					M,
+					Mixin,
+					Extends,
+					E,
+					PublicProps,
+					Defaults,
+					MakeDefaultsOptional,
+					I,
+					S,
+					LC,
+					Directives,
+					'',
+					TypeRefs,
+					TypeEl,
+					Provide,
+					TypeEmits,
+					StrictEmits,
+					Options
+				>
+			: T;
 	type __VLS_WithComponent<N0 extends string, LocalComponents, Self, N1 extends string, N2 extends string, N3 extends string> =
 		N1 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N1] } :
 		N2 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N2] } :

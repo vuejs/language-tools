@@ -53,9 +53,14 @@ function* generateTemplateCtx(
 		exps.push(`globalThis`);
 	}
 	if (options.sfc.script?.src || options.scriptRanges?.exportDefault) {
-		yield `type __VLS_SelfSetupReturn = NonNullable<Awaited<ReturnType<NonNullable<typeof __VLS_self['setup']>>>>${endOfLine}`
-		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
-		exps.push(`{} as __VLS_PickNotAny<__VLS_ProxyRefs<__VLS_SelfSetupReturn>, {}>`);
+		if (options.scriptRanges?.componentOptions?.hasExposeOption) {
+			exps.push(
+				`{} as __VLS_PublicInstanceWithoutExpose<InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>>`,
+			);
+		}
+		else {
+			exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
+		}
 	}
 	else {
 		exps.push(`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`);
