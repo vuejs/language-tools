@@ -1,5 +1,46 @@
 # Changelog
 
+## 3.1.4 (2025-11-16)
+
+### Bug Fixes
+
+- fix(language-service): prevent auto-insertion of html snippets in template interpolation (#5744) - Thanks to @serkodev!
+- fix(language-service): strip interpolations from document passed to html service - Thanks to @KazariEX!
+- fix(language-core): report unused `@ts-expect-error` directive on components with loose props checks (#5750) - Thanks to @serkodev and @KazariEX!
+- fix(language-core): respect directive comments before `v-else` (#5753) - Thanks to @serkodev and @KazariEX!
+
+### Other Changes
+
+- refactor(language-core): re-implement component references by codegen (#5736) - Thanks to @KazariEX!
+- refactor(language-core): simplify calculation of full interpolation content - Thanks to @KazariEX!
+
+## 3.1.3 (2025-11-03)
+
+### Features
+
+- feat(typescript-plugin): allow triggering file references on `<template>` (#5734) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(vscode): correct syntax highlight in template with `lang="html"` (#5728) - Thanks to @serkodev!
+
+### Other Changes
+
+- refactor(language-core): generate intrinsic elements variable into global types (#5730) - Thanks to @KazariEX!
+- refactor(typescript-plugin): remove go to definition trick for auto imported components (#5733) - Thanks to @KazariEX!
+
+## 3.1.2 (2025-10-25)
+
+### Bug Fixes
+
+- fix(component-meta): import type helpers by relative path
+- fix(language-core): fix syntax error when `propTypes` has no elements (#5704) - Thanks to @so1ve!
+- fix(language-core): omit defined emit props only (#5705) - Thanks to @so1ve!
+
+### Other Changes
+
+- docs: fix `vue-tsc` broken link to example boilerplate in `README.md` (#5721) - Thanks to @heyakyra!
+
 ## 3.1.1 (2025-10-07)
 
 ### Features
@@ -33,6 +74,12 @@
 - chore(lint): enforce use of type-only imports (#5658) - Thanks to @so1ve!
 - ci: upgrade node version (#5668) - Thanks to @so1ve!
 - refactor(typescript-plugin): move reactivity analysis logic to a seperate typescript plugin (#5672) - Thanks to @KazariEX!
+
+## 3.0.10 (2025-10-25)
+
+### Bug Fixes
+
+- fix(typescript-plugin): place `__vue__` in project instead of program (#5690)
 
 ## 3.0.9 (2025-10-07)
 

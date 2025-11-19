@@ -114,7 +114,7 @@ export function createTemplateCodegenContext(
 ) {
 	let variableId = 0;
 
-	function resolveCodeFeatures(features: VueCodeInformation) {
+	function resolveCodeFeatures(features: VueCodeInformation): VueCodeInformation {
 		if (features.verification && stack.length) {
 			const data = stack[stack.length - 1]!;
 			if (data.ignoreError) {
@@ -133,8 +133,14 @@ export function createTemplateCodegenContext(
 				return {
 					...features,
 					verification: {
-						shouldReport: () => {
-							data.expectError!.token++;
+						shouldReport: (source, code) => {
+							if (
+								typeof features.verification !== 'object'
+								|| !features.verification.shouldReport
+								|| features.verification.shouldReport(source, code) === true
+							) {
+								data.expectError!.token++;
+							}
 							return false;
 						},
 					},

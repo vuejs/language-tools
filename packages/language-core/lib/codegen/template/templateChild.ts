@@ -206,25 +206,16 @@ function getVIfNode(node: CompilerDOM.ElementNode) {
 }
 
 export function parseInterpolationNode(node: CompilerDOM.InterpolationNode, template: string) {
-	let content = node.content.loc.source;
 	let start = node.content.loc.start.offset;
-	let leftCharacter: string;
-	let rightCharacter: string;
+	let end = node.content.loc.end.offset;
 
 	// fix https://github.com/vuejs/language-tools/issues/1787
-	while ((leftCharacter = template.slice(start - 1, start)).trim() === '' && leftCharacter.length) {
+	while (template[start - 1]?.trim() === '') {
 		start--;
-		content = leftCharacter + content;
 	}
-	while (
-		(rightCharacter = template.slice(start + content.length, start + content.length + 1)).trim() === ''
-		&& rightCharacter.length
-	) {
-		content = content + rightCharacter;
+	while (template[end]?.trim() === '') {
+		end++;
 	}
 
-	return [
-		content,
-		start,
-	] as const;
+	return [template.slice(start, end), start] as const;
 }

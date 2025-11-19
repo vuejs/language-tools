@@ -35,6 +35,30 @@ export function createTsAst(
 	return ast;
 }
 
+export function createSfcBlockGenerator(
+	block: SfcBlock,
+	start: number,
+	end: number,
+	features: VueCodeInformation,
+) {
+	const replacement: [number, number, ...Code[]][] = [];
+
+	return {
+		replace(...args: typeof replacement[number]) {
+			replacement.push(args);
+		},
+		*generate() {
+			let offset = start;
+			for (const [start, end, ...codes] of replacement.sort((a, b) => a[0] - b[0])) {
+				yield generateSfcBlockSection(block, offset, start, features);
+				yield* codes;
+				offset = end;
+			}
+			yield generateSfcBlockSection(block, offset, end, features);
+		},
+	};
+}
+
 export function generateSfcBlockSection(
 	block: SfcBlock,
 	start: number,

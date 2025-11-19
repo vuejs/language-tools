@@ -7,7 +7,7 @@ import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
-import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { createSfcBlockGenerator, endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
@@ -20,7 +20,6 @@ export function* generateTemplate(
 
 	yield* generateSelf(options);
 	yield* generateTemplateCtx(options, ctx);
-	yield* generateTemplateElements();
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 	yield* generateTemplateBody(options, ctx);
@@ -28,9 +27,20 @@ export function* generateTemplate(
 
 function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
 	if (options.sfc.script && options.scriptRanges?.componentOptions) {
+		const { args, expose } = options.scriptRanges.componentOptions;
+		const { replace, generate } = createSfcBlockGenerator(
+			options.sfc.script,
+			args.start,
+			args.end,
+			codeFeatures.navigation,
+		);
+
+		if (expose) {
+			replace(expose.start, expose.end, `undefined`);
+		}
+
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
-		const { args } = options.scriptRanges.componentOptions;
-		yield generateSfcBlockSection(options.sfc.script, args.start, args.end, codeFeatures.all);
+		yield* generate();
 		yield `)${endOfLine}`;
 	}
 	else if (options.sfc.script && options.scriptRanges?.exportDefault) {
@@ -107,10 +117,6 @@ function* generateTemplateCtx(
 	yield `const __VLS_ctx = `;
 	yield* generateSpreadMerge(exps);
 	yield endOfLine;
-}
-
-function* generateTemplateElements(): Generator<Code> {
-	yield `let __VLS_elements!: __VLS_IntrinsicElements${endOfLine}`;
 }
 
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {

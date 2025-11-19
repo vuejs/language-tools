@@ -52,7 +52,6 @@ h1.myClass(class="text-right") hello
 h1#myId(class="text-right") hello
 </template>
 
-<!-- TODO -->
 <template lang="html">
 	<div @click></div>
 	<div @click="{}"></div>

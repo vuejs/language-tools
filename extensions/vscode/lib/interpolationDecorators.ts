@@ -1,3 +1,4 @@
+import { useActiveTextEditor, useDocumentText, useVisibleTextEditors, watch } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
 
@@ -9,37 +10,36 @@ const decorationType = vscode.window.createTextEditorDecorationType({
 	borderRadius: '4px',
 });
 
-export function activate(
-	context: vscode.ExtensionContext,
-	selector: vscode.DocumentSelector,
-) {
+export function activate(selector: vscode.DocumentSelector) {
 	let timeout: ReturnType<typeof setTimeout> | undefined;
 
-	for (const editor of vscode.window.visibleTextEditors) {
+	const visibleTextEditors = useVisibleTextEditors();
+	const activeTextEditor = useActiveTextEditor();
+	const activeText = useDocumentText(() => activeTextEditor.value?.document);
+
+	for (const editor of visibleTextEditors.value) {
 		updateDecorations(editor);
 	}
 
-	context.subscriptions.push(
-		vscode.window.onDidChangeActiveTextEditor(editor => {
-			if (editor) {
-				updateDecorations(editor);
-			}
-		}),
-		vscode.workspace.onDidChangeTextDocument(() => {
-			const editor = vscode.window.activeTextEditor;
-			if (editor) {
-				clearTimeout(timeout);
-				timeout = setTimeout(() => updateDecorations(editor), 100);
-			}
-		}),
-		vscode.workspace.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration('vue.editor.templateInterpolationDecorators')) {
-				for (const editor of vscode.window.visibleTextEditors) {
-					updateDecorations(editor);
-				}
-			}
-		}),
-	);
+	watch(activeTextEditor, editor => {
+		if (editor) {
+			updateDecorations(editor);
+		}
+	});
+
+	watch(activeText, () => {
+		const editor = activeTextEditor.value;
+		if (editor) {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => updateDecorations(editor), 100);
+		}
+	});
+
+	watch(() => config.editor.templateInterpolationDecorators, () => {
+		for (const editor of visibleTextEditors.value) {
+			updateDecorations(editor);
+		}
+	});
 
 	function updateDecorations(editor: vscode.TextEditor) {
 		if (!vscode.languages.match(selector, editor.document)) {

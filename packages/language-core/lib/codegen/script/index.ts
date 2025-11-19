@@ -167,17 +167,18 @@ function* generateExportDefault(options: ScriptCodegenOptions): Generator<Code> 
 		return;
 	}
 
-	let prefix: Code;
-	let suffix: Code;
+	const expression = `{} as typeof __VLS_export`;
+
 	if (options.sfc.script && options.scriptRanges?.exportDefault) {
 		const { exportDefault, componentOptions } = options.scriptRanges;
-		prefix = generateSfcBlockSection(
+		yield generateSfcBlockSection(
 			options.sfc.script,
 			exportDefault.start,
 			(componentOptions ?? exportDefault).expression.start,
 			codeFeatures.all,
 		);
-		suffix = generateSfcBlockSection(
+		yield expression;
+		yield generateSfcBlockSection(
 			options.sfc.script,
 			(componentOptions ?? exportDefault).expression.end,
 			options.sfc.script.content.length,
@@ -185,10 +186,17 @@ function* generateExportDefault(options: ScriptCodegenOptions): Generator<Code> 
 		);
 	}
 	else {
-		prefix = `export default `;
-		suffix = endOfLine;
+		yield `export `;
+		if (options.sfc.template) {
+			for (let i = 0; i < 'template'.length + 1; i++) {
+				yield [
+					``,
+					'main',
+					options.sfc.template.start + 1 + i,
+					i ? { __combineOffset: i } : codeFeatures.navigationWithoutRename,
+				];
+			}
+		}
+		yield `default ${expression}${endOfLine}`;
 	}
-	yield prefix;
-	yield `{} as typeof __VLS_export`;
-	yield suffix;
 }

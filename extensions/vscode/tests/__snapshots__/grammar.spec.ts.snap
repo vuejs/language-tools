@@ -133,66 +133,45 @@ exports[`grammar > directives.vue 1`] = `
 #          ^ source.vue punctuation.definition.tag.end.html.vue
 >
 #^ source.vue
-><!-- TODO -->
-#^^^^ source.vue comment.block.vue punctuation.definition.comment.vue
-#    ^^^^^^ source.vue comment.block.vue
-#          ^^^ source.vue comment.block.vue punctuation.definition.comment.vue
 ><template lang="html">
 #^ source.vue punctuation.definition.tag.begin.html.vue
 # ^^^^^^^^ source.vue entity.name.tag.template.html.vue
 #         ^^^^^^^^^^^^ source.vue meta.tag-stuff
 #                     ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
 >	<div @click></div>
-#^^^^^^^^^^^^^ source.vue text.html.derivative
-#             ^^^^^^^ source.vue text.html.derivative
+#^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >	<div @click="{}"></div>
-#^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                  ^^^^^^^ source.vue text.html.derivative
+#^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >	<div @click="log('hello'); log('world');"></div>
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                                           ^^^^^^^ source.vue text.html.derivative
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >	<div #default></div>
-#^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#               ^^^^^^^ source.vue text.html.derivative
+#^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >	<div #default="args"></div>
-#^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                      ^^^^^^^ source.vue text.html.derivative
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >	<div #></div>
-#^^^^^^^^ source.vue text.html.derivative
-#        ^^^^^^^ source.vue text.html.derivative
->	<div #="args"></div>
 #^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#               ^^^^^^^ source.vue text.html.derivative
->	<div :key></div>
-#^^^^^^^^^^^ source.vue text.html.derivative
-#           ^^^^^^^ source.vue text.html.derivative
->	<div :key="{}"></div>
-#^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                ^^^^^^^ source.vue text.html.derivative
->	<div v-if="true"></div>
-#^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                  ^^^^^^^ source.vue text.html.derivative
->	<div v-else-if="true"></div>
-#^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                       ^^^^^^^ source.vue text.html.derivative
->	<div v-else></div>
-#^^^^^^^^^^^^^ source.vue text.html.derivative
-#             ^^^^^^^ source.vue text.html.derivative
->	<div v-for="n in []"></div>
+>	<div #="args"></div>
 #^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                      ^^^^^^^ source.vue text.html.derivative
+>	<div :key></div>
+#^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div :key="{}"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-if="true"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-else-if="true"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-else></div>
+#^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>	<div v-for="n in []"></div>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >	<div v-if="true" v-else-if="true" v-else></div>
-#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                                          ^^^^^^^ source.vue text.html.derivative
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >	<div :foo="':foo=123'"></div>
-#^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                        ^^^^^^^ source.vue text.html.derivative
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >	<div :foo="[{ bar: []}]"></div>
-#^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                          ^^^^^^^ source.vue text.html.derivative
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 >	<div .prop="[1, 2]"></div>
-#^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
-#                     ^^^^^^^ source.vue text.html.derivative
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
 ></template>
 #^^ source.vue punctuation.definition.tag.begin.html.vue
 #  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
@@ -362,6 +341,33 @@ exports[`grammar > script-tag-in-script.vue 1`] = `
 #                            ^ source.vue
 #                             ^^^^^^ source.vue entity.name.tag.script.html.vue
 #                                   ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>
+#^ source.vue"
+`;
+
+exports[`grammar > tag-starts-with-template.vue 1`] = `
+"><template>
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#         ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>    <template-foo></template-foo>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>    <template:foo></template:foo>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>    <template-foo bar></template-foo>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>    <template-foo>{{ 0 }}</template-foo>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>    <template.foo[0].bar></template.foo[0].bar>
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>    <template-foo />
+#^^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+>    <template-foo/>
+#^^^^^^^^^^^^^^^^^^^^ source.vue text.html.derivative
+></template>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^^^ source.vue entity.name.tag.template.html.vue
+#          ^ source.vue punctuation.definition.tag.end.html.vue
 >
 #^ source.vue"
 `;

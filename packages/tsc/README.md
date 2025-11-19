@@ -12,4 +12,6 @@ Build dts:
 
 `vue-tsc --declaration --emitDeclarationOnly`
 
-Check out https://github.com/vuejs/language-tools/discussions/640#discussioncomment-1555479 for the example repo.
+Check out [vue-tsc-component-library-example](https://www.npmjs.com/package/@3nuc/vue-tsc-component-library-example?activeTab=code)
+([Repo Archive](https://web.archive.org/web/20220315023520/https://github.com/sethidden/vue-tsc-component-library-example))
+for the example repo.

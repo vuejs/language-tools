@@ -14,6 +14,10 @@ export function* generateVIf(
 	node: CompilerDOM.IfNode,
 ): Generator<Code> {
 	const originalBlockConditionsLength = ctx.blockConditions.length;
+	const isFragment = node.codegenNode
+		&& 'consequent' in node.codegenNode
+		&& 'tag' in node.codegenNode.consequent
+		&& node.codegenNode.consequent.tag === CompilerDOM.FRAGMENT;
 
 	for (let i = 0; i < node.branches.length; i++) {
 		const branch = node.branches[i]!;
@@ -48,7 +52,7 @@ export function* generateVIf(
 		}
 
 		yield `{${newLine}`;
-		yield* generateElementChildren(options, ctx, branch.children, isFragment(node));
+		yield* generateElementChildren(options, ctx, branch.children, i !== 0 || isFragment);
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {
@@ -57,11 +61,4 @@ export function* generateVIf(
 	}
 
 	ctx.blockConditions.length = originalBlockConditionsLength;
-}
-
-function isFragment(node: CompilerDOM.IfNode) {
-	return node.codegenNode
-		&& 'consequent' in node.codegenNode
-		&& 'tag' in node.codegenNode.consequent
-		&& node.codegenNode.consequent.tag === CompilerDOM.FRAGMENT;
 }

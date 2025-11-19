@@ -125,7 +125,7 @@ function* generatePropsOption(
 	if (options.templateCodegen?.inheritedAttrVars.size) {
 		let attrsType = `__VLS_InheritedAttrs`;
 		if (hasEmitsOption) {
-			attrsType = `Omit<${attrsType}, \`on\${string}\`>`;
+			attrsType = `Omit<${attrsType}, keyof __VLS_EmitProps>`;
 		}
 		getOptionCodes.push(() => {
 			const propsType = `__VLS_PickNotAny<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>`;

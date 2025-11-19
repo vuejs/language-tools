@@ -79,7 +79,7 @@
       "name": "v-text",
       "description": {
         "kind": "markdown",
-        "value": "Aktualizuje textový obsah elementu.\n\n- **Očekává:** `string`\n\n- **Podrobnosti**\n\n  `v-text` funguje tak, že elementu nastavuje vlastnost [textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent), což přepíše jakýkoli existující obsah uvnitř elementu. Pokud potřebujete aktualizovat část `textContent`, měli byste místo toho použít [„mustache“ interpolaci](https://cs.vuejs.org/guide/essentials/template-syntax.html#text-interpolation).\n\n- **Příklad**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- stejné jako -->\n  <span>{{msg}}</span>\n  ```\n\n- **Viz také:** [Syntaxe šablon – Interpolace textu](https://cs.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)"
+        "value": "Aktualizuje textový obsah elementu.\n\n- **Očekává:** `string`\n\n- **Podrobnosti**\n\n  `v-text` funguje tak, že elementu nastavuje vlastnost [textContent](https://developer.mozilla.org/en-US/docs/Web/API/Node/textContent), což přepíše jakýkoli existující obsah uvnitř elementu. Pokud potřebujete aktualizovat jen část `textContent`, měli byste místo toho použít [„mustache“ interpolaci](https://cs.vuejs.org/guide/essentials/template-syntax.html#text-interpolation) (např. tímto způsobem: <span v-pre>`<span>Toto zachovat a aktualizovat pouze {{dynamickaCast}}</span>`</span>).\n\n- **Příklad**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- stejné jako -->\n  <span>{{msg}}</span>\n  ```\n\n- **Viz také:** [Syntaxe šablon – Interpolace textu](https://cs.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)"
       },
       "references": "api/built-in-directives.html#v-text"
     },

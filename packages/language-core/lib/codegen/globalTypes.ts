@@ -11,9 +11,6 @@ export function getGlobalTypesFileName(options: VueCompilerOptions) {
 export function generateGlobalTypes(options: VueCompilerOptions) {
 	const { lib, target, checkUnknownProps } = options;
 
-	const fnPropsType = `(T extends { $props: infer Props } ? Props : {})${
-		checkUnknownProps ? '' : ' & Record<string, unknown>'
-	}`;
 	let text = `// @ts-nocheck\nexport {};\n`;
 	if (target < 3.5) {
 		text += `
@@ -24,26 +21,23 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	}
 	text += `
 ; declare global {
+	${checkUnknownProps ? '' : 'var __VLS_PROPS_FALLBACK: Record<string, unknown>;'}
+
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 	const __VLS_unref: typeof import('${lib}').unref;
 	const __VLS_placeholder: any;
+	const __VLS_intrinsics: ${
+		target >= 3.3
+			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements`
+			: `globalThis.JSX.IntrinsicElements`
+	};
 
-	type __VLS_NativeElements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
-	type __VLS_IntrinsicElements = ${
-		target >= 3.3
-			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements;`
-			: `globalThis.JSX.IntrinsicElements;`
-	}
-	type __VLS_Element = ${
-		target >= 3.3
-			? `import('${lib}/jsx-runtime').JSX.Element;`
-			: `globalThis.JSX.Element;`
-	}
+	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_GlobalComponents = ${
 		target >= 3.5
-			? `import('${lib}').GlobalComponents;`
-			: `import('${lib}').GlobalComponents & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>;`
-	}
+			? `import('${lib}').GlobalComponents`
+			: `import('${lib}').GlobalComponents & Pick<typeof import('${lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`
+	};
 	type __VLS_GlobalDirectives = import('${lib}').GlobalDirectives;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
@@ -65,12 +59,18 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P
 		: {};
-	type __VLS_FunctionalComponent<T> = (props: ${fnPropsType}, ctx?: any) => __VLS_Element & {
+	type __VLS_FunctionalComponent<T> = (props: (T extends { $props: infer Props } ? Props : {})${
+		checkUnknownProps ? '' : ' & Record<string, unknown>'
+	}, ctx?: any) => ${
+		target >= 3.3
+			? `import('${lib}/jsx-runtime').JSX.Element`
+			: `globalThis.JSX.Element`
+	} & {
 		__ctx?: {
 			attrs?: any;
 			slots?: T extends { $slots: infer Slots } ? Slots : Record<string, any>;
 			emit?: T extends { $emit: infer Emit } ? Emit : {};
-			props?: ${fnPropsType};
+			props?: typeof props;
 			expose?: (exposed: T) => void;
 		};
 	};

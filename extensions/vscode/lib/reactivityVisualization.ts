@@ -1,4 +1,5 @@
 import type { Analyzer } from 'laplacenoma';
+import { useActiveTextEditor, useTextEditorSelection, useVisibleTextEditors, watch } from 'reactive-vscode';
 import type * as ts from 'typescript';
 import * as vscode from 'vscode';
 import { config } from './config';
@@ -23,35 +24,35 @@ const dependentDecorations = vscode.window.createTextEditorDecorationType({
 	borderWidth: '0 0 0 3px',
 });
 
-export function activate(
-	context: vscode.ExtensionContext,
-	selector: vscode.DocumentSelector,
-) {
+export function activate(selector: vscode.DocumentSelector) {
 	const documentUpdateVersions = new WeakMap<vscode.TextDocument, number>();
 
 	let timeout: ReturnType<typeof setTimeout> | undefined;
 
-	for (const editor of vscode.window.visibleTextEditors) {
+	const visibleTextEditors = useVisibleTextEditors();
+	const activeTextEditor = useActiveTextEditor();
+	const activeSelection = useTextEditorSelection(activeTextEditor);
+
+	for (const editor of visibleTextEditors.value) {
 		updateDecorations(editor);
 	}
 
-	context.subscriptions.push(
-		vscode.window.onDidChangeActiveTextEditor(editor => {
-			if (editor) {
-				updateDecorations(editor);
-			}
-		}),
-		vscode.window.onDidChangeTextEditorSelection(() => {
-			const editor = vscode.window.activeTextEditor;
-			if (editor) {
-				clearTimeout(timeout);
-				timeout = setTimeout(
-					() => updateDecorations(editor),
-					getUpdateInterval(editor.document),
-				);
-			}
-		}),
-	);
+	watch(activeTextEditor, editor => {
+		if (editor) {
+			updateDecorations(editor);
+		}
+	});
+
+	watch(activeSelection, () => {
+		const editor = activeTextEditor.value;
+		if (editor) {
+			clearTimeout(timeout);
+			timeout = setTimeout(
+				() => updateDecorations(editor),
+				getUpdateInterval(editor.document),
+			);
+		}
+	});
 
 	function getUpdateInterval(document: vscode.TextDocument) {
 		const prevVersion = documentUpdateVersions.get(document);

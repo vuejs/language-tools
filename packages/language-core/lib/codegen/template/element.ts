@@ -292,7 +292,7 @@ export function* generateElement(
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	const failedPropExps: FailedPropExpression[] = [];
 
-	yield `__VLS_asFunctionalElement(__VLS_elements`;
+	yield `__VLS_asFunctionalElement(__VLS_intrinsics`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
@@ -301,7 +301,7 @@ export function* generateElement(
 		codeFeatures.withoutHighlightAndCompletion,
 	);
 	if (endTagOffset !== undefined) {
-		yield `, __VLS_elements`;
+		yield `, __VLS_intrinsics`;
 		yield* generatePropertyAccess(
 			options,
 			ctx,
@@ -334,18 +334,18 @@ export function* generateElement(
 
 	const reference = yield* generateElementReference(options, ctx, node);
 	if (reference) {
-		let typeExp = `__VLS_NativeElements['${node.tag}']`;
+		let typeExp = `__VLS_Elements['${node.tag}']`;
 		if (ctx.inVFor) {
 			typeExp += `[]`;
 		}
 		ctx.addTemplateRef(reference.name, typeExp, reference.offset);
 	}
 	if (ctx.singleRootNodes.has(node)) {
-		ctx.singleRootElTypes.push(`__VLS_NativeElements['${node.tag}']`);
+		ctx.singleRootElTypes.push(`__VLS_Elements['${node.tag}']`);
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
-		ctx.inheritedAttrVars.add(`__VLS_elements.${node.tag}`);
+		ctx.inheritedAttrVars.add(`__VLS_intrinsics.${node.tag}`);
 	}
 
 	collectStyleScopedClassReferences(options, ctx, node);
