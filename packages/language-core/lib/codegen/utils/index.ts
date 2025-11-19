@@ -35,7 +35,7 @@ export function createTsAst(
 	return ast;
 }
 
-export function createBlockGenerator(
+export function createSfcBlockGenerator(
 	block: SfcBlock,
 	start: number,
 	end: number,

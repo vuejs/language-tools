@@ -3,7 +3,7 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import {
-	createBlockGenerator,
+	createSfcBlockGenerator,
 	endOfLine,
 	generatePartiallyEnding,
 	generateSfcBlockSection,
@@ -136,7 +136,7 @@ function* generateSetupFunction(
 	scriptSetupRanges: ScriptSetupRanges,
 	syntax: 'return' | 'export default' | undefined,
 ): Generator<Code> {
-	const { replace, generate } = createBlockGenerator(
+	const { replace, generate } = createSfcBlockGenerator(
 		scriptSetup,
 		Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset),
 		scriptSetup.content.length,

@@ -7,7 +7,7 @@ import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
 import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
-import { createBlockGenerator, endOfLine, generateSfcBlockSection, newLine } from '../utils';
+import { createSfcBlockGenerator, endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
@@ -28,7 +28,7 @@ export function* generateTemplate(
 function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
 	if (options.sfc.script && options.scriptRanges?.componentOptions) {
 		const { args, expose } = options.scriptRanges.componentOptions;
-		const { replace, generate } = createBlockGenerator(
+		const { replace, generate } = createSfcBlockGenerator(
 			options.sfc.script,
 			args.start,
 			args.end,
