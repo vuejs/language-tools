@@ -201,11 +201,7 @@ function* generateSetupFunction(
 				generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
 				endOfLine,
 			);
-			replace(
-				typeArg.start,
-				typeArg.end,
-				`typeof __VLS_exposed`,
-			);
+			replace(typeArg.start, typeArg.end, `typeof __VLS_exposed`);
 		}
 		else if (arg) {
 			replace(
