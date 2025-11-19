@@ -192,19 +192,15 @@ function getVIfNode(node: CompilerDOM.ElementNode): CompilerDOM.IfNode | undefin
 			return {
 				type: CompilerDOM.NodeTypes.IF,
 				loc: node.loc,
-				branches: [
-					{
-						type: CompilerDOM.NodeTypes.IF_BRANCH,
-						loc: node.loc,
-						condition: ifDirective.exp,
-						children: [
-							{
-								...node,
-								props: node.props.filter(prop => prop !== ifDirective),
-							},
-						],
-					},
-				],
+				branches: [{
+					type: CompilerDOM.NodeTypes.IF_BRANCH,
+					loc: node.loc,
+					condition: ifDirective.exp,
+					children: [{
+						...node,
+						props: node.props.filter(prop => prop !== ifDirective),
+					}],
+				}],
 			};
 		}
 
