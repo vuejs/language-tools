@@ -21,6 +21,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 			directives: TextRange | undefined;
 			name: TextRange | undefined;
 			inheritAttrs: string | undefined;
+			expose: TextRange | undefined;
 		}
 		| undefined;
 
@@ -57,6 +58,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 				let directivesOptionNode: ts.ObjectLiteralExpression | undefined;
 				let nameOptionNode: ts.Expression | undefined;
 				let inheritAttrsOption: string | undefined;
+				let exposeOptionNode: ts.Expression | undefined;
 				ts.forEachChild(obj, node => {
 					if (ts.isPropertyAssignment(node) && ts.isIdentifier(node.name)) {
 						const name = _getNodeText(node.name);
@@ -72,6 +74,9 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 						else if (name === 'inheritAttrs') {
 							inheritAttrsOption = _getNodeText(node.initializer);
 						}
+						else if (name === 'expose') {
+							exposeOptionNode = node.initializer;
+						}
 					}
 				});
 				componentOptions = {
@@ -83,6 +88,7 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 					directives: directivesOptionNode ? _getStartEnd(directivesOptionNode) : undefined,
 					name: nameOptionNode ? _getStartEnd(nameOptionNode) : undefined,
 					inheritAttrs: inheritAttrsOption,
+					expose: exposeOptionNode ? _getStartEnd(exposeOptionNode) : undefined,
 				};
 			}
 		}
