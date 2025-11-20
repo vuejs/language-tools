@@ -119,5 +119,5 @@ function getVElseDirective(node: CompilerDOM.TemplateChildNode) {
 function isTemplateChildNode(
 	node: CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
 ): node is CompilerDOM.TemplateChildNode {
-	return !!node && node.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION;
+	return node.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION;
 }
