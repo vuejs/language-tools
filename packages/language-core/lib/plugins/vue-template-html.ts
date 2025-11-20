@@ -31,8 +31,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					addedSuffix = true;
 				}
 
-				const ast = compiler.baseParse(template, {
-					...compiler.parserOptions,
+				const ast = compiler.parse(template, {
 					...options,
 					comments: true,
 				});
