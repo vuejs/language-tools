@@ -31,13 +31,30 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					addedSuffix = true;
 				}
 
-				const result = compiler.compile(template, {
+				const ast = compiler.baseParse(template, {
+					...compiler.parserOptions,
 					...options,
 					comments: true,
 				});
+
+				const [nodeTransforms, directiveTransforms] = compiler.getBaseTransformPreset();
+				compiler.transform(ast, {
+					...options,
+					nodeTransforms: [
+						...nodeTransforms,
+						...options.nodeTransforms ?? [],
+					],
+					directiveTransforms: {
+						...directiveTransforms,
+						...options.directiveTransforms,
+					},
+				});
+
 				// @ts-expect-error
-				result.__addedSuffix = addedSuffix;
-				return result;
+				return {
+					ast,
+					__addedSuffix: addedSuffix,
+				} as CompilerDOM.CodegenResult;
 			}
 		},
 
