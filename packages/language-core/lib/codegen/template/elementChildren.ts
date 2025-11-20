@@ -79,6 +79,11 @@ function normalizeIfBranch(
 		break;
 	}
 
+	// fallback if no additional branch
+	if (end === start) {
+		return;
+	}
+
 	return { node: ifNode, end };
 }
 
