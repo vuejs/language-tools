@@ -181,29 +181,13 @@ export function getVForNode(node: CompilerDOM.ElementNode) {
 	}
 }
 
-function getVIfNode(node: CompilerDOM.ElementNode): CompilerDOM.IfNode | undefined {
+export function getVIfNode(node: CompilerDOM.ElementNode) {
 	const ifDirective = node.props.find(
 		(prop): prop is CompilerDOM.DirectiveNode =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& (prop.name === 'if' || prop.name === 'else-if' || prop.name === 'else'),
+			&& prop.name === 'if',
 	);
 	if (ifDirective) {
-		if (ifDirective.name === 'else-if' || ifDirective.name === 'else') {
-			return {
-				type: CompilerDOM.NodeTypes.IF,
-				loc: node.loc,
-				branches: [{
-					type: CompilerDOM.NodeTypes.IF_BRANCH,
-					loc: node.loc,
-					condition: ifDirective.name === 'else' ? undefined : ifDirective.exp,
-					children: [{
-						...node,
-						props: node.props.filter(prop => prop !== ifDirective),
-					}],
-				}],
-			};
-		}
-
 		let ifNode: CompilerDOM.IfNode | undefined;
 		CompilerDOM.processIf(node, ifDirective, transformContext, _ifNode => {
 			ifNode = { ..._ifNode };
