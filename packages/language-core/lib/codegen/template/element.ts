@@ -260,7 +260,7 @@ export function* generateComponent(
 			ctx.addTemplateRef(reference.name, typeExp, reference.offset);
 		}
 		if (isRootNode) {
-			ctx.singleRootElTypes.push(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
+			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
 		}
 	}
 
@@ -341,7 +341,7 @@ export function* generateElement(
 		ctx.addTemplateRef(reference.name, typeExp, reference.offset);
 	}
 	if (ctx.singleRootNodes.has(node)) {
-		ctx.singleRootElTypes.push(`__VLS_Elements['${node.tag}']`);
+		ctx.singleRootElTypes.add(`__VLS_Elements['${node.tag}']`);
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
