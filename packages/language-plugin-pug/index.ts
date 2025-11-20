@@ -6,6 +6,8 @@ import * as pug from 'volar-service-pug/lib/languageService';
 const classRegex = /^class\s*=/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
+	const CompilerDOM = modules['@vue/compiler-dom'];
+
 	return {
 		name: require('./package.json').name,
 
@@ -61,8 +63,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 				}
 
 				const map = new SourceMap(pugFile.mappings);
-				const compiler = modules['@vue/compiler-dom'];
-				const completed = compiler.compile(pugFile.htmlCode, {
+				const ast = CompilerDOM.parse(pugFile.htmlCode, {
 					...options,
 					comments: true,
 					onWarn(warning) {
@@ -79,8 +80,13 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						options.onError?.(createProxyObject(error));
 					},
 				});
+				CompilerDOM.transform(ast, options);
 
-				return createProxyObject(completed);
+				return {
+					ast: createProxyObject(ast),
+					code: '',
+					preamble: '',
+				};
 
 				function createProxyObject(target: any) {
 					const proxys = new WeakMap();

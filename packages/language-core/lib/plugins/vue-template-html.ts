@@ -16,13 +16,13 @@ type Node =
 const shouldAddSuffix = /(?<=<[^>/]+)$/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
+	const CompilerDOM = modules['@vue/compiler-dom'];
+
 	return {
 		version: 2.2,
 
 		compileSFCTemplate(lang, template, options) {
 			if (lang === 'html' || lang === 'md') {
-				const compiler = modules['@vue/compiler-dom'];
-
 				let addedSuffix = false;
 
 				// #4583
@@ -31,29 +31,18 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					addedSuffix = true;
 				}
 
-				const ast = compiler.parse(template, {
+				const ast = CompilerDOM.parse(template, {
 					...options,
 					comments: true,
 				});
+				CompilerDOM.transform(ast, options);
 
-				const [nodeTransforms, directiveTransforms] = compiler.getBaseTransformPreset();
-				compiler.transform(ast, {
-					...options,
-					nodeTransforms: [
-						...nodeTransforms,
-						...options.nodeTransforms ?? [],
-					],
-					directiveTransforms: {
-						...directiveTransforms,
-						...options.directiveTransforms,
-					},
-				});
-
-				// @ts-expect-error
 				return {
 					ast,
+					code: '',
+					preamble: '',
 					__addedSuffix: addedSuffix,
-				} as CompilerDOM.CodegenResult;
+				};
 			}
 		},
 
@@ -69,8 +58,6 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					return undefined;
 				}
 			}
-
-			const CompilerDOM = modules['@vue/compiler-dom'];
 
 			const lengthDiff = change.newText.length - (change.end - change.start);
 			let hitNodes: Node[] = [];
