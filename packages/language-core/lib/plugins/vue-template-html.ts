@@ -16,13 +16,13 @@ type Node =
 const shouldAddSuffix = /(?<=<[^>/]+)$/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
+	const CompilerDOM = modules['@vue/compiler-dom'];
+
 	return {
 		version: 2.2,
 
 		compileSFCTemplate(lang, template, options) {
 			if (lang === 'html' || lang === 'md') {
-				const compiler = modules['@vue/compiler-dom'];
-
 				let addedSuffix = false;
 
 				// #4583
@@ -31,30 +31,33 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					addedSuffix = true;
 				}
 
-				const result = compiler.compile(template, {
+				const ast = CompilerDOM.parse(template, {
 					...options,
 					comments: true,
 				});
-				// @ts-expect-error
-				result.__addedSuffix = addedSuffix;
-				return result;
+				CompilerDOM.transform(ast, options);
+
+				return {
+					ast,
+					code: '',
+					preamble: '',
+					__addedSuffix: addedSuffix,
+				};
 			}
 		},
 
 		updateSFCTemplate(oldResult, change) {
-			oldResult.code = oldResult.code.slice(0, change.start)
+			const newSource = oldResult.ast.source.slice(0, change.start)
 				+ change.newText
-				+ oldResult.code.slice(change.end);
+				+ oldResult.ast.source.slice(change.end);
 
 			// @ts-expect-error
 			if (oldResult.__addedSuffix) {
-				const originalTemplate = oldResult.code.slice(0, -1); // remove added '>'
+				const originalTemplate = newSource.slice(0, -1); // remove added '>'
 				if (!shouldAddSuffix.test(originalTemplate)) {
 					return undefined;
 				}
 			}
-
-			const CompilerDOM = modules['@vue/compiler-dom'];
 
 			const lengthDiff = change.newText.length - (change.end - change.start);
 			let hitNodes: Node[] = [];

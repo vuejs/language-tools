@@ -215,7 +215,7 @@ export function createTemplateCodegenContext(
 			ctxVar: string;
 			used: boolean;
 		} | undefined,
-		singleRootElTypes: [] as string[],
+		singleRootElTypes: new Set<string>(),
 		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
 		addTemplateRef(name: string, typeExp: string, offset: number) {
 			let refs = templateRefs.get(name);

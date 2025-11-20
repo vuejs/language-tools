@@ -191,7 +191,7 @@ function* generateRootEl(
 	ctx: TemplateCodegenContext,
 ): Generator<Code, string> {
 	yield `type __VLS_RootEl = `;
-	if (ctx.singleRootElTypes.length && !ctx.singleRootNodes.has(null)) {
+	if (ctx.singleRootElTypes.size && !ctx.singleRootNodes.has(null)) {
 		for (const type of ctx.singleRootElTypes) {
 			yield `${newLine}| ${type}`;
 		}
