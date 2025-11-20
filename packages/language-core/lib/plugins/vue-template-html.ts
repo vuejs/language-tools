@@ -42,13 +42,13 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 		},
 
 		updateSFCTemplate(oldResult, change) {
-			oldResult.code = oldResult.code.slice(0, change.start)
+			const newSource = oldResult.ast.source.slice(0, change.start)
 				+ change.newText
-				+ oldResult.code.slice(change.end);
+				+ oldResult.ast.source.slice(change.end);
 
 			// @ts-expect-error
 			if (oldResult.__addedSuffix) {
-				const originalTemplate = oldResult.code.slice(0, -1); // remove added '>'
+				const originalTemplate = newSource.slice(0, -1); // remove added '>'
 				if (!shouldAddSuffix.test(originalTemplate)) {
 					return undefined;
 				}
