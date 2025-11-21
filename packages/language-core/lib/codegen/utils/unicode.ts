@@ -4,6 +4,7 @@ import { wrapWith } from './wrapWith';
 export function* generateUnicode(code: string, offset: number, info: VueCodeInformation): Generator<Code> {
 	if (needToUnicode(code)) {
 		yield* wrapWith(
+			'template',
 			offset,
 			offset + code.length,
 			info,

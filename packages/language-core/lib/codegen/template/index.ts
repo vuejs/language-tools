@@ -113,6 +113,7 @@ function* generateSlots(
 			}
 			else {
 				yield* wrapWith(
+					'template',
 					slot.tagRange[0],
 					slot.tagRange[1],
 					codeFeatures.navigation,

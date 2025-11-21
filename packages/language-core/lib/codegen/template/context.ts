@@ -353,6 +353,7 @@ export function createTemplateCodegenContext(
 			commentBuffer.length = 0;
 			if (data.expectError !== undefined) {
 				yield* wrapWith(
+					'template',
 					data.expectError.node.loc.start.offset,
 					data.expectError.node.loc.end.offset,
 					{

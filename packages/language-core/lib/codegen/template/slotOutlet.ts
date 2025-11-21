@@ -70,6 +70,7 @@ export function* generateSlotOutlet(
 			}
 
 			yield* wrapWith(
+				'template',
 				nameProp.loc.start.offset,
 				nameProp.loc.end.offset,
 				codeFeatures.verification,
@@ -79,11 +80,13 @@ export function* generateSlotOutlet(
 		}
 		else {
 			yield* wrapWith(
+				'template',
 				startTagOffset,
 				startTagEndOffset,
 				codeFeatures.verification,
 				`${options.slotsAssignName ?? '__VLS_slots'}[`,
 				...wrapWith(
+					'template',
 					startTagOffset,
 					startTagEndOffset,
 					codeFeatures.verification,
@@ -94,6 +97,7 @@ export function* generateSlotOutlet(
 		}
 		yield `)(`;
 		yield* wrapWith(
+			'template',
 			startTagOffset,
 			startTagEndOffset,
 			codeFeatures.verification,
