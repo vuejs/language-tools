@@ -47,124 +47,129 @@ export function startServer(ts: typeof import('typescript')) {
 
 		let simpleLanguageService: LanguageService | undefined;
 
-		return {
-			...server.initialize(
-				params,
-				{
-					setup() {},
-					async getLanguageService(uri) {
-						if (uri.scheme === 'file') {
-							const fileName = uri.fsPath.replace(/\\/g, '/');
-							let projectInfoPromise = file2ProjectInfo.get(fileName);
-							if (!projectInfoPromise) {
-								projectInfoPromise = sendTsServerRequest<ts.server.protocol.ProjectInfo>(
-									'_vue:' + ts.server.protocol.CommandTypes.ProjectInfo,
-									{
-										file: fileName,
-										needFileNameList: false,
-									} satisfies ts.server.protocol.ProjectInfoRequestArgs,
-								);
-								file2ProjectInfo.set(fileName, projectInfoPromise);
+		const result = server.initialize(
+			params,
+			{
+				setup() {},
+				async getLanguageService(uri) {
+					if (uri.scheme === 'file') {
+						const fileName = uri.fsPath.replace(/\\/g, '/');
+						let projectInfoPromise = file2ProjectInfo.get(fileName);
+						if (!projectInfoPromise) {
+							projectInfoPromise = sendTsServerRequest<ts.server.protocol.ProjectInfo>(
+								'_vue:' + ts.server.protocol.CommandTypes.ProjectInfo,
+								{
+									file: fileName,
+									needFileNameList: false,
+								} satisfies ts.server.protocol.ProjectInfoRequestArgs,
+							);
+							file2ProjectInfo.set(fileName, projectInfoPromise);
+						}
+						const projectInfo = await projectInfoPromise;
+						if (projectInfo) {
+							const { configFileName } = projectInfo;
+							let languageService = tsconfigProjects.get(URI.file(configFileName));
+							if (!languageService) {
+								languageService = createProjectLanguageService(server, configFileName);
+								tsconfigProjects.set(URI.file(configFileName), languageService);
 							}
-							const projectInfo = await projectInfoPromise;
-							if (projectInfo) {
-								const { configFileName } = projectInfo;
-								let languageService = tsconfigProjects.get(URI.file(configFileName));
-								if (!languageService) {
-									languageService = createProjectLanguageService(server, configFileName);
-									tsconfigProjects.set(URI.file(configFileName), languageService);
-								}
-								return languageService;
-							}
+							return languageService;
 						}
-						return simpleLanguageService ??= createProjectLanguageService(server, undefined);
-					},
-					getExistingLanguageServices() {
-						return Promise.all([
-							...tsconfigProjects.values(),
-							simpleLanguageService,
-						].filter(promise => !!promise));
-					},
-					reload() {
-						for (const languageService of tsconfigProjects.values()) {
-							languageService.dispose();
-						}
-						tsconfigProjects.clear();
-						if (simpleLanguageService) {
-							simpleLanguageService.dispose();
-							simpleLanguageService = undefined;
-						}
-					},
+					}
+					return simpleLanguageService ??= createProjectLanguageService(server, undefined);
 				},
-				createVueLanguageServicePlugins(ts, {
-					collectExtractProps(...args) {
-						return sendTsServerRequest('_vue:collectExtractProps', args);
-					},
-					getComponentDirectives(...args) {
-						return sendTsServerRequest('_vue:getComponentDirectives', args);
-					},
-					getComponentEvents(...args) {
-						return sendTsServerRequest('_vue:getComponentEvents', args);
-					},
-					getComponentNames(...args) {
-						return sendTsServerRequest('_vue:getComponentNames', args);
-					},
-					getComponentProps(...args) {
-						return sendTsServerRequest('_vue:getComponentProps', args);
-					},
-					getComponentSlots(...args) {
-						return sendTsServerRequest('_vue:getComponentSlots', args);
-					},
-					getElementAttrs(...args) {
-						return sendTsServerRequest('_vue:getElementAttrs', args);
-					},
-					getElementNames(...args) {
-						return sendTsServerRequest('_vue:getElementNames', args);
-					},
-					getImportPathForFile(...args) {
-						return sendTsServerRequest('_vue:getImportPathForFile', args);
-					},
-					isRefAtPosition(...args) {
-						return sendTsServerRequest('_vue:isRefAtPosition', args);
-					},
-					getDocumentHighlights(fileName, position) {
-						return sendTsServerRequest(
-							'_vue:documentHighlights-full',
-							{
-								file: fileName,
-								...{ position } as unknown as { line: number; offset: number },
-								filesToSearch: [fileName],
-							} satisfies ts.server.protocol.DocumentHighlightsRequestArgs,
-						);
-					},
-					getEncodedSemanticClassifications(fileName, span) {
-						return sendTsServerRequest(
-							'_vue:encodedSemanticClassifications-full',
-							{
-								file: fileName,
-								...span,
-								format: ts.SemanticClassificationFormat.TwentyTwenty,
-							} satisfies ts.server.protocol.EncodedSemanticClassificationsRequestArgs,
-						);
-					},
-					async getQuickInfoAtPosition(fileName, { line, character }) {
-						const result = await sendTsServerRequest<ts.server.protocol.QuickInfoResponseBody>(
-							'_vue:' + ts.server.protocol.CommandTypes.Quickinfo,
-							{
-								file: fileName,
-								line: line + 1,
-								offset: character + 1,
-							} satisfies ts.server.protocol.FileLocationRequestArgs,
-						);
-						return result?.displayString;
-					},
-				}),
-			),
-			serverInfo: {
-				name: require('../package.json').name as string,
-				version: require('../package.json').version as string,
+				getExistingLanguageServices() {
+					return Promise.all([
+						...tsconfigProjects.values(),
+						simpleLanguageService,
+					].filter(promise => !!promise));
+				},
+				reload() {
+					for (const languageService of tsconfigProjects.values()) {
+						languageService.dispose();
+					}
+					tsconfigProjects.clear();
+					if (simpleLanguageService) {
+						simpleLanguageService.dispose();
+						simpleLanguageService = undefined;
+					}
+				},
 			},
+			createVueLanguageServicePlugins(ts, {
+				collectExtractProps(...args) {
+					return sendTsServerRequest('_vue:collectExtractProps', args);
+				},
+				getComponentDirectives(...args) {
+					return sendTsServerRequest('_vue:getComponentDirectives', args);
+				},
+				getComponentEvents(...args) {
+					return sendTsServerRequest('_vue:getComponentEvents', args);
+				},
+				getComponentNames(...args) {
+					return sendTsServerRequest('_vue:getComponentNames', args);
+				},
+				getComponentProps(...args) {
+					return sendTsServerRequest('_vue:getComponentProps', args);
+				},
+				getComponentSlots(...args) {
+					return sendTsServerRequest('_vue:getComponentSlots', args);
+				},
+				getElementAttrs(...args) {
+					return sendTsServerRequest('_vue:getElementAttrs', args);
+				},
+				getElementNames(...args) {
+					return sendTsServerRequest('_vue:getElementNames', args);
+				},
+				getImportPathForFile(...args) {
+					return sendTsServerRequest('_vue:getImportPathForFile', args);
+				},
+				isRefAtPosition(...args) {
+					return sendTsServerRequest('_vue:isRefAtPosition', args);
+				},
+				resolveModuleName(...args) {
+					return sendTsServerRequest('_vue:resolveModuleName', args);
+				},
+				getDocumentHighlights(fileName, position) {
+					return sendTsServerRequest(
+						'_vue:documentHighlights-full',
+						{
+							file: fileName,
+							...{ position } as unknown as { line: number; offset: number },
+							filesToSearch: [fileName],
+						} satisfies ts.server.protocol.DocumentHighlightsRequestArgs,
+					);
+				},
+				getEncodedSemanticClassifications(fileName, span) {
+					return sendTsServerRequest(
+						'_vue:encodedSemanticClassifications-full',
+						{
+							file: fileName,
+							...span,
+							format: ts.SemanticClassificationFormat.TwentyTwenty,
+						} satisfies ts.server.protocol.EncodedSemanticClassificationsRequestArgs,
+					);
+				},
+				async getQuickInfoAtPosition(fileName, { line, character }) {
+					const result = await sendTsServerRequest<ts.server.protocol.QuickInfoResponseBody>(
+						'_vue:' + ts.server.protocol.CommandTypes.Quickinfo,
+						{
+							file: fileName,
+							line: line + 1,
+							offset: character + 1,
+						} satisfies ts.server.protocol.FileLocationRequestArgs,
+					);
+					return result?.displayString;
+				},
+			}),
+		);
+
+		const packageJson = require('../package.json');
+		result.serverInfo = {
+			name: packageJson.name,
+			version: packageJson.version,
 		};
+
+		return result;
 
 		async function sendTsServerRequest<T>(command: string, args: any): Promise<T | null> {
 			return await new Promise<T | null>(resolve => {
