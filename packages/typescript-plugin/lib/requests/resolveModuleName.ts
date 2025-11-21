@@ -5,7 +5,7 @@ export function resolveModuleName(
 	languageServiceHost: ts.LanguageServiceHost,
 	fileName: string,
 	moduleName: string,
-): { name?: string } {
+): string | undefined {
 	const compilerOptions = languageServiceHost.getCompilationSettings();
 
 	const ext = moduleName.split('.').pop();
@@ -25,9 +25,9 @@ export function resolveModuleName(
 	);
 
 	const resolveFileName = result.resolvedModule?.resolvedFileName;
-	return {
-		name: resolveFileName ? transformFileName(resolveFileName, ext) : undefined,
-	};
+	if (resolveFileName) {
+		return transformFileName(resolveFileName, ext);
+	}
 }
 
 function transformFileName(fileName: string, ext: string | undefined) {

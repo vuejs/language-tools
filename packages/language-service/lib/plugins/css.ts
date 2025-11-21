@@ -1,13 +1,20 @@
 import type { LanguageServicePlugin, TextDocument, VirtualCode } from '@volar/language-service';
 import { isRenameEnabled } from '@vue/language-core';
-import { create as baseCreate, type Provide } from 'volar-service-css';
+import { create as baseCreate, type Provide, resolveReference } from 'volar-service-css';
 import type * as css from 'vscode-css-languageservice';
-import { createTsAliasDocumentLinksProviders, resolveEmbeddedCode } from '../utils';
+import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
 
 export function create(
 	{ resolveModuleName }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
-	const baseService = baseCreate({ scssDocumentSelector: ['scss', 'postcss'] });
+	const baseService = baseCreate({
+		getDocumentContext(context) {
+			return {
+				resolveReference: createReferenceResolver(context, resolveReference, resolveModuleName) as any,
+			};
+		},
+		scssDocumentSelector: ['scss', 'postcss'],
+	});
 	return {
 		...baseService,
 		capabilities: {
@@ -56,13 +63,6 @@ export function create(
 						return cssLs.prepareRename(document, position, stylesheet);
 					});
 				},
-
-				...createTsAliasDocumentLinksProviders(
-					context,
-					baseServiceInstance,
-					id => id.startsWith('style_'),
-					resolveModuleName,
-				),
 			};
 
 			function isWithinNavigationVirtualCode(

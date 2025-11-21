@@ -7,15 +7,15 @@ import type {
 	TextDocument,
 } from '@volar/language-service';
 import { hyphenateAttr, hyphenateTag, tsCodegen, type VueVirtualCode } from '@vue/language-core';
-import { camelize, capitalize } from '@vue/shared';
+import { camelize, capitalize, isPromise } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
-import { create as createHtmlService } from 'volar-service-html';
+import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
-import { createTsAliasDocumentLinksProviders, resolveEmbeddedCode } from '../utils';
+import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
 
 const specialTags = new Set([
 	'slot',
@@ -73,6 +73,11 @@ export function create(
 		: createHtmlService({
 			documentSelector: ['html', 'markdown'],
 			useDefaultDataProvider: false,
+			getDocumentContext(context) {
+				return {
+					resolveReference: createReferenceResolver(context, resolveReference, resolveModuleName) as any,
+				};
+			},
 			getCustomData() {
 				return [
 					...customData,
@@ -336,12 +341,24 @@ export function create(
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
 
-				...createTsAliasDocumentLinksProviders(
-					context,
-					baseServiceInstance,
-					'template',
-					resolveModuleName,
-				),
+				async provideDocumentLinks(document, token) {
+					if (document.languageId !== languageId) {
+						return;
+					}
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id !== 'template') {
+						return;
+					}
+
+					const documentLinks = await baseServiceInstance.provideDocumentLinks?.(document, token) ?? [];
+					for (const link of documentLinks) {
+						if (link.target && isPromise(link.target)) {
+							link.target = await link.target;
+						}
+					}
+
+					return documentLinks;
+				},
 			};
 
 			async function runWithVueData<T>(sourceDocumentUri: URI, root: VueVirtualCode, fn: () => T) {

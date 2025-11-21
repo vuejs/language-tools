@@ -1,4 +1,4 @@
-import type { LanguageServiceContext, LanguageServicePluginInstance, SourceScript } from '@volar/language-service';
+import type { LanguageServiceContext, SourceScript } from '@volar/language-service';
 import type { VueVirtualCode } from '@vue/language-core';
 import { URI } from 'vscode-uri';
 
@@ -20,54 +20,24 @@ export function resolveEmbeddedCode(
 	};
 }
 
-export function createTsAliasDocumentLinksProviders(
+export function createReferenceResolver(
 	context: LanguageServiceContext,
-	service: LanguageServicePluginInstance,
-	filter: string | ((id: string) => boolean),
+	resolveReference: typeof import('volar-service-html').resolveReference,
 	resolveModuleName: import('@vue/typescript-plugin/lib/requests').Requests['resolveModuleName'],
-): Pick<
-	LanguageServicePluginInstance,
-	'provideDocumentLinks' | 'resolveDocumentLink'
-> {
-	return {
-		async provideDocumentLinks(document, token) {
-			const info = resolveEmbeddedCode(context, document.uri);
-			if (!info) {
-				return;
-			}
+) {
+	return async (ref: string, base: string) => {
+		let uri = URI.parse(base);
+		const decoded = context.decodeEmbeddedDocumentUri(uri);
+		if (decoded) {
+			uri = decoded[0];
+		}
 
-			const documentLinks = await service.provideDocumentLinks?.(document, token);
+		const original = resolveReference(ref, uri, context.env.workspaceFolders);
+		if (ref.startsWith('./') || ref.startsWith('../')) {
+			return original;
+		}
 
-			for (const link of documentLinks ?? []) {
-				if (!link.target) {
-					continue;
-				}
-				let text = document.getText(link.range);
-				if (text.startsWith('./') || text.startsWith('../')) {
-					continue;
-				}
-				if (text.startsWith(`'`) || text.startsWith(`"`)) {
-					text = text.slice(1, -1);
-				}
-				link.data = {
-					fileName: info.root.fileName,
-					text: text,
-					originalTarget: link.target,
-				};
-				delete link.target;
-			}
-
-			return documentLinks;
-		},
-
-		async resolveDocumentLink(link) {
-			const { fileName, text, originalTarget } = link.data;
-			const { name } = await resolveModuleName(fileName, text) ?? {};
-
-			return {
-				...link,
-				target: name ?? originalTarget,
-			};
-		},
+		const moduleName = await resolveModuleName(uri.fsPath, ref);
+		return moduleName ?? original;
 	};
 }
