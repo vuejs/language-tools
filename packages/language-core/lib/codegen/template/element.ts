@@ -33,11 +33,20 @@ export function* generateComponent(
 	const componentFunctionalVar = ctx.getInternalVariable();
 	const componentVNodeVar = ctx.getInternalVariable();
 	const componentCtxVar = ctx.getInternalVariable();
+	const componentPropsVar = ctx.getInternalVariable();
 	const isComponentTag = node.tag.toLowerCase() === 'component';
 
+	let isCtxVarUsed = false;
+	let isPropsVarUsed = false;
 	ctx.currentComponent = {
-		ctxVar: componentCtxVar,
-		used: false,
+		get ctxVar() {
+			isCtxVarUsed = true;
+			return componentCtxVar;
+		},
+		get propsVar() {
+			isPropsVarUsed = true;
+			return componentPropsVar;
+		},
 	};
 
 	let props = node.props;
@@ -236,9 +245,6 @@ export function* generateComponent(
 		ctx,
 		node,
 		componentOriginalVar,
-		componentFunctionalVar,
-		componentVNodeVar,
-		componentCtxVar,
 	);
 	yield* generateElementDirectives(options, ctx, node);
 
@@ -249,7 +255,7 @@ export function* generateComponent(
 
 	if (reference || isRootNode) {
 		const componentInstanceVar = ctx.getInternalVariable();
-		ctx.currentComponent.used = true;
+		isCtxVarUsed = true;
 
 		yield `var ${componentInstanceVar} = {} as (Parameters<NonNullable<typeof ${componentCtxVar}['expose']>>[0] | null)`;
 		if (ctx.inVFor) {
@@ -267,11 +273,8 @@ export function* generateComponent(
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
-		const attrsVar = ctx.getInternalVariable();
-		ctx.currentComponent.used = true;
-
-		yield `var ${attrsVar}!: NonNullable<typeof ${componentCtxVar}['props']>${endOfLine}`;
-		ctx.inheritedAttrVars.add(attrsVar);
+		ctx.inheritedAttrVars.add(componentPropsVar);
+		isPropsVarUsed = true;
 	}
 
 	collectStyleScopedClassReferences(options, ctx, node);
@@ -281,8 +284,12 @@ export function* generateComponent(
 	) as CompilerDOM.DirectiveNode;
 	yield* generateVSlot(options, ctx, node, slotDir);
 
-	if (ctx.currentComponent.used) {
+	if (isCtxVarUsed) {
 		yield `var ${componentCtxVar}!: __VLS_FunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
+	}
+
+	if (isPropsVarUsed) {
+		yield `var ${componentPropsVar}!: __VLS_FunctionalComponentProps<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 	}
 }
 

@@ -15,12 +15,8 @@ export function* generateElementEvents(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	componentOriginalVar: string,
-	componentFunctionalVar: string,
-	componentVNodeVar: string,
-	componentCtxVar: string,
 ): Generator<Code> {
 	let emitsVar: string | undefined;
-	let propsVar: string | undefined;
 
 	for (const prop of node.props) {
 		if (
@@ -33,12 +29,11 @@ export function* generateElementEvents(
 					&& (!prop.arg || prop.arg.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && prop.arg.isStatic)
 			)
 		) {
-			ctx.currentComponent!.used = true;
 			if (!emitsVar) {
 				emitsVar = ctx.getInternalVariable();
-				propsVar = ctx.getInternalVariable();
-				yield `let ${emitsVar}!: __VLS_ResolveEmits<typeof ${componentOriginalVar}, typeof ${componentCtxVar}.emit>${endOfLine}`;
-				yield `let ${propsVar}!: __VLS_FunctionalComponentProps<typeof ${componentFunctionalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
+				yield `let ${emitsVar}!: __VLS_ResolveEmits<typeof ${componentOriginalVar}, typeof ${
+					ctx.currentComponent!.ctxVar
+				}.emit>${endOfLine}`;
 			}
 
 			let source = prop.arg?.loc.source ?? 'model-value';
@@ -59,7 +54,9 @@ export function* generateElementEvents(
 			const emitName = emitPrefix + source;
 			const camelizedEmitName = camelize(emitName);
 
-			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${propsVar}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
+			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${
+				ctx.currentComponent!.propsVar
+			}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
 			if (prop.name === 'on') {
 				yield `{ `;
 				yield* generateEventArg(options, source, start!, emitPrefix.slice(0, -1), codeFeatures.navigation);

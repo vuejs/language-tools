@@ -29,8 +29,6 @@ export function* generateVSlot(
 	}
 
 	if (slotDir || node.children.length) {
-		ctx.currentComponent.used = true;
-
 		yield `const { `;
 		if (slotDir) {
 			if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {

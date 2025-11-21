@@ -212,8 +212,8 @@ export function createTemplateCodegenContext(
 		inheritedAttrVars,
 		templateRefs,
 		currentComponent: undefined as {
-			ctxVar: string;
-			used: boolean;
+			get ctxVar(): string;
+			get propsVar(): string;
 		} | undefined,
 		singleRootElTypes: new Set<string>(),
 		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
