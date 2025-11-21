@@ -105,9 +105,6 @@ export function create(
 				],
 			},
 			hoverProvider: true,
-			documentLinkProvider: {
-				resolveProvider: true,
-			},
 		},
 		create(context) {
 			const baseServiceInstance = baseService.create(context);

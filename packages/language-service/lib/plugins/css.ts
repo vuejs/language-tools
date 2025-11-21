@@ -17,12 +17,6 @@ export function create(
 	});
 	return {
 		...baseService,
-		capabilities: {
-			...baseService.capabilities,
-			documentLinkProvider: {
-				resolveProvider: true,
-			},
-		},
 		create(context) {
 			const baseServiceInstance = baseService.create(context);
 			const {
