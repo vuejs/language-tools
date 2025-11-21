@@ -6,7 +6,13 @@ import type {
 	LanguageServicePlugin,
 	TextDocument,
 } from '@volar/language-service';
-import { hyphenateAttr, hyphenateTag, tsCodegen, type VueVirtualCode } from '@vue/language-core';
+import {
+	forEachInterpolationNode,
+	hyphenateAttr,
+	hyphenateTag,
+	tsCodegen,
+	type VueVirtualCode,
+} from '@vue/language-core';
 import { camelize, capitalize, isPromise } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService, resolveReference } from 'volar-service-html';
@@ -105,6 +111,31 @@ export function create(
 		},
 		create(context) {
 			const baseServiceInstance = baseService.create(context);
+
+			if (baseServiceInstance.provide['html/languageService']) {
+				const htmlService: html.LanguageService = baseServiceInstance.provide['html/languageService']();
+				const parseHTMLDocument = htmlService.parseHTMLDocument.bind(htmlService);
+
+				htmlService.parseHTMLDocument = document => {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id === 'template') {
+						const templateAst = info.root.sfc.template?.ast;
+						if (templateAst) {
+							let text = document.getText();
+							for (const node of forEachInterpolationNode(templateAst)) {
+								text = text.substring(0, node.loc.start.offset)
+									+ ' '.repeat(node.loc.end.offset - node.loc.start.offset)
+									+ text.substring(node.loc.end.offset);
+							}
+							return parseHTMLDocument({
+								...document,
+								getText: () => text,
+							});
+						}
+					}
+					return parseHTMLDocument(document);
+				};
+			}
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');
 			modelData ??= loadModelModifiersData(context.env.locale ?? 'en');

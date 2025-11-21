@@ -1,4 +1,3 @@
-import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
@@ -7,7 +6,7 @@ import { wrapWith } from '../utils/wrapWith';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
-import { generateTemplateChild, getVForNode } from './templateChild';
+import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
 	ts: typeof ts;
@@ -192,7 +191,7 @@ function* generateRootEl(
 	ctx: TemplateCodegenContext,
 ): Generator<Code, string> {
 	yield `type __VLS_RootEl = `;
-	if (ctx.singleRootElTypes.length && !ctx.singleRootNodes.has(null)) {
+	if (ctx.singleRootElTypes.size && !ctx.singleRootNodes.has(null)) {
 		for (const type of ctx.singleRootElTypes) {
 			yield `${newLine}| ${type}`;
 		}
@@ -202,40 +201,4 @@ function* generateRootEl(
 	}
 	yield endOfLine;
 	return `__VLS_RootEl`;
-}
-
-export function* forEachElementNode(
-	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode,
-): Generator<CompilerDOM.ElementNode> {
-	if (node.type === CompilerDOM.NodeTypes.ROOT) {
-		for (const child of node.children) {
-			yield* forEachElementNode(child);
-		}
-	}
-	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
-		const patchForNode = getVForNode(node);
-		if (patchForNode) {
-			yield* forEachElementNode(patchForNode);
-		}
-		else {
-			yield node;
-			for (const child of node.children) {
-				yield* forEachElementNode(child);
-			}
-		}
-	}
-	else if (node.type === CompilerDOM.NodeTypes.IF) {
-		// v-if / v-else-if / v-else
-		for (const branch of node.branches) {
-			for (const childNode of branch.children) {
-				yield* forEachElementNode(childNode);
-			}
-		}
-	}
-	else if (node.type === CompilerDOM.NodeTypes.FOR) {
-		// v-for
-		for (const child of node.children) {
-			yield* forEachElementNode(child);
-		}
-	}
 }

@@ -11,9 +11,6 @@ export function getGlobalTypesFileName(options: VueCompilerOptions) {
 export function generateGlobalTypes(options: VueCompilerOptions) {
 	const { lib, target, checkUnknownProps } = options;
 
-	const fnPropsType = `(T extends { $props: infer Props } ? Props : {})${
-		checkUnknownProps ? '' : ' & Record<string, unknown>'
-	}`;
 	let text = `// @ts-nocheck\nexport {};\n`;
 	if (target < 3.5) {
 		text += `
@@ -24,6 +21,8 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	}
 	text += `
 ; declare global {
+	${checkUnknownProps ? '' : 'var __VLS_PROPS_FALLBACK: Record<string, unknown>;'}
+
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 	const __VLS_unref: typeof import('${lib}').unref;
 	const __VLS_placeholder: any;
@@ -60,7 +59,9 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P
 		: {};
-	type __VLS_FunctionalComponent<T> = (props: ${fnPropsType}, ctx?: any) => ${
+	type __VLS_FunctionalComponent<T> = (props: (T extends { $props: infer Props } ? Props : {})${
+		checkUnknownProps ? '' : ' & Record<string, unknown>'
+	}, ctx?: any) => ${
 		target >= 3.3
 			? `import('${lib}/jsx-runtime').JSX.Element`
 			: `globalThis.JSX.Element`
@@ -69,7 +70,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 			attrs?: any;
 			slots?: T extends { $slots: infer Slots } ? Slots : Record<string, any>;
 			emit?: T extends { $emit: infer Emit } ? Emit : {};
-			props?: ${fnPropsType};
+			props?: typeof props;
 			expose?: (exposed: T) => void;
 		};
 	};

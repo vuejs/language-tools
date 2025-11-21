@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-service",
-	"version": "3.1.2",
+	"version": "3.1.4",
 	"license": "MIT",
 	"files": [
 		"data",
@@ -18,16 +18,16 @@
 	},
 	"dependencies": {
 		"@volar/language-service": "2.4.23",
-		"@vue/language-core": "3.1.2",
+		"@vue/language-core": "3.1.4",
 		"@vue/shared": "^3.5.0",
 		"path-browserify": "^1.0.1",
-		"volar-service-css": "0.0.65",
-		"volar-service-emmet": "0.0.65",
-		"volar-service-html": "0.0.65",
-		"volar-service-json": "0.0.65",
-		"volar-service-pug": "0.0.65",
-		"volar-service-pug-beautify": "0.0.65",
-		"volar-service-typescript": "0.0.65",
+		"volar-service-css": "0.0.67",
+		"volar-service-emmet": "0.0.67",
+		"volar-service-html": "0.0.67",
+		"volar-service-json": "0.0.67",
+		"volar-service-pug": "0.0.67",
+		"volar-service-pug-beautify": "0.0.67",
+		"volar-service-typescript": "0.0.67",
 		"vscode-html-languageservice": "^5.2.0",
 		"vscode-uri": "^3.0.8"
 	},
@@ -37,7 +37,7 @@
 		"@volar/kit": "2.4.23",
 		"@volar/typescript": "2.4.23",
 		"@vue/compiler-dom": "^3.5.0",
-		"@vue/typescript-plugin": "3.1.2",
+		"@vue/typescript-plugin": "3.1.4",
 		"vscode-css-languageservice": "^6.3.1"
 	}
 }

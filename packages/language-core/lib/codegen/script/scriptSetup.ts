@@ -97,7 +97,7 @@ export function* generateScriptSetup(
 						+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
 						+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
 					: `globalThis.JSX.IntrinsicAttributes`
-			}${endOfLine}`
+			} & (typeof globalThis extends { __VLS_PROPS_FALLBACK: infer P } ? P : {})${endOfLine}`
 			+ `	expose: (exposed: ${
 				scriptSetupRanges.defineExpose
 					? `import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<typeof __VLS_exposed>`
