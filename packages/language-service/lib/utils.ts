@@ -32,12 +32,10 @@ export function createReferenceResolver(
 			uri = decoded[0];
 		}
 
-		const original = resolveReference(ref, uri, context.env.workspaceFolders);
-		if (ref.startsWith('./') || ref.startsWith('../')) {
-			return original;
+		let moduleName: string | null | undefined;
+		if (!ref.startsWith('./') && !ref.startsWith('../')) {
+			moduleName = await resolveModuleName(uri.fsPath, ref);
 		}
-
-		const moduleName = await resolveModuleName(uri.fsPath, ref);
-		return moduleName ?? original;
+		return moduleName ?? resolveReference(ref, uri, context.env.workspaceFolders);
 	};
 }
