@@ -119,6 +119,7 @@ export function* generateElementProps(
 				yield `...{ `;
 			}
 			const codes = [...wrapWith(
+				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				codeFeatures.verification,
@@ -133,6 +134,7 @@ export function* generateElementProps(
 							shouldCamelize,
 						)
 						: wrapWith(
+							'template',
 							prop.loc.start.offset,
 							prop.loc.start.offset + 'v-model'.length,
 							codeFeatures.withoutHighlightAndCompletion,
@@ -141,6 +143,7 @@ export function* generateElementProps(
 				),
 				`: `,
 				...wrapWith(
+					'template',
 					prop.arg?.loc.start.offset ?? prop.loc.start.offset,
 					prop.arg?.loc.end.offset ?? prop.loc.end.offset,
 					codeFeatures.verification,
@@ -198,6 +201,7 @@ export function* generateElementProps(
 				yield `...{ `;
 			}
 			const codes = [...wrapWith(
+				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
 				codeFeatures.verification,
@@ -239,6 +243,7 @@ export function* generateElementProps(
 			}
 			else {
 				const codes = [...wrapWith(
+					'template',
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
 					codeFeatures.verification,

@@ -152,9 +152,9 @@ export function* generateConstExport(
 	}
 	yield `const `;
 	yield* wrapWith(
+		block.name,
 		0,
 		block.content.length,
-		block.name,
 		codeFeatures.doNotReportTs6133,
 		`__VLS_export`,
 	);

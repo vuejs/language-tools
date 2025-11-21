@@ -202,6 +202,7 @@ export function* generateComponent(
 
 	yield `const `;
 	yield* wrapWith(
+		'template',
 		node.loc.start.offset,
 		node.loc.end.offset,
 		codeFeatures.doNotReportTs6133,
@@ -211,6 +212,7 @@ export function* generateComponent(
 	yield* generateComponentGeneric(ctx);
 	yield `(`;
 	yield* wrapWith(
+		'template',
 		tagOffsets[0],
 		tagOffsets[0] + node.tag.length,
 		codeFeatures.verification,
@@ -312,6 +314,7 @@ export function* generateElement(
 	}
 	yield `)(`;
 	yield* wrapWith(
+		'template',
 		startTagOffset,
 		startTagOffset + node.tag.length,
 		codeFeatures.verification,
@@ -420,6 +423,7 @@ function* generateComponentGeneric(
 	if (ctx.currentInfo.generic) {
 		const { content, offset } = ctx.currentInfo.generic;
 		yield* wrapWith(
+			'template',
 			offset,
 			offset + content.length,
 			codeFeatures.verification,

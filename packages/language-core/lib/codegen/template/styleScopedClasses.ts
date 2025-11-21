@@ -28,9 +28,9 @@ export function* generateStyleScopedClassReferences(
 	for (const { source, className, offset } of ctx.scopedClasses) {
 		yield `/** @type {__VLS_StyleScopedClasses[`;
 		yield* wrapWith(
+			source,
 			offset - (withDot ? 1 : 0),
 			offset + className.length,
-			source,
 			codeFeatures.navigation,
 			`'`,
 			...generateEscaped(

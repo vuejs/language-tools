@@ -105,6 +105,7 @@ export function* generateEventArg(
 	}
 	else {
 		yield* wrapWith(
+			'template',
 			start,
 			start + name.length,
 			features,
