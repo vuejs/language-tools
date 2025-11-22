@@ -9,7 +9,7 @@ export interface ParsedCommandLine extends Omit<ts.ParsedCommandLine, 'fileNames
 	vueOptions: VueCompilerOptions;
 }
 
-export const createParsedCommandLineByJson = createCommandLineParser(
+export const createParsedCommandLineByJson = create(
 	(ts, host, rootDir: string, json: any, configFileName?: string) => {
 		// `parseJsonConfigFileContent` is missing in tsc
 		return 'parseJsonConfigFileContent' in (ts as any)
@@ -24,7 +24,7 @@ export const createParsedCommandLineByJson = createCommandLineParser(
 	},
 );
 
-export const createParsedCommandLine = createCommandLineParser(
+export const createParsedCommandLine = create(
 	(ts, host, configFileName: string) => {
 		const config = ts.readJsonConfigFile(configFileName, host.readFile);
 		return ts.parseJsonSourceFileConfigFileContent(
@@ -37,7 +37,7 @@ export const createParsedCommandLine = createCommandLineParser(
 	},
 );
 
-function createCommandLineParser<T extends any[]>(
+function create<T extends any[]>(
 	getParsedCommandLine: (
 		ts: typeof import('typescript'),
 		host: ts.ParseConfigHost,
