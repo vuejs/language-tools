@@ -2,7 +2,14 @@ import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, generatePartiallyEnding, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
+import {
+	createSfcBlockGenerator,
+	endOfLine,
+	generatePartiallyEnding,
+	generateSfcBlockSection,
+	identifierRegex,
+	newLine,
+} from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { wrapWith } from '../utils/wrapWith';
 import { generateComponent } from './component';
@@ -129,103 +136,99 @@ function* generateSetupFunction(
 	scriptSetupRanges: ScriptSetupRanges,
 	syntax: 'return' | 'export default' | undefined,
 ): Generator<Code> {
-	let setupCodeModifies: [Code[], number, number][] = [];
+	const { replace, generate } = createSfcBlockGenerator(
+		scriptSetup,
+		Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset),
+		scriptSetup.content.length,
+		codeFeatures.all,
+	);
+
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
-		setupCodeModifies.push(...generateDefineWithType(
-			scriptSetup,
-			statement,
-			scriptSetupRanges.withDefaults?.callExp ?? callExp,
-			typeArg,
-			name,
-			`__VLS_props`,
-			`__VLS_Props`,
-		));
+		for (
+			const replacement of generateDefineWithType(
+				scriptSetup,
+				statement,
+				scriptSetupRanges.withDefaults?.callExp ?? callExp,
+				typeArg,
+				name,
+				`__VLS_props`,
+				`__VLS_Props`,
+			)
+		) {
+			replace(...replacement);
+		}
 	}
 	if (scriptSetupRanges.defineEmits) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineEmits;
-		setupCodeModifies.push(...generateDefineWithType(
-			scriptSetup,
-			statement,
-			callExp,
-			typeArg,
-			name,
-			`__VLS_emit`,
-			`__VLS_Emit`,
-		));
+		for (
+			const replacement of generateDefineWithType(
+				scriptSetup,
+				statement,
+				callExp,
+				typeArg,
+				name,
+				`__VLS_emit`,
+				`__VLS_Emit`,
+			)
+		) {
+			replace(...replacement);
+		}
 	}
 	if (scriptSetupRanges.defineSlots) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineSlots;
-		setupCodeModifies.push(...generateDefineWithType(
-			scriptSetup,
-			statement,
-			callExp,
-			typeArg,
-			name,
-			`__VLS_slots`,
-			`__VLS_Slots`,
-		));
+		for (
+			const replacement of generateDefineWithType(
+				scriptSetup,
+				statement,
+				callExp,
+				typeArg,
+				name,
+				`__VLS_slots`,
+				`__VLS_Slots`,
+			)
+		) {
+			replace(...replacement);
+		}
 	}
 	if (scriptSetupRanges.defineExpose) {
 		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
 		if (typeArg) {
-			setupCodeModifies.push([
-				[
-					`let __VLS_exposed!: `,
-					generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
-					endOfLine,
-				],
+			replace(
 				callExp.start,
 				callExp.start,
-			], [
-				[`typeof __VLS_exposed`],
-				typeArg.start,
-				typeArg.end,
-			]);
+				`let __VLS_exposed!: `,
+				generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
+				endOfLine,
+			);
+			replace(typeArg.start, typeArg.end, `typeof __VLS_exposed`);
 		}
 		else if (arg) {
-			setupCodeModifies.push([
-				[
-					`const __VLS_exposed = `,
-					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
-					endOfLine,
-				],
+			replace(
 				callExp.start,
 				callExp.start,
-			], [
-				[`__VLS_exposed`],
-				arg.start,
-				arg.end,
-			]);
+				`const __VLS_exposed = `,
+				generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all),
+				endOfLine,
+			);
+			replace(arg.start, arg.end, `__VLS_exposed`);
 		}
 		else {
-			setupCodeModifies.push([
-				[`const __VLS_exposed = {}${endOfLine}`],
-				callExp.start,
-				callExp.start,
-			]);
+			replace(callExp.start, callExp.start, `const __VLS_exposed = {}${endOfLine}`);
 		}
 	}
 	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
 		for (const { callExp } of scriptSetupRanges.useAttrs) {
-			setupCodeModifies.push([
-				[`(`],
-				callExp.start,
-				callExp.start,
-			], [
-				[` as typeof __VLS_dollars.$attrs)`],
-				callExp.end,
-				callExp.end,
-			]);
+			replace(callExp.start, callExp.start, `(`);
+			replace(callExp.end, callExp.end, ` as typeof __VLS_dollars.$attrs)`);
 		}
 	}
 	for (const { callExp, exp, arg } of scriptSetupRanges.useCssModule) {
-		setupCodeModifies.push([
-			[`(`],
-			callExp.start,
-			callExp.start,
-		], [
-			arg
+		replace(callExp.start, callExp.start, `(`);
+		replace(
+			callExp.end,
+			callExp.end,
+			...arg
 				? [
 					` as Omit<__VLS_StyleModules, '$style'>[`,
 					generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic),
@@ -242,28 +245,15 @@ function* generateSetupFunction(
 					),
 					`])`,
 				],
-			callExp.end,
-			callExp.end,
-		]);
+		);
 		if (arg) {
-			setupCodeModifies.push([
-				[`__VLS_placeholder`],
-				arg.start,
-				arg.end,
-			]);
+			replace(arg.start, arg.end, `__VLS_placeholder`);
 		}
 	}
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
 		for (const { callExp } of scriptSetupRanges.useSlots) {
-			setupCodeModifies.push([
-				[`(`],
-				callExp.start,
-				callExp.start,
-			], [
-				[` as typeof __VLS_dollars.$slots)`],
-				callExp.end,
-				callExp.end,
-			]);
+			replace(callExp.start, callExp.start, `(`);
+			replace(callExp.end, callExp.end, ` as typeof __VLS_dollars.$slots)`);
 		}
 	}
 	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
@@ -276,49 +266,18 @@ function* generateSetupFunction(
 			]
 			: [`unknown`];
 		if (isTs) {
-			setupCodeModifies.push([
-				[
-					`<`,
-					...templateRefType,
-					`>`,
-				],
-				exp.end,
-				exp.end,
-			]);
+			replace(exp.end, exp.end, `<`, ...templateRefType, `>`);
 		}
 		else {
-			setupCodeModifies.push([
-				[`(`],
-				callExp.start,
-				callExp.start,
-			], [
-				[
-					` as __VLS_UseTemplateRef<`,
-					...templateRefType,
-					`>)`,
-				],
-				callExp.end,
-				callExp.end,
-			]);
+			replace(callExp.start, callExp.start, `(`);
+			replace(callExp.end, callExp.end, ` as __VLS_UseTemplateRef<`, ...templateRefType, `>)`);
 		}
 		if (arg) {
-			setupCodeModifies.push([
-				[`__VLS_placeholder`],
-				arg.start,
-				arg.end,
-			]);
+			replace(arg.start, arg.end, `__VLS_placeholder`);
 		}
 	}
-	setupCodeModifies = setupCodeModifies.sort((a, b) => a[1] - b[1]);
 
-	let nextStart = Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset);
-	for (const [codes, start, end] of setupCodeModifies) {
-		yield generateSfcBlockSection(scriptSetup, nextStart, start, codeFeatures.all);
-		yield* codes;
-		nextStart = end;
-	}
-	yield generateSfcBlockSection(scriptSetup, nextStart, scriptSetup.content.length, codeFeatures.all);
-
+	yield* generate();
 	yield* generatePartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
 	yield* generateMacros(options, ctx);
 
@@ -375,67 +334,57 @@ function* generateDefineWithType(
 	name: string | undefined,
 	defaultName: string,
 	typeName: string,
-): Generator<[Code[], number, number]> {
+): Generator<[number, number, ...Code[]]> {
 	if (typeArg) {
 		yield [
-			[
-				`type ${typeName} = `,
-				generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
-				endOfLine,
-			],
 			statement.start,
 			statement.start,
+			`type ${typeName} = `,
+			generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all),
+			endOfLine,
 		];
-		yield [[typeName], typeArg.start, typeArg.end];
+		yield [typeArg.start, typeArg.end, typeName];
 	}
 	if (!name) {
 		if (statement.start === callExp.start && statement.end === callExp.end) {
-			yield [[`const ${defaultName} = `], callExp.start, callExp.start];
+			yield [callExp.start, callExp.start, `const ${defaultName} = `];
 		}
 		else if (typeArg) {
 			yield [
-				[
-					`const ${defaultName} = `,
-					generateSfcBlockSection(scriptSetup, callExp.start, typeArg.start, codeFeatures.all),
-				],
 				statement.start,
 				typeArg.start,
+				`const ${defaultName} = `,
+				generateSfcBlockSection(scriptSetup, callExp.start, typeArg.start, codeFeatures.all),
 			];
 			yield [
-				[
-					generateSfcBlockSection(scriptSetup, typeArg.end, callExp.end, codeFeatures.all),
-					endOfLine,
-					generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
-					defaultName,
-				],
 				typeArg.end,
 				callExp.end,
+				generateSfcBlockSection(scriptSetup, typeArg.end, callExp.end, codeFeatures.all),
+				endOfLine,
+				generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
+				defaultName,
 			];
 		}
 		else {
 			yield [
-				[
-					`const ${defaultName} = `,
-					generateSfcBlockSection(scriptSetup, callExp.start, callExp.end, codeFeatures.all),
-					endOfLine,
-					generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
-					defaultName,
-				],
 				statement.start,
 				callExp.end,
+				`const ${defaultName} = `,
+				generateSfcBlockSection(scriptSetup, callExp.start, callExp.end, codeFeatures.all),
+				endOfLine,
+				generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
+				defaultName,
 			];
 		}
 	}
 	else if (!identifierRegex.test(name)) {
-		yield [[`const ${defaultName} = `], statement.start, callExp.start];
+		yield [statement.start, callExp.start, `const ${defaultName} = `];
 		yield [
-			[
-				endOfLine,
-				generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
-				defaultName,
-			],
 			statement.end,
 			statement.end,
+			endOfLine,
+			generateSfcBlockSection(scriptSetup, statement.start, callExp.start, codeFeatures.all),
+			defaultName,
 		];
 	}
 }
