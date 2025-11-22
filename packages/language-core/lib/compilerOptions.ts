@@ -38,9 +38,17 @@ export const createParsedCommandLine = createCommandLineParser(
 );
 
 function createCommandLineParser<T extends any[]>(
-	getter: (ts: typeof import('typescript'), host: ts.ParseConfigHost, ...args: T) => ts.ParsedCommandLine,
+	getParsedCommandLine: (
+		ts: typeof import('typescript'),
+		host: ts.ParseConfigHost,
+		...args: T
+	) => ts.ParsedCommandLine,
 ) {
-	return (ts: typeof import('typescript'), host: ts.ParseConfigHost, ...args: T): ParsedCommandLine => {
+	return (
+		ts: typeof import('typescript'),
+		host: Omit<ts.ParseConfigHost, 'readDirectory'>,
+		...args: T
+	): ParsedCommandLine => {
 		try {
 			const extendedPaths = new Set<string>();
 			const proxyHost = {
@@ -55,7 +63,7 @@ function createCommandLineParser<T extends any[]>(
 					return [];
 				},
 			};
-			const parsed = getter(ts, proxyHost, ...args);
+			const parsed = getParsedCommandLine(ts, proxyHost, ...args);
 
 			const resolver = new CompilerOptionsResolver(host.fileExists);
 			for (const extendPath of [...extendedPaths].reverse()) {
