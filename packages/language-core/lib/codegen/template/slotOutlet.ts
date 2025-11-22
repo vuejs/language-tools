@@ -108,7 +108,6 @@ export function* generateSlotOutlet(
 				node,
 				node.props.filter(prop => prop !== nameProp),
 				true,
-				true,
 			),
 			`}`,
 		);
@@ -122,7 +121,6 @@ export function* generateSlotOutlet(
 			node,
 			node.props.filter(prop => prop !== nameProp),
 			options.vueCompilerOptions.checkUnknownProps,
-			true,
 		);
 		yield `}${endOfLine}`;
 

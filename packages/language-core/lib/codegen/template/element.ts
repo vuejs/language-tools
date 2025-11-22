@@ -1,5 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
+import { toString } from 'muggle-string';
 import type { Code, VueCodeInformation } from '../../types';
 import { getElementTagOffsets, hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
@@ -197,16 +198,18 @@ export function* generateComponent(
 		}
 	}
 
-	yield `// @ts-ignore${newLine}`;
-	yield `const ${componentFunctionalVar} = __VLS_asFunctionalComponent(${componentOriginalVar}, new ${componentOriginalVar}({${newLine}`;
-	yield* generateElementProps(
+	const propCodes = [...generateElementProps(
 		options,
 		ctx,
 		node,
 		props,
 		options.vueCompilerOptions.checkUnknownProps,
-		false,
-	);
+		failedPropExps,
+	)];
+
+	yield `// @ts-ignore${newLine}`;
+	yield `const ${componentFunctionalVar} = __VLS_asFunctionalComponent(${componentOriginalVar}, new ${componentOriginalVar}({${newLine}`;
+	yield* toString(propCodes);
 	yield `}))${endOfLine}`;
 
 	yield `const `;
@@ -226,15 +229,7 @@ export function* generateComponent(
 		tagOffsets[0] + node.tag.length,
 		codeFeatures.verification,
 		`{${newLine}`,
-		...generateElementProps(
-			options,
-			ctx,
-			node,
-			props,
-			options.vueCompilerOptions.checkUnknownProps,
-			true,
-			failedPropExps,
-		),
+		...propCodes,
 		`}`,
 	);
 	yield `, ...__VLS_functionalComponentArgsRest(${componentFunctionalVar}))${endOfLine}`;
@@ -332,7 +327,6 @@ export function* generateElement(
 			node,
 			node.props,
 			options.vueCompilerOptions.checkUnknownProps,
-			true,
 			failedPropExps,
 		),
 		`}`,

@@ -1,6 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
-import { toString } from 'muggle-string';
 import { isMatch } from 'picomatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { hyphenateAttr, hyphenateTag } from '../../utils/shared';
@@ -29,7 +28,6 @@ export function* generateElementProps(
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
 	strictPropsCheck: boolean,
-	enableCodeFeatures: boolean,
 	failedPropExps?: FailedPropExpression[],
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
@@ -118,7 +116,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codes = [...wrapWith(
+			yield* wrapWith(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
@@ -152,16 +150,9 @@ export function* generateElementProps(
 						ctx,
 						prop,
 						prop.exp,
-						enableCodeFeatures,
 					),
 				),
-			)];
-			if (enableCodeFeatures) {
-				yield* codes;
-			}
-			else {
-				yield toString(codes);
-			}
+			);
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -173,18 +164,7 @@ export function* generateElementProps(
 						? `[__VLS_tryAsConstant(\`\${${prop.arg.content}}Modifiers\`)]`
 						: camelize(propName) + `Modifiers`
 					: `modelModifiers`;
-				const codes = [...generateModifiers(
-					options,
-					ctx,
-					prop,
-					propertyName,
-				)];
-				if (enableCodeFeatures) {
-					yield* codes;
-				}
-				else {
-					yield toString(codes);
-				}
+				yield* generateModifiers(options, ctx, prop, propertyName);
 				yield newLine;
 			}
 		}
@@ -200,7 +180,7 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			const codes = [...wrapWith(
+			yield* wrapWith(
 				'template',
 				prop.loc.start.offset,
 				prop.loc.end.offset,
@@ -219,13 +199,7 @@ export function* generateElementProps(
 						? generateAttrValue(prop.value, codeFeatures.withoutNavigation)
 						: [`true`]
 				),
-			)];
-			if (enableCodeFeatures) {
-				yield* codes;
-			}
-			else {
-				yield toString(codes);
-			}
+			);
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -237,12 +211,10 @@ export function* generateElementProps(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			if (prop.exp.loc.source === '$attrs') {
-				if (enableCodeFeatures) {
-					ctx.bindingAttrLocs.push(prop.exp.loc);
-				}
+				ctx.bindingAttrLocs.push(prop.exp.loc);
 			}
 			else {
-				const codes = [...wrapWith(
+				yield* wrapWith(
 					'template',
 					prop.exp.loc.start.offset,
 					prop.exp.loc.end.offset,
@@ -253,15 +225,8 @@ export function* generateElementProps(
 						ctx,
 						prop,
 						prop.exp,
-						enableCodeFeatures,
 					),
-				)];
-				if (enableCodeFeatures) {
-					yield* codes;
-				}
-				else {
-					yield toString(codes);
-				}
+				);
 				yield `,${newLine}`;
 			}
 		}
@@ -273,7 +238,6 @@ export function* generatePropExp(
 	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
-	enableCodeFeatures: boolean = true,
 ): Generator<Code> {
 	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
 	const features = isShorthand
@@ -324,9 +288,7 @@ export function* generatePropExp(
 					}
 				}
 
-				if (enableCodeFeatures) {
-					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
-				}
+				ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
 			}
 		}
 	}
