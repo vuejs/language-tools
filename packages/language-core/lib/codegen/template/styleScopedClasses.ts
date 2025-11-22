@@ -1,9 +1,9 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
-import { getNodeText } from '../../utils/shared';
+import { getAttributeValueOffset, getNodeText } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, normalizeAttributeValue } from '../utils';
+import { endOfLine } from '../utils';
 import { generateEscaped } from '../utils/escaped';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
@@ -28,9 +28,9 @@ export function* generateStyleScopedClassReferences(
 	for (const { source, className, offset } of ctx.scopedClasses) {
 		yield `/** @type {__VLS_StyleScopedClasses[`;
 		yield* wrapWith(
+			source,
 			offset - (withDot ? 1 : 0),
 			offset + className.length,
-			source,
 			codeFeatures.navigation,
 			`'`,
 			...generateEscaped(
@@ -61,26 +61,26 @@ export function collectStyleScopedClassReferences(
 				const getClassOffset = Reflect.get(prop.value.loc.start, 'getClassOffset') as (offset: number) => number;
 				const content = prop.value.loc.source.slice(1, -1);
 
-				let startOffset = 1;
+				let offset = 1;
 				for (const className of content.split(' ')) {
 					if (className) {
 						ctx.scopedClasses.push({
 							source: 'template',
 							className,
-							offset: getClassOffset(startOffset),
+							offset: getClassOffset(offset),
 						});
 					}
-					startOffset += className.length + 1;
+					offset += className.length + 1;
 				}
 			}
 			else {
-				const [content, startOffset] = normalizeAttributeValue(prop.value);
-				if (content) {
-					const classes = collectClasses(content, startOffset);
+				const offset = getAttributeValueOffset(prop.value);
+				if (prop.value.content) {
+					const classes = collectClasses(prop.value.content, offset);
 					ctx.scopedClasses.push(...classes);
 				}
 				else {
-					ctx.emptyClassOffsets.push(startOffset);
+					ctx.emptyClassOffsets.push(offset);
 				}
 			}
 		}

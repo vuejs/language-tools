@@ -29,7 +29,7 @@ export function* generateInterpolation(
 	} = options;
 
 	for (
-		let [section, offset, type] of forEachInterpolationSegment(
+		const segment of forEachInterpolationSegment(
 			ts,
 			ctx.inlineTsAsts,
 			destructuredPropNames,
@@ -41,45 +41,42 @@ export function* generateInterpolation(
 			suffix,
 		)
 	) {
-		if (offset === undefined) {
-			yield section;
+		if (typeof segment === 'string') {
+			yield segment;
+			continue;
 		}
-		else {
-			offset -= prefix.length;
-			let addSuffix = '';
-			const overLength = offset + section.length - code.length;
-			if (overLength > 0) {
-				addSuffix = section.slice(section.length - overLength);
-				section = section.slice(0, -overLength);
-			}
-			if (offset < 0) {
-				yield section.slice(0, -offset);
-				section = section.slice(-offset);
-				offset = 0;
-			}
-			const shouldSkip = section.length === 0 && (type === 'startText' || type === 'endText');
-			if (!shouldSkip) {
-				if (
-					start !== undefined
-					&& data
-				) {
-					yield [
-						section,
-						source,
-						start + offset,
-						type === 'errorMappingOnly'
-							? codeFeatures.verification
-							: typeof data === 'function'
-							? data(start + offset)
-							: data,
-					];
-				}
-				else {
-					yield section;
-				}
-			}
-			yield addSuffix;
+		let [section, offset, type] = segment;
+		offset -= prefix.length;
+		let addSuffix = '';
+		const overLength = offset + section.length - code.length;
+		if (overLength > 0) {
+			addSuffix = section.slice(section.length - overLength);
+			section = section.slice(0, -overLength);
 		}
+		if (offset < 0) {
+			yield section.slice(0, -offset);
+			section = section.slice(-offset);
+			offset = 0;
+		}
+		const shouldSkip = section.length === 0 && (type === 'startText' || type === 'endText');
+		if (!shouldSkip) {
+			if (start !== undefined && data) {
+				yield [
+					section,
+					source,
+					start + offset,
+					type === 'errorMappingOnly'
+						? codeFeatures.verification
+						: typeof data === 'function'
+						? data(start + offset)
+						: data,
+				];
+			}
+			else {
+				yield section;
+			}
+		}
+		yield addSuffix;
 	}
 }
 
@@ -90,8 +87,8 @@ interface CtxVar {
 }
 
 type Segment = [
-	fragment: string,
-	offset: number | undefined,
+	code: string,
+	offset: number,
 	type?: 'errorMappingOnly' | 'startText' | 'endText',
 ];
 
@@ -105,7 +102,7 @@ function* forEachInterpolationSegment(
 	start: number | undefined,
 	prefix: string,
 	suffix: string,
-): Generator<Segment> {
+): Generator<Segment | string> {
 	const code = prefix + originalCode + suffix;
 	const offset = start !== undefined ? start - prefix.length : undefined;
 	let ctxVars: CtxVar[] = [];
@@ -141,7 +138,7 @@ function* forEachInterpolationSegment(
 
 			if (curVar.isShorthand) {
 				yield [code.slice(lastVarEnd, curVar.offset + curVar.text.length), lastVarEnd];
-				yield [': ', undefined];
+				yield `: `;
 			}
 			else {
 				yield [code.slice(lastVarEnd, curVar.offset), lastVarEnd, i ? undefined : 'startText'];
@@ -165,16 +162,16 @@ function* generateVar(
 	code: string,
 	offset: number | undefined,
 	curVar: CtxVar,
-): Generator<Segment> {
+): Generator<Segment | string> {
 	// fix https://github.com/vuejs/language-tools/issues/1205
 	// fix https://github.com/vuejs/language-tools/issues/1264
 	yield ['', curVar.offset, 'errorMappingOnly'];
 
 	const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
 	if (isTemplateRef) {
-		yield [`__VLS_unref(`, undefined];
+		yield `__VLS_unref(`;
 		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
-		yield [`)`, undefined];
+		yield `)`;
 	}
 	else {
 		if (offset !== undefined) {
@@ -185,10 +182,10 @@ function* generateVar(
 		}
 
 		if (ctx.dollarVars.has(curVar.text)) {
-			yield [`__VLS_dollars.`, undefined];
+			yield `__VLS_dollars.`;
 		}
 		else {
-			yield [`__VLS_ctx.`, undefined];
+			yield `__VLS_ctx.`;
 		}
 		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
 	}

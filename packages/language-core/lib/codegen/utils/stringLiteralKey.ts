@@ -8,6 +8,7 @@ export function* generateStringLiteralKey(code: string, offset?: number, info?: 
 	}
 	else {
 		yield* wrapWith(
+			'template',
 			offset,
 			offset + code.length,
 			info,

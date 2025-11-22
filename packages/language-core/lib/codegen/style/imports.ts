@@ -12,9 +12,9 @@ export function* generateStyleImports(
 	if (typeof style.src === 'object') {
 		yield `${newLine} & typeof import(`;
 		yield* wrapWith(
+			'main',
 			style.src.offset,
 			style.src.offset + style.src.text.length,
-			'main',
 			features,
 			`'`,
 			[style.src.text, 'main', style.src.offset, combineLastMapping],

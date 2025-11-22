@@ -212,10 +212,10 @@ export function createTemplateCodegenContext(
 		inheritedAttrVars,
 		templateRefs,
 		currentComponent: undefined as {
-			ctxVar: string;
-			used: boolean;
+			get ctxVar(): string;
+			get propsVar(): string;
 		} | undefined,
-		singleRootElTypes: [] as string[],
+		singleRootElTypes: new Set<string>(),
 		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
 		addTemplateRef(name: string, typeExp: string, offset: number) {
 			let refs = templateRefs.get(name);
@@ -353,6 +353,7 @@ export function createTemplateCodegenContext(
 			commentBuffer.length = 0;
 			if (data.expectError !== undefined) {
 				yield* wrapWith(
+					'template',
 					data.expectError.node.loc.start.offset,
 					data.expectError.node.loc.end.offset,
 					{

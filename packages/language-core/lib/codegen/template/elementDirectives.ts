@@ -42,6 +42,7 @@ export function* generateElementDirectives(
 		}
 
 		yield* wrapWith(
+			'template',
 			prop.loc.start.offset,
 			prop.loc.end.offset,
 			codeFeatures.verification,
@@ -63,6 +64,7 @@ function* generateIdentifier(
 ): Generator<Code> {
 	const rawName = 'v-' + prop.name;
 	yield* wrapWith(
+		'template',
 		prop.loc.start.offset,
 		prop.loc.start.offset + rawName.length,
 		codeFeatures.verification,
@@ -92,6 +94,7 @@ function* generateArg(
 	const startOffset = arg.loc.start.offset + arg.loc.source.indexOf(arg.content);
 
 	yield* wrapWith(
+		'template',
 		startOffset,
 		startOffset + arg.content.length,
 		codeFeatures.verification,
@@ -135,6 +138,7 @@ export function* generateModifiers(
 	const endOffset = modifiers.at(-1)!.loc.end.offset;
 
 	yield* wrapWith(
+		'template',
 		startOffset,
 		endOffset,
 		codeFeatures.verification,
@@ -165,6 +169,7 @@ function* generateValue(
 	}
 
 	yield* wrapWith(
+		'template',
 		exp.loc.start.offset,
 		exp.loc.end.offset,
 		codeFeatures.verification,

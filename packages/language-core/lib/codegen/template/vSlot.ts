@@ -29,8 +29,6 @@ export function* generateVSlot(
 	}
 
 	if (slotDir || node.children.length) {
-		ctx.currentComponent.used = true;
-
 		yield `const { `;
 		if (slotDir) {
 			if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
@@ -46,6 +44,7 @@ export function* generateVSlot(
 			}
 			else {
 				yield* wrapWith(
+					'template',
 					slotDir.loc.start.offset,
 					slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
 					codeFeatures.withoutHighlightAndCompletion,
@@ -56,6 +55,7 @@ export function* generateVSlot(
 		else {
 			// #932: reference for implicit default slot
 			yield* wrapWith(
+				'template',
 				node.loc.start.offset,
 				node.loc.end.offset,
 				codeFeatures.navigation,
@@ -163,6 +163,7 @@ function* generateSlotParameters(
 	if (types.some(t => t)) {
 		yield `, `;
 		yield* wrapWith(
+			'template',
 			exp.loc.start.offset,
 			exp.loc.end.offset,
 			codeFeatures.verification,

@@ -1,10 +1,11 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
+import { toString } from 'muggle-string';
 import type { Code, VueCodeInformation } from '../../types';
-import { getElementTagOffsets, hyphenateTag } from '../../utils/shared';
+import { getAttributeValueOffset, getElementTagOffsets, hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
-import { endOfLine, identifierRegex, newLine, normalizeAttributeValue } from '../utils';
+import { endOfLine, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
@@ -33,11 +34,20 @@ export function* generateComponent(
 	const componentFunctionalVar = ctx.getInternalVariable();
 	const componentVNodeVar = ctx.getInternalVariable();
 	const componentCtxVar = ctx.getInternalVariable();
+	const componentPropsVar = ctx.getInternalVariable();
 	const isComponentTag = node.tag.toLowerCase() === 'component';
 
+	let isCtxVarUsed = false;
+	let isPropsVarUsed = false;
 	ctx.currentComponent = {
-		ctxVar: componentCtxVar,
-		used: false,
+		get ctxVar() {
+			isCtxVarUsed = true;
+			return componentCtxVar;
+		},
+		get propsVar() {
+			isPropsVarUsed = true;
+			return componentPropsVar;
+		},
 	};
 
 	let props = node.props;
@@ -188,20 +198,23 @@ export function* generateComponent(
 		}
 	}
 
-	yield `// @ts-ignore${newLine}`;
-	yield `const ${componentFunctionalVar} = __VLS_asFunctionalComponent(${componentOriginalVar}, new ${componentOriginalVar}({${newLine}`;
-	yield* generateElementProps(
+	const propCodes = [...generateElementProps(
 		options,
 		ctx,
 		node,
 		props,
 		options.vueCompilerOptions.checkUnknownProps,
-		false,
-	);
+		failedPropExps,
+	)];
+
+	yield `// @ts-ignore${newLine}`;
+	yield `const ${componentFunctionalVar} = __VLS_asFunctionalComponent(${componentOriginalVar}, new ${componentOriginalVar}({${newLine}`;
+	yield* toString(propCodes);
 	yield `}))${endOfLine}`;
 
 	yield `const `;
 	yield* wrapWith(
+		'template',
 		node.loc.start.offset,
 		node.loc.end.offset,
 		codeFeatures.doNotReportTs6133,
@@ -211,19 +224,12 @@ export function* generateComponent(
 	yield* generateComponentGeneric(ctx);
 	yield `(`;
 	yield* wrapWith(
+		'template',
 		tagOffsets[0],
 		tagOffsets[0] + node.tag.length,
 		codeFeatures.verification,
 		`{${newLine}`,
-		...generateElementProps(
-			options,
-			ctx,
-			node,
-			props,
-			options.vueCompilerOptions.checkUnknownProps,
-			true,
-			failedPropExps,
-		),
+		...propCodes,
 		`}`,
 	);
 	yield `, ...__VLS_functionalComponentArgsRest(${componentFunctionalVar}))${endOfLine}`;
@@ -234,9 +240,6 @@ export function* generateComponent(
 		ctx,
 		node,
 		componentOriginalVar,
-		componentFunctionalVar,
-		componentVNodeVar,
-		componentCtxVar,
 	);
 	yield* generateElementDirectives(options, ctx, node);
 
@@ -247,7 +250,7 @@ export function* generateComponent(
 
 	if (reference || isRootNode) {
 		const componentInstanceVar = ctx.getInternalVariable();
-		ctx.currentComponent.used = true;
+		isCtxVarUsed = true;
 
 		yield `var ${componentInstanceVar} = {} as (Parameters<NonNullable<typeof ${componentCtxVar}['expose']>>[0] | null)`;
 		if (ctx.inVFor) {
@@ -260,16 +263,13 @@ export function* generateComponent(
 			ctx.addTemplateRef(reference.name, typeExp, reference.offset);
 		}
 		if (isRootNode) {
-			ctx.singleRootElTypes.push(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
+			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
 		}
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
-		const attrsVar = ctx.getInternalVariable();
-		ctx.currentComponent.used = true;
-
-		yield `var ${attrsVar}!: NonNullable<typeof ${componentCtxVar}['props']>${endOfLine}`;
-		ctx.inheritedAttrVars.add(attrsVar);
+		ctx.inheritedAttrVars.add(componentPropsVar);
+		isPropsVarUsed = true;
 	}
 
 	collectStyleScopedClassReferences(options, ctx, node);
@@ -279,8 +279,12 @@ export function* generateComponent(
 	) as CompilerDOM.DirectiveNode;
 	yield* generateVSlot(options, ctx, node, slotDir);
 
-	if (ctx.currentComponent.used) {
+	if (isCtxVarUsed) {
 		yield `var ${componentCtxVar}!: __VLS_FunctionalComponentCtx<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
+	}
+
+	if (isPropsVarUsed) {
+		yield `var ${componentPropsVar}!: __VLS_FunctionalComponentProps<typeof ${componentOriginalVar}, typeof ${componentVNodeVar}>${endOfLine}`;
 	}
 }
 
@@ -312,6 +316,7 @@ export function* generateElement(
 	}
 	yield `)(`;
 	yield* wrapWith(
+		'template',
 		startTagOffset,
 		startTagOffset + node.tag.length,
 		codeFeatures.verification,
@@ -322,7 +327,6 @@ export function* generateElement(
 			node,
 			node.props,
 			options.vueCompilerOptions.checkUnknownProps,
-			true,
 			failedPropExps,
 		),
 		`}`,
@@ -341,7 +345,7 @@ export function* generateElement(
 		ctx.addTemplateRef(reference.name, typeExp, reference.offset);
 	}
 	if (ctx.singleRootNodes.has(node)) {
-		ctx.singleRootElTypes.push(`__VLS_Elements['${node.tag}']`);
+		ctx.singleRootElTypes.add(`__VLS_Elements['${node.tag}']`);
 	}
 
 	if (hasVBindAttrs(options, ctx, node)) {
@@ -420,6 +424,7 @@ function* generateComponentGeneric(
 	if (ctx.currentInfo.generic) {
 		const { content, offset } = ctx.currentInfo.generic;
 		yield* wrapWith(
+			'template',
 			offset,
 			offset + content.length,
 			codeFeatures.verification,
@@ -446,7 +451,8 @@ function* generateElementReference(
 			&& prop.name === 'ref'
 			&& prop.value
 		) {
-			const [name, offset] = normalizeAttributeValue(prop.value);
+			const name = prop.value.content;
+			const offset = getAttributeValueOffset(prop.value);
 
 			// navigation support for `const foo = ref()`
 			yield `/** @type {typeof __VLS_ctx`;

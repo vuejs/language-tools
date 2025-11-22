@@ -234,9 +234,9 @@ function* generateSetupFunction(
 				: [
 					` as __VLS_StyleModules[`,
 					...wrapWith(
+						scriptSetup.name,
 						exp.start,
 						exp.end,
-						scriptSetup.name,
 						codeFeatures.verification,
 						`'$style'`,
 					),
