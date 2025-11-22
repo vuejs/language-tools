@@ -258,9 +258,6 @@ export function* generatePropExp(
 		const propVariableName = camelize(exp.loc.source);
 
 		if (identifierRegex.test(propVariableName)) {
-			const isDestructuredProp = options.destructuredPropNames.has(propVariableName);
-			const isTemplateRef = options.templateRefNames.has(propVariableName);
-
 			const codes = generateCamelized(
 				exp.loc.source,
 				'template',
@@ -268,21 +265,18 @@ export function* generatePropExp(
 				codeFeatures.withoutHighlightAndCompletion,
 			);
 
-			if (ctx.hasLocalVariable(propVariableName) || isDestructuredProp) {
+			if (options.destructuredPropNames.has(propVariableName) || ctx.hasLocalVariable(propVariableName)) {
 				yield* codes;
+			}
+			else if (options.templateRefNames.has(propVariableName)) {
+				yield `__VLS_unref(`;
+				yield* codes;
+				yield `)`;
 			}
 			else {
 				ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
-
-				if (isTemplateRef) {
-					yield `__VLS_unref(`;
-					yield* codes;
-					yield `)`;
-				}
-				else {
-					yield `__VLS_ctx.`;
-					yield* codes;
-				}
+				yield `__VLS_ctx.`;
+				yield* codes;
 			}
 
 			ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
