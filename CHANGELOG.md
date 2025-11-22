@@ -11,6 +11,8 @@
 
 - fix(vscode): correct highlighting of tags starting with `template` (#5755) - Thanks to @serkodev and @KazariEX!
 - fix(language-core): allow loose props checks on generic components (#5748) - Thanks to @serkodev!
+- fix(language-core): avoid `vue-tsc` crash during single file checks (#5768) - Thanks to @KazariEX!
+- fix(language-core): dispose virtual code correctly - Thanks to @KazariEX!
 
 ### Performance
 
