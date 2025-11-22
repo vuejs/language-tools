@@ -1,9 +1,9 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code } from '../../types';
-import { getNodeText } from '../../utils/shared';
+import { getNodeText, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, normalizeAttributeValue } from '../utils';
+import { endOfLine } from '../utils';
 import { generateEscaped } from '../utils/escaped';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';

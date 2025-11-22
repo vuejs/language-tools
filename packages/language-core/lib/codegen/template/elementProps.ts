@@ -239,61 +239,54 @@ export function* generatePropExp(
 	prop: CompilerDOM.DirectiveNode,
 	exp: CompilerDOM.SimpleExpressionNode | undefined,
 ): Generator<Code> {
-	const isShorthand = prop.arg?.loc.start.offset === prop.exp?.loc.start.offset;
-	const features = isShorthand
-		? codeFeatures.withoutHighlightAndCompletion
-		: codeFeatures.all;
-
-	if (exp && exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) { // style='z-index: 2' will compile to {'z-index':'2'}
-		if (!isShorthand) { // vue 3.4+
-			yield* generateInterpolation(
-				options,
-				ctx,
-				'template',
-				features,
-				exp.loc.source,
-				exp.loc.start.offset,
-				`(`,
-				`)`,
-			);
-		}
-		else {
-			const propVariableName = camelize(exp.loc.source);
-
-			if (identifierRegex.test(propVariableName)) {
-				const isDestructuredProp = options.destructuredPropNames.has(propVariableName);
-				const isTemplateRef = options.templateRefNames.has(propVariableName);
-
-				const codes = generateCamelized(
-					exp.loc.source,
-					'template',
-					exp.loc.start.offset,
-					features,
-				);
-
-				if (ctx.hasLocalVariable(propVariableName) || isDestructuredProp) {
-					yield* codes;
-				}
-				else {
-					ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
-
-					if (isTemplateRef) {
-						yield `__VLS_unref(`;
-						yield* codes;
-						yield `)`;
-					}
-					else {
-						yield `__VLS_ctx.`;
-						yield* codes;
-					}
-				}
-
-				ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
-			}
-		}
+	if (!exp) {
+		yield `{}`;
+	}
+	else if (prop.arg?.loc.start.offset !== prop.exp?.loc.start.offset) {
+		yield* generateInterpolation(
+			options,
+			ctx,
+			'template',
+			codeFeatures.all,
+			exp.loc.source,
+			exp.loc.start.offset,
+			`(`,
+			`)`,
+		);
 	}
 	else {
-		yield `{}`;
+		const propVariableName = camelize(exp.loc.source);
+
+		if (identifierRegex.test(propVariableName)) {
+			const isDestructuredProp = options.destructuredPropNames.has(propVariableName);
+			const isTemplateRef = options.templateRefNames.has(propVariableName);
+
+			const codes = generateCamelized(
+				exp.loc.source,
+				'template',
+				exp.loc.start.offset,
+				codeFeatures.withoutHighlightAndCompletion,
+			);
+
+			if (ctx.hasLocalVariable(propVariableName) || isDestructuredProp) {
+				yield* codes;
+			}
+			else {
+				ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
+
+				if (isTemplateRef) {
+					yield `__VLS_unref(`;
+					yield* codes;
+					yield `)`;
+				}
+				else {
+					yield `__VLS_ctx.`;
+					yield* codes;
+				}
+			}
+
+			ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.loc, propVariableName));
+		}
 	}
 }
 
