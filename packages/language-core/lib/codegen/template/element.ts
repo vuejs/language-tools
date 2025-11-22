@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type { Code, VueCodeInformation } from '../../types';
-import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
+import { getAttributeValueOffset, getElementTagOffsets, hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, identifierRegex, newLine } from '../utils';
@@ -451,7 +451,8 @@ function* generateElementReference(
 			&& prop.name === 'ref'
 			&& prop.value
 		) {
-			const [name, offset] = normalizeAttributeValue(prop.value);
+			const name = prop.value.content;
+			const offset = getAttributeValueOffset(prop.value);
 
 			// navigation support for `const foo = ref()`
 			yield `/** @type {typeof __VLS_ctx`;

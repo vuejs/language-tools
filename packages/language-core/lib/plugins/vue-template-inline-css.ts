@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueLanguagePlugin } from '../types';
 import { forEachElementNode } from '../utils/forEachTemplateNode';
-import { normalizeAttributeValue } from '../utils/shared';
+import { getAttributeValueOffset } from '../utils/shared';
 import { allCodeFeatures } from './shared';
 
 const codeFeatures = {
@@ -41,12 +41,11 @@ function* generate(templateAst: NonNullable<CompilerDOM.RootNode>): Generator<Co
 				&& prop.name === 'style'
 				&& prop.value
 			) {
-				const [content, offset] = normalizeAttributeValue(prop.value);
 				yield `x { `;
 				yield [
-					content,
+					prop.value.content,
 					'template',
-					offset,
+					getAttributeValueOffset(prop.value),
 					codeFeatures,
 				];
 				yield ` }\n`;

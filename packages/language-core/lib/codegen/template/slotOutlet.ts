@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { getElementTagOffsets } from '../../utils/shared';
+import { getAttributeValueOffset, getElementTagOffsets } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
@@ -37,16 +37,11 @@ export function* generateSlotOutlet(
 		if (nameProp) {
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
-				let { source, start: { offset } } = nameProp.value.loc;
-				if (source.startsWith('"') || source.startsWith("'")) {
-					source = source.slice(1, -1);
-					offset++;
-				}
 				codes = generatePropertyAccess(
 					options,
 					ctx,
-					source,
-					offset,
+					nameProp.value.content,
+					getAttributeValueOffset(nameProp.value),
 					codeFeatures.navigationAndVerification,
 				);
 			}
