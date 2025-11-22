@@ -79,9 +79,13 @@ export function createVueLanguagePlugin<T>(
 				}
 			}
 		},
-		updateVirtualCode(_fileId, code, snapshot) {
+		updateVirtualCode(_scriptId, code, snapshot) {
 			code.update(snapshot);
 			return code;
+		},
+		disposeVirtualCode(scriptId) {
+			const fileName = asFileName(scriptId);
+			fileRegistry.delete(fileName);
 		},
 		typescript: {
 			extraFileExtensions: getAllExtensions(vueCompilerOptions)
