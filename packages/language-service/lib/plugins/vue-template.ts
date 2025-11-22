@@ -46,7 +46,6 @@ export function create(
 	{
 		getComponentNames,
 		getComponentProps,
-		getComponentEvents,
 		getComponentDirectives,
 		getComponentSlots,
 		getElementAttrs,
@@ -213,6 +212,7 @@ export function create(
 					} = await runWithVueData(
 						info.script.id,
 						info.root,
+						document.offsetAt(position),
 						() =>
 							baseServiceInstance.provideCompletionItems!(
 								document,
@@ -389,11 +389,16 @@ export function create(
 				},
 			};
 
-			async function runWithVueData<T>(sourceDocumentUri: URI, root: VueVirtualCode, fn: () => T) {
+			async function runWithVueData<T>(
+				sourceDocumentUri: URI,
+				root: VueVirtualCode,
+				position: number,
+				fn: () => T,
+			) {
 				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
 				await fn();
 
-				const { sync } = await provideHtmlData(sourceDocumentUri, root);
+				const { sync } = await provideHtmlData(sourceDocumentUri, root, position);
 				let lastSync = await sync();
 				let result = await fn();
 				while (lastSync.version !== (lastSync = await sync()).version) {
@@ -402,7 +407,7 @@ export function create(
 				return { result, ...lastSync };
 			}
 
-			async function provideHtmlData(sourceDocumentUri: URI, root: VueVirtualCode) {
+			async function provideHtmlData(sourceDocumentUri: URI, root: VueVirtualCode, position: number) {
 				await (initializing ??= initialize());
 
 				const casing = await checkCasing(context, sourceDocumentUri);
@@ -428,7 +433,6 @@ export function create(
 				const tagMap = new Map<string, {
 					attrs: string[];
 					propInfos: ComponentPropInfo[];
-					events: string[];
 					directives: string[];
 				}>();
 				const propMap = new Map<string, {
@@ -520,22 +524,20 @@ export function create(
 								tagInfo = {
 									attrs: [],
 									propInfos: [],
-									events: [],
 									directives: [],
 								};
 								tagMap.set(tag, tagInfo);
 								tasks.push((async () => {
 									tagMap.set(tag, {
 										attrs: await getElementAttrs(root.fileName, tag) ?? [],
-										propInfos: await getComponentProps(root.fileName, tag) ?? [],
-										events: await getComponentEvents(root.fileName, tag) ?? [],
+										propInfos: await getComponentProps(root.fileName, position) ?? [],
 										directives: await getComponentDirectives(root.fileName) ?? [],
 									});
 									version++;
 								})());
 							}
 
-							const { attrs, propInfos, events, directives } = tagInfo;
+							const { attrs, propInfos, directives } = tagInfo;
 
 							for (let i = 0; i < propInfos.length; i++) {
 								const prop = propInfos[i]!;
@@ -558,7 +560,7 @@ export function create(
 									...attrs.map<ComponentPropInfo>(attr => ({ name: attr })),
 								]
 							) {
-								const isGlobal = prop.isAttribute || !propNameSet.has(prop.name);
+								const isGlobal = !propNameSet.has(prop.name);
 								const propName = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 								const isEvent = hyphenateAttr(propName).startsWith('on-');
 
@@ -597,7 +599,6 @@ export function create(
 									) {
 										attributes.push({
 											name,
-											valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
 										});
 										propMap.set(name, {
 											name: propName,
@@ -606,23 +607,6 @@ export function create(
 											info: propInfo,
 										});
 									}
-								}
-							}
-
-							for (const event of events) {
-								const eventName = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
-
-								for (
-									const name of [
-										'v-on:' + eventName,
-										'@' + eventName,
-									]
-								) {
-									attributes.push({ name });
-									propMap.set(name, {
-										name: eventName,
-										kind: 'event',
-									});
 								}
 							}
 
@@ -643,11 +627,6 @@ export function create(
 							) {
 								if (prop.name.startsWith('onUpdate:')) {
 									models.push(prop.name.slice('onUpdate:'.length));
-								}
-							}
-							for (const event of events) {
-								if (event.startsWith('update:')) {
-									models.push(event.slice('update:'.length));
 								}
 							}
 

@@ -5,7 +5,6 @@ import { createVueLanguageServiceProxy } from './lib/common';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
-import { getComponentEvents } from './lib/requests/getComponentEvents';
 import { getComponentNames } from './lib/requests/getComponentNames';
 import { getComponentProps } from './lib/requests/getComponentProps';
 import { getComponentSlots } from './lib/requests/getComponentSlots';
@@ -141,20 +140,25 @@ export = createLanguageServicePlugin(
 				const { project } = getProject(fileName);
 				return createResponse(getComponentDirectives(ts, project.getLanguageService().getProgram()!, fileName));
 			});
-			session.addProtocolHandler('_vue:getComponentEvents', request => {
-				const [fileName, tag]: Parameters<Requests['getComponentEvents']> = request.arguments;
-				const { project } = getProject(fileName);
-				return createResponse(getComponentEvents(ts, project.getLanguageService().getProgram()!, fileName, tag));
-			});
 			session.addProtocolHandler('_vue:getComponentNames', request => {
 				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;
 				const { project } = getProject(fileName);
 				return createResponse(getComponentNames(ts, project.getLanguageService().getProgram()!, fileName));
 			});
 			session.addProtocolHandler('_vue:getComponentProps', request => {
-				const [fileName, tag]: Parameters<Requests['getComponentProps']> = request.arguments;
-				const { project } = getProject(fileName);
-				return createResponse(getComponentProps(ts, project.getLanguageService().getProgram()!, fileName, tag));
+				const [fileName, position]: Parameters<Requests['getComponentProps']> = request.arguments;
+				const { project, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
+				return createResponse(
+					getComponentProps(
+						ts,
+						language,
+						project.getLanguageService(),
+						sourceScript,
+						virtualCode,
+						position,
+						sourceScript.generated ? sourceScript.snapshot.getLength() : 0,
+					),
+				);
 			});
 			session.addProtocolHandler('_vue:getComponentSlots', request => {
 				const [fileName]: Parameters<Requests['getComponentSlots']> = request.arguments;
