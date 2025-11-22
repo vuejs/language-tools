@@ -181,7 +181,7 @@ export function getVForNode(node: CompilerDOM.ElementNode) {
 	}
 }
 
-function getVIfNode(node: CompilerDOM.ElementNode) {
+export function getVIfNode(node: CompilerDOM.ElementNode) {
 	const ifDirective = node.props.find(
 		(prop): prop is CompilerDOM.DirectiveNode =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
