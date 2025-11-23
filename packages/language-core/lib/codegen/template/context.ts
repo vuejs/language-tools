@@ -211,6 +211,7 @@ export function createTemplateCodegenContext(
 		bindingAttrLocs,
 		inheritedAttrVars,
 		templateRefs,
+		components: [] as string[],
 		currentComponent: undefined as {
 			get ctxVar(): string;
 			get propsVar(): string;
