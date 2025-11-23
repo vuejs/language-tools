@@ -102,9 +102,6 @@ export function startServer(ts: typeof import('typescript')) {
 				getComponentDirectives(...args) {
 					return sendTsServerRequest('_vue:getComponentDirectives', args);
 				},
-				getComponentEvents(...args) {
-					return sendTsServerRequest('_vue:getComponentEvents', args);
-				},
 				getComponentNames(...args) {
 					return sendTsServerRequest('_vue:getComponentNames', args);
 				},

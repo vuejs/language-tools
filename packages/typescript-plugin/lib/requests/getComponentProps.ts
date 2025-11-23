@@ -1,145 +1,170 @@
+import type * as CompilerDOM from '@vue/compiler-dom';
+import { isDefinitionEnabled, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getComponentType, getVariableType } from './utils';
+import { forEachTouchingNode } from './utils';
 
 export interface ComponentPropInfo {
 	name: string;
 	required?: boolean;
 	deprecated?: boolean;
-	isAttribute?: boolean;
 	documentation?: string;
-	values?: string[];
 }
 
 export function getComponentProps(
 	ts: typeof import('typescript'),
-	program: ts.Program,
-	fileName: string,
-	tag: string,
+	language: Language<string>,
+	languageService: ts.LanguageService,
+	sourceScript: SourceScript<string>,
+	virtualCode: VueVirtualCode,
+	position: number,
+	leadingOffset: number = 0,
 ): ComponentPropInfo[] {
-	const components = getVariableType(ts, program, fileName, '__VLS_components');
-	if (!components) {
+	const program = languageService.getProgram()!;
+	const sourceFile = program.getSourceFile(virtualCode.fileName);
+	if (!sourceFile) {
 		return [];
 	}
 
-	const componentType = getComponentType(ts, program, fileName, components, tag);
-	if (!componentType) {
+	const serviceScript = sourceScript.generated!.languagePlugin.typescript?.getServiceScript(virtualCode);
+	if (!serviceScript) {
 		return [];
 	}
 
-	const result = new Map<string, ComponentPropInfo>();
-	const checker = program.getTypeChecker();
-
-	for (const sig of componentType.getCallSignatures()) {
-		if (sig.parameters.length) {
-			const propParam = sig.parameters[0]!;
-			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.node);
-			const props = propsType.getProperties();
-			for (const prop of props) {
-				handlePropSymbol(prop);
-			}
-		}
+	const { template } = virtualCode.sfc;
+	if (!template?.ast) {
+		return [];
 	}
 
-	for (const sig of componentType.getConstructSignatures()) {
-		const instanceType = sig.getReturnType();
-		const propsSymbol = instanceType.getProperty('$props');
-		if (propsSymbol) {
-			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, components.node);
-			const props = propsType.getProperties();
-			for (const prop of props) {
-				handlePropSymbol(prop);
-			}
-		}
-	}
+	let mapped = false;
+	const map = language.maps.get(serviceScript.code, sourceScript);
 
-	return [...result.values()];
-
-	function handlePropSymbol(prop: ts.Symbol) {
-		if (prop.flags & ts.SymbolFlags.Method) { // #2443
-			return;
-		}
-		const name = prop.name;
-		const required = !(prop.flags & ts.SymbolFlags.Optional) || undefined;
-		const {
-			documentation,
-			deprecated,
-		} = generateDocumentation(prop.getDocumentationComment(checker), prop.getJsDocTags());
-		const values: any[] = [];
-		const type = checker.getTypeOfSymbol(prop);
-		const subTypes: ts.Type[] | undefined = (type as any).types;
-
-		if (subTypes) {
-			for (const subType of subTypes) {
-				const value = (subType as any).value;
-				if (value) {
-					values.push(value);
+	outer: for (const [offset, mapping] of map.toGeneratedLocation(position + template.startTagEnd)) {
+		if (isDefinitionEnabled(mapping.data)) {
+			for (const node of forEachTouchingNode(ts, sourceFile, offset + leadingOffset)) {
+				if (ts.isObjectLiteralExpression(node)) {
+					position = offset;
+					if (sourceFile.text[position - 1 + leadingOffset] === "'") {
+						position--;
+					}
+					mapped = true;
+					break outer;
 				}
 			}
 		}
-
-		let isAttribute: boolean | undefined;
-		for (const { parent } of checker.getRootSymbols(prop).flatMap(root => root.declarations ?? [])) {
-			if (!ts.isInterfaceDeclaration(parent)) {
-				continue;
-			}
-			const { text } = parent.name;
-			if (
-				text.endsWith('HTMLAttributes')
-				|| text === 'AriaAttributes'
-				|| text === 'SVGAttributes'
-			) {
-				isAttribute = true;
-				break;
-			}
+	}
+	if (!mapped) {
+		const templateNode = getTouchingTemplateNode(template.ast, position);
+		if (!templateNode) {
+			return [];
 		}
 
-		result.set(name, {
-			name,
-			required,
-			deprecated,
-			isAttribute,
-			documentation,
-			values,
-		});
+		position = templateNode.loc.start.offset;
+		outer: for (const [offset] of map.toGeneratedLocation(position + template.startTagEnd)) {
+			for (const node of forEachTouchingNode(ts, sourceFile, offset + leadingOffset)) {
+				if (
+					ts.isVariableDeclaration(node)
+					&& node.initializer
+					&& ts.isCallExpression(node.initializer)
+					&& node.initializer.arguments.length
+				) {
+					position = node.initializer.arguments[0]!.end - 1 - leadingOffset;
+					mapped = true;
+					break outer;
+				}
+			}
+		}
+		if (!mapped) {
+			return [];
+		}
+	}
+
+	const offset = 1145141919810;
+	const mapping = {
+		sourceOffsets: [offset],
+		generatedOffsets: [position],
+		lengths: [0],
+		data: {
+			completion: true,
+		},
+	};
+
+	const original = map.toGeneratedLocation;
+	map.toGeneratedLocation = function*(sourceOffset, ...args) {
+		if (sourceOffset === offset) {
+			yield [mapping.generatedOffsets[0]!, mapping];
+		}
+		yield* original.call(map, sourceOffset, ...args);
+	};
+
+	try {
+		const completions = languageService.getCompletionsAtPosition(virtualCode.fileName, offset, undefined);
+
+		return completions?.entries
+			.filter(entry => entry.kind === 'property')
+			.map(entry => {
+				const modifiers = entry.kindModifiers?.split(',') ?? [];
+				const details = languageService.getCompletionEntryDetails(
+					virtualCode.fileName,
+					offset,
+					entry.name,
+					undefined,
+					entry.source,
+					undefined,
+					entry.data,
+				);
+				return {
+					name: stripQuotes(entry.name),
+					required: !modifiers.includes('optional'),
+					deprecated: modifiers.includes('deprecated'),
+					documentation: details ? [...generateDocumentation(ts, details)].join('') : '',
+				};
+			}) ?? [];
+	}
+	finally {
+		map.toGeneratedLocation = original;
 	}
 }
 
-function generateDocumentation(parts: ts.SymbolDisplayPart[], jsDocTags: ts.JSDocTagInfo[]) {
-	const parsedComment = _symbolDisplayPartsToMarkdown(parts);
-	const parsedJsDoc = _jsDocTagInfoToMarkdown(jsDocTags);
-	const documentation = [parsedComment, parsedJsDoc].filter(str => !!str).join('\n\n');
-	const deprecated = jsDocTags.some(tag => tag.name === 'deprecated');
-	return {
-		documentation,
-		deprecated,
-	};
-}
-
-function _symbolDisplayPartsToMarkdown(parts: ts.SymbolDisplayPart[]) {
-	return parts.map(part => {
-		switch (part.kind) {
-			case 'keyword':
-				return `\`${part.text}\``;
-			case 'functionName':
-				return `**${part.text}**`;
-			default:
-				return part.text;
+function getTouchingTemplateNode(
+	node: CompilerDOM.ParentNode,
+	position: number,
+): CompilerDOM.ElementNode | undefined {
+	for (const child of node.children) {
+		if (child.type === 1 satisfies CompilerDOM.NodeTypes.ELEMENT) {
+			if (position >= child.loc.start.offset && position <= child.loc.end.offset) {
+				return getTouchingTemplateNode(child, position) ?? child;
+			}
 		}
-	}).join('');
+	}
 }
 
-function _jsDocTagInfoToMarkdown(jsDocTags: ts.JSDocTagInfo[]) {
-	return jsDocTags.map(tag => {
-		const tagName = `*@${tag.name}*`;
-		const tagText = tag.text?.map(t => {
-			if (t.kind === 'parameterName') {
-				return `\`${t.text}\``;
-			}
-			else {
-				return t.text;
-			}
-		}).join('') || '';
+function stripQuotes(str: string) {
+	if (str.startsWith('"') && str.endsWith('"')) {
+		return str.slice(1, -1);
+	}
+	return str;
+}
 
-		return `${tagName} ${tagText}`;
-	}).join('\n\n');
+function* generateDocumentation(
+	ts: typeof import('typescript'),
+	details: ts.CompletionEntryDetails,
+): Generator<string> {
+	if (details.displayParts.length) {
+		yield `\`\`\`\n`;
+		yield ts.displayPartsToString(details.displayParts);
+		yield `\n\`\`\`\n\n`;
+	}
+	if (details.documentation) {
+		yield ts.displayPartsToString(details.documentation);
+		yield `\n\n`;
+	}
+	if (details.tags?.length) {
+		for (const tag of details.tags) {
+			yield `*@${tag.name}*`;
+			if (tag.text?.length) {
+				yield ` — ${ts.displayPartsToString(tag.text)}`;
+			}
+			yield `\n\n`;
+		}
+	}
 }

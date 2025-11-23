@@ -498,7 +498,13 @@ test('#4796', async () => {
 		{
 		  "documentation": {
 		    "kind": "markdown",
-		    "value": "The message to display",
+		    "value": "\`\`\`
+		(property) msg?: string
+		\`\`\`
+
+		The message to display
+
+		",
 		  },
 		  "insertTextFormat": 1,
 		  "kind": 5,

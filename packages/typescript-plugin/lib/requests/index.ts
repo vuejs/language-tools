@@ -19,16 +19,12 @@ export interface Requests {
 	getComponentDirectives(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getComponentDirectives.js')['getComponentDirectives']>>;
-	getComponentEvents(
-		fileName: string,
-		tag: string,
-	): Response<ReturnType<typeof import('./getComponentEvents.js')['getComponentEvents']>>;
 	getComponentNames(
 		fileName: string,
 	): Response<ReturnType<typeof import('./getComponentNames.js')['getComponentNames']>>;
 	getComponentProps(
 		fileName: string,
-		tag: string,
+		position: number,
 	): Response<ReturnType<typeof import('./getComponentProps.js')['getComponentProps']>>;
 	getComponentSlots(
 		fileName: string,
