@@ -1,4 +1,4 @@
-import * as CompilerDOM from '@vue/compiler-dom';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, setActiveSub } from 'alien-signals';
 import type * as ts from 'typescript';
@@ -281,13 +281,10 @@ export function computedSfc(
 
 			const errors: CompilerDOM.CompilerError[] = [];
 			const warnings: CompilerDOM.CompilerError[] = [];
-			const [nodeTransforms, directiveTransforms] = CompilerDOM.getBaseTransformPreset();
 			let options: CompilerDOM.CompilerOptions = {
 				onError: err => errors.push(err),
 				onWarn: err => warnings.push(err),
 				expressionPlugins: ['typescript'],
-				nodeTransforms,
-				directiveTransforms,
 			};
 
 			for (const plugin of plugins) {

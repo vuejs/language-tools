@@ -13,22 +13,6 @@ import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 import { generateVSlot } from './vSlot';
 
-// @ts-ignore
-const transformContext: CompilerDOM.TransformContext = {
-	onError: () => {},
-	helperString: str => str.toString(),
-	replaceNode: () => {},
-	cacheHandlers: false,
-	prefixIdentifiers: false,
-	scopes: {
-		vFor: 0,
-		vOnce: 0,
-		vPre: 0,
-		vSlot: 0,
-	},
-	expressionPlugins: ['typescript'],
-};
-
 export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
@@ -39,11 +23,6 @@ export function* generateTemplateChild(
 		return;
 	}
 
-	const cur = node as CompilerDOM.ElementNode | CompilerDOM.IfNode | CompilerDOM.ForNode;
-	if (cur.codegenNode?.type === CompilerDOM.NodeTypes.JS_CACHE_EXPRESSION) {
-		cur.codegenNode = cur.codegenNode.value as any;
-	}
-
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
 		for (const item of collectSingleRootNodes(options, node.children)) {
 			ctx.singleRootNodes.add(item);
@@ -51,15 +30,7 @@ export function* generateTemplateChild(
 		yield* generateElementChildren(options, ctx, node.children);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
-		const vForNode = getVForNode(node);
-		const vIfNode = getVIfNode(node);
-		if (vForNode) {
-			yield* generateVFor(options, ctx, vForNode);
-		}
-		else if (vIfNode) {
-			yield* generateVIf(options, ctx, vIfNode);
-		}
-		else if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
+		if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
 			yield* generateSlotOutlet(options, ctx, node);
 		}
 		else {
@@ -86,10 +57,6 @@ export function* generateTemplateChild(
 			}
 		}
 	}
-	else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
-		// {{ var }}
-		yield* generateTemplateChild(options, ctx, node.content, false);
-	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		// {{ ... }} {{ ... }}
 		yield* generateElementChildren(options, ctx, node.children.filter(child => typeof child === 'object'), false);
@@ -115,9 +82,6 @@ export function* generateTemplateChild(
 	else if (node.type === CompilerDOM.NodeTypes.FOR) {
 		// v-for
 		yield* generateVFor(options, ctx, node);
-	}
-	else if (node.type === CompilerDOM.NodeTypes.TEXT) {
-		// not needed progress
 	}
 
 	if (enterNode) {
@@ -155,53 +119,6 @@ function* collectSingleRootNodes(
 	const tag = hyphenateTag(child.tag);
 	if (options.vueCompilerOptions.fallthroughComponentNames.includes(tag)) {
 		yield* collectSingleRootNodes(options, child.children);
-	}
-}
-
-// TODO: track https://github.com/vuejs/vue-next/issues/3498
-export function getVForNode(node: CompilerDOM.ElementNode) {
-	const forDirective = node.props.find(
-		(prop): prop is CompilerDOM.DirectiveNode =>
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'for',
-	);
-	if (forDirective) {
-		let forNode: CompilerDOM.ForNode | undefined;
-		CompilerDOM.processFor(node, forDirective, transformContext, _forNode => {
-			forNode = { ..._forNode };
-			return undefined;
-		});
-		if (forNode) {
-			forNode.children = [{
-				...node,
-				props: node.props.filter(prop => prop !== forDirective),
-			}];
-			return forNode;
-		}
-	}
-}
-
-function getVIfNode(node: CompilerDOM.ElementNode) {
-	const ifDirective = node.props.find(
-		(prop): prop is CompilerDOM.DirectiveNode =>
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'if',
-	);
-	if (ifDirective) {
-		let ifNode: CompilerDOM.IfNode | undefined;
-		CompilerDOM.processIf(node, ifDirective, transformContext, _ifNode => {
-			ifNode = { ..._ifNode };
-			return undefined;
-		});
-		if (ifNode) {
-			for (const branch of ifNode.branches) {
-				branch.children = [{
-					...node,
-					props: node.props.filter(prop => prop !== ifDirective),
-				}];
-			}
-			return ifNode;
-		}
 	}
 }
 

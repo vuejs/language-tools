@@ -1,4 +1,5 @@
 import type * as CompilerDOM from '@vue/compiler-dom';
+import { compileTemplate } from '../template/compile';
 import type { VueLanguagePlugin } from '../types';
 
 interface Loc {
@@ -31,11 +32,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 					addedSuffix = true;
 				}
 
-				const ast = CompilerDOM.parse(template, {
-					...options,
-					comments: true,
-				});
-				CompilerDOM.transform(ast, options);
+				const ast = compileTemplate(template, options);
 
 				return {
 					ast,
@@ -119,11 +116,6 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							return false;
 						}
 						if (node.exp && !tryUpdateNode(node.exp)) {
-							return false;
-						}
-					}
-					else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
-						if (!tryUpdateNode(node.content)) {
 							return false;
 						}
 					}

@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
-import { createTsAst, endOfLine, newLine } from '../utils';
+import { createTsAst, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
@@ -48,41 +48,9 @@ export function* generateVFor(
 	}
 	yield `) {${newLine}`;
 
-	let isFragment = true;
-	for (const argument of node.codegenNode?.children.arguments ?? []) {
-		if (
-			argument.type === CompilerDOM.NodeTypes.JS_FUNCTION_EXPRESSION
-			&& argument.returns?.type === CompilerDOM.NodeTypes.VNODE_CALL
-			&& argument.returns.props?.type === CompilerDOM.NodeTypes.JS_OBJECT_EXPRESSION
-		) {
-			if (argument.returns.tag !== CompilerDOM.FRAGMENT) {
-				isFragment = false;
-				continue;
-			}
-			for (const prop of argument.returns.props.properties) {
-				if (
-					prop.value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-					&& !prop.value.isStatic
-				) {
-					yield* generateInterpolation(
-						options,
-						ctx,
-						'template',
-						codeFeatures.all,
-						prop.value.content,
-						prop.value.loc.start.offset,
-						`(`,
-						`)`,
-					);
-					yield endOfLine;
-				}
-			}
-		}
-	}
-
 	const { inVFor } = ctx;
 	ctx.inVFor = true;
-	yield* generateElementChildren(options, ctx, node.children, isFragment);
+	yield* generateElementChildren(options, ctx, node.children, false);
 	ctx.inVFor = inVFor;
 
 	yield `}${newLine}`;

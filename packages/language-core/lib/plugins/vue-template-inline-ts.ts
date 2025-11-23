@@ -199,10 +199,6 @@ const plugin: VueLanguagePlugin = ctx => {
 					visit(child);
 				}
 			}
-			else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
-				// {{ var }}
-				visit(node.content);
-			}
 			else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 				// {{ ... }} {{ ... }}
 				for (const childNode of node.children) {
