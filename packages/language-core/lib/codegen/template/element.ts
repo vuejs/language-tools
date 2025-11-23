@@ -53,7 +53,7 @@ export function* generateComponent(
 	let props = node.props;
 	let dynamicTagInfo: {
 		tag: string;
-		offsets: number[];
+		offsets: [number] | [number, number];
 	} | undefined;
 
 	if (isComponentTag) {

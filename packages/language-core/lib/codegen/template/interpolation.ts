@@ -13,27 +13,18 @@ import type { TemplateCodegenOptions } from './index';
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	options: TemplateCodegenOptions | ScriptCodegenOptions,
+	options: Pick<TemplateCodegenOptions | ScriptCodegenOptions, 'ts' | 'destructuredPropNames' | 'templateRefNames'>,
 	ctx: TemplateCodegenContext,
 	source: string,
-	data: VueCodeInformation | ((offset: number) => VueCodeInformation) | undefined,
+	data: VueCodeInformation | ((offset: number) => VueCodeInformation),
 	code: string,
-	start: number | undefined,
+	start: number,
 	prefix: string = '',
 	suffix: string = '',
 ): Generator<Code> {
-	const {
-		ts,
-		destructuredPropNames,
-		templateRefNames,
-	} = options;
-
 	for (
 		const segment of forEachInterpolationSegment(
-			ts,
-			ctx.inlineTsAsts,
-			destructuredPropNames,
-			templateRefNames,
+			options,
 			ctx,
 			code,
 			start,
@@ -58,261 +49,241 @@ export function* generateInterpolation(
 			section = section.slice(-offset);
 			offset = 0;
 		}
-		const shouldSkip = section.length === 0 && (type === 'startText' || type === 'endText');
+		const shouldSkip = section.length === 0 && type === 'startEnd';
 		if (!shouldSkip) {
-			if (start !== undefined && data) {
-				yield [
-					section,
-					source,
-					start + offset,
-					type === 'errorMappingOnly'
-						? codeFeatures.verification
-						: typeof data === 'function'
-						? data(start + offset)
-						: data,
-				];
-			}
-			else {
-				yield section;
-			}
+			yield [
+				section,
+				source,
+				start + offset,
+				type === 'errorMappingOnly'
+					? codeFeatures.verification
+					: typeof data === 'function'
+					? data(start + offset)
+					: data,
+			];
 		}
 		yield addSuffix;
 	}
 }
 
-interface CtxVar {
-	text: string;
-	offset: number;
-	isShorthand?: boolean;
-}
-
-type Segment = [
-	code: string,
-	offset: number,
-	type?: 'errorMappingOnly' | 'startText' | 'endText',
-];
-
 function* forEachInterpolationSegment(
-	ts: typeof import('typescript'),
-	inlineTsAsts: Map<string, ts.SourceFile> | undefined,
-	destructuredPropNames: Set<string> | undefined,
-	templateRefNames: Set<string> | undefined,
+	options: Pick<TemplateCodegenOptions | ScriptCodegenOptions, 'ts' | 'destructuredPropNames' | 'templateRefNames'>,
 	ctx: TemplateCodegenContext,
 	originalCode: string,
-	start: number | undefined,
+	start: number,
 	prefix: string,
 	suffix: string,
-): Generator<Segment | string> {
+): Generator<
+	[
+		code: string,
+		offset: number,
+		type?: 'errorMappingOnly' | 'startEnd',
+	] | string
+> {
 	const code = prefix + originalCode + suffix;
-	const offset = start !== undefined ? start - prefix.length : undefined;
-	let ctxVars: CtxVar[] = [];
 
-	if (identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode, destructuredPropNames)) {
-		ctxVars.push({
-			text: originalCode,
-			offset: prefix.length,
-		});
-	}
-	else {
-		const ast = createTsAst(ts, inlineTsAsts, code);
-		const varCb = (id: ts.Identifier, isShorthand: boolean) => {
-			const text = getNodeText(ts, id, ast);
-			if (!shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
-				ctxVars.push({
-					text,
-					offset: getStartEnd(ts, id, ast).start,
-					isShorthand,
-				});
-			}
-		};
-		const scoped = ctx.scope();
-		ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, ctx, scoped));
-		scoped.end();
-	}
+	let prevEnd = 0;
 
-	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
-
-	if (ctxVars.length) {
-		for (let i = 0; i < ctxVars.length; i++) {
-			const lastVar = ctxVars[i - 1];
-			const curVar = ctxVars[i]!;
-			const lastVarEnd = lastVar ? lastVar.offset + lastVar.text.length : 0;
-
-			if (curVar.isShorthand) {
-				yield [code.slice(lastVarEnd, curVar.offset + curVar.text.length), lastVarEnd];
-				yield `: `;
-			}
-			else {
-				yield [code.slice(lastVarEnd, curVar.offset), lastVarEnd, i ? undefined : 'startText'];
-			}
-			yield* generateVar(templateRefNames, ctx, code, offset, curVar);
+	for (
+		const [name, offset, isShorthand] of forEachIdentifiers(
+			options.ts,
+			options.destructuredPropNames,
+			ctx,
+			originalCode,
+			code,
+			prefix,
+		)
+	) {
+		if (isShorthand) {
+			yield [code.slice(prevEnd, offset + name.length), prevEnd];
+			yield `: `;
+		}
+		else {
+			yield [code.slice(prevEnd, offset), prevEnd, prevEnd > 0 ? undefined : 'startEnd'];
 		}
 
-		const lastVar = ctxVars.at(-1)!;
-		if (lastVar.offset + lastVar.text.length < code.length) {
-			yield [code.slice(lastVar.offset + lastVar.text.length), lastVar.offset + lastVar.text.length, 'endText'];
+		// fix https://github.com/vuejs/language-tools/issues/1205
+		// fix https://github.com/vuejs/language-tools/issues/1264
+		yield ['', offset, 'errorMappingOnly'];
+
+		if (options.templateRefNames.has(name)) {
+			yield `__VLS_unref(`;
+			yield [name, offset];
+			yield `)`;
 		}
+		else {
+			ctx.accessExternalVariable(name, start - prefix.length + offset);
+			yield ctx.dollarVars.has(name) ? `__VLS_dollars.` : `__VLS_ctx.`;
+			yield [name, offset];
+		}
+
+		prevEnd = offset + name.length;
 	}
-	else {
-		yield [code, 0];
+
+	if (prevEnd < code.length) {
+		yield [code.slice(prevEnd), prevEnd, 'startEnd'];
 	}
 }
 
-function* generateVar(
-	templateRefNames: Set<string> | undefined,
+function* forEachIdentifiers(
+	ts: typeof import('typescript'),
+	destructuredPropNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
+	originalCode: string,
 	code: string,
-	offset: number | undefined,
-	curVar: CtxVar,
-): Generator<Segment | string> {
-	// fix https://github.com/vuejs/language-tools/issues/1205
-	// fix https://github.com/vuejs/language-tools/issues/1264
-	yield ['', curVar.offset, 'errorMappingOnly'];
-
-	const isTemplateRef = templateRefNames?.has(curVar.text) ?? false;
-	if (isTemplateRef) {
-		yield `__VLS_unref(`;
-		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
-		yield `)`;
+	prefix: string,
+): Generator<[string, number, boolean]> {
+	if (identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode, destructuredPropNames)) {
+		yield [originalCode, prefix.length, false];
+		return;
 	}
-	else {
-		if (offset !== undefined) {
-			ctx.accessExternalVariable(curVar.text, offset + curVar.offset);
-		}
-		else {
-			ctx.accessExternalVariable(curVar.text);
-		}
 
-		if (ctx.dollarVars.has(curVar.text)) {
-			yield `__VLS_dollars.`;
+	const scoped = ctx.scope();
+	const ast = createTsAst(ts, ctx.inlineTsAsts, code);
+
+	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx, scoped)) {
+		const text = getNodeText(ts, id, ast);
+		if (shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
+			continue;
 		}
-		else {
-			yield `__VLS_ctx.`;
-		}
-		yield [code.slice(curVar.offset, curVar.offset + curVar.text.length), curVar.offset];
+		yield [text, getStartEnd(ts, id, ast).start, isShorthand];
 	}
+
+	scoped.end();
 }
 
-function walkIdentifiers(
+function* forEachDeclarations(
 	ts: typeof import('typescript'),
 	node: ts.Node,
 	ast: ts.SourceFile,
-	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	ctx: TemplateCodegenContext,
 	scoped: ReturnType<TemplateCodegenContext['scope']>,
-) {
+): Generator<[ts.Identifier, boolean]> {
 	if (ts.isIdentifier(node)) {
-		cb(node, false);
+		yield [node, false];
 	}
 	else if (ts.isShorthandPropertyAssignment(node)) {
-		cb(node.name, true);
+		yield [node.name, true];
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		walkIdentifiers(ts, node.expression, ast, cb, ctx, scoped);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx, scoped);
 	}
 	else if (ts.isVariableDeclaration(node)) {
 		scoped.declare(...collectBindingNames(ts, node.name, ast));
-		walkIdentifiersInBinding(ts, node, ast, cb, ctx, scoped);
+		yield* forEachDeclarationsInBinding(ts, node, ast, ctx, scoped);
 	}
 	else if (ts.isArrayBindingPattern(node) || ts.isObjectBindingPattern(node)) {
 		for (const element of node.elements) {
 			if (ts.isBindingElement(element)) {
-				walkIdentifiersInBinding(ts, element, ast, cb, ctx, scoped);
+				yield* forEachDeclarationsInBinding(ts, element, ast, ctx, scoped);
 			}
 		}
 	}
 	else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
-		walkIdentifiersInFunction(ts, node, ast, cb, ctx);
+		yield* forEachDeclarationsInFunction(ts, node, ast, ctx);
 	}
 	else if (ts.isObjectLiteralExpression(node)) {
 		for (const prop of node.properties) {
 			if (ts.isPropertyAssignment(prop)) {
 				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
-					walkIdentifiers(ts, prop.name.expression, ast, cb, ctx, scoped);
+					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scoped);
 				}
-				walkIdentifiers(ts, prop.initializer, ast, cb, ctx, scoped);
+				yield* forEachDeclarations(ts, prop.initializer, ast, ctx, scoped);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				walkIdentifiers(ts, prop, ast, cb, ctx, scoped);
+				yield* forEachDeclarations(ts, prop, ast, ctx, scoped);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
-				walkIdentifiers(ts, prop.expression, ast, cb, ctx, scoped);
+				yield* forEachDeclarations(ts, prop.expression, ast, ctx, scoped);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
 			else if (ts.isFunctionLike(prop) && prop.body) {
-				walkIdentifiersInFunction(ts, prop, ast, cb, ctx);
+				yield* forEachDeclarationsInFunction(ts, prop, ast, ctx);
 			}
 		}
 	}
 	// fix https://github.com/vuejs/language-tools/issues/1422
 	else if (ts.isTypeNode(node)) {
-		walkIdentifiersInTypeNode(ts, node, cb);
+		yield* forEachDeclarationsInTypeNode(ts, node);
 	}
 	else if (ts.isBlock(node)) {
 		const scoped2 = scoped;
-		ts.forEachChild(node, node => walkIdentifiers(ts, node, ast, cb, ctx, scoped2));
+		for (const child of forEachNode(ts, node)) {
+			yield* forEachDeclarations(ts, child, ast, ctx, scoped2);
+		}
 		scoped2.end();
 	}
 	else {
-		ts.forEachChild(node, node => walkIdentifiers(ts, node, ast, cb, ctx, scoped));
+		for (const child of forEachNode(ts, node)) {
+			yield* forEachDeclarations(ts, child, ast, ctx, scoped);
+		}
 	}
 }
 
-function walkIdentifiersInBinding(
+function* forEachDeclarationsInBinding(
 	ts: typeof import('typescript'),
 	node: ts.BindingElement | ts.ParameterDeclaration | ts.VariableDeclaration,
 	ast: ts.SourceFile,
-	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	ctx: TemplateCodegenContext,
 	scoped: ReturnType<TemplateCodegenContext['scope']>,
-) {
+): Generator<[ts.Identifier, boolean]> {
 	if ('type' in node && node.type) {
-		walkIdentifiersInTypeNode(ts, node.type, cb);
+		yield* forEachDeclarationsInTypeNode(ts, node.type);
 	}
 	if (!ts.isIdentifier(node.name)) {
-		walkIdentifiers(ts, node.name, ast, cb, ctx, scoped);
+		yield* forEachDeclarations(ts, node.name, ast, ctx, scoped);
 	}
 	if (node.initializer) {
-		walkIdentifiers(ts, node.initializer, ast, cb, ctx, scoped);
+		yield* forEachDeclarations(ts, node.initializer, ast, ctx, scoped);
 	}
 }
 
-function walkIdentifiersInFunction(
+function* forEachDeclarationsInFunction(
 	ts: typeof import('typescript'),
 	node: ts.ArrowFunction | ts.FunctionExpression | ts.AccessorDeclaration | ts.MethodDeclaration,
 	ast: ts.SourceFile,
-	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	ctx: TemplateCodegenContext,
-) {
+): Generator<[ts.Identifier, boolean]> {
 	const scoped = ctx.scope();
 	for (const param of node.parameters) {
 		scoped.declare(...collectBindingNames(ts, param.name, ast));
-		walkIdentifiersInBinding(ts, param, ast, cb, ctx, scoped);
+		yield* forEachDeclarationsInBinding(ts, param, ast, ctx, scoped);
 	}
 	if (node.body) {
-		walkIdentifiers(ts, node.body, ast, cb, ctx, scoped);
+		yield* forEachDeclarations(ts, node.body, ast, ctx, scoped);
 	}
 	scoped.end();
 }
 
-function walkIdentifiersInTypeNode(
+function* forEachDeclarationsInTypeNode(
 	ts: typeof import('typescript'),
 	node: ts.Node,
-	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
-) {
+): Generator<[ts.Identifier, boolean]> {
 	if (ts.isTypeQueryNode(node)) {
 		let id = node.exprName;
 		while (!ts.isIdentifier(id)) {
 			id = id.left;
 		}
-		cb(id, false);
+		yield [id, false];
 	}
 	else {
-		ts.forEachChild(node, node => walkIdentifiersInTypeNode(ts, node, cb));
+		for (const child of forEachNode(ts, node)) {
+			yield* forEachDeclarationsInTypeNode(ts, child);
+		}
+	}
+}
+
+function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {
+	const children: ts.Node[] = [];
+	ts.forEachChild(node, child => {
+		children.push(child);
+	});
+	for (const child of children) {
+		yield child;
 	}
 }
 
