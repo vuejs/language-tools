@@ -21,7 +21,6 @@ export function* generateVSlot(
 	if (!ctx.currentComponent) {
 		return;
 	}
-	const slotBlockVars: string[] = [];
 	const slotVar = ctx.getInternalVariable();
 
 	if (slotDir) {
@@ -65,21 +64,17 @@ export function* generateVSlot(
 		yield `: ${slotVar} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
 	}
 
+	const scoped = ctx.scope();
+
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		const slotAst = createTsAst(options.ts, ctx.inlineTsAsts, `(${slotDir.exp.content}) => {}`);
-		slotBlockVars.push(...collectBindingNames(options.ts, slotAst, slotAst));
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
-	}
-
-	for (const varName of slotBlockVars) {
-		ctx.addLocalVariable(varName);
+		scoped.declare(...collectBindingNames(options.ts, slotAst, slotAst));
 	}
 
 	yield* generateElementChildren(options, ctx, node.children);
 
-	for (const varName of slotBlockVars) {
-		ctx.removeLocalVariable(varName);
-	}
+	scoped.end();
 
 	if (slotDir) {
 		let isStatic = true;

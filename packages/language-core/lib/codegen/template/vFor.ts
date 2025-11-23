@@ -15,12 +15,12 @@ export function* generateVFor(
 ): Generator<Code> {
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
-	const forBlockVars: string[] = [];
+	const scoped = ctx.scope();
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
 		const collectAst = createTsAst(options.ts, ctx.inlineTsAsts, `const [${leftExpressionText}]`);
-		forBlockVars.push(...collectBindingNames(options.ts, collectAst, collectAst));
+		scoped.declare(...collectBindingNames(options.ts, collectAst, collectAst));
 		yield [
 			leftExpressionText,
 			'template',
@@ -47,10 +47,6 @@ export function* generateVFor(
 		yield `{} as any`;
 	}
 	yield `) {${newLine}`;
-
-	for (const varName of forBlockVars) {
-		ctx.addLocalVariable(varName);
-	}
 
 	let isFragment = true;
 	for (const argument of node.codegenNode?.children.arguments ?? []) {
@@ -89,10 +85,9 @@ export function* generateVFor(
 	yield* generateElementChildren(options, ctx, node.children, isFragment);
 	ctx.inVFor = inVFor;
 
-	for (const varName of forBlockVars) {
-		ctx.removeLocalVariable(varName);
-	}
 	yield `}${newLine}`;
+
+	scoped.end();
 }
 
 export function parseVForNode(node: CompilerDOM.ForNode) {

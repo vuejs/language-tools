@@ -154,11 +154,12 @@ export function* generateEventExpression(
 
 		if (isCompound) {
 			yield `(...[$event]) => {${newLine}`;
-			ctx.addLocalVariable('$event');
+			const scoped = ctx.scope();
+			scoped.declare('$event');
 			yield* ctx.generateConditionGuards();
 			yield* interpolation;
 			yield endOfLine;
-			ctx.removeLocalVariable('$event');
+			scoped.end();
 			yield* ctx.generateAutoImportCompletion();
 			yield `}`;
 		}

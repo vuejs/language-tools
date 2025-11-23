@@ -236,11 +236,29 @@ export function createTemplateCodegenContext(
 		hasLocalVariable(name: string) {
 			return !!localVars.get(name);
 		},
-		addLocalVariable(name: string) {
+		delcare(name: string) {
 			localVars.set(name, (localVars.get(name) ?? 0) + 1);
 		},
-		removeLocalVariable(name: string) {
+		undeclare(name: string) {
 			localVars.set(name, localVars.get(name)! - 1);
+		},
+		scope() {
+			const declaredNames: string[] = [];
+			return {
+				declaredNames,
+				declare(...varNames: string[]) {
+					for (const varName of varNames) {
+						localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
+					}
+					declaredNames.push(...varNames);
+				},
+				end() {
+					for (const varName of declaredNames) {
+						localVars.set(varName, localVars.get(varName)! - 1);
+					}
+					declaredNames.length = 0;
+				},
+			};
 		},
 		getInternalVariable() {
 			return `__VLS_${variableId++}`;

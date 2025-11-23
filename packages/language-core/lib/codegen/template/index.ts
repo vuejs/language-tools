@@ -49,10 +49,10 @@ function* generateTemplate(
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	if (options.slotsAssignName) {
-		ctx.addLocalVariable(options.slotsAssignName);
+		ctx.delcare(options.slotsAssignName);
 	}
 	if (options.propsAssignName) {
-		ctx.addLocalVariable(options.propsAssignName);
+		ctx.delcare(options.propsAssignName);
 	}
 
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {

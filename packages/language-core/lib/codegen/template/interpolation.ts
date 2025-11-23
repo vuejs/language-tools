@@ -125,7 +125,9 @@ function* forEachInterpolationSegment(
 				});
 			}
 		};
-		ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, ctx, [], true));
+		const scoped = ctx.scope();
+		ts.forEachChild(ast, node => walkIdentifiers(ts, node, ast, varCb, ctx, scoped));
+		scoped.end();
 	}
 
 	ctxVars = ctxVars.sort((a, b) => a.offset - b.offset);
@@ -197,8 +199,7 @@ function walkIdentifiers(
 	ast: ts.SourceFile,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	ctx: TemplateCodegenContext,
-	blockVars: string[],
-	isRoot: boolean = false,
+	scoped: ReturnType<TemplateCodegenContext['scope']>,
 ) {
 	if (ts.isIdentifier(node)) {
 		cb(node, false);
@@ -207,20 +208,16 @@ function walkIdentifiers(
 		cb(node.name, true);
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		walkIdentifiers(ts, node.expression, ast, cb, ctx, blockVars);
+		walkIdentifiers(ts, node.expression, ast, cb, ctx, scoped);
 	}
 	else if (ts.isVariableDeclaration(node)) {
-		const bindingNames = collectBindingNames(ts, node.name, ast);
-		for (const name of bindingNames) {
-			ctx.addLocalVariable(name);
-			blockVars.push(name);
-		}
-		walkIdentifiersInBinding(ts, node, ast, cb, ctx, blockVars);
+		scoped.declare(...collectBindingNames(ts, node.name, ast));
+		walkIdentifiersInBinding(ts, node, ast, cb, ctx, scoped);
 	}
 	else if (ts.isArrayBindingPattern(node) || ts.isObjectBindingPattern(node)) {
 		for (const element of node.elements) {
 			if (ts.isBindingElement(element)) {
-				walkIdentifiersInBinding(ts, element, ast, cb, ctx, blockVars);
+				walkIdentifiersInBinding(ts, element, ast, cb, ctx, scoped);
 			}
 		}
 	}
@@ -232,18 +229,18 @@ function walkIdentifiers(
 			if (ts.isPropertyAssignment(prop)) {
 				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
-					walkIdentifiers(ts, prop.name.expression, ast, cb, ctx, blockVars);
+					walkIdentifiers(ts, prop.name.expression, ast, cb, ctx, scoped);
 				}
-				walkIdentifiers(ts, prop.initializer, ast, cb, ctx, blockVars);
+				walkIdentifiers(ts, prop.initializer, ast, cb, ctx, scoped);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				walkIdentifiers(ts, prop, ast, cb, ctx, blockVars);
+				walkIdentifiers(ts, prop, ast, cb, ctx, scoped);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
-				walkIdentifiers(ts, prop.expression, ast, cb, ctx, blockVars);
+				walkIdentifiers(ts, prop.expression, ast, cb, ctx, scoped);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
 			else if (ts.isFunctionLike(prop) && prop.body) {
@@ -255,24 +252,13 @@ function walkIdentifiers(
 	else if (ts.isTypeNode(node)) {
 		walkIdentifiersInTypeNode(ts, node, cb);
 	}
-	else {
-		const _blockVars = blockVars;
-		if (ts.isBlock(node)) {
-			blockVars = [];
-		}
-		ts.forEachChild(node, node => walkIdentifiers(ts, node, ast, cb, ctx, blockVars));
-		if (ts.isBlock(node)) {
-			for (const varName of blockVars) {
-				ctx.removeLocalVariable(varName);
-			}
-		}
-		blockVars = _blockVars;
+	else if (ts.isBlock(node)) {
+		const scoped2 = scoped;
+		ts.forEachChild(node, node => walkIdentifiers(ts, node, ast, cb, ctx, scoped2));
+		scoped2.end();
 	}
-
-	if (isRoot) {
-		for (const varName of blockVars) {
-			ctx.removeLocalVariable(varName);
-		}
+	else {
+		ts.forEachChild(node, node => walkIdentifiers(ts, node, ast, cb, ctx, scoped));
 	}
 }
 
@@ -282,16 +268,16 @@ function walkIdentifiersInBinding(
 	ast: ts.SourceFile,
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	ctx: TemplateCodegenContext,
-	blockVars: string[],
+	scoped: ReturnType<TemplateCodegenContext['scope']>,
 ) {
 	if ('type' in node && node.type) {
 		walkIdentifiersInTypeNode(ts, node.type, cb);
 	}
 	if (!ts.isIdentifier(node.name)) {
-		walkIdentifiers(ts, node.name, ast, cb, ctx, blockVars);
+		walkIdentifiers(ts, node.name, ast, cb, ctx, scoped);
 	}
 	if (node.initializer) {
-		walkIdentifiers(ts, node.initializer, ast, cb, ctx, blockVars);
+		walkIdentifiers(ts, node.initializer, ast, cb, ctx, scoped);
 	}
 }
 
@@ -302,20 +288,15 @@ function walkIdentifiersInFunction(
 	cb: (varNode: ts.Identifier, isShorthand: boolean) => void,
 	ctx: TemplateCodegenContext,
 ) {
-	const functionArgs: string[] = [];
+	const scoped = ctx.scope();
 	for (const param of node.parameters) {
-		functionArgs.push(...collectBindingNames(ts, param.name, ast));
-		walkIdentifiersInBinding(ts, param, ast, cb, ctx, functionArgs);
-	}
-	for (const varName of functionArgs) {
-		ctx.addLocalVariable(varName);
+		scoped.declare(...collectBindingNames(ts, param.name, ast));
+		walkIdentifiersInBinding(ts, param, ast, cb, ctx, scoped);
 	}
 	if (node.body) {
-		walkIdentifiers(ts, node.body, ast, cb, ctx, [], true);
+		walkIdentifiers(ts, node.body, ast, cb, ctx, scoped);
 	}
-	for (const varName of functionArgs) {
-		ctx.removeLocalVariable(varName);
-	}
+	scoped.end();
 }
 
 function walkIdentifiersInTypeNode(
