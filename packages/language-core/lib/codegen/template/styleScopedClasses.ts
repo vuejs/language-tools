@@ -3,7 +3,7 @@ import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { getAttributeValueOffset, getNodeText } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine } from '../utils';
+import { createTsAst, endOfLine } from '../utils';
 import { generateEscaped } from '../utils/escaped';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
@@ -94,7 +94,7 @@ export function collectStyleScopedClassReferences(
 			const startOffset = prop.exp.loc.start.offset - 1;
 
 			const { ts } = options;
-			const ast = ts.createSourceFile('', content, 99 satisfies ts.ScriptTarget.Latest);
+			const ast = createTsAst(options.ts, ctx.inlineTsAsts, content);
 			const literals: ts.StringLiteralLike[] = [];
 
 			ts.forEachChild(ast, node => {
