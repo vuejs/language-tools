@@ -2,13 +2,12 @@
 import { defineComponent } from 'vue';
 
 const Comp = defineComponent({});
-const [foo, bar, baz, qux] = {} as any[];
+const [foo, bar, baz, qux] = {} as number[];
 </script>
 
 <template>
 	<template v-if="(true as any)" :foo />
 	<template v-else-if="(false as any)" :bar />
-
 	<Comp>
 		<template #default v-if="baz" />
 		<template #default v-else-if="qux" />
