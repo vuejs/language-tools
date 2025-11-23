@@ -41,7 +41,6 @@ export function createVueLanguageServicePlugins(
 	}),
 ) {
 	return [
-		createCssPlugin(),
 		createJsonPlugin(),
 		createPugFormatPlugin(),
 		createVueAutoSpacePlugin(),
@@ -65,6 +64,7 @@ export function createVueLanguageServicePlugins(
 		createVueInlayHintsPlugin(ts),
 
 		// type aware plugins
+		createCssPlugin(client),
 		createTypescriptSemanticTokensPlugin(client),
 		createVueAutoDotValuePlugin(ts, client),
 		createVueComponentSemanticTokensPlugin(client),

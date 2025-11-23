@@ -67,7 +67,7 @@ export function* generateComponent(
 	if (
 		options.vueCompilerOptions.target >= 3.5
 		&& options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateCodegen?.singleRootElTypes.length
+		&& options.templateCodegen?.singleRootElTypes.size
 	) {
 		yield `__typeEl: {} as __VLS_RootEl,${newLine}`;
 	}

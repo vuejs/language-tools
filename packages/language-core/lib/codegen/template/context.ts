@@ -212,10 +212,10 @@ export function createTemplateCodegenContext(
 		inheritedAttrVars,
 		templateRefs,
 		currentComponent: undefined as {
-			ctxVar: string;
-			used: boolean;
+			get ctxVar(): string;
+			get propsVar(): string;
 		} | undefined,
-		singleRootElTypes: [] as string[],
+		singleRootElTypes: new Set<string>(),
 		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
 		addTemplateRef(name: string, typeExp: string, offset: number) {
 			let refs = templateRefs.get(name);
@@ -236,11 +236,29 @@ export function createTemplateCodegenContext(
 		hasLocalVariable(name: string) {
 			return !!localVars.get(name);
 		},
-		addLocalVariable(name: string) {
+		delcare(name: string) {
 			localVars.set(name, (localVars.get(name) ?? 0) + 1);
 		},
-		removeLocalVariable(name: string) {
+		undeclare(name: string) {
 			localVars.set(name, localVars.get(name)! - 1);
+		},
+		scope() {
+			const declaredNames: string[] = [];
+			return {
+				declaredNames,
+				declare(...varNames: string[]) {
+					for (const varName of varNames) {
+						localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
+					}
+					declaredNames.push(...varNames);
+				},
+				end() {
+					for (const varName of declaredNames) {
+						localVars.set(varName, localVars.get(varName)! - 1);
+					}
+					declaredNames.length = 0;
+				},
+			};
 		},
 		getInternalVariable() {
 			return `__VLS_${variableId++}`;
@@ -353,6 +371,7 @@ export function createTemplateCodegenContext(
 			commentBuffer.length = 0;
 			if (data.expectError !== undefined) {
 				yield* wrapWith(
+					'template',
 					data.expectError.node.loc.start.offset,
 					data.expectError.node.loc.end.offset,
 					{

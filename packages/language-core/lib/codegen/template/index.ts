@@ -49,10 +49,10 @@ function* generateTemplate(
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	if (options.slotsAssignName) {
-		ctx.addLocalVariable(options.slotsAssignName);
+		ctx.delcare(options.slotsAssignName);
 	}
 	if (options.propsAssignName) {
-		ctx.addLocalVariable(options.propsAssignName);
+		ctx.delcare(options.propsAssignName);
 	}
 
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
@@ -113,6 +113,7 @@ function* generateSlots(
 			}
 			else {
 				yield* wrapWith(
+					'template',
 					slot.tagRange[0],
 					slot.tagRange[1],
 					codeFeatures.navigation,
@@ -191,7 +192,7 @@ function* generateRootEl(
 	ctx: TemplateCodegenContext,
 ): Generator<Code, string> {
 	yield `type __VLS_RootEl = `;
-	if (ctx.singleRootElTypes.length && !ctx.singleRootNodes.has(null)) {
+	if (ctx.singleRootElTypes.size && !ctx.singleRootNodes.has(null)) {
 		for (const type of ctx.singleRootElTypes) {
 			yield `${newLine}| ${type}`;
 		}

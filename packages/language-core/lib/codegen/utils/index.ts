@@ -1,4 +1,3 @@
-import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
@@ -7,19 +6,6 @@ export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
 export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
-
-export function normalizeAttributeValue(node: CompilerDOM.TextNode) {
-	let offset = node.loc.start.offset;
-	let content = node.loc.source;
-	if (
-		(content.startsWith(`'`) && content.endsWith(`'`))
-		|| (content.startsWith(`"`) && content.endsWith(`"`))
-	) {
-		offset++;
-		content = content.slice(1, -1);
-	}
-	return [content, offset] as const;
-}
 
 export function createTsAst(
 	ts: typeof import('typescript'),

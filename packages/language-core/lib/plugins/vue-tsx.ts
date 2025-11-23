@@ -20,7 +20,6 @@ const plugin: VueLanguagePlugin = ctx => {
 
 		requiredCompilerOptions: [
 			'noPropertyAccessFromIndexSignature',
-			'exactOptionalPropertyTypes',
 		],
 
 		getEmbeddedCodes(fileName, sfc) {

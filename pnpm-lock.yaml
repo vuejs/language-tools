@@ -64,13 +64,13 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/language-core':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../../packages/language-core
       '@vue/language-server':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../../packages/language-server
       '@vue/typescript-plugin':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../../packages/typescript-plugin
       laplacenoma:
         specifier: ^0.0.3
@@ -97,7 +97,7 @@ importers:
         specifier: 2.4.23
         version: 2.4.23
       '@vue/language-core':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../language-core
       path-browserify:
         specifier: ^1.0.1
@@ -106,7 +106,7 @@ importers:
         specifier: '*'
         version: 5.9.3
       vue-component-type-helpers:
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../component-type-helpers
     devDependencies:
       '@types/node':
@@ -177,7 +177,7 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/language-core':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../language-core
 
   packages/language-server:
@@ -186,13 +186,13 @@ importers:
         specifier: 2.4.23
         version: 2.4.23
       '@vue/language-core':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../language-core
       '@vue/language-service':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../language-service
       '@vue/typescript-plugin':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../typescript-plugin
       typescript:
         specifier: '*'
@@ -214,7 +214,7 @@ importers:
         specifier: 2.4.23
         version: 2.4.23
       '@vue/language-core':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
@@ -266,7 +266,7 @@ importers:
         specifier: ^3.5.0
         version: 3.5.13
       '@vue/typescript-plugin':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../typescript-plugin
       vscode-css-languageservice:
         specifier: ^6.3.1
@@ -278,7 +278,7 @@ importers:
         specifier: 2.4.23
         version: 2.4.23
       '@vue/language-core':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../language-core
       typescript:
         specifier: '>=5.0.0'
@@ -294,7 +294,7 @@ importers:
         specifier: 2.4.23
         version: 2.4.23
       '@vue/language-core':
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../language-core
       '@vue/shared':
         specifier: ^3.5.0
@@ -319,10 +319,10 @@ importers:
         specifier: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72
         version: https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72(typescript@5.9.3)
       vue-component-meta:
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../packages/component-meta
       vue-component-type-helpers:
-        specifier: 3.1.4
+        specifier: 3.1.5
         version: link:../packages/component-type-helpers
       vue3.4:
         specifier: npm:vue@3.4.38

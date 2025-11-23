@@ -25,9 +25,9 @@ export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 
 	yield `export * from `;
 	yield* wrapWith(
+		'main',
 		src.offset,
 		src.offset + src.text.length,
-		'main',
 		{
 			...codeFeatures.all,
 			...text !== src.text ? codeFeatures.navigationWithoutRename : {},

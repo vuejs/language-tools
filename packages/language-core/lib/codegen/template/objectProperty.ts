@@ -47,6 +47,7 @@ export function* generateObjectProperty(
 		}
 		else {
 			yield* wrapWith(
+				'template',
 				offset,
 				offset + code.length,
 				features,
