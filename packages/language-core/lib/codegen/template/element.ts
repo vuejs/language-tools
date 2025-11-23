@@ -9,7 +9,6 @@ import { endOfLine, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
 import { type FailedPropExpression, generateElementProps } from './elementProps';
@@ -17,6 +16,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { collectStyleScopedClassReferences } from './styleScopedClasses';
+import { generateElementChildren } from './templateChild';
 import { generateVSlot } from './vSlot';
 
 const colonReg = /:/g;
@@ -353,6 +353,40 @@ export function* generateElement(
 	}
 
 	collectStyleScopedClassReferences(options, ctx, node);
+
+	const { currentComponent } = ctx;
+	ctx.currentComponent = undefined;
+	yield* generateElementChildren(options, ctx, node.children);
+	ctx.currentComponent = currentComponent;
+}
+
+export function* generateFragment(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode,
+): Generator<Code> {
+	const [startTagOffset] = getElementTagOffsets(node, options.template);
+
+	// special case for <template v-for="..." :key="..." />
+	if (node.props.length) {
+		yield `__VLS_asFunctionalElement(__VLS_intrinsics.template)(`;
+		yield* wrapWith(
+			'template',
+			startTagOffset,
+			startTagOffset + node.tag.length,
+			codeFeatures.verification,
+			`{${newLine}`,
+			...generateElementProps(
+				options,
+				ctx,
+				node,
+				node.props,
+				options.vueCompilerOptions.checkUnknownProps,
+			),
+			`}`,
+		);
+		yield `)${endOfLine}`;
+	}
 
 	const { currentComponent } = ctx;
 	ctx.currentComponent = undefined;

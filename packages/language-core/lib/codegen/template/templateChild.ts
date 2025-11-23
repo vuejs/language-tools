@@ -4,8 +4,7 @@ import { hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
-import { generateComponent, generateElement } from './element';
-import { generateElementChildren } from './elementChildren';
+import { generateComponent, generateElement, generateFragment } from './element';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
@@ -13,11 +12,26 @@ import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 import { generateVSlot } from './vSlot';
 
+export function* generateElementChildren(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	children: (CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode)[],
+	enterNode: boolean = true,
+	isVForChild: boolean = false,
+): Generator<Code> {
+	yield* ctx.generateAutoImportCompletion();
+	for (const childNode of children) {
+		yield* generateTemplateChild(options, ctx, childNode, enterNode, isVForChild);
+	}
+	yield* ctx.generateAutoImportCompletion();
+}
+
 export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
 	enterNode: boolean = true,
+	isVForChild: boolean = false,
 ): Generator<Code> {
 	if (enterNode && !ctx.enter(node)) {
 		return;
@@ -34,26 +48,20 @@ export function* generateTemplateChild(
 			yield* generateSlotOutlet(options, ctx, node);
 		}
 		else {
-			const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
-				| CompilerDOM.DirectiveNode
-				| undefined;
-			if (
-				node.tagType === CompilerDOM.ElementTypes.TEMPLATE
-				&& ctx.currentComponent
-				&& slotDir
-			) {
+			const slotDir = node.props.find(CompilerDOM.isVSlot);
+			if (node.tagType === CompilerDOM.ElementTypes.TEMPLATE && ctx.currentComponent && slotDir) {
 				yield* generateVSlot(options, ctx, node, slotDir);
 			}
-			else if (
-				node.tagType === CompilerDOM.ElementTypes.ELEMENT
-				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
-			) {
-				yield* generateElement(options, ctx, node);
+			else if (node.tagType === CompilerDOM.ElementTypes.TEMPLATE && isVForChild) {
+				yield* generateFragment(options, ctx, node);
 			}
-			else {
+			else if (node.tagType === CompilerDOM.ElementTypes.COMPONENT) {
 				const { currentComponent } = ctx;
 				yield* generateComponent(options, ctx, node);
 				ctx.currentComponent = currentComponent;
+			}
+			else {
+				yield* generateElement(options, ctx, node);
 			}
 		}
 	}

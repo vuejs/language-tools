@@ -7,10 +7,10 @@ import { codeFeatures } from '../codeFeatures';
 import { createTsAst, endOfLine, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
+import { generateElementChildren } from './templateChild';
 
 export function* generateVSlot(
 	options: TemplateCodegenOptions,
