@@ -1,9 +1,7 @@
 import {
 	createCompilerError,
-	createSimpleExpression,
 	type DirectiveNode,
 	type ElementNode,
-	ElementTypes,
 	ErrorCodes,
 	type IfBranchNode,
 	type IfNode,
@@ -20,11 +18,9 @@ export const transformIf = createStructuralDirectiveTransform(
 			dir.name !== 'else'
 			&& (!dir.exp || !(dir.exp as SimpleExpressionNode).content.trim())
 		) {
-			const loc = dir.exp ? dir.exp.loc : node.loc;
 			context.onError(
 				createCompilerError(ErrorCodes.X_V_IF_NO_EXPRESSION, dir.loc),
 			);
-			dir.exp = createSimpleExpression('', false, loc);
 		}
 
 		if (dir.name === 'if') {
@@ -54,10 +50,7 @@ export const transformIf = createStructuralDirectiveTransform(
 				}
 
 				if (sibling?.type === NodeTypes.IF) {
-					if (
-						(dir.name === 'else-if' || dir.name === 'else')
-						&& !sibling.branches.at(-1)!.condition
-					) {
+					if (!sibling.branches.at(-1)!.condition) {
 						context.onError(
 							createCompilerError(ErrorCodes.X_V_ELSE_NO_ADJACENT_IF, node.loc),
 						);
@@ -85,12 +78,10 @@ export const transformIf = createStructuralDirectiveTransform(
 );
 
 function createIfBranch(node: ElementNode, dir: DirectiveNode): IfBranchNode {
-	const isTemplateIf = node.tagType === ElementTypes.TEMPLATE;
 	return {
 		type: NodeTypes.IF_BRANCH,
 		loc: node.loc,
 		condition: dir.name === 'else' ? undefined : dir.exp,
 		children: [node],
-		isTemplateIf,
 	};
 }
