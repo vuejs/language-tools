@@ -6,8 +6,8 @@ const [foo, bar, baz, qux] = {} as number[];
 </script>
 
 <template>
-	<template v-if="(true as any)" :foo />
-	<template v-else-if="(false as any)" :bar />
+	<template v-if="true" :foo />
+	<template v-else-if="false" :bar />
 	<Comp>
 		<template #default v-if="baz" />
 		<template #default v-else-if="qux" />

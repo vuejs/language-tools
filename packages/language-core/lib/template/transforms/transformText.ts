@@ -23,12 +23,7 @@ export const transformText: NodeTransform = node => {
 					for (let j = i + 1; j < children.length; j++) {
 						const next = children[j]!;
 						if (isText(next)) {
-							if (!currentContainer) {
-								currentContainer = children[i] = createCompoundExpression(
-									[child],
-									child.loc,
-								);
-							}
+							currentContainer ??= children[i] = createCompoundExpression([child], child.loc);
 							currentContainer.children.push(` + `, next);
 							children.splice(j, 1);
 							j--;

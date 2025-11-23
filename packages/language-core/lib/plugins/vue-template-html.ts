@@ -1,4 +1,4 @@
-import type * as CompilerDOM from '@vue/compiler-dom';
+import * as CompilerDOM from '@vue/compiler-dom';
 import { compileTemplate } from '../template/compile';
 import type { VueLanguagePlugin } from '../types';
 
@@ -16,9 +16,7 @@ type Node =
 
 const shouldAddSuffix = /(?<=<[^>/]+)$/;
 
-const plugin: VueLanguagePlugin = ({ modules }) => {
-	const CompilerDOM = modules['@vue/compiler-dom'];
-
+const plugin: VueLanguagePlugin = () => {
 	return {
 		version: 2.2,
 
