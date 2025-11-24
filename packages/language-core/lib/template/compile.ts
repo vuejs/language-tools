@@ -1,4 +1,5 @@
 import { type CompilerOptions, getBaseTransformPreset, parse, transform } from '@vue/compiler-dom';
+import { transformElement } from './transforms/transformElement';
 import { transformText } from './transforms/transformText';
 import { transformFor } from './transforms/vFor';
 import { transformIf } from './transforms/vIf';
@@ -12,6 +13,7 @@ export function compileTemplate(source: string, options: CompilerOptions) {
 			nodeTransforms[0]!, // transformVBindShorthand
 			transformIf,
 			transformFor,
+			transformElement,
 			transformText,
 			...options.nodeTransforms || [],
 		],

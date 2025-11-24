@@ -39,7 +39,6 @@ export function* generateComponent(
 
 	let isCtxVarUsed = false;
 	let isPropsVarUsed = false;
-	ctx.components.push(node.tag);
 	ctx.currentComponent = {
 		get ctxVar() {
 			isCtxVarUsed = true;

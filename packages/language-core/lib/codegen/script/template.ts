@@ -206,7 +206,7 @@ function* generateBindings(
 	}
 
 	const usageVars = new Set([
-		...options.templateCodegen?.components.flatMap(c => [camelize(c), capitalize(camelize(c))]) ?? [],
+		...options.sfc.template?.ast?.components.flatMap(c => [camelize(c), capitalize(camelize(c))]) ?? [],
 		...options.templateCodegen?.accessExternalVariables.keys() ?? [],
 		...templateCodegenCtx.accessExternalVariables.keys(),
 	]);
