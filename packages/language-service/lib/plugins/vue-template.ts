@@ -40,7 +40,6 @@ const specialProps = new Set([
 
 const builtInComponents = new Set([
 	'Transition',
-	'BaseTransition',
 	'TransitionGroup',
 	'KeepAlive',
 	'Suspense',
