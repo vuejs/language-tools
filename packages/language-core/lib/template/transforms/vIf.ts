@@ -1,8 +1,10 @@
 import {
+	type AttributeNode,
 	createCompilerError,
 	type DirectiveNode,
 	type ElementNode,
 	ErrorCodes,
+	findProp,
 	type IfBranchNode,
 	type IfNode,
 	NodeTypes,
@@ -62,6 +64,16 @@ export const transformIf = createStructuralDirectiveTransform(
 						branch.children.unshift(...comments);
 					}
 
+					if (branch.userKey) {
+						for (const { userKey } of sibling.branches) {
+							if (isSameKey(userKey, branch.userKey)) {
+								context.onError(
+									createCompilerError(ErrorCodes.X_V_IF_SAME_KEY, branch.userKey.loc),
+								);
+							}
+						}
+					}
+
 					sibling.branches.push(branch);
 					traverseNode(branch, context);
 					context.currentNode = null;
@@ -83,5 +95,33 @@ function createIfBranch(node: ElementNode, dir: DirectiveNode): IfBranchNode {
 		loc: node.loc,
 		condition: dir.name === 'else' ? undefined : dir.exp,
 		children: [node],
+		userKey: findProp(node, 'key'),
 	};
+}
+
+function isSameKey(
+	a: AttributeNode | DirectiveNode | undefined,
+	b: AttributeNode | DirectiveNode,
+): boolean {
+	if (!a || a.type !== b.type) {
+		return false;
+	}
+	if (a.type === NodeTypes.ATTRIBUTE) {
+		if (a.value!.content !== (b as AttributeNode).value!.content) {
+			return false;
+		}
+	}
+	else {
+		const exp = a.exp!;
+		const branchExp = (b as DirectiveNode).exp!;
+		if (
+			exp.type !== branchExp.type
+			|| exp.type !== NodeTypes.SIMPLE_EXPRESSION
+			|| exp.isStatic !== (branchExp as SimpleExpressionNode).isStatic
+			|| exp.content !== (branchExp as SimpleExpressionNode).content
+		) {
+			return false;
+		}
+	}
+	return true;
 }

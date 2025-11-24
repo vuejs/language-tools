@@ -1,4 +1,15 @@
-import { createCompilerError, ElementTypes, ErrorCodes, type NodeTransform, NodeTypes } from '@vue/compiler-dom';
+import {
+	createCompilerError,
+	type DirectiveNode,
+	ElementTypes,
+	ErrorCodes,
+	findDir,
+	isStaticExp,
+	isTemplateNode,
+	type NodeTransform,
+	NodeTypes,
+	type TemplateChildNode,
+} from '@vue/compiler-dom';
 import { isBuiltInDirective } from '@vue/shared';
 
 export const transformElement: NodeTransform = (node, context) => {
@@ -9,10 +20,6 @@ export const transformElement: NodeTransform = (node, context) => {
 
 		const isComponent = node.tagType === ElementTypes.COMPONENT;
 		const isSlotOutlet = node.tagType === ElementTypes.SLOT;
-
-		if (isComponent) {
-			context.components.add(node.tag);
-		}
 
 		for (const prop of node.props) {
 			if (prop.type !== NodeTypes.DIRECTIVE) {
@@ -45,12 +52,86 @@ export const transformElement: NodeTransform = (node, context) => {
 				continue;
 			}
 
-			const result = context.directiveTransforms[prop.name]?.(prop, node, context);
-			if (isSlotOutlet && (result?.needRuntime || !isBuiltInDirective(prop.name))) {
+			const runtimeDirectives: DirectiveNode[] = [];
+			const directiveTransform = context.directiveTransforms[prop.name];
+			if (directiveTransform) {
+				const { needRuntime } = directiveTransform(prop, node, context);
+				if (needRuntime) {
+					runtimeDirectives.push(prop);
+				}
+			}
+			else if (!isBuiltInDirective(prop.name)) {
+				runtimeDirectives.push(prop);
+			}
+
+			if (isSlotOutlet && runtimeDirectives.length) {
 				context.onError(
 					createCompilerError(ErrorCodes.X_V_SLOT_UNEXPECTED_DIRECTIVE_ON_SLOT_OUTLET, prop.loc),
 				);
 			}
+		}
+
+		if (isComponent) {
+			let hasTemplateSlots = false;
+			let hasNamedDefaultSlot = false;
+			const implicitDefaultChildren: TemplateChildNode[] = [];
+			const seenSlotNames = new Set<string>();
+			const onComponentSlot = findDir(node, 'slot', true);
+
+			for (const child of node.children) {
+				let slotDir: DirectiveNode | undefined;
+				if (!isTemplateNode(child) || !(slotDir = findDir(child, 'slot', true))) {
+					if (child.type !== NodeTypes.COMMENT) {
+						implicitDefaultChildren.push(child);
+					}
+					continue;
+				}
+
+				if (onComponentSlot) {
+					context.onError(
+						createCompilerError(ErrorCodes.X_V_SLOT_MIXED_SLOT_USAGE, slotDir.loc),
+					);
+					break;
+				}
+
+				if (findDir(child, /^(?:if|else-if|else|for)$/, true)) {
+					continue;
+				}
+
+				hasTemplateSlots = true;
+				const staticSlotName = slotDir.arg
+					? isStaticExp(slotDir.arg)
+						? slotDir.arg.content
+						: undefined
+					: 'default';
+
+				if (staticSlotName) {
+					if (seenSlotNames.has(staticSlotName)) {
+						context.onError(
+							createCompilerError(ErrorCodes.X_V_SLOT_DUPLICATE_SLOT_NAMES, slotDir.loc),
+						);
+						continue;
+					}
+					seenSlotNames.add(staticSlotName);
+					if (staticSlotName === 'default') {
+						hasNamedDefaultSlot = true;
+					}
+				}
+			}
+
+			if (
+				hasTemplateSlots && hasNamedDefaultSlot
+				&& implicitDefaultChildren.some(node => node.type !== NodeTypes.TEXT || !!node.content.trim())
+			) {
+				context.onError(
+					createCompilerError(
+						ErrorCodes.X_V_SLOT_EXTRANEOUS_DEFAULT_SLOT_CHILDREN,
+						implicitDefaultChildren[0]!.loc,
+					),
+				);
+			}
+
+			context.components.add(node.tag);
 		}
 	};
 };

@@ -1,4 +1,4 @@
-import { createCompilerError, ErrorCodes, type ForNode, NodeTypes } from '@vue/compiler-dom';
+import { createCompilerError, ErrorCodes, findProp, type ForNode, isTemplateNode, NodeTypes } from '@vue/compiler-dom';
 import { createStructuralDirectiveTransform } from '../utils';
 
 export const transformFor = createStructuralDirectiveTransform(
@@ -32,5 +32,21 @@ export const transformFor = createStructuralDirectiveTransform(
 		};
 
 		context.replaceNode(forNode);
+
+		return () => {
+			if (isTemplateNode(node)) {
+				for (const child of node.children) {
+					if (child.type === NodeTypes.ELEMENT) {
+						const key = findProp(child, 'key');
+						if (key) {
+							context.onError(
+								createCompilerError(ErrorCodes.X_V_FOR_TEMPLATE_KEY_PLACEMENT, key.loc),
+							);
+							break;
+						}
+					}
+				}
+			}
+		};
 	},
 );
