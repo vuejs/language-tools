@@ -16,7 +16,7 @@ export function* generateInterpolation(
 	options: Pick<TemplateCodegenOptions | ScriptCodegenOptions, 'ts' | 'destructuredPropNames' | 'templateRefNames'>,
 	ctx: TemplateCodegenContext,
 	source: string,
-	data: VueCodeInformation | ((offset: number) => VueCodeInformation),
+	data: VueCodeInformation,
 	code: string,
 	start: number,
 	prefix: string = '',
@@ -57,8 +57,6 @@ export function* generateInterpolation(
 				start + offset,
 				type === 'errorMappingOnly'
 					? codeFeatures.verification
-					: typeof data === 'function'
-					? data(start + offset)
 					: data,
 			];
 		}

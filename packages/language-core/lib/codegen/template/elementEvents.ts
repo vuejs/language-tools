@@ -120,32 +120,13 @@ export function* generateEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		let isFirstMapping = true;
-
 		const ast = createTsAst(options.ts, ctx.inlineTsAsts, prop.exp.content);
 		const isCompound = isCompoundExpression(options.ts, ast);
 		const interpolation = generateInterpolation(
 			options,
 			ctx,
 			'template',
-			offset => {
-				if (isCompound && isFirstMapping) {
-					isFirstMapping = false;
-					ctx.inlayHints.push({
-						blockName: 'template',
-						offset,
-						setting: 'vue.inlayHints.inlineHandlerLeading',
-						label: '$event =>',
-						paddingRight: true,
-						tooltip: [
-							'`$event` is a hidden parameter, you can use it in this callback.',
-							'To hide this hint, set `vue.inlayHints.inlineHandlerLeading` to `false` in IDE settings.',
-							'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
-						].join('\n\n'),
-					});
-				}
-				return codeFeatures.all;
-			},
+			codeFeatures.all,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
 			isCompound ? `` : `(`,
@@ -162,6 +143,19 @@ export function* generateEventExpression(
 			scoped.end();
 			yield* ctx.generateAutoImportCompletion();
 			yield `}`;
+
+			ctx.inlayHints.push({
+				blockName: 'template',
+				offset: prop.exp.loc.start.offset,
+				setting: 'vue.inlayHints.inlineHandlerLeading',
+				label: '$event =>',
+				paddingRight: true,
+				tooltip: [
+					'`$event` is a hidden parameter, you can use it in this callback.',
+					'To hide this hint, set `vue.inlayHints.inlineHandlerLeading` to `false` in IDE settings.',
+					'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
+				].join('\n\n'),
+			});
 		}
 		else {
 			yield* interpolation;
