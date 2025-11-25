@@ -20,7 +20,7 @@ import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
-import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
+import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
 
 const specialTags = new Set([
@@ -36,6 +36,14 @@ const specialProps = new Set([
 	'key',
 	'ref',
 	'style',
+]);
+
+const builtInComponents = new Set([
+	'Transition',
+	'TransitionGroup',
+	'KeepAlive',
+	'Suspense',
+	'Teleport',
 ]);
 
 let builtInData: html.HTMLDataV1 | undefined;
@@ -405,13 +413,14 @@ export function create(
 			async function provideHtmlData(sourceDocumentUri: URI, root: VueVirtualCode) {
 				await (initializing ??= initialize());
 
-				const casing = await checkCasing(context, sourceDocumentUri);
+				const tagNameCasing = await getTagNameCasing(context, sourceDocumentUri);
+				const attrNameCasing = await getAttrNameCasing(context, sourceDocumentUri);
 
 				for (const tag of builtInData!.tags ?? []) {
 					if (specialTags.has(tag.name)) {
 						continue;
 					}
-					if (casing.tag === TagNameCasing.Kebab) {
+					if (tagNameCasing === TagNameCasing.Kebab) {
 						tag.name = hyphenateTag(tag.name);
 					}
 					else {
@@ -472,13 +481,7 @@ export function create(
 								components = [];
 								tasks.push((async () => {
 									components = (await getComponentNames(root.fileName) ?? [])
-										.filter(name =>
-											name !== 'Transition'
-											&& name !== 'TransitionGroup'
-											&& name !== 'KeepAlive'
-											&& name !== 'Suspense'
-											&& name !== 'Teleport'
-										);
+										.filter(name => !builtInComponents.has(name));
 									version++;
 								})());
 							}
@@ -487,7 +490,7 @@ export function create(
 							const tags: html.ITagData[] = [];
 
 							for (const tag of components) {
-								if (casing.tag === TagNameCasing.Kebab) {
+								if (tagNameCasing === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(tag));
 								}
 								else {
@@ -497,7 +500,7 @@ export function create(
 
 							for (const binding of scriptSetupRanges?.bindings ?? []) {
 								const name = root.sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
-								if (casing.tag === TagNameCasing.Kebab) {
+								if (tagNameCasing === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}
 								else {
@@ -559,11 +562,11 @@ export function create(
 								]
 							) {
 								const isGlobal = prop.isAttribute || !propNameSet.has(prop.name);
-								const propName = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
+								const propName = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 								const isEvent = hyphenateAttr(propName).startsWith('on-');
 
 								if (isEvent) {
-									const eventName = casing.attr === AttrNameCasing.Camel
+									const eventName = attrNameCasing === AttrNameCasing.Camel
 										? propName['on'.length]!.toLowerCase() + propName.slice('onX'.length)
 										: propName.slice('on-'.length);
 
@@ -584,7 +587,7 @@ export function create(
 								}
 								else {
 									const propInfo = propInfos.find(prop => {
-										const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
+										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === propName;
 									});
 
@@ -610,7 +613,7 @@ export function create(
 							}
 
 							for (const event of events) {
-								const eventName = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
+								const eventName = attrNameCasing === AttrNameCasing.Camel ? event : hyphenateAttr(event);
 
 								for (
 									const name of [
@@ -652,7 +655,7 @@ export function create(
 							}
 
 							for (const model of models) {
-								const name = casing.attr === AttrNameCasing.Camel ? model : hyphenateAttr(model);
+								const name = attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model);
 
 								attributes.push({ name: 'v-model:' + name });
 								propMap.set('v-model:' + name, {

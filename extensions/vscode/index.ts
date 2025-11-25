@@ -213,7 +213,7 @@ function resolveServerPath() {
 	if (path.isAbsolute(config.server.path)) {
 		const entryFile = require.resolve('./index.js', { paths: [config.server.path] });
 		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-		fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
+		fs.writeFileSync(tsPluginPackPath, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
 		return entryFile;
 	}
 
@@ -225,7 +225,7 @@ function resolveServerPath() {
 			const serverPath = path.join(uri.fsPath, config.server.path);
 			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
 			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-			fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
+			fs.writeFileSync(tsPluginPackPath, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
 			return entryFile;
 		}
 		catch {}

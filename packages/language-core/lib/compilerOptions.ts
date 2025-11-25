@@ -5,89 +5,110 @@ import { generateGlobalTypes, getGlobalTypesFileName } from './codegen/globalTyp
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { hyphenateTag } from './utils/shared';
 
+interface ParseConfigHost extends Omit<ts.ParseConfigHost, 'readDirectory'> {}
+
 export interface ParsedCommandLine extends Omit<ts.ParsedCommandLine, 'fileNames'> {
 	vueOptions: VueCompilerOptions;
 }
 
-export const createParsedCommandLineByJson = create(
-	(ts, host, rootDir: string, json: any, configFileName?: string) => {
-		// `parseJsonConfigFileContent` is missing in tsc
-		return 'parseJsonConfigFileContent' in (ts as any)
-			? ts.parseJsonConfigFileContent(json, host, rootDir, {}, configFileName)
-			: ts.parseJsonSourceFileConfigFileContent(
-				ts.parseJsonText(configFileName ?? 'tsconfig.json', JSON.stringify(json)),
-				host,
-				rootDir,
-				{},
-				configFileName,
-			);
-	},
-);
+export function createParsedCommandLineByJson(
+	ts: typeof import('typescript'),
+	host: ParseConfigHost,
+	rootDir: string,
+	json: any,
+	configFileName?: string,
+): ParsedCommandLine {
+	const extendedPaths = new Set<string>();
+	const proxyHost = {
+		...host,
+		readFile(fileName: string) {
+			if (!fileName.endsWith('/package.json')) {
+				extendedPaths.add(fileName);
+			}
+			return host.readFile(fileName);
+		},
+		readDirectory() {
+			return [];
+		},
+	};
+	const config = ts.readJsonConfigFile(rootDir, () => JSON.stringify(json));
+	const parsed = ts.parseJsonSourceFileConfigFileContent(
+		config,
+		proxyHost,
+		rootDir,
+		{},
+		configFileName,
+	);
+	const resolver = new CompilerOptionsResolver(host.fileExists);
 
-export const createParsedCommandLine = create(
-	(ts, host, configFileName: string) => {
-		const config = ts.readJsonConfigFile(configFileName, host.readFile);
-		return ts.parseJsonSourceFileConfigFileContent(
+	for (const extendPath of [...extendedPaths].reverse()) {
+		try {
+			const configFile = ts.readJsonConfigFile(extendPath, host.readFile);
+			const obj = ts.convertToObject(configFile, []);
+			const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
+			resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
+		}
+		catch {}
+	}
+
+	resolver.addConfig(json?.vueCompilerOptions ?? {}, rootDir);
+
+	return {
+		...parsed,
+		vueOptions: resolver.build(),
+	};
+}
+
+export function createParsedCommandLine(
+	ts: typeof import('typescript'),
+	host: ParseConfigHost,
+	configFileName: string,
+): ParsedCommandLine {
+	try {
+		const extendedPaths = new Set<string>();
+		const proxyHost = {
+			...host,
+			readFile(fileName: string) {
+				if (!fileName.endsWith('/package.json')) {
+					extendedPaths.add(fileName);
+				}
+				return host.readFile(fileName);
+			},
+			readDirectory() {
+				return [];
+			},
+		};
+		const config = ts.readJsonConfigFile(configFileName, proxyHost.readFile);
+		const parsed = ts.parseJsonSourceFileConfigFileContent(
 			config,
-			host,
+			proxyHost,
 			path.dirname(configFileName),
 			{},
 			configFileName,
 		);
-	},
-);
+		const resolver = new CompilerOptionsResolver(host.fileExists);
 
-function create<T extends any[]>(
-	getParsedCommandLine: (
-		ts: typeof import('typescript'),
-		host: ts.ParseConfigHost,
-		...args: T
-	) => ts.ParsedCommandLine,
-) {
-	return (
-		ts: typeof import('typescript'),
-		host: Omit<ts.ParseConfigHost, 'readDirectory'>,
-		...args: T
-	): ParsedCommandLine => {
-		try {
-			const extendedPaths = new Set<string>();
-			const proxyHost = {
-				...host,
-				readFile(fileName: string) {
-					if (!fileName.endsWith('/package.json')) {
-						extendedPaths.add(fileName);
-					}
-					return host.readFile(fileName);
-				},
-				readDirectory() {
-					return [];
-				},
-			};
-			const parsed = getParsedCommandLine(ts, proxyHost, ...args);
-
-			const resolver = new CompilerOptionsResolver(host.fileExists);
-			for (const extendPath of [...extendedPaths].reverse()) {
-				try {
-					const configFile = ts.readJsonConfigFile(extendPath, host.readFile);
-					const obj = ts.convertToObject(configFile, []);
-					const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
-					resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
-				}
-				catch {}
+		for (const extendPath of [...extendedPaths].reverse()) {
+			try {
+				const configFile = ts.readJsonConfigFile(extendPath, host.readFile);
+				const obj = ts.convertToObject(configFile, []);
+				const rawOptions: RawVueCompilerOptions = obj?.vueCompilerOptions ?? {};
+				resolver.addConfig(rawOptions, path.dirname(configFile.fileName));
 			}
-
-			return {
-				...parsed,
-				vueOptions: resolver.build(),
-			};
+			catch {}
 		}
-		catch {}
 
 		return {
-			options: {},
-			errors: [],
-			vueOptions: getDefaultCompilerOptions(),
+			...parsed,
+			vueOptions: resolver.build(),
 		};
+	}
+	catch {}
+
+	return {
+		options: {},
+		errors: [],
+		vueOptions: getDefaultCompilerOptions(),
 	};
 }
 
