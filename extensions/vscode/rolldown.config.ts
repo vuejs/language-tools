@@ -8,7 +8,7 @@ const resolve = (...paths: string[]) => path.resolve(__dirname, ...paths);
 const config: RolldownOptions = {
 	input: {
 		'extension': './index.ts',
-		'reactivity-analysis-plugin': './reactivityAnalysis/plugin.ts',
+		'reactivity-analysis-plugin': './lib/reactivityAnalysisPlugin.ts',
 	},
 	output: {
 		format: 'cjs',
