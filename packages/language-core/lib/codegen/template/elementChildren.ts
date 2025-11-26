@@ -10,7 +10,7 @@ export function* generateElementChildren(
 	children: (CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode)[],
 	enterNode = true,
 ): Generator<Code> {
-	yield* ctx.generateAutoImportCompletion();
+	const endScope = ctx.startScope();
 	for (let i = 0; i < children.length; i++) {
 		const current = children[i]!;
 		const normalized = normalizeIfBranch(children, i);
@@ -21,7 +21,7 @@ export function* generateElementChildren(
 		}
 		yield* generateTemplateChild(options, ctx, current, enterNode);
 	}
-	yield* ctx.generateAutoImportCompletion();
+	yield* endScope();
 }
 
 function normalizeIfBranch(
