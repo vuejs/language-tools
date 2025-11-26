@@ -197,12 +197,6 @@ export function createTemplateCodegenContext(
 		hasLocalVariable(name: string) {
 			return !!localVars.get(name);
 		},
-		delcare(name: string) {
-			localVars.set(name, (localVars.get(name) ?? 0) + 1);
-		},
-		undeclare(name: string) {
-			localVars.set(name, localVars.get(name)! - 1);
-		},
 		scope() {
 			const declaredNames: string[] = [];
 			return {

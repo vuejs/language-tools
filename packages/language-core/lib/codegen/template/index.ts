@@ -48,11 +48,12 @@ function* generateTemplate(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
+	const scoped = ctx.scope();
 	if (options.slotsAssignName) {
-		ctx.delcare(options.slotsAssignName);
+		scoped.declare(options.slotsAssignName);
 	}
 	if (options.propsAssignName) {
-		ctx.delcare(options.propsAssignName);
+		scoped.declare(options.propsAssignName);
 	}
 
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
@@ -89,6 +90,7 @@ function* generateTemplate(
 		}
 		yield `} & { [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 	}
+	scoped.end();
 }
 
 function* generateSlots(
