@@ -29,12 +29,6 @@ function normalizeIfBranch(
 	start: number,
 ): { node: CompilerDOM.IfNode; end: number } | undefined {
 	const first = children[start]!;
-	if (!isTemplateChildNode(first)) {
-		return;
-	}
-	if (first.type === CompilerDOM.NodeTypes.IF) {
-		return { node: first, end: start };
-	}
 	if (first.type !== CompilerDOM.NodeTypes.ELEMENT) {
 		return;
 	}
@@ -49,7 +43,7 @@ function normalizeIfBranch(
 
 	for (let i = start + 1; i < children.length; i++) {
 		const sibling = children[i]!;
-		if (!isTemplateChildNode(sibling)) {
+		if (sibling.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 			continue;
 		}
 		if (sibling.type === CompilerDOM.NodeTypes.COMMENT) {
@@ -109,10 +103,4 @@ function getVElseDirective(node: CompilerDOM.TemplateChildNode) {
 			directive,
 		};
 	}
-}
-
-function isTemplateChildNode(
-	node: CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
-): node is CompilerDOM.TemplateChildNode {
-	return node.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION;
 }
