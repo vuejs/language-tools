@@ -12,13 +12,8 @@ export function* generateElementChildren(
 ): Generator<Code> {
 	const endScope = ctx.startScope();
 	for (let i = 0; i < children.length; i++) {
-		const current = children[i]!;
-		const normalized = normalizeIfBranch(children, i);
-		if (normalized) {
-			i = normalized.end;
-			yield* generateTemplateChild(options, ctx, normalized.node, enterNode);
-			continue;
-		}
+		let current = children[i];
+		[current, i] = normalizeIfBranch(children, i);
 		yield* generateTemplateChild(options, ctx, current, enterNode);
 	}
 	yield* endScope();
@@ -27,15 +22,15 @@ export function* generateElementChildren(
 function normalizeIfBranch(
 	children: (CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode)[],
 	start: number,
-): { node: CompilerDOM.IfNode; end: number } | undefined {
+): [node: typeof children[number], end: number] {
 	const first = children[start]!;
 	if (first.type !== CompilerDOM.NodeTypes.ELEMENT) {
-		return;
+		return [first, start];
 	}
 
 	const ifNode = getVIfNode(first);
 	if (!ifNode) {
-		return;
+		return [first, start];
 	}
 
 	let end = start;
@@ -73,7 +68,7 @@ function normalizeIfBranch(
 		break;
 	}
 
-	return { node: ifNode, end };
+	return [ifNode, end];
 }
 
 function createIfBranch(node: CompilerDOM.ElementNode, dir: CompilerDOM.DirectiveNode): CompilerDOM.IfBranchNode {
