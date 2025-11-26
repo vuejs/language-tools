@@ -6,14 +6,14 @@ const cond2 = true
 </script>
 
 <template>
-    <Comp>
-        <template #default v-if="cond1">1</template>
-        <template #default v-else-if="cond2">2</template>
+	<Comp>
+		<template #default v-if="cond1">1</template>
+		<template #default v-else-if="cond2">2</template>
 
-        <div v-if="cond1 === true"></div>
-        <div v-else-if="cond1.length"></div>
+		<div v-if="cond1 === true"></div>
+		<div v-else-if="cond1.length"></div>
 
-        <template #default v-if="cond1 === true">1</template>
-        <template #default v-else-if="cond1.length">2</template>
-    </Comp>
+		<template #default v-if="cond1 === true">1</template>
+		<template #default v-else-if="cond1.length">2</template>
+	</Comp>
 </template>
