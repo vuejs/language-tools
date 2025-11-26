@@ -21,7 +21,7 @@ export function createVueLanguageServiceProxy<T>(
 			case 'getCodeFixesAtPosition':
 				return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan':
-				return getDefinitionAndBoundSpan(ts, language, asScriptId, target[p]);
+				return getDefinitionAndBoundSpan(ts, language, asScriptId, languageService, vueOptions, target[p]);
 		}
 	};
 
@@ -193,11 +193,14 @@ function getDefinitionAndBoundSpan<T>(
 	ts: typeof import('typescript'),
 	language: Language<T>,
 	asScriptId: (fileName: string) => T,
+	languageService: ts.LanguageService,
+	vueOptions: VueCompilerOptions,
 	getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan'],
 ): ts.LanguageService['getDefinitionAndBoundSpan'] {
 	return (fileName, position) => {
 		const result = getDefinitionAndBoundSpan(fileName, position);
 
+		const program = languageService.getProgram()!;
 		const sourceScript = language.scripts.get(asScriptId(fileName));
 		const root = sourceScript?.generated?.root;
 		if (!(root instanceof VueVirtualCode)) {
@@ -237,6 +240,7 @@ function getDefinitionAndBoundSpan<T>(
 		}
 
 		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
+		const skippedDefinitions: ts.DefinitionInfo[] = [];
 
 		// #5275
 		if (result.definitions.length >= 2) {
@@ -250,9 +254,70 @@ function getDefinitionAndBoundSpan<T>(
 			}
 		}
 
+		for (const definition of result.definitions) {
+			if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
+				continue;
+			}
+
+			const sourceFile = program.getSourceFile(definition.fileName);
+			if (!sourceFile) {
+				continue;
+			}
+
+			visit(sourceFile, definition, sourceFile);
+		}
+
+		for (const definition of skippedDefinitions) {
+			definitions.delete(definition);
+		}
+
 		return {
 			definitions: [...definitions],
 			textSpan: result.textSpan,
 		};
+
+		function visit(
+			node: ts.Node,
+			definition: ts.DefinitionInfo,
+			sourceFile: ts.SourceFile,
+		) {
+			if (ts.isPropertySignature(node) && node.type) {
+				proxy(node.name, node.type, definition, sourceFile);
+			}
+			else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type && !node.initializer) {
+				proxy(node.name, node.type, definition, sourceFile);
+			}
+			else {
+				ts.forEachChild(node, child => visit(child, definition, sourceFile));
+			}
+		}
+
+		function proxy(
+			name: ts.PropertyName,
+			type: ts.TypeNode,
+			definition: ts.DefinitionInfo,
+			sourceFile: ts.SourceFile,
+		) {
+			const { textSpan, fileName } = definition;
+			const start = name.getStart(sourceFile);
+			const end = name.getEnd();
+
+			if (start !== textSpan.start || end - start !== textSpan.length) {
+				return;
+			}
+
+			if (!ts.isIndexedAccessTypeNode(type)) {
+				return;
+			}
+
+			const pos = type.indexType.getStart(sourceFile);
+			const res = getDefinitionAndBoundSpan(fileName, pos);
+			if (res?.definitions?.length) {
+				for (const definition of res.definitions) {
+					definitions.add(definition);
+				}
+				skippedDefinitions.push(definition);
+			}
+		}
 	};
 }
