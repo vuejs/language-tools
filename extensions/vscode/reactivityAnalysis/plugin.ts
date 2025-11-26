@@ -23,7 +23,7 @@ const plugin: ts.server.PluginModuleFactory = ({ typescript: ts }) => {
 					};
 				});
 				info.session.addProtocolHandler('_vue:getInterpolationRanges', request => {
-					const [fileName]: [string, number] = request.arguments;
+					const [fileName]: [string] = request.arguments;
 					return {
 						response: getInterpolationRanges(info.session!, fileName),
 						responseRequired: true,
