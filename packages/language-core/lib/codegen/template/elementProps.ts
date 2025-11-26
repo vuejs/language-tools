@@ -265,7 +265,9 @@ export function* generatePropExp(
 				codeFeatures.withoutHighlightAndCompletion,
 			);
 
-			if (options.destructuredPropNames.has(propVariableName) || ctx.hasLocalVariable(propVariableName)) {
+			if (
+				options.destructuredPropNames.has(propVariableName) || ctx.scopes.some(scope => scope.has(propVariableName))
+			) {
 				yield* codes;
 			}
 			else if (options.templateRefNames.has(propVariableName)) {

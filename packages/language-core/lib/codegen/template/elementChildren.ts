@@ -10,9 +10,9 @@ export function* generateElementChildren(
 	children: (CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode)[],
 	enterNode = true,
 ): Generator<Code> {
-	yield* ctx.generateAutoImportCompletion();
+	const endScope = ctx.startScope();
 	for (const childNode of children) {
 		yield* generateTemplateChild(options, ctx, childNode, enterNode);
 	}
-	yield* ctx.generateAutoImportCompletion();
+	yield* endScope();
 }

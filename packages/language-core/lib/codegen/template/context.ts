@@ -112,8 +112,8 @@ export function createTemplateCodegenContext(
 ) {
 	let variableId = 0;
 
+	const scopes = [new Set<string>()];
 	const hoistVars = new Map<string, string>();
-	const localVars = new Map<string, number>();
 	const dollarVars = new Set<string>();
 	const accessExternalVariables = new Map<string, Set<number>>();
 	const slots: {
@@ -194,25 +194,19 @@ export function createTemplateCodegenContext(
 				arr.add(offset);
 			}
 		},
-		hasLocalVariable(name: string) {
-			return !!localVars.get(name);
+		scopes,
+		declare(...varNames: string[]) {
+			const scope = scopes.at(-1)!;
+			for (const varName of varNames) {
+				scope.add(varName);
+			}
 		},
-		scope() {
-			const declaredNames: string[] = [];
-			return {
-				declaredNames,
-				declare(...varNames: string[]) {
-					for (const varName of varNames) {
-						localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
-					}
-					declaredNames.push(...varNames);
-				},
-				end() {
-					for (const varName of declaredNames) {
-						localVars.set(varName, localVars.get(varName)! - 1);
-					}
-					declaredNames.length = 0;
-				},
+		startScope() {
+			const scope = new Set<string>();
+			scopes.push(scope);
+			return () => {
+				scopes.pop();
+				return generateAutoImport();
 			};
 		},
 		getInternalVariable() {
@@ -240,41 +234,6 @@ export function createTemplateCodegenContext(
 			for (const condition of blockConditions) {
 				yield `if (!${condition}) return${endOfLine}`;
 			}
-		},
-		*generateAutoImportCompletion(): Generator<Code> {
-			const all = [...accessExternalVariables.entries()];
-			if (!all.some(([, offsets]) => offsets.size)) {
-				return;
-			}
-			yield `// @ts-ignore${newLine}`; // #2304
-			yield `[`;
-			for (const [varName, offsets] of all) {
-				for (const offset of offsets) {
-					if (options.scriptSetupBindingNames.has(varName)) {
-						// #3409
-						yield [
-							varName,
-							'template',
-							offset,
-							{
-								...codeFeatures.additionalCompletion,
-								...codeFeatures.semanticWithoutHighlight,
-							},
-						];
-					}
-					else {
-						yield [
-							varName,
-							'template',
-							offset,
-							codeFeatures.additionalCompletion,
-						];
-					}
-					yield `,`;
-				}
-				offsets.clear();
-			}
-			yield `]${endOfLine}`;
 		},
 		enter(node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode) {
 			if (node.type === CompilerDOM.NodeTypes.COMMENT) {
@@ -343,6 +302,42 @@ export function createTemplateCodegenContext(
 			}
 		},
 	};
+
+	function* generateAutoImport(): Generator<Code> {
+		const all = [...accessExternalVariables.entries()];
+		if (!all.some(([, offsets]) => offsets.size)) {
+			return;
+		}
+		yield `// @ts-ignore${newLine}`; // #2304
+		yield `[`;
+		for (const [varName, offsets] of all) {
+			for (const offset of offsets) {
+				if (options.scriptSetupBindingNames.has(varName)) {
+					// #3409
+					yield [
+						varName,
+						'template',
+						offset,
+						{
+							...codeFeatures.additionalCompletion,
+							...codeFeatures.semanticWithoutHighlight,
+						},
+					];
+				}
+				else {
+					yield [
+						varName,
+						'template',
+						offset,
+						codeFeatures.additionalCompletion,
+					];
+				}
+				yield `,`;
+			}
+			offsets.clear();
+		}
+		yield `]${endOfLine}`;
+	}
 
 	function resolveCodeFeatures(features: VueCodeInformation): VueCodeInformation {
 		if (features.verification && stack.length) {

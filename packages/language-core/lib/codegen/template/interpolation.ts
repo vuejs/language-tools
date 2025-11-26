@@ -149,18 +149,16 @@ function* forEachIdentifiers(
 		return;
 	}
 
-	const scoped = ctx.scope();
+	const endScope = ctx.startScope();
 	const ast = getTypeScriptAST(ts, block, code);
-
-	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx, scoped)) {
+	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx)) {
 		const text = getNodeText(ts, id, ast);
 		if (shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
 			continue;
 		}
 		yield [text, getStartEnd(ts, id, ast).start, isShorthand];
 	}
-
-	scoped.end();
+	endScope();
 }
 
 function* forEachDeclarations(
@@ -168,7 +166,6 @@ function* forEachDeclarations(
 	node: ts.Node,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
-	scoped: ReturnType<TemplateCodegenContext['scope']>,
 ): Generator<[ts.Identifier, boolean]> {
 	if (ts.isIdentifier(node)) {
 		yield [node, false];
@@ -177,16 +174,16 @@ function* forEachDeclarations(
 		yield [node.name, true];
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scoped);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx);
 	}
 	else if (ts.isVariableDeclaration(node)) {
-		scoped.declare(...collectBindingNames(ts, node.name, ast));
-		yield* forEachDeclarationsInBinding(ts, node, ast, ctx, scoped);
+		ctx.declare(...collectBindingNames(ts, node.name, ast));
+		yield* forEachDeclarationsInBinding(ts, node, ast, ctx);
 	}
 	else if (ts.isArrayBindingPattern(node) || ts.isObjectBindingPattern(node)) {
 		for (const element of node.elements) {
 			if (ts.isBindingElement(element)) {
-				yield* forEachDeclarationsInBinding(ts, element, ast, ctx, scoped);
+				yield* forEachDeclarationsInBinding(ts, element, ast, ctx);
 			}
 		}
 	}
@@ -198,18 +195,18 @@ function* forEachDeclarations(
 			if (ts.isPropertyAssignment(prop)) {
 				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
-					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scoped);
+					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx);
 				}
-				yield* forEachDeclarations(ts, prop.initializer, ast, ctx, scoped);
+				yield* forEachDeclarations(ts, prop.initializer, ast, ctx);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				yield* forEachDeclarations(ts, prop, ast, ctx, scoped);
+				yield* forEachDeclarations(ts, prop, ast, ctx);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
-				yield* forEachDeclarations(ts, prop.expression, ast, ctx, scoped);
+				yield* forEachDeclarations(ts, prop.expression, ast, ctx);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
 			else if (ts.isFunctionLike(prop) && prop.body) {
@@ -222,15 +219,15 @@ function* forEachDeclarations(
 		yield* forEachDeclarationsInTypeNode(ts, node);
 	}
 	else if (ts.isBlock(node)) {
-		const scoped2 = scoped;
+		const endScope = ctx.startScope();
 		for (const child of forEachNode(ts, node)) {
-			yield* forEachDeclarations(ts, child, ast, ctx, scoped2);
+			yield* forEachDeclarations(ts, child, ast, ctx);
 		}
-		scoped2.end();
+		endScope();
 	}
 	else {
 		for (const child of forEachNode(ts, node)) {
-			yield* forEachDeclarations(ts, child, ast, ctx, scoped);
+			yield* forEachDeclarations(ts, child, ast, ctx);
 		}
 	}
 }
@@ -240,16 +237,15 @@ function* forEachDeclarationsInBinding(
 	node: ts.BindingElement | ts.ParameterDeclaration | ts.VariableDeclaration,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
-	scoped: ReturnType<TemplateCodegenContext['scope']>,
 ): Generator<[ts.Identifier, boolean]> {
 	if ('type' in node && node.type) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type);
 	}
 	if (!ts.isIdentifier(node.name)) {
-		yield* forEachDeclarations(ts, node.name, ast, ctx, scoped);
+		yield* forEachDeclarations(ts, node.name, ast, ctx);
 	}
 	if (node.initializer) {
-		yield* forEachDeclarations(ts, node.initializer, ast, ctx, scoped);
+		yield* forEachDeclarations(ts, node.initializer, ast, ctx);
 	}
 }
 
@@ -259,15 +255,15 @@ function* forEachDeclarationsInFunction(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 ): Generator<[ts.Identifier, boolean]> {
-	const scoped = ctx.scope();
+	const endScope = ctx.startScope();
 	for (const param of node.parameters) {
-		scoped.declare(...collectBindingNames(ts, param.name, ast));
-		yield* forEachDeclarationsInBinding(ts, param, ast, ctx, scoped);
+		ctx.declare(...collectBindingNames(ts, param.name, ast));
+		yield* forEachDeclarationsInBinding(ts, param, ast, ctx);
 	}
 	if (node.body) {
-		yield* forEachDeclarations(ts, node.body, ast, ctx, scoped);
+		yield* forEachDeclarations(ts, node.body, ast, ctx);
 	}
-	scoped.end();
+	endScope();
 }
 
 function* forEachDeclarationsInTypeNode(
@@ -303,7 +299,7 @@ function shouldIdentifierSkipped(
 	text: string,
 	destructuredPropNames: Set<string> | undefined,
 ) {
-	return ctx.hasLocalVariable(text)
+	return ctx.scopes.some(scope => scope.has(text))
 		// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 		|| isGloballyAllowed(text)
 		|| isLiteralWhitelisted(text)

@@ -135,13 +135,12 @@ export function* generateEventExpression(
 
 		if (isCompound) {
 			yield `(...[$event]) => {${newLine}`;
-			const scoped = ctx.scope();
-			scoped.declare('$event');
+			const endScope = ctx.startScope();
+			ctx.declare('$event');
 			yield* ctx.generateConditionGuards();
 			yield* interpolation;
 			yield endOfLine;
-			scoped.end();
-			yield* ctx.generateAutoImportCompletion();
+			yield* endScope();
 			yield `}`;
 
 			ctx.inlayHints.push({
