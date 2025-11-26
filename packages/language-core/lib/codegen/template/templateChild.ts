@@ -52,12 +52,8 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 		const vForNode = getVForNode(node);
-		const vIfNode = getVIfNode(node);
 		if (vForNode) {
 			yield* generateVFor(options, ctx, vForNode);
-		}
-		else if (vIfNode) {
-			yield* generateVIf(options, ctx, vIfNode);
 		}
 		else if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
 			yield* generateSlotOutlet(options, ctx, node);
@@ -181,7 +177,7 @@ export function getVForNode(node: CompilerDOM.ElementNode) {
 	}
 }
 
-function getVIfNode(node: CompilerDOM.ElementNode) {
+export function getVIfNode(node: CompilerDOM.ElementNode) {
 	const ifDirective = node.props.find(
 		(prop): prop is CompilerDOM.DirectiveNode =>
 			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
