@@ -1,11 +1,11 @@
 import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import type { ScriptCodegenOptions } from '../script';
-import { createTsAst, identifierRegex } from '../utils';
+import { getTypeScriptAST, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 
@@ -13,9 +13,12 @@ import type { TemplateCodegenOptions } from './index';
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	options: Pick<TemplateCodegenOptions | ScriptCodegenOptions, 'ts' | 'destructuredPropNames' | 'templateRefNames'>,
+	options: Pick<
+		TemplateCodegenOptions | ScriptCodegenOptions,
+		'ts' | 'destructuredPropNames' | 'templateRefNames'
+	>,
 	ctx: TemplateCodegenContext,
-	source: string,
+	block: SfcBlock,
 	data: VueCodeInformation,
 	code: string,
 	start: number,
@@ -26,6 +29,7 @@ export function* generateInterpolation(
 		const segment of forEachInterpolationSegment(
 			options,
 			ctx,
+			block,
 			code,
 			start,
 			prefix,
@@ -53,7 +57,7 @@ export function* generateInterpolation(
 		if (!shouldSkip) {
 			yield [
 				section,
-				source,
+				block.name,
 				start + offset,
 				type === 'errorMappingOnly'
 					? codeFeatures.verification
@@ -65,8 +69,12 @@ export function* generateInterpolation(
 }
 
 function* forEachInterpolationSegment(
-	options: Pick<TemplateCodegenOptions | ScriptCodegenOptions, 'ts' | 'destructuredPropNames' | 'templateRefNames'>,
+	options: Pick<
+		TemplateCodegenOptions | ScriptCodegenOptions,
+		'ts' | 'destructuredPropNames' | 'templateRefNames'
+	>,
 	ctx: TemplateCodegenContext,
+	block: SfcBlock,
 	originalCode: string,
 	start: number,
 	prefix: string,
@@ -84,9 +92,9 @@ function* forEachInterpolationSegment(
 
 	for (
 		const [name, offset, isShorthand] of forEachIdentifiers(
-			options.ts,
-			options.destructuredPropNames,
+			options,
 			ctx,
+			block,
 			originalCode,
 			code,
 			prefix,
@@ -124,20 +132,25 @@ function* forEachInterpolationSegment(
 }
 
 function* forEachIdentifiers(
-	ts: typeof import('typescript'),
-	destructuredPropNames: Set<string> | undefined,
+	{ ts, destructuredPropNames }: Pick<
+		TemplateCodegenOptions | ScriptCodegenOptions,
+		'ts' | 'destructuredPropNames'
+	>,
 	ctx: TemplateCodegenContext,
+	block: SfcBlock,
 	originalCode: string,
 	code: string,
 	prefix: string,
 ): Generator<[string, number, boolean]> {
-	if (identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode, destructuredPropNames)) {
+	if (
+		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode, destructuredPropNames)
+	) {
 		yield [originalCode, prefix.length, false];
 		return;
 	}
 
 	const scoped = ctx.scope();
-	const ast = createTsAst(ts, ctx.inlineTsAsts, code);
+	const ast = getTypeScriptAST(ts, block, code);
 
 	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx, scoped)) {
 		const text = getNodeText(ts, id, ast);

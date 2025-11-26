@@ -246,7 +246,7 @@ export function* generatePropExp(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.all,
 			exp.loc.source,
 			exp.loc.start.offset,

@@ -4,7 +4,7 @@ import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
-import { createTsAst, endOfLine, newLine } from '../utils';
+import { endOfLine, getTypeScriptAST, newLine } from '../utils';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
@@ -67,7 +67,7 @@ export function* generateVSlot(
 	const scoped = ctx.scope();
 
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const slotAst = createTsAst(options.ts, ctx.inlineTsAsts, `(${slotDir.exp.content}) => {}`);
+		const slotAst = getTypeScriptAST(options.ts, options.template, `(${slotDir.exp.content}) => {}`);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
 		scoped.declare(...collectBindingNames(options.ts, slotAst, slotAst));
 	}
@@ -122,7 +122,7 @@ function* generateSlotParameters(
 	const interpolation = [...generateInterpolation(
 		options,
 		ctx,
-		'template',
+		options.template,
 		codeFeatures.all,
 		ast.text,
 		startOffset,

@@ -20,7 +20,7 @@ export function* generatePropertyAccess(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			features,
 			code,
 			offset,

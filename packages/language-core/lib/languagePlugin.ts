@@ -5,7 +5,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import { createPlugins } from './plugins';
 import type { VueCompilerOptions, VueLanguagePlugin, VueLanguagePluginReturn } from './types';
-import { VueVirtualCode } from './virtualFile/vueFile';
+import { VueVirtualCode } from './virtualCode';
 
 const fileRegistries: Record<string, Map<string, VueVirtualCode>> = {};
 

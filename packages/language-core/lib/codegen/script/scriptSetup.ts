@@ -110,7 +110,7 @@ export function* generateScriptSetup(
 		yield `})(),${newLine}`; // __VLS_setup = (async () => {
 		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))${endOfLine}`;
 	}
-	else if (!options.sfc.script) {
+	else if (!options.script) {
 		// no script block, generate script setup code at root
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default');
 	}

@@ -10,7 +10,7 @@ export function* generateStyleScopedClasses(
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	const option = options.vueCompilerOptions.resolveStyleClassNames;
-	const styles = options.sfc.styles
+	const styles = options.styles
 		.map((style, i) => [style, i] as const)
 		.filter(([style]) => option === true || (option === 'scoped' && style.scoped));
 	if (!styles.length) {

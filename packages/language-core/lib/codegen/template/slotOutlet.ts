@@ -144,7 +144,7 @@ export function* generateSlotOutlet(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				'template',
+				options.template,
 				codeFeatures.all,
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,

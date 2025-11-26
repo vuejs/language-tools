@@ -9,7 +9,7 @@ export * from './lib/utils/collectBindings';
 export * from './lib/utils/forEachTemplateNode';
 export * from './lib/utils/parseSfc';
 export * from './lib/utils/shared';
-export * from './lib/virtualFile/vueFile';
+export * from './lib/virtualCode';
 
 export { tsCodegen } from './lib/plugins/vue-tsx';
 

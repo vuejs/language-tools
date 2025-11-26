@@ -3,9 +3,8 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { isCompoundExpression } from '../codegen/template/elementEvents';
 import { parseInterpolationNode } from '../codegen/template/templateChild';
 import { parseVForNode } from '../codegen/template/vFor';
-import { createTsAst } from '../codegen/utils';
+import { getTypeScriptAST } from '../codegen/utils';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
-import { templateInlineTsAsts } from '../virtualFile/computedSfc';
 
 const codeFeatures: CodeInformation = {
 	format: true,
@@ -23,7 +22,7 @@ const formatBrackets = {
 	generic: ['<', '>() => {};'] as [string, string],
 };
 
-const plugin: VueLanguagePlugin = ctx => {
+const plugin: VueLanguagePlugin = ({ modules: { typescript: ts } }) => {
 	const parseds = new WeakMap<Sfc, ReturnType<typeof parse>>();
 
 	return {
@@ -64,15 +63,14 @@ const plugin: VueLanguagePlugin = ctx => {
 	};
 
 	function parse(sfc: Sfc) {
-		const data = new Map<string, Code[]>();
+		const result = new Map<string, Code[]>();
 		if (!sfc.template?.ast) {
-			return data;
+			return result;
 		}
-		const templateContent = sfc.template.content;
-		const inlineTsAsts = templateInlineTsAsts.get(sfc.template.ast);
+		const template = sfc.template;
 		let i = 0;
 		sfc.template.ast.children.forEach(visit);
-		return data;
+		return result;
 
 		function visit(node: CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode) {
 			if (node.type === CompilerDOM.NodeTypes.COMMENT) {
@@ -107,8 +105,8 @@ const plugin: VueLanguagePlugin = ctx => {
 						&& prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY // style='z-index: 2' will compile to {'z-index':'2'}
 					) {
 						if (prop.name === 'on' && prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-							const ast = createTsAst(ctx.modules.typescript, inlineTsAsts, prop.exp.content);
-							if (isCompoundExpression(ctx.modules.typescript, ast)) {
+							const ast = getTypeScriptAST(ts, template, prop.exp.content);
+							if (isCompoundExpression(ts, ast)) {
 								addFormatCodes(
 									prop.exp.loc.source,
 									prop.exp.loc.start.offset,
@@ -183,14 +181,14 @@ const plugin: VueLanguagePlugin = ctx => {
 				if (leftExpressionRange && leftExpressionText && source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 					let start = leftExpressionRange.start;
 					let end = source.loc.start.offset + source.content.length;
-					while (templateContent[start - 1] === ' ' || templateContent[start - 1] === '(') {
+					while (template.content[start - 1] === ' ' || template.content[start - 1] === '(') {
 						start--;
 					}
-					while (templateContent[end] === ' ' || templateContent[end] === ')') {
+					while (template.content[end] === ' ' || template.content[end] === ')') {
 						end++;
 					}
 					addFormatCodes(
-						templateContent.slice(start, end),
+						template.content.slice(start, end),
 						start,
 						formatBrackets.for,
 					);
@@ -213,7 +211,7 @@ const plugin: VueLanguagePlugin = ctx => {
 			}
 			else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 				// {{ ... }}
-				const [content, start] = parseInterpolationNode(node, templateContent);
+				const [content, start] = parseInterpolationNode(node, template.content);
 				const lines = content.split('\n');
 				const firstLineEmpty = lines[0]!.trim() === '';
 				const lastLineEmpty = lines[lines.length - 1]!.trim() === '';
@@ -258,7 +256,7 @@ const plugin: VueLanguagePlugin = ctx => {
 
 		function addFormatCodes(code: string, offset: number, wrapper: [string, string]) {
 			const id = 'template_inline_ts_' + i++;
-			data.set(id, [
+			result.set(id, [
 				wrapper[0],
 				[
 					code,

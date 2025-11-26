@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
-import { createTsAst, endOfLine, newLine } from '../utils';
+import { endOfLine, getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
@@ -19,7 +19,7 @@ export function* generateVFor(
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
-		const collectAst = createTsAst(options.ts, ctx.inlineTsAsts, `const [${leftExpressionText}]`);
+		const collectAst = getTypeScriptAST(options.ts, options.template, `const [${leftExpressionText}]`);
 		scoped.declare(...collectBindingNames(options.ts, collectAst, collectAst));
 		yield [
 			leftExpressionText,
@@ -34,7 +34,7 @@ export function* generateVFor(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.all,
 			source.content,
 			source.loc.start.offset,
@@ -67,7 +67,7 @@ export function* generateVFor(
 					yield* generateInterpolation(
 						options,
 						ctx,
-						'template',
+						options.template,
 						codeFeatures.all,
 						prop.value.content,
 						prop.value.loc.start.offset,

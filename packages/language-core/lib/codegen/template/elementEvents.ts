@@ -3,7 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { combineLastMapping, createTsAst, endOfLine, identifierRegex, newLine } from '../utils';
+import { combineLastMapping, endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
 import { generateCamelized } from '../utils/camelized';
 import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
@@ -120,12 +120,12 @@ export function* generateEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const ast = createTsAst(options.ts, ctx.inlineTsAsts, prop.exp.content);
+		const ast = getTypeScriptAST(options.ts, options.template, prop.exp.content);
 		const isCompound = isCompoundExpression(options.ts, ast);
 		const interpolation = generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.all,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
@@ -177,7 +177,7 @@ export function* generateModelEventExpression(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.verification,
 			prop.exp.content,
 			prop.exp.loc.start.offset,

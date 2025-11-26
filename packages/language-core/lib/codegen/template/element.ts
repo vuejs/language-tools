@@ -115,7 +115,7 @@ export function* generateComponent(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.all,
 			dynamicTagInfo.tag,
 			dynamicTagInfo.offsets[0],
@@ -127,7 +127,7 @@ export function* generateComponent(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				'template',
+				options.template,
 				codeFeatures.withoutCompletion,
 				dynamicTagInfo.tag,
 				dynamicTagInfo.offsets[1],
@@ -369,7 +369,7 @@ function* generateFailedPropExps(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.all,
 			failedExp.node.loc.source,
 			failedExp.node.loc.start.offset,

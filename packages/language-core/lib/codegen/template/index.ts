@@ -27,7 +27,7 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	const context = createTemplateCodegenContext(options, options.template.ast);
+	const context = createTemplateCodegenContext(options);
 	const codegen = generateTemplate(options, context);
 
 	const codes: Code[] = [];
