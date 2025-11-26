@@ -3,7 +3,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type { Segment } from 'muggle-string';
 import type * as ts from 'typescript';
-import type { VueEmbeddedCode } from './virtualFile/embeddedFile';
+import type { VueEmbeddedCode } from './virtualCode/embeddedCodes';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 

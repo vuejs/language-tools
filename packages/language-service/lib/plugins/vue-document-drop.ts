@@ -4,7 +4,7 @@ import { camelize, capitalize, hyphenate } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences';
 import { URI } from 'vscode-uri';
-import { checkCasing, TagNameCasing } from '../nameCasing';
+import { getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createAddComponentToOptionEdit, getLastImportNode } from '../plugins/vue-extract-file';
 import { resolveEmbeddedCode } from '../utils';
 
@@ -44,7 +44,7 @@ export function create(
 						return;
 					}
 
-					const casing = await checkCasing(context, info.script.id);
+					const tagNameCasing = await getTagNameCasing(context, info.script.id);
 					const baseName = path.basename(importUri);
 					const newName = capitalize(camelize(baseName.slice(0, baseName.lastIndexOf('.'))));
 
@@ -114,7 +114,7 @@ export function create(
 					}
 
 					return {
-						insertText: `<${casing.tag === TagNameCasing.Kebab ? hyphenate(newName) : newName}$0 />`,
+						insertText: `<${tagNameCasing === TagNameCasing.Kebab ? hyphenate(newName) : newName}$0 />`,
 						insertTextFormat: 2 satisfies typeof InsertTextFormat.Snippet,
 						additionalEdit,
 					};

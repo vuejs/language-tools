@@ -27,7 +27,7 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	const context = createTemplateCodegenContext(options, options.template.ast);
+	const context = createTemplateCodegenContext(options);
 	const codegen = generateTemplate(options, context);
 
 	const codes: Code[] = [];
@@ -49,10 +49,10 @@ function* generateTemplate(
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	if (options.slotsAssignName) {
-		ctx.addLocalVariable(options.slotsAssignName);
+		ctx.delcare(options.slotsAssignName);
 	}
 	if (options.propsAssignName) {
-		ctx.addLocalVariable(options.propsAssignName);
+		ctx.delcare(options.propsAssignName);
 	}
 
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
@@ -113,6 +113,7 @@ function* generateSlots(
 			}
 			else {
 				yield* wrapWith(
+					'template',
 					slot.tagRange[0],
 					slot.tagRange[1],
 					codeFeatures.navigation,

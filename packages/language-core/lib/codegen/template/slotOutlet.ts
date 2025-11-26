@@ -1,6 +1,6 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { getElementTagOffsets } from '../../utils/shared';
+import { getAttributeValueOffset, getElementTagOffsets } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
@@ -37,16 +37,11 @@ export function* generateSlotOutlet(
 		if (nameProp) {
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
-				let { source, start: { offset } } = nameProp.value.loc;
-				if (source.startsWith('"') || source.startsWith("'")) {
-					source = source.slice(1, -1);
-					offset++;
-				}
 				codes = generatePropertyAccess(
 					options,
 					ctx,
-					source,
-					offset,
+					nameProp.value.content,
+					getAttributeValueOffset(nameProp.value),
 					codeFeatures.navigationAndVerification,
 				);
 			}
@@ -70,6 +65,7 @@ export function* generateSlotOutlet(
 			}
 
 			yield* wrapWith(
+				'template',
 				nameProp.loc.start.offset,
 				nameProp.loc.end.offset,
 				codeFeatures.verification,
@@ -79,11 +75,13 @@ export function* generateSlotOutlet(
 		}
 		else {
 			yield* wrapWith(
+				'template',
 				startTagOffset,
 				startTagEndOffset,
 				codeFeatures.verification,
 				`${options.slotsAssignName ?? '__VLS_slots'}[`,
 				...wrapWith(
+					'template',
 					startTagOffset,
 					startTagEndOffset,
 					codeFeatures.verification,
@@ -94,6 +92,7 @@ export function* generateSlotOutlet(
 		}
 		yield `)(`;
 		yield* wrapWith(
+			'template',
 			startTagOffset,
 			startTagEndOffset,
 			codeFeatures.verification,
@@ -103,7 +102,6 @@ export function* generateSlotOutlet(
 				ctx,
 				node,
 				node.props.filter(prop => prop !== nameProp),
-				true,
 				true,
 			),
 			`}`,
@@ -118,7 +116,6 @@ export function* generateSlotOutlet(
 			node,
 			node.props.filter(prop => prop !== nameProp),
 			options.vueCompilerOptions.checkUnknownProps,
-			true,
 		);
 		yield `}${endOfLine}`;
 
@@ -147,7 +144,7 @@ export function* generateSlotOutlet(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				'template',
+				options.template,
 				codeFeatures.all,
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,

@@ -11,9 +11,9 @@ export function* generateClassProperty(
 ): Generator<Code> {
 	yield `${newLine} & { `;
 	yield* wrapWith(
+		'style_' + styleIndex,
 		offset,
 		offset + classNameWithDot.length,
-		'style_' + styleIndex,
 		codeFeatures.navigation,
 		`'`,
 		[

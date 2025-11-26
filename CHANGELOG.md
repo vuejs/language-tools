@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.1.5 (2025-11-23)
+
+### Features
+
+- feat(language-service): support tsconfig path alias resolution for document links (#5562) - Thanks to @KazariEX!
+- feat(language-server): add `serverInfo` to initialized result (#5767) - Thanks to @kada49!
+
+### Bug Fixes
+
+- fix(vscode): correct highlighting of tags starting with `template` (#5755) - Thanks to @serkodev and @KazariEX!
+- fix(language-core): allow loose props checks on generic components (#5748) - Thanks to @serkodev!
+- fix(language-core): avoid `vue-tsc` crash during single file checks (#5768) - Thanks to @KazariEX!
+- fix(language-core): dispose virtual code correctly - Thanks to @KazariEX!
+
+### Performance
+
+- perf(language-core): skip unnecessary runtime codegen step (#5766) - Thanks to @KazariEX!
+
 ## 3.1.4 (2025-11-16)
 
 ### Bug Fixes

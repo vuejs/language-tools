@@ -47,7 +47,7 @@ export function startServer(ts: typeof import('typescript')) {
 
 		let simpleLanguageService: LanguageService | undefined;
 
-		return server.initialize(
+		const result = server.initialize(
 			params,
 			{
 				setup() {},
@@ -126,6 +126,9 @@ export function startServer(ts: typeof import('typescript')) {
 				isRefAtPosition(...args) {
 					return sendTsServerRequest('_vue:isRefAtPosition', args);
 				},
+				resolveModuleName(...args) {
+					return sendTsServerRequest('_vue:resolveModuleName', args);
+				},
 				getDocumentHighlights(fileName, position) {
 					return sendTsServerRequest(
 						'_vue:documentHighlights-full',
@@ -159,6 +162,14 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 			}),
 		);
+
+		const packageJson = require('../package.json');
+		result.serverInfo = {
+			name: packageJson.name,
+			version: packageJson.version,
+		};
+
+		return result;
 
 		async function sendTsServerRequest<T>(command: string, args: any): Promise<T | null> {
 			return await new Promise<T | null>(resolve => {

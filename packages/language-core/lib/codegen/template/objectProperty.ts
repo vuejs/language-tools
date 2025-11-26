@@ -22,7 +22,7 @@ export function* generateObjectProperty(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				'template',
+				options.template,
 				features,
 				code.slice(1, -1),
 				offset + 1,
@@ -34,7 +34,7 @@ export function* generateObjectProperty(
 			yield* generateInterpolation(
 				options,
 				ctx,
-				'template',
+				options.template,
 				features,
 				code,
 				offset,
@@ -47,6 +47,7 @@ export function* generateObjectProperty(
 		}
 		else {
 			yield* wrapWith(
+				'template',
 				offset,
 				offset + code.length,
 				features,

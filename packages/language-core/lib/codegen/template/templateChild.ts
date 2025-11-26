@@ -100,7 +100,7 @@ export function* generateTemplateChild(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.all,
 			content,
 			start,

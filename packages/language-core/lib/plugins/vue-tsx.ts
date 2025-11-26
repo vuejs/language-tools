@@ -10,7 +10,7 @@ import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { Sfc, VueLanguagePlugin } from '../types';
 import { computedSet } from '../utils/signals';
 
-export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof createTsx>>();
+export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof useCodegen>>();
 
 const validLangs = new Set(['js', 'jsx', 'ts', 'tsx']);
 
@@ -20,11 +20,10 @@ const plugin: VueLanguagePlugin = ctx => {
 
 		requiredCompilerOptions: [
 			'noPropertyAccessFromIndexSignature',
-			'exactOptionalPropertyTypes',
 		],
 
 		getEmbeddedCodes(fileName, sfc) {
-			const codegen = useCodegen(fileName, sfc);
+			const codegen = getCodegen(fileName, sfc);
 			return [{
 				id: 'script_' + codegen.getLang(),
 				lang: codegen.getLang(),
@@ -33,16 +32,16 @@ const plugin: VueLanguagePlugin = ctx => {
 
 		resolveEmbeddedCode(fileName, sfc, embeddedFile) {
 			if (/script_(js|jsx|ts|tsx)/.test(embeddedFile.id)) {
-				const codegen = useCodegen(fileName, sfc);
-				const tsx = codegen.getGeneratedScript();
-				embeddedFile.content = [...tsx.codes];
+				const codegen = getCodegen(fileName, sfc);
+				const generatedScript = codegen.getGeneratedScript();
+				embeddedFile.content = [...generatedScript.codes];
 			}
 		},
 	};
 
-	function useCodegen(fileName: string, sfc: Sfc) {
+	function getCodegen(fileName: string, sfc: Sfc) {
 		if (!tsCodegen.has(sfc)) {
-			tsCodegen.set(sfc, createTsx(fileName, sfc, ctx));
+			tsCodegen.set(sfc, useCodegen(fileName, sfc, ctx));
 		}
 		return tsCodegen.get(sfc)!;
 	}
@@ -50,7 +49,7 @@ const plugin: VueLanguagePlugin = ctx => {
 
 export default plugin;
 
-function createTsx(
+function useCodegen(
 	fileName: string,
 	sfc: Sfc,
 	ctx: Parameters<VueLanguagePlugin>[0],
@@ -201,17 +200,34 @@ function createTsx(
 		});
 	});
 
+	const getTemplateComponents = computed<string[]>(old => {
+		const components = sfc.template?.ast?.components ?? [];
+		if (old?.length === components.length && old.every((v, i) => v === components[i])) {
+			return old;
+		}
+		return components;
+	});
+
+	const getTemplateStartTagOffset = computed(() => {
+		if (sfc.template) {
+			return sfc.template.start - sfc.template.startTagEnd;
+		}
+	});
+
 	const getGeneratedScript = computed(() => {
 		return generateScript({
 			ts,
-			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
-			sfc,
+			script: sfc.script,
+			scriptSetup: sfc.scriptSetup,
+			styles: sfc.styles,
 			fileName,
 			lang: getLang(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateCodegen: getGeneratedTemplate(),
+			templateComponents: getTemplateComponents(),
+			templateStartTagOffset: getTemplateStartTagOffset(),
 			destructuredPropNames: getSetupDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
 		});

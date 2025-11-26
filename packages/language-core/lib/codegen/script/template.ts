@@ -26,19 +26,19 @@ export function* generateTemplate(
 }
 
 function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
-	if (options.sfc.script && options.scriptRanges?.componentOptions) {
+	if (options.script && options.scriptRanges?.componentOptions) {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
 		const { args } = options.scriptRanges.componentOptions;
-		yield generateSfcBlockSection(options.sfc.script, args.start, args.end, codeFeatures.all);
+		yield generateSfcBlockSection(options.script, args.start, args.end, codeFeatures.all);
 		yield `)${endOfLine}`;
 	}
-	else if (options.sfc.script && options.scriptRanges?.exportDefault) {
+	else if (options.script && options.scriptRanges?.exportDefault) {
 		yield `const __VLS_self = `;
 		const { expression } = options.scriptRanges.exportDefault;
-		yield generateSfcBlockSection(options.sfc.script, expression.start, expression.end, codeFeatures.all);
+		yield generateSfcBlockSection(options.script, expression.start, expression.end, codeFeatures.all);
 		yield endOfLine;
 	}
-	else if (options.sfc.script?.src) {
+	else if (options.script?.src) {
 		yield `let __VLS_self!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
 	}
 }
@@ -52,13 +52,13 @@ function* generateTemplateCtx(
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
 		exps.push(`globalThis`);
 	}
-	if (options.sfc.script?.src || options.scriptRanges?.exportDefault) {
+	if (options.script?.src || options.scriptRanges?.exportDefault) {
 		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
 	}
 	else {
 		exps.push(`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`);
 	}
-	if (options.sfc.styles.some(style => style.module)) {
+	if (options.styles.some(style => style.module)) {
 		exps.push(`{} as __VLS_StyleModules`);
 	}
 
@@ -111,11 +111,11 @@ function* generateTemplateCtx(
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
 	const types: string[] = [`typeof __VLS_ctx`];
 
-	if (options.sfc.script && options.scriptRanges?.componentOptions?.components) {
+	if (options.script && options.scriptRanges?.componentOptions?.components) {
 		const { components } = options.scriptRanges.componentOptions;
 		yield `const __VLS_componentsOption = `;
 		yield generateSfcBlockSection(
-			options.sfc.script,
+			options.script,
 			components.start,
 			components.end,
 			codeFeatures.navigation,
@@ -131,11 +131,11 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
 	const types: string[] = [`typeof __VLS_ctx`];
 
-	if (options.sfc.script && options.scriptRanges?.componentOptions?.directives) {
+	if (options.script && options.scriptRanges?.componentOptions?.directives) {
 		const { directives } = options.scriptRanges.componentOptions;
 		yield `const __VLS_directivesOption = `;
 		yield generateSfcBlockSection(
-			options.sfc.script,
+			options.script,
 			directives.start,
 			directives.end,
 			codeFeatures.navigation,
@@ -179,12 +179,12 @@ function* generateCssVars(
 	options: ScriptCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
-	for (const style of options.sfc.styles) {
+	for (const style of options.styles) {
 		for (const binding of style.bindings) {
 			yield* generateInterpolation(
 				options,
 				ctx,
-				style.name,
+				style,
 				codeFeatures.all,
 				binding.text,
 				binding.offset,
@@ -201,12 +201,12 @@ function* generateBindings(
 	ctx: ScriptCodegenContext,
 	templateCodegenCtx: TemplateCodegenContext,
 ): Generator<Code> {
-	if (!options.sfc.scriptSetup || !ctx.bindingNames.size) {
+	if (!options.scriptSetup || !ctx.bindingNames.size) {
 		return;
 	}
 
 	const usageVars = new Set([
-		...options.sfc.template?.ast?.components.flatMap(c => [camelize(c), capitalize(camelize(c))]) ?? [],
+		...options.templateComponents.flatMap(c => [camelize(c), capitalize(camelize(c))]),
 		...options.templateCodegen?.accessExternalVariables.keys() ?? [],
 		...templateCodegenCtx.accessExternalVariables.keys(),
 	]);

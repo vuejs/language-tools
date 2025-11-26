@@ -1,6 +1,5 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code, VueCodeInformation } from '../../types';
-import { templateInlineTsAsts } from '../../virtualFile/computedSfc';
 import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
@@ -110,45 +109,8 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  */
 export function createTemplateCodegenContext(
 	options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames'>,
-	templateAst?: CompilerDOM.RootNode,
 ) {
 	let variableId = 0;
-
-	function resolveCodeFeatures(features: VueCodeInformation): VueCodeInformation {
-		if (features.verification && stack.length) {
-			const data = stack[stack.length - 1]!;
-			if (data.ignoreError) {
-				// We are currently in a region of code covered by a @vue-ignore directive, so don't
-				// even bother performing any type-checking: set verification to false.
-				return {
-					...features,
-					verification: false,
-				};
-			}
-			if (data.expectError !== undefined) {
-				// We are currently in a region of code covered by a @vue-expect-error directive. We need to
-				// keep track of the number of errors encountered within this region so that we can know whether
-				// we will need to propagate an "unused ts-expect-error" diagnostic back to the original
-				// .vue file or not.
-				return {
-					...features,
-					verification: {
-						shouldReport: (source, code) => {
-							if (
-								typeof features.verification !== 'object'
-								|| !features.verification.shouldReport
-								|| features.verification.shouldReport(source, code) === true
-							) {
-								data.expectError!.token++;
-							}
-							return false;
-						},
-					},
-				};
-			}
-		}
-		return features;
-	}
 
 	const hoistVars = new Map<string, string>();
 	const localVars = new Map<string, number>();
@@ -198,7 +160,6 @@ export function createTemplateCodegenContext(
 			return stack[stack.length - 1]!;
 		},
 		resolveCodeFeatures,
-		inlineTsAsts: templateAst && templateInlineTsAsts.get(templateAst),
 		inVFor: false,
 		slots,
 		dynamicSlots,
@@ -212,8 +173,8 @@ export function createTemplateCodegenContext(
 		inheritedAttrVars,
 		templateRefs,
 		currentComponent: undefined as {
-			ctxVar: string;
-			used: boolean;
+			get ctxVar(): string;
+			get propsVar(): string;
 		} | undefined,
 		singleRootElTypes: new Set<string>(),
 		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
@@ -236,11 +197,29 @@ export function createTemplateCodegenContext(
 		hasLocalVariable(name: string) {
 			return !!localVars.get(name);
 		},
-		addLocalVariable(name: string) {
+		delcare(name: string) {
 			localVars.set(name, (localVars.get(name) ?? 0) + 1);
 		},
-		removeLocalVariable(name: string) {
+		undeclare(name: string) {
 			localVars.set(name, localVars.get(name)! - 1);
+		},
+		scope() {
+			const declaredNames: string[] = [];
+			return {
+				declaredNames,
+				declare(...varNames: string[]) {
+					for (const varName of varNames) {
+						localVars.set(varName, (localVars.get(varName) ?? 0) + 1);
+					}
+					declaredNames.push(...varNames);
+				},
+				end() {
+					for (const varName of declaredNames) {
+						localVars.set(varName, localVars.get(varName)! - 1);
+					}
+					declaredNames.length = 0;
+				},
+			};
 		},
 		getInternalVariable() {
 			return `__VLS_${variableId++}`;
@@ -353,6 +332,7 @@ export function createTemplateCodegenContext(
 			commentBuffer.length = 0;
 			if (data.expectError !== undefined) {
 				yield* wrapWith(
+					'template',
 					data.expectError.node.loc.start.offset,
 					data.expectError.node.loc.end.offset,
 					{
@@ -369,4 +349,40 @@ export function createTemplateCodegenContext(
 			}
 		},
 	};
+
+	function resolveCodeFeatures(features: VueCodeInformation): VueCodeInformation {
+		if (features.verification && stack.length) {
+			const data = stack[stack.length - 1]!;
+			if (data.ignoreError) {
+				// We are currently in a region of code covered by a @vue-ignore directive, so don't
+				// even bother performing any type-checking: set verification to false.
+				return {
+					...features,
+					verification: false,
+				};
+			}
+			if (data.expectError !== undefined) {
+				// We are currently in a region of code covered by a @vue-expect-error directive. We need to
+				// keep track of the number of errors encountered within this region so that we can know whether
+				// we will need to propagate an "unused ts-expect-error" diagnostic back to the original
+				// .vue file or not.
+				return {
+					...features,
+					verification: {
+						shouldReport: (source, code) => {
+							if (
+								typeof features.verification !== 'object'
+								|| !features.verification.shouldReport
+								|| features.verification.shouldReport(source, code) === true
+							) {
+								data.expectError!.token++;
+							}
+							return false;
+						},
+					},
+				};
+			}
+		}
+		return features;
+	}
 }

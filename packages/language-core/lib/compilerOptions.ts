@@ -31,7 +31,14 @@ export function createParsedCommandLineByJson(
 			return [];
 		},
 	};
-	const parsed = ts.parseJsonConfigFileContent(json, proxyHost, rootDir, {}, configFileName);
+	const config = ts.readJsonConfigFile(rootDir, () => JSON.stringify(json));
+	const parsed = ts.parseJsonSourceFileConfigFileContent(
+		config,
+		proxyHost,
+		rootDir,
+		{},
+		configFileName,
+	);
 	const resolver = new CompilerOptionsResolver(host.fileExists);
 
 	for (const extendPath of [...extendedPaths].reverse()) {
@@ -44,8 +51,7 @@ export function createParsedCommandLineByJson(
 		catch {}
 	}
 
-	// ensure the rootDir is added to the config roots
-	resolver.addConfig({}, rootDir);
+	resolver.addConfig(json?.vueCompilerOptions ?? {}, rootDir);
 
 	return {
 		...parsed,

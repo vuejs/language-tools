@@ -1,4 +1,3 @@
-import type * as CompilerDOM from '@vue/compiler-dom';
 import type * as ts from 'typescript';
 import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
@@ -8,30 +7,31 @@ export const endOfLine = `;${newLine}`;
 export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
 export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
-export function normalizeAttributeValue(node: CompilerDOM.TextNode) {
-	let offset = node.loc.start.offset;
-	let content = node.loc.source;
-	if (
-		(content.startsWith(`'`) && content.endsWith(`'`))
-		|| (content.startsWith(`"`) && content.endsWith(`"`))
-	) {
-		offset++;
-		content = content.slice(1, -1);
-	}
-	return [content, offset] as const;
-}
+const cacheMaps = new Map<SfcBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();
 
-export function createTsAst(
-	ts: typeof import('typescript'),
-	inlineTsAsts: Map<string, ts.SourceFile> | undefined,
-	text: string,
-) {
-	let ast = inlineTsAsts?.get(text);
-	if (!ast) {
-		ast = ts.createSourceFile('/a.ts', text, 99 satisfies ts.ScriptTarget.ESNext);
-		inlineTsAsts?.set(text, ast);
+export function getTypeScriptAST(ts: typeof import('typescript'), block: SfcBlock, text: string): ts.SourceFile {
+	if (!cacheMaps.has(block)) {
+		cacheMaps.set(block, [block.content, new Map()]);
 	}
-	(ast as any).__volar_used = true;
+	const cacheMap = cacheMaps.get(block)!;
+	if (cacheMap[0] !== block.content) {
+		cacheMap[0] = block.content;
+		for (const [key, info] of cacheMap[1]) {
+			if (info[1]) {
+				info[1] = 0;
+			}
+			else {
+				cacheMap[1].delete(key);
+			}
+		}
+	}
+	const cache = cacheMap[1].get(text);
+	if (cache) {
+		cache[1]++;
+		return cache[0];
+	}
+	const ast = ts.createSourceFile('/dummy.ts', text, 99 satisfies ts.ScriptTarget.ESNext);
+	cacheMap[1].set(text, [ast, 1]);
 	return ast;
 }
 

@@ -41,7 +41,7 @@ export function activate(selector: vscode.DocumentSelector) {
 		}
 	});
 
-	function updateDecorations(editor: vscode.TextEditor) {
+	async function updateDecorations(editor: vscode.TextEditor) {
 		if (!vscode.languages.match(selector, editor.document)) {
 			return;
 		}
@@ -49,16 +49,29 @@ export function activate(selector: vscode.DocumentSelector) {
 			editor.setDecorations(decorationType, []);
 			return;
 		}
-		editor.setDecorations(
-			decorationType,
-			[...editor.document.getText().matchAll(/{{[\s\S]*?}}/g)].map(match => {
-				const start = match.index + 2;
-				const end = match.index + match[0].length - 2;
-				return new vscode.Range(
-					editor.document.positionAt(start),
-					editor.document.positionAt(end),
-				);
-			}),
-		);
+		try {
+			const result = await vscode.commands.executeCommand<
+				{
+					body?: [number, number][];
+				} | undefined
+			>(
+				'typescript.tsserverRequest',
+				'_vue:getInterpolationRanges',
+				[editor.document.uri.fsPath.replace(/\\/g, '/')],
+				{ isAsync: true, lowPriority: true },
+			);
+			editor.setDecorations(
+				decorationType,
+				(result?.body ?? []).map(range =>
+					new vscode.Range(
+						editor.document.positionAt(range[0]),
+						editor.document.positionAt(range[1]),
+					)
+				),
+			);
+		}
+		catch {
+			editor.setDecorations(decorationType, []);
+		}
 	}
 }
