@@ -8,7 +8,7 @@ const resolve = (...paths: string[]) => path.resolve(__dirname, ...paths);
 const config: RolldownOptions = {
 	input: {
 		'extension': './index.ts',
-		'reactivity-analysis': './reactivityAnalysis/plugin.ts',
+		'reactivity-analysis-plugin': './lib/reactivityAnalysisPlugin.ts',
 	},
 	output: {
 		format: 'cjs',
@@ -37,7 +37,7 @@ const config: RolldownOptions = {
 				fs.mkdirSync(resolve('./node_modules/vue-reactivity-analysis-plugin-pack'), { recursive: true });
 				fs.writeFileSync(
 					resolve('./node_modules/vue-reactivity-analysis-plugin-pack/index.js'),
-					`module.exports = require('../../dist/reactivity-analysis.js');`,
+					`module.exports = require('../../dist/reactivity-analysis-plugin.js');`,
 				);
 
 				if (isDev) {
