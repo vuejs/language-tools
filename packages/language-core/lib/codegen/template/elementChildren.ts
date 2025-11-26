@@ -71,6 +71,7 @@ function normalizeIfBranch(
 	return [ifNode, end];
 }
 
+// source: https://github.com/vuejs/core/blob/25ebe3a42cd80ac0256355c2740a0258cdd7419d/packages/compiler-core/src/transforms/vIf.ts#L207
 function createIfBranch(node: CompilerDOM.ElementNode, dir: CompilerDOM.DirectiveNode): CompilerDOM.IfBranchNode {
 	const isTemplateIf = node.tagType === CompilerDOM.ElementTypes.TEMPLATE;
 	return {
