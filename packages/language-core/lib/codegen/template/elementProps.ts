@@ -6,9 +6,9 @@ import { getAttributeValueOffset, hyphenateAttr, hyphenateTag } from '../../util
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { identifierRegex, newLine } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
-import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
 import { generateEventArg, generateEventExpression } from './elementEvents';
@@ -116,43 +116,36 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			yield* wrapWith(
+			const token = yield* startBoundary(
 				'template',
 				prop.loc.start.offset,
-				prop.loc.end.offset,
 				codeFeatures.verification,
-				...(
-					prop.arg
-						? generateObjectProperty(
-							options,
-							ctx,
-							propName,
-							prop.arg.loc.start.offset,
-							features,
-							shouldCamelize,
-						)
-						: wrapWith(
-							'template',
-							prop.loc.start.offset,
-							prop.loc.start.offset + 'v-model'.length,
-							codeFeatures.withoutHighlightAndCompletion,
-							propName,
-						)
-				),
-				`: `,
-				...wrapWith(
-					'template',
-					prop.arg?.loc.start.offset ?? prop.loc.start.offset,
-					prop.arg?.loc.end.offset ?? prop.loc.end.offset,
-					codeFeatures.verification,
-					...generatePropExp(
-						options,
-						ctx,
-						prop,
-						prop.exp,
-					),
-				),
 			);
+			if (prop.arg) {
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					propName,
+					prop.arg.loc.start.offset,
+					features,
+					shouldCamelize,
+				);
+			}
+			else {
+				const token2 = yield* startBoundary(
+					'template',
+					prop.loc.start.offset,
+					codeFeatures.withoutHighlightAndCompletion,
+				);
+				yield propName;
+				yield endBoundary(token2, prop.loc.start.offset + 'v-model'.length);
+			}
+			yield `: `;
+			const argLoc = prop.arg?.loc ?? prop.loc;
+			const token3 = yield* startBoundary('template', argLoc.start.offset, codeFeatures.verification);
+			yield* generatePropExp(options, ctx, prop, prop.exp);
+			yield endBoundary(token3, argLoc.end.offset);
+			yield endBoundary(token, prop.loc.end.offset);
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -180,26 +173,23 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			yield* wrapWith(
-				'template',
+			const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);
+			yield* generateObjectProperty(
+				options,
+				ctx,
+				prop.name,
 				prop.loc.start.offset,
-				prop.loc.end.offset,
-				codeFeatures.verification,
-				...generateObjectProperty(
-					options,
-					ctx,
-					prop.name,
-					prop.loc.start.offset,
-					features,
-					shouldCamelize,
-				),
-				`: `,
-				...(
-					prop.value
-						? generateAttrValue(prop.value, codeFeatures.withoutNavigation)
-						: [`true`]
-				),
+				features,
+				shouldCamelize,
 			);
+			yield `: `;
+			if (prop.value) {
+				yield* generateAttrValue(prop.value, codeFeatures.withoutNavigation);
+			}
+			else {
+				yield `true`;
+			}
+			yield endBoundary(token, prop.loc.end.offset);
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -214,19 +204,15 @@ export function* generateElementProps(
 				ctx.bindingAttrLocs.push(prop.exp.loc);
 			}
 			else {
-				yield* wrapWith(
-					'template',
-					prop.exp.loc.start.offset,
-					prop.exp.loc.end.offset,
-					codeFeatures.verification,
-					`...`,
-					...generatePropExp(
-						options,
-						ctx,
-						prop,
-						prop.exp,
-					),
+				const token = yield* startBoundary('template', prop.exp.loc.start.offset, codeFeatures.verification);
+				yield `...`;
+				yield* generatePropExp(
+					options,
+					ctx,
+					prop,
+					prop.exp,
 				);
+				yield endBoundary(token, prop.exp.loc.end.offset);
 				yield `,${newLine}`;
 			}
 		}

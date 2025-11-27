@@ -4,8 +4,8 @@ import type { Code } from '../../types';
 import { getAttributeValueOffset, getNodeText } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, getTypeScriptAST } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateEscaped } from '../utils/escaped';
-import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 
@@ -27,21 +27,17 @@ export function* generateStyleScopedClassReferences(
 	}
 	for (const { source, className, offset } of ctx.scopedClasses) {
 		yield `/** @type {__VLS_StyleScopedClasses[`;
-		yield* wrapWith(
+		const token = yield* startBoundary(source, offset - (withDot ? 1 : 0), codeFeatures.navigation);
+		yield `'`;
+		yield* generateEscaped(
+			className,
 			source,
-			offset - (withDot ? 1 : 0),
-			offset + className.length,
-			codeFeatures.navigation,
-			`'`,
-			...generateEscaped(
-				className,
-				source,
-				offset,
-				codeFeatures.navigationAndAdditionalCompletion,
-				classNameEscapeRegex,
-			),
-			`'`,
+			offset,
+			codeFeatures.navigationAndAdditionalCompletion,
+			classNameEscapeRegex,
 		);
+		yield `'`;
+		yield endBoundary(token, offset + className.length);
 		yield `]} */${endOfLine}`;
 	}
 }

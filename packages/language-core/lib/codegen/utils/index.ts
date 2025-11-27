@@ -4,7 +4,6 @@ import { codeFeatures } from '../codeFeatures';
 
 export const newLine = `\n`;
 export const endOfLine = `;${newLine}`;
-export const combineLastMapping: VueCodeInformation = { __combineOffset: 1 };
 export const identifierRegex = /^[a-zA-Z_$][0-9a-zA-Z_$]*$/;
 
 const cacheMaps = new Map<SfcBlock, [content: string, Map<string, [ts.SourceFile, usages: number]>]>();

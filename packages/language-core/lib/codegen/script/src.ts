@@ -1,7 +1,7 @@
-import type { Code, SfcBlockAttr } from '../../types';
+import type { Code, SfcBlockAttr, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { combineLastMapping, endOfLine } from '../utils';
-import { wrapWith } from '../utils/wrapWith';
+import { endOfLine } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 
 export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 	if (src === true) {
@@ -24,19 +24,16 @@ export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 	}
 
 	yield `export * from `;
-	yield* wrapWith(
-		'main',
-		src.offset,
-		src.offset + src.text.length,
-		{
-			...codeFeatures.all,
-			...text !== src.text ? codeFeatures.navigationWithoutRename : {},
-		},
-		`'`,
-		[text.slice(0, src.text.length), 'main', src.offset, combineLastMapping],
-		text.slice(src.text.length),
-		`'`,
-	);
+	const wrapCodeFeatures: VueCodeInformation = {
+		...codeFeatures.all,
+		...text !== src.text ? codeFeatures.navigationWithoutRename : {},
+	};
+	const token = yield* startBoundary('main', src.offset, wrapCodeFeatures);
+	yield `'`;
+	yield [text.slice(0, src.text.length), 'main', src.offset, { __combineToken: token }];
+	yield text.slice(src.text.length);
+	yield `'`;
+	yield endBoundary(token, src.offset + src.text.length);
 	yield endOfLine;
 	yield `export { default } from '${text}'${endOfLine}`;
 }

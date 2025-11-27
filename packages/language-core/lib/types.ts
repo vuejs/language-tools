@@ -17,7 +17,7 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 };
 
 export interface VueCodeInformation extends CodeInformation {
-	__combineOffset?: number;
+	__combineToken?: symbol;
 	__linkedToken?: symbol;
 }
 

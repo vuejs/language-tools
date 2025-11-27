@@ -6,8 +6,8 @@ import { getAttributeValueOffset, getElementTagOffsets, hyphenateTag } from '../
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, identifierRegex, newLine } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
-import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import { generateElementDirectives } from './elementDirectives';
@@ -213,25 +213,17 @@ export function* generateComponent(
 	yield `}))${endOfLine}`;
 
 	yield `const `;
-	yield* wrapWith(
-		'template',
-		node.loc.start.offset,
-		node.loc.end.offset,
-		codeFeatures.doNotReportTs6133,
-		componentVNodeVar,
-	);
+	const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.doNotReportTs6133);
+	yield componentVNodeVar;
+	yield endBoundary(token, node.loc.end.offset);
 	yield ` = ${componentFunctionalVar}`;
 	yield* generateComponentGeneric(ctx);
 	yield `(`;
-	yield* wrapWith(
-		'template',
-		tagOffsets[0],
-		tagOffsets[0] + node.tag.length,
-		codeFeatures.verification,
-		`{${newLine}`,
-		...propCodes,
-		`}`,
-	);
+	const token2 = yield* startBoundary('template', tagOffsets[0], codeFeatures.verification);
+	yield `{${newLine}`;
+	yield* propCodes;
+	yield `}`;
+	yield endBoundary(token2, tagOffsets[0] + node.tag.length);
 	yield `, ...__VLS_functionalComponentArgsRest(${componentFunctionalVar}))${endOfLine}`;
 
 	yield* generateFailedPropExps(options, ctx, failedPropExps);
@@ -315,22 +307,18 @@ export function* generateElement(
 		);
 	}
 	yield `)(`;
-	yield* wrapWith(
-		'template',
-		startTagOffset,
-		startTagOffset + node.tag.length,
-		codeFeatures.verification,
-		`{${newLine}`,
-		...generateElementProps(
-			options,
-			ctx,
-			node,
-			node.props,
-			options.vueCompilerOptions.checkUnknownProps,
-			failedPropExps,
-		),
-		`}`,
+	const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
+	yield `{${newLine}`;
+	yield* generateElementProps(
+		options,
+		ctx,
+		node,
+		node.props,
+		options.vueCompilerOptions.checkUnknownProps,
+		failedPropExps,
 	);
+	yield `}`;
+	yield endBoundary(token, startTagOffset + node.tag.length);
 	yield `)${endOfLine}`;
 
 	yield* generateFailedPropExps(options, ctx, failedPropExps);
@@ -423,20 +411,11 @@ function* generateComponentGeneric(
 ): Generator<Code> {
 	if (ctx.currentInfo.generic) {
 		const { content, offset } = ctx.currentInfo.generic;
-		yield* wrapWith(
-			'template',
-			offset,
-			offset + content.length,
-			codeFeatures.verification,
-			`<`,
-			[
-				content,
-				'template',
-				offset,
-				codeFeatures.all,
-			],
-			`>`,
-		);
+		const token = yield* startBoundary('template', offset, codeFeatures.verification);
+		yield `<`;
+		yield [content, 'template', offset, codeFeatures.all];
+		yield `>`;
+		yield endBoundary(token, offset + content.length);
 	}
 }
 

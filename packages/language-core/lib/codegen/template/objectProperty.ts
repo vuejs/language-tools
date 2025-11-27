@@ -1,9 +1,9 @@
 import { camelize } from '@vue/shared';
 import type { Code, VueCodeInformation } from '../../types';
-import { combineLastMapping, identifierRegex } from '../utils';
+import { identifierRegex } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
-import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -46,15 +46,11 @@ export function* generateObjectProperty(
 			yield* generateCamelized(code, 'template', offset, features);
 		}
 		else {
-			yield* wrapWith(
-				'template',
-				offset,
-				offset + code.length,
-				features,
-				`'`,
-				...generateCamelized(code, 'template', offset, combineLastMapping),
-				`'`,
-			);
+			const token = yield* startBoundary('template', offset, features);
+			yield `'`;
+			yield* generateCamelized(code, 'template', offset, { __combineToken: token });
+			yield `'`;
+			yield endBoundary(token, offset + code.length);
 		}
 	}
 	else {

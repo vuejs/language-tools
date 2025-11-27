@@ -3,7 +3,7 @@ import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
-import { wrapWith } from '../utils/wrapWith';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenOptions } from './index';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
@@ -284,10 +284,9 @@ export function createTemplateCodegenContext(
 			const data = stack.pop()!;
 			commentBuffer.length = 0;
 			if (data.expectError !== undefined) {
-				yield* wrapWith(
+				const token = yield* startBoundary(
 					'template',
 					data.expectError.node.loc.start.offset,
-					data.expectError.node.loc.end.offset,
 					{
 						verification: {
 							// If no errors/warnings/diagnostics were reported within the region of code covered
@@ -296,8 +295,9 @@ export function createTemplateCodegenContext(
 							shouldReport: () => data.expectError!.token === 0,
 						},
 					},
-					`// @ts-expect-error`,
 				);
+				yield `// @ts-expect-error`;
+				yield endBoundary(token, data.expectError.node.loc.end.offset);
 				yield `${newLine}${endOfLine}`;
 			}
 		},
