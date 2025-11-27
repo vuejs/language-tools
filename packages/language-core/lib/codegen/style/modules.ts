@@ -8,7 +8,7 @@ import { generateStyleImports } from './imports';
 export function* generateStyleModules(
 	options: ScriptCodegenOptions,
 ): Generator<Code> {
-	const styles = options.sfc.styles.map((style, i) => [style, i] as const).filter(([style]) => style.module);
+	const styles = options.styles.map((style, i) => [style, i] as const).filter(([style]) => style.module);
 	if (!styles.length && !options.scriptSetupRanges?.useCssModule.length) {
 		return;
 	}

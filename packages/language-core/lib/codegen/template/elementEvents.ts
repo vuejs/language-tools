@@ -3,9 +3,9 @@ import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { combineLastMapping, createTsAst, endOfLine, identifierRegex, newLine } from '../utils';
+import { endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
-import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -96,21 +96,17 @@ export function* generateEventArg(
 		name = capitalize(name);
 	}
 	if (identifierRegex.test(camelize(name))) {
-		yield ['', 'template', start, features];
+		const token = yield* startBoundary('template', start, features);
 		yield directive;
-		yield* generateCamelized(name, 'template', start, combineLastMapping);
+		yield* generateCamelized(name, 'template', start, { __combineToken: token });
 	}
 	else {
-		yield* wrapWith(
-			'template',
-			start,
-			start + name.length,
-			features,
-			`'`,
-			directive,
-			...generateCamelized(name, 'template', start, combineLastMapping),
-			`'`,
-		);
+		const token = yield* startBoundary('template', start, features);
+		yield `'`;
+		yield directive;
+		yield* generateCamelized(name, 'template', start, { __combineToken: token });
+		yield `'`;
+		yield endBoundary(token, start + name.length);
 	}
 }
 
@@ -120,32 +116,13 @@ export function* generateEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		let isFirstMapping = true;
-
-		const ast = createTsAst(options.ts, ctx.inlineTsAsts, prop.exp.content);
+		const ast = getTypeScriptAST(options.ts, options.template, prop.exp.content);
 		const isCompound = isCompoundExpression(options.ts, ast);
 		const interpolation = generateInterpolation(
 			options,
 			ctx,
-			'template',
-			offset => {
-				if (isCompound && isFirstMapping) {
-					isFirstMapping = false;
-					ctx.inlayHints.push({
-						blockName: 'template',
-						offset,
-						setting: 'vue.inlayHints.inlineHandlerLeading',
-						label: '$event =>',
-						paddingRight: true,
-						tooltip: [
-							'`$event` is a hidden parameter, you can use it in this callback.',
-							'To hide this hint, set `vue.inlayHints.inlineHandlerLeading` to `false` in IDE settings.',
-							'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
-						].join('\n\n'),
-					});
-				}
-				return codeFeatures.all;
-			},
+			options.template,
+			codeFeatures.all,
 			prop.exp.content,
 			prop.exp.loc.start.offset,
 			isCompound ? `` : `(`,
@@ -154,14 +131,26 @@ export function* generateEventExpression(
 
 		if (isCompound) {
 			yield `(...[$event]) => {${newLine}`;
-			const scoped = ctx.scope();
-			scoped.declare('$event');
+			const endScope = ctx.startScope();
+			ctx.declare('$event');
 			yield* ctx.generateConditionGuards();
 			yield* interpolation;
 			yield endOfLine;
-			scoped.end();
-			yield* ctx.generateAutoImportCompletion();
+			yield* endScope();
 			yield `}`;
+
+			ctx.inlayHints.push({
+				blockName: 'template',
+				offset: prop.exp.loc.start.offset,
+				setting: 'vue.inlayHints.inlineHandlerLeading',
+				label: '$event =>',
+				paddingRight: true,
+				tooltip: [
+					'`$event` is a hidden parameter, you can use it in this callback.',
+					'To hide this hint, set `vue.inlayHints.inlineHandlerLeading` to `false` in IDE settings.',
+					'[More info](https://github.com/vuejs/language-tools/issues/2445#issuecomment-1444771420)',
+				].join('\n\n'),
+			});
 		}
 		else {
 			yield* interpolation;
@@ -183,7 +172,7 @@ export function* generateModelEventExpression(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.verification,
 			prop.exp.content,
 			prop.exp.loc.start.offset,

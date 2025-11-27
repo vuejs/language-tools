@@ -34,7 +34,7 @@ export function* generateVIf(
 			const codes = [...generateInterpolation(
 				options,
 				ctx,
-				'template',
+				options.template,
 				codeFeatures.all,
 				branch.condition.content,
 				branch.condition.loc.start.offset,

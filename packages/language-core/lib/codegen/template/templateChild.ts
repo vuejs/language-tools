@@ -15,15 +15,15 @@ import { generateVSlot } from './vSlot';
 export function* generateElementChildren(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	children: (CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode)[],
-	enterNode: boolean = true,
+	children: CompilerDOM.TemplateChildNode[],
+	enterNode = true,
 	isVForChild: boolean = false,
 ): Generator<Code> {
-	yield* ctx.generateAutoImportCompletion();
-	for (const childNode of children) {
-		yield* generateTemplateChild(options, ctx, childNode, enterNode, isVForChild);
+	const endScope = ctx.startScope();
+	for (const child of children) {
+		yield* generateTemplateChild(options, ctx, child, enterNode, isVForChild);
 	}
-	yield* ctx.generateAutoImportCompletion();
+	yield* endScope();
 }
 
 export function* generateTemplateChild(
@@ -67,7 +67,12 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		// {{ ... }} {{ ... }}
-		yield* generateElementChildren(options, ctx, node.children.filter(child => typeof child === 'object'), false);
+		for (const child of node.children) {
+			if (typeof child !== 'object') {
+				continue;
+			}
+			yield* generateTemplateChild(options, ctx, child, false);
+		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 		// {{ ... }}
@@ -75,7 +80,7 @@ export function* generateTemplateChild(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.all,
 			content,
 			start,

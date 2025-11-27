@@ -2,7 +2,7 @@ import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, newLine } from '../utils';
-import { wrapWith } from '../utils/wrapWith';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
@@ -27,7 +27,7 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	const context = createTemplateCodegenContext(options, options.template.ast);
+	const context = createTemplateCodegenContext(options);
 	const codegen = generateTemplate(options, context);
 
 	const codes: Code[] = [];
@@ -48,11 +48,13 @@ function* generateTemplate(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
+	const endScope = ctx.startScope();
+
 	if (options.slotsAssignName) {
-		ctx.delcare(options.slotsAssignName);
+		ctx.declare(options.slotsAssignName);
 	}
 	if (options.propsAssignName) {
-		ctx.delcare(options.propsAssignName);
+		ctx.declare(options.propsAssignName);
 	}
 
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
@@ -89,6 +91,7 @@ function* generateTemplate(
 		}
 		yield `} & { [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 	}
+	yield* endScope();
 }
 
 function* generateSlots(
@@ -112,13 +115,9 @@ function* generateSlots(
 				);
 			}
 			else {
-				yield* wrapWith(
-					'template',
-					slot.tagRange[0],
-					slot.tagRange[1],
-					codeFeatures.navigation,
-					`default`,
-				);
+				const token = yield* startBoundary('template', slot.tagRange[0], codeFeatures.navigation);
+				yield `default`;
+				yield endBoundary(token, slot.tagRange[1]);
 			}
 			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}

@@ -24,4 +24,5 @@ The `languages` field must specify file-types for which the plug-in will be enab
 
 - For neovim, see the [details on configuring `tsserver`][nvim].
 
-[nvim]: https://github.com/neovim/nvim-lspconfig/blob/master/doc/server_configurations.md#vue-support
+[nvim]: https://github.com/neovim/nvim-lspconfig/blob/master/doc/configs.md#vue-support
+  
