@@ -34,22 +34,23 @@ export function getTypeScriptAST(ts: typeof import('typescript'), block: SfcBloc
 	return ast;
 }
 
-export function generateSfcBlockSection(
+export function* generateSfcBlockSection(
 	block: SfcBlock,
 	start: number,
 	end: number,
 	features: VueCodeInformation,
-): Code {
-	return [
+	partiallyEnd = false,
+): Generator<Code> {
+	yield [
 		block.content.slice(start, end),
 		block.name,
 		start,
 		features,
 	];
-}
-
-export function* generatePartiallyEnding(source: string, end: number): Generator<Code> {
-	yield `debugger`;
-	yield [``, source, end, codeFeatures.verification];
-	yield newLine;
+	// #3632
+	if (partiallyEnd) {
+		yield `debugger`;
+		yield [``, block.name, end, codeFeatures.verification];
+		yield newLine;
+	}
 }

@@ -5,7 +5,7 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { TemplateCodegenContext } from '../template/context';
-import { endOfLine, generatePartiallyEnding, generateSfcBlockSection, newLine } from '../utils';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
@@ -55,11 +55,11 @@ function* generateScript(
 		const { exportDefault, componentOptions } = options.scriptRanges;
 		if (options.scriptSetup && options.scriptSetupRanges) {
 			if (exportDefault) {
-				yield generateSfcBlockSection(options.script, 0, exportDefault.start, codeFeatures.all);
+				yield* generateSfcBlockSection(options.script, 0, exportDefault.start, codeFeatures.all, true);
 				yield* generateScriptSetup(options, ctx, options.scriptSetup, options.scriptSetupRanges);
 			}
 			else {
-				yield generateSfcBlockSection(options.script, 0, options.script.content.length, codeFeatures.all);
+				yield* generateSfcBlockSection(options.script, 0, options.script.content.length, codeFeatures.all, true);
 				yield* generateScriptSetup(options, ctx, options.scriptSetup, options.scriptSetupRanges);
 			}
 		}
@@ -90,20 +90,20 @@ function* generateScript(
 				});
 			}
 
-			yield generateSfcBlockSection(options.script, 0, exportDefault.start, codeFeatures.all);
-			yield* generateConstExport(options, options.script);
+			yield* generateSfcBlockSection(options.script, 0, exportDefault.start, codeFeatures.all, true);
+			yield* generateConstExport(options.script);
 			if (wrapLeft) {
 				yield wrapLeft;
 			}
-			yield generateSfcBlockSection(options.script, expression.start, expression.end, codeFeatures.all);
+			yield* generateSfcBlockSection(options.script, expression.start, expression.end, codeFeatures.all);
 			if (wrapRight) {
 				yield wrapRight;
 			}
 			yield endOfLine;
 		}
 		else {
-			yield generateSfcBlockSection(options.script, 0, options.script.content.length, codeFeatures.all);
-			yield* generateConstExport(options, options.script);
+			yield* generateSfcBlockSection(options.script, 0, options.script.content.length, codeFeatures.all, true);
+			yield* generateConstExport(options.script);
 			yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 		}
 	}
@@ -144,16 +144,8 @@ function* generateGlobalTypesReference(
 }
 
 export function* generateConstExport(
-	options: ScriptCodegenOptions,
 	block: SfcBlock,
 ): Generator<Code> {
-	if (options.script) {
-		// #3632
-		yield* generatePartiallyEnding(
-			options.script.name,
-			options.scriptRanges?.exportDefault?.start ?? options.script.content.length,
-		);
-	}
 	yield `const `;
 	const token = yield* startBoundary(block.name, 0, codeFeatures.doNotReportTs6133);
 	yield `__VLS_export`;
@@ -171,14 +163,14 @@ function* generateExportDefault(options: ScriptCodegenOptions): Generator<Code> 
 
 	if (options.script && options.scriptRanges?.exportDefault) {
 		const { exportDefault, componentOptions } = options.scriptRanges;
-		yield generateSfcBlockSection(
+		yield* generateSfcBlockSection(
 			options.script,
 			exportDefault.start,
 			(componentOptions ?? exportDefault).expression.start,
 			codeFeatures.all,
 		);
 		yield expression;
-		yield generateSfcBlockSection(
+		yield* generateSfcBlockSection(
 			options.script,
 			(componentOptions ?? exportDefault).expression.end,
 			options.script.content.length,

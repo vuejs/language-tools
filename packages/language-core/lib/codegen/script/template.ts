@@ -29,13 +29,13 @@ function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
 	if (options.script && options.scriptRanges?.componentOptions) {
 		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
 		const { args } = options.scriptRanges.componentOptions;
-		yield generateSfcBlockSection(options.script, args.start, args.end, codeFeatures.all);
+		yield* generateSfcBlockSection(options.script, args.start, args.end, codeFeatures.all);
 		yield `)${endOfLine}`;
 	}
 	else if (options.script && options.scriptRanges?.exportDefault) {
 		yield `const __VLS_self = `;
 		const { expression } = options.scriptRanges.exportDefault;
-		yield generateSfcBlockSection(options.script, expression.start, expression.end, codeFeatures.all);
+		yield* generateSfcBlockSection(options.script, expression.start, expression.end, codeFeatures.all);
 		yield endOfLine;
 	}
 	else if (options.script?.src) {
@@ -47,22 +47,23 @@ function* generateTemplateCtx(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
-	const exps: Code[] = [];
+	const exps: Iterable<Code>[] = [];
+	const emitTypes: string[] = [];
+	const propTypes: string[] = [];
 
 	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
-		exps.push(`globalThis`);
+		exps.push([`globalThis`]);
 	}
 	if (options.script?.src || options.scriptRanges?.exportDefault) {
-		exps.push(`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`);
+		exps.push([`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`]);
 	}
 	else {
-		exps.push(`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`);
+		exps.push([`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`]);
 	}
 	if (options.styles.some(style => style.module)) {
-		exps.push(`{} as __VLS_StyleModules`);
+		exps.push([`{} as __VLS_StyleModules`]);
 	}
 
-	const emitTypes: string[] = [];
 	if (options.scriptSetupRanges?.defineEmits) {
 		const { defineEmits } = options.scriptSetupRanges;
 		emitTypes.push(`typeof ${defineEmits.name ?? `__VLS_emit`}`);
@@ -72,10 +73,9 @@ function* generateTemplateCtx(
 	}
 	if (emitTypes.length) {
 		yield `type __VLS_EmitProps = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(` & `)}>>${endOfLine}`;
-		exps.push(`{} as { $emit: ${emitTypes.join(` & `)} }`);
+		exps.push([`{} as { $emit: ${emitTypes.join(` & `)} }`]);
 	}
 
-	const propTypes: string[] = [];
 	const { defineProps, withDefaults } = options.scriptSetupRanges ?? {};
 	const props = defineProps?.arg
 		? `typeof ${defineProps.name ?? `__VLS_props`}`
@@ -95,12 +95,12 @@ function* generateTemplateCtx(
 	}
 	if (propTypes.length) {
 		yield `type __VLS_InternalProps = ${propTypes.join(` & `)}${endOfLine}`;
-		exps.push(`{} as { $props: __VLS_InternalProps }`);
-		exps.push(`{} as __VLS_InternalProps`);
+		exps.push([`{} as { $props: __VLS_InternalProps }`]);
+		exps.push([`{} as __VLS_InternalProps`]);
 	}
 
 	if (options.scriptSetupRanges && ctx.bindingNames.size) {
-		exps.push(`{} as __VLS_Bindings`);
+		exps.push([`{} as __VLS_Bindings`]);
 	}
 
 	yield `const __VLS_ctx = `;
@@ -114,7 +114,7 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 	if (options.script && options.scriptRanges?.componentOptions?.components) {
 		const { components } = options.scriptRanges.componentOptions;
 		yield `const __VLS_componentsOption = `;
-		yield generateSfcBlockSection(
+		yield* generateSfcBlockSection(
 			options.script,
 			components.start,
 			components.end,
@@ -134,7 +134,7 @@ function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<C
 	if (options.script && options.scriptRanges?.componentOptions?.directives) {
 		const { directives } = options.scriptRanges.componentOptions;
 		yield `const __VLS_directivesOption = `;
-		yield generateSfcBlockSection(
+		yield* generateSfcBlockSection(
 			options.script,
 			directives.start,
 			directives.end,
