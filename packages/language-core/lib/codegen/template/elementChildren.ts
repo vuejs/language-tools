@@ -7,7 +7,7 @@ import { generateTemplateChild, getVIfNode } from './templateChild';
 export function* generateElementChildren(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	children: (CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode)[],
+	children: CompilerDOM.TemplateChildNode[],
 	enterNode = true,
 ): Generator<Code> {
 	const endScope = ctx.startScope();
@@ -20,7 +20,7 @@ export function* generateElementChildren(
 }
 
 function normalizeIfBranch(
-	children: (CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode)[],
+	children: CompilerDOM.TemplateChildNode[],
 	start: number,
 ): [node: typeof children[number], end: number] {
 	const first = children[start]!;
@@ -38,9 +38,6 @@ function normalizeIfBranch(
 
 	for (let i = start + 1; i < children.length; i++) {
 		const sibling = children[i]!;
-		if (sibling.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-			continue;
-		}
 		if (sibling.type === CompilerDOM.NodeTypes.COMMENT) {
 			comments.push(sibling);
 			continue;

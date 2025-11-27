@@ -88,7 +88,12 @@ export function* generateTemplateChild(
 	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		// {{ ... }} {{ ... }}
-		yield* generateElementChildren(options, ctx, node.children.filter(child => typeof child === 'object'), false);
+		for (const child of node.children) {
+			if (typeof child !== 'object') {
+				continue;
+			}
+			yield* generateTemplateChild(options, ctx, child, false);
+		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.INTERPOLATION) {
 		// {{ ... }}
