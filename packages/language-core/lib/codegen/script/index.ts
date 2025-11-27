@@ -6,7 +6,7 @@ import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generatePartiallyEnding, generateSfcBlockSection, newLine } from '../utils';
-import { wrapWith } from '../utils/wrapWith';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
 import { generateSrc } from './src';
@@ -155,13 +155,9 @@ export function* generateConstExport(
 		);
 	}
 	yield `const `;
-	yield* wrapWith(
-		block.name,
-		0,
-		block.content.length,
-		codeFeatures.doNotReportTs6133,
-		`__VLS_export`,
-	);
+	const token = yield* startBoundary(block.name, 0, codeFeatures.doNotReportTs6133);
+	yield `__VLS_export`;
+	yield endBoundary(token, block.content.length);
 	yield ` = `;
 }
 
@@ -192,12 +188,15 @@ function* generateExportDefault(options: ScriptCodegenOptions): Generator<Code> 
 	else {
 		yield `export `;
 		if (options.templateStartTagOffset !== undefined) {
+			const token = Symbol();
 			for (let i = 0; i < 'template'.length + 1; i++) {
 				yield [
 					``,
 					'template',
 					options.templateStartTagOffset + 1 + i,
-					i ? { __combineOffset: i } : codeFeatures.navigationWithoutRename,
+					i === 0
+						? { ...codeFeatures.navigationWithoutRename, __combineToken: token }
+						: { __combineToken: token },
 				];
 			}
 		}

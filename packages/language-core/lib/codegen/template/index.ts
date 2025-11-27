@@ -2,7 +2,7 @@ import type * as ts from 'typescript';
 import type { Code, Sfc, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, newLine } from '../utils';
-import { wrapWith } from '../utils/wrapWith';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
 import { generateStyleScopedClassReferences } from './styleScopedClasses';
@@ -115,13 +115,9 @@ function* generateSlots(
 				);
 			}
 			else {
-				yield* wrapWith(
-					'template',
-					slot.tagRange[0],
-					slot.tagRange[1],
-					codeFeatures.navigation,
-					`default`,
-				);
+				const token = yield* startBoundary('template', slot.tagRange[0], codeFeatures.navigation);
+				yield `default`;
+				yield endBoundary(token, slot.tagRange[1]);
 			}
 			yield `?: (props: typeof ${slot.propsVar}) => any }`;
 		}

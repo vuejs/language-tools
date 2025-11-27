@@ -3,9 +3,9 @@ import { camelize, capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { combineLastMapping, endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
+import { endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
-import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
@@ -96,21 +96,17 @@ export function* generateEventArg(
 		name = capitalize(name);
 	}
 	if (identifierRegex.test(camelize(name))) {
-		yield ['', 'template', start, features];
+		const token = yield* startBoundary('template', start, features);
 		yield directive;
-		yield* generateCamelized(name, 'template', start, combineLastMapping);
+		yield* generateCamelized(name, 'template', start, { __combineToken: token });
 	}
 	else {
-		yield* wrapWith(
-			'template',
-			start,
-			start + name.length,
-			features,
-			`'`,
-			directive,
-			...generateCamelized(name, 'template', start, combineLastMapping),
-			`'`,
-		);
+		const token = yield* startBoundary('template', start, features);
+		yield `'`;
+		yield directive;
+		yield* generateCamelized(name, 'template', start, { __combineToken: token });
+		yield `'`;
+		yield endBoundary(token, start + name.length);
 	}
 }
 

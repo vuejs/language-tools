@@ -3,9 +3,9 @@ import { camelize } from '@vue/shared';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateStringLiteralKey } from '../utils/stringLiteralKey';
-import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
@@ -41,19 +41,15 @@ export function* generateElementDirectives(
 			ctx.accessExternalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
 		}
 
-		yield* wrapWith(
-			'template',
-			prop.loc.start.offset,
-			prop.loc.end.offset,
-			codeFeatures.verification,
-			`__VLS_asFunctionalDirective(`,
-			...generateIdentifier(options, prop),
-			`)(null!, { ...__VLS_directiveBindingRestFields, `,
-			...generateArg(options, ctx, prop),
-			...generateModifiers(options, ctx, prop),
-			...generateValue(options, ctx, prop),
-			` }, null!, null!)`,
-		);
+		const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);
+		yield `__VLS_asFunctionalDirective(`;
+		yield* generateIdentifier(options, prop);
+		yield `)(null!, { ...__VLS_directiveBindingRestFields, `;
+		yield* generateArg(options, ctx, prop);
+		yield* generateModifiers(options, ctx, prop);
+		yield* generateValue(options, ctx, prop);
+		yield ` }, null!, null!)`;
+		yield endBoundary(token, prop.loc.end.offset);
 		yield endOfLine;
 	}
 }
@@ -63,22 +59,19 @@ function* generateIdentifier(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	const rawName = 'v-' + prop.name;
-	yield* wrapWith(
+	const startOffset = prop.loc.start.offset;
+	const token = yield* startBoundary('template', startOffset, codeFeatures.verification);
+	yield `__VLS_directives.`;
+	yield* generateCamelized(
+		rawName,
 		'template',
 		prop.loc.start.offset,
-		prop.loc.start.offset + rawName.length,
-		codeFeatures.verification,
-		`__VLS_directives.`,
-		...generateCamelized(
-			rawName,
-			'template',
-			prop.loc.start.offset,
-			{
-				...codeFeatures.withoutHighlightAndCompletion,
-				verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
-			},
-		),
+		{
+			...codeFeatures.withoutHighlightAndCompletion,
+			verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
+		},
 	);
+	yield endBoundary(token, startOffset + rawName.length);
 }
 
 function* generateArg(
@@ -92,14 +85,9 @@ function* generateArg(
 	}
 
 	const startOffset = arg.loc.start.offset + arg.loc.source.indexOf(arg.content);
-
-	yield* wrapWith(
-		'template',
-		startOffset,
-		startOffset + arg.content.length,
-		codeFeatures.verification,
-		`arg`,
-	);
+	const token = yield* startBoundary('template', startOffset, codeFeatures.verification);
+	yield `arg`;
+	yield endBoundary(token, startOffset + arg.content.length);
 	yield `: `;
 	if (arg.isStatic) {
 		yield* generateStringLiteralKey(
@@ -133,17 +121,11 @@ export function* generateModifiers(
 	if (!modifiers.length) {
 		return;
 	}
-
 	const startOffset = modifiers[0]!.loc.start.offset - 1;
 	const endOffset = modifiers.at(-1)!.loc.end.offset;
-
-	yield* wrapWith(
-		'template',
-		startOffset,
-		endOffset,
-		codeFeatures.verification,
-		propertyName,
-	);
+	const token = yield* startBoundary('template', startOffset, codeFeatures.verification);
+	yield propertyName;
+	yield endBoundary(token, endOffset);
 	yield `: { `;
 	for (const mod of modifiers) {
 		yield* generateObjectProperty(
@@ -167,14 +149,9 @@ function* generateValue(
 	if (exp?.type !== CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
 		return;
 	}
-
-	yield* wrapWith(
-		'template',
-		exp.loc.start.offset,
-		exp.loc.end.offset,
-		codeFeatures.verification,
-		`value`,
-	);
+	const token = yield* startBoundary('template', exp.loc.start.offset, codeFeatures.verification);
+	yield `value`;
+	yield endBoundary(token, exp.loc.end.offset);
 	yield `: `;
 	yield* generatePropExp(
 		options,

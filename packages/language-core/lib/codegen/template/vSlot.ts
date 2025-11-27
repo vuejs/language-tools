@@ -5,7 +5,7 @@ import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, getTypeScriptAST, newLine } from '../utils';
-import { wrapWith } from '../utils/wrapWith';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
 import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
@@ -42,24 +42,20 @@ export function* generateVSlot(
 				);
 			}
 			else {
-				yield* wrapWith(
+				const token = yield* startBoundary(
 					'template',
 					slotDir.loc.start.offset,
-					slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
 					codeFeatures.withoutHighlightAndCompletion,
-					`default`,
 				);
+				yield `default`;
+				yield endBoundary(token, slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0));
 			}
 		}
 		else {
 			// #932: reference for implicit default slot
-			yield* wrapWith(
-				'template',
-				node.loc.start.offset,
-				node.loc.end.offset,
-				codeFeatures.navigation,
-				`default`,
-			);
+			const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.navigation);
+			yield `default`;
+			yield endBoundary(token, node.loc.end.offset);
 		}
 		yield `: ${slotVar} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
 	}
@@ -154,15 +150,11 @@ function* generateSlotParameters(
 
 	if (types.some(t => t)) {
 		yield `, `;
-		yield* wrapWith(
-			'template',
-			exp.loc.start.offset,
-			exp.loc.end.offset,
-			codeFeatures.verification,
-			`(`,
-			...types.flatMap(type => type ? [`_`, type, `, `] : `_, `),
-			`) => [] as any`,
-		);
+		const token = yield* startBoundary('template', exp.loc.start.offset, codeFeatures.verification);
+		yield `(`;
+		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);
+		yield `) => [] as any`;
+		yield endBoundary(token, exp.loc.end.offset);
 	}
 	yield `)${endOfLine}`;
 }

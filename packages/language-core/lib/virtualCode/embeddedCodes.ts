@@ -192,17 +192,18 @@ export function useEmbeddedCodes(
 
 		for (let i = 0; i < mappings.length; i++) {
 			const mapping = mappings[i]!;
-			if (mapping.data.__combineOffset !== undefined) {
-				const offsetMapping = mappings[i - mapping.data.__combineOffset];
-				if (typeof offsetMapping === 'string' || !offsetMapping) {
-					throw new Error(
-						'Invalid offset mapping, mappings: ' + mappings.length + ', i: ' + i + ', offset: '
-							+ mapping.data.__combineOffset,
-					);
+			if (mapping.data.__combineToken !== undefined) {
+				const token = mapping.data.__combineToken;
+				if (tokenMappings.has(token)) {
+					const offsetMapping = tokenMappings.get(token)!;
+					offsetMapping.sourceOffsets.push(...mapping.sourceOffsets);
+					offsetMapping.generatedOffsets.push(...mapping.generatedOffsets);
+					offsetMapping.lengths.push(...mapping.lengths);
 				}
-				offsetMapping.sourceOffsets.push(...mapping.sourceOffsets);
-				offsetMapping.generatedOffsets.push(...mapping.generatedOffsets);
-				offsetMapping.lengths.push(...mapping.lengths);
+				else {
+					tokenMappings.set(token, mapping);
+					newMappings.push(mapping);
+				}
 				continue;
 			}
 			if (mapping.data.__linkedToken !== undefined) {
