@@ -148,10 +148,10 @@ export function* generateConstExport(
 	block: SfcBlock,
 ): Generator<Code> {
 	if (options.script) {
+		// #3632
 		yield* generatePartiallyEnding(
 			options.script.name,
 			options.scriptRanges?.exportDefault?.start ?? options.script.content.length,
-			'#3632/script.vue',
 		);
 	}
 	yield `const `;

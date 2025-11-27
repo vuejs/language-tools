@@ -308,7 +308,8 @@ function* generateSetupFunction(
 		transforms,
 		(start, end) => generateSfcBlockSection(scriptSetup, start, end, codeFeatures.all),
 	);
-	yield* generatePartiallyEnding(scriptSetup.name, scriptSetup.content.length, '#3632/scriptSetup.vue');
+	// #3632
+	yield* generatePartiallyEnding(scriptSetup.name, scriptSetup.content.length);
 	yield* generateMacros(options, ctx);
 
 	const hasSlots = !!(

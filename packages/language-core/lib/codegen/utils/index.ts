@@ -48,13 +48,8 @@ export function generateSfcBlockSection(
 	];
 }
 
-export function* generatePartiallyEnding(
-	source: string,
-	end: number,
-	mark: string,
-	delimiter = 'debugger',
-): Generator<Code> {
-	yield delimiter;
+export function* generatePartiallyEnding(source: string, end: number): Generator<Code> {
+	yield `debugger`;
 	yield [``, source, end, codeFeatures.verification];
-	yield `/* PartiallyEnd: ${mark} */${newLine}`;
+	yield newLine;
 }
