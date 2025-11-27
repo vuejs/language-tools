@@ -194,9 +194,9 @@ function* generateExportDefault(options: ScriptCodegenOptions): Generator<Code> 
 					``,
 					'template',
 					options.templateStartTagOffset + 1 + i,
-					i !== 0
-						? { __combineToken: token }
-						: { ...codeFeatures.navigationWithoutRename, __combineToken: token },
+					i === 0
+						? { ...codeFeatures.navigationWithoutRename, __combineToken: token }
+						: { __combineToken: token },
 				];
 			}
 		}
