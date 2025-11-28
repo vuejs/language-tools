@@ -13,22 +13,6 @@ import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 import { generateVSlot } from './vSlot';
 
-// @ts-ignore
-const transformContext: CompilerDOM.TransformContext = {
-	onError: () => {},
-	helperString: str => str.toString(),
-	replaceNode: () => {},
-	cacheHandlers: false,
-	prefixIdentifiers: false,
-	scopes: {
-		vFor: 0,
-		vOnce: 0,
-		vPre: 0,
-		vSlot: 0,
-	},
-	expressionPlugins: ['typescript'],
-};
-
 export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
@@ -51,11 +35,7 @@ export function* generateTemplateChild(
 		yield* generateElementChildren(options, ctx, node.children);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
-		const vForNode = getVForNode(node);
-		if (vForNode) {
-			yield* generateVFor(options, ctx, vForNode);
-		}
-		else if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
+		if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
 			yield* generateSlotOutlet(options, ctx, node);
 		}
 		else {
@@ -156,53 +136,6 @@ function* collectSingleRootNodes(
 	const tag = hyphenateTag(child.tag);
 	if (options.vueCompilerOptions.fallthroughComponentNames.includes(tag)) {
 		yield* collectSingleRootNodes(options, child.children);
-	}
-}
-
-// TODO: track https://github.com/vuejs/vue-next/issues/3498
-export function getVForNode(node: CompilerDOM.ElementNode) {
-	const forDirective = node.props.find(
-		(prop): prop is CompilerDOM.DirectiveNode =>
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'for',
-	);
-	if (forDirective) {
-		let forNode: CompilerDOM.ForNode | undefined;
-		CompilerDOM.processFor(node, forDirective, transformContext, _forNode => {
-			forNode = { ..._forNode };
-			return undefined;
-		});
-		if (forNode) {
-			forNode.children = [{
-				...node,
-				props: node.props.filter(prop => prop !== forDirective),
-			}];
-			return forNode;
-		}
-	}
-}
-
-export function getVIfNode(node: CompilerDOM.ElementNode) {
-	const ifDirective = node.props.find(
-		(prop): prop is CompilerDOM.DirectiveNode =>
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.name === 'if',
-	);
-	if (ifDirective) {
-		let ifNode: CompilerDOM.IfNode | undefined;
-		CompilerDOM.processIf(node, ifDirective, transformContext, _ifNode => {
-			ifNode = { ..._ifNode };
-			return undefined;
-		});
-		if (ifNode) {
-			for (const branch of ifNode.branches) {
-				branch.children = [{
-					...node,
-					props: node.props.filter(prop => prop !== ifDirective),
-				}];
-			}
-			return ifNode;
-		}
 	}
 }
 

@@ -4,6 +4,7 @@ import { computed, setActiveSub } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
 import { computedArray, computedItems } from '../utils/signals';
+import { normalizeTemplateAST } from './normalize';
 
 export function useIR(
 	ts: typeof import('typescript'),
@@ -275,6 +276,7 @@ export function useIR(
 				try {
 					const result = plugin.compileSFCTemplate?.(base.lang, base.content, options);
 					if (result) {
+						normalizeTemplateAST(result.ast);
 						return {
 							snapshot: getUntrackedSnapshot(),
 							template: base.content,
