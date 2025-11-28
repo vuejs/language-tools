@@ -12,26 +12,12 @@ import { generateVFor } from './vFor';
 import { generateVIf } from './vIf';
 import { generateVSlot } from './vSlot';
 
-export function* generateElementChildren(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-	children: CompilerDOM.TemplateChildNode[],
-	enterNode = true,
-	isVForChild: boolean = false,
-): Generator<Code> {
-	const endScope = ctx.startScope();
-	for (const child of children) {
-		yield* generateTemplateChild(options, ctx, child, enterNode, isVForChild);
-	}
-	yield* endScope();
-}
-
 export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
-	enterNode: boolean = true,
-	isVForChild: boolean = false,
+	enterNode = true,
+	isVForChild = false,
 ): Generator<Code> {
 	if (enterNode && !ctx.enter(node)) {
 		return;
@@ -41,7 +27,9 @@ export function* generateTemplateChild(
 		for (const item of collectSingleRootNodes(options, node.children)) {
 			ctx.singleRootNodes.add(item);
 		}
-		yield* generateElementChildren(options, ctx, node.children);
+		for (const child of node.children) {
+			yield* generateTemplateChild(options, ctx, child);
+		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 		if (node.tagType === CompilerDOM.ElementTypes.SLOT) {

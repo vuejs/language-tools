@@ -183,7 +183,10 @@ export function* generateElementProps(
 				shouldCamelize,
 			);
 			yield `: `;
-			if (prop.value) {
+			if (prop.name === 'style') {
+				yield `{}`;
+			}
+			else if (prop.value) {
 				yield* generateAttrValue(prop.value, codeFeatures.withoutNavigation);
 			}
 			else {

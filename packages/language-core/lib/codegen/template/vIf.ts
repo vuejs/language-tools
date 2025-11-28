@@ -6,7 +6,7 @@ import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateElementChildren } from './templateChild';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateVIf(
 	options: TemplateCodegenOptions,
@@ -48,7 +48,9 @@ export function* generateVIf(
 		}
 
 		yield `{${newLine}`;
-		yield* generateElementChildren(options, ctx, branch.children, i !== 0, true);
+		for (const child of branch.children) {
+			yield* generateTemplateChild(options, ctx, child, i !== 0, true);
+		}
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {

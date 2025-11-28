@@ -16,7 +16,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { collectStyleScopedClassReferences } from './styleScopedClasses';
-import { generateElementChildren } from './templateChild';
+import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
 
 const colonReg = /:/g;
@@ -344,7 +344,9 @@ export function* generateElement(
 
 	const { currentComponent } = ctx;
 	ctx.currentComponent = undefined;
-	yield* generateElementChildren(options, ctx, node.children);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
+	}
 	ctx.currentComponent = currentComponent;
 }
 
@@ -374,7 +376,9 @@ export function* generateFragment(
 
 	const { currentComponent } = ctx;
 	ctx.currentComponent = undefined;
-	yield* generateElementChildren(options, ctx, node.children);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
+	}
 	ctx.currentComponent = currentComponent;
 }
 

@@ -6,7 +6,7 @@ import { getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
-import { generateElementChildren } from './templateChild';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateVFor(
 	options: TemplateCodegenOptions,
@@ -50,7 +50,9 @@ export function* generateVFor(
 
 	const { inVFor } = ctx;
 	ctx.inVFor = true;
-	yield* generateElementChildren(options, ctx, node.children, false, true);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child, false, true);
+	}
 	ctx.inVFor = inVFor;
 
 	yield* endScope();
