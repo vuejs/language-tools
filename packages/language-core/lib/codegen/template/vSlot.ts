@@ -7,10 +7,10 @@ import { codeFeatures } from '../codeFeatures';
 import { endOfLine, getTypeScriptAST, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateVSlot(
 	options: TemplateCodegenOptions,
@@ -66,7 +66,9 @@ export function* generateVSlot(
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
 		ctx.declare(...collectBindingNames(options.ts, slotAst, slotAst));
 	}
-	yield* generateElementChildren(options, ctx, node.children);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
+	}
 	yield* endScope();
 
 	if (slotDir) {
