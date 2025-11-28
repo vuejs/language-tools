@@ -1,7 +1,7 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { forEachElementNode } from '../utils/forEachTemplateNode';
 
-// See https://github.com/vuejs/vue-next/issues/3498
+// See https://github.com/vuejs/core/issues/3498
 export function normalizeTemplateAST(root: CompilerDOM.RootNode) {
 	// @ts-ignore
 	const transformContext: CompilerDOM.TransformContext = {
