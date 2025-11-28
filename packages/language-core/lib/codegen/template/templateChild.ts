@@ -4,7 +4,7 @@ import { hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
-import { generateComponent, generateElement } from './element';
+import { generateComponent, generateElement, generateFragment } from './element';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
@@ -17,14 +17,10 @@ export function* generateTemplateChild(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
 	enterNode = true,
+	isVForChild = false,
 ): Generator<Code> {
 	if (enterNode && !ctx.enter(node)) {
 		return;
-	}
-
-	const cur = node as CompilerDOM.ElementNode | CompilerDOM.IfNode | CompilerDOM.ForNode;
-	if (cur.codegenNode?.type === CompilerDOM.NodeTypes.JS_CACHE_EXPRESSION) {
-		cur.codegenNode = cur.codegenNode.value as any;
 	}
 
 	if (node.type === CompilerDOM.NodeTypes.ROOT) {
@@ -40,32 +36,22 @@ export function* generateTemplateChild(
 			yield* generateSlotOutlet(options, ctx, node);
 		}
 		else {
-			const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
-				| CompilerDOM.DirectiveNode
-				| undefined;
-			if (
-				node.tagType === CompilerDOM.ElementTypes.TEMPLATE
-				&& ctx.currentComponent
-				&& slotDir
-			) {
+			const slotDir = node.props.find(CompilerDOM.isVSlot);
+			if (node.tagType === CompilerDOM.ElementTypes.TEMPLATE && ctx.currentComponent && slotDir) {
 				yield* generateVSlot(options, ctx, node, slotDir);
 			}
-			else if (
-				node.tagType === CompilerDOM.ElementTypes.ELEMENT
-				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
-			) {
-				yield* generateElement(options, ctx, node);
+			else if (node.tagType === CompilerDOM.ElementTypes.TEMPLATE && isVForChild) {
+				yield* generateFragment(options, ctx, node);
 			}
-			else {
+			else if (node.tagType === CompilerDOM.ElementTypes.COMPONENT) {
 				const { currentComponent } = ctx;
 				yield* generateComponent(options, ctx, node);
 				ctx.currentComponent = currentComponent;
 			}
+			else {
+				yield* generateElement(options, ctx, node);
+			}
 		}
-	}
-	else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {
-		// {{ var }}
-		yield* generateTemplateChild(options, ctx, node.content, false);
 	}
 	else if (node.type === CompilerDOM.NodeTypes.COMPOUND_EXPRESSION) {
 		// {{ ... }} {{ ... }}
@@ -97,9 +83,6 @@ export function* generateTemplateChild(
 	else if (node.type === CompilerDOM.NodeTypes.FOR) {
 		// v-for
 		yield* generateVFor(options, ctx, node);
-	}
-	else if (node.type === CompilerDOM.NodeTypes.TEXT) {
-		// not needed progress
 	}
 
 	if (enterNode) {
