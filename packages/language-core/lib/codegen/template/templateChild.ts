@@ -5,7 +5,6 @@ import { codeFeatures } from '../codeFeatures';
 import { endOfLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import { generateComponent, generateElement } from './element';
-import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateSlotOutlet } from './slotOutlet';
@@ -32,7 +31,9 @@ export function* generateTemplateChild(
 		for (const item of collectSingleRootNodes(options, node.children)) {
 			ctx.singleRootNodes.add(item);
 		}
-		yield* generateElementChildren(options, ctx, node.children);
+		for (const child of node.children) {
+			yield* generateTemplateChild(options, ctx, child);
+		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
 		if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
