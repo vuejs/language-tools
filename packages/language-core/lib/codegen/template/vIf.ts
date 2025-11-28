@@ -4,9 +4,9 @@ import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import { newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateVIf(
 	options: TemplateCodegenOptions,
@@ -52,7 +52,9 @@ export function* generateVIf(
 		}
 
 		yield `{${newLine}`;
-		yield* generateElementChildren(options, ctx, branch.children, i !== 0 || isFragment);
+		for (const child of branch.children) {
+			yield* generateTemplateChild(options, ctx, child, i !== 0 || isFragment);
+		}
 		yield `}${newLine}`;
 
 		if (addedBlockCondition) {

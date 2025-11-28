@@ -17,7 +17,7 @@ export function* generateTemplateChild(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.RootNode | CompilerDOM.TemplateChildNode | CompilerDOM.SimpleExpressionNode,
-	enterNode: boolean = true,
+	enterNode = true,
 ): Generator<Code> {
 	if (enterNode && !ctx.enter(node)) {
 		return;

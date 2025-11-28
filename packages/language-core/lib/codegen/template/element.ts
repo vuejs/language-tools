@@ -9,7 +9,6 @@ import { endOfLine, identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
 import { type FailedPropExpression, generateElementProps } from './elementProps';
@@ -17,6 +16,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
 import { collectStyleScopedClassReferences } from './styleScopedClasses';
+import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
 
 const colonReg = /:/g;
@@ -344,7 +344,9 @@ export function* generateElement(
 
 	const { currentComponent } = ctx;
 	ctx.currentComponent = undefined;
-	yield* generateElementChildren(options, ctx, node.children);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
+	}
 	ctx.currentComponent = currentComponent;
 }
 

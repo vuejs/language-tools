@@ -4,9 +4,9 @@ import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
 import { endOfLine, getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateVFor(
 	options: TemplateCodegenOptions,
@@ -82,7 +82,9 @@ export function* generateVFor(
 
 	const { inVFor } = ctx;
 	ctx.inVFor = true;
-	yield* generateElementChildren(options, ctx, node.children, isFragment);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child, isFragment);
+	}
 	ctx.inVFor = inVFor;
 
 	yield* endScope();

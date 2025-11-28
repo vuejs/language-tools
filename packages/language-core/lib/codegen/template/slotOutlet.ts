@@ -6,11 +6,11 @@ import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import { generateElementProps, generatePropExp } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateSlotOutlet(
 	options: TemplateCodegenOptions,
@@ -148,5 +148,7 @@ export function* generateSlotOutlet(
 			});
 		}
 	}
-	yield* generateElementChildren(options, ctx, node.children);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
+	}
 }
