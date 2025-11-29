@@ -141,20 +141,6 @@ function* generateInheritedAttrs(
 			: `{}`
 	}`;
 	yield endOfLine;
-	if (ctx.bindingAttrLocs.length) {
-		yield `[`;
-		for (const loc of ctx.bindingAttrLocs) {
-			yield `__VLS_dollars.`;
-			yield [
-				loc.source,
-				'template',
-				loc.start.offset,
-				codeFeatures.all,
-			];
-			yield `,`;
-		}
-		yield `]${endOfLine}`;
-	}
 	return `import('${options.vueCompilerOptions.lib}').ComponentPublicInstance['$attrs'] & __VLS_InheritedAttrs`;
 }
 

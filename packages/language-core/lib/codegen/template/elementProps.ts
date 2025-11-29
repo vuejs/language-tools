@@ -204,7 +204,7 @@ export function* generateElementProps(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			if (prop.exp.loc.source === '$attrs') {
-				ctx.bindingAttrLocs.push(prop.exp.loc);
+				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 			else {
 				const token = yield* startBoundary('template', prop.exp.loc.start.offset, codeFeatures.verification);

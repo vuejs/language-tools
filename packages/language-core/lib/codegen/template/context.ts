@@ -135,7 +135,6 @@ export function createTemplateCodegenContext(
 	}[] = [];
 	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
-	const bindingAttrLocs: CompilerDOM.SourceLocation[] = [];
 	const inheritedAttrVars = new Set<string>();
 	const templateRefs = new Map<string, {
 		typeExp: string;
@@ -169,7 +168,6 @@ export function createTemplateCodegenContext(
 		scopedClasses,
 		emptyClassOffsets,
 		inlayHints,
-		bindingAttrLocs,
 		inheritedAttrVars,
 		templateRefs,
 		currentComponent: undefined as {
