@@ -29,8 +29,8 @@ export { generate as generateTemplate };
 function generate(options: TemplateCodegenOptions) {
 	const context = createTemplateCodegenContext(options);
 	const codegen = generateTemplate(options, context);
-
 	const codes: Code[] = [];
+
 	for (const code of codegen) {
 		if (typeof code === 'object') {
 			code[3] = context.resolveCodeFeatures(code[3]);
@@ -56,7 +56,6 @@ function* generateTemplate(
 	if (options.propsAssignName) {
 		ctx.declare(options.propsAssignName);
 	}
-
 	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
 		ctx.dollarVars.add('$slots');
 	}
@@ -69,28 +68,34 @@ function* generateTemplate(
 	if (options.vueCompilerOptions.inferTemplateDollarEl) {
 		ctx.dollarVars.add('$el');
 	}
-
 	if (options.template.ast) {
 		yield* generateTemplateChild(options, ctx, options.template.ast);
 	}
-
 	yield* generateStyleScopedClassReferences(ctx);
 	yield* ctx.generateHoistVariables();
 
-	const dollarTypes = [
-		['$slots', yield* generateSlots(options, ctx)],
-		['$attrs', yield* generateInheritedAttrs(options, ctx)],
-		['$refs', yield* generateTemplateRefs(options, ctx)],
-		['$el', yield* generateRootEl(ctx)],
-	].filter(([name]) => ctx.dollarVars.has(name!));
+	const dollarSlotsType = yield* generateSlots(options, ctx);
+	const dollarAttrsType = yield* generateInheritedAttrs(options, ctx);
+	const dollarRefsType = yield* generateTemplateRefs(options, ctx);
+	const dollarElType = yield* generateRootEl(ctx);
 
-	if (dollarTypes.length) {
+	if (ctx.dollarVars.size) {
 		yield `var __VLS_dollars!: {${newLine}`;
-		for (const [name, type] of dollarTypes) {
-			yield `${name}: ${type}${endOfLine}`;
+		if (ctx.dollarVars.has('$slots')) {
+			yield `$slots: ${dollarSlotsType}${endOfLine}`;
+		}
+		if (ctx.dollarVars.has('$attrs')) {
+			yield `$attrs: ${dollarAttrsType}${endOfLine}`;
+		}
+		if (ctx.dollarVars.has('$refs')) {
+			yield `$refs: ${dollarRefsType}${endOfLine}`;
+		}
+		if (ctx.dollarVars.has('$el')) {
+			yield `$el: ${dollarElType}${endOfLine}`;
 		}
 		yield `} & { [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 	}
+
 	yield* endScope();
 }
 
@@ -136,7 +141,6 @@ function* generateInheritedAttrs(
 			: `{}`
 	}`;
 	yield endOfLine;
-
 	if (ctx.bindingAttrLocs.length) {
 		yield `[`;
 		for (const loc of ctx.bindingAttrLocs) {

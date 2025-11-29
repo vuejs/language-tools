@@ -132,7 +132,7 @@ function* forEachInterpolationSegment(
 }
 
 function* forEachIdentifiers(
-	{ ts, destructuredPropNames }: Pick<
+	options: Pick<
 		TemplateCodegenOptions | ScriptCodegenOptions,
 		'ts' | 'destructuredPropNames'
 	>,
@@ -143,17 +143,18 @@ function* forEachIdentifiers(
 	prefix: string,
 ): Generator<[string, number, boolean]> {
 	if (
-		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode, destructuredPropNames)
+		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(options, ctx, originalCode)
 	) {
 		yield [originalCode, prefix.length, false];
 		return;
 	}
 
+	const { ts } = options;
 	const endScope = ctx.startScope();
 	const ast = getTypeScriptAST(ts, block, code);
 	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx)) {
 		const text = getNodeText(ts, id, ast);
-		if (shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
+		if (shouldIdentifierSkipped(options, ctx, text)) {
 			continue;
 		}
 		yield [text, getStartEnd(ts, id, ast).start, isShorthand];
@@ -295,9 +296,12 @@ function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator
 }
 
 function shouldIdentifierSkipped(
+	{ destructuredPropNames }: Pick<
+		TemplateCodegenOptions | ScriptCodegenOptions,
+		'destructuredPropNames'
+	>,
 	ctx: TemplateCodegenContext,
 	text: string,
-	destructuredPropNames: Set<string> | undefined,
 ) {
 	return ctx.scopes.some(scope => scope.has(text))
 		// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
@@ -305,5 +309,5 @@ function shouldIdentifierSkipped(
 		|| isLiteralWhitelisted(text)
 		|| text === 'require'
 		|| text.startsWith('__VLS_')
-		|| destructuredPropNames?.has(text);
+		|| destructuredPropNames.has(text);
 }

@@ -8,7 +8,7 @@ import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { Sfc, VueLanguagePlugin } from '../types';
-import { computedSet } from '../utils/signals';
+import { computedArray, computedSet } from '../utils/signals';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof useCodegen>>();
 
@@ -200,12 +200,8 @@ function useCodegen(
 		});
 	});
 
-	const getTemplateComponents = computed<string[]>(old => {
-		const components = sfc.template?.ast?.components ?? [];
-		if (old?.length === components.length && old.every((v, i) => v === components[i])) {
-			return old;
-		}
-		return components;
+	const getTemplateComponents = computedArray(() => {
+		return sfc.template?.ast?.components ?? [];
 	});
 
 	const getTemplateStartTagOffset = computed(() => {

@@ -105,7 +105,6 @@ function* generateSlotParameters(
 ): Generator<Code> {
 	const { ts } = options;
 	const statement = ast.statements[0];
-
 	if (!statement || !ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
 		return;
 	}
@@ -113,7 +112,6 @@ function* generateSlotParameters(
 	const { expression } = statement;
 	const startOffset = exp.loc.start.offset - 1;
 	const types: (Code | null)[] = [];
-
 	const interpolation = [...generateInterpolation(
 		options,
 		ctx,

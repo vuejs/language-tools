@@ -77,7 +77,7 @@ export interface VueCompilerOptions {
 
 export const validVersions = [2, 2.1, 2.2] as const;
 
-export type VueLanguagePluginReturn = {
+export interface VueLanguagePluginReturn {
 	version: typeof validVersions[number];
 	name?: string;
 	order?: number;
@@ -106,7 +106,7 @@ export type VueLanguagePluginReturn = {
 	): CompilerDOM.CodegenResult | undefined;
 	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string }[];
 	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
-};
+}
 
 export type VueLanguagePlugin = (ctx: {
 	modules: {
