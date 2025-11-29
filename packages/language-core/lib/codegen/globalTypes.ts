@@ -1,4 +1,6 @@
 import type { VueCompilerOptions } from '../types';
+import * as names from './names';
+import { endOfLine, newLine } from './utils';
 
 export function getGlobalTypesFileName(options: VueCompilerOptions) {
 	return [
@@ -11,22 +13,23 @@ export function getGlobalTypesFileName(options: VueCompilerOptions) {
 export function generateGlobalTypes(options: VueCompilerOptions) {
 	const { lib, target, checkUnknownProps } = options;
 
-	let text = `// @ts-nocheck\nexport {};\n`;
+	let text = `// @ts-nocheck${newLine}`;
+	text += `export {}${endOfLine}`;
+
 	if (target < 3.5) {
-		text += `
-; declare module '${lib}' {
+		text += `declare module '${lib}' {
 	export interface GlobalComponents { }
 	export interface GlobalDirectives { }
-}`;
+}${newLine}`;
 	}
-	text += `
-; declare global {
-	${checkUnknownProps ? '' : 'var __VLS_PROPS_FALLBACK: Record<string, unknown>;'}
+
+	text += `declare global {
+	${checkUnknownProps ? '' : `var ${names.PROPS_FALLBACK}: Record<string, unknown>;`}
 
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 	const __VLS_unref: typeof import('${lib}').unref;
-	const __VLS_placeholder: any;
-	const __VLS_intrinsics: ${
+	const ${names.placeholder}: any;
+	const ${names.intrinsics}: ${
 		target >= 3.3
 			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements`
 			: `globalThis.JSX.IntrinsicElements`
@@ -174,7 +177,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	}) => void;
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
-}
-`;
+}${newLine}`;
+
 	return text;
 }

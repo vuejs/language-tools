@@ -1,3 +1,4 @@
+import { names } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { getComponentType, getVariableType } from './utils';
 
@@ -16,7 +17,7 @@ export function getComponentProps(
 	fileName: string,
 	tag: string,
 ): ComponentPropInfo[] {
-	const components = getVariableType(ts, program, fileName, '__VLS_components');
+	const components = getVariableType(ts, program, fileName, names.components);
 	if (!components) {
 		return [];
 	}

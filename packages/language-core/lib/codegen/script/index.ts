@@ -4,6 +4,7 @@ import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
+import * as names from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
@@ -148,7 +149,7 @@ export function* generateConstExport(
 ): Generator<Code> {
 	yield `const `;
 	const token = yield* startBoundary(block.name, 0, codeFeatures.doNotReportTs6133);
-	yield `__VLS_export`;
+	yield names._export;
 	yield endBoundary(token, block.content.length);
 	yield ` = `;
 }
@@ -159,7 +160,7 @@ function* generateExportDefault(options: ScriptCodegenOptions): Generator<Code> 
 		return;
 	}
 
-	const expression = `{} as typeof __VLS_export`;
+	const expression = `{} as typeof ${names._export}`;
 
 	if (options.script && options.scriptRanges?.exportDefault) {
 		const { exportDefault, componentOptions } = options.scriptRanges;

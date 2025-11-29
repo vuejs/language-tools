@@ -1,0 +1,30 @@
+export const ctx = '__VLS_ctx';
+export const self = '__VLS_self';
+export const dollars = '__VLS_dollars';
+export const slots = '__VLS_slots';
+export const props = '__VLS_props';
+export const defaults = '__VLS_defaults';
+export const defaultModels = '__VLS_defaultModels';
+export const modelEmit = '__VLS_modelEmit';
+export const emit = '__VLS_emit';
+export const exposed = '__VLS_exposed';
+export const setup = '__VLS_setup';
+export const components = '___VLS_components';
+export const directives = '___VLS_directives';
+export const intrinsics = '__VLS_intrinsics';
+export const placeholder = '__VLS_placeholder';
+export const _export = '__VLS_export';
+
+export const ModelProps = '__VLS_ModelProps';
+export const Props = '__VLS_Props';
+export const Slots = '__VLS_Slots';
+export const InheritedAttrs = '__VLS_InheritedAttrs';
+export const TemplateRefs = '__VLS_TemplateRefs';
+export const RootEl = '__VLS_RootEl';
+export const ModelEmit = '__VLS_ModelEmit';
+export const EmitProps = '__VLS_EmitProps';
+export const InternalProps = '__VLS_InternalProps';
+export const Emit = '__VLS_Emit';
+export const Bindings = '__VLS_Bindings';
+
+export const PROPS_FALLBACK = '__VLS_PROPS_FALLBACK';

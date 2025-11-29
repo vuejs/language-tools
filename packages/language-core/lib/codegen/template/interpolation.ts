@@ -4,6 +4,7 @@ import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
+import * as names from '../names';
 import type { ScriptCodegenOptions } from '../script';
 import { getTypeScriptAST, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
@@ -119,7 +120,8 @@ function* forEachInterpolationSegment(
 		}
 		else {
 			ctx.accessExternalVariable(name, start - prefix.length + offset);
-			yield ctx.dollarVars.has(name) ? `__VLS_dollars.` : `__VLS_ctx.`;
+			yield ctx.dollarVars.has(name) ? names.dollars : names.ctx;
+			yield `.`;
 			yield [name, offset];
 		}
 

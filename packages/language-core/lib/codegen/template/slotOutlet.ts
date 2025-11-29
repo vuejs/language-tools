@@ -3,6 +3,7 @@ import type { Code } from '../../types';
 import { getAttributeValueOffset, getElementTagOffsets } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
+import * as names from '../names';
 import { endOfLine, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
@@ -65,13 +66,13 @@ export function* generateSlotOutlet(
 			}
 
 			const token = yield* startBoundary('template', nameProp.loc.start.offset, codeFeatures.verification);
-			yield options.slotsAssignName ?? '__VLS_slots';
+			yield options.slotsAssignName ?? names.slots;
 			yield* codes;
 			yield endBoundary(token, nameProp.loc.end.offset);
 		}
 		else {
 			const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
-			yield `${options.slotsAssignName ?? '__VLS_slots'}[`;
+			yield `${options.slotsAssignName ?? names.slots}[`;
 			const token2 = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
 			yield `'default'`;
 			yield endBoundary(token2, startTagEndOffset);

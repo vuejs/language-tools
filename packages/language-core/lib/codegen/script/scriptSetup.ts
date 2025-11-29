@@ -2,6 +2,7 @@ import { camelize } from '@vue/shared';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
+import * as names from '../names';
 import { endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -49,10 +50,10 @@ export function* generateScriptSetup(
 			yield `>`;
 		}
 		yield `(${newLine}`
-			+ `	__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>['props'],${newLine}`
-			+ `	__VLS_ctx?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof __VLS_setup>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
-			+ `	__VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>['expose'],${newLine}`
-			+ `	__VLS_setup = (async () => {${newLine}`;
+			+ `	${names.props}: NonNullable<Awaited<typeof ${names.setup}>>['props'],${newLine}`
+			+ `	${names.ctx}?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof ${names.setup}>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
+			+ `	${names.exposed}?: NonNullable<Awaited<typeof ${names.setup}>>['expose'],${newLine}`
+			+ `	${names.setup} = (async () => {${newLine}`;
 		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined);
 
 		const propTypes: string[] = [];
@@ -75,18 +76,18 @@ export function* generateScriptSetup(
 			);
 		}
 		if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
-			propTypes.push(`__VLS_EmitProps`);
+			propTypes.push(names.EmitProps);
 		}
 		if (options.templateCodegen?.inheritedAttrVars.size) {
-			propTypes.push(`__VLS_InheritedAttrs`);
+			propTypes.push(names.InheritedAttrs);
 		}
 
 		const emitTypes: string[] = [];
 		if (scriptSetupRanges.defineEmits) {
-			emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? '__VLS_emit'}`);
+			emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
 		}
 		if (scriptSetupRanges.defineModel.length) {
-			emitTypes.push(`typeof __VLS_modelEmit`);
+			emitTypes.push(`typeof ${names.modelEmit}`);
 		}
 
 		yield `return {} as {${newLine}`
@@ -98,18 +99,18 @@ export function* generateScriptSetup(
 						+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
 						+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
 					: `globalThis.JSX.IntrinsicAttributes`
-			} & (typeof globalThis extends { __VLS_PROPS_FALLBACK: infer P } ? P : {})${endOfLine}`
+			} & (typeof globalThis extends { ${names.PROPS_FALLBACK}: infer P } ? P : {})${endOfLine}`
 			+ `	expose: (exposed: ${
 				scriptSetupRanges.defineExpose
-					? `import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<typeof __VLS_exposed>`
+					? `import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
 					: `{}`
 			}) => void${endOfLine}`
 			+ `	attrs: any${endOfLine}`
-			+ `	slots: __VLS_Slots${endOfLine}`
+			+ `	slots: ${names.Slots}${endOfLine}`
 			+ `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`
 			+ `}${endOfLine}`;
 		yield `})(),${newLine}`; // __VLS_setup = (async () => {
-		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof __VLS_setup> }))${endOfLine}`;
+		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof ${names.setup}> }))${endOfLine}`;
 	}
 	else if (!options.script) {
 		// no script block, generate script setup code at root
@@ -140,8 +141,8 @@ function* generateSetupFunction(
 			scriptSetupRanges.withDefaults?.callExp ?? callExp,
 			typeArg,
 			name,
-			`__VLS_props`,
-			`__VLS_Props`,
+			names.props,
+			names.Props,
 		));
 	}
 	if (scriptSetupRanges.defineEmits) {
@@ -152,8 +153,8 @@ function* generateSetupFunction(
 			callExp,
 			typeArg,
 			name,
-			`__VLS_emit`,
-			`__VLS_Emit`,
+			names.emit,
+			names.Emit,
 		));
 	}
 	if (scriptSetupRanges.defineSlots) {
@@ -164,8 +165,8 @@ function* generateSetupFunction(
 			callExp,
 			typeArg,
 			name,
-			`__VLS_slots`,
-			`__VLS_Slots`,
+			names.slots,
+			names.Slots,
 		));
 	}
 	if (scriptSetupRanges.defineExpose) {
@@ -173,31 +174,31 @@ function* generateSetupFunction(
 		if (typeArg) {
 			transforms.push(
 				insert(callExp.start, function*() {
-					yield `let __VLS_exposed!: `;
+					yield `let ${names.exposed}!: `;
 					yield* generateSfcBlockSection(scriptSetup, typeArg.start, typeArg.end, codeFeatures.all);
 					yield endOfLine;
 				}),
 				replace(typeArg.start, typeArg.end, function*() {
-					yield `typeof __VLS_exposed`;
+					yield `typeof ${names.exposed}`;
 				}),
 			);
 		}
 		else if (arg) {
 			transforms.push(
 				insert(callExp.start, function*() {
-					yield `const __VLS_exposed = `;
+					yield `const ${names.exposed} = `;
 					yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.all);
 					yield endOfLine;
 				}),
 				replace(arg.start, arg.end, function*() {
-					yield `__VLS_exposed`;
+					yield `${names.exposed}`;
 				}),
 			);
 		}
 		else {
 			transforms.push(
 				insert(callExp.start, function*() {
-					yield `const __VLS_exposed = {}${endOfLine}`;
+					yield `const ${names.exposed} = {}${endOfLine}`;
 				}),
 			);
 		}
@@ -209,7 +210,7 @@ function* generateSetupFunction(
 					yield `(`;
 				}),
 				insert(callExp.end, function*() {
-					yield ` as typeof __VLS_dollars.$attrs)`;
+					yield ` as typeof ${names.dollars}.$attrs)`;
 				}),
 			);
 		}
@@ -228,7 +229,7 @@ function* generateSetupFunction(
 					yield `])`;
 				}),
 				replace(arg.start, arg.end, function*() {
-					yield `__VLS_placeholder`;
+					yield names.placeholder;
 				}),
 			);
 		}
@@ -251,7 +252,7 @@ function* generateSetupFunction(
 					yield `(`;
 				}),
 				insert(callExp.end, function*() {
-					yield ` as typeof __VLS_dollars.$slots)`;
+					yield ` as typeof ${names.dollars}.$slots)`;
 				}),
 			);
 		}
@@ -263,7 +264,8 @@ function* generateSetupFunction(
 				insert(exp.end, function*() {
 					yield `<`;
 					if (arg) {
-						yield `__VLS_TemplateRefs[`;
+						yield names.TemplateRefs;
+						yield `[`;
 						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic);
 						yield `]`;
 					}
@@ -282,7 +284,8 @@ function* generateSetupFunction(
 				insert(callExp.end, function*() {
 					yield ` as __VLS_UseTemplateRef<`;
 					if (arg) {
-						yield `__VLS_TemplateRefs[`;
+						yield names.TemplateRefs;
+						yield `[`;
 						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic);
 						yield `]`;
 					}
@@ -296,7 +299,7 @@ function* generateSetupFunction(
 		if (arg) {
 			transforms.push(
 				replace(arg.start, arg.end, function*() {
-					yield `__VLS_placeholder`;
+					yield names.placeholder;
 				}),
 			);
 		}
@@ -330,7 +333,7 @@ function* generateSetupFunction(
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 			yield* prefix;
-			yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_base, __VLS_Slots>${endOfLine}`;
+			yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_base, ${names.Slots}>${endOfLine}`;
 		}
 		else {
 			yield* prefix;
@@ -423,7 +426,7 @@ function* generatePublicProps(
 	hasSlots: boolean,
 ): Generator<Code> {
 	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
-		yield `const __VLS_defaults = `;
+		yield `const ${names.defaults} = `;
 		yield* generateSfcBlockSection(
 			scriptSetup,
 			scriptSetupRanges.withDefaults.arg.start,
@@ -435,13 +438,13 @@ function* generatePublicProps(
 
 	const propTypes: string[] = [];
 	if (options.vueCompilerOptions.jsxSlots && hasSlots) {
-		propTypes.push(`${ctx.localTypes.PropsChildren}<__VLS_Slots>`);
+		propTypes.push(`${ctx.localTypes.PropsChildren}<${names.Slots}>`);
 	}
 	if (scriptSetupRanges.defineProps?.typeArg) {
-		propTypes.push(`__VLS_Props`);
+		propTypes.push(names.Props);
 	}
 	if (scriptSetupRanges.defineModel.length) {
-		propTypes.push(`__VLS_ModelProps`);
+		propTypes.push(names.ModelProps);
 	}
 	if (propTypes.length) {
 		ctx.generatedPropsType = true;
@@ -477,7 +480,7 @@ function* generateModels(
 		}
 		else if (defineModel.defaultValue && propName) {
 			// Infer from defineModel({ default: T })
-			modelType = `typeof __VLS_defaultModels['${propName}']`;
+			modelType = `typeof ${names.defaultModels}['${propName}']`;
 		}
 		else {
 			modelType = `any`;
@@ -494,23 +497,23 @@ function* generateModels(
 	}
 
 	if (defaultCodes.length) {
-		yield `const __VLS_defaultModels = {${newLine}`;
+		yield `const ${names.defaultModels} = {${newLine}`;
 		yield* defaultCodes;
 		yield `}${endOfLine}`;
 	}
 
-	yield `type __VLS_ModelProps = {${newLine}`;
+	yield `type ${names.ModelProps} = {${newLine}`;
 	for (const codes of propCodes) {
 		yield* codes;
 	}
 	yield `}${endOfLine}`;
 
-	yield `type __VLS_ModelEmit = {${newLine}`;
+	yield `type ${names.ModelEmit} = {${newLine}`;
 	for (const codes of emitCodes) {
 		yield* codes;
 	}
 	yield `}${endOfLine}`;
-	yield `const __VLS_modelEmit = defineEmits<__VLS_ModelEmit>()${endOfLine}`;
+	yield `const ${names.modelEmit} = defineEmits<${names.ModelEmit}>()${endOfLine}`;
 }
 
 function* generateModelProp(

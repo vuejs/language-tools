@@ -1,3 +1,4 @@
+import { names } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { getSelfComponentName, getVariableType } from './utils';
 
@@ -6,12 +7,12 @@ export function getComponentNames(
 	program: ts.Program,
 	fileName: string,
 ): string[] {
-	const names = getVariableType(ts, program, fileName, '__VLS_components')
+	const componentNames = getVariableType(ts, program, fileName, names.components)
 		?.type
 		.getProperties()
 		.map(c => c.name)
 		.filter(entry => !entry.includes('$') && !entry.startsWith('_'))
 		?? [];
-	names.push(getSelfComponentName(fileName));
-	return names;
+	componentNames.push(getSelfComponentName(fileName));
+	return componentNames;
 }

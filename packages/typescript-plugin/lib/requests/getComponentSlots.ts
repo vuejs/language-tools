@@ -1,4 +1,4 @@
-import { tsCodegen, type VueVirtualCode } from '@vue/language-core';
+import { names, tsCodegen, type VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { getVariableType } from './utils';
 
@@ -12,7 +12,7 @@ export function getComponentSlots(
 		return [];
 	}
 
-	const assignName = codegen.getSetupSlotsAssignName() ?? `__VLS_slots`;
+	const assignName = codegen.getSetupSlotsAssignName() ?? names.slots;
 	const slots = getVariableType(ts, program, virtualCode.fileName, assignName);
 	if (!slots) {
 		return [];

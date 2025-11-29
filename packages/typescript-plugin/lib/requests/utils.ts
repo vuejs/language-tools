@@ -1,3 +1,4 @@
+import { names } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import * as path from 'path-browserify';
 import type * as ts from 'typescript';
@@ -20,7 +21,7 @@ export function getComponentType(
 	if (!componentSymbol) {
 		const name = getSelfComponentName(fileName);
 		if (name === capitalize(camelize(tag))) {
-			componentType = getVariableType(ts, program, fileName, '__VLS_export')?.type;
+			componentType = getVariableType(ts, program, fileName, names._export)?.type;
 		}
 	}
 	else {

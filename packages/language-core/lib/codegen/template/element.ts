@@ -5,6 +5,7 @@ import type { Code, VueCodeInformation } from '../../types';
 import { getAttributeValueOffset, getElementTagOffsets, hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
+import * as names from '../names';
 import { endOfLine, identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -142,7 +143,7 @@ export function* generateComponent(
 			getCanonicalComponentName(node.tag)
 		}', __VLS_LocalComponents, `;
 		if (options.selfComponentName && possibleOriginalNames.includes(options.selfComponentName)) {
-			yield `typeof __VLS_export, `;
+			yield `typeof ${names._export}, `;
 		}
 		else {
 			yield `void, `;
@@ -169,7 +170,7 @@ export function* generateComponent(
 			yield `/** @type {[`;
 			for (const tagOffset of tagOffsets) {
 				for (const shouldCapitalize of (node.tag[0] === node.tag[0]!.toUpperCase() ? [false] : [true, false])) {
-					yield `typeof __VLS_components.`;
+					yield `typeof ${names.components}.`;
 					yield* generateCamelized(
 						shouldCapitalize ? capitalize(node.tag) : node.tag,
 						'template',
@@ -288,7 +289,7 @@ export function* generateElement(
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	const failedPropExps: FailGeneratedExpression[] = [];
 
-	yield `__VLS_asFunctionalElement(__VLS_intrinsics`;
+	yield `__VLS_asFunctionalElement(${names.intrinsics}`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
@@ -297,7 +298,8 @@ export function* generateElement(
 		codeFeatures.withoutHighlightAndCompletion,
 	);
 	if (endTagOffset !== undefined) {
-		yield `, __VLS_intrinsics`;
+		yield `, `;
+		yield names.intrinsics;
 		yield* generatePropertyAccess(
 			options,
 			ctx,
@@ -436,7 +438,7 @@ function* generateElementReference(
 			const offset = getAttributeValueOffset(prop.value);
 
 			// navigation support for `const foo = ref()`
-			yield `/** @type {typeof __VLS_ctx`;
+			yield `/** @type {typeof ${names.ctx}`;
 			yield* generatePropertyAccess(
 				options,
 				ctx,

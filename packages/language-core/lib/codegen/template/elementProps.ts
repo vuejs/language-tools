@@ -5,6 +5,7 @@ import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
 import { getAttributeValueOffset, hyphenateAttr, hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
+import * as names from '../names';
 import { identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -266,7 +267,8 @@ export function* generatePropExp(
 			}
 			else {
 				ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
-				yield `__VLS_ctx.`;
+				yield names.ctx;
+				yield `.`;
 				yield* codes;
 			}
 

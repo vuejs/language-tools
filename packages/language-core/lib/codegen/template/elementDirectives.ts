@@ -2,6 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
+import * as names from '../names';
 import { endOfLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -61,7 +62,8 @@ function* generateIdentifier(
 	const rawName = 'v-' + prop.name;
 	const startOffset = prop.loc.start.offset;
 	const token = yield* startBoundary('template', startOffset, codeFeatures.verification);
-	yield `__VLS_directives.`;
+	yield names.directives;
+	yield `.`;
 	yield* generateCamelized(
 		rawName,
 		'template',

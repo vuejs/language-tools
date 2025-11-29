@@ -2,6 +2,7 @@ import { camelize, capitalize } from '@vue/shared';
 import * as path from 'path-browserify';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
+import * as names from '../names';
 import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
@@ -27,19 +28,19 @@ export function* generateTemplate(
 
 function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
 	if (options.script && options.scriptRanges?.componentOptions) {
-		yield `const __VLS_self = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
+		yield `const ${names.self} = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
 		const { args } = options.scriptRanges.componentOptions;
 		yield* generateSfcBlockSection(options.script, args.start, args.end, codeFeatures.all);
 		yield `)${endOfLine}`;
 	}
 	else if (options.script && options.scriptRanges?.exportDefault) {
-		yield `const __VLS_self = `;
+		yield `const ${names.self} = `;
 		const { expression } = options.scriptRanges.exportDefault;
 		yield* generateSfcBlockSection(options.script, expression.start, expression.end, codeFeatures.all);
 		yield endOfLine;
 	}
 	else if (options.script?.src) {
-		yield `let __VLS_self!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
+		yield `let ${names.self}!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
 	}
 }
 
@@ -55,7 +56,7 @@ function* generateTemplateCtx(
 		exps.push([`globalThis`]);
 	}
 	if (options.script?.src || options.scriptRanges?.exportDefault) {
-		exps.push([`{} as InstanceType<__VLS_PickNotAny<typeof __VLS_self, new () => {}>>`]);
+		exps.push([`{} as InstanceType<__VLS_PickNotAny<typeof ${names.self}, new () => {}>>`]);
 	}
 	else {
 		exps.push([`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`]);
@@ -66,50 +67,50 @@ function* generateTemplateCtx(
 
 	if (options.scriptSetupRanges?.defineEmits) {
 		const { defineEmits } = options.scriptSetupRanges;
-		emitTypes.push(`typeof ${defineEmits.name ?? `__VLS_emit`}`);
+		emitTypes.push(`typeof ${defineEmits.name ?? names.emit}`);
 	}
 	if (options.scriptSetupRanges?.defineModel.length) {
-		emitTypes.push(`typeof __VLS_modelEmit`);
+		emitTypes.push(`typeof ${names.modelEmit}`);
 	}
 	if (emitTypes.length) {
-		yield `type __VLS_EmitProps = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(` & `)}>>${endOfLine}`;
+		yield `type ${names.EmitProps} = __VLS_EmitsToProps<__VLS_NormalizeEmits<${emitTypes.join(` & `)}>>${endOfLine}`;
 		exps.push([`{} as { $emit: ${emitTypes.join(` & `)} }`]);
 	}
 
 	const { defineProps, withDefaults } = options.scriptSetupRanges ?? {};
 	const props = defineProps?.arg
-		? `typeof ${defineProps.name ?? `__VLS_props`}`
+		? `typeof ${defineProps.name ?? names.props}`
 		: defineProps?.typeArg
 		? withDefaults?.arg
-			? `__VLS_WithDefaultsGlobal<__VLS_Props, typeof __VLS_defaults>`
-			: `__VLS_Props`
+			? `__VLS_WithDefaultsGlobal<${names.Props}, typeof ${names.defaults}>`
+			: `${names.Props}`
 		: undefined;
 	if (props) {
 		propTypes.push(props);
 	}
 	if (options.scriptSetupRanges?.defineModel.length) {
-		propTypes.push(`__VLS_ModelProps`);
+		propTypes.push(names.ModelProps);
 	}
 	if (emitTypes.length) {
-		propTypes.push(`__VLS_EmitProps`);
+		propTypes.push(names.EmitProps);
 	}
 	if (propTypes.length) {
-		yield `type __VLS_InternalProps = ${propTypes.join(` & `)}${endOfLine}`;
-		exps.push([`{} as { $props: __VLS_InternalProps }`]);
-		exps.push([`{} as __VLS_InternalProps`]);
+		yield `type ${names.InternalProps} = ${propTypes.join(` & `)}${endOfLine}`;
+		exps.push([`{} as { $props: ${names.InternalProps} }`]);
+		exps.push([`{} as ${names.InternalProps}`]);
 	}
 
 	if (options.scriptSetupRanges && ctx.bindingNames.size) {
-		exps.push([`{} as __VLS_Bindings`]);
+		exps.push([`{} as ${names.Bindings}`]);
 	}
 
-	yield `const __VLS_ctx = `;
+	yield `const ${names.ctx} = `;
 	yield* generateSpreadMerge(exps);
 	yield endOfLine;
 }
 
 function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
-	const types: string[] = [`typeof __VLS_ctx`];
+	const types: string[] = [`typeof ${names.ctx}`];
 
 	if (options.script && options.scriptRanges?.componentOptions?.components) {
 		const { components } = options.scriptRanges.componentOptions;
@@ -125,11 +126,11 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 	}
 
 	yield `type __VLS_LocalComponents = ${types.join(` & `)}${endOfLine}`;
-	yield `let __VLS_components!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
+	yield `let ${names.components}!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
 function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
-	const types: string[] = [`typeof __VLS_ctx`];
+	const types: string[] = [`typeof ${names.ctx}`];
 
 	if (options.script && options.scriptRanges?.componentOptions?.directives) {
 		const { directives } = options.scriptRanges.componentOptions;
@@ -145,7 +146,7 @@ function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<C
 	}
 
 	yield `type __VLS_LocalDirectives = ${types.join(` & `)}${endOfLine}`;
-	yield `let __VLS_directives!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
+	yield `let ${names.directives}!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
 function* generateTemplateBody(
@@ -167,11 +168,11 @@ function* generateTemplateBody(
 	}
 	else {
 		if (!options.scriptSetupRanges?.defineSlots) {
-			yield `type __VLS_Slots = {}${endOfLine}`;
+			yield `type ${names.Slots} = {}${endOfLine}`;
 		}
-		yield `type __VLS_InheritedAttrs = {}${endOfLine}`;
-		yield `type __VLS_TemplateRefs = {}${endOfLine}`;
-		yield `type __VLS_RootEl = any${endOfLine}`;
+		yield `type ${names.InheritedAttrs} = {}${endOfLine}`;
+		yield `type ${names.TemplateRefs} = {}${endOfLine}`;
+		yield `type ${names.RootEl} = any${endOfLine}`;
 	}
 }
 
@@ -211,7 +212,7 @@ function* generateBindings(
 		...templateCodegenCtx.accessExternalVariables.keys(),
 	]);
 
-	yield `type __VLS_Bindings = __VLS_ProxyRefs<{${newLine}`;
+	yield `type ${names.Bindings} = __VLS_ProxyRefs<{${newLine}`;
 	for (const varName of ctx.bindingNames) {
 		if (!usageVars.has(varName)) {
 			continue;
