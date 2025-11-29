@@ -29,7 +29,7 @@ export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
 	const context = createTemplateCodegenContext(options);
-	const codegen = generateTemplate(options, context);
+	const codegen = generateWorker(options, context);
 	const codes: Code[] = [];
 
 	for (const code of codegen) {
@@ -45,37 +45,44 @@ function generate(options: TemplateCodegenOptions) {
 	};
 }
 
-function* generateTemplate(
+function* generateWorker(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	const endScope = ctx.startScope();
+	const {
+		slotsAssignName,
+		propsAssignName,
+		vueCompilerOptions,
+		template,
+		hasDefineSlots,
+	} = options;
 
-	if (options.slotsAssignName) {
-		ctx.declare(options.slotsAssignName);
+	if (slotsAssignName) {
+		ctx.declare(slotsAssignName);
 	}
-	if (options.propsAssignName) {
-		ctx.declare(options.propsAssignName);
+	if (propsAssignName) {
+		ctx.declare(propsAssignName);
 	}
-	if (options.vueCompilerOptions.inferTemplateDollarSlots) {
+	if (vueCompilerOptions.inferTemplateDollarSlots) {
 		ctx.dollarVars.add('$slots');
 	}
-	if (options.vueCompilerOptions.inferTemplateDollarAttrs) {
+	if (vueCompilerOptions.inferTemplateDollarAttrs) {
 		ctx.dollarVars.add('$attrs');
 	}
-	if (options.vueCompilerOptions.inferTemplateDollarRefs) {
+	if (vueCompilerOptions.inferTemplateDollarRefs) {
 		ctx.dollarVars.add('$refs');
 	}
-	if (options.vueCompilerOptions.inferTemplateDollarEl) {
+	if (vueCompilerOptions.inferTemplateDollarEl) {
 		ctx.dollarVars.add('$el');
 	}
-	if (options.template.ast) {
-		yield* generateTemplateChild(options, ctx, options.template.ast);
+	if (template.ast) {
+		yield* generateTemplateChild(options, ctx, template.ast);
 	}
 	yield* generateStyleScopedClassReferences(ctx);
 	yield* ctx.generateHoistVariables();
 
-	if (!options.hasDefineSlots) {
+	if (!hasDefineSlots) {
 		yield* generateSlotsType(options, ctx);
 	}
 	yield* generateInheritedAttrsType(ctx);
@@ -88,7 +95,7 @@ function* generateTemplate(
 			yield `$slots: ${names.Slots}${endOfLine}`;
 		}
 		if (ctx.dollarVars.has('$attrs')) {
-			yield `$attrs: import('${options.vueCompilerOptions.lib}').ComponentPublicInstance['$attrs'] & ${names.InheritedAttrs}${endOfLine}`;
+			yield `$attrs: import('${vueCompilerOptions.lib}').ComponentPublicInstance['$attrs'] & ${names.InheritedAttrs}${endOfLine}`;
 		}
 		if (ctx.dollarVars.has('$refs')) {
 			yield `$refs: ${names.TemplateRefs}${endOfLine}`;
@@ -96,7 +103,7 @@ function* generateTemplate(
 		if (ctx.dollarVars.has('$el')) {
 			yield `$el: ${names.RootEl}${endOfLine}`;
 		}
-		yield `} & { [K in keyof import('${options.vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
+		yield `} & { [K in keyof import('${vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 	}
 
 	yield* endScope();

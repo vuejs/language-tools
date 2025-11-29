@@ -9,8 +9,7 @@ import { generateCamelized } from '../utils/camelized';
 import { type CodeTransform, generateCodeWithTransforms, insert, replace } from '../utils/transform';
 import { generateComponent } from './component';
 import type { ScriptCodegenContext } from './context';
-import { generateConstExport, type ScriptCodegenOptions } from './index';
-import { generateTemplate } from './template';
+import type { ScriptCodegenOptions } from './index';
 
 export function* generateScriptSetupImports(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
@@ -27,147 +26,118 @@ export function* generateScriptSetupImports(
 	];
 }
 
-export function* generateScriptSetup(
+export function* generateGeneric(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
+	generic: NonNullable<NonNullable<Sfc['scriptSetup']>['generic']>,
+	body: Iterable<Code>,
 ): Generator<Code> {
-	if (scriptSetup.generic) {
-		yield* generateConstExport(scriptSetup);
-		yield `(`;
-		if (typeof scriptSetup.generic === 'object') {
-			yield `<`;
-			yield [
-				scriptSetup.generic.text,
-				'main',
-				scriptSetup.generic.offset,
-				codeFeatures.all,
-			];
-			if (!scriptSetup.generic.text.endsWith(`,`)) {
-				yield `,`;
-			}
-			yield `>`;
+	yield `(`;
+	if (typeof generic === 'object') {
+		yield `<`;
+		yield [generic.text, 'main', generic.offset, codeFeatures.all];
+		if (!generic.text.endsWith(`,`)) {
+			yield `,`;
 		}
-		yield `(${newLine}`
-			+ `	${names.props}: NonNullable<Awaited<typeof ${names.setup}>>['props'],${newLine}`
-			+ `	${names.ctx}?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof ${names.setup}>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
-			+ `	${names.exposed}?: NonNullable<Awaited<typeof ${names.setup}>>['expose'],${newLine}`
-			+ `	${names.setup} = (async () => {${newLine}`;
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, undefined);
-
-		const propTypes: string[] = [];
-		if (ctx.generatedPropsType) {
-			propTypes.push(`__VLS_PublicProps`);
-		}
-		if (scriptSetupRanges.defineProps?.arg) {
-			yield `const __VLS_propsOption = `;
-			yield* generateSfcBlockSection(
-				scriptSetup,
-				scriptSetupRanges.defineProps.arg.start,
-				scriptSetupRanges.defineProps.arg.end,
-				codeFeatures.navigation,
-			);
-			yield endOfLine;
-			propTypes.push(
-				`import('${options.vueCompilerOptions.lib}').${
-					options.vueCompilerOptions.target >= 3.3 ? `ExtractPublicPropTypes` : `ExtractPropTypes`
-				}<typeof __VLS_propsOption>`,
-			);
-		}
-		if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
-			propTypes.push(names.EmitProps);
-		}
-		if (options.templateCodegen?.inheritedAttrVars.size) {
-			propTypes.push(names.InheritedAttrs);
-		}
-
-		const emitTypes: string[] = [];
-		if (scriptSetupRanges.defineEmits) {
-			emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
-		}
-		if (scriptSetupRanges.defineModel.length) {
-			emitTypes.push(`typeof ${names.modelEmit}`);
-		}
-
-		yield `return {} as {${newLine}`
-			+ `	props: ${propTypes.length ? `${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}> & ` : ``}${
-				options.vueCompilerOptions.target >= 3.4
-					? `import('${options.vueCompilerOptions.lib}').PublicProps`
-					: options.vueCompilerOptions.target >= 3
-					? `import('${options.vueCompilerOptions.lib}').VNodeProps`
-						+ ` & import('${options.vueCompilerOptions.lib}').AllowedComponentProps`
-						+ ` & import('${options.vueCompilerOptions.lib}').ComponentCustomProps`
-					: `globalThis.JSX.IntrinsicAttributes`
-			} & (typeof globalThis extends { ${names.PROPS_FALLBACK}: infer P } ? P : {})${endOfLine}`
-			+ `	expose: (exposed: ${
-				scriptSetupRanges.defineExpose
-					? `import('${options.vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
-					: `{}`
-			}) => void${endOfLine}`
-			+ `	attrs: any${endOfLine}`
-			+ `	slots: ${names.Slots}${endOfLine}`
-			+ `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`
-			+ `}${endOfLine}`;
-		yield `})(),${newLine}`; // __VLS_setup = (async () => {
-		yield `) => ({} as import('${options.vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof ${names.setup}> }))${endOfLine}`;
+		yield `>`;
 	}
-	else if (!options.script) {
-		// no script block, generate script setup code at root
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'export default');
+	yield `(${newLine}`
+		+ `	${names.props}: NonNullable<Awaited<typeof ${names.setup}>>['props'],${newLine}`
+		+ `	${names.ctx}?: ${ctx.localTypes.PrettifyLocal}<Pick<NonNullable<Awaited<typeof ${names.setup}>>, 'attrs' | 'emit' | 'slots'>>,${newLine}` // use __VLS_Prettify for less dts code
+		+ `	${names.exposed}?: NonNullable<Awaited<typeof ${names.setup}>>['expose'],${newLine}`
+		+ `	${names.setup} = (async () => {${newLine}`;
+
+	yield* body;
+
+	const propTypes: string[] = [];
+	const { vueCompilerOptions } = options;
+
+	if (ctx.generatedPropsType) {
+		propTypes.push(names.PublicProps);
 	}
-	else {
-		yield* generateConstExport(scriptSetup);
-		yield `await (async () => {${newLine}`;
-		yield* generateSetupFunction(options, ctx, scriptSetup, scriptSetupRanges, 'return');
-		yield `})()${endOfLine}`;
+	if (scriptSetupRanges.defineProps?.arg) {
+		yield `const __VLS_propsOption = `;
+		yield* generateSfcBlockSection(
+			scriptSetup,
+			scriptSetupRanges.defineProps.arg.start,
+			scriptSetupRanges.defineProps.arg.end,
+			codeFeatures.navigation,
+		);
+		yield endOfLine;
+		propTypes.push(
+			`import('${vueCompilerOptions.lib}').${
+				vueCompilerOptions.target >= 3.3 ? `ExtractPublicPropTypes` : `ExtractPropTypes`
+			}<typeof __VLS_propsOption>`,
+		);
 	}
+	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
+		propTypes.push(names.EmitProps);
+	}
+	if (options.templateCodegen?.inheritedAttrVars.size) {
+		propTypes.push(names.InheritedAttrs);
+	}
+
+	const emitTypes: string[] = [];
+	if (scriptSetupRanges.defineEmits) {
+		emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
+	}
+	if (scriptSetupRanges.defineModel.length) {
+		emitTypes.push(`typeof ${names.modelEmit}`);
+	}
+
+	yield `return {} as {${newLine}`
+		+ `	props: ${propTypes.length ? `${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}> & ` : ``}${
+			vueCompilerOptions.target >= 3.4
+				? `import('${vueCompilerOptions.lib}').PublicProps`
+				: vueCompilerOptions.target >= 3
+				? `import('${vueCompilerOptions.lib}').VNodeProps`
+					+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
+					+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
+				: `globalThis.JSX.IntrinsicAttributes`
+		} & (typeof globalThis extends { ${names.PROPS_FALLBACK}: infer P } ? P : {})${endOfLine}`
+		+ `	expose: (exposed: ${
+			scriptSetupRanges.defineExpose
+				? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
+				: `{}`
+		}) => void${endOfLine}`
+		+ `	attrs: any${endOfLine}`
+		+ `	slots: ${names.Slots}${endOfLine}`
+		+ `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`
+		+ `}${endOfLine}`;
+	yield `})(),${newLine}`; // __VLS_setup = (async () => {
+	yield `) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof ${names.setup}> }))${endOfLine}`;
 }
 
-function* generateSetupFunction(
+export function* generateSetupFunction(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
-	syntax: 'return' | 'export default' | undefined,
+	body: Iterable<Code>,
+	output?: Iterable<Code>,
 ): Generator<Code> {
 	const transforms: CodeTransform[] = [];
 
 	if (scriptSetupRanges.defineProps) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineProps;
-		transforms.push(...generateDefineWithTypeTransforms(
-			scriptSetup,
-			statement,
-			scriptSetupRanges.withDefaults?.callExp ?? callExp,
-			typeArg,
-			name,
-			names.props,
-			names.Props,
-		));
+		const _callExp = scriptSetupRanges.withDefaults?.callExp ?? callExp;
+		transforms.push(
+			...generateDefineWithTypeTransforms(scriptSetup, statement, _callExp, typeArg, name, names.props, names.Props),
+		);
 	}
 	if (scriptSetupRanges.defineEmits) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineEmits;
-		transforms.push(...generateDefineWithTypeTransforms(
-			scriptSetup,
-			statement,
-			callExp,
-			typeArg,
-			name,
-			names.emit,
-			names.Emit,
-		));
+		transforms.push(
+			...generateDefineWithTypeTransforms(scriptSetup, statement, callExp, typeArg, name, names.emit, names.Emit),
+		);
 	}
 	if (scriptSetupRanges.defineSlots) {
 		const { name, statement, callExp, typeArg } = scriptSetupRanges.defineSlots;
-		transforms.push(...generateDefineWithTypeTransforms(
-			scriptSetup,
-			statement,
-			callExp,
-			typeArg,
-			name,
-			names.slots,
-			names.Slots,
-		));
+		transforms.push(
+			...generateDefineWithTypeTransforms(scriptSetup, statement, callExp, typeArg, name, names.slots, names.Slots),
+		);
 	}
 	if (scriptSetupRanges.defineExpose) {
 		const { callExp, arg, typeArg } = scriptSetupRanges.defineExpose;
@@ -322,21 +292,18 @@ function* generateSetupFunction(
 
 	yield* generateModels(scriptSetup, scriptSetupRanges);
 	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges, hasSlots);
-	yield* generateTemplate(options, ctx);
+	yield* body;
 
-	if (syntax) {
-		const prefix = syntax === 'return'
-			? [`return `]
-			: generateConstExport(scriptSetup);
+	if (output) {
 		if (hasSlots) {
 			yield `const __VLS_base = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
-			yield* prefix;
+			yield* output;
 			yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_base, ${names.Slots}>${endOfLine}`;
 		}
 		else {
-			yield* prefix;
+			yield* output;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
 		}
@@ -448,7 +415,7 @@ function* generatePublicProps(
 	}
 	if (propTypes.length) {
 		ctx.generatedPropsType = true;
-		yield `type __VLS_PublicProps = ${propTypes.join(` & `)}${endOfLine}`;
+		yield `type ${names.PublicProps} = ${propTypes.join(` & `)}${endOfLine}`;
 	}
 }
 

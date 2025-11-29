@@ -32,7 +32,8 @@ export function* generateComponent(
 	}
 
 	const returns: string[][] = [];
-	if (ctx.bypassDefineComponent) {
+	const isJs = options.lang === 'js' || options.lang === 'jsx';
+	if (isJs) {
 		// fill $props
 		if (scriptSetupRanges.defineProps) {
 			const name = scriptSetupRanges.defineProps.name ?? names.props;
@@ -54,7 +55,7 @@ export function* generateComponent(
 		yield `),${newLine}`;
 	}
 
-	if (!ctx.bypassDefineComponent) {
+	if (!isJs) {
 		const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
 		yield* emitOptionCodes;
 		yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
@@ -135,13 +136,13 @@ function* generatePropsOption(
 	}
 	if (ctx.generatedPropsType) {
 		if (options.vueCompilerOptions.target < 3.6) {
-			let propsType = `${ctx.localTypes.TypePropsToOption}<__VLS_PublicProps>`;
+			let propsType = `${ctx.localTypes.TypePropsToOption}<${names.PublicProps}>`;
 			if (scriptSetupRanges.withDefaults?.arg) {
 				propsType = `${ctx.localTypes.WithDefaultsLocal}<${propsType}, typeof ${names.defaults}>`;
 			}
 			optionGenerates.push([`{} as ${propsType}`]);
 		}
-		typeOptionGenerates.push([`{} as __VLS_PublicProps`]);
+		typeOptionGenerates.push([`{} as ${names.PublicProps}`]);
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
 		const { arg } = scriptSetupRanges.defineProps;

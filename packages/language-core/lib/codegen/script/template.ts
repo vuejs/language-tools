@@ -17,13 +17,32 @@ export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
-	ctx.generatedTemplate = true;
-
 	yield* generateSelf(options);
 	yield* generateTemplateCtx(options, ctx);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
-	yield* generateTemplateBody(options, ctx);
+
+	const templateCodegenCtx = createTemplateCodegenContext({
+		scriptSetupBindingNames: new Set(),
+	});
+
+	yield* generateStyleScopedClasses(options, templateCodegenCtx);
+	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
+	yield* generateStyleModules(options);
+	yield* generateCssVars(options, templateCodegenCtx);
+	yield* generateBindings(options, ctx, templateCodegenCtx);
+
+	if (options.templateCodegen) {
+		yield* options.templateCodegen.codes;
+	}
+	else {
+		if (!options.scriptSetupRanges?.defineSlots) {
+			yield `type ${names.Slots} = {}${endOfLine}`;
+		}
+		yield `type ${names.InheritedAttrs} = {}${endOfLine}`;
+		yield `type ${names.TemplateRefs} = {}${endOfLine}`;
+		yield `type ${names.RootEl} = any${endOfLine}`;
+	}
 }
 
 function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
@@ -147,33 +166,6 @@ function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<C
 
 	yield `type __VLS_LocalDirectives = ${types.join(` & `)}${endOfLine}`;
 	yield `let ${names.directives}!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
-}
-
-function* generateTemplateBody(
-	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
-): Generator<Code> {
-	const templateCodegenCtx = createTemplateCodegenContext({
-		scriptSetupBindingNames: new Set(),
-	});
-
-	yield* generateStyleScopedClasses(options, templateCodegenCtx);
-	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
-	yield* generateStyleModules(options);
-	yield* generateCssVars(options, templateCodegenCtx);
-	yield* generateBindings(options, ctx, templateCodegenCtx);
-
-	if (options.templateCodegen) {
-		yield* options.templateCodegen.codes;
-	}
-	else {
-		if (!options.scriptSetupRanges?.defineSlots) {
-			yield `type ${names.Slots} = {}${endOfLine}`;
-		}
-		yield `type ${names.InheritedAttrs} = {}${endOfLine}`;
-		yield `type ${names.TemplateRefs} = {}${endOfLine}`;
-		yield `type ${names.RootEl} = any${endOfLine}`;
-	}
 }
 
 function* generateCssVars(

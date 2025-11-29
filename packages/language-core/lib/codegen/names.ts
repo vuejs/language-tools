@@ -26,5 +26,6 @@ export const EmitProps = '__VLS_EmitProps';
 export const InternalProps = '__VLS_InternalProps';
 export const Emit = '__VLS_Emit';
 export const Bindings = '__VLS_Bindings';
+export const PublicProps = '__VLS_PublicProps';
 
 export const PROPS_FALLBACK = '__VLS_PROPS_FALLBACK';
