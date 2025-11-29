@@ -16,7 +16,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
-export interface FailedPropExpression {
+export interface FailGeneratedExpression {
 	node: CompilerDOM.SimpleExpressionNode;
 	prefix: string;
 	suffix: string;
@@ -28,7 +28,7 @@ export function* generateElementProps(
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
 	strictPropsCheck: boolean,
-	failedPropExps?: FailedPropExpression[],
+	failGeneratedExpressions?: FailGeneratedExpression[],
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -60,14 +60,14 @@ export function* generateElementProps(
 				&& prop.arg.loc.source.startsWith('[')
 				&& prop.arg.loc.source.endsWith(']')
 			) {
-				failedPropExps?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
-				failedPropExps?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
+				failGeneratedExpressions?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
+				failGeneratedExpressions?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
 			}
 			else if (
 				!prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
+				failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 		}
 	}
@@ -97,7 +97,7 @@ export function* generateElementProps(
 				|| options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(propName!, pattern))
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
+					failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 				}
 				continue;
 			}
@@ -204,7 +204,7 @@ export function* generateElementProps(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			if (prop.exp.loc.source === '$attrs') {
-				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
+				failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 			else {
 				const token = yield* startBoundary('template', prop.exp.loc.start.offset, codeFeatures.verification);
