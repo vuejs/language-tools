@@ -20,6 +20,7 @@ import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-di
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
 import { create as createVueDocumentHighlightsPlugin } from './lib/plugins/vue-document-highlights';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
+import { create as createVueFormatTakeOverPlugin } from './lib/plugins/vue-format-takeover';
 import { create as createVueGlobalTypesErrorPlugin } from './lib/plugins/vue-global-types-error';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 import { create as createVueMissingPropsHintsPlugin } from './lib/plugins/vue-missing-props-hints';
@@ -43,6 +44,7 @@ export function createVueLanguageServicePlugins(
 	return [
 		createJsonPlugin(),
 		createPugFormatPlugin(),
+		createVueFormatTakeOverPlugin(),
 		createVueAutoSpacePlugin(),
 		createVueCompilerDomErrorsPlugin(),
 		createVueDirectiveCommentsPlugin(),

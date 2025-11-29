@@ -380,6 +380,27 @@
 					"default": false,
 					"markdownDescription": "%configuration.format.style.initialIndent%"
 				},
+				"vue.format.takeOver": {
+					"type": "object",
+					"default": {
+						"root": true,
+						"script": true,
+						"template": true,
+						"style": true
+					},
+					"properties": {
+						"script": {
+							"type": "boolean"
+						},
+						"template": {
+							"type": "boolean"
+						},
+						"style": {
+							"type": "boolean"
+						}
+					},
+					"markdownDescription": "%configuration.format.takeOver%"
+				},
 				"vue.format.wrapAttributes": {
 					"type": "string",
 					"default": "auto",

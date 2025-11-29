@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = 'Vue';
 export const name = 'volar';
-export const version = '3.1.0';
+export const version = '3.1.5';
 export const displayName = 'Vue (Official)';
 export const description = 'Language Support for Vue';
 export const extensionId = `${publisher}.${name}`;
@@ -56,6 +56,7 @@ export type ConfigKey =
 	| 'vue.format.template.initialIndent'
 	| 'vue.format.script.initialIndent'
 	| 'vue.format.style.initialIndent'
+	| 'vue.format.takeOver'
 	| 'vue.format.wrapAttributes';
 
 export interface ConfigKeyTypeMap {
@@ -79,6 +80,7 @@ export interface ConfigKeyTypeMap {
 	'vue.format.template.initialIndent': boolean;
 	'vue.format.script.initialIndent': boolean;
 	'vue.format.style.initialIndent': boolean;
+	'vue.format.takeOver': { 'script'?: boolean; 'template'?: boolean; 'style'?: boolean };
 	'vue.format.wrapAttributes':
 		| 'auto'
 		| 'force'
@@ -110,6 +112,7 @@ export interface ConfigShorthandMap {
 	formatTemplateInitialIndent: 'vue.format.template.initialIndent';
 	formatScriptInitialIndent: 'vue.format.script.initialIndent';
 	formatStyleInitialIndent: 'vue.format.style.initialIndent';
+	formatTakeOver: 'vue.format.takeOver';
 	formatWrapAttributes: 'vue.format.wrapAttributes';
 }
 
@@ -134,6 +137,7 @@ export interface ConfigShorthandTypeMap {
 	formatTemplateInitialIndent: boolean;
 	formatScriptInitialIndent: boolean;
 	formatStyleInitialIndent: boolean;
+	formatTakeOver: { 'script'?: boolean; 'template'?: boolean; 'style'?: boolean };
 	formatWrapAttributes:
 		| 'auto'
 		| 'force'
@@ -334,6 +338,15 @@ export const configs = {
 		default: false,
 	} as ConfigItem<'vue.format.style.initialIndent'>,
 	/**
+	 * @key `vue.format.takeOver`
+	 * @default `{"root":true,"script":true,"template":true,"style":true}`
+	 * @type `object`
+	 */
+	formatTakeOver: {
+		key: 'vue.format.takeOver',
+		default: { 'root': true, 'script': true, 'template': true, 'style': true },
+	} as ConfigItem<'vue.format.takeOver'>,
+	/**
 	 * @key `vue.format.wrapAttributes`
 	 * @default `"auto"`
 	 * @type `string`
@@ -365,6 +378,7 @@ export interface ScopedConfigKeyTypeMap {
 	'format.template.initialIndent': boolean;
 	'format.script.initialIndent': boolean;
 	'format.style.initialIndent': boolean;
+	'format.takeOver': { 'script'?: boolean; 'template'?: boolean; 'style'?: boolean };
 	'format.wrapAttributes':
 		| 'auto'
 		| 'force'
@@ -398,6 +412,7 @@ export const scopedConfigs = {
 		'format.template.initialIndent': true,
 		'format.script.initialIndent': false,
 		'format.style.initialIndent': false,
+		'format.takeOver': { 'root': true, 'script': true, 'template': true, 'style': true },
 		'format.wrapAttributes': 'auto',
 	} satisfies ScopedConfigKeyTypeMap,
 };
@@ -445,6 +460,7 @@ export interface NestedConfigs {
 			'style': {
 				'initialIndent': boolean;
 			};
+			'takeOver': { 'script'?: boolean; 'template'?: boolean; 'style'?: boolean };
 			'wrapAttributes':
 				| 'auto'
 				| 'force'
@@ -499,6 +515,7 @@ export interface NestedScopedConfigs {
 		'style': {
 			'initialIndent': boolean;
 		};
+		'takeOver': { 'script'?: boolean; 'template'?: boolean; 'style'?: boolean };
 		'wrapAttributes':
 			| 'auto'
 			| 'force'
