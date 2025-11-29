@@ -11,7 +11,7 @@ import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
 import { generateElementDirectives } from './elementDirectives';
 import { generateElementEvents } from './elementEvents';
-import { type FailedPropExpression, generateElementProps } from './elementProps';
+import { type FailGeneratedExpression, generateElementProps } from './elementProps';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
@@ -27,7 +27,7 @@ export function* generateComponent(
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	const tagOffsets = getElementTagOffsets(node, options.template);
-	const failedPropExps: FailedPropExpression[] = [];
+	const failGeneratedExpressions: FailGeneratedExpression[] = [];
 	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
 	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
 	const componentOriginalVar = matchImportName ?? ctx.getInternalVariable();
@@ -204,7 +204,7 @@ export function* generateComponent(
 		node,
 		props,
 		options.vueCompilerOptions.checkUnknownProps,
-		failedPropExps,
+		failGeneratedExpressions,
 	)];
 
 	yield `// @ts-ignore${newLine}`;
@@ -226,7 +226,7 @@ export function* generateComponent(
 	yield endBoundary(token2, tagOffsets[0] + node.tag.length);
 	yield `, ...__VLS_functionalComponentArgsRest(${componentFunctionalVar}))${endOfLine}`;
 
-	yield* generateFailedPropExps(options, ctx, failedPropExps);
+	yield* generateFailedExpressions(options, ctx, failGeneratedExpressions);
 	yield* generateElementEvents(
 		options,
 		ctx,
@@ -286,7 +286,7 @@ export function* generateElement(
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
-	const failedPropExps: FailedPropExpression[] = [];
+	const failedPropExps: FailGeneratedExpression[] = [];
 
 	yield `__VLS_asFunctionalElement(__VLS_intrinsics`;
 	yield* generatePropertyAccess(
@@ -321,7 +321,7 @@ export function* generateElement(
 	yield endBoundary(token, startTagOffset + node.tag.length);
 	yield `)${endOfLine}`;
 
-	yield* generateFailedPropExps(options, ctx, failedPropExps);
+	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementDirectives(options, ctx, node);
 
 	const reference = yield* generateElementReference(options, ctx, node);
@@ -350,12 +350,12 @@ export function* generateElement(
 	ctx.currentComponent = currentComponent;
 }
 
-function* generateFailedPropExps(
+function* generateFailedExpressions(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
-	failedPropExps: FailedPropExpression[],
+	failGeneratedExpressions: FailGeneratedExpression[],
 ): Generator<Code> {
-	for (const failedExp of failedPropExps) {
+	for (const failedExp of failGeneratedExpressions) {
 		yield* generateInterpolation(
 			options,
 			ctx,
