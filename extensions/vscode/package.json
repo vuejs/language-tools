@@ -380,26 +380,20 @@
 					"default": false,
 					"markdownDescription": "%configuration.format.style.initialIndent%"
 				},
-				"vue.format.takeOver": {
-					"type": "object",
-					"default": {
-						"root": true,
-						"script": true,
-						"template": true,
-						"style": true
-					},
-					"properties": {
-						"script": {
-							"type": "boolean"
-						},
-						"template": {
-							"type": "boolean"
-						},
-						"style": {
-							"type": "boolean"
-						}
-					},
-					"markdownDescription": "%configuration.format.takeOver%"
+				"vue.format.script.enabled": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "%configuration.format.script.enabled%"
+				},
+				"vue.format.template.enabled": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "%configuration.format.template.enabled%"
+				},
+				"vue.format.style.enabled": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "%configuration.format.style.enabled%"
 				},
 				"vue.format.wrapAttributes": {
 					"type": "string",

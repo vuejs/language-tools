@@ -1,20 +1,6 @@
 import type { LanguageServicePlugin, LanguageServicePluginInstance, TextDocument } from '@volar/language-service';
 import { URI } from 'vscode-uri';
 
-export interface FormatTakeOverConfig {
-	root?: boolean;
-	script?: boolean;
-	template?: boolean;
-	style?: boolean;
-}
-
-const defaultOptions: Required<FormatTakeOverConfig> = {
-	root: true,
-	script: true,
-	template: true,
-	style: true,
-};
-
 export function create(): LanguageServicePlugin {
 	return {
 		name: 'vue-format-takeover',
@@ -25,11 +11,6 @@ export function create(): LanguageServicePlugin {
 			},
 		},
 		create(context): LanguageServicePluginInstance {
-			const getOptions = async () => ({
-				...defaultOptions,
-				...(await context.env.getConfiguration<FormatTakeOverConfig>?.('vue.format.takeOver') ?? {}),
-			});
-
 			async function shouldSkip(document: TextDocument): Promise<boolean> {
 				const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 				if (!decoded) {
@@ -37,16 +18,19 @@ export function create(): LanguageServicePlugin {
 				}
 
 				const [, embeddedCodeId] = decoded;
-				const options = await getOptions();
 
-				if (embeddedCodeId.startsWith('template') || embeddedCodeId.startsWith('root')) {
-					return !options.template;
+				if (embeddedCodeId === 'script_raw' || embeddedCodeId === 'scriptsetup_raw') {
+					return await context.env.getConfiguration<boolean>?.('vue.format.script.enabled') === false;
 				}
-				if (embeddedCodeId.startsWith('script')) {
-					return !options.script;
+				if (embeddedCodeId.startsWith('style_')) {
+					return await context.env.getConfiguration<boolean>?.('vue.format.style.enabled') === false;
 				}
-				if (embeddedCodeId.startsWith('style')) {
-					return !options.style;
+				if (
+					embeddedCodeId === 'template'
+					|| embeddedCodeId.startsWith('template_inline_ts_')
+					|| embeddedCodeId === 'root_tags'
+				) {
+					return await context.env.getConfiguration<boolean>?.('vue.format.template.enabled') === false;
 				}
 
 				return false;

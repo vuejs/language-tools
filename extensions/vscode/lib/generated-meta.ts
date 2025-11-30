@@ -56,7 +56,9 @@ export type ConfigKey =
 	| 'vue.format.template.initialIndent'
 	| 'vue.format.script.initialIndent'
 	| 'vue.format.style.initialIndent'
-	| 'vue.format.takeOver'
+	| 'vue.format.script.enabled'
+	| 'vue.format.template.enabled'
+	| 'vue.format.style.enabled'
 	| 'vue.format.wrapAttributes';
 
 export interface ConfigKeyTypeMap {
@@ -80,7 +82,9 @@ export interface ConfigKeyTypeMap {
 	'vue.format.template.initialIndent': boolean;
 	'vue.format.script.initialIndent': boolean;
 	'vue.format.style.initialIndent': boolean;
-	'vue.format.takeOver': { 'script'?: boolean; 'template'?: boolean; 'style'?: boolean };
+	'vue.format.script.enabled': boolean;
+	'vue.format.template.enabled': boolean;
+	'vue.format.style.enabled': boolean;
 	'vue.format.wrapAttributes':
 		| 'auto'
 		| 'force'
@@ -112,7 +116,9 @@ export interface ConfigShorthandMap {
 	formatTemplateInitialIndent: 'vue.format.template.initialIndent';
 	formatScriptInitialIndent: 'vue.format.script.initialIndent';
 	formatStyleInitialIndent: 'vue.format.style.initialIndent';
-	formatTakeOver: 'vue.format.takeOver';
+	formatScriptEnabled: 'vue.format.script.enabled';
+	formatTemplateEnabled: 'vue.format.template.enabled';
+	formatStyleEnabled: 'vue.format.style.enabled';
 	formatWrapAttributes: 'vue.format.wrapAttributes';
 }
 
@@ -137,7 +143,9 @@ export interface ConfigShorthandTypeMap {
 	formatTemplateInitialIndent: boolean;
 	formatScriptInitialIndent: boolean;
 	formatStyleInitialIndent: boolean;
-	formatTakeOver: { 'script'?: boolean; 'template'?: boolean; 'style'?: boolean };
+	formatScriptEnabled: boolean;
+	formatTemplateEnabled: boolean;
+	formatStyleEnabled: boolean;
 	formatWrapAttributes:
 		| 'auto'
 		| 'force'
@@ -338,14 +346,32 @@ export const configs = {
 		default: false,
 	} as ConfigItem<'vue.format.style.initialIndent'>,
 	/**
-	 * @key `vue.format.takeOver`
-	 * @default `{"root":true,"script":true,"template":true,"style":true}`
-	 * @type `object`
+	 * @key `vue.format.script.enabled`
+	 * @default `true`
+	 * @type `boolean`
 	 */
-	formatTakeOver: {
-		key: 'vue.format.takeOver',
-		default: { 'root': true, 'script': true, 'template': true, 'style': true },
-	} as ConfigItem<'vue.format.takeOver'>,
+	formatScriptEnabled: {
+		key: 'vue.format.script.enabled',
+		default: true,
+	} as ConfigItem<'vue.format.script.enabled'>,
+	/**
+	 * @key `vue.format.template.enabled`
+	 * @default `true`
+	 * @type `boolean`
+	 */
+	formatTemplateEnabled: {
+		key: 'vue.format.template.enabled',
+		default: true,
+	} as ConfigItem<'vue.format.template.enabled'>,
+	/**
+	 * @key `vue.format.style.enabled`
+	 * @default `true`
+	 * @type `boolean`
+	 */
+	formatStyleEnabled: {
+		key: 'vue.format.style.enabled',
+		default: true,
+	} as ConfigItem<'vue.format.style.enabled'>,
 	/**
 	 * @key `vue.format.wrapAttributes`
 	 * @default `"auto"`
@@ -378,7 +404,9 @@ export interface ScopedConfigKeyTypeMap {
 	'format.template.initialIndent': boolean;
 	'format.script.initialIndent': boolean;
 	'format.style.initialIndent': boolean;
-	'format.takeOver': { 'script'?: boolean; 'template'?: boolean; 'style'?: boolean };
+	'format.script.enabled': boolean;
+	'format.template.enabled': boolean;
+	'format.style.enabled': boolean;
 	'format.wrapAttributes':
 		| 'auto'
 		| 'force'
@@ -412,7 +440,9 @@ export const scopedConfigs = {
 		'format.template.initialIndent': true,
 		'format.script.initialIndent': false,
 		'format.style.initialIndent': false,
-		'format.takeOver': { 'root': true, 'script': true, 'template': true, 'style': true },
+		'format.script.enabled': true,
+		'format.template.enabled': true,
+		'format.style.enabled': true,
 		'format.wrapAttributes': 'auto',
 	} satisfies ScopedConfigKeyTypeMap,
 };
@@ -453,14 +483,16 @@ export interface NestedConfigs {
 		'format': {
 			'template': {
 				'initialIndent': boolean;
+				'enabled': boolean;
 			};
 			'script': {
 				'initialIndent': boolean;
+				'enabled': boolean;
 			};
 			'style': {
 				'initialIndent': boolean;
+				'enabled': boolean;
 			};
-			'takeOver': { 'script'?: boolean; 'template'?: boolean; 'style'?: boolean };
 			'wrapAttributes':
 				| 'auto'
 				| 'force'
@@ -508,14 +540,16 @@ export interface NestedScopedConfigs {
 	'format': {
 		'template': {
 			'initialIndent': boolean;
+			'enabled': boolean;
 		};
 		'script': {
 			'initialIndent': boolean;
+			'enabled': boolean;
 		};
 		'style': {
 			'initialIndent': boolean;
+			'enabled': boolean;
 		};
-		'takeOver': { 'script'?: boolean; 'template'?: boolean; 'style'?: boolean };
 		'wrapAttributes':
 			| 'auto'
 			| 'force'
