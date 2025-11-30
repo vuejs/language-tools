@@ -158,9 +158,9 @@ function useCodegen(
 
 	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
-	const getDefinePropsName = computed(() => getScriptSetupRanges()?.defineProps?.name);
+	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
 
-	const getDefineSlotsName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
+	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
 
 	const getSetupInheritAttrs = computed(() => {
 		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
@@ -203,8 +203,8 @@ function useCodegen(
 			setupBindingNames: getSetupBindingNames(),
 			templateRefNames: getTemplateRefNames(),
 			hasDefineSlots: hasDefineSlots(),
-			propsAssignName: getDefinePropsName(),
-			slotsAssignName: getDefineSlotsName(),
+			propsAssignName: getSetupPropsAssignName(),
+			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getSetupInheritAttrs(),
 			selfComponentName: getComponentSelfName(),
 		});
@@ -272,7 +272,7 @@ function useCodegen(
 		getLang,
 		getScriptRanges,
 		getScriptSetupRanges,
-		getSetupSlotsAssignName: getDefineSlotsName,
+		getSetupSlotsAssignName,
 		getGeneratedScript,
 		getGeneratedTemplate,
 	};
