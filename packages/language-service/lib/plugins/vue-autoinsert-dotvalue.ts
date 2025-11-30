@@ -55,7 +55,7 @@ export function create(
 						if (sourceOffset < startTagEnd || sourceOffset > endTagStart) {
 							continue;
 						}
-						if (isBlacklistNode(ts, ast, sourceOffset - startTagEnd, false)) {
+						if (shouldSkip(ts, ast, sourceOffset - startTagEnd, false)) {
 							return;
 						}
 					}
@@ -86,7 +86,7 @@ function isCharacterTyping(document: TextDocument, change: { text: string; range
 	return charReg.test(lastCharacter) && !charReg.test(nextCharacter);
 }
 
-function isBlacklistNode(ts: typeof import('typescript'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
+function shouldSkip(ts: typeof import('typescript'), node: ts.Node, pos: number, allowAccessDotValue: boolean) {
 	if (ts.isVariableDeclaration(node) && pos >= node.name.getFullStart() && pos <= node.name.getEnd()) {
 		return true;
 	}
@@ -123,47 +123,48 @@ function isBlacklistNode(ts: typeof import('typescript'), node: ts.Node, pos: nu
 		ts.isCallExpression(node)
 		&& ts.isIdentifier(node.expression)
 		&& isWatchOrUseFunction(node.expression.text)
-		&& isTopLevelArgOrArrayTopLevelItemItem(node)
+		&& isTopLevelArgOrArrayTopLevelItemItem(ts, node, pos)
 	) {
 		return true;
 	}
 	else {
-		let _isBlacklistNode = false;
+		let _shouldSkip = false;
 		node.forEachChild(node => {
-			if (_isBlacklistNode) {
+			if (_shouldSkip) {
 				return;
 			}
 			if (pos >= node.getFullStart() && pos <= node.getEnd()) {
-				if (isBlacklistNode(ts, node, pos, allowAccessDotValue)) {
-					_isBlacklistNode = true;
+				if (shouldSkip(ts, node, pos, allowAccessDotValue)) {
+					_shouldSkip = true;
 				}
 			}
 		});
-		return _isBlacklistNode;
+		return _shouldSkip;
 	}
+}
 
-	function isWatchOrUseFunction(fnName: string) {
-		return fnName === 'watch'
-			|| fnName === 'unref'
-			|| fnName === 'triggerRef'
-			|| fnName === 'isRef'
-			|| hyphenateAttr(fnName).startsWith('use-');
-	}
-	function isTopLevelArgOrArrayTopLevelItemItem(node: ts.CallExpression) {
-		for (const arg of node.arguments) {
-			if (pos >= arg.getFullStart() && pos <= arg.getEnd()) {
-				if (ts.isIdentifier(arg)) {
-					return true;
-				}
-				if (ts.isArrayLiteralExpression(arg)) {
-					for (const el of arg.elements) {
-						if (pos >= el.getFullStart() && pos <= el.getEnd()) {
-							return ts.isIdentifier(el);
-						}
+function isWatchOrUseFunction(fnName: string) {
+	return fnName === 'watch'
+		|| fnName === 'unref'
+		|| fnName === 'triggerRef'
+		|| fnName === 'isRef'
+		|| hyphenateAttr(fnName).startsWith('use-');
+}
+
+function isTopLevelArgOrArrayTopLevelItemItem(ts: typeof import('typescript'), node: ts.CallExpression, pos: number) {
+	for (const arg of node.arguments) {
+		if (pos >= arg.getFullStart() && pos <= arg.getEnd()) {
+			if (ts.isIdentifier(arg)) {
+				return true;
+			}
+			if (ts.isArrayLiteralExpression(arg)) {
+				for (const el of arg.elements) {
+					if (pos >= el.getFullStart() && pos <= el.getEnd()) {
+						return ts.isIdentifier(el);
 					}
 				}
-				return false;
 			}
+			return false;
 		}
 	}
 }

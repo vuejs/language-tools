@@ -22,6 +22,7 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		useMdFilePlugin,
 		useHtmlFilePlugin,
 		vueRootTagsPlugin,
+		vueTsx,
 		vueScriptJsPlugin,
 		vueStyleCss,
 		vueTemplateHtmlPlugin,
@@ -31,7 +32,6 @@ export function createPlugins(pluginContext: Parameters<VueLanguagePlugin>[0]) {
 		vueSfcCustomBlocks,
 		vueSfcScriptsFormat,
 		vueSfcTemplate,
-		vueTsx,
 		...pluginContext.vueCompilerOptions.plugins,
 	];
 
