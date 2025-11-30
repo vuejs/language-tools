@@ -1,17 +1,22 @@
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import type { ScriptCodegenOptions } from '../script';
+import * as names from '../names';
+import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, newLine } from '../utils';
+import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleImports } from './common';
 
 export function* generateStyleModules(
-	{ styles, scriptSetupRanges, vueCompilerOptions }: ScriptCodegenOptions,
+	{ styles, vueCompilerOptions }: StyleCodegenOptions,
+	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	const styleModules = styles.filter(style => style.module);
-	if (!styleModules.length && !scriptSetupRanges?.useCssModule.length) {
+	if (!styleModules.length) {
 		return;
 	}
-	yield `type __VLS_StyleModules = {${newLine}`;
+	ctx.generatedTypes.add(names.StyleModules);
+
+	yield `type ${names.StyleModules} = {${newLine}`;
 	for (const style of styleModules) {
 		if (style.module === true) {
 			yield `$style`;

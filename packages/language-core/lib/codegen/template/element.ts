@@ -31,7 +31,7 @@ export function* generateComponent(
 	const tagOffsets = getElementTagOffsets(node, options.template);
 	const failGeneratedExpressions: FailGeneratedExpression[] = [];
 	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
-	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
+	const matchImportName = possibleOriginalNames.find(name => options.directAccessNames.has(name));
 	const componentOriginalVar = matchImportName ?? ctx.getInternalVariable();
 	const componentFunctionalVar = ctx.getInternalVariable();
 	const componentVNodeVar = ctx.getInternalVariable();
@@ -565,7 +565,7 @@ function* generateElementReference(
 			yield `} */${endOfLine}`;
 
 			if (identifierRegex.test(name) && !options.templateRefNames.has(name)) {
-				ctx.accessExternalVariable(name, offset);
+				ctx.accessExternalVariable('template', name, offset);
 			}
 
 			return { name, offset };

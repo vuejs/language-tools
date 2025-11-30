@@ -10,14 +10,6 @@ export function createScriptCodegenContext(options: ScriptCodegenOptions) {
 
 	return {
 		generatedTypes: new Set<string>(),
-		bindingNames: new Set([
-			...options.scriptRanges?.bindings.map(
-				({ range }) => options.script!.content.slice(range.start, range.end),
-			) ?? [],
-			...options.scriptSetupRanges?.bindings.map(
-				({ range }) => options.scriptSetup!.content.slice(range.start, range.end),
-			) ?? [],
-		]),
 		localTypes,
 		inlayHints,
 	};

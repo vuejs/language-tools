@@ -2,12 +2,14 @@ import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
 import * as path from 'path-browserify';
 import { generateScript } from '../codegen/script';
+import { generateStyle } from '../codegen/style';
 import { generateTemplate } from '../codegen/template';
+import type { TemplateCodegenContext } from '../codegen/template/context';
 import { CompilerOptionsResolver } from '../compilerOptions';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
-import type { Sfc, VueLanguagePlugin } from '../types';
+import type { Code, Sfc, VueLanguagePlugin } from '../types';
 import { computedArray, computedSet } from '../utils/signals';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof useCodegen>>();
@@ -56,22 +58,18 @@ function useCodegen(
 ) {
 	const ts = ctx.modules.typescript;
 
-	const getRawLang = computed(() => {
+	const getLang = computed(() => {
+		let lang = sfc.scriptSetup?.lang ?? sfc.script?.lang;
 		if (sfc.script && sfc.scriptSetup) {
 			if (sfc.scriptSetup.lang !== 'js') {
-				return sfc.scriptSetup.lang;
+				lang = sfc.scriptSetup.lang;
 			}
 			else {
-				return sfc.script.lang;
+				lang = sfc.script.lang;
 			}
 		}
-		return sfc.scriptSetup?.lang ?? sfc.script?.lang;
-	});
-
-	const getLang = computed(() => {
-		const rawLang = getRawLang();
-		if (rawLang && validLangs.has(rawLang)) {
-			return rawLang;
+		if (lang && validLangs.has(lang)) {
+			return lang;
 		}
 		return 'ts';
 	});
@@ -100,43 +98,57 @@ function useCodegen(
 
 	const getSetupBindingNames = computedSet(() => {
 		const newNames = new Set<string>();
-		const bindings = getScriptSetupRanges()?.bindings;
-		if (sfc.scriptSetup && bindings) {
-			for (const { range } of bindings) {
-				newNames.add(sfc.scriptSetup.content.slice(range.start, range.end));
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (!sfc.scriptSetup || !scriptSetupRanges) {
+			return newNames;
+		}
+		for (const { range } of scriptSetupRanges.bindings) {
+			const name = sfc.scriptSetup.content.slice(range.start, range.end);
+			if (!getImportComponentNames().has(name)) {
+				newNames.add(name);
+			}
+		}
+		const scriptRanges = getScriptRanges();
+		if (sfc.script && scriptRanges) {
+			for (const { range } of scriptRanges.bindings) {
+				newNames.add(sfc.script.content.slice(range.start, range.end));
 			}
 		}
 		return newNames;
 	});
 
-	const getSetupImportComponentNames = computedSet(() => {
-		const newNames = new Set<string>();
-		const bindings = getScriptSetupRanges()?.bindings;
-		if (sfc.scriptSetup && bindings) {
-			for (const { range, moduleName, isDefaultImport, isNamespace } of bindings) {
+	const getImportComponentNames = computedSet(() => {
+		const names = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (sfc.scriptSetup && scriptSetupRanges) {
+			for (const { range, moduleName, isDefaultImport, isNamespace } of scriptSetupRanges.bindings) {
 				if (
 					moduleName
 					&& isDefaultImport
 					&& !isNamespace
 					&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
 				) {
-					newNames.add(sfc.scriptSetup.content.slice(range.start, range.end));
+					names.add(sfc.scriptSetup.content.slice(range.start, range.end));
 				}
 			}
 		}
-		return newNames;
+		return names;
 	});
 
-	const getSetupDestructuredPropNames = computedSet(() => {
-		const newNames = new Set(getScriptSetupRanges()?.defineProps?.destructured?.keys());
-		const rest = getScriptSetupRanges()?.defineProps?.destructuredRest;
+	const getDirectAccessNames = computedSet(() => {
+		const scriptSetupRanges = getScriptSetupRanges();
+		const names = new Set([
+			...scriptSetupRanges?.defineProps?.destructured?.keys() ?? [],
+			...getImportComponentNames(),
+		]);
+		const rest = scriptSetupRanges?.defineProps?.destructuredRest;
 		if (rest) {
-			newNames.add(rest);
+			names.add(rest);
 		}
-		return newNames;
+		return names;
 	});
 
-	const getSetupTemplateRefNames = computedSet(() => {
+	const getTemplateRefNames = computedSet(() => {
 		const newNames = new Set(
 			getScriptSetupRanges()?.useTemplateRef
 				.map(({ name }) => name)
@@ -145,7 +157,7 @@ function useCodegen(
 		return newNames;
 	});
 
-	const setupHasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
+	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
 	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
 
@@ -188,11 +200,10 @@ function useCodegen(
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
 			template: sfc.template,
-			scriptSetupBindingNames: getSetupBindingNames(),
-			scriptSetupImportComponentNames: getSetupImportComponentNames(),
-			destructuredPropNames: getSetupDestructuredPropNames(),
-			templateRefNames: getSetupTemplateRefNames(),
-			hasDefineSlots: setupHasDefineSlots(),
+			directAccessNames: getDirectAccessNames(),
+			setupBindingNames: getSetupBindingNames(),
+			templateRefNames: getTemplateRefNames(),
+			hasDefineSlots: hasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
 			inheritAttrs: getSetupInheritAttrs(),
@@ -216,7 +227,7 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			script: sfc.script,
 			scriptSetup: sfc.scriptSetup,
-			styles: sfc.styles,
+			setupBindingNames: getSetupBindingNames(),
 			fileName,
 			lang: getLang(),
 			scriptRanges: getScriptRanges(),
@@ -224,9 +235,38 @@ function useCodegen(
 			templateCodegen: getGeneratedTemplate(),
 			templateComponents: getTemplateComponents(),
 			templateStartTagOffset: getTemplateStartTagOffset(),
-			destructuredPropNames: getSetupDestructuredPropNames(),
-			templateRefNames: getSetupTemplateRefNames(),
+			styleCodegen: getGeneratedStyle(),
 		});
+	});
+
+	const getGeneratedStyle = computed(() => {
+		if (!sfc.styles.length) {
+			return;
+		}
+		const generation = generateStyle({
+			ts,
+			vueCompilerOptions: getResolvedOptions(),
+			styles: sfc.styles,
+			directAccessNames: getDirectAccessNames(),
+			templateRefNames: getTemplateRefNames(),
+			setupBindingNames: getSetupBindingNames(),
+		});
+		const codes: Code[] = [];
+		let ctx: TemplateCodegenContext;
+
+		while (true) {
+			const result = generation.next();
+			if (result.done) {
+				ctx = result.value;
+				break;
+			}
+			codes.push(result.value);
+		}
+
+		return {
+			...ctx,
+			codes,
+		};
 	});
 
 	return {

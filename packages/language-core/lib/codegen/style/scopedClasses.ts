@@ -1,11 +1,11 @@
 import type { Code } from '../../types';
-import type { ScriptCodegenOptions } from '../script';
 import { generateStyleScopedClassReference } from '../template/styleScopedClasses';
 import { endOfLine } from '../utils';
+import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleImports } from './common';
 
 export function* generateStyleScopedClasses(
-	{ vueCompilerOptions, styles }: ScriptCodegenOptions,
+	{ vueCompilerOptions, styles }: StyleCodegenOptions,
 ): Generator<Code> {
 	const { resolveStyleClassNames, resolveStyleImports } = vueCompilerOptions;
 	if (!resolveStyleClassNames) {

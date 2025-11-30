@@ -13,9 +13,8 @@ export interface TemplateCodegenOptions {
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	template: NonNullable<Sfc['template']>;
-	scriptSetupBindingNames: Set<string>;
-	scriptSetupImportComponentNames: Set<string>;
-	destructuredPropNames: Set<string>;
+	directAccessNames: Set<string>;
+	setupBindingNames: Set<string>;
 	templateRefNames: Set<string>;
 	hasDefineSlots?: boolean;
 	propsAssignName?: string;
@@ -27,19 +26,17 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	const context = createTemplateCodegenContext(options);
-	const codegen = generateWorker(options, context);
+	const ctx = createTemplateCodegenContext(options.setupBindingNames);
+	const codegen = generateWorker(options, ctx);
 	const codes: Code[] = [];
-
 	for (const code of codegen) {
 		if (typeof code === 'object') {
-			code[3] = context.resolveCodeFeatures(code[3]);
+			code[3] = ctx.resolveCodeFeatures(code[3]);
 		}
 		codes.push(code);
 	}
-
 	return {
-		...context,
+		...ctx,
 		codes,
 	};
 }
@@ -49,6 +46,7 @@ function* generateWorker(
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
 	const endScope = ctx.startScope();
+	ctx.declare(...options.directAccessNames);
 	const {
 		slotsAssignName,
 		propsAssignName,

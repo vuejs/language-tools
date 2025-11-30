@@ -5,7 +5,7 @@ import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
-import type { ScriptCodegenOptions } from '../script';
+import type { StyleCodegenOptions } from '../style';
 import { forEachNode, getTypeScriptAST, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -15,8 +15,8 @@ const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
 	options: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
-		'ts' | 'destructuredPropNames' | 'templateRefNames'
+		TemplateCodegenOptions | StyleCodegenOptions,
+		'ts' | 'templateRefNames'
 	>,
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
@@ -70,9 +70,9 @@ export function* generateInterpolation(
 }
 
 function* forEachInterpolationSegment(
-	options: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
-		'ts' | 'destructuredPropNames' | 'templateRefNames'
+	{ ts, templateRefNames }: Pick<
+		TemplateCodegenOptions | StyleCodegenOptions,
+		'ts' | 'templateRefNames'
 	>,
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
@@ -93,7 +93,7 @@ function* forEachInterpolationSegment(
 
 	for (
 		const [name, offset, isShorthand] of forEachIdentifiers(
-			options,
+			ts,
 			ctx,
 			block,
 			originalCode,
@@ -113,13 +113,13 @@ function* forEachInterpolationSegment(
 		// fix https://github.com/vuejs/language-tools/issues/1264
 		yield ['', offset, 'errorMappingOnly'];
 
-		if (options.templateRefNames.has(name)) {
+		if (templateRefNames.has(name)) {
 			yield `__VLS_unref(`;
 			yield [name, offset];
 			yield `)`;
 		}
 		else {
-			ctx.accessExternalVariable(name, start - prefix.length + offset);
+			ctx.accessExternalVariable(block.name, name, start - prefix.length + offset);
 			yield ctx.dollarVars.has(name) ? names.dollars : names.ctx;
 			yield `.`;
 			yield [name, offset];
@@ -134,10 +134,7 @@ function* forEachInterpolationSegment(
 }
 
 function* forEachIdentifiers(
-	options: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
-		'ts' | 'destructuredPropNames'
-	>,
+	ts: typeof import('typescript'),
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
 	originalCode: string,
@@ -145,18 +142,17 @@ function* forEachIdentifiers(
 	prefix: string,
 ): Generator<[string, number, boolean]> {
 	if (
-		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(options, ctx, originalCode)
+		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode)
 	) {
 		yield [originalCode, prefix.length, false];
 		return;
 	}
 
-	const { ts } = options;
 	const endScope = ctx.startScope();
 	const ast = getTypeScriptAST(ts, block, code);
 	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx)) {
 		const text = getNodeText(ts, id, ast);
-		if (shouldIdentifierSkipped(options, ctx, text)) {
+		if (shouldIdentifierSkipped(ctx, text)) {
 			continue;
 		}
 		yield [text, getStartEnd(ts, id, ast).start, isShorthand];
@@ -288,10 +284,6 @@ function* forEachDeclarationsInTypeNode(
 }
 
 function shouldIdentifierSkipped(
-	{ destructuredPropNames }: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
-		'destructuredPropNames'
-	>,
 	ctx: TemplateCodegenContext,
 	text: string,
 ) {
@@ -300,6 +292,5 @@ function shouldIdentifierSkipped(
 		|| isGloballyAllowed(text)
 		|| isLiteralWhitelisted(text)
 		|| text === 'require'
-		|| text.startsWith('__VLS_')
-		|| destructuredPropNames.has(text);
+		|| text.startsWith('__VLS_');
 }

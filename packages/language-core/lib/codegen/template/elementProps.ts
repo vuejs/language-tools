@@ -255,9 +255,7 @@ export function* generatePropExp(
 				codeFeatures.withoutHighlightAndCompletion,
 			);
 
-			if (
-				options.destructuredPropNames.has(propVariableName) || ctx.scopes.some(scope => scope.has(propVariableName))
-			) {
+			if (ctx.scopes.some(scope => scope.has(propVariableName))) {
 				yield* codes;
 			}
 			else if (options.templateRefNames.has(propVariableName)) {
@@ -266,7 +264,7 @@ export function* generatePropExp(
 				yield `)`;
 			}
 			else {
-				ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
+				ctx.accessExternalVariable('template', propVariableName, exp.loc.start.offset);
 				yield names.ctx;
 				yield `.`;
 				yield* codes;

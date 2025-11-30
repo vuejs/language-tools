@@ -4,7 +4,6 @@ import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
-import type { TemplateCodegenOptions } from './index';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
@@ -108,14 +107,14 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  * and additionally how we use that to determine whether to propagate diagnostics back upward.
  */
 export function createTemplateCodegenContext(
-	options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames'>,
+	setupBindingNames: Set<string>,
 ) {
 	let variableId = 0;
 
-	const scopes = [new Set<string>()];
+	const scopes: Set<string>[] = [];
 	const hoistVars = new Map<string, string>();
 	const dollarVars = new Set<string>();
-	const accessExternalVariables = new Map<string, Set<number>>();
+	const accessExternalVariables = new Map<string, Map<string, Set<number>>>();
 	const slots: {
 		name: string;
 		offset?: number;
@@ -176,10 +175,14 @@ export function createTemplateCodegenContext(
 			}
 			refs.push({ typeExp, offset });
 		},
-		accessExternalVariable(name: string, offset?: number) {
-			let arr = accessExternalVariables.get(name);
+		accessExternalVariable(source: string, name: string, offset?: number) {
+			let map = accessExternalVariables.get(name);
+			if (!map) {
+				accessExternalVariables.set(name, map = new Map());
+			}
+			let arr = map.get(source);
 			if (!arr) {
-				accessExternalVariables.set(name, arr = new Set());
+				map.set(source, arr = new Set());
 			}
 			if (offset !== undefined) {
 				arr.add(offset);
@@ -301,31 +304,33 @@ export function createTemplateCodegenContext(
 		}
 		yield `// @ts-ignore${newLine}`; // #2304
 		yield `[`;
-		for (const [varName, offsets] of all) {
-			for (const offset of offsets) {
-				if (options.scriptSetupBindingNames.has(varName)) {
-					// #3409
-					yield [
-						varName,
-						'template',
-						offset,
-						{
-							...codeFeatures.additionalCompletion,
-							...codeFeatures.semanticWithoutHighlight,
-						},
-					];
+		for (const [varName, map] of all) {
+			for (const [source, offsets] of map) {
+				for (const offset of offsets) {
+					if (setupBindingNames.has(varName)) {
+						// #3409
+						yield [
+							varName,
+							source,
+							offset,
+							{
+								...codeFeatures.additionalCompletion,
+								...codeFeatures.semanticWithoutHighlight,
+							},
+						];
+					}
+					else {
+						yield [
+							varName,
+							source,
+							offset,
+							codeFeatures.additionalCompletion,
+						];
+					}
+					yield `,`;
 				}
-				else {
-					yield [
-						varName,
-						'template',
-						offset,
-						codeFeatures.additionalCompletion,
-					];
-				}
-				yield `,`;
+				offsets.clear();
 			}
-			offsets.clear();
 		}
 		yield `]${endOfLine}`;
 	}
