@@ -51,7 +51,6 @@ export function createVueLanguageServicePlugins(
 		createVueGlobalTypesErrorPlugin(),
 		createVueScopedClassLinksPlugin(),
 		createVueSfcPlugin(),
-		createVueSuggestDefineAssignmentPlugin(),
 		createVueTemplateRefLinksPlugin(),
 		createEmmetPlugin({
 			mappedLanguages: {
@@ -61,6 +60,7 @@ export function createVueLanguageServicePlugins(
 		}),
 
 		// TS related plugins
+		createVueSuggestDefineAssignmentPlugin(ts),
 		createTypeScriptDocCommentTemplatePlugin(ts),
 		createTypeScriptSyntacticPlugin(ts),
 		createVueInlayHintsPlugin(ts),
