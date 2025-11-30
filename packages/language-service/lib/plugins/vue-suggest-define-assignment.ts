@@ -106,6 +106,9 @@ function shouldSkip(ts: typeof import('typescript'), node: ts.Node, pos: number)
 	if (ts.isStringLiteral(node) && pos >= node.getFullStart() && pos <= node.getEnd()) {
 		return true;
 	}
+	else if (ts.isTemplateLiteral(node) && pos >= node.getFullStart() && pos <= node.getEnd()) {
+		return true;
+	}
 	else {
 		let _shouldSkip = false;
 		node.forEachChild(node => {
