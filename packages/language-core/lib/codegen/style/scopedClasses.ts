@@ -1,7 +1,7 @@
-import type{ StyleCodegenOptions } from '.';
 import type { Code } from '../../types';
 import { generateStyleScopedClassReference } from '../template/styleScopedClasses';
 import { endOfLine } from '../utils';
+import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleImports } from './common';
 
 export function* generateStyleScopedClasses(

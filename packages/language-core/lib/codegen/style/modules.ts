@@ -1,10 +1,10 @@
-import type { StyleCodegenOptions } from '.';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
+import * as names from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, newLine } from '../utils';
+import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleImports } from './common';
-import * as names from '../names';
 
 export function* generateStyleModules(
 	{ styles, usedCssModule, vueCompilerOptions }: StyleCodegenOptions,
