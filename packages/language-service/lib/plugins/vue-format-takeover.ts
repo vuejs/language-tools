@@ -11,6 +11,20 @@ export function create(): LanguageServicePlugin {
 			},
 		},
 		create(context): LanguageServicePluginInstance {
+			return {
+				async provideDocumentFormattingEdits(document) {
+					if (await shouldSkip(document)) {
+						return [];
+					}
+					return undefined;
+				},
+				async provideOnTypeFormattingEdits(document) {
+					if (await shouldSkip(document)) {
+						return [];
+					}
+					return undefined;
+				},
+			};
 			async function shouldSkip(document: TextDocument): Promise<boolean> {
 				const decoded = context.decodeEmbeddedDocumentUri(URI.parse(document.uri));
 				if (!decoded) {
@@ -35,21 +49,6 @@ export function create(): LanguageServicePlugin {
 
 				return false;
 			}
-
-			return {
-				async provideDocumentFormattingEdits(document) {
-					if (await shouldSkip(document)) {
-						return [];
-					}
-					return undefined;
-				},
-				async provideOnTypeFormattingEdits(document) {
-					if (await shouldSkip(document)) {
-						return [];
-					}
-					return undefined;
-				},
-			};
 		},
 	};
 }
