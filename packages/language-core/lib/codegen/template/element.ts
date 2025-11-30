@@ -3,11 +3,11 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
-import { getAttributeValueOffset, getElementTagOffsets, getNodeText, hyphenateTag } from '../../utils/shared';
+import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import * as names from '../names';
-import { endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
+import { endOfLine, forEachNode, getTypeScriptAST, identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -17,6 +17,7 @@ import { type FailGeneratedExpression, generateElementProps } from './elementPro
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
+import { generateStyleScopedClassReference } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
 
@@ -265,7 +266,7 @@ export function* generateComponent(
 		isPropsVarUsed = true;
 	}
 
-	collectStyleScopedClassReferences(options, ctx, node);
+	yield* generateStyleScopedClassReferences(options, node);
 
 	const slotDir = node.props.find(p =>
 		p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot'
@@ -342,7 +343,7 @@ export function* generateElement(
 		ctx.inheritedAttrVars.add(`__VLS_intrinsics.${node.tag}`);
 	}
 
-	collectStyleScopedClassReferences(options, ctx, node);
+	yield* generateStyleScopedClassReferences(options, node);
 
 	const { currentComponent } = ctx;
 	ctx.currentComponent = undefined;
@@ -352,41 +353,27 @@ export function* generateElement(
 	ctx.currentComponent = currentComponent;
 }
 
-function collectStyleScopedClassReferences(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
+function* generateStyleScopedClassReferences(
+	{ template, ts }: TemplateCodegenOptions,
 	node: CompilerDOM.ElementNode,
-) {
+): Generator<Code> {
 	for (const prop of node.props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 			&& prop.name === 'class'
 			&& prop.value
 		) {
-			if (options.template.lang === 'pug') {
+			if (template.lang === 'pug') {
 				const getClassOffset = Reflect.get(prop.value.loc.start, 'getClassOffset') as (offset: number) => number;
 				const content = prop.value.loc.source.slice(1, -1);
-
-				let offset = 1;
-				for (const className of content.split(' ')) {
-					if (className) {
-						ctx.scopedClasses.push({
-							source: 'template',
-							className,
-							offset: getClassOffset(offset),
-						});
-					}
-					offset += className.length + 1;
+				for (const [className, pos] of forEachClassName(content)) {
+					yield* generateStyleScopedClassReference(template, className, getClassOffset(pos + 1));
 				}
 			}
 			else {
-				const offset = getAttributeValueOffset(prop.value);
-				if (prop.value.content) {
-					const classes = collectClasses(prop.value.content, offset);
-					ctx.scopedClasses.push(...classes);
-				}
-				else {
-					ctx.emptyClassOffsets.push(offset);
+				const [text, start] = normalizeAttributeValue(prop.value);
+				for (const [className, offset] of forEachClassName(text)) {
+					yield* generateStyleScopedClassReference(template, className, start + offset);
 				}
 			}
 		}
@@ -398,17 +385,15 @@ function collectStyleScopedClassReferences(
 		) {
 			const content = '(' + prop.exp.content + ')';
 			const startOffset = prop.exp.loc.start.offset - 1;
-
-			const { ts } = options;
-			const ast = getTypeScriptAST(ts, options.template, content);
+			const ast = getTypeScriptAST(ts, template, content);
 			const literals: ts.StringLiteralLike[] = [];
 
-			ts.forEachChild(ast, node => {
+			for (const node of forEachNode(ts, ast)) {
 				if (
 					!ts.isExpressionStatement(node)
 					|| !ts.isParenthesizedExpression(node.expression)
 				) {
-					return;
+					continue;
 				}
 				const { expression } = node.expression;
 
@@ -416,45 +401,43 @@ function collectStyleScopedClassReferences(
 					literals.push(expression);
 				}
 				else if (ts.isArrayLiteralExpression(expression)) {
-					walkArrayLiteral(expression);
+					yield* walkArrayLiteral(expression);
 				}
 				else if (ts.isObjectLiteralExpression(expression)) {
-					walkObjectLiteral(expression);
-				}
-			});
-
-			for (const literal of literals) {
-				if (literal.text) {
-					const classes = collectClasses(
-						literal.text,
-						literal.end - literal.text.length - 1 + startOffset,
-					);
-					ctx.scopedClasses.push(...classes);
-				}
-				else {
-					ctx.emptyClassOffsets.push(literal.end - 1 + startOffset);
+					yield* walkObjectLiteral(expression);
 				}
 			}
 
-			function walkArrayLiteral(node: ts.ArrayLiteralExpression) {
+			for (const literal of literals) {
+				const start = literal.end - literal.text.length - 1 + startOffset;
+				for (const [className, offset] of forEachClassName(literal.text)) {
+					yield* generateStyleScopedClassReference(template, className, start + offset);
+				}
+			}
+
+			function* walkArrayLiteral(node: ts.ArrayLiteralExpression) {
 				const { elements } = node;
 				for (const element of elements) {
 					if (ts.isStringLiteralLike(element)) {
 						literals.push(element);
 					}
 					else if (ts.isObjectLiteralExpression(element)) {
-						walkObjectLiteral(element);
+						yield* walkObjectLiteral(element);
 					}
 				}
 			}
 
-			function walkObjectLiteral(node: ts.ObjectLiteralExpression) {
+			function* walkObjectLiteral(node: ts.ObjectLiteralExpression) {
 				const { properties } = node;
 				for (const property of properties) {
 					if (ts.isPropertyAssignment(property)) {
 						const { name } = property;
 						if (ts.isIdentifier(name)) {
-							walkIdentifier(name);
+							yield* generateStyleScopedClassReference(
+								template,
+								name.text,
+								name.end - name.text.length + startOffset,
+							);
 						}
 						else if (ts.isStringLiteral(name)) {
 							literals.push(name);
@@ -467,50 +450,24 @@ function collectStyleScopedClassReferences(
 						}
 					}
 					else if (ts.isShorthandPropertyAssignment(property)) {
-						walkIdentifier(property.name);
+						yield* generateStyleScopedClassReference(
+							template,
+							property.name.text,
+							property.name.end - property.name.text.length + startOffset,
+						);
 					}
 				}
-			}
-
-			function walkIdentifier(node: ts.Identifier) {
-				const text = getNodeText(ts, node, ast);
-				ctx.scopedClasses.push({
-					source: 'template',
-					className: text,
-					offset: node.end - text.length + startOffset,
-				});
 			}
 		}
 	}
 }
 
-function collectClasses(content: string, startOffset = 0) {
-	const classes: {
-		source: string;
-		className: string;
-		offset: number;
-	}[] = [];
-
-	let currentClassName = '';
+function* forEachClassName(content: string) {
 	let offset = 0;
-	for (const char of (content + ' ')) {
-		if (char.trim() === '') {
-			if (currentClassName !== '') {
-				classes.push({
-					source: 'template',
-					className: currentClassName,
-					offset: offset + startOffset,
-				});
-				offset += currentClassName.length;
-				currentClassName = '';
-			}
-			offset += char.length;
-		}
-		else {
-			currentClassName += char;
-		}
+	for (const className of content.split(' ')) {
+		yield [className, offset] as const;
+		offset += className.length + 1;
 	}
-	return classes;
 }
 
 function* generateFailedExpressions(
@@ -595,9 +552,7 @@ function* generateElementReference(
 			&& prop.name === 'ref'
 			&& prop.value
 		) {
-			const name = prop.value.content;
-			const offset = getAttributeValueOffset(prop.value);
-
+			const [name, offset] = normalizeAttributeValue(prop.value);
 			// navigation support for `const foo = ref()`
 			yield `/** @type {typeof ${names.ctx}`;
 			yield* generatePropertyAccess(

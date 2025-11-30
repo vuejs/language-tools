@@ -54,3 +54,13 @@ export function* generateSfcBlockSection(
 		yield newLine;
 	}
 }
+
+export function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {
+	const children: ts.Node[] = [];
+	ts.forEachChild(node, child => {
+		children.push(child);
+	});
+	for (const child of children) {
+		yield child;
+	}
+}

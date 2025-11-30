@@ -9,7 +9,7 @@ import type {
 	SFCStyleBlock,
 	SFCTemplateBlock,
 } from '@vue/compiler-sfc';
-import { getAttributeValueOffset } from './shared';
+import { normalizeAttributeValue } from './shared';
 
 declare module '@vue/compiler-sfc' {
 	interface SFCDescriptor {
@@ -157,9 +157,9 @@ function parseAttr(p: CompilerDOM.AttributeNode, node: CompilerDOM.ElementNode) 
 	if (!p.value) {
 		return true;
 	}
-	const offset = getAttributeValueOffset(p.value);
+	const [content, offset] = normalizeAttributeValue(p.value);
 	return {
-		text: p.value.content,
+		text: content,
 		offset: offset - node.loc.start.offset,
 		quotes: offset > p.value.loc.start.offset,
 	};

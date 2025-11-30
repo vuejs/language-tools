@@ -6,7 +6,6 @@ import { endOfLine, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from './context';
 import { generateObjectProperty } from './objectProperty';
-import { generateStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
@@ -78,7 +77,6 @@ function* generateWorker(
 	if (template.ast) {
 		yield* generateTemplateChild(options, ctx, template.ast);
 	}
-	yield* generateStyleScopedClassReferences(ctx);
 	yield* ctx.generateHoistVariables();
 	yield* generateSlotsType(options, ctx);
 	yield* generateInheritedAttrsType(ctx);

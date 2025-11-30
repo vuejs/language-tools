@@ -128,12 +128,6 @@ export function createTemplateCodegenContext(
 		propsVar: string;
 	}[] = [];
 	const blockConditions: string[] = [];
-	const scopedClasses: {
-		source: string;
-		className: string;
-		offset: number;
-	}[] = [];
-	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
 	const inheritedAttrVars = new Set<string>();
 	const templateRefs = new Map<string, {
@@ -166,8 +160,6 @@ export function createTemplateCodegenContext(
 		dollarVars,
 		accessExternalVariables,
 		blockConditions,
-		scopedClasses,
-		emptyClassOffsets,
 		inlayHints,
 		inheritedAttrVars,
 		templateRefs,

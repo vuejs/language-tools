@@ -7,7 +7,6 @@ import { generateStyleModules } from '../style/modules';
 import { generateStyleScopedClasses } from '../style/scopedClasses';
 import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
 import { generateInterpolation } from '../template/interpolation';
-import { generateStyleScopedClassReferences } from '../template/styleScopedClasses';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
@@ -26,8 +25,7 @@ export function* generateTemplate(
 		scriptSetupBindingNames: new Set(),
 	});
 
-	yield* generateStyleScopedClasses(options, templateCodegenCtx);
-	yield* generateStyleScopedClassReferences(templateCodegenCtx, true);
+	yield* generateStyleScopedClasses(options);
 	yield* generateStyleModules(options);
 	yield* generateCssVars(options, templateCodegenCtx);
 	yield* generateBindings(options, ctx, templateCodegenCtx);

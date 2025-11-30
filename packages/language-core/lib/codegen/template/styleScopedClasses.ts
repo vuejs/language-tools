@@ -1,34 +1,48 @@
-import type { Code } from '../../types';
+import type { Code, SfcBlock } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine } from '../utils';
+import { newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateEscaped } from '../utils/escaped';
-import type { TemplateCodegenContext } from './context';
 
 const classNameEscapeRegex = /([\\'])/;
 
-export function* generateStyleScopedClassReferences(
-	ctx: TemplateCodegenContext,
-	withDot = false,
+// For language-service/lib/plugins/vue-scoped-class-links.ts usage
+export const references: WeakMap<SfcBlock, [version: string, [className: string, offset: number][]]> = new WeakMap();
+
+export function* generateStyleScopedClassReference(
+	block: SfcBlock,
+	className: string,
+	offset: number,
+	fullStart = offset,
 ): Generator<Code> {
-	for (const offset of ctx.emptyClassOffsets) {
+	if (!className) {
 		yield `/** @type {__VLS_StyleScopedClasses['`;
 		yield ['', 'template', offset, codeFeatures.additionalCompletion];
-		yield `']} */${endOfLine}`;
+		yield `']} */${newLine}`;
+		return;
 	}
-	for (const { source, className, offset } of ctx.scopedClasses) {
-		yield `/** @type {__VLS_StyleScopedClasses[`;
-		const token = yield* startBoundary(source, offset - (withDot ? 1 : 0), codeFeatures.navigation);
-		yield `'`;
-		yield* generateEscaped(
-			className,
-			source,
-			offset,
-			codeFeatures.navigationAndAdditionalCompletion,
-			classNameEscapeRegex,
-		);
-		yield `'`;
-		yield endBoundary(token, offset + className.length);
-		yield `]} */${endOfLine}`;
+
+	const cache = references.get(block);
+	if (!cache || cache[0] !== block.content) {
+		const arr: [className: string, offset: number][] = [];
+		references.set(block, [block.content, arr]);
+		arr.push([className, offset]);
 	}
+	else {
+		cache[1].push([className, offset]);
+	}
+
+	yield `/** @type {__VLS_StyleScopedClasses[`;
+	const token = yield* startBoundary(block.name, fullStart, codeFeatures.navigation);
+	yield `'`;
+	yield* generateEscaped(
+		className,
+		block.name,
+		offset,
+		codeFeatures.navigationAndAdditionalCompletion,
+		classNameEscapeRegex,
+	);
+	yield `'`;
+	yield endBoundary(token, offset + className.length);
+	yield `]} */${newLine}`;
 }

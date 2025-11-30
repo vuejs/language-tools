@@ -6,7 +6,7 @@ import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
 import type { ScriptCodegenOptions } from '../script';
-import { getTypeScriptAST, identifierRegex } from '../utils';
+import { forEachNode, getTypeScriptAST, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 
@@ -284,16 +284,6 @@ function* forEachDeclarationsInTypeNode(
 		for (const child of forEachNode(ts, node)) {
 			yield* forEachDeclarationsInTypeNode(ts, child);
 		}
-	}
-}
-
-function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {
-	const children: ts.Node[] = [];
-	ts.forEachChild(node, child => {
-		children.push(child);
-	});
-	for (const child of children) {
-		yield child;
 	}
 }
 

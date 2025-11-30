@@ -2,7 +2,7 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import { isMatch } from 'picomatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { getAttributeValueOffset, hyphenateAttr, hyphenateTag } from '../../utils/shared';
+import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import * as names from '../names';
@@ -282,9 +282,9 @@ function* generateAttrValue(
 	features: VueCodeInformation,
 ): Generator<Code> {
 	const quote = node.loc.source.startsWith("'") ? "'" : '"';
-	const offset = getAttributeValueOffset(node);
+	const [content, offset] = normalizeAttributeValue(node);
 	yield quote;
-	yield* generateUnicode(node.content, offset, features);
+	yield* generateUnicode(content, offset, features);
 	yield quote;
 }
 
