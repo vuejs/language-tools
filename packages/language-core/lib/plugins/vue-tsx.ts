@@ -100,7 +100,7 @@ function useCodegen(
 			: undefined
 	);
 
-	const getBindingNames = computedSet(() => {
+	const getSetupBindingNames = computedSet(() => {
 		const newNames = new Set<string>();
 		const scriptSetupRanges = getScriptSetupRanges();
 		if (!sfc.scriptSetup || !scriptSetupRanges) {
@@ -198,7 +198,7 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			template: sfc.template,
 			destructuredPropNames: getDestructuredPropNames(),
-			setupBindingNames: getBindingNames(),
+			setupBindingNames: getSetupBindingNames(),
 			templateRefNames: getSetupTemplateRefNames(),
 			scriptSetupImportComponentNames: getSetupImportComponentNames(),
 			hasDefineSlots: setupHasDefineSlots(),
@@ -225,7 +225,7 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			script: sfc.script,
 			scriptSetup: sfc.scriptSetup,
-			setupBindingNames: getBindingNames(),
+			setupBindingNames: getSetupBindingNames(),
 			fileName,
 			lang: getLang(),
 			scriptRanges: getScriptRanges(),
@@ -250,7 +250,7 @@ function useCodegen(
 			styles: sfc.styles,
 			destructuredPropNames: getDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
-			setupBindingNames: getBindingNames(),
+			setupBindingNames: getSetupBindingNames(),
 		});
 		const codes: Code[] = [];
 		let ctx: TemplateCodegenContext;
