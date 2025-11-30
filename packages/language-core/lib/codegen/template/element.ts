@@ -565,7 +565,7 @@ function* generateElementReference(
 			yield `} */${endOfLine}`;
 
 			if (identifierRegex.test(name) && !options.templateRefNames.has(name)) {
-				ctx.accessExternalVariable(name, offset);
+				ctx.accessExternalVariable('template', name, offset);
 			}
 
 			return { name, offset };

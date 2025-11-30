@@ -282,7 +282,7 @@ export function* generateSetupFunction(
 		(start, end) =>
 			generateSfcBlockSection(scriptSetup, start, end, codeFeatures.all, end === scriptSetup.content.length),
 	);
-	yield* generateMacros(options, ctx);
+	yield* generateMacros(options);
 	yield* generateModels(scriptSetup, scriptSetupRanges);
 	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* body;
@@ -303,15 +303,12 @@ export function* generateSetupFunction(
 	}
 }
 
-function* generateMacros(
-	options: ScriptCodegenOptions,
-	ctx: ScriptCodegenContext,
-): Generator<Code> {
+function* generateMacros(options: ScriptCodegenOptions): Generator<Code> {
 	if (options.vueCompilerOptions.target >= 3.3) {
 		yield `// @ts-ignore${newLine}`;
 		yield `declare const { `;
 		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!ctx.bindingNames.has(macro)) {
+			if (!options.scriptBindings.has(macro)) {
 				yield `${macro}, `;
 			}
 		}

@@ -13,17 +13,18 @@ export interface StyleCodegenOptions {
 	styles: Sfc['styles'];
 	destructuredPropNames: Set<string>;
 	templateRefNames: Set<string>;
+	scriptBindings: Set<string>;
 }
 
 export { generate as generateStyle };
 
 function* generate(options: StyleCodegenOptions) {
-	const ctx = createTemplateCodegenContext({
-		scriptSetupBindingNames: new Set(),
-	});
+	const ctx = createTemplateCodegenContext(options.scriptBindings);
+	const endScope = ctx.startScope();
 	yield* generateStyleScopedClasses(options);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
+	yield* endScope();
 	return ctx;
 }
 

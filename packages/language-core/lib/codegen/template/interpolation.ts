@@ -119,7 +119,7 @@ function* forEachInterpolationSegment(
 			yield `)`;
 		}
 		else {
-			ctx.accessExternalVariable(name, start - prefix.length + offset);
+			ctx.accessExternalVariable(block.name, name, start - prefix.length + offset);
 			yield ctx.dollarVars.has(name) ? names.dollars : names.ctx;
 			yield `.`;
 			yield [name, offset];

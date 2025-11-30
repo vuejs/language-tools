@@ -266,7 +266,7 @@ export function* generatePropExp(
 				yield `)`;
 			}
 			else {
-				ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
+				ctx.accessExternalVariable('template', propVariableName, exp.loc.start.offset);
 				yield names.ctx;
 				yield `.`;
 				yield* codes;

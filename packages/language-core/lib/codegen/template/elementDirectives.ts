@@ -39,7 +39,7 @@ export function* generateElementDirectives(
 		}
 
 		if (!builtInDirectives.has(prop.name)) {
-			ctx.accessExternalVariable(camelize('v-' + prop.name), prop.loc.start.offset);
+			ctx.accessExternalVariable('template', camelize('v-' + prop.name), prop.loc.start.offset);
 		}
 
 		const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);

@@ -13,7 +13,7 @@ export interface TemplateCodegenOptions {
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	template: NonNullable<Sfc['template']>;
-	scriptSetupBindingNames: Set<string>;
+	scriptBindings: Set<string>;
 	scriptSetupImportComponentNames: Set<string>;
 	destructuredPropNames: Set<string>;
 	templateRefNames: Set<string>;
@@ -27,7 +27,7 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	const ctx = createTemplateCodegenContext(options);
+	const ctx = createTemplateCodegenContext(options.scriptBindings);
 	const codegen = generateWorker(options, ctx);
 	const codes: Code[] = [];
 
