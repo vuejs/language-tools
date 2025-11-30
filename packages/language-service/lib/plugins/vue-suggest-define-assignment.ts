@@ -1,6 +1,7 @@
 import type { CompletionItem, CompletionItemKind, LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { type TextRange, tsCodegen } from '@vue/language-core';
 import type * as ts from 'typescript';
+import { URI } from 'vscode-uri';
 import { resolveEmbeddedCode } from '../utils';
 
 const documentToSourceFile = new WeakMap<TextDocument, ts.SourceFile>();
@@ -129,7 +130,7 @@ function getSourceFile(ts: typeof import('typescript'), document: TextDocument):
 	let sourceFile = documentToSourceFile.get(document);
 	if (!sourceFile) {
 		sourceFile = ts.createSourceFile(
-			document.uri,
+			URI.parse(document.uri).path,
 			document.getText(),
 			ts.ScriptTarget.Latest,
 		);
