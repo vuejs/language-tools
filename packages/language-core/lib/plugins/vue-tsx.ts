@@ -2,15 +2,15 @@ import { camelize, capitalize } from '@vue/shared';
 import { computed } from 'alien-signals';
 import * as path from 'path-browserify';
 import { generateScript } from '../codegen/script';
+import { generateStyle } from '../codegen/style';
 import { generateTemplate } from '../codegen/template';
+import type { TemplateCodegenContext } from '../codegen/template/context';
 import { CompilerOptionsResolver } from '../compilerOptions';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
 import type { Code, Sfc, VueLanguagePlugin } from '../types';
 import { computedArray, computedSet } from '../utils/signals';
-import { generateStyle } from '../codegen/style';
-import { TemplateCodegenContext } from '../codegen/template/context';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof useCodegen>>();
 
