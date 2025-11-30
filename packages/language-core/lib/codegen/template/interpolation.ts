@@ -16,7 +16,7 @@ const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 export function* generateInterpolation(
 	options: Pick<
 		TemplateCodegenOptions | StyleCodegenOptions,
-		'ts' | 'destructuredPropNames' | 'templateRefNames'
+		'ts' | 'templateRefNames'
 	>,
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
@@ -70,9 +70,9 @@ export function* generateInterpolation(
 }
 
 function* forEachInterpolationSegment(
-	options: Pick<
+	{ ts, templateRefNames }: Pick<
 		TemplateCodegenOptions | StyleCodegenOptions,
-		'ts' | 'destructuredPropNames' | 'templateRefNames'
+		'ts' | 'templateRefNames'
 	>,
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
@@ -93,7 +93,7 @@ function* forEachInterpolationSegment(
 
 	for (
 		const [name, offset, isShorthand] of forEachIdentifiers(
-			options,
+			ts,
 			ctx,
 			block,
 			originalCode,
@@ -113,7 +113,7 @@ function* forEachInterpolationSegment(
 		// fix https://github.com/vuejs/language-tools/issues/1264
 		yield ['', offset, 'errorMappingOnly'];
 
-		if (options.templateRefNames.has(name)) {
+		if (templateRefNames.has(name)) {
 			yield `__VLS_unref(`;
 			yield [name, offset];
 			yield `)`;
@@ -134,10 +134,7 @@ function* forEachInterpolationSegment(
 }
 
 function* forEachIdentifiers(
-	options: Pick<
-		TemplateCodegenOptions | StyleCodegenOptions,
-		'ts' | 'destructuredPropNames'
-	>,
+	ts: typeof import('typescript'),
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
 	originalCode: string,
@@ -145,18 +142,17 @@ function* forEachIdentifiers(
 	prefix: string,
 ): Generator<[string, number, boolean]> {
 	if (
-		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(options, ctx, originalCode)
+		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode)
 	) {
 		yield [originalCode, prefix.length, false];
 		return;
 	}
 
-	const { ts } = options;
 	const endScope = ctx.startScope();
 	const ast = getTypeScriptAST(ts, block, code);
 	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx)) {
 		const text = getNodeText(ts, id, ast);
-		if (shouldIdentifierSkipped(options, ctx, text)) {
+		if (shouldIdentifierSkipped(ctx, text)) {
 			continue;
 		}
 		yield [text, getStartEnd(ts, id, ast).start, isShorthand];
@@ -288,10 +284,6 @@ function* forEachDeclarationsInTypeNode(
 }
 
 function shouldIdentifierSkipped(
-	{ destructuredPropNames }: Pick<
-		TemplateCodegenOptions | StyleCodegenOptions,
-		'destructuredPropNames'
-	>,
 	ctx: TemplateCodegenContext,
 	text: string,
 ) {
@@ -300,6 +292,5 @@ function shouldIdentifierSkipped(
 		|| isGloballyAllowed(text)
 		|| isLiteralWhitelisted(text)
 		|| text === 'require'
-		|| text.startsWith('__VLS_')
-		|| destructuredPropNames.has(text);
+		|| text.startsWith('__VLS_');
 }

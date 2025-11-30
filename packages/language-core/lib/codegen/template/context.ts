@@ -107,7 +107,7 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  * and additionally how we use that to determine whether to propagate diagnostics back upward.
  */
 export function createTemplateCodegenContext(
-	scriptBindings: Set<string>,
+	setupBindingNames: Set<string>,
 ) {
 	let variableId = 0;
 
@@ -307,7 +307,7 @@ export function createTemplateCodegenContext(
 		for (const [varName, map] of all) {
 			for (const [source, offsets] of map) {
 				for (const offset of offsets) {
-					if (scriptBindings.has(varName)) {
+					if (setupBindingNames.has(varName)) {
 						// #3409
 						yield [
 							varName,

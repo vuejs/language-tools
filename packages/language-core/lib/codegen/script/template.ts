@@ -150,10 +150,10 @@ function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<C
 }
 
 function* generateBindings(
-	{ templateComponents, templateCodegen, styleCodegen, scriptBindings }: ScriptCodegenOptions,
+	{ templateComponents, templateCodegen, styleCodegen, setupBindingNames }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
-	if (!scriptBindings.size) {
+	if (!setupBindingNames.size) {
 		return;
 	}
 	ctx.generatedTypes.add(names.Bindings);
@@ -165,15 +165,15 @@ function* generateBindings(
 	]);
 
 	yield `type ${names.Bindings} = __VLS_ProxyRefs<{${newLine}`;
-	for (const varName of scriptBindings) {
-		if (!usedVars.has(varName)) {
+	for (const bindingName of setupBindingNames) {
+		if (!usedVars.has(bindingName)) {
 			continue;
 		}
-		const token = Symbol(varName.length);
+		const token = Symbol(bindingName.length);
 		yield ['', undefined, 0, { __linkedToken: token }];
-		yield `${varName}: typeof `;
+		yield `${bindingName}: typeof `;
 		yield ['', undefined, 0, { __linkedToken: token }];
-		yield varName;
+		yield bindingName;
 		yield endOfLine;
 	}
 	yield `}>${endOfLine}`;

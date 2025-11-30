@@ -28,7 +28,7 @@ export interface ScriptCodegenOptions {
 	templateStartTagOffset: number | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
 	styleCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
-	scriptBindings: Set<string>;
+	setupBindingNames: Set<string>;
 }
 
 export { generate as generateScript };
