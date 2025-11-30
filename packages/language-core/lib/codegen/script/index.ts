@@ -20,17 +20,14 @@ export interface ScriptCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	script: Sfc['script'];
 	scriptSetup: Sfc['scriptSetup'];
-	styles: Sfc['styles'];
 	fileName: string;
 	lang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateComponents: string[];
 	templateStartTagOffset: number | undefined;
-	// TODO: remove this for better increment ality
 	templateCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
-	destructuredPropNames: Set<string>;
-	templateRefNames: Set<string>;
+	styleCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
 }
 
 export { generate as generateScript };

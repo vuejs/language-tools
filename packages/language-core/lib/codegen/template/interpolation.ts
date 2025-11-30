@@ -5,7 +5,7 @@ import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
-import type { ScriptCodegenOptions } from '../script';
+import type { StyleCodegenOptions } from '../style';
 import { forEachNode, getTypeScriptAST, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
@@ -15,7 +15,7 @@ const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
 	options: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
+		TemplateCodegenOptions | StyleCodegenOptions,
 		'ts' | 'destructuredPropNames' | 'templateRefNames'
 	>,
 	ctx: TemplateCodegenContext,
@@ -71,7 +71,7 @@ export function* generateInterpolation(
 
 function* forEachInterpolationSegment(
 	options: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
+		TemplateCodegenOptions | StyleCodegenOptions,
 		'ts' | 'destructuredPropNames' | 'templateRefNames'
 	>,
 	ctx: TemplateCodegenContext,
@@ -135,7 +135,7 @@ function* forEachInterpolationSegment(
 
 function* forEachIdentifiers(
 	options: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
+		TemplateCodegenOptions | StyleCodegenOptions,
 		'ts' | 'destructuredPropNames'
 	>,
 	ctx: TemplateCodegenContext,
@@ -289,7 +289,7 @@ function* forEachDeclarationsInTypeNode(
 
 function shouldIdentifierSkipped(
 	{ destructuredPropNames }: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
+		TemplateCodegenOptions | StyleCodegenOptions,
 		'destructuredPropNames'
 	>,
 	ctx: TemplateCodegenContext,

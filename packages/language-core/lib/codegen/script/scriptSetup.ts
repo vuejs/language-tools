@@ -194,7 +194,7 @@ export function* generateSetupFunction(
 		if (arg) {
 			transforms.push(
 				insert(callExp.end, function*() {
-					yield ` as Omit<__VLS_StyleModules, '$style'>[`;
+					yield ` as Omit<${names.StyleModules}, '$style'>[`;
 					yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic);
 					yield `])`;
 				}),
@@ -206,7 +206,7 @@ export function* generateSetupFunction(
 		else {
 			transforms.push(
 				insert(callExp.end, function*() {
-					yield ` as __VLS_StyleModules[`;
+					yield ` as ${names.StyleModules}[`;
 					const token = yield* startBoundary(scriptSetup.name, exp.start, codeFeatures.verification);
 					yield `'$style'`;
 					yield endBoundary(token, exp.end);

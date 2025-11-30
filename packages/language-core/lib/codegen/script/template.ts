@@ -3,10 +3,6 @@ import * as path from 'path-browserify';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
-import { generateStyleModules } from '../style/modules';
-import { generateStyleScopedClasses } from '../style/scopedClasses';
-import { createTemplateCodegenContext, type TemplateCodegenContext } from '../template/context';
-import { generateInterpolation } from '../template/interpolation';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
@@ -17,19 +13,14 @@ export function* generateTemplate(
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	yield* generateSelf(options);
+	yield* generateBindings(options, ctx);
 	yield* generateTemplateCtx(options, ctx);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 
-	const templateCodegenCtx = createTemplateCodegenContext({
-		scriptSetupBindingNames: new Set(),
-	});
-
-	yield* generateStyleScopedClasses(options);
-	yield* generateStyleModules(options);
-	yield* generateCssVars(options, templateCodegenCtx);
-	yield* generateBindings(options, ctx, templateCodegenCtx);
-
+	if (options.styleCodegen) {
+		yield* options.styleCodegen.codes;
+	}
 	if (options.templateCodegen) {
 		yield* options.templateCodegen.codes;
 	}
@@ -54,7 +45,7 @@ function* generateSelf({ script, scriptRanges, vueCompilerOptions, fileName }: S
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, script, scriptRanges, styles, scriptSetupRanges, fileName }: ScriptCodegenOptions,
+	{ vueCompilerOptions, script, scriptRanges, styleCodegen, scriptSetupRanges, fileName }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	const exps: Iterable<Code>[] = [];
@@ -70,8 +61,8 @@ function* generateTemplateCtx(
 	else {
 		exps.push([`{} as import('${vueCompilerOptions.lib}').ComponentPublicInstance`]);
 	}
-	if (styles.some(style => style.module)) {
-		exps.push([`{} as __VLS_StyleModules`]);
+	if (styleCodegen?.generatedTypes.has(names.StyleModules)) {
+		exps.push([`{} as ${names.StyleModules}`]);
 	}
 
 	if (scriptSetupRanges?.defineEmits) {
@@ -109,7 +100,7 @@ function* generateTemplateCtx(
 		exps.push([`{} as ${names.InternalProps}`]);
 	}
 
-	if (scriptSetupRanges && ctx.bindingNames.size) {
+	if (ctx.generatedTypes.has(names.Bindings)) {
 		exps.push([`{} as ${names.Bindings}`]);
 	}
 
@@ -158,48 +149,26 @@ function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<C
 	yield `let ${names.directives}!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
-function* generateCssVars(
-	options: ScriptCodegenOptions,
-	ctx: TemplateCodegenContext,
-): Generator<Code> {
-	for (const style of options.styles) {
-		for (const binding of style.bindings) {
-			yield* generateInterpolation(
-				options,
-				ctx,
-				style,
-				codeFeatures.all,
-				binding.text,
-				binding.offset,
-				`(`,
-				`)`,
-			);
-			yield endOfLine;
-		}
-	}
-}
-
 function* generateBindings(
-	options: ScriptCodegenOptions,
+	{ scriptSetup, templateComponents, templateCodegen, styleCodegen }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
-	templateCodegenCtx: TemplateCodegenContext,
 ): Generator<Code> {
-	if (!options.scriptSetup || !ctx.bindingNames.size) {
+	if (!(scriptSetup && ctx.bindingNames.size)) {
 		return;
 	}
+	ctx.generatedTypes.add(names.Bindings);
 
-	const usageVars = new Set([
-		...options.templateComponents.flatMap(c => [camelize(c), capitalize(camelize(c))]),
-		...options.templateCodegen?.accessExternalVariables.keys() ?? [],
-		...templateCodegenCtx.accessExternalVariables.keys(),
+	const usedVars = new Set([
+		...templateComponents.flatMap(c => [camelize(c), capitalize(camelize(c))]),
+		...templateCodegen?.accessExternalVariables.keys() ?? [],
+		...styleCodegen?.accessExternalVariables.keys() ?? [],
 	]);
 
 	yield `type ${names.Bindings} = __VLS_ProxyRefs<{${newLine}`;
 	for (const varName of ctx.bindingNames) {
-		if (!usageVars.has(varName)) {
+		if (!usedVars.has(varName)) {
 			continue;
 		}
-
 		const token = Symbol(varName.length);
 		yield ['', undefined, 0, { __linkedToken: token }];
 		yield `${varName}: typeof `;

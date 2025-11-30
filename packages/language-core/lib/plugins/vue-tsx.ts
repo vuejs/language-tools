@@ -7,8 +7,10 @@ import { CompilerOptionsResolver } from '../compilerOptions';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
-import type { Sfc, VueLanguagePlugin } from '../types';
+import type { Code, Sfc, VueLanguagePlugin } from '../types';
 import { computedArray, computedSet } from '../utils/signals';
+import { generateStyle } from '../codegen/style';
+import { TemplateCodegenContext } from '../codegen/template/context';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof useCodegen>>();
 
@@ -216,7 +218,6 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			script: sfc.script,
 			scriptSetup: sfc.scriptSetup,
-			styles: sfc.styles,
 			fileName,
 			lang: getLang(),
 			scriptRanges: getScriptRanges(),
@@ -224,9 +225,40 @@ function useCodegen(
 			templateCodegen: getGeneratedTemplate(),
 			templateComponents: getTemplateComponents(),
 			templateStartTagOffset: getTemplateStartTagOffset(),
+			styleCodegen: getGeneratedStyle(),
+		});
+	});
+
+	const usedCssModule = computed(() => !!getScriptSetupRanges()?.useCssModule.length);
+
+	const getGeneratedStyle = computed(() => {
+		if (!sfc.styles.length) {
+			return;
+		}
+		const generation = generateStyle({
+			ts,
+			vueCompilerOptions: getResolvedOptions(),
+			usedCssModule: usedCssModule(),
+			styles: sfc.styles,
 			destructuredPropNames: getSetupDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
 		});
+		const codes: Code[] = [];
+		let ctx: TemplateCodegenContext;
+
+		while (true) {
+			const result = generation.next();
+			if (result.done) {
+				ctx = result.value;
+				break;
+			}
+			codes.push(result.value);
+		}
+
+		return {
+			...ctx,
+			codes,
+		};
 	});
 
 	return {

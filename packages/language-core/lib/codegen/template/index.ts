@@ -27,19 +27,19 @@ export interface TemplateCodegenOptions {
 export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
-	const context = createTemplateCodegenContext(options);
-	const codegen = generateWorker(options, context);
+	const ctx = createTemplateCodegenContext(options);
+	const codegen = generateWorker(options, ctx);
 	const codes: Code[] = [];
 
 	for (const code of codegen) {
 		if (typeof code === 'object') {
-			code[3] = context.resolveCodeFeatures(code[3]);
+			code[3] = ctx.resolveCodeFeatures(code[3]);
 		}
 		codes.push(code);
 	}
 
 	return {
-		...context,
+		...ctx,
 		codes,
 	};
 }
