@@ -380,6 +380,21 @@
 					"default": false,
 					"markdownDescription": "%configuration.format.style.initialIndent%"
 				},
+				"vue.format.script.enabled": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "%configuration.format.script.enabled%"
+				},
+				"vue.format.template.enabled": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "%configuration.format.template.enabled%"
+				},
+				"vue.format.style.enabled": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "%configuration.format.style.enabled%"
+				},
 				"vue.format.wrapAttributes": {
 					"type": "string",
 					"default": "auto",
