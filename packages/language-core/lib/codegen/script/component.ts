@@ -122,31 +122,39 @@ function* generatePropsOption(
 	scriptSetupRanges: ScriptSetupRanges,
 	hasEmitsOption: boolean,
 ): Generator<Code> {
-	const optionGenerates: Iterable<Code>[] = [];
-	const typeOptionGenerates: Iterable<Code>[] = [];
+	const optionGenerates: (() => Iterable<Code>)[] = [];
+	const typeOptionGenerates: (() => Iterable<Code>)[] = [];
 
 	if (options.templateCodegen?.generatedTypes.has(names.InheritedAttrs)) {
 		const attrsType = hasEmitsOption
 			? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
 			: names.InheritedAttrs;
-		const propsType = `__VLS_PickNotAny<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>`;
-		const optionType = `${ctx.localTypes.TypePropsToOption}<${propsType}>`;
-		optionGenerates.push([`{} as ${optionType}`]);
-		typeOptionGenerates.push([`{} as ${attrsType}`]);
+		optionGenerates.push(function*() {
+			const propsType = `__VLS_PickNotAny<${ctx.localTypes.OmitIndexSignature}<${attrsType}>, {}>`;
+			const optionType = `${ctx.localTypes.TypePropsToOption}<${propsType}>`;
+			yield `{} as ${optionType}`;
+		});
+		typeOptionGenerates.push(function*() {
+			yield `{} as ${attrsType}`;
+		});
 	}
 	if (ctx.generatedTypes.has(names.PublicProps)) {
 		if (options.vueCompilerOptions.target < 3.6) {
-			let propsType = `${ctx.localTypes.TypePropsToOption}<${names.PublicProps}>`;
-			if (scriptSetupRanges.withDefaults?.arg) {
-				propsType = `${ctx.localTypes.WithDefaultsLocal}<${propsType}, typeof ${names.defaults}>`;
-			}
-			optionGenerates.push([`{} as ${propsType}`]);
+			optionGenerates.push(function*() {
+				let propsType = `${ctx.localTypes.TypePropsToOption}<${names.PublicProps}>`;
+				if (scriptSetupRanges.withDefaults?.arg) {
+					propsType = `${ctx.localTypes.WithDefaultsLocal}<${propsType}, typeof ${names.defaults}>`;
+				}
+				yield `{} as ${propsType}`;
+			});
 		}
-		typeOptionGenerates.push([`{} as ${names.PublicProps}`]);
+		typeOptionGenerates.push(function*() {
+			yield `{} as ${names.PublicProps}`;
+		});
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
 		const { arg } = scriptSetupRanges.defineProps;
-		optionGenerates.push(generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation));
+		optionGenerates.push(() => generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.navigation));
 		typeOptionGenerates.length = 0;
 	}
 
@@ -161,12 +169,12 @@ function* generatePropsOption(
 			yield `__defaults: ${names.defaults},${newLine}`;
 		}
 		yield `__typeProps: `;
-		yield* generateSpreadMerge(typeOptionGenerates);
+		yield* generateSpreadMerge(typeOptionGenerates.map(g => g()));
 		yield `,${newLine}`;
 	}
 	if (useOption) {
 		yield `props: `;
-		yield* generateSpreadMerge(optionGenerates);
+		yield* generateSpreadMerge(optionGenerates.map(g => g()));
 		yield `,${newLine}`;
 	}
 }
