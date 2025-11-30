@@ -135,12 +135,13 @@ function useCodegen(
 		return names;
 	});
 
-	const getRawBindingNames = computedSet(() => {
+	const getDirectAccessNames = computedSet(() => {
+		const scriptSetupRanges = getScriptSetupRanges();
 		const names = new Set([
-			...getScriptSetupRanges()?.defineProps?.destructured?.keys() ?? [],
+			...scriptSetupRanges?.defineProps?.destructured?.keys() ?? [],
 			...getImportComponentNames(),
 		]);
-		const rest = getScriptSetupRanges()?.defineProps?.destructuredRest;
+		const rest = scriptSetupRanges?.defineProps?.destructuredRest;
 		if (rest) {
 			names.add(rest);
 		}
@@ -199,7 +200,7 @@ function useCodegen(
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
 			template: sfc.template,
-			rawBindingNames: getRawBindingNames(),
+			directAccessNames: getDirectAccessNames(),
 			setupBindingNames: getSetupBindingNames(),
 			templateRefNames: getTemplateRefNames(),
 			hasDefineSlots: hasDefineSlots(),
@@ -246,7 +247,7 @@ function useCodegen(
 			ts,
 			vueCompilerOptions: getResolvedOptions(),
 			styles: sfc.styles,
-			rawBindingNames: getRawBindingNames(),
+			directAccessNames: getDirectAccessNames(),
 			templateRefNames: getTemplateRefNames(),
 			setupBindingNames: getSetupBindingNames(),
 		});

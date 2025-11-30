@@ -11,7 +11,7 @@ export interface StyleCodegenOptions {
 	vueCompilerOptions: VueCompilerOptions;
 	styles: Sfc['styles'];
 	templateRefNames: Set<string>;
-	rawBindingNames: Set<string>;
+	directAccessNames: Set<string>;
 	setupBindingNames: Set<string>;
 }
 
@@ -20,7 +20,7 @@ export { generate as generateStyle };
 function* generate(options: StyleCodegenOptions) {
 	const ctx = createTemplateCodegenContext(options.setupBindingNames);
 	const endScope = ctx.startScope();
-	ctx.declare(...options.rawBindingNames);
+	ctx.declare(...options.directAccessNames);
 	yield* generateStyleScopedClasses(options);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
