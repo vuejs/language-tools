@@ -58,22 +58,18 @@ function useCodegen(
 ) {
 	const ts = ctx.modules.typescript;
 
-	const getRawLang = computed(() => {
+	const getLang = computed(() => {
+		let lang = sfc.scriptSetup?.lang ?? sfc.script?.lang;
 		if (sfc.script && sfc.scriptSetup) {
 			if (sfc.scriptSetup.lang !== 'js') {
-				return sfc.scriptSetup.lang;
+				lang = sfc.scriptSetup.lang;
 			}
 			else {
-				return sfc.script.lang;
+				lang = sfc.script.lang;
 			}
 		}
-		return sfc.scriptSetup?.lang ?? sfc.script?.lang;
-	});
-
-	const getLang = computed(() => {
-		const rawLang = getRawLang();
-		if (rawLang && validLangs.has(rawLang)) {
-			return rawLang;
+		if (lang && validLangs.has(lang)) {
+			return lang;
 		}
 		return 'ts';
 	});
@@ -139,7 +135,7 @@ function useCodegen(
 		return names;
 	});
 
-	const getDestructuredPropNames = computedSet(() => {
+	const getRawBindingNames = computedSet(() => {
 		const names = new Set([
 			...getScriptSetupRanges()?.defineProps?.destructured?.keys() ?? [],
 			...getImportComponentNames(),
@@ -151,7 +147,7 @@ function useCodegen(
 		return names;
 	});
 
-	const getSetupTemplateRefNames = computedSet(() => {
+	const getTemplateRefNames = computedSet(() => {
 		const newNames = new Set(
 			getScriptSetupRanges()?.useTemplateRef
 				.map(({ name }) => name)
@@ -160,11 +156,11 @@ function useCodegen(
 		return newNames;
 	});
 
-	const setupHasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
+	const hasDefineSlots = computed(() => !!getScriptSetupRanges()?.defineSlots);
 
-	const getSetupPropsAssignName = computed(() => getScriptSetupRanges()?.defineProps?.name);
+	const getDefinePropsName = computed(() => getScriptSetupRanges()?.defineProps?.name);
 
-	const getSetupSlotsAssignName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
+	const getDefineSlotsName = computed(() => getScriptSetupRanges()?.defineSlots?.name);
 
 	const getSetupInheritAttrs = computed(() => {
 		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
@@ -203,12 +199,12 @@ function useCodegen(
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
 			template: sfc.template,
-			rawBindingNames: getDestructuredPropNames(),
+			rawBindingNames: getRawBindingNames(),
 			setupBindingNames: getSetupBindingNames(),
-			templateRefNames: getSetupTemplateRefNames(),
-			hasDefineSlots: setupHasDefineSlots(),
-			propsAssignName: getSetupPropsAssignName(),
-			slotsAssignName: getSetupSlotsAssignName(),
+			templateRefNames: getTemplateRefNames(),
+			hasDefineSlots: hasDefineSlots(),
+			propsAssignName: getDefinePropsName(),
+			slotsAssignName: getDefineSlotsName(),
 			inheritAttrs: getSetupInheritAttrs(),
 			selfComponentName: getComponentSelfName(),
 		});
@@ -253,8 +249,8 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			usedCssModule: usedCssModule(),
 			styles: sfc.styles,
-			rawBindingNames: getDestructuredPropNames(),
-			templateRefNames: getSetupTemplateRefNames(),
+			rawBindingNames: getRawBindingNames(),
+			templateRefNames: getTemplateRefNames(),
 			setupBindingNames: getSetupBindingNames(),
 		});
 		const codes: Code[] = [];
@@ -279,7 +275,7 @@ function useCodegen(
 		getLang,
 		getScriptRanges,
 		getScriptSetupRanges,
-		getSetupSlotsAssignName,
+		getSetupSlotsAssignName: getDefineSlotsName,
 		getGeneratedScript,
 		getGeneratedTemplate,
 	};
