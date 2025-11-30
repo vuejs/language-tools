@@ -9,7 +9,7 @@ export function createScriptCodegenContext(options: ScriptCodegenOptions) {
 	const inlayHints: InlayHintInfo[] = [];
 
 	return {
-		generatedPropsType: false,
+		generatedTypes: new Set<string>(),
 		bindingNames: new Set([
 			...options.scriptRanges?.bindings.map(
 				({ range }) => options.script!.content.slice(range.start, range.end),

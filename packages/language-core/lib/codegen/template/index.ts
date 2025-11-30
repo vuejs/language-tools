@@ -55,7 +55,6 @@ function* generateWorker(
 		propsAssignName,
 		vueCompilerOptions,
 		template,
-		hasDefineSlots,
 	} = options;
 
 	if (slotsAssignName) {
@@ -81,10 +80,7 @@ function* generateWorker(
 	}
 	yield* generateStyleScopedClassReferences(ctx);
 	yield* ctx.generateHoistVariables();
-
-	if (!hasDefineSlots) {
-		yield* generateSlotsType(options, ctx);
-	}
+	yield* generateSlotsType(options, ctx);
 	yield* generateInheritedAttrsType(ctx);
 	yield* generateTemplateRefsType(options, ctx);
 	yield* generateRootElType(ctx);
@@ -92,16 +88,23 @@ function* generateWorker(
 	if (ctx.dollarVars.size) {
 		yield `var ${names.dollars}!: {${newLine}`;
 		if (ctx.dollarVars.has('$slots')) {
-			yield `$slots: ${names.Slots}${endOfLine}`;
+			const type = ctx.generatedTypes.has(names.Slots) ? names.Slots : `{}`;
+			yield `$slots: ${type}${endOfLine}`;
 		}
 		if (ctx.dollarVars.has('$attrs')) {
-			yield `$attrs: import('${vueCompilerOptions.lib}').ComponentPublicInstance['$attrs'] & ${names.InheritedAttrs}${endOfLine}`;
+			yield `$attrs: import('${vueCompilerOptions.lib}').ComponentPublicInstance['$attrs']`;
+			if (ctx.generatedTypes.has(names.InheritedAttrs)) {
+				yield ` & ${names.InheritedAttrs}`;
+			}
+			yield endOfLine;
 		}
 		if (ctx.dollarVars.has('$refs')) {
-			yield `$refs: ${names.TemplateRefs}${endOfLine}`;
+			const type = ctx.generatedTypes.has(names.TemplateRefs) ? names.TemplateRefs : `{}`;
+			yield `$refs: ${type}${endOfLine}`;
 		}
 		if (ctx.dollarVars.has('$el')) {
-			yield `$el: ${names.RootEl}${endOfLine}`;
+			const type = ctx.generatedTypes.has(names.RootEl) ? names.RootEl : `any`;
+			yield `$el: ${type}${endOfLine}`;
 		}
 		yield `} & { [K in keyof import('${vueCompilerOptions.lib}').ComponentPublicInstance]: unknown }${endOfLine}`;
 	}
@@ -113,6 +116,11 @@ function* generateSlotsType(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
+	if (options.hasDefineSlots || (!ctx.slots.length && !ctx.dynamicSlots.length)) {
+		return;
+	}
+	ctx.generatedTypes.add(names.Slots);
+
 	yield `type ${names.Slots} = {}`;
 	for (const { expVar, propsVar } of ctx.dynamicSlots) {
 		yield `${newLine}& { [K in NonNullable<typeof ${expVar}>]?: (props: typeof ${propsVar}) => any }`;
@@ -138,12 +146,15 @@ function* generateSlotsType(
 	yield endOfLine;
 }
 
-function* generateInheritedAttrsType(ctx: TemplateCodegenContext): Generator<Code> {
-	yield `type ${names.InheritedAttrs} = ${
-		ctx.inheritedAttrVars.size
-			? `Partial<${[...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `)}>`
-			: `{}`
-	}`;
+function* generateInheritedAttrsType(ctx: TemplateCodegenContext) {
+	if (!ctx.inheritedAttrVars.size) {
+		return;
+	}
+	ctx.generatedTypes.add(names.InheritedAttrs);
+
+	yield `type ${names.InheritedAttrs} = Partial<${
+		[...ctx.inheritedAttrVars].map(name => `typeof ${name}`).join(` & `)
+	}>`;
 	yield endOfLine;
 }
 
@@ -151,6 +162,11 @@ function* generateTemplateRefsType(
 	options: TemplateCodegenOptions,
 	ctx: TemplateCodegenContext,
 ): Generator<Code> {
+	if (!ctx.templateRefs.size) {
+		return;
+	}
+	ctx.generatedTypes.add(names.TemplateRefs);
+
 	yield `type ${names.TemplateRefs} = {}`;
 	for (const [name, refs] of ctx.templateRefs) {
 		yield `${newLine}& `;
@@ -180,14 +196,14 @@ function* generateTemplateRefsType(
 }
 
 function* generateRootElType(ctx: TemplateCodegenContext): Generator<Code> {
-	yield `type ${names.RootEl} = `;
-	if (ctx.singleRootElTypes.size && !ctx.singleRootNodes.has(null)) {
-		for (const type of ctx.singleRootElTypes) {
-			yield `${newLine}| ${type}`;
-		}
+	if (!ctx.singleRootElTypes.size || ctx.singleRootNodes.has(null)) {
+		return;
 	}
-	else {
-		yield `any`;
+	ctx.generatedTypes.add(names.RootEl);
+
+	yield `type ${names.RootEl} = `;
+	for (const type of ctx.singleRootElTypes) {
+		yield `${newLine}| ${type}`;
 	}
 	yield endOfLine;
 }
