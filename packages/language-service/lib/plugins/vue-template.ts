@@ -23,6 +23,10 @@ import { loadModelModifiersData, loadTemplateData } from '../data';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
 
+const beautifyHtmlModule: { html_beautify: (text: string, options: any) => string } = require(
+	'vscode-html-languageservice/lib/umd/beautify/beautify-html',
+);
+
 const specialTags = new Set([
 	'slot',
 	'component',
@@ -48,21 +52,6 @@ const builtInComponents = new Set([
 
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
-const beautifyHtmlModule: { html_beautify: (text: string, options: any) => string } = require(
-	'vscode-html-languageservice/lib/umd/beautify/beautify-html',
-);
-const originalHtmlBeautify = beautifyHtmlModule.html_beautify;
-let formattingVoidElements: string[] | undefined;
-
-beautifyHtmlModule.html_beautify = (text, options) => {
-	if (formattingVoidElements?.length) {
-		options = {
-			...options,
-			void_elements: formattingVoidElements,
-		};
-	}
-	return originalHtmlBeautify(text, options);
-};
 
 export function create(
 	languageId: 'html' | 'jade',
@@ -397,12 +386,16 @@ export function create(
 						return;
 					}
 					const info = resolveEmbeddedCode(context, document.uri);
-					const isTemplate = info?.code.id === 'template';
+					if (info?.code.id !== 'template') {
+						return;
+					}
 
+					const originalHtmlBeautify = beautifyHtmlModule.html_beautify;
 					try {
-						if (isTemplate) {
-							formattingVoidElements = await getFormattingVoidElements(info.root, info.script.id);
-						}
+						const voidElements = await getFormattingVoidElements(info.root, info.script.id);
+
+						beautifyHtmlModule.html_beautify = (text, options) =>
+							originalHtmlBeautify(text, { ...options, void_elements: voidElements });
 
 						return await baseServiceInstance.provideDocumentFormattingEdits?.(
 							document,
@@ -413,9 +406,7 @@ export function create(
 						);
 					}
 					finally {
-						if (isTemplate) {
-							formattingVoidElements = undefined;
-						}
+						beautifyHtmlModule.html_beautify = originalHtmlBeautify;
 					}
 				},
 
