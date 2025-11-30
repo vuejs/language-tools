@@ -48,6 +48,21 @@ const builtInComponents = new Set([
 
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
+const beautifyHtmlModule: { html_beautify: (text: string, options: any) => string } = require(
+	'vscode-html-languageservice/lib/umd/beautify/beautify-html',
+);
+const originalHtmlBeautify = beautifyHtmlModule.html_beautify;
+let formattingVoidElements: string[] | undefined;
+
+beautifyHtmlModule.html_beautify = (text, options) => {
+	if (formattingVoidElements?.length) {
+		options = {
+			...options,
+			void_elements: formattingVoidElements,
+		};
+	}
+	return originalHtmlBeautify(text, options);
+};
 
 export function create(
 	languageId: 'html' | 'jade',
@@ -377,6 +392,33 @@ export function create(
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
 
+				async provideDocumentFormattingEdits(document, range, options, embeddedCodeContext, token) {
+					if (document.languageId !== languageId) {
+						return;
+					}
+					const info = resolveEmbeddedCode(context, document.uri);
+					const isTemplate = info?.code.id === 'template';
+
+					try {
+						if (isTemplate) {
+							formattingVoidElements = await getFormattingVoidElements(info.root, info.script.id);
+						}
+
+						return await baseServiceInstance.provideDocumentFormattingEdits?.(
+							document,
+							range,
+							options,
+							embeddedCodeContext,
+							token,
+						);
+					}
+					finally {
+						if (isTemplate) {
+							formattingVoidElements = undefined;
+						}
+					}
+				},
+
 				async provideDocumentLinks(document, token) {
 					if (document.languageId !== languageId) {
 						return;
@@ -408,6 +450,32 @@ export function create(
 					result = await fn();
 				}
 				return { result, ...lastSync };
+			}
+
+			async function getFormattingVoidElements(root: VueVirtualCode, sourceDocumentUri: URI) {
+				const tagNameCasing = await getTagNameCasing(context, sourceDocumentUri);
+				const componentNames = new Set<string>();
+				const scriptSetupRanges = tsCodegen.get(root.sfc)?.getScriptSetupRanges();
+				const componentList = (await getComponentNames(root.fileName) ?? [])
+					.filter(name => !builtInComponents.has(name));
+
+				const addName = (name: string) => {
+					const tagName = tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name;
+					componentNames.add(tagName.toLowerCase());
+				};
+
+				for (const tag of componentList) {
+					addName(tag);
+				}
+				if (root.sfc.scriptSetup) {
+					for (const binding of scriptSetupRanges?.bindings ?? []) {
+						addName(root.sfc.scriptSetup.content.slice(binding.range.start, binding.range.end));
+					}
+				}
+
+				return htmlDataProvider.provideTags()
+					.filter(tag => tag.void && !componentNames.has(tag.name.toLowerCase()))
+					.map(tag => tag.name);
 			}
 
 			async function provideHtmlData(sourceDocumentUri: URI, root: VueVirtualCode) {
