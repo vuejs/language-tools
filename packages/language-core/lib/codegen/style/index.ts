@@ -12,7 +12,7 @@ export interface StyleCodegenOptions {
 	usedCssModule: boolean;
 	styles: Sfc['styles'];
 	templateRefNames: Set<string>;
-	destructuredPropNames: Set<string>;
+	rawBindingNames: Set<string>;
 	setupBindingNames: Set<string>;
 }
 
@@ -21,7 +21,7 @@ export { generate as generateStyle };
 function* generate(options: StyleCodegenOptions) {
 	const ctx = createTemplateCodegenContext(options.setupBindingNames);
 	const endScope = ctx.startScope();
-	ctx.declare(...options.destructuredPropNames);
+	ctx.declare(...options.rawBindingNames);
 	yield* generateStyleScopedClasses(options);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);

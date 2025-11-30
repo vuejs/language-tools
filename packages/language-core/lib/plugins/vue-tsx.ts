@@ -107,7 +107,10 @@ function useCodegen(
 			return newNames;
 		}
 		for (const { range } of scriptSetupRanges.bindings) {
-			newNames.add(sfc.scriptSetup.content.slice(range.start, range.end));
+			const name = sfc.scriptSetup.content.slice(range.start, range.end);
+			if (!getImportComponentNames().has(name)) {
+				newNames.add(name);
+			}
 		}
 		const scriptRanges = getScriptRanges();
 		if (sfc.script && scriptRanges) {
@@ -118,31 +121,34 @@ function useCodegen(
 		return newNames;
 	});
 
-	const getSetupImportComponentNames = computedSet(() => {
-		const newNames = new Set<string>();
-		const bindings = getScriptSetupRanges()?.bindings;
-		if (sfc.scriptSetup && bindings) {
-			for (const { range, moduleName, isDefaultImport, isNamespace } of bindings) {
+	const getImportComponentNames = computedSet(() => {
+		const names = new Set<string>();
+		const scriptSetupRanges = getScriptSetupRanges();
+		if (sfc.scriptSetup && scriptSetupRanges) {
+			for (const { range, moduleName, isDefaultImport, isNamespace } of scriptSetupRanges.bindings) {
 				if (
 					moduleName
 					&& isDefaultImport
 					&& !isNamespace
 					&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
 				) {
-					newNames.add(sfc.scriptSetup.content.slice(range.start, range.end));
+					names.add(sfc.scriptSetup.content.slice(range.start, range.end));
 				}
 			}
 		}
-		return newNames;
+		return names;
 	});
 
 	const getDestructuredPropNames = computedSet(() => {
-		const newNames = new Set(getScriptSetupRanges()?.defineProps?.destructured?.keys());
+		const names = new Set([
+			...getScriptSetupRanges()?.defineProps?.destructured?.keys() ?? [],
+			...getImportComponentNames(),
+		]);
 		const rest = getScriptSetupRanges()?.defineProps?.destructuredRest;
 		if (rest) {
-			newNames.add(rest);
+			names.add(rest);
 		}
-		return newNames;
+		return names;
 	});
 
 	const getSetupTemplateRefNames = computedSet(() => {
@@ -197,10 +203,9 @@ function useCodegen(
 			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
 			template: sfc.template,
-			destructuredPropNames: getDestructuredPropNames(),
+			rawBindingNames: getDestructuredPropNames(),
 			setupBindingNames: getSetupBindingNames(),
 			templateRefNames: getSetupTemplateRefNames(),
-			scriptSetupImportComponentNames: getSetupImportComponentNames(),
 			hasDefineSlots: setupHasDefineSlots(),
 			propsAssignName: getSetupPropsAssignName(),
 			slotsAssignName: getSetupSlotsAssignName(),
@@ -248,7 +253,7 @@ function useCodegen(
 			vueCompilerOptions: getResolvedOptions(),
 			usedCssModule: usedCssModule(),
 			styles: sfc.styles,
-			destructuredPropNames: getDestructuredPropNames(),
+			rawBindingNames: getDestructuredPropNames(),
 			templateRefNames: getSetupTemplateRefNames(),
 			setupBindingNames: getSetupBindingNames(),
 		});

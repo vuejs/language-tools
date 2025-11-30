@@ -31,7 +31,7 @@ export function* generateComponent(
 	const tagOffsets = getElementTagOffsets(node, options.template);
 	const failGeneratedExpressions: FailGeneratedExpression[] = [];
 	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
-	const matchImportName = possibleOriginalNames.find(name => options.scriptSetupImportComponentNames.has(name));
+	const matchImportName = possibleOriginalNames.find(name => options.rawBindingNames.has(name));
 	const componentOriginalVar = matchImportName ?? ctx.getInternalVariable();
 	const componentFunctionalVar = ctx.getInternalVariable();
 	const componentVNodeVar = ctx.getInternalVariable();
