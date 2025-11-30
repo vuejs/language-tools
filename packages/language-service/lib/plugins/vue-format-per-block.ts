@@ -3,7 +3,7 @@ import { URI } from 'vscode-uri';
 
 export function create(): LanguageServicePlugin {
 	return {
-		name: 'vue-format-takeover',
+		name: 'vue-format-per-block',
 		capabilities: {
 			documentFormattingProvider: true,
 			documentOnTypeFormattingProvider: {
