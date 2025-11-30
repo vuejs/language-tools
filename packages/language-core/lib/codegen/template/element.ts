@@ -1,12 +1,13 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
+import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
-import { getAttributeValueOffset, getElementTagOffsets, hyphenateTag } from '../../utils/shared';
+import { getAttributeValueOffset, getElementTagOffsets, getNodeText, hyphenateTag } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import * as names from '../names';
-import { endOfLine, identifierRegex, newLine } from '../utils';
+import { endOfLine, getTypeScriptAST, identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import type { TemplateCodegenContext } from './context';
@@ -16,7 +17,6 @@ import { type FailGeneratedExpression, generateElementProps } from './elementPro
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generatePropertyAccess } from './propertyAccess';
-import { collectStyleScopedClassReferences } from './styleScopedClasses';
 import { generateTemplateChild } from './templateChild';
 import { generateVSlot } from './vSlot';
 
@@ -350,6 +350,167 @@ export function* generateElement(
 		yield* generateTemplateChild(options, ctx, child);
 	}
 	ctx.currentComponent = currentComponent;
+}
+
+function collectStyleScopedClassReferences(
+	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
+	node: CompilerDOM.ElementNode,
+) {
+	for (const prop of node.props) {
+		if (
+			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
+			&& prop.name === 'class'
+			&& prop.value
+		) {
+			if (options.template.lang === 'pug') {
+				const getClassOffset = Reflect.get(prop.value.loc.start, 'getClassOffset') as (offset: number) => number;
+				const content = prop.value.loc.source.slice(1, -1);
+
+				let offset = 1;
+				for (const className of content.split(' ')) {
+					if (className) {
+						ctx.scopedClasses.push({
+							source: 'template',
+							className,
+							offset: getClassOffset(offset),
+						});
+					}
+					offset += className.length + 1;
+				}
+			}
+			else {
+				const offset = getAttributeValueOffset(prop.value);
+				if (prop.value.content) {
+					const classes = collectClasses(prop.value.content, offset);
+					ctx.scopedClasses.push(...classes);
+				}
+				else {
+					ctx.emptyClassOffsets.push(offset);
+				}
+			}
+		}
+		else if (
+			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
+			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+			&& prop.arg.content === 'class'
+		) {
+			const content = '(' + prop.exp.content + ')';
+			const startOffset = prop.exp.loc.start.offset - 1;
+
+			const { ts } = options;
+			const ast = getTypeScriptAST(ts, options.template, content);
+			const literals: ts.StringLiteralLike[] = [];
+
+			ts.forEachChild(ast, node => {
+				if (
+					!ts.isExpressionStatement(node)
+					|| !ts.isParenthesizedExpression(node.expression)
+				) {
+					return;
+				}
+				const { expression } = node.expression;
+
+				if (ts.isStringLiteralLike(expression)) {
+					literals.push(expression);
+				}
+				else if (ts.isArrayLiteralExpression(expression)) {
+					walkArrayLiteral(expression);
+				}
+				else if (ts.isObjectLiteralExpression(expression)) {
+					walkObjectLiteral(expression);
+				}
+			});
+
+			for (const literal of literals) {
+				if (literal.text) {
+					const classes = collectClasses(
+						literal.text,
+						literal.end - literal.text.length - 1 + startOffset,
+					);
+					ctx.scopedClasses.push(...classes);
+				}
+				else {
+					ctx.emptyClassOffsets.push(literal.end - 1 + startOffset);
+				}
+			}
+
+			function walkArrayLiteral(node: ts.ArrayLiteralExpression) {
+				const { elements } = node;
+				for (const element of elements) {
+					if (ts.isStringLiteralLike(element)) {
+						literals.push(element);
+					}
+					else if (ts.isObjectLiteralExpression(element)) {
+						walkObjectLiteral(element);
+					}
+				}
+			}
+
+			function walkObjectLiteral(node: ts.ObjectLiteralExpression) {
+				const { properties } = node;
+				for (const property of properties) {
+					if (ts.isPropertyAssignment(property)) {
+						const { name } = property;
+						if (ts.isIdentifier(name)) {
+							walkIdentifier(name);
+						}
+						else if (ts.isStringLiteral(name)) {
+							literals.push(name);
+						}
+						else if (ts.isComputedPropertyName(name)) {
+							const { expression } = name;
+							if (ts.isStringLiteralLike(expression)) {
+								literals.push(expression);
+							}
+						}
+					}
+					else if (ts.isShorthandPropertyAssignment(property)) {
+						walkIdentifier(property.name);
+					}
+				}
+			}
+
+			function walkIdentifier(node: ts.Identifier) {
+				const text = getNodeText(ts, node, ast);
+				ctx.scopedClasses.push({
+					source: 'template',
+					className: text,
+					offset: node.end - text.length + startOffset,
+				});
+			}
+		}
+	}
+}
+
+function collectClasses(content: string, startOffset = 0) {
+	const classes: {
+		source: string;
+		className: string;
+		offset: number;
+	}[] = [];
+
+	let currentClassName = '';
+	let offset = 0;
+	for (const char of (content + ' ')) {
+		if (char.trim() === '') {
+			if (currentClassName !== '') {
+				classes.push({
+					source: 'template',
+					className: currentClassName,
+					offset: offset + startOffset,
+				});
+				offset += currentClassName.length;
+				currentClassName = '';
+			}
+			offset += char.length;
+		}
+		else {
+			currentClassName += char;
+		}
+	}
+	return classes;
 }
 
 function* generateFailedExpressions(

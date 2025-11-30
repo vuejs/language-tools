@@ -54,7 +54,7 @@ export function* generateGeneric(
 	const propTypes: string[] = [];
 	const { vueCompilerOptions } = options;
 
-	if (ctx.generatedPropsType) {
+	if (ctx.generatedTypes.has(names.PublicProps)) {
 		propTypes.push(names.PublicProps);
 	}
 	if (scriptSetupRanges.defineProps?.arg) {
@@ -75,7 +75,7 @@ export function* generateGeneric(
 	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
 		propTypes.push(names.EmitProps);
 	}
-	if (options.templateCodegen?.inheritedAttrVars.size) {
+	if (options.templateCodegen?.generatedTypes.has(names.InheritedAttrs)) {
 		propTypes.push(names.InheritedAttrs);
 	}
 
@@ -283,19 +283,12 @@ export function* generateSetupFunction(
 			generateSfcBlockSection(scriptSetup, start, end, codeFeatures.all, end === scriptSetup.content.length),
 	);
 	yield* generateMacros(options, ctx);
-
-	const hasSlots = !!(
-		scriptSetupRanges.defineSlots
-		|| options.templateCodegen?.slots.length
-		|| options.templateCodegen?.dynamicSlots.length
-	);
-
 	yield* generateModels(scriptSetup, scriptSetupRanges);
-	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges, hasSlots);
+	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* body;
 
 	if (output) {
-		if (hasSlots) {
+		if (hasSlotsType(options)) {
 			yield `const __VLS_base = `;
 			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
 			yield endOfLine;
@@ -390,7 +383,6 @@ function* generatePublicProps(
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
-	hasSlots: boolean,
 ): Generator<Code> {
 	if (scriptSetupRanges.defineProps?.typeArg && scriptSetupRanges.withDefaults?.arg) {
 		yield `const ${names.defaults} = `;
@@ -404,7 +396,7 @@ function* generatePublicProps(
 	}
 
 	const propTypes: string[] = [];
-	if (options.vueCompilerOptions.jsxSlots && hasSlots) {
+	if (options.vueCompilerOptions.jsxSlots && hasSlotsType(options)) {
 		propTypes.push(`${ctx.localTypes.PropsChildren}<${names.Slots}>`);
 	}
 	if (scriptSetupRanges.defineProps?.typeArg) {
@@ -414,9 +406,16 @@ function* generatePublicProps(
 		propTypes.push(names.ModelProps);
 	}
 	if (propTypes.length) {
-		ctx.generatedPropsType = true;
 		yield `type ${names.PublicProps} = ${propTypes.join(` & `)}${endOfLine}`;
+		ctx.generatedTypes.add(names.PublicProps);
 	}
+}
+
+function hasSlotsType(options: ScriptCodegenOptions): boolean {
+	return !!(
+		options.scriptSetupRanges?.defineSlots
+		|| options.templateCodegen?.generatedTypes.has(names.Slots)
+	);
 }
 
 function* generateModels(

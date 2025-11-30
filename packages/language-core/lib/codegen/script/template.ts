@@ -35,60 +35,52 @@ export function* generateTemplate(
 	if (options.templateCodegen) {
 		yield* options.templateCodegen.codes;
 	}
-	else {
-		if (!options.scriptSetupRanges?.defineSlots) {
-			yield `type ${names.Slots} = {}${endOfLine}`;
-		}
-		yield `type ${names.InheritedAttrs} = {}${endOfLine}`;
-		yield `type ${names.TemplateRefs} = {}${endOfLine}`;
-		yield `type ${names.RootEl} = any${endOfLine}`;
-	}
 }
 
-function* generateSelf(options: ScriptCodegenOptions): Generator<Code> {
-	if (options.script && options.scriptRanges?.componentOptions) {
-		yield `const ${names.self} = (await import('${options.vueCompilerOptions.lib}')).defineComponent(`;
-		const { args } = options.scriptRanges.componentOptions;
-		yield* generateSfcBlockSection(options.script, args.start, args.end, codeFeatures.all);
+function* generateSelf({ script, scriptRanges, vueCompilerOptions, fileName }: ScriptCodegenOptions): Generator<Code> {
+	if (script && scriptRanges?.componentOptions) {
+		yield `const ${names.self} = (await import('${vueCompilerOptions.lib}')).defineComponent(`;
+		const { args } = scriptRanges.componentOptions;
+		yield* generateSfcBlockSection(script, args.start, args.end, codeFeatures.all);
 		yield `)${endOfLine}`;
 	}
-	else if (options.script && options.scriptRanges?.exportDefault) {
+	else if (script && scriptRanges?.exportDefault) {
 		yield `const ${names.self} = `;
-		const { expression } = options.scriptRanges.exportDefault;
-		yield* generateSfcBlockSection(options.script, expression.start, expression.end, codeFeatures.all);
+		const { expression } = scriptRanges.exportDefault;
+		yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
 		yield endOfLine;
 	}
-	else if (options.script?.src) {
-		yield `let ${names.self}!: typeof import('./${path.basename(options.fileName)}').default${endOfLine}`;
+	else if (script?.src) {
+		yield `let ${names.self}!: typeof import('./${path.basename(fileName)}').default${endOfLine}`;
 	}
 }
 
 function* generateTemplateCtx(
-	options: ScriptCodegenOptions,
+	{ vueCompilerOptions, script, scriptRanges, styles, scriptSetupRanges, fileName }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	const exps: Iterable<Code>[] = [];
 	const emitTypes: string[] = [];
 	const propTypes: string[] = [];
 
-	if (options.vueCompilerOptions.petiteVueExtensions.some(ext => options.fileName.endsWith(ext))) {
+	if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
 		exps.push([`globalThis`]);
 	}
-	if (options.script?.src || options.scriptRanges?.exportDefault) {
+	if (script?.src || scriptRanges?.exportDefault) {
 		exps.push([`{} as InstanceType<__VLS_PickNotAny<typeof ${names.self}, new () => {}>>`]);
 	}
 	else {
-		exps.push([`{} as import('${options.vueCompilerOptions.lib}').ComponentPublicInstance`]);
+		exps.push([`{} as import('${vueCompilerOptions.lib}').ComponentPublicInstance`]);
 	}
-	if (options.styles.some(style => style.module)) {
+	if (styles.some(style => style.module)) {
 		exps.push([`{} as __VLS_StyleModules`]);
 	}
 
-	if (options.scriptSetupRanges?.defineEmits) {
-		const { defineEmits } = options.scriptSetupRanges;
+	if (scriptSetupRanges?.defineEmits) {
+		const { defineEmits } = scriptSetupRanges;
 		emitTypes.push(`typeof ${defineEmits.name ?? names.emit}`);
 	}
-	if (options.scriptSetupRanges?.defineModel.length) {
+	if (scriptSetupRanges?.defineModel.length) {
 		emitTypes.push(`typeof ${names.modelEmit}`);
 	}
 	if (emitTypes.length) {
@@ -96,7 +88,7 @@ function* generateTemplateCtx(
 		exps.push([`{} as { $emit: ${emitTypes.join(` & `)} }`]);
 	}
 
-	const { defineProps, withDefaults } = options.scriptSetupRanges ?? {};
+	const { defineProps, withDefaults } = scriptSetupRanges ?? {};
 	const props = defineProps?.arg
 		? `typeof ${defineProps.name ?? names.props}`
 		: defineProps?.typeArg
@@ -107,7 +99,7 @@ function* generateTemplateCtx(
 	if (props) {
 		propTypes.push(props);
 	}
-	if (options.scriptSetupRanges?.defineModel.length) {
+	if (scriptSetupRanges?.defineModel.length) {
 		propTypes.push(names.ModelProps);
 	}
 	if (emitTypes.length) {
@@ -119,7 +111,7 @@ function* generateTemplateCtx(
 		exps.push([`{} as ${names.InternalProps}`]);
 	}
 
-	if (options.scriptSetupRanges && ctx.bindingNames.size) {
+	if (scriptSetupRanges && ctx.bindingNames.size) {
 		exps.push([`{} as ${names.Bindings}`]);
 	}
 

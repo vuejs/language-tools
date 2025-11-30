@@ -155,6 +155,7 @@ export function createTemplateCodegenContext(
 	const commentBuffer: CompilerDOM.CommentNode[] = [];
 
 	return {
+		generatedTypes: new Set<string>(),
 		get currentInfo() {
 			return stack[stack.length - 1]!;
 		},
