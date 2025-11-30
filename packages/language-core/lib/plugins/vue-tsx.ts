@@ -238,8 +238,6 @@ function useCodegen(
 		});
 	});
 
-	const usedCssModule = computed(() => !!getScriptSetupRanges()?.useCssModule.length);
-
 	const getGeneratedStyle = computed(() => {
 		if (!sfc.styles.length) {
 			return;
@@ -247,7 +245,6 @@ function useCodegen(
 		const generation = generateStyle({
 			ts,
 			vueCompilerOptions: getResolvedOptions(),
-			usedCssModule: usedCssModule(),
 			styles: sfc.styles,
 			rawBindingNames: getRawBindingNames(),
 			templateRefNames: getTemplateRefNames(),

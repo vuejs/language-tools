@@ -9,7 +9,6 @@ import { endOfLine } from '../utils';
 export interface StyleCodegenOptions {
 	ts: typeof import('typescript');
 	vueCompilerOptions: VueCompilerOptions;
-	usedCssModule: boolean;
 	styles: Sfc['styles'];
 	templateRefNames: Set<string>;
 	rawBindingNames: Set<string>;

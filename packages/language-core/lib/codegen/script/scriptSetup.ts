@@ -191,10 +191,13 @@ export function* generateSetupFunction(
 				yield `(`;
 			}),
 		);
+		const type = options.styleCodegen?.generatedTypes.has(names.StyleModules)
+			? names.StyleModules
+			: `{}`;
 		if (arg) {
 			transforms.push(
 				insert(callExp.end, function*() {
-					yield ` as Omit<${names.StyleModules}, '$style'>[`;
+					yield ` as Omit<${type}, '$style'>[`;
 					yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic);
 					yield `])`;
 				}),
@@ -206,7 +209,7 @@ export function* generateSetupFunction(
 		else {
 			transforms.push(
 				insert(callExp.end, function*() {
-					yield ` as ${names.StyleModules}[`;
+					yield ` as ${type}[`;
 					const token = yield* startBoundary(scriptSetup.name, exp.start, codeFeatures.verification);
 					yield `'$style'`;
 					yield endBoundary(token, exp.end);
