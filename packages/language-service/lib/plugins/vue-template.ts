@@ -216,14 +216,14 @@ export function create(
 					disposable?.dispose();
 				},
 
-				provideDocumentFormattingEdits(_document, _range, options) {
+				provideDocumentFormattingEdits(document, range, options, ...rest) {
 					formattingOptions = options;
-					return undefined;
+					return baseServiceInstance.provideDocumentFormattingEdits?.(document, range, options, ...rest);
 				},
 
-				provideOnTypeFormattingEdits(_document, _position, _key, options) {
+				provideOnTypeFormattingEdits(document, position, key, options, ...rest) {
 					formattingOptions = options;
-					return undefined;
+					return baseServiceInstance.provideOnTypeFormattingEdits?.(document, position, key, options, ...rest);
 				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
