@@ -1,11 +1,13 @@
-import type {
-	CompletionItemKind,
-	CompletionItemTag,
-	CompletionList,
-	Disposable,
-	LanguageServicePlugin,
-	TextDocument,
+import {
+	type CompletionItemKind,
+	type CompletionItemTag,
+	type CompletionList,
+	type Disposable,
+	type LanguageServicePlugin,
+	type TextDocument,
+	transformCompletionItem,
 } from '@volar/language-service';
+import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
 import {
 	forEachInterpolationNode,
 	hyphenateAttr,
@@ -17,6 +19,12 @@ import { camelize, capitalize, isPromise } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
+import { getFormatCodeSettings } from 'volar-service-typescript/lib/configs/getFormatCodeSettings.js';
+import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences.js';
+import {
+	applyCompletionEntryDetails,
+	convertCompletionInfo,
+} from 'volar-service-typescript/lib/utils/lspConverters.js';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
@@ -50,6 +58,7 @@ let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
 export function create(
+	ts: typeof import('typescript'),
 	languageId: 'html' | 'jade',
 	{
 		getComponentNames,
@@ -59,6 +68,8 @@ export function create(
 		getComponentSlots,
 		getElementAttrs,
 		resolveModuleName,
+		getAutoImportSuggestions,
+		resolveAutoImportCompletionEntry,
 	}: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
@@ -191,8 +202,11 @@ export function create(
 			}
 
 			const disposable = context.env.onDidChangeConfiguration?.(() => initializing = undefined);
+			const transformedItems = new WeakSet<html.CompletionItem>();
 
 			let initializing: Promise<void> | undefined;
+			let formattingOptions: html.FormattingOptions | undefined;
+			let lastCompletionDocument: TextDocument | undefined;
 
 			return {
 				...baseServiceInstance,
@@ -200,6 +214,16 @@ export function create(
 				dispose() {
 					baseServiceInstance.dispose?.();
 					disposable?.dispose();
+				},
+
+				provideDocumentFormattingEdits(_document, _range, options) {
+					formattingOptions = options;
+					return undefined;
+				},
+
+				provideOnTypeFormattingEdits(_document, _position, _key, options) {
+					formattingOptions = options;
+					return undefined;
 				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
@@ -212,9 +236,10 @@ export function create(
 					}
 
 					const {
-						result: completionList,
+						result: htmlCompletion,
 						target,
 						info: {
+							tagNameCasing,
 							components,
 							propMap,
 						},
@@ -230,24 +255,71 @@ export function create(
 							),
 					);
 
-					if (!completionList) {
+					if (!htmlCompletion) {
 						return;
+					}
+
+					const autoImportPlaceholderIndex = htmlCompletion.items.findIndex(item =>
+						item.label === 'AutoImportsPlaceholder'
+					);
+					if (autoImportPlaceholderIndex !== -1) {
+						const offset = document.offsetAt(position);
+						const map = context.language.maps.get(info.code, info.script);
+						let spliced = false;
+						for (const [sourceOffset] of map.toSourceLocation(offset)) {
+							const [formatOptions, preferences] = await Promise.all([
+								getFormatCodeSettings(context, document, formattingOptions),
+								getUserPreferences(context, document),
+							]);
+							const autoImport = await getAutoImportSuggestions(
+								info.root.fileName,
+								sourceOffset,
+								preferences,
+								formatOptions,
+							);
+							if (!autoImport) {
+								continue;
+							}
+							const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
+							const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
+							for (const tsItem of tsCompletion.items) {
+								if (placeholder.textEdit) {
+									const newText = tsItem.textEdit?.newText ?? tsItem.label;
+									tsItem.textEdit = {
+										...placeholder.textEdit,
+										newText: tagNameCasing === TagNameCasing.Kebab
+											? hyphenateTag(newText)
+											: newText,
+									};
+								}
+								else {
+									tsItem.textEdit = undefined;
+								}
+							}
+							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1, ...tsCompletion.items);
+							spliced = true;
+							lastCompletionDocument = document;
+							break;
+						}
+						if (!spliced) {
+							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
+						}
 					}
 
 					switch (target) {
 						case 'tag': {
-							completionList.items.forEach(transformTag);
+							htmlCompletion.items.forEach(transformTag);
 							break;
 						}
 						case 'attribute': {
-							addDirectiveModifiers(completionList, document);
-							completionList.items.forEach(transformAttribute);
+							addDirectiveModifiers(htmlCompletion, document);
+							htmlCompletion.items.forEach(transformAttribute);
 							break;
 						}
 					}
 
 					updateExtraCustomData([]);
-					return completionList;
+					return htmlCompletion;
 
 					function transformTag(item: html.CompletionItem) {
 						const tagName = capitalize(camelize(item.label));
@@ -356,6 +428,61 @@ export function create(
 						if (item.label === 'v-for') {
 							item.textEdit!.newText = item.label + '="${1:value} in ${2:source}"';
 						}
+					}
+				},
+
+				async resolveCompletionItem(item) {
+					if (item.data?.__isAutoImport || item.data?.__isComponentAutoImport) {
+						const embeddedUri = URI.parse(lastCompletionDocument!.uri);
+						const decoded = context.decodeEmbeddedDocumentUri(embeddedUri);
+						if (!decoded) {
+							return item;
+						}
+						const sourceScript = context.language.scripts.get(decoded[0]);
+						if (!sourceScript) {
+							return item;
+						}
+						const [formatOptions, preferences] = await Promise.all([
+							getFormatCodeSettings(context, lastCompletionDocument!, formattingOptions),
+							getUserPreferences(context, lastCompletionDocument!),
+						]);
+						const details = await resolveAutoImportCompletionEntry(item.data, preferences, formatOptions);
+						if (details) {
+							const virtualCode = sourceScript.generated!.embeddedCodes.get(decoded[1])!;
+							const sourceDocument = context.documents.get(
+								sourceScript.id,
+								sourceScript.languageId,
+								sourceScript.snapshot,
+							);
+							const embeddedDocument = context.documents.get(embeddedUri, virtualCode.languageId, virtualCode.snapshot);
+							const map = context.language.maps.get(virtualCode, sourceScript);
+							item = transformCompletionItem(
+								item,
+								embeddedRange =>
+									getSourceRange(
+										[sourceDocument, embeddedDocument, map],
+										embeddedRange,
+									),
+								embeddedDocument,
+								context,
+							);
+							applyCompletionEntryDetails(
+								ts,
+								item,
+								details,
+								sourceDocument,
+								fileName => URI.file(fileName),
+								() => undefined,
+							);
+							transformedItems.add(item);
+						}
+					}
+					return item;
+				},
+
+				transformCompletionItem(item) {
+					if (transformedItems.has(item)) {
+						return item;
 					}
 				},
 
@@ -688,6 +815,19 @@ export function create(
 							}));
 						},
 					},
+					{
+						getId: () => 'vue-auto-imports',
+						isApplicable: () => true,
+						provideTags() {
+							return [{ name: 'AutoImportsPlaceholder', attributes: [] }];
+						},
+						provideAttributes() {
+							return [];
+						},
+						provideValues() {
+							return [];
+						},
+					},
 				]);
 
 				return {
@@ -697,6 +837,7 @@ export function create(
 							version,
 							target,
 							info: {
+								tagNameCasing,
 								components,
 								propMap,
 							},

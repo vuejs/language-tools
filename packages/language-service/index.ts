@@ -74,8 +74,8 @@ export function createVueLanguageServicePlugins(
 		createVueDocumentHighlightsPlugin(client),
 		createVueExtractFilePlugin(ts, client),
 		createVueMissingPropsHintsPlugin(client),
-		createVueTemplatePlugin('html', client),
-		createVueTemplatePlugin('jade', client),
+		createVueTemplatePlugin(ts, 'html', client),
+		createVueTemplatePlugin(ts, 'jade', client),
 		createVueTwoslashQueriesPlugin(client),
 	];
 }
