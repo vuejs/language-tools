@@ -23,7 +23,13 @@ export const isReady = !!html_beautify && !!repeat;
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HTMLFormatConfiguration, Position, Range, TextDocument, TextEdit } from 'vscode-html-languageservice';
+import {
+	type HTMLFormatConfiguration,
+	Position,
+	Range,
+	type TextDocument,
+	type TextEdit,
+} from 'vscode-html-languageservice';
 
 export function format(
 	document: TextDocument,
