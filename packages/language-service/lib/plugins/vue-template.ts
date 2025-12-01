@@ -20,8 +20,9 @@ import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
+import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
-import { createModulesLoader, createReferenceResolver, resolveEmbeddedCode } from '../utils';
+import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
 
 const specialTags = new Set([
 	'slot',
@@ -48,8 +49,6 @@ const builtInComponents = new Set([
 
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
-
-const patchHtmlBeautify = createHtmlBeautifyPatcher();
 
 export function create(
 	languageId: 'html' | 'jade',
@@ -118,10 +117,12 @@ export function create(
 		},
 		create(context) {
 			const baseServiceInstance = baseService.create(context);
+			let patchHtmlServiceFormat: ReturnType<typeof createHtmlServiceFormatPatcher> | undefined;
 
 			if (baseServiceInstance.provide['html/languageService']) {
 				const htmlService: html.LanguageService = baseServiceInstance.provide['html/languageService']();
 				const parseHTMLDocument = htmlService.parseHTMLDocument.bind(htmlService);
+				patchHtmlServiceFormat = createHtmlServiceFormatPatcher(htmlService);
 
 				htmlService.parseHTMLDocument = document => {
 					const info = resolveEmbeddedCode(context, document.uri);
@@ -397,12 +398,12 @@ export function create(
 							token,
 						);
 
-					if (!patchHtmlBeautify) {
+					if (!patchHtmlServiceFormat) {
 						return baseFn();
 					}
 
 					const voidElements = await getFormattingVoidElements(info.root, info.script.id);
-					return patchHtmlBeautify(voidElements, baseFn);
+					return patchHtmlServiceFormat(voidElements, baseFn);
 				},
 
 				async provideDocumentLinks(document, token) {
@@ -862,39 +863,20 @@ function getPropName(
 	return { isEvent, propName: name };
 }
 
-function createHtmlBeautifyPatcher() {
-	const ensureModules = createModulesLoader<{
-		html_beautify: (text: string, options: any) => string;
-	}>(
-		() => require('vscode-html-languageservice/lib/umd/beautify/beautify-html.js'),
-		// @ts-ignore
-		() => import('vscode-html-languageservice/lib/esm/beautify/beautify-html.js'),
-	);
-
-	return async function patchVoidElements<T>(voidElements: string[], run: () => T) {
+function createHtmlServiceFormatPatcher(htmlService: html.LanguageService) {
+	return async function patchVoidElements<T>(voidElements: string[], run: () => T | PromiseLike<T>) {
 		if (voidElements.length === 0) {
 			return await run();
 		}
 
-		const modules = await ensureModules();
-		const originals = modules.map(m => m.html_beautify);
+		const originalFormat = htmlService.format;
 
+		htmlService.format = (document, range, options) => format(document, range, options, voidElements);
 		try {
-			for (let i = 0; i < modules.length; i++) {
-				const module = modules[i]!;
-				module.html_beautify = (text, options) =>
-					originals[i]!(text, {
-						...options,
-						void_elements: voidElements,
-					});
-			}
 			return await run();
 		}
 		finally {
-			for (let i = 0; i < modules.length; i++) {
-				const module = modules[i]!;
-				module.html_beautify = originals[i]!;
-			}
+			htmlService.format = originalFormat;
 		}
 	};
 }
