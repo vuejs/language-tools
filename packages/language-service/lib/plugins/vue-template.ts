@@ -23,10 +23,6 @@ import { loadModelModifiersData, loadTemplateData } from '../data';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
 
-const beautifyHtmlModule: { html_beautify: (text: string, options: any) => string } = require(
-	'vscode-html-languageservice/lib/umd/beautify/beautify-html',
-);
-
 const specialTags = new Set([
 	'slot',
 	'component',
@@ -52,6 +48,8 @@ const builtInComponents = new Set([
 
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
+
+const patchHtmlBeautify = createHtmlBeautifyPatcher();
 
 export function create(
 	languageId: 'html' | 'jade',
@@ -390,24 +388,19 @@ export function create(
 						return;
 					}
 
-					const originalHtmlBeautify = beautifyHtmlModule.html_beautify;
-					try {
-						const voidElements = await getFormattingVoidElements(info.root, info.script.id);
+					const voidElements = await getFormattingVoidElements(info.root, info.script.id);
 
-						beautifyHtmlModule.html_beautify = (text, options) =>
-							originalHtmlBeautify(text, { ...options, void_elements: voidElements });
-
-						return await baseServiceInstance.provideDocumentFormattingEdits?.(
-							document,
-							range,
-							options,
-							embeddedCodeContext,
-							token,
-						);
-					}
-					finally {
-						beautifyHtmlModule.html_beautify = originalHtmlBeautify;
-					}
+					return await patchHtmlBeautify(
+						voidElements,
+						() =>
+							baseServiceInstance.provideDocumentFormattingEdits?.(
+								document,
+								range,
+								options,
+								embeddedCodeContext,
+								token,
+							),
+					);
 				},
 
 				async provideDocumentLinks(document, token) {
@@ -865,4 +858,34 @@ function getPropName(
 		return { isEvent: true, propName: name.slice('on-'.length) };
 	}
 	return { isEvent, propName: name };
+}
+
+function createHtmlBeautifyPatcher() {
+	let module: { html_beautify: (text: string, options: any) => string } | undefined;
+
+	try {
+		module = require('vscode-html-languageservice/lib/umd/beautify/beautify-html');
+	}
+	catch {
+		console.error('Failed to load html beautify module for patcher');
+	}
+
+	const originalHtmlBeautify = module?.html_beautify;
+
+	return async function patchVoidElements<T>(voidElements: string[], run: () => T) {
+		if (!module || !originalHtmlBeautify || !voidElements.length) {
+			return await run();
+		}
+		try {
+			module.html_beautify = (text, options) =>
+				originalHtmlBeautify(text, {
+					...options,
+					void_elements: voidElements,
+				});
+			return await run();
+		}
+		finally {
+			module.html_beautify = originalHtmlBeautify;
+		}
+	};
 }
