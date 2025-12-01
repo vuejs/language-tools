@@ -39,3 +39,16 @@ export function createReferenceResolver(
 		return moduleName ?? resolveReference(ref, uri, context.env.workspaceFolders);
 	};
 }
+
+// for checking module is exists when build
+export function tryRequire<T>(fn: () => T, errorMessage?: string): T | {} | undefined {
+	try {
+		return fn();
+	}
+	catch {
+		if (errorMessage !== undefined) {
+			console.error(errorMessage);
+		}
+		return {};
+	}
+}

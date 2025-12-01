@@ -20,7 +20,7 @@ import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
-import { format } from '../htmlFormatter';
+import { format, isReady as isHtmlFormatterReady } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
 
@@ -864,6 +864,10 @@ function getPropName(
 }
 
 function createHtmlServiceFormatPatcher(htmlService: html.LanguageService) {
+	if (!isHtmlFormatterReady) {
+		return undefined;
+	}
+
 	return async function patchVoidElements<T>(voidElements: string[], run: () => T | PromiseLike<T>) {
 		if (voidElements.length === 0) {
 			return await run();

@@ -1,5 +1,19 @@
+import { tryRequire } from './utils';
+
+const { html_beautify } = tryRequire(
+	() => require('vscode-html-languageservice/lib/umd/beautify/beautify-html'),
+	'Failed to load vscode-html-languageservice/lib/umd/beautify/beautify-html',
+);
+
+const { repeat } = tryRequire(
+	() => require('vscode-html-languageservice/lib/umd/utils/strings'),
+	'Failed to load vscode-html-languageservice/lib/umd/utils/strings',
+);
+
+export const isReady = !!html_beautify && !!repeat;
+
 /*
- * original file: https://github.com/microsoft/vscode-html-languageservice/blob/src/services/htmlFormatter.ts
+ * original file: https://github.com/microsoft/vscode-html-languageservice/blob/main/src/services/htmlFormatter.ts
  * commit: a134f3050c22fe80954241467cd429811792a81d (2024-03-22)
  * purpose: override to add void_elements option
  */
@@ -10,12 +24,6 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { HTMLFormatConfiguration, Position, Range, TextDocument, TextEdit } from 'vscode-html-languageservice';
-
-// @ts-expect-error
-import { html_beautify, IBeautifyHTMLOptions } from 'vscode-html-languageservice/lib/umd/beautify/beautify-html';
-
-// @ts-expect-error
-import { repeat } from 'vscode-html-languageservice/lib/umd/utils/strings';
 
 export function format(
 	document: TextDocument,
@@ -79,7 +87,7 @@ export function format(
 	else {
 		range = Range.create(Position.create(0, 0), document.positionAt(value.length));
 	}
-	const htmlOptions: IBeautifyHTMLOptions = {
+	const htmlOptions = {
 		indent_size: tabSize,
 		indent_char: options.insertSpaces ? ' ' : '\t',
 		indent_empty_lines: getFormatOption(options, 'indentEmptyLines', false),
