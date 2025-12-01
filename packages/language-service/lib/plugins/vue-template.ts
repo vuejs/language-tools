@@ -388,19 +388,21 @@ export function create(
 						return;
 					}
 
-					const voidElements = await getFormattingVoidElements(info.root, info.script.id);
+					const baseFn = () =>
+						baseServiceInstance.provideDocumentFormattingEdits?.(
+							document,
+							range,
+							options,
+							embeddedCodeContext,
+							token,
+						);
 
-					return await patchHtmlBeautify(
-						voidElements,
-						() =>
-							baseServiceInstance.provideDocumentFormattingEdits?.(
-								document,
-								range,
-								options,
-								embeddedCodeContext,
-								token,
-							),
-					);
+					if (!patchHtmlBeautify) {
+						return baseFn();
+					}
+
+					const voidElements = await getFormattingVoidElements(info.root, info.script.id);
+					return patchHtmlBeautify(voidElements, baseFn);
 				},
 
 				async provideDocumentLinks(document, token) {
@@ -861,31 +863,28 @@ function getPropName(
 }
 
 function createHtmlBeautifyPatcher() {
-	let module: { html_beautify: (text: string, options: any) => string } | undefined;
-
 	try {
-		module = require('vscode-html-languageservice/lib/umd/beautify/beautify-html');
+		const module: { html_beautify: (text: string, options: any) => string } = require(
+			'vscode-html-languageservice/lib/umd/beautify/beautify-html',
+		);
+
+		const originalHtmlBeautify = module.html_beautify;
+
+		return async function patchVoidElements<T>(voidElements: string[], run: () => T) {
+			try {
+				module.html_beautify = (text, options) =>
+					originalHtmlBeautify(text, {
+						...options,
+						void_elements: voidElements,
+					});
+				return await run();
+			}
+			finally {
+				module.html_beautify = originalHtmlBeautify;
+			}
+		};
 	}
 	catch {
 		console.error('Failed to load html beautify module for patcher');
 	}
-
-	const originalHtmlBeautify = module?.html_beautify;
-
-	return async function patchVoidElements<T>(voidElements: string[], run: () => T) {
-		if (!module || !originalHtmlBeautify || !voidElements.length) {
-			return await run();
-		}
-		try {
-			module.html_beautify = (text, options) =>
-				originalHtmlBeautify(text, {
-					...options,
-					void_elements: voidElements,
-				});
-			return await run();
-		}
-		finally {
-			module.html_beautify = originalHtmlBeautify;
-		}
-	};
 }
