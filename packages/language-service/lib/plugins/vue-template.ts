@@ -863,11 +863,15 @@ function getPropName(
 }
 
 function createHtmlBeautifyPatcher() {
-	try {
-		const module: { html_beautify: (text: string, options: any) => string } = require(
-			'vscode-html-languageservice/lib/umd/beautify/beautify-html',
-		);
+	// for build check is module exists
+	function requireBeautifyHtml() {
+		return require('vscode-html-languageservice/lib/umd/beautify/beautify-html') as {
+			html_beautify: (text: string, options: any) => string;
+		};
+	}
 
+	try {
+		const module = requireBeautifyHtml();
 		const originalHtmlBeautify = module.html_beautify;
 
 		return async function patchVoidElements<T>(voidElements: string[], run: () => T) {
