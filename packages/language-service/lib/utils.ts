@@ -39,3 +39,47 @@ export function createReferenceResolver(
 		return moduleName ?? resolveReference(ref, uri, context.env.workspaceFolders);
 	};
 }
+
+export function createModulesLoader<T>(cjsLoader?: () => T, esmLoader?: () => Promise<T>): () => Promise<T[]> {
+	let cached: Promise<T[]> | undefined;
+	return () => {
+		if (cached) {
+			return cached;
+		}
+		cached = (async () => {
+			const loaded: T[] = [];
+			if (cjsLoader) {
+				try {
+					const cjs = cjsLoader();
+					if (cjs) {
+						loaded.push(cjs);
+					}
+				}
+				catch {
+					// ignore, will still try ESM path below
+					console.error('Failed to load CJS module.');
+				}
+			}
+
+			if (esmLoader) {
+				try {
+					const esm = await esmLoader();
+					if (esm && !loaded.includes(esm)) {
+						loaded.push(esm);
+					}
+				}
+				catch {
+					// ignore; CJS path may still be available
+					console.error('Failed to load ESM module.');
+				}
+			}
+
+			if (loaded.length === 0) {
+				console.error('Failed to load modules.');
+			}
+
+			return loaded;
+		})();
+		return cached;
+	};
+}

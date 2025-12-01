@@ -21,7 +21,7 @@ import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
-import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
+import { createModulesLoader, createReferenceResolver, resolveEmbeddedCode } from '../utils';
 
 const specialTags = new Set([
 	'slot',
@@ -863,32 +863,38 @@ function getPropName(
 }
 
 function createHtmlBeautifyPatcher() {
-	// for build check is module exists
-	function requireBeautifyHtml() {
-		return require('vscode-html-languageservice/lib/umd/beautify/beautify-html') as {
-			html_beautify: (text: string, options: any) => string;
-		};
-	}
+	const ensureModules = createModulesLoader<{
+		html_beautify: (text: string, options: any) => string;
+	}>(
+		() => require('vscode-html-languageservice/lib/umd/beautify/beautify-html.js'),
+		// @ts-ignore
+		() => import('vscode-html-languageservice/lib/esm/beautify/beautify-html.js'),
+	);
 
-	try {
-		const module = requireBeautifyHtml();
-		const originalHtmlBeautify = module.html_beautify;
+	return async function patchVoidElements<T>(voidElements: string[], run: () => T) {
+		if (voidElements.length === 0) {
+			return await run();
+		}
 
-		return async function patchVoidElements<T>(voidElements: string[], run: () => T) {
-			try {
+		const modules = await ensureModules();
+		const originals = modules.map(m => m.html_beautify);
+
+		try {
+			for (let i = 0; i < modules.length; i++) {
+				const module = modules[i]!;
 				module.html_beautify = (text, options) =>
-					originalHtmlBeautify(text, {
+					originals[i]!(text, {
 						...options,
 						void_elements: voidElements,
 					});
-				return await run();
 			}
-			finally {
-				module.html_beautify = originalHtmlBeautify;
+			return await run();
+		}
+		finally {
+			for (let i = 0; i < modules.length; i++) {
+				const module = modules[i]!;
+				module.html_beautify = originals[i]!;
 			}
-		};
-	}
-	catch {
-		console.error('Failed to load html beautify module for patcher');
-	}
+		}
+	};
 }
