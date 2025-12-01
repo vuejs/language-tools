@@ -34,13 +34,9 @@ export interface ScriptCodegenOptions {
 export { generate as generateScript };
 
 function generate(options: ScriptCodegenOptions) {
-	const context = createScriptCodegenContext(options);
-	const codegen = generateWorker(options, context);
-
-	return {
-		...context,
-		codes: [...codegen],
-	};
+	const ctx = createScriptCodegenContext(options);
+	const codeGenerator = generateWorker(options, ctx);
+	return { ...ctx, codes: [...codeGenerator] };
 }
 
 function* generateWorker(
