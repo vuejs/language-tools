@@ -96,24 +96,27 @@ function useCodegen(
 	);
 
 	const getSetupBindingNames = computedSet(() => {
-		const newNames = new Set<string>();
+		const names = new Set<string>();
 		const scriptSetupRanges = getScriptSetupRanges();
 		if (!sfc.scriptSetup || !scriptSetupRanges) {
-			return newNames;
+			return names;
 		}
 		for (const { range } of scriptSetupRanges.bindings) {
 			const name = sfc.scriptSetup.content.slice(range.start, range.end);
 			if (!getImportComponentNames().has(name)) {
-				newNames.add(name);
+				names.add(name);
 			}
 		}
 		const scriptRanges = getScriptRanges();
 		if (sfc.script && scriptRanges) {
 			for (const { range } of scriptRanges.bindings) {
-				newNames.add(sfc.script.content.slice(range.start, range.end));
+				const name = sfc.script.content.slice(range.start, range.end);
+				if (!getImportComponentNames().has(name)) {
+					names.add(name);
+				}
 			}
 		}
-		return newNames;
+		return names;
 	});
 
 	const getImportComponentNames = computedSet(() => {
@@ -128,6 +131,19 @@ function useCodegen(
 					&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
 				) {
 					names.add(sfc.scriptSetup.content.slice(range.start, range.end));
+				}
+			}
+			const scriptRange = getScriptRanges();
+			if (sfc.script && scriptRange) {
+				for (const { range, moduleName, isDefaultImport, isNamespace } of scriptRange.bindings) {
+					if (
+						moduleName
+						&& isDefaultImport
+						&& !isNamespace
+						&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
+					) {
+						names.add(sfc.script.content.slice(range.start, range.end));
+					}
 				}
 			}
 		}
@@ -259,5 +275,6 @@ function useCodegen(
 		getSetupSlotsAssignName,
 		getGeneratedScript,
 		getGeneratedTemplate,
+		getImportComponentNames,
 	};
 }

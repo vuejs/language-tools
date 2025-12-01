@@ -16,7 +16,13 @@ export function getComponentDirectives(
 	program: ts.Program,
 	fileName: string,
 ): string[] {
-	const directives = getVariableType(ts, program, fileName, names.directives);
+	const sourceFile = program.getSourceFile(fileName);
+	if (!sourceFile) {
+		return [];
+	}
+
+	const checker = program.getTypeChecker();
+	const directives = getVariableType(ts, checker, sourceFile, names.directives);
 	if (!directives) {
 		return [];
 	}
