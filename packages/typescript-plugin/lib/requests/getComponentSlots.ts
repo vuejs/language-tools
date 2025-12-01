@@ -12,8 +12,14 @@ export function getComponentSlots(
 		return [];
 	}
 
+	const sourceFile = program.getSourceFile(virtualCode.fileName);
+	if (!sourceFile) {
+		return [];
+	}
+
+	const checker = program.getTypeChecker();
 	const assignName = codegen.getSetupSlotsAssignName() ?? names.slots;
-	const slots = getVariableType(ts, program, virtualCode.fileName, assignName);
+	const slots = getVariableType(ts, checker, sourceFile, assignName);
 	if (!slots) {
 		return [];
 	}

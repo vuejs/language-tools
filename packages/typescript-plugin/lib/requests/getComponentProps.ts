@@ -1,6 +1,6 @@
-import { names } from '@vue/language-core';
+import type { VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getComponentType, getVariableType } from './utils';
+import { getComponentType } from './utils';
 
 export interface ComponentPropInfo {
 	name: string;
@@ -14,26 +14,26 @@ export interface ComponentPropInfo {
 export function getComponentProps(
 	ts: typeof import('typescript'),
 	program: ts.Program,
-	fileName: string,
+	virtualCode: VueVirtualCode,
 	tag: string,
 ): ComponentPropInfo[] {
-	const components = getVariableType(ts, program, fileName, names.components);
-	if (!components) {
+	const sourceFile = program.getSourceFile(virtualCode.fileName);
+	if (!sourceFile) {
 		return [];
 	}
 
-	const componentType = getComponentType(ts, program, fileName, components, tag);
+	const checker = program.getTypeChecker();
+	const componentType = getComponentType(ts, checker, sourceFile, virtualCode, tag);
 	if (!componentType) {
 		return [];
 	}
 
 	const result = new Map<string, ComponentPropInfo>();
-	const checker = program.getTypeChecker();
 
-	for (const sig of componentType.getCallSignatures()) {
+	for (const sig of componentType.type.getCallSignatures()) {
 		if (sig.parameters.length) {
 			const propParam = sig.parameters[0]!;
-			const propsType = checker.getTypeOfSymbolAtLocation(propParam, components.node);
+			const propsType = checker.getTypeOfSymbolAtLocation(propParam, componentType.node);
 			const props = propsType.getProperties();
 			for (const prop of props) {
 				handlePropSymbol(prop);
@@ -41,11 +41,11 @@ export function getComponentProps(
 		}
 	}
 
-	for (const sig of componentType.getConstructSignatures()) {
+	for (const sig of componentType.type.getConstructSignatures()) {
 		const instanceType = sig.getReturnType();
 		const propsSymbol = instanceType.getProperty('$props');
 		if (propsSymbol) {
-			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, components.node);
+			const propsType = checker.getTypeOfSymbolAtLocation(propsSymbol, componentType.node);
 			const props = propsType.getProperties();
 			for (const prop of props) {
 				handlePropSymbol(prop);

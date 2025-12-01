@@ -4,12 +4,11 @@ import * as path from 'path-browserify';
 import { generateScript } from '../codegen/script';
 import { generateStyle } from '../codegen/style';
 import { generateTemplate } from '../codegen/template';
-import type { TemplateCodegenContext } from '../codegen/template/context';
 import { CompilerOptionsResolver } from '../compilerOptions';
 import { parseScriptRanges } from '../parsers/scriptRanges';
 import { parseScriptSetupRanges } from '../parsers/scriptSetupRanges';
 import { parseVueCompilerOptions } from '../parsers/vueCompilerOptions';
-import type { Code, Sfc, VueLanguagePlugin } from '../types';
+import type { Sfc, VueLanguagePlugin } from '../types';
 import { computedArray, computedSet } from '../utils/signals';
 
 export const tsCodegen = new WeakMap<Sfc, ReturnType<typeof useCodegen>>();
@@ -97,24 +96,27 @@ function useCodegen(
 	);
 
 	const getSetupBindingNames = computedSet(() => {
-		const newNames = new Set<string>();
+		const names = new Set<string>();
 		const scriptSetupRanges = getScriptSetupRanges();
 		if (!sfc.scriptSetup || !scriptSetupRanges) {
-			return newNames;
+			return names;
 		}
 		for (const { range } of scriptSetupRanges.bindings) {
 			const name = sfc.scriptSetup.content.slice(range.start, range.end);
 			if (!getImportComponentNames().has(name)) {
-				newNames.add(name);
+				names.add(name);
 			}
 		}
 		const scriptRanges = getScriptRanges();
 		if (sfc.script && scriptRanges) {
 			for (const { range } of scriptRanges.bindings) {
-				newNames.add(sfc.script.content.slice(range.start, range.end));
+				const name = sfc.script.content.slice(range.start, range.end);
+				if (!getImportComponentNames().has(name)) {
+					names.add(name);
+				}
 			}
 		}
-		return newNames;
+		return names;
 	});
 
 	const getImportComponentNames = computedSet(() => {
@@ -129,6 +131,19 @@ function useCodegen(
 					&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
 				) {
 					names.add(sfc.scriptSetup.content.slice(range.start, range.end));
+				}
+			}
+			const scriptRange = getScriptRanges();
+			if (sfc.script && scriptRange) {
+				for (const { range, moduleName, isDefaultImport, isNamespace } of scriptRange.bindings) {
+					if (
+						moduleName
+						&& isDefaultImport
+						&& !isNamespace
+						&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
+					) {
+						names.add(sfc.script.content.slice(range.start, range.end));
+					}
 				}
 			}
 		}
@@ -211,6 +226,20 @@ function useCodegen(
 		});
 	});
 
+	const getGeneratedStyle = computed(() => {
+		if (!sfc.styles.length) {
+			return;
+		}
+		return generateStyle({
+			ts,
+			vueCompilerOptions: getResolvedOptions(),
+			styles: sfc.styles,
+			directAccessNames: getDirectAccessNames(),
+			templateRefNames: getTemplateRefNames(),
+			setupBindingNames: getSetupBindingNames(),
+		});
+	});
+
 	const getTemplateComponents = computedArray(() => {
 		return sfc.template?.ast?.components ?? [];
 	});
@@ -239,36 +268,6 @@ function useCodegen(
 		});
 	});
 
-	const getGeneratedStyle = computed(() => {
-		if (!sfc.styles.length) {
-			return;
-		}
-		const generation = generateStyle({
-			ts,
-			vueCompilerOptions: getResolvedOptions(),
-			styles: sfc.styles,
-			directAccessNames: getDirectAccessNames(),
-			templateRefNames: getTemplateRefNames(),
-			setupBindingNames: getSetupBindingNames(),
-		});
-		const codes: Code[] = [];
-		let ctx: TemplateCodegenContext;
-
-		while (true) {
-			const result = generation.next();
-			if (result.done) {
-				ctx = result.value;
-				break;
-			}
-			codes.push(result.value);
-		}
-
-		return {
-			...ctx,
-			codes,
-		};
-	});
-
 	return {
 		getLang,
 		getScriptRanges,
@@ -276,5 +275,6 @@ function useCodegen(
 		getSetupSlotsAssignName,
 		getGeneratedScript,
 		getGeneratedTemplate,
+		getImportComponentNames,
 	};
 }

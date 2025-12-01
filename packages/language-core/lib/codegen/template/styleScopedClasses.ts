@@ -1,6 +1,6 @@
 import type { Code, SfcBlock } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { newLine } from '../utils';
+import { endOfLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateEscaped } from '../utils/escaped';
 
@@ -18,7 +18,7 @@ export function* generateStyleScopedClassReference(
 	if (!className) {
 		yield `/** @type {__VLS_StyleScopedClasses['`;
 		yield ['', 'template', offset, codeFeatures.additionalCompletion];
-		yield `']} */${newLine}`;
+		yield `']} */${endOfLine}`;
 		return;
 	}
 
@@ -44,5 +44,5 @@ export function* generateStyleScopedClassReference(
 	);
 	yield `'`;
 	yield endBoundary(token, offset + className.length);
-	yield `]} */${newLine}`;
+	yield `]} */${endOfLine}`;
 }

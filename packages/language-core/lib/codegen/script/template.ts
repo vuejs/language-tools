@@ -153,22 +153,19 @@ function* generateBindings(
 	{ templateComponents, templateCodegen, styleCodegen, setupBindingNames }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
-	if (!setupBindingNames.size) {
-		return;
-	}
-	ctx.generatedTypes.add(names.Bindings);
-
-	const usedVars = new Set([
+	const testNames = new Set([
 		...templateComponents.flatMap(c => [camelize(c), capitalize(camelize(c))]),
 		...templateCodegen?.accessExternalVariables.keys() ?? [],
 		...styleCodegen?.accessExternalVariables.keys() ?? [],
 	]);
+	const exposeNames = [...setupBindingNames].filter(name => testNames.has(name));
+	if (exposeNames.length === 0) {
+		return;
+	}
+	ctx.generatedTypes.add(names.Bindings);
 
 	yield `type ${names.Bindings} = __VLS_ProxyRefs<{${newLine}`;
-	for (const bindingName of setupBindingNames) {
-		if (!usedVars.has(bindingName)) {
-			continue;
-		}
+	for (const bindingName of exposeNames) {
 		const token = Symbol(bindingName.length);
 		yield ['', undefined, 0, { __linkedToken: token }];
 		yield `${bindingName}: typeof `;

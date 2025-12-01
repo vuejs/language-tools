@@ -27,18 +27,15 @@ export { generate as generateTemplate };
 
 function generate(options: TemplateCodegenOptions) {
 	const ctx = createTemplateCodegenContext(options.setupBindingNames);
-	const codegen = generateWorker(options, ctx);
+	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
-	for (const code of codegen) {
+	for (const code of codeGenerator) {
 		if (typeof code === 'object') {
 			code[3] = ctx.resolveCodeFeatures(code[3]);
 		}
 		codes.push(code);
 	}
-	return {
-		...ctx,
-		codes,
-	};
+	return { ...ctx, codes };
 }
 
 function* generateWorker(

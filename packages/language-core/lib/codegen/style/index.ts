@@ -17,15 +17,29 @@ export interface StyleCodegenOptions {
 
 export { generate as generateStyle };
 
-function* generate(options: StyleCodegenOptions) {
+function generate(options: StyleCodegenOptions) {
 	const ctx = createTemplateCodegenContext(options.setupBindingNames);
+	const codeGenerator = generateWorker(options, ctx);
+	const codes: Code[] = [];
+	for (const code of codeGenerator) {
+		if (typeof code === 'object') {
+			code[3] = ctx.resolveCodeFeatures(code[3]);
+		}
+		codes.push(code);
+	}
+	return { ...ctx, codes };
+}
+
+function* generateWorker(
+	options: StyleCodegenOptions,
+	ctx: TemplateCodegenContext,
+) {
 	const endScope = ctx.startScope();
 	ctx.declare(...options.directAccessNames);
 	yield* generateStyleScopedClasses(options);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);
 	yield* endScope();
-	return ctx;
 }
 
 function* generateCssVars(
