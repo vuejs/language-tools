@@ -32,20 +32,7 @@ export function* generateComponent(
 	}
 
 	const returns: string[][] = [];
-	const isJs = options.lang === 'js' || options.lang === 'jsx';
-	if (isJs) {
-		// fill $props
-		if (scriptSetupRanges.defineProps) {
-			const name = scriptSetupRanges.defineProps.name ?? names.props;
-			// NOTE: defineProps is inaccurate for $props
-			returns.push([name]);
-			returns.push([`{} as { $props: Partial<typeof ${name}> }`]);
-		}
-		// fill $emit
-		if (scriptSetupRanges.defineEmits) {
-			returns.push([`{} as { $emit: typeof ${scriptSetupRanges.defineEmits.name ?? names.emit} }`]);
-		}
-	}
+
 	if (scriptSetupRanges.defineExpose) {
 		returns.push([names.exposed]);
 	}
@@ -55,11 +42,10 @@ export function* generateComponent(
 		yield `),${newLine}`;
 	}
 
-	if (!isJs) {
-		const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
-		yield* emitOptionCodes;
-		yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
-	}
+	const emitOptionCodes = [...generateEmitsOption(options, scriptSetupRanges)];
+	yield* emitOptionCodes;
+	yield* generatePropsOption(options, ctx, scriptSetup, scriptSetupRanges, !!emitOptionCodes.length);
+
 	if (
 		options.vueCompilerOptions.target >= 3.5
 		&& options.vueCompilerOptions.inferComponentDollarRefs
