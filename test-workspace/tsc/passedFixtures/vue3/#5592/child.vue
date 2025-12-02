@@ -1,6 +1,6 @@
 <script setup lang="ts" generic="T">
 defineOptions({ inheritAttrs: false });
-defineProps</* @vue-ignore */ T>();
+defineProps<T>();
 </script>
 
 <template>
