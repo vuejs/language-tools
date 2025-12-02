@@ -28,6 +28,7 @@ import {
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
+import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
 
@@ -150,6 +151,45 @@ export function create(
 						}
 					}
 					return parseHTMLDocument(document);
+				};
+				htmlService.format = (document, range, options) => {
+					let voidElements: string[] | undefined;
+					const info = resolveEmbeddedCode(context, document.uri);
+					const codegen = info && tsCodegen.get(info.root.sfc);
+					if (codegen) {
+						const componentNames = new Set([
+							...codegen.getImportComponentNames(),
+							...codegen.getSetupBindingNames(),
+						]);
+						// copied from https://github.com/microsoft/vscode-html-languageservice/blob/10daf45dc16b4f4228987cf7cddf3a7dbbdc7570/src/beautify/beautify-html.js#L2746-L2761
+						voidElements = [
+							'area',
+							'base',
+							'br',
+							'col',
+							'embed',
+							'hr',
+							'img',
+							'input',
+							'keygen',
+							'link',
+							'menuitem',
+							'meta',
+							'param',
+							'source',
+							'track',
+							'wbr',
+							'!doctype',
+							'?xml',
+							'basefont',
+							'isindex',
+						].filter(tag =>
+							tag
+							&& !componentNames.has(tag)
+							&& !componentNames.has(capitalize(camelize(tag)))
+						);
+					}
+					return format(document, range, options, voidElements);
 				};
 			}
 
