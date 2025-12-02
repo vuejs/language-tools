@@ -1,5 +1,5 @@
 import type { LanguageServicePlugin } from '@volar/language-service';
-import { tsCodegen } from '@vue/language-core';
+import { references } from '@vue/language-core/lib/codegen/template/styleScopedClasses';
 import { resolveEmbeddedCode } from '../utils';
 
 export function create(): LanguageServicePlugin {
@@ -15,22 +15,24 @@ export function create(): LanguageServicePlugin {
 					if (info?.code.id !== 'template') {
 						return;
 					}
-
 					const { sfc } = info.root;
-					const codegen = tsCodegen.get(sfc);
-
-					const option = info.root.vueCompilerOptions.resolveStyleClassNames;
-					const scopedClasses = codegen?.getGeneratedTemplate()?.scopedClasses ?? [];
+					if (!sfc.template) {
+						return;
+					}
+					const { resolveStyleClassNames } = info.root.vueCompilerOptions;
+					if (!resolveStyleClassNames) {
+						return;
+					}
+					const scopedClasses = references.get(sfc.template)?.[1] ?? [];
 					const styleClasses = new Map<string, string[]>();
 
-					for (let i = 0; i < sfc.styles.length; i++) {
-						const style = sfc.styles[i]!;
-						if (option !== true && !(option === 'scoped' && style.scoped)) {
+					for (const style of sfc.styles) {
+						if (!(resolveStyleClassNames === true || style.scoped)) {
 							continue;
 						}
 
-						const styleDocumentUri = context.encodeEmbeddedDocumentUri(info.script.id, 'style_' + i);
-						const styleVirtualCode = info.script.generated.embeddedCodes.get('style_' + i);
+						const styleDocumentUri = context.encodeEmbeddedDocumentUri(info.script.id, style.name);
+						const styleVirtualCode = info.script.generated.embeddedCodes.get(style.name);
 						if (!styleVirtualCode) {
 							continue;
 						}
@@ -52,7 +54,7 @@ export function create(): LanguageServicePlugin {
 						}
 					}
 
-					return scopedClasses.flatMap(({ className, offset }) => {
+					return scopedClasses.flatMap(([className, offset]) => {
 						const range = {
 							start: document.positionAt(offset),
 							end: document.positionAt(offset + className.length),

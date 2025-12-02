@@ -7,7 +7,7 @@ import type {
 } from '@volar/language-service';
 import { hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import * as html from 'vscode-html-languageservice';
-import { AttrNameCasing, checkCasing } from '../nameCasing';
+import { AttrNameCasing, getAttrNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
 
 export function create(
@@ -39,7 +39,7 @@ export function create(
 					}
 
 					const result: InlayHint[] = [];
-					const casing = await checkCasing(context, info.script.id);
+					const attrNameCasing = await getAttrNameCasing(context, info.script.id);
 					const components = await getComponentNames(info.root.fileName) ?? [];
 					const componentProps = new Map<string, string[]>();
 
@@ -141,7 +141,7 @@ export function create(
 												end: document.positionAt(current.labelOffset),
 											},
 											newText: ` :${
-												casing.attr === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp
+												attrNameCasing === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp
 											}=`,
 										}],
 									});

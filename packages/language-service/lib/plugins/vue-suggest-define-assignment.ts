@@ -1,8 +1,12 @@
-import type { CompletionItem, CompletionItemKind, LanguageServicePlugin } from '@volar/language-service';
+import type { CompletionItem, CompletionItemKind, LanguageServicePlugin, TextDocument } from '@volar/language-service';
 import { type TextRange, tsCodegen } from '@vue/language-core';
+import type * as ts from 'typescript';
+import { URI } from 'vscode-uri';
 import { resolveEmbeddedCode } from '../utils';
 
-export function create(): LanguageServicePlugin {
+const documentToSourceFile = new WeakMap<TextDocument, ts.SourceFile>();
+
+export function create(ts: typeof import('typescript')): LanguageServicePlugin {
 	return {
 		name: 'vue-suggest-define-assignment',
 		capabilities: {
@@ -11,7 +15,7 @@ export function create(): LanguageServicePlugin {
 		create(context) {
 			return {
 				isAdditionalCompletion: true,
-				async provideCompletionItems(document) {
+				async provideCompletionItems(document, position) {
 					const info = resolveEmbeddedCode(context, document.uri);
 					if (!info?.code.id.startsWith('script_')) {
 						return;
@@ -27,6 +31,11 @@ export function create(): LanguageServicePlugin {
 					const scriptSetup = sfc.scriptSetup;
 					const scriptSetupRanges = codegen?.getScriptSetupRanges();
 					if (!scriptSetup || !scriptSetupRanges) {
+						return;
+					}
+
+					const sourceFile = getSourceFile(ts, document);
+					if (shouldSkip(ts, sourceFile, document.offsetAt(position))) {
 						return;
 					}
 
@@ -92,4 +101,40 @@ export function create(): LanguageServicePlugin {
 			};
 		},
 	};
+}
+
+function shouldSkip(ts: typeof import('typescript'), node: ts.Node, pos: number) {
+	if (ts.isStringLiteral(node) && pos >= node.getFullStart() && pos <= node.getEnd()) {
+		return true;
+	}
+	else if (ts.isTemplateLiteral(node) && pos >= node.getFullStart() && pos <= node.getEnd()) {
+		return true;
+	}
+	else {
+		let _shouldSkip = false;
+		node.forEachChild(node => {
+			if (_shouldSkip) {
+				return;
+			}
+			if (pos >= node.getFullStart() && pos <= node.getEnd()) {
+				if (shouldSkip(ts, node, pos)) {
+					_shouldSkip = true;
+				}
+			}
+		});
+		return _shouldSkip;
+	}
+}
+
+function getSourceFile(ts: typeof import('typescript'), document: TextDocument): ts.SourceFile {
+	let sourceFile = documentToSourceFile.get(document);
+	if (!sourceFile) {
+		sourceFile = ts.createSourceFile(
+			URI.parse(document.uri).path,
+			document.getText(),
+			ts.ScriptTarget.Latest,
+		);
+		documentToSourceFile.set(document, sourceFile);
+	}
+	return sourceFile;
 }

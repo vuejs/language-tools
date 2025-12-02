@@ -1,4 +1,10 @@
-import { isSemanticTokensEnabled, type Language, type SourceScript, type VueVirtualCode } from '@vue/language-core';
+import {
+	isSemanticTokensEnabled,
+	type Language,
+	names,
+	type SourceScript,
+	type VueVirtualCode,
+} from '@vue/language-core';
 import type * as ts from 'typescript';
 
 interface ExtractPropsInfo {
@@ -27,7 +33,7 @@ export function collectExtractProps(
 		if (
 			ts.isPropertyAccessExpression(node)
 			&& ts.isIdentifier(node.expression)
-			&& node.expression.text === '__VLS_ctx'
+			&& node.expression.text === names.ctx
 			&& ts.isIdentifier(node.name)
 		) {
 			const { name } = node;

@@ -3,7 +3,7 @@ import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCParseResult } from '@vue/compiler-sfc';
 import type { Segment } from 'muggle-string';
 import type * as ts from 'typescript';
-import type { VueEmbeddedCode } from './virtualFile/embeddedFile';
+import type { VueEmbeddedCode } from './virtualCode/embeddedCodes';
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
@@ -17,7 +17,8 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 };
 
 export interface VueCodeInformation extends CodeInformation {
-	__combineOffset?: number;
+	htmlAutoImport?: boolean;
+	__combineToken?: symbol;
 	__linkedToken?: symbol;
 }
 
@@ -77,7 +78,7 @@ export interface VueCompilerOptions {
 
 export const validVersions = [2, 2.1, 2.2] as const;
 
-export type VueLanguagePluginReturn = {
+export interface VueLanguagePluginReturn {
 	version: typeof validVersions[number];
 	name?: string;
 	order?: number;
@@ -106,7 +107,7 @@ export type VueLanguagePluginReturn = {
 	): CompilerDOM.CodegenResult | undefined;
 	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string }[];
 	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
-};
+}
 
 export type VueLanguagePlugin = (ctx: {
 	modules: {

@@ -53,79 +53,15 @@ function getCompletionsAtPosition<T>(
 		const fileName = filePath.replace(windowsPathReg, '/');
 		const result = getCompletionsAtPosition(fileName, position, options, formattingSettings);
 		if (result) {
-			// filter __VLS_
-			result.entries = result.entries.filter(
-				entry =>
-					!entry.name.includes('__VLS_')
-					&& !entry.labelDetails?.description?.includes('__VLS_'),
+			resolveCompletionResult(
+				ts,
+				language,
+				asScriptId,
+				vueOptions,
+				fileName,
+				position,
+				result,
 			);
-
-			// filter global variables in template and styles
-			const sourceScript = language.scripts.get(asScriptId(fileName));
-			const root = sourceScript?.generated?.root;
-			if (root instanceof VueVirtualCode) {
-				const blocks = [
-					root.sfc.template,
-					...root.sfc.styles,
-				];
-				const ranges = blocks.filter(Boolean).map(block =>
-					[
-						block!.startTagEnd,
-						block!.endTagStart,
-					] as const
-				);
-
-				if (ranges.some(([start, end]) => position >= start && position <= end)) {
-					const globalKinds = new Set(['var', 'function', 'module']);
-					const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
-					const sortTexts = new Set([
-						globalsOrKeywords,
-						'z' + globalsOrKeywords,
-						globalsOrKeywords + '1',
-					]);
-
-					result.entries = result.entries.filter(entry =>
-						!(entry.kind === 'const' && entry.name in vueOptions.macros) && (
-							!globalKinds.has(entry.kind)
-							|| !sortTexts.has(entry.sortText)
-							|| isGloballyAllowed(entry.name)
-						)
-					);
-				}
-			}
-
-			// modify label
-			for (const item of result.entries) {
-				if (item.source) {
-					const originalName = item.name;
-					for (const vueExt of vueOptions.extensions) {
-						const suffix = capitalize(vueExt.slice(1)); // .vue -> Vue
-						if (item.source.endsWith(vueExt) && item.name.endsWith(suffix)) {
-							item.name = capitalize(item.name.slice(0, -suffix.length));
-							if (item.insertText) {
-								// #2286
-								item.insertText = item.insertText.replace(`${suffix}$1`, '$1');
-							}
-							if (item.data) {
-								// @ts-expect-error
-								item.data.__isComponentAutoImport = {
-									ext: vueExt,
-									suffix,
-									originalName,
-									newName: item.insertText,
-								};
-							}
-							break;
-						}
-					}
-					if (item.data) {
-						// @ts-expect-error
-						item.data.__isAutoImport = {
-							fileName,
-						};
-					}
-				}
-			}
 		}
 		return result;
 	};
@@ -137,45 +73,133 @@ function getCompletionEntryDetails<T>(
 ): ts.LanguageService['getCompletionEntryDetails'] {
 	return (...args) => {
 		const details = getCompletionEntryDetails(...args);
-		// modify import statement
-		// @ts-expect-error
-		if (args[6]?.__isComponentAutoImport) {
-			// @ts-expect-error
-			const { originalName, newName } = args[6].__isComponentAutoImport;
-			for (const codeAction of details?.codeActions ?? []) {
-				for (const change of codeAction.changes) {
-					for (const textChange of change.textChanges) {
-						textChange.newText = textChange.newText.replace(
-							'import ' + originalName + ' from ',
-							'import ' + newName + ' from ',
-						);
+		if (details) {
+			resolveCompletionEntryDetails(language, details, args[6]);
+		}
+		return details;
+	};
+}
+
+export function resolveCompletionResult<T>(
+	ts: typeof import('typescript'),
+	language: Language<T>,
+	asScriptId: (fileName: string) => T,
+	vueOptions: VueCompilerOptions,
+	fileName: string,
+	position: number,
+	result: ts.CompletionInfo,
+) {
+	// filter __VLS_
+	result.entries = result.entries.filter(
+		entry =>
+			!entry.name.includes('__VLS_')
+			&& !entry.labelDetails?.description?.includes('__VLS_'),
+	);
+
+	// filter global variables in template and styles
+	const sourceScript = language.scripts.get(asScriptId(fileName));
+	const root = sourceScript?.generated?.root;
+	if (root instanceof VueVirtualCode) {
+		const blocks = [
+			root.sfc.template,
+			...root.sfc.styles,
+		];
+		const ranges = blocks.filter(Boolean).map(block =>
+			[
+				block!.startTagEnd,
+				block!.endTagStart,
+			] as const
+		);
+
+		if (ranges.some(([start, end]) => position >= start && position <= end)) {
+			const globalKinds = new Set(['var', 'function', 'module']);
+			const globalsOrKeywords = (ts as any).Completions.SortText.GlobalsOrKeywords;
+			const sortTexts = new Set([
+				globalsOrKeywords,
+				'z' + globalsOrKeywords,
+				globalsOrKeywords + '1',
+			]);
+
+			result.entries = result.entries.filter(entry =>
+				!(entry.kind === 'const' && entry.name in vueOptions.macros) && (
+					!globalKinds.has(entry.kind)
+					|| !sortTexts.has(entry.sortText)
+					|| isGloballyAllowed(entry.name)
+				)
+			);
+		}
+	}
+
+	// modify label
+	for (const item of result.entries) {
+		if (item.source) {
+			const oldName = item.name;
+			for (const vueExt of vueOptions.extensions) {
+				const suffix = capitalize(vueExt.slice(1)); // .vue -> Vue
+				if (item.source.endsWith(vueExt) && item.name.endsWith(suffix)) {
+					item.name = capitalize(item.name.slice(0, -suffix.length));
+					if (item.insertText) {
+						// #2286
+						item.insertText = item.insertText.replace(`${suffix}$1`, '$1');
 					}
+					if (item.data) {
+						// @ts-expect-error
+						item.data.__isComponentAutoImport = {
+							oldName,
+							newName: item.name,
+						};
+					}
+					break;
+				}
+			}
+			if (item.data) {
+				// @ts-expect-error
+				item.data.__isAutoImport = {
+					fileName,
+				};
+			}
+		}
+	}
+}
+
+export function resolveCompletionEntryDetails(
+	language: Language<any>,
+	details: ts.CompletionEntryDetails,
+	data: any,
+) {
+	// modify import statement
+	if (data.__isComponentAutoImport) {
+		const { oldName, newName } = data.__isComponentAutoImport;
+		for (const codeAction of details?.codeActions ?? []) {
+			for (const change of codeAction.changes) {
+				for (const textChange of change.textChanges) {
+					textChange.newText = textChange.newText.replace(
+						'import ' + oldName + ' from ',
+						'import ' + newName + ' from ',
+					);
 				}
 			}
 		}
-		// @ts-expect-error
-		if (args[6]?.__isAutoImport) {
-			// @ts-expect-error
-			const { fileName } = args[6].__isAutoImport;
-			const sourceScript = language.scripts.get(fileName);
-			if (sourceScript?.generated?.root instanceof VueVirtualCode) {
-				const { vueSfc } = sourceScript.generated.root;
-				if (!vueSfc?.descriptor.script && !vueSfc?.descriptor.scriptSetup) {
-					for (const codeAction of details?.codeActions ?? []) {
-						for (const change of codeAction.changes) {
-							for (const textChange of change.textChanges) {
-								textChange.newText = `<script setup lang="ts">${textChange.newText}</script>\n\n`;
-								break;
-							}
+	}
+	if (data.__isAutoImport) {
+		const { fileName } = data.__isAutoImport;
+		const sourceScript = language.scripts.get(fileName);
+		if (sourceScript?.generated?.root instanceof VueVirtualCode) {
+			const { vueSfc } = sourceScript.generated.root;
+			if (!vueSfc?.descriptor.script && !vueSfc?.descriptor.scriptSetup) {
+				for (const codeAction of details?.codeActions ?? []) {
+					for (const change of codeAction.changes) {
+						for (const textChange of change.textChanges) {
+							textChange.newText = `<script setup lang="ts">${textChange.newText}</script>\n\n`;
 							break;
 						}
 						break;
 					}
+					break;
 				}
 			}
 		}
-		return details;
-	};
+	}
 }
 
 function getCodeFixesAtPosition(
@@ -199,19 +223,36 @@ function getDefinitionAndBoundSpan<T>(
 ): ts.LanguageService['getDefinitionAndBoundSpan'] {
 	return (fileName, position) => {
 		const result = getDefinitionAndBoundSpan(fileName, position);
-		if (!result?.definitions?.length) {
-			return result;
-		}
 
 		const program = languageService.getProgram()!;
 		const sourceScript = language.scripts.get(asScriptId(fileName));
-		if (!sourceScript?.generated) {
+		const root = sourceScript?.generated?.root;
+		if (!(root instanceof VueVirtualCode)) {
 			return result;
 		}
 
-		const root = sourceScript.generated.root;
-		if (!(root instanceof VueVirtualCode)) {
-			return result;
+		if (!result?.definitions?.length) {
+			const { template } = root.sfc;
+			if (template) {
+				const textSpan = {
+					start: template.start + 1,
+					length: 'template'.length,
+				};
+				if (position >= textSpan.start && position <= textSpan.start + textSpan.length) {
+					return {
+						textSpan,
+						definitions: [{
+							fileName,
+							textSpan,
+							kind: ts.ScriptElementKind.scriptElement,
+							name: fileName,
+							containerKind: ts.ScriptElementKind.unknown,
+							containerName: '',
+						}],
+					};
+				}
+			}
+			return;
 		}
 
 		if (
@@ -232,7 +273,7 @@ function getDefinitionAndBoundSpan<T>(
 					root.sfc.content[definition.textSpan.start - 1] === '@'
 					|| root.sfc.content.slice(definition.textSpan.start - 5, definition.textSpan.start) === 'v-on:'
 				) {
-					skippedDefinitions.push(definition);
+					definitions.delete(definition);
 				}
 			}
 		}

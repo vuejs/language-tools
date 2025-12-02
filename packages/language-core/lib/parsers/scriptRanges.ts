@@ -7,22 +7,36 @@ export interface ScriptRanges extends ReturnType<typeof parseScriptRanges> {}
 
 export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.SourceFile, hasScriptSetup: boolean) {
 	let exportDefault:
-		| (TextRange & {
+		| TextRange & {
+			expression: TextRange;
+		}
+		| undefined;
+	let componentOptions:
+		| {
 			expression: TextRange;
 			args: TextRange;
 			argsNode: ts.ObjectLiteralExpression;
-			componentsOption: TextRange | undefined;
-			componentsOptionNode: ts.ObjectLiteralExpression | undefined;
-			directivesOption: TextRange | undefined;
-			nameOption: TextRange | undefined;
-			inheritAttrsOption: string | undefined;
-		})
+			components: TextRange | undefined;
+			componentsNode: ts.ObjectLiteralExpression | undefined;
+			directives: TextRange | undefined;
+			name: TextRange | undefined;
+			inheritAttrs: string | undefined;
+		}
 		| undefined;
 
 	const bindings = hasScriptSetup ? parseBindingRanges(ts, ast) : [];
 
 	ts.forEachChild(ast, raw => {
 		if (ts.isExportAssignment(raw)) {
+			exportDefault = {
+				..._getStartEnd(raw),
+				expression: _getStartEnd(raw.expression),
+			};
+			const comment = getClosestMultiLineCommentRange(ts, raw, [], ast);
+			if (comment) {
+				exportDefault.start = comment.start;
+			}
+
 			let node: ts.AsExpression | ts.ExportAssignment | ts.ParenthesizedExpression = raw;
 			while (isAsExpression(node.expression) || ts.isParenthesizedExpression(node.expression)) { // fix https://github.com/vuejs/language-tools/issues/1882
 				node = node.expression;
@@ -60,27 +74,23 @@ export function parseScriptRanges(ts: typeof import('typescript'), ast: ts.Sourc
 						}
 					}
 				});
-				exportDefault = {
-					..._getStartEnd(raw),
+				componentOptions = {
 					expression: _getStartEnd(node.expression),
 					args: _getStartEnd(obj),
 					argsNode: obj,
-					componentsOption: componentsOptionNode ? _getStartEnd(componentsOptionNode) : undefined,
-					componentsOptionNode,
-					directivesOption: directivesOptionNode ? _getStartEnd(directivesOptionNode) : undefined,
-					nameOption: nameOptionNode ? _getStartEnd(nameOptionNode) : undefined,
-					inheritAttrsOption,
+					components: componentsOptionNode ? _getStartEnd(componentsOptionNode) : undefined,
+					componentsNode: componentsOptionNode,
+					directives: directivesOptionNode ? _getStartEnd(directivesOptionNode) : undefined,
+					name: nameOptionNode ? _getStartEnd(nameOptionNode) : undefined,
+					inheritAttrs: inheritAttrsOption,
 				};
-				const comment = getClosestMultiLineCommentRange(ts, raw, [], ast);
-				if (comment) {
-					exportDefault.start = comment.start;
-				}
 			}
 		}
 	});
 
 	return {
 		exportDefault,
+		componentOptions,
 		bindings,
 	};
 

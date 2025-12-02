@@ -1,14 +1,11 @@
 import type { Code, VueCodeInformation } from '../../types';
-import { wrapWith } from './wrapWith';
+import { endBoundary, startBoundary } from './boundary';
 
 export function* generateUnicode(code: string, offset: number, info: VueCodeInformation): Generator<Code> {
 	if (needToUnicode(code)) {
-		yield* wrapWith(
-			offset,
-			offset + code.length,
-			info,
-			toUnicode(code),
-		);
+		const token = yield* startBoundary('template', offset, info);
+		yield toUnicode(code);
+		yield endBoundary(token, offset + code.length);
 	}
 	else {
 		yield [code, 'template', offset, info];

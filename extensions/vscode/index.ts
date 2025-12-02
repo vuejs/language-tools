@@ -90,16 +90,6 @@ export = defineExtension(() => {
 			}
 		});
 
-		// Setup typescript.js in production mode
-		if (fs.existsSync(path.join(__dirname, 'language-server.js'))) {
-			fs.writeFileSync(
-				path.join(__dirname, 'typescript.js'),
-				`module.exports = require("${
-					vscode.env.appRoot.replace(/\\/g, '/')
-				}/extensions/node_modules/typescript/lib/typescript.js");`,
-			);
-		}
-
 		if (config.server.path) {
 			if (!serverPath) {
 				vscode.window.showErrorMessage('Cannot find @vue/language-server.');
@@ -115,7 +105,10 @@ export = defineExtension(() => {
 			});
 		}
 
-		client = launch(serverPath ?? vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js').fsPath);
+		client = launch(
+			serverPath ?? vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js').fsPath,
+			vscode.env.appRoot.replace(/\\/g, '/') + '/extensions/node_modules/typescript/lib',
+		);
 
 		volarLabs.addLanguageClient(client);
 
@@ -124,9 +117,9 @@ export = defineExtension(() => {
 		activateAutoInsertion(selectors, client);
 		activateDocumentDropEdit(selectors, client);
 
-		focusMode.activate(context, selectors);
-		interpolationDecorators.activate(context, selectors);
-		reactivityVisualization.activate(context, selectors);
+		focusMode.activate(selectors);
+		interpolationDecorators.activate(selectors);
+		reactivityVisualization.activate(selectors);
 		welcome.activate(context);
 	}, { immediate: true });
 
@@ -145,18 +138,21 @@ export = defineExtension(() => {
 	return volarLabs.extensionExports;
 });
 
-function launch(serverPath: string) {
+function launch(serverPath: string, tsdk: string) {
+	const args = ['--tsdk=' + tsdk];
 	const client = new lsp.LanguageClient(
 		'vue',
 		'Vue',
 		{
 			run: {
 				module: serverPath,
+				args,
 				transport: lsp.TransportKind.ipc,
 				options: {},
 			},
 			debug: {
 				module: serverPath,
+				args,
 				transport: lsp.TransportKind.ipc,
 				options: { execArgv: ['--nolazy', '--inspect=' + 6009] },
 			},
@@ -211,7 +207,7 @@ function resolveServerPath() {
 	if (path.isAbsolute(config.server.path)) {
 		const entryFile = require.resolve('./index.js', { paths: [config.server.path] });
 		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-		fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
+		fs.writeFileSync(tsPluginPackPath, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
 		return entryFile;
 	}
 
@@ -223,7 +219,7 @@ function resolveServerPath() {
 			const serverPath = path.join(uri.fsPath, config.server.path);
 			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
 			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-			fs.writeFileSync(tsPluginPackPath, `module.exports = require("${tsPluginPath}");`);
+			fs.writeFileSync(tsPluginPackPath, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
 			return entryFile;
 		}
 		catch {}

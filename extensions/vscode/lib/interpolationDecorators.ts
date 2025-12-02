@@ -1,3 +1,4 @@
+import { useActiveTextEditor, useDocumentText, useVisibleTextEditors, watch } from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
 
@@ -9,39 +10,38 @@ const decorationType = vscode.window.createTextEditorDecorationType({
 	borderRadius: '4px',
 });
 
-export function activate(
-	context: vscode.ExtensionContext,
-	selector: vscode.DocumentSelector,
-) {
+export function activate(selector: vscode.DocumentSelector) {
 	let timeout: ReturnType<typeof setTimeout> | undefined;
 
-	for (const editor of vscode.window.visibleTextEditors) {
+	const visibleTextEditors = useVisibleTextEditors();
+	const activeTextEditor = useActiveTextEditor();
+	const activeText = useDocumentText(() => activeTextEditor.value?.document);
+
+	for (const editor of visibleTextEditors.value) {
 		updateDecorations(editor);
 	}
 
-	context.subscriptions.push(
-		vscode.window.onDidChangeActiveTextEditor(editor => {
-			if (editor) {
-				updateDecorations(editor);
-			}
-		}),
-		vscode.workspace.onDidChangeTextDocument(() => {
-			const editor = vscode.window.activeTextEditor;
-			if (editor) {
-				clearTimeout(timeout);
-				timeout = setTimeout(() => updateDecorations(editor), 100);
-			}
-		}),
-		vscode.workspace.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration('vue.editor.templateInterpolationDecorators')) {
-				for (const editor of vscode.window.visibleTextEditors) {
-					updateDecorations(editor);
-				}
-			}
-		}),
-	);
+	watch(activeTextEditor, editor => {
+		if (editor) {
+			updateDecorations(editor);
+		}
+	});
 
-	function updateDecorations(editor: vscode.TextEditor) {
+	watch(activeText, () => {
+		const editor = activeTextEditor.value;
+		if (editor) {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => updateDecorations(editor), 100);
+		}
+	});
+
+	watch(() => config.editor.templateInterpolationDecorators, () => {
+		for (const editor of visibleTextEditors.value) {
+			updateDecorations(editor);
+		}
+	});
+
+	async function updateDecorations(editor: vscode.TextEditor) {
 		if (!vscode.languages.match(selector, editor.document)) {
 			return;
 		}
@@ -49,16 +49,29 @@ export function activate(
 			editor.setDecorations(decorationType, []);
 			return;
 		}
-		editor.setDecorations(
-			decorationType,
-			[...editor.document.getText().matchAll(/{{[\s\S]*?}}/g)].map(match => {
-				const start = match.index + 2;
-				const end = match.index + match[0].length - 2;
-				return new vscode.Range(
-					editor.document.positionAt(start),
-					editor.document.positionAt(end),
-				);
-			}),
-		);
+		try {
+			const result = await vscode.commands.executeCommand<
+				{
+					body?: [number, number][];
+				} | undefined
+			>(
+				'typescript.tsserverRequest',
+				'_vue:getInterpolationRanges',
+				[editor.document.uri.fsPath.replace(/\\/g, '/')],
+				{ isAsync: true, lowPriority: true },
+			);
+			editor.setDecorations(
+				decorationType,
+				(result?.body ?? []).map(range =>
+					new vscode.Range(
+						editor.document.positionAt(range[0]),
+						editor.document.positionAt(range[1]),
+					)
+				),
+			);
+		}
+		catch {
+			editor.setDecorations(decorationType, []);
+		}
 	}
 }

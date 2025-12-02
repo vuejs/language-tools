@@ -4,13 +4,13 @@ import type * as ts from 'typescript';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
-import { createTsAst, endOfLine, newLine } from '../utils';
-import { wrapWith } from '../utils/wrapWith';
+import { endOfLine, getTypeScriptAST, newLine } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateVSlot(
 	options: TemplateCodegenOptions,
@@ -21,7 +21,6 @@ export function* generateVSlot(
 	if (!ctx.currentComponent) {
 		return;
 	}
-	const slotBlockVars: string[] = [];
 	const slotVar = ctx.getInternalVariable();
 
 	if (slotDir) {
@@ -29,8 +28,6 @@ export function* generateVSlot(
 	}
 
 	if (slotDir || node.children.length) {
-		ctx.currentComponent.used = true;
-
 		yield `const { `;
 		if (slotDir) {
 			if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
@@ -45,41 +42,34 @@ export function* generateVSlot(
 				);
 			}
 			else {
-				yield* wrapWith(
+				const token = yield* startBoundary(
+					'template',
 					slotDir.loc.start.offset,
-					slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0),
 					codeFeatures.withoutHighlightAndCompletion,
-					`default`,
 				);
+				yield `default`;
+				yield endBoundary(token, slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0));
 			}
 		}
 		else {
 			// #932: reference for implicit default slot
-			yield* wrapWith(
-				node.loc.start.offset,
-				node.loc.end.offset,
-				codeFeatures.navigation,
-				`default`,
-			);
+			const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.navigation);
+			yield `default`;
+			yield endBoundary(token, node.loc.end.offset);
 		}
 		yield `: ${slotVar} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
 	}
 
+	const endScope = ctx.startScope();
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const slotAst = createTsAst(options.ts, ctx.inlineTsAsts, `(${slotDir.exp.content}) => {}`);
-		slotBlockVars.push(...collectBindingNames(options.ts, slotAst, slotAst));
+		const slotAst = getTypeScriptAST(options.ts, options.template, `(${slotDir.exp.content}) => {}`);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
+		ctx.declare(...collectBindingNames(options.ts, slotAst, slotAst));
 	}
-
-	for (const varName of slotBlockVars) {
-		ctx.addLocalVariable(varName);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child);
 	}
-
-	yield* generateElementChildren(options, ctx, node.children);
-
-	for (const varName of slotBlockVars) {
-		ctx.removeLocalVariable(varName);
-	}
+	yield* endScope();
 
 	if (slotDir) {
 		let isStatic = true;
@@ -115,7 +105,6 @@ function* generateSlotParameters(
 ): Generator<Code> {
 	const { ts } = options;
 	const statement = ast.statements[0];
-
 	if (!statement || !ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
 		return;
 	}
@@ -123,11 +112,10 @@ function* generateSlotParameters(
 	const { expression } = statement;
 	const startOffset = exp.loc.start.offset - 1;
 	const types: (Code | null)[] = [];
-
 	const interpolation = [...generateInterpolation(
 		options,
 		ctx,
-		'template',
+		options.template,
 		codeFeatures.all,
 		ast.text,
 		startOffset,
@@ -162,14 +150,11 @@ function* generateSlotParameters(
 
 	if (types.some(t => t)) {
 		yield `, `;
-		yield* wrapWith(
-			exp.loc.start.offset,
-			exp.loc.end.offset,
-			codeFeatures.verification,
-			`(`,
-			...types.flatMap(type => type ? [`_`, type, `, `] : `_, `),
-			`) => [] as any`,
-		);
+		const token = yield* startBoundary('template', exp.loc.start.offset, codeFeatures.verification);
+		yield `(`;
+		yield* types.flatMap(type => type ? [`_`, type, `, `] : `_, `);
+		yield `) => [] as any`;
+		yield endBoundary(token, exp.loc.end.offset);
 	}
 	yield `)${endOfLine}`;
 }

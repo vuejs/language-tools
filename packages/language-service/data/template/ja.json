@@ -79,7 +79,7 @@
       "name": "v-text",
       "description": {
         "kind": "markdown",
-        "value": "要素のテキスト内容を更新します。\n\n- **期待する値:** `string`\n\n- **詳細**\n\n  `v-text` は要素の [textContent](https://developer.mozilla.org/ja/docs/Web/API/Node/textContent) プロパティをセットする動作なので、要素内の既存のコンテンツはすべて上書きされます。`textContent` の一部を更新する必要がある場合は、代わりに[マスタッシュ展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)を使用します。\n\n- **例**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- same as -->\n  <span>{{msg}}</span>\n  ```\n\n- **参照** [テンプレート構文 - テキスト展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)"
+        "value": "要素のテキスト内容を更新します。\n\n- **期待する値:** `string`\n\n- **詳細**\n\n  `v-text` は要素の [textContent](https://developer.mozilla.org/ja/docs/Web/API/Node/textContent) プロパティをセットする動作なので、要素内の既存のコンテンツはすべて上書きされます。`textContent` の一部だけを更新する必要がある場合は、代わりに[マスタッシュ展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)を使用します (例: <span v-pre>`<span>これは保持して {{dynamicPortion}} を更新</span>`</span>)。\n\n- **例**\n\n  ```html\n  <span v-text=\"msg\"></span>\n  <!-- same as -->\n  <span>{{msg}}</span>\n  ```\n\n- **参照** [テンプレート構文 - テキスト展開](https://ja.vuejs.org/guide/essentials/template-syntax.html#text-interpolation)"
       },
       "references": "api/built-in-directives.html#v-text"
     },

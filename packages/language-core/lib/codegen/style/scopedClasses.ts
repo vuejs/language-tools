@@ -1,45 +1,41 @@
 import type { Code } from '../../types';
-import type { ScriptCodegenOptions } from '../script';
-import type { TemplateCodegenContext } from '../template/context';
+import { generateStyleScopedClassReference } from '../template/styleScopedClasses';
 import { endOfLine } from '../utils';
-import { generateClassProperty } from './classProperty';
-import { generateStyleImports } from './imports';
+import type { StyleCodegenOptions } from '.';
+import { generateClassProperty, generateStyleImports } from './common';
 
 export function* generateStyleScopedClasses(
-	options: ScriptCodegenOptions,
-	ctx: TemplateCodegenContext,
+	{ vueCompilerOptions, styles }: StyleCodegenOptions,
 ): Generator<Code> {
-	const option = options.vueCompilerOptions.resolveStyleClassNames;
-	const styles = options.sfc.styles
-		.map((style, i) => [style, i] as const)
-		.filter(([style]) => option === true || (option === 'scoped' && style.scoped));
-	if (!styles.length) {
+	const { resolveStyleClassNames, resolveStyleImports } = vueCompilerOptions;
+	if (!resolveStyleClassNames) {
 		return;
 	}
-
-	const firstClasses = new Set<string>();
+	const scopedStyles = styles.filter(style => resolveStyleClassNames === true || style.scoped);
+	if (!scopedStyles.length) {
+		return;
+	}
+	const visited = new Set<string>();
+	const deferredGenerations: Generator<Code>[] = [];
 	yield `type __VLS_StyleScopedClasses = {}`;
-	for (const [style, i] of styles) {
-		if (options.vueCompilerOptions.resolveStyleImports) {
+	for (const style of scopedStyles) {
+		if (resolveStyleImports) {
 			yield* generateStyleImports(style);
 		}
 		for (const className of style.classNames) {
-			if (firstClasses.has(className.text)) {
-				ctx.scopedClasses.push({
-					source: 'style_' + i,
-					className: className.text.slice(1),
-					offset: className.offset + 1,
-				});
-				continue;
+			if (!visited.has(className.text)) {
+				visited.add(className.text);
+				yield* generateClassProperty(style.name, className.text, className.offset, 'boolean');
 			}
-			firstClasses.add(className.text);
-			yield* generateClassProperty(
-				i,
-				className.text,
-				className.offset,
-				'boolean',
-			);
+			else {
+				deferredGenerations.push(
+					generateStyleScopedClassReference(style, className.text.slice(1), className.offset + 1),
+				);
+			}
 		}
 	}
 	yield endOfLine;
+	for (const generate of deferredGenerations) {
+		yield* generate;
+	}
 }

@@ -1,5 +1,85 @@
 # Changelog
 
+## 3.1.5 (2025-11-23)
+
+### Features
+
+- feat(language-service): support tsconfig path alias resolution for document links (#5562) - Thanks to @KazariEX!
+- feat(language-server): add `serverInfo` to initialized result (#5767) - Thanks to @kada49!
+
+### Bug Fixes
+
+- fix(vscode): correct highlighting of tags starting with `template` (#5755) - Thanks to @serkodev and @KazariEX!
+- fix(language-core): allow loose props checks on generic components (#5748) - Thanks to @serkodev!
+- fix(language-core): avoid `vue-tsc` crash during single file checks (#5768) - Thanks to @KazariEX!
+- fix(language-core): dispose virtual code correctly - Thanks to @KazariEX!
+
+### Performance
+
+- perf(language-core): skip unnecessary runtime codegen step (#5766) - Thanks to @KazariEX!
+
+## 3.1.4 (2025-11-16)
+
+### Bug Fixes
+
+- fix(language-service): prevent auto-insertion of html snippets in template interpolation (#5744) - Thanks to @serkodev!
+- fix(language-service): strip interpolations from document passed to html service - Thanks to @KazariEX!
+- fix(language-core): report unused `@ts-expect-error` directive on components with loose props checks (#5750) - Thanks to @serkodev and @KazariEX!
+- fix(language-core): respect directive comments before `v-else` (#5753) - Thanks to @serkodev and @KazariEX!
+
+### Other Changes
+
+- refactor(language-core): re-implement component references by codegen (#5736) - Thanks to @KazariEX!
+- refactor(language-core): simplify calculation of full interpolation content - Thanks to @KazariEX!
+
+## 3.1.3 (2025-11-03)
+
+### Features
+
+- feat(typescript-plugin): allow triggering file references on `<template>` (#5734) - Thanks to @KazariEX!
+
+### Bug Fixes
+
+- fix(vscode): correct syntax highlight in template with `lang="html"` (#5728) - Thanks to @serkodev!
+
+### Other Changes
+
+- refactor(language-core): generate intrinsic elements variable into global types (#5730) - Thanks to @KazariEX!
+- refactor(typescript-plugin): remove go to definition trick for auto imported components (#5733) - Thanks to @KazariEX!
+
+## 3.1.2 (2025-10-25)
+
+### Bug Fixes
+
+- fix(component-meta): import type helpers by relative path
+- fix(language-core): fix syntax error when `propTypes` has no elements (#5704) - Thanks to @so1ve!
+- fix(language-core): omit defined emit props only (#5705) - Thanks to @so1ve!
+
+### Other Changes
+
+- docs: fix `vue-tsc` broken link to example boilerplate in `README.md` (#5721) - Thanks to @heyakyra!
+
+## 3.1.1 (2025-10-07)
+
+### Features
+
+- feat(language-server): support `--tsdk` command line arg (#5691)
+
+### Bug Fixes
+
+- fix(language-core): tolerate non-literal export default (#5675) - Thanks to @KazariEX!
+- fix(language-core): use component instance props as fallthrough attributes (#5686) - Thanks to @KazariEX!
+- fix(typescript-plugin): determine if variable is `Ref` by `RefSymbol` property (#5687) - Thanks to @KazariEX!
+- fix(language-core): exclude effect of comments on root node (#5689) - Thanks to @KazariEX!
+- fix(typescript-plugin): place `__vue__` in project instead of program (#5690)
+- fix(component-type-helpers): remove deprecated `$scopedSlots` support for Vue 2
+- fix(language-core): replace markdown links after sfc blocks processing (#5695) - Thanks to @KazariEX!
+- fix(language-core): do not report unused error on `__VLS_export` (#5696) - Thanks to @KazariEX!
+
+### Other Changes
+
+- refactor(language-core): reimplement `writeGlobalTypes` without side effects
+
 ## 3.1.0 (2025-09-28)
 
 ### Performance
@@ -12,6 +92,18 @@
 - chore(lint): enforce use of type-only imports (#5658) - Thanks to @so1ve!
 - ci: upgrade node version (#5668) - Thanks to @so1ve!
 - refactor(typescript-plugin): move reactivity analysis logic to a seperate typescript plugin (#5672) - Thanks to @KazariEX!
+
+## 3.0.10 (2025-10-25)
+
+### Bug Fixes
+
+- fix(typescript-plugin): place `__vue__` in project instead of program (#5690)
+
+## 3.0.9 (2025-10-07)
+
+### Features
+
+- feat(language-server): support `--tsdk` command line arg (#5691)
 
 ## 3.0.8 (2025-09-23)
 

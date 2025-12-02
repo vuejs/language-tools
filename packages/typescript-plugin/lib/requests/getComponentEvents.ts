@@ -1,19 +1,20 @@
+import type { VueVirtualCode } from '@vue/language-core';
 import type * as ts from 'typescript';
-import { getComponentType, getVariableType } from './utils';
+import { getComponentType } from './utils';
 
 export function getComponentEvents(
 	ts: typeof import('typescript'),
 	program: ts.Program,
-	fileName: string,
+	virtualCode: VueVirtualCode,
 	tag: string,
 ): string[] {
-	const checker = program.getTypeChecker();
-	const components = getVariableType(ts, program, fileName, '__VLS_components');
-	if (!components) {
+	const sourceFile = program.getSourceFile(virtualCode.fileName);
+	if (!sourceFile) {
 		return [];
 	}
 
-	const componentType = getComponentType(ts, program, fileName, components, tag);
+	const checker = program.getTypeChecker();
+	const componentType = getComponentType(ts, checker, sourceFile, virtualCode, tag);
 	if (!componentType) {
 		return [];
 	}
@@ -27,15 +28,15 @@ export function getComponentEvents(
 	// 	}
 	// }
 
-	for (const sig of componentType.getConstructSignatures()) {
+	for (const sig of componentType.type.getConstructSignatures()) {
 		const instanceType = sig.getReturnType();
 		const emitSymbol = instanceType.getProperty('$emit');
 		if (emitSymbol) {
-			const emitType = checker.getTypeOfSymbolAtLocation(emitSymbol, components.node);
+			const emitType = checker.getTypeOfSymbolAtLocation(emitSymbol, componentType.node);
 			for (const call of emitType.getCallSignatures()) {
 				if (call.parameters.length) {
 					const eventNameParamSymbol = call.parameters[0]!;
-					const eventNameParamType = checker.getTypeOfSymbolAtLocation(eventNameParamSymbol, components.node);
+					const eventNameParamType = checker.getTypeOfSymbolAtLocation(eventNameParamSymbol, componentType.node);
 					if (eventNameParamType.isStringLiteral()) {
 						result.add(eventNameParamType.value);
 					}

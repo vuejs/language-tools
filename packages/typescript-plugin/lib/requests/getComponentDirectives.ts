@@ -1,3 +1,4 @@
+import { names } from '@vue/language-core';
 import type * as ts from 'typescript';
 import { getVariableType } from './utils';
 
@@ -15,7 +16,13 @@ export function getComponentDirectives(
 	program: ts.Program,
 	fileName: string,
 ): string[] {
-	const directives = getVariableType(ts, program, fileName, '__VLS_directives');
+	const sourceFile = program.getSourceFile(fileName);
+	if (!sourceFile) {
+		return [];
+	}
+
+	const checker = program.getTypeChecker();
+	const directives = getVariableType(ts, checker, sourceFile, names.directives);
 	if (!directives) {
 		return [];
 	}

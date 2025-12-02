@@ -1,20 +1,35 @@
-import type {
-	CompletionItemKind,
-	CompletionItemTag,
-	CompletionList,
-	Disposable,
-	LanguageServicePlugin,
-	TextDocument,
+import {
+	type CompletionItemKind,
+	type CompletionItemTag,
+	type CompletionList,
+	type Disposable,
+	type LanguageServicePlugin,
+	type TextDocument,
+	transformCompletionItem,
 } from '@volar/language-service';
-import { hyphenateAttr, hyphenateTag, tsCodegen, type VueVirtualCode } from '@vue/language-core';
+import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
+import {
+	forEachInterpolationNode,
+	hyphenateAttr,
+	hyphenateTag,
+	tsCodegen,
+	type VueVirtualCode,
+} from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
-import { create as createHtmlService } from 'volar-service-html';
+import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
+import { getFormatCodeSettings } from 'volar-service-typescript/lib/configs/getFormatCodeSettings.js';
+import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences.js';
+import {
+	applyCompletionEntryDetails,
+	convertCompletionInfo,
+} from 'volar-service-typescript/lib/utils/lspConverters.js';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
-import { AttrNameCasing, checkCasing, TagNameCasing } from '../nameCasing';
+import { format } from '../htmlFormatter';
+import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
 
 const specialTags = new Set([
@@ -32,22 +47,37 @@ const specialProps = new Set([
 	'style',
 ]);
 
+const builtInComponents = new Set([
+	'Transition',
+	'TransitionGroup',
+	'KeepAlive',
+	'Suspense',
+	'Teleport',
+]);
+
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
 export function create(
+	ts: typeof import('typescript'),
 	languageId: 'html' | 'jade',
 	{
 		getComponentNames,
-		getElementAttrs,
 		getComponentProps,
 		getComponentEvents,
 		getComponentDirectives,
 		getComponentSlots,
+		getElementAttrs,
+		resolveModuleName,
+		getAutoImportSuggestions,
+		resolveAutoImportCompletionEntry,
 	}: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
+	let modulePathCache:
+		| Map<string, Promise<string | null | undefined> | string | null | undefined>
+		| undefined;
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
@@ -72,6 +102,41 @@ export function create(
 		: createHtmlService({
 			documentSelector: ['html', 'markdown'],
 			useDefaultDataProvider: false,
+			getDocumentContext(context) {
+				return {
+					resolveReference(ref, base) {
+						let baseUri = URI.parse(base);
+						const decoded = context.decodeEmbeddedDocumentUri(baseUri);
+						if (decoded) {
+							baseUri = decoded[0];
+						}
+						if (
+							modulePathCache
+							&& baseUri.scheme === 'file'
+							&& !ref.startsWith('./')
+							&& !ref.startsWith('../')
+						) {
+							const map = modulePathCache;
+							if (!map.has(ref)) {
+								const fileName = baseUri.fsPath.replace(/\\/g, '/');
+								const promise = resolveModuleName(fileName, ref);
+								map.set(ref, promise);
+								if (promise instanceof Promise) {
+									promise.then(res => map.set(ref, res));
+								}
+							}
+							const cached = modulePathCache.get(ref);
+							if (cached instanceof Promise) {
+								throw cached;
+							}
+							if (cached) {
+								return cached;
+							}
+						}
+						return resolveReference(ref, baseUri, context.env.workspaceFolders);
+					},
+				};
+			},
 			getCustomData() {
 				return [
 					...customData,
@@ -96,6 +161,70 @@ export function create(
 		},
 		create(context) {
 			const baseServiceInstance = baseService.create(context);
+
+			if (baseServiceInstance.provide['html/languageService']) {
+				const htmlService: html.LanguageService = baseServiceInstance.provide['html/languageService']();
+				const parseHTMLDocument = htmlService.parseHTMLDocument.bind(htmlService);
+
+				htmlService.parseHTMLDocument = document => {
+					const info = resolveEmbeddedCode(context, document.uri);
+					if (info?.code.id === 'template') {
+						const templateAst = info.root.sfc.template?.ast;
+						if (templateAst) {
+							let text = document.getText();
+							for (const node of forEachInterpolationNode(templateAst)) {
+								text = text.substring(0, node.loc.start.offset)
+									+ ' '.repeat(node.loc.end.offset - node.loc.start.offset)
+									+ text.substring(node.loc.end.offset);
+							}
+							return parseHTMLDocument({
+								...document,
+								getText: () => text,
+							});
+						}
+					}
+					return parseHTMLDocument(document);
+				};
+				htmlService.format = (document, range, options) => {
+					let voidElements: string[] | undefined;
+					const info = resolveEmbeddedCode(context, document.uri);
+					const codegen = info && tsCodegen.get(info.root.sfc);
+					if (codegen) {
+						const componentNames = new Set([
+							...codegen.getImportComponentNames(),
+							...codegen.getSetupBindingNames(),
+						]);
+						// copied from https://github.com/microsoft/vscode-html-languageservice/blob/10daf45dc16b4f4228987cf7cddf3a7dbbdc7570/src/beautify/beautify-html.js#L2746-L2761
+						voidElements = [
+							'area',
+							'base',
+							'br',
+							'col',
+							'embed',
+							'hr',
+							'img',
+							'input',
+							'keygen',
+							'link',
+							'menuitem',
+							'meta',
+							'param',
+							'source',
+							'track',
+							'wbr',
+							'!doctype',
+							'?xml',
+							'basefont',
+							'isindex',
+						].filter(tag =>
+							tag
+							&& !componentNames.has(tag)
+							&& !componentNames.has(capitalize(camelize(tag)))
+						);
+					}
+					return format(document, range, options, voidElements);
+				};
+			}
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');
 			modelData ??= loadModelModifiersData(context.env.locale ?? 'en');
@@ -146,8 +275,11 @@ export function create(
 			}
 
 			const disposable = context.env.onDidChangeConfiguration?.(() => initializing = undefined);
+			const transformedItems = new WeakSet<html.CompletionItem>();
 
 			let initializing: Promise<void> | undefined;
+			let formattingOptions: html.FormattingOptions | undefined;
+			let lastCompletionDocument: TextDocument | undefined;
 
 			return {
 				...baseServiceInstance,
@@ -155,6 +287,16 @@ export function create(
 				dispose() {
 					baseServiceInstance.dispose?.();
 					disposable?.dispose();
+				},
+
+				provideDocumentFormattingEdits(document, range, options, ...rest) {
+					formattingOptions = options;
+					return baseServiceInstance.provideDocumentFormattingEdits?.(document, range, options, ...rest);
+				},
+
+				provideOnTypeFormattingEdits(document, position, key, options, ...rest) {
+					formattingOptions = options;
+					return baseServiceInstance.provideOnTypeFormattingEdits?.(document, position, key, options, ...rest);
 				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
@@ -167,9 +309,10 @@ export function create(
 					}
 
 					const {
-						result: completionList,
+						result: htmlCompletion,
 						target,
 						info: {
+							tagNameCasing,
 							components,
 							propMap,
 						},
@@ -185,24 +328,71 @@ export function create(
 							),
 					);
 
-					if (!completionList) {
+					if (!htmlCompletion) {
 						return;
+					}
+
+					const autoImportPlaceholderIndex = htmlCompletion.items.findIndex(item =>
+						item.label === 'AutoImportsPlaceholder'
+					);
+					if (autoImportPlaceholderIndex !== -1) {
+						const offset = document.offsetAt(position);
+						const map = context.language.maps.get(info.code, info.script);
+						let spliced = false;
+						for (const [sourceOffset] of map.toSourceLocation(offset)) {
+							const [formatOptions, preferences] = await Promise.all([
+								getFormatCodeSettings(context, document, formattingOptions),
+								getUserPreferences(context, document),
+							]);
+							const autoImport = await getAutoImportSuggestions(
+								info.root.fileName,
+								sourceOffset,
+								preferences,
+								formatOptions,
+							);
+							if (!autoImport) {
+								continue;
+							}
+							const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
+							const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
+							for (const tsItem of tsCompletion.items) {
+								if (placeholder.textEdit) {
+									const newText = tsItem.textEdit?.newText ?? tsItem.label;
+									tsItem.textEdit = {
+										...placeholder.textEdit,
+										newText: tagNameCasing === TagNameCasing.Kebab
+											? hyphenateTag(newText)
+											: newText,
+									};
+								}
+								else {
+									tsItem.textEdit = undefined;
+								}
+							}
+							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1, ...tsCompletion.items);
+							spliced = true;
+							lastCompletionDocument = document;
+							break;
+						}
+						if (!spliced) {
+							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
+						}
 					}
 
 					switch (target) {
 						case 'tag': {
-							completionList.items.forEach(transformTag);
+							htmlCompletion.items.forEach(transformTag);
 							break;
 						}
 						case 'attribute': {
-							addDirectiveModifiers(completionList, document);
-							completionList.items.forEach(transformAttribute);
+							addDirectiveModifiers(htmlCompletion, document);
+							htmlCompletion.items.forEach(transformAttribute);
 							break;
 						}
 					}
 
 					updateExtraCustomData([]);
-					return completionList;
+					return htmlCompletion;
 
 					function transformTag(item: html.CompletionItem) {
 						const tagName = capitalize(camelize(item.label));
@@ -314,6 +504,61 @@ export function create(
 					}
 				},
 
+				async resolveCompletionItem(item) {
+					if (item.data?.__isAutoImport || item.data?.__isComponentAutoImport) {
+						const embeddedUri = URI.parse(lastCompletionDocument!.uri);
+						const decoded = context.decodeEmbeddedDocumentUri(embeddedUri);
+						if (!decoded) {
+							return item;
+						}
+						const sourceScript = context.language.scripts.get(decoded[0]);
+						if (!sourceScript) {
+							return item;
+						}
+						const [formatOptions, preferences] = await Promise.all([
+							getFormatCodeSettings(context, lastCompletionDocument!, formattingOptions),
+							getUserPreferences(context, lastCompletionDocument!),
+						]);
+						const details = await resolveAutoImportCompletionEntry(item.data, preferences, formatOptions);
+						if (details) {
+							const virtualCode = sourceScript.generated!.embeddedCodes.get(decoded[1])!;
+							const sourceDocument = context.documents.get(
+								sourceScript.id,
+								sourceScript.languageId,
+								sourceScript.snapshot,
+							);
+							const embeddedDocument = context.documents.get(embeddedUri, virtualCode.languageId, virtualCode.snapshot);
+							const map = context.language.maps.get(virtualCode, sourceScript);
+							item = transformCompletionItem(
+								item,
+								embeddedRange =>
+									getSourceRange(
+										[sourceDocument, embeddedDocument, map],
+										embeddedRange,
+									),
+								embeddedDocument,
+								context,
+							);
+							applyCompletionEntryDetails(
+								ts,
+								item,
+								details,
+								sourceDocument,
+								fileName => URI.file(fileName),
+								() => undefined,
+							);
+							transformedItems.add(item);
+						}
+					}
+					return item;
+				},
+
+				transformCompletionItem(item) {
+					if (transformedItems.has(item)) {
+						return item;
+					}
+				},
+
 				provideHover(document, position, token) {
 					if (document.languageId !== languageId) {
 						return;
@@ -330,6 +575,25 @@ export function create(
 					}
 
 					return baseServiceInstance.provideHover?.(document, position, token);
+				},
+
+				async provideDocumentLinks(document, token) {
+					modulePathCache = new Map();
+					while (true) {
+						try {
+							const result = await baseServiceInstance.provideDocumentLinks?.(document, token);
+							modulePathCache = undefined;
+							return result;
+						}
+						catch (e) {
+							if (e instanceof Promise) {
+								await e;
+							}
+							else {
+								throw e;
+							}
+						}
+					}
 				},
 			};
 
@@ -349,13 +613,14 @@ export function create(
 			async function provideHtmlData(sourceDocumentUri: URI, root: VueVirtualCode) {
 				await (initializing ??= initialize());
 
-				const casing = await checkCasing(context, sourceDocumentUri);
+				const tagNameCasing = await getTagNameCasing(context, sourceDocumentUri);
+				const attrNameCasing = await getAttrNameCasing(context, sourceDocumentUri);
 
 				for (const tag of builtInData!.tags ?? []) {
 					if (specialTags.has(tag.name)) {
 						continue;
 					}
-					if (casing.tag === TagNameCasing.Kebab) {
+					if (tagNameCasing === TagNameCasing.Kebab) {
 						tag.name = hyphenateTag(tag.name);
 					}
 					else {
@@ -416,13 +681,7 @@ export function create(
 								components = [];
 								tasks.push((async () => {
 									components = (await getComponentNames(root.fileName) ?? [])
-										.filter(name =>
-											name !== 'Transition'
-											&& name !== 'TransitionGroup'
-											&& name !== 'KeepAlive'
-											&& name !== 'Suspense'
-											&& name !== 'Teleport'
-										);
+										.filter(name => !builtInComponents.has(name));
 									version++;
 								})());
 							}
@@ -431,7 +690,7 @@ export function create(
 							const tags: html.ITagData[] = [];
 
 							for (const tag of components) {
-								if (casing.tag === TagNameCasing.Kebab) {
+								if (tagNameCasing === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(tag));
 								}
 								else {
@@ -441,7 +700,7 @@ export function create(
 
 							for (const binding of scriptSetupRanges?.bindings ?? []) {
 								const name = root.sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
-								if (casing.tag === TagNameCasing.Kebab) {
+								if (tagNameCasing === TagNameCasing.Kebab) {
 									names.add(hyphenateTag(name));
 								}
 								else {
@@ -503,11 +762,11 @@ export function create(
 								]
 							) {
 								const isGlobal = prop.isAttribute || !propNameSet.has(prop.name);
-								const propName = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
+								const propName = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 								const isEvent = hyphenateAttr(propName).startsWith('on-');
 
 								if (isEvent) {
-									const eventName = casing.attr === AttrNameCasing.Camel
+									const eventName = attrNameCasing === AttrNameCasing.Camel
 										? propName['on'.length]!.toLowerCase() + propName.slice('onX'.length)
 										: propName.slice('on-'.length);
 
@@ -528,7 +787,7 @@ export function create(
 								}
 								else {
 									const propInfo = propInfos.find(prop => {
-										const name = casing.attr === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
+										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === propName;
 									});
 
@@ -554,7 +813,7 @@ export function create(
 							}
 
 							for (const event of events) {
-								const eventName = casing.attr === AttrNameCasing.Camel ? event : hyphenateAttr(event);
+								const eventName = attrNameCasing === AttrNameCasing.Camel ? event : hyphenateAttr(event);
 
 								for (
 									const name of [
@@ -596,7 +855,7 @@ export function create(
 							}
 
 							for (const model of models) {
-								const name = casing.attr === AttrNameCasing.Camel ? model : hyphenateAttr(model);
+								const name = attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model);
 
 								attributes.push({ name: 'v-model:' + name });
 								propMap.set('v-model:' + name, {
@@ -629,6 +888,19 @@ export function create(
 							}));
 						},
 					},
+					{
+						getId: () => 'vue-auto-imports',
+						isApplicable: () => true,
+						provideTags() {
+							return [{ name: 'AutoImportsPlaceholder', attributes: [] }];
+						},
+						provideAttributes() {
+							return [];
+						},
+						provideValues() {
+							return [];
+						},
+					},
 				]);
 
 				return {
@@ -638,6 +910,7 @@ export function create(
 							version,
 							target,
 							info: {
+								tagNameCasing,
 								components,
 								propMap,
 							},

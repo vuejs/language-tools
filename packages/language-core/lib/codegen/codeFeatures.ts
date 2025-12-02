@@ -7,6 +7,9 @@ const raw = {
 		semantic: true,
 		navigation: true,
 	},
+	htmlAutoImportOnly: {
+		htmlAutoImport: true,
+	},
 	verification: {
 		verification: true,
 	},

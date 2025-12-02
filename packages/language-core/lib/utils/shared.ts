@@ -14,6 +14,17 @@ export function hyphenateAttr(str: string) {
 	return hyphencase;
 }
 
+export function normalizeAttributeValue(node: CompilerDOM.TextNode) {
+	const { source, start } = node.loc;
+	if (
+		(source.startsWith('"') && source.endsWith('"'))
+		|| (source.startsWith("'") && source.endsWith("'"))
+	) {
+		return [source.slice(1, -1), start.offset + 1] as const;
+	}
+	return [source, start.offset] as const;
+}
+
 export function getElementTagOffsets(
 	node: CompilerDOM.ElementNode,
 	template: NonNullable<Sfc['template']>,

@@ -1,5 +1,5 @@
 import { createProxyLanguageService, decorateLanguageServiceHost } from '@volar/typescript';
-import type { Language } from '@vue/language-core';
+import { forEachEmbeddedCode, type Language } from '@vue/language-core';
 import { createAnalyzer } from 'laplacenoma';
 // @ts-expect-error
 import rulesVue from 'laplacenoma/rules/vue';
@@ -19,6 +19,13 @@ const plugin: ts.server.PluginModuleFactory = ({ typescript: ts }) => {
 					const [fileName, position]: [string, number] = request.arguments;
 					return {
 						response: getReactivityAnalysis(ts, info.session!, fileName, position),
+						responseRequired: true,
+					};
+				});
+				info.session.addProtocolHandler('_vue:getInterpolationRanges', request => {
+					const [fileName]: [string] = request.arguments;
+					return {
+						response: getInterpolationRanges(info.session!, fileName),
 						responseRequired: true,
 					};
 				});
@@ -45,7 +52,7 @@ function getReactivityAnalysis(
 		project: ts.server.Project;
 	};
 
-	const language: Language<string> | undefined = project['program']?.__vue__?.language;
+	const language: Language<string> | undefined = (project as any).__vue__?.language;
 	if (!language) {
 		return;
 	}
@@ -97,4 +104,50 @@ function getReactivityAnalysis(
 		languageService,
 		toSourceRange,
 	});
+}
+
+function getInterpolationRanges(
+	session: ts.server.Session,
+	fileName: string,
+) {
+	const { project } = session['getFileAndProject']({
+		file: fileName,
+		projectFileName: undefined,
+	}) as {
+		file: ts.server.NormalizedPath;
+		project: ts.server.Project;
+	};
+
+	const language: Language<string> | undefined = (project as any).__vue__?.language;
+	if (!language) {
+		return;
+	}
+
+	const sourceScript = language.scripts.get(fileName);
+	if (!sourceScript?.generated) {
+		return;
+	}
+
+	const ranges: [number, number][] = [];
+	for (const code of forEachEmbeddedCode(sourceScript.generated.root)) {
+		const codeText = code.snapshot.getText(0, code.snapshot.getLength());
+		if (
+			(
+				code.id.startsWith('template_inline_ts_')
+				&& codeText.startsWith('0 +')
+				&& codeText.endsWith('+ 0;')
+			)
+			|| (code.id.startsWith('style_') && code.id.endsWith('_inline_ts'))
+		) {
+			for (const mapping of code.mappings) {
+				for (let i = 0; i < mapping.sourceOffsets.length; i++) {
+					ranges.push([
+						mapping.sourceOffsets[i]!,
+						mapping.sourceOffsets[i]! + mapping.lengths[i]!,
+					]);
+				}
+			}
+		}
+	}
+	return ranges;
 }

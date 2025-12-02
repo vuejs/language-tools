@@ -1,3 +1,10 @@
+import {
+	useActiveTextEditor,
+	useDocumentText,
+	useTextEditorSelection,
+	useVisibleTextEditors,
+	watch,
+} from 'reactive-vscode';
 import * as vscode from 'vscode';
 import { config } from './config';
 
@@ -8,12 +15,7 @@ const tagUnfocusDecorations = Array.from({ length: 8 }).map((_, i) =>
 	})
 );
 
-export function activate(
-	context: vscode.ExtensionContext,
-	selector: vscode.DocumentSelector,
-) {
-	let timeout: ReturnType<typeof setTimeout> | undefined;
-
+export function activate(selector: vscode.DocumentSelector) {
 	const editor2Decorations = new Map<vscode.TextEditor, {
 		currentTagDecIndex: number;
 		targetTagDecIndex: number;
@@ -48,32 +50,40 @@ export function activate(
 		}
 	}, 24);
 
-	context.subscriptions.push(
-		vscode.window.onDidChangeVisibleTextEditors(editors => {
-			for (const [editor, info] of editor2Decorations) {
-				if (!editors.includes(editor)) {
-					info.targetTagDecIndex = 0;
-				}
+	const visibleTextEditors = useVisibleTextEditors();
+	const activeTextEditor = useActiveTextEditor();
+	const activeSelection = useTextEditorSelection(activeTextEditor);
+	const activeText = useDocumentText(() => activeTextEditor.value?.document);
+
+	watch(visibleTextEditors, editors => {
+		for (const [editor, info] of editor2Decorations) {
+			if (!editors.includes(editor)) {
+				info.targetTagDecIndex = 0;
 			}
-		}),
-		vscode.window.onDidChangeTextEditorSelection(editor => {
-			updateDecorations(editor.textEditor);
-		}),
-		vscode.workspace.onDidChangeTextDocument(() => {
-			const editor = vscode.window.activeTextEditor;
-			if (editor) {
-				clearTimeout(timeout);
-				timeout = setTimeout(() => updateDecorations(editor), 100);
+		}
+	});
+
+	watch(activeSelection, () => {
+		if (activeTextEditor.value) {
+			updateDecorations(activeTextEditor.value);
+		}
+	});
+
+	let timeout: NodeJS.Timeout | undefined;
+	watch(activeText, () => {
+		clearTimeout(timeout);
+		timeout = setTimeout(() => {
+			if (activeTextEditor.value) {
+				updateDecorations(activeTextEditor.value);
 			}
-		}),
-		vscode.workspace.onDidChangeConfiguration(e => {
-			if (e.affectsConfiguration('vue.editor.focusMode')) {
-				for (const editor of vscode.window.visibleTextEditors) {
-					updateDecorations(editor);
-				}
-			}
-		}),
-	);
+		}, 100);
+	});
+
+	watch(() => config.editor.focusMode, () => {
+		for (const editor of visibleTextEditors.value) {
+			updateDecorations(editor);
+		}
+	});
 
 	async function updateDecorations(editor: vscode.TextEditor) {
 		if (!vscode.languages.match(selector, editor.document)) {

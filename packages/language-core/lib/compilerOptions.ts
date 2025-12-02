@@ -31,7 +31,14 @@ export function createParsedCommandLineByJson(
 			return [];
 		},
 	};
-	const parsed = ts.parseJsonConfigFileContent(json, proxyHost, rootDir, {}, configFileName);
+	const config = ts.readJsonConfigFile(rootDir, () => JSON.stringify(json));
+	const parsed = ts.parseJsonSourceFileConfigFileContent(
+		config,
+		proxyHost,
+		rootDir,
+		{},
+		configFileName,
+	);
 	const resolver = new CompilerOptionsResolver(host.fileExists);
 
 	for (const extendPath of [...extendedPaths].reverse()) {
@@ -44,8 +51,7 @@ export function createParsedCommandLineByJson(
 		catch {}
 	}
 
-	// ensure the rootDir is added to the config roots
-	resolver.addConfig({}, rootDir);
+	resolver.addConfig(json?.vueCompilerOptions ?? {}, rootDir);
 
 	return {
 		...parsed,
@@ -182,7 +188,7 @@ export class CompilerOptionsResolver {
 				...defaults.fallthroughComponentNames,
 				...this.options.fallthroughComponentNames ?? [],
 			].map(hyphenateTag),
-			// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
+			// https://github.com/vuejs/core/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 			experimentalModelPropName: Object.fromEntries(
 				Object.entries(
@@ -323,13 +329,13 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 	};
 }
 
-export function writeGlobalTypes(
+export function createGlobalTypesWriter(
 	vueOptions: VueCompilerOptions,
 	writeFile: (fileName: string, data: string) => void,
 ) {
 	const writed = new Set<string>();
 	const { globalTypesPath } = vueOptions;
-	vueOptions.globalTypesPath = (fileName: string) => {
+	return (fileName: string) => {
 		const result = globalTypesPath(fileName);
 		if (result && !writed.has(result)) {
 			writed.add(result);
@@ -337,4 +343,14 @@ export function writeGlobalTypes(
 		}
 		return result;
 	};
+}
+
+/**
+ * @deprecated use `createGlobalTypesWriter` instead
+ */
+export function writeGlobalTypes(
+	vueOptions: VueCompilerOptions,
+	writeFile: (fileName: string, data: string) => void,
+) {
+	vueOptions.globalTypesPath = createGlobalTypesWriter(vueOptions, writeFile);
 }
