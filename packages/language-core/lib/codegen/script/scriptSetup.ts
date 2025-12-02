@@ -242,45 +242,25 @@ export function* generateSetupFunction(
 			);
 		}
 	}
-	const isTs = options.lang !== 'js' && options.lang !== 'jsx';
-	for (const { callExp, exp, arg } of scriptSetupRanges.useTemplateRef) {
-		if (isTs) {
-			transforms.push(
-				insert(exp.end, function*() {
-					yield `<`;
-					if (arg) {
-						yield names.TemplateRefs;
-						yield `[`;
-						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic);
-						yield `]`;
-					}
-					else {
-						yield `unknown`;
-					}
-					yield `>`;
-				}),
-			);
-		}
-		else {
-			transforms.push(
-				insert(callExp.start, function*() {
-					yield `(`;
-				}),
-				insert(callExp.end, function*() {
-					yield ` as __VLS_UseTemplateRef<`;
-					if (arg) {
-						yield names.TemplateRefs;
-						yield `[`;
-						yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic);
-						yield `]`;
-					}
-					else {
-						yield `unknown`;
-					}
-					yield `>)`;
-				}),
-			);
-		}
+	for (const { callExp, arg } of scriptSetupRanges.useTemplateRef) {
+		transforms.push(
+			insert(callExp.start, function*() {
+				yield `(`;
+			}),
+			insert(callExp.end, function*() {
+				yield ` as __VLS_UseTemplateRef<`;
+				if (arg) {
+					yield names.TemplateRefs;
+					yield `[`;
+					yield* generateSfcBlockSection(scriptSetup, arg.start, arg.end, codeFeatures.withoutSemantic);
+					yield `]`;
+				}
+				else {
+					yield `unknown`;
+				}
+				yield `>)`;
+			}),
+		);
 		if (arg) {
 			transforms.push(
 				replace(arg.start, arg.end, function*() {

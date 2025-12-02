@@ -21,7 +21,6 @@ export interface ScriptCodegenOptions {
 	script: Sfc['script'];
 	scriptSetup: Sfc['scriptSetup'];
 	fileName: string;
-	lang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
 	templateComponents: string[];

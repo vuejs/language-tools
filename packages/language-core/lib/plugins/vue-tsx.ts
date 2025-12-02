@@ -23,41 +23,24 @@ const plugin: VueLanguagePlugin = ctx => {
 			'noPropertyAccessFromIndexSignature',
 		],
 
-		getEmbeddedCodes(fileName, sfc) {
-			const codegen = getCodegen(fileName, sfc);
-			return [{
-				id: 'script_' + codegen.getLang(),
-				lang: codegen.getLang(),
-			}];
+		getEmbeddedCodes(_fileName, sfc) {
+			const lang = computeLang(sfc);
+			return [{ lang, id: 'script_' + lang }];
 		},
 
 		resolveEmbeddedCode(fileName, sfc, embeddedFile) {
 			if (/script_(js|jsx|ts|tsx)/.test(embeddedFile.id)) {
-				const codegen = getCodegen(fileName, sfc);
+				let codegen = tsCodegen.get(sfc);
+				if (!codegen) {
+					tsCodegen.set(sfc, codegen = useCodegen(fileName, sfc, ctx));
+				}
 				const generatedScript = codegen.getGeneratedScript();
 				embeddedFile.content = [...generatedScript.codes];
 			}
 		},
 	};
 
-	function getCodegen(fileName: string, sfc: Sfc) {
-		if (!tsCodegen.has(sfc)) {
-			tsCodegen.set(sfc, useCodegen(fileName, sfc, ctx));
-		}
-		return tsCodegen.get(sfc)!;
-	}
-};
-
-export default plugin;
-
-function useCodegen(
-	fileName: string,
-	sfc: Sfc,
-	ctx: Parameters<VueLanguagePlugin>[0],
-) {
-	const ts = ctx.modules.typescript;
-
-	const getLang = computed(() => {
+	function computeLang(sfc: Sfc) {
 		let lang = sfc.scriptSetup?.lang ?? sfc.script?.lang;
 		if (sfc.script && sfc.scriptSetup) {
 			if (sfc.scriptSetup.lang !== 'js') {
@@ -71,7 +54,17 @@ function useCodegen(
 			return lang;
 		}
 		return 'ts';
-	});
+	}
+};
+
+export default plugin;
+
+function useCodegen(
+	fileName: string,
+	sfc: Sfc,
+	ctx: Parameters<VueLanguagePlugin>[0],
+) {
+	const ts = ctx.modules.typescript;
 
 	const getResolvedOptions = computed(() => {
 		const options = parseVueCompilerOptions(sfc.comments);
@@ -258,7 +251,6 @@ function useCodegen(
 			scriptSetup: sfc.scriptSetup,
 			setupBindingNames: getSetupBindingNames(),
 			fileName,
-			lang: getLang(),
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateCodegen: getGeneratedTemplate(),
@@ -269,7 +261,6 @@ function useCodegen(
 	});
 
 	return {
-		getLang,
 		getScriptRanges,
 		getScriptSetupRanges,
 		getSetupSlotsAssignName,
