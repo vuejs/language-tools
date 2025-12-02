@@ -1394,6 +1394,44 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			}
 		`);
 		});
+
+		test('component-name-description (vue)', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/component-name-description/component.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.name).toBe('MyComponent');
+			// Note: JSDoc on export statements in Vue SFCs is not currently extractable
+			// because the TypeScript type checker doesn't have access to the raw SFC AST
+			expect(meta.description).toBeUndefined();
+			expect(meta.type).toEqual(TypeMeta.Class);
+		});
+
+		test('component-name-description (ts)', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/component-name-description/component-ts.ts',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.name).toBe('TsComponent');
+			expect(meta.description).toBe('TypeScript component with description');
+			expect(meta.type).toEqual(TypeMeta.Class);
+		});
+
+		test('component-no-name (vue)', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/component-name-description/component-no-name.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.name).toBeUndefined();
+			expect(meta.description).toBeUndefined();
+			expect(meta.type).toEqual(TypeMeta.Class);
+		});
 	});
 
 const checkerOptions: MetaCheckerOptions = {

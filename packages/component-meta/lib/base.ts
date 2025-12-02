@@ -83,6 +83,8 @@ export function createCheckerBase(
 	);
 }
 
+
+
 function baseCreate(
 	ts: typeof import('typescript'),
 	getConfigAndFiles: () => [
@@ -282,8 +284,16 @@ interface ComponentMeta<T> {
 		let _events: ReturnType<typeof getEvents> | undefined;
 		let _slots: ReturnType<typeof getSlots> | undefined;
 		let _exposed: ReturnType<typeof getExposed> | undefined;
+		let _name: string | undefined;
+		let _description: string | undefined;
 
 		const meta = {
+			get name() {
+				return _name ?? (_name = getName());
+			},
+			get description() {
+				return _description ?? (_description = getDescription());
+			},
 			get type() {
 				return _type ?? (_type = getType());
 			},
@@ -449,6 +459,53 @@ interface ComponentMeta<T> {
 			}
 
 			return [];
+		}
+
+		function getName() {
+			// Try to get name from component options
+			const sourceScript = language.scripts.get(componentPath)!;
+			const { snapshot } = sourceScript;
+			const vueFile = sourceScript.generated?.root;
+
+			if (vueFile && exportName === 'default' && vueFile instanceof core.VueVirtualCode) {
+				// For Vue SFC, check the script section
+				const { sfc } = vueFile;
+				if (sfc.script) {
+					const name = readComponentName(sfc.script.ast, exportName, ts);
+					if (name) {
+						return name;
+					}
+				}
+			}
+			else if (!vueFile) {
+				// For TS/JS files
+				const ast = ts.createSourceFile(
+					'/tmp.' + componentPath.slice(componentPath.lastIndexOf('.') + 1),
+					snapshot.getText(0, snapshot.getLength()),
+					ts.ScriptTarget.Latest,
+				);
+				return readComponentName(ast, exportName, ts);
+			}
+
+			return undefined;
+		}
+
+		function getDescription() {
+			// Get JSDoc description from the component export
+			// Note: For .vue files, JSDoc on export statements is not currently supported
+			// as the TypeScript AST doesn't preserve the JSDoc from the SFC script section
+			const sourceScript = language.scripts.get(componentPath)!;
+			const vueFile = sourceScript.generated?.root;
+
+			if (!vueFile) {
+				// For TS/JS files, use the actual source file
+				const sourceFile = program.getSourceFile(componentPath);
+				if (sourceFile) {
+					return readComponentDescription(sourceFile, exportName, ts, typeChecker);
+				}
+			}
+
+			return undefined;
 		}
 	}
 
@@ -1010,4 +1067,135 @@ function resolveDefaultOptionExpression(
 		}
 	}
 	return _default;
+}
+
+function readComponentName(
+	ast: ts.SourceFile,
+	exportName: string,
+	ts: typeof import('typescript'),
+): string | undefined {
+	const optionsNode = getComponentOptionsNode();
+
+	if (optionsNode) {
+		const nameProp = optionsNode.properties.find(
+			prop => ts.isPropertyAssignment(prop) && prop.name?.getText(ast) === 'name'
+		);
+
+		if (nameProp && ts.isPropertyAssignment(nameProp) && ts.isStringLiteral(nameProp.initializer)) {
+			return nameProp.initializer.text;
+		}
+	}
+
+	return undefined;
+
+	function getComponentNode() {
+		let result: ts.Node | undefined;
+
+		if (exportName === 'default') {
+			ast.forEachChild(child => {
+				if (ts.isExportAssignment(child)) {
+					result = child.expression;
+				}
+			});
+		}
+		else {
+			ast.forEachChild(child => {
+				if (
+					ts.isVariableStatement(child)
+					&& child.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
+				) {
+					for (const dec of child.declarationList.declarations) {
+						if (dec.name.getText(ast) === exportName) {
+							result = dec.initializer;
+						}
+					}
+				}
+			});
+		}
+
+		return result;
+	}
+
+	function getComponentOptionsNode() {
+		const component = getComponentNode();
+
+		if (component) {
+			// export default { ... }
+			if (ts.isObjectLiteralExpression(component)) {
+				return component;
+			}
+			// export default defineComponent({ ... })
+			else if (ts.isCallExpression(component)) {
+				if (component.arguments.length) {
+					const arg = component.arguments[0]!;
+					if (ts.isObjectLiteralExpression(arg)) {
+						return arg;
+					}
+				}
+			}
+		}
+
+		return undefined;
+	}
+}
+
+function readComponentDescription(
+	ast: ts.SourceFile,
+	exportName: string,
+	ts: typeof import('typescript'),
+	typeChecker: ts.TypeChecker,
+): string | undefined {
+	const exportNode = getExportNode();
+
+	if (exportNode) {
+		// Try to get JSDoc comments from the node
+		const jsDocTags = (exportNode as any).jsDoc;
+		if (jsDocTags && jsDocTags.length > 0) {
+			const jsDoc = jsDocTags[0];
+			if (jsDoc.comment) {
+				// Handle both string and array of comment parts
+				if (typeof jsDoc.comment === 'string') {
+					return jsDoc.comment;
+				}
+				else if (Array.isArray(jsDoc.comment)) {
+					return jsDoc.comment.map((part: any) => part.text || '').join('');
+				}
+			}
+		}
+
+		// Fallback to symbol documentation
+		const symbol = typeChecker.getSymbolAtLocation(exportNode);
+		if (symbol) {
+			const description = ts.displayPartsToString(symbol.getDocumentationComment(typeChecker));
+			return description || undefined;
+		}
+	}
+
+	return undefined;
+
+	function getExportNode() {
+		let result: ts.Node | undefined;
+
+		if (exportName === 'default') {
+			ast.forEachChild(child => {
+				if (ts.isExportAssignment(child)) {
+					// Return the export assignment itself, not the expression
+					result = child;
+				}
+			});
+		}
+		else {
+			ast.forEachChild(child => {
+				if (
+					ts.isVariableStatement(child)
+					&& child.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
+				) {
+					// Return the variable statement itself
+					result = child;
+				}
+			});
+		}
+
+		return result;
+	}
 }

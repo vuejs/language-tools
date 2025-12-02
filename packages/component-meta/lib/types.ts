@@ -8,6 +8,8 @@ export interface Declaration {
 }
 
 export interface ComponentMeta {
+	name?: string;
+	description?: string;
 	type: TypeMeta;
 	props: PropertyMeta[];
 	events: EventMeta[];
