@@ -18,6 +18,63 @@ export * from './types';
 
 const windowsPathReg = /\\/g;
 
+// Utility function to get the component node from an AST
+function getComponentNodeFromAst(
+	ast: ts.SourceFile,
+	exportName: string,
+	ts: typeof import('typescript'),
+): ts.Node | undefined {
+	let result: ts.Node | undefined;
+
+	if (exportName === 'default') {
+		ast.forEachChild(child => {
+			if (ts.isExportAssignment(child)) {
+				result = child.expression;
+			}
+		});
+	}
+	else {
+		ast.forEachChild(child => {
+			if (
+				ts.isVariableStatement(child)
+				&& child.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
+			) {
+				for (const dec of child.declarationList.declarations) {
+					if (dec.name.getText(ast) === exportName) {
+						result = dec.initializer;
+					}
+				}
+			}
+		});
+	}
+
+	return result;
+}
+
+// Utility function to get the component options node from a component node
+function getComponentOptionsNodeFromComponent(
+	component: ts.Node | undefined,
+	ts: typeof import('typescript'),
+): ts.ObjectLiteralExpression | undefined {
+	if (component) {
+		// export default { ... }
+		if (ts.isObjectLiteralExpression(component)) {
+			return component;
+		}
+		// export default defineComponent({ ... })
+		else if (ts.isCallExpression(component)) {
+			if (component.arguments.length) {
+				const arg = component.arguments[0]!;
+				if (ts.isObjectLiteralExpression(arg)) {
+					return arg;
+				}
+			}
+		}
+	}
+
+	return undefined;
+}
+
 export function createCheckerByJsonConfigBase(
 	ts: typeof import('typescript'),
 	rootDir: string,
@@ -934,51 +991,12 @@ function readTsComponentDefaultProps(
 	return {};
 
 	function getComponentNode() {
-		let result: ts.Node | undefined;
-
-		if (exportName === 'default') {
-			ast.forEachChild(child => {
-				if (ts.isExportAssignment(child)) {
-					result = child.expression;
-				}
-			});
-		}
-		else {
-			ast.forEachChild(child => {
-				if (
-					ts.isVariableStatement(child)
-					&& child.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
-				) {
-					for (const dec of child.declarationList.declarations) {
-						if (dec.name.getText(ast) === exportName) {
-							result = dec.initializer;
-						}
-					}
-				}
-			});
-		}
-
-		return result;
+		return getComponentNodeFromAst(ast, exportName, ts);
 	}
 
 	function getComponentOptionsNode() {
 		const component = getComponentNode();
-
-		if (component) {
-			// export default { ... }
-			if (ts.isObjectLiteralExpression(component)) {
-				return component;
-			}
-			// export default defineComponent({ ... })
-			else if (ts.isCallExpression(component)) {
-				if (component.arguments.length) {
-					const arg = component.arguments[0]!;
-					if (ts.isObjectLiteralExpression(arg)) {
-						return arg;
-					}
-				}
-			}
-		}
+		return getComponentOptionsNodeFromComponent(component, ts);
 	}
 
 	function getPropsNode() {
@@ -1074,7 +1092,8 @@ function readComponentName(
 	exportName: string,
 	ts: typeof import('typescript'),
 ): string | undefined {
-	const optionsNode = getComponentOptionsNode();
+	const componentNode = getComponentNodeFromAst(ast, exportName, ts);
+	const optionsNode = getComponentOptionsNodeFromComponent(componentNode, ts);
 
 	if (optionsNode) {
 		const nameProp = optionsNode.properties.find(
@@ -1087,56 +1106,6 @@ function readComponentName(
 	}
 
 	return undefined;
-
-	function getComponentNode() {
-		let result: ts.Node | undefined;
-
-		if (exportName === 'default') {
-			ast.forEachChild(child => {
-				if (ts.isExportAssignment(child)) {
-					result = child.expression;
-				}
-			});
-		}
-		else {
-			ast.forEachChild(child => {
-				if (
-					ts.isVariableStatement(child)
-					&& child.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
-				) {
-					for (const dec of child.declarationList.declarations) {
-						if (dec.name.getText(ast) === exportName) {
-							result = dec.initializer;
-						}
-					}
-				}
-			});
-		}
-
-		return result;
-	}
-
-	function getComponentOptionsNode() {
-		const component = getComponentNode();
-
-		if (component) {
-			// export default { ... }
-			if (ts.isObjectLiteralExpression(component)) {
-				return component;
-			}
-			// export default defineComponent({ ... })
-			else if (ts.isCallExpression(component)) {
-				if (component.arguments.length) {
-					const arg = component.arguments[0]!;
-					if (ts.isObjectLiteralExpression(arg)) {
-						return arg;
-					}
-				}
-			}
-		}
-
-		return undefined;
-	}
 }
 
 function readComponentDescription(
@@ -1148,17 +1117,16 @@ function readComponentDescription(
 	const exportNode = getExportNode();
 
 	if (exportNode) {
-		// Try to get JSDoc comments from the node
-		const jsDocTags = (exportNode as any).jsDoc;
-		if (jsDocTags && jsDocTags.length > 0) {
-			const jsDoc = jsDocTags[0];
-			if (jsDoc.comment) {
+		// Try to get JSDoc comments from the node using TypeScript API
+		const jsDocComments = ts.getJSDocCommentsAndTags(exportNode);
+		for (const jsDoc of jsDocComments) {
+			if (ts.isJSDoc(jsDoc) && jsDoc.comment) {
 				// Handle both string and array of comment parts
 				if (typeof jsDoc.comment === 'string') {
 					return jsDoc.comment;
 				}
 				else if (Array.isArray(jsDoc.comment)) {
-					return jsDoc.comment.map((part: any) => part.text || '').join('');
+					return jsDoc.comment.map(part => (part as any).text || '').join('');
 				}
 			}
 		}
