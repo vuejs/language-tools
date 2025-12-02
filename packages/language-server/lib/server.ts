@@ -68,10 +68,12 @@ export function startServer(ts: typeof import('typescript')) {
 						const projectInfo = await projectInfoPromise;
 						if (projectInfo) {
 							const { configFileName } = projectInfo;
-							let languageService = tsconfigProjects.get(URI.file(configFileName));
+							// Normalize path to ensure consistent URI creation across platforms (especially WSL2)
+							const normalizedConfigFileName = configFileName.replace(/\\/g, '/');
+							let languageService = tsconfigProjects.get(URI.file(normalizedConfigFileName));
 							if (!languageService) {
-								languageService = createProjectLanguageService(server, configFileName);
-								tsconfigProjects.set(URI.file(configFileName), languageService);
+								languageService = createProjectLanguageService(server, normalizedConfigFileName);
+								tsconfigProjects.set(URI.file(normalizedConfigFileName), languageService);
 							}
 							return languageService;
 						}
