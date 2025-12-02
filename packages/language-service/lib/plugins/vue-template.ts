@@ -13,7 +13,7 @@ import {
 	tsCodegen,
 	type VueVirtualCode,
 } from '@vue/language-core';
-import { camelize, capitalize, isPromise } from '@vue/shared';
+import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
@@ -22,7 +22,7 @@ import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
-import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 const specialTags = new Set([
 	'slot',
@@ -64,6 +64,9 @@ export function create(
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
+	let modulePathCache:
+		| Map<string, Promise<string | null | undefined> | string | null | undefined>
+		| undefined;
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
@@ -90,7 +93,37 @@ export function create(
 			useDefaultDataProvider: false,
 			getDocumentContext(context) {
 				return {
-					resolveReference: createReferenceResolver(context, resolveReference, resolveModuleName) as any,
+					resolveReference(ref, base) {
+						let baseUri = URI.parse(base);
+						const decoded = context.decodeEmbeddedDocumentUri(baseUri);
+						if (decoded) {
+							baseUri = decoded[0];
+						}
+						if (
+							modulePathCache
+							&& baseUri.scheme === 'file'
+							&& !ref.startsWith('./')
+							&& !ref.startsWith('../')
+						) {
+							const map = modulePathCache;
+							if (!map.has(ref)) {
+								const fileName = baseUri.fsPath.replace(/\\/g, '/');
+								const promise = resolveModuleName(fileName, ref);
+								map.set(ref, promise);
+								if (promise instanceof Promise) {
+									promise.then(res => map.set(ref, res));
+								}
+							}
+							const cached = modulePathCache.get(ref);
+							if (cached instanceof Promise) {
+								throw cached;
+							}
+							if (cached) {
+								return cached;
+							}
+						}
+						return resolveReference(ref, baseUri, context.env.workspaceFolders);
+					},
 				};
 			},
 			getCustomData() {
@@ -418,22 +451,22 @@ export function create(
 				},
 
 				async provideDocumentLinks(document, token) {
-					if (document.languageId !== languageId) {
-						return;
-					}
-					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
-						return;
-					}
-
-					const documentLinks = await baseServiceInstance.provideDocumentLinks?.(document, token) ?? [];
-					for (const link of documentLinks) {
-						if (link.target && isPromise(link.target)) {
-							link.target = await link.target;
+					modulePathCache = new Map();
+					while (true) {
+						try {
+							const result = await baseServiceInstance.provideDocumentLinks?.(document, token);
+							modulePathCache = undefined;
+							return result;
+						}
+						catch (e) {
+							if (e instanceof Promise) {
+								await e;
+							}
+							else {
+								throw e;
+							}
 						}
 					}
-
-					return documentLinks;
 				},
 			};
 
