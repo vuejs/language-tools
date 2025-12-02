@@ -56,13 +56,17 @@ function* generateWorker(
 
 	// <script> + <script setup>
 	if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
-		// <script> head
+		// <script>
 		const { exportDefault, componentOptions } = scriptRanges;
 		if (exportDefault) {
-			yield* generateSfcBlockSection(script, 0, exportDefault.start, codeFeatures.all, true);
+			const { expression: options } = componentOptions ?? exportDefault;
+			yield* generateSfcBlockSection(script, 0, options.start, codeFeatures.all);
+			yield exportExpression;
+			yield* generateSfcBlockSection(script, options.end, script.content.length, codeFeatures.all, true);
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all, true);
+			yield `export default ${exportExpression}${endOfLine}`;
 		}
 
 		// <script setup>
@@ -94,17 +98,6 @@ function* generateWorker(
 				[`return `],
 			);
 			yield `})()${endOfLine}`;
-		}
-
-		// <script> tail
-		if (exportDefault) {
-			const { expression } = componentOptions ?? exportDefault;
-			yield* generateSfcBlockSection(script, exportDefault.start, expression.start, codeFeatures.all);
-			yield exportExpression;
-			yield* generateSfcBlockSection(script, expression.end, script.content.length, codeFeatures.all);
-		}
-		else {
-			yield `export default ${exportExpression}${endOfLine}`;
 		}
 	}
 	// only <script setup>
