@@ -1403,9 +1403,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const meta = checker.getComponentMeta(componentPath);
 
 			expect(meta.name).toBe('MyComponent');
-			// Note: JSDoc on export statements in Vue SFCs is not currently extractable
-			// because the TypeScript type checker doesn't have access to the raw SFC AST
-			expect(meta.description).toBeUndefined();
+			expect(meta.description).toBe('My awesome component description');
 			expect(meta.type).toEqual(TypeMeta.Class);
 		});
 

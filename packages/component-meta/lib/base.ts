@@ -140,8 +140,6 @@ export function createCheckerBase(
 	);
 }
 
-
-
 function baseCreate(
 	ts: typeof import('typescript'),
 	getConfigAndFiles: () => [
@@ -548,21 +546,10 @@ interface ComponentMeta<T> {
 		}
 
 		function getDescription() {
-			// Get JSDoc description from the component export
-			// Note: For .vue files, JSDoc on export statements is not currently supported
-			// as the TypeScript AST doesn't preserve the JSDoc from the SFC script section
-			const sourceScript = language.scripts.get(componentPath)!;
-			const vueFile = sourceScript.generated?.root;
-
-			if (!vueFile) {
-				// For TS/JS files, use the actual source file
-				const sourceFile = program.getSourceFile(componentPath);
-				if (sourceFile) {
-					return readComponentDescription(sourceFile, exportName, ts, typeChecker);
-				}
+			const sourceFile = program.getSourceFile(componentPath);
+			if (sourceFile) {
+				return readComponentDescription(sourceFile, exportName, ts, typeChecker);
 			}
-
-			return undefined;
 		}
 	}
 
@@ -1097,7 +1084,7 @@ function readComponentName(
 
 	if (optionsNode) {
 		const nameProp = optionsNode.properties.find(
-			prop => ts.isPropertyAssignment(prop) && prop.name?.getText(ast) === 'name'
+			prop => ts.isPropertyAssignment(prop) && prop.name?.getText(ast) === 'name',
 		);
 
 		if (nameProp && ts.isPropertyAssignment(nameProp) && ts.isStringLiteral(nameProp.initializer)) {

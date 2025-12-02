@@ -1,5 +1,116 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`vue-tsc-dts > Input: component-name-description/component.vue, Output: component-name-description/component.vue.d.ts 1`] = `
+"declare const __VLS_export: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {
+        /**
+         * The title prop
+         */
+        title: {
+            type: StringConstructor;
+            required: true;
+        };
+    };
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+/**
+ * My awesome component description
+ */
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: component-name-description/component-no-name.vue, Output: component-name-description/component-no-name.vue.d.ts 1`] = `
+"/**
+ * Component without explicit name
+ */
+type __VLS_Props = {
+    /**
+     * The value prop
+     */
+    value: string;
+};
+declare const __VLS_export: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: __VLS_Props;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`vue-tsc-dts > Input: component-name-description/component-ts.ts, Output: component-name-description/component-ts.d.ts 1`] = `
+"/**
+ * TypeScript component with description
+ */
+declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {
+        /**
+         * The message prop
+         */
+        message: {
+            type: StringConstructor;
+            required: true;
+        };
+    };
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+export default _default;
+"
+`;
+
 exports[`vue-tsc-dts > Input: empty-component/component.vue, Output: empty-component/component.vue.d.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
@@ -500,7 +611,7 @@ exports[`vue-tsc-dts > Input: reference-type-props/component-js-setup.vue, Outpu
             default: string;
         };
         numberOrStringProp: {
-            type: (NumberConstructor | StringConstructor)[];
+            type: (StringConstructor | NumberConstructor)[];
             default: number;
         };
         arrayProps: {
