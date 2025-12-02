@@ -111,6 +111,11 @@ export function* generateComponent(
 			yield `, `;
 		}
 		yield `]} */${endOfLine}`;
+
+		// auto import support
+		yield `// @ts-ignore${newLine}`; // #2304
+		yield* generateCamelized(capitalize(node.tag), 'template', tagOffsets[0], codeFeatures.htmlAutoImportOnly);
+		yield endOfLine;
 	}
 	else if (dynamicTagInfo) {
 		yield `const ${componentOriginalVar} = (`;
@@ -185,17 +190,7 @@ export function* generateComponent(
 
 			// auto import support
 			yield `// @ts-ignore${newLine}`; // #2304
-			yield* generateCamelized(
-				capitalize(node.tag),
-				'template',
-				tagOffsets[0],
-				{
-					completion: {
-						isAdditional: true,
-						onlyImport: true,
-					},
-				},
-			);
+			yield* generateCamelized(capitalize(node.tag), 'template', tagOffsets[0], codeFeatures.htmlAutoImportOnly);
 			yield endOfLine;
 		}
 	}

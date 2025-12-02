@@ -123,6 +123,12 @@ export function startServer(ts: typeof import('typescript')) {
 				getImportPathForFile(...args) {
 					return sendTsServerRequest('_vue:getImportPathForFile', args);
 				},
+				getAutoImportSuggestions(...args) {
+					return sendTsServerRequest('_vue:getAutoImportSuggestions', args);
+				},
+				resolveAutoImportCompletionEntry(...args) {
+					return sendTsServerRequest('_vue:resolveAutoImportCompletionEntry', args);
+				},
 				isRefAtPosition(...args) {
 					return sendTsServerRequest('_vue:isRefAtPosition', args);
 				},
