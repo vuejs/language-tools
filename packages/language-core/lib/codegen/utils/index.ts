@@ -49,8 +49,8 @@ export function* generateSfcBlockSection(
 	];
 	// #3632
 	if (partiallyEnd) {
-		yield `debugger`;
-		yield [``, block.name, end, codeFeatures.verification];
+		yield `;`;
+		yield ['', block.name, end, codeFeatures.verification];
 		yield newLine;
 	}
 }
