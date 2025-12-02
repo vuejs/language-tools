@@ -276,5 +276,7 @@ function useCodegen(
 		getGeneratedScript,
 		getGeneratedTemplate,
 		getImportComponentNames,
+		getSetupBindingNames,
+		getDirectAccessNames,
 	};
 }
