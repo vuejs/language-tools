@@ -65,10 +65,6 @@ meta.name // 'MyComponent'
 meta.description // 'My awesome component description'
 ```
 
-> **Note**
->
-> JSDoc comments on `export default` statements in Vue SFCs (`.vue` files) are not currently supported due to limitations in how TypeScript processes the virtual files generated from SFCs.
-
 ### Extracting prop meta
 
 `vue-component-meta` will automatically extract the prop details like its name, default value, is required or not, etc. Additionally, you can even write prop description in source code via [JSDoc](https://jsdoc.app/) comment for that prop.
