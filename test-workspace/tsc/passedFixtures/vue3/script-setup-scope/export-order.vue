@@ -10,6 +10,5 @@ export const useTwo = async () => ({ two: 'two' })
 
 <script lang="ts" setup>
 useOne()
-// @ts-expect-error
 useTwo()
 </script>
