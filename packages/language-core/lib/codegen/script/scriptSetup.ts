@@ -87,25 +87,37 @@ export function* generateGeneric(
 		emitTypes.push(`typeof ${names.modelEmit}`);
 	}
 
-	yield `return {} as {${newLine}`
-		+ `	props: ${propTypes.length ? `${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}> & ` : ``}${
-			vueCompilerOptions.target >= 3.4
-				? `import('${vueCompilerOptions.lib}').PublicProps`
-				: vueCompilerOptions.target >= 3
-				? `import('${vueCompilerOptions.lib}').VNodeProps`
-					+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
-					+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
-				: `globalThis.JSX.IntrinsicAttributes`
-		} & (typeof globalThis extends { ${names.PROPS_FALLBACK}: infer P } ? P : {})${endOfLine}`
-		+ `	expose: (exposed: ${
-			scriptSetupRanges.defineExpose
-				? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
-				: `{}`
-		}) => void${endOfLine}`
-		+ `	attrs: any${endOfLine}`
-		+ `	slots: ${names.Slots}${endOfLine}`
-		+ `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`
-		+ `}${endOfLine}`;
+	yield `return {} as {${newLine}`;
+	yield `	props: ${propTypes.length ? `${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}> & ` : ``}${
+		vueCompilerOptions.target >= 3.4
+			? `import('${vueCompilerOptions.lib}').PublicProps`
+			: vueCompilerOptions.target >= 3
+			? `import('${vueCompilerOptions.lib}').VNodeProps`
+				+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
+				+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
+			: `globalThis.JSX.IntrinsicAttributes`
+	} & (typeof globalThis extends { ${names.PROPS_FALLBACK}: infer P } ? P : {})${endOfLine}`;
+	yield `	expose: (exposed: `;
+	yield scriptSetupRanges.defineExpose
+		? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
+		: `{}`;
+	if (
+		options.vueCompilerOptions.inferComponentDollarRefs
+		&& options.templateCodegen?.generatedTypes.has(names.TemplateRefs)
+	) {
+		yield ` & { $refs: ${names.TemplateRefs}; }`;
+	}
+	if (
+		options.vueCompilerOptions.inferComponentDollarEl
+		&& options.templateCodegen?.generatedTypes.has(names.RootEl)
+	) {
+		yield ` & { $el: ${names.RootEl}; }`;
+	}
+	yield `) => void${endOfLine}`;
+	yield `	attrs: any${endOfLine}`;
+	yield `	slots: ${names.Slots}${endOfLine}`;
+	yield `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`;
+	yield `}${endOfLine}`;
 	yield `})(),${newLine}`; // __VLS_setup = (async () => {
 	yield `) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof ${names.setup}> }))${endOfLine}`;
 }
