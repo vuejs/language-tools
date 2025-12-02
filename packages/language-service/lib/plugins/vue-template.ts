@@ -20,7 +20,7 @@ import { create as createPugService } from 'volar-service-pug';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
-import { format, isReady as isHtmlFormatterReady } from '../htmlFormatter';
+import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
 
@@ -117,12 +117,10 @@ export function create(
 		},
 		create(context) {
 			const baseServiceInstance = baseService.create(context);
-			let patchHtmlServiceFormat: ReturnType<typeof createHtmlServiceFormatPatcher> | undefined;
 
 			if (baseServiceInstance.provide['html/languageService']) {
 				const htmlService: html.LanguageService = baseServiceInstance.provide['html/languageService']();
 				const parseHTMLDocument = htmlService.parseHTMLDocument.bind(htmlService);
-				patchHtmlServiceFormat = createHtmlServiceFormatPatcher(htmlService);
 
 				htmlService.parseHTMLDocument = document => {
 					const info = resolveEmbeddedCode(context, document.uri);
@@ -142,6 +140,45 @@ export function create(
 						}
 					}
 					return parseHTMLDocument(document);
+				};
+				htmlService.format = (document, range, options) => {
+					let voidElements: string[] | undefined;
+					const info = resolveEmbeddedCode(context, document.uri);
+					const codegen = info && tsCodegen.get(info.root.sfc);
+					if (codegen) {
+						const componentNames = new Set([
+							...codegen.getImportComponentNames(),
+							...codegen.getSetupBindingNames(),
+						]);
+						// copied from https://github.com/microsoft/vscode-html-languageservice/blob/10daf45dc16b4f4228987cf7cddf3a7dbbdc7570/src/beautify/beautify-html.js#L2746-L2761
+						voidElements = [
+							'area',
+							'base',
+							'br',
+							'col',
+							'embed',
+							'hr',
+							'img',
+							'input',
+							'keygen',
+							'link',
+							'menuitem',
+							'meta',
+							'param',
+							'source',
+							'track',
+							'wbr',
+							'!doctype',
+							'?xml',
+							'basefont',
+							'isindex',
+						].filter(tag =>
+							tag
+							&& !componentNames.has(tag)
+							&& !componentNames.has(capitalize(camelize(tag)))
+						);
+					}
+					return format(document, range, options, voidElements);
 				};
 			}
 
@@ -380,32 +417,6 @@ export function create(
 					return baseServiceInstance.provideHover?.(document, position, token);
 				},
 
-				async provideDocumentFormattingEdits(document, range, options, embeddedCodeContext, token) {
-					if (document.languageId !== languageId) {
-						return;
-					}
-					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
-						return;
-					}
-
-					const baseFn = () =>
-						baseServiceInstance.provideDocumentFormattingEdits?.(
-							document,
-							range,
-							options,
-							embeddedCodeContext,
-							token,
-						);
-
-					if (!patchHtmlServiceFormat) {
-						return baseFn();
-					}
-
-					const voidElements = await getFormattingVoidElements(info.root, info.script.id);
-					return patchHtmlServiceFormat(voidElements, baseFn);
-				},
-
 				async provideDocumentLinks(document, token) {
 					if (document.languageId !== languageId) {
 						return;
@@ -437,32 +448,6 @@ export function create(
 					result = await fn();
 				}
 				return { result, ...lastSync };
-			}
-
-			async function getFormattingVoidElements(root: VueVirtualCode, sourceDocumentUri: URI) {
-				const tagNameCasing = await getTagNameCasing(context, sourceDocumentUri);
-				const componentNames = new Set<string>();
-				const scriptSetupRanges = tsCodegen.get(root.sfc)?.getScriptSetupRanges();
-				const componentList = (await getComponentNames(root.fileName) ?? [])
-					.filter(name => !builtInComponents.has(name));
-
-				const addName = (name: string) => {
-					const tagName = tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name;
-					componentNames.add(tagName.toLowerCase());
-				};
-
-				for (const tag of componentList) {
-					addName(tag);
-				}
-				if (root.sfc.scriptSetup) {
-					for (const binding of scriptSetupRanges?.bindings ?? []) {
-						addName(root.sfc.scriptSetup.content.slice(binding.range.start, binding.range.end));
-					}
-				}
-
-				return htmlDataProvider.provideTags()
-					.filter(tag => tag.void && !componentNames.has(tag.name.toLowerCase()))
-					.map(tag => tag.name);
 			}
 
 			async function provideHtmlData(sourceDocumentUri: URI, root: VueVirtualCode) {
@@ -861,26 +846,4 @@ function getPropName(
 		return { isEvent: true, propName: name.slice('on-'.length) };
 	}
 	return { isEvent, propName: name };
-}
-
-function createHtmlServiceFormatPatcher(htmlService: html.LanguageService) {
-	if (!isHtmlFormatterReady) {
-		return undefined;
-	}
-
-	return async function patchVoidElements<T>(voidElements: string[], run: () => T | PromiseLike<T>) {
-		if (voidElements.length === 0) {
-			return await run();
-		}
-
-		const originalFormat = htmlService.format;
-
-		htmlService.format = (document, range, options) => format(document, range, options, voidElements);
-		try {
-			return await run();
-		}
-		finally {
-			htmlService.format = originalFormat;
-		}
-	};
 }

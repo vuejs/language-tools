@@ -1,16 +1,7 @@
-import { tryRequire } from './utils';
-
-const { html_beautify } = tryRequire(
-	() => require('vscode-html-languageservice/lib/umd/beautify/beautify-html'),
-	'Failed to load vscode-html-languageservice/lib/umd/beautify/beautify-html',
-);
-
-const { repeat } = tryRequire(
-	() => require('vscode-html-languageservice/lib/umd/utils/strings'),
-	'Failed to load vscode-html-languageservice/lib/umd/utils/strings',
-);
-
-export const isReady = !!html_beautify && !!repeat;
+// @ts-expect-error
+import beautify = require('vscode-html-languageservice/lib/umd/beautify/beautify-html.js');
+// @ts-expect-error
+import strings = require('vscode-html-languageservice/lib/umd/utils/strings.js');
 
 /*
  * original file: https://github.com/microsoft/vscode-html-languageservice/blob/main/src/services/htmlFormatter.ts
@@ -115,9 +106,11 @@ export function format(
 		...voidElements !== undefined && { void_elements: voidElements },
 	};
 
-	let result = html_beautify(trimLeft(value), htmlOptions);
+	let result = beautify.html_beautify(trimLeft(value), htmlOptions);
 	if (initialIndentLevel > 0) {
-		const indent = options.insertSpaces ? repeat(' ', tabSize * initialIndentLevel) : repeat('\t', initialIndentLevel);
+		const indent = options.insertSpaces
+			? strings.repeat(' ', tabSize * initialIndentLevel)
+			: strings.repeat('\t', initialIndentLevel);
 		result = result.split('\n').join('\n' + indent);
 		if (range.start.character === 0) {
 			result = indent + result; // keep the indent
