@@ -1,10 +1,65 @@
-import { type Language, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
+import { toGeneratedRange, toSourceRanges } from '@volar/typescript/lib/node/transform';
+import { getServiceScript } from '@volar/typescript/lib/node/utils';
+import { type Language, type VueCodeInformation, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 
 const windowsPathReg = /\\/g;
 
-export function createVueLanguageServiceProxy<T>(
+export function preprocessLanguageService(
+	languageService: ts.LanguageService,
+	getLanguage: () => Language<any> | undefined,
+) {
+	const { getCodeFixesAtPosition } = languageService;
+
+	languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, formatOptions, preferences) => {
+		let fixes = getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
+		const language = getLanguage();
+		if (
+			language
+			&& errorCodes.includes(2339) // Property 'xxx' does not exist on type 'yyy'.ts(2339)
+		) {
+			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
+			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
+				for (
+					const sourceRange of toSourceRanges(
+						sourceScript,
+						language,
+						serviceScript,
+						start,
+						end,
+						true,
+						() => true,
+					)
+				) {
+					const generateRange2 = toGeneratedRange(
+						language,
+						serviceScript,
+						sourceScript,
+						sourceRange[1],
+						sourceRange[2],
+						(data: VueCodeInformation) => typeof data.completion === 'object' && !!data.completion.isAdditional,
+					);
+					if (generateRange2 !== undefined) {
+						let importFixes = getCodeFixesAtPosition(
+							targetScript.id,
+							generateRange2[0],
+							generateRange2[1],
+							[2304], // Cannot find name 'xxx'.ts(2304)
+							formatOptions,
+							preferences,
+						);
+						importFixes = importFixes.filter(fix => fix.fixName === 'import');
+						fixes = fixes.concat(importFixes);
+					}
+				}
+			}
+		}
+		return fixes;
+	};
+}
+
+export function postprocessLanguageService<T>(
 	ts: typeof import('typescript'),
 	language: Language<T>,
 	languageService: ts.LanguageService,
