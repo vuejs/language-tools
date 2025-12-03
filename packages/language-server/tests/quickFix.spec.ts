@@ -13,10 +13,10 @@ afterEach(async () => {
 	openedDocuments.length = 0;
 });
 
-test('"Add Import" quick fix for undefined variable in template', async () => {
-	await prepareDocument('tsconfigProject/utils.ts', 'typescript', `export function foo() {}`);
+test('"Add import" quick fix for undefined variable in template', async () => {
+	await prepareDocument('tsconfigProject/fixture.ts', 'typescript', `export function foo() {}`);
 
-	const diagnostics = await requestSemanticDiagnostics(
+	const codeFixes = await requestCodeFixes(
 		'tsconfigProject/fixture.vue',
 		'vue',
 		`
@@ -30,11 +30,16 @@ test('"Add Import" quick fix for undefined variable in template', async () => {
 		'foo',
 	);
 
-	// https://typescript.tv/errors/#ts2304
-	expect(diagnostics.some(diagnostic => diagnostic.code === 2304)).toBe(true);
+	expect(
+		codeFixes.some(
+			codeFix =>
+				codeFix.fixName === 'import'
+				&& codeFix.description.includes('./fixture'),
+		),
+	).toBe(true);
 });
 
-async function requestSemanticDiagnostics(
+async function requestCodeFixes(
 	fileName: string,
 	languageId: string,
 	content: string,
@@ -50,7 +55,7 @@ async function requestSemanticDiagnostics(
 	const start = document.positionAt(offset);
 	const end = document.positionAt(offset + identifier.length);
 
-	const res = await server.tsserver.message({
+	const diagnostics = await server.tsserver.message({
 		seq: server.nextSeq(),
 		command: 'semanticDiagnosticsSync',
 		arguments: {
@@ -59,6 +64,26 @@ async function requestSemanticDiagnostics(
 			startOffset: start.character + 1,
 			endLine: end.line + 1,
 			endOffset: end.character + 1,
+		},
+	});
+	expect(diagnostics.success).toBe(true);
+
+	const errorCodes = (diagnostics.body as any[])
+		.map((diagnostic: any) => diagnostic.code)
+		.filter((code): code is number => typeof code === 'number');
+
+	expect(errorCodes.length).toBeGreaterThan(0);
+
+	const res = await server.tsserver.message({
+		seq: server.nextSeq(),
+		command: 'getCodeFixes',
+		arguments: {
+			file: URI.parse(document.uri).fsPath,
+			startLine: start.line + 1,
+			startOffset: start.character + 1,
+			endLine: end.line + 1,
+			endOffset: end.character + 1,
+			errorCodes,
 		},
 	});
 
