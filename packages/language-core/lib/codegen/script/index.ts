@@ -8,8 +8,14 @@ import * as names from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
+import { generateComponent, generateWithSlots } from './component';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
-import { generateGeneric, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
+import {
+	generateGeneric,
+	generateScriptAndScriptSetup,
+	generateScriptSetup,
+	generateScriptSetupImports,
+} from './scriptSetup';
 import { generateSrc } from './src';
 import { generateTemplate } from './template';
 
@@ -69,15 +75,15 @@ function* generateWorker(
 		}
 
 		// <script setup>
-		yield* generateExportDeclareEqual(scriptSetup);
 		if (scriptSetup.generic) {
+			yield* generateExportDeclareEqual(scriptSetup);
 			yield* generateGeneric(
 				options,
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
 				scriptSetup.generic,
-				generateSetupFunction(
+				generateScriptSetup(
 					options,
 					ctx,
 					scriptSetup,
@@ -87,16 +93,20 @@ function* generateWorker(
 			);
 		}
 		else {
-			yield `await (async () => {${newLine}`;
-			yield* generateSetupFunction(
+			yield* generateWithSlots(
 				options,
 				ctx,
-				scriptSetup,
-				scriptSetupRanges,
-				generateTemplate(options, ctx),
-				[`return `],
+				generateScriptAndScriptSetup(
+					options,
+					ctx,
+					script,
+					scriptRanges,
+					scriptSetup,
+					scriptSetupRanges,
+					generateTemplate(options, ctx),
+				),
+				generateExportDeclareEqual(scriptSetup),
 			);
-			yield `})()${endOfLine}`;
 		}
 	}
 	// only <script setup>
@@ -109,7 +119,7 @@ function* generateWorker(
 				scriptSetup,
 				scriptSetupRanges,
 				scriptSetup.generic,
-				generateSetupFunction(
+				generateScriptSetup(
 					options,
 					ctx,
 					scriptSetup,
@@ -120,12 +130,17 @@ function* generateWorker(
 		}
 		else {
 			// no script block, generate script setup code at root
-			yield* generateSetupFunction(
+			yield* generateScriptSetup(
 				options,
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
 				generateTemplate(options, ctx),
+			);
+			yield* generateWithSlots(
+				options,
+				ctx,
+				generateComponent(options, ctx, scriptSetup, scriptSetupRanges),
 				generateExportDeclareEqual(scriptSetup),
 			);
 		}

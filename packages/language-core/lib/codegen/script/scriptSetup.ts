@@ -1,4 +1,5 @@
 import { camelize } from '@vue/shared';
+import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, TextRange } from '../../types';
 import { codeFeatures } from '../codeFeatures';
@@ -7,7 +8,7 @@ import { endOfLine, generateSfcBlockSection, identifierRegex, newLine } from '..
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { type CodeTransform, generateCodeWithTransforms, insert, replace } from '../utils/transform';
-import { generateComponent } from './component';
+import { generateComponent, hasSlotsType } from './component';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
 
@@ -122,13 +123,63 @@ export function* generateGeneric(
 	yield `) => ({} as import('${vueCompilerOptions.lib}').VNode & { __ctx?: Awaited<typeof ${names.setup}> }))${endOfLine}`;
 }
 
-export function* generateSetupFunction(
+export function* generateScriptAndScriptSetup(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+	script: NonNullable<Sfc['script']>,
+	scriptRanges: ScriptRanges,
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetupRanges: ScriptSetupRanges,
+	body: Iterable<Code>,
+): Generator<Code> {
+	if (
+		scriptRanges.componentOptions
+		&& scriptRanges.componentOptions.expression.start !== scriptRanges.componentOptions.args.start
+	) {
+		// use defineComponent() from user space code if it exist
+		yield* generateSfcBlockSection(
+			script,
+			scriptRanges.componentOptions.expression.start,
+			scriptRanges.componentOptions.args.start,
+			codeFeatures.all,
+		);
+		yield `{${newLine}`;
+	}
+	else {
+		yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
+	}
+
+	yield `...await (async () => {${newLine}`;
+	yield* generateSetupBody(options, ctx, scriptSetup, scriptSetupRanges, body);
+	yield `return `;
+	yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges, true);
+	yield endOfLine;
+	yield `})(),${newLine}`;
+
+	if (scriptRanges.componentOptions?.args) {
+		const { args } = scriptRanges.componentOptions;
+		yield* generateSfcBlockSection(script, args.start + 1, args.end - 1, codeFeatures.all);
+	}
+
+	yield `})${endOfLine}`;
+}
+
+export function* generateScriptSetup(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
 	body: Iterable<Code>,
-	output?: Iterable<Code>,
+): Generator<Code> {
+	yield* generateSetupBody(options, ctx, scriptSetup, scriptSetupRanges, body);
+}
+
+function* generateSetupBody(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+	scriptSetup: NonNullable<Sfc['scriptSetup']>,
+	scriptSetupRanges: ScriptSetupRanges,
+	body: Iterable<Code>,
 ): Generator<Code> {
 	const transforms: CodeTransform[] = [];
 
@@ -281,21 +332,6 @@ export function* generateSetupFunction(
 	yield* generateModels(scriptSetup, scriptSetupRanges);
 	yield* generatePublicProps(options, ctx, scriptSetup, scriptSetupRanges);
 	yield* body;
-
-	if (output) {
-		if (hasSlotsType(options)) {
-			yield `const __VLS_base = `;
-			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
-			yield endOfLine;
-			yield* output;
-			yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_base, ${names.Slots}>${endOfLine}`;
-		}
-		else {
-			yield* output;
-			yield* generateComponent(options, ctx, scriptSetup, scriptSetupRanges);
-			yield endOfLine;
-		}
-	}
 }
 
 function* generateMacros(options: ScriptCodegenOptions): Generator<Code> {
@@ -401,13 +437,6 @@ function* generatePublicProps(
 		yield `type ${names.PublicProps} = ${propTypes.join(` & `)}${endOfLine}`;
 		ctx.generatedTypes.add(names.PublicProps);
 	}
-}
-
-function hasSlotsType(options: ScriptCodegenOptions): boolean {
-	return !!(
-		options.scriptSetupRanges?.defineSlots
-		|| options.templateCodegen?.generatedTypes.has(names.Slots)
-	);
 }
 
 function* generateModels(

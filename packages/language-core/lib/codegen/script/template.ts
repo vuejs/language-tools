@@ -30,7 +30,7 @@ function* generateSelf({ script, scriptRanges, vueCompilerOptions, fileName }: S
 	if (script && scriptRanges?.componentOptions) {
 		yield `const ${names.self} = (await import('${vueCompilerOptions.lib}')).defineComponent(`;
 		const { args } = scriptRanges.componentOptions;
-		yield* generateSfcBlockSection(script, args.start, args.end, codeFeatures.all);
+		yield* generateSfcBlockSection(script, args.start, args.end, codeFeatures.navigation);
 		yield `)${endOfLine}`;
 	}
 	else if (script && scriptRanges?.exportDefault) {

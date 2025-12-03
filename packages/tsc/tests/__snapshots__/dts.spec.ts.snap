@@ -770,7 +770,7 @@ type __VLS_Slots = {} & {
 } & {
     vbind?: (props: typeof __VLS_7) => any;
 };
-declare const __VLS_base: import("vue").DefineComponent2<{
+declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
     props: {};
@@ -779,7 +779,7 @@ declare const __VLS_base: import("vue").DefineComponent2<{
     mixins: {}[];
     extends: {};
     emits: string[];
-    slots: {};
+    slots: import("vue").SlotsType<__VLS_Slots>;
     inject: {};
     components: {};
     directives: {};
@@ -791,14 +791,8 @@ declare const __VLS_base: import("vue").DefineComponent2<{
     __typeEl: any;
     __defaults: unknown;
 }>;
-declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
 declare const _default: typeof __VLS_export;
 export default _default;
-type __VLS_WithSlots<T, S> = T & {
-    new (): {
-        $slots: S;
-    };
-};
 "
 `;
 
@@ -817,7 +811,7 @@ type __VLS_Slots = {
     }) => VNode[];
     'no-bind': () => VNode[];
 };
-declare const __VLS_base: import("vue").DefineComponent2<{
+declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
     props: {};
@@ -826,7 +820,7 @@ declare const __VLS_base: import("vue").DefineComponent2<{
     mixins: {}[];
     extends: {};
     emits: string[];
-    slots: {};
+    slots: import("vue").SlotsType<__VLS_Slots>;
     inject: {};
     components: {};
     directives: {};
@@ -838,14 +832,8 @@ declare const __VLS_base: import("vue").DefineComponent2<{
     __typeEl: any;
     __defaults: unknown;
 }>;
-declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
 declare const _default: typeof __VLS_export;
 export default _default;
-type __VLS_WithSlots<T, S> = T & {
-    new (): {
-        $slots: S;
-    };
-};
 "
 `;
 
@@ -867,7 +855,7 @@ type __VLS_Slots = {} & {
 } & {
     vbind?: (props: typeof __VLS_7) => any;
 };
-declare const __VLS_base: import("vue").DefineComponent2<{
+declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
     props: {};
@@ -876,7 +864,7 @@ declare const __VLS_base: import("vue").DefineComponent2<{
     mixins: {}[];
     extends: {};
     emits: string[];
-    slots: {};
+    slots: import("vue").SlotsType<__VLS_Slots>;
     inject: {};
     components: {};
     directives: {};
@@ -888,14 +876,8 @@ declare const __VLS_base: import("vue").DefineComponent2<{
     __typeEl: any;
     __defaults: unknown;
 }>;
-declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
 declare const _default: typeof __VLS_export;
 export default _default;
-type __VLS_WithSlots<T, S> = T & {
-    new (): {
-        $slots: S;
-    };
-};
 "
 `;
 
