@@ -1,4 +1,9 @@
-import { toGeneratedRange, toSourceRanges } from '@volar/typescript/lib/node/transform';
+import {
+	toGeneratedOffset,
+	toGeneratedRange,
+	toSourceOffsets,
+	toSourceRanges,
+} from '@volar/typescript/lib/node/transform';
 import { getServiceScript } from '@volar/typescript/lib/node/utils';
 import { type Language, type VueCodeInformation, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize, isGloballyAllowed } from '@vue/shared';
@@ -10,8 +15,46 @@ export function preprocessLanguageService(
 	languageService: ts.LanguageService,
 	getLanguage: () => Language<any> | undefined,
 ) {
-	const { getCodeFixesAtPosition } = languageService;
+	const { getCompletionsAtPosition, getCodeFixesAtPosition } = languageService;
 
+	languageService.getCompletionsAtPosition = (fileName, position, preferences, formatOptions) => {
+		let result = getCompletionsAtPosition(fileName, position, preferences, formatOptions);
+		const language = getLanguage();
+		if (language) {
+			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
+			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
+				for (
+					const sourceOffset of toSourceOffsets(
+						sourceScript,
+						language,
+						serviceScript,
+						position,
+						() => true,
+					)
+				) {
+					const generatedOffset2 = toGeneratedOffset(
+						language,
+						serviceScript,
+						sourceScript,
+						sourceOffset[1],
+						(data: VueCodeInformation) => !!data.__importCompletion,
+					);
+					if (generatedOffset2 !== undefined) {
+						const completion2 = getCompletionsAtPosition(targetScript.id, generatedOffset2, preferences, formatOptions);
+						if (completion2) {
+							const existingNames = new Set(result?.entries.map(entry => entry.name));
+							for (const entry of completion2.entries) {
+								if (!existingNames.has(entry.name)) {
+									result?.entries.push(entry);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return result;
+	};
 	languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, formatOptions, preferences) => {
 		let fixes = getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
 		const language = getLanguage();
@@ -38,7 +81,7 @@ export function preprocessLanguageService(
 						sourceScript,
 						sourceRange[1],
 						sourceRange[2],
-						(data: VueCodeInformation) => typeof data.completion === 'object' && !!data.completion.isAdditional,
+						(data: VueCodeInformation) => !!data.__importCompletion,
 					);
 					if (generateRange2 !== undefined) {
 						let importFixes = getCodeFixesAtPosition(

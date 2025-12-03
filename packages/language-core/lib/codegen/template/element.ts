@@ -114,7 +114,7 @@ export function* generateComponent(
 
 		// auto import support
 		yield `// @ts-ignore${newLine}`; // #2304
-		yield* generateCamelized(capitalize(node.tag), 'template', tagOffsets[0], codeFeatures.htmlAutoImportOnly);
+		yield* generateCamelized(capitalize(node.tag), 'template', tagOffsets[0], codeFeatures.importCompletionOnly);
 		yield endOfLine;
 	}
 	else if (dynamicTagInfo) {
@@ -190,7 +190,7 @@ export function* generateComponent(
 
 			// auto import support
 			yield `// @ts-ignore${newLine}`; // #2304
-			yield* generateCamelized(capitalize(node.tag), 'template', tagOffsets[0], codeFeatures.htmlAutoImportOnly);
+			yield* generateCamelized(capitalize(node.tag), 'template', tagOffsets[0], codeFeatures.importCompletionOnly);
 			yield endOfLine;
 		}
 	}

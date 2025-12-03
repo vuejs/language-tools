@@ -314,7 +314,7 @@ export function createTemplateCodegenContext(
 							source,
 							offset,
 							{
-								...codeFeatures.additionalCompletion,
+								...codeFeatures.importCompletionOnly,
 								...codeFeatures.semanticWithoutHighlight,
 							},
 						];
@@ -324,7 +324,7 @@ export function createTemplateCodegenContext(
 							varName,
 							source,
 							offset,
-							codeFeatures.additionalCompletion,
+							codeFeatures.importCompletionOnly,
 						];
 					}
 					yield `,`;

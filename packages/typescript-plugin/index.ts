@@ -149,7 +149,7 @@ export = createLanguageServicePlugin(
 					}
 					const map = language.maps.get(code, sourceScript);
 					for (const [tsPosition, mapping] of map.toGeneratedLocation(position)) {
-						if (!(mapping.data as core.VueCodeInformation).htmlAutoImport) {
+						if (!(mapping.data as core.VueCodeInformation).__importCompletion) {
 							continue;
 						}
 						const tsPosition2 = tsPosition + sourceScript.snapshot.getLength();
