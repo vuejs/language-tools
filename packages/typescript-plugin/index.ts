@@ -1,9 +1,13 @@
-import { toGeneratedRange, toSourceRanges, transformFileTextChanges } from '@volar/typescript/lib/node/transform.js';
-import { getServiceScript } from '@volar/typescript/lib/node/utils.js';
+import { transformFileTextChanges } from '@volar/typescript/lib/node/transform.js';
 import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as core from '@vue/language-core';
 import type * as ts from 'typescript';
-import { createVueLanguageServiceProxy, resolveCompletionEntryDetails, resolveCompletionResult } from './lib/common';
+import {
+	postprocessLanguageService,
+	preprocessLanguageService,
+	resolveCompletionEntryDetails,
+	resolveCompletionResult,
+} from './lib/common';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
@@ -22,40 +26,7 @@ const projectToOriginalLanguageService = new WeakMap<ts.server.Project, ts.Langu
 export = createLanguageServicePlugin(
 	(ts, info) => {
 		let _language: core.Language<string> | undefined;
-		const { getCodeFixesAtPosition } = info.languageService;
-		info.languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, formatOptions, preferences) => {
-			let fixes = getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
-			if (_language) {
-				const [serviceScript, targetScript, sourceScript] = getServiceScript(_language, fileName);
-				if (serviceScript && sourceScript?.generated?.root instanceof core.VueVirtualCode) {
-					for (
-						const sourceRange of toSourceRanges(sourceScript, _language, serviceScript, start, end, true, () => true)
-					) {
-						const generateRange2 = toGeneratedRange(
-							_language,
-							serviceScript,
-							sourceScript,
-							sourceRange[1],
-							sourceRange[2],
-							(data: core.VueCodeInformation) => typeof data.completion === 'object' && !!data.completion.isAdditional,
-						);
-						if (generateRange2 !== undefined) {
-							let importFixes = getCodeFixesAtPosition(
-								targetScript.id,
-								generateRange2[0],
-								generateRange2[1],
-								[2304], // Cannot find name 'xxx'.ts(2304)
-								formatOptions,
-								preferences,
-							);
-							importFixes = importFixes.filter(fix => fix.fixName === 'import');
-							fixes = fixes.concat(importFixes);
-						}
-					}
-				}
-			}
-			return fixes;
-		};
+		preprocessLanguageService(info.languageService, () => _language);
 
 		projectToOriginalLanguageService.set(info.project, info.languageService);
 
@@ -73,7 +44,7 @@ export = createLanguageServicePlugin(
 			languagePlugins: [languagePlugin],
 			setup: language => {
 				_language = language;
-				info.languageService = createVueLanguageServiceProxy(
+				info.languageService = postprocessLanguageService(
 					ts,
 					language,
 					info.languageService,
