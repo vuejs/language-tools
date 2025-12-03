@@ -15,11 +15,22 @@ export function preprocessLanguageService(
 	languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, formatOptions, preferences) => {
 		let fixes = getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
 		const language = getLanguage();
-		if (language) {
+		if (
+			language
+			&& errorCodes.includes(2339) // Property 'xxx' does not exist on type 'yyy'.ts(2339)
+		) {
 			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
 			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
 				for (
-					const sourceRange of toSourceRanges(sourceScript, language, serviceScript, start, end, true, () => true)
+					const sourceRange of toSourceRanges(
+						sourceScript,
+						language,
+						serviceScript,
+						start,
+						end,
+						true,
+						() => true,
+					)
 				) {
 					const generateRange2 = toGeneratedRange(
 						language,
