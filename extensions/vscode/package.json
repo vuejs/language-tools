@@ -201,6 +201,13 @@
 				]
 			},
 			{
+				"scopeName": "vue.sfc.script.leading-operator-fix",
+				"path": "./syntaxes/vue-sfc-script-leading-operator-fix.json",
+				"injectTo": [
+					"source.vue"
+				]
+			},
+			{
 				"scopeName": "vue.sfc.style.variable.injection",
 				"path": "./syntaxes/vue-sfc-style-variable-injection.json",
 				"injectTo": [
