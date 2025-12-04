@@ -1,10 +1,108 @@
-import { type Language, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
+import {
+	toGeneratedOffset,
+	toGeneratedRange,
+	toSourceOffsets,
+	toSourceRanges,
+} from '@volar/typescript/lib/node/transform';
+import { getServiceScript } from '@volar/typescript/lib/node/utils';
+import { type Language, type VueCodeInformation, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
 import { capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 
 const windowsPathReg = /\\/g;
 
-export function createVueLanguageServiceProxy<T>(
+export function preprocessLanguageService(
+	languageService: ts.LanguageService,
+	getLanguage: () => Language<any> | undefined,
+) {
+	const { getCompletionsAtPosition, getCodeFixesAtPosition } = languageService;
+
+	languageService.getCompletionsAtPosition = (fileName, position, preferences, formatOptions) => {
+		let result = getCompletionsAtPosition(fileName, position, preferences, formatOptions);
+		const language = getLanguage();
+		if (language) {
+			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
+			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
+				for (
+					const sourceOffset of toSourceOffsets(
+						sourceScript,
+						language,
+						serviceScript,
+						position,
+						() => true,
+					)
+				) {
+					const generatedOffset2 = toGeneratedOffset(
+						language,
+						serviceScript,
+						sourceScript,
+						sourceOffset[1],
+						(data: VueCodeInformation) => !!data.__importCompletion,
+					);
+					if (generatedOffset2 !== undefined) {
+						const completion2 = getCompletionsAtPosition(targetScript.id, generatedOffset2, preferences, formatOptions);
+						if (completion2) {
+							const existingNames = new Set(result?.entries.map(entry => entry.name));
+							for (const entry of completion2.entries) {
+								if (!existingNames.has(entry.name)) {
+									result?.entries.push(entry);
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return result;
+	};
+	languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, formatOptions, preferences) => {
+		let fixes = getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
+		const language = getLanguage();
+		if (
+			language
+			&& errorCodes.includes(2339) // Property 'xxx' does not exist on type 'yyy'.ts(2339)
+		) {
+			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
+			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
+				for (
+					const sourceRange of toSourceRanges(
+						sourceScript,
+						language,
+						serviceScript,
+						start,
+						end,
+						true,
+						() => true,
+					)
+				) {
+					const generateRange2 = toGeneratedRange(
+						language,
+						serviceScript,
+						sourceScript,
+						sourceRange[1],
+						sourceRange[2],
+						(data: VueCodeInformation) => !!data.__importCompletion,
+					);
+					if (generateRange2 !== undefined) {
+						let importFixes = getCodeFixesAtPosition(
+							targetScript.id,
+							generateRange2[0],
+							generateRange2[1],
+							[2304], // Cannot find name 'xxx'.ts(2304)
+							formatOptions,
+							preferences,
+						);
+						importFixes = importFixes.filter(fix => fix.fixName === 'import');
+						fixes = fixes.concat(importFixes);
+					}
+				}
+			}
+		}
+		return fixes;
+	};
+}
+
+export function postprocessLanguageService<T>(
 	ts: typeof import('typescript'),
 	language: Language<T>,
 	languageService: ts.LanguageService,

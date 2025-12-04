@@ -2,7 +2,12 @@ import { transformFileTextChanges } from '@volar/typescript/lib/node/transform.j
 import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/createLanguageServicePlugin';
 import * as core from '@vue/language-core';
 import type * as ts from 'typescript';
-import { createVueLanguageServiceProxy, resolveCompletionEntryDetails, resolveCompletionResult } from './lib/common';
+import {
+	postprocessLanguageService,
+	preprocessLanguageService,
+	resolveCompletionEntryDetails,
+	resolveCompletionResult,
+} from './lib/common';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
@@ -32,10 +37,14 @@ export = createLanguageServicePlugin(
 		vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 		addVueCommands();
 
+		let _language: core.Language<string> | undefined;
+		preprocessLanguageService(info.languageService, () => _language);
+
 		return {
 			languagePlugins: [languagePlugin],
 			setup: language => {
-				info.languageService = createVueLanguageServiceProxy(
+				_language = language;
+				info.languageService = postprocessLanguageService(
 					ts,
 					language,
 					info.languageService,
@@ -140,7 +149,7 @@ export = createLanguageServicePlugin(
 					}
 					const map = language.maps.get(code, sourceScript);
 					for (const [tsPosition, mapping] of map.toGeneratedLocation(position)) {
-						if (!(mapping.data as core.VueCodeInformation).htmlAutoImport) {
+						if (!(mapping.data as core.VueCodeInformation).__importCompletion) {
 							continue;
 						}
 						const tsPosition2 = tsPosition + sourceScript.snapshot.getLength();

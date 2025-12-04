@@ -17,7 +17,7 @@ export function* generateStyleScopedClassReference(
 ): Generator<Code> {
 	if (!className) {
 		yield `/** @type {__VLS_StyleScopedClasses['`;
-		yield ['', 'template', offset, codeFeatures.additionalCompletion];
+		yield ['', 'template', offset, codeFeatures.completion];
 		yield `']} */${endOfLine}`;
 		return;
 	}
@@ -39,7 +39,7 @@ export function* generateStyleScopedClassReference(
 		className,
 		block.name,
 		offset,
-		codeFeatures.navigationAndAdditionalCompletion,
+		codeFeatures.navigationAndCompletion,
 		classNameEscapeRegex,
 	);
 	yield `'`;
