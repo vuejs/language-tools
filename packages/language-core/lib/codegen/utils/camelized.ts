@@ -8,7 +8,7 @@ export function* generateCamelized(
 	features: VueCodeInformation,
 ): Generator<Code> {
 	const parts = code.split('-');
-	const combineToken = Symbol();
+	const combineToken = features.__combineToken ?? Symbol();
 
 	for (let i = 0; i < parts.length; i++) {
 		const part = parts[i]!;
