@@ -129,7 +129,7 @@ function* generatePropsOption(
 			optionGenerates.push(function*() {
 				let propsType = `${ctx.localTypes.TypePropsToOption}<${names.PublicProps}>`;
 				if (scriptSetupRanges.withDefaults?.arg) {
-					propsType = `${ctx.localTypes.WithDefaultsLocal}<${propsType}, typeof ${names.defaults}>`;
+					propsType = `${ctx.localTypes.WithDefaults}<${propsType}, typeof ${names.defaults}>`;
 				}
 				yield `{} as ${propsType}`;
 			});

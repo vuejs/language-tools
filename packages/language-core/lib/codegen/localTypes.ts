@@ -4,11 +4,11 @@ import { endOfLine } from './utils';
 export function getLocalTypesGenerator(vueCompilerOptions: VueCompilerOptions) {
 	const used = new Set<string>();
 
-	const WithDefaultsLocal = defineHelper(
-		`__VLS_WithDefaultsLocal`,
+	const WithDefaults = defineHelper(
+		`__VLS_WithDefaults`,
 		() =>
 			`
-type __VLS_WithDefaultsLocal<P, D> = {
+type __VLS_WithDefaults<P, D> = {
 	[K in keyof Pick<P, keyof P>]: K extends keyof D
 		? ${PrettifyLocal.name}<P[K] & { default: D[K] }>
 		: P[K]
@@ -68,7 +68,7 @@ type __VLS_TypePropsToOption<T> = {
 	);
 	const helpers = {
 		[PrettifyLocal.name]: PrettifyLocal,
-		[WithDefaultsLocal.name]: WithDefaultsLocal,
+		[WithDefaults.name]: WithDefaults,
 		[WithSlots.name]: WithSlots,
 		[PropsChildren.name]: PropsChildren,
 		[TypePropsToOption.name]: TypePropsToOption,
@@ -81,8 +81,8 @@ type __VLS_TypePropsToOption<T> = {
 		get PrettifyLocal() {
 			return PrettifyLocal.name;
 		},
-		get WithDefaultsLocal() {
-			return WithDefaultsLocal.name;
+		get WithDefaults() {
+			return WithDefaults.name;
 		},
 		get WithSlots() {
 			return WithSlots.name;
