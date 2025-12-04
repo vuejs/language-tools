@@ -178,7 +178,7 @@ function getCompletionEntryDetails<T>(
 	};
 }
 
-function resolveCompletionResult<T>(
+export function resolveCompletionResult<T>(
 	ts: typeof import('typescript'),
 	language: Language<T>,
 	asScriptId: (fileName: string) => T,
@@ -260,7 +260,7 @@ function resolveCompletionResult<T>(
 	}
 }
 
-function resolveCompletionEntryDetails(
+export function resolveCompletionEntryDetails(
 	language: Language<any>,
 	details: ts.CompletionEntryDetails,
 	data: any,
