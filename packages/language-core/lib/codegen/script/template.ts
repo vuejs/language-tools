@@ -77,16 +77,8 @@ function* generateTemplateCtx(
 		exps.push([`{} as { $emit: ${emitTypes.join(` & `)} }`]);
 	}
 
-	const { defineProps, withDefaults } = scriptSetupRanges ?? {};
-	const props = defineProps?.arg
-		? `typeof ${defineProps.name ?? names.props}`
-		: defineProps?.typeArg
-		? withDefaults?.arg
-			? `__VLS_WithDefaultsGlobal<${names.Props}, typeof ${names.defaults}>`
-			: `${names.Props}`
-		: undefined;
-	if (props) {
-		propTypes.push(props);
+	if (scriptSetupRanges?.defineProps) {
+		propTypes.push(`typeof ${scriptSetupRanges.defineProps.name ?? names.props}`);
 	}
 	if (scriptSetupRanges?.defineModel.length) {
 		propTypes.push(names.ModelProps);
