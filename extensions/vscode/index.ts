@@ -266,6 +266,11 @@ function patchTypeScriptExtension() {
 				'.languages.match([t.typescript,t.typescriptreact,t.javascript,t.javascriptreact]',
 				s => s + '.concat("vue")',
 			);
+			// patch isTypeScriptDocument
+			text = text.replace(
+				'.languages.match([t.typescript,t.typescriptreact]',
+				s => s + '.concat("vue")',
+			);
 
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
 			text = text.replace(
