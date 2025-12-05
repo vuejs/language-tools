@@ -19,10 +19,6 @@ const plugin: VueLanguagePlugin = ctx => {
 	return {
 		version: 2.2,
 
-		requiredCompilerOptions: [
-			'noPropertyAccessFromIndexSignature',
-		],
-
 		getEmbeddedCodes(_fileName, sfc) {
 			const lang = computeLang(sfc);
 			return [{ lang, id: 'script_' + lang }];
@@ -181,7 +177,6 @@ function useCodegen(
 		}
 		return generateTemplate({
 			ts,
-			compilerOptions: ctx.compilerOptions,
 			vueCompilerOptions: getResolvedOptions(),
 			template: sfc.template,
 			setupConsts: getSetupConsts(),

@@ -10,7 +10,6 @@ import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
 	ts: typeof ts;
-	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;
 	template: NonNullable<Sfc['template']>;
 	setupRefs: Set<string>;
