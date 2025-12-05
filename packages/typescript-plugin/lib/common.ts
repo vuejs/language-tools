@@ -189,13 +189,13 @@ export function postprocessLanguageService<T>(
 	const getProxyMethod = (target: ts.LanguageService, p: string | symbol): Function | undefined => {
 		switch (p) {
 			case 'getCompletionsAtPosition':
-				return getCompletionsAtPosition(ts, language, asScriptId, vueOptions, target[p]);
+				return getCompletionsAtPosition(target[p]);
 			case 'getCompletionEntryDetails':
-				return getCompletionEntryDetails(language, target[p]);
+				return getCompletionEntryDetails(target[p]);
 			case 'getCodeFixesAtPosition':
 				return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan':
-				return getDefinitionAndBoundSpan(ts, language, asScriptId, languageService, vueOptions, target[p]);
+				return getDefinitionAndBoundSpan(target[p]);
 		}
 	};
 
@@ -214,44 +214,178 @@ export function postprocessLanguageService<T>(
 			return Reflect.set(target, p, value, receiver);
 		},
 	});
-}
 
-function getCompletionsAtPosition<T>(
-	ts: typeof import('typescript'),
-	language: Language<T>,
-	asScriptId: (fileName: string) => T,
-	vueOptions: VueCompilerOptions,
-	getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
-): ts.LanguageService['getCompletionsAtPosition'] {
-	return (filePath, position, options, formattingSettings) => {
-		const fileName = filePath.replace(windowsPathReg, '/');
-		const result = getCompletionsAtPosition(fileName, position, options, formattingSettings);
-		if (result) {
-			resolveCompletionResult(
-				ts,
-				language,
-				asScriptId,
-				vueOptions,
-				fileName,
-				position,
-				result,
-			);
-		}
-		return result;
-	};
-}
+	function getCompletionsAtPosition(
+		getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
+	): ts.LanguageService['getCompletionsAtPosition'] {
+		return (filePath, position, options, formattingSettings) => {
+			const fileName = filePath.replace(windowsPathReg, '/');
+			const result = getCompletionsAtPosition(fileName, position, options, formattingSettings);
+			if (result) {
+				resolveCompletionResult(
+					ts,
+					language,
+					asScriptId,
+					vueOptions,
+					fileName,
+					position,
+					result,
+				);
+			}
+			return result;
+		};
+	}
 
-function getCompletionEntryDetails<T>(
-	language: Language<T>,
-	getCompletionEntryDetails: ts.LanguageService['getCompletionEntryDetails'],
-): ts.LanguageService['getCompletionEntryDetails'] {
-	return (...args) => {
-		const details = getCompletionEntryDetails(...args);
-		if (details) {
-			resolveCompletionEntryDetails(language, details, args[6]);
-		}
-		return details;
-	};
+	function getCompletionEntryDetails(
+		getCompletionEntryDetails: ts.LanguageService['getCompletionEntryDetails'],
+	): ts.LanguageService['getCompletionEntryDetails'] {
+		return (...args) => {
+			const details = getCompletionEntryDetails(...args);
+			if (details) {
+				resolveCompletionEntryDetails(language, details, args[6]);
+			}
+			return details;
+		};
+	}
+
+	function getCodeFixesAtPosition(
+		getCodeFixesAtPosition: ts.LanguageService['getCodeFixesAtPosition'],
+	): ts.LanguageService['getCodeFixesAtPosition'] {
+		return (...args) => {
+			let result = getCodeFixesAtPosition(...args);
+			// filter __VLS_
+			result = result.filter(entry => !entry.description.includes('__VLS_'));
+			return result;
+		};
+	}
+
+	function getDefinitionAndBoundSpan(
+		getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan'],
+	): ts.LanguageService['getDefinitionAndBoundSpan'] {
+		return (fileName, position) => {
+			const result = getDefinitionAndBoundSpan(fileName, position);
+
+			const program = languageService.getProgram()!;
+			const sourceScript = language.scripts.get(asScriptId(fileName));
+			const root = sourceScript?.generated?.root;
+			if (!(root instanceof VueVirtualCode)) {
+				return result;
+			}
+
+			if (!result?.definitions?.length) {
+				const { template } = root.sfc;
+				if (template) {
+					const textSpan = {
+						start: template.start + 1,
+						length: 'template'.length,
+					};
+					if (position >= textSpan.start && position <= textSpan.start + textSpan.length) {
+						return {
+							textSpan,
+							definitions: [{
+								fileName,
+								textSpan,
+								kind: ts.ScriptElementKind.scriptElement,
+								name: fileName,
+								containerKind: ts.ScriptElementKind.unknown,
+								containerName: '',
+							}],
+						};
+					}
+				}
+				return;
+			}
+
+			if (
+				!root.sfc.template
+				|| position < root.sfc.template.startTagEnd
+				|| position > root.sfc.template.endTagStart
+			) {
+				return result;
+			}
+
+			const definitions = new Set<ts.DefinitionInfo>(result.definitions);
+			const skippedDefinitions: ts.DefinitionInfo[] = [];
+
+			// #5275
+			if (result.definitions.length >= 2) {
+				for (const definition of result.definitions) {
+					if (
+						root.sfc.content[definition.textSpan.start - 1] === '@'
+						|| root.sfc.content.slice(definition.textSpan.start - 5, definition.textSpan.start) === 'v-on:'
+					) {
+						definitions.delete(definition);
+					}
+				}
+			}
+
+			for (const definition of result.definitions) {
+				if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
+					continue;
+				}
+
+				const sourceFile = program.getSourceFile(definition.fileName);
+				if (!sourceFile) {
+					continue;
+				}
+
+				visit(sourceFile, definition, sourceFile);
+			}
+
+			for (const definition of skippedDefinitions) {
+				definitions.delete(definition);
+			}
+
+			return {
+				definitions: [...definitions],
+				textSpan: result.textSpan,
+			};
+
+			function visit(
+				node: ts.Node,
+				definition: ts.DefinitionInfo,
+				sourceFile: ts.SourceFile,
+			) {
+				if (ts.isPropertySignature(node) && node.type) {
+					proxy(node.name, node.type, definition, sourceFile);
+				}
+				else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type && !node.initializer) {
+					proxy(node.name, node.type, definition, sourceFile);
+				}
+				else {
+					ts.forEachChild(node, child => visit(child, definition, sourceFile));
+				}
+			}
+
+			function proxy(
+				name: ts.PropertyName,
+				type: ts.TypeNode,
+				definition: ts.DefinitionInfo,
+				sourceFile: ts.SourceFile,
+			) {
+				const { textSpan, fileName } = definition;
+				const start = name.getStart(sourceFile);
+				const end = name.getEnd();
+
+				if (start !== textSpan.start || end - start !== textSpan.length) {
+					return;
+				}
+
+				if (!ts.isIndexedAccessTypeNode(type)) {
+					return;
+				}
+
+				const pos = type.indexType.getStart(sourceFile);
+				const res = getDefinitionAndBoundSpan(fileName, pos);
+				if (res?.definitions?.length) {
+					for (const definition of res.definitions) {
+						definitions.add(definition);
+					}
+					skippedDefinitions.push(definition);
+				}
+			}
+		};
+	}
 }
 
 export function resolveCompletionResult<T>(
@@ -374,148 +508,4 @@ export function resolveCompletionEntryDetails(
 			}
 		}
 	}
-}
-
-function getCodeFixesAtPosition(
-	getCodeFixesAtPosition: ts.LanguageService['getCodeFixesAtPosition'],
-): ts.LanguageService['getCodeFixesAtPosition'] {
-	return (...args) => {
-		let result = getCodeFixesAtPosition(...args);
-		// filter __VLS_
-		result = result.filter(entry => !entry.description.includes('__VLS_'));
-		return result;
-	};
-}
-
-function getDefinitionAndBoundSpan<T>(
-	ts: typeof import('typescript'),
-	language: Language<T>,
-	asScriptId: (fileName: string) => T,
-	languageService: ts.LanguageService,
-	vueOptions: VueCompilerOptions,
-	getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan'],
-): ts.LanguageService['getDefinitionAndBoundSpan'] {
-	return (fileName, position) => {
-		const result = getDefinitionAndBoundSpan(fileName, position);
-
-		const program = languageService.getProgram()!;
-		const sourceScript = language.scripts.get(asScriptId(fileName));
-		const root = sourceScript?.generated?.root;
-		if (!(root instanceof VueVirtualCode)) {
-			return result;
-		}
-
-		if (!result?.definitions?.length) {
-			const { template } = root.sfc;
-			if (template) {
-				const textSpan = {
-					start: template.start + 1,
-					length: 'template'.length,
-				};
-				if (position >= textSpan.start && position <= textSpan.start + textSpan.length) {
-					return {
-						textSpan,
-						definitions: [{
-							fileName,
-							textSpan,
-							kind: ts.ScriptElementKind.scriptElement,
-							name: fileName,
-							containerKind: ts.ScriptElementKind.unknown,
-							containerName: '',
-						}],
-					};
-				}
-			}
-			return;
-		}
-
-		if (
-			!root.sfc.template
-			|| position < root.sfc.template.startTagEnd
-			|| position > root.sfc.template.endTagStart
-		) {
-			return result;
-		}
-
-		const definitions = new Set<ts.DefinitionInfo>(result.definitions);
-		const skippedDefinitions: ts.DefinitionInfo[] = [];
-
-		// #5275
-		if (result.definitions.length >= 2) {
-			for (const definition of result.definitions) {
-				if (
-					root.sfc.content[definition.textSpan.start - 1] === '@'
-					|| root.sfc.content.slice(definition.textSpan.start - 5, definition.textSpan.start) === 'v-on:'
-				) {
-					definitions.delete(definition);
-				}
-			}
-		}
-
-		for (const definition of result.definitions) {
-			if (vueOptions.extensions.some(ext => definition.fileName.endsWith(ext))) {
-				continue;
-			}
-
-			const sourceFile = program.getSourceFile(definition.fileName);
-			if (!sourceFile) {
-				continue;
-			}
-
-			visit(sourceFile, definition, sourceFile);
-		}
-
-		for (const definition of skippedDefinitions) {
-			definitions.delete(definition);
-		}
-
-		return {
-			definitions: [...definitions],
-			textSpan: result.textSpan,
-		};
-
-		function visit(
-			node: ts.Node,
-			definition: ts.DefinitionInfo,
-			sourceFile: ts.SourceFile,
-		) {
-			if (ts.isPropertySignature(node) && node.type) {
-				proxy(node.name, node.type, definition, sourceFile);
-			}
-			else if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.type && !node.initializer) {
-				proxy(node.name, node.type, definition, sourceFile);
-			}
-			else {
-				ts.forEachChild(node, child => visit(child, definition, sourceFile));
-			}
-		}
-
-		function proxy(
-			name: ts.PropertyName,
-			type: ts.TypeNode,
-			definition: ts.DefinitionInfo,
-			sourceFile: ts.SourceFile,
-		) {
-			const { textSpan, fileName } = definition;
-			const start = name.getStart(sourceFile);
-			const end = name.getEnd();
-
-			if (start !== textSpan.start || end - start !== textSpan.length) {
-				return;
-			}
-
-			if (!ts.isIndexedAccessTypeNode(type)) {
-				return;
-			}
-
-			const pos = type.indexType.getStart(sourceFile);
-			const res = getDefinitionAndBoundSpan(fileName, pos);
-			if (res?.definitions?.length) {
-				for (const definition of res.definitions) {
-					definitions.add(definition);
-				}
-				skippedDefinitions.push(definition);
-			}
-		}
-	};
 }
