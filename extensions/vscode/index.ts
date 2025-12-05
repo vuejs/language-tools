@@ -113,7 +113,7 @@ export = defineExtension(() => {
 
 		client = launch(
 			serverPath ?? vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js').fsPath,
-			tsdk,
+			tsdk.replace(/\\/g, '/'),
 		);
 
 		volarLabs.addLanguageClient(client);
@@ -203,7 +203,7 @@ function launch(serverPath: string, tsdk: string) {
 }
 
 function resolveTsdkPath() {
-	const vscodeTsdk = vscode.env.appRoot.replace(/\\/g, '/') + '/extensions/node_modules/typescript/lib';
+	const vscodeTsdk = path.join(vscode.env.appRoot, 'extensions', 'node_modules', 'typescript', 'lib');
 	if (fs.existsSync(vscodeTsdk)) {
 		return vscodeTsdk;
 	}
@@ -217,8 +217,6 @@ function resolveTsdkPath() {
 			return theiaTsdk;
 		}
 	}
-
-	return undefined;
 }
 
 function resolveServerPath() {
