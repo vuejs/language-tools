@@ -19,7 +19,7 @@ export function normalizeTemplateAST(root: CompilerDOM.RootNode) {
 		expressionPlugins: ['typescript'],
 	};
 
-	for (const { children } of forEachElementNode(root)) {
+	for (const { children, codegenNode, props } of forEachElementNode(root)) {
 		for (let i = 0; i < children.length; i++) {
 			const child = children[i]!;
 			if (child.type !== CompilerDOM.NodeTypes.ELEMENT) {
@@ -35,6 +35,43 @@ export function normalizeTemplateAST(root: CompilerDOM.RootNode) {
 				const normalized = normalizeIfBranch(ifNode, children, i);
 				children.splice(i, normalized.end - i + 1, normalized.node);
 				continue;
+			}
+		}
+		// #4539
+		if (
+			codegenNode
+			&& 'props' in codegenNode
+			&& codegenNode.props
+			&& 'properties' in codegenNode.props
+		) {
+			for (const p of codegenNode.props.properties) {
+				if (
+					p.key.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& p.key.content === 'key'
+					&& !p.key.isHandlerKey
+					&& !p.key.loc.source
+					&& p.value.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
+					&& p.value.constType === CompilerDOM.ConstantTypes.NOT_CONSTANT
+				) {
+					const contentBeforeValue = root.loc.source.slice(0, p.value.loc.start.offset);
+					const argOffset = contentBeforeValue.lastIndexOf('key');
+					props.push({
+						type: CompilerDOM.NodeTypes.DIRECTIVE,
+						name: 'bind',
+						exp: p.value,
+						loc: p.loc,
+						arg: {
+							...p.key,
+							loc: {
+								start: { line: -1, column: -1, offset: argOffset },
+								end: { line: -1, column: -1, offset: argOffset + 'key'.length },
+								source: 'key',
+							},
+						},
+						modifiers: [],
+					});
+					break;
+				}
 			}
 		}
 	}
