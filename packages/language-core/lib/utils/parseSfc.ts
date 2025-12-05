@@ -125,7 +125,11 @@ function createBlock(node: ElementNode, source: string) {
 				block.__src = parseAttr(p, node);
 			}
 			else if (isScriptBlock(block)) {
-				if (p.name === 'setup' || p.name === 'vapor') {
+				if (p.name === 'vapor') {
+					block.setup ??= attrs[p.name];
+					block.__generic ??= true;
+				}
+				else if (p.name === 'setup') {
 					block.setup = attrs[p.name];
 				}
 				else if (p.name === 'generic') {
