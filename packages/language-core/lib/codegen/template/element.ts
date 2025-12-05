@@ -232,12 +232,12 @@ export function* generateComponent(
 	);
 	yield* generateElementDirectives(options, ctx, node);
 
-	const reference = yield* generateElementReference(options, ctx, node);
+	const templateRef = getTemplateRef(node);
 	const tag = hyphenateTag(node.tag);
 	const isRootNode = ctx.singleRootNodes.has(node)
 		&& !options.vueCompilerOptions.fallthroughComponentNames.includes(tag);
 
-	if (reference || isRootNode) {
+	if (templateRef || isRootNode) {
 		const componentInstanceVar = ctx.getInternalVariable();
 		isCtxVarUsed = true;
 
@@ -247,9 +247,9 @@ export function* generateComponent(
 		}
 		yield endOfLine;
 
-		if (reference) {
+		if (templateRef) {
 			const typeExp = `typeof ${ctx.getHoistVariable(componentInstanceVar)}`;
-			ctx.addTemplateRef(reference.name, typeExp, reference.offset);
+			ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 		}
 		if (isRootNode) {
 			ctx.singleRootElTypes.add(`NonNullable<typeof ${componentInstanceVar}>['$el']`);
@@ -322,13 +322,13 @@ export function* generateElement(
 	yield* generateFailedExpressions(options, ctx, failedPropExps);
 	yield* generateElementDirectives(options, ctx, node);
 
-	const reference = yield* generateElementReference(options, ctx, node);
-	if (reference) {
+	const templateRef = getTemplateRef(node);
+	if (templateRef) {
 		let typeExp = `__VLS_Elements['${node.tag}']`;
 		if (ctx.inVFor) {
 			typeExp += `[]`;
 		}
-		ctx.addTemplateRef(reference.name, typeExp, reference.offset);
+		ctx.addTemplateRef(templateRef[0], typeExp, templateRef[1]);
 	}
 	if (ctx.singleRootNodes.has(node)) {
 		ctx.singleRootElTypes.add(`__VLS_Elements['${node.tag}']`);
@@ -536,34 +536,14 @@ function* generateComponentGeneric(
 	}
 }
 
-function* generateElementReference(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-): Generator<Code, { name: string; offset: number } | void> {
+function getTemplateRef(node: CompilerDOM.ElementNode) {
 	for (const prop of node.props) {
 		if (
 			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
 			&& prop.name === 'ref'
 			&& prop.value
 		) {
-			const [name, offset] = normalizeAttributeValue(prop.value);
-			// navigation support for `const foo = ref()`
-			yield `/** @type {typeof ${names.ctx}`;
-			yield* generatePropertyAccess(
-				options,
-				ctx,
-				name,
-				offset,
-				codeFeatures.navigation,
-			);
-			yield `} */${endOfLine}`;
-
-			if (identifierRegex.test(name) && !options.templateRefNames.has(name)) {
-				ctx.accessExternalVariable('template', name, offset);
-			}
-
-			return { name, offset };
+			return normalizeAttributeValue(prop.value);
 		}
 	}
 }
