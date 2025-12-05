@@ -259,9 +259,8 @@ export function* generatePropExp(
 				yield* codes;
 			}
 			else if (options.templateRefNames.has(propVariableName)) {
-				yield `__VLS_unref(`;
 				yield* codes;
-				yield `)`;
+				yield `.value`;
 			}
 			else {
 				ctx.accessExternalVariable('template', propVariableName, exp.loc.start.offset);

@@ -114,9 +114,8 @@ function* forEachInterpolationSegment(
 		yield ['', offset, 'errorMappingOnly'];
 
 		if (templateRefNames.has(name)) {
-			yield `__VLS_unref(`;
 			yield [name, offset];
-			yield `)`;
+			yield `.value`;
 		}
 		else {
 			ctx.accessExternalVariable(block.name, name, start - prefix.length + offset);

@@ -27,7 +27,6 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	${checkUnknownProps ? '' : `var ${names.PROPS_FALLBACK}: Record<string, unknown>;`}
 
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
-	const __VLS_unref: typeof import('${lib}').unref;
 	const ${names.placeholder}: any;
 	const ${names.intrinsics}: ${
 		target >= 3.3
