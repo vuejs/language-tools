@@ -16,7 +16,7 @@ const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 export function* generateInterpolation(
 	options: Pick<
 		TemplateCodegenOptions | StyleCodegenOptions,
-		'ts' | 'templateRefNames'
+		'ts' | 'setupRefs'
 	>,
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
@@ -70,9 +70,9 @@ export function* generateInterpolation(
 }
 
 function* forEachInterpolationSegment(
-	{ ts, templateRefNames }: Pick<
+	{ ts, setupRefs }: Pick<
 		TemplateCodegenOptions | StyleCodegenOptions,
-		'ts' | 'templateRefNames'
+		'ts' | 'setupRefs'
 	>,
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
@@ -109,17 +109,19 @@ function* forEachInterpolationSegment(
 			yield [code.slice(prevEnd, offset), prevEnd, prevEnd > 0 ? undefined : 'startEnd'];
 		}
 
-		// fix https://github.com/vuejs/language-tools/issues/1205
-		// fix https://github.com/vuejs/language-tools/issues/1264
-		yield ['', offset, 'errorMappingOnly'];
-
-		if (templateRefNames.has(name)) {
+		if (setupRefs.has(name)) {
 			yield [name, offset];
 			yield `.value`;
 		}
 		else {
-			ctx.accessExternalVariable(block.name, name, start - prefix.length + offset);
-			yield ctx.dollarVars.has(name) ? names.dollars : names.ctx;
+			yield ['', offset, 'errorMappingOnly']; // #1205, #1264
+			if (ctx.dollarVars.has(name)) {
+				yield names.dollars;
+			}
+			else {
+				ctx.recordComponentAccess(block.name, name, start - prefix.length + offset);
+				yield names.ctx;
+			}
 			yield `.`;
 			yield [name, offset];
 		}

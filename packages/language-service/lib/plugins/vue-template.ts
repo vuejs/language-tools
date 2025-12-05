@@ -192,7 +192,7 @@ export function create(
 					if (codegen) {
 						const componentNames = new Set([
 							...codegen.getImportComponentNames(),
-							...codegen.getSetupBindingNames(),
+							...codegen.getSetupExposed(),
 						]);
 						// copied from https://github.com/microsoft/vscode-html-languageservice/blob/10daf45dc16b4f4228987cf7cddf3a7dbbdc7570/src/beautify/beautify-html.js#L2746-L2761
 						voidElements = [

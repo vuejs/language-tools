@@ -1,4 +1,3 @@
-import { camelize, capitalize } from '@vue/shared';
 import * as path from 'path-browserify';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
@@ -13,7 +12,7 @@ export function* generateTemplate(
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	yield* generateSelf(options);
-	yield* generateBindings(options, ctx);
+	yield* generateSetupExposed(options, ctx);
 	yield* generateTemplateCtx(options, ctx);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
@@ -92,8 +91,8 @@ function* generateTemplateCtx(
 		exps.push([`{} as ${names.InternalProps}`]);
 	}
 
-	if (ctx.generatedTypes.has(names.Bindings)) {
-		exps.push([`{} as ${names.Bindings}`]);
+	if (ctx.generatedTypes.has(names.SetupExposed)) {
+		exps.push([`{} as ${names.SetupExposed}`]);
 	}
 
 	yield `const ${names.ctx} = `;
@@ -141,23 +140,17 @@ function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<C
 	yield `let ${names.directives}!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
-function* generateBindings(
-	{ templateComponents, templateCodegen, styleCodegen, setupBindingNames }: ScriptCodegenOptions,
+function* generateSetupExposed(
+	{ setupExposed }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
-	const testNames = new Set([
-		...templateComponents.flatMap(c => [camelize(c), capitalize(camelize(c))]),
-		...templateCodegen?.accessExternalVariables.keys() ?? [],
-		...styleCodegen?.accessExternalVariables.keys() ?? [],
-	]);
-	const exposeNames = [...setupBindingNames].filter(name => testNames.has(name));
-	if (exposeNames.length === 0) {
+	if (!setupExposed.size) {
 		return;
 	}
-	ctx.generatedTypes.add(names.Bindings);
+	ctx.generatedTypes.add(names.SetupExposed);
 
-	yield `type ${names.Bindings} = __VLS_ProxyRefs<{${newLine}`;
-	for (const bindingName of exposeNames) {
+	yield `type ${names.SetupExposed} = __VLS_ProxyRefs<{${newLine}`;
+	for (const bindingName of setupExposed) {
 		const token = Symbol(bindingName.length);
 		yield ['', undefined, 0, { __linkedToken: token }];
 		yield `${bindingName}: typeof `;

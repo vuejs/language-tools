@@ -37,14 +37,9 @@ export function* generateElementDirectives(
 		) {
 			continue;
 		}
-
-		if (!builtInDirectives.has(prop.name)) {
-			ctx.accessExternalVariable('template', camelize('v-' + prop.name), prop.loc.start.offset);
-		}
-
 		const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);
 		yield `__VLS_asFunctionalDirective(`;
-		yield* generateIdentifier(options, prop);
+		yield* generateIdentifier(options, ctx, prop);
 		yield `)(null!, { ...__VLS_directiveBindingRestFields, `;
 		yield* generateArg(options, ctx, prop);
 		yield* generateModifiers(options, ctx, prop);
@@ -57,6 +52,7 @@ export function* generateElementDirectives(
 
 function* generateIdentifier(
 	options: TemplateCodegenOptions,
+	ctx: TemplateCodegenContext,
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	const rawName = 'v-' + prop.name;
@@ -73,6 +69,9 @@ function* generateIdentifier(
 			verification: options.vueCompilerOptions.checkUnknownDirectives && !builtInDirectives.has(prop.name),
 		},
 	);
+	if (!builtInDirectives.has(prop.name)) {
+		ctx.recordComponentAccess('template', camelize(rawName), prop.loc.start.offset);
+	}
 	yield endBoundary(token, startOffset + rawName.length);
 }
 

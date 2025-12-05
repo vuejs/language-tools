@@ -106,15 +106,13 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  * an error/diagnostic was encountered for a region of code covered by a `@vue-expect-error` directive,
  * and additionally how we use that to determine whether to propagate diagnostics back upward.
  */
-export function createTemplateCodegenContext(
-	setupBindingNames: Set<string>,
-) {
+export function createTemplateCodegenContext() {
 	let variableId = 0;
 
 	const scopes: Set<string>[] = [];
 	const hoistVars = new Map<string, string>();
 	const dollarVars = new Set<string>();
-	const accessExternalVariables = new Map<string, Map<string, Set<number>>>();
+	const componentAccessMap = new Map<string, Map<string, Set<number>>>();
 	const slots: {
 		name: string;
 		offset?: number;
@@ -157,7 +155,7 @@ export function createTemplateCodegenContext(
 		slots,
 		dynamicSlots,
 		dollarVars,
-		accessExternalVariables,
+		componentAccessMap,
 		blockConditions,
 		inlayHints,
 		inheritedAttrVars,
@@ -175,10 +173,10 @@ export function createTemplateCodegenContext(
 			}
 			refs.push({ typeExp, offset });
 		},
-		accessExternalVariable(source: string, name: string, offset?: number) {
-			let map = accessExternalVariables.get(name);
+		recordComponentAccess(source: string, name: string, offset?: number) {
+			let map = componentAccessMap.get(name);
 			if (!map) {
-				accessExternalVariables.set(name, map = new Map());
+				componentAccessMap.set(name, map = new Map());
 			}
 			let arr = map.get(source);
 			if (!arr) {
@@ -298,7 +296,7 @@ export function createTemplateCodegenContext(
 	};
 
 	function* generateAutoImport(): Generator<Code> {
-		const all = [...accessExternalVariables.entries()];
+		const all = [...componentAccessMap.entries()];
 		if (!all.some(([, offsets]) => offsets.size)) {
 			return;
 		}
@@ -307,26 +305,7 @@ export function createTemplateCodegenContext(
 		for (const [varName, map] of all) {
 			for (const [source, offsets] of map) {
 				for (const offset of offsets) {
-					if (setupBindingNames.has(varName)) {
-						// #3409
-						yield [
-							varName,
-							source,
-							offset,
-							{
-								...codeFeatures.importCompletionOnly,
-								...codeFeatures.semanticWithoutHighlight,
-							},
-						];
-					}
-					else {
-						yield [
-							varName,
-							source,
-							offset,
-							codeFeatures.importCompletionOnly,
-						];
-					}
+					yield [varName, source, offset, codeFeatures.importCompletionOnly];
 					yield `,`;
 				}
 				offsets.clear();
