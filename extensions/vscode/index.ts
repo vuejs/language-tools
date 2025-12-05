@@ -105,9 +105,15 @@ export = defineExtension(() => {
 			});
 		}
 
+		const tsdk = resolveTsdkPath();
+		if (tsdk === undefined) {
+			vscode.window.showErrorMessage('Cannot find TypeScript SDK.');
+			return;
+		}
+
 		client = launch(
 			serverPath ?? vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js').fsPath,
-			vscode.env.appRoot.replace(/\\/g, '/') + '/extensions/node_modules/typescript/lib',
+			tsdk,
 		);
 
 		volarLabs.addLanguageClient(client);
@@ -194,6 +200,25 @@ function launch(serverPath: string, tsdk: string) {
 	client.start();
 
 	return client;
+}
+
+function resolveTsdkPath() {
+	const vscodeTsdk = vscode.env.appRoot.replace(/\\/g, '/') + '/extensions/node_modules/typescript/lib';
+	if (fs.existsSync(vscodeTsdk)) {
+		return vscodeTsdk;
+	}
+
+	const tsExt = vscode.extensions.getExtension('vscode.typescript-language-features');
+	if (tsExt) {
+		// Eclipse Theia
+		// see: https://github.com/eclipse-theia/vscode-builtin-extensions/blob/65c70ec636bd879ef9529d0a2da36f4b99139c40/src/package-vsix.js#L71
+		const theiaTsdk = path.join(tsExt.extensionPath, 'deps', 'typescript', 'lib');
+		if (fs.existsSync(theiaTsdk)) {
+			return theiaTsdk;
+		}
+	}
+
+	return undefined;
 }
 
 function resolveServerPath() {
