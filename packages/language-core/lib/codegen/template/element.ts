@@ -31,8 +31,8 @@ export function* generateComponent(
 	const tagOffsets = getElementTagOffsets(node, options.template);
 	const failGeneratedExpressions: FailGeneratedExpression[] = [];
 	const possibleOriginalNames = getPossibleOriginalComponentNames(node.tag, true);
-	const matchImportName = possibleOriginalNames.find(name => options.directAccessNames.has(name));
-	const componentOriginalVar = matchImportName ?? ctx.getInternalVariable();
+	const matchConst = possibleOriginalNames.find(name => options.setupConsts.has(name));
+	const componentOriginalVar = matchConst ?? ctx.getInternalVariable();
 	const componentFunctionalVar = ctx.getInternalVariable();
 	const componentVNodeVar = ctx.getInternalVariable();
 	const componentCtxVar = ctx.getInternalVariable();
@@ -86,7 +86,7 @@ export function* generateComponent(
 		};
 	}
 
-	if (matchImportName) {
+	if (matchConst) {
 		// navigation support
 		yield `/** @type {[`;
 		for (const tagOffset of tagOffsets) {
@@ -100,7 +100,7 @@ export function* generateComponent(
 				];
 			}
 			else {
-				const shouldCapitalize = matchImportName[0]!.toUpperCase() === matchImportName[0];
+				const shouldCapitalize = matchConst[0]!.toUpperCase() === matchConst[0];
 				yield* generateCamelized(
 					shouldCapitalize ? capitalize(node.tag) : node.tag,
 					'template',

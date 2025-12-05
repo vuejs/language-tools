@@ -23,11 +23,10 @@ export interface ScriptCodegenOptions {
 	fileName: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	templateComponents: string[];
 	templateStartTagOffset: number | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
 	styleCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
-	setupBindingNames: Set<string>;
+	setupExposed: Set<string>;
 }
 
 export { generate as generateScript };

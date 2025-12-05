@@ -10,15 +10,14 @@ export interface StyleCodegenOptions {
 	ts: typeof import('typescript');
 	vueCompilerOptions: VueCompilerOptions;
 	styles: Sfc['styles'];
-	templateRefNames: Set<string>;
-	directAccessNames: Set<string>;
-	setupBindingNames: Set<string>;
+	setupRefs: Set<string>;
+	setupConsts: Set<string>;
 }
 
 export { generate as generateStyle };
 
 function generate(options: StyleCodegenOptions) {
-	const ctx = createTemplateCodegenContext(options.setupBindingNames);
+	const ctx = createTemplateCodegenContext();
 	const codeGenerator = generateWorker(options, ctx);
 	const codes: Code[] = [];
 	for (const code of codeGenerator) {
@@ -35,7 +34,7 @@ function* generateWorker(
 	ctx: TemplateCodegenContext,
 ) {
 	const endScope = ctx.startScope();
-	ctx.declare(...options.directAccessNames);
+	ctx.declare(...options.setupConsts);
 	yield* generateStyleScopedClasses(options);
 	yield* generateStyleModules(options, ctx);
 	yield* generateCssVars(options, ctx);

@@ -258,12 +258,12 @@ export function* generatePropExp(
 			if (ctx.scopes.some(scope => scope.has(propVariableName))) {
 				yield* codes;
 			}
-			else if (options.templateRefNames.has(propVariableName)) {
+			else if (options.setupRefs.has(propVariableName)) {
 				yield* codes;
 				yield `.value`;
 			}
 			else {
-				ctx.accessExternalVariable('template', propVariableName, exp.loc.start.offset);
+				ctx.recordComponentAccess('template', propVariableName, exp.loc.start.offset);
 				yield names.ctx;
 				yield `.`;
 				yield* codes;
