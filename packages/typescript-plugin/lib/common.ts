@@ -15,8 +15,84 @@ export function preprocessLanguageService(
 	languageService: ts.LanguageService,
 	getLanguage: () => Language<any> | undefined,
 ) {
-	const { getCompletionsAtPosition, getCodeFixesAtPosition } = languageService;
+	const {
+		getQuickInfoAtPosition,
+		getSuggestionDiagnostics,
+		getCompletionsAtPosition,
+		getCodeFixesAtPosition,
+	} = languageService;
 
+	languageService.getQuickInfoAtPosition = (fileName, position, maximumLength) => {
+		let result = getQuickInfoAtPosition(fileName, position, maximumLength);
+		const language = getLanguage();
+		if (result && language) {
+			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
+			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
+				for (
+					const sourceOffset of toSourceOffsets(
+						sourceScript,
+						language,
+						serviceScript,
+						position,
+						() => true,
+					)
+				) {
+					const generatedOffset2 = toGeneratedOffset(
+						language,
+						serviceScript,
+						sourceScript,
+						sourceOffset[1],
+						(data: VueCodeInformation) => !!data.__importCompletion,
+					);
+					if (generatedOffset2 !== undefined) {
+						const extraInfo = getQuickInfoAtPosition(targetScript.id, generatedOffset2, maximumLength);
+						if (extraInfo) {
+							result.tags ??= [];
+							result.tags.push(...extraInfo.tags ?? []);
+						}
+					}
+				}
+			}
+		}
+		return result;
+	};
+	languageService.getSuggestionDiagnostics = fileName => {
+		const diagnostics = getSuggestionDiagnostics(fileName);
+		const language = getLanguage();
+		if (language) {
+			const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
+				for (const diagnostic of diagnostics) {
+					for (
+						const sourceRange of toSourceRanges(
+							sourceScript,
+							language,
+							serviceScript,
+							diagnostic.start,
+							diagnostic.start + diagnostic.length,
+							true,
+							(data: VueCodeInformation) => !!data.__importCompletion,
+						)
+					) {
+						const generateRange2 = toGeneratedRange(
+							language,
+							serviceScript,
+							sourceScript,
+							sourceRange[1],
+							sourceRange[2],
+							(data: VueCodeInformation) => !data.__importCompletion,
+						);
+						if (generateRange2 !== undefined) {
+							diagnostic.start = generateRange2[0];
+							diagnostic.length = generateRange2[1] - generateRange2[0];
+							break;
+						}
+					}
+				}
+			}
+		}
+		return diagnostics;
+	};
 	languageService.getCompletionsAtPosition = (fileName, position, preferences, formatOptions) => {
 		let result = getCompletionsAtPosition(fileName, position, preferences, formatOptions);
 		const language = getLanguage();
