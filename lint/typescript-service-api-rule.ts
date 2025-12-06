@@ -1,9 +1,107 @@
+// @tsslint-disable typescript-service-api
 import { defineRule } from '@tsslint/config';
 import type * as ts from 'typescript';
 
-const typescriptServiceApis = new Map<string, Set<string>>([
-	['Identifier', new Set(['text'])],
-]);
+/*
+ * service api list: https://github.com/microsoft/TypeScript/blob/38d95c8001300f525fd601dd0ce6d0ff5f12baee/src/services/types.ts
+ * commit: 96acaa52902feb1320e1d8ec8936b8669cca447d (2025-09-25)
+ */
+const SERVICE_API: Record<string, string[]> = {
+	Node: [
+		'getSourceFile',
+		'getChildCount',
+		'getChildAt',
+		'getChildren',
+		'getStart',
+		'getFullStart',
+		'getEnd',
+		'getWidth',
+		'getFullWidth',
+		'getLeadingTriviaWidth',
+		'getFullText',
+		'getText',
+		'getFirstToken',
+		'getLastToken',
+		'forEachChild',
+	],
+	Identifier: [
+		'text',
+	],
+	PrivateIdentifier: [
+		'text',
+	],
+	Symbol: [
+		'name',
+		'getFlags',
+		'getEscapedName',
+		'getName',
+		'getDeclarations',
+		'getDocumentationComment',
+		'getContextualDocumentationComment',
+		'getJsDocTags',
+		'getContextualJsDocTags',
+	],
+	Type: [
+		'getFlags',
+		'getSymbol',
+		'getProperties',
+		'getProperty',
+		'getApparentProperties',
+		'getCallSignatures',
+		'getConstructSignatures',
+		'getStringIndexType',
+		'getNumberIndexType',
+		'getBaseTypes',
+		'getNonNullableType',
+		'getConstraint',
+		'getDefault',
+		'isUnion',
+		'isIntersection',
+		'isUnionOrIntersection',
+		'isLiteral',
+		'isStringLiteral',
+		'isNumberLiteral',
+		'isTypeParameter',
+		'isClassOrInterface',
+		'isClass',
+		'isIndexType',
+	],
+	TypeReference: [
+		'typeArguments',
+	],
+	Signature: [
+		'getDeclaration',
+		'getTypeParameters',
+		'getParameters',
+		'getTypeParameterAtPosition',
+		'getReturnType',
+		'getDocumentationComment',
+		'getJsDocTags',
+	],
+	SourceFile: [
+		'version',
+		'scriptSnapshot',
+		'nameTable',
+		'getNamedDeclarations',
+		'getLineAndCharacterOfPosition',
+		'getLineEndOfPosition',
+		'getLineStarts',
+		'getPositionOfLineAndCharacter',
+		'update',
+		'sourceMapper',
+	],
+	SourceFileLike: [
+		'getLineAndCharacterOfPosition',
+	],
+	SourceMapSource: [
+		'getLineAndCharacterOfPosition',
+	],
+};
+
+const typescriptServiceApis: Map<string, Set<string>> = new Map();
+for (const [typeName, properties] of Object.entries(SERVICE_API)) {
+	typescriptServiceApis.set(typeName, new Set(properties));
+}
 
 const TYPESCRIPT_PACKAGE_PATH = '/node_modules/typescript/';
 
@@ -60,7 +158,6 @@ export default defineRule(({ typescript: ts, file, program, report }) => {
 
 	ts.forEachChild(file, function visit(node) {
 		if (ts.isPropertyAccessExpression(node)) {
-			// @tsslint-disable-next-line typescript-service-api
 			checkAccess(node.expression, node.name.text, node.name.getStart(file), node.name.getEnd());
 		}
 		else if (ts.isElementAccessExpression(node) && ts.isStringLiteralLike(node.argumentExpression)) {
