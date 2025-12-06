@@ -1,8 +1,13 @@
-import { defineConfig } from '@tsslint/config';
+import { createIgnorePlugin, defineConfig } from '@tsslint/config';
 import { defineRules } from '@tsslint/eslint';
 import * as path from 'node:path';
+import tsServiceApiRule from './lint/typescript-service-api-rule';
 
 export default defineConfig({
+	plugins: [
+		createIgnorePlugin('@tsslint-disable-next-line', true),
+		createIgnorePlugin(['@tsslint-disable', '@tsslint-enable'], false),
+	],
 	rules: {
 		// oxlint's default rules, but without unicorn. See https://oxc.rs/docs/guide/usage/linter/rules.html
 		...await defineRules({
@@ -196,5 +201,6 @@ export default defineConfig({
 				ts.forEachChild(node, visit);
 			});
 		},
+		'typescript-service-api': tsServiceApiRule,
 	},
 });
