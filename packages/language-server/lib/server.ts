@@ -175,6 +175,23 @@ export function startServer(ts: typeof import('typescript')) {
 			version: packageJson.version,
 		};
 
+		server.documents.onDidOpen(async ({ document }) => {
+			const uri = URI.parse(document.uri);
+			return sendTsServerRequest(
+				'_vue:' + ts.server.protocol.CommandTypes.UpdateOpen,
+				{
+					openFiles: [
+						{
+							file: uri.fsPath.replace(/\\/g, '/'),
+							fileContent: document.getText(),
+						},
+					],
+					changedFiles: [],
+					closedFiles: [],
+				} satisfies ts.server.protocol.UpdateOpenRequestArgs,
+			);
+		});
+
 		return result;
 
 		async function sendTsServerRequest<T>(command: string, args: any): Promise<T | null> {
