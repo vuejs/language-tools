@@ -30,39 +30,55 @@ export interface PropertyMeta {
 	global: boolean;
 	required: boolean;
 	type: string;
-	rawType?: ts.Type;
 	tags: { name: string; text?: string }[];
 	declarations: Declaration[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
+	getTypeObject(): ts.Type;
 }
 
 export interface EventMeta {
 	name: string;
 	description: string;
 	type: string;
-	rawType?: ts.Type;
 	signature: string;
 	tags: { name: string; text?: string }[];
 	declarations: Declaration[];
 	schema: PropertyMetaSchema[];
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
+	getTypeObject(): ts.Type | undefined;
 }
 
 export interface SlotMeta {
 	name: string;
 	type: string;
-	rawType?: ts.Type;
 	description: string;
 	declarations: Declaration[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
+	getTypeObject(): ts.Type;
 }
 
 export interface ExposeMeta {
 	name: string;
 	description: string;
 	type: string;
-	rawType?: ts.Type;
 	declarations: Declaration[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
+	getTypeObject(): ts.Type;
 }
 
 export type PropertyMetaSchema =
@@ -85,6 +101,9 @@ export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
 	forceUseTs?: boolean;
 	printer?: ts.PrinterOptions;
-	rawType?: boolean;
 	noDeclarations?: boolean;
+	/**
+	 * @deprecated No longer needed, use `getTypeObject()` instead
+	 */
+	rawType?: boolean;
 }

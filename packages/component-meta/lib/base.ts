@@ -275,6 +275,12 @@ function baseCreate(
 			scriptSnapshots.clear();
 			projectVersion++;
 		},
+		getProgram() {
+			return tsLs.getProgram();
+		},
+		/**
+		 * @deprecated use `getProgram()` instead
+		 */
 		__internal__: {
 			tsLs,
 		},
@@ -650,12 +656,15 @@ function createSchemaResolvers(
 			})),
 			required: !(prop.flags & ts.SymbolFlags.Optional),
 			type: getFullyQualifiedName(subtype),
-			rawType: rawType ? subtype : undefined,
 			get declarations() {
 				return declarations ??= getDeclarations(prop.declarations ?? []);
 			},
 			get schema() {
 				return schema ??= resolveSchema(subtype);
+			},
+			rawType: rawType ? subtype : undefined,
+			getTypeObject() {
+				return subtype;
 			},
 		};
 	}
@@ -670,13 +679,16 @@ function createSchemaResolvers(
 		return {
 			name: prop.getName(),
 			type: getFullyQualifiedName(subtype),
-			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
 			get declarations() {
 				return declarations ??= getDeclarations(prop.declarations ?? []);
 			},
 			get schema() {
 				return schema ??= resolveSchema(subtype);
+			},
+			rawType: rawType ? subtype : undefined,
+			getTypeObject() {
+				return subtype;
 			},
 		};
 	}
@@ -688,7 +700,6 @@ function createSchemaResolvers(
 		return {
 			name: expose.getName(),
 			type: getFullyQualifiedName(subtype),
-			rawType: rawType ? subtype : undefined,
 			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
 			get declarations() {
 				return declarations ??= getDeclarations(expose.declarations ?? []);
@@ -696,17 +707,23 @@ function createSchemaResolvers(
 			get schema() {
 				return schema ??= resolveSchema(subtype);
 			},
+			rawType: rawType ? subtype : undefined,
+			getTypeObject() {
+				return subtype;
+			},
 		};
 	}
 	function resolveEventSignature(call: ts.Signature): EventMeta {
 		let schema: PropertyMetaSchema[] | undefined;
 		let declarations: Declaration[] | undefined;
-		let subtype = undefined;
+		let subtype: ts.Type | undefined;
+		let symbol: ts.Symbol | undefined;
 		let subtypeStr = '[]';
 		let getSchema = () => [] as PropertyMetaSchema[];
 
 		if (call.parameters.length >= 2) {
-			subtype = typeChecker.getTypeOfSymbolAtLocation(call.parameters[1]!, symbolNode);
+			symbol = call.parameters[1]!;
+			subtype = typeChecker.getTypeOfSymbolAtLocation(symbol, symbolNode);
 			if ((call.parameters[1]!.valueDeclaration as any)?.dotDotDotToken) {
 				subtypeStr = getFullyQualifiedName(subtype);
 				getSchema = () => typeChecker.getTypeArguments(subtype! as ts.TypeReference).map(resolveSchema);
@@ -736,13 +753,16 @@ function createSchemaResolvers(
 				text: tag.text !== undefined ? ts.displayPartsToString(tag.text) : undefined,
 			})),
 			type: subtypeStr,
-			rawType: rawType ? subtype : undefined,
 			signature: typeChecker.signatureToString(call),
 			get declarations() {
 				return declarations ??= call.declaration ? getDeclarations([call.declaration]) : [];
 			},
 			get schema() {
 				return schema ??= getSchema();
+			},
+			rawType: rawType ? subtype : undefined,
+			getTypeObject() {
+				return subtype;
 			},
 		};
 	}
