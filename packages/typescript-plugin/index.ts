@@ -102,9 +102,6 @@ export = createLanguageServicePlugin(
 			session.addProtocolHandler('_vue:quickinfo', request => {
 				return handlers.get('quickinfo')!(request);
 			});
-			session.addProtocolHandler('_vue:updateOpen', request => {
-				return handlers.get('updateOpen')!(request);
-			});
 			session.addProtocolHandler(
 				'_vue:collectExtractProps',
 				request => {
