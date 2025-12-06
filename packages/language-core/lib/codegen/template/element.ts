@@ -3,7 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
-import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
+import { getElementTagOffsets, getNodeText, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import * as names from '../names';
@@ -382,6 +382,7 @@ function* generateStyleScopedClassReferences(
 			const startOffset = prop.exp.loc.start.offset - 1;
 			const ast = getTypeScriptAST(ts, template, content);
 			const literals: ts.StringLiteralLike[] = [];
+			const identifiers: ts.Identifier[] = [];
 
 			for (const node of forEachNode(ts, ast)) {
 				if (
@@ -396,10 +397,10 @@ function* generateStyleScopedClassReferences(
 					literals.push(expression);
 				}
 				else if (ts.isArrayLiteralExpression(expression)) {
-					yield* walkArrayLiteral(expression);
+					walkArrayLiteral(expression);
 				}
 				else if (ts.isObjectLiteralExpression(expression)) {
-					yield* walkObjectLiteral(expression);
+					walkObjectLiteral(expression);
 				}
 			}
 
@@ -410,29 +411,30 @@ function* generateStyleScopedClassReferences(
 				}
 			}
 
-			function* walkArrayLiteral(node: ts.ArrayLiteralExpression) {
+			for (const identifier of identifiers) {
+				const text = getNodeText(ts, identifier, ast);
+				yield* generateStyleScopedClassReference(template, text, identifier.end - text.length + startOffset);
+			}
+
+			function walkArrayLiteral(node: ts.ArrayLiteralExpression) {
 				const { elements } = node;
 				for (const element of elements) {
 					if (ts.isStringLiteralLike(element)) {
 						literals.push(element);
 					}
 					else if (ts.isObjectLiteralExpression(element)) {
-						yield* walkObjectLiteral(element);
+						walkObjectLiteral(element);
 					}
 				}
 			}
 
-			function* walkObjectLiteral(node: ts.ObjectLiteralExpression) {
+			function walkObjectLiteral(node: ts.ObjectLiteralExpression) {
 				const { properties } = node;
 				for (const property of properties) {
 					if (ts.isPropertyAssignment(property)) {
 						const { name } = property;
 						if (ts.isIdentifier(name)) {
-							yield* generateStyleScopedClassReference(
-								template,
-								name.text,
-								name.end - name.text.length + startOffset,
-							);
+							identifiers.push(name);
 						}
 						else if (ts.isStringLiteral(name)) {
 							literals.push(name);
@@ -445,11 +447,7 @@ function* generateStyleScopedClassReferences(
 						}
 					}
 					else if (ts.isShorthandPropertyAssignment(property)) {
-						yield* generateStyleScopedClassReference(
-							template,
-							property.name.text,
-							property.name.end - property.name.text.length + startOffset,
-						);
+						identifiers.push(property.name);
 					}
 				}
 			}
