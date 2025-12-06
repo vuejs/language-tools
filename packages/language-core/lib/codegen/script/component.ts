@@ -2,7 +2,7 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
-import { generateSfcBlockSection, newLine } from '../utils';
+import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateIntersectMerge, generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
@@ -12,19 +12,9 @@ export function* generateComponent(
 	ctx: ScriptCodegenContext,
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
+	outputRaw?: boolean,
 ): Generator<Code> {
-	if (
-		options.script
-		&& options.scriptRanges?.componentOptions
-		&& options.scriptRanges.componentOptions.expression.start !== options.scriptRanges.componentOptions.args.start
-	) {
-		// use defineComponent() from user space code if it exist
-		yield* generateSfcBlockSection(
-			options.script,
-			options.scriptRanges.componentOptions.expression.start,
-			options.scriptRanges.componentOptions.args.start,
-			codeFeatures.all,
-		);
+	if (outputRaw) {
 		yield `{${newLine}`;
 	}
 	else {
@@ -60,11 +50,47 @@ export function* generateComponent(
 	) {
 		yield `__typeEl: {} as ${names.RootEl},${newLine}`;
 	}
-	if (options.script && options.scriptRanges?.componentOptions?.args) {
-		const { args } = options.scriptRanges.componentOptions;
-		yield* generateSfcBlockSection(options.script, args.start + 1, args.end - 1, codeFeatures.all);
+	if (hasSlotsType(options)) {
+		yield `slots: {} as ${
+			options.vueCompilerOptions.target >= 3.3
+				? `import('${options.vueCompilerOptions.lib}').SlotsType<${names.Slots}>`
+				: names.Slots
+		},${newLine}`;
 	}
-	yield `})`;
+
+	if (outputRaw) {
+		yield `}`;
+	}
+	else {
+		yield `})`;
+	}
+}
+
+export function* generateWithSlots(
+	options: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+	body: Iterable<Code>,
+	output: Iterable<Code>,
+): Generator<Code> {
+	if (options.vueCompilerOptions.target < 3.3 && hasSlotsType(options)) {
+		yield `const __VLS_base = `;
+		yield* body;
+		yield endOfLine;
+		yield* output;
+		yield `{} as ${ctx.localTypes.WithSlots}<typeof __VLS_base, __VLS_base.slots>${endOfLine}`;
+	}
+	else {
+		yield* output;
+		yield* body;
+		yield endOfLine;
+	}
+}
+
+export function hasSlotsType(options: ScriptCodegenOptions) {
+	return !!(
+		options.scriptSetupRanges?.defineSlots
+		|| options.templateCodegen?.generatedTypes.has(names.Slots)
+	);
 }
 
 function* generateEmitsOption(
