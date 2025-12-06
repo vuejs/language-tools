@@ -175,21 +175,25 @@ export function startServer(ts: typeof import('typescript')) {
 			version: packageJson.version,
 		};
 
+		// #5572
 		server.documents.onDidOpen(async ({ document }) => {
-			const uri = URI.parse(document.uri);
-			return sendTsServerRequest(
-				'_vue:' + ts.server.protocol.CommandTypes.UpdateOpen,
-				{
-					openFiles: [
-						{
-							file: uri.fsPath.replace(/\\/g, '/'),
-							fileContent: document.getText(),
-						},
-					],
-					changedFiles: [],
-					closedFiles: [],
-				} satisfies ts.server.protocol.UpdateOpenRequestArgs,
-			);
+			const fileDocument = findFileDocumentForUpdate(document.uri);
+			if (fileDocument) {
+				const uri = URI.parse(fileDocument.uri);
+				await sendTsServerRequest(
+					'_vue:' + ts.server.protocol.CommandTypes.UpdateOpen,
+					{
+						openFiles: [
+							{
+								file: uri.fsPath.replace(/\\/g, '/'),
+								fileContent: fileDocument.getText(),
+							},
+						],
+						changedFiles: [],
+						closedFiles: [],
+					} satisfies ts.server.protocol.UpdateOpenRequestArgs,
+				);
+			}
 		});
 
 		return result;
@@ -235,6 +239,17 @@ export function startServer(ts: typeof import('typescript')) {
 				createLanguageServiceEnvironment(server, [...server.workspaceFolders.all]),
 				{},
 			);
+		}
+
+		function findFileDocumentForUpdate(docUri: string) {
+			const uri = URI.parse(docUri);
+			if (uri.scheme === 'file') {
+				return;
+			}
+			return server.documents.all().find(document => {
+				const documentUri = URI.parse(document.uri);
+				return documentUri.scheme === 'file' && documentUri.fsPath === uri.fsPath;
+			});
 		}
 	});
 
