@@ -1,12 +1,12 @@
-// @tsslint-disable typescript-service-api
+// @tsslint-disable typescript-services-types
 import { defineRule } from '@tsslint/config';
 import type * as ts from 'typescript';
 
 /*
- * service api list: https://github.com/microsoft/TypeScript/blob/38d95c8001300f525fd601dd0ce6d0ff5f12baee/src/services/types.ts
+ * services types list: https://github.com/microsoft/TypeScript/blob/38d95c8001300f525fd601dd0ce6d0ff5f12baee/src/services/types.ts
  * commit: 96acaa52902feb1320e1d8ec8936b8669cca447d (2025-09-25)
  */
-const SERVICE_API: Record<string, string[]> = {
+const SERVICES_TYPES: Record<string, string[]> = {
 	Node: [
 		'getSourceFile',
 		'getChildCount',
@@ -98,9 +98,9 @@ const SERVICE_API: Record<string, string[]> = {
 	],
 };
 
-const typescriptServiceApis: Map<string, Set<string>> = new Map();
-for (const [typeName, properties] of Object.entries(SERVICE_API)) {
-	typescriptServiceApis.set(typeName, new Set(properties));
+const tsServicesTypes: Map<string, Set<string>> = new Map();
+for (const [typeName, properties] of Object.entries(SERVICES_TYPES)) {
+	tsServicesTypes.set(typeName, new Set(properties));
 }
 
 const TYPESCRIPT_PACKAGE_PATH = '/node_modules/typescript/';
@@ -144,13 +144,13 @@ export default defineRule(({ typescript: ts, file, program, report }) => {
 	}
 
 	function checkAccess(target: ts.Expression, propertyName: string, start: number, end: number) {
-		for (const [typeName, properties] of typescriptServiceApis) {
+		for (const [typeName, properties] of tsServicesTypes) {
 			if (!properties.has(propertyName)) {
 				continue;
 			}
 			const type = typeChecker.getTypeAtLocation(target);
 			if (isTargetType(type, typeName)) {
-				report('TypeScript service-only API is used', start, end);
+				report('TypeScript services types is used.', start, end);
 				break;
 			}
 		}

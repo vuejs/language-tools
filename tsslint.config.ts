@@ -1,7 +1,8 @@
+// @tsslint-disable typescript-services-types
 import { createIgnorePlugin, defineConfig } from '@tsslint/config';
 import { defineRules } from '@tsslint/eslint';
 import * as path from 'node:path';
-import tsServiceApiRule from './lint/typescript-service-api-rule';
+import tsServicesTypesRule from './lint/typescript-services-types-rule';
 
 export default defineConfig({
 	plugins: [
@@ -201,6 +202,6 @@ export default defineConfig({
 				ts.forEachChild(node, visit);
 			});
 		},
-		'typescript-service-api': tsServiceApiRule,
+		'typescript-services-types': tsServicesTypesRule,
 	},
 });
