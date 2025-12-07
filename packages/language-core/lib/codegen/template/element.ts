@@ -3,7 +3,7 @@ import { camelize, capitalize } from '@vue/shared';
 import { toString } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { Code, VueCodeInformation } from '../../types';
-import { getElementTagOffsets, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
+import { getElementTagOffsets, getNodeText, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
 import * as names from '../names';
@@ -428,11 +428,8 @@ function* generateStyleScopedClassReferences(
 					if (ts.isPropertyAssignment(property)) {
 						const { name } = property;
 						if (ts.isIdentifier(name)) {
-							yield* generateStyleScopedClassReference(
-								template,
-								name.text,
-								name.end - name.text.length + startOffset,
-							);
+							const text = getNodeText(ts, name, ast);
+							yield* generateStyleScopedClassReference(template, text, name.end - text.length + startOffset);
 						}
 						else if (ts.isStringLiteral(name)) {
 							literals.push(name);
@@ -445,11 +442,8 @@ function* generateStyleScopedClassReferences(
 						}
 					}
 					else if (ts.isShorthandPropertyAssignment(property)) {
-						yield* generateStyleScopedClassReference(
-							template,
-							property.name.text,
-							property.name.end - property.name.text.length + startOffset,
-						);
+						const text = getNodeText(ts, property.name, ast);
+						yield* generateStyleScopedClassReference(template, text, property.name.end - text.length + startOffset);
 					}
 				}
 			}
