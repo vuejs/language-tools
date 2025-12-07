@@ -1,4 +1,3 @@
-// @tsslint-disable typescript-services-types
 import { defineRule } from '@tsslint/config';
 import type * as ts from 'typescript';
 
