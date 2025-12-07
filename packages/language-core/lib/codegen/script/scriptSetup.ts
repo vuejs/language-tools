@@ -274,8 +274,7 @@ export function* generateSetupFunction(
 		Math.max(scriptSetupRanges.importSectionEndOffset, scriptSetupRanges.leadingCommentEndOffset),
 		scriptSetup.content.length,
 		transforms,
-		(start, end) =>
-			generateSfcBlockSection(scriptSetup, start, end, codeFeatures.all, end === scriptSetup.content.length),
+		(start, end) => generateSfcBlockSection(scriptSetup, start, end, codeFeatures.all),
 	);
 	yield* generateMacros(options);
 	yield* generateModels(scriptSetup, scriptSetupRanges);

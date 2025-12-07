@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import type { Code, SfcBlock, VueCodeInformation } from '../../types';
+import type { Code, Sfc, SfcBlock, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 
 export const newLine = `\n`;
@@ -35,23 +35,25 @@ export function getTypeScriptAST(ts: typeof import('typescript'), block: SfcBloc
 }
 
 export function* generateSfcBlockSection(
-	block: SfcBlock,
+	block: NonNullable<Sfc['script' | 'scriptSetup']>,
 	start: number,
 	end: number,
 	features: VueCodeInformation,
-	partiallyEnd = false,
 ): Generator<Code> {
-	yield [
-		block.content.slice(start, end),
-		block.name,
-		start,
-		features,
-	];
+	const text = block.content.slice(start, end);
+	yield [text, block.name, start, features];
+
 	// #3632
-	if (partiallyEnd) {
-		yield `;`;
-		yield ['', block.name, end, codeFeatures.verification];
-		yield newLine;
+	if ('parseDiagnostics' in block.ast) {
+		const emptyEndLength = text.length - text.trimEnd().length;
+		for (const diag of block.ast.parseDiagnostics as ts.DiagnosticWithLocation[]) {
+			if (diag.start >= end - emptyEndLength) {
+				yield `;`;
+				yield ['', block.name, end, codeFeatures.verification];
+				yield newLine;
+				break;
+			}
+		}
 	}
 }
 
