@@ -819,7 +819,7 @@
 					]
 				},
 				{
-					"begin": "\\blang\\s*=\\s*(?:['\"]?)ts\\b",
+					"begin": "\\blang\\s*=\\s*(?:(['\"])ts\\1|ts\\b)",
 					"beginCaptures": {
 						"0": {
 							"name": "entity.other.attribute-name.lang.html.vue"
@@ -892,7 +892,7 @@
 					]
 				},
 				{
-					"begin": "\\blang\\s*=\\s*(?:['\"]?)scss\\b",
+					"begin": "\\blang\\s*=\\s*(?:(['\"])scss\\1|scss\\b)",
 					"beginCaptures": {
 						"0": {
 							"name": "entity.other.attribute-name.lang.html.vue"
