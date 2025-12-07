@@ -60,10 +60,10 @@ function* generateWorker(
 			const { expression: options } = componentOptions ?? exportDefault;
 			yield* generateSfcBlockSection(script, 0, options.start, codeFeatures.all);
 			yield exportExpression;
-			yield* generateSfcBlockSection(script, options.end, script.content.length, codeFeatures.all, true);
+			yield* generateSfcBlockSection(script, options.end, script.content.length, codeFeatures.all);
 		}
 		else {
-			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all, true);
+			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
 			yield `export default ${exportExpression}${endOfLine}`;
 		}
 
@@ -160,7 +160,7 @@ function* generateWorker(
 				});
 			}
 
-			yield* generateSfcBlockSection(script, 0, exportDefault.start, codeFeatures.all, true);
+			yield* generateSfcBlockSection(script, 0, exportDefault.start, codeFeatures.all);
 			yield* generateExportDeclareEqual(script);
 			if (wrapLeft) {
 				yield wrapLeft;
@@ -176,7 +176,7 @@ function* generateWorker(
 			yield* generateSfcBlockSection(script, expression.end, script.content.length, codeFeatures.all);
 		}
 		else {
-			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all, true);
+			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
 			yield* generateExportDeclareEqual(script);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, ctx);
