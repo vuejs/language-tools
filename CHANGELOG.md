@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.1.7 (2025-12-08)
+
+### Features
+
+- feat(language-core): cache virtual code by `scriptId` (#5811) - Thanks to @serkodev!
+
+### Bug Fixes
+
+- fix(language-core): avoid using `Identifier.text` property (#5810)
+- fix(language-core): generate script separator on demand (#5816)
+- fix(language-core): avoid invalid `__VLS_Slots` generation
+
+### Other Changes
+
+- feat(lint): add typescript services types lint rule (#5813) - Thanks to @serkodev!
+
 ## 3.1.6 (2025-12-06)
 
 ### Features
