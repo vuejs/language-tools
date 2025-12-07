@@ -74,7 +74,7 @@ function useCodegen(
 
 	const getScriptRanges = computed(() =>
 		sfc.script && validLangs.has(sfc.script.lang)
-			? parseScriptRanges(ts, sfc.script.ast, !!sfc.scriptSetup)
+			? parseScriptRanges(ts, sfc.script.ast, getResolvedOptions())
 			: undefined
 	);
 
@@ -88,27 +88,13 @@ function useCodegen(
 		const names = new Set<string>();
 		const scriptSetupRanges = getScriptSetupRanges();
 		if (sfc.scriptSetup && scriptSetupRanges) {
-			for (const { range, moduleName, isDefaultImport, isNamespace } of scriptSetupRanges.bindings) {
-				if (
-					moduleName
-					&& isDefaultImport
-					&& !isNamespace
-					&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
-				) {
-					names.add(sfc.scriptSetup.content.slice(range.start, range.end));
-				}
+			for (const range of scriptSetupRanges.components) {
+				names.add(sfc.scriptSetup.content.slice(range.start, range.end));
 			}
 			const scriptRange = getScriptRanges();
 			if (sfc.script && scriptRange) {
-				for (const { range, moduleName, isDefaultImport, isNamespace } of scriptRange.bindings) {
-					if (
-						moduleName
-						&& isDefaultImport
-						&& !isNamespace
-						&& ctx.vueCompilerOptions.extensions.some(ext => moduleName.endsWith(ext))
-					) {
-						names.add(sfc.script.content.slice(range.start, range.end));
-					}
+				for (const range of scriptRange.components) {
+					names.add(sfc.script.content.slice(range.start, range.end));
 				}
 			}
 		}
@@ -214,13 +200,13 @@ function useCodegen(
 		if (!sfc.scriptSetup || !scriptSetupRanges) {
 			return allVars;
 		}
-		for (const { range } of scriptSetupRanges.bindings) {
+		for (const range of scriptSetupRanges.bindings) {
 			const name = sfc.scriptSetup.content.slice(range.start, range.end);
 			allVars.add(name);
 		}
 		const scriptRanges = getScriptRanges();
 		if (sfc.script && scriptRanges) {
-			for (const { range } of scriptRanges.bindings) {
+			for (const range of scriptRanges.bindings) {
 				const name = sfc.script.content.slice(range.start, range.end);
 				allVars.add(name);
 			}
@@ -276,6 +262,5 @@ function useCodegen(
 		getGeneratedTemplate,
 		getImportComponentNames,
 		getSetupExposed,
-		getSetupConsts,
 	};
 }

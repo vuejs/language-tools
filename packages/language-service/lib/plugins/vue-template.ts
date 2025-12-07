@@ -685,7 +685,7 @@ export function create(
 									version++;
 								})());
 							}
-							const scriptSetupRanges = tsCodegen.get(root.sfc)?.getScriptSetupRanges();
+							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
 
@@ -698,13 +698,19 @@ export function create(
 								}
 							}
 
-							for (const binding of scriptSetupRanges?.bindings ?? []) {
-								const name = root.sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
-								if (tagNameCasing === TagNameCasing.Kebab) {
-									names.add(hyphenateTag(name));
-								}
-								else {
-									names.add(name);
+							if (codegen) {
+								for (
+									const name of [
+										...codegen.getImportComponentNames(),
+										...codegen.getSetupExposed(),
+									]
+								) {
+									if (tagNameCasing === TagNameCasing.Kebab) {
+										names.add(hyphenateTag(name));
+									}
+									else {
+										names.add(name);
+									}
 								}
 							}
 
