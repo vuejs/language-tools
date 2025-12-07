@@ -115,7 +115,7 @@ export function* generateGeneric(
 	}
 	yield `) => void${endOfLine}`;
 	yield `	attrs: any${endOfLine}`;
-	yield `	slots: ${names.Slots}${endOfLine}`;
+	yield `	slots: ${hasSlotsType(options) ? names.Slots : `{}`}${endOfLine}`;
 	yield `	emit: ${emitTypes.length ? emitTypes.join(` & `) : `{}`}${endOfLine}`;
 	yield `}${endOfLine}`;
 	yield `})(),${newLine}`; // __VLS_setup = (async () => {
