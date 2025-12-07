@@ -107,6 +107,21 @@ const TYPESCRIPT_PACKAGE_PATH = '/node_modules/typescript/';
 export default defineRule(({ typescript: ts, file, program, report }) => {
 	const typeChecker = program.getTypeChecker();
 
+	ts.forEachChild(file, function visit(node) {
+		if (ts.isPropertyAccessExpression(node)) {
+			checkAccess(node.expression, node.name.text, node.name.getStart(file), node.name.getEnd());
+		}
+		else if (ts.isElementAccessExpression(node) && ts.isStringLiteralLike(node.argumentExpression)) {
+			checkAccess(
+				node.expression,
+				node.argumentExpression.text,
+				node.argumentExpression.getStart(file),
+				node.argumentExpression.getEnd(),
+			);
+		}
+		ts.forEachChild(node, visit);
+	});
+
 	function isUnionOrIntersection(type: ts.Type): type is ts.UnionOrIntersectionType {
 		return (type.flags & (ts.TypeFlags.Union | ts.TypeFlags.Intersection)) !== 0;
 	}
@@ -154,19 +169,4 @@ export default defineRule(({ typescript: ts, file, program, report }) => {
 			}
 		}
 	}
-
-	ts.forEachChild(file, function visit(node) {
-		if (ts.isPropertyAccessExpression(node)) {
-			checkAccess(node.expression, node.name.text, node.name.getStart(file), node.name.getEnd());
-		}
-		else if (ts.isElementAccessExpression(node) && ts.isStringLiteralLike(node.argumentExpression)) {
-			checkAccess(
-				node.expression,
-				node.argumentExpression.text,
-				node.argumentExpression.getStart(file),
-				node.argumentExpression.getEnd(),
-			);
-		}
-		ts.forEachChild(node, visit);
-	});
 });
