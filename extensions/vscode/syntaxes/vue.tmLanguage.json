@@ -242,7 +242,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"]?)scss\\b\\2)",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[\\s\\S]*?\\blang\\s*=\\s*(?:['\"]?)scss\\b)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -338,7 +338,7 @@
 					]
 				},
 				{
-					"begin": "([a-zA-Z0-9:-]+)\\b(?=[^>]*\\blang\\s*=\\s*(['\"]?)ts\\b\\2)",
+					"begin": "([a-zA-Z0-9:-]+)\\b(?=[\\s\\S]*?\\blang\\s*=\\s*(?:['\"]?)ts\\b)",
 					"beginCaptures": {
 						"1": {
 							"name": "entity.name.tag.$1.html.vue"
@@ -739,17 +739,7 @@
 					},
 					"patterns": [
 						{
-							"include": "#tag-stuff"
-						},
-						{
-							"begin": "(?<=>)",
-							"end": "(?=<\\/script[\\s>])",
-							"name": "source.js",
-							"patterns": [
-								{
-									"include": "source.js"
-								}
-							]
+							"include": "#script-tag-stuff"
 						}
 					]
 				},
@@ -771,17 +761,7 @@
 					},
 					"patterns": [
 						{
-							"include": "#tag-stuff"
-						},
-						{
-							"begin": "(?<=>)",
-							"end": "(?=<\\/style[\\s>])",
-							"name": "source.css",
-							"patterns": [
-								{
-									"include": "source.css"
-								}
-							]
+							"include": "#style-tag-stuff"
 						}
 					]
 				},
@@ -816,6 +796,160 @@
 		}
 	],
 	"repository": {
+		"script-tag-stuff": {
+			"begin": "\\G",
+			"end": "(?=<\\/script[\\s>])",
+			"patterns": [
+				{
+					"begin": "\\G",
+					"end": "(?=\\blang\\s*=)|(>)",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.definition.tag.end.html.vue"
+						}
+					},
+					"name": "meta.tag-stuff",
+					"patterns": [
+						{
+							"include": "#vue-directives"
+						},
+						{
+							"include": "text.html.basic#attribute"
+						}
+					]
+				},
+				{
+					"begin": "\\blang\\s*=\\s*(?:['\"]?)ts\\b",
+					"beginCaptures": {
+						"0": {
+							"name": "entity.other.attribute-name.lang.html.vue"
+						}
+					},
+					"end": "(?=<\\/script[\\s>])",
+					"patterns": [
+						{
+							"begin": "\\G",
+							"end": "(>)",
+							"endCaptures": {
+								"1": {
+									"name": "punctuation.definition.tag.end.html.vue"
+								}
+							},
+							"name": "meta.tag-stuff",
+							"patterns": [
+								{
+									"include": "#vue-directives"
+								},
+								{
+									"include": "text.html.basic#attribute"
+								}
+							]
+						},
+						{
+							"begin": "(?<=>)",
+							"end": "(?=<\\/script[\\s>])",
+							"name": "source.ts",
+							"patterns": [
+								{
+									"include": "source.ts"
+								}
+							]
+						}
+					]
+				},
+				{
+					"begin": "(?<=>)",
+					"end": "(?=<\\/script[\\s>])",
+					"name": "source.js",
+					"patterns": [
+						{
+							"include": "source.js"
+						}
+					]
+				}
+			]
+		},
+		"style-tag-stuff": {
+			"begin": "\\G",
+			"end": "(?=<\\/style[\\s>])",
+			"patterns": [
+				{
+					"begin": "\\G",
+					"end": "(?=\\blang\\s*=)|(>)",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.definition.tag.end.html.vue"
+						}
+					},
+					"name": "meta.tag-stuff",
+					"patterns": [
+						{
+							"include": "#vue-directives"
+						},
+						{
+							"include": "text.html.basic#attribute"
+						}
+					]
+				},
+				{
+					"begin": "\\blang\\s*=\\s*(?:['\"]?)scss\\b",
+					"beginCaptures": {
+						"0": {
+							"name": "entity.other.attribute-name.lang.html.vue"
+						}
+					},
+					"end": "(</)(style)\\s*(?=>)",
+					"endCaptures": {
+						"1": {
+							"name": "punctuation.definition.tag.begin.html.vue"
+						},
+						"2": {
+							"name": "entity.name.tag.$2.html.vue"
+						}
+					},
+					"patterns": [
+						{
+							"begin": "\\G",
+							"end": "(>)",
+							"endCaptures": {
+								"1": {
+									"name": "punctuation.definition.tag.end.html.vue"
+								}
+							},
+							"name": "meta.tag-stuff",
+							"patterns": [
+								{
+									"include": "#vue-directives"
+								},
+								{
+									"include": "text.html.basic#attribute"
+								}
+							]
+						},
+						{
+							"begin": "(?<=>)",
+							"end": "(?=<\\/style[\\s>])",
+							"name": "source.css.scss",
+							"patterns": [
+								{
+									"include": "source.css.scss"
+								}
+							]
+						}
+					]
+				},
+				{
+					"begin": "(?<=>)",
+					"end": "(?=<\\/style[\\s>])",
+					"name": "source.css",
+					"patterns": [
+						{
+							"include": "source.css"
+						}
+					]
+				}
+			]
+		},
 		"self-closing-tag": {
 			"begin": "(<)([a-zA-Z0-9:-]+)(?=([^>]+/>))",
 			"beginCaptures": {
