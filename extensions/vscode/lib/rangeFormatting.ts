@@ -2,51 +2,41 @@ import type * as vscode from 'vscode';
 import diff = require('fast-diff');
 
 /** for test unit */
-export type FormatableTextDocument = Pick<vscode.TextDocument, 'getText' | 'offsetAt'>;
+export type FormatableTextDocument = Pick<vscode.TextDocument, 'getText' | 'offsetAt' | 'positionAt'>;
 
 /** for test unit */
-export type TextEditReplace = (range: vscode.Range, newText: string) => vscode.TextEdit;
+export type TextEditReplace = (start: number, end: number, newText: string) => vscode.TextEdit;
 
 export function restrictFormattingEditsToRange(
 	document: FormatableTextDocument,
 	range: vscode.Range,
-	edits: vscode.TextEdit[] | null | undefined,
+	edits: vscode.TextEdit[],
 	replace: TextEditReplace,
 ) {
-	if (!edits?.length) {
-		return edits;
-	}
-
-	if (edits.every(edit => range.contains(edit.range))) {
-		return edits;
-	}
-
 	const selectionStart = document.offsetAt(range.start);
 	const selectionEnd = document.offsetAt(range.end);
-	let selectionText = document.getText(range);
+	const result: vscode.TextEdit[] = [];
 
-	const sortedEdits = [...edits].sort((a, b) => document.offsetAt(b.range.start) - document.offsetAt(a.range.start));
-
-	for (const edit of sortedEdits) {
+	for (const edit of edits) {
 		const editStart = document.offsetAt(edit.range.start);
 		const editEnd = document.offsetAt(edit.range.end);
+
+		if (editStart >= selectionStart && editEnd <= selectionEnd) {
+			result.push(edit);
+			continue;
+		}
 
 		if (editEnd < selectionStart || editStart > selectionEnd) {
 			continue;
 		}
 
-		const relativeStart = Math.max(editStart, selectionStart) - selectionStart;
-		const relativeEnd = Math.min(editEnd, selectionEnd) - selectionStart;
-		const trimmedText = getTrimmedNewText(document, selectionStart, selectionEnd, edit, editStart, editEnd);
-
-		selectionText = selectionText.slice(0, relativeStart) + trimmedText + selectionText.slice(relativeEnd);
+		const trimmedEdit = getTrimmedNewText(document, selectionStart, selectionEnd, edit, editStart, editEnd);
+		if (trimmedEdit) {
+			result.push(replace(trimmedEdit.start, trimmedEdit.end, trimmedEdit.newText));
+		}
 	}
 
-	if (selectionText === document.getText(range)) {
-		return [];
-	}
-
-	return [replace(range, selectionText)];
+	return result;
 }
 
 function getTrimmedNewText(
@@ -58,19 +48,27 @@ function getTrimmedNewText(
 	editEnd: number,
 ) {
 	if (editStart === editEnd) {
-		return edit.newText;
+		return {
+			start: editStart,
+			end: editEnd,
+			newText: edit.newText,
+		};
 	}
 	const oldText = document.getText(edit.range);
 	const overlapStart = Math.max(editStart, selectionStart) - editStart;
 	const overlapEnd = Math.min(editEnd, selectionEnd) - editStart;
 	if (overlapStart === overlapEnd) {
-		return '';
+		return;
 	}
 
 	const map = createOffsetMap(oldText, edit.newText);
 	const newStart = map[overlapStart];
 	const newEnd = map[overlapEnd];
-	return edit.newText.slice(newStart, newEnd);
+	return {
+		start: editStart + overlapStart,
+		end: editStart + overlapEnd,
+		newText: edit.newText.slice(newStart, newEnd),
+	};
 }
 
 function createOffsetMap(oldText: string, newText: string) {

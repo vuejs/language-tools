@@ -179,7 +179,22 @@ function launch(serverPath: string, tsdk: string) {
 				},
 				async provideDocumentRangeFormattingEdits(document, range, options, token, next) {
 					const edits = await next(document, range, options, token);
-					return restrictFormattingEditsToRange(document, range, edits, vscode.TextEdit.replace);
+					if (edits) {
+						return restrictFormattingEditsToRange(
+							document,
+							range,
+							edits,
+							(start, end, newText) =>
+								new vscode.TextEdit(
+									new vscode.Range(
+										document.positionAt(start),
+										document.positionAt(end),
+									),
+									newText,
+								),
+						);
+					}
+					return edits;
 				},
 			},
 			documentSelector: config.server.includeLanguages,
