@@ -61,10 +61,6 @@ function getTrimmedNewText(
 		return edit.newText;
 	}
 	const oldText = document.getText(edit.range);
-	if (!oldText) {
-		return '';
-	}
-
 	const overlapStart = Math.max(editStart, selectionStart) - editStart;
 	const overlapEnd = Math.min(editEnd, selectionEnd) - editStart;
 	if (overlapStart === overlapEnd) {
