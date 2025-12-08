@@ -39,8 +39,10 @@ export function parseBindingRanges(
 				const { name, namedBindings } = node.importClause;
 
 				if (name) {
+					const range = _getStartEnd(name);
+					bindings.push(range);
 					if (componentExtsensions.some(ext => moduleName.endsWith(ext))) {
-						components.push(_getStartEnd(name));
+						components.push(range);
 					}
 				}
 				if (namedBindings) {
@@ -49,15 +51,14 @@ export function parseBindingRanges(
 							if (element.isTypeOnly) {
 								continue;
 							}
+							const range = _getStartEnd(element.name);
+							bindings.push(range);
 							if (
 								element.propertyName
 								&& _getNodeText(element.propertyName) === 'default'
 								&& componentExtsensions.some(ext => moduleName.endsWith(ext))
 							) {
-								components.push(_getStartEnd(element.name));
-							}
-							else {
-								bindings.push(_getStartEnd(element.name));
+								components.push(range);
 							}
 						}
 					}
