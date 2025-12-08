@@ -739,7 +739,7 @@
 					},
 					"patterns": [
 						{
-							"include": "#script-tag-stuff"
+							"include": "#multi-line-script-tag-stuff"
 						}
 					]
 				},
@@ -761,7 +761,7 @@
 					},
 					"patterns": [
 						{
-							"include": "#style-tag-stuff"
+							"include": "#multi-line-style-tag-stuff"
 						}
 					]
 				},
@@ -796,7 +796,7 @@
 		}
 	],
 	"repository": {
-		"script-tag-stuff": {
+		"multi-line-script-tag-stuff": {
 			"begin": "\\G",
 			"end": "(?=<\\/script[\\s>])",
 			"patterns": [
@@ -906,7 +906,7 @@
 				}
 			]
 		},
-		"style-tag-stuff": {
+		"multi-line-style-tag-stuff": {
 			"begin": "\\G",
 			"end": "(?=<\\/style[\\s>])",
 			"patterns": [
