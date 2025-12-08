@@ -178,8 +178,7 @@ function launch(serverPath: string, tsdk: string) {
 					return await (middleware.resolveCodeAction?.(item, token, next) ?? next(item, token));
 				},
 				async provideDocumentRangeFormattingEdits(document, range, options, token, next) {
-					const edits = await (middleware.provideDocumentRangeFormattingEdits?.(document, range, options, token, next)
-						?? next(document, range, options, token));
+					const edits = await next(document, range, options, token);
 					return restrictFormattingEditsToRange(document, range, edits, vscode.TextEdit.replace);
 				},
 			},
