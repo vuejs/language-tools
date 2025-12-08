@@ -58,12 +58,8 @@ function getTrimmedNewText(
 	editEnd: number,
 ) {
 	if (editStart === editEnd) {
-		if (editStart < selectionStart || editStart > selectionEnd) {
-			return '';
-		}
 		return edit.newText;
 	}
-
 	const oldText = document.getText(edit.range);
 	if (!oldText) {
 		return '';
