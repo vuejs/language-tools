@@ -18,7 +18,7 @@ export interface TemplateCodegenOptions {
 	propsAssignName?: string;
 	slotsAssignName?: string;
 	inheritAttrs: boolean;
-	selfComponentName?: string;
+	selfComponentName: string;
 }
 
 export { generate as generateTemplate };

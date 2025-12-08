@@ -36,31 +36,28 @@ export function* generateTemplateChild(
 		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.ELEMENT) {
+		let slotDir: CompilerDOM.DirectiveNode | undefined;
+
 		if (node.tagType === CompilerDOM.ElementTypes.SLOT) {
 			yield* generateSlotOutlet(options, ctx, node);
 		}
-		else {
-			const slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
+		else if (
+			node.tagType === CompilerDOM.ElementTypes.TEMPLATE
+			&& ctx.components.length
+			&& (slotDir = node.props.find(p => p.type === CompilerDOM.NodeTypes.DIRECTIVE && p.name === 'slot') as
 				| CompilerDOM.DirectiveNode
-				| undefined;
-			if (
-				node.tagType === CompilerDOM.ElementTypes.TEMPLATE
-				&& ctx.currentComponent
-				&& slotDir
-			) {
-				yield* generateVSlot(options, ctx, node, slotDir);
-			}
-			else if (
-				node.tagType === CompilerDOM.ElementTypes.ELEMENT
-				|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
-			) {
-				yield* generateElement(options, ctx, node);
-			}
-			else {
-				const { currentComponent } = ctx;
-				yield* generateComponent(options, ctx, node);
-				ctx.currentComponent = currentComponent;
-			}
+				| undefined)
+		) {
+			yield* generateVSlot(options, ctx, node, slotDir, ctx.components[ctx.components.length - 1]!());
+		}
+		else if (
+			node.tagType === CompilerDOM.ElementTypes.ELEMENT
+			|| node.tagType === CompilerDOM.ElementTypes.TEMPLATE
+		) {
+			yield* generateElement(options, ctx, node);
+		}
+		else {
+			yield* generateComponent(options, ctx, node);
 		}
 	}
 	else if (node.type === CompilerDOM.NodeTypes.TEXT_CALL) {

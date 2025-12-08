@@ -110,6 +110,7 @@ export function createTemplateCodegenContext() {
 	let variableId = 0;
 
 	const scopes: Set<string>[] = [];
+	const components: (() => string)[] = [];
 	const hoistVars = new Map<string, string>();
 	const dollarVars = new Set<string>();
 	const componentAccessMap = new Map<string, Map<string, Set<number>>>();
@@ -160,10 +161,6 @@ export function createTemplateCodegenContext() {
 		inlayHints,
 		inheritedAttrVars,
 		templateRefs,
-		currentComponent: undefined as {
-			get ctxVar(): string;
-			get propsVar(): string;
-		} | undefined,
 		singleRootElTypes: new Set<string>(),
 		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
 		addTemplateRef(name: string, typeExp: string, offset: number) {
@@ -187,6 +184,7 @@ export function createTemplateCodegenContext() {
 			}
 		},
 		scopes,
+		components,
 		declare(...varNames: string[]) {
 			const scope = scopes.at(-1)!;
 			for (const varName of varNames) {
