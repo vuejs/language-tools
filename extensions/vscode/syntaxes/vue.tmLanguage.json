@@ -911,8 +911,8 @@
 			"end": "(?=<\\/style[\\s>])",
 			"patterns": [
 				{
-					"begin": "\\G(?!\\blang\\s*=\\s*(?:['\"]?)scss\\b)",
-					"end": "(?=\\blang\\s*=\\s*(?:['\"]?)scss\\b)|(>)",
+					"begin": "\\G(?!\\blang\\s*=\\s*(?:['\"]?)(?:scss|stylus|less|postcss)\\b)",
+					"end": "(?=\\blang\\s*=\\s*(?:['\"]?)(?:scss|stylus|less|postcss)\\b)|(>)",
 					"endCaptures": {
 						"1": {
 							"name": "punctuation.definition.tag.end.html.vue"
@@ -942,6 +942,63 @@
 							"patterns": [
 								{
 									"include": "source.css.scss"
+								}
+							]
+						}
+					]
+				},
+				{
+					"begin": "(?=\\blang\\s*=\\s*(?:['\"]?)stylus\\b)",
+					"end": "(?=<\\/style[\\s>])",
+					"patterns": [
+						{
+							"include": "#tag-stuff"
+						},
+						{
+							"begin": "(?<=>)",
+							"end": "(?=<\\/style[\\s>])",
+							"name": "source.stylus",
+							"patterns": [
+								{
+									"include": "source.stylus"
+								}
+							]
+						}
+					]
+				},
+				{
+					"begin": "(?=\\blang\\s*=\\s*(?:['\"]?)less\\b)",
+					"end": "(?=<\\/style[\\s>])",
+					"patterns": [
+						{
+							"include": "#tag-stuff"
+						},
+						{
+							"begin": "(?<=>)",
+							"end": "(?=<\\/style[\\s>])",
+							"name": "source.css.less",
+							"patterns": [
+								{
+									"include": "source.css.less"
+								}
+							]
+						}
+					]
+				},
+				{
+					"begin": "(?=\\blang\\s*=\\s*(?:['\"]?)postcss\\b)",
+					"end": "(?=<\\/style[\\s>])",
+					"patterns": [
+						{
+							"include": "#tag-stuff"
+						},
+						{
+							"begin": "(?<=>)",
+							"end": "(?=<\\/style[\\s>])",
+							"name": "source.postcss",
+							"patterns": [
+								{
+									"include": "source.postcss"
 								}
 							]
 						}
