@@ -19,8 +19,6 @@ import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
-import { getFormatCodeSettings } from 'volar-service-typescript/lib/configs/getFormatCodeSettings.js';
-import { getUserPreferences } from 'volar-service-typescript/lib/configs/getUserPreferences.js';
 import {
 	applyCompletionEntryDetails,
 	convertCompletionInfo,
@@ -278,7 +276,6 @@ export function create(
 			const transformedItems = new WeakSet<html.CompletionItem>();
 
 			let initializing: Promise<void> | undefined;
-			let formattingOptions: html.FormattingOptions | undefined;
 			let lastCompletionDocument: TextDocument | undefined;
 
 			return {
@@ -287,16 +284,6 @@ export function create(
 				dispose() {
 					baseServiceInstance.dispose?.();
 					disposable?.dispose();
-				},
-
-				provideDocumentFormattingEdits(document, range, options, ...rest) {
-					formattingOptions = options;
-					return baseServiceInstance.provideDocumentFormattingEdits?.(document, range, options, ...rest);
-				},
-
-				provideOnTypeFormattingEdits(document, position, key, options, ...rest) {
-					formattingOptions = options;
-					return baseServiceInstance.provideOnTypeFormattingEdits?.(document, position, key, options, ...rest);
 				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
@@ -340,15 +327,9 @@ export function create(
 						const map = context.language.maps.get(info.code, info.script);
 						let spliced = false;
 						for (const [sourceOffset] of map.toSourceLocation(offset)) {
-							const [formatOptions, preferences] = await Promise.all([
-								getFormatCodeSettings(context, document, formattingOptions),
-								getUserPreferences(context, document),
-							]);
 							const autoImport = await getAutoImportSuggestions(
 								info.root.fileName,
 								sourceOffset,
-								preferences,
-								formatOptions,
 							);
 							if (!autoImport) {
 								continue;
@@ -515,11 +496,7 @@ export function create(
 						if (!sourceScript) {
 							return item;
 						}
-						const [formatOptions, preferences] = await Promise.all([
-							getFormatCodeSettings(context, lastCompletionDocument!, formattingOptions),
-							getUserPreferences(context, lastCompletionDocument!),
-						]);
-						const details = await resolveAutoImportCompletionEntry(item.data, preferences, formatOptions);
+						const details = await resolveAutoImportCompletionEntry(item.data);
 						if (details) {
 							const virtualCode = sourceScript.generated!.embeddedCodes.get(decoded[1])!;
 							const sourceDocument = context.documents.get(

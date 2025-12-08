@@ -136,8 +136,7 @@ export = createLanguageServicePlugin(
 				);
 			});
 			session.addProtocolHandler('_vue:getAutoImportSuggestions', request => {
-				const [fileName, position, preferences, formatOptions]: Parameters<Requests['getAutoImportSuggestions']> =
-					request.arguments;
+				const [fileName, position]: Parameters<Requests['getAutoImportSuggestions']> = request.arguments;
 				const { project, language, sourceScript, virtualCode } = getProjectAndVirtualCode(fileName);
 				const tsLanguageService = projectToOriginalLanguageService.get(project);
 				if (!tsLanguageService) {
@@ -156,8 +155,8 @@ export = createLanguageServicePlugin(
 						const result = tsLanguageService.getCompletionsAtPosition(
 							fileName,
 							tsPosition2,
-							preferences,
-							formatOptions,
+							session['getPreferences'](fileName),
+							session['getFormatOptions'](fileName),
 						);
 						if (result) {
 							resolveCompletionResult(
@@ -183,7 +182,12 @@ export = createLanguageServicePlugin(
 						}
 						return createResponse(result);
 					}
-					const result = tsLanguageService.getCompletionsAtPosition(fileName, 0, preferences, formatOptions);
+					const result = tsLanguageService.getCompletionsAtPosition(
+						fileName,
+						0,
+						session['getPreferences'](fileName),
+						session['getFormatOptions'](fileName),
+					);
 					if (result) {
 						resolveCompletionResult(
 							ts,
@@ -211,8 +215,7 @@ export = createLanguageServicePlugin(
 				return createResponse(undefined);
 			});
 			session.addProtocolHandler('_vue:resolveAutoImportCompletionEntry', request => {
-				const [data, preferences, formatOptions]: Parameters<Requests['resolveAutoImportCompletionEntry']> =
-					request.arguments;
+				const [data]: Parameters<Requests['resolveAutoImportCompletionEntry']> = request.arguments;
 				if (!(data as any).__getAutoImportSuggestions) {
 					return createResponse(undefined);
 				}
@@ -226,9 +229,9 @@ export = createLanguageServicePlugin(
 					fileName,
 					position,
 					entryName,
-					formatOptions,
+					session['getFormatOptions'](fileName),
 					source,
-					preferences,
+					session['getPreferences'](fileName),
 					data,
 				);
 				if (details) {
