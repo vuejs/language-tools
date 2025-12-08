@@ -42,6 +42,9 @@ export function parseBindingRanges(
 					if (componentExtsensions.some(ext => moduleName.endsWith(ext))) {
 						components.push(_getStartEnd(name));
 					}
+					else {
+						bindings.push(_getStartEnd(name));
+					}
 				}
 				if (namedBindings) {
 					if (ts.isNamedImports(namedBindings)) {
