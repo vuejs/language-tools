@@ -31,7 +31,7 @@ export function restrictFormattingEditsToRange(
 		const editStart = document.offsetAt(edit.range.start);
 		const editEnd = document.offsetAt(edit.range.end);
 
-		if (editEnd <= selectionStart || editStart >= selectionEnd) {
+		if (editEnd < selectionStart || editStart > selectionEnd) {
 			continue;
 		}
 

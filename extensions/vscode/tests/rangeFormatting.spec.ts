@@ -67,6 +67,17 @@ describe('provideDocumentRangeFormattingEdits', () => {
 		const result = restrictFormattingEditsToRange(document, selection, edits, textEditReplace);
 		expect(result).toBe(edits);
 	});
+
+	test('keeps boundary inserts when other edits are out of range', () => {
+		const document = createDocument('0123456789');
+		const selection = createRange(2, 5);
+		const edits = [
+			createTextEdit(5, 6, 'Z'),
+			createTextEdit(2, 2, 'X'),
+		];
+		const result = restrictFormattingEditsToRange(document, selection, edits, textEditReplace);
+		expect(result).toEqual([textEditReplace(selection, 'X234')]);
+	});
 });
 
 // self implementation of vscode test utils
