@@ -45,9 +45,11 @@ export function* generateSfcBlockSection(
 
 	// #3632
 	if ('parseDiagnostics' in block.ast) {
-		const emptyEndLength = text.length - text.trimEnd().length;
+		const textEnd = text.trimEnd().length;
 		for (const diag of block.ast.parseDiagnostics as ts.DiagnosticWithLocation[]) {
-			if (diag.start >= end - emptyEndLength) {
+			const diagStart = diag.start;
+			const diagEnd = diag.start + diag.length;
+			if (diagStart >= textEnd && diagEnd <= end) {
 				yield `;`;
 				yield ['', block.name, end, codeFeatures.verification];
 				yield newLine;
