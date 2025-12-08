@@ -160,20 +160,20 @@ function* generateWorker(
 				});
 			}
 
-			yield* generateSfcBlockSection(script, 0, exportDefault.start, codeFeatures.all);
-			yield* generateExportDeclareEqual(script);
-			if (wrapLeft) {
-				yield wrapLeft;
-			}
-			yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
-			if (wrapRight) {
-				yield wrapRight;
-			}
+			yield* generateSfcBlockSection(script, 0, expression.start, codeFeatures.all);
+			yield exportExpression;
 			yield endOfLine;
 			yield* generateTemplate(options, ctx);
-			yield* generateSfcBlockSection(script, exportDefault.start, expression.start, codeFeatures.all);
-			yield exportExpression;
-			yield* generateSfcBlockSection(script, expression.end, script.content.length, codeFeatures.all);
+			yield* generateExportDeclareEqual(script);
+			if (wrapLeft && wrapRight) {
+				yield wrapLeft;
+				yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
+				yield wrapRight;
+				yield* generateSfcBlockSection(script, expression.end, script.content.length, codeFeatures.all);
+			}
+			else {
+				yield* generateSfcBlockSection(script, expression.start, script.content.length, codeFeatures.all);
+			}
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
