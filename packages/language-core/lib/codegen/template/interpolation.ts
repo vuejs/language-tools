@@ -1,11 +1,12 @@
 import { isGloballyAllowed, makeMap } from '@vue/shared';
 import type * as ts from 'typescript';
-import type { Code, VueCodeInformation } from '../../types';
+import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
-import type { ScriptCodegenOptions } from '../script';
-import { createTsAst, identifierRegex } from '../utils';
+import * as names from '../names';
+import type { StyleCodegenOptions } from '../style';
+import { forEachNode, getTypeScriptAST, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
 import type { TemplateCodegenOptions } from './index';
 
@@ -13,10 +14,13 @@ import type { TemplateCodegenOptions } from './index';
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	options: Pick<TemplateCodegenOptions | ScriptCodegenOptions, 'ts' | 'destructuredPropNames' | 'templateRefNames'>,
+	options: Pick<
+		TemplateCodegenOptions | StyleCodegenOptions,
+		'ts' | 'setupRefs'
+	>,
 	ctx: TemplateCodegenContext,
-	source: string,
-	data: VueCodeInformation | ((offset: number) => VueCodeInformation),
+	block: SfcBlock,
+	data: VueCodeInformation,
 	code: string,
 	start: number,
 	prefix: string = '',
@@ -26,6 +30,7 @@ export function* generateInterpolation(
 		const segment of forEachInterpolationSegment(
 			options,
 			ctx,
+			block,
 			code,
 			start,
 			prefix,
@@ -53,12 +58,10 @@ export function* generateInterpolation(
 		if (!shouldSkip) {
 			yield [
 				section,
-				source,
+				block.name,
 				start + offset,
 				type === 'errorMappingOnly'
 					? codeFeatures.verification
-					: typeof data === 'function'
-					? data(start + offset)
 					: data,
 			];
 		}
@@ -67,8 +70,12 @@ export function* generateInterpolation(
 }
 
 function* forEachInterpolationSegment(
-	options: Pick<TemplateCodegenOptions | ScriptCodegenOptions, 'ts' | 'destructuredPropNames' | 'templateRefNames'>,
+	{ ts, setupRefs }: Pick<
+		TemplateCodegenOptions | StyleCodegenOptions,
+		'ts' | 'setupRefs'
+	>,
 	ctx: TemplateCodegenContext,
+	block: SfcBlock,
 	originalCode: string,
 	start: number,
 	prefix: string,
@@ -86,9 +93,9 @@ function* forEachInterpolationSegment(
 
 	for (
 		const [name, offset, isShorthand] of forEachIdentifiers(
-			options.ts,
-			options.destructuredPropNames,
+			ts,
 			ctx,
+			block,
 			originalCode,
 			code,
 			prefix,
@@ -102,18 +109,20 @@ function* forEachInterpolationSegment(
 			yield [code.slice(prevEnd, offset), prevEnd, prevEnd > 0 ? undefined : 'startEnd'];
 		}
 
-		// fix https://github.com/vuejs/language-tools/issues/1205
-		// fix https://github.com/vuejs/language-tools/issues/1264
-		yield ['', offset, 'errorMappingOnly'];
-
-		if (options.templateRefNames.has(name)) {
-			yield `__VLS_unref(`;
+		if (setupRefs.has(name)) {
 			yield [name, offset];
-			yield `)`;
+			yield `.value`;
 		}
 		else {
-			ctx.accessExternalVariable(name, start - prefix.length + offset);
-			yield ctx.dollarVars.has(name) ? `__VLS_dollars.` : `__VLS_ctx.`;
+			yield ['', offset, 'errorMappingOnly']; // #1205, #1264
+			if (ctx.dollarVars.has(name)) {
+				yield names.dollars;
+			}
+			else {
+				ctx.recordComponentAccess(block.name, name, start - prefix.length + offset);
+				yield names.ctx;
+			}
+			yield `.`;
 			yield [name, offset];
 		}
 
@@ -127,29 +136,29 @@ function* forEachInterpolationSegment(
 
 function* forEachIdentifiers(
 	ts: typeof import('typescript'),
-	destructuredPropNames: Set<string> | undefined,
 	ctx: TemplateCodegenContext,
+	block: SfcBlock,
 	originalCode: string,
 	code: string,
 	prefix: string,
 ): Generator<[string, number, boolean]> {
-	if (identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode, destructuredPropNames)) {
+	if (
+		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode)
+	) {
 		yield [originalCode, prefix.length, false];
 		return;
 	}
 
-	const scoped = ctx.scope();
-	const ast = createTsAst(ts, ctx.inlineTsAsts, code);
-
-	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx, scoped)) {
+	const endScope = ctx.startScope();
+	const ast = getTypeScriptAST(ts, block, code);
+	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx)) {
 		const text = getNodeText(ts, id, ast);
-		if (shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
+		if (shouldIdentifierSkipped(ctx, text)) {
 			continue;
 		}
 		yield [text, getStartEnd(ts, id, ast).start, isShorthand];
 	}
-
-	scoped.end();
+	endScope();
 }
 
 function* forEachDeclarations(
@@ -157,7 +166,6 @@ function* forEachDeclarations(
 	node: ts.Node,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
-	scoped: ReturnType<TemplateCodegenContext['scope']>,
 ): Generator<[ts.Identifier, boolean]> {
 	if (ts.isIdentifier(node)) {
 		yield [node, false];
@@ -166,16 +174,16 @@ function* forEachDeclarations(
 		yield [node.name, true];
 	}
 	else if (ts.isPropertyAccessExpression(node)) {
-		yield* forEachDeclarations(ts, node.expression, ast, ctx, scoped);
+		yield* forEachDeclarations(ts, node.expression, ast, ctx);
 	}
 	else if (ts.isVariableDeclaration(node)) {
-		scoped.declare(...collectBindingNames(ts, node.name, ast));
-		yield* forEachDeclarationsInBinding(ts, node, ast, ctx, scoped);
+		ctx.declare(...collectBindingNames(ts, node.name, ast));
+		yield* forEachDeclarationsInBinding(ts, node, ast, ctx);
 	}
 	else if (ts.isArrayBindingPattern(node) || ts.isObjectBindingPattern(node)) {
 		for (const element of node.elements) {
 			if (ts.isBindingElement(element)) {
-				yield* forEachDeclarationsInBinding(ts, element, ast, ctx, scoped);
+				yield* forEachDeclarationsInBinding(ts, element, ast, ctx);
 			}
 		}
 	}
@@ -187,18 +195,18 @@ function* forEachDeclarations(
 			if (ts.isPropertyAssignment(prop)) {
 				// fix https://github.com/vuejs/language-tools/issues/1176
 				if (ts.isComputedPropertyName(prop.name)) {
-					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx, scoped);
+					yield* forEachDeclarations(ts, prop.name.expression, ast, ctx);
 				}
-				yield* forEachDeclarations(ts, prop.initializer, ast, ctx, scoped);
+				yield* forEachDeclarations(ts, prop.initializer, ast, ctx);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1156
 			else if (ts.isShorthandPropertyAssignment(prop)) {
-				yield* forEachDeclarations(ts, prop, ast, ctx, scoped);
+				yield* forEachDeclarations(ts, prop, ast, ctx);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/1148#issuecomment-1094378126
 			else if (ts.isSpreadAssignment(prop)) {
 				// TODO: cannot report "Spread types may only be created from object types.ts(2698)"
-				yield* forEachDeclarations(ts, prop.expression, ast, ctx, scoped);
+				yield* forEachDeclarations(ts, prop.expression, ast, ctx);
 			}
 			// fix https://github.com/vuejs/language-tools/issues/4604
 			else if (ts.isFunctionLike(prop) && prop.body) {
@@ -211,15 +219,15 @@ function* forEachDeclarations(
 		yield* forEachDeclarationsInTypeNode(ts, node);
 	}
 	else if (ts.isBlock(node)) {
-		const scoped2 = scoped;
+		const endScope = ctx.startScope();
 		for (const child of forEachNode(ts, node)) {
-			yield* forEachDeclarations(ts, child, ast, ctx, scoped2);
+			yield* forEachDeclarations(ts, child, ast, ctx);
 		}
-		scoped2.end();
+		endScope();
 	}
 	else {
 		for (const child of forEachNode(ts, node)) {
-			yield* forEachDeclarations(ts, child, ast, ctx, scoped);
+			yield* forEachDeclarations(ts, child, ast, ctx);
 		}
 	}
 }
@@ -229,16 +237,15 @@ function* forEachDeclarationsInBinding(
 	node: ts.BindingElement | ts.ParameterDeclaration | ts.VariableDeclaration,
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
-	scoped: ReturnType<TemplateCodegenContext['scope']>,
 ): Generator<[ts.Identifier, boolean]> {
 	if ('type' in node && node.type) {
 		yield* forEachDeclarationsInTypeNode(ts, node.type);
 	}
 	if (!ts.isIdentifier(node.name)) {
-		yield* forEachDeclarations(ts, node.name, ast, ctx, scoped);
+		yield* forEachDeclarations(ts, node.name, ast, ctx);
 	}
 	if (node.initializer) {
-		yield* forEachDeclarations(ts, node.initializer, ast, ctx, scoped);
+		yield* forEachDeclarations(ts, node.initializer, ast, ctx);
 	}
 }
 
@@ -248,15 +255,15 @@ function* forEachDeclarationsInFunction(
 	ast: ts.SourceFile,
 	ctx: TemplateCodegenContext,
 ): Generator<[ts.Identifier, boolean]> {
-	const scoped = ctx.scope();
+	const endScope = ctx.startScope();
 	for (const param of node.parameters) {
-		scoped.declare(...collectBindingNames(ts, param.name, ast));
-		yield* forEachDeclarationsInBinding(ts, param, ast, ctx, scoped);
+		ctx.declare(...collectBindingNames(ts, param.name, ast));
+		yield* forEachDeclarationsInBinding(ts, param, ast, ctx);
 	}
 	if (node.body) {
-		yield* forEachDeclarations(ts, node.body, ast, ctx, scoped);
+		yield* forEachDeclarations(ts, node.body, ast, ctx);
 	}
-	scoped.end();
+	endScope();
 }
 
 function* forEachDeclarationsInTypeNode(
@@ -277,26 +284,14 @@ function* forEachDeclarationsInTypeNode(
 	}
 }
 
-function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {
-	const children: ts.Node[] = [];
-	ts.forEachChild(node, child => {
-		children.push(child);
-	});
-	for (const child of children) {
-		yield child;
-	}
-}
-
 function shouldIdentifierSkipped(
 	ctx: TemplateCodegenContext,
 	text: string,
-	destructuredPropNames: Set<string> | undefined,
 ) {
-	return ctx.hasLocalVariable(text)
+	return ctx.scopes.some(scope => scope.has(text))
 		// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 		|| isGloballyAllowed(text)
 		|| isLiteralWhitelisted(text)
 		|| text === 'require'
-		|| text.startsWith('__VLS_')
-		|| destructuredPropNames?.has(text);
+		|| text.startsWith('__VLS_');
 }

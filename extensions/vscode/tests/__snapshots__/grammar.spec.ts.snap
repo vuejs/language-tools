@@ -263,6 +263,125 @@ exports[`grammar > jsx.vue 1`] = `
 #^ source.vue"
 `;
 
+exports[`grammar > leading-operator.vue 1`] = `
+"><script>
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ source.vue entity.name.tag.script.html.vue
+#       ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>if (false
+#^^^^^^^^^^ source.vue
+>< true
+#^^^^^^^ source.vue
+>) { }
+#^^^^^^ source.vue
+>(
+#^^ source.vue
+><br />
+#^^^^^^^ source.vue
+>);
+#^^^ source.vue
+></script>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^ source.vue entity.name.tag.script.html.vue
+#        ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><script lang="js">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ source.vue entity.name.tag.script.html.vue
+#       ^^^^^^^^^^ source.vue meta.tag-stuff
+#                 ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>if (false
+#^^^^^^^^^^ source.vue
+>< true
+#^^^^^^^ source.vue
+>) {}
+#^^^^^ source.vue
+>(
+#^^ source.vue
+><br />
+#^^^^^^^ source.vue
+>);
+#^^^ source.vue
+></script>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^ source.vue entity.name.tag.script.html.vue
+#        ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><script lang="jsx">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ source.vue entity.name.tag.script.html.vue
+#       ^^^^^^^^^^^ source.vue meta.tag-stuff
+#                  ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>if (false
+#^^^^^^^^^^ source.vue
+>< true
+#^^^^^^^ source.vue
+>) {}
+#^^^^^ source.vue
+>(
+#^^ source.vue
+><br />
+#^^^^^^^ source.vue
+>);
+#^^^ source.vue
+></script>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^ source.vue entity.name.tag.script.html.vue
+#        ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><script lang="ts">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ source.vue entity.name.tag.script.html.vue
+#       ^^^^^^^^^^ source.vue meta.tag-stuff
+#                 ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>if (false
+#^^^^^^^^^^ source.vue
+>< true
+#^^^^^^^ source.vue
+>) {}
+#^^^^^ source.vue
+>interface Foo
+#^^^^^^^^^^^^^^ source.vue
+><T> { value: T; }
+#^^^^^^^^^^^^^^^^^^ source.vue
+></script>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^ source.vue entity.name.tag.script.html.vue
+#        ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue
+><script lang="tsx">
+#^ source.vue punctuation.definition.tag.begin.html.vue
+# ^^^^^^ source.vue entity.name.tag.script.html.vue
+#       ^^^^^^^^^^^ source.vue meta.tag-stuff
+#                  ^ source.vue meta.tag-stuff punctuation.definition.tag.end.html.vue
+>if (false
+#^^^^^^^^^^ source.vue
+>< true
+#^^^^^^^ source.vue
+>) {}
+#^^^^^ source.vue
+>interface Foo
+#^^^^^^^^^^^^^^ source.vue
+><T> { value: T; }
+#^^^^^^^^^^^^^^^^^^ source.vue
+>(
+#^^ source.vue
+><br />
+#^^^^^^^ source.vue
+>);
+#^^^ source.vue
+></script>
+#^^ source.vue punctuation.definition.tag.begin.html.vue
+#  ^^^^^^ source.vue entity.name.tag.script.html.vue
+#        ^ source.vue punctuation.definition.tag.end.html.vue
+>
+#^ source.vue"
+`;
+
 exports[`grammar > namespaced.vue 1`] = `
 "><script setup lang="ts">
 #^ source.vue punctuation.definition.tag.begin.html.vue

@@ -1,11 +1,13 @@
-import type {
-	CompletionItemKind,
-	CompletionItemTag,
-	CompletionList,
-	Disposable,
-	LanguageServicePlugin,
-	TextDocument,
+import {
+	type CompletionItemKind,
+	type CompletionItemTag,
+	type CompletionList,
+	type Disposable,
+	type LanguageServicePlugin,
+	type TextDocument,
+	transformCompletionItem,
 } from '@volar/language-service';
+import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
 import {
 	forEachInterpolationNode,
 	hyphenateAttr,
@@ -13,15 +15,20 @@ import {
 	tsCodegen,
 	type VueVirtualCode,
 } from '@vue/language-core';
-import { camelize, capitalize, isPromise } from '@vue/shared';
+import { camelize, capitalize } from '@vue/shared';
 import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
+import {
+	applyCompletionEntryDetails,
+	convertCompletionInfo,
+} from 'volar-service-typescript/lib/utils/lspConverters.js';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
 import { loadModelModifiersData, loadTemplateData } from '../data';
+import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
-import { createReferenceResolver, resolveEmbeddedCode } from '../utils';
+import { resolveEmbeddedCode } from '../utils';
 
 const specialTags = new Set([
 	'slot',
@@ -50,6 +57,7 @@ let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
 export function create(
+	ts: typeof import('typescript'),
 	languageId: 'html' | 'jade',
 	{
 		getComponentNames,
@@ -59,10 +67,15 @@ export function create(
 		getComponentSlots,
 		getElementAttrs,
 		resolveModuleName,
+		getAutoImportSuggestions,
+		resolveAutoImportCompletionEntry,
 	}: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
+	let modulePathCache:
+		| Map<string, Promise<string | null | undefined> | string | null | undefined>
+		| undefined;
 
 	const onDidChangeCustomDataListeners = new Set<() => void>();
 	const onDidChangeCustomData = (listener: () => void): Disposable => {
@@ -89,7 +102,37 @@ export function create(
 			useDefaultDataProvider: false,
 			getDocumentContext(context) {
 				return {
-					resolveReference: createReferenceResolver(context, resolveReference, resolveModuleName) as any,
+					resolveReference(ref, base) {
+						let baseUri = URI.parse(base);
+						const decoded = context.decodeEmbeddedDocumentUri(baseUri);
+						if (decoded) {
+							baseUri = decoded[0];
+						}
+						if (
+							modulePathCache
+							&& baseUri.scheme === 'file'
+							&& !ref.startsWith('./')
+							&& !ref.startsWith('../')
+						) {
+							const map = modulePathCache;
+							if (!map.has(ref)) {
+								const fileName = baseUri.fsPath.replace(/\\/g, '/');
+								const promise = resolveModuleName(fileName, ref);
+								map.set(ref, promise);
+								if (promise instanceof Promise) {
+									promise.then(res => map.set(ref, res));
+								}
+							}
+							const cached = modulePathCache.get(ref);
+							if (cached instanceof Promise) {
+								throw cached;
+							}
+							if (cached) {
+								return cached;
+							}
+						}
+						return resolveReference(ref, baseUri, context.env.workspaceFolders);
+					},
 				};
 			},
 			getCustomData() {
@@ -139,6 +182,45 @@ export function create(
 						}
 					}
 					return parseHTMLDocument(document);
+				};
+				htmlService.format = (document, range, options) => {
+					let voidElements: string[] | undefined;
+					const info = resolveEmbeddedCode(context, document.uri);
+					const codegen = info && tsCodegen.get(info.root.sfc);
+					if (codegen) {
+						const componentNames = new Set([
+							...codegen.getImportComponentNames(),
+							...codegen.getSetupExposed(),
+						]);
+						// copied from https://github.com/microsoft/vscode-html-languageservice/blob/10daf45dc16b4f4228987cf7cddf3a7dbbdc7570/src/beautify/beautify-html.js#L2746-L2761
+						voidElements = [
+							'area',
+							'base',
+							'br',
+							'col',
+							'embed',
+							'hr',
+							'img',
+							'input',
+							'keygen',
+							'link',
+							'menuitem',
+							'meta',
+							'param',
+							'source',
+							'track',
+							'wbr',
+							'!doctype',
+							'?xml',
+							'basefont',
+							'isindex',
+						].filter(tag =>
+							tag
+							&& !componentNames.has(tag)
+							&& !componentNames.has(capitalize(camelize(tag)))
+						);
+					}
+					return format(document, range, options, voidElements);
 				};
 			}
 
@@ -191,8 +273,10 @@ export function create(
 			}
 
 			const disposable = context.env.onDidChangeConfiguration?.(() => initializing = undefined);
+			const transformedItems = new WeakSet<html.CompletionItem>();
 
 			let initializing: Promise<void> | undefined;
+			let lastCompletionDocument: TextDocument | undefined;
 
 			return {
 				...baseServiceInstance,
@@ -212,9 +296,10 @@ export function create(
 					}
 
 					const {
-						result: completionList,
+						result: htmlCompletion,
 						target,
 						info: {
+							tagNameCasing,
 							components,
 							propMap,
 						},
@@ -230,24 +315,65 @@ export function create(
 							),
 					);
 
-					if (!completionList) {
+					if (!htmlCompletion) {
 						return;
+					}
+
+					const autoImportPlaceholderIndex = htmlCompletion.items.findIndex(item =>
+						item.label === 'AutoImportsPlaceholder'
+					);
+					if (autoImportPlaceholderIndex !== -1) {
+						const offset = document.offsetAt(position);
+						const map = context.language.maps.get(info.code, info.script);
+						let spliced = false;
+						for (const [sourceOffset] of map.toSourceLocation(offset)) {
+							const autoImport = await getAutoImportSuggestions(
+								info.root.fileName,
+								sourceOffset,
+							);
+							if (!autoImport) {
+								continue;
+							}
+							const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
+							const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
+							for (const tsItem of tsCompletion.items) {
+								if (placeholder.textEdit) {
+									const newText = tsItem.textEdit?.newText ?? tsItem.label;
+									tsItem.textEdit = {
+										...placeholder.textEdit,
+										newText: tagNameCasing === TagNameCasing.Kebab
+											? hyphenateTag(newText)
+											: newText,
+									};
+								}
+								else {
+									tsItem.textEdit = undefined;
+								}
+							}
+							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1, ...tsCompletion.items);
+							spliced = true;
+							lastCompletionDocument = document;
+							break;
+						}
+						if (!spliced) {
+							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
+						}
 					}
 
 					switch (target) {
 						case 'tag': {
-							completionList.items.forEach(transformTag);
+							htmlCompletion.items.forEach(transformTag);
 							break;
 						}
 						case 'attribute': {
-							addDirectiveModifiers(completionList, document);
-							completionList.items.forEach(transformAttribute);
+							addDirectiveModifiers(htmlCompletion, document);
+							htmlCompletion.items.forEach(transformAttribute);
 							break;
 						}
 					}
 
 					updateExtraCustomData([]);
-					return completionList;
+					return htmlCompletion;
 
 					function transformTag(item: html.CompletionItem) {
 						const tagName = capitalize(camelize(item.label));
@@ -359,6 +485,57 @@ export function create(
 					}
 				},
 
+				async resolveCompletionItem(item) {
+					if (item.data?.__isAutoImport || item.data?.__isComponentAutoImport) {
+						const embeddedUri = URI.parse(lastCompletionDocument!.uri);
+						const decoded = context.decodeEmbeddedDocumentUri(embeddedUri);
+						if (!decoded) {
+							return item;
+						}
+						const sourceScript = context.language.scripts.get(decoded[0]);
+						if (!sourceScript) {
+							return item;
+						}
+						const details = await resolveAutoImportCompletionEntry(item.data);
+						if (details) {
+							const virtualCode = sourceScript.generated!.embeddedCodes.get(decoded[1])!;
+							const sourceDocument = context.documents.get(
+								sourceScript.id,
+								sourceScript.languageId,
+								sourceScript.snapshot,
+							);
+							const embeddedDocument = context.documents.get(embeddedUri, virtualCode.languageId, virtualCode.snapshot);
+							const map = context.language.maps.get(virtualCode, sourceScript);
+							item = transformCompletionItem(
+								item,
+								embeddedRange =>
+									getSourceRange(
+										[sourceDocument, embeddedDocument, map],
+										embeddedRange,
+									),
+								embeddedDocument,
+								context,
+							);
+							applyCompletionEntryDetails(
+								ts,
+								item,
+								details,
+								sourceDocument,
+								fileName => URI.file(fileName),
+								() => undefined,
+							);
+							transformedItems.add(item);
+						}
+					}
+					return item;
+				},
+
+				transformCompletionItem(item) {
+					if (transformedItems.has(item)) {
+						return item;
+					}
+				},
+
 				provideHover(document, position, token) {
 					if (document.languageId !== languageId) {
 						return;
@@ -378,22 +555,22 @@ export function create(
 				},
 
 				async provideDocumentLinks(document, token) {
-					if (document.languageId !== languageId) {
-						return;
-					}
-					const info = resolveEmbeddedCode(context, document.uri);
-					if (info?.code.id !== 'template') {
-						return;
-					}
-
-					const documentLinks = await baseServiceInstance.provideDocumentLinks?.(document, token) ?? [];
-					for (const link of documentLinks) {
-						if (link.target && isPromise(link.target)) {
-							link.target = await link.target;
+					modulePathCache = new Map();
+					while (true) {
+						try {
+							const result = await baseServiceInstance.provideDocumentLinks?.(document, token);
+							modulePathCache = undefined;
+							return result;
+						}
+						catch (e) {
+							if (e instanceof Promise) {
+								await e;
+							}
+							else {
+								throw e;
+							}
 						}
 					}
-
-					return documentLinks;
 				},
 			};
 
@@ -485,7 +662,7 @@ export function create(
 									version++;
 								})());
 							}
-							const scriptSetupRanges = tsCodegen.get(root.sfc)?.getScriptSetupRanges();
+							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
 
@@ -498,13 +675,19 @@ export function create(
 								}
 							}
 
-							for (const binding of scriptSetupRanges?.bindings ?? []) {
-								const name = root.sfc.scriptSetup!.content.slice(binding.range.start, binding.range.end);
-								if (tagNameCasing === TagNameCasing.Kebab) {
-									names.add(hyphenateTag(name));
-								}
-								else {
-									names.add(name);
+							if (codegen) {
+								for (
+									const name of [
+										...codegen.getImportComponentNames(),
+										...codegen.getSetupExposed(),
+									]
+								) {
+									if (tagNameCasing === TagNameCasing.Kebab) {
+										names.add(hyphenateTag(name));
+									}
+									else {
+										names.add(name);
+									}
 								}
 							}
 
@@ -688,6 +871,19 @@ export function create(
 							}));
 						},
 					},
+					{
+						getId: () => 'vue-auto-imports',
+						isApplicable: () => true,
+						provideTags() {
+							return [{ name: 'AutoImportsPlaceholder', attributes: [] }];
+						},
+						provideAttributes() {
+							return [];
+						},
+						provideValues() {
+							return [];
+						},
+					},
 				]);
 
 				return {
@@ -697,6 +893,7 @@ export function create(
 							version,
 							target,
 							info: {
+								tagNameCasing,
 								components,
 								propMap,
 							},

@@ -2,11 +2,11 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { codeFeatures } from '../codeFeatures';
-import { createTsAst, endOfLine, newLine } from '../utils';
+import { endOfLine, getTypeScriptAST, newLine } from '../utils';
 import type { TemplateCodegenContext } from './context';
-import { generateElementChildren } from './elementChildren';
 import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
+import { generateTemplateChild } from './templateChild';
 
 export function* generateVFor(
 	options: TemplateCodegenOptions,
@@ -15,12 +15,12 @@ export function* generateVFor(
 ): Generator<Code> {
 	const { source } = node.parseResult;
 	const { leftExpressionRange, leftExpressionText } = parseVForNode(node);
-	const scoped = ctx.scope();
+	const endScope = ctx.startScope();
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
-		const collectAst = createTsAst(options.ts, ctx.inlineTsAsts, `const [${leftExpressionText}]`);
-		scoped.declare(...collectBindingNames(options.ts, collectAst, collectAst));
+		const collectAst = getTypeScriptAST(options.ts, options.template, `const [${leftExpressionText}]`);
+		ctx.declare(...collectBindingNames(options.ts, collectAst, collectAst));
 		yield [
 			leftExpressionText,
 			'template',
@@ -34,7 +34,7 @@ export function* generateVFor(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.all,
 			source.content,
 			source.loc.start.offset,
@@ -67,7 +67,7 @@ export function* generateVFor(
 					yield* generateInterpolation(
 						options,
 						ctx,
-						'template',
+						options.template,
 						codeFeatures.all,
 						prop.value.content,
 						prop.value.loc.start.offset,
@@ -82,12 +82,13 @@ export function* generateVFor(
 
 	const { inVFor } = ctx;
 	ctx.inVFor = true;
-	yield* generateElementChildren(options, ctx, node.children, isFragment);
+	for (const child of node.children) {
+		yield* generateTemplateChild(options, ctx, child, isFragment);
+	}
 	ctx.inVFor = inVFor;
 
+	yield* endScope();
 	yield `}${newLine}`;
-
-	scoped.end();
 }
 
 export function parseVForNode(node: CompilerDOM.ForNode) {

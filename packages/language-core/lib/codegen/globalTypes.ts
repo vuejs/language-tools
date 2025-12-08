@@ -1,4 +1,6 @@
 import type { VueCompilerOptions } from '../types';
+import * as names from './names';
+import { endOfLine, newLine } from './utils';
 
 export function getGlobalTypesFileName(options: VueCompilerOptions) {
 	return [
@@ -11,22 +13,22 @@ export function getGlobalTypesFileName(options: VueCompilerOptions) {
 export function generateGlobalTypes(options: VueCompilerOptions) {
 	const { lib, target, checkUnknownProps } = options;
 
-	let text = `// @ts-nocheck\nexport {};\n`;
+	let text = `// @ts-nocheck${newLine}`;
+	text += `export {}${endOfLine}`;
+
 	if (target < 3.5) {
-		text += `
-; declare module '${lib}' {
+		text += `declare module '${lib}' {
 	export interface GlobalComponents { }
 	export interface GlobalDirectives { }
-}`;
+}${newLine}`;
 	}
-	text += `
-; declare global {
-	${checkUnknownProps ? '' : 'var __VLS_PROPS_FALLBACK: Record<string, unknown>;'}
+
+	text += `declare global {
+	${checkUnknownProps ? '' : `var ${names.PROPS_FALLBACK}: Record<string, unknown>;`}
 
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
-	const __VLS_unref: typeof import('${lib}').unref;
-	const __VLS_placeholder: any;
-	const __VLS_intrinsics: ${
+	const ${names.placeholder}: any;
+	const ${names.intrinsics}: ${
 		target >= 3.3
 			? `import('${lib}/jsx-runtime').JSX.IntrinsicElements`
 			: `globalThis.JSX.IntrinsicElements`
@@ -42,7 +44,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 	type __VLS_SpreadMerge<A, B> = Omit<A, keyof B> & B;
-	type __VLS_WithComponent<N0 extends string, LocalComponents, Self, N1 extends string, N2 extends string, N3 extends string> =
+	type __VLS_WithComponent<N0 extends string, LocalComponents, Self, N1 extends string, N2 extends string = N1, N3 extends string = N1> =
 		N1 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N1] } :
 		N2 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N2] } :
 		N3 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N3] } :
@@ -134,12 +136,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	type __VLS_ResolveDirectives<T> = {
 		[K in keyof T & string as \`v\${Capitalize<K>}\`]: T[K];
 	};
-	type __VLS_PrettifyGlobal<T> = { [K in keyof T as K]: T[K]; } & {};
-	type __VLS_WithDefaultsGlobal<P, D> = {
-		[K in keyof P as K extends keyof D ? K : never]-?: P[K];
-	} & {
-		[K in keyof P as K extends keyof D ? never : K]: P[K];
-	};
+	type __VLS_PrettifyGlobal<T> = (T extends any ? { [K in keyof T]: T[K]; } : { [K in keyof T as K]: T[K]; }) & {};
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
 	type __VLS_ProxyRefs<T> = import('${lib}').ShallowUnwrapRef<T>;
 
@@ -174,7 +171,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	}) => void;
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
-}
-`;
+}${newLine}`;
+
 	return text;
 }

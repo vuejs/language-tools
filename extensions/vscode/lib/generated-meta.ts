@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = 'Vue';
 export const name = 'volar';
-export const version = '3.1.0';
+export const version = '3.1.5';
 export const displayName = 'Vue (Official)';
 export const description = 'Language Support for Vue';
 export const extensionId = `${publisher}.${name}`;
@@ -56,6 +56,9 @@ export type ConfigKey =
 	| 'vue.format.template.initialIndent'
 	| 'vue.format.script.initialIndent'
 	| 'vue.format.style.initialIndent'
+	| 'vue.format.script.enabled'
+	| 'vue.format.template.enabled'
+	| 'vue.format.style.enabled'
 	| 'vue.format.wrapAttributes';
 
 export interface ConfigKeyTypeMap {
@@ -79,6 +82,9 @@ export interface ConfigKeyTypeMap {
 	'vue.format.template.initialIndent': boolean;
 	'vue.format.script.initialIndent': boolean;
 	'vue.format.style.initialIndent': boolean;
+	'vue.format.script.enabled': boolean;
+	'vue.format.template.enabled': boolean;
+	'vue.format.style.enabled': boolean;
 	'vue.format.wrapAttributes':
 		| 'auto'
 		| 'force'
@@ -110,6 +116,9 @@ export interface ConfigShorthandMap {
 	formatTemplateInitialIndent: 'vue.format.template.initialIndent';
 	formatScriptInitialIndent: 'vue.format.script.initialIndent';
 	formatStyleInitialIndent: 'vue.format.style.initialIndent';
+	formatScriptEnabled: 'vue.format.script.enabled';
+	formatTemplateEnabled: 'vue.format.template.enabled';
+	formatStyleEnabled: 'vue.format.style.enabled';
 	formatWrapAttributes: 'vue.format.wrapAttributes';
 }
 
@@ -134,6 +143,9 @@ export interface ConfigShorthandTypeMap {
 	formatTemplateInitialIndent: boolean;
 	formatScriptInitialIndent: boolean;
 	formatStyleInitialIndent: boolean;
+	formatScriptEnabled: boolean;
+	formatTemplateEnabled: boolean;
+	formatStyleEnabled: boolean;
 	formatWrapAttributes:
 		| 'auto'
 		| 'force'
@@ -334,6 +346,33 @@ export const configs = {
 		default: false,
 	} as ConfigItem<'vue.format.style.initialIndent'>,
 	/**
+	 * @key `vue.format.script.enabled`
+	 * @default `true`
+	 * @type `boolean`
+	 */
+	formatScriptEnabled: {
+		key: 'vue.format.script.enabled',
+		default: true,
+	} as ConfigItem<'vue.format.script.enabled'>,
+	/**
+	 * @key `vue.format.template.enabled`
+	 * @default `true`
+	 * @type `boolean`
+	 */
+	formatTemplateEnabled: {
+		key: 'vue.format.template.enabled',
+		default: true,
+	} as ConfigItem<'vue.format.template.enabled'>,
+	/**
+	 * @key `vue.format.style.enabled`
+	 * @default `true`
+	 * @type `boolean`
+	 */
+	formatStyleEnabled: {
+		key: 'vue.format.style.enabled',
+		default: true,
+	} as ConfigItem<'vue.format.style.enabled'>,
+	/**
 	 * @key `vue.format.wrapAttributes`
 	 * @default `"auto"`
 	 * @type `string`
@@ -365,6 +404,9 @@ export interface ScopedConfigKeyTypeMap {
 	'format.template.initialIndent': boolean;
 	'format.script.initialIndent': boolean;
 	'format.style.initialIndent': boolean;
+	'format.script.enabled': boolean;
+	'format.template.enabled': boolean;
+	'format.style.enabled': boolean;
 	'format.wrapAttributes':
 		| 'auto'
 		| 'force'
@@ -398,6 +440,9 @@ export const scopedConfigs = {
 		'format.template.initialIndent': true,
 		'format.script.initialIndent': false,
 		'format.style.initialIndent': false,
+		'format.script.enabled': true,
+		'format.template.enabled': true,
+		'format.style.enabled': true,
 		'format.wrapAttributes': 'auto',
 	} satisfies ScopedConfigKeyTypeMap,
 };
@@ -438,12 +483,15 @@ export interface NestedConfigs {
 		'format': {
 			'template': {
 				'initialIndent': boolean;
+				'enabled': boolean;
 			};
 			'script': {
 				'initialIndent': boolean;
+				'enabled': boolean;
 			};
 			'style': {
 				'initialIndent': boolean;
+				'enabled': boolean;
 			};
 			'wrapAttributes':
 				| 'auto'
@@ -492,12 +540,15 @@ export interface NestedScopedConfigs {
 	'format': {
 		'template': {
 			'initialIndent': boolean;
+			'enabled': boolean;
 		};
 		'script': {
 			'initialIndent': boolean;
+			'enabled': boolean;
 		};
 		'style': {
 			'initialIndent': boolean;
+			'enabled': boolean;
 		};
 		'wrapAttributes':
 			| 'auto'

@@ -9,7 +9,7 @@ import type {
 	SFCStyleBlock,
 	SFCTemplateBlock,
 } from '@vue/compiler-sfc';
-import { getAttributeValueOffset } from './shared';
+import { normalizeAttributeValue } from './shared';
 
 declare module '@vue/compiler-sfc' {
 	interface SFCDescriptor {
@@ -125,7 +125,11 @@ function createBlock(node: ElementNode, source: string) {
 				block.__src = parseAttr(p, node);
 			}
 			else if (isScriptBlock(block)) {
-				if (p.name === 'setup' || p.name === 'vapor') {
+				if (p.name === 'vapor') {
+					block.setup ??= attrs[p.name];
+					block.__generic ??= true;
+				}
+				else if (p.name === 'setup') {
 					block.setup = attrs[p.name];
 				}
 				else if (p.name === 'generic') {
@@ -157,9 +161,9 @@ function parseAttr(p: CompilerDOM.AttributeNode, node: CompilerDOM.ElementNode) 
 	if (!p.value) {
 		return true;
 	}
-	const offset = getAttributeValueOffset(p.value);
+	const [content, offset] = normalizeAttributeValue(p.value);
 	return {
-		text: p.value.content,
+		text: content,
 		offset: offset - node.loc.start.offset,
 		quotes: offset > p.value.loc.start.offset,
 	};

@@ -188,7 +188,7 @@ export class CompilerOptionsResolver {
 				...defaults.fallthroughComponentNames,
 				...this.options.fallthroughComponentNames ?? [],
 			].map(hyphenateTag),
-			// https://github.com/vuejs/vue-next/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
+			// https://github.com/vuejs/core/blob/master/packages/compiler-dom/src/transforms/vModel.ts#L49-L51
 			// https://vuejs.org/guide/essentials/forms.html#form-input-bindings
 			experimentalModelPropName: Object.fromEntries(
 				Object.entries(

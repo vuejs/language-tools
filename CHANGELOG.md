@@ -1,5 +1,73 @@
 # Changelog
 
+## 3.1.7 (2025-12-08)
+
+### Features
+
+- feat(language-core): cache virtual code by `scriptId` (#5811) - Thanks to @serkodev!
+
+### Bug Fixes
+
+- fix(language-core): avoid using `Identifier.text` property (#5810)
+- fix(language-core): generate script separator on demand (#5816)
+- fix(language-core): avoid invalid `__VLS_Slots` generation
+
+### Other Changes
+
+- feat(lint): add typescript services types lint rule (#5813) - Thanks to @serkodev!
+
+## 3.1.6 (2025-12-06)
+
+### Features
+
+- feat(vscode): add settings to enable per-block formatting (#5784) - Thanks to @serkodev!
+- feat(language-service): enhanced component auto import (#5790)
+- feat(component-meta): add component name and description fields (#5797)
+- feat(typescript-plugin): add support for template "Add Import" quick fix (#5799) - Thanks to @serkodev!
+- feat(typescript-plugin): mapping JSDoc informations from `<script setup>` (#5805)
+- feat(vscode): support tsdk path for Eclipse Theia (#5806) - Thanks to @serkodev!
+
+### Bug Fixes
+
+- fix(language-service): ignore intrinsic elements when detect tag name casing (#5771)
+- fix(language-core): `createParsedCommandLineByJson` parsed incorrect options since v3.1.5 (https://github.com/vuejs/language-tools/pull/5768#issuecomment-3569623037)
+- fix(vscode): make `vue.server.path` compatible with Windows (#5772)
+- fix(vscode): analyze interpolation highlight ranges based on AST (#5777)
+- fix(vscode): sync latest vscode html language configuration (#5740)
+- fix(language-core): enhance `getVIfNode` to support `v-else-if` directives (#5765) - Thanks to @serkodev!
+- fix(language-core): generate `{}` instead of its string value for `style="..."` (#5781) - Thanks to @KazariEX!
+- fix(language-core): `v-bind="$attrs"` loses navigation when `inferTemplateDollarAttrs` is disabled (#5783)
+- fix(language-service): skip `const props =` completion in StringLiteral (#5786)
+- fix(language-core): unable to get completion for the second scoped class name
+- fix(language-service): format components with HTML void-element names (#5788) - Thanks to @serkodev!
+- fix(language-service): properly handle promise when resolving CSS links (#5785)
+- fix(language-core): infer `$el` type for generic components using `inferComponentDollarEl` (#5794)
+- fix(language-core): ensure `<script>` content generates before `<script setup>` (#5795)
+- fix(language-core): remove `bypassDefineComponent` hack for better JS support (#4876) (#5379)
+- fix(language-core): `Prettify<T>` caused generic props gets inferred as `unknown`  (#5667) - Thanks to @so1ve!
+- fix(vscode): handle leading `<` as operator in SFC scripts (#5801) - Thanks to @serkodev!
+- fix(vscode): patch `isTypeScriptDocument` in VSCode for `typescript.preferences.autoImportSpecifierExcludeRegexes` config support (#5364)
+- fix(language-core): ensure type consistency for optional boolean props (#5803)
+- fix(language-core): add compatibility for `vapor` attr (#5496)
+- fix(language-core): AST fault tolerance for key binding on template (#5807)
+
+### Performance
+
+- perf(language-core): reuse ts asts for `:class` - Thanks to @KazariEX!
+
+### Other Changes
+
+- Revert "refactor(typescript-plugin): remove go to definition trick for auto imported components (#5733)"
+- docs(typescript-plugin): update Neovim configuration link (#5775) - Thanks to @AlexVagrant!
+- refactor(language-core): normalize template AST (#5782)
+- refactor(language-core): split style codegen (#5787)
+- refactor(language-core): remove `debugger` from virtual code for tsslint compatibility
+- refactor(language-core): remove legacy navigation support in `ref="xxx"`
+- refactor(language-core): reduce codegen options (#5804)
+- refactor(component-meta): deprecated `rawType` and `__internal__.tsLs` (#5808)
+- chore: update volar to 2.4.26
+  - feat: fallback resolution mode for `createResolveModuleName` (https://github.com/volarjs/volar.js/pull/293) (#5644) - Thanks to @serkodev!
+
 ## 3.1.5 (2025-11-23)
 
 ### Features

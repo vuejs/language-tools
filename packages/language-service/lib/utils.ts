@@ -19,23 +19,3 @@ export function resolveEmbeddedCode(
 		root: sourceScript.generated!.root as VueVirtualCode,
 	};
 }
-
-export function createReferenceResolver(
-	context: LanguageServiceContext,
-	resolveReference: typeof import('volar-service-html').resolveReference,
-	resolveModuleName: import('@vue/typescript-plugin/lib/requests').Requests['resolveModuleName'],
-) {
-	return async (ref: string, base: string) => {
-		let uri = URI.parse(base);
-		const decoded = context.decodeEmbeddedDocumentUri(uri);
-		if (decoded) {
-			uri = decoded[0];
-		}
-
-		let moduleName: string | null | undefined;
-		if (!ref.startsWith('./') && !ref.startsWith('../')) {
-			moduleName = await resolveModuleName(uri.fsPath, ref);
-		}
-		return moduleName ?? resolveReference(ref, uri, context.env.workspaceFolders);
-	};
-}

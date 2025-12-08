@@ -56,4 +56,11 @@ export interface Requests {
 		fileName: string,
 		position: ts.LineAndCharacter,
 	): Response<string>;
+	getAutoImportSuggestions(
+		fileName: string,
+		position: number,
+	): Response<ts.CompletionInfo>;
+	resolveAutoImportCompletionEntry(
+		data: ts.CompletionEntryData,
+	): Response<ts.CompletionEntryDetails>;
 }

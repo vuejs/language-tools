@@ -2,13 +2,14 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import { isMatch } from 'picomatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { getAttributeValueOffset, hyphenateAttr, hyphenateTag } from '../../utils/shared';
+import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
+import * as names from '../names';
 import { identifierRegex, newLine } from '../utils';
+import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
 import { generateUnicode } from '../utils/unicode';
-import { wrapWith } from '../utils/wrapWith';
 import type { TemplateCodegenContext } from './context';
 import { generateModifiers } from './elementDirectives';
 import { generateEventArg, generateEventExpression } from './elementEvents';
@@ -16,7 +17,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
-export interface FailedPropExpression {
+export interface FailGeneratedExpression {
 	node: CompilerDOM.SimpleExpressionNode;
 	prefix: string;
 	suffix: string;
@@ -28,7 +29,7 @@ export function* generateElementProps(
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
 	strictPropsCheck: boolean,
-	failedPropExps?: FailedPropExpression[],
+	failGeneratedExpressions?: FailGeneratedExpression[],
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -60,14 +61,14 @@ export function* generateElementProps(
 				&& prop.arg.loc.source.startsWith('[')
 				&& prop.arg.loc.source.endsWith(']')
 			) {
-				failedPropExps?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
-				failedPropExps?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
+				failGeneratedExpressions?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
+				failGeneratedExpressions?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
 			}
 			else if (
 				!prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
+				failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 		}
 	}
@@ -97,7 +98,7 @@ export function* generateElementProps(
 				|| options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(propName!, pattern))
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
+					failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 				}
 				continue;
 			}
@@ -116,43 +117,36 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			yield* wrapWith(
+			const token = yield* startBoundary(
 				'template',
 				prop.loc.start.offset,
-				prop.loc.end.offset,
 				codeFeatures.verification,
-				...(
-					prop.arg
-						? generateObjectProperty(
-							options,
-							ctx,
-							propName,
-							prop.arg.loc.start.offset,
-							features,
-							shouldCamelize,
-						)
-						: wrapWith(
-							'template',
-							prop.loc.start.offset,
-							prop.loc.start.offset + 'v-model'.length,
-							codeFeatures.withoutHighlightAndCompletion,
-							propName,
-						)
-				),
-				`: `,
-				...wrapWith(
-					'template',
-					prop.arg?.loc.start.offset ?? prop.loc.start.offset,
-					prop.arg?.loc.end.offset ?? prop.loc.end.offset,
-					codeFeatures.verification,
-					...generatePropExp(
-						options,
-						ctx,
-						prop,
-						prop.exp,
-					),
-				),
 			);
+			if (prop.arg) {
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					propName,
+					prop.arg.loc.start.offset,
+					features,
+					shouldCamelize,
+				);
+			}
+			else {
+				const token2 = yield* startBoundary(
+					'template',
+					prop.loc.start.offset,
+					codeFeatures.withoutHighlightAndCompletion,
+				);
+				yield propName;
+				yield endBoundary(token2, prop.loc.start.offset + 'v-model'.length);
+			}
+			yield `: `;
+			const argLoc = prop.arg?.loc ?? prop.loc;
+			const token3 = yield* startBoundary('template', argLoc.start.offset, codeFeatures.verification);
+			yield* generatePropExp(options, ctx, prop, prop.exp);
+			yield endBoundary(token3, argLoc.end.offset);
+			yield endBoundary(token, prop.loc.end.offset);
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -180,26 +174,26 @@ export function* generateElementProps(
 			if (shouldSpread) {
 				yield `...{ `;
 			}
-			yield* wrapWith(
-				'template',
+			const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);
+			yield* generateObjectProperty(
+				options,
+				ctx,
+				prop.name,
 				prop.loc.start.offset,
-				prop.loc.end.offset,
-				codeFeatures.verification,
-				...generateObjectProperty(
-					options,
-					ctx,
-					prop.name,
-					prop.loc.start.offset,
-					features,
-					shouldCamelize,
-				),
-				`: `,
-				...(
-					prop.value
-						? generateAttrValue(prop.value, codeFeatures.withoutNavigation)
-						: [`true`]
-				),
+				features,
+				shouldCamelize,
 			);
+			yield `: `;
+			if (prop.name === 'style') {
+				yield `{}`;
+			}
+			else if (prop.value) {
+				yield* generateAttrValue(prop.value, codeFeatures.withoutNavigation);
+			}
+			else {
+				yield `true`;
+			}
+			yield endBoundary(token, prop.loc.end.offset);
 			if (shouldSpread) {
 				yield ` }`;
 			}
@@ -211,22 +205,18 @@ export function* generateElementProps(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			if (prop.exp.loc.source === '$attrs') {
-				ctx.bindingAttrLocs.push(prop.exp.loc);
+				failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 			else {
-				yield* wrapWith(
-					'template',
-					prop.exp.loc.start.offset,
-					prop.exp.loc.end.offset,
-					codeFeatures.verification,
-					`...`,
-					...generatePropExp(
-						options,
-						ctx,
-						prop,
-						prop.exp,
-					),
+				const token = yield* startBoundary('template', prop.exp.loc.start.offset, codeFeatures.verification);
+				yield `...`;
+				yield* generatePropExp(
+					options,
+					ctx,
+					prop,
+					prop.exp,
 				);
+				yield endBoundary(token, prop.exp.loc.end.offset);
 				yield `,${newLine}`;
 			}
 		}
@@ -246,7 +236,7 @@ export function* generatePropExp(
 		yield* generateInterpolation(
 			options,
 			ctx,
-			'template',
+			options.template,
 			codeFeatures.all,
 			exp.loc.source,
 			exp.loc.start.offset,
@@ -265,17 +255,17 @@ export function* generatePropExp(
 				codeFeatures.withoutHighlightAndCompletion,
 			);
 
-			if (options.destructuredPropNames.has(propVariableName) || ctx.hasLocalVariable(propVariableName)) {
+			if (ctx.scopes.some(scope => scope.has(propVariableName))) {
 				yield* codes;
 			}
-			else if (options.templateRefNames.has(propVariableName)) {
-				yield `__VLS_unref(`;
+			else if (options.setupRefs.has(propVariableName)) {
 				yield* codes;
-				yield `)`;
+				yield `.value`;
 			}
 			else {
-				ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
-				yield `__VLS_ctx.`;
+				ctx.recordComponentAccess('template', propVariableName, exp.loc.start.offset);
+				yield names.ctx;
+				yield `.`;
 				yield* codes;
 			}
 
@@ -289,9 +279,9 @@ function* generateAttrValue(
 	features: VueCodeInformation,
 ): Generator<Code> {
 	const quote = node.loc.source.startsWith("'") ? "'" : '"';
-	const offset = getAttributeValueOffset(node);
+	const [content, offset] = normalizeAttributeValue(node);
 	yield quote;
-	yield* generateUnicode(node.content, offset, features);
+	yield* generateUnicode(content, offset, features);
 	yield quote;
 }
 

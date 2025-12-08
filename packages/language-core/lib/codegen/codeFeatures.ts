@@ -7,14 +7,14 @@ const raw = {
 		semantic: true,
 		navigation: true,
 	},
+	importCompletionOnly: {
+		__importCompletion: true,
+	},
 	verification: {
 		verification: true,
 	},
 	completion: {
 		completion: true,
-	},
-	additionalCompletion: {
-		completion: { isAdditional: true },
 	},
 	withoutCompletion: {
 		verification: true,
@@ -27,9 +27,9 @@ const raw = {
 	navigationWithoutRename: {
 		navigation: { shouldRename: () => false },
 	},
-	navigationAndAdditionalCompletion: {
+	navigationAndCompletion: {
 		navigation: true,
-		completion: { isAdditional: true },
+		completion: true,
 	},
 	navigationAndVerification: {
 		navigation: true,
