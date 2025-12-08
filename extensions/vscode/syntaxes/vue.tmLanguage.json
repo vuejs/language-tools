@@ -801,8 +801,8 @@
 			"end": "(?=<\\/script[\\s>])",
 			"patterns": [
 				{
-					"begin": "\\G(?!\\blang\\s*=\\s*(?:['\"]?)ts\\b)",
-					"end": "(?=\\blang\\s*=\\s*(?:['\"]?)ts\\b)|(>)",
+					"begin": "\\G(?!\\blang\\s*=\\s*(?:['\"]?)(?:ts|tsx|jsx|coffee)\\b)",
+					"end": "(?=\\blang\\s*=\\s*(?:['\"]?)(?:ts|tsx|jsx|coffee)\\b)|(>)",
 					"endCaptures": {
 						"1": {
 							"name": "punctuation.definition.tag.end.html.vue"
@@ -832,6 +832,63 @@
 							"patterns": [
 								{
 									"include": "source.ts"
+								}
+							]
+						}
+					]
+				},
+				{
+					"begin": "(?=\\blang\\s*=\\s*(?:['\"]?)tsx\\b)",
+					"end": "(?=<\\/script[\\s>])",
+					"patterns": [
+						{
+							"include": "#tag-stuff"
+						},
+						{
+							"begin": "(?<=>)",
+							"end": "(?=<\\/script[\\s>])",
+							"name": "source.tsx",
+							"patterns": [
+								{
+									"include": "source.tsx"
+								}
+							]
+						}
+					]
+				},
+				{
+					"begin": "(?=\\blang\\s*=\\s*(?:['\"]?)jsx\\b)",
+					"end": "(?=<\\/script[\\s>])",
+					"patterns": [
+						{
+							"include": "#tag-stuff"
+						},
+						{
+							"begin": "(?<=>)",
+							"end": "(?=<\\/script[\\s>])",
+							"name": "source.js.jsx",
+							"patterns": [
+								{
+									"include": "source.js.jsx"
+								}
+							]
+						}
+					]
+				},
+				{
+					"begin": "(?=\\blang\\s*=\\s*(?:['\"]?)coffee\\b)",
+					"end": "(?=<\\/script[\\s>])",
+					"patterns": [
+						{
+							"include": "#tag-stuff"
+						},
+						{
+							"begin": "(?<=>)",
+							"end": "(?=<\\/script[\\s>])",
+							"name": "source.coffee",
+							"patterns": [
+								{
+									"include": "source.coffee"
 								}
 							]
 						}
