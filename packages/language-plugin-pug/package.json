@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@volar/source-map": "2.4.26",
-		"volar-service-pug": "0.0.67"
+		"volar-service-pug": "0.0.68"
 	},
 	"devDependencies": {
 		"@types/node": "^22.10.4",

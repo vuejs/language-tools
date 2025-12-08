@@ -1,7 +1,12 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`vue-tsc-dts > Input: component-name-description/component.vue, Output: component-name-description/component.vue.d.ts 1`] = `
-"declare const __VLS_export: import("vue").DefineComponent2<{
+"/**
+ * My awesome component description
+ */
+declare const _default: typeof __VLS_export;
+export default _default;
+declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
     props: {
@@ -30,11 +35,6 @@ exports[`vue-tsc-dts > Input: component-name-description/component.vue, Output: 
     __typeEl: any;
     __defaults: unknown;
 }>;
-/**
- * My awesome component description
- */
-declare const _default: typeof __VLS_export;
-export default _default;
 "
 `;
 
@@ -525,7 +525,9 @@ export default _default;
 `;
 
 exports[`vue-tsc-dts > Input: reference-type-props/component-js.vue, Output: reference-type-props/component-js.vue.d.ts 1`] = `
-"declare const __VLS_export: import("vue").DefineComponent2<{
+"declare const _default: typeof __VLS_export;
+export default _default;
+declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
     props: {
@@ -569,8 +571,6 @@ exports[`vue-tsc-dts > Input: reference-type-props/component-js.vue, Output: ref
     __typeEl: any;
     __defaults: unknown;
 }>;
-declare const _default: typeof __VLS_export;
-export default _default;
 "
 `;
 

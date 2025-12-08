@@ -44,7 +44,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
 	type __VLS_SpreadMerge<A, B> = Omit<A, keyof B> & B;
-	type __VLS_WithComponent<N0 extends string, LocalComponents, Self, N1 extends string, N2 extends string, N3 extends string> =
+	type __VLS_WithComponent<N0 extends string, LocalComponents, Self, N1 extends string, N2 extends string = N1, N3 extends string = N1> =
 		N1 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N1] } :
 		N2 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N2] } :
 		N3 extends keyof LocalComponents ? { [K in N0]: LocalComponents[N3] } :
