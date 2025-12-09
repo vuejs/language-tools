@@ -1,11 +1,7 @@
 <template>
 	<slot />
 	<template v-for="(value, key) of ({} as T)">
-		<slot
-		v-if="typeof key === 'string'"
-		:name="`cell:${key}`"
-		:value="value"
-		/>
+		<slot v-if="typeof key === 'string'" :name="`cell:${key}`" :value="(value as T[keyof T])" />
 	</template>
 </template>
 

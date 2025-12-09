@@ -27,10 +27,8 @@
   </div>
   <!-- objUnion -->
   <div v-for="(val, key, index) in objUnion">
-    <!-- {{ exactType(val, {} as string | number) }} -->
-    {{ exactType(val, {} as string) }}
-    <!-- {{ exactType(key, {} as 'a' | 'b') }} -->
-    {{ exactType(key, {} as 'a') }}
+    {{ exactType(val, {} as string | number) }}
+    {{ exactType(key, {} as 'a' | 'b') }}
     {{ exactType(index, {} as number) }}
   </div>
   <!-- record -->
@@ -42,7 +40,7 @@
   <!-- any -->
   <div v-for="(val, index) in _any">
     {{ exactType(val, {} as any) }}
-    {{ exactType(index, {} as number) }}
+    {{ exactType(index, {} as string | number | symbol) }}
   </div>
 </template>
 

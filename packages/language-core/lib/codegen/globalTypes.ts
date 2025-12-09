@@ -140,20 +140,13 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	type __VLS_UseTemplateRef<T> = Readonly<import('${lib}').ShallowRef<T | null>>;
 	type __VLS_ProxyRefs<T> = import('${lib}').ShallowUnwrapRef<T>;
 
-	function __VLS_getVForSourceType<T extends number | string | any[] | Iterable<any>>(source: T): [
-		item: T extends number ? number
-			: T extends string ? string
-			: T extends any[] ? T[number]
-			: T extends Iterable<infer T1> ? T1
-			: any,
-		index: number,
-	][];
-	function __VLS_getVForSourceType<T>(source: T): [
-		item: T[keyof T],
-		key: keyof T,
-		index: number,
-	][];
-	function __VLS_getSlotParameters<S, D extends S>(slot: S, decl?: D):
+	function __VLS_vFor<T>(source: T):
+		T extends number ? [number, number][]
+		: T extends string ? [string, number][]
+		: T extends any[] ? [T[number], number][]
+		: T extends Iterable<infer V> ? [V, number][]
+		: [T[keyof T], keyof T, number][];
+	function __VLS_vSlot<S, D extends S>(slot: S, decl?: D):
 		D extends (...args: infer P) => any ? P : any[];
 	function __VLS_asFunctionalDirective<T>(dir: T): T extends import('${lib}').ObjectDirective
 		? NonNullable<T['created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted']>

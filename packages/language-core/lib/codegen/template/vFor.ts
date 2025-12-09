@@ -30,7 +30,7 @@ export function* generateVFor(
 	}
 	yield `] of `;
 	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `__VLS_getVForSourceType(`;
+		yield `__VLS_vFor(`;
 		yield* generateInterpolation(
 			options,
 			ctx,
