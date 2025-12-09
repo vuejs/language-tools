@@ -13,8 +13,8 @@ export function* generateTemplate(
 ): Generator<Code> {
 	yield* generateSetupExposed(options, ctx);
 	yield* generateTemplateCtx(options, ctx, selfType);
-	yield* generateTemplateComponents(options);
-	yield* generateTemplateDirectives(options);
+	yield* generateTemplateComponents(options, ctx);
+	yield* generateTemplateDirectives(options, ctx);
 
 	if (options.styleCodegen) {
 		yield* options.styleCodegen.codes;
@@ -82,14 +82,20 @@ function* generateTemplateCtx(
 	yield endOfLine;
 }
 
-function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<Code> {
-	const types: string[] = [`typeof ${names.ctx}`];
+function* generateTemplateComponents(
+	{ script, scriptRanges }: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+): Generator<Code> {
+	const types: string[] = [];
 
-	if (options.script && options.scriptRanges?.componentOptions?.components) {
-		const { components } = options.scriptRanges.componentOptions;
+	if (ctx.generatedTypes.has(names.SetupExposed)) {
+		types.push(names.SetupExposed);
+	}
+	if (script && scriptRanges?.componentOptions?.components) {
+		const { components } = scriptRanges.componentOptions;
 		yield `const __VLS_componentsOption = `;
 		yield* generateSfcBlockSection(
-			options.script,
+			script,
 			components.start,
 			components.end,
 			codeFeatures.navigation,
@@ -98,18 +104,24 @@ function* generateTemplateComponents(options: ScriptCodegenOptions): Generator<C
 		types.push(`typeof __VLS_componentsOption`);
 	}
 
-	yield `type __VLS_LocalComponents = ${types.join(` & `)}${endOfLine}`;
+	yield `type __VLS_LocalComponents = ${types.length ? types.join(` & `) : `{}`}${endOfLine}`;
 	yield `let ${names.components}!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
 }
 
-function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<Code> {
-	const types: string[] = [`typeof ${names.ctx}`];
+function* generateTemplateDirectives(
+	{ script, scriptRanges }: ScriptCodegenOptions,
+	ctx: ScriptCodegenContext,
+): Generator<Code> {
+	const types: string[] = [];
 
-	if (options.script && options.scriptRanges?.componentOptions?.directives) {
-		const { directives } = options.scriptRanges.componentOptions;
+	if (ctx.generatedTypes.has(names.SetupExposed)) {
+		types.push(names.SetupExposed);
+	}
+	if (script && scriptRanges?.componentOptions?.directives) {
+		const { directives } = scriptRanges.componentOptions;
 		yield `const __VLS_directivesOption = `;
 		yield* generateSfcBlockSection(
-			options.script,
+			script,
 			directives.start,
 			directives.end,
 			codeFeatures.navigation,
@@ -118,7 +130,7 @@ function* generateTemplateDirectives(options: ScriptCodegenOptions): Generator<C
 		types.push(`__VLS_ResolveDirectives<typeof __VLS_directivesOption>`);
 	}
 
-	yield `type __VLS_LocalDirectives = ${types.join(` & `)}${endOfLine}`;
+	yield `type __VLS_LocalDirectives = ${types.length ? types.join(` & `) : `{}`}${endOfLine}`;
 	yield `let ${names.directives}!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
 }
 
