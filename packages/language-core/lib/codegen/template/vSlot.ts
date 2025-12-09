@@ -139,7 +139,7 @@ function* generateSlotParameters(
 
 	yield `const [`;
 	yield* interpolation;
-	yield `] = __VLS_getSlotParameters(${slotVar}!`;
+	yield `] = __VLS_vSlot(${slotVar}!`;
 
 	if (types.some(t => t)) {
 		yield `, `;
