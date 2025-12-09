@@ -5,7 +5,6 @@ import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
-import { resolveSrcPath } from './src';
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
@@ -26,7 +25,7 @@ export function* generateTemplate(
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, script, styleCodegen, scriptSetupRanges, fileName }: ScriptCodegenOptions,
+	{ vueCompilerOptions, styleCodegen, scriptSetupRanges, fileName }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	selfType: string | undefined,
 ): Generator<Code> {
@@ -39,9 +38,6 @@ function* generateTemplateCtx(
 	}
 	if (selfType) {
 		exps.push([`{} as InstanceType<__VLS_PickNotAny<typeof ${selfType}, new () => {}>>`]);
-	}
-	else if (typeof script?.src === 'object') {
-		exps.push([`{} as typeof import('${resolveSrcPath(script.src.text)}').default`]);
 	}
 	else {
 		exps.push([`{} as import('${vueCompilerOptions.lib}').ComponentPublicInstance`]);
