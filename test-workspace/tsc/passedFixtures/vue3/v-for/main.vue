@@ -37,10 +37,22 @@
     {{ exactType(key, {} as string) }}
     {{ exactType(index, {} as number) }}
   </div>
+  <!-- recordNumberKey -->
+  <div v-for="(val, key, index) in recordNumberKey">
+    {{ exactType(val, {} as string) }}
+    {{ exactType(key, {} as string) }}
+    {{ exactType(index, {} as number) }}
+  </div>
+  <!-- recordUnionKey -->
+  <div v-for="(val, key, index) in recordUnionKey">
+    {{ exactType(val, {} as string) }}
+    {{ exactType(key, {} as 'a' | 'b') }}
+    {{ exactType(index, {} as number) }}
+  </div>
   <!-- any -->
   <div v-for="(val, index) in _any">
     {{ exactType(val, {} as any) }}
-    {{ exactType(index, {} as string | number | symbol) }}
+    {{ exactType(index, {} as string | number) }}
   </div>
 </template>
 
@@ -52,5 +64,7 @@ const map = new Map<string, number>();
 const obj = { a: '', b: 0 };
 const objUnion = { a: '' } as { a: string } | { a: string, b: number };
 const record: Record<string, string> = { a: '' };
+const recordNumberKey: Record<number, string> = { 1: '' };
+const recordUnionKey: Record<'a' | 'b', string> = { 'a': '', 'b': '' };
 const _any = {} as any;
 </script>

@@ -145,7 +145,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		: T extends string ? [string, number][]
 		: T extends any[] ? [T[number], number][]
 		: T extends Iterable<infer V> ? [V, number][]
-		: [T[keyof T], keyof T, number][];
+		: [T[keyof T], keyof T extends string ? keyof T : string, number][];
 	function __VLS_vSlot<S, D extends S>(slot: S, decl?: D):
 		D extends (...args: infer P) => any ? P : any[];
 	function __VLS_asFunctionalDirective<T>(dir: T): T extends import('${lib}').ObjectDirective
