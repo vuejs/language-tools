@@ -3,6 +3,7 @@ import {
 	type CompletionItemTag,
 	type CompletionList,
 	type Disposable,
+	type LanguageServiceContext,
 	type LanguageServicePlugin,
 	type TextDocument,
 	transformCompletionItem,
@@ -86,9 +87,43 @@ export function create(
 			},
 		};
 	};
+	const getDocumentContext: (context: LanguageServiceContext) => html.DocumentContext = context => ({
+		resolveReference(ref, base) {
+			let baseUri = URI.parse(base);
+			const decoded = context.decodeEmbeddedDocumentUri(baseUri);
+			if (decoded) {
+				baseUri = decoded[0];
+			}
+			if (
+				modulePathCache
+				&& baseUri.scheme === 'file'
+				&& !ref.startsWith('./')
+				&& !ref.startsWith('../')
+			) {
+				const map = modulePathCache;
+				if (!map.has(ref)) {
+					const fileName = baseUri.fsPath.replace(/\\/g, '/');
+					const promise = resolveModuleName(fileName, ref);
+					map.set(ref, promise);
+					if (promise instanceof Promise) {
+						promise.then(res => map.set(ref, res));
+					}
+				}
+				const cached = modulePathCache.get(ref);
+				if (cached instanceof Promise) {
+					throw cached;
+				}
+				if (cached) {
+					return cached;
+				}
+			}
+			return resolveReference(ref, baseUri, context.env.workspaceFolders);
+		},
+	});
 	const baseService = languageId === 'jade'
 		? createPugService({
 			useDefaultDataProvider: false,
+			getDocumentContext,
 			getCustomData() {
 				return [
 					...customData,
@@ -100,41 +135,7 @@ export function create(
 		: createHtmlService({
 			documentSelector: ['html', 'markdown'],
 			useDefaultDataProvider: false,
-			getDocumentContext(context) {
-				return {
-					resolveReference(ref, base) {
-						let baseUri = URI.parse(base);
-						const decoded = context.decodeEmbeddedDocumentUri(baseUri);
-						if (decoded) {
-							baseUri = decoded[0];
-						}
-						if (
-							modulePathCache
-							&& baseUri.scheme === 'file'
-							&& !ref.startsWith('./')
-							&& !ref.startsWith('../')
-						) {
-							const map = modulePathCache;
-							if (!map.has(ref)) {
-								const fileName = baseUri.fsPath.replace(/\\/g, '/');
-								const promise = resolveModuleName(fileName, ref);
-								map.set(ref, promise);
-								if (promise instanceof Promise) {
-									promise.then(res => map.set(ref, res));
-								}
-							}
-							const cached = modulePathCache.get(ref);
-							if (cached instanceof Promise) {
-								throw cached;
-							}
-							if (cached) {
-								return cached;
-							}
-						}
-						return resolveReference(ref, baseUri, context.env.workspaceFolders);
-					},
-				};
-			},
+			getDocumentContext,
 			getCustomData() {
 				return [
 					...customData,
