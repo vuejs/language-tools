@@ -40,7 +40,7 @@
   <!-- recordNumberKey -->
   <div v-for="(val, key, index) in recordNumberKey">
     {{ exactType(val, {} as string) }}
-    {{ exactType(key, {} as string) }}
+    {{ exactType(key, {} as '1' | '2' | '3') }}
     {{ exactType(index, {} as number) }}
   </div>
   <!-- recordUnionKey -->
@@ -64,7 +64,7 @@ const map = new Map<string, number>();
 const obj = { a: '', b: 0 };
 const objUnion = { a: '' } as { a: string } | { a: string, b: number };
 const record: Record<string, string> = { a: '' };
-const recordNumberKey: Record<number, string> = { 1: '' };
+const recordNumberKey: Record<1 | 2 | 3, string> = { 1: '', 2: '', 3: '' };
 const recordUnionKey: Record<'a' | 'b', string> = { 'a': '', 'b': '' };
 const _any = {} as any;
 </script>
