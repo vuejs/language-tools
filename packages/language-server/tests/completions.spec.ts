@@ -210,8 +210,6 @@ test('Auto import', async () => {
 			},
 		} satisfies import('typescript').server.protocol.ConfigureRequestArguments,
 	});
-	const items = (await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items;
-	console.log(items);
 	expect(
 		(await requestCompletionListToVueServer('fixture.vue', 'vue', `<template><| /></template>`)).items
 			.map(item => item.label),
