@@ -2,6 +2,8 @@
 import type { FunctionDirective } from 'vue';
 import { exactType } from '../../shared';
 
+let Comp!: (_: { foo?: string; }) => void;
+
 export default {
 	directives: {
 		foo: {} as FunctionDirective<typeof Comp, (_: string) => void>
@@ -10,7 +12,6 @@ export default {
 </script>
 
 <script setup lang="ts">
-let Comp!: (_: { foo?: string; }) => void;
 </script>
 
 <template>

@@ -12,7 +12,6 @@ export function* generateTemplate(
 	ctx: ScriptCodegenContext,
 	selfType?: string,
 ): Generator<Code> {
-	selfType ??= yield* generateSelf(options);
 	yield* generateSetupExposed(options, ctx);
 	yield* generateTemplateCtx(options, ctx, selfType);
 	yield* generateTemplateComponents(options);
@@ -23,24 +22,6 @@ export function* generateTemplate(
 	}
 	if (options.templateCodegen) {
 		yield* options.templateCodegen.codes;
-	}
-}
-
-function* generateSelf({ script, scriptRanges, vueCompilerOptions }: ScriptCodegenOptions): Generator<Code> {
-	const varName = '__VLS_self';
-	if (script && scriptRanges?.componentOptions) {
-		yield `const ${varName} = (await import('${vueCompilerOptions.lib}')).defineComponent(`;
-		const { args } = scriptRanges.componentOptions;
-		yield* generateSfcBlockSection(script, args.start, args.end, codeFeatures.all);
-		yield `)${endOfLine}`;
-		return varName;
-	}
-	else if (script && scriptRanges?.exportDefault) {
-		yield `const ${varName} = `;
-		const { expression } = scriptRanges.exportDefault;
-		yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
-		yield endOfLine;
-		return varName;
 	}
 }
 

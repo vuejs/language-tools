@@ -55,12 +55,17 @@ function* generateWorker(
 	// <script> + <script setup>
 	if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
 		// <script>
-		const { exportDefault, componentOptions } = scriptRanges;
+		let selfType: string | undefined;
+		const { exportDefault } = scriptRanges;
 		if (exportDefault) {
-			const { expression: options } = componentOptions ?? exportDefault;
-			yield* generateSfcBlockSection(script, 0, options.start, codeFeatures.all);
-			yield exportExpression;
-			yield* generateSfcBlockSection(script, options.end, script.content.length, codeFeatures.all);
+			yield* generateScriptWithExportDefault(
+				ctx,
+				script,
+				scriptRanges,
+				exportDefault,
+				vueCompilerOptions,
+				selfType = '__VLS_self',
+			);
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
@@ -68,7 +73,7 @@ function* generateWorker(
 		}
 
 		// <script setup>
-		yield* generateExportDeclareEqual(scriptSetup);
+		yield* generateExportDeclareEqual(scriptSetup, names._export);
 		if (scriptSetup.generic) {
 			yield* generateGeneric(
 				options,
@@ -81,7 +86,7 @@ function* generateWorker(
 					ctx,
 					scriptSetup,
 					scriptSetupRanges,
-					generateTemplate(options, ctx),
+					generateTemplate(options, ctx, selfType),
 				),
 			);
 		}
@@ -92,7 +97,7 @@ function* generateWorker(
 				ctx,
 				scriptSetup,
 				scriptSetupRanges,
-				generateTemplate(options, ctx),
+				generateTemplate(options, ctx, selfType),
 				[`return `],
 			);
 			yield `})()${endOfLine}`;
@@ -101,7 +106,7 @@ function* generateWorker(
 	// only <script setup>
 	else if (scriptSetup && scriptSetupRanges) {
 		if (scriptSetup.generic) {
-			yield* generateExportDeclareEqual(scriptSetup);
+			yield* generateExportDeclareEqual(scriptSetup, names._export);
 			yield* generateGeneric(
 				options,
 				ctx,
@@ -125,7 +130,7 @@ function* generateWorker(
 				scriptSetup,
 				scriptSetupRanges,
 				generateTemplate(options, ctx),
-				generateExportDeclareEqual(scriptSetup),
+				generateExportDeclareEqual(scriptSetup, names._export),
 			);
 		}
 		yield `export default ${exportExpression}${endOfLine}`;
@@ -134,49 +139,19 @@ function* generateWorker(
 	else if (script && scriptRanges) {
 		const { exportDefault } = scriptRanges;
 		if (exportDefault) {
-			const { expression, isObjectLiteral } = exportDefault;
-
-			let wrapLeft: string | undefined;
-			let wrapRight: string | undefined;
-			if (
-				isObjectLiteral
-				&& vueCompilerOptions.optionsWrapper.length
-			) {
-				[wrapLeft, wrapRight] = vueCompilerOptions.optionsWrapper;
-				ctx.inlayHints.push({
-					blockName: script.name,
-					offset: expression.start,
-					setting: 'vue.inlayHints.optionsWrapper',
-					label: wrapLeft || '[Missing optionsWrapper[0]]',
-					tooltip: [
-						'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
-						'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
-					].join('\n\n'),
-				}, {
-					blockName: script.name,
-					offset: expression.end,
-					setting: 'vue.inlayHints.optionsWrapper',
-					label: wrapRight || '[Missing optionsWrapper[1]]',
-				});
-			}
-
-			yield* generateSfcBlockSection(script, 0, expression.start, codeFeatures.all);
-			yield `${exportExpression}${endOfLine}`;
-			yield* generateTemplate(options, ctx, names._export);
-			yield* generateExportDeclareEqual(script);
-			if (wrapLeft && wrapRight) {
-				yield wrapLeft;
-				yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
-				yield wrapRight;
-				yield* generateSfcBlockSection(script, expression.end, script.content.length, codeFeatures.all);
-			}
-			else {
-				yield* generateSfcBlockSection(script, expression.start, script.content.length, codeFeatures.all);
-			}
+			yield* generateScriptWithExportDefault(
+				ctx,
+				script,
+				scriptRanges,
+				exportDefault,
+				vueCompilerOptions,
+				names._export,
+				generateTemplate(options, ctx, names._export),
+			);
 		}
 		else {
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
-			yield* generateExportDeclareEqual(script);
+			yield* generateExportDeclareEqual(script, names._export);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
 			yield* generateTemplate(options, ctx, names._export);
 			yield `export default ${exportExpression}${endOfLine}`;
@@ -184,6 +159,62 @@ function* generateWorker(
 	}
 
 	yield* ctx.localTypes.generate();
+}
+
+function* generateScriptWithExportDefault(
+	ctx: ScriptCodegenContext,
+	script: NonNullable<Sfc['script']>,
+	scriptRanges: ScriptRanges,
+	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
+	vueCompilerOptions: VueCompilerOptions,
+	varName: string,
+	templateGenerator?: Generator<Code>,
+): Generator<Code> {
+	const { componentOptions } = scriptRanges;
+	const { expression, isObjectLiteral } = componentOptions ?? exportDefault;
+
+	let wrapLeft: string | undefined;
+	let wrapRight: string | undefined;
+	if (
+		isObjectLiteral
+		&& vueCompilerOptions.optionsWrapper.length
+	) {
+		[wrapLeft, wrapRight] = vueCompilerOptions.optionsWrapper;
+		ctx.inlayHints.push({
+			blockName: script.name,
+			offset: expression.start,
+			setting: 'vue.inlayHints.optionsWrapper',
+			label: wrapLeft || '[Missing optionsWrapper[0]]',
+			tooltip: [
+				'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
+				'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
+			].join('\n\n'),
+		}, {
+			blockName: script.name,
+			offset: expression.end,
+			setting: 'vue.inlayHints.optionsWrapper',
+			label: wrapRight || '[Missing optionsWrapper[1]]',
+		});
+	}
+
+	yield* generateSfcBlockSection(script, 0, expression.start, codeFeatures.all);
+	yield exportExpression;
+	yield* generateSfcBlockSection(script, expression.end, exportDefault.end, codeFeatures.all);
+	yield endOfLine;
+	if (templateGenerator) {
+		yield* templateGenerator;
+	}
+	yield* generateExportDeclareEqual(script, varName);
+	if (wrapLeft && wrapRight) {
+		yield wrapLeft;
+		yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
+		yield wrapRight;
+	}
+	else {
+		yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
+	}
+	yield endOfLine;
+	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, codeFeatures.all);
 }
 
 function* generateGlobalTypesReference(options: ScriptCodegenOptions): Generator<Code> {
@@ -207,10 +238,10 @@ function* generateGlobalTypesReference(options: ScriptCodegenOptions): Generator
 	}
 }
 
-function* generateExportDeclareEqual(block: SfcBlock): Generator<Code> {
+function* generateExportDeclareEqual(block: SfcBlock, name: string): Generator<Code> {
 	yield `const `;
 	const token = yield* startBoundary(block.name, 0, codeFeatures.doNotReportTs6133);
-	yield names._export;
+	yield name;
 	yield endBoundary(token, block.content.length);
 	yield ` = `;
 }

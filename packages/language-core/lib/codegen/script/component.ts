@@ -13,23 +13,7 @@ export function* generateComponent(
 	scriptSetup: NonNullable<Sfc['scriptSetup']>,
 	scriptSetupRanges: ScriptSetupRanges,
 ): Generator<Code> {
-	if (
-		options.script
-		&& options.scriptRanges?.componentOptions
-		&& options.scriptRanges.componentOptions.expression.start !== options.scriptRanges.componentOptions.args.start
-	) {
-		// use defineComponent() from user space code if it exist
-		yield* generateSfcBlockSection(
-			options.script,
-			options.scriptRanges.componentOptions.expression.start,
-			options.scriptRanges.componentOptions.args.start,
-			codeFeatures.all,
-		);
-		yield `{${newLine}`;
-	}
-	else {
-		yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
-	}
+	yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({${newLine}`;
 
 	const returns: string[][] = [];
 
@@ -59,10 +43,6 @@ export function* generateComponent(
 		&& options.templateCodegen?.generatedTypes.has(names.RootEl)
 	) {
 		yield `__typeEl: {} as ${names.RootEl},${newLine}`;
-	}
-	if (options.script && options.scriptRanges?.componentOptions?.args) {
-		const { args } = options.scriptRanges.componentOptions;
-		yield* generateSfcBlockSection(options.script, args.start + 1, args.end - 1, codeFeatures.all);
 	}
 	yield `})`;
 }
