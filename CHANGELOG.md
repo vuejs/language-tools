@@ -1,5 +1,24 @@
 # Changelog
 
+## 3.1.8 (2025-12-09)
+
+### Features
+
+- feat(vscode): support multiline attribute for `<script>` and `<style>` tag (#5830) - Thanks to @serkodev!
+- feat(vscode): supports format with selected range (#5761) - Thanks to @serkodev!
+- feat(language-service): add tsconfig-based document link support for Pug
+
+### Bug Fixes
+
+- fix(language-core): limit the range of parseDiagnostics checks (#5823)
+- fix(language-core): restore default import bindings for template scope (#5824) - Thanks to @serkodev!
+- fix(typescript-plugin): get `preferences` and `formatOptions` in tsserver (#5829)
+- fix(language-core): avoid generating component options within the setup scope (#5832)
+
+### Other Changes
+
+- perf(language-core): dedupe component options generation (#5831)
+
 ## 3.1.7 (2025-12-08)
 
 ### Features
