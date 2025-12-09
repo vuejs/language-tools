@@ -13,6 +13,7 @@ export function parseScriptRanges(
 	let exportDefault:
 		| TextRange & {
 			expression: TextRange;
+			isObjectLiteral: boolean;
 		}
 		| undefined;
 	let componentOptions:
@@ -35,6 +36,7 @@ export function parseScriptRanges(
 			exportDefault = {
 				..._getStartEnd(raw),
 				expression: _getStartEnd(raw.expression),
+				isObjectLiteral: ts.isObjectLiteralExpression(raw.expression),
 			};
 			const comment = getClosestMultiLineCommentRange(ts, raw, [], ast);
 			if (comment) {

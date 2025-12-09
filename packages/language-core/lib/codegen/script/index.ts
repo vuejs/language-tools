@@ -132,14 +132,14 @@ function* generateWorker(
 	}
 	// only <script>
 	else if (script && scriptRanges) {
-		const { exportDefault, componentOptions } = scriptRanges;
+		const { exportDefault } = scriptRanges;
 		if (exportDefault) {
-			const { expression } = componentOptions ?? exportDefault;
+			const { expression, isObjectLiteral } = exportDefault;
 
 			let wrapLeft: string | undefined;
 			let wrapRight: string | undefined;
 			if (
-				script.content[expression.start] === '{'
+				isObjectLiteral
 				&& vueCompilerOptions.optionsWrapper.length
 			) {
 				[wrapLeft, wrapRight] = vueCompilerOptions.optionsWrapper;
@@ -161,8 +161,7 @@ function* generateWorker(
 			}
 
 			yield* generateSfcBlockSection(script, 0, expression.start, codeFeatures.all);
-			yield exportExpression;
-			yield endOfLine;
+			yield `${exportExpression}${endOfLine}`;
 			yield* generateTemplate(options, ctx, names._export);
 			yield* generateExportDeclareEqual(script);
 			if (wrapLeft && wrapRight) {
