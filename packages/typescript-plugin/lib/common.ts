@@ -273,26 +273,6 @@ export function postprocessLanguageService<T>(
 			}
 
 			if (!result?.definitions?.length) {
-				const { template } = root.sfc;
-				if (template) {
-					const textSpan = {
-						start: template.start + 1,
-						length: 'template'.length,
-					};
-					if (position >= textSpan.start && position <= textSpan.start + textSpan.length) {
-						return {
-							textSpan,
-							definitions: [{
-								fileName,
-								textSpan,
-								kind: ts.ScriptElementKind.scriptElement,
-								name: fileName,
-								containerKind: ts.ScriptElementKind.unknown,
-								containerName: '',
-							}],
-						};
-					}
-				}
 				return;
 			}
 
