@@ -18,6 +18,7 @@ export function parseScriptRanges(
 		| undefined;
 	let componentOptions:
 		| {
+			isObjectLiteral: boolean;
 			expression: TextRange;
 			args: TextRange;
 			argsNode: ts.ObjectLiteralExpression;
@@ -81,6 +82,7 @@ export function parseScriptRanges(
 					}
 				});
 				componentOptions = {
+					isObjectLiteral: ts.isObjectLiteralExpression(node.expression),
 					expression: _getStartEnd(node.expression),
 					args: _getStartEnd(obj),
 					argsNode: obj,
