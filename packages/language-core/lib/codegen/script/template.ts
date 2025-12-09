@@ -1,4 +1,3 @@
-import * as path from 'path-browserify';
 import type { Code } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
@@ -6,14 +5,16 @@ import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { generateSpreadMerge } from '../utils/merge';
 import type { ScriptCodegenContext } from './context';
 import type { ScriptCodegenOptions } from './index';
+import { resolveSrcPath } from './src';
 
 export function* generateTemplate(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
+	selfType?: string,
 ): Generator<Code> {
-	yield* generateSelf(options);
+	selfType ??= yield* generateSelf(options);
 	yield* generateSetupExposed(options, ctx);
-	yield* generateTemplateCtx(options, ctx);
+	yield* generateTemplateCtx(options, ctx, selfType);
 	yield* generateTemplateComponents(options);
 	yield* generateTemplateDirectives(options);
 
@@ -25,27 +26,28 @@ export function* generateTemplate(
 	}
 }
 
-function* generateSelf({ script, scriptRanges, vueCompilerOptions, fileName }: ScriptCodegenOptions): Generator<Code> {
+function* generateSelf({ script, scriptRanges, vueCompilerOptions }: ScriptCodegenOptions): Generator<Code> {
+	const varName = '__VLS_self';
 	if (script && scriptRanges?.componentOptions) {
-		yield `const ${names.self} = (await import('${vueCompilerOptions.lib}')).defineComponent(`;
+		yield `const ${varName} = (await import('${vueCompilerOptions.lib}')).defineComponent(`;
 		const { args } = scriptRanges.componentOptions;
 		yield* generateSfcBlockSection(script, args.start, args.end, codeFeatures.all);
 		yield `)${endOfLine}`;
+		return varName;
 	}
 	else if (script && scriptRanges?.exportDefault) {
-		yield `const ${names.self} = `;
+		yield `const ${varName} = `;
 		const { expression } = scriptRanges.exportDefault;
 		yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
 		yield endOfLine;
-	}
-	else if (script?.src) {
-		yield `let ${names.self}!: typeof import('./${path.basename(fileName)}').default${endOfLine}`;
+		return varName;
 	}
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, script, scriptRanges, styleCodegen, scriptSetupRanges, fileName }: ScriptCodegenOptions,
+	{ vueCompilerOptions, script, styleCodegen, scriptSetupRanges, fileName }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
+	selfType: string | undefined,
 ): Generator<Code> {
 	const exps: Iterable<Code>[] = [];
 	const emitTypes: string[] = [];
@@ -54,8 +56,11 @@ function* generateTemplateCtx(
 	if (vueCompilerOptions.petiteVueExtensions.some(ext => fileName.endsWith(ext))) {
 		exps.push([`globalThis`]);
 	}
-	if (script?.src || scriptRanges?.exportDefault) {
-		exps.push([`{} as InstanceType<__VLS_PickNotAny<typeof ${names.self}, new () => {}>>`]);
+	if (selfType) {
+		exps.push([`{} as InstanceType<__VLS_PickNotAny<typeof ${selfType}, new () => {}>>`]);
+	}
+	else if (typeof script?.src === 'object') {
+		exps.push([`{} as typeof import('${resolveSrcPath(script.src.text)}').default`]);
 	}
 	else {
 		exps.push([`{} as import('${vueCompilerOptions.lib}').ComponentPublicInstance`]);

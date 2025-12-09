@@ -8,20 +8,7 @@ export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 		return;
 	}
 	let { text } = src;
-
-	if (text.endsWith('.d.ts')) {
-		text = text.slice(0, -'.d.ts'.length);
-	}
-	else if (text.endsWith('.ts')) {
-		text = text.slice(0, -'.ts'.length);
-	}
-	else if (text.endsWith('.tsx')) {
-		text = text.slice(0, -'.tsx'.length) + '.jsx';
-	}
-
-	if (!text.endsWith('.js') && !text.endsWith('.jsx')) {
-		text = text + '.js';
-	}
+	text = resolveSrcPath(text);
 
 	yield `export * from `;
 	const wrapCodeFeatures: VueCodeInformation = {
@@ -36,4 +23,20 @@ export function* generateSrc(src: SfcBlockAttr): Generator<Code> {
 	yield endBoundary(token, src.offset + src.text.length);
 	yield endOfLine;
 	yield `export { default } from '${text}'${endOfLine}`;
+}
+
+export function resolveSrcPath(text: string): string {
+	if (text.endsWith('.d.ts')) {
+		text = text.slice(0, -'.d.ts'.length);
+	}
+	else if (text.endsWith('.ts')) {
+		text = text.slice(0, -'.ts'.length);
+	}
+	else if (text.endsWith('.tsx')) {
+		text = text.slice(0, -'.tsx'.length) + '.jsx';
+	}
+	if (!text.endsWith('.js') && !text.endsWith('.jsx')) {
+		text = text + '.js';
+	}
+	return text;
 }

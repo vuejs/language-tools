@@ -694,16 +694,6 @@ test('Component returns', async () => {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
 		        {
-		          "end": {
-		            "line": 3,
-		            "offset": 11,
-		          },
-		          "start": {
-		            "line": 3,
-		            "offset": 8,
-		          },
-		        },
-		        {
 		          "contextEnd": {
 		            "line": 12,
 		            "offset": 13,
@@ -719,6 +709,16 @@ test('Component returns', async () => {
 		          "start": {
 		            "line": 12,
 		            "offset": 7,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 11,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 8,
 		          },
 		        },
 		      ],

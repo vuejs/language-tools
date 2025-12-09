@@ -163,7 +163,7 @@ function* generateWorker(
 			yield* generateSfcBlockSection(script, 0, expression.start, codeFeatures.all);
 			yield exportExpression;
 			yield endOfLine;
-			yield* generateTemplate(options, ctx);
+			yield* generateTemplate(options, ctx, names._export);
 			yield* generateExportDeclareEqual(script);
 			if (wrapLeft && wrapRight) {
 				yield wrapLeft;
@@ -179,7 +179,7 @@ function* generateWorker(
 			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
 			yield* generateExportDeclareEqual(script);
 			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
-			yield* generateTemplate(options, ctx);
+			yield* generateTemplate(options, ctx, names._export);
 			yield `export default ${exportExpression}${endOfLine}`;
 		}
 	}

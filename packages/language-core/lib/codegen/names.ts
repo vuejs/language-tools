@@ -1,5 +1,4 @@
 export const ctx = '__VLS_ctx';
-export const self = '__VLS_self';
 export const dollars = '__VLS_dollars';
 export const slots = '__VLS_slots';
 export const props = '__VLS_props';
