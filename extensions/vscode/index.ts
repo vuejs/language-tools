@@ -18,6 +18,7 @@ import * as vscode from 'vscode';
 import { config } from './lib/config';
 import * as focusMode from './lib/focusMode';
 import * as interpolationDecorators from './lib/interpolationDecorators';
+import { restrictFormattingEditsToRange } from './lib/rangeFormatting';
 import * as reactivityVisualization from './lib/reactivityVisualization';
 import * as welcome from './lib/welcome';
 
@@ -175,6 +176,25 @@ function launch(serverPath: string, tsdk: string) {
 						(item as any).data.original.data.newName = inputName;
 					}
 					return await (middleware.resolveCodeAction?.(item, token, next) ?? next(item, token));
+				},
+				async provideDocumentRangeFormattingEdits(document, range, options, token, next) {
+					const edits = await next(document, range, options, token);
+					if (edits) {
+						return restrictFormattingEditsToRange(
+							document,
+							range,
+							edits,
+							(start, end, newText) =>
+								new vscode.TextEdit(
+									new vscode.Range(
+										document.positionAt(start),
+										document.positionAt(end),
+									),
+									newText,
+								),
+						);
+					}
+					return edits;
 				},
 			},
 			documentSelector: config.server.includeLanguages,
