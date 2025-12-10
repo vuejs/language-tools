@@ -5,8 +5,10 @@ import { expect, test } from 'vitest';
 import { run } from '..';
 
 test(`vue-tsc`, () => {
-	const tests = fs.readdirSync(path.resolve(__dirname, '../../../test-workspace/tsc'))
-		.filter(dir => dir !== 'tsconfig.json' && dir !== 'shared.d.ts' && dir !== 'petite-vue');
+	const dirPath = path.resolve(__dirname, '..', '..', '..', 'test-workspace', 'tsc');
+	const tests = fs.readdirSync(dirPath)
+		.filter(dir => fs.existsSync(path.resolve(dirPath, dir, 'tsconfig.json')));
+
 	fs.writeFileSync(
 		path.resolve(__dirname, '../../../test-workspace/tsc/tsconfig.json'),
 		JSON.stringify(
@@ -18,11 +20,11 @@ test(`vue-tsc`, () => {
 			'\t',
 		),
 	);
+
 	expect(
 		getTscOutput().sort(),
 	).toMatchInlineSnapshot(`
 		[
-		  "test-workspace/tsc/components_3.4/main.vue(79,11): error TS2345: Argument of type '<T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<...>) => import("vue3.4").VNode & { __ctx?: Awaite...' is not assignable to parameter of type 'never'.",
 		  "test-workspace/tsc/failed_#3632/both.vue(3,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/failed_#3632/script.vue(3,1): error TS1109: Expression expected.",

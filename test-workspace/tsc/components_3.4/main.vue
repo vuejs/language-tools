@@ -64,13 +64,13 @@ declare const ScriptSetupGenericExact: <T, >(
 		props: {
 			onBar?: ((data: T) => any) | undefined;
 			foo: T;
-		} & import('vue').VNodeProps & import('vue').AllowedComponentProps & import('vue').ComponentCustomProps & Record<string, unknown>,
+		} & import('vue3.4').VNodeProps & import('vue3.4').AllowedComponentProps & import('vue3.4').ComponentCustomProps & Record<string, unknown>,
 		attrs: any,
 		slots: { default?: (props: T) => any; },
 		emit: { (e: 'bar', data: T): void; },
-		expose(_exposed: import('vue').ShallowUnwrapRef<{ baz: T; buz: import('vue').Ref<1>; }>): void,
+		expose(_exposed: import('vue3.4').ShallowUnwrapRef<{ baz: T; buz: import('vue3.4').Ref<1>; }>): void,
 	}>
-) => import('vue').VNode & { __ctx?: Awaited<typeof _setup>; };
+) => import('vue3.4').VNode & { __ctx?: Awaited<typeof _setup>; };
 
 exactType(ScriptSetup, ScriptSetupExact);
 exactType(ScriptSetupExpose, ScriptSetupExposeExact);
