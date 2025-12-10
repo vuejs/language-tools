@@ -1,5 +1,4 @@
 import * as path from 'path-browserify';
-import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
@@ -15,14 +14,12 @@ import { generateTemplate } from './template';
 const exportExpression = `{} as typeof ${names._export}`;
 
 export interface ScriptCodegenOptions {
-	ts: typeof ts;
 	vueCompilerOptions: VueCompilerOptions;
 	script: Sfc['script'];
 	scriptSetup: Sfc['scriptSetup'];
 	fileName: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	templateStartTagOffset: number | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
 	styleCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
 	setupExposed: Set<string>;
