@@ -37,8 +37,6 @@ test(`vue-tsc`, () => {
 		  "test-workspace/tsc/failed_directives/main.vue(17,2): error TS2578: Unused '@ts-expect-error' directive.",
 		  "test-workspace/tsc/failed_directives/main.vue(20,2): error TS2578: Unused '@ts-expect-error' directive.",
 		  "test-workspace/tsc/failed_directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type '{ exist: {}; Comp: () => void; $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; ... 8 more ...; $watch<T extends string | ((...args: any) => any)>(source: T, cb: T extends (...args: any) => infer R ? (args_0: R, args_1: R, args_2: OnCleanup) => any : (a...'.",
-		  "test-workspace/tsc/fallthroughAttributes/main.vue(14,2): error TS2578: Unused '@ts-expect-error' directive.",
-		  "test-workspace/tsc/fallthroughAttributes/main.vue(16,2): error TS2578: Unused '@ts-expect-error' directive.",
 		]
 	`);
 });
