@@ -96,7 +96,7 @@ export function preprocessLanguageService(
 	languageService.getCompletionsAtPosition = (fileName, position, preferences, formatOptions) => {
 		let result = getCompletionsAtPosition(fileName, position, preferences, formatOptions);
 		const language = getLanguage();
-		if (language) {
+		if (language && result) {
 			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
 			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
 				for (
@@ -118,10 +118,20 @@ export function preprocessLanguageService(
 					if (generatedOffset2 !== undefined) {
 						const completion2 = getCompletionsAtPosition(targetScript.id, generatedOffset2, preferences, formatOptions);
 						if (completion2) {
-							const existingNames = new Set(result?.entries.map(entry => entry.name));
+							const nameToIndex = new Map(result.entries.map((entry, index) => [entry.name, index]));
 							for (const entry of completion2.entries) {
-								if (!existingNames.has(entry.name)) {
-									result?.entries.push(entry);
+								if (entry.kind === 'warning') {
+									continue;
+								}
+								if (nameToIndex.has(entry.name)) {
+									const index = nameToIndex.get(entry.name)!;
+									const existingEntry = result.entries[index]!;
+									if (existingEntry.kind === 'warning') {
+										result.entries[index] = entry;
+									}
+								}
+								else {
+									result.entries.push(entry);
 								}
 							}
 						}

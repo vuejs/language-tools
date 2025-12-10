@@ -1,4 +1,5 @@
 import type { TextDocument } from '@volar/language-server';
+import * as path from 'node:path';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server.js';
@@ -867,6 +868,35 @@ test('Auto insert defines', async () => {
 	`);
 });
 
+test('#5847', async () => {
+	await prepareDocument(
+		'tsconfigProject/fixture.ts',
+		'typescript',
+		`export function testFn() { console.log('testFn'); }`,
+	);
+	expect(
+		await requestCompletionItemToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<script setup></script>
+
+			<template>{{ testFn| }}</template>
+			`,
+			'testFn',
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "hasAction": true,
+		  "kind": "function",
+		  "kindModifiers": "export",
+		  "name": "testFn",
+		  "sortText": "16",
+		  "source": "tsconfigProject/fixture",
+		}
+	`);
+});
+
 const openedDocuments: TextDocument[] = [];
 
 afterEach(async () => {
@@ -918,6 +948,8 @@ async function requestCompletionItemToTsServer(
 	const completions = await requestCompletionListToTsServer(fileName, languageId, content);
 	let completion = completions.find((item: any) => item.name === itemLabel);
 	expect(completion).toBeDefined();
+	delete completion.data;
+	completion.source &&= path.relative(testWorkspacePath, completion.source).replace(/\\/g, '/');
 	return completion!;
 }
 
