@@ -18,7 +18,7 @@ test(`vue-tsc`, () => {
 			},
 			undefined,
 			'\t',
-		),
+		) + '\n',
 	);
 
 	expect(
