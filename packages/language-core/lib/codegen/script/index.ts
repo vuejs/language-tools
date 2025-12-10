@@ -1,5 +1,4 @@
 import * as path from 'path-browserify';
-import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
@@ -10,20 +9,17 @@ import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
 import { generateGeneric, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
-import { generateSrc } from './src';
 import { generateTemplate } from './template';
 
 const exportExpression = `{} as typeof ${names._export}`;
 
 export interface ScriptCodegenOptions {
-	ts: typeof ts;
 	vueCompilerOptions: VueCompilerOptions;
 	script: Sfc['script'];
 	scriptSetup: Sfc['scriptSetup'];
 	fileName: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	templateStartTagOffset: number | undefined;
 	templateCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
 	styleCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
 	setupExposed: Set<string>;
@@ -41,19 +37,39 @@ function* generateWorker(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
-	yield* generateGlobalTypesReference(options);
+	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
 
-	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions } = options;
+	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
 
-	if (scriptSetup && scriptSetupRanges) {
-		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+	// <script src="">
+	if (typeof script?.src === 'object') {
+		let src = script.src.text;
+		if (src.endsWith('.ts') && !src.endsWith('.d.ts')) {
+			src = src.slice(0, -'.ts'.length) + '.js';
+		}
+		else if (src.endsWith('.tsx')) {
+			src = src.slice(0, -'.tsx'.length) + '.jsx';
+		}
+
+		yield `import __VLS_default from `;
+		const token = yield* startBoundary('main', script.src.offset, {
+			...codeFeatures.all,
+			...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
+		});
+		yield `'`;
+		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, { __combineToken: token }];
+		yield src.slice(script.src.text.length);
+		yield `'`;
+		yield endBoundary(token, script.src.offset + script.src.text.length);
+		yield endOfLine;
+		yield `export default __VLS_default;${endOfLine}`;
+
+		yield* generateTemplate(options, ctx, '__VLS_default');
 	}
-	if (script?.src) {
-		yield* generateSrc(script.src);
-	}
-
 	// <script> + <script setup>
-	if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
+	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
+		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+
 		// <script>
 		let selfType: string | undefined;
 		const { exportDefault } = scriptRanges;
@@ -105,6 +121,8 @@ function* generateWorker(
 	}
 	// only <script setup>
 	else if (scriptSetup && scriptSetupRanges) {
+		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+
 		if (scriptSetup.generic) {
 			yield* generateExportDeclareEqual(scriptSetup, names._export);
 			yield* generateGeneric(
@@ -217,13 +235,13 @@ function* generateScriptWithExportDefault(
 	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, codeFeatures.all);
 }
 
-function* generateGlobalTypesReference(options: ScriptCodegenOptions): Generator<Code> {
-	const globalTypesPath = options.vueCompilerOptions.globalTypesPath(options.fileName);
+function* generateGlobalTypesReference(vueCompilerOptions: VueCompilerOptions, fileName: string): Generator<Code> {
+	const globalTypesPath = vueCompilerOptions.globalTypesPath(fileName);
 	if (!globalTypesPath) {
 		yield `/* placeholder */${newLine}`;
 	}
 	else if (path.isAbsolute(globalTypesPath)) {
-		let relativePath = path.relative(path.dirname(options.fileName), globalTypesPath);
+		let relativePath = path.relative(path.dirname(fileName), globalTypesPath);
 		if (
 			relativePath !== globalTypesPath
 			&& !relativePath.startsWith('./')

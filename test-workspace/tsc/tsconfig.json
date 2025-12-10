@@ -26,7 +26,6 @@
 		// { "path": "./passedFixtures/petite-vue" },
 		{ "path": "./passedFixtures/pug" },
 		{ "path": "./passedFixtures/vue3" },
-		{ "path": "./passedFixtures/vue3_strictTemplate" },
 		{ "path": "./passedFixtures/vue3.4" }
 	]
 }

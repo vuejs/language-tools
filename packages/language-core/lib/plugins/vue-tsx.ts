@@ -188,12 +188,6 @@ function useCodegen(
 		});
 	});
 
-	const getTemplateStartTagOffset = computed(() => {
-		if (sfc.template) {
-			return sfc.template.start - sfc.template.startTagEnd;
-		}
-	});
-
 	const getSetupExposed = computedSet(() => {
 		const allVars = new Set<string>();
 		const scriptSetupRanges = getScriptSetupRanges();
@@ -240,7 +234,6 @@ function useCodegen(
 
 	const getGeneratedScript = computed(() => {
 		return generateScript({
-			ts,
 			vueCompilerOptions: getResolvedOptions(),
 			script: sfc.script,
 			scriptSetup: sfc.scriptSetup,
@@ -249,7 +242,6 @@ function useCodegen(
 			scriptRanges: getScriptRanges(),
 			scriptSetupRanges: getScriptSetupRanges(),
 			templateCodegen: getGeneratedTemplate(),
-			templateStartTagOffset: getTemplateStartTagOffset(),
 			styleCodegen: getGeneratedStyle(),
 		});
 	});

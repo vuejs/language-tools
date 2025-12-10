@@ -1,9 +1,9 @@
+<!-- @strictTemplates true -->
+ 
 <template>
-	<!-- @vue-expect-error -->
-	<Foo bar="123"></Foo>
+	<Foo class="123"></Foo>
 
-	<!-- @vue-expect-error -->
-	<div foo="123"></div>
+	<div class="123"></div>
 </template>
 
 <script setup lang="ts">

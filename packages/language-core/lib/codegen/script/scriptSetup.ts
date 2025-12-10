@@ -96,7 +96,11 @@ export function* generateGeneric(
 				+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
 				+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
 			: `globalThis.JSX.IntrinsicAttributes`
-	} & (typeof globalThis extends { ${names.PROPS_FALLBACK}: infer P } ? P : {})${endOfLine}`;
+	}`;
+	if (!vueCompilerOptions.checkUnknownProps) {
+		yield ` & (typeof globalThis extends { ${names.PROPS_FALLBACK}: infer P } ? P : {})`;
+	}
+	yield endOfLine;
 	yield `	expose: (exposed: `;
 	yield scriptSetupRanges.defineExpose
 		? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
