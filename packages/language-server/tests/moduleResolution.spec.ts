@@ -26,8 +26,16 @@ import Comp from './module-rename-comp-renamed.vue'
 	fs.renameSync(oldComponentPath, newComponentPath);
 	createdFiles.push(newComponentPath);
 
-	const diagnosticsAfter = await getSemanticDiagnostics(server, document.uri);
-	expect(diagnosticsAfter.some(diagnostic => diagnostic.code === 2307)).toBe(false);
+	await expect.poll(
+		async () => {
+			const diagnosticsAfter = await getSemanticDiagnostics(server, document.uri);
+			return diagnosticsAfter.some(diagnostic => diagnostic.code === 2307);
+		},
+		{
+			interval: 100,
+			timeout: 5000,
+		},
+	).toBe(false);
 });
 
 const openedDocuments: TextDocument[] = [];
