@@ -1,3 +1,5 @@
+<!-- @strictTemplates true -->
+
 <script lang="ts" setup>
 import { ref } from 'vue';
 

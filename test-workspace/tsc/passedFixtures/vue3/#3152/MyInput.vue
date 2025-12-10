@@ -1,3 +1,5 @@
+<!-- @strictTemplates true -->
+ 
 <script setup>
 </script>
 

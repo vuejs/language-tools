@@ -1,7 +1,11 @@
+<!-- @strictTemplates true -->
+ 
 <template>
-	<Foo class="123"></Foo>
+	<!-- @vue-expect-error -->
+	<Foo bar="123"></Foo>
 
-	<div class="123"></div>
+	<!-- @vue-expect-error -->
+	<div foo="123"></div>
 </template>
 
 <script setup lang="ts">
