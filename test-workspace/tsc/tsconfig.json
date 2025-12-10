@@ -509,6 +509,21 @@
 			"path": "./#625/tsconfig.json"
 		},
 		{
+			"path": "./_failed_#3632/tsconfig.json"
+		},
+		{
+			"path": "./_failed_#4569/tsconfig.json"
+		},
+		{
+			"path": "./_failed_#5071/tsconfig.json"
+		},
+		{
+			"path": "./_failed_#5823/tsconfig.json"
+		},
+		{
+			"path": "./_failed_directives/tsconfig.json"
+		},
+		{
 			"path": "./attrs/tsconfig.json"
 		},
 		{
@@ -555,21 +570,6 @@
 		},
 		{
 			"path": "./events/tsconfig.json"
-		},
-		{
-			"path": "./failed_#3632/tsconfig.json"
-		},
-		{
-			"path": "./failed_#4569/tsconfig.json"
-		},
-		{
-			"path": "./failed_#5071/tsconfig.json"
-		},
-		{
-			"path": "./failed_#5823/tsconfig.json"
-		},
-		{
-			"path": "./failed_directives/tsconfig.json"
 		},
 		{
 			"path": "./fallthroughAttributes/tsconfig.json"

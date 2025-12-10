@@ -25,19 +25,18 @@ test(`vue-tsc`, () => {
 		getTscOutput().sort(),
 	).toMatchInlineSnapshot(`
 		[
-		  "test-workspace/tsc/#3718/main.vue(2,27): error TS2353: Object literal may only specify known properties, and 'onEventDoesNotExist' does not exist in type 'NonNullable<Partial<{}> & Omit<{ readonly to: string | RendererElement | null | undefined; readonly disabled?: boolean | undefined; readonly defer?: boolean | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, undefined>>'.",
-		  "test-workspace/tsc/failed_#3632/both.vue(3,1): error TS1109: Expression expected.",
-		  "test-workspace/tsc/failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
-		  "test-workspace/tsc/failed_#3632/script.vue(3,1): error TS1109: Expression expected.",
-		  "test-workspace/tsc/failed_#3632/scriptSetup.vue(3,1): error TS1109: Expression expected.",
-		  "test-workspace/tsc/failed_#4569/main.vue(1,41): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.",
-		  "test-workspace/tsc/failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
-		  "test-workspace/tsc/failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
-		  "test-workspace/tsc/failed_#5823/main.vue(6,13): error TS1109: Expression expected.",
-		  "test-workspace/tsc/failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type '{ exist: {}; Comp: () => void; $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; ... 8 more ...; $watch<T extends string | ((...args: any) => any)>(source: T, cb: T extends (...args: any) => infer R ? (args_0: R, args_1: R, args_2: OnCleanup) => any : (a...'.",
-		  "test-workspace/tsc/failed_directives/main.vue(17,2): error TS2578: Unused '@ts-expect-error' directive.",
-		  "test-workspace/tsc/failed_directives/main.vue(20,2): error TS2578: Unused '@ts-expect-error' directive.",
-		  "test-workspace/tsc/failed_directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type '{ exist: {}; Comp: () => void; $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; ... 8 more ...; $watch<T extends string | ((...args: any) => any)>(source: T, cb: T extends (...args: any) => infer R ? (args_0: R, args_1: R, args_2: OnCleanup) => any : (a...'.",
+		  "test-workspace/tsc/_failed_#3632/both.vue(3,1): error TS1109: Expression expected.",
+		  "test-workspace/tsc/_failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
+		  "test-workspace/tsc/_failed_#3632/script.vue(3,1): error TS1109: Expression expected.",
+		  "test-workspace/tsc/_failed_#3632/scriptSetup.vue(3,1): error TS1109: Expression expected.",
+		  "test-workspace/tsc/_failed_#4569/main.vue(1,41): error TS4025: Exported variable '__VLS_export' has or is using private name 'Props'.",
+		  "test-workspace/tsc/_failed_#5071/withScript.vue(1,19): error TS1005: ';' expected.",
+		  "test-workspace/tsc/_failed_#5071/withoutScript.vue(2,26): error TS1005: ';' expected.",
+		  "test-workspace/tsc/_failed_#5823/main.vue(6,13): error TS1109: Expression expected.",
+		  "test-workspace/tsc/_failed_directives/main.vue(14,6): error TS2339: Property 'notExist' does not exist on type '{ exist: {}; Comp: () => void; $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; ... 8 more ...; $watch<T extends string | ((...args: any) => any)>(source: T, cb: T extends (...args: any) => infer R ? (args_0: R, args_1: R, args_2: OnCleanup) => any : (a...'.",
+		  "test-workspace/tsc/_failed_directives/main.vue(17,2): error TS2578: Unused '@ts-expect-error' directive.",
+		  "test-workspace/tsc/_failed_directives/main.vue(20,2): error TS2578: Unused '@ts-expect-error' directive.",
+		  "test-workspace/tsc/_failed_directives/main.vue(9,6): error TS2339: Property 'notExist' does not exist on type '{ exist: {}; Comp: () => void; $: ComponentInternalInstance; $data: {}; $props: {}; $attrs: Data; $refs: Data; $slots: Readonly<InternalSlots>; ... 8 more ...; $watch<T extends string | ((...args: any) => any)>(source: T, cb: T extends (...args: any) => infer R ? (args_0: R, args_1: R, args_2: OnCleanup) => any : (a...'.",
 		]
 	`);
 });
