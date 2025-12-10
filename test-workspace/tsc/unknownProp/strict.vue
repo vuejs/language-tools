@@ -1,3 +1,5 @@
+<!-- @strictTemplates true -->
+
 <template>
 	<!-- @vue-expect-error -->
 	<Foo bar="123"></Foo>

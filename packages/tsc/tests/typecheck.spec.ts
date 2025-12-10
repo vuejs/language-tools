@@ -25,6 +25,7 @@ test(`vue-tsc`, () => {
 		getTscOutput().sort(),
 	).toMatchInlineSnapshot(`
 		[
+		  "test-workspace/tsc/#3718/main.vue(2,27): error TS2353: Object literal may only specify known properties, and 'onEventDoesNotExist' does not exist in type 'NonNullable<Partial<{}> & Omit<{ readonly to: string | RendererElement | null | undefined; readonly disabled?: boolean | undefined; readonly defer?: boolean | undefined; } & VNodeProps & AllowedComponentProps & ComponentCustomProps, undefined>>'.",
 		  "test-workspace/tsc/failed_#3632/both.vue(3,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/failed_#3632/both.vue(7,1): error TS1109: Expression expected.",
 		  "test-workspace/tsc/failed_#3632/script.vue(3,1): error TS1109: Expression expected.",

@@ -1,4 +1,6 @@
 {
+	"vue.server.path": "packages/language-server",
+	"typescript.tsdk": "node_modules/typescript/lib",
 	"dprint.path": "node_modules/dprint/dprint",
 	"[javascript]": {
 		"editor.defaultFormatter": "dprint.dprint"
@@ -20,6 +22,5 @@
 		"packages/*/lib/**/*.d.ts": true,
 		"packages/*/lib/**/*.js": true,
 		"packages/*/lib/**/*.map": true
-	},
-	"typescript.tsdk": "node_modules/typescript/lib"
+	}
 }
