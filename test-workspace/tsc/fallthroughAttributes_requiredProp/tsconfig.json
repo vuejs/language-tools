@@ -1,4 +1,8 @@
 {
 	"extends": "../../tsconfig.base.json",
-	"include": ["**/*"]
+	"include": ["**/*"],
+	"vueCompilerOptions": {
+		"strictTemplates": true,
+		"fallthroughAttributes": true
+	}
 }

@@ -1,6 +1,3 @@
-<!-- @fallthroughAttributes true -->
-<!-- @strictTemplates true -->
-
 <script setup lang="ts">
 defineProps<{
 	onChange?: (value: string) => void;

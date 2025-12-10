@@ -1,5 +1,3 @@
-<!-- @strictTemplates true -->
- 
 <script setup lang="ts">
 import Comp from './comp.vue';
 

@@ -1,5 +1,3 @@
-<!-- @strictTemplates true -->
- 
 <template>
 	<Foo class="123"></Foo>
 

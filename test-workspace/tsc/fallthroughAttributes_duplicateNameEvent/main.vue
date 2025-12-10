@@ -1,6 +1,3 @@
-<!-- @fallthroughAttributes true -->
-<!-- @strictTemplates true -->
-
 <script setup lang="ts">
 import basic from './basic.vue';
 import { exactType } from '../shared';
