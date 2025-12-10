@@ -1,3 +1,5 @@
+<!-- @strictTemplates true -->
+ 
 <template>
 	<div>
 		<svg>

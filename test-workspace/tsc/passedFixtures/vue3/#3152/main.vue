@@ -1,3 +1,5 @@
+<!-- @strictTemplates true -->
+ 
 <script setup>
 import { ref } from 'vue'
 import MyInput from './MyInput.vue';

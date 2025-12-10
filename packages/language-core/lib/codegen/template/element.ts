@@ -185,7 +185,9 @@ function* generateComponentBody(
 	const propsVar = ctx.getInternalVariable();
 
 	yield `// @ts-ignore${newLine}`;
-	yield `const ${functionalVar} = __VLS_asFunctionalComponent(${componentVar}, new ${componentVar}({${newLine}`;
+	yield `const ${functionalVar} = ${
+		options.vueCompilerOptions.checkUnknownProps ? '__VLS_asFunctionalComponent0' : '__VLS_asFunctionalComponent1'
+	}(${componentVar}, new ${componentVar}({${newLine}`;
 	yield* toString(propCodes);
 	yield `}))${endOfLine}`;
 
@@ -274,7 +276,9 @@ export function* generateElement(
 	const [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	const failedPropExps: FailGeneratedExpression[] = [];
 
-	yield `__VLS_asFunctionalElement(${names.intrinsics}`;
+	yield `${
+		options.vueCompilerOptions.checkUnknownProps ? `__VLS_asFunctionalElement0` : `__VLS_asFunctionalElement1`
+	}(${names.intrinsics}`;
 	yield* generatePropertyAccess(
 		options,
 		ctx,
