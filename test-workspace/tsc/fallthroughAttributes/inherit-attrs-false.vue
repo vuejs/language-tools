@@ -1,5 +1,5 @@
 <!-- @fallthroughAttributes true -->
-<!-- @strictTemplate true -->
+<!-- @strictTemplates true -->
 
 <script>
 import { defineComponent } from 'vue';

@@ -1,5 +1,5 @@
 <!-- @fallthroughAttributes true -->
-<!-- @strictTemplate true -->
+<!-- @strictTemplates true -->
 
 <script setup lang="ts" generic="T">
 import child from './child.vue';

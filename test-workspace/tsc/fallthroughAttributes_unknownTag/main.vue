@@ -1,5 +1,5 @@
 <!-- @fallthroughAttributes true -->
-<!-- @strictTemplate true -->
+<!-- @strictTemplates true -->
 
 <script setup lang="ts">
 import basic from './basic.vue';
