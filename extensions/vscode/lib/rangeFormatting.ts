@@ -29,10 +29,13 @@ export function restrictFormattingEditsToRange(
 			continue;
 		}
 
-		const trimmedEdit = getTrimmedNewText(document, selectionStart, selectionEnd, edit, editStart, editEnd);
-		if (trimmedEdit) {
-			result.push(replace(trimmedEdit.start, trimmedEdit.end, trimmedEdit.newText));
+		if (editStart === editEnd) {
+			result.push(edit);
+			continue;
 		}
+
+		const trimmedEdit = getTrimmedNewText(document, selectionStart, selectionEnd, edit, editStart, editEnd);
+		result.push(replace(trimmedEdit.start, trimmedEdit.end, trimmedEdit.newText));
 	}
 
 	return result;
@@ -46,24 +49,14 @@ function getTrimmedNewText(
 	editStart: number,
 	editEnd: number,
 ) {
-	if (editStart === editEnd) {
-		return {
-			start: editStart,
-			end: editEnd,
-			newText: edit.newText,
-		};
-	}
 	const oldText = document.getText(edit.range);
 	let overlapStart = Math.max(editStart, selectionStart) - editStart;
 	let overlapEnd = Math.min(editEnd, selectionEnd) - editStart;
-	if (overlapStart === overlapEnd) {
-		return;
-	}
-
 	let oldTextIndex = 0;
 	let newTextIndex = 0;
 	let newStart!: number;
 	let newEnd!: number;
+
 	while (true) {
 		if (oldTextIndex === overlapStart) {
 			newStart = newTextIndex;
@@ -78,7 +71,7 @@ function getTrimmedNewText(
 		}
 		if (!isWhitespaceChar(oldCharCode) && !isWhitespaceChar(newCharCode)) {
 			newStart = newTextIndex;
-			overlapStart -= overlapStart - oldTextIndex;
+			overlapStart = oldTextIndex;
 			break;
 		}
 		if (isWhitespaceChar(oldCharCode)) {
@@ -91,6 +84,7 @@ function getTrimmedNewText(
 
 	oldTextIndex = oldText.length - 1;
 	newTextIndex = edit.newText.length - 1;
+
 	while (true) {
 		if (oldTextIndex + 1 === overlapEnd) {
 			newEnd = newTextIndex + 1;
@@ -105,7 +99,7 @@ function getTrimmedNewText(
 		}
 		if (!isWhitespaceChar(oldCharCode) && !isWhitespaceChar(newCharCode)) {
 			newEnd = newTextIndex + 1;
-			overlapEnd += overlapEnd - oldTextIndex + 1;
+			overlapEnd = oldTextIndex + 1;
 			break;
 		}
 		if (isWhitespaceChar(oldCharCode)) {
