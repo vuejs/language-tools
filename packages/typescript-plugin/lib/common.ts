@@ -23,117 +23,129 @@ export function preprocessLanguageService(
 	} = languageService;
 
 	languageService.getQuickInfoAtPosition = (fileName, position, maximumLength) => {
-		let result = getQuickInfoAtPosition(fileName, position, maximumLength);
+		const result = getQuickInfoAtPosition(fileName, position, maximumLength);
+		if (!result) {
+			return result;
+		}
 		const language = getLanguage();
-		if (result && language) {
-			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
-			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
-				for (
-					const sourceOffset of toSourceOffsets(
-						sourceScript,
-						language,
-						serviceScript,
-						position,
-						() => true,
-					)
-				) {
-					const generatedOffset2 = toGeneratedOffset(
-						language,
-						serviceScript,
-						sourceScript,
-						sourceOffset[1],
-						(data: VueCodeInformation) => !!data.__importCompletion,
-					);
-					if (generatedOffset2 !== undefined) {
-						const extraInfo = getQuickInfoAtPosition(targetScript.id, generatedOffset2, maximumLength);
-						if (extraInfo) {
-							result.tags ??= [];
-							result.tags.push(...extraInfo.tags ?? []);
-						}
-					}
+		if (!language) {
+			return result;
+		}
+		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
+			return result;
+		}
+		for (
+			const sourceOffset of toSourceOffsets(
+				sourceScript,
+				language,
+				serviceScript,
+				position,
+				() => true,
+			)
+		) {
+			const generatedOffset2 = toGeneratedOffset(
+				language,
+				serviceScript,
+				sourceScript,
+				sourceOffset[1],
+				(data: VueCodeInformation) => !!data.__importCompletion,
+			);
+			if (generatedOffset2 !== undefined) {
+				const extraInfo = getQuickInfoAtPosition(fileName, generatedOffset2, maximumLength);
+				if (extraInfo) {
+					result.tags ??= [];
+					result.tags.push(...extraInfo.tags ?? []);
 				}
 			}
 		}
 		return result;
 	};
 	languageService.getSuggestionDiagnostics = fileName => {
-		const diagnostics = getSuggestionDiagnostics(fileName);
+		const result = getSuggestionDiagnostics(fileName);
 		const language = getLanguage();
-		if (language) {
-			const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
-			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
-				for (const diagnostic of diagnostics) {
-					for (
-						const sourceRange of toSourceRanges(
-							sourceScript,
-							language,
-							serviceScript,
-							diagnostic.start,
-							diagnostic.start + diagnostic.length,
-							true,
-							(data: VueCodeInformation) => !!data.__importCompletion,
-						)
-					) {
-						const generateRange2 = toGeneratedRange(
-							language,
-							serviceScript,
-							sourceScript,
-							sourceRange[1],
-							sourceRange[2],
-							(data: VueCodeInformation) => !data.__importCompletion,
-						);
-						if (generateRange2 !== undefined) {
-							diagnostic.start = generateRange2[0];
-							diagnostic.length = generateRange2[1] - generateRange2[0];
-							break;
-						}
-					}
+		if (!language) {
+			return result;
+		}
+		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
+			return result;
+		}
+		for (const diagnostic of result) {
+			for (
+				const sourceRange of toSourceRanges(
+					sourceScript,
+					language,
+					serviceScript,
+					diagnostic.start,
+					diagnostic.start + diagnostic.length,
+					true,
+					(data: VueCodeInformation) => !!data.__importCompletion,
+				)
+			) {
+				const generateRange2 = toGeneratedRange(
+					language,
+					serviceScript,
+					sourceScript,
+					sourceRange[1],
+					sourceRange[2],
+					(data: VueCodeInformation) => !data.__importCompletion,
+				);
+				if (generateRange2 !== undefined) {
+					diagnostic.start = generateRange2[0];
+					diagnostic.length = generateRange2[1] - generateRange2[0];
+					break;
 				}
 			}
 		}
-		return diagnostics;
+		return result;
 	};
 	languageService.getCompletionsAtPosition = (fileName, position, preferences, formatOptions) => {
-		let result = getCompletionsAtPosition(fileName, position, preferences, formatOptions);
+		const result = getCompletionsAtPosition(fileName, position, preferences, formatOptions);
+		if (!result) {
+			return result;
+		}
 		const language = getLanguage();
-		if (language && result) {
-			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
-			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
-				for (
-					const sourceOffset of toSourceOffsets(
-						sourceScript,
-						language,
-						serviceScript,
-						position,
-						() => true,
-					)
-				) {
-					const generatedOffset2 = toGeneratedOffset(
-						language,
-						serviceScript,
-						sourceScript,
-						sourceOffset[1],
-						(data: VueCodeInformation) => !!data.__importCompletion,
-					);
-					if (generatedOffset2 !== undefined) {
-						const completion2 = getCompletionsAtPosition(targetScript.id, generatedOffset2, preferences, formatOptions);
-						if (completion2) {
-							const nameToIndex = new Map(result.entries.map((entry, index) => [entry.name, index]));
-							for (const entry of completion2.entries) {
-								if (entry.kind === 'warning') {
-									continue;
-								}
-								if (nameToIndex.has(entry.name)) {
-									const index = nameToIndex.get(entry.name)!;
-									const existingEntry = result.entries[index]!;
-									if (existingEntry.kind === 'warning') {
-										result.entries[index] = entry;
-									}
-								}
-								else {
-									result.entries.push(entry);
-								}
+		if (!language) {
+			return result;
+		}
+		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
+			return result;
+		}
+		for (
+			const sourceOffset of toSourceOffsets(
+				sourceScript,
+				language,
+				serviceScript,
+				position,
+				() => true,
+			)
+		) {
+			const generatedOffset2 = toGeneratedOffset(
+				language,
+				serviceScript,
+				sourceScript,
+				sourceOffset[1],
+				(data: VueCodeInformation) => !!data.__importCompletion,
+			);
+			if (generatedOffset2 !== undefined) {
+				const completion2 = getCompletionsAtPosition(fileName, generatedOffset2, preferences, formatOptions);
+				if (completion2) {
+					const nameToIndex = new Map(result.entries.map((entry, index) => [entry.name, index]));
+					for (const entry of completion2.entries) {
+						if (entry.kind === 'warning') {
+							continue;
+						}
+						if (nameToIndex.has(entry.name)) {
+							const index = nameToIndex.get(entry.name)!;
+							const existingEntry = result.entries[index]!;
+							if (existingEntry.kind === 'warning') {
+								result.entries[index] = entry;
 							}
+						}
+						else {
+							result.entries.push(entry);
 						}
 					}
 				}
@@ -142,49 +154,52 @@ export function preprocessLanguageService(
 		return result;
 	};
 	languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, formatOptions, preferences) => {
-		let fixes = getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
+		let result = getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
+		// Property 'xxx' does not exist on type 'yyy'.ts(2339)
+		if (!errorCodes.includes(2339)) {
+			return result;
+		}
 		const language = getLanguage();
-		if (
-			language
-			&& errorCodes.includes(2339) // Property 'xxx' does not exist on type 'yyy'.ts(2339)
+		if (!language) {
+			return result;
+		}
+		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
+			return result;
+		}
+		for (
+			const sourceRange of toSourceRanges(
+				sourceScript,
+				language,
+				serviceScript,
+				start,
+				end,
+				true,
+				() => true,
+			)
 		) {
-			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
-			if (serviceScript && sourceScript?.generated?.root instanceof VueVirtualCode) {
-				for (
-					const sourceRange of toSourceRanges(
-						sourceScript,
-						language,
-						serviceScript,
-						start,
-						end,
-						true,
-						() => true,
-					)
-				) {
-					const generateRange2 = toGeneratedRange(
-						language,
-						serviceScript,
-						sourceScript,
-						sourceRange[1],
-						sourceRange[2],
-						(data: VueCodeInformation) => !!data.__importCompletion,
-					);
-					if (generateRange2 !== undefined) {
-						let importFixes = getCodeFixesAtPosition(
-							targetScript.id,
-							generateRange2[0],
-							generateRange2[1],
-							[2304], // Cannot find name 'xxx'.ts(2304)
-							formatOptions,
-							preferences,
-						);
-						importFixes = importFixes.filter(fix => fix.fixName === 'import');
-						fixes = fixes.concat(importFixes);
-					}
-				}
+			const generateRange2 = toGeneratedRange(
+				language,
+				serviceScript,
+				sourceScript,
+				sourceRange[1],
+				sourceRange[2],
+				(data: VueCodeInformation) => !!data.__importCompletion,
+			);
+			if (generateRange2 !== undefined) {
+				let importFixes = getCodeFixesAtPosition(
+					fileName,
+					generateRange2[0],
+					generateRange2[1],
+					[2304], // Cannot find name 'xxx'.ts(2304)
+					formatOptions,
+					preferences,
+				);
+				importFixes = importFixes.filter(fix => fix.fixName === 'import');
+				result = result.concat(importFixes);
 			}
 		}
-		return fixes;
+		return result;
 	};
 }
 
