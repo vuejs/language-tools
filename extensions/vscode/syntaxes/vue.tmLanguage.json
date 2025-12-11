@@ -359,7 +359,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"while": "^(?!\\s*<\\/script\\b)",
 							"name": "source.ts",
 							"patterns": [
 								{
@@ -423,7 +423,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/)",
+							"while": "^(?!\\s*<\\/script\\b)",
 							"name": "source.tsx",
 							"patterns": [
 								{
@@ -827,7 +827,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/script[\\s>])",
+							"while": "^(?!\\s*<\\/script\\b)",
 							"name": "source.ts",
 							"patterns": [
 								{
@@ -846,7 +846,7 @@
 						},
 						{
 							"begin": "(?<=>)",
-							"end": "(?=<\\/script[\\s>])",
+							"while": "^(?!\\s*<\\/script\\b)",
 							"name": "source.tsx",
 							"patterns": [
 								{
