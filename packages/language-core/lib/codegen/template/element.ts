@@ -143,6 +143,14 @@ export function* generateComponent(
 					yield ` | typeof ${names.components}.`;
 					yield* generateCamelized(capitalize(tag), 'template', startTagOffset, codeFeatures.navigation);
 				}
+				if (endTagOffset !== undefined) {
+					yield ` | typeof ${names.components}.`;
+					yield* generateCamelized(tag, 'template', endTagOffset, codeFeatures.navigation);
+					if (tag[0] !== tag[0]!.toUpperCase()) {
+						yield ` | typeof ${names.components}.`;
+						yield* generateCamelized(capitalize(tag), 'template', endTagOffset, codeFeatures.navigation);
+					}
+				}
 				yield `} */${newLine}`;
 				// auto import support
 				yield* generateCamelized(tag, 'template', startTagOffset, codeFeatures.importCompletionOnly);
