@@ -66,7 +66,7 @@ function getTrimmedNewText(
 	let newEnd = edit.newText.length;
 
 	while (true) {
-		if (oldTextIndex <= overlapStart) {
+		if (oldTextIndex === overlapStart) {
 			newStart = newTextIndex;
 		}
 		if (oldTextIndex === overlapEnd) {

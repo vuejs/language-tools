@@ -75,6 +75,14 @@ describe('provideDocumentRangeFormattingEdits', () => {
 		const result = restrictFormattingEditsToRange(document, selection, edits, createTextEdit);
 		expect(applyEdits(document, result)).toMatchInlineSnapshot(`"01X23456789"`);
 	});
+
+	test('handles deletion where newText is shorter than oldText in selection', () => {
+		const document = createDocument('ab  ');
+		const selection = createRange(1, 3);
+		const edits = [createTextEdit(0, 4, 'ab')];
+		const result = restrictFormattingEditsToRange(document, selection, edits, createTextEdit);
+		expect(applyEdits(document, result)).toMatchInlineSnapshot(`"ab "`);
+	});
 });
 
 // self implementation of vscode test utils
