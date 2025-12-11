@@ -213,6 +213,8 @@ export function postprocessLanguageService<T>(
 	const proxyCache = new Map<string | symbol, Function | undefined>();
 	const getProxyMethod = (target: ts.LanguageService, p: string | symbol): Function | undefined => {
 		switch (p) {
+			case 'findReferences':
+				return findReferences(target[p]);
 			case 'getCompletionsAtPosition':
 				return getCompletionsAtPosition(target[p]);
 			case 'getCompletionEntryDetails':
@@ -239,6 +241,44 @@ export function postprocessLanguageService<T>(
 			return Reflect.set(target, p, value, receiver);
 		},
 	});
+
+	function findReferences(
+		findReferences: ts.LanguageService['findReferences'],
+	): ts.LanguageService['findReferences'] {
+		return (fileName, ...rest) => {
+			const result = findReferences(fileName, ...rest);
+			if (!result) {
+				return result;
+			}
+			// #5719
+			for (const { references } of result) {
+				for (const reference of references) {
+					const sourceScript = language.scripts.get(asScriptId(reference.fileName));
+					const root = sourceScript?.generated?.root;
+					if (!sourceScript || !(root instanceof VueVirtualCode)) {
+						continue;
+					}
+					const styles = root.sfc.styles;
+					if (!styles.length) {
+						return result;
+					}
+					const isInStyle = styles.some(style =>
+						reference.textSpan.start >= style.startTagEnd
+						&& reference.textSpan.start + reference.textSpan.length <= style.endTagStart
+					);
+					if (!isInStyle) {
+						continue;
+					}
+					const leadingChar = sourceScript.snapshot.getText(reference.textSpan.start - 1, reference.textSpan.start);
+					if (leadingChar === '.') {
+						reference.textSpan.start--;
+						reference.textSpan.length++;
+					}
+				}
+			}
+			return result;
+		};
+	}
 
 	function getCompletionsAtPosition(
 		getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
