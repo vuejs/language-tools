@@ -62,15 +62,12 @@ function getTrimmedNewText(
 
 	let oldTextIndex = 0;
 	let newTextIndex = 0;
-	let newStart = 0;
-	let newEnd = edit.newText.length;
+	let newStart!: number;
+	let newEnd!: number;
 
 	while (true) {
 		if (oldTextIndex === overlapStart) {
 			newStart = newTextIndex;
-		}
-		if (oldTextIndex === overlapEnd) {
-			newEnd = newTextIndex;
 			break;
 		}
 		const oldCharCode = oldText.charCodeAt(oldTextIndex);
@@ -85,6 +82,28 @@ function getTrimmedNewText(
 		}
 		if (isWhitespaceChar(newCharCode)) {
 			newTextIndex++;
+		}
+	}
+
+	oldTextIndex = oldText.length - 1;
+	newTextIndex = edit.newText.length - 1;
+	while (true) {
+		if (oldTextIndex + 1 === overlapEnd) {
+			newEnd = newTextIndex + 1;
+			break;
+		}
+		const oldCharCode = oldText.charCodeAt(oldTextIndex);
+		const newCharCode = edit.newText.charCodeAt(newTextIndex);
+		if (oldCharCode === newCharCode || (!isWhitespaceChar(oldCharCode) && !isWhitespaceChar(newCharCode))) {
+			oldTextIndex--;
+			newTextIndex--;
+			continue;
+		}
+		if (isWhitespaceChar(oldCharCode)) {
+			oldTextIndex--;
+		}
+		if (isWhitespaceChar(newCharCode)) {
+			newTextIndex--;
 		}
 	}
 
