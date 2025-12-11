@@ -8,7 +8,7 @@ describe('provideDocumentRangeFormattingEdits', () => {
 		const selection = createRange(1, 5);
 		const edits = [createTextEdit(0, 5, '_BCDE')];
 		const result = restrictFormattingEditsToRange(document, selection, edits, createTextEdit);
-		expect(applyEdits(document, result)).toMatchInlineSnapshot(`"0BCDE5"`);
+		expect(applyEdits(document, result)).toMatchInlineSnapshot(`"_BCDE5"`);
 	});
 
 	test('keeps indent when edits start on previous line', () => {
@@ -89,7 +89,7 @@ describe('provideDocumentRangeFormattingEdits', () => {
 		const selection = createRange(1, 5); // select "bcde"
 		const edits = [createTextEdit(0, 6, 'ab')]; // replace all with just "ab"
 		const result = restrictFormattingEditsToRange(document, selection, edits, createTextEdit);
-		expect(applyEdits(document, result)).toMatchInlineSnapshot(`"af"`);
+		expect(applyEdits(document, result)).toMatchInlineSnapshot(`"ab"`);
 	});
 
 	test('handles insertion where newText is longer than oldText', () => {
@@ -164,7 +164,7 @@ describe('provideDocumentRangeFormattingEdits', () => {
 		const selection = createRange(1, 3); // select "好世"
 		const edits = [createTextEdit(0, 4, '你好朋友')];
 		const result = restrictFormattingEditsToRange(document, selection, edits, createTextEdit);
-		expect(applyEdits(document, result)).toMatchInlineSnapshot(`"你好朋界"`);
+		expect(applyEdits(document, result)).toMatchInlineSnapshot(`"你好朋友"`);
 	});
 
 	test('handles overlapStart equals overlapEnd', () => {
