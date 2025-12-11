@@ -30,7 +30,7 @@ describe('provideDocumentRangeFormattingEdits', () => {
 			createTextEdit(
 				selection.start.character - 1,
 				selection.end.character,
-				`  <div>
+				`\n  <div>
     <div>2</div>
   </div>`,
 			),
