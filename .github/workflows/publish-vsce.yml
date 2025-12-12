@@ -1,4 +1,4 @@
-name: Release to VSCode Marketplace
+name: Publish to VSCode Marketplace
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - "*"
 
 jobs:
-  release-vsce:
+  publish-vsce:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

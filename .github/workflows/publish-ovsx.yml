@@ -1,4 +1,4 @@
-name: Release to Open VSX
+name: Publish to Open VSX
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - "*"
 
 jobs:
-  release-ovsx:
+  publish-ovsx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
