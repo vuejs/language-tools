@@ -4,10 +4,10 @@ import { defineConfig } from 'rolldown';
 
 export default defineConfig({
 	input: {
-		'extension': './src/extension.js',
-		'reactivity-analysis-plugin': './src/reactivityAnalysisPlugin.js',
-		'language-server': '../../packages/language-server/index.ts',
-		'typescript-plugin': '../../packages/typescript-plugin/index.ts',
+		'extension': './src/extension.ts',
+		'reactivity-analysis-plugin': './src/reactivityAnalysisPlugin.ts',
+		'language-server': './node_modules/@vue/language-server/index.ts',
+		'typescript-plugin': './node_modules/@vue/typescript-plugin/index.ts',
 	},
 	output: {
 		format: 'cjs',
