@@ -2,18 +2,12 @@
 if (false
 < true
 ) { }
-(
-<br />
-);
 </script>
 
 <script lang="js">
 if (false
 < true
 ) {}
-(
-<br />
-);
 </script>
 
 <script lang="jsx">
