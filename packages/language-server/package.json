@@ -17,9 +17,9 @@
 	},
 	"dependencies": {
 		"@volar/language-server": "2.4.27",
-		"@vue/language-core": "3.1.8",
-		"@vue/language-service": "3.1.8",
-		"@vue/typescript-plugin": "3.1.8",
+		"@vue/language-core": "workspace:*",
+		"@vue/language-service": "workspace:*",
+		"@vue/typescript-plugin": "workspace:*",
 		"vscode-uri": "^3.0.8"
 	},
 	"peerDependencies": {

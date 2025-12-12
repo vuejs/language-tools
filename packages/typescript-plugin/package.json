@@ -14,7 +14,7 @@
 	},
 	"dependencies": {
 		"@volar/typescript": "2.4.27",
-		"@vue/language-core": "3.1.8",
+		"@vue/language-core": "workspace:*",
 		"@vue/shared": "^3.5.0",
 		"path-browserify": "^1.0.1"
 	},
