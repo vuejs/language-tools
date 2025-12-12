@@ -22,8 +22,8 @@ export function preprocessLanguageService(
 		getCodeFixesAtPosition,
 	} = languageService;
 
-	languageService.getQuickInfoAtPosition = (fileName, position, maximumLength) => {
-		const result = getQuickInfoAtPosition(fileName, position, maximumLength);
+	languageService.getQuickInfoAtPosition = (fileName, position, ...rests) => {
+		const result = getQuickInfoAtPosition(fileName, position, ...rests);
 		if (!result) {
 			return result;
 		}
@@ -52,7 +52,7 @@ export function preprocessLanguageService(
 				(data: VueCodeInformation) => !!data.__importCompletion,
 			);
 			if (generatedOffset2 !== undefined) {
-				const extraInfo = getQuickInfoAtPosition(fileName, generatedOffset2, maximumLength);
+				const extraInfo = getQuickInfoAtPosition(fileName, generatedOffset2, ...rests);
 				if (extraInfo) {
 					result.tags ??= [];
 					result.tags.push(...extraInfo.tags ?? []);
@@ -61,8 +61,8 @@ export function preprocessLanguageService(
 		}
 		return result;
 	};
-	languageService.getSuggestionDiagnostics = fileName => {
-		const result = getSuggestionDiagnostics(fileName);
+	languageService.getSuggestionDiagnostics = (fileName, ...rests) => {
+		const result = getSuggestionDiagnostics(fileName, ...rests);
 		const language = getLanguage();
 		if (!language) {
 			return result;
@@ -100,8 +100,8 @@ export function preprocessLanguageService(
 		}
 		return result;
 	};
-	languageService.getCompletionsAtPosition = (fileName, position, preferences, formatOptions) => {
-		const result = getCompletionsAtPosition(fileName, position, preferences, formatOptions);
+	languageService.getCompletionsAtPosition = (fileName, position, ...rests) => {
+		const result = getCompletionsAtPosition(fileName, position, ...rests);
 		if (!result) {
 			return result;
 		}
@@ -130,7 +130,7 @@ export function preprocessLanguageService(
 				(data: VueCodeInformation) => !!data.__importCompletion,
 			);
 			if (generatedOffset2 !== undefined) {
-				const completion2 = getCompletionsAtPosition(fileName, generatedOffset2, preferences, formatOptions);
+				const completion2 = getCompletionsAtPosition(fileName, generatedOffset2, ...rests);
 				if (completion2) {
 					const nameToIndex = new Map(result.entries.map((entry, index) => [entry.name, index]));
 					for (const entry of completion2.entries) {
@@ -153,8 +153,8 @@ export function preprocessLanguageService(
 		}
 		return result;
 	};
-	languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, formatOptions, preferences) => {
-		let result = getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
+	languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, ...rests) => {
+		let result = getCodeFixesAtPosition(fileName, start, end, errorCodes, ...rests);
 		// Property 'xxx' does not exist on type 'yyy'.ts(2339)
 		if (!errorCodes.includes(2339)) {
 			return result;
@@ -192,8 +192,7 @@ export function preprocessLanguageService(
 					generateRange2[0],
 					generateRange2[1],
 					[2304], // Cannot find name 'xxx'.ts(2304)
-					formatOptions,
-					preferences,
+					...rests,
 				);
 				importFixes = importFixes.filter(fix => fix.fixName === 'import');
 				result = result.concat(importFixes);
@@ -283,9 +282,9 @@ export function postprocessLanguageService<T>(
 	function getCompletionsAtPosition(
 		getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
 	): ts.LanguageService['getCompletionsAtPosition'] {
-		return (filePath, position, options, formattingSettings) => {
+		return (filePath, position, ...rests) => {
 			const fileName = filePath.replace(windowsPathReg, '/');
-			const result = getCompletionsAtPosition(fileName, position, options, formattingSettings);
+			const result = getCompletionsAtPosition(fileName, position, ...rests);
 			if (result) {
 				resolveCompletionResult(
 					ts,
@@ -327,8 +326,8 @@ export function postprocessLanguageService<T>(
 	function getDefinitionAndBoundSpan(
 		getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan'],
 	): ts.LanguageService['getDefinitionAndBoundSpan'] {
-		return (fileName, position) => {
-			const result = getDefinitionAndBoundSpan(fileName, position);
+		return (fileName, position, ...rests) => {
+			const result = getDefinitionAndBoundSpan(fileName, position, ...rests);
 
 			const program = languageService.getProgram()!;
 			const sourceScript = language.scripts.get(asScriptId(fileName));
@@ -421,7 +420,7 @@ export function postprocessLanguageService<T>(
 				}
 
 				const pos = type.indexType.getStart(sourceFile);
-				const res = getDefinitionAndBoundSpan(fileName, pos);
+				const res = getDefinitionAndBoundSpan(fileName, pos, ...rests);
 				if (res?.definitions?.length) {
 					for (const definition of res.definitions) {
 						definitions.add(definition);
