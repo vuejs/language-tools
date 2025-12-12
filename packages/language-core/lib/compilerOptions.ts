@@ -113,7 +113,7 @@ export function createParsedCommandLine(
 }
 
 export class CompilerOptionsResolver {
-	options: Omit<RawVueCompilerOptions, 'target' | 'globalTypesPath' | 'plugins'> = {};
+	options: Omit<RawVueCompilerOptions, 'target' | 'strictTemplates' | 'globalTypesPath' | 'plugins'> = {};
 	target: number | undefined;
 	globalTypesPath: string | undefined;
 	plugins: VueLanguagePlugin[] = [];
@@ -132,6 +132,14 @@ export class CompilerOptionsResolver {
 					else {
 						this.target = options[key];
 					}
+					break;
+				case 'strictTemplates':
+					const strict = !!options.strictTemplates;
+					this.options.strictVModel ??= strict;
+					this.options.checkUnknownProps ??= strict;
+					this.options.checkUnknownEvents ??= strict;
+					this.options.checkUnknownDirectives ??= strict;
+					this.options.checkUnknownComponents ??= strict;
 					break;
 				case 'globalTypesPath':
 					if (options[key] !== undefined) {
@@ -169,12 +177,11 @@ export class CompilerOptionsResolver {
 		}
 	}
 
-	build(defaults?: VueCompilerOptions) {
-		defaults ??= getDefaultCompilerOptions(this.target, this.options.lib, this.options.strictTemplates);
-
+	build(defaults = getDefaultCompilerOptions()) {
 		const resolvedOptions: VueCompilerOptions = {
 			...defaults,
 			...this.options,
+			target: this.target ?? defaults.target,
 			plugins: this.plugins,
 			macros: {
 				...defaults.macros,
@@ -275,8 +282,8 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 		vitePressExtensions: [],
 		petiteVueExtensions: [],
 		jsxSlots: false,
-		strictVModel: strictTemplates,
 		strictCssModules: false,
+		strictVModel: strictTemplates,
 		checkUnknownProps: strictTemplates,
 		checkUnknownEvents: strictTemplates,
 		checkUnknownDirectives: strictTemplates,

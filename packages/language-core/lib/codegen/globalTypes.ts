@@ -6,12 +6,11 @@ export function getGlobalTypesFileName(options: VueCompilerOptions) {
 	return [
 		options.lib,
 		options.target,
-		options.checkUnknownProps,
-	].map(v => (typeof v === 'boolean' ? Number(v) : v)).join('_') + '.d.ts';
+	].join('_') + '.d.ts';
 }
 
 export function generateGlobalTypes(options: VueCompilerOptions) {
-	const { lib, target, checkUnknownProps } = options;
+	const { lib, target } = options;
 
 	let text = `// @ts-nocheck${newLine}`;
 	text += `export {}${endOfLine}`;
@@ -24,7 +23,7 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 	}
 
 	text += `declare global {
-	${checkUnknownProps ? '' : `var ${names.PROPS_FALLBACK}: Record<string, unknown>;`}
+	var ${names.PROPS_FALLBACK}: Record<string, unknown>;
 
 	const __VLS_directiveBindingRestFields: { instance: null, oldValue: null, modifiers: any, dir: any };
 	const ${names.placeholder}: any;
@@ -61,9 +60,20 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		? K extends { __ctx?: { props?: infer P } } ? NonNullable<P> : never
 		: T extends (props: infer P, ...args: any) => any ? P
 		: {};
-	type __VLS_FunctionalComponent<T> = (props: (T extends { $props: infer Props } ? Props : {})${
-		checkUnknownProps ? '' : ' & Record<string, unknown>'
-	}, ctx?: any) => ${
+	type __VLS_FunctionalComponent0<T> = (props: (T extends { $props: infer Props } ? Props : {}), ctx?: any) => ${
+		target >= 3.3
+			? `import('${lib}/jsx-runtime').JSX.Element`
+			: `globalThis.JSX.Element`
+	} & {
+		__ctx?: {
+			attrs?: any;
+			slots?: T extends { $slots: infer Slots } ? Slots : Record<string, any>;
+			emit?: T extends { $emit: infer Emit } ? Emit : {};
+			props?: typeof props;
+			expose?: (exposed: T) => void;
+		};
+	};
+	type __VLS_FunctionalComponent1<T> = (props: (T extends { $props: infer Props } ? Props : {}) & Record<string, unknown>, ctx?: any) => ${
 		target >= 3.3
 			? `import('${lib}/jsx-runtime').JSX.Element`
 			: `globalThis.JSX.Element`
@@ -153,15 +163,19 @@ export function generateGlobalTypes(options: VueCompilerOptions) {
 		: T extends (...args: any) => any
 			? T
 			: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
-	function __VLS_asFunctionalComponent<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
-		T extends new (...args: any) => any ? __VLS_FunctionalComponent<K>
+	function __VLS_asFunctionalComponent0<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
+		T extends new (...args: any) => any ? __VLS_FunctionalComponent0<K>
 		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
 		: T extends (...args: any) => any ? T
-		: __VLS_FunctionalComponent<{}>;
+		: __VLS_FunctionalComponent0<{}>;
+	function __VLS_asFunctionalComponent1<T, K = T extends new (...args: any) => any ? InstanceType<T> : unknown>(t: T, instance?: K):
+		T extends new (...args: any) => any ? __VLS_FunctionalComponent1<K>
+		: T extends () => any ? (props: {}, ctx?: any) => ReturnType<T>
+		: T extends (...args: any) => any ? T
+		: __VLS_FunctionalComponent1<{}>;
 	function __VLS_functionalComponentArgsRest<T extends (...args: any) => any>(t: T): 2 extends Parameters<T>['length'] ? [any] : [];
-	function __VLS_asFunctionalElement<T>(tag: T, endTag?: T): (attrs: T${
-		checkUnknownProps ? '' : ' & Record<string, unknown>'
-	}) => void;
+	function __VLS_asFunctionalElement0<T>(tag: T, endTag?: T): (attrs: T) => void;
+	function __VLS_asFunctionalElement1<T>(tag: T, endTag?: T): (attrs: T & Record<string, unknown>) => void;
 	function __VLS_asFunctionalSlot<S>(slot: S): S extends () => infer R ? (props: {}) => R : NonNullable<S>;
 	function __VLS_tryAsConstant<const T>(t: T): T;
 }${newLine}`;

@@ -124,7 +124,9 @@ function createIfBranch(node: CompilerDOM.ElementNode, dir: CompilerDOM.Directiv
 		type: CompilerDOM.NodeTypes.IF_BRANCH,
 		loc: node.loc,
 		condition: dir.name === 'else' ? undefined : dir.exp,
-		children: isTemplateIf && !CompilerDOM.findDir(node, 'for') ? node.children : [node],
+		children: isTemplateIf && !CompilerDOM.findDir(node, 'for') && !CompilerDOM.findDir(node, 'slot')
+			? node.children
+			: [node],
 		userKey: CompilerDOM.findProp(node, 'key'),
 		isTemplateIf,
 	};

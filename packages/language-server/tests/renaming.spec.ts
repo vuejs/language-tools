@@ -905,6 +905,93 @@ test('Component tags', async () => {
 	`);
 });
 
+test('Global component tags', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<script lang="ts" setup>
+			declare module 'vue' {
+				export interface GlobalComponents {
+					Foo|: any;
+				}
+			}
+			</script>
+
+			<template>
+				<Foo></Foo>
+			</template>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "Foo",
+		    "fullDisplayName": ""vue".GlobalComponents.Foo",
+		    "kind": "property",
+		    "kindModifiers": "declare",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 5,
+		        "offset": 9,
+		      },
+		      "start": {
+		        "line": 5,
+		        "offset": 6,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 11,
+		            "offset": 15,
+		          },
+		          "start": {
+		            "line": 11,
+		            "offset": 12,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 11,
+		            "offset": 9,
+		          },
+		          "start": {
+		            "line": 11,
+		            "offset": 6,
+		          },
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 5,
+		            "offset": 15,
+		          },
+		          "contextStart": {
+		            "line": 5,
+		            "offset": 6,
+		          },
+		          "end": {
+		            "line": 5,
+		            "offset": 9,
+		          },
+		          "start": {
+		            "line": 5,
+		            "offset": 6,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+});
+
 test('#4673', async () => {
 	expect(
 		await requestRenameToTsServer(
