@@ -1,7 +1,7 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"name": "Vue",
-	"scopeName": "source.vue",
+	"scopeName": "text.html.vue",
 	"patterns": [
 		{
 			"include": "#vue-comments"
@@ -700,10 +700,10 @@
 						{
 							"begin": "(?<=>)",
 							"end": "(?=<\\/)",
-							"name": "source.vue",
+							"name": "text.html.vue",
 							"patterns": [
 								{
-									"include": "source.vue"
+									"include": "text.html.vue"
 								}
 							]
 						}

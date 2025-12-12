@@ -1,7 +1,7 @@
 {
 	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
 	"fileTypes": [],
-	"injectionSelector": "L:source.vue source.js, L:source.vue source.js.jsx, L:source.vue source.tsx",
+	"injectionSelector": "L:text.html.vue source.js, L:text.html.vue source.js.jsx, L:text.html.vue source.tsx",
 	"patterns": [
 		{
 			"match": "^\\s*(<)(?=\\s+[_$[:alpha:]])",
