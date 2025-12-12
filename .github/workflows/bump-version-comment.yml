@@ -41,11 +41,11 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-
-      - uses: pnpm/action-setup@v4
 
       - name: Install Lerna Lite
         run: pnpm add -g @lerna-lite/cli @lerna-lite/version
