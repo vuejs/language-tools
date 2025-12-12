@@ -22,8 +22,8 @@ export function preprocessLanguageService(
 		getCodeFixesAtPosition,
 	} = languageService;
 
-	languageService.getQuickInfoAtPosition = (fileName, position, maximumLength) => {
-		let result = getQuickInfoAtPosition(fileName, position, maximumLength);
+	languageService.getQuickInfoAtPosition = (fileName, position, ...rests) => {
+		let result = getQuickInfoAtPosition(fileName, position, ...rests);
 		const language = getLanguage();
 		if (result && language) {
 			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
@@ -45,7 +45,7 @@ export function preprocessLanguageService(
 						(data: VueCodeInformation) => !!data.__importCompletion,
 					);
 					if (generatedOffset2 !== undefined) {
-						const extraInfo = getQuickInfoAtPosition(targetScript.id, generatedOffset2, maximumLength);
+						const extraInfo = getQuickInfoAtPosition(targetScript.id, generatedOffset2, ...rests);
 						if (extraInfo) {
 							result.tags ??= [];
 							result.tags.push(...extraInfo.tags ?? []);
@@ -56,8 +56,8 @@ export function preprocessLanguageService(
 		}
 		return result;
 	};
-	languageService.getSuggestionDiagnostics = fileName => {
-		const diagnostics = getSuggestionDiagnostics(fileName);
+	languageService.getSuggestionDiagnostics = (fileName, ...rests) => {
+		const diagnostics = getSuggestionDiagnostics(fileName, ...rests);
 		const language = getLanguage();
 		if (language) {
 			const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
@@ -93,8 +93,8 @@ export function preprocessLanguageService(
 		}
 		return diagnostics;
 	};
-	languageService.getCompletionsAtPosition = (fileName, position, preferences, formatOptions) => {
-		let result = getCompletionsAtPosition(fileName, position, preferences, formatOptions);
+	languageService.getCompletionsAtPosition = (fileName, position, ...rests) => {
+		let result = getCompletionsAtPosition(fileName, position, ...rests);
 		const language = getLanguage();
 		if (language) {
 			const [serviceScript, targetScript, sourceScript] = getServiceScript(language, fileName);
@@ -116,7 +116,7 @@ export function preprocessLanguageService(
 						(data: VueCodeInformation) => !!data.__importCompletion,
 					);
 					if (generatedOffset2 !== undefined) {
-						const completion2 = getCompletionsAtPosition(targetScript.id, generatedOffset2, preferences, formatOptions);
+						const completion2 = getCompletionsAtPosition(targetScript.id, generatedOffset2, ...rests);
 						if (completion2) {
 							const existingNames = new Set(result?.entries.map(entry => entry.name));
 							for (const entry of completion2.entries) {
@@ -131,8 +131,8 @@ export function preprocessLanguageService(
 		}
 		return result;
 	};
-	languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, formatOptions, preferences) => {
-		let fixes = getCodeFixesAtPosition(fileName, start, end, errorCodes, formatOptions, preferences);
+	languageService.getCodeFixesAtPosition = (fileName, start, end, errorCodes, ...rests) => {
+		let fixes = getCodeFixesAtPosition(fileName, start, end, errorCodes, ...rests);
 		const language = getLanguage();
 		if (
 			language
@@ -165,8 +165,7 @@ export function preprocessLanguageService(
 							generateRange2[0],
 							generateRange2[1],
 							[2304], // Cannot find name 'xxx'.ts(2304)
-							formatOptions,
-							preferences,
+							...rests,
 						);
 						importFixes = importFixes.filter(fix => fix.fixName === 'import');
 						fixes = fixes.concat(importFixes);
@@ -218,9 +217,9 @@ export function postprocessLanguageService<T>(
 	function getCompletionsAtPosition(
 		getCompletionsAtPosition: ts.LanguageService['getCompletionsAtPosition'],
 	): ts.LanguageService['getCompletionsAtPosition'] {
-		return (filePath, position, options, formattingSettings) => {
+		return (filePath, position, ...rests) => {
 			const fileName = filePath.replace(windowsPathReg, '/');
-			const result = getCompletionsAtPosition(fileName, position, options, formattingSettings);
+			const result = getCompletionsAtPosition(fileName, position, ...rests);
 			if (result) {
 				resolveCompletionResult(
 					ts,
@@ -262,8 +261,8 @@ export function postprocessLanguageService<T>(
 	function getDefinitionAndBoundSpan(
 		getDefinitionAndBoundSpan: ts.LanguageService['getDefinitionAndBoundSpan'],
 	): ts.LanguageService['getDefinitionAndBoundSpan'] {
-		return (fileName, position) => {
-			const result = getDefinitionAndBoundSpan(fileName, position);
+		return (fileName, position, ...rests) => {
+			const result = getDefinitionAndBoundSpan(fileName, position, ...rests);
 
 			const program = languageService.getProgram()!;
 			const sourceScript = language.scripts.get(asScriptId(fileName));
