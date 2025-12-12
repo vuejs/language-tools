@@ -1,6 +1,5 @@
 {
 	"private": true,
-	"packageManager": "pnpm@10.12.3",
 	"scripts": {
 		"prerelease": "npm run test",
 		"build": "tsgo -b",
