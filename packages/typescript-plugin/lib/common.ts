@@ -420,7 +420,7 @@ export function postprocessLanguageService<T>(
 				}
 
 				const pos = type.indexType.getStart(sourceFile);
-				const res = getDefinitionAndBoundSpan(fileName, pos);
+				const res = getDefinitionAndBoundSpan(fileName, pos, ...rests);
 				if (res?.definitions?.length) {
 					for (const definition of res.definitions) {
 						definitions.add(definition);
