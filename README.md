@@ -74,7 +74,7 @@ If you want to work on the volar extension follow these commands to set up your 
 git clone https://github.com/vuejs/language-tools.git
 cd language-tools
 pnpm install
-pnpm run build
+run build
 ```
 
 The recommended way to develop the volar extension is to use the [Debug Tools](https://code.visualstudio.com/Docs/editor/debugging) provided by VSCode.

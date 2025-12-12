@@ -15,14 +15,14 @@ import {
 	watch,
 } from 'reactive-vscode';
 import * as vscode from 'vscode';
-import { config } from './lib/config';
-import * as focusMode from './lib/focusMode';
-import * as interpolationDecorators from './lib/interpolationDecorators';
-import { restrictFormattingEditsToRange } from './lib/rangeFormatting';
-import * as reactivityVisualization from './lib/reactivityVisualization';
-import * as welcome from './lib/welcome';
+import { config } from './config';
+import * as focusMode from './focusMode';
+import * as interpolationDecorators from './interpolationDecorators';
+import { restrictFormattingEditsToRange } from './rangeFormatting';
+import * as reactivityVisualization from './reactivityVisualization';
+import * as welcome from './welcome';
 
-const serverPath = resolveServerPath();
+let serverPath = resolveServerPath();
 const neededRestart = !patchTypeScriptExtension();
 
 for (
@@ -112,10 +112,16 @@ export = defineExtension(() => {
 			return;
 		}
 
-		client = launch(
-			serverPath ?? vscode.Uri.joinPath(context.extensionUri, 'dist', 'language-server.js').fsPath,
-			tsdk.replace(/\\/g, '/'),
-		);
+		if (!serverPath) {
+			try {
+				serverPath = require.resolve('../node_modules/@vue/language-server');
+			}
+			catch {
+				serverPath = require.resolve('../dist/language-server.js');
+			}
+		}
+
+		client = launch(serverPath, tsdk.replace(/\\/g, '/'));
 
 		volarLabs.addLanguageClient(client);
 
@@ -240,17 +246,25 @@ function resolveTsdkPath() {
 }
 
 function resolveServerPath() {
-	const tsPluginPackPath = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack', 'index.js');
+	const pluginDir = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack');
+	const pluginFile = path.join(pluginDir, 'index.js');
+
+	if (!fs.existsSync(pluginDir)) {
+		fs.mkdirSync(pluginDir, { recursive: true });
+	}
 
 	if (!config.server.path) {
-		fs.writeFileSync(tsPluginPackPath, `module.exports = require("../../dist/typescript-plugin.js");`);
+		fs.writeFileSync(
+			pluginFile,
+			`try { module.exports = require("../@vue/typescript-plugin"); } catch { module.exports = require("../../dist/typescript-plugin.js"); }`,
+		);
 		return;
 	}
 
 	if (path.isAbsolute(config.server.path)) {
 		const entryFile = require.resolve('./index.js', { paths: [config.server.path] });
 		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-		fs.writeFileSync(tsPluginPackPath, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
+		fs.writeFileSync(pluginFile, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
 		return entryFile;
 	}
 
@@ -262,7 +276,7 @@ function resolveServerPath() {
 			const serverPath = path.join(uri.fsPath, config.server.path);
 			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
 			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-			fs.writeFileSync(tsPluginPackPath, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
+			fs.writeFileSync(pluginFile, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
 			return entryFile;
 		}
 		catch {}
@@ -278,7 +292,7 @@ function patchTypeScriptExtension() {
 	const fs = require('node:fs');
 	const readFileSync = fs.readFileSync;
 	const extensionJsPath = require.resolve('./dist/extension.js', { paths: [tsExtension.extensionPath] });
-	const { publisher, name } = require('./package.json');
+	const { publisher, name } = require('../package.json');
 	const vueExtension = vscode.extensions.getExtension(`${publisher}.${name}`)!;
 	const tsPluginName = 'vue-typescript-plugin-pack';
 
