@@ -1,7 +1,6 @@
 import { createProxyLanguageService, decorateLanguageServiceHost } from '@volar/typescript';
 import { forEachEmbeddedCode, type Language } from '@vue/language-core';
 import { createAnalyzer } from 'laplacenoma';
-// @ts-expect-error
 import rulesVue from 'laplacenoma/rules/vue';
 import type * as ts from 'typescript';
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type * as vscode from 'vscode';
-import { type FormatableTextDocument, restrictFormattingEditsToRange } from '../lib/rangeFormatting';
+import { type FormatableTextDocument, restrictFormattingEditsToRange } from '../src/rangeFormatting';
 
 describe('provideDocumentRangeFormattingEdits', () => {
 	test('only replace selected range', () => {

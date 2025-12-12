@@ -3,6 +3,7 @@ node_modules
 *.tsbuildinfo
 *.vsix
 
+extensions/vscode/out
 packages/*/*.d.ts
 packages/*/*.js
 packages/*/*.map

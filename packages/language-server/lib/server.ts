@@ -79,10 +79,11 @@ export function startServer(ts: typeof import('typescript')) {
 					return simpleLanguageService ??= createProjectLanguageService(server, undefined);
 				},
 				getExistingLanguageServices() {
-					return Promise.all([
-						...tsconfigProjects.values(),
-						simpleLanguageService,
-					].filter(promise => !!promise));
+					const projects = [...tsconfigProjects.values()];
+					if (simpleLanguageService) {
+						projects.push(simpleLanguageService);
+					}
+					return projects;
 				},
 				reload() {
 					for (const languageService of tsconfigProjects.values()) {

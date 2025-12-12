@@ -9,6 +9,7 @@
 		"lint/*.ts"
 	],
 	"references": [
+		{ "path": "./extensions/vscode/tsconfig.json" },
 		{ "path": "./packages/component-meta/tsconfig.json" },
 		{ "path": "./packages/language-server/tsconfig.json" },
 		{ "path": "./packages/language-plugin-pug/tsconfig.json" },

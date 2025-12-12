@@ -1,6 +1,5 @@
 {
-	"vue.server.path": "packages/language-server",
-	"typescript.tsdk": "node_modules/typescript/lib",
+	"typescript.experimental.useTsgo": true,
 	"dprint.path": "node_modules/dprint/dprint",
 	"[javascript]": {
 		"editor.defaultFormatter": "dprint.dprint"

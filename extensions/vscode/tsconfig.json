@@ -1,9 +1,15 @@
 {
 	"extends": "../../tsconfig.base.json",
+	"include": ["src"],
 	"compilerOptions": {
-		"noEmit": true,
+		"outDir": "out",
+		"rootDir": "src",
 		"module": "CommonJS",
 		"moduleResolution": "Node"
 	},
-	"include": ["*", "lib/**/*", "reactivityAnalysis/**/*"]
+	"references": [
+		{ "path": "../../packages/language-core/tsconfig.json" },
+		{ "path": "../../packages/language-server/tsconfig.json" },
+		{ "path": "../../packages/typescript-plugin/tsconfig.json" }
+	]
 }
