@@ -1,4 +1,4 @@
-name: Publish to Open VSX
+name: Publish Packages
 
 on:
   workflow_dispatch:
@@ -19,18 +19,17 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      - name: Install global tools
-        run: pnpm install -g ovsx
+      - name: Install Lerna Lite
+        run: pnpm add -g @lerna-lite/cli @lerna-lite/version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        working-directory: extensions/vscode
         run: npm run build
 
-      - name: Publish to Open VSX
-        working-directory: extensions/vscode
+      - name: Publish to NPM
         env:
-          OVSX_PAT: ${{ secrets.OVSX_PAT }}
-        run: ovsx publish
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          lerna publish from-package --yes --dist-tag=latest

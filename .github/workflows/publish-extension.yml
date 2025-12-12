@@ -1,4 +1,4 @@
-name: Publish to VSCode Marketplace
+name: Publish to Open VSX and VSCode Marketplace
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       - "*"
 
 jobs:
-  publish-vsce:
+  publish-ovsx:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,12 +19,21 @@ jobs:
           node-version: 24
           cache: pnpm
 
+      - name: Install global tools
+        run: pnpm install -g ovsx
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build
         working-directory: extensions/vscode
         run: npm run build
+
+      - name: Publish to Open VSX
+        working-directory: extensions/vscode
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: ovsx publish
 
       - name: Publish to VSCode Marketplace
         working-directory: extensions/vscode
