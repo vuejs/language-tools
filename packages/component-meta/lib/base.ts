@@ -641,6 +641,13 @@ function createSchemaResolvers(
 		return acc;
 	}
 
+	function getJsDocTags(target: ts.Symbol | ts.Signature) {
+		return target.getJsDocTags(typeChecker).map(tag => ({
+			name: tag.name,
+			text: tag.text !== undefined ? ts.displayPartsToString(tag.text) : undefined,
+		}));
+	}
+
 	function resolveNestedProperties(prop: ts.Symbol): PropertyMeta {
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode);
 		let schema: PropertyMetaSchema | undefined;
@@ -650,10 +657,7 @@ function createSchemaResolvers(
 			name: prop.getEscapedName().toString(),
 			global: false,
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-			tags: prop.getJsDocTags(typeChecker).map(tag => ({
-				name: tag.name,
-				text: tag.text !== undefined ? ts.displayPartsToString(tag.text) : undefined,
-			})),
+			tags: getJsDocTags(prop),
 			required: !(prop.flags & ts.SymbolFlags.Optional),
 			type: getFullyQualifiedName(subtype),
 			get declarations() {
@@ -680,6 +684,7 @@ function createSchemaResolvers(
 			name: prop.getName(),
 			type: getFullyQualifiedName(subtype),
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
+			tags: getJsDocTags(prop),
 			get declarations() {
 				return declarations ??= getDeclarations(prop.declarations ?? []);
 			},
@@ -701,6 +706,7 @@ function createSchemaResolvers(
 			name: expose.getName(),
 			type: getFullyQualifiedName(subtype),
 			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
+			tags: getJsDocTags(expose),
 			get declarations() {
 				return declarations ??= getDeclarations(expose.declarations ?? []);
 			},
@@ -748,10 +754,7 @@ function createSchemaResolvers(
 		return {
 			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0]!, symbolNode) as ts.StringLiteralType).value,
 			description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
-			tags: call.getJsDocTags().map(tag => ({
-				name: tag.name,
-				text: tag.text !== undefined ? ts.displayPartsToString(tag.text) : undefined,
-			})),
+			tags: getJsDocTags(call),
 			type: subtypeStr,
 			signature: typeChecker.signatureToString(call),
 			get declarations() {

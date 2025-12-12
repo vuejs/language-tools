@@ -385,13 +385,9 @@ export {};
 `;
 
 exports[`Input: reference-type-exposed/component.vue, Output: reference-type-exposed/component.vue.d.ts 1`] = `
-"declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): {
-        /**
-         * a counter string
-         */
-        counter: import("vue").Ref<string, string>;
-    };
+"import type { MyExposed } from './my-exposed';
+declare const __VLS_export: import("vue").DefineComponent2<{
+    setup(): MyExposed;
     data(): {};
     props: {};
     computed: {};
@@ -413,6 +409,22 @@ exports[`Input: reference-type-exposed/component.vue, Output: reference-type-exp
 }>;
 declare const _default: typeof __VLS_export;
 export default _default;
+"
+`;
+
+exports[`Input: reference-type-exposed/my-exposed.ts, Output: reference-type-exposed/my-exposed.d.ts 1`] = `
+"import type { Ref } from 'vue';
+export interface MyExposed {
+    /**
+     * a counter string
+     */
+    counter: Ref<string>;
+    /**
+     * an oldCounter string
+     * @deprecated use counter instead
+     */
+    oldCounter: Ref<string>;
+}
 "
 `;
 
@@ -803,20 +815,8 @@ type __VLS_WithSlots<T, S> = T & {
 `;
 
 exports[`Input: reference-type-slots/component-define-slots.vue, Output: reference-type-slots/component-define-slots.vue.d.ts 1`] = `
-"import type { VNode } from 'vue';
-type __VLS_Slots = {
-    default: (props: {
-        num: number;
-    }) => VNode[];
-    'named-slot': (props: {
-        str: string;
-    }) => VNode[];
-    vbind: (props: {
-        num: number;
-        str: string;
-    }) => VNode[];
-    'no-bind': () => VNode[];
-};
+"import type { MySlots } from './my-slots';
+type __VLS_Slots = MySlots;
 declare const __VLS_base: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
@@ -896,6 +896,31 @@ type __VLS_WithSlots<T, S> = T & {
         $slots: S;
     };
 };
+"
+`;
+
+exports[`Input: reference-type-slots/my-slots.ts, Output: reference-type-slots/my-slots.d.ts 1`] = `
+"import type { VNode } from 'vue';
+export interface MySlots {
+    /**
+     * Default slot
+     */
+    default: (props: {
+        num: number;
+    }) => VNode[];
+    'named-slot': (props: {
+        str: string;
+    }) => VNode[];
+    /**
+     * Slot with tags
+     * @deprecated do not use
+     */
+    vbind: (props: {
+        num: number;
+        str: string;
+    }) => VNode[];
+    'no-bind': () => VNode[];
+}
 "
 `;
 

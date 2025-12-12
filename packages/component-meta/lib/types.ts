@@ -25,11 +25,11 @@ export enum TypeMeta {
 
 export interface PropertyMeta {
 	name: string;
-	default?: string;
 	description: string;
+	type: string;
+	default?: string;
 	global: boolean;
 	required: boolean;
-	type: string;
 	tags: { name: string; text?: string }[];
 	declarations: Declaration[];
 	schema: PropertyMetaSchema;
@@ -57,8 +57,9 @@ export interface EventMeta {
 
 export interface SlotMeta {
 	name: string;
-	type: string;
 	description: string;
+	type: string;
+	tags: { name: string; text?: string }[];
 	declarations: Declaration[];
 	schema: PropertyMetaSchema;
 	/**
@@ -72,6 +73,7 @@ export interface ExposeMeta {
 	name: string;
 	description: string;
 	type: string;
+	tags: { name: string; text?: string }[];
 	declarations: Declaration[];
 	schema: PropertyMetaSchema;
 	/**
