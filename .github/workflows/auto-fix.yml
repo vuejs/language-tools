@@ -26,15 +26,10 @@ jobs:
 
       - run: pnpm install
 
-      # lint
-      - name: Auto-fix
-        run: npm run lint:fix
+      - run: npm run lint:fix
 
-      # format
-      - name: Format
-        run: npm run format
+      - run: npm run format
 
-      # commit
       - name: Commit
         uses: EndBug/add-and-commit@v9
         with:
