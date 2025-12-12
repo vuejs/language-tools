@@ -1,29 +1,27 @@
 {
 	"private": true,
-	"packageManager": "pnpm@10.12.3",
+	"packageManager": "pnpm@10.25.0",
 	"scripts": {
-		"build": "tsc -b",
-		"watch": "pnpm run \"/^watch:.*/\"",
-		"watch:base": "tsc -b -w",
-		"watch:vue": "cd ./extensions/vscode && pnpm run watch",
-		"prerelease": "pnpm run build && pnpm run test",
+		"prerelease": "npm run test",
+		"build": "tsgo -b",
+		"watch": "tsgo -b -w",
 		"release": "lerna publish --no-push --no-git-tag-version",
-		"release:next": "pnpm run release --dist-tag next",
-		"test": "vitest run",
-		"test:update": "vitest run --update",
+		"test": "npm run build && vitest run",
+		"test:update": "npm run build && vitest run --update",
 		"format": "dprint fmt",
 		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
-		"lint:fix": "pnpm run lint -- --fix"
+		"lint:fix": "npm run lint -- --fix"
 	},
 	"devDependencies": {
-		"@lerna-lite/cli": "^4.1.2",
-		"@lerna-lite/publish": "^4.1.2",
-		"@tsslint/cli": "^2.0.4",
-		"@tsslint/config": "^2.0.4",
-		"@tsslint/eslint": "^2.0.4",
-		"@typescript-eslint/eslint-plugin": "^8.19.0",
-		"dprint": "^0.50.0",
+		"@lerna-lite/cli": "latest",
+		"@lerna-lite/publish": "latest",
+		"@tsslint/cli": "latest",
+		"@tsslint/config": "latest",
+		"@tsslint/eslint": "latest",
+		"@typescript-eslint/eslint-plugin": "latest",
+		"@typescript/native-preview": "latest",
+		"dprint": "latest",
 		"typescript": "latest",
-		"vitest": "^3.1.3"
+		"vitest": "latest"
 	}
 }

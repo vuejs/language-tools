@@ -26,7 +26,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm run build && pnpm --filter volar run build:prod
+        working-directory: extensions/vscode
+        run: npm run build
 
       - name: Publish to Open VSX
         id: publish_ovsx
