@@ -1,17 +1,27 @@
-<script setup>
+<script
+  setup
+>
 const a = 0;
 </script>
 
-<script setup lang="ts">
+<script
+  setup
+  lang="ts"
+>
 type a = 0;
 </script>
 
-<style scoped>
+<style
+  scoped
+>
 :root {
   color: red;
 }
 </style>
 
-<style scoped lang="scss">
+<style
+  scoped
+  lang="scss"
+>
 $color: red;
 </style>
