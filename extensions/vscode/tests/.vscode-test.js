@@ -6,7 +6,7 @@ module.exports = defineConfig({
 	workspaceFolder: path.join(__dirname, './workspace'),
 
 	// Use a dedicated out dir for test JS files
-	files: ['out/**/*.test.js'],
+	files: ['out/**/*.e2e-test.js'],
 
 	// Mocha options
 	mocha: {
