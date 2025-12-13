@@ -32,4 +32,4 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          lerna publish from-package --yes --dist-tag=latest
+          lerna publish from-package --yes
