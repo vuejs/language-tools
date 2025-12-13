@@ -1,5 +1,3 @@
-name: Bump Version on Comment
-
 on:
   issue_comment:
     types: [created]

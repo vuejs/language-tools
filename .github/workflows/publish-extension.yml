@@ -1,5 +1,3 @@
-name: Publish to Open VSX and VSCode Marketplace
-
 on:
   workflow_dispatch:
   push:
