@@ -1,0 +1,29 @@
+name: Auto Tag on Version Commit
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  auto-tag:
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.head_commit.message, 'v')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Check commit message and create tag
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          
+          if [[ $COMMIT_MSG =~ ^(v[0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            TAG_NAME="${BASH_REMATCH[1]}"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG_NAME" -m "Release $TAG_NAME"
+            git push origin "$TAG_NAME"
+            echo "✅ Tag $TAG_NAME created"
+          fi

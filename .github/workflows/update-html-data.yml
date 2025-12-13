@@ -1,4 +1,4 @@
-name: update-html-data
+name: Update HTML Data
 
 on:
   push:
