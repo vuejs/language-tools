@@ -1936,8 +1936,8 @@ packages:
   vscode-oniguruma@2.0.1:
     resolution: {integrity: sha512-poJU8iHIWnC3vgphJnrLZyI3YdqRlR27xzqDmpPXYzA93R4Gk8z7T6oqDzDoHjoikA2aS82crdXFkjELCdJsjQ==}
 
-  vscode-textmate@9.2.1:
-    resolution: {integrity: sha512-eXiUi2yYFv9bdvgrYtJynA7UemCEkpVNE50S9iBBA08LYG5t9+/TB+8IRS/YoYOubCez2OkSyZ1Q12eQMwzbrw==}
+  vscode-textmate@9.3.0:
+    resolution: {integrity: sha512-zHiZZOdb9xqj5/X1C4a29sbgT2HngdWxPLSl3PyHRQF+5visI4uNM020OHiLJjsMxUssyk/pGVAg/9LCIobrVg==}
 
   vscode-tmlanguage-snapshot@1.0.1:
     resolution: {integrity: sha512-8Um3RGrNDR6LfiK/FVETR/o1rwjlxMAphvSff3bxqb20DweJGV/yV6LJLdhImx4MeUg7euAe6JotY+K6UKg+KQ==}
@@ -3602,12 +3602,12 @@ snapshots:
 
   vscode-oniguruma@2.0.1: {}
 
-  vscode-textmate@9.2.1: {}
+  vscode-textmate@9.3.0: {}
 
   vscode-tmlanguage-snapshot@1.0.1:
     dependencies:
       vscode-oniguruma: 2.0.1
-      vscode-textmate: 9.2.1
+      vscode-textmate: 9.3.0
 
   vscode-uri@3.1.0: {}
 
