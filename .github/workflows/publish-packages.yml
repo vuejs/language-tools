@@ -20,7 +20,7 @@ jobs:
           cache: pnpm
 
       - name: Install Lerna Lite
-        run: pnpm add -g @lerna-lite/cli @lerna-lite/version
+        run: pnpm add -g @lerna-lite/cli @lerna-lite/publish
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
