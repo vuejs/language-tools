@@ -66,7 +66,7 @@
 
 ## Contribution Guide
 
-If you want to work on the volar extension, follow these commands to set up your local development environment.
+If you want to work on the volar extension follow these commands to set up your local development environment.
 
 🔎 Note that you will need pnpm - you can download it here: https://pnpm.io/installation.
 
