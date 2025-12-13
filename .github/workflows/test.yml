@@ -1,14 +1,13 @@
-name: test
+name: Test
 
 on: [push, pull_request]
 
 jobs:
-  build:
+  test:
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        node-version: [24]
         os: [macos-latest, windows-latest, ubuntu-latest]
 
     steps:
@@ -16,11 +15,11 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 24
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
       - run: npm run test

@@ -2,10 +2,8 @@
 	"private": true,
 	"packageManager": "pnpm@10.25.0",
 	"scripts": {
-		"prerelease": "npm run test",
 		"build": "tsgo -b",
 		"watch": "tsgo -b -w",
-		"release": "lerna publish --no-push --no-git-tag-version",
 		"test": "npm run build && vitest run",
 		"test:update": "npm run build && vitest run --update",
 		"format": "dprint fmt",
@@ -13,15 +11,18 @@
 		"lint:fix": "npm run lint -- --fix"
 	},
 	"devDependencies": {
-		"@lerna-lite/cli": "latest",
-		"@lerna-lite/publish": "latest",
-		"@tsslint/cli": "latest",
-		"@tsslint/config": "latest",
-		"@tsslint/eslint": "latest",
+		"@tsslint/cli": "3.0.0-alpha.0",
+		"@tsslint/config": "3.0.0-alpha.0",
+		"@tsslint/eslint": "3.0.0-alpha.0",
 		"@typescript-eslint/eslint-plugin": "latest",
 		"@typescript/native-preview": "latest",
 		"dprint": "latest",
 		"typescript": "latest",
 		"vitest": "latest"
+	},
+	"pnpm": {
+		"overrides": {
+			"vite": "beta"
+		}
 	}
 }

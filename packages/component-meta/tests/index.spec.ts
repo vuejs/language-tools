@@ -1181,6 +1181,18 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(b).toBeDefined();
 			expect(c).toBeDefined();
 			expect(d).toBeDefined();
+
+			expect(c).toStrictEqual(expect.objectContaining(
+				{
+					description: 'Slot with tags',
+					tags: [
+						{
+							name: 'deprecated',
+							text: 'do not use',
+						},
+					],
+				},
+			));
 		});
 
 		test('reference-type-slots w/ generic', () => {
@@ -1205,6 +1217,8 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(meta.type).toEqual(TypeMeta.Class);
 
 			const counter = meta.exposed.find(exposed => exposed.name === 'counter');
+			const oldCounter = meta.exposed.find(exposed => exposed.name === 'oldCounter');
+
 			expect(counter).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
@@ -1213,9 +1227,21 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "name": "counter",
 				  "rawType": undefined,
 				  "schema": "string",
+				  "tags": [],
 				  "type": "string",
 				}
 			`);
+			expect(oldCounter).toStrictEqual(expect.objectContaining(
+				{
+					description: 'an oldCounter string',
+					tags: [
+						{
+							name: 'deprecated',
+							text: 'use counter instead',
+						},
+					],
+				},
+			));
 		});
 
 		test('component with both props and events', () => {
