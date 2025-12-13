@@ -94,8 +94,8 @@ export default defineConfig([{
 			}],
 			'@typescript-eslint/no-unnecessary-type-assertion': true,
 		}),
-		'missing-dependency': (await import('./lint/missing-dependency-rule.js')).default,
-		'type-imports': (await import('./lint/type-imports-rule.js')).default,
+		'missing-dependency': (await import('./lint/missing-dependency-rule.ts')).default,
+		'type-imports': (await import('./lint/type-imports-rule.ts')).default,
 	},
 }, {
 	include: [
@@ -104,6 +104,6 @@ export default defineConfig([{
 		'packages/tsc/**/*.ts',
 	],
 	rules: {
-		'typescript-services-types': (await import('./lint/typescript-services-types-rule.js')).default,
+		'typescript-services-types': (await import('./lint/typescript-services-types-rule.ts')).default,
 	},
 }]);

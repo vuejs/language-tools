@@ -11,13 +11,18 @@
 		"lint:fix": "npm run lint -- --fix"
 	},
 	"devDependencies": {
-		"@tsslint/cli": "latest",
-		"@tsslint/config": "latest",
-		"@tsslint/eslint": "latest",
+		"@tsslint/cli": "3.0.0-alpha.0",
+		"@tsslint/config": "3.0.0-alpha.0",
+		"@tsslint/eslint": "3.0.0-alpha.0",
 		"@typescript-eslint/eslint-plugin": "latest",
 		"@typescript/native-preview": "latest",
 		"dprint": "latest",
 		"typescript": "latest",
 		"vitest": "latest"
+	},
+	"pnpm": {
+		"overrides": {
+			"vite": "beta"
+		}
 	}
 }
