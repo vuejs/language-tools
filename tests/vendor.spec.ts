@@ -15,8 +15,14 @@ test.skipIf(process.env.TEST_VENDOR !== '1')(`ensure vendor is updated`, async (
 });
 
 async function getRemoteCommit(repo: string, path: string): Promise<string | undefined> {
-	console.log('fetching', repo, path);
-	const response = await fetch(`https://api.github.com/repos/${repo}/commits?path=${path}&per_page=1`);
+	const token = process.env.GH_TOKEN;
+	console.log(`fetching${token ? ` with token` : ''}`, repo, path);
+	const headers: Record<string, string> = {
+		'Accept': 'application/vnd.github+json',
+		'X-GitHub-Api-Version': '2022-11-28',
+		...token && { 'Authorization': `Bearer ${token}` },
+	};
+	const response = await fetch(`https://api.github.com/repos/${repo}/commits?path=${path}&per_page=1`, { headers });
 	const data = await response.json();
 	const sha: string | undefined = data[0]?.sha;
 	if (!sha) {
