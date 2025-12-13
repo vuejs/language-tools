@@ -4,7 +4,8 @@
 	"scripts": {
 		"build": "tsgo -b",
 		"watch": "tsgo -b -w",
-		"test": "npm run build && vitest run",
+		"test:vscode": "cd extensions/vscode && npm run test",
+		"test": "npm run build && vitest run && npm run test:vscode",
 		"test:update": "npm run build && vitest run --update",
 		"format": "dprint fmt",
 		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
@@ -14,6 +15,7 @@
 		"@tsslint/cli": "3.0.0-alpha.0",
 		"@tsslint/config": "3.0.0-alpha.0",
 		"@tsslint/eslint": "3.0.0-alpha.0",
+		"@types/mocha": "^10.0.10",
 		"@typescript-eslint/eslint-plugin": "latest",
 		"@typescript/native-preview": "latest",
 		"dprint": "latest",

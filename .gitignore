@@ -2,8 +2,10 @@ dist
 node_modules
 *.tsbuildinfo
 *.vsix
+.vscode-test
 
 extensions/vscode/out
+extensions/vscode/tests/out
 packages/*/*.d.ts
 packages/*/*.js
 packages/*/*.map

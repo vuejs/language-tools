@@ -11,7 +11,8 @@
 		"noUnusedParameters": true,
 		"esModuleInterop": false,
 		"forceConsistentCasingInFileNames": true,
-		"noUncheckedIndexedAccess": true
+		"noUncheckedIndexedAccess": true,
+		"types": ["mocha"]
 	},
 	"include": []
 }
