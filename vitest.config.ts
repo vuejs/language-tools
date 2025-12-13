@@ -9,9 +9,9 @@ export default defineConfig({
 				isolate: false,
 			},
 		},
-		exclude: [
-			'extensions/vscode/tests/out/**/*',
-			'extensions/vscode/tests/suite/**/*',
+		include: [
+			'packages/**/*.spec.*',
+			'extensions/vscode/**/*.spec.*',
 		],
 	},
 });
