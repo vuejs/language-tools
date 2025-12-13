@@ -4,6 +4,7 @@
 	"scripts": {
 		"build": "tsgo -b",
 		"watch": "tsgo -b -w",
+		"test:vscode": "cd extensions/vscode && npm run test",
 		"test": "npm run build && vitest run",
 		"test:update": "npm run build && vitest run --update",
 		"format": "dprint fmt",
