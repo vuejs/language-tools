@@ -25,14 +25,6 @@ export async function openDocument(fileName: string): Promise<void> {
 /**
  * Ensures the TypeScript language server is fully initialized and ready to provide rich type information.
  *
- * This function works by:
- * 1. Opening a 'canary.ts' file which contains a known type (`ServerReadinessProbe`).
- * 2. Activating the 'prettify-ts' extension.
- * 3. Repeatedly triggering a hover on the `ServerReadinessProbe` type.
- * 4. Waiting until the hover content no longer shows a "loading..." message and includes
- *    detailed metadata (specifically, "a?: string" from the `ServerReadinessProbe` type).
- *    This indicates that the server has fully parsed the AST and is operational.
- *
  * @remarks
  * This method of waiting for server readiness by inspecting hover content is a heuristic.
  * More robust or direct methods for determining server readiness should be explored
@@ -104,36 +96,6 @@ type PrettifySettings = {
 	unwrapFunctions?: boolean;
 	unwrapGenericArgumentsTypeNames?: string[];
 };
-
-/**
- * Applies the given settings to the Prettify TypeScript extension.
- * If a setting is not provided, it will use the default value.
- */
-export async function applySettings(overrides: PrettifySettings = {}) {
-	const config = vscode.workspace.getConfiguration('prettify-ts');
-
-	const defaults: Required<PrettifySettings> = {
-		enabled: true,
-		typeIndentation: 4,
-		maxCharacters: 20000,
-		hidePrivateProperties: true,
-		maxDepth: 2,
-		maxProperties: 100,
-		maxSubProperties: 5,
-		maxUnionMembers: 15,
-		maxFunctionSignatures: 5,
-		skippedTypeNames: [],
-		unwrapArrays: true,
-		unwrapFunctions: true,
-		unwrapGenericArgumentsTypeNames: ['Promise'],
-	};
-
-	const merged = { ...defaults, ...overrides };
-
-	for (const key of Object.keys(merged) as (keyof PrettifySettings)[]) {
-		await config.update(key, merged[key], vscode.ConfigurationTarget.Workspace);
-	}
-}
 
 /**
  * Retrieves the hover information for a given keyword in the currently opened document.
