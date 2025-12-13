@@ -441,6 +441,8 @@ declare const __VLS_export: import("vue").DefineComponent2<{
     methods: {
         /** Resets the counter to zero */
         reset(): void;
+        /** Increments the counter by one */
+        increment(): void;
     };
     mixins: {}[];
     extends: {};
@@ -450,7 +452,7 @@ declare const __VLS_export: import("vue").DefineComponent2<{
     components: {};
     directives: {};
     provide: {};
-    expose: "reset";
+    expose: "reset" | "increment";
     __typeProps: unknown;
     __typeEmits: unknown;
     __typeRefs: {};
