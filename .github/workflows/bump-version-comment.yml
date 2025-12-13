@@ -9,8 +9,7 @@ jobs:
     if: |
       github.event.issue.pull_request &&
       (contains(github.event.comment.body, '@bump-patch') ||
-      contains(github.event.comment.body, '@bump-minor') ||
-      contains(github.event.comment.body, '@bump-major'))
+      contains(github.event.comment.body, '@bump-minor'))
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -54,8 +53,6 @@ jobs:
             VERSION_TYPE="patch"
           elif [[ "${{ github.event.comment.body }}" == *"@bump-minor"* ]]; then
             VERSION_TYPE="minor"
-          elif [[ "${{ github.event.comment.body }}" == *"@bump-major"* ]]; then
-            VERSION_TYPE="major"
           else
             echo "No valid version command found."
             exit 1
