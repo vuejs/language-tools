@@ -82,21 +82,17 @@ function parseArgs() {
 	return { update };
 }
 
-async function main() {
-	const dir = path.dirname(fileURLToPath(import.meta.url));
-	const dirPath = path.resolve(dir, '../tests/embeddedGrammars');
-	const { update } = parseArgs();
-	const lockPath = path.resolve(dirPath, '_lock.json');
-	const lockRaw = await readFile(lockPath, 'utf8');
-	const lock: LockItem[] = JSON.parse(lockRaw);
-	if (!Array.isArray(lock)) {
-		throw new Error('_lock.json must contain an array of lock items.');
-	}
-	const results = await Promise.all(lock.map(item => processItem(dirPath, item, update)));
-	const lockChanged = results.some(Boolean);
-	if (lockChanged) {
-		await writeFile(lockPath, JSON.stringify(lock, null, '\t') + '\n', 'utf8');
-	}
+const dir = path.dirname(fileURLToPath(import.meta.url));
+const dirPath = path.resolve(dir, '../tests/embeddedGrammars');
+const { update } = parseArgs();
+const lockPath = path.resolve(dirPath, '_lock.json');
+const lockRaw = await readFile(lockPath, 'utf8');
+const lock: LockItem[] = JSON.parse(lockRaw);
+if (!Array.isArray(lock)) {
+	throw new Error('_lock.json must contain an array of lock items.');
 }
-
-main();
+const results = await Promise.all(lock.map(item => processItem(dirPath, item, update)));
+const lockChanged = results.some(Boolean);
+if (lockChanged) {
+	await writeFile(lockPath, JSON.stringify(lock, null, '\t') + '\n', 'utf8');
+}

@@ -3,11 +3,13 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { createGrammarSnapshot } from 'vscode-tmlanguage-snapshot';
 
+const grammarsSync = import('../scripts/grammars-sync');
 const fixturesDir = path.resolve(__dirname, './grammarFixtures');
 const embeddedFixturesDir = path.resolve(__dirname, './embeddedGrammarFixtures');
 const packageJsonPath = path.resolve(__dirname, '../package.json');
 
 describe('grammar', async () => {
+	await grammarsSync;
 	const snapshot = await createGrammarSnapshot(packageJsonPath);
 	const fixtures = fs.readdirSync(fixturesDir);
 
@@ -21,6 +23,7 @@ describe('grammar', async () => {
 });
 
 describe('embedded grammar', async () => {
+	await grammarsSync;
 	const embeddedGrammarsDir = path.resolve(__dirname, './embeddedGrammars');
 	const snapshot = await createGrammarSnapshot(packageJsonPath, {
 		extraGrammarPaths: [
