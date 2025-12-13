@@ -473,7 +473,7 @@
 	},
 	"scripts": {
 		"build": "rolldown --config",
-		"pack": "npm run build && vsce package",
+		"pack": "npm run build && npx @vscode/vsce package",
 		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format"
 	},
 	"devDependencies": {
