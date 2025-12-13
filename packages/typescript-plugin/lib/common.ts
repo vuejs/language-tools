@@ -517,10 +517,10 @@ export function resolveCompletionResult<T>(
 export function resolveCompletionEntryDetails(
 	language: Language<any>,
 	details: ts.CompletionEntryDetails,
-	data: any,
+	data: Record<string, any> | undefined,
 ) {
 	// modify import statement
-	if (data.__isComponentAutoImport) {
+	if (data?.__isComponentAutoImport) {
 		const { oldName, newName } = data.__isComponentAutoImport;
 		for (const codeAction of details?.codeActions ?? []) {
 			for (const change of codeAction.changes) {
@@ -533,7 +533,7 @@ export function resolveCompletionEntryDetails(
 			}
 		}
 	}
-	if (data.__isAutoImport) {
+	if (data?.__isAutoImport) {
 		const { fileName } = data.__isAutoImport;
 		const sourceScript = language.scripts.get(fileName);
 		if (sourceScript?.generated?.root instanceof VueVirtualCode) {

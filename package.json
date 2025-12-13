@@ -5,7 +5,7 @@
 		"build": "tsgo -b",
 		"watch": "tsgo -b -w",
 		"test": "npm run build && vitest run",
-		"test:update": "npm run build && vitest run --update",
+		"test:grammar": "vitest run extensions/vscode/tests/grammar.spec.ts",
 		"format": "dprint fmt",
 		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
 		"lint:fix": "npm run lint -- --fix"

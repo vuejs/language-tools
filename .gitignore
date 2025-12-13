@@ -4,6 +4,7 @@ node_modules
 *.vsix
 
 extensions/vscode/out
+extensions/vscode/tests/embeddedGrammars/*.tmLanguage.json
 packages/*/*.d.ts
 packages/*/*.js
 packages/*/*.map
