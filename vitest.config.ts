@@ -10,8 +10,8 @@ export default defineConfig({
 			},
 		},
 		include: [
-			'packages/**/*.spec.*',
-			'extensions/vscode/**/*.spec.*',
+			'packages/**/*.spec.?(c|m)[jt]s?(x)',
+			'extensions/vscode/**/*.spec.?(c|m)[jt]s?(x)',
 		],
 	},
 });
