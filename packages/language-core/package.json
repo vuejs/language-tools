@@ -27,13 +27,5 @@
 		"@types/picomatch": "^4.0.0",
 		"@volar/typescript": "2.4.27",
 		"@vue/compiler-sfc": "^3.5.0"
-	},
-	"peerDependencies": {
-		"typescript": "*"
-	},
-	"peerDependenciesMeta": {
-		"typescript": {
-			"optional": true
-		}
 	}
 }
