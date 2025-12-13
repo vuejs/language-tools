@@ -20,7 +20,7 @@ jobs:
           cache: pnpm
 
       - name: Install global tools
-        run: pnpm install -g ovsx
+        run: pnpm install -g @vscode/vsce ovsx
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
