@@ -67,6 +67,10 @@ jobs:
           NEW_VERSION=$(node -p "require('./lerna.json').version")
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
+      - name: Generate extension metadata
+        working-directory: extensions/vscode
+        run: npm run gen-ext-meta
+
       - name: Commit
         uses: EndBug/add-and-commit@v9
         with:
