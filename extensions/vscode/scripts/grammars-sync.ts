@@ -84,7 +84,7 @@ function parseArgs() {
 
 async function main() {
 	const dir = path.dirname(fileURLToPath(import.meta.url));
-	const dirPath = path.resolve(dir, '../extensions/vscode/tests/embeddedGrammars');
+	const dirPath = path.resolve(dir, '../tests/embeddedGrammars');
 	const { update } = parseArgs();
 	const lockPath = path.resolve(dirPath, '_lock.json');
 	const lockRaw = await readFile(lockPath, 'utf8');
