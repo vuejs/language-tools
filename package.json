@@ -15,7 +15,6 @@
 		"@tsslint/cli": "3.0.0-alpha.0",
 		"@tsslint/config": "3.0.0-alpha.0",
 		"@tsslint/eslint": "3.0.0-alpha.0",
-		"@types/mocha": "^10.0.10",
 		"@typescript-eslint/eslint-plugin": "latest",
 		"@typescript/native-preview": "latest",
 		"dprint": "latest",

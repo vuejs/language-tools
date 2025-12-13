@@ -480,6 +480,7 @@
 		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format"
 	},
 	"devDependencies": {
+		"@types/mocha": "^10.0.10",
 		"@types/node": "^22.10.4",
 		"@types/vscode": "1.88.0",
 		"@volar/typescript": "2.4.27",

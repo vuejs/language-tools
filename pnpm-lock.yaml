@@ -20,9 +20,6 @@ importers:
       '@tsslint/eslint':
         specifier: 3.0.0-alpha.0
         version: 3.0.0-alpha.0(typescript@5.9.3)
-      '@types/mocha':
-        specifier: ^10.0.10
-        version: 10.0.10
       '@typescript-eslint/eslint-plugin':
         specifier: latest
         version: 8.49.0(@typescript-eslint/parser@8.49.0(eslint@9.27.0)(typescript@5.9.3))(eslint@9.27.0)(typescript@5.9.3)
@@ -41,6 +38,9 @@ importers:
 
   extensions/vscode:
     devDependencies:
+      '@types/mocha':
+        specifier: ^10.0.10
+        version: 10.0.10
       '@types/node':
         specifier: ^22.10.4
         version: 22.19.2
@@ -772,7 +772,7 @@ packages:
     resolution: {integrity: sha512-CZ28GLfOEIFkvCFngN8Sfx5h+Se0zN+h4B7yOsPVCcgtiO7t5jt9xQh2E1UkFep+eb9fjyMfuC5gBypwb07fvQ==}
     peerDependencies:
       msw: ^2.4.9
-      vite: beta
+      vite: ^6.0.0 || ^7.0.0-0
     peerDependenciesMeta:
       msw:
         optional: true
