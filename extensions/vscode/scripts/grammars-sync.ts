@@ -76,23 +76,44 @@ Please run "pnpm test:prepare -u" to update the lock hash.`,
 	return false;
 }
 
-function parseArgs() {
-	const args = process.argv.slice(2);
-	const update = args.includes('-u') || args.includes('--update');
-	return { update };
-}
-
 const dir = path.dirname(fileURLToPath(import.meta.url));
 const dirPath = path.resolve(dir, '../tests/embeddedGrammars');
-const { update } = parseArgs();
 const lockPath = path.resolve(dirPath, '_lock.json');
-const lockRaw = await readFile(lockPath, 'utf8');
-const lock: LockItem[] = JSON.parse(lockRaw);
+const update = !fs.existsSync(lockPath);
+const lock: LockItem[] = update
+	? [
+		{
+			'file': 'css.tmLanguage.json',
+			'url': 'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/css/syntaxes/css.tmLanguage.json',
+			'checksum': 'sha256-bcc97d1a3a6bf112f72d8bdb58bc438eb68aa0e070b94d00c6064b75f5cab69b',
+		},
+		{
+			'file': 'html.tmLanguage.json',
+			'url': 'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/html/syntaxes/html.tmLanguage.json',
+			'checksum': 'sha256-80dedf4fb27e88889ac8fb72763954a6d2660502c686f4415208d8c8d00352cd',
+		},
+		{
+			'file': 'javascript.tmLanguage.json',
+			'url':
+				'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/javascript/syntaxes/JavaScript.tmLanguage.json',
+			'checksum': 'sha256-db6f17f15bc4f5e860a3b8fa6055a69720a53df845c8d5121cdc4f128c16291f',
+		},
+		{
+			'file': 'scss.tmLanguage.json',
+			'url': 'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/scss/syntaxes/scss.tmLanguage.json',
+			'checksum': 'sha256-8f2824a80a7c6fd558fc538ec52d0a7a42a4d7ecb7ddf20d79f0d1f00fa6602b',
+		},
+		{
+			'file': 'typescript.tmLanguage.json',
+			'url':
+				'https://raw.githubusercontent.com/microsoft/vscode/main/extensions/typescript-basics/syntaxes/TypeScript.tmLanguage.json',
+			'checksum': 'sha256-4e92e0d7de560217d6c8d3236d85e6e17a5d77825b15729a230c761743122661',
+		},
+	]
+	: JSON.parse(await readFile(lockPath, 'utf8'));
 if (!Array.isArray(lock)) {
 	throw new Error('_lock.json must contain an array of lock items.');
 }
-const results = await Promise.all(lock.map(item => processItem(dirPath, item, update)));
-const lockChanged = results.some(Boolean);
-if (lockChanged) {
-	await writeFile(lockPath, JSON.stringify(lock, null, '\t') + '\n', 'utf8');
-}
+await Promise.all(lock.map(item => processItem(dirPath, item, update)));
+await mkdir(dirPath, { recursive: true });
+await writeFile(lockPath, JSON.stringify(lock, null, '\t') + '\n', 'utf8');
