@@ -1,4 +1,4 @@
-import { assertHover, ensureTypeScriptServerReady, getHover } from './utils';
+import { assertHover, ensureTypeScriptServerReady, getHover, nthIndex } from './utils';
 
 suite('Vue Hover Types', () => {
 	suiteSetup(async function() {
@@ -6,7 +6,10 @@ suite('Vue Hover Types', () => {
 	});
 
 	test('primitive', async () => {
-		const hover = await getHover('TestPrimitiveObj');
+		const hover = await getHover(
+			doc => doc.positionAt(nthIndex(doc.getText(), 'TestPrimitiveObj', 1) + 1),
+		);
+
 		const expected = `type TestPrimitiveObj = { value: string; }`;
 		assertHover(hover, expected);
 	});

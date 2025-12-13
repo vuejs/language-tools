@@ -79,30 +79,13 @@ export async function ensureTypeScriptServerReady(fileName: string, keyword: str
 }
 
 /**
- * Extension settings for Prettify TypeScript.
- */
-type PrettifySettings = {
-	enabled?: boolean;
-	typeIndentation?: number;
-	maxCharacters?: number;
-	hidePrivateProperties?: boolean;
-	maxDepth?: number;
-	maxProperties?: number;
-	maxSubProperties?: number;
-	maxUnionMembers?: number;
-	maxFunctionSignatures?: number;
-	skippedTypeNames?: string[];
-	unwrapArrays?: boolean;
-	unwrapFunctions?: boolean;
-	unwrapGenericArgumentsTypeNames?: string[];
-};
-
-/**
  * Retrieves the hover information for a given keyword in the currently opened document.
  * @returns {Promise<string>} The prettified type string from the hover content with whitespace normalized.
  */
-export async function getHover(keyword: string): Promise<string[]> {
-	const position = openDoc.positionAt(openDoc.getText().indexOf(keyword) + 1);
+export async function getHover(
+	getPosition: (doc: vscode.TextDocument) => vscode.Position,
+): Promise<string[]> {
+	const position = getPosition(openDoc);
 
 	const hovers = await vscode.commands.executeCommand<vscode.Hover[]>(
 		'vscode.executeHoverProvider',
@@ -161,4 +144,17 @@ export function assertHover(hovers: string[], expected: string): void {
 		hovers.includes(normalizedExpected),
 		`Expected hover content to be "${expected}", but got "${hovers.join(', ')}"`,
 	);
+}
+
+/**
+ * Returns the index of the nth occurrence of a pattern in a string.
+ * @returns The index of the nth match, or -1 if not found.
+ */
+export function nthIndex(str: string, pattern: string, n: number): number {
+	let index = -1;
+	for (let i = 0; i < n; i++) {
+		index = str.indexOf(pattern, index + 1);
+		if (index === -1) break;
+	}
+	return index;
 }
