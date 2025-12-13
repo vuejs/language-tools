@@ -1,0 +1,73 @@
+name: Bump Version on Comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  bump-version:
+    if: |
+      github.event.issue.pull_request &&
+      (contains(github.event.comment.body, '@bump-patch') ||
+      contains(github.event.comment.body, '@bump-minor'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+
+    steps:
+      - name: Add reaction to comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ github.event.comment.id }}
+          reactions: eyes
+
+      - name: Get PR branch
+        id: pr
+        run: |
+          PR_NUMBER=${{ github.event.issue.number }}
+          PR_DATA=$(gh pr view $PR_NUMBER --json headRefName,headRepository)
+          BRANCH=$(echo "$PR_DATA" | jq -r .headRefName)
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.pr.outputs.branch }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Lerna Lite
+        run: pnpm add -g @lerna-lite/cli @lerna-lite/version
+
+      - name: Bump version
+        run: |
+          if [[ "${{ github.event.comment.body }}" == *"@bump-patch"* ]]; then
+            VERSION_TYPE="patch"
+          elif [[ "${{ github.event.comment.body }}" == *"@bump-minor"* ]]; then
+            VERSION_TYPE="minor"
+          else
+            echo "No valid version command found."
+            exit 1
+          fi
+
+          lerna version $VERSION_TYPE --no-push --no-git-tag-version --force-publish --yes
+          NEW_VERSION=$(node -p "require('./lerna.json').version")
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+
+      - name: Generate extension metadata
+        working-directory: extensions/vscode
+        run: npm run gen-ext-meta
+
+      - name: Commit
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "ci: bump version to ${{ env.NEW_VERSION }} [skip ci]"
+          default_author: github_actions

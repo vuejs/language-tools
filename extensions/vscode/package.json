@@ -472,9 +472,9 @@
 		}
 	},
 	"scripts": {
+		"vscode:prepublish": "npm run build",
 		"build": "rolldown --config",
-		"pack": "npm run build && vsce package",
-		"release": "npm run build && vsce publish",
+		"pack": "npx @vscode/vsce package",
 		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format"
 	},
 	"devDependencies": {
@@ -482,7 +482,6 @@
 		"@types/vscode": "1.88.0",
 		"@volar/typescript": "2.4.27",
 		"@volar/vscode": "2.4.27",
-		"@vscode/vsce": "latest",
 		"@vue/language-core": "workspace:*",
 		"@vue/language-server": "workspace:*",
 		"@vue/typescript-plugin": "workspace:*",
