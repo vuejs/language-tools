@@ -1,3 +1,5 @@
+name: Auto Fix
+
 on:
   push:
     branches:

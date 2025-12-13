@@ -1,3 +1,5 @@
+name: Copilot Setup Steps
+
 on:
   workflow_dispatch:
   push:

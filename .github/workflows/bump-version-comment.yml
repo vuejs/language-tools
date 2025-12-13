@@ -1,3 +1,5 @@
+name: Bump Version on Comment
+
 on:
   issue_comment:
     types: [created]
@@ -36,8 +38,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ steps.pr.outputs.branch }}
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: pnpm/action-setup@v4
 
@@ -74,5 +74,3 @@ jobs:
         with:
           message: "ci: bump version to ${{ env.NEW_VERSION }} [skip ci]"
           default_author: github_actions
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
