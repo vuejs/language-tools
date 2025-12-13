@@ -4,8 +4,9 @@
 	"scripts": {
 		"build": "tsgo -b",
 		"watch": "tsgo -b -w",
-		"test": "npm run build && vitest run",
-		"test:update": "npm run build && vitest run --update",
+		"test": "npm run build && npm run test:prepare && vitest run",
+		"test:update": "npm run build && npm run test:prepare && vitest run --update",
+		"test:prepare": "node scripts/grammars-sync.ts",
 		"format": "dprint fmt",
 		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
 		"lint:fix": "npm run lint -- --fix"
