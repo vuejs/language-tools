@@ -6,6 +6,7 @@
 		"watch": "tsgo -b -w",
 		"test": "npm run build && vitest run",
 		"test:update": "npm run build && vitest run --update",
+		"test:vendor": "TEST_VENDOR=1 vitest run vendor",
 		"format": "dprint fmt",
 		"lint": "tsslint --project {tsconfig.json,packages/*/tsconfig.json,extensions/*/tsconfig.json}",
 		"lint:fix": "npm run lint -- --fix"
