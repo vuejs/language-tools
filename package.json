@@ -2,10 +2,8 @@
 	"private": true,
 	"packageManager": "pnpm@10.25.0",
 	"scripts": {
-		"prerelease": "npm run test",
 		"build": "tsgo -b",
 		"watch": "tsgo -b -w",
-		"release": "lerna publish --no-push --no-git-tag-version",
 		"test": "npm run build && vitest run",
 		"test:update": "npm run build && vitest run --update",
 		"format": "dprint fmt",
