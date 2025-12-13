@@ -5,7 +5,7 @@ node_modules
 .vscode-test
 
 extensions/vscode/out
-extensions/vscode/tests/out
+extensions/vscode/e2e/out
 packages/*/*.d.ts
 packages/*/*.js
 packages/*/*.map

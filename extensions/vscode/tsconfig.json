@@ -5,8 +5,7 @@
 		"outDir": "out",
 		"rootDir": "src",
 		"module": "CommonJS",
-		"moduleResolution": "Node",
-		"types": ["mocha"]
+		"moduleResolution": "Node"
 	},
 	"references": [
 		{ "path": "../../packages/language-core/tsconfig.json" },

@@ -473,8 +473,8 @@
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run build",
-		"pretest": "tsc --project ./tests/tsconfig.json && pnpm build",
-		"test": "vscode-test --config ./tests/.vscode-test.js",
+		"pretest": "tsc --project ./e2e/tsconfig.json && pnpm build",
+		"test": "vscode-test --config ./e2e/.vscode-test.js",
 		"build": "rolldown --config",
 		"pack": "npx @vscode/vsce package",
 		"gen-ext-meta": "vscode-ext-gen --scope vue --output src/generated-meta.ts && cd ../.. && npm run format"
