@@ -3,6 +3,7 @@ node_modules
 *.tsbuildinfo
 *.vsix
 
+extensions/vscode/types
 extensions/vscode/out
 extensions/vscode/tests/embeddedGrammars/*.tmLanguage.json
 packages/*/*.d.ts
