@@ -20,9 +20,10 @@
 					"default": "vue",
 					"markdownDescription": "Specify module name for import regular types."
 				},
-				"globalTypesPath": {
+				"typesRoot": {
 					"type": "string",
-					"markdownDescription": "Path to the global types file. Manual configuration is required when `node_modules` does not exist in the environment."
+					"default": "@vue/language-core/types",
+					"markdownDescription": "Root path for helper type definitions. See: https://github.com/vuejs/language-tools/pull/5872"
 				},
 				"extensions": {
 					"type": "array",
