@@ -537,6 +537,13 @@ export function resolveCompletionEntryDetails(
 						'import ' + oldName + ' from ',
 						'import ' + newName + ' from ',
 					);
+					// #5874
+					if (data.__vue__autoImportSuggestions) {
+						textChange.newText = textChange.newText.replace(
+							'import type ' + oldName + ' from ',
+							'import ' + newName + ' from ',
+						);
+					}
 				}
 			}
 		}
