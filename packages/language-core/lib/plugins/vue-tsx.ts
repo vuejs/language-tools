@@ -67,7 +67,7 @@ function useCodegen(
 	const getResolvedOptions = computed(() => {
 		const options = parseVueCompilerOptions(sfc.comments);
 		if (options) {
-			const resolver = new CompilerOptionsResolver();
+			const resolver = new CompilerOptionsResolver(ts, () => undefined /* does not support resolving target="auto" */);
 			resolver.addConfig(options, path.dirname(fileName));
 			return resolver.build(vueCompilerOptions);
 		}

@@ -38,7 +38,7 @@ export function createParsedCommandLineByJson(
 		{},
 		configFileName,
 	);
-	const resolver = new CompilerOptionsResolver(host.fileExists);
+	const resolver = new CompilerOptionsResolver(ts, host.readFile);
 
 	for (const extendPath of [...extendedPaths].reverse()) {
 		try {
@@ -85,7 +85,7 @@ export function createParsedCommandLine(
 			{},
 			configFileName,
 		);
-		const resolver = new CompilerOptionsResolver(host.fileExists);
+		const resolver = new CompilerOptionsResolver(ts, host.readFile);
 
 		for (const extendPath of [...extendedPaths].reverse()) {
 			try {
@@ -118,7 +118,8 @@ export class CompilerOptionsResolver {
 	plugins: VueLanguagePlugin[] = [];
 
 	constructor(
-		public fileExists?: (path: string) => boolean,
+		public ts: typeof import('typescript'),
+		public readFile: (fileName: string) => string | undefined,
 	) {}
 
 	addConfig(options: RawVueCompilerOptions, rootDir: string) {
@@ -126,7 +127,7 @@ export class CompilerOptionsResolver {
 			switch (key) {
 				case 'target':
 					if (options[key] === 'auto') {
-						this.target = findVueVersion(rootDir);
+						this.target = this.resolveVueVersion(rootDir);
 					}
 					else {
 						this.target = options[key];
@@ -154,7 +155,8 @@ export class CompilerOptionsResolver {
 					this.plugins = (options.plugins ?? [])
 						.flatMap<VueLanguagePlugin>((pluginPath: string) => {
 							try {
-								const resolvedPath = resolvePath(pluginPath, rootDir);
+								const resolve = (require as NodeJS.Require | undefined)?.resolve;
+								const resolvedPath = resolve?.(pluginPath, { paths: [rootDir] });
 								if (resolvedPath) {
 									const plugin = require(resolvedPath);
 									plugin.__moduleName = pluginPath;
@@ -177,7 +179,7 @@ export class CompilerOptionsResolver {
 			}
 		}
 		if (options.target === undefined) {
-			this.target ??= findVueVersion(rootDir);
+			this.target ??= this.resolveVueVersion(rootDir);
 		}
 	}
 
@@ -216,31 +218,24 @@ export class CompilerOptionsResolver {
 
 		return resolvedOptions;
 	}
-}
 
-function findVueVersion(rootDir: string) {
-	const resolvedPath = resolvePath('vue/package.json', rootDir);
-	if (resolvedPath) {
-		const vuePackageJson = require(resolvedPath);
-		const versionNumbers = vuePackageJson.version.split('.');
-		return Number(versionNumbers[0] + '.' + versionNumbers[1]);
-	}
-	else {
-		// console.warn('Load vue/package.json failed from', folder);
-	}
-}
-
-function resolvePath(scriptPath: string, root: string) {
-	try {
-		if ((require as NodeJS.Require | undefined)?.resolve) {
-			return require.resolve(scriptPath, { paths: [root] });
+	resolveVueVersion(folder: string): number | undefined {
+		const packageJsonPath = this.ts.findConfigFile(
+			folder,
+			fileName => this.readFile(fileName) !== undefined,
+			'node_modules/vue/package.json',
+		);
+		if (!packageJsonPath) {
+			return;
 		}
-		else {
-			// console.warn('failed to resolve path:', scriptPath, 'require.resolve is not supported in web');
+		const packageJsonContent = this.readFile(packageJsonPath);
+		if (!packageJsonContent) {
+			return;
 		}
-	}
-	catch {
-		// console.warn(error);
+		const packageJson = JSON.parse(packageJsonContent);
+		const version: string = packageJson.version;
+		const [majorVersion, minorVersion] = version.split('.');
+		return Number(majorVersion + '.' + minorVersion);
 	}
 }
 
