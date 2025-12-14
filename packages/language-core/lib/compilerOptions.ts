@@ -112,7 +112,7 @@ export function createParsedCommandLine(
 }
 
 export class CompilerOptionsResolver {
-	options: Omit<RawVueCompilerOptions, 'target' | 'strictTemplates' | 'plugins'> = {};
+	options: Omit<RawVueCompilerOptions, 'target' | 'strictTemplates' | 'typesRoot' | 'plugins'> = {};
 	target: number | undefined;
 	typesRoot: string | undefined;
 	plugins: VueLanguagePlugin[] = [];
