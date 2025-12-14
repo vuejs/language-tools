@@ -1,4 +1,3 @@
-// @ts-nocheck
 declare global {
 	const __VLS_directiveBindingRestFields: { instance: null; oldValue: null; modifiers: any; dir: any };
 
@@ -111,13 +110,13 @@ declare global {
 		: T extends string ? [string, number][]
 		: T extends any[] ? [T[number], number][]
 		: T extends Iterable<infer V> ? [V, number][]
-		: [T[keyof T], `${keyof T}`, number][];
+		: [T[keyof T], `${keyof T & (string | number)}`, number][];
 	function __VLS_vSlot<S, D extends S>(slot: S, decl?: D): D extends (...args: infer P) => any ? P : any[];
 	function __VLS_asFunctionalDirective<T, ObjectDirective>(
 		dir: T,
 		od: ObjectDirective,
 	): T extends ObjectDirective
-		? NonNullable<T['created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted']>
+		? NonNullable<T[keyof T & ('created' | 'beforeMount' | 'mounted' | 'beforeUpdate' | 'updated' | 'beforeUnmount' | 'unmounted')]>
 		: T extends (...args: any) => any ? T
 		: (arg1: unknown, arg2: unknown, arg3: unknown, arg4: unknown) => void;
 	function __VLS_asFunctionalComponent0<T, K = T extends new(...args: any) => any ? InstanceType<T> : unknown>(
