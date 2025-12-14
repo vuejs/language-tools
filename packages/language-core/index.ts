@@ -1,4 +1,3 @@
-export * from './lib/codegen/globalTypes';
 export * from './lib/codegen/template';
 export * from './lib/compilerOptions';
 export * from './lib/languagePlugin';

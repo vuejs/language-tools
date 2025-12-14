@@ -21,7 +21,6 @@ import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-documen
 import { create as createVueDocumentHighlightsPlugin } from './lib/plugins/vue-document-highlights';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
 import { create as createVueFormatPerBlockPlugin } from './lib/plugins/vue-format-per-block';
-import { create as createVueGlobalTypesErrorPlugin } from './lib/plugins/vue-global-types-error';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 import { create as createVueMissingPropsHintsPlugin } from './lib/plugins/vue-missing-props-hints';
 import { create as createVueScopedClassLinksPlugin } from './lib/plugins/vue-scoped-class-links';
@@ -48,7 +47,6 @@ export function createVueLanguageServicePlugins(
 		createVueAutoSpacePlugin(),
 		createVueCompilerDomErrorsPlugin(),
 		createVueDirectiveCommentsPlugin(),
-		createVueGlobalTypesErrorPlugin(),
 		createVueScopedClassLinksPlugin(),
 		createVueSfcPlugin(),
 		createVueTemplateRefLinksPlugin(),

@@ -21,7 +21,7 @@ export function getComponentNames(
 		?? [];
 
 	componentNames.push(getSelfComponentName(fileName));
-	componentNames.push(...tsCodegen.get(sfc)?.getImportComponentNames() ?? []);
+	componentNames.push(...tsCodegen.get(sfc)?.getImportedComponents() ?? []);
 
 	return [...new Set(componentNames)];
 }

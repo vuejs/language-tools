@@ -157,8 +157,6 @@ function baseCreate(
 	let fileNamesSet = new Set(fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
 
-	vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
-
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
@@ -267,7 +265,6 @@ function baseCreate(
 		},
 		reload() {
 			[{ vueOptions, options, projectReferences }, fileNames] = getConfigAndFiles();
-			vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 			fileNamesSet = new Set(fileNames.map(path => path.replace(windowsPathReg, '/')));
 			this.clearCache();
 		},
@@ -504,10 +501,17 @@ interface ComponentMeta<T> {
 			const $exposed = symbolProperties.find(prop => prop.escapedName === 'exposed');
 
 			if ($exposed) {
+				const $props = symbolProperties.find(prop => prop.escapedName === 'props');
+				const propsProperties = $props ? typeChecker.getTypeOfSymbolAtLocation($props, symbolNode).getProperties() : [];
 				const type = typeChecker.getTypeOfSymbolAtLocation($exposed, symbolNode);
 				const properties = type.getProperties().filter(prop =>
-					// only exposed props will not have a valueDeclaration
-					!prop.valueDeclaration
+					// only exposed props will have at least one declaration and no valueDeclaration
+					prop.declarations?.length
+					&& !prop.valueDeclaration
+					// Cross-check with props to avoid including props here
+					&& (!propsProperties.length || !propsProperties.some(({ name }) => name === prop.name))
+					// Exclude $slots
+					&& prop.name !== '$slots'
 				);
 
 				return properties.map(prop => {

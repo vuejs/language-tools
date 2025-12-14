@@ -35,7 +35,6 @@ const createProgram = proxyCreateProgram(ts, ts.createProgram, (ts, options) => 
 		vueOptions.target = 99;
 		vueOptions.extensions = ['vue', 'cext'];
 	}
-	vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 	const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
 		ts,
 		options.options,

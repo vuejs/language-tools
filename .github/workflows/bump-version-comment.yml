@@ -47,6 +47,9 @@ jobs:
       - name: Install Lerna Lite
         run: pnpm add -g @lerna-lite/cli @lerna-lite/version
 
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
       - name: Bump version
         run: |
           if [[ "${{ github.event.comment.body }}" == *"@bump-patch"* ]]; then

@@ -114,8 +114,8 @@ export function* generateEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const ast = getTypeScriptAST(options.ts, options.template, prop.exp.content);
-		const isCompound = isCompoundExpression(options.ts, ast);
+		const ast = getTypeScriptAST(options.typescript, options.template, prop.exp.content);
+		const isCompound = isCompoundExpression(options.typescript, ast);
 		const interpolation = generateInterpolation(
 			options,
 			ctx,
