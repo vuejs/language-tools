@@ -1,4 +1,5 @@
 import type * as ts from 'typescript';
+import type { VueCompletionData } from '../common.js';
 
 type Response<T> = T | null | undefined | Promise<T | null | undefined>;
 
@@ -61,6 +62,6 @@ export interface Requests {
 		position: number,
 	): Response<ts.CompletionInfo>;
 	resolveAutoImportCompletionEntry(
-		data: ts.CompletionEntryData,
+		data: VueCompletionData,
 	): Response<ts.CompletionEntryDetails>;
 }

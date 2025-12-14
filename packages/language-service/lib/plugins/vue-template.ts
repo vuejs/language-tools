@@ -487,7 +487,9 @@ export function create(
 				},
 
 				async resolveCompletionItem(item) {
-					if (item.data?.__isAutoImport || item.data?.__isComponentAutoImport) {
+					const data = item.data as import('@vue/typescript-plugin/lib/common').VueCompletionData;
+
+					if (data?.__vue__autoImport || data?.__vue__componentAutoImport) {
 						const embeddedUri = URI.parse(lastCompletionDocument!.uri);
 						const decoded = context.decodeEmbeddedDocumentUri(embeddedUri);
 						if (!decoded) {
@@ -497,7 +499,7 @@ export function create(
 						if (!sourceScript) {
 							return item;
 						}
-						const details = await resolveAutoImportCompletionEntry(item.data);
+						const details = await resolveAutoImportCompletionEntry(data);
 						if (details) {
 							const virtualCode = sourceScript.generated!.embeddedCodes.get(decoded[1])!;
 							const sourceDocument = context.documents.get(

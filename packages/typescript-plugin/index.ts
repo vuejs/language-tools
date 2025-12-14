@@ -7,6 +7,7 @@ import {
 	preprocessLanguageService,
 	resolveCompletionEntryDetails,
 	resolveCompletionResult,
+	type VueCompletionData,
 } from './lib/common';
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
@@ -167,14 +168,17 @@ export = createLanguageServicePlugin(
 								position,
 								result,
 							);
-							result.entries = result.entries.filter((entry: any) =>
-								entry.data?.__isComponentAutoImport || entry.data?.__isAutoImport
-							);
+							result.entries = result.entries
+								.filter(entry => {
+									const data = entry.data as VueCompletionData;
+									return data?.__vue__componentAutoImport || data?.__vue__autoImport;
+								});
 							for (const entry of result.entries) {
-								(entry.data as any).__getAutoImportSuggestions = {
+								const data = (entry.data as VueCompletionData)!;
+								data.__vue__autoImportSuggestions = {
 									fileName,
 									position: tsPosition + sourceScript.snapshot.getLength(),
-									entryName: (entry.data as any).__isComponentAutoImport?.oldName ?? entry.name,
+									entryName: data.__vue__componentAutoImport?.oldName ?? entry.name,
 									source: entry.source,
 								};
 							}
@@ -197,14 +201,17 @@ export = createLanguageServicePlugin(
 							position,
 							result,
 						);
-						result.entries = result.entries.filter((entry: any) =>
-							entry.data?.__isComponentAutoImport || entry.data?.__isAutoImport
-						);
+						result.entries = result.entries
+							.filter(entry => {
+								const data = entry.data as VueCompletionData;
+								return data?.__vue__componentAutoImport || data?.__vue__autoImport;
+							});
 						for (const entry of result.entries) {
-							(entry.data as any).__getAutoImportSuggestions = {
+							const data = (entry.data as VueCompletionData)!;
+							data.__vue__autoImportSuggestions = {
 								fileName,
 								position: 0,
-								entryName: (entry.data as any).__isComponentAutoImport?.oldName ?? entry.name,
+								entryName: data.__vue__componentAutoImport?.oldName ?? entry.name,
 								source: entry.source,
 							};
 						}
@@ -215,10 +222,10 @@ export = createLanguageServicePlugin(
 			});
 			session.addProtocolHandler('_vue:resolveAutoImportCompletionEntry', request => {
 				const [data]: Parameters<Requests['resolveAutoImportCompletionEntry']> = request.arguments;
-				if (!(data as any).__getAutoImportSuggestions) {
+				if (!data?.__vue__autoImportSuggestions) {
 					return createResponse(undefined);
 				}
-				const { fileName, position, entryName, source } = (data as any).__getAutoImportSuggestions;
+				const { fileName, position, entryName, source } = data.__vue__autoImportSuggestions;
 				const { project, language } = getProject(fileName);
 				const tsLanguageService = projectToOriginalLanguageService.get(project);
 				if (!tsLanguageService) {
