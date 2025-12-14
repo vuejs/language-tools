@@ -231,7 +231,9 @@ export function getDefaultCompilerOptions(
 	target = 99,
 	lib = 'vue',
 	strictTemplates = false,
-	typesRoot = path.join(__dirname.replace(/\\/g, '/'), '..', 'types'),
+	typesRoot = typeof __dirname !== 'undefined'
+		? path.join(__dirname.replace(/\\/g, '/'), '..', 'types')
+		: '@vue/language-core/types',
 ): VueCompilerOptions {
 	return {
 		target,
