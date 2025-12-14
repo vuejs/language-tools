@@ -415,17 +415,25 @@ export function postprocessLanguageService<T>(
 					return;
 				}
 
-				if (!ts.isIndexedAccessTypeNode(type)) {
-					return;
-				}
-
-				const pos = type.indexType.getStart(sourceFile);
-				const res = getDefinitionAndBoundSpan(fileName, pos, ...rests);
-				if (res?.definitions?.length) {
-					for (const definition of res.definitions) {
-						definitions.add(definition);
+				if (ts.isIndexedAccessTypeNode(type)) {
+					const pos = type.indexType.getStart(sourceFile);
+					const res = getDefinitionAndBoundSpan(fileName, pos, ...rests);
+					if (res?.definitions?.length) {
+						for (const definition of res.definitions) {
+							definitions.add(definition);
+						}
+						skippedDefinitions.push(definition);
 					}
-					skippedDefinitions.push(definition);
+				}
+				else if (ts.isImportTypeNode(type)) {
+					const pos = type.argument.getStart(sourceFile);
+					const res = getDefinitionAndBoundSpan(fileName, pos, ...rests);
+					if (res?.definitions?.length) {
+						for (const definition of res.definitions) {
+							definitions.add(definition);
+						}
+						skippedDefinitions.push(definition);
+					}
 				}
 			}
 		};
