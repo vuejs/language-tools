@@ -4,7 +4,6 @@
 		"typescript": "latest",
 		"vue": "https://pkg.pr.new/vue@e1bc0eb02e22bc0c236e1471c11d96a368764b72",
 		"vue-component-meta": "workspace:*",
-		"vue-component-type-helpers": "workspace:*",
-		"vue3.4": "npm:vue@3.4.38"
+		"vue-component-type-helpers": "workspace:*"
 	}
 }

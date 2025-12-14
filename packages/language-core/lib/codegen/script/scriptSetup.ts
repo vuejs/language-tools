@@ -52,6 +52,7 @@ export function* generateGeneric(
 	yield* body;
 
 	const propTypes: string[] = [];
+	const emitTypes: string[] = [];
 	const { vueCompilerOptions } = options;
 
 	if (ctx.generatedTypes.has(names.PublicProps)) {
@@ -78,8 +79,6 @@ export function* generateGeneric(
 	if (options.templateCodegen?.generatedTypes.has(names.InheritedAttrs)) {
 		propTypes.push(names.InheritedAttrs);
 	}
-
-	const emitTypes: string[] = [];
 	if (scriptSetupRanges.defineEmits) {
 		emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
 	}
@@ -88,15 +87,17 @@ export function* generateGeneric(
 	}
 
 	yield `return {} as {${newLine}`;
-	yield `	props: ${propTypes.length ? `${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}> & ` : ``}${
-		vueCompilerOptions.target >= 3.4
-			? `import('${vueCompilerOptions.lib}').PublicProps`
-			: vueCompilerOptions.target >= 3
-			? `import('${vueCompilerOptions.lib}').VNodeProps`
-				+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
-				+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
-			: `globalThis.JSX.IntrinsicAttributes`
-	}`;
+	yield `	props: `;
+	yield vueCompilerOptions.target >= 3.4
+		? `import('${vueCompilerOptions.lib}').PublicProps`
+		: vueCompilerOptions.target >= 3
+		? `import('${vueCompilerOptions.lib}').VNodeProps`
+			+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
+			+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
+		: `globalThis.JSX.IntrinsicAttributes`;
+	if (propTypes.length) {
+		yield ` & ${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}>`;
+	}
 	if (!vueCompilerOptions.checkUnknownProps) {
 		yield ` & (typeof globalThis extends { ${names.PROPS_FALLBACK}: infer P } ? P : {})`;
 	}
