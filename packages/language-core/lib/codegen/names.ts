@@ -11,7 +11,6 @@ export const setup = '__VLS_setup';
 export const components = '__VLS_components';
 export const directives = '__VLS_directives';
 export const intrinsics = '__VLS_intrinsics';
-export const placeholder = '__VLS_placeholder';
 export const _export = '__VLS_export';
 
 export const ModelProps = '__VLS_ModelProps';
@@ -27,5 +26,3 @@ export const Emit = '__VLS_Emit';
 export const SetupExposed = '__VLS_SetupExposed';
 export const PublicProps = '__VLS_PublicProps';
 export const StyleModules = '__VLS_StyleModules';
-
-export const PROPS_FALLBACK = '__VLS_PROPS_FALLBACK';

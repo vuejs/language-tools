@@ -80,7 +80,7 @@ function* generateTemplateCtx(
 }
 
 function* generateTemplateComponents(
-	{ script, scriptRanges }: ScriptCodegenOptions,
+	{ vueCompilerOptions, script, scriptRanges }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	const types: string[] = [];
@@ -102,11 +102,21 @@ function* generateTemplateComponents(
 	}
 
 	yield `type __VLS_LocalComponents = ${types.length ? types.join(` & `) : `{}`}${endOfLine}`;
+	yield `type __VLS_GlobalComponents = ${
+		vueCompilerOptions.target >= 3.5
+			? `import('${vueCompilerOptions.lib}').GlobalComponents`
+			: `import('${vueCompilerOptions.lib}').GlobalComponents & Pick<typeof import('${vueCompilerOptions.lib}'), 'Transition' | 'TransitionGroup' | 'KeepAlive' | 'Suspense' | 'Teleport'>`
+	}${endOfLine}`;
 	yield `let ${names.components}!: __VLS_LocalComponents & __VLS_GlobalComponents${endOfLine}`;
+	yield `let ${names.intrinsics}!: ${
+		vueCompilerOptions.target >= 3.3
+			? `import('${vueCompilerOptions.lib}/jsx-runtime').JSX.IntrinsicElements`
+			: `globalThis.JSX.IntrinsicElements`
+	}${endOfLine}`;
 }
 
 function* generateTemplateDirectives(
-	{ script, scriptRanges }: ScriptCodegenOptions,
+	{ vueCompilerOptions, script, scriptRanges }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	const types: string[] = [];
@@ -128,11 +138,11 @@ function* generateTemplateDirectives(
 	}
 
 	yield `type __VLS_LocalDirectives = ${types.length ? types.join(` & `) : `{}`}${endOfLine}`;
-	yield `let ${names.directives}!: __VLS_LocalDirectives & __VLS_GlobalDirectives${endOfLine}`;
+	yield `let ${names.directives}!: __VLS_LocalDirectives & import('${vueCompilerOptions.lib}').GlobalDirectives${endOfLine}`;
 }
 
 function* generateSetupExposed(
-	{ exposed }: ScriptCodegenOptions,
+	{ vueCompilerOptions, exposed }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
 	if (!exposed.size) {
@@ -140,7 +150,7 @@ function* generateSetupExposed(
 	}
 	ctx.generatedTypes.add(names.SetupExposed);
 
-	yield `type ${names.SetupExposed} = __VLS_ProxyRefs<{${newLine}`;
+	yield `type ${names.SetupExposed} = import('${vueCompilerOptions.lib}').ShallowUnwrapRef<{${newLine}`;
 	for (const bindingName of exposed) {
 		const token = Symbol(bindingName.length);
 		yield ['', undefined, 0, { __linkedToken: token }];

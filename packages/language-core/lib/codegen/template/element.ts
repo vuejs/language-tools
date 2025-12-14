@@ -115,7 +115,7 @@ export function* generateComponent(
 			yield endOfLine;
 		}
 		else {
-			yield `let ${componentVar}!: __VLS_WithComponent<'${tag}', __VLS_LocalComponents`;
+			yield `let ${componentVar}!: __VLS_WithComponent<'${tag}', __VLS_LocalComponents, __VLS_GlobalComponents`;
 			yield originalNames.has(options.componentName)
 				? `, typeof ${names._export}`
 				: `, void`;

@@ -34,7 +34,6 @@ export = createLanguageServicePlugin(
 			vueOptions,
 			id => id,
 		);
-		vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 		addVueCommands();
 
 		let _language: core.Language<string> | undefined;
@@ -290,12 +289,12 @@ export = createLanguageServicePlugin(
 			session.addProtocolHandler('_vue:getElementAttrs', request => {
 				const [fileName, tag]: Parameters<Requests['getElementAttrs']> = request.arguments;
 				const { project } = getProject(fileName);
-				return createResponse(getElementAttrs(ts, project.getLanguageService().getProgram()!, tag));
+				return createResponse(getElementAttrs(ts, project.getLanguageService().getProgram()!, fileName, tag));
 			});
 			session.addProtocolHandler('_vue:getElementNames', request => {
 				const [fileName]: Parameters<Requests['getElementNames']> = request.arguments;
 				const { project } = getProject(fileName);
-				return createResponse(getElementNames(ts, project.getLanguageService().getProgram()!));
+				return createResponse(getElementNames(ts, project.getLanguageService().getProgram()!, fileName));
 			});
 			session.addProtocolHandler('_vue:resolveModuleName', request => {
 				const [fileName, moduleName]: Parameters<Requests['resolveModuleName']> = request.arguments;

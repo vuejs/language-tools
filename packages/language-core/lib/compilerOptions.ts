@@ -1,7 +1,6 @@
-import { camelize, NOOP as noop } from '@vue/shared';
+import { camelize } from '@vue/shared';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
-import { generateGlobalTypes, getGlobalTypesFileName } from './codegen/globalTypes';
 import type { RawVueCompilerOptions, VueCompilerOptions, VueLanguagePlugin } from './types';
 import { hyphenateTag } from './utils/shared';
 
@@ -204,46 +203,7 @@ export class CompilerOptionsResolver {
 			),
 		};
 
-		if (resolvedOptions.globalTypesPath === noop) {
-			if (this.fileExists && this.globalTypesPath === undefined) {
-				const fileDirToGlobalTypesPath = new Map<string, string | undefined>();
-				resolvedOptions.globalTypesPath = fileName => {
-					const fileDir = path.dirname(fileName);
-					if (fileDirToGlobalTypesPath.has(fileDir)) {
-						return fileDirToGlobalTypesPath.get(fileDir);
-					}
-
-					const root = this.findNodeModulesRoot(fileDir, resolvedOptions.lib);
-					const result = root
-						? path.join(
-							root,
-							'node_modules',
-							'.vue-global-types',
-							getGlobalTypesFileName(resolvedOptions),
-						)
-						: undefined;
-
-					fileDirToGlobalTypesPath.set(fileDir, result);
-					return result;
-				};
-			}
-			else {
-				resolvedOptions.globalTypesPath = () => this.globalTypesPath;
-			}
-		}
-
 		return resolvedOptions;
-	}
-
-	private findNodeModulesRoot(dir: string, lib: string) {
-		while (!this.fileExists!(path.join(dir, 'node_modules', lib, 'package.json'))) {
-			const parentDir = path.dirname(dir);
-			if (dir === parentDir) {
-				return;
-			}
-			dir = parentDir;
-		}
-		return dir;
 	}
 }
 
@@ -273,11 +233,16 @@ function resolvePath(scriptPath: string, root: string) {
 	}
 }
 
-export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTemplates = false): VueCompilerOptions {
+export function getDefaultCompilerOptions(
+	target = 99,
+	lib = 'vue',
+	strictTemplates = false,
+	typesRoot = path.join(__dirname.replace(/\\/g, '/'), '..', 'types'),
+): VueCompilerOptions {
 	return {
 		target,
 		lib,
-		globalTypesPath: noop,
+		typesRoot,
 		extensions: ['.vue'],
 		vitePressExtensions: [],
 		petiteVueExtensions: [],
@@ -334,30 +299,4 @@ export function getDefaultCompilerOptions(target = 99, lib = 'vue', strictTempla
 			},
 		},
 	};
-}
-
-export function createGlobalTypesWriter(
-	vueOptions: VueCompilerOptions,
-	writeFile: (fileName: string, data: string) => void,
-) {
-	const writed = new Set<string>();
-	const { globalTypesPath } = vueOptions;
-	return (fileName: string) => {
-		const result = globalTypesPath(fileName);
-		if (result && !writed.has(result)) {
-			writed.add(result);
-			writeFile(result, generateGlobalTypes(vueOptions));
-		}
-		return result;
-	};
-}
-
-/**
- * @deprecated use `createGlobalTypesWriter` instead
- */
-export function writeGlobalTypes(
-	vueOptions: VueCompilerOptions,
-	writeFile: (fileName: string, data: string) => void,
-) {
-	vueOptions.globalTypesPath = createGlobalTypesWriter(vueOptions, writeFile);
 }
