@@ -238,6 +238,7 @@ function* generateGlobalTypesReference(
 	{ typesRoot, lib, target, checkUnknownProps }: VueCompilerOptions,
 	fileName: string,
 ): Generator<Code> {
+	let typesPath: string;
 	if (path.isAbsolute(typesRoot)) {
 		let relativePath = path.relative(path.dirname(fileName), typesRoot);
 		if (
@@ -247,16 +248,17 @@ function* generateGlobalTypesReference(
 		) {
 			relativePath = './' + relativePath;
 		}
-		yield `/// <reference types="${relativePath}/template-helpers" />${newLine}`;
+		typesPath = relativePath;
 	}
 	else {
-		yield `/// <reference types="${typesRoot}/template-helpers" />${newLine}`;
+		typesPath = typesRoot;
 	}
+	yield `/// <reference types=${JSON.stringify(typesPath + '/template-helpers.d.ts')} />${newLine}`;
 	if (!checkUnknownProps) {
-		yield `/// <reference types="${typesRoot}/props-fallback" />${newLine}`;
+		yield `/// <reference types=${JSON.stringify(typesPath + '/props-fallback.d.ts')} />${newLine}`;
 	}
 	if (lib === 'vue' && target < 3.5) {
-		yield `/// <reference types="${typesRoot}/vue-3.4-shims" />${newLine}`;
+		yield `/// <reference types=${JSON.stringify(typesPath + '/vue-3.4-shims.d.ts')} />${newLine}`;
 	}
 }
 
