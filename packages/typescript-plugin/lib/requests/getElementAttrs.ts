@@ -1,18 +1,25 @@
 import { names } from '@vue/language-core';
 import type * as ts from 'typescript';
+import { getVariableType } from './utils';
 
 export function getElementAttrs(
 	ts: typeof import('typescript'),
 	program: ts.Program,
+	fileName: string,
 	tag: string,
 ): string[] {
+	const sourceFile = program.getSourceFile(fileName);
+	if (!sourceFile) {
+		return [];
+	}
+
 	const checker = program.getTypeChecker();
-	const elements = checker.resolveName(names.intrinsics, undefined, ts.SymbolFlags.Variable, false);
+	const elements = getVariableType(ts, checker, sourceFile, names.intrinsics);
 	if (!elements) {
 		return [];
 	}
 
-	const elementType = checker.getTypeOfSymbol(elements).getProperty(tag);
+	const elementType = elements.type.getProperty(tag);
 	if (!elementType) {
 		return [];
 	}

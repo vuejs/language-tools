@@ -40,7 +40,7 @@ export function* generateElementDirectives(
 		const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);
 		yield `__VLS_asFunctionalDirective(`;
 		yield* generateIdentifier(options, ctx, prop);
-		yield `)(null!, { ...__VLS_directiveBindingRestFields, `;
+		yield `, {} as import('${options.vueCompilerOptions.lib}').ObjectDirective)(null!, { ...__VLS_directiveBindingRestFields, `;
 		yield* generateArg(options, ctx, prop);
 		yield* generateModifiers(options, ctx, prop);
 		yield* generateValue(options, ctx, prop);

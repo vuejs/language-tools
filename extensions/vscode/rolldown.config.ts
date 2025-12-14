@@ -30,6 +30,15 @@ export default defineConfig({
 			},
 		},
 		{
+			name: 'copy-types',
+			buildEnd() {
+				const sourceDir = path.resolve(__dirname, '../../packages/language-core/types');
+				const targetDir = path.resolve(__dirname, './types');
+				fs.rmSync(targetDir, { recursive: true, force: true });
+				fs.cpSync(sourceDir, targetDir, { recursive: true });
+			},
+		},
+		{
 			name: 'umd2esm',
 			resolveId: {
 				filter: {

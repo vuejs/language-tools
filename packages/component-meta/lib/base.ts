@@ -157,8 +157,6 @@ function baseCreate(
 	let fileNamesSet = new Set(fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
 
-	vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
-
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
@@ -267,7 +265,6 @@ function baseCreate(
 		},
 		reload() {
 			[{ vueOptions, options, projectReferences }, fileNames] = getConfigAndFiles();
-			vueOptions.globalTypesPath = core.createGlobalTypesWriter(vueOptions, ts.sys.writeFile);
 			fileNamesSet = new Set(fileNames.map(path => path.replace(windowsPathReg, '/')));
 			this.clearCache();
 		},

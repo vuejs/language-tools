@@ -234,24 +234,31 @@ function* generateScriptWithExportDefault(
 	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, codeFeatures.all);
 }
 
-function* generateGlobalTypesReference(vueCompilerOptions: VueCompilerOptions, fileName: string): Generator<Code> {
-	const globalTypesPath = vueCompilerOptions.globalTypesPath(fileName);
-	if (!globalTypesPath) {
-		yield `/* placeholder */${newLine}`;
-	}
-	else if (path.isAbsolute(globalTypesPath)) {
-		let relativePath = path.relative(path.dirname(fileName), globalTypesPath);
+function* generateGlobalTypesReference(
+	{ typesRoot, lib, target, checkUnknownProps }: VueCompilerOptions,
+	fileName: string,
+): Generator<Code> {
+	let typesPath: string;
+	if (path.isAbsolute(typesRoot)) {
+		let relativePath = path.relative(path.dirname(fileName), typesRoot);
 		if (
-			relativePath !== globalTypesPath
+			relativePath !== typesRoot
 			&& !relativePath.startsWith('./')
 			&& !relativePath.startsWith('../')
 		) {
 			relativePath = './' + relativePath;
 		}
-		yield `/// <reference types="${relativePath}" />${newLine}`;
+		typesPath = relativePath;
 	}
 	else {
-		yield `/// <reference types="${globalTypesPath}" />${newLine}`;
+		typesPath = typesRoot;
+	}
+	yield `/// <reference types=${JSON.stringify(typesPath + '/template-helpers.d.ts')} />${newLine}`;
+	if (!checkUnknownProps) {
+		yield `/// <reference types=${JSON.stringify(typesPath + '/props-fallback.d.ts')} />${newLine}`;
+	}
+	if (lib === 'vue' && target < 3.5) {
+		yield `/// <reference types=${JSON.stringify(typesPath + '/vue-3.4-shims.d.ts')} />${newLine}`;
 	}
 }
 

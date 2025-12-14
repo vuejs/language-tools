@@ -98,10 +98,7 @@ export function* generateGeneric(
 	if (propTypes.length) {
 		yield ` & ${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}>`;
 	}
-	if (!vueCompilerOptions.checkUnknownProps) {
-		yield ` & (typeof globalThis extends { ${names.PROPS_FALLBACK}: infer P } ? P : {})`;
-	}
-	yield endOfLine;
+	yield ` & (typeof globalThis extends { __VLS_PROPS_FALLBACK: infer P } ? P : {})${endOfLine}`;
 	yield `	expose: (exposed: `;
 	yield scriptSetupRanges.defineExpose
 		? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
@@ -219,7 +216,7 @@ export function* generateSetupFunction(
 					yield `])`;
 				}),
 				replace(arg.start, arg.end, function*() {
-					yield names.placeholder;
+					yield `{} as any`;
 				}),
 			);
 		}
@@ -253,7 +250,7 @@ export function* generateSetupFunction(
 				yield `(`;
 			}),
 			insert(callExp.end, function*() {
-				yield ` as __VLS_UseTemplateRef<`;
+				yield ` as Readonly<import('${options.vueCompilerOptions.lib}').ShallowRef<`;
 				if (arg) {
 					yield names.TemplateRefs;
 					yield `[`;
@@ -263,13 +260,13 @@ export function* generateSetupFunction(
 				else {
 					yield `unknown`;
 				}
-				yield `>)`;
+				yield ` | null>>)`;
 			}),
 		);
 		if (arg) {
 			transforms.push(
 				replace(arg.start, arg.end, function*() {
-					yield names.placeholder;
+					yield `{} as any`;
 				}),
 			);
 		}
