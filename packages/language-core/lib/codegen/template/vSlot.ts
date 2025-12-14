@@ -55,9 +55,9 @@ export function* generateVSlot(
 
 	const endScope = ctx.startScope();
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const slotAst = getTypeScriptAST(options.ts, options.template, `(${slotDir.exp.content}) => {}`);
+		const slotAst = getTypeScriptAST(options.typescript, options.template, `(${slotDir.exp.content}) => {}`);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
-		ctx.declare(...collectBindingNames(options.ts, slotAst, slotAst));
+		ctx.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
 	}
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
@@ -96,7 +96,7 @@ function* generateSlotParameters(
 	exp: CompilerDOM.SimpleExpressionNode,
 	slotVar: string,
 ): Generator<Code> {
-	const { ts } = options;
+	const { typescript: ts } = options;
 	const statement = ast.statements[0];
 	if (!statement || !ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
 		return;

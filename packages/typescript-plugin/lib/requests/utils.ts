@@ -20,7 +20,7 @@ export function getComponentType(
 	]);
 	const codegen = tsCodegen.get(sfc);
 
-	for (const importedName of codegen?.getImportComponentNames() ?? []) {
+	for (const importedName of codegen?.getImportedComponents() ?? []) {
 		if (testNames.has(importedName)) {
 			const node = searchDefaultImportIdentifier(ts, sourceFile, importedName);
 			if (node) {

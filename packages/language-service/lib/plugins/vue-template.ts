@@ -190,7 +190,7 @@ export function create(
 					const codegen = info && tsCodegen.get(info.root.sfc);
 					if (codegen) {
 						const componentNames = new Set([
-							...codegen.getImportComponentNames(),
+							...codegen.getImportedComponents(),
 							...codegen.getSetupExposed(),
 						]);
 						// copied from https://github.com/microsoft/vscode-html-languageservice/blob/10daf45dc16b4f4228987cf7cddf3a7dbbdc7570/src/beautify/beautify-html.js#L2746-L2761
@@ -679,7 +679,7 @@ export function create(
 							if (codegen) {
 								for (
 									const name of [
-										...codegen.getImportComponentNames(),
+										...codegen.getImportedComponents(),
 										...codegen.getSetupExposed(),
 									]
 								) {

@@ -7,7 +7,7 @@ import { generateInterpolation } from '../template/interpolation';
 import { endOfLine } from '../utils';
 
 export interface StyleCodegenOptions {
-	ts: typeof import('typescript');
+	typescript: typeof import('typescript');
 	vueCompilerOptions: VueCompilerOptions;
 	styles: Sfc['styles'];
 	setupRefs: Set<string>;

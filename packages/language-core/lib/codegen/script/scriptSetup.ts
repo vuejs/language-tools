@@ -76,7 +76,7 @@ export function* generateGeneric(
 	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
 		propTypes.push(names.EmitProps);
 	}
-	if (options.templateCodegen?.generatedTypes.has(names.InheritedAttrs)) {
+	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
 		propTypes.push(names.InheritedAttrs);
 	}
 	if (scriptSetupRanges.defineEmits) {
@@ -108,13 +108,13 @@ export function* generateGeneric(
 		: `{}`;
 	if (
 		options.vueCompilerOptions.inferComponentDollarRefs
-		&& options.templateCodegen?.generatedTypes.has(names.TemplateRefs)
+		&& options.templateAndStyleTypes.has(names.TemplateRefs)
 	) {
 		yield ` & { $refs: ${names.TemplateRefs}; }`;
 	}
 	if (
 		options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateCodegen?.generatedTypes.has(names.RootEl)
+		&& options.templateAndStyleTypes.has(names.RootEl)
 	) {
 		yield ` & { $el: ${names.RootEl}; }`;
 	}
@@ -208,7 +208,7 @@ export function* generateSetupFunction(
 				yield `(`;
 			}),
 		);
-		const type = options.styleCodegen?.generatedTypes.has(names.StyleModules)
+		const type = options.templateAndStyleTypes.has(names.StyleModules)
 			? names.StyleModules
 			: `{}`;
 		if (arg) {
@@ -307,7 +307,7 @@ function* generateMacros(options: ScriptCodegenOptions): Generator<Code> {
 		yield `// @ts-ignore${newLine}`;
 		yield `declare const { `;
 		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!options.setupExposed.has(macro)) {
+			if (!options.exposed.has(macro)) {
 				yield `${macro}, `;
 			}
 		}
@@ -410,7 +410,7 @@ function* generatePublicProps(
 function hasSlotsType(options: ScriptCodegenOptions): boolean {
 	return !!(
 		options.scriptSetupRanges?.defineSlots
-		|| options.templateCodegen?.generatedTypes.has(names.Slots)
+		|| options.templateAndStyleTypes.has(names.Slots)
 	);
 }
 

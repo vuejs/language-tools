@@ -16,16 +16,13 @@ export function* generateTemplate(
 	yield* generateTemplateComponents(options, ctx);
 	yield* generateTemplateDirectives(options, ctx);
 
-	if (options.styleCodegen) {
-		yield* options.styleCodegen.codes;
-	}
-	if (options.templateCodegen) {
-		yield* options.templateCodegen.codes;
+	if (options.templateAndStyleCodes.length) {
+		yield* options.templateAndStyleCodes;
 	}
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, styleCodegen, scriptSetupRanges, fileName }: ScriptCodegenOptions,
+	{ vueCompilerOptions, templateAndStyleTypes, scriptSetupRanges, fileName }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	selfType: string | undefined,
 ): Generator<Code> {
@@ -42,7 +39,7 @@ function* generateTemplateCtx(
 	else {
 		exps.push([`{} as import('${vueCompilerOptions.lib}').ComponentPublicInstance`]);
 	}
-	if (styleCodegen?.generatedTypes.has(names.StyleModules)) {
+	if (templateAndStyleTypes.has(names.StyleModules)) {
 		exps.push([`{} as ${names.StyleModules}`]);
 	}
 
@@ -135,16 +132,16 @@ function* generateTemplateDirectives(
 }
 
 function* generateSetupExposed(
-	{ setupExposed }: ScriptCodegenOptions,
+	{ exposed }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
-	if (!setupExposed.size) {
+	if (!exposed.size) {
 		return;
 	}
 	ctx.generatedTypes.add(names.SetupExposed);
 
 	yield `type ${names.SetupExposed} = __VLS_ProxyRefs<{${newLine}`;
-	for (const bindingName of setupExposed) {
+	for (const bindingName of exposed) {
 		const token = Symbol(bindingName.length);
 		yield ['', undefined, 0, { __linkedToken: token }];
 		yield `${bindingName}: typeof `;

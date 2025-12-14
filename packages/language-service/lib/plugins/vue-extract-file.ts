@@ -299,11 +299,10 @@ export function createAddComponentToOptionEdit(
 	ast: ts.SourceFile,
 	componentName: string,
 ) {
-	const scriptRanges = tsCodegen.get(sfc)?.getScriptRanges();
-	if (!scriptRanges?.componentOptions) {
+	const componentOptions = tsCodegen.get(sfc)?.getScriptRanges()?.componentOptions;
+	if (!componentOptions) {
 		return;
 	}
-	const { componentOptions } = scriptRanges;
 
 	// https://github.com/microsoft/TypeScript/issues/36174
 	const printer = ts.createPrinter();

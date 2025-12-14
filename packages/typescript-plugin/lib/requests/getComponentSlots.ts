@@ -18,7 +18,7 @@ export function getComponentSlots(
 	}
 
 	const checker = program.getTypeChecker();
-	const assignName = codegen.getSetupSlotsAssignName() ?? names.slots;
+	const assignName = codegen.getScriptSetupRanges()?.defineSlots?.name ?? names.slots;
 	const slots = getVariableType(ts, checker, sourceFile, assignName);
 	if (!slots) {
 		return [];

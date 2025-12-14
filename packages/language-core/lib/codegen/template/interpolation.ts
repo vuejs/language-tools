@@ -5,19 +5,17 @@ import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
-import type { StyleCodegenOptions } from '../style';
 import { forEachNode, getTypeScriptAST, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
-import type { TemplateCodegenOptions } from './index';
 
 // https://github.com/vuejs/core/blob/fb0c3ca519f1fccf52049cd6b8db3a67a669afe9/packages/compiler-core/src/transforms/transformExpression.ts#L47
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	options: Pick<
-		TemplateCodegenOptions | StyleCodegenOptions,
-		'ts' | 'setupRefs'
-	>,
+	{ typescript, setupRefs }: {
+		typescript: typeof import('typescript');
+		setupRefs: Set<string>;
+	},
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
 	data: VueCodeInformation,
@@ -28,7 +26,8 @@ export function* generateInterpolation(
 ): Generator<Code> {
 	for (
 		const segment of forEachInterpolationSegment(
-			options,
+			typescript,
+			setupRefs,
 			ctx,
 			block,
 			code,
@@ -70,10 +69,8 @@ export function* generateInterpolation(
 }
 
 function* forEachInterpolationSegment(
-	{ ts, setupRefs }: Pick<
-		TemplateCodegenOptions | StyleCodegenOptions,
-		'ts' | 'setupRefs'
-	>,
+	ts: typeof import('typescript'),
+	setupRefs: Set<string>,
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
 	originalCode: string,

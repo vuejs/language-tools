@@ -4,7 +4,6 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
-import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
@@ -20,9 +19,9 @@ export interface ScriptCodegenOptions {
 	fileName: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	templateCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
-	styleCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
-	setupExposed: Set<string>;
+	templateAndStyleTypes: Set<string>;
+	templateAndStyleCodes: Code[];
+	exposed: Set<string>;
 }
 
 export { generate as generateScript };
