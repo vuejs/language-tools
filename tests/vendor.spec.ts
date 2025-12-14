@@ -3,6 +3,11 @@ import { expect, test } from 'vitest';
 const VENDOR_LIST: { repo: string; path: string }[] = [
 	{ repo: 'microsoft/TypeScript', path: 'src/services/types.ts' },
 	{ repo: 'microsoft/vscode-html-languageservice', path: 'src/services/htmlFormatter.ts' },
+	{ repo: 'microsoft/vscode', path: 'extensions/css/syntaxes/css.tmLanguage.json' },
+	{ repo: 'microsoft/vscode', path: 'extensions/html/syntaxes/html.tmLanguage.json' },
+	{ repo: 'microsoft/vscode', path: 'extensions/javascript/syntaxes/JavaScript.tmLanguage.json' },
+	{ repo: 'microsoft/vscode', path: 'extensions/scss/syntaxes/scss.tmLanguage.json' },
+	{ repo: 'microsoft/vscode', path: 'extensions/typescript-basics/syntaxes/TypeScript.tmLanguage.json' },
 ];
 
 test.skipIf(process.env.TEST_VENDOR !== '1')(`ensure vendor is updated`, async () => {
