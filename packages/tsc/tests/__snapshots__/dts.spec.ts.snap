@@ -385,8 +385,18 @@ export {};
 `;
 
 exports[`Input: reference-type-exposed/component.vue, Output: reference-type-exposed/component.vue.d.ts 1`] = `
-"import type { MyExposed } from './my-exposed';
-declare const __VLS_export: import("vue").DefineComponent2<{
+"import { type VNode } from 'vue';
+import type { MyExposed } from './my-exposed';
+type __VLS_Props = {
+    label: string;
+};
+type __VLS_Emit = {
+    click: [event: Event];
+};
+type __VLS_Slots = {
+    default: () => VNode[];
+};
+declare const __VLS_base: import("vue").DefineComponent2<{
     setup(): MyExposed;
     data(): {};
     props: {};
@@ -401,14 +411,54 @@ declare const __VLS_export: import("vue").DefineComponent2<{
     directives: {};
     provide: {};
     expose: string;
+    __typeProps: __VLS_Props;
+    __typeEmits: __VLS_Emit;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+declare const _default: typeof __VLS_export;
+export default _default;
+type __VLS_WithSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
+"
+`;
+
+exports[`Input: reference-type-exposed/component-options-api.vue, Output: reference-type-exposed/component-options-api.vue.d.ts 1`] = `
+"declare const _default: typeof __VLS_export;
+export default _default;
+declare const __VLS_export: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {
+        counter: number;
+    };
+    props: {};
+    computed: {};
+    methods: {
+        /** Resets the counter to zero */
+        reset(): void;
+        /** Increments the counter by one */
+        increment(): void;
+    };
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: "reset" | "increment";
     __typeProps: unknown;
     __typeEmits: unknown;
     __typeRefs: {};
     __typeEl: any;
     __defaults: unknown;
 }>;
-declare const _default: typeof __VLS_export;
-export default _default;
 "
 `;
 

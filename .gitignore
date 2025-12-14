@@ -6,6 +6,7 @@ node_modules
 
 extensions/vscode/out
 extensions/vscode/e2e/out
+extensions/vscode/tests/embeddedGrammars/*.tmLanguage.json
 packages/*/*.d.ts
 packages/*/*.js
 packages/*/*.map

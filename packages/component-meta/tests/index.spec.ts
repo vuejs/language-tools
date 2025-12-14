@@ -1242,6 +1242,40 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 					],
 				},
 			));
+			expect(meta.exposed.find(({ name }) => ['label', 'click', 'default'].includes(name))).toBeUndefined();
+			expect(meta.props.find(({ name }) => name === 'label')).toBeDefined();
+			expect(meta.events.find(({ name }) => name === 'click')).toBeDefined();
+			expect(meta.slots.find(({ name }) => name === 'default')).toBeDefined();
+		});
+
+		test('options-api expose array', () => {
+			const componentPath = path.resolve(
+				__dirname,
+				'../../../test-workspace/component-meta/reference-type-exposed/component-options-api.vue',
+			);
+			const meta = checker.getComponentMeta(componentPath);
+
+			expect(meta.type).toEqual(TypeMeta.Class);
+			expect(meta.exposed.map(({ name }) => name)).toStrictEqual(expect.arrayContaining(['increment', 'reset']));
+
+			const reset = meta.exposed.find(exposed => exposed.name === 'reset');
+
+			expect(reset).toMatchInlineSnapshot(`
+				{
+				  "declarations": [],
+				  "description": "Resets the counter to zero",
+				  "getTypeObject": [Function],
+				  "name": "reset",
+				  "rawType": undefined,
+				  "schema": {
+				    "kind": "event",
+				    "schema": undefined,
+				    "type": "(): void",
+				  },
+				  "tags": [],
+				  "type": "() => void",
+				}
+			`);
 		});
 
 		test('component with both props and events', () => {

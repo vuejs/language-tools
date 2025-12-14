@@ -134,9 +134,6 @@ importers:
       picomatch:
         specifier: ^4.0.2
         version: 4.0.3
-      typescript:
-        specifier: '*'
-        version: 5.9.3
     devDependencies:
       '@types/node':
         specifier: ^22.10.4
