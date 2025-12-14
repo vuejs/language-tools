@@ -9,10 +9,9 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 
 export { VueEmbeddedCode };
 
-export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'globalTypesPath' | 'plugins'>> & {
+export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
 	strictTemplates?: boolean;
 	target?: 'auto' | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
-	globalTypesPath?: string;
 	plugins?: string[];
 };
 

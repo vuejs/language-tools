@@ -112,9 +112,8 @@ export function createParsedCommandLine(
 }
 
 export class CompilerOptionsResolver {
-	options: Omit<RawVueCompilerOptions, 'target' | 'strictTemplates' | 'globalTypesPath' | 'plugins'> = {};
+	options: Omit<RawVueCompilerOptions, 'target' | 'strictTemplates' | 'plugins'> = {};
 	target: number | undefined;
-	globalTypesPath: string | undefined;
 	plugins: VueLanguagePlugin[] = [];
 
 	constructor(
@@ -139,11 +138,6 @@ export class CompilerOptionsResolver {
 					this.options.checkUnknownEvents ??= strict;
 					this.options.checkUnknownDirectives ??= strict;
 					this.options.checkUnknownComponents ??= strict;
-					break;
-				case 'globalTypesPath':
-					if (options[key] !== undefined) {
-						this.globalTypesPath = path.join(rootDir, options[key]);
-					}
 					break;
 				case 'plugins':
 					this.plugins = (options.plugins ?? [])
