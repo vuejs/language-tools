@@ -71,7 +71,7 @@ function* generateWorker(
 
 		// <script>
 		let selfType: string | undefined;
-		const { exportDefault } = scriptRanges;
+		const exportDefault = scriptRanges.exports.default;
 		if (exportDefault) {
 			yield* generateScriptWithExportDefault(
 				ctx,
@@ -154,7 +154,7 @@ function* generateWorker(
 	}
 	// only <script>
 	else if (script && scriptRanges) {
-		const { exportDefault } = scriptRanges;
+		const exportDefault = scriptRanges.exports.default;
 		if (exportDefault) {
 			yield* generateScriptWithExportDefault(
 				ctx,
@@ -182,12 +182,12 @@ function* generateScriptWithExportDefault(
 	ctx: ScriptCodegenContext,
 	script: NonNullable<Sfc['script']>,
 	scriptRanges: ScriptRanges,
-	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
+	exportDefault: NonNullable<ScriptRanges['exports'][string]>,
 	vueCompilerOptions: VueCompilerOptions,
 	varName: string,
 	templateGenerator?: Generator<Code>,
 ): Generator<Code> {
-	const { componentOptions } = scriptRanges;
+	const componentOptions = scriptRanges.exports.default?.options;
 	const { expression, isObjectLiteral } = componentOptions ?? exportDefault;
 
 	let wrapLeft: string | undefined;

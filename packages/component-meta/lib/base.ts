@@ -18,63 +18,6 @@ export * from './types';
 
 const windowsPathReg = /\\/g;
 
-// Utility function to get the component node from an AST
-function getComponentNodeFromAst(
-	ast: ts.SourceFile,
-	exportName: string,
-	ts: typeof import('typescript'),
-): ts.Node | undefined {
-	let result: ts.Node | undefined;
-
-	if (exportName === 'default') {
-		ast.forEachChild(child => {
-			if (ts.isExportAssignment(child)) {
-				result = child.expression;
-			}
-		});
-	}
-	else {
-		ast.forEachChild(child => {
-			if (
-				ts.isVariableStatement(child)
-				&& child.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
-			) {
-				for (const dec of child.declarationList.declarations) {
-					if (dec.name.getText(ast) === exportName) {
-						result = dec.initializer;
-					}
-				}
-			}
-		});
-	}
-
-	return result;
-}
-
-// Utility function to get the component options node from a component node
-function getComponentOptionsNodeFromComponent(
-	component: ts.Node | undefined,
-	ts: typeof import('typescript'),
-): ts.ObjectLiteralExpression | undefined {
-	if (component) {
-		// export default { ... }
-		if (ts.isObjectLiteralExpression(component)) {
-			return component;
-		}
-		// export default defineComponent({ ... })
-		else if (ts.isCallExpression(component)) {
-			if (component.arguments.length) {
-				const arg = component.arguments[0]!;
-				if (ts.isObjectLiteralExpression(arg)) {
-					return arg;
-				}
-			}
-		}
-	}
-
-	return undefined;
-}
-
 export function createCheckerByJsonConfigBase(
 	ts: typeof import('typescript'),
 	rootDir: string,
@@ -157,6 +100,7 @@ function baseCreate(
 	let fileNamesSet = new Set(fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
 
+	const scriptRangesCache = new WeakMap<ts.SourceFile, core.ScriptRanges>();
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
@@ -229,6 +173,7 @@ function baseCreate(
 	);
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
+	const printer = ts.createPrinter(checkerOptions.printer);
 
 	if (checkerOptions.forceUseTs) {
 		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
@@ -274,12 +219,6 @@ function baseCreate(
 		},
 		getProgram() {
 			return tsLs.getProgram();
-		},
-		/**
-		 * @deprecated use `getProgram()` instead
-		 */
-		__internal__: {
-			tsLs,
 		},
 	};
 
@@ -399,7 +338,7 @@ interface ComponentMeta<T> {
 					.map(prop => {
 						const {
 							resolveNestedProperties,
-						} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
+						} = createSchemaResolvers(ts, typeChecker, language, symbolNode, checkerOptions);
 
 						return resolveNestedProperties(prop);
 					})
@@ -415,32 +354,36 @@ interface ComponentMeta<T> {
 			}
 
 			// fill defaults
-			const printer = ts.createPrinter(checkerOptions.printer);
-			const sourceScript = language.scripts.get(componentPath)!;
-			const { snapshot } = sourceScript;
-
-			const vueFile = sourceScript.generated?.root;
-			const vueDefaults = vueFile && exportName === 'default'
-				? (vueFile instanceof core.VueVirtualCode ? readVueComponentDefaultProps(vueFile, printer, ts) : {})
-				: {};
-			const tsDefaults = !vueFile
-				? readTsComponentDefaultProps(
-					ts.createSourceFile(
-						'/tmp.' + componentPath.slice(componentPath.lastIndexOf('.') + 1), // ts | js | tsx | jsx
-						snapshot.getText(0, snapshot.getLength()),
-						ts.ScriptTarget.Latest,
-					),
-					exportName,
-					printer,
+			const sourceScript = language.scripts.get(componentPath);
+			const sourceFile = program.getSourceFile(componentPath);
+			const scriptRanges = sourceFile ? getScriptRanges(sourceFile) : undefined;
+			const vueFile = sourceScript?.generated?.root;
+			const defaults = sourceFile && scriptRanges
+				? readDefaultsFromScript(
 					ts,
+					printer,
+					sourceFile,
+					scriptRanges,
+					exportName,
 				)
 				: {};
+			const virtualCode = vueFile ? getVirtualCode(componentPath) : undefined;
+			const scriptSetupRanges = virtualCode ? getScriptSetupRanges(virtualCode) : undefined;
+
+			if (virtualCode?.sfc.scriptSetup && scriptSetupRanges) {
+				Object.assign(
+					defaults,
+					readDefaultsFromScriptSetup(
+						ts,
+						printer,
+						virtualCode.sfc.scriptSetup.ast,
+						scriptSetupRanges,
+					),
+				);
+			}
 
 			for (
-				const [propName, defaultExp] of Object.entries({
-					...vueDefaults,
-					...tsDefaults,
-				})
+				const [propName, defaultExp] of Object.entries(defaults)
 			) {
 				const prop = result.find(p => p.name === propName);
 				if (prop) {
@@ -469,7 +412,7 @@ interface ComponentMeta<T> {
 				return calls.map(call => {
 					const {
 						resolveEventSignature,
-					} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
+					} = createSchemaResolvers(ts, typeChecker, language, symbolNode, checkerOptions);
 
 					return resolveEventSignature(call);
 				}).filter(event => event.name);
@@ -488,7 +431,7 @@ interface ComponentMeta<T> {
 				return properties.map(prop => {
 					const {
 						resolveSlotProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
+					} = createSchemaResolvers(ts, typeChecker, language, symbolNode, checkerOptions);
 
 					return resolveSlotProperties(prop);
 				});
@@ -517,7 +460,7 @@ interface ComponentMeta<T> {
 				return properties.map(prop => {
 					const {
 						resolveExposedProperties,
-					} = createSchemaResolvers(typeChecker, symbolNode, checkerOptions, ts, language);
+					} = createSchemaResolvers(ts, typeChecker, language, symbolNode, checkerOptions);
 
 					return resolveExposedProperties(prop);
 				});
@@ -527,38 +470,21 @@ interface ComponentMeta<T> {
 		}
 
 		function getName() {
-			// Try to get name from component options
-			const sourceScript = language.scripts.get(componentPath)!;
-			const { snapshot } = sourceScript;
-			const vueFile = sourceScript.generated?.root;
-
-			if (vueFile && exportName === 'default' && vueFile instanceof core.VueVirtualCode) {
-				// For Vue SFC, check the script section
-				const { sfc } = vueFile;
-				if (sfc.script) {
-					const name = readComponentName(sfc.script.ast, exportName, ts);
-					if (name) {
-						return name;
-					}
+			const sourceFile = program.getSourceFile(componentPath);
+			if (sourceFile) {
+				const scriptRanges = getScriptRanges(sourceFile);
+				const name = scriptRanges?.exports[exportName]?.options?.name;
+				if (name && ts.isStringLiteral(name.node)) {
+					return name.node.text;
 				}
 			}
-			else if (!vueFile) {
-				// For TS/JS files
-				const ast = ts.createSourceFile(
-					'/tmp.' + componentPath.slice(componentPath.lastIndexOf('.') + 1),
-					snapshot.getText(0, snapshot.getLength()),
-					ts.ScriptTarget.Latest,
-				);
-				return readComponentName(ast, exportName, ts);
-			}
-
-			return undefined;
 		}
 
 		function getDescription() {
 			const sourceFile = program.getSourceFile(componentPath);
 			if (sourceFile) {
-				return readComponentDescription(sourceFile, exportName, ts, typeChecker);
+				const scriptRanges = getScriptRanges(sourceFile);
+				return readComponentDescription(ts, scriptRanges, exportName, typeChecker);
 			}
 		}
 	}
@@ -602,14 +528,37 @@ interface ComponentMeta<T> {
 			exports,
 		};
 	}
+
+	function getScriptRanges(sourceFile: ts.SourceFile) {
+		let scriptRanges = scriptRangesCache.get(sourceFile);
+		if (!scriptRanges) {
+			scriptRanges = core.parseScriptRanges(ts, sourceFile, vueOptions);
+			scriptRangesCache.set(sourceFile, scriptRanges);
+		}
+		return scriptRanges;
+	}
+
+	function getVirtualCode(fileName: string) {
+		const sourceScript = language.scripts.get(fileName);
+		const vueFile = sourceScript?.generated?.root;
+		if (vueFile instanceof core.VueVirtualCode) {
+			return vueFile;
+		}
+	}
+
+	function getScriptSetupRanges(virtualCode: core.VueVirtualCode) {
+		const { sfc } = virtualCode;
+		const codegen = core.tsCodegen.get(sfc);
+		return codegen?.getScriptSetupRanges();
+	}
 }
 
 function createSchemaResolvers(
+	ts: typeof import('typescript'),
 	typeChecker: ts.TypeChecker,
+	language: core.Language<string>,
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
-	ts: typeof import('typescript'),
-	language: core.Language<string>,
 ) {
 	const visited = new Set<ts.Type>();
 
@@ -680,7 +629,9 @@ function createSchemaResolvers(
 		const propType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode));
 		const signatures = propType.getCallSignatures();
 		const paramType = signatures[0]?.parameters[0];
-		const subtype = paramType ? typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode) : typeChecker.getAnyType();
+		const subtype = paramType
+			? typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode)
+			: typeChecker.getAnyType();
 		let schema: PropertyMetaSchema | undefined;
 		let declarations: Declaration[] | undefined;
 
@@ -873,7 +824,7 @@ function createSchemaResolvers(
 					}
 				}
 			}
-			return undefined;
+			return;
 		}
 		return {
 			file: declaration.getSourceFile().fileName,
@@ -890,168 +841,127 @@ function createSchemaResolvers(
 	};
 }
 
-function readVueComponentDefaultProps(
-	root: core.VueVirtualCode,
-	printer: ts.Printer | undefined,
+function readDefaultsFromScriptSetup(
 	ts: typeof import('typescript'),
+	printer: ts.Printer,
+	sourceFile: ts.SourceFile,
+	scriptSetupRanges: core.ScriptSetupRanges,
 ) {
-	let result: Record<string, {
-		default?: string;
-		required?: boolean;
-	}> = {};
-	const { sfc } = root;
+	const result: Record<string, { default?: string }> = {};
 
-	scriptSetupWorker();
-	scriptWorker();
+	if (scriptSetupRanges.withDefaults?.arg) {
+		const obj = findObjectLiteralExpression(ts, scriptSetupRanges.withDefaults.arg.node);
+		if (obj) {
+			for (const prop of obj.properties) {
+				if (ts.isPropertyAssignment(prop)) {
+					const name = prop.name.getText(sourceFile);
+					const expNode = resolveDefaultOptionExpression(ts, prop.initializer);
+					const expText = printer.printNode(ts.EmitHint.Expression, expNode, sourceFile)
+						?? expNode.getText(sourceFile);
+					result[name] = { default: expText };
+				}
+			}
+		}
+	}
+	else if (scriptSetupRanges.defineProps?.arg) {
+		const obj = findObjectLiteralExpression(ts, scriptSetupRanges.defineProps.arg.node);
+		if (obj) {
+			Object.assign(
+				result,
+				resolvePropsOption(ts, printer, sourceFile, obj),
+			);
+		}
+	}
+	else if (scriptSetupRanges.defineProps?.destructured) {
+		for (const [name, initializer] of scriptSetupRanges.defineProps.destructured) {
+			if (initializer) {
+				const expText = printer.printNode(ts.EmitHint.Expression, initializer, sourceFile)
+					?? initializer.getText(sourceFile);
+				result[name] = { default: expText };
+			}
+		}
+	}
+
+	if (scriptSetupRanges.defineModel) {
+		for (const defineModel of scriptSetupRanges.defineModel) {
+			const obj = defineModel.arg ? findObjectLiteralExpression(ts, defineModel.arg.node) : undefined;
+			if (obj) {
+				const name = defineModel.name
+					? sourceFile.text.slice(defineModel.name.start, defineModel.name.end).slice(1, -1)
+					: 'modelValue';
+				result[name] = { default: resolveModelOption(ts, printer, sourceFile, obj) };
+			}
+		}
+	}
 
 	return result;
-
-	function scriptSetupWorker() {
-		if (!sfc.scriptSetup) {
-			return;
-		}
-		const { ast } = sfc.scriptSetup;
-
-		const codegen = core.tsCodegen.get(sfc);
-		const scriptSetupRanges = codegen?.getScriptSetupRanges();
-
-		if (scriptSetupRanges?.withDefaults?.argNode) {
-			const obj = findObjectLiteralExpression(scriptSetupRanges.withDefaults.argNode);
-			if (obj) {
-				for (const prop of obj.properties) {
-					if (ts.isPropertyAssignment(prop)) {
-						const name = prop.name.getText(ast);
-						const expNode = resolveDefaultOptionExpression(prop.initializer, ts);
-						const expText = printer?.printNode(ts.EmitHint.Expression, expNode, ast) ?? expNode.getText(ast);
-
-						result[name] = {
-							default: expText,
-						};
-					}
-				}
-			}
-		}
-		else if (scriptSetupRanges?.defineProps?.argNode) {
-			const obj = findObjectLiteralExpression(scriptSetupRanges.defineProps.argNode);
-			if (obj) {
-				result = {
-					...result,
-					...resolvePropsOption(ast, obj, printer, ts),
-				};
-			}
-		}
-		else if (scriptSetupRanges?.defineProps?.destructured) {
-			for (const [name, initializer] of scriptSetupRanges.defineProps.destructured) {
-				if (initializer) {
-					const expText = printer?.printNode(ts.EmitHint.Expression, initializer, ast) ?? initializer.getText(ast);
-					result[name] = {
-						default: expText,
-					};
-				}
-			}
-		}
-
-		if (scriptSetupRanges?.defineModel) {
-			for (const defineModel of scriptSetupRanges.defineModel) {
-				const obj = defineModel.argNode ? findObjectLiteralExpression(defineModel.argNode) : undefined;
-				if (obj) {
-					const name = defineModel.name
-						? sfc.scriptSetup.content.slice(defineModel.name.start, defineModel.name.end).slice(1, -1)
-						: 'modelValue';
-					result[name] = resolveModelOption(ast, obj, printer, ts);
-				}
-			}
-		}
-
-		function findObjectLiteralExpression(node: ts.Node) {
-			if (ts.isObjectLiteralExpression(node)) {
-				return node;
-			}
-			let result: ts.ObjectLiteralExpression | undefined;
-			node.forEachChild(child => {
-				if (!result) {
-					result = findObjectLiteralExpression(child);
-				}
-			});
-			return result;
-		}
-	}
-
-	function scriptWorker() {
-		if (!sfc.script) {
-			return;
-		}
-		const { ast } = sfc.script;
-
-		const scriptResult = readTsComponentDefaultProps(ast, 'default', printer, ts);
-		for (const [key, value] of Object.entries(scriptResult)) {
-			result[key] = value;
-		}
-	}
 }
 
-function readTsComponentDefaultProps(
-	ast: ts.SourceFile,
-	exportName: string,
-	printer: ts.Printer | undefined,
+function findObjectLiteralExpression(
 	ts: typeof import('typescript'),
+	node: ts.Node,
 ) {
-	const props = getPropsNode();
-
-	if (props) {
-		return resolvePropsOption(ast, props, printer, ts);
+	if (ts.isObjectLiteralExpression(node)) {
+		return node;
 	}
+	let result: ts.ObjectLiteralExpression | undefined;
+	node.forEachChild(child => {
+		if (!result) {
+			result = findObjectLiteralExpression(ts, child);
+		}
+	});
+	return result;
+}
 
-	return {};
-
-	function getComponentNode() {
-		return getComponentNodeFromAst(ast, exportName, ts);
+function readDefaultsFromScript(
+	ts: typeof import('typescript'),
+	printer: ts.Printer,
+	sourceFile: ts.SourceFile,
+	scriptRanges: core.ScriptRanges,
+	exportName: string,
+) {
+	const component = scriptRanges.exports[exportName];
+	if (!component) {
+		return {};
 	}
-
-	function getComponentOptionsNode() {
-		const component = getComponentNode();
-		return getComponentOptionsNodeFromComponent(component, ts);
-	}
-
-	function getPropsNode() {
-		const options = getComponentOptionsNode();
-		const props = options?.properties.find(prop => prop.name?.getText(ast) === 'props');
-		if (props && ts.isPropertyAssignment(props)) {
-			if (ts.isObjectLiteralExpression(props.initializer)) {
-				return props.initializer;
-			}
+	const props = component?.options?.args.node.properties.find(prop => prop.name?.getText(sourceFile) === 'props');
+	if (props && ts.isPropertyAssignment(props)) {
+		if (ts.isObjectLiteralExpression(props.initializer)) {
+			return resolvePropsOption(ts, printer, sourceFile, props.initializer);
 		}
 	}
+	return {};
 }
 
 function resolvePropsOption(
-	ast: ts.SourceFile,
-	props: ts.ObjectLiteralExpression,
-	printer: ts.Printer | undefined,
 	ts: typeof import('typescript'),
+	printer: ts.Printer,
+	sourceFile: ts.SourceFile,
+	props: ts.ObjectLiteralExpression,
 ) {
 	const result: Record<string, { default?: string; required?: boolean }> = {};
 
 	for (const prop of props.properties) {
 		if (ts.isPropertyAssignment(prop)) {
-			const name = prop.name.getText(ast);
+			const name = prop.name.getText(sourceFile);
 			if (ts.isObjectLiteralExpression(prop.initializer)) {
 				const defaultProp = prop.initializer.properties.find(p =>
-					ts.isPropertyAssignment(p) && p.name.getText(ast) === 'default'
+					ts.isPropertyAssignment(p) && p.name.getText(sourceFile) === 'default'
 				) as ts.PropertyAssignment | undefined;
 				const requiredProp = prop.initializer.properties.find(p =>
-					ts.isPropertyAssignment(p) && p.name.getText(ast) === 'required'
+					ts.isPropertyAssignment(p) && p.name.getText(sourceFile) === 'required'
 				) as ts.PropertyAssignment | undefined;
 
 				result[name] = {};
 
 				if (requiredProp) {
-					const exp = requiredProp.initializer.getText(ast);
+					const exp = requiredProp.initializer.getText(sourceFile);
 					result[name].required = exp === 'true';
 				}
 				if (defaultProp) {
-					const expNode = resolveDefaultOptionExpression(defaultProp.initializer, ts);
-					const expText = printer?.printNode(ts.EmitHint.Expression, expNode, ast) ?? expNode.getText(ast);
+					const expNode = resolveDefaultOptionExpression(ts, defaultProp.initializer);
+					const expText = printer.printNode(ts.EmitHint.Expression, expNode, sourceFile)
+						?? expNode.getText(sourceFile);
 					result[name].default = expText;
 				}
 			}
@@ -1062,30 +972,30 @@ function resolvePropsOption(
 }
 
 function resolveModelOption(
-	ast: ts.SourceFile,
-	options: ts.ObjectLiteralExpression,
-	printer: ts.Printer | undefined,
 	ts: typeof import('typescript'),
+	printer: ts.Printer,
+	sourceFile: ts.SourceFile,
+	options: ts.ObjectLiteralExpression,
 ) {
-	const result: { default?: string } = {};
+	let _default: string | undefined;
 
 	for (const prop of options.properties) {
 		if (ts.isPropertyAssignment(prop)) {
-			const name = prop.name.getText(ast);
+			const name = prop.name.getText(sourceFile);
 			if (name === 'default') {
-				const expNode = resolveDefaultOptionExpression(prop.initializer, ts);
-				const expText = printer?.printNode(ts.EmitHint.Expression, expNode, ast) ?? expNode.getText(ast);
-				result.default = expText;
+				const expNode = resolveDefaultOptionExpression(ts, prop.initializer);
+				const expText = printer.printNode(ts.EmitHint.Expression, expNode, sourceFile) ?? expNode.getText(sourceFile);
+				_default = expText;
 			}
 		}
 	}
 
-	return result;
+	return _default;
 }
 
 function resolveDefaultOptionExpression(
-	_default: ts.Expression,
 	ts: typeof import('typescript'),
+	_default: ts.Expression,
 ) {
 	if (ts.isArrowFunction(_default)) {
 		if (ts.isBlock(_default.body)) {
@@ -1101,38 +1011,17 @@ function resolveDefaultOptionExpression(
 	return _default;
 }
 
-function readComponentName(
-	ast: ts.SourceFile,
-	exportName: string,
-	ts: typeof import('typescript'),
-): string | undefined {
-	const componentNode = getComponentNodeFromAst(ast, exportName, ts);
-	const optionsNode = getComponentOptionsNodeFromComponent(componentNode, ts);
-
-	if (optionsNode) {
-		const nameProp = optionsNode.properties.find(
-			prop => ts.isPropertyAssignment(prop) && prop.name?.getText(ast) === 'name',
-		);
-
-		if (nameProp && ts.isPropertyAssignment(nameProp) && ts.isStringLiteral(nameProp.initializer)) {
-			return nameProp.initializer.text;
-		}
-	}
-
-	return undefined;
-}
-
 function readComponentDescription(
-	ast: ts.SourceFile,
-	exportName: string,
 	ts: typeof import('typescript'),
+	scriptRanges: core.ScriptRanges,
+	exportName: string,
 	typeChecker: ts.TypeChecker,
 ): string | undefined {
-	const exportNode = getExportNode();
+	const _export = scriptRanges.exports[exportName];
 
-	if (exportNode) {
+	if (_export) {
 		// Try to get JSDoc comments from the node using TypeScript API
-		const jsDocComments = ts.getJSDocCommentsAndTags(exportNode);
+		const jsDocComments = ts.getJSDocCommentsAndTags(_export.node);
 		for (const jsDoc of jsDocComments) {
 			if (ts.isJSDoc(jsDoc) && jsDoc.comment) {
 				// Handle both string and array of comment parts
@@ -1146,38 +1035,10 @@ function readComponentDescription(
 		}
 
 		// Fallback to symbol documentation
-		const symbol = typeChecker.getSymbolAtLocation(exportNode);
+		const symbol = typeChecker.getSymbolAtLocation(_export.node);
 		if (symbol) {
 			const description = ts.displayPartsToString(symbol.getDocumentationComment(typeChecker));
 			return description || undefined;
 		}
-	}
-
-	return undefined;
-
-	function getExportNode() {
-		let result: ts.Node | undefined;
-
-		if (exportName === 'default') {
-			ast.forEachChild(child => {
-				if (ts.isExportAssignment(child)) {
-					// Return the export assignment itself, not the expression
-					result = child;
-				}
-			});
-		}
-		else {
-			ast.forEachChild(child => {
-				if (
-					ts.isVariableStatement(child)
-					&& child.modifiers?.some(mod => mod.kind === ts.SyntaxKind.ExportKeyword)
-				) {
-					// Return the variable statement itself
-					result = child;
-				}
-			});
-		}
-
-		return result;
 	}
 }

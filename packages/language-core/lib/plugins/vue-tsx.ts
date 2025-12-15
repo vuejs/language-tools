@@ -132,13 +132,13 @@ function useCodegen(
 
 	const getInheritAttrs = computed(() => {
 		const value = getScriptSetupRanges()?.defineOptions?.inheritAttrs
-			?? getScriptRanges()?.componentOptions?.inheritAttrs;
+			?? getScriptRanges()?.exports.default?.options?.inheritAttrs;
 		return value !== 'false';
 	});
 
 	const getComponentName = computed(() => {
 		let name: string;
-		const { componentOptions } = getScriptRanges() ?? {};
+		const componentOptions = getScriptRanges()?.exports.default?.options;
 		if (sfc.script && componentOptions?.name) {
 			name = sfc.script.content.slice(
 				componentOptions.name.start + 1,

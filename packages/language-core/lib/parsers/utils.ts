@@ -91,7 +91,7 @@ export function getClosestMultiLineCommentRange(
 	node: ts.Node,
 	parents: ts.Node[],
 	ast: ts.SourceFile,
-) {
+): TextRange | undefined {
 	for (let i = parents.length - 1; i >= 0; i--) {
 		if (ts.isStatement(node)) {
 			break;
@@ -104,6 +104,7 @@ export function getClosestMultiLineCommentRange(
 
 	if (comment) {
 		return {
+			node,
 			start: comment.pos,
 			end: comment.end,
 		};
