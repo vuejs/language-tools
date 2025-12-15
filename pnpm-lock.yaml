@@ -89,9 +89,6 @@ importers:
       typescript:
         specifier: '*'
         version: 5.9.3
-      vue-component-type-helpers:
-        specifier: workspace:*
-        version: link:../component-type-helpers
     devDependencies:
       '@types/node':
         specifier: ^22.10.4

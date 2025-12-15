@@ -14,7 +14,7 @@ export function parseScriptRanges(
 	const _exports: Record<
 		'default' | string,
 		TextRange & {
-			expression: TextRange;
+			expression: TextRange<ts.Expression>;
 			isObjectLiteral: boolean;
 			options?: {
 				isObjectLiteral: boolean;

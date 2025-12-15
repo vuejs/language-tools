@@ -2,6 +2,13 @@ import { createLanguageServiceHost, resolveFileLanguageId, type TypeScriptProjec
 import * as core from '@vue/language-core';
 import { posix as path } from 'path-browserify';
 import type * as ts from 'typescript';
+import {
+	inferComponentEmit,
+	inferComponentExposed,
+	inferComponentProps,
+	inferComponentSlots,
+	inferComponentType,
+} from './helpers';
 
 import type {
 	ComponentMeta,
@@ -105,23 +112,14 @@ function baseCreate(
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
 		getCompilationSettings: () => options,
-		getScriptFileNames: () => [...fileNamesSet],
+		getScriptFileNames: () => [
+			...[...fileNamesSet],
+			globalComponentName,
+		],
 		getProjectReferences: () => projectReferences,
 	};
 	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot | undefined>();
-	const metaSnapshots = new Map<string, ts.IScriptSnapshot>();
-	const getScriptFileNames = projectHost.getScriptFileNames;
-	projectHost.getScriptFileNames = () => {
-		const names = getScriptFileNames();
-		return [
-			...names,
-			...names.map(getMetaFileName),
-			globalComponentName,
-			getMetaFileName(globalComponentName),
-		];
-	};
-
 	const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
 		ts,
 		projectHost.getCompilationSettings(),
@@ -143,12 +141,6 @@ function baseCreate(
 
 			if (fileName === globalComponentName) {
 				snapshot = globalComponentSnapshot;
-			}
-			else if (isMetaFileName(fileName)) {
-				if (!metaSnapshots.has(fileName)) {
-					metaSnapshots.set(fileName, ts.ScriptSnapshot.fromString(getMetaScriptContent(fileName)));
-				}
-				snapshot = metaSnapshots.get(fileName);
 			}
 			else {
 				if (!scriptSnapshots.has(fileName)) {
@@ -222,59 +214,36 @@ function baseCreate(
 		},
 	};
 
-	function isMetaFileName(fileName: string) {
-		return fileName.endsWith('.meta.ts');
-	}
-
-	function getMetaFileName(fileName: string) {
-		return (
-			vueOptions.extensions.some(ext => fileName.endsWith(ext))
-				? fileName
-				: fileName.slice(0, fileName.lastIndexOf('.'))
-		) + '.meta.ts';
-	}
-
-	function getMetaScriptContent(fileName: string) {
-		const helpersPath = require.resolve('vue-component-type-helpers').replace(windowsPathReg, '/');
-		let helpersRelativePath = path.relative(path.dirname(fileName), helpersPath);
-		if (!helpersRelativePath.startsWith('./') && !helpersRelativePath.startsWith('../')) {
-			helpersRelativePath = './' + helpersRelativePath;
-		}
-		let code = `
-import type { ComponentType, ComponentProps, ComponentEmit, ComponentSlots, ComponentExposed } from '${helpersRelativePath}';
-import type * as Components from '${fileName.slice(0, -'.meta.ts'.length)}';
-
-export default {} as { [K in keyof typeof Components]: ComponentMeta<typeof Components[K]>; };
-
-interface ComponentMeta<T> {
-	type: ComponentType<T>;
-	props: ComponentProps<T>;
-	emit: ComponentEmit<T>;
-	slots: ComponentSlots<T>;
-	exposed: ComponentExposed<T>;
-}
-`.trim();
-		return code;
-	}
-
 	function getExportNames(componentPath: string) {
 		const program = tsLs.getProgram()!;
-		const typeChecker = program.getTypeChecker();
-		return _getExports(program, typeChecker, componentPath).exports.map(e => e.getName());
+		const sourceFile = program.getSourceFile(componentPath);
+		if (sourceFile) {
+			const scriptRanges = getScriptRanges(sourceFile);
+			return Object.keys(scriptRanges.exports);
+		}
 	}
 
 	function getComponentMeta(componentPath: string, exportName = 'default'): ComponentMeta {
-		const program = tsLs.getProgram()!;
-		const typeChecker = program.getTypeChecker();
-		const { symbolNode, exports } = _getExports(program, typeChecker, componentPath);
-		const _export = exports.find(property => property.getName() === exportName);
+		let program = tsLs.getProgram()!;
+		let sourceFile = program.getSourceFile(componentPath);
+		if (!sourceFile) {
+			fileNamesSet.add(componentPath);
+			projectVersion++;
+			program = tsLs.getProgram()!;
+			sourceFile = program.getSourceFile(componentPath);
+			if (!sourceFile) {
+				throw `Could not find component file: ${componentPath}`;
+			}
+		}
 
-		if (!_export) {
+		const scriptRanges = getScriptRanges(sourceFile);
+		const component = scriptRanges.exports[exportName];
+		if (!component) {
 			throw `Could not find export ${exportName}`;
 		}
 
-		const componentType = typeChecker.getTypeOfSymbolAtLocation(_export, symbolNode);
-		const symbolProperties = componentType.getProperties();
+		const symbolNode = component.expression.node;
+		const typeChecker = program.getTypeChecker();
 
 		let _type: ReturnType<typeof getType> | undefined;
 		let _props: ReturnType<typeof getProps> | undefined;
@@ -311,24 +280,16 @@ interface ComponentMeta<T> {
 		return meta;
 
 		function getType() {
-			const $type = symbolProperties.find(prop => prop.escapedName === 'type');
-
-			if ($type) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($type, symbolNode);
-				return Number(typeChecker.typeToString(type));
-			}
-
-			return 0;
+			return inferComponentType(typeChecker, symbolNode) ?? 0;
 		}
 
 		function getProps() {
-			const $props = symbolProperties.find(prop => prop.escapedName === 'props');
+			const propsType = inferComponentProps(typeChecker, symbolNode);
 			const vnodeEventRegex = /^onVnode[A-Z]/;
 			let result: PropertyMeta[] = [];
 
-			if ($props) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($props, symbolNode);
-				const properties = type.getProperties();
+			if (propsType) {
+				const properties = propsType.getProperties();
 
 				const eventProps = new Set(
 					meta.events.map(event => `on${event.name.charAt(0).toUpperCase()}${event.name.slice(1)}`),
@@ -403,11 +364,10 @@ interface ComponentMeta<T> {
 		}
 
 		function getEvents() {
-			const $emit = symbolProperties.find(prop => prop.escapedName === 'emit');
+			const emitType = inferComponentEmit(typeChecker, symbolNode);
 
-			if ($emit) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($emit, symbolNode);
-				const calls = type.getCallSignatures();
+			if (emitType) {
+				const calls = emitType.getCallSignatures();
 
 				return calls.map(call => {
 					const {
@@ -422,11 +382,10 @@ interface ComponentMeta<T> {
 		}
 
 		function getSlots() {
-			const $slots = symbolProperties.find(prop => prop.escapedName === 'slots');
+			const slotsType = inferComponentSlots(typeChecker, symbolNode);
 
-			if ($slots) {
-				const type = typeChecker.getTypeOfSymbolAtLocation($slots, symbolNode);
-				const properties = type.getProperties();
+			if (slotsType) {
+				const properties = slotsType.getProperties();
 
 				return properties.map(prop => {
 					const {
@@ -441,13 +400,12 @@ interface ComponentMeta<T> {
 		}
 
 		function getExposed() {
-			const $exposed = symbolProperties.find(prop => prop.escapedName === 'exposed');
+			const exposedType = inferComponentExposed(typeChecker, symbolNode);
 
-			if ($exposed) {
-				const $props = symbolProperties.find(prop => prop.escapedName === 'props');
-				const propsProperties = $props ? typeChecker.getTypeOfSymbolAtLocation($props, symbolNode).getProperties() : [];
-				const type = typeChecker.getTypeOfSymbolAtLocation($exposed, symbolNode);
-				const properties = type.getProperties().filter(prop =>
+			if (exposedType) {
+				const propsType = inferComponentProps(typeChecker, symbolNode);
+				const propsProperties = propsType?.getProperties() ?? [];
+				const properties = exposedType.getProperties().filter(prop =>
 					// only exposed props will have at least one declaration and no valueDeclaration
 					prop.declarations?.length
 					&& !prop.valueDeclaration
@@ -487,46 +445,6 @@ interface ComponentMeta<T> {
 				return readComponentDescription(ts, scriptRanges, exportName, typeChecker);
 			}
 		}
-	}
-
-	function _getExports(
-		program: ts.Program,
-		typeChecker: ts.TypeChecker,
-		componentPath: string,
-	) {
-		const sourceFile = program.getSourceFile(getMetaFileName(componentPath));
-		if (!sourceFile) {
-			throw 'Could not find main source file';
-		}
-
-		const moduleSymbol = typeChecker.getSymbolAtLocation(sourceFile);
-		if (!moduleSymbol) {
-			throw 'Could not find module symbol';
-		}
-
-		const exportedSymbols = typeChecker.getExportsOfModule(moduleSymbol);
-
-		let symbolNode: ts.Expression | undefined;
-
-		for (const symbol of exportedSymbols) {
-			const [declaration] = symbol.getDeclarations() ?? [];
-
-			if (declaration && ts.isExportAssignment(declaration)) {
-				symbolNode = declaration.expression;
-			}
-		}
-
-		if (!symbolNode) {
-			throw 'Could not find symbol node';
-		}
-
-		const exportDefaultType = typeChecker.getTypeAtLocation(symbolNode);
-		const exports = exportDefaultType.getProperties();
-
-		return {
-			symbolNode,
-			exports,
-		};
 	}
 
 	function getScriptRanges(sourceFile: ts.SourceFile) {
