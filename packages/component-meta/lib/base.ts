@@ -387,9 +387,6 @@ interface ComponentMeta<T> {
 			) {
 				const prop = result.find(p => p.name === propName);
 				if (prop) {
-					if (!defaultExp) {
-						debugger;
-					}
 					prop.default = defaultExp.default;
 
 					if (defaultExp.required !== undefined) {
