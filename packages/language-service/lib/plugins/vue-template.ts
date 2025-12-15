@@ -54,6 +54,56 @@ const builtInComponents = new Set([
 	'Teleport',
 ]);
 
+// Sort text priority tokens
+const SORT_TOKEN = {
+	COMPONENT_PROP: '\u0000',
+	COLON_PREFIX: '\u0001',
+	AT_PREFIX: '\u0002',
+	V_BIND_PREFIX: '\u0003',
+	V_MODEL_PREFIX: '\u0004',
+	V_ON_PREFIX: '\u0005',
+	VUE_EVENT: '\u0004',
+	SPECIAL_PROP: '\u0001',
+	CONTROL_FLOW: '\u0003',
+	DIRECTIVE: '\u0002',
+	HTML_ATTR: '\u0001',
+} as const;
+
+// String constants
+const AUTO_IMPORT_PLACEHOLDER = 'AutoImportsPlaceholder';
+const EVENT_PROP_PREFIX = 'on-';
+const UPDATE_EVENT_PREFIX = 'update:';
+const UPDATE_PROP_PREFIX = 'onUpdate:';
+const MODEL_VALUE_PROP = 'modelValue';
+
+// Directive prefixes
+const DIRECTIVE_V_ON = 'v-on:';
+const DIRECTIVE_V_BIND = 'v-bind:';
+const DIRECTIVE_V_MODEL = 'v-model:';
+const V_ON_SHORTHAND = '@';
+const V_BIND_SHORTHAND = ':';
+const DIRECTIVE_V_FOR_NAME = 'v-for';
+
+// Control flow directives
+const CONTROL_FLOW_DIRECTIVES = ['v-if', 'v-else-if', 'v-else', 'v-for'] as const;
+
+// Templates
+const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
+
+type CompletionTarget = 'tag' | 'attribute' | 'value';
+
+interface TagInfo {
+	attrs: string[];
+	propInfos: ComponentPropInfo[];
+	events: string[];
+}
+
+interface AttributeMetadata {
+	name: string;
+	kind: 'prop' | 'event';
+	info?: ComponentPropInfo;
+}
+
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
 
@@ -229,49 +279,10 @@ export function create(
 			modelData ??= loadModelModifiersData(context.env.locale ?? 'en');
 
 			// https://vuejs.org/api/built-in-directives.html#v-on
+			const vOnModifiers = extractDirectiveModifiers(builtInData.globalAttributes?.find(x => x.name === 'v-on'));
 			// https://vuejs.org/api/built-in-directives.html#v-bind
-			const vOnModifiers: Record<string, string> = {};
-			const vBindModifiers: Record<string, string> = {};
-			const vModelModifiers: Record<string, string> = {};
-			const vOn = builtInData.globalAttributes?.find(x => x.name === 'v-on');
-			const vBind = builtInData.globalAttributes?.find(x => x.name === 'v-bind');
-			const vModel = builtInData.globalAttributes?.find(x => x.name === 'v-model');
-
-			if (vOn) {
-				const markdown = typeof vOn.description === 'object'
-					? vOn.description.value
-					: vOn.description ?? '';
-				const modifiers = markdown
-					.split('\n- ')[4]!
-					.split('\n').slice(2, -1);
-				for (let text of modifiers) {
-					text = text.slice('  - `.'.length);
-					const [name, desc] = text.split('` - ') as [string, string];
-					vOnModifiers[name] = desc;
-				}
-			}
-			if (vBind) {
-				const markdown = typeof vBind.description === 'object'
-					? vBind.description.value
-					: vBind.description ?? '';
-				const modifiers = markdown
-					.split('\n- ')[4]!
-					.split('\n').slice(2, -1);
-				for (let text of modifiers) {
-					text = text.slice('  - `.'.length);
-					const [name, desc] = text.split('` - ') as [string, string];
-					vBindModifiers[name] = desc;
-				}
-			}
-			if (vModel) {
-				for (const modifier of modelData.globalAttributes ?? []) {
-					const description = typeof modifier.description === 'object'
-						? modifier.description.value
-						: modifier.description ?? '';
-					const references = modifier.references?.map(ref => `[${ref.name}](${ref.url})`).join(' | ');
-					vModelModifiers[modifier.name] = description + '\n\n' + references;
-				}
-			}
+			const vBindModifiers = extractDirectiveModifiers(builtInData.globalAttributes?.find(x => x.name === 'v-bind'));
+			const vModelModifiers = extractModelModifiers(modelData.globalAttributes);
 
 			const disposable = context.env.onDidChangeConfiguration?.(() => initializing = undefined);
 			const transformedItems = new WeakSet<html.CompletionItem>();
@@ -320,46 +331,7 @@ export function create(
 						return;
 					}
 
-					const autoImportPlaceholderIndex = htmlCompletion.items.findIndex(item =>
-						item.label === 'AutoImportsPlaceholder'
-					);
-					if (autoImportPlaceholderIndex !== -1) {
-						const offset = document.offsetAt(position);
-						const map = context.language.maps.get(info.code, info.script);
-						let spliced = false;
-						for (const [sourceOffset] of map.toSourceLocation(offset)) {
-							const autoImport = await getAutoImportSuggestions(
-								info.root.fileName,
-								sourceOffset,
-							);
-							if (!autoImport) {
-								continue;
-							}
-							const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
-							const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
-							for (const tsItem of tsCompletion.items) {
-								if (placeholder.textEdit) {
-									const newText = tsItem.textEdit?.newText ?? tsItem.label;
-									tsItem.textEdit = {
-										...placeholder.textEdit,
-										newText: tagNameCasing === TagNameCasing.Kebab
-											? hyphenateTag(newText)
-											: newText,
-									};
-								}
-								else {
-									tsItem.textEdit = undefined;
-								}
-							}
-							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1, ...tsCompletion.items);
-							spliced = true;
-							lastCompletionDocument = document;
-							break;
-						}
-						if (!spliced) {
-							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
-						}
-					}
+					await replaceAutoImportPlaceholder(htmlCompletion, info);
 
 					switch (target) {
 						case 'tag': {
@@ -373,14 +345,59 @@ export function create(
 						}
 					}
 
-					updateExtraCustomData([]);
 					return htmlCompletion;
+
+					async function replaceAutoImportPlaceholder(
+						htmlCompletion: CompletionList,
+						info: NonNullable<ReturnType<typeof resolveEmbeddedCode>>,
+					) {
+						const autoImportPlaceholderIndex = htmlCompletion.items.findIndex(item =>
+							item.label === AUTO_IMPORT_PLACEHOLDER
+						);
+						if (autoImportPlaceholderIndex !== -1) {
+							const offset = document.offsetAt(position);
+							const map = context.language.maps.get(info.code, info.script);
+							let spliced = false;
+							for (const [sourceOffset] of map.toSourceLocation(offset)) {
+								const autoImport = await getAutoImportSuggestions(
+									info.root.fileName,
+									sourceOffset,
+								);
+								if (!autoImport) {
+									continue;
+								}
+								const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
+								const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
+								for (const tsItem of tsCompletion.items) {
+									if (placeholder.textEdit) {
+										const newText = tsItem.textEdit?.newText ?? tsItem.label;
+										tsItem.textEdit = {
+											...placeholder.textEdit,
+											newText: tagNameCasing === TagNameCasing.Kebab
+												? hyphenateTag(newText)
+												: newText,
+										};
+									}
+									else {
+										tsItem.textEdit = undefined;
+									}
+								}
+								htmlCompletion.items.splice(autoImportPlaceholderIndex, 1, ...tsCompletion.items);
+								spliced = true;
+								lastCompletionDocument = document;
+								break;
+							}
+							if (!spliced) {
+								htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
+							}
+						}
+					}
 
 					function transformTag(item: html.CompletionItem) {
 						const tagName = capitalize(camelize(item.label));
 						if (components?.includes(tagName)) {
 							item.kind = 6 satisfies typeof CompletionItemKind.Variable;
-							item.sortText = '\u0000' + (item.sortText ?? item.label);
+							item.sortText = SORT_TOKEN.COMPONENT_PROP + (item.sortText ?? item.label);
 						}
 					}
 
@@ -399,13 +416,7 @@ export function create(
 							}
 						}
 						else {
-							let name = item.label;
-							for (const str of ['v-bind:', ':']) {
-								if (name.startsWith(str) && name !== str) {
-									name = name.slice(str.length);
-									break;
-								}
-							}
+							const name = stripDirectivePrefix(item.label);
 							if (specialProps.has(name)) {
 								prop = {
 									name,
@@ -414,74 +425,26 @@ export function create(
 							}
 						}
 
-						const tokens: string[] = [];
-
+						// Set item kind
 						if (prop) {
-							const { isEvent, propName } = getPropName(prop.name, prop.kind === 'event');
-
-							if (prop.kind === 'prop') {
-								if (!prop.isGlobal) {
-									item.kind = 5 satisfies typeof CompletionItemKind.Field;
-								}
+							if (prop.kind === 'prop' && !prop.info?.isAttribute) {
+								item.kind = 5 satisfies typeof CompletionItemKind.Field;
 							}
-							else if (isEvent) {
+							else if (prop.kind === 'event' || hyphenateAttr(prop.name).startsWith(EVENT_PROP_PREFIX)) {
 								item.kind = 23 satisfies typeof CompletionItemKind.Event;
-								if (propName.startsWith('vue:')) {
-									tokens.push('\u0004');
-								}
-							}
-
-							if (!prop.isGlobal) {
-								tokens.push('\u0000');
-
-								if (item.label.startsWith(':')) {
-									tokens.push('\u0001');
-								}
-								else if (item.label.startsWith('@')) {
-									tokens.push('\u0002');
-								}
-								else if (item.label.startsWith('v-bind:')) {
-									tokens.push('\u0003');
-								}
-								else if (item.label.startsWith('v-model:')) {
-									tokens.push('\u0004');
-								}
-								else if (item.label.startsWith('v-on:')) {
-									tokens.push('\u0005');
-								}
-								else {
-									tokens.push('\u0000');
-								}
-
-								if (specialProps.has(propName)) {
-									tokens.push('\u0001');
-								}
-								else {
-									tokens.push('\u0000');
-								}
 							}
 						}
-						else if (
-							item.label === 'v-if'
-							|| item.label === 'v-else-if'
-							|| item.label === 'v-else'
-							|| item.label === 'v-for'
-						) {
+						else if (CONTROL_FLOW_DIRECTIVES.includes(item.label as any)) {
 							item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
-							tokens.push('\u0003');
 						}
 						else if (item.label.startsWith('v-')) {
 							item.kind = 3 satisfies typeof CompletionItemKind.Function;
-							tokens.push('\u0002');
-						}
-						else {
-							tokens.push('\u0001');
 						}
 
-						item.sortText = tokens.join('') + (item.sortText ?? item.label);
+						item.sortText = buildAttributeSortText(item.label, prop);
 
-						if (item.label === 'v-for') {
-							item.textEdit!.newText = item.label + '="${1:value} in ${2:source}"';
+						if (item.label === DIRECTIVE_V_FOR_NAME) {
+							item.textEdit!.newText = item.label + V_FOR_SNIPPET;
 						}
 					}
 				},
@@ -539,7 +502,7 @@ export function create(
 					}
 				},
 
-				provideHover(document, position, token) {
+				async provideHover(document, position, token) {
 					if (document.languageId !== languageId) {
 						return;
 					}
@@ -547,14 +510,14 @@ export function create(
 					if (info?.code.id !== 'template') {
 						return;
 					}
-
-					if (context.decodeEmbeddedDocumentUri(URI.parse(document.uri))) {
-						updateExtraCustomData([
-							htmlDataProvider,
-						]);
-					}
-
-					return baseServiceInstance.provideHover?.(document, position, token);
+					const {
+						result: htmlHover,
+					} = await runWithVueData(
+						info.script.id,
+						info.root,
+						() => baseServiceInstance.provideHover!(document, position, token),
+					);
+					return htmlHover;
 				},
 
 				async provideDocumentLinks(document, token) {
@@ -593,8 +556,10 @@ export function create(
 			async function provideHtmlData(sourceDocumentUri: URI, root: VueVirtualCode) {
 				await (initializing ??= initialize());
 
-				const tagNameCasing = await getTagNameCasing(context, sourceDocumentUri);
-				const attrNameCasing = await getAttrNameCasing(context, sourceDocumentUri);
+				const [tagNameCasing, attrNameCasing] = await Promise.all([
+					getTagNameCasing(context, sourceDocumentUri),
+					getAttrNameCasing(context, sourceDocumentUri),
+				]);
 
 				for (const tag of builtInData!.tags ?? []) {
 					if (specialTags.has(tag.name)) {
@@ -609,23 +574,14 @@ export function create(
 				}
 
 				let version = 0;
-				let target: 'tag' | 'attribute' | 'value';
+				let target: CompletionTarget;
 				let components: string[] | undefined;
+				let directives: string[] | undefined;
 				let values: string[] | undefined;
 
 				const tasks: Promise<void>[] = [];
-				const tagMap = new Map<string, {
-					attrs: string[];
-					propInfos: ComponentPropInfo[];
-					events: string[];
-					directives: string[];
-				}>();
-				const propMap = new Map<string, {
-					name: string;
-					kind: 'prop' | 'event';
-					isGlobal?: boolean;
-					info?: ComponentPropInfo;
-				}>();
+				const tagDataMap = new Map<string, TagInfo>();
+				const propMap = new Map<string, AttributeMetadata>();
 
 				updateExtraCustomData([
 					{
@@ -657,14 +613,7 @@ export function create(
 						getId: () => 'vue-template',
 						isApplicable: () => true,
 						provideTags: () => {
-							if (!components) {
-								components = [];
-								tasks.push((async () => {
-									components = (await getComponentNames(root.fileName) ?? [])
-										.filter(name => !builtInComponents.has(name));
-									version++;
-								})());
-							}
+							const components = getComponents();
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
@@ -677,7 +626,6 @@ export function create(
 									names.add(tag);
 								}
 							}
-
 							if (codegen) {
 								for (
 									const name of [
@@ -693,80 +641,36 @@ export function create(
 									}
 								}
 							}
-
 							for (const name of names) {
-								tags.push({
-									name: name,
-									attributes: [],
-								});
+								tags.push({ name, attributes: [] });
 							}
 
 							return tags;
 						},
 						provideAttributes: tag => {
-							let tagInfo = tagMap.get(tag);
-							if (!tagInfo) {
-								tagInfo = {
-									attrs: [],
-									propInfos: [],
-									events: [],
-									directives: [],
-								};
-								tagMap.set(tag, tagInfo);
-								tasks.push((async () => {
-									tagMap.set(tag, {
-										attrs: await getElementAttrs(root.fileName, tag) ?? [],
-										propInfos: await getComponentProps(root.fileName, tag) ?? [],
-										events: await getComponentEvents(root.fileName, tag) ?? [],
-										directives: await getComponentDirectives(root.fileName) ?? [],
-									});
-									version++;
-								})());
-							}
-
-							const { attrs, propInfos, events, directives } = tagInfo;
-
-							for (let i = 0; i < propInfos.length; i++) {
-								const prop = propInfos[i]!;
-								if (prop.name.startsWith('ref_')) {
-									propInfos.splice(i--, 1);
-									continue;
-								}
-								if (hyphenateTag(prop.name).startsWith('on-vnode-')) {
-									prop.name = 'onVue:' + prop.name['onVnode'.length]!.toLowerCase()
-										+ prop.name.slice('onVnodeX'.length);
-								}
-							}
-
+							const directives = getDirectives();
+							const { attrs, propInfos, events } = getTagData(tag);
 							const attributes: html.IAttributeData[] = [];
-							const propNameSet = new Set(propInfos.map(prop => prop.name));
+							const models: string[] = [];
 
 							for (
 								const prop of [
 									...propInfos,
-									...attrs.map<ComponentPropInfo>(attr => ({ name: attr })),
+									...attrs.map<ComponentPropInfo>(attr => ({ name: attr, isAttribute: true })),
 								]
 							) {
-								const isGlobal = prop.isAttribute || !propNameSet.has(prop.name);
 								const propName = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
-								const isEvent = hyphenateAttr(propName).startsWith('on-');
-
+								const isEvent = hyphenateAttr(propName).startsWith(EVENT_PROP_PREFIX);
 								if (isEvent) {
 									const eventName = attrNameCasing === AttrNameCasing.Camel
 										? propName['on'.length]!.toLowerCase() + propName.slice('onX'.length)
-										: propName.slice('on-'.length);
+										: propName.slice(EVENT_PROP_PREFIX.length);
 
-									for (
-										const name of [
-											'v-on:' + eventName,
-											'@' + eventName,
-										]
-									) {
+									for (const name of [DIRECTIVE_V_ON + eventName, V_ON_SHORTHAND + eventName]) {
 										attributes.push({ name });
 										propMap.set(name, {
 											name: propName,
 											kind: 'event',
-											isGlobal,
 											info: prop,
 										});
 									}
@@ -777,13 +681,7 @@ export function create(
 										return name === propName;
 									});
 
-									for (
-										const name of [
-											propName,
-											':' + propName,
-											'v-bind:' + propName,
-										]
-									) {
+									for (const name of [propName, V_BIND_SHORTHAND + propName, DIRECTIVE_V_BIND + propName]) {
 										attributes.push({
 											name,
 											valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
@@ -791,22 +689,14 @@ export function create(
 										propMap.set(name, {
 											name: propName,
 											kind: 'prop',
-											isGlobal,
 											info: propInfo,
 										});
 									}
 								}
 							}
-
 							for (const event of events) {
 								const eventName = attrNameCasing === AttrNameCasing.Camel ? event : hyphenateAttr(event);
-
-								for (
-									const name of [
-										'v-on:' + eventName,
-										'@' + eventName,
-									]
-								) {
+								for (const name of [DIRECTIVE_V_ON + eventName, V_ON_SHORTHAND + eventName]) {
 									attributes.push({ name });
 									propMap.set(name, {
 										name: eventName,
@@ -814,42 +704,34 @@ export function create(
 									});
 								}
 							}
-
 							for (const directive of directives) {
-								const name = hyphenateAttr(directive);
 								attributes.push({
-									name,
+									name: hyphenateAttr(directive),
 								});
 							}
-
-							const models: string[] = [];
-
 							for (
 								const prop of [
 									...propInfos,
 									...attrs.map(attr => ({ name: attr })),
 								]
 							) {
-								if (prop.name.startsWith('onUpdate:')) {
-									models.push(prop.name.slice('onUpdate:'.length));
+								if (prop.name.startsWith(UPDATE_PROP_PREFIX)) {
+									models.push(prop.name.slice(UPDATE_PROP_PREFIX.length));
 								}
 							}
 							for (const event of events) {
-								if (event.startsWith('update:')) {
-									models.push(event.slice('update:'.length));
+								if (event.startsWith(UPDATE_EVENT_PREFIX)) {
+									models.push(event.slice(UPDATE_EVENT_PREFIX.length));
 								}
 							}
-
 							for (const model of models) {
 								const name = attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model);
-
-								attributes.push({ name: 'v-model:' + name });
-								propMap.set('v-model:' + name, {
+								attributes.push({ name: DIRECTIVE_V_MODEL + name });
+								propMap.set(DIRECTIVE_V_MODEL + name, {
 									name,
 									kind: 'prop',
 								});
-
-								if (model === 'modelValue') {
+								if (model === MODEL_VALUE_PROP) {
 									propMap.set('v-model', {
 										name,
 										kind: 'prop',
@@ -860,25 +742,14 @@ export function create(
 							return attributes;
 						},
 						provideValues: (tag, attr) => {
-							if (!values) {
-								values = [];
-								tasks.push((async () => {
-									if (tag === 'slot' && attr === 'name') {
-										values = await getComponentSlots(root.fileName) ?? [];
-									}
-									version++;
-								})());
-							}
-							return values.map(value => ({
-								name: value,
-							}));
+							return getAttrValues(tag, attr).map(value => ({ name: value }));
 						},
 					},
 					{
 						getId: () => 'vue-auto-imports',
 						isApplicable: () => true,
 						provideTags() {
-							return [{ name: 'AutoImportsPlaceholder', attributes: [] }];
+							return [{ name: AUTO_IMPORT_PLACEHOLDER, attributes: [] }];
 						},
 						provideAttributes() {
 							return [];
@@ -903,6 +774,59 @@ export function create(
 						};
 					},
 				};
+
+				function getAttrValues(tag: string, attr: string) {
+					if (!values) {
+						values = [];
+						tasks.push((async () => {
+							if (tag === 'slot' && attr === 'name') {
+								values = await getComponentSlots(root.fileName) ?? [];
+							}
+							version++;
+						})());
+					}
+					return values;
+				}
+
+				function getTagData(tag: string) {
+					let data = tagDataMap.get(tag);
+					if (!data) {
+						data = { attrs: [], propInfos: [], events: [] };
+						tagDataMap.set(tag, data);
+						tasks.push((async () => {
+							tagDataMap.set(tag, {
+								attrs: await getElementAttrs(root.fileName, tag) ?? [],
+								propInfos: await getComponentProps(root.fileName, tag) ?? [],
+								events: await getComponentEvents(root.fileName, tag) ?? [],
+							});
+							version++;
+						})());
+					}
+					return data;
+				}
+
+				function getDirectives() {
+					if (!directives) {
+						directives = [];
+						tasks.push((async () => {
+							directives = await getComponentDirectives(root.fileName) ?? [];
+							version++;
+						})());
+					}
+					return directives;
+				}
+
+				function getComponents() {
+					if (!components) {
+						components = [];
+						tasks.push((async () => {
+							components = await getComponentNames(root.fileName) ?? [];
+							components = components.filter(name => !builtInComponents.has(name));
+							version++;
+						})());
+					}
+					return components;
+				}
 			}
 
 			function addDirectiveModifiers(completionList: CompletionList, document: TextDocument) {
@@ -912,9 +836,9 @@ export function create(
 				}
 
 				const [text, ...modifiers] = replacement.text.split('.') as [string, ...string[]];
-				const isVOn = text.startsWith('v-on:') || text.startsWith('@') && text.length > 1;
-				const isVBind = text.startsWith('v-bind:') || text.startsWith(':') && text.length > 1;
-				const isVModel = text.startsWith('v-model:') || text === 'v-model';
+				const isVOn = text.startsWith(DIRECTIVE_V_ON) || text.startsWith(V_ON_SHORTHAND) && text.length > 1;
+				const isVBind = text.startsWith(DIRECTIVE_V_BIND) || text.startsWith(V_BIND_SHORTHAND) && text.length > 1;
+				const isVModel = text.startsWith(DIRECTIVE_V_MODEL) || text === 'v-model';
 				const currentModifiers = isVOn
 					? vOnModifiers
 					: isVBind
@@ -997,13 +921,99 @@ function getReplacement(list: html.CompletionList, doc: TextDocument) {
 	}
 }
 
-function getPropName(
-	prop: string,
-	isEvent: boolean,
-) {
-	const name = hyphenateAttr(prop);
-	if (name.startsWith('on-')) {
-		return { isEvent: true, propName: name.slice('on-'.length) };
+function extractDirectiveModifiers(directive: html.IAttributeData | undefined): Record<string, string> {
+	const modifiers: Record<string, string> = {};
+	if (!directive) {
+		return modifiers;
 	}
-	return { isEvent, propName: name };
+	const markdown = typeof directive.description === 'object'
+		? directive.description.value
+		: directive.description ?? '';
+	const modifierLines = markdown
+		.split('\n- ')[4]
+		?.split('\n').slice(2, -1) ?? [];
+	for (let text of modifierLines) {
+		text = text.slice('  - `.'.length);
+		const [name, desc] = text.split('` - ') as [string, string];
+		modifiers[name] = desc;
+	}
+	return modifiers;
+}
+
+function extractModelModifiers(attributes: html.IAttributeData[] | undefined): Record<string, string> {
+	const modifiers: Record<string, string> = {};
+	if (!attributes) {
+		return modifiers;
+	}
+	for (const modifier of attributes) {
+		const description = typeof modifier.description === 'object'
+			? modifier.description.value
+			: modifier.description ?? '';
+		const references = modifier.references?.map(ref => `[${ref.name}](${ref.url})`).join(' | ');
+		modifiers[modifier.name] = description + '\n\n' + references;
+	}
+	return modifiers;
+}
+
+function buildAttributeSortText(
+	label: string,
+	prop: AttributeMetadata | undefined,
+): string {
+	const tokens: string[] = [];
+
+	if (prop) {
+		if (!prop.info?.isAttribute) {
+			tokens.push(SORT_TOKEN.COMPONENT_PROP);
+
+			if (label.startsWith(V_BIND_SHORTHAND)) {
+				tokens.push(SORT_TOKEN.COLON_PREFIX);
+			}
+			else if (label.startsWith(V_ON_SHORTHAND)) {
+				tokens.push(SORT_TOKEN.AT_PREFIX);
+			}
+			else if (label.startsWith(DIRECTIVE_V_BIND)) {
+				tokens.push(SORT_TOKEN.V_BIND_PREFIX);
+			}
+			else if (label.startsWith(DIRECTIVE_V_MODEL)) {
+				tokens.push(SORT_TOKEN.V_MODEL_PREFIX);
+			}
+			else if (label.startsWith(DIRECTIVE_V_ON)) {
+				tokens.push(SORT_TOKEN.V_ON_PREFIX);
+			}
+			else {
+				tokens.push(SORT_TOKEN.COMPONENT_PROP);
+			}
+
+			if (specialProps.has(prop.name)) {
+				tokens.push(SORT_TOKEN.SPECIAL_PROP);
+			}
+			else {
+				tokens.push(SORT_TOKEN.COMPONENT_PROP);
+			}
+		}
+
+		if (prop.name.startsWith('onVue:')) {
+			tokens.unshift(SORT_TOKEN.VUE_EVENT);
+		}
+	}
+	else if (CONTROL_FLOW_DIRECTIVES.includes(label as any)) {
+		tokens.push(SORT_TOKEN.CONTROL_FLOW);
+	}
+	else if (label.startsWith('v-')) {
+		tokens.push(SORT_TOKEN.DIRECTIVE);
+	}
+	else {
+		tokens.push(SORT_TOKEN.HTML_ATTR);
+	}
+
+	return tokens.join('') + label;
+}
+
+function stripDirectivePrefix(name: string): string {
+	for (const prefix of [DIRECTIVE_V_BIND, V_BIND_SHORTHAND]) {
+		if (name.startsWith(prefix) && name !== prefix) {
+			return name.slice(prefix.length);
+		}
+	}
+	return name;
 }

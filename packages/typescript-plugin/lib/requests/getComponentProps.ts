@@ -1,4 +1,5 @@
 import type { VueVirtualCode } from '@vue/language-core';
+import { capitalize } from '@vue/shared';
 import type * as ts from 'typescript';
 import { getComponentType } from './utils';
 
@@ -28,7 +29,8 @@ export function getComponentProps(
 		return [];
 	}
 
-	const result = new Map<string, ComponentPropInfo>();
+	const map = new Map<string, ComponentPropInfo>();
+	const result: ComponentPropInfo[] = [];
 
 	for (const sig of componentType.type.getCallSignatures()) {
 		if (sig.parameters.length) {
@@ -53,7 +55,18 @@ export function getComponentProps(
 		}
 	}
 
-	return [...result.values()];
+	for (const prop of map.values()) {
+		if (prop.name.startsWith('ref_')) {
+			continue;
+		}
+		if (prop.name.startsWith('onVnode')) {
+			const vnodeEvent = prop.name.slice('onVnode'.length);
+			prop.name = 'onVue:' + capitalize(vnodeEvent);
+		}
+		result.push(prop);
+	}
+
+	return result;
 
 	function handlePropSymbol(prop: ts.Symbol) {
 		if (prop.flags & ts.SymbolFlags.Method) { // #2443
@@ -94,7 +107,7 @@ export function getComponentProps(
 			}
 		}
 
-		result.set(name, {
+		map.set(name, {
 			name,
 			required,
 			deprecated,
