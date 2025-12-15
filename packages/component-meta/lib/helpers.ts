@@ -138,9 +138,9 @@ function findProperty(
 	type: ts.Type,
 	propertyName: string,
 ): ts.Type | undefined {
-	const emit = type.getProperty(propertyName);
-	if (emit) {
-		return typeChecker.getTypeOfSymbolAtLocation(emit, symbolNode);
+	const prop = type.getProperty(propertyName);
+	if (prop) {
+		return typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode);
 	}
 	if (type.isUnionOrIntersection()) {
 		for (const sub of type.types) {
