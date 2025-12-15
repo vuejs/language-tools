@@ -245,35 +245,35 @@ function baseCreate(
 		const symbolNode = component.expression.node;
 		const typeChecker = program.getTypeChecker();
 
-		let _type: ReturnType<typeof getType> | undefined;
-		let _props: ReturnType<typeof getProps> | undefined;
-		let _events: ReturnType<typeof getEvents> | undefined;
-		let _slots: ReturnType<typeof getSlots> | undefined;
-		let _exposed: ReturnType<typeof getExposed> | undefined;
-		let _name: string | undefined;
-		let _description: string | undefined;
+		let name: string | undefined;
+		let description: string | undefined;
+		let type: ReturnType<typeof getType> | undefined;
+		let props: ReturnType<typeof getProps> | undefined;
+		let events: ReturnType<typeof getEvents> | undefined;
+		let slots: ReturnType<typeof getSlots> | undefined;
+		let exposed: ReturnType<typeof getExposed> | undefined;
 
 		const meta = {
 			get name() {
-				return _name ?? (_name = getName());
+				return name ?? (name = getName());
 			},
 			get description() {
-				return _description ?? (_description = getDescription());
+				return description ?? (description = getDescription());
 			},
 			get type() {
-				return _type ?? (_type = getType());
+				return type ?? (type = getType());
 			},
 			get props() {
-				return _props ?? (_props = getProps());
+				return props ?? (props = getProps());
 			},
 			get events() {
-				return _events ?? (_events = getEvents());
+				return events ?? (events = getEvents());
 			},
 			get slots() {
-				return _slots ?? (_slots = getSlots());
+				return slots ?? (slots = getSlots());
 			},
 			get exposed() {
-				return _exposed ?? (_exposed = getExposed());
+				return exposed ?? (exposed = getExposed());
 			},
 		};
 
