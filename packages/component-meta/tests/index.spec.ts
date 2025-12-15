@@ -661,7 +661,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(bar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
-				  "default": ""BAR"",
+				  "default": "'BAR'",
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -1459,7 +1459,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				{
 				  "declarations": [],
 				  "default": "{
-				    foo: "bar",
+				    foo: 'bar',
 				}",
 				  "description": "Default function Object",
 				  "getTypeObject": [Function],

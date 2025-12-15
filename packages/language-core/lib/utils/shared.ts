@@ -41,12 +41,13 @@ export function getElementTagOffsets(
 	return tagOffsets as [number] | [number, number];
 }
 
-export function getStartEnd(
+export function getStartEnd<T extends ts.Node>(
 	ts: typeof import('typescript'),
-	node: ts.Node,
+	node: T,
 	ast: ts.SourceFile,
-): TextRange {
+): TextRange<T> {
 	return {
+		node,
 		start: (ts as any).getTokenPosOfNode(node, ast) as number,
 		end: node.end,
 	};

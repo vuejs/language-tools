@@ -193,7 +193,8 @@ declare module '@vue/compiler-sfc' {
 	}
 }
 
-export interface TextRange {
+export interface TextRange<Node extends ts.Node = ts.Node> {
+	node: Node;
 	start: number;
 	end: number;
 }

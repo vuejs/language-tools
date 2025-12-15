@@ -88,8 +88,8 @@ function* generateTemplateComponents(
 	if (ctx.generatedTypes.has(names.SetupExposed)) {
 		types.push(names.SetupExposed);
 	}
-	if (script && scriptRanges?.componentOptions?.components) {
-		const { components } = scriptRanges.componentOptions;
+	if (script && scriptRanges?.exports.default?.options?.components) {
+		const { components } = scriptRanges.exports.default.options;
 		yield `const __VLS_componentsOption = `;
 		yield* generateSfcBlockSection(
 			script,
@@ -124,8 +124,8 @@ function* generateTemplateDirectives(
 	if (ctx.generatedTypes.has(names.SetupExposed)) {
 		types.push(names.SetupExposed);
 	}
-	if (script && scriptRanges?.componentOptions?.directives) {
-		const { directives } = scriptRanges.componentOptions;
+	if (script && scriptRanges?.exports.default?.options?.directives) {
+		const { directives } = scriptRanges.exports.default.options;
 		yield `const __VLS_directivesOption = `;
 		yield* generateSfcBlockSection(
 			script,
