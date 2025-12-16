@@ -86,6 +86,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(bar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "optional string bar with lazy and trim modifiers",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -107,6 +108,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(barModifiers).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -141,6 +143,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(foo).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "string foo",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -232,6 +235,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(union).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "required union type",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -255,6 +259,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(unionOptional).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "optional union type",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -279,6 +284,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(nested).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "required nested object",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -290,6 +296,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				    "schema": {
 				      "nestedProp": {
 				        "declarations": [],
+				        "default": undefined,
 				        "description": "nested prop documentation",
 				        "getTypeObject": [Function],
 				        "global": false,
@@ -312,6 +319,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(nestedIntersection).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "required nested object with intersection",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -323,6 +331,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				    "schema": {
 				      "additionalProp": {
 				        "declarations": [],
+				        "default": undefined,
 				        "description": "required additional property",
 				        "getTypeObject": [Function],
 				        "global": false,
@@ -335,6 +344,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				      },
 				      "nestedProp": {
 				        "declarations": [],
+				        "default": undefined,
 				        "description": "nested prop documentation",
 				        "getTypeObject": [Function],
 				        "global": false,
@@ -357,6 +367,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(nestedOptional).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "optional nested object",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -372,6 +383,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				        "schema": {
 				          "nestedProp": {
 				            "declarations": [],
+				            "default": undefined,
 				            "description": "nested prop documentation",
 				            "getTypeObject": [Function],
 				            "global": false,
@@ -398,6 +410,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(array).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "required array object",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -412,6 +425,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				        "schema": {
 				          "nestedProp": {
 				            "declarations": [],
+				            "default": undefined,
 				            "description": "nested prop documentation",
 				            "getTypeObject": [Function],
 				            "global": false,
@@ -437,6 +451,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(arrayOptional).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "optional array object",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -455,6 +470,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				            "schema": {
 				              "nestedProp": {
 				                "declarations": [],
+				                "default": undefined,
 				                "description": "nested prop documentation",
 				                "getTypeObject": [Function],
 				                "global": false,
@@ -483,6 +499,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(enumValue).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "enum value",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -507,6 +524,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(namespaceType).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "namespace type",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -527,6 +545,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(literalFromContext).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "literal type alias that require context",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -554,6 +573,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(inlined).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -565,6 +585,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				    "schema": {
 				      "foo": {
 				        "declarations": [],
+				        "default": undefined,
 				        "description": "",
 				        "getTypeObject": [Function],
 				        "global": false,
@@ -587,6 +608,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(recursive).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -598,6 +620,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				    "schema": {
 				      "recursive": {
 				        "declarations": [],
+				        "default": undefined,
 				        "description": "",
 				        "getTypeObject": [Function],
 				        "global": false,
@@ -709,6 +732,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(xfoo).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -725,6 +749,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(xbar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -748,6 +773,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(xbaz).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -798,7 +824,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(bar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
-				  "default": ""BAR"",
+				  "default": "'BAR'",
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -846,6 +872,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(xfoo).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -862,6 +889,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(xbar).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -885,6 +913,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(xbaz).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
+				  "default": undefined,
 				  "description": "",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -908,7 +937,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			expect(hello).toMatchInlineSnapshot(`
 				{
 				  "declarations": [],
-				  "default": ""Hello"",
+				  "default": "'Hello'",
 				  "description": "The hello property.",
 				  "getTypeObject": [Function],
 				  "global": false,
@@ -1016,6 +1045,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				          "schema": {
 				            "foo": {
 				              "declarations": [],
+				              "default": undefined,
 				              "description": "",
 				              "getTypeObject": [Function],
 				              "global": false,
@@ -1053,6 +1083,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				      "schema": {
 				        "arg1": {
 				          "declarations": [],
+				          "default": undefined,
 				          "description": "",
 				          "getTypeObject": [Function],
 				          "global": false,
@@ -1065,6 +1096,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				        },
 				        "arg2": {
 				          "declarations": [],
+				          "default": undefined,
 				          "description": "",
 				          "getTypeObject": [Function],
 				          "global": false,
@@ -1398,6 +1430,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				      "schema": {
 				        "email": {
 				          "declarations": [],
+				          "default": undefined,
 				          "description": "email of user",
 				          "getTypeObject": [Function],
 				          "global": false,
@@ -1410,6 +1443,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				        },
 				        "password": {
 				          "declarations": [],
+				          "default": undefined,
 				          "description": "password of same user",
 				          "getTypeObject": [Function],
 				          "global": false,
