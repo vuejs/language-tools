@@ -543,9 +543,11 @@ export function create(
 										if (p.required) {
 											name += ` <sup>required</sup>`;
 										}
-										markdown += `| ${name} | \`${p.type.replace(/\|/g, '\\|')}\` | ${p.description ?? ''} | ${
-											p.default ?? ''
-										} |\n`;
+										let _default = '';
+										if (p.default) {
+											_default = '`' + p.default + '`';
+										}
+										markdown += `| ${name} | \`${p.type.replace(/\|/g, '\\|')}\` | ${p.description ?? ''} | ${_default} |\n`;
 									}
 								}
 
