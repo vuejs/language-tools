@@ -304,7 +304,7 @@ function baseCreate(
 			const virtualCode = vueFile ? getVirtualCode(componentPath) : undefined;
 			const scriptSetupRanges = virtualCode ? getScriptSetupRanges(virtualCode) : undefined;
 			const defaults: Map<string, string> = virtualCode?.sfc.scriptSetup && scriptSetupRanges
-				? readDefaultsFromScriptSetup(
+				? collectPropDefaultsFromScriptSetup(
 					ts,
 					printer,
 					virtualCode.sfc.scriptSetup.ast,
@@ -763,7 +763,7 @@ function createSchemaResolvers(
 	};
 }
 
-function readDefaultsFromScriptSetup(
+function collectPropDefaultsFromScriptSetup(
 	ts: typeof import('typescript'),
 	printer: ts.Printer,
 	sourceFile: ts.SourceFile,
