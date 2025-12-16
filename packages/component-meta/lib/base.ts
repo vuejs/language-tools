@@ -54,7 +54,6 @@ export function createCheckerByJsonConfigBase(
 		},
 		checkerOptions,
 		rootDir,
-		path.join(rootDir, 'jsconfig.json.global.vue'),
 	);
 }
 
@@ -86,7 +85,6 @@ export function createCheckerBase(
 		},
 		checkerOptions,
 		path.dirname(tsconfig),
-		tsconfig + '.global.vue',
 	);
 }
 
@@ -98,7 +96,6 @@ function baseCreate(
 	],
 	checkerOptions: MetaCheckerOptions,
 	rootPath: string,
-	globalComponentName: string,
 ) {
 	let [{ vueOptions, options, projectReferences }, fileNames] = getConfigAndFiles();
 	/**
@@ -112,13 +109,9 @@ function baseCreate(
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
 		getCompilationSettings: () => options,
-		getScriptFileNames: () => [
-			...[...fileNamesSet],
-			globalComponentName,
-		],
+		getScriptFileNames: () => [...fileNamesSet],
 		getProjectReferences: () => projectReferences,
 	};
-	const globalComponentSnapshot = ts.ScriptSnapshot.fromString('<script setup lang="ts"></script>');
 	const scriptSnapshots = new Map<string, ts.IScriptSnapshot | undefined>();
 	const vueLanguagePlugin = core.createVueLanguagePlugin<string>(
 		ts,
@@ -139,21 +132,16 @@ function baseCreate(
 		fileName => {
 			let snapshot = scriptSnapshots.get(fileName);
 
-			if (fileName === globalComponentName) {
-				snapshot = globalComponentSnapshot;
-			}
-			else {
-				if (!scriptSnapshots.has(fileName)) {
-					const fileText = ts.sys.readFile(fileName);
-					if (fileText !== undefined) {
-						scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(fileText));
-					}
-					else {
-						scriptSnapshots.set(fileName, undefined);
-					}
+			if (!scriptSnapshots.has(fileName)) {
+				const fileText = ts.sys.readFile(fileName);
+				if (fileText !== undefined) {
+					scriptSnapshots.set(fileName, ts.ScriptSnapshot.fromString(fileText));
 				}
-				snapshot = scriptSnapshots.get(fileName);
+				else {
+					scriptSnapshots.set(fileName, undefined);
+				}
 			}
+			snapshot = scriptSnapshots.get(fileName);
 
 			if (snapshot) {
 				language.scripts.set(fileName, snapshot);
@@ -182,8 +170,6 @@ function baseCreate(
 			return scriptKind;
 		};
 	}
-
-	let globalPropNames: string[] | undefined;
 
 	return {
 		getExportNames,
@@ -304,14 +290,6 @@ function baseCreate(
 						return resolveNestedProperties(prop);
 					})
 					.filter(prop => !vnodeEventRegex.test(prop.name) && !eventProps.has(prop.name));
-			}
-
-			// fill global
-			if (componentPath !== globalComponentName) {
-				globalPropNames ??= getComponentMeta(globalComponentName).props.map(prop => prop.name);
-				for (const prop of result) {
-					prop.global = globalPropNames.includes(prop.name);
-				}
 			}
 
 			// fill defaults
@@ -523,10 +501,20 @@ function createSchemaResolvers(
 		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode);
 		let schema: PropertyMetaSchema | undefined;
 		let declarations: Declaration[] | undefined;
+		let global = false;
+
+		for (const decl of prop.declarations ?? []) {
+			if (
+				decl.getSourceFile() !== symbolNode.getSourceFile()
+				&& isPublicProp(decl)
+			) {
+				global = true;
+			}
+		}
 
 		return {
 			name: prop.getEscapedName().toString(),
-			global: false,
+			global,
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
 			tags: getJsDocTags(prop),
 			required: !(prop.flags & ts.SymbolFlags.Optional),
@@ -543,6 +531,27 @@ function createSchemaResolvers(
 			},
 		};
 	}
+
+	function isPublicProp(declaration: ts.Declaration): boolean {
+		const publicInterfaces = new Set([
+			'PublicProps',
+			'VNodeProps',
+			'AllowedComponentProps',
+			'ComponentCustomProps',
+		]);
+		let parent = declaration.parent;
+		while (parent) {
+			if (ts.isInterfaceDeclaration(parent) || ts.isTypeAliasDeclaration(parent)) {
+				if (publicInterfaces.has(parent.name.text)) {
+					return true;
+				}
+				return false;
+			}
+			parent = parent.parent;
+		}
+		return false;
+	}
+
 	function resolveSlotProperties(prop: ts.Symbol): SlotMeta {
 		const propType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode));
 		const signatures = propType.getCallSignatures();

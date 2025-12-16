@@ -134,17 +134,17 @@ export function inferComponentExposed(
 
 function findProperty(
 	typeChecker: ts.TypeChecker,
-	symbolNode: ts.Node,
+	location: ts.Node,
 	type: ts.Type,
-	propertyName: string,
+	property: string,
 ): ts.Type | undefined {
-	const prop = type.getProperty(propertyName);
-	if (prop) {
-		return typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode);
+	const symbol = type.getProperty(property);
+	if (symbol) {
+		return typeChecker.getTypeOfSymbolAtLocation(symbol, location);
 	}
 	if (type.isUnionOrIntersection()) {
 		for (const sub of type.types) {
-			const found = findProperty(typeChecker, symbolNode, sub, propertyName);
+			const found = findProperty(typeChecker, location, sub, property);
 			if (found) {
 				return found;
 			}
