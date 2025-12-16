@@ -291,56 +291,31 @@ function baseCreate(
 					.map(prop => {
 						const {
 							resolveNestedProperties,
-						} = createSchemaResolvers(ts, typeChecker, language, symbolNode, checkerOptions);
+						} = createSchemaResolvers(ts, typeChecker, printer, language, symbolNode, checkerOptions);
 
 						return resolveNestedProperties(prop);
 					})
 					.filter(prop => !vnodeEventRegex.test(prop.name) && !eventProps.has(prop.name));
 			}
 
-			// fill defaults
+			// fill <script setup> defaults
 			const sourceScript = language.scripts.get(componentPath);
-			const sourceFile = program.getSourceFile(componentPath);
-			const scriptRanges = sourceFile ? getScriptRanges(sourceFile) : undefined;
 			const vueFile = sourceScript?.generated?.root;
-			const defaults = sourceFile && scriptRanges
-				? readDefaultsFromScript(
-					ts,
-					printer,
-					sourceFile,
-					scriptRanges,
-					exportName,
-				)
-				: {};
 			const virtualCode = vueFile ? getVirtualCode(componentPath) : undefined;
 			const scriptSetupRanges = virtualCode ? getScriptSetupRanges(virtualCode) : undefined;
+			const defaults: Map<string, string> = virtualCode?.sfc.scriptSetup && scriptSetupRanges
+				? readDefaultsFromScriptSetup(
+					ts,
+					printer,
+					virtualCode.sfc.scriptSetup.ast,
+					scriptSetupRanges,
+				)
+				: new Map();
 
-			if (virtualCode?.sfc.scriptSetup && scriptSetupRanges) {
-				Object.assign(
-					defaults,
-					readDefaultsFromScriptSetup(
-						ts,
-						printer,
-						virtualCode.sfc.scriptSetup.ast,
-						scriptSetupRanges,
-					),
-				);
-			}
-
-			for (
-				const [propName, defaultExp] of Object.entries(defaults)
-			) {
+			for (const [propName, defaultExp] of defaults) {
 				const prop = result.find(p => p.name === propName);
 				if (prop) {
-					prop.default = defaultExp.default;
-
-					if (defaultExp.required !== undefined) {
-						prop.required = defaultExp.required;
-					}
-
-					if (prop.default !== undefined) {
-						prop.required = false; // props with default are always optional
-					}
+					prop.default ??= defaultExp;
 				}
 			}
 
@@ -356,7 +331,7 @@ function baseCreate(
 				return calls.map(call => {
 					const {
 						resolveEventSignature,
-					} = createSchemaResolvers(ts, typeChecker, language, symbolNode, checkerOptions);
+					} = createSchemaResolvers(ts, typeChecker, printer, language, symbolNode, checkerOptions);
 
 					return resolveEventSignature(call);
 				}).filter(event => event.name);
@@ -374,7 +349,7 @@ function baseCreate(
 				return properties.map(prop => {
 					const {
 						resolveSlotProperties,
-					} = createSchemaResolvers(ts, typeChecker, language, symbolNode, checkerOptions);
+					} = createSchemaResolvers(ts, typeChecker, printer, language, symbolNode, checkerOptions);
 
 					return resolveSlotProperties(prop);
 				});
@@ -402,7 +377,7 @@ function baseCreate(
 				return properties.map(prop => {
 					const {
 						resolveExposedProperties,
-					} = createSchemaResolvers(ts, typeChecker, language, symbolNode, checkerOptions);
+					} = createSchemaResolvers(ts, typeChecker, printer, language, symbolNode, checkerOptions);
 
 					return resolveExposedProperties(prop);
 				});
@@ -458,6 +433,7 @@ function baseCreate(
 function createSchemaResolvers(
 	ts: typeof import('typescript'),
 	typeChecker: ts.TypeChecker,
+	printer: ts.Printer,
 	language: core.Language<string>,
 	symbolNode: ts.Expression,
 	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
@@ -503,30 +479,49 @@ function createSchemaResolvers(
 		}));
 	}
 
-	function resolveNestedProperties(prop: ts.Symbol): PropertyMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode);
+	function resolveNestedProperties(propSymbol: ts.Symbol): PropertyMeta {
+		const subtype = typeChecker.getTypeOfSymbolAtLocation(propSymbol, symbolNode);
 		let schema: PropertyMetaSchema | undefined;
 		let declarations: Declaration[] | undefined;
 		let global = false;
+		let _default: string | undefined;
+		let required = !(propSymbol.flags & ts.SymbolFlags.Optional);
 
-		for (const decl of prop.declarations ?? []) {
+		for (const decl of propSymbol.declarations ?? []) {
 			if (
 				decl.getSourceFile() !== symbolNode.getSourceFile()
 				&& isPublicProp(decl)
 			) {
 				global = true;
 			}
+			if (ts.isPropertyAssignment(decl) && ts.isObjectLiteralExpression(decl.initializer)) {
+				for (const option of decl.initializer.properties) {
+					if (ts.isPropertyAssignment(option)) {
+						const key = option.name.getText();
+						if (key === 'default') {
+							const defaultExp = resolveDefaultOptionExpression(ts, option.initializer);
+							_default = printer.printNode(ts.EmitHint.Expression, defaultExp, decl.getSourceFile());
+						}
+						else if (key === 'required') {
+							if (option.initializer.getText() === 'true') {
+								required = true;
+							}
+						}
+					}
+				}
+			}
 		}
 
 		return {
-			name: prop.getEscapedName().toString(),
+			name: propSymbol.getEscapedName().toString(),
 			global,
-			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
-			tags: getJsDocTags(prop),
-			required: !(prop.flags & ts.SymbolFlags.Optional),
+			default: _default,
+			description: ts.displayPartsToString(propSymbol.getDocumentationComment(typeChecker)),
+			tags: getJsDocTags(propSymbol),
+			required,
 			type: getFullyQualifiedName(subtype),
 			get declarations() {
-				return declarations ??= getDeclarations(prop.declarations ?? []);
+				return declarations ??= getDeclarations(propSymbol.declarations ?? []);
 			},
 			get schema() {
 				return schema ??= resolveSchema(subtype);
@@ -774,7 +769,7 @@ function readDefaultsFromScriptSetup(
 	sourceFile: ts.SourceFile,
 	scriptSetupRanges: core.ScriptSetupRanges,
 ) {
-	const result: Record<string, { default?: string }> = {};
+	const result = new Map<string, string>();
 
 	if (scriptSetupRanges.withDefaults?.arg) {
 		const obj = findObjectLiteralExpression(ts, scriptSetupRanges.withDefaults.arg.node);
@@ -783,28 +778,17 @@ function readDefaultsFromScriptSetup(
 				if (ts.isPropertyAssignment(prop)) {
 					const name = prop.name.getText(sourceFile);
 					const expNode = resolveDefaultOptionExpression(ts, prop.initializer);
-					const expText = printer.printNode(ts.EmitHint.Expression, expNode, sourceFile)
-						?? expNode.getText(sourceFile);
-					result[name] = { default: expText };
+					const expText = printer.printNode(ts.EmitHint.Expression, expNode, sourceFile);
+					result.set(name, expText);
 				}
 			}
-		}
-	}
-	else if (scriptSetupRanges.defineProps?.arg) {
-		const obj = findObjectLiteralExpression(ts, scriptSetupRanges.defineProps.arg.node);
-		if (obj) {
-			Object.assign(
-				result,
-				resolvePropsOption(ts, printer, sourceFile, obj),
-			);
 		}
 	}
 	else if (scriptSetupRanges.defineProps?.destructured) {
 		for (const [name, initializer] of scriptSetupRanges.defineProps.destructured) {
 			if (initializer) {
-				const expText = printer.printNode(ts.EmitHint.Expression, initializer, sourceFile)
-					?? initializer.getText(sourceFile);
-				result[name] = { default: expText };
+				const expText = printer.printNode(ts.EmitHint.Expression, initializer, sourceFile);
+				result.set(name, expText);
 			}
 		}
 	}
@@ -816,7 +800,10 @@ function readDefaultsFromScriptSetup(
 				const name = defineModel.name
 					? sourceFile.text.slice(defineModel.name.start, defineModel.name.end).slice(1, -1)
 					: 'modelValue';
-				result[name] = { default: resolveModelOption(ts, printer, sourceFile, obj) };
+				const _default = resolveModelOption(ts, printer, sourceFile, obj);
+				if (_default) {
+					result.set(name, _default);
+				}
 			}
 		}
 	}
@@ -837,64 +824,6 @@ function findObjectLiteralExpression(
 			result = findObjectLiteralExpression(ts, child);
 		}
 	});
-	return result;
-}
-
-function readDefaultsFromScript(
-	ts: typeof import('typescript'),
-	printer: ts.Printer,
-	sourceFile: ts.SourceFile,
-	scriptRanges: core.ScriptRanges,
-	exportName: string,
-) {
-	const component = scriptRanges.exports[exportName];
-	if (!component) {
-		return {};
-	}
-	const props = component?.options?.args.node.properties.find(prop => prop.name?.getText(sourceFile) === 'props');
-	if (props && ts.isPropertyAssignment(props)) {
-		if (ts.isObjectLiteralExpression(props.initializer)) {
-			return resolvePropsOption(ts, printer, sourceFile, props.initializer);
-		}
-	}
-	return {};
-}
-
-function resolvePropsOption(
-	ts: typeof import('typescript'),
-	printer: ts.Printer,
-	sourceFile: ts.SourceFile,
-	props: ts.ObjectLiteralExpression,
-) {
-	const result: Record<string, { default?: string; required?: boolean }> = {};
-
-	for (const prop of props.properties) {
-		if (ts.isPropertyAssignment(prop)) {
-			const name = prop.name.getText(sourceFile);
-			if (ts.isObjectLiteralExpression(prop.initializer)) {
-				const defaultProp = prop.initializer.properties.find(p =>
-					ts.isPropertyAssignment(p) && p.name.getText(sourceFile) === 'default'
-				) as ts.PropertyAssignment | undefined;
-				const requiredProp = prop.initializer.properties.find(p =>
-					ts.isPropertyAssignment(p) && p.name.getText(sourceFile) === 'required'
-				) as ts.PropertyAssignment | undefined;
-
-				result[name] = {};
-
-				if (requiredProp) {
-					const exp = requiredProp.initializer.getText(sourceFile);
-					result[name].required = exp === 'true';
-				}
-				if (defaultProp) {
-					const expNode = resolveDefaultOptionExpression(ts, defaultProp.initializer);
-					const expText = printer.printNode(ts.EmitHint.Expression, expNode, sourceFile)
-						?? expNode.getText(sourceFile);
-					result[name].default = expText;
-				}
-			}
-		}
-	}
-
 	return result;
 }
 
