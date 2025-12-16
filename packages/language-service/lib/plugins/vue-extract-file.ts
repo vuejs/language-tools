@@ -299,7 +299,7 @@ export function createAddComponentToOptionEdit(
 	ast: ts.SourceFile,
 	componentName: string,
 ) {
-	const componentOptions = tsCodegen.get(sfc)?.getScriptRanges()?.exports.default?.options;
+	const componentOptions = tsCodegen.get(sfc)?.getScriptRanges()?.exportDefault?.options;
 	if (!componentOptions) {
 		return;
 	}

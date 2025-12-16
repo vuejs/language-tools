@@ -110,7 +110,6 @@ function baseCreate(
 	let fileNamesSet = new Set(fileNames.map(path => path.replace(windowsPathReg, '/')));
 	let projectVersion = 0;
 
-	const scriptRangesCache = new WeakMap<ts.SourceFile, core.ScriptRanges>();
 	const projectHost: TypeScriptProjectHost = {
 		getCurrentDirectory: () => rootPath,
 		getProjectVersion: () => projectVersion.toString(),
@@ -206,35 +205,29 @@ function baseCreate(
 		},
 	};
 
-	function getExportNames(componentPath: string) {
-		const program = tsLs.getProgram()!;
-		const sourceFile = program.getSourceFile(componentPath);
-		if (sourceFile) {
-			const scriptRanges = getScriptRanges(sourceFile);
-			return Object.keys(scriptRanges.exports);
-		}
-	}
-
-	function getComponentMeta(componentPath: string, exportName = 'default'): ComponentMeta {
+	function getProgramAndFile(componentPath: string) {
 		let program = tsLs.getProgram()!;
 		let sourceFile = program.getSourceFile(componentPath);
 		if (!sourceFile) {
 			fileNamesSet.add(componentPath);
 			projectVersion++;
 			program = tsLs.getProgram()!;
-			sourceFile = program.getSourceFile(componentPath);
-			if (!sourceFile) {
-				throw `Could not find component file: ${componentPath}`;
-			}
+			sourceFile = program.getSourceFile(componentPath)!;
 		}
+		return [program, sourceFile] as const;
+	}
 
-		const scriptRanges = getScriptRanges(sourceFile);
-		const component = scriptRanges.exports[exportName];
-		if (!component) {
-			throw `Could not find export ${exportName}`;
+	function getExportNames(componentPath: string) {
+		const [program, sourceFile] = getProgramAndFile(componentPath);
+		return getExports(program, sourceFile).map(e => e.getName());
+	}
+
+	function getComponentMeta(componentPath: string, exportName = 'default'): ComponentMeta {
+		const [program, sourceFile] = getProgramAndFile(componentPath);
+		const symbolNode = getExport(ts, program, sourceFile, exportName)!;
+		if (!symbolNode) {
+			throw new Error(`Export '${exportName}' not found in '${componentPath}'.`);
 		}
-
-		const symbolNode = component.expression.node;
 		const typeChecker = program.getTypeChecker();
 
 		let name: string | undefined;
@@ -387,32 +380,55 @@ function baseCreate(
 		}
 
 		function getName() {
-			const sourceFile = program.getSourceFile(componentPath);
-			if (sourceFile) {
-				const scriptRanges = getScriptRanges(sourceFile);
-				const name = scriptRanges?.exports[exportName]?.options?.name;
-				if (name && ts.isStringLiteral(name.node)) {
-					return name.node.text;
-				}
+			let decl = getExport(ts, program, sourceFile, exportName);
+			if (!decl) {
+				return;
 			}
+
+			// const __VLS_export = ...
+			const text = sourceFile.text.slice(decl.pos, decl.end);
+			if (text.includes(core.names._export)) {
+				ts.forEachChild(sourceFile, child2 => {
+					if (ts.isVariableStatement(child2)) {
+						for (const { name, initializer } of child2.declarationList.declarations) {
+							if (name.getText() === core.names._export && initializer) {
+								decl = initializer;
+							}
+						}
+					}
+				});
+			}
+
+			return core.parseOptionsFromExtression(ts, decl, sourceFile)?.name?.node.text;
 		}
 
 		function getDescription() {
-			const sourceFile = program.getSourceFile(componentPath);
-			if (sourceFile) {
-				const scriptRanges = getScriptRanges(sourceFile);
-				return readComponentDescription(ts, scriptRanges, exportName, typeChecker);
+			const decl = getExport(ts, program, sourceFile, exportName);
+			if (!decl) {
+				return;
+			}
+
+			// Try to get JSDoc comments from the node using TypeScript API
+			const jsDocComments = ts.getJSDocCommentsAndTags(decl);
+			for (const jsDoc of jsDocComments) {
+				if (ts.isJSDoc(jsDoc) && jsDoc.comment) {
+					// Handle both string and array of comment parts
+					if (typeof jsDoc.comment === 'string') {
+						return jsDoc.comment;
+					}
+					else if (Array.isArray(jsDoc.comment)) {
+						return jsDoc.comment.map(part => (part as any).text || '').join('');
+					}
+				}
+			}
+
+			// Fallback to symbol documentation
+			const symbol = typeChecker.getSymbolAtLocation(decl);
+			if (symbol) {
+				const description = ts.displayPartsToString(symbol.getDocumentationComment(typeChecker));
+				return description || undefined;
 			}
 		}
-	}
-
-	function getScriptRanges(sourceFile: ts.SourceFile) {
-		let scriptRanges = scriptRangesCache.get(sourceFile);
-		if (!scriptRanges) {
-			scriptRanges = core.parseScriptRanges(ts, sourceFile, vueOptions);
-			scriptRangesCache.set(sourceFile, scriptRanges);
-		}
-		return scriptRanges;
 	}
 
 	function getVirtualCode(fileName: string) {
@@ -867,34 +883,27 @@ function resolveDefaultOptionExpression(
 	return _default;
 }
 
-function readComponentDescription(
+function getExport(
 	ts: typeof import('typescript'),
-	scriptRanges: core.ScriptRanges,
+	program: ts.Program,
+	sourceFile: ts.SourceFile,
 	exportName: string,
-	typeChecker: ts.TypeChecker,
-): string | undefined {
-	const _export = scriptRanges.exports[exportName];
-
-	if (_export) {
-		// Try to get JSDoc comments from the node using TypeScript API
-		const jsDocComments = ts.getJSDocCommentsAndTags(_export.node);
-		for (const jsDoc of jsDocComments) {
-			if (ts.isJSDoc(jsDoc) && jsDoc.comment) {
-				// Handle both string and array of comment parts
-				if (typeof jsDoc.comment === 'string') {
-					return jsDoc.comment;
-				}
-				else if (Array.isArray(jsDoc.comment)) {
-					return jsDoc.comment.map(part => (part as any).text || '').join('');
-				}
-			}
+) {
+	const exports = getExports(program, sourceFile);
+	const symbol = exports.find(e => e.getName() === exportName);
+	if (symbol?.valueDeclaration) {
+		const decl = symbol.valueDeclaration;
+		if (ts.isExportAssignment(decl)) {
+			return decl.expression;
 		}
-
-		// Fallback to symbol documentation
-		const symbol = typeChecker.getSymbolAtLocation(_export.node);
-		if (symbol) {
-			const description = ts.displayPartsToString(symbol.getDocumentationComment(typeChecker));
-			return description || undefined;
+		if (ts.isVariableDeclaration(decl)) {
+			return decl.initializer;
 		}
 	}
+}
+
+function getExports(program: ts.Program, sourceFile: ts.SourceFile) {
+	const typeChecker = program.getTypeChecker();
+	const moduleSymbol = typeChecker.getSymbolAtLocation(sourceFile);
+	return moduleSymbol ? typeChecker.getExportsOfModule(moduleSymbol) : [];
 }
