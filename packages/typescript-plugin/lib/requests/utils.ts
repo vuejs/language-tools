@@ -38,27 +38,26 @@ export function getComponentType(
 		let componentSymbol = components.type.getProperty(nameParts[0])
 			?? components.type.getProperty(camelize(nameParts[0]))
 			?? components.type.getProperty(capitalize(camelize(nameParts[0])));
-		let componentType: ts.Type | undefined;
-		if (!componentSymbol) {
-			const name = getSelfComponentName(fileName);
-			if (name === capitalize(camelize(tag))) {
-				componentType = getVariableType(ts, checker, sourceFile, names._export)?.type;
-			}
-		}
-		else {
-			componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
+		if (componentSymbol) {
+			let componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 			for (let i = 1; i < nameParts.length; i++) {
 				componentSymbol = componentType.getProperty(nameParts[i]!);
 				if (componentSymbol) {
 					componentType = checker.getTypeOfSymbolAtLocation(componentSymbol, components.node);
 				}
 			}
+			if (componentType) {
+				return {
+					node: components.node,
+					type: componentType,
+				};
+			}
 		}
-		if (componentType) {
-			return {
-				node: components.node,
-				type: componentType,
-			};
+		else {
+			const name = getSelfComponentName(fileName);
+			if (name === capitalize(camelize(tag))) {
+				return getVariableType(ts, checker, sourceFile, names._export);
+			}
 		}
 	}
 
@@ -93,7 +92,7 @@ function searchVariableDeclarationNode(
 	sourceFile: ts.SourceFile,
 	name: string,
 ) {
-	let result: ts.Node | undefined;
+	let result: ts.VariableDeclaration | undefined;
 	walk(sourceFile);
 	return result;
 

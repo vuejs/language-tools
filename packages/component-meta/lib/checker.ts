@@ -69,22 +69,20 @@ export function createCheckerBase(
 	const { languageServiceHost } = createLanguageServiceHost(ts, ts.sys, language, s => s, projectHost);
 	const tsLs = ts.createLanguageService(languageServiceHost);
 	const printer = ts.createPrinter(checkerOptions.printer);
+	const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
 
-	if (checkerOptions.forceUseTs) {
-		const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
-		languageServiceHost.getScriptKind = fileName => {
-			const scriptKind = getScriptKind!(fileName);
-			if (vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
-				if (scriptKind === ts.ScriptKind.JS) {
-					return ts.ScriptKind.TS;
-				}
-				if (scriptKind === ts.ScriptKind.JSX) {
-					return ts.ScriptKind.TSX;
-				}
+	languageServiceHost.getScriptKind = fileName => {
+		const scriptKind = getScriptKind!(fileName);
+		if (vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
+			if (scriptKind === ts.ScriptKind.JS) {
+				return ts.ScriptKind.TS;
 			}
-			return scriptKind;
-		};
-	}
+			if (scriptKind === ts.ScriptKind.JSX) {
+				return ts.ScriptKind.TSX;
+			}
+		}
+		return scriptKind;
+	};
 
 	return {
 		getExportNames,
@@ -95,6 +93,7 @@ export function createCheckerBase(
 			if (!componentNode) {
 				throw new Error(`Export '${exportName}' not found in '${sourceFile.fileName}'.`);
 			}
+			const componentType = program.getTypeChecker().getTypeAtLocation(componentNode);
 			return getComponentMeta(
 				ts,
 				program,
@@ -103,7 +102,8 @@ export function createCheckerBase(
 				language,
 				sourceFile,
 				componentNode,
-				checkerOptions,
+				componentType,
+				checkerOptions.schema ?? false,
 			);
 		},
 		updateFile(fileName: string, text: string) {
@@ -150,7 +150,7 @@ export function createCheckerBase(
 	}
 }
 
-function getExport(
+export function getExport(
 	ts: typeof import('typescript'),
 	program: ts.Program,
 	sourceFile: ts.SourceFile,

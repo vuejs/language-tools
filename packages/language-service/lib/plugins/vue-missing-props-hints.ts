@@ -11,7 +11,7 @@ import { AttrNameCasing, getAttrNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
 
 export function create(
-	{ getComponentNames, getElementNames, getComponentProps }: import('@vue/typescript-plugin/lib/requests').Requests,
+	{ getComponentNames, getElementNames, getComponentMeta }: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	return {
 		name: 'vue-missing-props-hints',
@@ -77,7 +77,7 @@ export function create(
 								}
 								componentProps.set(
 									checkTag,
-									(await getComponentProps(info.root.fileName, checkTag) ?? [])
+									((await getComponentMeta(info.root.fileName, checkTag))?.props ?? [])
 										.filter(prop => prop.required)
 										.map(prop => prop.name),
 								);

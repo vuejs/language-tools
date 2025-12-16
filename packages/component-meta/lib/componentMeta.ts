@@ -9,7 +9,7 @@ import {
 } from './helpers';
 import { createSchemaResolvers } from './schemaResolvers';
 import { getDefaultsFromScriptSetup } from './scriptSetup';
-import type { ComponentMeta, MetaCheckerOptions, PropertyMeta } from './types';
+import type { ComponentMeta, MetaCheckerSchemaOptions, PropertyMeta } from './types';
 
 const vnodeEventRegex = /^onVnode[A-Z]/;
 
@@ -20,8 +20,9 @@ export function getComponentMeta(
 	vueOptions: core.VueCompilerOptions,
 	language: core.Language<string>,
 	sourceFile: ts.SourceFile,
-	componentNode: ts.Expression,
-	checkerOptions: MetaCheckerOptions,
+	componentNode: ts.Node,
+	componentType: ts.Type,
+	options: MetaCheckerSchemaOptions,
 ): ComponentMeta {
 	const typeChecker = program.getTypeChecker();
 
@@ -60,11 +61,11 @@ export function getComponentMeta(
 	return meta;
 
 	function getType() {
-		return inferComponentType(typeChecker, componentNode) ?? 0;
+		return inferComponentType(componentType) ?? 0;
 	}
 
 	function getProps() {
-		const propsType = inferComponentProps(typeChecker, componentNode);
+		const propsType = inferComponentProps(typeChecker, componentType);
 		if (!propsType) {
 			return [];
 		}
@@ -79,11 +80,11 @@ export function getComponentMeta(
 			.map(prop => {
 				const {
 					resolveNestedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, componentNode, checkerOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, sourceFile, options);
 
 				return resolveNestedProperties(prop);
 			})
-			.filter(prop => !vnodeEventRegex.test(prop.name) && !eventProps.has(prop.name));
+			.filter((prop): prop is PropertyMeta => !!prop && !vnodeEventRegex.test(prop.name) && !eventProps.has(prop.name));
 
 		// Merge default props from script setup
 		const defaults = getDefaultsFromScriptSetup(ts, printer, language, sourceFile.fileName, vueOptions);
@@ -100,7 +101,7 @@ export function getComponentMeta(
 	}
 
 	function getEvents() {
-		const emitType = inferComponentEmit(typeChecker, componentNode);
+		const emitType = inferComponentEmit(typeChecker, componentType);
 
 		if (emitType) {
 			const calls = emitType.getCallSignatures();
@@ -108,7 +109,7 @@ export function getComponentMeta(
 			return calls.map(call => {
 				const {
 					resolveEventSignature,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, componentNode, checkerOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, sourceFile, options);
 
 				return resolveEventSignature(call);
 			}).filter(event => event.name);
@@ -118,7 +119,7 @@ export function getComponentMeta(
 	}
 
 	function getSlots() {
-		const slotsType = inferComponentSlots(typeChecker, componentNode);
+		const slotsType = inferComponentSlots(typeChecker, componentType);
 
 		if (slotsType) {
 			const properties = slotsType.getProperties();
@@ -126,7 +127,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveSlotProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, componentNode, checkerOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, sourceFile, options);
 
 				return resolveSlotProperties(prop);
 			});
@@ -136,10 +137,10 @@ export function getComponentMeta(
 	}
 
 	function getExposed() {
-		const exposedType = inferComponentExposed(typeChecker, componentNode);
+		const exposedType = inferComponentExposed(typeChecker, componentType);
 
 		if (exposedType) {
-			const propsType = inferComponentProps(typeChecker, componentNode);
+			const propsType = inferComponentProps(typeChecker, componentType);
 			const propsProperties = propsType?.getProperties() ?? [];
 			const properties = exposedType.getProperties().filter(prop =>
 				// only exposed props will have at least one declaration and no valueDeclaration
@@ -154,7 +155,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveExposedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, componentNode, checkerOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, sourceFile, options);
 
 				return resolveExposedProperties(prop);
 			});

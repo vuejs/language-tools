@@ -10,6 +10,7 @@ import {
 } from '@volar/language-service';
 import { getSourceRange } from '@volar/language-service/lib/utils/featureWorkers';
 import {
+	forEachElementNode,
 	forEachInterpolationNode,
 	hyphenateAttr,
 	hyphenateTag,
@@ -17,7 +18,6 @@ import {
 	type VueVirtualCode,
 } from '@vue/language-core';
 import { camelize, capitalize } from '@vue/shared';
-import type { ComponentPropInfo } from '@vue/typescript-plugin/lib/requests/getComponentProps';
 import { create as createHtmlService, resolveReference } from 'volar-service-html';
 import { create as createPugService } from 'volar-service-pug';
 import {
@@ -26,6 +26,7 @@ import {
 } from 'volar-service-typescript/lib/utils/lspConverters.js';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
+import { ComponentMeta, PropertyMeta } from '../../../component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
@@ -94,14 +95,13 @@ type CompletionTarget = 'tag' | 'attribute' | 'value';
 
 interface TagInfo {
 	attrs: string[];
-	propInfos: ComponentPropInfo[];
-	events: string[];
+	meta: ComponentMeta | undefined | null;
 }
 
 interface AttributeMetadata {
 	name: string;
 	kind: 'prop' | 'event';
-	info?: ComponentPropInfo;
+	meta?: PropertyMeta;
 }
 
 let builtInData: html.HTMLDataV1 | undefined;
@@ -112,8 +112,7 @@ export function create(
 	languageId: 'html' | 'jade',
 	{
 		getComponentNames,
-		getComponentProps,
-		getComponentEvents,
+		getComponentMeta,
 		getComponentDirectives,
 		getComponentSlots,
 		getElementAttrs,
@@ -405,13 +404,13 @@ export function create(
 						let prop = propMap.get(item.label);
 
 						if (prop) {
-							if (prop.info?.documentation) {
+							if (prop.meta?.description) {
 								item.documentation = {
 									kind: 'markdown',
-									value: prop.info.documentation,
+									value: prop.meta.description,
 								};
 							}
-							if (prop.info?.deprecated) {
+							if (prop.meta?.tags.some(tag => tag.name === 'deprecated')) {
 								item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 							}
 						}
@@ -427,7 +426,8 @@ export function create(
 
 						// Set item kind
 						if (prop) {
-							if (prop.kind === 'prop' && !prop.info?.isAttribute) {
+							// @ts-ignore
+							if (prop.kind === 'prop' && !prop.meta?.isAttribute) {
 								item.kind = 5 satisfies typeof CompletionItemKind.Field;
 							}
 							else if (prop.kind === 'event' || hyphenateAttr(prop.name).startsWith(EVENT_PROP_PREFIX)) {
@@ -510,14 +510,109 @@ export function create(
 					if (info?.code.id !== 'template') {
 						return;
 					}
-					const {
+					let {
 						result: htmlHover,
+						target,
 					} = await runWithVueData(
 						info.script.id,
 						info.root,
 						() => baseServiceInstance.provideHover!(document, position, token),
 					);
+					const templateAst = info.root.sfc.template?.ast;
+
+					if (target === 'tag' && templateAst && (!htmlHover || !hasContents(htmlHover.contents))) {
+						for (const element of forEachElementNode(templateAst)) {
+							const tagStart = element.loc.start.offset + element.loc.source.indexOf(element.tag);
+							const tagEnd = tagStart + element.tag.length;
+							const offset = document.offsetAt(position);
+
+							if (offset >= tagStart && offset <= tagEnd) {
+								const meta = await getComponentMeta(info.root.fileName, element.tag);
+								const props = meta?.props.filter(p => !p.global);
+								let markdown = '|  |  |  |  |\n| --- | --- | --- | --- |\n';
+								let hasMeta = false;
+
+								if (props?.length) {
+									hasMeta = true;
+									markdown += '| **Prop** | **Type** | **Description** | **Default** |\n';
+									for (const p of props) {
+										let name = '*' + p.name + '*';
+										if (p.tags.some(tag => tag.name === 'deprecated')) {
+											name = '~~' + name + '~~';
+										}
+										if (p.required) {
+											name += ` <sup>required</sup>`;
+										}
+										markdown += `| ${name} | \`${p.type.replace(/\|/g, '\\|')}\` | ${p.description ?? ''} | ${
+											p.default ?? ''
+										} |\n`;
+									}
+								}
+
+								if (meta?.events?.length) {
+									hasMeta = true;
+									markdown += `| **Event** | **Params** | **Description** |  |\n`;
+									for (const e of meta.events) {
+										let name = '*' + e.name + '*';
+										if (e.tags.some(tag => tag.name === 'deprecated')) {
+											name = '~~' + name + '~~';
+										}
+										markdown += `| ${name} | \`${e.type}\` | ${e.description ?? ''} |  |\n`;
+									}
+								}
+
+								if (meta?.slots?.length) {
+									hasMeta = true;
+									markdown += `| **Slot** | **Params** | **Description** |  |  |\n`;
+									for (const s of meta.slots) {
+										let name = '*' + s.name + '*';
+										if (s.tags.some(tag => tag.name === 'deprecated')) {
+											name = '~~' + name + '~~';
+										}
+										markdown += `| ${name} | \`${s.type}\` | ${s.description ?? ''} |  |  |\n`;
+									}
+								}
+
+								if (meta?.exposed.length) {
+									hasMeta = true;
+									markdown += `| **Exposed** | **Type** | **Description** |  |  |\n`;
+									for (const e of meta.exposed) {
+										let name = '*' + e.name + '*';
+										if (e.tags.some(tag => tag.name === 'deprecated')) {
+											name = '~~' + name + '~~';
+										}
+										markdown += `| ${name} | \`${e.type}\` | ${e.description ?? ''} |  |  |\n`;
+									}
+								}
+
+								if (hasMeta) {
+									htmlHover ??= {
+										range: {
+											start: document.positionAt(tagStart),
+											end: document.positionAt(tagEnd),
+										},
+										contents: '',
+									};
+									htmlHover.contents = {
+										kind: 'markdown',
+										value: markdown,
+									};
+								}
+							}
+						}
+					}
+
 					return htmlHover;
+
+					function hasContents(contents: html.MarkupContent | html.MarkedString | html.MarkedString[]) {
+						if (typeof contents === 'string') {
+							return !!contents;
+						}
+						if (Array.isArray(contents)) {
+							return contents.some(hasContents);
+						}
+						return !!contents.value;
+					}
 				},
 
 				async provideDocumentLinks(document, token) {
@@ -649,14 +744,14 @@ export function create(
 						},
 						provideAttributes: tag => {
 							const directives = getDirectives();
-							const { attrs, propInfos, events } = getTagData(tag);
+							const { attrs, meta } = getTagData(tag);
 							const attributes: html.IAttributeData[] = [];
 							const models: string[] = [];
 
 							for (
 								const prop of [
-									...propInfos,
-									...attrs.map<ComponentPropInfo>(attr => ({ name: attr, isAttribute: true })),
+									...meta?.props ?? [],
+									// ...attrs.map<PropertyMeta>(attr => ({ name: attr, isAttribute: true })),
 								]
 							) {
 								const propName = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
@@ -671,12 +766,12 @@ export function create(
 										propMap.set(name, {
 											name: propName,
 											kind: 'event',
-											info: prop,
+											meta: prop,
 										});
 									}
 								}
 								else {
-									const propInfo = propInfos.find(prop => {
+									const propInfo = meta?.props.find(prop => {
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === propName;
 									});
@@ -684,18 +779,18 @@ export function create(
 									for (const name of [propName, V_BIND_SHORTHAND + propName, DIRECTIVE_V_BIND + propName]) {
 										attributes.push({
 											name,
-											valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
+											// valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
 										});
 										propMap.set(name, {
 											name: propName,
 											kind: 'prop',
-											info: propInfo,
+											meta: propInfo,
 										});
 									}
 								}
 							}
-							for (const event of events) {
-								const eventName = attrNameCasing === AttrNameCasing.Camel ? event : hyphenateAttr(event);
+							for (const event of meta?.events ?? []) {
+								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
 								for (const name of [DIRECTIVE_V_ON + eventName, V_ON_SHORTHAND + eventName]) {
 									attributes.push({ name });
 									propMap.set(name, {
@@ -711,7 +806,7 @@ export function create(
 							}
 							for (
 								const prop of [
-									...propInfos,
+									...meta?.props ?? [],
 									...attrs.map(attr => ({ name: attr })),
 								]
 							) {
@@ -719,9 +814,9 @@ export function create(
 									models.push(prop.name.slice(UPDATE_PROP_PREFIX.length));
 								}
 							}
-							for (const event of events) {
-								if (event.startsWith(UPDATE_EVENT_PREFIX)) {
-									models.push(event.slice(UPDATE_EVENT_PREFIX.length));
+							for (const event of meta?.events ?? []) {
+								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
+									models.push(event.name.slice(UPDATE_EVENT_PREFIX.length));
 								}
 							}
 							for (const model of models) {
@@ -791,13 +886,12 @@ export function create(
 				function getTagData(tag: string) {
 					let data = tagDataMap.get(tag);
 					if (!data) {
-						data = { attrs: [], propInfos: [], events: [] };
+						data = { attrs: [], meta: undefined };
 						tagDataMap.set(tag, data);
 						tasks.push((async () => {
 							tagDataMap.set(tag, {
 								attrs: await getElementAttrs(root.fileName, tag) ?? [],
-								propInfos: await getComponentProps(root.fileName, tag) ?? [],
-								events: await getComponentEvents(root.fileName, tag) ?? [],
+								meta: await getComponentMeta(root.fileName, tag),
 							});
 							version++;
 						})());
@@ -962,7 +1056,8 @@ function buildAttributeSortText(
 	const tokens: string[] = [];
 
 	if (prop) {
-		if (!prop.info?.isAttribute) {
+		// @ts-ignore
+		if (!prop.meta?.isAttribute) {
 			tokens.push(SORT_TOKEN.COMPONENT_PROP);
 
 			if (label.startsWith(V_BIND_SHORTHAND)) {

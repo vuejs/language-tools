@@ -1,15 +1,7 @@
 import type * as core from '@vue/language-core';
 import type * as ts from 'typescript';
 import { resolveDefaultOptionExpression } from './scriptSetup';
-import type {
-	Declaration,
-	EventMeta,
-	ExposeMeta,
-	MetaCheckerOptions,
-	PropertyMeta,
-	PropertyMetaSchema,
-	SlotMeta,
-} from './types';
+import type { Declaration, EventMeta, ExposeMeta, PropertyMeta, PropertyMetaSchema, SlotMeta } from './types';
 
 const publicPropsInterfaces = new Set([
 	'PublicProps',
@@ -23,8 +15,8 @@ export function createSchemaResolvers(
 	typeChecker: ts.TypeChecker,
 	printer: ts.Printer,
 	language: core.Language<string>,
-	symbolNode: ts.Expression,
-	{ rawType, schema: options, noDeclarations }: MetaCheckerOptions,
+	sourceFile: ts.SourceFile,
+	options: import('./types').MetaCheckerSchemaOptions,
 ) {
 	const visited = new Set<ts.Type>();
 
@@ -68,7 +60,7 @@ export function createSchemaResolvers(
 	}
 
 	function resolveNestedProperties(propSymbol: ts.Symbol): PropertyMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(propSymbol, symbolNode);
+		const subtype = typeChecker.getTypeOfSymbol(propSymbol);
 		let schema: PropertyMetaSchema | undefined;
 		let declarations: Declaration[] | undefined;
 		let global = false;
@@ -77,7 +69,7 @@ export function createSchemaResolvers(
 
 		for (const decl of propSymbol.declarations ?? []) {
 			if (
-				decl.getSourceFile() !== symbolNode.getSourceFile()
+				decl.getSourceFile() !== sourceFile
 				&& isPublicProp(decl)
 			) {
 				global = true;
@@ -108,13 +100,12 @@ export function createSchemaResolvers(
 			tags: getJsDocTags(propSymbol),
 			required,
 			type: getFullyQualifiedName(subtype),
-			get declarations() {
-				return declarations ??= getDeclarations(propSymbol.declarations ?? []);
-			},
 			get schema() {
 				return schema ??= resolveSchema(subtype);
 			},
-			rawType: rawType ? subtype : undefined,
+			getDeclarations() {
+				return declarations ??= getDeclarations(propSymbol.declarations ?? []);
+			},
 			getTypeObject() {
 				return subtype;
 			},
@@ -136,11 +127,11 @@ export function createSchemaResolvers(
 	}
 
 	function resolveSlotProperties(prop: ts.Symbol): SlotMeta {
-		const propType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbolAtLocation(prop, symbolNode));
+		const propType = typeChecker.getNonNullableType(typeChecker.getTypeOfSymbol(prop));
 		const signatures = propType.getCallSignatures();
 		const paramType = signatures[0]?.parameters[0];
 		const subtype = paramType
-			? typeChecker.getTypeOfSymbolAtLocation(paramType, symbolNode)
+			? typeChecker.getTypeOfSymbol(paramType)
 			: typeChecker.getAnyType();
 		let schema: PropertyMetaSchema | undefined;
 		let declarations: Declaration[] | undefined;
@@ -150,20 +141,19 @@ export function createSchemaResolvers(
 			type: getFullyQualifiedName(subtype),
 			description: ts.displayPartsToString(prop.getDocumentationComment(typeChecker)),
 			tags: getJsDocTags(prop),
-			get declarations() {
-				return declarations ??= getDeclarations(prop.declarations ?? []);
-			},
 			get schema() {
 				return schema ??= resolveSchema(subtype);
 			},
-			rawType: rawType ? subtype : undefined,
+			getDeclarations() {
+				return declarations ??= getDeclarations(prop.declarations ?? []);
+			},
 			getTypeObject() {
 				return subtype;
 			},
 		};
 	}
 	function resolveExposedProperties(expose: ts.Symbol): ExposeMeta {
-		const subtype = typeChecker.getTypeOfSymbolAtLocation(expose, symbolNode);
+		const subtype = typeChecker.getTypeOfSymbol(expose);
 		let schema: PropertyMetaSchema | undefined;
 		let declarations: Declaration[] | undefined;
 
@@ -172,13 +162,12 @@ export function createSchemaResolvers(
 			type: getFullyQualifiedName(subtype),
 			description: ts.displayPartsToString(expose.getDocumentationComment(typeChecker)),
 			tags: getJsDocTags(expose),
-			get declarations() {
-				return declarations ??= getDeclarations(expose.declarations ?? []);
-			},
 			get schema() {
 				return schema ??= resolveSchema(subtype);
 			},
-			rawType: rawType ? subtype : undefined,
+			getDeclarations() {
+				return declarations ??= getDeclarations(expose.declarations ?? []);
+			},
 			getTypeObject() {
 				return subtype;
 			},
@@ -194,7 +183,7 @@ export function createSchemaResolvers(
 
 		if (call.parameters.length >= 2) {
 			symbol = call.parameters[1]!;
-			subtype = typeChecker.getTypeOfSymbolAtLocation(symbol, symbolNode);
+			subtype = typeChecker.getTypeOfSymbol(symbol);
 			if ((call.parameters[1]!.valueDeclaration as any)?.dotDotDotToken) {
 				subtypeStr = getFullyQualifiedName(subtype);
 				getSchema = () => typeChecker.getTypeArguments(subtype! as ts.TypeReference).map(resolveSchema);
@@ -202,14 +191,14 @@ export function createSchemaResolvers(
 			else {
 				subtypeStr = '[';
 				for (let i = 1; i < call.parameters.length; i++) {
-					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i]!, symbolNode))
+					subtypeStr += getFullyQualifiedName(typeChecker.getTypeOfSymbol(call.parameters[i]!))
 						+ ', ';
 				}
 				subtypeStr = subtypeStr.slice(0, -2) + ']';
 				getSchema = () => {
 					const result: PropertyMetaSchema[] = [];
 					for (let i = 1; i < call.parameters.length; i++) {
-						result.push(resolveSchema(typeChecker.getTypeOfSymbolAtLocation(call.parameters[i]!, symbolNode)));
+						result.push(resolveSchema(typeChecker.getTypeOfSymbol(call.parameters[i]!)));
 					}
 					return result;
 				};
@@ -217,18 +206,17 @@ export function createSchemaResolvers(
 		}
 
 		return {
-			name: (typeChecker.getTypeOfSymbolAtLocation(call.parameters[0]!, symbolNode) as ts.StringLiteralType).value,
+			name: (typeChecker.getTypeOfSymbol(call.parameters[0]!) as ts.StringLiteralType).value,
 			description: ts.displayPartsToString(call.getDocumentationComment(typeChecker)),
 			tags: getJsDocTags(call),
 			type: subtypeStr,
 			signature: typeChecker.signatureToString(call),
-			get declarations() {
-				return declarations ??= call.declaration ? getDeclarations([call.declaration]) : [];
-			},
 			get schema() {
 				return schema ??= getSchema();
 			},
-			rawType: rawType ? subtype : undefined,
+			getDeclarations() {
+				return declarations ??= call.declaration ? getDeclarations([call.declaration]) : [];
+			},
 			getTypeObject() {
 				return subtype;
 			},
@@ -244,7 +232,7 @@ export function createSchemaResolvers(
 				return schema ??= signature.parameters.length
 					? typeChecker
 						.getTypeArguments(
-							typeChecker.getTypeOfSymbolAtLocation(signature.parameters[0]!, symbolNode) as ts.TypeReference,
+							typeChecker.getTypeOfSymbol(signature.parameters[0]!) as ts.TypeReference,
 						)
 						.map(resolveSchema)
 					: undefined;
@@ -312,9 +300,6 @@ export function createSchemaResolvers(
 		return str;
 	}
 	function getDeclarations(declaration: ts.Declaration[]) {
-		if (noDeclarations) {
-			return [];
-		}
 		return declaration.map(getDeclaration).filter(d => !!d);
 	}
 	function getDeclaration(declaration: ts.Declaration): Declaration | undefined {
