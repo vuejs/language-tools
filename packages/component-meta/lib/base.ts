@@ -24,6 +24,12 @@ import type {
 export * from './types';
 
 const windowsPathReg = /\\/g;
+const publicPropsInterfaces = new Set([
+	'PublicProps',
+	'VNodeProps',
+	'AllowedComponentProps',
+	'ComponentCustomProps',
+]);
 
 export function createCheckerByJsonConfigBase(
 	ts: typeof import('typescript'),
@@ -533,16 +539,10 @@ function createSchemaResolvers(
 	}
 
 	function isPublicProp(declaration: ts.Declaration): boolean {
-		const publicInterfaces = new Set([
-			'PublicProps',
-			'VNodeProps',
-			'AllowedComponentProps',
-			'ComponentCustomProps',
-		]);
 		let parent = declaration.parent;
 		while (parent) {
 			if (ts.isInterfaceDeclaration(parent) || ts.isTypeAliasDeclaration(parent)) {
-				if (publicInterfaces.has(parent.name.text)) {
+				if (publicPropsInterfaces.has(parent.name.text)) {
 					return true;
 				}
 				return false;
