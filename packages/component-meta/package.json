@@ -15,8 +15,7 @@
 	"dependencies": {
 		"@volar/typescript": "2.4.27",
 		"@vue/language-core": "workspace:*",
-		"path-browserify": "^1.0.1",
-		"vue-component-type-helpers": "workspace:*"
+		"path-browserify": "^1.0.1"
 	},
 	"peerDependencies": {
 		"typescript": "*"
