@@ -100,7 +100,7 @@ export function getComponentMeta(
 
 		for (const prop of result) {
 			if (prop.name.match(/^onVnode[A-Z]/)) {
-				prop.name = prop.name.replace('onVnode', 'onVue');
+				prop.name = 'onVue:' + prop.name['onVnode'.length]?.toLowerCase() + prop.name.slice('onVnode'.length + 1);
 			}
 			prop.default ??= defaults?.get(prop.name);
 		}
