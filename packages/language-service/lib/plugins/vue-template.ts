@@ -529,67 +529,93 @@ export function create(
 							if (offset >= tagStart && offset <= tagEnd) {
 								const meta = await getComponentMeta(info.root.fileName, element.tag);
 								const props = meta?.props.filter(p => !p.global);
-								let markdown = '|  |  |  |  |\n| --- | --- | --- | --- |\n';
-								let hasMeta = false;
+								let tableContents = '';
 
 								if (props?.length) {
-									hasMeta = true;
-									markdown += '| **Prop** | **Type** | **Description** | **Default** |\n';
+									tableContents += `<tr>
+										<th>v-bind</th>
+										<th>Type</th>
+										<th></th>
+										<th>Default</th>
+									</tr>\n`;
 									for (const p of props) {
-										let name = '*' + p.name + '*';
+										let name = `<b>${p.name}</b>`;
 										if (p.tags.some(tag => tag.name === 'deprecated')) {
-											name = '~~' + name + '~~';
+											name = `<del>${name}</del>`;
 										}
-										if (p.required) {
-											name += ` <sup>required</sup>`;
-										}
-										let _default = '';
-										if (p.default) {
-											_default = '`' + p.default + '`';
-										}
-										markdown += `| ${name} | \`${p.type.replace(/\|/g, '\\|')}\` | ${
-											p.description ?? ''
-										} | ${_default} |\n`;
+										tableContents += `<tr>`
+										tableContents += `<td>${name}${p.required ? '<sup><code>required</code></sup>' : ''}</td>`;
+										tableContents += `<td><code>${p.type}</code></td>`;
+										tableContents += `<td>${p.description ?? ''}</td>`;
+										tableContents += `<td>${p.default ? `<code>${p.default}</code>` : ''}</td>`;
+										tableContents += `</tr>\n`;
 									}
 								}
 
 								if (meta?.events?.length) {
-									hasMeta = true;
-									markdown += `| **Event** | **Params** | **Description** |  |\n`;
+									tableContents += `<tr>
+										<th>v-on</th>
+										<th>Params</th>
+										<th></th>
+										<th></th>
+									</tr>\n`;
 									for (const e of meta.events) {
-										let name = '*' + e.name + '*';
+										let name = `<b>${e.name}</b>`;
 										if (e.tags.some(tag => tag.name === 'deprecated')) {
-											name = '~~' + name + '~~';
+											name = `<del>${name}</del>`;
 										}
-										markdown += `| ${name} | \`${e.type}\` | ${e.description ?? ''} |  |\n`;
+										tableContents += `<tr>`
+										tableContents += `<td>${name}</td>`;
+										tableContents += `<td><code>${e.type}</code></td>`;
+										tableContents += `<td>${e.description ?? ''}</td>`;
+										tableContents += `<td></td>`;
+										tableContents += `</tr>\n`;
 									}
 								}
 
 								if (meta?.slots?.length) {
-									hasMeta = true;
-									markdown += `| **Slot** | **Params** | **Description** |  |  |\n`;
+									tableContents += `<tr>
+										<th>v-slot</th>
+										<th>Params</th>
+										<th></th>
+										<th></th>
+									</tr>\n`;
 									for (const s of meta.slots) {
-										let name = '*' + s.name + '*';
+										let name = `<b>${s.name}</b>`;
 										if (s.tags.some(tag => tag.name === 'deprecated')) {
-											name = '~~' + name + '~~';
+											name = `<del>${name}</del>`;
 										}
-										markdown += `| ${name} | \`${s.type}\` | ${s.description ?? ''} |  |  |\n`;
+										tableContents += `<tr>`
+										tableContents += `<td>${name}</td>`;
+										tableContents += `<td><code>${s.type}</code></td>`;
+										tableContents += `<td>${s.description ?? ''}</td>`;
+										tableContents += `<td></td>`;
+										tableContents += `</tr>\n`;
 									}
 								}
 
 								if (meta?.exposed.length) {
-									hasMeta = true;
-									markdown += `| **Exposed** | **Type** | **Description** |  |  |\n`;
+									tableContents += `<tr>
+										<th>Exposed</th>
+										<th>Type</th>
+										<th></th>
+										<th></th>
+									</tr>\n`;
 									for (const e of meta.exposed) {
-										let name = '*' + e.name + '*';
+										let name = `<b>${e.name}</b>`;
 										if (e.tags.some(tag => tag.name === 'deprecated')) {
-											name = '~~' + name + '~~';
+											name = `<del>${name}</del>`;
 										}
-										markdown += `| ${name} | \`${e.type}\` | ${e.description ?? ''} |  |  |\n`;
+										tableContents += `<tr>`
+										tableContents += `<td>${name}</td>`;
+										tableContents += `<td><code>${e.type}</code></td>`;
+										tableContents += `<td>${e.description ?? ''}</td>`;
+										tableContents += `<td></td>`;
+										tableContents += `</tr>\n`;
 									}
 								}
 
-								if (hasMeta) {
+								if (tableContents) {
 									htmlHover ??= {
 										range: {
 											start: document.positionAt(tagStart),
@@ -599,7 +625,7 @@ export function create(
 									};
 									htmlHover.contents = {
 										kind: 'markdown',
-										value: markdown,
+										value: `<table>\n${tableContents}\n</table>`,
 									};
 								}
 							}

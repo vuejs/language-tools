@@ -9,6 +9,7 @@ import { hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import * as html from 'vscode-html-languageservice';
 import { AttrNameCasing, getAttrNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
+import type { PropertyMeta } from '../../../component-meta';
 
 export function create(
 	{ getComponentNames, getElementNames, getComponentMeta }: import('@vue/typescript-plugin/lib/requests').Requests,
@@ -41,7 +42,7 @@ export function create(
 					const result: InlayHint[] = [];
 					const attrNameCasing = await getAttrNameCasing(context, info.script.id);
 					const components = await getComponentNames(info.root.fileName) ?? [];
-					const componentProps = new Map<string, string[]>();
+					const componentProps = new Map<string, PropertyMeta[]>();
 
 					intrinsicElementNames ??= new Set(
 						await getElementNames(info.root.fileName) ?? [],
@@ -49,7 +50,7 @@ export function create(
 
 					let token: html.TokenType;
 					let current: {
-						unburnedRequiredProps: string[];
+						unburnedRequiredProps: PropertyMeta[];
 						labelOffset: number;
 					} | undefined;
 
@@ -78,8 +79,7 @@ export function create(
 								componentProps.set(
 									checkTag,
 									((await getComponentMeta(info.root.fileName, checkTag))?.props ?? [])
-										.filter(prop => prop.required)
-										.map(prop => prop.name),
+										.filter(prop => prop.required),
 								);
 							}
 
@@ -120,9 +120,9 @@ export function create(
 										attrText = 'on-' + hyphenateAttr(attrText.slice('@'.length));
 									}
 
-									current.unburnedRequiredProps = current.unburnedRequiredProps.filter(propName => {
-										return attrText !== propName
-											&& attrText !== hyphenateAttr(propName);
+									current.unburnedRequiredProps = current.unburnedRequiredProps.filter(prop => {
+										return attrText !== prop.name
+											&& attrText !== hyphenateAttr(prop.name);
 									});
 								}
 							}
@@ -131,7 +131,7 @@ export function create(
 							if (current) {
 								for (const requiredProp of current.unburnedRequiredProps) {
 									result.push({
-										label: `${requiredProp}!`,
+										label: `${requiredProp.name}!`,
 										paddingLeft: true,
 										position: document.positionAt(current.labelOffset),
 										kind: 2 satisfies typeof InlayHintKind.Parameter,
@@ -141,8 +141,8 @@ export function create(
 												end: document.positionAt(current.labelOffset),
 											},
 											newText: ` :${
-												attrNameCasing === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp) : requiredProp
-											}=`,
+												attrNameCasing === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp.name) : requiredProp.name
+											}="${requiredProp.default?.replace(/"/g, "'") ?? ''}"`,
 										}],
 									});
 								}
