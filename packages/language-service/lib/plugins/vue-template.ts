@@ -533,9 +533,8 @@ export function create(
 
 								if (props?.length) {
 									tableContents += `<tr>
-										<th>v-bind</th>
-										<th>Type</th>
-										<th></th>
+										<th>Prop</th>
+										<th>Description</th>
 										<th>Default</th>
 									</tr>\n`;
 									for (const p of props) {
@@ -544,9 +543,8 @@ export function create(
 											name = `<del>${name}</del>`;
 										}
 										tableContents += `<tr>
-											<td>${name}${p.required ? '<sup><code>required</code></sup>' : ''}</td>
-											<td><code>${p.type}</code></td>
-											<td>${p.description ?? ''}</td>
+											<td>${name}${p.required ? ' <sup><em>required</em></sup>' : ''}</td>
+											<td>${p.description ? `<p>${p.description}</p>` : ''}<code>${p.type}</code></td>
 											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
 										</tr>\n`;
 									}
@@ -554,10 +552,8 @@ export function create(
 
 								if (meta?.events?.length) {
 									tableContents += `<tr>
-										<th>v-on</th>
-										<th>Params</th>
-										<th></th>
-										<th></th>
+										<th>Event</th>
+										<th colspan="2">Description</th>
 									</tr>\n`;
 									for (const e of meta.events) {
 										let name = `<b>${e.name}</b>`;
@@ -566,8 +562,7 @@ export function create(
 										}
 										tableContents += `<tr>
 											<td>${name}</td>
-											<td><code>${e.type}</code></td>
-											<td>${e.description ?? ''}</td>
+											<td>${e.description ? `<p>${e.description}</p>` : ''}<code>${e.type}</code></td>
 											<td></td>
 										</tr>\n`;
 									}
@@ -575,10 +570,8 @@ export function create(
 
 								if (meta?.slots?.length) {
 									tableContents += `<tr>
-										<th>v-slot</th>
-										<th>Params</th>
-										<th></th>
-										<th></th>
+										<th>Slot</th>
+										<th colspan="2">Description</th>
 									</tr>\n`;
 									for (const s of meta.slots) {
 										let name = `<b>${s.name}</b>`;
@@ -587,8 +580,7 @@ export function create(
 										}
 										tableContents += `<tr>
 											<td>${name}</td>
-											<td><code>${s.type}</code></td>
-											<td>${s.description ?? ''}</td>
+											<td>${s.description ? `<p>${s.description}</p>` : ''}<code>${s.type}</code></td>
 											<td></td>
 										</tr>\n`;
 									}
@@ -597,9 +589,7 @@ export function create(
 								if (meta?.exposed.length) {
 									tableContents += `<tr>
 										<th>Exposed</th>
-										<th>Type</th>
-										<th></th>
-										<th></th>
+										<th colspan="2">Description</th>
 									</tr>\n`;
 									for (const e of meta.exposed) {
 										let name = `<b>${e.name}</b>`;
@@ -608,26 +598,25 @@ export function create(
 										}
 										tableContents += `<tr>
 											<td>${name}</td>
-											<td><code>${e.type}</code></td>
-											<td>${e.description ?? ''}</td>
+											<td>${e.description ? `<p>${e.description}</p>` : ''}<code>${e.type}</code></td>
 											<td></td>
 										</tr>\n`;
 									}
 								}
 
-								if (tableContents) {
-									htmlHover ??= {
-										range: {
-											start: document.positionAt(tagStart),
-											end: document.positionAt(tagEnd),
-										},
-										contents: '',
-									};
-									htmlHover.contents = {
-										kind: 'markdown',
-										value: `<table>\n${tableContents}\n</table>`,
-									};
-								}
+								htmlHover ??= {
+									range: {
+										start: document.positionAt(tagStart),
+										end: document.positionAt(tagEnd),
+									},
+									contents: '',
+								};
+								htmlHover.contents = {
+									kind: 'markdown',
+									value: tableContents
+										? `<table>\n${tableContents}\n</table>`
+										: `No info available.`,
+								};
 							}
 						}
 					}
