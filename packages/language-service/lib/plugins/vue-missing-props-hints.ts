@@ -131,7 +131,7 @@ export function create(
 							if (current) {
 								for (const requiredProp of current.unburnedRequiredProps) {
 									result.push({
-										label: `${requiredProp.name}!`,
+										label: requiredProp.name,
 										paddingLeft: true,
 										position: document.positionAt(current.labelOffset),
 										kind: 2 satisfies typeof InlayHintKind.Parameter,
