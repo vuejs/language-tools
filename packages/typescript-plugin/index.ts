@@ -40,7 +40,9 @@ export = createLanguageServicePlugin(
 		const getScriptSnapshot = host.getScriptSnapshot?.bind(host);
 		if (getScriptSnapshot) {
 			host.getScriptSnapshot = fileName => {
-				if (!vueOptions.vitePressExtensions.some(ext => fileName.toLowerCase().endsWith(ext.toLowerCase()))) {
+				const shouldIgnoreMarkdown = fileName.toLowerCase().endsWith('.md')
+					&& !vueOptions.vitePressExtensions.some(ext => fileName.toLowerCase().endsWith(ext.toLowerCase()));
+				if (shouldIgnoreMarkdown) {
 					return;
 				}
 				return getScriptSnapshot(fileName);
