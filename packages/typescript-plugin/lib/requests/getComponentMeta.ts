@@ -19,7 +19,7 @@ export function getComponentMeta(
 	}
 	return _get(
 		ts,
-		program,
+		checker,
 		ts.createPrinter(),
 		virtualCode.vueCompilerOptions,
 		language,

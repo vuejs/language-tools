@@ -93,10 +93,11 @@ export function createCheckerBase(
 			if (!componentNode) {
 				throw new Error(`Export '${exportName}' not found in '${sourceFile.fileName}'.`);
 			}
-			const componentType = program.getTypeChecker().getTypeAtLocation(componentNode);
+			const checker = program.getTypeChecker();
+			const componentType = checker.getTypeAtLocation(componentNode);
 			return getComponentMeta(
 				ts,
-				program,
+				checker,
 				printer,
 				vueOptions,
 				language,

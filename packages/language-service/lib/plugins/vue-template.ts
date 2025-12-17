@@ -110,16 +110,7 @@ let modelData: html.HTMLDataV1 | undefined;
 export function create(
 	ts: typeof import('typescript'),
 	languageId: 'html' | 'jade',
-	{
-		getComponentNames,
-		getComponentMeta,
-		getComponentDirectives,
-		getComponentSlots,
-		getElementAttrs,
-		resolveModuleName,
-		getAutoImportSuggestions,
-		resolveAutoImportCompletionEntry,
-	}: import('@vue/typescript-plugin/lib/requests').Requests,
+	tsserver: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
 	let customData: html.IHTMLDataProvider[] = [];
 	let extraCustomData: html.IHTMLDataProvider[] = [];
@@ -152,7 +143,7 @@ export function create(
 				const map = modulePathCache;
 				if (!map.has(ref)) {
 					const fileName = baseUri.fsPath.replace(/\\/g, '/');
-					const promise = resolveModuleName(fileName, ref);
+					const promise = tsserver.resolveModuleName(fileName, ref);
 					map.set(ref, promise);
 					if (promise instanceof Promise) {
 						promise.then(res => map.set(ref, res));
@@ -358,7 +349,7 @@ export function create(
 							const map = context.language.maps.get(info.code, info.script);
 							let spliced = false;
 							for (const [sourceOffset] of map.toSourceLocation(offset)) {
-								const autoImport = await getAutoImportSuggestions(
+								const autoImport = await tsserver.getAutoImportSuggestions(
 									info.root.fileName,
 									sourceOffset,
 								);
@@ -462,7 +453,7 @@ export function create(
 						if (!sourceScript) {
 							return item;
 						}
-						const details = await resolveAutoImportCompletionEntry(data);
+						const details = await tsserver.resolveAutoImportCompletionEntry(data);
 						if (details) {
 							const virtualCode = sourceScript.generated!.embeddedCodes.get(decoded[1])!;
 							const sourceDocument = context.documents.get(
@@ -527,7 +518,7 @@ export function create(
 							const offset = document.offsetAt(position);
 
 							if (offset >= tagStart && offset <= tagEnd) {
-								const meta = await getComponentMeta(info.root.fileName, element.tag);
+								const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
 								const props = meta?.props.filter(p => !p.global);
 								let tableContents = '';
 
@@ -885,7 +876,7 @@ export function create(
 						values = [];
 						tasks.push((async () => {
 							if (tag === 'slot' && attr === 'name') {
-								values = await getComponentSlots(root.fileName) ?? [];
+								values = await tsserver.getComponentSlots(root.fileName) ?? [];
 							}
 							version++;
 						})());
@@ -900,8 +891,8 @@ export function create(
 						tagDataMap.set(tag, data);
 						tasks.push((async () => {
 							tagDataMap.set(tag, {
-								attrs: await getElementAttrs(root.fileName, tag) ?? [],
-								meta: await getComponentMeta(root.fileName, tag),
+								attrs: await tsserver.getElementAttrs(root.fileName, tag) ?? [],
+								meta: await tsserver.getComponentMeta(root.fileName, tag),
 							});
 							version++;
 						})());
@@ -913,7 +904,7 @@ export function create(
 					if (!directives) {
 						directives = [];
 						tasks.push((async () => {
-							directives = await getComponentDirectives(root.fileName) ?? [];
+							directives = await tsserver.getComponentDirectives(root.fileName) ?? [];
 							version++;
 						})());
 					}
@@ -924,7 +915,7 @@ export function create(
 					if (!components) {
 						components = [];
 						tasks.push((async () => {
-							components = await getComponentNames(root.fileName) ?? [];
+							components = await tsserver.getComponentNames(root.fileName) ?? [];
 							components = components.filter(name => !builtInComponents.has(name));
 							version++;
 						})());

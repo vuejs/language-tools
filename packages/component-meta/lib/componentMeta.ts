@@ -13,7 +13,7 @@ import type { ComponentMeta, MetaCheckerSchemaOptions, PropertyMeta } from './ty
 
 export function getComponentMeta(
 	ts: typeof import('typescript'),
-	program: ts.Program,
+	typeChecker: ts.TypeChecker,
 	printer: ts.Printer,
 	vueOptions: core.VueCompilerOptions,
 	language: core.Language<string>,
@@ -21,7 +21,6 @@ export function getComponentMeta(
 	componentType: ts.Type,
 	options: MetaCheckerSchemaOptions,
 ): ComponentMeta {
-	const typeChecker = program.getTypeChecker();
 	const componentSymbol = typeChecker.getSymbolAtLocation(componentNode);
 
 	let componentFile = componentNode.getSourceFile();
