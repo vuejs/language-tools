@@ -532,11 +532,7 @@ export function create(
 								let tableContents = '';
 
 								if (props?.length) {
-									tableContents += `<tr>
-										<th>Prop</th>
-										<th>Description</th>
-										<th>Default</th>
-									</tr>\n`;
+									tableContents += `<tr><th>Prop</th><th>Description</th><th>Default</th></tr>\n`;
 									for (const p of props) {
 										tableContents += `<tr>
 											<td>${printName(p)}</td>
@@ -547,10 +543,7 @@ export function create(
 								}
 
 								if (meta?.events?.length) {
-									tableContents += `<tr>
-										<th>Event</th>
-										<th colspan="2">Description</th>
-									</tr>\n`;
+									tableContents += `<tr><th>Event</th><th colspan="2">Description</th></tr>\n`;
 									for (const e of meta.events) {
 										tableContents += `<tr>
 											<td>${printName(e)}</td>
@@ -561,10 +554,7 @@ export function create(
 								}
 
 								if (meta?.slots?.length) {
-									tableContents += `<tr>
-										<th>Slot</th>
-										<th colspan="2">Description</th>
-									</tr>\n`;
+									tableContents += `<tr><th>Slot</th><th colspan="2">Description</th></tr>\n`;
 									for (const s of meta.slots) {
 										tableContents += `<tr>
 											<td>${printName(s)}</td>
@@ -575,10 +565,7 @@ export function create(
 								}
 
 								if (meta?.exposed.length) {
-									tableContents += `<tr>
-										<th>Exposed</th>
-										<th colspan="2">Description</th>
-									</tr>\n`;
+									tableContents += `<tr><th>Exposed</th><th colspan="2">Description</th></tr>\n`;
 									for (const e of meta.exposed) {
 										tableContents += `<tr>
 											<td>${printName(e)}</td>
@@ -606,6 +593,26 @@ export function create(
 					}
 
 					return htmlHover;
+
+					function printName(meta: { name: string; tags: { name: string }[]; required?: boolean }) {
+						let name = `<b>${meta.name}</b>`;
+						if (meta.tags.some(tag => tag.name === 'deprecated')) {
+							name = `<del>${name}</del>`;
+						}
+						if (meta.required) {
+							name += ' <sup><em>required</em></sup>';
+						}
+						return name;
+					}
+
+					function printDescription(meta: { description?: string; type: string }) {
+						let desc = `<code>${meta.type}</code>`;
+						if (meta.description) {
+							desc = `${meta.description}<br>${desc}`;
+							desc = `<p>${desc}</p>`;
+						}
+						return desc;
+					}
 
 					function hasContents(contents: html.MarkupContent | html.MarkedString | html.MarkedString[]) {
 						if (typeof contents === 'string') {
@@ -1004,26 +1011,6 @@ export function create(
 		extraCustomData = extraData;
 		onDidChangeCustomDataListeners.forEach(l => l());
 	}
-}
-
-function printName(meta: { name: string; tags: { name: string }[]; required?: boolean }) {
-	let name = `<b>${meta.name}</b>`;
-	if (meta.tags.some(tag => tag.name === 'deprecated')) {
-		name = `<del>${name}</del>`;
-	}
-	if (meta.required) {
-		name += ' <sup><em>required</em></sup>';
-	}
-	return name;
-}
-
-function printDescription(meta: { description?: string; type: string }) {
-	let desc = `<code>${meta.type}</code>`;
-	if (meta.description) {
-		desc = `${meta.description}<br>${desc}`;
-		desc = `<p>${desc}</p>`;
-	}
-	return desc;
 }
 
 function getReplacement(list: html.CompletionList, doc: TextDocument) {
