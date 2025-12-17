@@ -47,11 +47,6 @@ const specialProps = new Set([
 	'style',
 ]);
 
-for (const key of [...specialProps]) {
-	specialProps.add(':' + key);
-	specialProps.add('v-bind:' + key);
-}
-
 const builtInComponents = new Set([
 	'Transition',
 	'TransitionGroup',
@@ -59,6 +54,9 @@ const builtInComponents = new Set([
 	'Suspense',
 	'Teleport',
 ]);
+
+// Control flow directives
+const CONTROL_FLOW_DIRECTIVES = new Set(['v-if', 'v-else-if', 'v-else', 'v-for']);
 
 // Sort text priority tokens
 const SORT_TOKEN = {
@@ -91,9 +89,6 @@ const V_ON_SHORTHAND = '@';
 const V_BIND_SHORTHAND = ':';
 const DIRECTIVE_V_FOR_NAME = 'v-for';
 
-// Control flow directives
-const CONTROL_FLOW_DIRECTIVES = ['v-if', 'v-else-if', 'v-else', 'v-for'] as const;
-
 // Templates
 const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 
@@ -102,11 +97,6 @@ type CompletionTarget = 'tag' | 'attribute' | 'value';
 interface TagInfo {
 	attrs: string[];
 	meta: ComponentMeta | undefined | null;
-}
-
-interface AttributeMetadata {
-	source: 'prop' | 'event';
-	meta?: PropertyMeta;
 }
 
 let builtInData: html.HTMLDataV1 | undefined;
@@ -308,7 +298,7 @@ export function create(
 						info: {
 							tagNameCasing,
 							components,
-							propMap,
+							labelToMeta,
 						},
 					} = await runWithVueData(
 						info.script.id,
@@ -397,43 +387,43 @@ export function create(
 					}
 
 					function transformAttribute(item: html.CompletionItem) {
-						let prop = propMap.get(item.label);
+						let propMeta = labelToMeta.get(item.label);
 
-						if (prop) {
-							if (prop.meta?.description) {
+						if (propMeta) {
+							if (propMeta.description) {
 								item.documentation = {
 									kind: 'markdown',
-									value: prop.meta.description,
+									value: propMeta.description,
 								};
 							}
-							if (prop.meta?.tags.some(tag => tag.name === 'deprecated')) {
+							if (propMeta.tags.some(tag => tag.name === 'deprecated')) {
 								item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 							}
 						}
 						else {
-							const name = stripDirectivePrefix(item.label);
-							if (specialProps.has(name)) {
-								prop = { source: 'prop' };
+							const originalName = stripDirectivePrefix(item.label);
+							if (specialProps.has(originalName)) {
+								item.kind = 5 satisfies typeof CompletionItemKind.Field;
 							}
 						}
 
-						// Set item kind
-						if (prop) {
-							if (prop.source === 'prop' && prop.meta) {
-								item.kind = 5 satisfies typeof CompletionItemKind.Field;
-							}
-							else if (prop.source === 'event' || prop.meta?.name.match(EVENT_PROP_REGEX)) {
-								item.kind = 23 satisfies typeof CompletionItemKind.Event;
-							}
+						if (
+							propMeta?.name.match(EVENT_PROP_REGEX) || item.label.startsWith(DIRECTIVE_V_ON)
+							|| item.label.startsWith(V_ON_SHORTHAND)
+						) {
+							item.kind = 23 satisfies typeof CompletionItemKind.Event;
 						}
-						else if (CONTROL_FLOW_DIRECTIVES.includes(item.label as any)) {
+						else if (propMeta) {
+							item.kind = 5 satisfies typeof CompletionItemKind.Field;
+						}
+						else if (CONTROL_FLOW_DIRECTIVES.has(item.label)) {
 							item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
 						}
 						else if (item.label.startsWith('v-')) {
 							item.kind = 3 satisfies typeof CompletionItemKind.Function;
 						}
 
-						item.sortText = buildAttributeSortText(item.label, prop);
+						item.sortText = buildAttributeSortText(item.label, propMeta);
 
 						if (item.label === DIRECTIVE_V_FOR_NAME) {
 							item.textEdit!.newText = item.label + V_FOR_SNIPPET;
@@ -535,34 +525,31 @@ export function create(
 								}
 
 								if (meta?.events?.length) {
-									tableContents += `<tr><th>Event</th><th colspan="2">Description</th></tr>\n`;
+									tableContents += `<tr><th>Event</th><th>Description</th><th></th></tr>\n`;
 									for (const e of meta.events) {
 										tableContents += `<tr>
 											<td>${printName(e)}</td>
-											<td>${printDescription(e)}</td>
-											<td></td>
+											<td colspan="2">${printDescription(e)}</td>
 										</tr>\n`;
 									}
 								}
 
 								if (meta?.slots?.length) {
-									tableContents += `<tr><th>Slot</th><th colspan="2">Description</th></tr>\n`;
+									tableContents += `<tr><th>Slot</th><th>Description</th><th></th></tr>\n`;
 									for (const s of meta.slots) {
 										tableContents += `<tr>
 											<td>${printName(s)}</td>
-											<td>${printDescription(s)}</td>
-											<td></td>
+											<td colspan="2">${printDescription(s)}</td>
 										</tr>\n`;
 									}
 								}
 
 								if (meta?.exposed.length) {
-									tableContents += `<tr><th>Exposed</th><th colspan="2">Description</th></tr>\n`;
+									tableContents += `<tr><th>Exposed</th><th>Description</th><th></th></tr>\n`;
 									for (const e of meta.exposed) {
 										tableContents += `<tr>
 											<td>${printName(e)}</td>
-											<td>${printDescription(e)}</td>
-											<td></td>
+											<td colspan="2">${printDescription(e)}</td>
 										</tr>\n`;
 									}
 								}
@@ -678,7 +665,7 @@ export function create(
 
 				const tasks: Promise<void>[] = [];
 				const tagDataMap = new Map<string, TagInfo>();
-				const propMap = new Map<string, AttributeMetadata>();
+				const labelToMeta = new Map<string, PropertyMeta>();
 
 				updateExtraCustomData([
 					{
@@ -748,7 +735,6 @@ export function create(
 							const directives = getDirectives();
 							const { attrs, meta } = getTagData(tag);
 							const attributes: html.IAttributeData[] = [];
-							const models: string[] = [];
 
 							for (
 								const [propName, propMeta] of [
@@ -767,14 +753,13 @@ export function create(
 
 									for (const name of [DIRECTIVE_V_ON + eventName, V_ON_SHORTHAND + eventName]) {
 										attributes.push({ name });
-										propMap.set(name, {
-											source: 'event',
-											meta: propMeta,
-										});
+										if (propMeta) {
+											labelToMeta.set(name, propMeta);
+										}
 									}
 								}
 								else {
-									const propInfo = meta?.props.find(prop => {
+									const propMeta2 = meta?.props.find(prop => {
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === hyphenatedName;
 									});
@@ -786,18 +771,16 @@ export function create(
 											name,
 											// valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
 										});
-										propMap.set(name, {
-											source: 'prop',
-											meta: propInfo,
-										});
+										if (propMeta2) {
+											labelToMeta.set(name, propMeta2);
+										}
 									}
 								}
 							}
 							for (const event of meta?.events ?? []) {
 								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
-								for (const name of [DIRECTIVE_V_ON + eventName, V_ON_SHORTHAND + eventName]) {
-									attributes.push({ name });
-									propMap.set(name, { source: 'event' });
+								for (const label of [DIRECTIVE_V_ON + eventName, V_ON_SHORTHAND + eventName]) {
+									attributes.push({ name: label });
 								}
 							}
 							for (const directive of directives) {
@@ -806,26 +789,30 @@ export function create(
 								});
 							}
 							for (
-								const prop of [
-									...meta?.props ?? [],
-									...attrs.map(attr => ({ name: attr })),
-								]
+								const [propName, propMeta] of [
+									...meta?.props.map(prop => [prop.name, prop] as const) ?? [],
+									...attrs.map(attr => [attr, undefined]),
+								] as [string, PropertyMeta | undefined][]
 							) {
-								if (prop.name.startsWith(UPDATE_PROP_PREFIX)) {
-									models.push(prop.name.slice(UPDATE_PROP_PREFIX.length));
+								if (propName.startsWith(UPDATE_PROP_PREFIX)) {
+									const model = propName.slice(UPDATE_PROP_PREFIX.length);
+									const label = DIRECTIVE_V_MODEL
+										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
+									attributes.push({ name: label });
+									if (propMeta) {
+										labelToMeta.set(label, propMeta);
+										if (model === MODEL_VALUE_PROP) {
+											labelToMeta.set('v-model', propMeta);
+										}
+									}
 								}
 							}
 							for (const event of meta?.events ?? []) {
 								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
-									models.push(event.name.slice(UPDATE_EVENT_PREFIX.length));
-								}
-							}
-							for (const model of models) {
-								const name = attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model);
-								attributes.push({ name: DIRECTIVE_V_MODEL + name });
-								propMap.set(DIRECTIVE_V_MODEL + name, { source: 'prop' });
-								if (model === MODEL_VALUE_PROP) {
-									propMap.set('v-model', { source: 'prop' });
+									const model = event.name.slice(UPDATE_EVENT_PREFIX.length);
+									const label = DIRECTIVE_V_MODEL
+										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
+									attributes.push({ name: label });
 								}
 							}
 
@@ -859,7 +846,7 @@ export function create(
 							info: {
 								tagNameCasing,
 								components,
-								propMap,
+								labelToMeta,
 							},
 						};
 					},
@@ -1046,11 +1033,11 @@ function extractModelModifiers(attributes: html.IAttributeData[] | undefined): R
 
 function buildAttributeSortText(
 	label: string,
-	prop: AttributeMetadata | undefined,
+	propMeta: PropertyMeta | undefined,
 ): string {
 	const tokens: string[] = [];
 
-	if (prop?.meta) {
+	if (propMeta) {
 		tokens.push(SORT_TOKEN.COMPONENT_PROP);
 
 		if (label.startsWith(V_BIND_SHORTHAND)) {
@@ -1072,18 +1059,19 @@ function buildAttributeSortText(
 			tokens.push(SORT_TOKEN.COMPONENT_PROP);
 		}
 
-		if (specialProps.has(label)) {
+		const originalName = stripDirectivePrefix(label);
+		if (specialProps.has(originalName)) {
 			tokens.push(SORT_TOKEN.SPECIAL_PROP);
 		}
 		else {
 			tokens.push(SORT_TOKEN.COMPONENT_PROP);
 		}
 
-		if (prop.meta.name.startsWith('onVue:')) {
+		if (propMeta.name.startsWith('onVue:')) {
 			tokens.unshift(SORT_TOKEN.VUE_EVENT);
 		}
 	}
-	else if (CONTROL_FLOW_DIRECTIVES.includes(label as any)) {
+	else if (CONTROL_FLOW_DIRECTIVES.has(label)) {
 		tokens.push(SORT_TOKEN.CONTROL_FLOW);
 	}
 	else if (label.startsWith('v-')) {
