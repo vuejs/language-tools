@@ -11,20 +11,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			);
 			const meta = checker.getComponentMeta(componentPath);
 
-			expect(meta.props.map(prop => prop.name)).toEqual([
-				'key',
-				'ref',
-				'ref_for',
-				'ref_key',
-				'onVueBeforeMount',
-				'onVueMounted',
-				'onVueBeforeUpdate',
-				'onVueUpdated',
-				'onVueBeforeUnmount',
-				'onVueUnmounted',
-				'class',
-				'style',
-			]);
+			expect(meta.props.map(prop => prop.name)).toMatchInlineSnapshot(`
+				[
+				  "key",
+				  "ref",
+				  "ref_for",
+				  "ref_key",
+				  "onVue:beforeMount",
+				  "onVue:mounted",
+				  "onVue:beforeUpdate",
+				  "onVue:updated",
+				  "onVue:beforeUnmount",
+				  "onVue:unmounted",
+				  "class",
+				  "style",
+				]
+			`);
 			expect(meta.props.filter(prop => !prop.global)).toEqual([]);
 		});
 
