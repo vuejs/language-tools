@@ -99,7 +99,6 @@ export function createCheckerBase(
 				ts,
 				checker,
 				printer,
-				vueOptions,
 				language,
 				componentNode,
 				componentType,

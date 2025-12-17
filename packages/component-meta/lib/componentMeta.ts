@@ -15,7 +15,6 @@ export function getComponentMeta(
 	ts: typeof import('typescript'),
 	typeChecker: ts.TypeChecker,
 	printer: ts.Printer,
-	vueOptions: core.VueCompilerOptions,
 	language: core.Language<string>,
 	componentNode: ts.Node,
 	componentType: ts.Type,
@@ -97,7 +96,7 @@ export function getComponentMeta(
 			})
 			.filter((prop): prop is PropertyMeta => !!prop && !eventProps.has(prop.name));
 
-		const defaults = getDefaultsFromScriptSetup(ts, printer, language, componentFile.fileName, vueOptions);
+		const defaults = getDefaultsFromScriptSetup(ts, printer, language, componentFile.fileName);
 
 		for (const prop of result) {
 			if (prop.name.match(/^onVnode[A-Z]/)) {

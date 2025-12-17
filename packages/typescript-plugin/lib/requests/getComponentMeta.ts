@@ -21,7 +21,6 @@ export function getComponentMeta(
 		ts,
 		checker,
 		ts.createPrinter(),
-		virtualCode.vueCompilerOptions,
 		language,
 		componentType.node,
 		componentType.type,
