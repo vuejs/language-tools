@@ -35,6 +35,18 @@ export = createLanguageServicePlugin(
 			vueOptions,
 			id => id,
 		);
+
+		const host = info.languageServiceHost;
+		const getScriptSnapshot = host.getScriptSnapshot?.bind(host);
+		if (getScriptSnapshot) {
+			host.getScriptSnapshot = fileName => {
+				if (!vueOptions.vitePressExtensions.some(ext => fileName.toLowerCase().endsWith(ext.toLowerCase()))) {
+					return;
+				}
+				return getScriptSnapshot(fileName);
+			};
+		}
+
 		addVueCommands();
 
 		let _language: core.Language<string> | undefined;
