@@ -538,13 +538,9 @@ export function create(
 										<th>Default</th>
 									</tr>\n`;
 									for (const p of props) {
-										let name = `<b>${p.name}</b>`;
-										if (p.tags.some(tag => tag.name === 'deprecated')) {
-											name = `<del>${name}</del>`;
-										}
 										tableContents += `<tr>
-											<td>${name}${p.required ? ' <sup><em>required</em></sup>' : ''}</td>
-											<td>${p.description ? `<p>${p.description}</p>` : ''}<code>${p.type}</code></td>
+											<td>${printName(p)}</td>
+											<td>${printDescription(p)}</td>
 											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
 										</tr>\n`;
 									}
@@ -556,13 +552,9 @@ export function create(
 										<th colspan="2">Description</th>
 									</tr>\n`;
 									for (const e of meta.events) {
-										let name = `<b>${e.name}</b>`;
-										if (e.tags.some(tag => tag.name === 'deprecated')) {
-											name = `<del>${name}</del>`;
-										}
 										tableContents += `<tr>
-											<td>${name}</td>
-											<td>${e.description ? `<p>${e.description}</p>` : ''}<code>${e.type}</code></td>
+											<td>${printName(e)}</td>
+											<td>${printDescription(e)}</td>
 											<td></td>
 										</tr>\n`;
 									}
@@ -574,13 +566,9 @@ export function create(
 										<th colspan="2">Description</th>
 									</tr>\n`;
 									for (const s of meta.slots) {
-										let name = `<b>${s.name}</b>`;
-										if (s.tags.some(tag => tag.name === 'deprecated')) {
-											name = `<del>${name}</del>`;
-										}
 										tableContents += `<tr>
-											<td>${name}</td>
-											<td>${s.description ? `<p>${s.description}</p>` : ''}<code>${s.type}</code></td>
+											<td>${printName(s)}</td>
+											<td>${printDescription(s)}</td>
 											<td></td>
 										</tr>\n`;
 									}
@@ -592,13 +580,9 @@ export function create(
 										<th colspan="2">Description</th>
 									</tr>\n`;
 									for (const e of meta.exposed) {
-										let name = `<b>${e.name}</b>`;
-										if (e.tags.some(tag => tag.name === 'deprecated')) {
-											name = `<del>${name}</del>`;
-										}
 										tableContents += `<tr>
-											<td>${name}</td>
-											<td>${e.description ? `<p>${e.description}</p>` : ''}<code>${e.type}</code></td>
+											<td>${printName(e)}</td>
+											<td>${printDescription(e)}</td>
 											<td></td>
 										</tr>\n`;
 									}
@@ -1020,6 +1004,26 @@ export function create(
 		extraCustomData = extraData;
 		onDidChangeCustomDataListeners.forEach(l => l());
 	}
+}
+
+function printName(meta: { name: string; tags: { name: string }[]; required?: boolean }) {
+	let name = `<b>${meta.name}</b>`;
+	if (meta.tags.some(tag => tag.name === 'deprecated')) {
+		name = `<del>${name}</del>`;
+	}
+	if (meta.required) {
+		name += ' <sup><em>required</em></sup>';
+	}
+	return name;
+}
+
+function printDescription(meta: { description?: string; type: string }) {
+	let desc = `<code>${meta.type}</code>`;
+	if (meta.description) {
+		desc = `${meta.description}<br>${desc}`;
+		desc = `<p>${desc}</p>`;
+	}
+	return desc;
 }
 
 function getReplacement(list: html.CompletionList, doc: TextDocument) {
