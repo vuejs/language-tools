@@ -30,7 +30,7 @@ export function getComponentMeta(
 
 	if (componentSymbol) {
 		const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
-			? typeChecker.getAliasedSymbol(componentType.symbol)
+			? typeChecker.getAliasedSymbol(componentSymbol)
 			: componentType.symbol;
 		const declaration = symbol?.valueDeclaration ?? symbol?.declarations?.[0];
 
