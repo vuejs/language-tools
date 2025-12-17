@@ -47,6 +47,11 @@ const specialProps = new Set([
 	'style',
 ]);
 
+for (const key of [...specialProps]) {
+	specialProps.add(':' + key);
+	specialProps.add('v-bind:' + key);
+}
+
 const builtInComponents = new Set([
 	'Transition',
 	'TransitionGroup',
@@ -70,9 +75,10 @@ const SORT_TOKEN = {
 	HTML_ATTR: '\u0001',
 } as const;
 
+const EVENT_PROP_REGEX = /^on[A-Z]/;
+
 // String constants
 const AUTO_IMPORT_PLACEHOLDER = 'AutoImportsPlaceholder';
-const EVENT_PROP_PREFIX = 'on-';
 const UPDATE_EVENT_PREFIX = 'update:';
 const UPDATE_PROP_PREFIX = 'onUpdate:';
 const MODEL_VALUE_PROP = 'modelValue';
@@ -99,8 +105,7 @@ interface TagInfo {
 }
 
 interface AttributeMetadata {
-	name: string;
-	kind: 'prop' | 'event';
+	source: 'prop' | 'event';
 	meta?: PropertyMeta;
 }
 
@@ -408,20 +413,16 @@ export function create(
 						else {
 							const name = stripDirectivePrefix(item.label);
 							if (specialProps.has(name)) {
-								prop = {
-									name,
-									kind: 'prop',
-								};
+								prop = { source: 'prop' };
 							}
 						}
 
 						// Set item kind
 						if (prop) {
-							// @ts-ignore
-							if (prop.kind === 'prop' && !prop.meta?.isAttribute) {
+							if (prop.source === 'prop' && prop.meta) {
 								item.kind = 5 satisfies typeof CompletionItemKind.Field;
 							}
-							else if (prop.kind === 'event' || hyphenateAttr(prop.name).startsWith(EVENT_PROP_PREFIX)) {
+							else if (prop.source === 'event' || prop.meta?.name.match(EVENT_PROP_REGEX)) {
 								item.kind = 23 satisfies typeof CompletionItemKind.Event;
 							}
 						}
@@ -750,41 +751,43 @@ export function create(
 							const models: string[] = [];
 
 							for (
-								const prop of [
-									...meta?.props ?? [],
-									// ...attrs.map<PropertyMeta>(attr => ({ name: attr, isAttribute: true })),
-								]
+								const [propName, propMeta] of [
+									...meta?.props.map(prop => [prop.name, prop] as const) ?? [],
+									...attrs.map(attr => [attr, undefined]),
+								] as [string, PropertyMeta | undefined][]
 							) {
-								const propName = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
-								const isEvent = hyphenateAttr(propName).startsWith(EVENT_PROP_PREFIX);
+								const hyphenatedName = attrNameCasing === AttrNameCasing.Camel ? propName : hyphenateAttr(propName);
+								const isEvent = !!propName.match(EVENT_PROP_REGEX);
 								if (isEvent) {
-									const eventName = attrNameCasing === AttrNameCasing.Camel
-										? propName['on'.length]!.toLowerCase() + propName.slice('onX'.length)
-										: propName.slice(EVENT_PROP_PREFIX.length);
+									let eventName = propName.slice(2);
+									eventName = eventName.charAt(0).toLowerCase() + eventName.slice(1);
+									if (attrNameCasing === AttrNameCasing.Kebab) {
+										eventName = hyphenateAttr(eventName);
+									}
 
 									for (const name of [DIRECTIVE_V_ON + eventName, V_ON_SHORTHAND + eventName]) {
 										attributes.push({ name });
 										propMap.set(name, {
-											name: propName,
-											kind: 'event',
-											meta: prop,
+											source: 'event',
+											meta: propMeta,
 										});
 									}
 								}
 								else {
 									const propInfo = meta?.props.find(prop => {
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
-										return name === propName;
+										return name === hyphenatedName;
 									});
 
-									for (const name of [propName, V_BIND_SHORTHAND + propName, DIRECTIVE_V_BIND + propName]) {
+									for (
+										const name of [hyphenatedName, V_BIND_SHORTHAND + hyphenatedName, DIRECTIVE_V_BIND + hyphenatedName]
+									) {
 										attributes.push({
 											name,
 											// valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
 										});
 										propMap.set(name, {
-											name: propName,
-											kind: 'prop',
+											source: 'prop',
 											meta: propInfo,
 										});
 									}
@@ -794,10 +797,7 @@ export function create(
 								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
 								for (const name of [DIRECTIVE_V_ON + eventName, V_ON_SHORTHAND + eventName]) {
 									attributes.push({ name });
-									propMap.set(name, {
-										name: eventName,
-										kind: 'event',
-									});
+									propMap.set(name, { source: 'event' });
 								}
 							}
 							for (const directive of directives) {
@@ -823,15 +823,9 @@ export function create(
 							for (const model of models) {
 								const name = attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model);
 								attributes.push({ name: DIRECTIVE_V_MODEL + name });
-								propMap.set(DIRECTIVE_V_MODEL + name, {
-									name,
-									kind: 'prop',
-								});
+								propMap.set(DIRECTIVE_V_MODEL + name, { source: 'prop' });
 								if (model === MODEL_VALUE_PROP) {
-									propMap.set('v-model', {
-										name,
-										kind: 'prop',
-									});
+									propMap.set('v-model', { source: 'prop' });
 								}
 							}
 
@@ -1056,39 +1050,36 @@ function buildAttributeSortText(
 ): string {
 	const tokens: string[] = [];
 
-	if (prop) {
-		// @ts-ignore
-		if (!prop.meta?.isAttribute) {
+	if (prop?.meta) {
+		tokens.push(SORT_TOKEN.COMPONENT_PROP);
+
+		if (label.startsWith(V_BIND_SHORTHAND)) {
+			tokens.push(SORT_TOKEN.COLON_PREFIX);
+		}
+		else if (label.startsWith(V_ON_SHORTHAND)) {
+			tokens.push(SORT_TOKEN.AT_PREFIX);
+		}
+		else if (label.startsWith(DIRECTIVE_V_BIND)) {
+			tokens.push(SORT_TOKEN.V_BIND_PREFIX);
+		}
+		else if (label.startsWith(DIRECTIVE_V_MODEL)) {
+			tokens.push(SORT_TOKEN.V_MODEL_PREFIX);
+		}
+		else if (label.startsWith(DIRECTIVE_V_ON)) {
+			tokens.push(SORT_TOKEN.V_ON_PREFIX);
+		}
+		else {
 			tokens.push(SORT_TOKEN.COMPONENT_PROP);
-
-			if (label.startsWith(V_BIND_SHORTHAND)) {
-				tokens.push(SORT_TOKEN.COLON_PREFIX);
-			}
-			else if (label.startsWith(V_ON_SHORTHAND)) {
-				tokens.push(SORT_TOKEN.AT_PREFIX);
-			}
-			else if (label.startsWith(DIRECTIVE_V_BIND)) {
-				tokens.push(SORT_TOKEN.V_BIND_PREFIX);
-			}
-			else if (label.startsWith(DIRECTIVE_V_MODEL)) {
-				tokens.push(SORT_TOKEN.V_MODEL_PREFIX);
-			}
-			else if (label.startsWith(DIRECTIVE_V_ON)) {
-				tokens.push(SORT_TOKEN.V_ON_PREFIX);
-			}
-			else {
-				tokens.push(SORT_TOKEN.COMPONENT_PROP);
-			}
-
-			if (specialProps.has(prop.name)) {
-				tokens.push(SORT_TOKEN.SPECIAL_PROP);
-			}
-			else {
-				tokens.push(SORT_TOKEN.COMPONENT_PROP);
-			}
 		}
 
-		if (prop.name.startsWith('onVue:')) {
+		if (specialProps.has(label)) {
+			tokens.push(SORT_TOKEN.SPECIAL_PROP);
+		}
+		else {
+			tokens.push(SORT_TOKEN.COMPONENT_PROP);
+		}
+
+		if (prop.meta.name.startsWith('onVue:')) {
 			tokens.unshift(SORT_TOKEN.VUE_EVENT);
 		}
 	}
