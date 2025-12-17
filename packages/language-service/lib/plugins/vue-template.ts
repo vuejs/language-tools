@@ -26,7 +26,7 @@ import {
 } from 'volar-service-typescript/lib/utils/lspConverters.js';
 import * as html from 'vscode-html-languageservice';
 import { URI, Utils } from 'vscode-uri';
-import { ComponentMeta, PropertyMeta } from '../../../component-meta';
+import type { ComponentMeta, PropertyMeta } from '../../../component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
@@ -547,7 +547,9 @@ export function create(
 										if (p.default) {
 											_default = '`' + p.default + '`';
 										}
-										markdown += `| ${name} | \`${p.type.replace(/\|/g, '\\|')}\` | ${p.description ?? ''} | ${_default} |\n`;
+										markdown += `| ${name} | \`${p.type.replace(/\|/g, '\\|')}\` | ${
+											p.description ?? ''
+										} | ${_default} |\n`;
 									}
 								}
 

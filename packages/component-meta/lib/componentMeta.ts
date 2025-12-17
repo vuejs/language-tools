@@ -24,10 +24,22 @@ export function getComponentMeta(
 	options: MetaCheckerSchemaOptions,
 ): ComponentMeta {
 	const typeChecker = program.getTypeChecker();
-	const {
-		node: resolvedComponentNode,
-		sourceFile: resolvedSourceFile,
-	} = resolveComponentNode(componentNode);
+	const componentSymbol = typeChecker.getSymbolAtLocation(componentNode);
+
+	let componentFile = componentNode.getSourceFile();
+
+	if (componentSymbol) {
+		const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
+			? typeChecker.getAliasedSymbol(componentType.symbol)
+			: componentType.symbol;
+		const declaration = symbol?.valueDeclaration ?? symbol?.declarations?.[0];
+
+		if (declaration) {
+			componentFile = declaration.getSourceFile();
+			componentNode = declaration;
+		}
+	}
+
 
 	let name: string | undefined;
 	let description: string | undefined;
@@ -83,14 +95,14 @@ export function getComponentMeta(
 			.map(prop => {
 				const {
 					resolveNestedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, resolvedSourceFile, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
 
 				return resolveNestedProperties(prop);
 			})
 			.filter((prop): prop is PropertyMeta => !!prop && !vnodeEventRegex.test(prop.name) && !eventProps.has(prop.name));
 
 		// Merge default props from script setup
-		const defaults = getDefaultsFromScriptSetup(ts, printer, language, resolvedSourceFile.fileName, vueOptions);
+		const defaults = getDefaultsFromScriptSetup(ts, printer, language, componentFile.fileName, vueOptions);
 
 		if (defaults?.size) {
 			for (const prop of result) {
@@ -112,7 +124,7 @@ export function getComponentMeta(
 			return calls.map(call => {
 				const {
 					resolveEventSignature,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, resolvedSourceFile, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
 
 				return resolveEventSignature(call);
 			}).filter(event => event.name);
@@ -130,7 +142,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveSlotProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, resolvedSourceFile, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
 
 				return resolveSlotProperties(prop);
 			});
@@ -158,7 +170,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveExposedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, resolvedSourceFile, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
 
 				return resolveExposedProperties(prop);
 			});
@@ -168,12 +180,12 @@ export function getComponentMeta(
 	}
 
 	function getName() {
-		let decl = resolvedComponentNode;
+		let decl = componentNode;
 
 		// const __VLS_export = ...
-		const text = resolvedSourceFile.text.slice(decl.pos, decl.end);
+		const text = componentFile.text.slice(decl.pos, decl.end);
 		if (text.includes(core.names._export)) {
-			ts.forEachChild(resolvedSourceFile, child2 => {
+			ts.forEachChild(componentFile, child2 => {
 				if (ts.isVariableStatement(child2)) {
 					for (const { name, initializer } of child2.declarationList.declarations) {
 						if (name.getText() === core.names._export && initializer) {
@@ -184,12 +196,12 @@ export function getComponentMeta(
 			});
 		}
 
-		return core.parseOptionsFromExtression(ts, decl, resolvedSourceFile)?.name?.node.text;
+		return core.parseOptionsFromExtression(ts, decl, componentFile)?.name?.node.text;
 	}
 
 	function getDescription() {
 		// Try to get JSDoc comments from the node using TypeScript API
-		const jsDocComments = ts.getJSDocCommentsAndTags(resolvedComponentNode);
+		const jsDocComments = ts.getJSDocCommentsAndTags(componentNode);
 		for (const jsDoc of jsDocComments) {
 			if (ts.isJSDoc(jsDoc) && jsDoc.comment) {
 				// Handle both string and array of comment parts
@@ -203,31 +215,10 @@ export function getComponentMeta(
 		}
 
 		// Fallback to symbol documentation
-		const symbol = typeChecker.getSymbolAtLocation(resolvedComponentNode);
+		const symbol = typeChecker.getSymbolAtLocation(componentNode);
 		if (symbol) {
 			const description = ts.displayPartsToString(symbol.getDocumentationComment(typeChecker));
 			return description || undefined;
 		}
-	}
-
-	function resolveComponentSymbol(node: ts.Node) {
-		const symbol = typeChecker.getSymbolAtLocation(node);
-		if (!symbol) {
-			return;
-		}
-		if (symbol.flags & ts.SymbolFlags.Alias) {
-			return typeChecker.getAliasedSymbol(symbol);
-		}
-		return symbol;
-	}
-
-	function resolveComponentNode(node: ts.Node) {
-		const symbol = resolveComponentSymbol(node);
-		const declaration = symbol?.valueDeclaration ?? symbol?.declarations?.[0];
-
-		return {
-			node: declaration ?? node,
-			sourceFile: declaration?.getSourceFile() ?? node.getSourceFile(),
-		};
 	}
 }

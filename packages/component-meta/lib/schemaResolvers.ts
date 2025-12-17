@@ -15,7 +15,6 @@ export function createSchemaResolvers(
 	typeChecker: ts.TypeChecker,
 	printer: ts.Printer,
 	language: core.Language<string>,
-	sourceFile: ts.SourceFile,
 	options: import('./types').MetaCheckerSchemaOptions,
 ) {
 	const visited = new Set<ts.Type>();
@@ -68,10 +67,7 @@ export function createSchemaResolvers(
 		let required = !(propSymbol.flags & ts.SymbolFlags.Optional);
 
 		for (const decl of propSymbol.declarations ?? []) {
-			if (
-				decl.getSourceFile() !== sourceFile
-				&& isPublicProp(decl)
-			) {
+			if (isPublicProp(decl)) {
 				global = true;
 			}
 			if (ts.isPropertyAssignment(decl) && ts.isObjectLiteralExpression(decl.initializer)) {
