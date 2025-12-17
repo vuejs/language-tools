@@ -19,7 +19,6 @@ export function getComponentMeta(
 	printer: ts.Printer,
 	vueOptions: core.VueCompilerOptions,
 	language: core.Language<string>,
-	sourceFile: ts.SourceFile,
 	componentNode: ts.Node,
 	componentType: ts.Type,
 	options: MetaCheckerSchemaOptions,
@@ -228,7 +227,7 @@ export function getComponentMeta(
 
 		return {
 			node: declaration ?? node,
-			sourceFile: declaration?.getSourceFile() ?? sourceFile,
+			sourceFile: declaration?.getSourceFile() ?? node.getSourceFile(),
 		};
 	}
 }
