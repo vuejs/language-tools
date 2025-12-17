@@ -16,6 +16,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				'ref',
 				'ref_for',
 				'ref_key',
+				'onVueBeforeMount',
+				'onVueMounted',
+				'onVueBeforeUpdate',
+				'onVueUpdated',
+				'onVueBeforeUnmount',
+				'onVueUnmounted',
 				'class',
 				'style',
 			]);

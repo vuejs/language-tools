@@ -11,8 +11,6 @@ import { createSchemaResolvers } from './schemaResolvers';
 import { getDefaultsFromScriptSetup } from './scriptSetup';
 import type { ComponentMeta, MetaCheckerSchemaOptions, PropertyMeta } from './types';
 
-const vnodeEventRegex = /^onVnode[A-Z]/;
-
 export function getComponentMeta(
 	ts: typeof import('typescript'),
 	program: ts.Program,
@@ -98,17 +96,15 @@ export function getComponentMeta(
 
 				return resolveNestedProperties(prop);
 			})
-			.filter((prop): prop is PropertyMeta => !!prop && !vnodeEventRegex.test(prop.name) && !eventProps.has(prop.name));
+			.filter((prop): prop is PropertyMeta => !!prop && !eventProps.has(prop.name));
 
-		// Merge default props from script setup
 		const defaults = getDefaultsFromScriptSetup(ts, printer, language, componentFile.fileName, vueOptions);
 
-		if (defaults?.size) {
-			for (const prop of result) {
-				if (defaults.has(prop.name)) {
-					prop.default = defaults.get(prop.name);
-				}
+		for (const prop of result) {
+			if (prop.name.match(/^onVnode[A-Z]/)) {
+				prop.name = prop.name.replace('onVnode', 'onVue');
 			}
+			prop.default ??= defaults?.get(prop.name);
 		}
 
 		return result;
