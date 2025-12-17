@@ -32,7 +32,7 @@
 				},
 				"vitePressExtensions": {
 					"type": "array",
-					"default": [".md"],
+					"default": [".vue.md"],
 					"markdownDescription": "Valid file extensions that should be considered as regular VitePress SFC."
 				},
 				"petiteVueExtensions": {

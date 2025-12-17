@@ -252,7 +252,7 @@ export function getDefaultCompilerOptions(
 		lib,
 		typesRoot,
 		extensions: ['.vue'],
-		vitePressExtensions: [],
+		vitePressExtensions: ['.vue.md'],
 		petiteVueExtensions: [],
 		jsxSlots: false,
 		strictCssModules: false,
