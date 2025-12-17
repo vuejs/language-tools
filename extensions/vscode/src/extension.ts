@@ -203,10 +203,7 @@ function launch(serverPath: string, tsdk: string) {
 					return edits;
 				},
 			},
-			documentSelector: [
-				...config.server.includeLanguages,
-				{ pattern: '**/*.vue.md' },
-			],
+			documentSelector: config.server.includeLanguages,
 			markdown: {
 				isTrusted: true,
 				supportHtml: true,
