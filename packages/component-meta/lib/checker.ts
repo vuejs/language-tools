@@ -100,7 +100,6 @@ export function createCheckerBase(
 				printer,
 				vueOptions,
 				language,
-				sourceFile,
 				componentNode,
 				componentType,
 				checkerOptions.schema ?? false,

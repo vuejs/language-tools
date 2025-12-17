@@ -19,12 +19,27 @@ export function getComponentMeta(
 	printer: ts.Printer,
 	vueOptions: core.VueCompilerOptions,
 	language: core.Language<string>,
-	sourceFile: ts.SourceFile,
 	componentNode: ts.Node,
 	componentType: ts.Type,
 	options: MetaCheckerSchemaOptions,
 ): ComponentMeta {
 	const typeChecker = program.getTypeChecker();
+	const componentSymbol = typeChecker.getSymbolAtLocation(componentNode);
+
+	let componentFile = componentNode.getSourceFile();
+
+	if (componentSymbol) {
+		const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
+			? typeChecker.getAliasedSymbol(componentType.symbol)
+			: componentType.symbol;
+		const declaration = symbol?.valueDeclaration ?? symbol?.declarations?.[0];
+
+		if (declaration) {
+			componentFile = declaration.getSourceFile();
+			componentNode = declaration;
+		}
+	}
+
 
 	let name: string | undefined;
 	let description: string | undefined;
@@ -80,14 +95,14 @@ export function getComponentMeta(
 			.map(prop => {
 				const {
 					resolveNestedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, sourceFile, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
 
 				return resolveNestedProperties(prop);
 			})
 			.filter((prop): prop is PropertyMeta => !!prop && !vnodeEventRegex.test(prop.name) && !eventProps.has(prop.name));
 
 		// Merge default props from script setup
-		const defaults = getDefaultsFromScriptSetup(ts, printer, language, sourceFile.fileName, vueOptions);
+		const defaults = getDefaultsFromScriptSetup(ts, printer, language, componentFile.fileName, vueOptions);
 
 		if (defaults?.size) {
 			for (const prop of result) {
@@ -109,7 +124,7 @@ export function getComponentMeta(
 			return calls.map(call => {
 				const {
 					resolveEventSignature,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, sourceFile, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
 
 				return resolveEventSignature(call);
 			}).filter(event => event.name);
@@ -127,7 +142,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveSlotProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, sourceFile, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
 
 				return resolveSlotProperties(prop);
 			});
@@ -155,7 +170,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveExposedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, sourceFile, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
 
 				return resolveExposedProperties(prop);
 			});
@@ -168,9 +183,9 @@ export function getComponentMeta(
 		let decl = componentNode;
 
 		// const __VLS_export = ...
-		const text = sourceFile.text.slice(decl.pos, decl.end);
+		const text = componentFile.text.slice(decl.pos, decl.end);
 		if (text.includes(core.names._export)) {
-			ts.forEachChild(sourceFile, child2 => {
+			ts.forEachChild(componentFile, child2 => {
 				if (ts.isVariableStatement(child2)) {
 					for (const { name, initializer } of child2.declarationList.declarations) {
 						if (name.getText() === core.names._export && initializer) {
@@ -181,7 +196,7 @@ export function getComponentMeta(
 			});
 		}
 
-		return core.parseOptionsFromExtression(ts, decl, sourceFile)?.name?.node.text;
+		return core.parseOptionsFromExtression(ts, decl, componentFile)?.name?.node.text;
 	}
 
 	function getDescription() {

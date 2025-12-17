@@ -23,7 +23,6 @@ export function getComponentMeta(
 		ts.createPrinter(),
 		virtualCode.vueCompilerOptions,
 		language,
-		sourceFile,
 		componentType.node,
 		componentType.type,
 		false,
