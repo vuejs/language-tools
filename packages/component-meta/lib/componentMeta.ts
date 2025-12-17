@@ -40,7 +40,6 @@ export function getComponentMeta(
 		}
 	}
 
-
 	let name: string | undefined;
 	let description: string | undefined;
 	let type: ReturnType<typeof getType> | undefined;

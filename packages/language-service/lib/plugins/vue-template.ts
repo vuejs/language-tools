@@ -543,12 +543,12 @@ export function create(
 										if (p.tags.some(tag => tag.name === 'deprecated')) {
 											name = `<del>${name}</del>`;
 										}
-										tableContents += `<tr>`
-										tableContents += `<td>${name}${p.required ? '<sup><code>required</code></sup>' : ''}</td>`;
-										tableContents += `<td><code>${p.type}</code></td>`;
-										tableContents += `<td>${p.description ?? ''}</td>`;
-										tableContents += `<td>${p.default ? `<code>${p.default}</code>` : ''}</td>`;
-										tableContents += `</tr>\n`;
+										tableContents += `<tr>
+											<td>${name}${p.required ? '<sup><code>required</code></sup>' : ''}</td>
+											<td><code>${p.type}</code></td>
+											<td>${p.description ?? ''}</td>
+											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
+										</tr>\n`;
 									}
 								}
 
@@ -564,12 +564,12 @@ export function create(
 										if (e.tags.some(tag => tag.name === 'deprecated')) {
 											name = `<del>${name}</del>`;
 										}
-										tableContents += `<tr>`
-										tableContents += `<td>${name}</td>`;
-										tableContents += `<td><code>${e.type}</code></td>`;
-										tableContents += `<td>${e.description ?? ''}</td>`;
-										tableContents += `<td></td>`;
-										tableContents += `</tr>\n`;
+										tableContents += `<tr>
+											<td>${name}</td>
+											<td><code>${e.type}</code></td>
+											<td>${e.description ?? ''}</td>
+											<td></td>
+										</tr>\n`;
 									}
 								}
 
@@ -585,12 +585,12 @@ export function create(
 										if (s.tags.some(tag => tag.name === 'deprecated')) {
 											name = `<del>${name}</del>`;
 										}
-										tableContents += `<tr>`
-										tableContents += `<td>${name}</td>`;
-										tableContents += `<td><code>${s.type}</code></td>`;
-										tableContents += `<td>${s.description ?? ''}</td>`;
-										tableContents += `<td></td>`;
-										tableContents += `</tr>\n`;
+										tableContents += `<tr>
+											<td>${name}</td>
+											<td><code>${s.type}</code></td>
+											<td>${s.description ?? ''}</td>
+											<td></td>
+										</tr>\n`;
 									}
 								}
 
@@ -606,12 +606,12 @@ export function create(
 										if (e.tags.some(tag => tag.name === 'deprecated')) {
 											name = `<del>${name}</del>`;
 										}
-										tableContents += `<tr>`
-										tableContents += `<td>${name}</td>`;
-										tableContents += `<td><code>${e.type}</code></td>`;
-										tableContents += `<td>${e.description ?? ''}</td>`;
-										tableContents += `<td></td>`;
-										tableContents += `</tr>\n`;
+										tableContents += `<tr>
+											<td>${name}</td>
+											<td><code>${e.type}</code></td>
+											<td>${e.description ?? ''}</td>
+											<td></td>
+										</tr>\n`;
 									}
 								}
 

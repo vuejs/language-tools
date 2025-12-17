@@ -7,9 +7,9 @@ import type {
 } from '@volar/language-service';
 import { hyphenateAttr, hyphenateTag } from '@vue/language-core';
 import * as html from 'vscode-html-languageservice';
+import type { PropertyMeta } from '../../../component-meta';
 import { AttrNameCasing, getAttrNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
-import type { PropertyMeta } from '../../../component-meta';
 
 export function create(
 	{ getComponentNames, getElementNames, getComponentMeta }: import('@vue/typescript-plugin/lib/requests').Requests,
