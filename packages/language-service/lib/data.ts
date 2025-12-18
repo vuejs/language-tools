@@ -40,29 +40,6 @@ export function loadTemplateData(lang: string) {
 
 	resolveReferences(data);
 
-	for (const attr of [...data.globalAttributes ?? []]) {
-		if (!attr.name.startsWith('v-')) {
-			data.globalAttributes?.push(
-				{ ...attr, name: `:${attr.name}` },
-				{ ...attr, name: `v-bind:${attr.name}` },
-			);
-		}
-	}
-
-	const vOn = data.globalAttributes?.find(d => d.name === 'v-on');
-	const vSlot = data.globalAttributes?.find(d => d.name === 'v-slot');
-	const vBind = data.globalAttributes?.find(d => d.name === 'v-bind');
-
-	if (vOn) {
-		data.globalAttributes?.push({ ...vOn, name: '@' });
-	}
-	if (vSlot) {
-		data.globalAttributes?.push({ ...vSlot, name: '#' });
-	}
-	if (vBind) {
-		data.globalAttributes?.push({ ...vBind, name: ':' });
-	}
-
 	return data;
 }
 
