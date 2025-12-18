@@ -734,9 +734,16 @@ export function create(
 										});
 									}
 									if (!hint || hint === 'v') {
+										const isBoolean = typeof propMeta2?.schema === 'object'
+											&& propMeta2.schema.kind === 'enum'
+											&& (
+												propMeta2.schema.schema?.includes('true')
+												|| propMeta2.schema.schema?.includes('false')
+											);
 										attributes.push({
 											name: labelName,
 											description: propMeta2 && createDescription(propMeta2),
+											valueSet: isBoolean ? 'v' : undefined,
 										});
 									}
 								}
