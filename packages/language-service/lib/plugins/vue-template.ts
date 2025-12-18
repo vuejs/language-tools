@@ -24,7 +24,7 @@ import {
 	applyCompletionEntryDetails,
 	convertCompletionInfo,
 } from 'volar-service-typescript/lib/utils/lspConverters.js';
-import type * as html from 'vscode-html-languageservice';
+import * as html from 'vscode-html-languageservice';
 import { URI } from 'vscode-uri';
 import type { ComponentMeta, PropertyMeta } from '../../../component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
@@ -52,7 +52,7 @@ const DIRECTIVE_V_FOR_NAME = 'v-for';
 const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 
 interface TagInfo {
-	attrs: string[];
+	attrs: { name: string; type: string }[];
 	meta: ComponentMeta | undefined | null;
 }
 
@@ -218,6 +218,11 @@ export function create(
 			const vBindModifiers = extractDirectiveModifiers(builtInData.globalAttributes?.find(x => x.name === 'v-bind'));
 			const vModelModifiers = extractModelModifiers(modelData.globalAttributes);
 			const transformedItems = new WeakSet<html.CompletionItem>();
+			const defaultHtmlTags = new Map<string, html.ITagData>();
+
+			for (const tag of html.getDefaultHTMLDataProvider().provideTags()) {
+				defaultHtmlTags.set(tag.name, tag);
+			}
 
 			let lastCompletionDocument: TextDocument | undefined;
 
@@ -632,11 +637,14 @@ export function create(
 							const { components, elements } = getComponentsAndElements();
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
-							const tags: html.ITagData[] = builtInData?.tags?.map(tag => ({
-								...tag,
-								name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
-							})) ?? [];
-							const builtInTags = new Set<string>([...builtInData?.tags?.map(tag => tag.name) ?? []]);
+							const tags: html.ITagData[] = [];
+
+							for (const tag of builtInData?.tags ?? []) {
+								tags.push({
+									...tag,
+									name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
+								});
+							}
 
 							for (const tag of components) {
 								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag) : tag);
@@ -654,9 +662,16 @@ export function create(
 									names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
 								}
 							}
+
+							const added = new Set<string>(tags.map(t => t.name));
 							for (const name of names) {
-								if (!builtInTags.has(name)) {
-									tags.push({ name, attributes: [] });
+								if (!added.has(name)) {
+									const defaultTag = defaultHtmlTags.get(name);
+									tags.push({
+										...defaultTag,
+										name,
+										attributes: [],
+									});
 								}
 							}
 
@@ -685,7 +700,7 @@ export function create(
 							for (
 								const [propName, propMeta] of [
 									...meta?.props.map(prop => [prop.name, prop] as const) ?? [],
-									...attrs.map(attr => [attr, undefined]),
+									...attrs.map(attr => [attr.name, undefined]),
 								] as [string, PropertyMeta | undefined][]
 							) {
 								if (propName.match(EVENT_PROP_REGEX)) {
@@ -753,7 +768,7 @@ export function create(
 							for (
 								const [propName, propMeta] of [
 									...meta?.props.map(prop => [prop.name, prop] as const) ?? [],
-									...attrs.map(attr => [attr, undefined]),
+									...attrs.map(attr => [attr.name, undefined]),
 								] as [string, PropertyMeta | undefined][]
 							) {
 								if (propName.startsWith(UPDATE_PROP_PREFIX)) {
