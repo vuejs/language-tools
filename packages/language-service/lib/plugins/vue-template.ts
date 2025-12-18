@@ -574,7 +574,7 @@ export function create(
 					return htmlHover;
 
 					function printName(meta: { name: string; tags: { name: string }[]; required?: boolean }) {
-						let name = `<b>${meta.name}</b>`;
+						let name = meta.name;
 						if (meta.tags.some(tag => tag.name === 'deprecated')) {
 							name = `<del>${name}</del>`;
 						}
