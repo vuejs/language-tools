@@ -25,27 +25,27 @@ import {
 	convertCompletionInfo,
 } from 'volar-service-typescript/lib/utils/lspConverters.js';
 import * as html from 'vscode-html-languageservice';
-import { URI, Utils } from 'vscode-uri';
+import { URI } from 'vscode-uri';
 import type { ComponentMeta, PropertyMeta } from '../../../component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
 
-const specialTags = new Set([
-	'slot',
-	'component',
-	'template',
-]);
+// const specialTags = new Set([
+// 	'slot',
+// 	'component',
+// 	'template',
+// ]);
 
-const specialProps = new Set([
-	'class',
-	'data-allow-mismatch',
-	'is',
-	'key',
-	'ref',
-	'style',
-]);
+// const specialProps = new Set([
+// 	'class',
+// 	'data-allow-mismatch',
+// 	'is',
+// 	'key',
+// 	'ref',
+// 	'style',
+// ]);
 
 const builtInComponents = new Set([
 	'Transition',
@@ -56,7 +56,7 @@ const builtInComponents = new Set([
 ]);
 
 // Control flow directives
-const CONTROL_FLOW_DIRECTIVES = new Set(['v-if', 'v-else-if', 'v-else', 'v-for']);
+// const CONTROL_FLOW_DIRECTIVES = new Set(['v-if', 'v-else-if', 'v-else', 'v-for']);
 
 // Sort text priority tokens
 const SORT_TOKEN = {
@@ -92,8 +92,6 @@ const DIRECTIVE_V_FOR_NAME = 'v-for';
 // Templates
 const V_FOR_SNIPPET = '="${1:value} in ${2:source}"';
 
-type CompletionTarget = 'tag' | 'attribute' | 'value';
-
 interface TagInfo {
 	attrs: string[];
 	meta: ComponentMeta | undefined | null;
@@ -107,8 +105,7 @@ export function create(
 	languageId: 'html' | 'jade',
 	tsserver: import('@vue/typescript-plugin/lib/requests').Requests,
 ): LanguageServicePlugin {
-	let customData: html.IHTMLDataProvider[] = [];
-	let extraCustomData: html.IHTMLDataProvider[] = [];
+	let htmlData: html.IHTMLDataProvider[] = [];
 	let modulePathCache:
 		| Map<string, Promise<string | null | undefined> | string | null | undefined>
 		| undefined;
@@ -160,10 +157,7 @@ export function create(
 			useDefaultDataProvider: false,
 			getDocumentContext,
 			getCustomData() {
-				return [
-					...customData,
-					...extraCustomData,
-				];
+				return htmlData;
 			},
 			onDidChangeCustomData,
 		})
@@ -172,14 +166,10 @@ export function create(
 			useDefaultDataProvider: false,
 			getDocumentContext,
 			getCustomData() {
-				return [
-					...customData,
-					...extraCustomData,
-				];
+				return htmlData;
 			},
 			onDidChangeCustomData,
 		});
-	const htmlDataProvider = html.getDefaultHTMLDataProvider();
 
 	return {
 		name: `vue-template (${languageId})`,
@@ -268,11 +258,8 @@ export function create(
 			// https://vuejs.org/api/built-in-directives.html#v-bind
 			const vBindModifiers = extractDirectiveModifiers(builtInData.globalAttributes?.find(x => x.name === 'v-bind'));
 			const vModelModifiers = extractModelModifiers(modelData.globalAttributes);
-
-			const disposable = context.env.onDidChangeConfiguration?.(() => initializing = undefined);
 			const transformedItems = new WeakSet<html.CompletionItem>();
 
-			let initializing: Promise<void> | undefined;
 			let lastCompletionDocument: TextDocument | undefined;
 
 			return {
@@ -280,7 +267,6 @@ export function create(
 
 				dispose() {
 					baseServiceInstance.dispose?.();
-					disposable?.dispose();
 				},
 
 				async provideCompletionItems(document, position, completionContext, token) {
@@ -292,17 +278,30 @@ export function create(
 						return;
 					}
 
+					const prevText = document.getText({ start: { line: 0, character: 0 }, end: position });
+
+					let hint: 'v' | ':' | '@' | undefined;
+					if (prevText.match(/\bv[\w.-]*$/)) {
+						hint = 'v';
+					}
+					else if (prevText.match(/[:][\w.-]*$/)) {
+						hint = ':';
+					}
+					else if (prevText.match(/[@][\w.-]*$/)) {
+						hint = '@';
+					}
+
 					const {
 						result: htmlCompletion,
-						target,
 						info: {
 							tagNameCasing,
 							components,
 							labelToMeta,
 						},
-					} = await runWithVueData(
+					} = await runWithVueDataProvider(
 						info.script.id,
 						info.root,
+						hint,
 						() =>
 							baseServiceInstance.provideCompletionItems!(
 								document,
@@ -311,22 +310,59 @@ export function create(
 								token,
 							),
 					);
+					const componentSet = new Set(components);
 
 					if (!htmlCompletion) {
 						return;
 					}
 
+					if (!hint) {
+						htmlCompletion.isIncomplete = true;
+					}
+
 					await replaceAutoImportPlaceholder(htmlCompletion, info);
 
-					switch (target) {
-						case 'tag': {
-							htmlCompletion.items.forEach(transformTag);
-							break;
-						}
-						case 'attribute': {
-							addDirectiveModifiers(htmlCompletion, document);
-							htmlCompletion.items.forEach(transformAttribute);
-							break;
+					for (const item of htmlCompletion.items) {
+						switch (item.kind) {
+							case 10 satisfies typeof CompletionItemKind.Property:
+								if (
+									componentSet.has(item.label)
+									|| componentSet.has(capitalize(camelize(item.label)))
+								) {
+									item.kind = 6 satisfies typeof CompletionItemKind.Variable;
+									item.sortText = SORT_TOKEN.COMPONENT_PROP + (item.sortText ?? item.label);
+								}
+								break;
+							case 12 satisfies typeof CompletionItemKind.Value:
+								addDirectiveModifiers(htmlCompletion, item, document);
+
+								const propMeta = labelToMeta.get(item.label);
+								// const propName = item.label.startsWith(DIRECTIVE_V_BIND)
+								// 	? item.label.slice(DIRECTIVE_V_BIND.length)
+								// 	: item.label.startsWith(V_BIND_SHORTHAND)
+								// 	? item.label.slice(V_BIND_SHORTHAND.length)
+								// 	: item.label;
+
+								if (propMeta?.tags.some(tag => tag.name === 'deprecated')) {
+									item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
+								}
+
+								if (item.label.startsWith('v-') && !item.label.includes(':')) {
+									item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
+								}
+								else if (item.label.startsWith(DIRECTIVE_V_ON) || item.label.startsWith(V_ON_SHORTHAND)) {
+									item.kind = 23 satisfies typeof CompletionItemKind.Event;
+								}
+								else if (propMeta) {
+									item.kind = 5 satisfies typeof CompletionItemKind.Field;
+								}
+
+								// item.sortText = buildAttributeSortText(item.label, propName, propMeta);
+
+								if (item.label === DIRECTIVE_V_FOR_NAME) {
+									item.textEdit!.newText = item.label + V_FOR_SNIPPET;
+								}
+								break;
 						}
 					}
 
@@ -375,58 +411,6 @@ export function create(
 							if (!spliced) {
 								htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
 							}
-						}
-					}
-
-					function transformTag(item: html.CompletionItem) {
-						const tagName = capitalize(camelize(item.label));
-						if (components?.includes(tagName)) {
-							item.kind = 6 satisfies typeof CompletionItemKind.Variable;
-							item.sortText = SORT_TOKEN.COMPONENT_PROP + (item.sortText ?? item.label);
-						}
-					}
-
-					function transformAttribute(item: html.CompletionItem) {
-						let propMeta = labelToMeta.get(item.label);
-
-						if (propMeta) {
-							if (propMeta.description) {
-								item.documentation = {
-									kind: 'markdown',
-									value: propMeta.description,
-								};
-							}
-							if (propMeta.tags.some(tag => tag.name === 'deprecated')) {
-								item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
-							}
-						}
-						else {
-							const originalName = stripDirectivePrefix(item.label);
-							if (specialProps.has(originalName)) {
-								item.kind = 5 satisfies typeof CompletionItemKind.Field;
-							}
-						}
-
-						if (
-							propMeta?.name.match(EVENT_PROP_REGEX) || item.label.startsWith(DIRECTIVE_V_ON)
-							|| item.label.startsWith(V_ON_SHORTHAND)
-						) {
-							item.kind = 23 satisfies typeof CompletionItemKind.Event;
-						}
-						else if (propMeta) {
-							item.kind = 5 satisfies typeof CompletionItemKind.Field;
-						}
-						else if (CONTROL_FLOW_DIRECTIVES.has(item.label)) {
-							item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
-						}
-						else if (item.label.startsWith('v-')) {
-							item.kind = 3 satisfies typeof CompletionItemKind.Function;
-						}
-
-						item.sortText = buildAttributeSortText(item.label, propMeta);
-
-						if (item.label === DIRECTIVE_V_FOR_NAME) {
-							item.textEdit!.newText = item.label + V_FOR_SNIPPET;
 						}
 					}
 				},
@@ -494,80 +478,82 @@ export function create(
 					}
 					let {
 						result: htmlHover,
-						target,
-					} = await runWithVueData(
+					} = await runWithVueDataProvider(
 						info.script.id,
 						info.root,
+						undefined,
 						() => baseServiceInstance.provideHover!(document, position, token),
 					);
 					const templateAst = info.root.sfc.template?.ast;
 
-					if (target === 'tag' && templateAst && (!htmlHover || !hasContents(htmlHover.contents))) {
-						for (const element of forEachElementNode(templateAst)) {
-							const tagStart = element.loc.start.offset + element.loc.source.indexOf(element.tag);
-							const tagEnd = tagStart + element.tag.length;
-							const offset = document.offsetAt(position);
+					if (!templateAst || (htmlHover && hasContents(htmlHover.contents))) {
+						return htmlHover;
+					}
 
-							if (offset >= tagStart && offset <= tagEnd) {
-								const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
-								const props = meta?.props.filter(p => !p.global);
-								let tableContents = '';
+					for (const element of forEachElementNode(templateAst)) {
+						const tagStart = element.loc.start.offset + element.loc.source.indexOf(element.tag);
+						const tagEnd = tagStart + element.tag.length;
+						const offset = document.offsetAt(position);
 
-								if (props?.length) {
-									tableContents += `<tr><th>Prop</th><th>Description</th><th>Default</th></tr>\n`;
-									for (const p of props) {
-										tableContents += `<tr>
+						if (offset >= tagStart && offset <= tagEnd) {
+							const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
+							const props = meta?.props.filter(p => !p.global);
+							let tableContents = '';
+
+							if (props?.length) {
+								tableContents += `<tr><th>Prop</th><th>Description</th><th>Default</th></tr>\n`;
+								for (const p of props) {
+									tableContents += `<tr>
 											<td>${printName(p)}</td>
 											<td>${printDescription(p)}</td>
 											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
 										</tr>\n`;
-									}
 								}
+							}
 
-								if (meta?.events?.length) {
-									tableContents += `<tr><th>Event</th><th>Description</th><th></th></tr>\n`;
-									for (const e of meta.events) {
-										tableContents += `<tr>
+							if (meta?.events?.length) {
+								tableContents += `<tr><th>Event</th><th>Description</th><th></th></tr>\n`;
+								for (const e of meta.events) {
+									tableContents += `<tr>
 											<td>${printName(e)}</td>
 											<td colspan="2">${printDescription(e)}</td>
 										</tr>\n`;
-									}
 								}
+							}
 
-								if (meta?.slots?.length) {
-									tableContents += `<tr><th>Slot</th><th>Description</th><th></th></tr>\n`;
-									for (const s of meta.slots) {
-										tableContents += `<tr>
+							if (meta?.slots?.length) {
+								tableContents += `<tr><th>Slot</th><th>Description</th><th></th></tr>\n`;
+								for (const s of meta.slots) {
+									tableContents += `<tr>
 											<td>${printName(s)}</td>
 											<td colspan="2">${printDescription(s)}</td>
 										</tr>\n`;
-									}
 								}
+							}
 
-								if (meta?.exposed.length) {
-									tableContents += `<tr><th>Exposed</th><th>Description</th><th></th></tr>\n`;
-									for (const e of meta.exposed) {
-										tableContents += `<tr>
+							if (meta?.exposed.length) {
+								tableContents += `<tr><th>Exposed</th><th>Description</th><th></th></tr>\n`;
+								for (const e of meta.exposed) {
+									tableContents += `<tr>
 											<td>${printName(e)}</td>
 											<td colspan="2">${printDescription(e)}</td>
 										</tr>\n`;
-									}
 								}
-
-								htmlHover ??= {
-									range: {
-										start: document.positionAt(tagStart),
-										end: document.positionAt(tagEnd),
-									},
-									contents: '',
-								};
-								htmlHover.contents = {
-									kind: 'markdown',
-									value: tableContents
-										? `<table>\n${tableContents}\n</table>`
-										: `No info available.`,
-								};
 							}
+
+							htmlHover ??= {
+								range: {
+									start: document.positionAt(tagStart),
+									end: document.positionAt(tagEnd),
+								},
+								contents: '',
+							};
+							htmlHover.contents = {
+								kind: 'markdown',
+								value: tableContents
+									? `<table>\n${tableContents}\n</table>`
+									: `No info available.`,
+							};
 						}
 					}
 
@@ -624,11 +610,16 @@ export function create(
 				},
 			};
 
-			async function runWithVueData<T>(sourceDocumentUri: URI, root: VueVirtualCode, fn: () => T) {
+			async function runWithVueDataProvider<T>(
+				sourceDocumentUri: URI,
+				root: VueVirtualCode,
+				hint: 'v' | ':' | '@' | undefined,
+				fn: () => T,
+			) {
 				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
 				await fn();
 
-				const { sync } = await provideHtmlData(sourceDocumentUri, root);
+				const { sync } = await provideHtmlData(sourceDocumentUri, root, hint);
 				let lastSync = await sync();
 				let result = await fn();
 				while (lastSync.version !== (lastSync = await sync()).version) {
@@ -637,28 +628,17 @@ export function create(
 				return { result, ...lastSync };
 			}
 
-			async function provideHtmlData(sourceDocumentUri: URI, root: VueVirtualCode) {
-				await (initializing ??= initialize());
-
+			async function provideHtmlData(
+				sourceDocumentUri: URI,
+				root: VueVirtualCode,
+				hint: 'v' | ':' | '@' | undefined,
+			) {
 				const [tagNameCasing, attrNameCasing] = await Promise.all([
 					getTagNameCasing(context, sourceDocumentUri),
 					getAttrNameCasing(context, sourceDocumentUri),
 				]);
 
-				for (const tag of builtInData!.tags ?? []) {
-					if (specialTags.has(tag.name)) {
-						continue;
-					}
-					if (tagNameCasing === TagNameCasing.Kebab) {
-						tag.name = hyphenateTag(tag.name);
-					}
-					else {
-						tag.name = camelize(capitalize(tag.name));
-					}
-				}
-
 				let version = 0;
-				let target: CompletionTarget;
 				let components: string[] | undefined;
 				let directives: string[] | undefined;
 				let values: string[] | undefined;
@@ -668,31 +648,6 @@ export function create(
 				const labelToMeta = new Map<string, PropertyMeta>();
 
 				updateExtraCustomData([
-					{
-						getId: () => htmlDataProvider.getId(),
-						isApplicable: () => true,
-						provideTags() {
-							target = 'tag';
-							return htmlDataProvider.provideTags()
-								.filter(tag => !specialTags.has(tag.name));
-						},
-						provideAttributes(tag) {
-							target = 'attribute';
-							const attrs = htmlDataProvider.provideAttributes(tag);
-							if (tag === 'slot') {
-								const nameAttr = attrs.find(attr => attr.name === 'name');
-								if (nameAttr) {
-									nameAttr.valueSet = 'slot';
-								}
-							}
-							return attrs;
-						},
-						provideValues(tag, attr) {
-							target = 'value';
-							return htmlDataProvider.provideValues(tag, attr);
-						},
-					},
-					html.newHTMLDataProvider('vue-template-built-in', builtInData!),
 					{
 						getId: () => 'vue-template',
 						isApplicable: () => true,
@@ -729,6 +684,15 @@ export function create(
 								tags.push({ name, attributes: [] });
 							}
 
+							for (const builtInTag of builtInData!.tags ?? []) {
+								tags.push({
+									...builtInTag,
+									name: tagNameCasing === TagNameCasing.Kebab
+										? hyphenateTag(builtInTag.name)
+										: builtInTag.name,
+								});
+							}
+
 							return tags;
 						},
 						provideAttributes: tag => {
@@ -751,11 +715,18 @@ export function create(
 										eventName = hyphenateAttr(eventName);
 									}
 
-									for (const name of [DIRECTIVE_V_ON + eventName, V_ON_SHORTHAND + eventName]) {
-										attributes.push({ name });
-										if (propMeta) {
-											labelToMeta.set(name, propMeta);
-										}
+									const label = hint === 'v'
+										? DIRECTIVE_V_ON + eventName
+										: V_ON_SHORTHAND + eventName;
+
+									attributes.push({
+										name: label,
+										description: propMeta?.description
+											? { kind: 'markdown', value: propMeta.description }
+											: undefined,
+									});
+									if (propMeta) {
+										labelToMeta.set(label, propMeta);
 									}
 								}
 								else {
@@ -764,24 +735,33 @@ export function create(
 										return name === hyphenatedName;
 									});
 
-									for (
-										const name of [hyphenatedName, V_BIND_SHORTHAND + hyphenatedName, DIRECTIVE_V_BIND + hyphenatedName]
-									) {
-										attributes.push({
-											name,
-											// valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
-										});
-										if (propMeta2) {
-											labelToMeta.set(name, propMeta2);
-										}
+									const label = hint === 'v'
+										? DIRECTIVE_V_BIND + hyphenatedName
+										: V_BIND_SHORTHAND + hyphenatedName;
+
+									attributes.push({
+										name: label,
+										description: propMeta2?.description
+											? { kind: 'markdown', value: propMeta2.description }
+											: undefined,
+										// valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
+									});
+									if (propMeta2) {
+										labelToMeta.set(label, propMeta2);
 									}
 								}
 							}
 							for (const event of meta?.events ?? []) {
 								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
-								for (const label of [DIRECTIVE_V_ON + eventName, V_ON_SHORTHAND + eventName]) {
-									attributes.push({ name: label });
-								}
+								const label = hint === 'v'
+									? DIRECTIVE_V_ON + eventName
+									: V_ON_SHORTHAND + eventName;
+								attributes.push({
+									name: label,
+									description: event.description
+										? { kind: 'markdown', value: event.description }
+										: undefined,
+								});
 							}
 							for (const directive of directives) {
 								attributes.push({
@@ -798,7 +778,12 @@ export function create(
 									const model = propName.slice(UPDATE_PROP_PREFIX.length);
 									const label = DIRECTIVE_V_MODEL
 										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
-									attributes.push({ name: label });
+									attributes.push({
+										name: label,
+										description: propMeta?.description
+											? { kind: 'markdown', value: propMeta.description }
+											: undefined,
+									});
 									if (propMeta) {
 										labelToMeta.set(label, propMeta);
 										if (model === MODEL_VALUE_PROP) {
@@ -812,7 +797,12 @@ export function create(
 									const model = event.name.slice(UPDATE_EVENT_PREFIX.length);
 									const label = DIRECTIVE_V_MODEL
 										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
-									attributes.push({ name: label });
+									attributes.push({
+										name: label,
+										description: event.description
+											? { kind: 'markdown', value: event.description }
+											: undefined,
+									});
 								}
 							}
 
@@ -842,7 +832,6 @@ export function create(
 						await Promise.all(tasks);
 						return {
 							version,
-							target,
 							info: {
 								tagNameCasing,
 								components,
@@ -905,8 +894,12 @@ export function create(
 				}
 			}
 
-			function addDirectiveModifiers(completionList: CompletionList, document: TextDocument) {
-				const replacement = getReplacement(completionList, document);
+			function addDirectiveModifiers(
+				list: CompletionList,
+				item: html.CompletionItem,
+				document: TextDocument,
+			) {
+				const replacement = getReplacement(item, document);
 				if (!replacement?.text.includes('.')) {
 					return;
 				}
@@ -948,52 +941,25 @@ export function create(
 						kind: 20 satisfies typeof CompletionItemKind.EnumMember,
 					};
 
-					completionList.items.push(newItem);
+					list.items.push(newItem);
 				}
-			}
-
-			async function initialize() {
-				customData = await getHtmlCustomData();
-			}
-
-			async function getHtmlCustomData() {
-				const customData: string[] = await context.env.getConfiguration?.('html.customData') ?? [];
-				const newData: html.IHTMLDataProvider[] = [];
-				for (const customDataPath of customData) {
-					for (const workspaceFolder of context.env.workspaceFolders) {
-						const uri = Utils.resolvePath(workspaceFolder, customDataPath);
-						const json = await context.env.fs?.readFile(uri);
-						if (json) {
-							try {
-								const data = JSON.parse(json);
-								newData.push(html.newHTMLDataProvider(customDataPath, data));
-							}
-							catch (error) {
-								console.error(error);
-							}
-						}
-					}
-				}
-				return newData;
 			}
 		},
 	};
 
 	function updateExtraCustomData(extraData: html.IHTMLDataProvider[]) {
-		extraCustomData = extraData;
+		htmlData = extraData;
 		onDidChangeCustomDataListeners.forEach(l => l());
 	}
 }
 
-function getReplacement(list: html.CompletionList, doc: TextDocument) {
-	for (const item of list.items) {
-		if (item.textEdit && 'range' in item.textEdit) {
-			return {
-				item: item,
-				textEdit: item.textEdit,
-				text: doc.getText(item.textEdit.range),
-			};
-		}
+function getReplacement(item: html.CompletionItem, doc: TextDocument) {
+	if (item.textEdit && 'range' in item.textEdit) {
+		return {
+			item: item,
+			textEdit: item.textEdit,
+			text: doc.getText(item.textEdit.range),
+		};
 	}
 }
 
@@ -1031,64 +997,55 @@ function extractModelModifiers(attributes: html.IAttributeData[] | undefined): R
 	return modifiers;
 }
 
-function buildAttributeSortText(
-	label: string,
-	propMeta: PropertyMeta | undefined,
-): string {
-	const tokens: string[] = [];
+// function buildAttributeSortText(
+// 	label: string,
+// 	originalName: string,
+// 	propMeta: PropertyMeta | undefined,
+// ): string {
+// 	const tokens: string[] = [];
 
-	if (propMeta) {
-		tokens.push(SORT_TOKEN.COMPONENT_PROP);
+// 	if (propMeta) {
+// 		tokens.push(SORT_TOKEN.COMPONENT_PROP);
 
-		if (label.startsWith(V_BIND_SHORTHAND)) {
-			tokens.push(SORT_TOKEN.COLON_PREFIX);
-		}
-		else if (label.startsWith(V_ON_SHORTHAND)) {
-			tokens.push(SORT_TOKEN.AT_PREFIX);
-		}
-		else if (label.startsWith(DIRECTIVE_V_BIND)) {
-			tokens.push(SORT_TOKEN.V_BIND_PREFIX);
-		}
-		else if (label.startsWith(DIRECTIVE_V_MODEL)) {
-			tokens.push(SORT_TOKEN.V_MODEL_PREFIX);
-		}
-		else if (label.startsWith(DIRECTIVE_V_ON)) {
-			tokens.push(SORT_TOKEN.V_ON_PREFIX);
-		}
-		else {
-			tokens.push(SORT_TOKEN.COMPONENT_PROP);
-		}
+// 		if (label.startsWith(V_BIND_SHORTHAND)) {
+// 			tokens.push(SORT_TOKEN.COLON_PREFIX);
+// 		}
+// 		else if (label.startsWith(V_ON_SHORTHAND)) {
+// 			tokens.push(SORT_TOKEN.AT_PREFIX);
+// 		}
+// 		else if (label.startsWith(DIRECTIVE_V_BIND)) {
+// 			tokens.push(SORT_TOKEN.V_BIND_PREFIX);
+// 		}
+// 		else if (label.startsWith(DIRECTIVE_V_MODEL)) {
+// 			tokens.push(SORT_TOKEN.V_MODEL_PREFIX);
+// 		}
+// 		else if (label.startsWith(DIRECTIVE_V_ON)) {
+// 			tokens.push(SORT_TOKEN.V_ON_PREFIX);
+// 		}
+// 		else {
+// 			tokens.push(SORT_TOKEN.COMPONENT_PROP);
+// 		}
 
-		const originalName = stripDirectivePrefix(label);
-		if (specialProps.has(originalName)) {
-			tokens.push(SORT_TOKEN.SPECIAL_PROP);
-		}
-		else {
-			tokens.push(SORT_TOKEN.COMPONENT_PROP);
-		}
+// 		if (specialProps.has(originalName)) {
+// 			tokens.push(SORT_TOKEN.SPECIAL_PROP);
+// 		}
+// 		else {
+// 			tokens.push(SORT_TOKEN.COMPONENT_PROP);
+// 		}
 
-		if (propMeta.name.startsWith('onVue:')) {
-			tokens.unshift(SORT_TOKEN.VUE_EVENT);
-		}
-	}
-	else if (CONTROL_FLOW_DIRECTIVES.has(label)) {
-		tokens.push(SORT_TOKEN.CONTROL_FLOW);
-	}
-	else if (label.startsWith('v-')) {
-		tokens.push(SORT_TOKEN.DIRECTIVE);
-	}
-	else {
-		tokens.push(SORT_TOKEN.HTML_ATTR);
-	}
+// 		if (propMeta.name.startsWith('onVue:')) {
+// 			tokens.unshift(SORT_TOKEN.VUE_EVENT);
+// 		}
+// 	}
+// 	else if (CONTROL_FLOW_DIRECTIVES.has(label)) {
+// 		tokens.push(SORT_TOKEN.CONTROL_FLOW);
+// 	}
+// 	else if (label.startsWith('v-')) {
+// 		tokens.push(SORT_TOKEN.DIRECTIVE);
+// 	}
+// 	else {
+// 		tokens.push(SORT_TOKEN.HTML_ATTR);
+// 	}
 
-	return tokens.join('') + label;
-}
-
-function stripDirectivePrefix(name: string): string {
-	for (const prefix of [DIRECTIVE_V_BIND, V_BIND_SHORTHAND]) {
-		if (name.startsWith(prefix) && name !== prefix) {
-			return name.slice(prefix.length);
-		}
-	}
-	return name;
-}
+// 	return tokens.join('') + label;
+// }
