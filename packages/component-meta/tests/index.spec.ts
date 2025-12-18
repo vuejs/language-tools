@@ -44,12 +44,14 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 
 			expect(modelValue).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "default": undefined,
 				  "description": "required number modelValue",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "modelValue",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": "number",
 				  "tags": [],
@@ -63,12 +65,14 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 
 			expect(foo).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "default": "false",
 				  "description": "optional boolean foo with default false",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "foo",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -91,12 +95,14 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 
 			expect(bar).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "default": undefined,
 				  "description": "optional string bar with lazy and trim modifiers",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "bar",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -112,12 +118,14 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			`);
 			expect(barModifiers).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "barModifiers",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -146,12 +154,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const foo = meta.props.find(prop => prop.name === 'foo');
 			expect(foo).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        722,
+				        734,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "string foo",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "foo",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": "string",
 				  "tags": [
@@ -183,12 +201,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const bar = meta.props.find(prop => prop.name === 'bar');
 			expect(bar).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        770,
+				        783,
+				      ],
+				    },
+				  ],
 				  "default": "1",
 				  "description": "optional number bar",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "bar",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -206,12 +234,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const baz = meta.props.find(prop => prop.name === 'baz');
 			expect(baz).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        816,
+				        831,
+				      ],
+				    },
+				  ],
 				  "default": "["foo", "bar"]",
 				  "description": "string array baz",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "baz",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -235,12 +273,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const union = meta.props.find(prop => prop.name === 'union');
 			expect(union).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        867,
+				        890,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "required union type",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "union",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": {
 				    "kind": "enum",
@@ -258,12 +306,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const unionOptional = meta.props.find(prop => prop.name === 'unionOptional');
 			expect(unionOptional).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        926,
+				        958,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "optional union type",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "unionOptional",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -282,23 +340,43 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const nested = meta.props.find(prop => prop.name === 'nested');
 			expect(nested).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        997,
+				        1019,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "required nested object",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "nested",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": {
 				    "kind": "object",
 				    "schema": {
 				      "nestedProp": {
+				        "declarations": [
+				          {
+				            "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				            "range": [
+				              74,
+				              93,
+				            ],
+				          },
+				        ],
 				        "default": undefined,
 				        "description": "nested prop documentation",
 				        "getDeclarations": [Function],
 				        "getTypeObject": [Function],
 				        "global": false,
 				        "name": "nestedProp",
+				        "rawType": undefined,
 				        "required": true,
 				        "schema": "string",
 				        "tags": [],
@@ -315,35 +393,65 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const nestedIntersection = meta.props.find(prop => prop.name === 'nestedIntersection');
 			expect(nestedIntersection).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        1076,
+				        1189,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "required nested object with intersection",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "nestedIntersection",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": {
 				    "kind": "object",
 				    "schema": {
 				      "additionalProp": {
+				        "declarations": [
+				          {
+				            "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				            "range": [
+				              1162,
+				              1185,
+				            ],
+				          },
+				        ],
 				        "default": undefined,
 				        "description": "required additional property",
 				        "getDeclarations": [Function],
 				        "getTypeObject": [Function],
 				        "global": false,
 				        "name": "additionalProp",
+				        "rawType": undefined,
 				        "required": true,
 				        "schema": "string",
 				        "tags": [],
 				        "type": "string",
 				      },
 				      "nestedProp": {
+				        "declarations": [
+				          {
+				            "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				            "range": [
+				              74,
+				              93,
+				            ],
+				          },
+				        ],
 				        "default": undefined,
 				        "description": "nested prop documentation",
 				        "getDeclarations": [Function],
 				        "getTypeObject": [Function],
 				        "global": false,
 				        "name": "nestedProp",
+				        "rawType": undefined,
 				        "required": true,
 				        "schema": "string",
 				        "tags": [],
@@ -360,12 +468,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const nestedOptional = meta.props.find(prop => prop.name === 'nestedOptional');
 			expect(nestedOptional).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        1228,
+				        1282,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "optional nested object",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "nestedOptional",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -375,12 +493,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				        "kind": "object",
 				        "schema": {
 				          "nestedProp": {
+				            "declarations": [
+				              {
+				                "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				                "range": [
+				                  74,
+				                  93,
+				                ],
+				              },
+				            ],
 				            "default": undefined,
 				            "description": "nested prop documentation",
 				            "getDeclarations": [Function],
 				            "getTypeObject": [Function],
 				            "global": false,
 				            "name": "nestedProp",
+				            "rawType": undefined,
 				            "required": true,
 				            "schema": "string",
 				            "tags": [],
@@ -401,12 +529,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const array = meta.props.find(prop => prop.name === 'array');
 			expect(array).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        1320,
+				        1343,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "required array object",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "array",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": {
 				    "kind": "array",
@@ -415,12 +553,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				        "kind": "object",
 				        "schema": {
 				          "nestedProp": {
+				            "declarations": [
+				              {
+				                "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				                "range": [
+				                  74,
+				                  93,
+				                ],
+				              },
+				            ],
 				            "default": undefined,
 				            "description": "nested prop documentation",
 				            "getDeclarations": [Function],
 				            "getTypeObject": [Function],
 				            "global": false,
 				            "name": "nestedProp",
+				            "rawType": undefined,
 				            "required": true,
 				            "schema": "string",
 				            "tags": [],
@@ -440,12 +588,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const arrayOptional = meta.props.find(prop => prop.name === 'arrayOptional');
 			expect(arrayOptional).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        1381,
+				        1413,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "optional array object",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "arrayOptional",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -458,12 +616,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				            "kind": "object",
 				            "schema": {
 				              "nestedProp": {
+				                "declarations": [
+				                  {
+				                    "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				                    "range": [
+				                      74,
+				                      93,
+				                    ],
+				                  },
+				                ],
 				                "default": undefined,
 				                "description": "nested prop documentation",
 				                "getDeclarations": [Function],
 				                "getTypeObject": [Function],
 				                "global": false,
 				                "name": "nestedProp",
+				                "rawType": undefined,
 				                "required": true,
 				                "schema": "string",
 				                "tags": [],
@@ -486,12 +654,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const enumValue = meta.props.find(prop => prop.name === 'enumValue');
 			expect(enumValue).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        1440,
+				        1458,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "enum value",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "enumValue",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": {
 				    "kind": "enum",
@@ -510,12 +688,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const namespaceType = meta.props.find(prop => prop.name === 'namespaceType');
 			expect(namespaceType).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        1489,
+				        1523,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "namespace type",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "namespaceType",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": {
 				    "kind": "object",
@@ -530,12 +718,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const literalFromContext = meta.props.find(prop => prop.name === 'literalFromContext');
 			expect(literalFromContext).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        1579,
+				        1612,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "literal type alias that require context",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "literalFromContext",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": {
 				    "kind": "enum",
@@ -557,23 +755,43 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const inlined = meta.props.find(prop => prop.name === 'inlined');
 			expect(inlined).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        1614,
+				        1639,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "inlined",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": {
 				    "kind": "object",
 				    "schema": {
 				      "foo": {
+				        "declarations": [
+				          {
+				            "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				            "range": [
+				              1625,
+				              1636,
+				            ],
+				          },
+				        ],
 				        "default": undefined,
 				        "description": "",
 				        "getDeclarations": [Function],
 				        "getTypeObject": [Function],
 				        "global": false,
 				        "name": "foo",
+				        "rawType": undefined,
 				        "required": true,
 				        "schema": "string",
 				        "tags": [],
@@ -590,23 +808,43 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const recursive = meta.props.find(prop => prop.name === 'recursive');
 			expect(recursive).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				      "range": [
+				        1641,
+				        1675,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "recursive",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": {
 				    "kind": "object",
 				    "schema": {
 				      "recursive": {
+				        "declarations": [
+				          {
+				            "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/my-props.ts",
+				            "range": [
+				              204,
+				              238,
+				            ],
+				          },
+				        ],
 				        "default": undefined,
 				        "description": "",
 				        "getDeclarations": [Function],
 				        "getTypeObject": [Function],
 				        "global": false,
 				        "name": "recursive",
+				        "rawType": undefined,
 				        "required": true,
 				        "schema": "MyNestedRecursiveProps",
 				        "tags": [],
@@ -647,12 +885,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const foo = meta.props.find(prop => prop.name === 'foo');
 			expect(foo).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js.vue",
+				      "range": [
+				        181,
+				        223,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "foo",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": "string",
 				  "tags": [],
@@ -663,12 +911,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const bar = meta.props.find(prop => prop.name === 'bar');
 			expect(bar).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js.vue",
+				      "range": [
+				        229,
+				        272,
+				      ],
+				    },
+				  ],
 				  "default": "'BAR'",
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "bar",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -686,12 +944,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const baz = meta.props.find(prop => prop.name === 'baz');
 			expect(baz).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js.vue",
+				      "range": [
+				        278,
+				        302,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "baz",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -709,12 +977,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const xfoo = meta.props.find(prop => prop.name === 'xfoo');
 			expect(xfoo).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js.vue",
+				      "range": [
+				        305,
+				        325,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "xfoo",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": "string",
 				  "tags": [],
@@ -725,12 +1003,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const xbar = meta.props.find(prop => prop.name === 'xbar');
 			expect(xbar).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js.vue",
+				      "range": [
+				        328,
+				        345,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "xbar",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -748,12 +1036,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const xbaz = meta.props.find(prop => prop.name === 'xbaz');
 			expect(xbaz).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js.vue",
+				      "range": [
+				        348,
+				        369,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "xbaz",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -781,12 +1079,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const foo = meta.props.find(prop => prop.name === 'foo');
 			expect(foo).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js-setup.vue",
+				      "range": [
+				        117,
+				        164,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "foo",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": "string",
 				  "tags": [],
@@ -797,12 +1105,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const bar = meta.props.find(prop => prop.name === 'bar');
 			expect(bar).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js-setup.vue",
+				      "range": [
+				        168,
+				        215,
+				      ],
+				    },
+				  ],
 				  "default": "'BAR'",
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "bar",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -820,12 +1138,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const baz = meta.props.find(prop => prop.name === 'baz');
 			expect(baz).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js-setup.vue",
+				      "range": [
+				        219,
+				        246,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "baz",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -843,12 +1171,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const xfoo = meta.props.find(prop => prop.name === 'xfoo');
 			expect(xfoo).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js-setup.vue",
+				      "range": [
+				        250,
+				        270,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "xfoo",
+				  "rawType": undefined,
 				  "required": true,
 				  "schema": "string",
 				  "tags": [],
@@ -859,12 +1197,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const xbar = meta.props.find(prop => prop.name === 'xbar');
 			expect(xbar).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js-setup.vue",
+				      "range": [
+				        274,
+				        291,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "xbar",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -882,12 +1230,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const xbaz = meta.props.find(prop => prop.name === 'xbaz');
 			expect(xbaz).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js-setup.vue",
+				      "range": [
+				        295,
+				        316,
+				      ],
+				    },
+				  ],
 				  "default": undefined,
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "xbaz",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -905,12 +1263,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const hello = meta.props.find(prop => prop.name === 'hello');
 			expect(hello).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js-setup.vue",
+				      "range": [
+				        381,
+				        432,
+				      ],
+				    },
+				  ],
 				  "default": "'Hello'",
 				  "description": "The hello property.",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "hello",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -933,12 +1301,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const numberOrStringProp = meta.props.find(prop => prop.name === 'numberOrStringProp');
 			expect(numberOrStringProp).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js-setup.vue",
+				      "range": [
+				        436,
+				        505,
+				      ],
+				    },
+				  ],
 				  "default": "42",
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "numberOrStringProp",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -957,12 +1335,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const arrayProps = meta.props.find(prop => prop.name === 'arrayProps');
 			expect(arrayProps).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/reference-type-props/component-js-setup.vue",
+				      "range": [
+				        509,
+				        575,
+				      ],
+				    },
+				  ],
 				  "default": "[42, 43, 44]",
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "arrayProps",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -996,10 +1384,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const onFoo = meta.events.find(event => event.name === 'foo');
 			expect(onFoo).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "name": "foo",
+				  "rawType": undefined,
 				  "schema": [
 				    {
 				      "kind": "enum",
@@ -1009,12 +1399,14 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				          "kind": "object",
 				          "schema": {
 				            "foo": {
+				              "declarations": [],
 				              "default": undefined,
 				              "description": "",
 				              "getDeclarations": [Function],
 				              "getTypeObject": [Function],
 				              "global": false,
 				              "name": "foo",
+				              "rawType": undefined,
 				              "required": true,
 				              "schema": "string",
 				              "tags": [],
@@ -1036,33 +1428,39 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const onBar = meta.events.find(event => event.name === 'bar');
 			expect(onBar).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "name": "bar",
+				  "rawType": undefined,
 				  "schema": [
 				    {
 				      "kind": "object",
 				      "schema": {
 				        "arg1": {
+				          "declarations": [],
 				          "default": undefined,
 				          "description": "",
 				          "getDeclarations": [Function],
 				          "getTypeObject": [Function],
 				          "global": false,
 				          "name": "arg1",
+				          "rawType": undefined,
 				          "required": true,
 				          "schema": "number",
 				          "tags": [],
 				          "type": "number",
 				        },
 				        "arg2": {
+				          "declarations": [],
 				          "default": undefined,
 				          "description": "",
 				          "getDeclarations": [Function],
 				          "getTypeObject": [Function],
 				          "global": false,
 				          "name": "arg2",
+				          "rawType": undefined,
 				          "required": false,
 				          "schema": "any",
 				          "tags": [],
@@ -1081,10 +1479,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const onBaz = meta.events.find(event => event.name === 'baz');
 			expect(onBaz).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "name": "baz",
+				  "rawType": undefined,
 				  "schema": [],
 				  "signature": "(e: "baz"): void",
 				  "tags": [],
@@ -1102,10 +1502,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const onBar = meta.events.find(event => event.name === 'bar');
 			expect(onBar).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "name": "bar",
+				  "rawType": undefined,
 				  "schema": [
 				    "number",
 				  ],
@@ -1212,10 +1614,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 
 			expect(counter).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "description": "a counter string",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "name": "counter",
+				  "rawType": undefined,
 				  "schema": "string",
 				  "tags": [],
 				  "type": "string",
@@ -1252,10 +1656,12 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 
 			expect(reset).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "description": "Resets the counter to zero",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "name": "reset",
+				  "rawType": undefined,
 				  "schema": {
 				    "kind": "event",
 				    "schema": undefined,
@@ -1376,33 +1782,39 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const submitEvent = meta.events.find(evt => evt.name === 'submit');
 			expect(submitEvent).toMatchInlineSnapshot(`
 				{
+				  "declarations": [],
 				  "description": "",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "name": "submit",
+				  "rawType": undefined,
 				  "schema": [
 				    {
 				      "kind": "object",
 				      "schema": {
 				        "email": {
+				          "declarations": [],
 				          "default": undefined,
 				          "description": "email of user",
 				          "getDeclarations": [Function],
 				          "getTypeObject": [Function],
 				          "global": false,
 				          "name": "email",
+				          "rawType": undefined,
 				          "required": true,
 				          "schema": "string",
 				          "tags": [],
 				          "type": "string",
 				        },
 				        "password": {
+				          "declarations": [],
 				          "default": undefined,
 				          "description": "password of same user",
 				          "getDeclarations": [Function],
 				          "getTypeObject": [Function],
 				          "global": false,
 				          "name": "password",
+				          "rawType": undefined,
 				          "required": true,
 				          "schema": "string",
 				          "tags": [],
@@ -1421,12 +1833,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const propNumberDefault = meta.props.find(prop => prop.name === 'numberDefault');
 			expect(propNumberDefault).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/options-api/component.ts",
+				      "range": [
+				        477,
+				        530,
+				      ],
+				    },
+				  ],
 				  "default": "42",
 				  "description": "Default number",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "numberDefault",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -1444,6 +1866,15 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const propObjectDefault = meta.props.find(prop => prop.name === 'objectDefault');
 			expect(propObjectDefault).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/options-api/component.ts",
+				      "range": [
+				        575,
+				        656,
+				      ],
+				    },
+				  ],
 				  "default": "{
 				    foo: 'bar',
 				}",
@@ -1452,6 +1883,7 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "objectDefault",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
@@ -1469,12 +1901,22 @@ const worker = (checker: ComponentMetaChecker, withTsconfig: boolean) =>
 			const propArrayDefault = meta.props.find(prop => prop.name === 'arrayDefault');
 			expect(propArrayDefault).toMatchInlineSnapshot(`
 				{
+				  "declarations": [
+				    {
+				      "file": "/Users/johnsonchu/Desktop/volar/vue/test-workspace/component-meta/options-api/component.ts",
+				      "range": [
+				        700,
+				        764,
+				      ],
+				    },
+				  ],
 				  "default": "[1, 2, 3]",
 				  "description": "Default function Array",
 				  "getDeclarations": [Function],
 				  "getTypeObject": [Function],
 				  "global": false,
 				  "name": "arrayDefault",
+				  "rawType": undefined,
 				  "required": false,
 				  "schema": {
 				    "kind": "enum",
