@@ -24,7 +24,7 @@ import {
 	applyCompletionEntryDetails,
 	convertCompletionInfo,
 } from 'volar-service-typescript/lib/utils/lspConverters.js';
-import * as html from 'vscode-html-languageservice';
+import type * as html from 'vscode-html-languageservice';
 import { URI } from 'vscode-uri';
 import type { ComponentMeta, PropertyMeta } from '../../../component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
