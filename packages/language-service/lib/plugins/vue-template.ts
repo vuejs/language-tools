@@ -269,55 +269,16 @@ export function create(
 					if (!htmlCompletion) {
 						return;
 					}
-
 					if (!hint) {
 						htmlCompletion.isIncomplete = true;
 					}
 
-					await replaceAutoImportPlaceholder(htmlCompletion, info);
-
-					for (const item of htmlCompletion.items) {
-						switch (item.kind) {
-							case 10 satisfies typeof CompletionItemKind.Property:
-								if (
-									componentSet.has(item.label)
-									|| componentSet.has(capitalize(camelize(item.label)))
-								) {
-									item.kind = 6 satisfies typeof CompletionItemKind.Variable;
-								}
-								break;
-							case 12 satisfies typeof CompletionItemKind.Value:
-								addDirectiveModifiers(htmlCompletion, item, document);
-
-								if (typeof item.documentation === 'object' && item.documentation.value.startsWith(DEPRECATED_MARKER)) {
-									item.documentation.value = item.documentation.value.replace(DEPRECATED_MARKER, '');
-									item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
-								}
-
-								if (item.label.startsWith(DIRECTIVE_V_ON) || item.label.startsWith(V_ON_SHORTHAND)) {
-									item.kind = 23 satisfies typeof CompletionItemKind.Event;
-								}
-								else if (
-									item.label.startsWith(DIRECTIVE_V_BIND)
-									|| item.label.startsWith(V_BIND_SHORTHAND)
-									|| item.label.startsWith(DIRECTIVE_V_MODEL)
-								) {
-									item.kind = 5 satisfies typeof CompletionItemKind.Field;
-								}
-								else if (item.label.startsWith('v-')) {
-									item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
-								}
-
-								if (item.label === DIRECTIVE_V_FOR_NAME) {
-									item.textEdit!.newText = item.label + V_FOR_SNIPPET;
-								}
-								break;
-						}
-					}
+					await resolveAutoImportPlaceholder(htmlCompletion, info);
+					resolveComponentItemKinds(htmlCompletion);
 
 					return htmlCompletion;
 
-					async function replaceAutoImportPlaceholder(
+					async function resolveAutoImportPlaceholder(
 						htmlCompletion: CompletionList,
 						info: NonNullable<ReturnType<typeof resolveEmbeddedCode>>,
 					) {
@@ -361,6 +322,49 @@ export function create(
 						}
 						if (!spliced) {
 							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
+						}
+					}
+
+					function resolveComponentItemKinds(htmlCompletion: CompletionList) {
+						for (const item of htmlCompletion.items) {
+							switch (item.kind) {
+								case 10 satisfies typeof CompletionItemKind.Property:
+									if (
+										componentSet.has(item.label)
+										|| componentSet.has(capitalize(camelize(item.label)))
+									) {
+										item.kind = 6 satisfies typeof CompletionItemKind.Variable;
+									}
+									break;
+								case 12 satisfies typeof CompletionItemKind.Value:
+									addDirectiveModifiers(htmlCompletion, item, document);
+
+									if (
+										typeof item.documentation === 'object' && item.documentation.value.startsWith(DEPRECATED_MARKER)
+									) {
+										item.documentation.value = item.documentation.value.replace(DEPRECATED_MARKER, '');
+										item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
+									}
+
+									if (item.label.startsWith(DIRECTIVE_V_ON) || item.label.startsWith(V_ON_SHORTHAND)) {
+										item.kind = 23 satisfies typeof CompletionItemKind.Event;
+									}
+									else if (
+										item.label.startsWith(DIRECTIVE_V_BIND)
+										|| item.label.startsWith(V_BIND_SHORTHAND)
+										|| item.label.startsWith(DIRECTIVE_V_MODEL)
+									) {
+										item.kind = 5 satisfies typeof CompletionItemKind.Field;
+									}
+									else if (item.label.startsWith('v-')) {
+										item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
+									}
+
+									if (item.label === DIRECTIVE_V_FOR_NAME) {
+										item.textEdit!.newText = item.label + V_FOR_SNIPPET;
+									}
+									break;
+							}
 						}
 					}
 				},
@@ -606,20 +610,21 @@ export function create(
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
+							const builtInTagMap = new Map<string, html.ITagData>();
 
+							for (const tag of builtInData?.tags ?? []) {
+								builtInTagMap.set(tag.name, tag);
+								tags.push({
+									...tag,
+									name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
+								});
+							}
 							for (const tag of components) {
-								if (tagNameCasing === TagNameCasing.Kebab) {
-									names.add(hyphenateTag(tag));
-								}
-								else {
-									names.add(tag);
-								}
+								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag) : tag);
 							}
-
 							for (const tag of elements) {
-								names.add(hyphenateTag(tag));
+								names.add(tag);
 							}
-
 							if (codegen) {
 								for (
 									const name of [
@@ -627,16 +632,13 @@ export function create(
 										...codegen.getSetupExposed(),
 									]
 								) {
-									if (tagNameCasing === TagNameCasing.Kebab) {
-										names.add(hyphenateTag(name));
-									}
-									else {
-										names.add(name);
-									}
+									names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(name) : name);
 								}
 							}
 							for (const name of names) {
-								tags.push({ name, attributes: [] });
+								if (!builtInTagMap.has(name)) {
+									tags.push({ name, attributes: [] });
+								}
 							}
 
 							return tags;
@@ -707,11 +709,17 @@ export function create(
 									});
 								}
 							}
+
+							for (const globalAttr of builtInData?.globalAttributes ?? []) {
+								attributes.push(globalAttr);
+							}
+
 							for (const directive of directives) {
 								attributes.push({
 									name: hyphenateAttr(directive),
 								});
 							}
+
 							for (
 								const [propName, propMeta] of [
 									...meta?.props.map(prop => [prop.name, prop] as const) ?? [],
@@ -751,15 +759,9 @@ export function create(
 					{
 						getId: () => 'vue-auto-imports',
 						isApplicable: () => true,
-						provideTags() {
-							return [{ name: AUTO_IMPORT_PLACEHOLDER, attributes: [] }];
-						},
-						provideAttributes() {
-							return [];
-						},
-						provideValues() {
-							return [];
-						},
+						provideTags: () => [{ name: AUTO_IMPORT_PLACEHOLDER, attributes: [] }],
+						provideAttributes: () => [],
+						provideValues: () => [],
 					},
 				]);
 
