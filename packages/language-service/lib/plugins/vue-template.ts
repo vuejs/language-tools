@@ -32,21 +32,6 @@ import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
 
-// const specialTags = new Set([
-// 	'slot',
-// 	'component',
-// 	'template',
-// ]);
-
-// const specialProps = new Set([
-// 	'class',
-// 	'data-allow-mismatch',
-// 	'is',
-// 	'key',
-// 	'ref',
-// 	'style',
-// ]);
-
 const builtInComponents = new Set([
 	'Transition',
 	'TransitionGroup',
@@ -54,9 +39,6 @@ const builtInComponents = new Set([
 	'Suspense',
 	'Teleport',
 ]);
-
-// Control flow directives
-// const CONTROL_FLOW_DIRECTIVES = new Set(['v-if', 'v-else-if', 'v-else', 'v-for']);
 
 // Sort text priority tokens
 const SORT_TOKEN = {
@@ -333,27 +315,24 @@ export function create(
 								addDirectiveModifiers(htmlCompletion, item, document);
 
 								const propMeta = labelToMeta.get(item.label);
-								// const propName = item.label.startsWith(DIRECTIVE_V_BIND)
-								// 	? item.label.slice(DIRECTIVE_V_BIND.length)
-								// 	: item.label.startsWith(V_BIND_SHORTHAND)
-								// 	? item.label.slice(V_BIND_SHORTHAND.length)
-								// 	: item.label;
 
 								if (propMeta?.tags.some(tag => tag.name === 'deprecated')) {
 									item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 								}
 
-								if (item.label.startsWith('v-') && !item.label.includes(':')) {
-									item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
-								}
-								else if (item.label.startsWith(DIRECTIVE_V_ON) || item.label.startsWith(V_ON_SHORTHAND)) {
+								if (item.label.startsWith(DIRECTIVE_V_ON) || item.label.startsWith(V_ON_SHORTHAND)) {
 									item.kind = 23 satisfies typeof CompletionItemKind.Event;
 								}
-								else if (propMeta) {
+								else if (
+									item.label.startsWith(DIRECTIVE_V_BIND)
+									|| item.label.startsWith(V_BIND_SHORTHAND)
+									|| item.label.startsWith(DIRECTIVE_V_MODEL)
+								) {
 									item.kind = 5 satisfies typeof CompletionItemKind.Field;
 								}
-
-								// item.sortText = buildAttributeSortText(item.label, propName, propMeta);
+								else if (item.label.startsWith('v-')) {
+									item.kind = 14 satisfies typeof CompletionItemKind.Keyword;
+								}
 
 								if (item.label === DIRECTIVE_V_FOR_NAME) {
 									item.textEdit!.newText = item.label + V_FOR_SNIPPET;
@@ -702,19 +681,17 @@ export function create(
 									...attrs.map(attr => [attr, undefined]),
 								] as [string, PropertyMeta | undefined][]
 							) {
-								const hyphenatedName = attrNameCasing === AttrNameCasing.Camel ? propName : hyphenateAttr(propName);
-								const isEvent = !!propName.match(EVENT_PROP_REGEX);
-								if (isEvent) {
-									let eventName = propName.slice(2);
-									eventName = eventName.charAt(0).toLowerCase() + eventName.slice(1);
+								if (propName.match(EVENT_PROP_REGEX)) {
+									let labelName = propName.slice(2);
+									labelName = labelName.charAt(0).toLowerCase() + labelName.slice(1);
 									if (attrNameCasing === AttrNameCasing.Kebab) {
-										eventName = hyphenateAttr(eventName);
+										labelName = hyphenateAttr(labelName);
 									}
 
 									const label = !hint || hint === '@'
-										? V_ON_SHORTHAND + hyphenatedName
+										? V_ON_SHORTHAND + labelName
 										: hint === 'v'
-										? DIRECTIVE_V_ON + hyphenatedName
+										? DIRECTIVE_V_ON + labelName
 										: undefined;
 
 									if (label) {
@@ -730,14 +707,15 @@ export function create(
 									}
 								}
 								else {
+									const labelName = attrNameCasing === AttrNameCasing.Camel ? propName : hyphenateAttr(propName);
 									const propMeta2 = meta?.props.find(prop => {
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
-										return name === hyphenatedName;
+										return name === labelName;
 									});
 									const label = !hint || hint === ':'
-										? V_BIND_SHORTHAND + hyphenatedName
+										? V_BIND_SHORTHAND + labelName
 										: hint === 'v'
-										? DIRECTIVE_V_BIND + hyphenatedName
+										? DIRECTIVE_V_BIND + labelName
 										: undefined;
 
 									if (label) {
@@ -1006,56 +984,3 @@ function extractModelModifiers(attributes: html.IAttributeData[] | undefined): R
 	}
 	return modifiers;
 }
-
-// function buildAttributeSortText(
-// 	label: string,
-// 	originalName: string,
-// 	propMeta: PropertyMeta | undefined,
-// ): string {
-// 	const tokens: string[] = [];
-
-// 	if (propMeta) {
-// 		tokens.push(SORT_TOKEN.COMPONENT_PROP);
-
-// 		if (label.startsWith(V_BIND_SHORTHAND)) {
-// 			tokens.push(SORT_TOKEN.COLON_PREFIX);
-// 		}
-// 		else if (label.startsWith(V_ON_SHORTHAND)) {
-// 			tokens.push(SORT_TOKEN.AT_PREFIX);
-// 		}
-// 		else if (label.startsWith(DIRECTIVE_V_BIND)) {
-// 			tokens.push(SORT_TOKEN.V_BIND_PREFIX);
-// 		}
-// 		else if (label.startsWith(DIRECTIVE_V_MODEL)) {
-// 			tokens.push(SORT_TOKEN.V_MODEL_PREFIX);
-// 		}
-// 		else if (label.startsWith(DIRECTIVE_V_ON)) {
-// 			tokens.push(SORT_TOKEN.V_ON_PREFIX);
-// 		}
-// 		else {
-// 			tokens.push(SORT_TOKEN.COMPONENT_PROP);
-// 		}
-
-// 		if (specialProps.has(originalName)) {
-// 			tokens.push(SORT_TOKEN.SPECIAL_PROP);
-// 		}
-// 		else {
-// 			tokens.push(SORT_TOKEN.COMPONENT_PROP);
-// 		}
-
-// 		if (propMeta.name.startsWith('onVue:')) {
-// 			tokens.unshift(SORT_TOKEN.VUE_EVENT);
-// 		}
-// 	}
-// 	else if (CONTROL_FLOW_DIRECTIVES.has(label)) {
-// 		tokens.push(SORT_TOKEN.CONTROL_FLOW);
-// 	}
-// 	else if (label.startsWith('v-')) {
-// 		tokens.push(SORT_TOKEN.DIRECTIVE);
-// 	}
-// 	else {
-// 		tokens.push(SORT_TOKEN.HTML_ATTR);
-// 	}
-
-// 	return tokens.join('') + label;
-// }
