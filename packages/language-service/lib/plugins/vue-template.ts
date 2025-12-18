@@ -279,17 +279,13 @@ export function create(
 					}
 
 					const prevText = document.getText({ start: { line: 0, character: 0 }, end: position });
-
-					let hint: 'v' | ':' | '@' | undefined;
-					if (prevText.match(/\bv[\w.-]*$/)) {
-						hint = 'v';
-					}
-					else if (prevText.match(/[:][\w.-]*$/)) {
-						hint = ':';
-					}
-					else if (prevText.match(/[@][\w.-]*$/)) {
-						hint = '@';
-					}
+					const hint: 'v' | ':' | '@' | undefined = prevText.match(/\bv[\S]*$/)
+						? 'v'
+						: prevText.match(/[:][\S]*$/)
+						? ':'
+						: prevText.match(/[@][\S]*$/)
+						? '@'
+						: undefined;
 
 					const {
 						result: htmlCompletion,
@@ -715,18 +711,22 @@ export function create(
 										eventName = hyphenateAttr(eventName);
 									}
 
-									const label = hint === 'v'
-										? DIRECTIVE_V_ON + eventName
-										: V_ON_SHORTHAND + eventName;
+									const label = !hint || hint === '@'
+										? V_ON_SHORTHAND + hyphenatedName
+										: hint === 'v'
+										? DIRECTIVE_V_ON + hyphenatedName
+										: undefined;
 
-									attributes.push({
-										name: label,
-										description: propMeta?.description
-											? { kind: 'markdown', value: propMeta.description }
-											: undefined,
-									});
-									if (propMeta) {
-										labelToMeta.set(label, propMeta);
+									if (label) {
+										attributes.push({
+											name: label,
+											description: propMeta?.description
+												? { kind: 'markdown', value: propMeta.description }
+												: undefined,
+										});
+										if (propMeta) {
+											labelToMeta.set(label, propMeta);
+										}
 									}
 								}
 								else {
@@ -734,34 +734,42 @@ export function create(
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === hyphenatedName;
 									});
-
-									const label = hint === 'v'
+									const label = !hint || hint === ':'
+										? V_BIND_SHORTHAND + hyphenatedName
+										: hint === 'v'
 										? DIRECTIVE_V_BIND + hyphenatedName
-										: V_BIND_SHORTHAND + hyphenatedName;
+										: undefined;
 
-									attributes.push({
-										name: label,
-										description: propMeta2?.description
-											? { kind: 'markdown', value: propMeta2.description }
-											: undefined,
-										// valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
-									});
-									if (propMeta2) {
-										labelToMeta.set(label, propMeta2);
+									if (label) {
+										attributes.push({
+											name: label,
+											description: propMeta2?.description
+												? { kind: 'markdown', value: propMeta2.description }
+												: undefined,
+											// valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
+										});
+										if (propMeta2) {
+											labelToMeta.set(label, propMeta2);
+										}
 									}
 								}
 							}
 							for (const event of meta?.events ?? []) {
 								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
-								const label = hint === 'v'
+								const label = !hint || hint === '@'
+									? V_ON_SHORTHAND + eventName
+									: hint === 'v'
 									? DIRECTIVE_V_ON + eventName
-									: V_ON_SHORTHAND + eventName;
-								attributes.push({
-									name: label,
-									description: event.description
-										? { kind: 'markdown', value: event.description }
-										: undefined,
-								});
+									: undefined;
+
+								if (label) {
+									attributes.push({
+										name: label,
+										description: event.description
+											? { kind: 'markdown', value: event.description }
+											: undefined,
+									});
+								}
 							}
 							for (const directive of directives) {
 								attributes.push({
@@ -792,17 +800,19 @@ export function create(
 									}
 								}
 							}
-							for (const event of meta?.events ?? []) {
-								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
-									const model = event.name.slice(UPDATE_EVENT_PREFIX.length);
-									const label = DIRECTIVE_V_MODEL
-										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
-									attributes.push({
-										name: label,
-										description: event.description
-											? { kind: 'markdown', value: event.description }
-											: undefined,
-									});
+							if (!hint || hint === 'v') {
+								for (const event of meta?.events ?? []) {
+									if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
+										const model = event.name.slice(UPDATE_EVENT_PREFIX.length);
+										const label = DIRECTIVE_V_MODEL
+											+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
+										attributes.push({
+											name: label,
+											description: event.description
+												? { kind: 'markdown', value: event.description }
+												: undefined,
+										});
+									}
 								}
 							}
 
