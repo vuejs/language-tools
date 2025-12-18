@@ -91,10 +91,7 @@ export function getComponentMeta(
 			.map(prop => {
 				const {
 					resolveNestedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options, {
-					noDeclarations: false,
-					rawType: false,
-				});
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
 
 				return resolveNestedProperties(prop);
 			})

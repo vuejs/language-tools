@@ -141,7 +141,7 @@ export function create(
 												end: document.positionAt(current.labelOffset),
 											},
 											newText: ` :${
-												attrNameCasing === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp.name) : requiredProp
+												attrNameCasing === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp.name) : requiredProp.name
 											}=`,
 										}],
 									});
