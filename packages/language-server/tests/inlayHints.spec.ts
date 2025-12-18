@@ -61,7 +61,7 @@ test('Missing props', async () => {
 					</script>
 
 					<template>
-						<Foo/* foo! */></Foo>
+						<Foo/* foo */></Foo>
 					</template>
 				"
 	`);
