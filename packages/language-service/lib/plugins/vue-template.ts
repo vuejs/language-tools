@@ -55,7 +55,7 @@ const SORT_TOKEN = {
 	HTML_ATTR: '\u0001',
 } as const;
 
-const deprecatedMarker = '**deprecated**';
+const deprecatedMarker = '**deprecated**\n\n';
 
 const EVENT_PROP_REGEX = /^on[A-Z]/;
 
@@ -315,7 +315,7 @@ export function create(
 								addDirectiveModifiers(htmlCompletion, item, document);
 
 								if (typeof item.documentation === 'object' && item.documentation.value.startsWith(deprecatedMarker)) {
-									item.documentation.value = item.documentation.value.replace(deprecatedMarker, '').trimStart();
+									item.documentation.value = item.documentation.value.replace(deprecatedMarker, '');
 									item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 								}
 
@@ -804,14 +804,17 @@ export function create(
 				};
 
 				function createDescription(meta: Pick<PropertyMeta, 'description' | 'tags'>) {
-					let description = meta?.description;
+					let description = meta?.description ?? '';
 					if (meta?.tags.some(tag => tag.name === 'deprecated')) {
-						description = deprecatedMarker + '\n\n' + (description ?? '');
+						description = deprecatedMarker + description;
 					}
-					if (description) {
+					if (!description) {
 						return;
 					}
-					return { kind: 'markdown' as const, value: description };
+					return {
+						kind: 'markdown' as const,
+						value: description,
+					};
 				}
 
 				function getAttrValues(tag: string, attr: string) {
