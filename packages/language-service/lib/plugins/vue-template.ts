@@ -32,7 +32,6 @@ import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
 
-const DEPRECATED_MARKER = '**deprecated**\n\n';
 const EVENT_PROP_REGEX = /^on[A-Z]/;
 
 // String constants
@@ -261,6 +260,7 @@ export function create(
 						info.script.id,
 						info.root,
 						hint,
+						'completion',
 						() =>
 							baseServiceInstance.provideCompletionItems!(
 								document,
@@ -345,9 +345,8 @@ export function create(
 									addDirectiveModifiers(htmlCompletion, item, document);
 
 									if (
-										typeof item.documentation === 'object' && item.documentation.value.startsWith(DEPRECATED_MARKER)
+										typeof item.documentation === 'object' && item.documentation.value.includes('*@deprecated*')
 									) {
-										item.documentation.value = item.documentation.value.replace(DEPRECATED_MARKER, '');
 										item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 									}
 
@@ -441,6 +440,7 @@ export function create(
 						info.script.id,
 						info.root,
 						undefined,
+						'hover',
 						() => baseServiceInstance.provideHover!(document, position, token),
 					);
 					const templateAst = info.root.sfc.template?.ast;
@@ -596,12 +596,13 @@ export function create(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
 				hint: 'v' | ':' | '@' | undefined,
+				mode: 'completion' | 'hover',
 				fn: () => T,
 			) {
 				// #4298: Precompute HTMLDocument before provideHtmlData to avoid parseHTMLDocument requesting component names from tsserver
 				await fn();
 
-				const { sync } = await provideHtmlData(sourceDocumentUri, root, hint);
+				const { sync } = await provideHtmlData(sourceDocumentUri, root, hint, mode);
 				let lastSync = await sync();
 				let result = await fn();
 				while (lastSync.version !== (lastSync = await sync()).version) {
@@ -614,6 +615,7 @@ export function create(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
 				hint: 'v' | ':' | '@' | undefined,
+				mode: 'completion' | 'hover',
 			) {
 				const [tagNameCasing, attrNameCasing] = await Promise.all([
 					getTagNameCasing(context, sourceDocumentUri),
@@ -824,9 +826,13 @@ export function create(
 				};
 
 				function createDescription(meta: Pick<PropertyMeta, 'description' | 'tags'>) {
+					if (mode === 'hover') {
+						// dedupe from TS hover
+						return;
+					}
 					let description = meta?.description ?? '';
-					if (meta?.tags.some(tag => tag.name === 'deprecated')) {
-						description = DEPRECATED_MARKER + description;
+					for (const tag of meta.tags) {
+						description += `\n\n*@${tag.name}* ${tag.text ?? ''}`;
 					}
 					if (!description) {
 						return;
