@@ -274,7 +274,7 @@ export function create(
 					if (!htmlCompletion) {
 						return;
 					}
-					if (!prevText.match(/\b[\S]+$/)) {
+					if (!prevText.match(/[\S]+$/)) {
 						htmlCompletion.isIncomplete = true;
 					}
 
@@ -690,11 +690,22 @@ export function create(
 								}
 								if (attr.name === 'ref' || attr.name.startsWith('v-')) {
 									attributes.push(attr);
+									continue;
 								}
-								else {
+								if (!hint || hint === ':') {
 									attributes.push({
 										...attr,
-										name: ':' + attr.name,
+										name: V_BIND_SHORTHAND + attr.name,
+									});
+								}
+								if (!hint || hint === 'v') {
+									attributes.push({
+										...attr,
+										name: DIRECTIVE_V_BIND + attr.name,
+									});
+									attributes.push({
+										...attr,
+										name: attr.name,
 									});
 								}
 							}
@@ -712,10 +723,15 @@ export function create(
 										labelName = hyphenateAttr(labelName);
 									}
 
-									if (!hint || hint === '@' || hint === 'v') {
-										const prefix = !hint || hint === '@' ? V_ON_SHORTHAND : DIRECTIVE_V_ON;
+									if (!hint || hint === '@') {
 										attributes.push({
-											name: prefix + labelName,
+											name: V_ON_SHORTHAND + labelName,
+											description: propMeta && createDescription(propMeta),
+										});
+									}
+									if (!hint || hint === 'v') {
+										attributes.push({
+											name: DIRECTIVE_V_ON + labelName,
 											description: propMeta && createDescription(propMeta),
 										});
 									}
@@ -726,10 +742,9 @@ export function create(
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === labelName;
 									});
-									if (!hint || hint === ':' || hint === 'v') {
-										const prefix = !hint || hint === ':' ? V_BIND_SHORTHAND : DIRECTIVE_V_BIND;
+									if (!hint || hint === ':') {
 										attributes.push({
-											name: prefix + labelName,
+											name: V_BIND_SHORTHAND + labelName,
 											description: propMeta2 && createDescription(propMeta2),
 										});
 									}
@@ -741,6 +756,10 @@ export function create(
 												|| propMeta2.schema.schema?.includes('false')
 											);
 										attributes.push({
+											name: DIRECTIVE_V_BIND + labelName,
+											description: propMeta2 && createDescription(propMeta2),
+										});
+										attributes.push({
 											name: labelName,
 											description: propMeta2 && createDescription(propMeta2),
 											valueSet: isBoolean ? 'v' : undefined,
@@ -751,10 +770,15 @@ export function create(
 							for (const event of meta?.events ?? []) {
 								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
 
-								if (!hint || hint === '@' || hint === 'v') {
-									const prefix = !hint || hint === '@' ? V_ON_SHORTHAND : DIRECTIVE_V_ON;
+								if (!hint || hint === '@') {
 									attributes.push({
-										name: prefix + eventName,
+										name: V_ON_SHORTHAND + eventName,
+										description: event && createDescription(event),
+									});
+								}
+								if (!hint || hint === 'v') {
+									attributes.push({
+										name: DIRECTIVE_V_ON + eventName,
 										description: event && createDescription(event),
 									});
 								}
