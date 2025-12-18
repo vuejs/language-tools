@@ -19,6 +19,7 @@ export function getComponentMeta(
 	componentNode: ts.Node,
 	componentType: ts.Type,
 	options: MetaCheckerSchemaOptions,
+	deprecatedOptions: { noDeclarations: boolean; rawType: boolean } = { noDeclarations: true, rawType: false },
 ): ComponentMeta {
 	const componentSymbol = typeChecker.getSymbolAtLocation(componentNode);
 
@@ -90,7 +91,10 @@ export function getComponentMeta(
 			.map(prop => {
 				const {
 					resolveNestedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options, {
+					noDeclarations: false,
+					rawType: false,
+				});
 
 				return resolveNestedProperties(prop);
 			})
@@ -117,7 +121,7 @@ export function getComponentMeta(
 			return calls.map(call => {
 				const {
 					resolveEventSignature,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
 
 				return resolveEventSignature(call);
 			}).filter(event => event.name);
@@ -135,7 +139,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveSlotProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
 
 				return resolveSlotProperties(prop);
 			});
@@ -163,7 +167,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveExposedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, options);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
 
 				return resolveExposedProperties(prop);
 			});

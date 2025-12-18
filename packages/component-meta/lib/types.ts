@@ -32,6 +32,14 @@ export interface PropertyMeta {
 	required: boolean;
 	tags: { name: string; text?: string }[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
 	getDeclarations(): Declaration[];
 	getTypeObject(): ts.Type;
 }
@@ -43,6 +51,14 @@ export interface EventMeta {
 	signature: string;
 	tags: { name: string; text?: string }[];
 	schema: PropertyMetaSchema[];
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
 	getDeclarations(): Declaration[];
 	getTypeObject(): ts.Type | undefined;
 }
@@ -53,6 +69,14 @@ export interface SlotMeta {
 	type: string;
 	tags: { name: string; text?: string }[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
 	getDeclarations(): Declaration[];
 	getTypeObject(): ts.Type;
 }
@@ -63,6 +87,14 @@ export interface ExposeMeta {
 	type: string;
 	tags: { name: string; text?: string }[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
+	/**
+	 * @deprecated use `getTypeObject()` instead
+	 */
+	rawType?: ts.Type;
 	getDeclarations(): Declaration[];
 	getTypeObject(): ts.Type;
 }
@@ -86,4 +118,16 @@ export type MetaCheckerSchemaOptions = boolean | {
 export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
 	printer?: ts.PrinterOptions;
+	/**
+	 * @deprecated No longer needed, this is default behavior now
+	 */
+	noDeclarations?: boolean;
+	/**
+	 * @deprecated No longer needed, this is default behavior now
+	 */
+	forceUseTs?: boolean;
+	/**
+	 * @deprecated No longer needed, use `getTypeObject()` instead
+	 */
+	rawType?: boolean;
 }

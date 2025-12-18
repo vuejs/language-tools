@@ -16,6 +16,7 @@ export function createSchemaResolvers(
 	printer: ts.Printer,
 	language: core.Language<string>,
 	options: import('./types').MetaCheckerSchemaOptions,
+	deprecatedOptions: { noDeclarations: boolean; rawType: boolean },
 ) {
 	const visited = new Set<ts.Type>();
 
@@ -99,6 +100,17 @@ export function createSchemaResolvers(
 			get schema() {
 				return schema ??= resolveSchema(subtype);
 			},
+			get declarations() {
+				if (deprecatedOptions.noDeclarations) {
+					return [];
+				}
+				return this.getDeclarations();
+			},
+			get rawType() {
+				if (deprecatedOptions.rawType) {
+					return this.getTypeObject();
+				}
+			},
 			getDeclarations() {
 				return declarations ??= getDeclarations(propSymbol.declarations ?? []);
 			},
@@ -140,6 +152,17 @@ export function createSchemaResolvers(
 			get schema() {
 				return schema ??= resolveSchema(subtype);
 			},
+			get declarations() {
+				if (deprecatedOptions.noDeclarations) {
+					return [];
+				}
+				return this.getDeclarations();
+			},
+			get rawType() {
+				if (deprecatedOptions.rawType) {
+					return this.getTypeObject();
+				}
+			},
 			getDeclarations() {
 				return declarations ??= getDeclarations(prop.declarations ?? []);
 			},
@@ -160,6 +183,17 @@ export function createSchemaResolvers(
 			tags: getJsDocTags(expose),
 			get schema() {
 				return schema ??= resolveSchema(subtype);
+			},
+			get declarations() {
+				if (deprecatedOptions.noDeclarations) {
+					return [];
+				}
+				return this.getDeclarations();
+			},
+			get rawType() {
+				if (deprecatedOptions.rawType) {
+					return this.getTypeObject();
+				}
 			},
 			getDeclarations() {
 				return declarations ??= getDeclarations(expose.declarations ?? []);
@@ -209,6 +243,17 @@ export function createSchemaResolvers(
 			signature: typeChecker.signatureToString(call),
 			get schema() {
 				return schema ??= getSchema();
+			},
+			get declarations() {
+				if (deprecatedOptions.noDeclarations) {
+					return [];
+				}
+				return this.getDeclarations();
+			},
+			get rawType() {
+				if (deprecatedOptions.rawType) {
+					return this.getTypeObject();
+				}
 			},
 			getDeclarations() {
 				return declarations ??= call.declaration ? getDeclarations([call.declaration]) : [];

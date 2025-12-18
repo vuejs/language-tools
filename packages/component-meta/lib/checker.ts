@@ -71,18 +71,20 @@ export function createCheckerBase(
 	const printer = ts.createPrinter(checkerOptions.printer);
 	const getScriptKind = languageServiceHost.getScriptKind?.bind(languageServiceHost);
 
-	languageServiceHost.getScriptKind = fileName => {
-		const scriptKind = getScriptKind!(fileName);
-		if (vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
-			if (scriptKind === ts.ScriptKind.JS) {
-				return ts.ScriptKind.TS;
+	if (checkerOptions.forceUseTs ?? true) {
+		languageServiceHost.getScriptKind = fileName => {
+			const scriptKind = getScriptKind!(fileName);
+			if (vueOptions.extensions.some(ext => fileName.endsWith(ext))) {
+				if (scriptKind === ts.ScriptKind.JS) {
+					return ts.ScriptKind.TS;
+				}
+				if (scriptKind === ts.ScriptKind.JSX) {
+					return ts.ScriptKind.TSX;
+				}
 			}
-			if (scriptKind === ts.ScriptKind.JSX) {
-				return ts.ScriptKind.TSX;
-			}
-		}
-		return scriptKind;
-	};
+			return scriptKind;
+		};
+	}
 
 	return {
 		getExportNames,
@@ -103,6 +105,10 @@ export function createCheckerBase(
 				componentNode,
 				componentType,
 				checkerOptions.schema ?? false,
+				{
+					noDeclarations: checkerOptions.noDeclarations ?? true,
+					rawType: checkerOptions.rawType ?? false,
+				},
 			);
 		},
 		updateFile(fileName: string, text: string) {
