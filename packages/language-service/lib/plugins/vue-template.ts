@@ -55,13 +55,14 @@ const SORT_TOKEN = {
 	HTML_ATTR: '\u0001',
 } as const;
 
+const deprecatedMarker = '**deprecated**';
+
 const EVENT_PROP_REGEX = /^on[A-Z]/;
 
 // String constants
 const AUTO_IMPORT_PLACEHOLDER = 'AutoImportsPlaceholder';
 const UPDATE_EVENT_PREFIX = 'update:';
 const UPDATE_PROP_PREFIX = 'onUpdate:';
-const MODEL_VALUE_PROP = 'modelValue';
 
 // Directive prefixes
 const DIRECTIVE_V_ON = 'v-on:';
@@ -274,7 +275,6 @@ export function create(
 						info: {
 							tagNameCasing,
 							components,
-							labelToMeta,
 						},
 					} = await runWithVueDataProvider(
 						info.script.id,
@@ -314,9 +314,8 @@ export function create(
 							case 12 satisfies typeof CompletionItemKind.Value:
 								addDirectiveModifiers(htmlCompletion, item, document);
 
-								const propMeta = labelToMeta.get(item.label);
-
-								if (propMeta?.tags.some(tag => tag.name === 'deprecated')) {
+								if (typeof item.documentation === 'object' && item.documentation.value.startsWith(deprecatedMarker)) {
+									item.documentation.value = item.documentation.value.replace(deprecatedMarker, '').trimStart();
 									item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 								}
 
@@ -620,7 +619,6 @@ export function create(
 
 				const tasks: Promise<void>[] = [];
 				const tagDataMap = new Map<string, TagInfo>();
-				const labelToMeta = new Map<string, PropertyMeta>();
 
 				updateExtraCustomData([
 					{
@@ -697,13 +695,8 @@ export function create(
 									if (label) {
 										attributes.push({
 											name: label,
-											description: propMeta?.description
-												? { kind: 'markdown', value: propMeta.description }
-												: undefined,
+											description: propMeta && createDescription(propMeta),
 										});
-										if (propMeta) {
-											labelToMeta.set(label, propMeta);
-										}
 									}
 								}
 								else {
@@ -721,14 +714,8 @@ export function create(
 									if (label) {
 										attributes.push({
 											name: label,
-											description: propMeta2?.description
-												? { kind: 'markdown', value: propMeta2.description }
-												: undefined,
-											// valueSet: prop.values?.some(value => typeof value === 'string') ? '__deferred__' : undefined,
+											description: propMeta2 && createDescription(propMeta2),
 										});
-										if (propMeta2) {
-											labelToMeta.set(label, propMeta2);
-										}
 									}
 								}
 							}
@@ -743,9 +730,7 @@ export function create(
 								if (label) {
 									attributes.push({
 										name: label,
-										description: event.description
-											? { kind: 'markdown', value: event.description }
-											: undefined,
+										description: event && createDescription(event),
 									});
 								}
 							}
@@ -766,16 +751,8 @@ export function create(
 										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
 									attributes.push({
 										name: label,
-										description: propMeta?.description
-											? { kind: 'markdown', value: propMeta.description }
-											: undefined,
+										description: propMeta && createDescription(propMeta),
 									});
-									if (propMeta) {
-										labelToMeta.set(label, propMeta);
-										if (model === MODEL_VALUE_PROP) {
-											labelToMeta.set('v-model', propMeta);
-										}
-									}
 								}
 							}
 							if (!hint || hint === 'v') {
@@ -786,9 +763,7 @@ export function create(
 											+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
 										attributes.push({
 											name: label,
-											description: event.description
-												? { kind: 'markdown', value: event.description }
-												: undefined,
+											description: createDescription(event),
 										});
 									}
 								}
@@ -823,11 +798,21 @@ export function create(
 							info: {
 								tagNameCasing,
 								components,
-								labelToMeta,
 							},
 						};
 					},
 				};
+
+				function createDescription(meta: Pick<PropertyMeta, 'description' | 'tags'>) {
+					let description = meta?.description;
+					if (meta?.tags.some(tag => tag.name === 'deprecated')) {
+						description = deprecatedMarker + '\n\n' + (description ?? '');
+					}
+					if (description) {
+						return;
+					}
+					return { kind: 'markdown' as const, value: description };
+				}
 
 				function getAttrValues(tag: string, attr: string) {
 					if (!values) {
