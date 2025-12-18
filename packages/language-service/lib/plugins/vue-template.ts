@@ -609,16 +609,12 @@ export function create(
 							const { components, elements } = getComponentsAndElements();
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
-							const tags: html.ITagData[] = [];
-							const builtInTagMap = new Map<string, html.ITagData>();
+							const tags: html.ITagData[] = builtInData?.tags?.map(tag => ({
+								...tag,
+								name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
+							})) ?? [];
+							const builtInTags = new Set<string>([...builtInData?.tags?.map(tag => tag.name) ?? []]);
 
-							for (const tag of builtInData?.tags ?? []) {
-								builtInTagMap.set(tag.name, tag);
-								tags.push({
-									...tag,
-									name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
-								});
-							}
 							for (const tag of components) {
 								names.add(tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag) : tag);
 							}
@@ -636,7 +632,7 @@ export function create(
 								}
 							}
 							for (const name of names) {
-								if (!builtInTagMap.has(name)) {
+								if (!builtInTags.has(name)) {
 									tags.push({ name, attributes: [] });
 								}
 							}
@@ -647,6 +643,21 @@ export function create(
 							const directives = getDirectives();
 							const { attrs, meta } = getTagData(tag);
 							const attributes: html.IAttributeData[] = [];
+
+							for (const attr of builtInData?.globalAttributes ?? []) {
+								if (attr.name === 'is' && tag.toLowerCase() !== 'component') {
+									continue;
+								}
+								if (attr.name === 'ref' || attr.name.startsWith('v-')) {
+									attributes.push(attr);
+								}
+								else {
+									attributes.push({
+										...attr,
+										name: ':' + attr.name,
+									});
+								}
+							}
 
 							for (
 								const [propName, propMeta] of [
@@ -708,10 +719,6 @@ export function create(
 										description: event && createDescription(event),
 									});
 								}
-							}
-
-							for (const globalAttr of builtInData?.globalAttributes ?? []) {
-								attributes.push(globalAttr);
 							}
 
 							for (const directive of directives) {
