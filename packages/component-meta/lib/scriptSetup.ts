@@ -6,7 +6,6 @@ export function getDefaultsFromScriptSetup(
 	printer: ts.Printer,
 	language: core.Language<string>,
 	componentPath: string,
-	vueOptions: core.VueCompilerOptions,
 ) {
 	const sourceScript = language.scripts.get(componentPath);
 	const virtualCode = sourceScript?.generated?.root as core.VueVirtualCode | undefined;
@@ -17,7 +16,7 @@ export function getDefaultsFromScriptSetup(
 	if (!sourceFile) {
 		return;
 	}
-	const scriptSetupRanges = core.parseScriptSetupRanges(ts, sourceFile, vueOptions);
+	const scriptSetupRanges = core.parseScriptSetupRanges(ts, sourceFile, virtualCode.vueCompilerOptions);
 	if (scriptSetupRanges) {
 		return collectPropDefaultsFromScriptSetup(
 			ts,
