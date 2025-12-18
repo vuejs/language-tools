@@ -590,6 +590,7 @@ export function create(
 
 				let version = 0;
 				let components: string[] | undefined;
+				let elements: string[] | undefined;
 				let directives: string[] | undefined;
 				let values: string[] | undefined;
 
@@ -601,7 +602,7 @@ export function create(
 						getId: () => 'vue-template',
 						isApplicable: () => true,
 						provideTags: () => {
-							const components = getComponents();
+							const { components, elements } = getComponentsAndElements();
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
@@ -614,6 +615,11 @@ export function create(
 									names.add(tag);
 								}
 							}
+
+							for (const tag of elements) {
+								names.add(hyphenateTag(tag));
+							}
+
 							if (codegen) {
 								for (
 									const name of [
@@ -824,15 +830,24 @@ export function create(
 					return directives;
 				}
 
-				function getComponents() {
-					if (!components) {
+				function getComponentsAndElements() {
+					if (!components || !elements) {
 						components = [];
+						elements = [];
 						tasks.push((async () => {
-							components = await tsserver.getComponentNames(root.fileName) ?? [];
+							const res = await Promise.all([
+								tsserver.getComponentNames(root.fileName),
+								tsserver.getElementNames(root.fileName),
+							]);
+							components = res[0] ?? [];
+							elements = res[1] ?? [];
 							version++;
 						})());
 					}
-					return components;
+					return {
+						components,
+						elements,
+					};
 				}
 			}
 
@@ -889,8 +904,8 @@ export function create(
 		},
 	};
 
-	function updateExtraCustomData(extraData: html.IHTMLDataProvider[]) {
-		htmlData = extraData;
+	function updateExtraCustomData(newData: html.IHTMLDataProvider[]) {
+		htmlData = newData;
 		onDidChangeCustomDataListeners.forEach(l => l());
 	}
 }
