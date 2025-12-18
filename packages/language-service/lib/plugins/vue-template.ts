@@ -349,42 +349,43 @@ export function create(
 						const autoImportPlaceholderIndex = htmlCompletion.items.findIndex(item =>
 							item.label === AUTO_IMPORT_PLACEHOLDER
 						);
-						if (autoImportPlaceholderIndex !== -1) {
-							const offset = document.offsetAt(position);
-							const map = context.language.maps.get(info.code, info.script);
-							let spliced = false;
-							for (const [sourceOffset] of map.toSourceLocation(offset)) {
-								const autoImport = await tsserver.getAutoImportSuggestions(
-									info.root.fileName,
-									sourceOffset,
-								);
-								if (!autoImport) {
-									continue;
-								}
-								const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
-								const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
-								for (const tsItem of tsCompletion.items) {
-									if (placeholder.textEdit) {
-										const newText = tsItem.textEdit?.newText ?? tsItem.label;
-										tsItem.textEdit = {
-											...placeholder.textEdit,
-											newText: tagNameCasing === TagNameCasing.Kebab
-												? hyphenateTag(newText)
-												: newText,
-										};
-									}
-									else {
-										tsItem.textEdit = undefined;
-									}
-								}
-								htmlCompletion.items.splice(autoImportPlaceholderIndex, 1, ...tsCompletion.items);
-								spliced = true;
-								lastCompletionDocument = document;
-								break;
+						if (autoImportPlaceholderIndex === -1) {
+							return;
+						}
+						const offset = document.offsetAt(position);
+						const map = context.language.maps.get(info.code, info.script);
+						let spliced = false;
+						for (const [sourceOffset] of map.toSourceLocation(offset)) {
+							const autoImport = await tsserver.getAutoImportSuggestions(
+								info.root.fileName,
+								sourceOffset,
+							);
+							if (!autoImport) {
+								continue;
 							}
-							if (!spliced) {
-								htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
+							const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
+							const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
+							for (const tsItem of tsCompletion.items) {
+								if (placeholder.textEdit) {
+									const newText = tsItem.textEdit?.newText ?? tsItem.label;
+									tsItem.textEdit = {
+										...placeholder.textEdit,
+										newText: tagNameCasing === TagNameCasing.Kebab
+											? hyphenateTag(newText)
+											: newText,
+									};
+								}
+								else {
+									tsItem.textEdit = undefined;
+								}
 							}
+							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1, ...tsCompletion.items);
+							spliced = true;
+							lastCompletionDocument = document;
+							break;
+						}
+						if (!spliced) {
+							htmlCompletion.items.splice(autoImportPlaceholderIndex, 1);
 						}
 					}
 				},
