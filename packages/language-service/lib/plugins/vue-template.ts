@@ -274,7 +274,7 @@ export function create(
 					if (!htmlCompletion) {
 						return;
 					}
-					if (!hint) {
+					if (!prevText.match(/\b[\S]+$/)) {
 						htmlCompletion.isIncomplete = true;
 					}
 
@@ -712,15 +712,10 @@ export function create(
 										labelName = hyphenateAttr(labelName);
 									}
 
-									const label = !hint || hint === '@'
-										? V_ON_SHORTHAND + labelName
-										: hint === 'v'
-										? DIRECTIVE_V_ON + labelName
-										: undefined;
-
-									if (label) {
+									if (!hint || hint === '@' || hint === 'v') {
+										const prefix = !hint || hint === '@' ? V_ON_SHORTHAND : DIRECTIVE_V_ON;
 										attributes.push({
-											name: label,
+											name: prefix + labelName,
 											description: propMeta && createDescription(propMeta),
 										});
 									}
@@ -731,15 +726,16 @@ export function create(
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === labelName;
 									});
-									const label = !hint || hint === ':'
-										? V_BIND_SHORTHAND + labelName
-										: hint === 'v'
-										? DIRECTIVE_V_BIND + labelName
-										: undefined;
-
-									if (label) {
+									if (!hint || hint === ':' || hint === 'v') {
+										const prefix = !hint || hint === ':' ? V_BIND_SHORTHAND : DIRECTIVE_V_BIND;
 										attributes.push({
-											name: label,
+											name: prefix + labelName,
+											description: propMeta2 && createDescription(propMeta2),
+										});
+									}
+									if (!hint || hint === 'v') {
+										attributes.push({
+											name: labelName,
 											description: propMeta2 && createDescription(propMeta2),
 										});
 									}
@@ -747,15 +743,11 @@ export function create(
 							}
 							for (const event of meta?.events ?? []) {
 								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
-								const label = !hint || hint === '@'
-									? V_ON_SHORTHAND + eventName
-									: hint === 'v'
-									? DIRECTIVE_V_ON + eventName
-									: undefined;
 
-								if (label) {
+								if (!hint || hint === '@' || hint === 'v') {
+									const prefix = !hint || hint === '@' ? V_ON_SHORTHAND : DIRECTIVE_V_ON;
 									attributes.push({
-										name: label,
+										name: prefix + eventName,
 										description: event && createDescription(event),
 									});
 								}
