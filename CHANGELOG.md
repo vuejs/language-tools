@@ -1,5 +1,47 @@
 # Changelog
 
+## 3.2.0 (2025-12-00)
+
+### vscode
+
+- **fix:** Vue TS highlighting when trailing type alias is missing semicolon (#5853) - Thanks to @serkodev!
+- **perf:** replace `fast-diff` with custom character-by-character alignment algorithm (#5849) (#5851)
+- **refactor:** update Vue grammar scope name to "text.html.vue" (#5856)
+- **test:** add test for embedded grammars (#5861) - Thanks to @serkodev!
+
+### component-meta
+
+- **feat:** add `tags` to slots and exposed (#5862) - Thanks to @aj-dev!
+- **feat:** filter out irrelevant properties from `exposed` (#5868) - Thanks to @aj-dev!
+
+### typescript-plugin
+
+- **feat:** include leading dot when finding references to CSS classes (#5852)
+- **fix:** missing module error after file rename (#5839) - Thanks to @serkodev!
+- **fix:** prioritize non-warning completion entries over warning ones (#5847)
+- **fix:** always pass rest parameters for future compatibility (#5859) - Thanks to @KazariEX!
+- **fix:** add nullish guards before accessing `ts.CompletionEntryData` (#5869) - Thanks to @KazariEX!
+- **fix:** handle import type nodes in definition proxy (#5873)
+
+### language-core
+
+- **feat:** revert overcorrection of `v-for` type inference (#5836)
+- **feat:** align `v-for` key type with `Object.keys` (#5837) - Thanks to @serkodev!
+- **feat:** narrow component and directive types (#5841)
+- **feat:** support `<!-- @strictTemplates -->` magic comment (#5845)
+- **fix:** correctly resolve `<script src="">` (#5838)
+- **fix:** preserve template slot wrappers during `createIfBranch` (#5844) - Thanks to @serkodev!
+- **fix:** include end tag locations when renaming global components
+- **refactor:** replace dynamic types generation with static files (#5872)
+
+### workspace
+
+- **chore:** update testing infrastructure (#5848)
+- **chore:** use tsgo in development (#5860)
+- **chore:** reduce local dependencies and update workflows (#5863)
+- **chore:** upgrade tsslint and vite to pre-release versions
+- **chore:** delete tests for Vue 3.4 (#5871)
+
 ## 3.1.8 (2025-12-09)
 
 ### Features
