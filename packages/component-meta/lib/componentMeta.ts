@@ -9,21 +9,33 @@ import {
 } from './helpers';
 import { createSchemaResolvers } from './schemaResolvers';
 import { getDefaultsFromScriptSetup } from './scriptSetup';
-import type { ComponentMeta, MetaCheckerOptions, PropertyMeta } from './types';
-
-const vnodeEventRegex = /^onVnode[A-Z]/;
+import type { ComponentMeta, MetaCheckerSchemaOptions, PropertyMeta } from './types';
 
 export function getComponentMeta(
 	ts: typeof import('typescript'),
-	program: ts.Program,
+	typeChecker: ts.TypeChecker,
 	printer: ts.Printer,
-	vueOptions: core.VueCompilerOptions,
 	language: core.Language<string>,
-	sourceFile: ts.SourceFile,
-	componentNode: ts.Expression,
-	checkerOptions: MetaCheckerOptions,
+	componentNode: ts.Node,
+	componentType: ts.Type,
+	options: MetaCheckerSchemaOptions,
+	deprecatedOptions: { noDeclarations: boolean; rawType: boolean } = { noDeclarations: true, rawType: false },
 ): ComponentMeta {
-	const typeChecker = program.getTypeChecker();
+	const componentSymbol = typeChecker.getSymbolAtLocation(componentNode);
+
+	let componentFile = componentNode.getSourceFile();
+
+	if (componentSymbol) {
+		const symbol = componentSymbol.flags & ts.SymbolFlags.Alias
+			? typeChecker.getAliasedSymbol(componentSymbol)
+			: componentType.symbol;
+		const declaration = symbol?.valueDeclaration ?? symbol?.declarations?.[0];
+
+		if (declaration) {
+			componentFile = declaration.getSourceFile();
+			componentNode = declaration;
+		}
+	}
 
 	let name: string | undefined;
 	let description: string | undefined;
@@ -60,11 +72,11 @@ export function getComponentMeta(
 	return meta;
 
 	function getType() {
-		return inferComponentType(typeChecker, componentNode) ?? 0;
+		return inferComponentType(componentType) ?? 0;
 	}
 
 	function getProps() {
-		const propsType = inferComponentProps(typeChecker, componentNode);
+		const propsType = inferComponentProps(typeChecker, componentType);
 		if (!propsType) {
 			return [];
 		}
@@ -79,28 +91,26 @@ export function getComponentMeta(
 			.map(prop => {
 				const {
 					resolveNestedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, componentNode, checkerOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
 
 				return resolveNestedProperties(prop);
 			})
-			.filter(prop => !vnodeEventRegex.test(prop.name) && !eventProps.has(prop.name));
+			.filter((prop): prop is PropertyMeta => !!prop && !eventProps.has(prop.name));
 
-		// Merge default props from script setup
-		const defaults = getDefaultsFromScriptSetup(ts, printer, language, sourceFile.fileName, vueOptions);
+		const defaults = getDefaultsFromScriptSetup(ts, printer, language, componentFile.fileName);
 
-		if (defaults?.size) {
-			for (const prop of result) {
-				if (defaults.has(prop.name)) {
-					prop.default = defaults.get(prop.name);
-				}
+		for (const prop of result) {
+			if (prop.name.match(/^onVnode[A-Z]/)) {
+				prop.name = 'onVue:' + prop.name['onVnode'.length]?.toLowerCase() + prop.name.slice('onVnode'.length + 1);
 			}
+			prop.default ??= defaults?.get(prop.name);
 		}
 
 		return result;
 	}
 
 	function getEvents() {
-		const emitType = inferComponentEmit(typeChecker, componentNode);
+		const emitType = inferComponentEmit(typeChecker, componentType);
 
 		if (emitType) {
 			const calls = emitType.getCallSignatures();
@@ -108,7 +118,7 @@ export function getComponentMeta(
 			return calls.map(call => {
 				const {
 					resolveEventSignature,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, componentNode, checkerOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
 
 				return resolveEventSignature(call);
 			}).filter(event => event.name);
@@ -118,7 +128,7 @@ export function getComponentMeta(
 	}
 
 	function getSlots() {
-		const slotsType = inferComponentSlots(typeChecker, componentNode);
+		const slotsType = inferComponentSlots(typeChecker, componentType);
 
 		if (slotsType) {
 			const properties = slotsType.getProperties();
@@ -126,7 +136,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveSlotProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, componentNode, checkerOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
 
 				return resolveSlotProperties(prop);
 			});
@@ -136,10 +146,10 @@ export function getComponentMeta(
 	}
 
 	function getExposed() {
-		const exposedType = inferComponentExposed(typeChecker, componentNode);
+		const exposedType = inferComponentExposed(typeChecker, componentType);
 
 		if (exposedType) {
-			const propsType = inferComponentProps(typeChecker, componentNode);
+			const propsType = inferComponentProps(typeChecker, componentType);
 			const propsProperties = propsType?.getProperties() ?? [];
 			const properties = exposedType.getProperties().filter(prop =>
 				// only exposed props will have at least one declaration and no valueDeclaration
@@ -154,7 +164,7 @@ export function getComponentMeta(
 			return properties.map(prop => {
 				const {
 					resolveExposedProperties,
-				} = createSchemaResolvers(ts, typeChecker, printer, language, componentNode, checkerOptions);
+				} = createSchemaResolvers(ts, typeChecker, printer, language, options, deprecatedOptions);
 
 				return resolveExposedProperties(prop);
 			});
@@ -167,9 +177,9 @@ export function getComponentMeta(
 		let decl = componentNode;
 
 		// const __VLS_export = ...
-		const text = sourceFile.text.slice(decl.pos, decl.end);
+		const text = componentFile.text.slice(decl.pos, decl.end);
 		if (text.includes(core.names._export)) {
-			ts.forEachChild(sourceFile, child2 => {
+			ts.forEachChild(componentFile, child2 => {
 				if (ts.isVariableStatement(child2)) {
 					for (const { name, initializer } of child2.declarationList.declarations) {
 						if (name.getText() === core.names._export && initializer) {
@@ -180,7 +190,7 @@ export function getComponentMeta(
 			});
 		}
 
-		return core.parseOptionsFromExtression(ts, decl, sourceFile)?.name?.node.text;
+		return core.parseOptionsFromExtression(ts, decl, componentFile)?.name?.node.text;
 	}
 
 	function getDescription() {

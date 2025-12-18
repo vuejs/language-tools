@@ -280,6 +280,9 @@ importers:
       path-browserify:
         specifier: ^1.0.1
         version: 1.0.1
+      vue-component-meta:
+        specifier: workspace:*
+        version: link:../component-meta
     devDependencies:
       '@types/node':
         specifier: ^22.10.4

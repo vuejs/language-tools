@@ -12,9 +12,8 @@ import {
 import type { Requests } from './lib/requests';
 import { collectExtractProps } from './lib/requests/collectExtractProps';
 import { getComponentDirectives } from './lib/requests/getComponentDirectives';
-import { getComponentEvents } from './lib/requests/getComponentEvents';
+import { getComponentMeta } from './lib/requests/getComponentMeta';
 import { getComponentNames } from './lib/requests/getComponentNames';
-import { getComponentProps } from './lib/requests/getComponentProps';
 import { getComponentSlots } from './lib/requests/getComponentSlots';
 import { getElementAttrs } from './lib/requests/getElementAttrs';
 import { getElementNames } from './lib/requests/getElementNames';
@@ -273,20 +272,17 @@ export = createLanguageServicePlugin(
 				const { project } = getProject(fileName);
 				return createResponse(getComponentDirectives(ts, project.getLanguageService().getProgram()!, fileName));
 			});
-			session.addProtocolHandler('_vue:getComponentEvents', request => {
-				const [fileName, tag]: Parameters<Requests['getComponentEvents']> = request.arguments;
-				const { project, virtualCode } = getProjectAndVirtualCode(fileName);
-				return createResponse(getComponentEvents(ts, project.getLanguageService().getProgram()!, virtualCode, tag));
-			});
 			session.addProtocolHandler('_vue:getComponentNames', request => {
 				const [fileName]: Parameters<Requests['getComponentNames']> = request.arguments;
 				const { project, virtualCode } = getProjectAndVirtualCode(fileName);
 				return createResponse(getComponentNames(ts, project.getLanguageService().getProgram()!, virtualCode));
 			});
-			session.addProtocolHandler('_vue:getComponentProps', request => {
-				const [fileName, tag]: Parameters<Requests['getComponentProps']> = request.arguments;
-				const { project, virtualCode } = getProjectAndVirtualCode(fileName);
-				return createResponse(getComponentProps(ts, project.getLanguageService().getProgram()!, virtualCode, tag));
+			session.addProtocolHandler('_vue:getComponentMeta', request => {
+				const [fileName, tag]: Parameters<Requests['getComponentMeta']> = request.arguments;
+				const { project, virtualCode, language } = getProjectAndVirtualCode(fileName);
+				const program = project.getLanguageService().getProgram()!;
+				const sourceFile = program.getSourceFile(virtualCode.fileName)!;
+				return createResponse(getComponentMeta(ts, program, language, sourceFile, virtualCode, tag));
 			});
 			session.addProtocolHandler('_vue:getComponentSlots', request => {
 				const [fileName]: Parameters<Requests['getComponentSlots']> = request.arguments;
