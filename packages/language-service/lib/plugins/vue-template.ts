@@ -32,31 +32,7 @@ import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
 
-const builtInComponents = new Set([
-	'Transition',
-	'TransitionGroup',
-	'KeepAlive',
-	'Suspense',
-	'Teleport',
-]);
-
-// Sort text priority tokens
-const SORT_TOKEN = {
-	COMPONENT_PROP: '\u0000',
-	COLON_PREFIX: '\u0001',
-	AT_PREFIX: '\u0002',
-	V_BIND_PREFIX: '\u0003',
-	V_MODEL_PREFIX: '\u0004',
-	V_ON_PREFIX: '\u0005',
-	VUE_EVENT: '\u0004',
-	SPECIAL_PROP: '\u0001',
-	CONTROL_FLOW: '\u0003',
-	DIRECTIVE: '\u0002',
-	HTML_ATTR: '\u0001',
-} as const;
-
-const deprecatedMarker = '**deprecated**\n\n';
-
+const DEPRECATED_MARKER = '**deprecated**\n\n';
 const EVENT_PROP_REGEX = /^on[A-Z]/;
 
 // String constants
@@ -308,14 +284,13 @@ export function create(
 									|| componentSet.has(capitalize(camelize(item.label)))
 								) {
 									item.kind = 6 satisfies typeof CompletionItemKind.Variable;
-									item.sortText = SORT_TOKEN.COMPONENT_PROP + (item.sortText ?? item.label);
 								}
 								break;
 							case 12 satisfies typeof CompletionItemKind.Value:
 								addDirectiveModifiers(htmlCompletion, item, document);
 
-								if (typeof item.documentation === 'object' && item.documentation.value.startsWith(deprecatedMarker)) {
-									item.documentation.value = item.documentation.value.replace(deprecatedMarker, '');
+								if (typeof item.documentation === 'object' && item.documentation.value.startsWith(DEPRECATED_MARKER)) {
+									item.documentation.value = item.documentation.value.replace(DEPRECATED_MARKER, '');
 									item.tags = [1 satisfies typeof CompletionItemTag.Deprecated];
 								}
 
@@ -658,15 +633,6 @@ export function create(
 								tags.push({ name, attributes: [] });
 							}
 
-							for (const builtInTag of builtInData!.tags ?? []) {
-								tags.push({
-									...builtInTag,
-									name: tagNameCasing === TagNameCasing.Kebab
-										? hyphenateTag(builtInTag.name)
-										: builtInTag.name,
-								});
-							}
-
 							return tags;
 						},
 						provideAttributes: tag => {
@@ -807,7 +773,7 @@ export function create(
 				function createDescription(meta: Pick<PropertyMeta, 'description' | 'tags'>) {
 					let description = meta?.description ?? '';
 					if (meta?.tags.some(tag => tag.name === 'deprecated')) {
-						description = deprecatedMarker + description;
+						description = DEPRECATED_MARKER + description;
 					}
 					if (!description) {
 						return;
@@ -863,7 +829,6 @@ export function create(
 						components = [];
 						tasks.push((async () => {
 							components = await tsserver.getComponentNames(root.fileName) ?? [];
-							components = components.filter(name => !builtInComponents.has(name));
 							version++;
 						})());
 					}
