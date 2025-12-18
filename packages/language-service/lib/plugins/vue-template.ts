@@ -452,13 +452,33 @@ export function create(
 						if (offset >= tagStart && offset <= tagEnd) {
 							const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
 							const props = meta?.props.filter(p => !p.global);
+							const modelProps = new Set<PropertyMeta>();
 							let tableContents = '';
+
+							for (const event of meta?.events ?? []) {
+								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
+									const modelName = event.name.slice(UPDATE_EVENT_PREFIX.length);
+									const modelProp = props?.find(p => p.name === modelName);
+									if (modelProp) {
+										modelProps.add(modelProp);
+									}
+								}
+							}
+							for (const prop of props ?? []) {
+								if (prop.name.startsWith(UPDATE_PROP_PREFIX)) {
+									const modelName = prop.name.slice(UPDATE_PROP_PREFIX.length);
+									const modelProp = props?.find(p => p.name === modelName);
+									if (modelProp) {
+										modelProps.add(modelProp);
+									}
+								}
+							}
 
 							if (props?.length) {
 								tableContents += `<tr><th>Prop</th><th>Description</th><th>Default</th></tr>\n`;
 								for (const p of props) {
 									tableContents += `<tr>
-											<td>${printName(p)}</td>
+											<td>${printName(p, modelProps.has(p))}</td>
 											<td>${printDescription(p)}</td>
 											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
 										</tr>\n`;
@@ -506,20 +526,23 @@ export function create(
 								kind: 'markdown',
 								value: tableContents
 									? `<table>\n${tableContents}\n</table>`
-									: `No info available.`,
+									: `No type information available.`,
 							};
 						}
 					}
 
 					return htmlHover;
 
-					function printName(meta: { name: string; tags: { name: string }[]; required?: boolean }) {
+					function printName(meta: { name: string; tags: { name: string }[]; required?: boolean }, model?: boolean) {
 						let name = meta.name;
 						if (meta.tags.some(tag => tag.name === 'deprecated')) {
 							name = `<del>${name}</del>`;
 						}
 						if (meta.required) {
 							name += ' <sup><em>required</em></sup>';
+						}
+						if (model) {
+							name += ' <sup><em>model</em></sup>';
 						}
 						return name;
 					}
