@@ -141,8 +141,8 @@ export function create(
 												end: document.positionAt(current.labelOffset),
 											},
 											newText: ` :${
-												attrNameCasing === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp.name) : requiredProp.name
-											}="${requiredProp.default?.replace(/"/g, "'") ?? ''}"`,
+												attrNameCasing === AttrNameCasing.Kebab ? hyphenateAttr(requiredProp.name) : requiredProp
+											}=`,
 										}],
 									});
 								}
