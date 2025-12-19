@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = 'Vue';
 export const name = 'volar';
-export const version = '3.1.5';
+export const version = '3.1.8';
 export const displayName = 'Vue (Official)';
 export const description = 'Language Support for Vue';
 export const extensionId = `${publisher}.${name}`;
@@ -17,7 +17,7 @@ export type CommandKey =
 	| 'vue.action.restartServer';
 
 /**
- * Commands map registed by `Vue.volar`
+ * Commands map registered by `Vue.volar`
  */
 export const commands = {
 	/**
@@ -31,6 +31,25 @@ export const commands = {
 	 */
 	actionRestartServer: 'vue.action.restartServer',
 } satisfies Record<string, CommandKey>;
+
+/**
+ * Type union of all languages
+ */
+export type LanguageKey =
+	| 'vue'
+	| 'markdown'
+	| 'html'
+	| 'jade';
+
+/**
+ * Languages map registed by `Vue.volar`
+ */
+export const languages = {
+	vue: 'vue',
+	markdown: 'markdown',
+	html: 'html',
+	jade: 'jade',
+} satisfies Record<string, LanguageKey>;
 
 /**
  * Type union of all configs
@@ -67,7 +86,7 @@ export interface ConfigKeyTypeMap {
 	'vue.editor.reactivityVisualization': boolean;
 	'vue.editor.templateInterpolationDecorators': boolean;
 	'vue.server.path': string | undefined;
-	'vue.server.includeLanguages': string[];
+	'vue.server.includeLanguages': unknown[];
 	'vue.codeActions.askNewComponentName': boolean;
 	'vue.suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
 	'vue.suggest.propNameCasing': 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
@@ -128,7 +147,7 @@ export interface ConfigShorthandTypeMap {
 	editorReactivityVisualization: boolean;
 	editorTemplateInterpolationDecorators: boolean;
 	serverPath: string | undefined;
-	serverIncludeLanguages: string[];
+	serverIncludeLanguages: unknown[];
 	codeActionsAskNewComponentName: boolean;
 	suggestComponentNameCasing: 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
 	suggestPropNameCasing: 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
@@ -212,12 +231,12 @@ export const configs = {
 	} as ConfigItem<'vue.server.path'>,
 	/**
 	 * @key `vue.server.includeLanguages`
-	 * @default `["vue"]`
+	 * @default `["vue",{"language":"markdown","pattern":"**\/*.vue.md"}]`
 	 * @type `array`
 	 */
 	serverIncludeLanguages: {
 		key: 'vue.server.includeLanguages',
-		default: ['vue'],
+		default: ['vue', { 'language': 'markdown', 'pattern': '**/*.vue.md' }],
 	} as ConfigItem<'vue.server.includeLanguages'>,
 	/**
 	 * @key `vue.codeActions.askNewComponentName`
@@ -389,7 +408,7 @@ export interface ScopedConfigKeyTypeMap {
 	'editor.reactivityVisualization': boolean;
 	'editor.templateInterpolationDecorators': boolean;
 	'server.path': string | undefined;
-	'server.includeLanguages': string[];
+	'server.includeLanguages': unknown[];
 	'codeActions.askNewComponentName': boolean;
 	'suggest.componentNameCasing': 'preferKebabCase' | 'preferPascalCase' | 'alwaysKebabCase' | 'alwaysPascalCase';
 	'suggest.propNameCasing': 'preferKebabCase' | 'preferCamelCase' | 'alwaysKebabCase' | 'alwaysCamelCase';
@@ -425,7 +444,7 @@ export const scopedConfigs = {
 		'editor.reactivityVisualization': true,
 		'editor.templateInterpolationDecorators': true,
 		'server.path': undefined,
-		'server.includeLanguages': ['vue'],
+		'server.includeLanguages': ['vue', { 'language': 'markdown', 'pattern': '**/*.vue.md' }],
 		'codeActions.askNewComponentName': true,
 		'suggest.componentNameCasing': 'preferPascalCase',
 		'suggest.propNameCasing': 'preferKebabCase',
@@ -459,7 +478,7 @@ export interface NestedConfigs {
 		};
 		'server': {
 			'path': string | undefined;
-			'includeLanguages': string[];
+			'includeLanguages': unknown[];
 		};
 		'codeActions': {
 			'askNewComponentName': boolean;
@@ -516,7 +535,7 @@ export interface NestedScopedConfigs {
 	};
 	'server': {
 		'path': string | undefined;
-		'includeLanguages': string[];
+		'includeLanguages': unknown[];
 	};
 	'codeActions': {
 		'askNewComponentName': boolean;

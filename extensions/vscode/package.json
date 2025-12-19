@@ -286,10 +286,32 @@
 				"vue.server.includeLanguages": {
 					"type": "array",
 					"items": {
-						"type": "string"
+						"anyOf": [
+							{
+								"type": "string"
+							},
+							{
+								"type": "object",
+								"properties": {
+									"language": {
+										"type": "string"
+									},
+									"pattern": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"language"
+								]
+							}
+						]
 					},
 					"default": [
-						"vue"
+						"vue",
+						{
+							"language": "markdown",
+							"pattern": "**/*.vue.md"
+						}
 					],
 					"markdownDescription": "%configuration.server.includeLanguages%"
 				},
