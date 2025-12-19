@@ -250,16 +250,16 @@ function resolveTsdkPath() {
 }
 
 function resolveServerPath() {
-	const pluginDir = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack');
-	const pluginFile = path.join(pluginDir, 'index.js');
+	const tsPluginDir = path.join(__dirname, '..', 'node_modules', 'vue-typescript-plugin-pack');
+	const tsPluginEntry = path.join(tsPluginDir, 'index.js');
 
-	if (!fs.existsSync(pluginDir)) {
-		fs.mkdirSync(pluginDir, { recursive: true });
+	if (!fs.existsSync(tsPluginDir)) {
+		fs.mkdirSync(tsPluginDir, { recursive: true });
 	}
 
 	if (!config.server.path) {
 		fs.writeFileSync(
-			pluginFile,
+			tsPluginEntry,
 			`try { module.exports = require("../@vue/typescript-plugin"); } catch { module.exports = require("../../dist/typescript-plugin.js"); }`,
 		);
 		return;
@@ -268,7 +268,7 @@ function resolveServerPath() {
 	if (path.isAbsolute(config.server.path)) {
 		const entryFile = require.resolve('./index.js', { paths: [config.server.path] });
 		const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-		fs.writeFileSync(pluginFile, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
+		fs.writeFileSync(tsPluginEntry, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
 		return entryFile;
 	}
 
@@ -280,7 +280,7 @@ function resolveServerPath() {
 			const serverPath = path.join(uri.fsPath, config.server.path);
 			const entryFile = require.resolve('./index.js', { paths: [serverPath] });
 			const tsPluginPath = require.resolve('@vue/typescript-plugin', { paths: [path.dirname(entryFile)] });
-			fs.writeFileSync(pluginFile, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
+			fs.writeFileSync(tsPluginEntry, `module.exports = require(${JSON.stringify(tsPluginPath)});`);
 			return entryFile;
 		}
 		catch {}
@@ -299,6 +299,21 @@ function patchTypeScriptExtension() {
 	const { publisher, name } = require('../package.json');
 	const vueExtension = vscode.extensions.getExtension(`${publisher}.${name}`)!;
 	const tsPluginName = 'vue-typescript-plugin-pack';
+	const reactiveAnalysisPluginEntry = path.join(
+		__dirname,
+		'..',
+		'node_modules',
+		'vue-reactivity-analysis-plugin-pack',
+		'index.js',
+	);
+
+	if (!fs.existsSync(reactiveAnalysisPluginEntry)) {
+		fs.mkdirSync(path.dirname(reactiveAnalysisPluginEntry), { recursive: true });
+		fs.writeFileSync(
+			reactiveAnalysisPluginEntry,
+			`try { module.exports = require("../../out/reactivityAnalysisPlugin.js"); } catch { module.exports = require("../../dist/reactivity-analysis-plugin.js"); }`,
+		);
+	}
 	const languages = getIncludeLanguages().map(lang => typeof lang === 'string' ? lang : lang.language);
 
 	vueExtension.packageJSON.contributes.typescriptServerPlugins = [
