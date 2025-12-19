@@ -366,10 +366,7 @@ function patchTypeScriptExtension() {
 				s => {
 					for (const [virtualLang, lang] of virtualLangMap) {
 						s += `if(n==="${virtualLang}"){t.push(${
-							JSON.stringify({
-								language: lang.language,
-								pattern: lang.pattern,
-							})
+							JSON.stringify({ language: lang.language, pattern: lang.pattern })
 						});continue;}`;
 					}
 					return s;
