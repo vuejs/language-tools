@@ -372,6 +372,11 @@ function patchTypeScriptExtension() {
 					return s;
 				},
 			);
+			// patch hasCapabilityForResource
+			text = text.replace(
+				'hasCapabilityForResource(e,t){',
+				s => s + 'if(e.path.endsWith(".vue.md"))return true;',
+			);
 			// patch BufferSyncSupport.openTextDocument
 			text = text.replace(
 				'if(!this.modeIds.has(e.languageId)',
