@@ -52,8 +52,11 @@ test('#4670', async () => {
 	).toMatchInlineSnapshot(`
 		[
 		  "@auxclick",
+		  "v-on:auxclick",
 		  "@click",
+		  "v-on:click",
 		  "@dblclick",
+		  "v-on:dblclick",
 		]
 	`);
 });
