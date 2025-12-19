@@ -34,6 +34,20 @@ export = createLanguageServicePlugin(
 			vueOptions,
 			id => id,
 		);
+
+		const host = info.languageServiceHost;
+		const getScriptSnapshot = host.getScriptSnapshot?.bind(host);
+		if (getScriptSnapshot) {
+			host.getScriptSnapshot = fileName => {
+				const shouldIgnoreMarkdown = fileName.toLowerCase().endsWith('.md')
+					&& !vueOptions.vitePressExtensions.some(ext => fileName.toLowerCase().endsWith(ext.toLowerCase()));
+				if (shouldIgnoreMarkdown) {
+					return;
+				}
+				return getScriptSnapshot(fileName);
+			};
+		}
+
 		addVueCommands();
 
 		let _language: core.Language<string> | undefined;
