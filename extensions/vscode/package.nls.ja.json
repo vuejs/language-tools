@@ -6,6 +6,7 @@
 	"configuration.suggest.componentNameCasing": "コンポーネント名の命名規則。",
 	"configuration.suggest.propNameCasing": "属性名の命名規則。",
 	"configuration.suggest.defineAssignment": "補完項目 `props` を選択した時に `const props = ` を `defineProps` の前に自動で追加します。（`emit` と `slots` も同様）",
+	"configuration.hover.rich": "（実験的）型情報を使用して Vue コンポーネントのリッチホバーを有効にします（props、events、slots、exposed をテーブル形式で表示）。",
 	"configuration.autoInsert.dotValue": "Ref 値に `.value` を自動で追加します。",
 	"configuration.autoInsert.bracketSpacing": "二重中括弧で括られた内側にスペースを自動で追加します。",
 	"configuration.inlayHints.destructuredProps": "分割代入された props のインレイヒントを表示します：\n\n```ts\nwatch(() => /* props. */foo, () => { ... });\n```",
