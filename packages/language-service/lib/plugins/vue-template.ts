@@ -458,7 +458,7 @@ export function create(
 							const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
 							const props = meta?.props.filter(p => !p.global);
 							const modelProps = new Set<PropertyMeta>();
-							let tableContents = '';
+							let tableContents: string[] = [];
 
 							for (const event of meta?.events ?? []) {
 								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
@@ -480,44 +480,49 @@ export function create(
 							}
 
 							if (props?.length) {
-								tableContents += `<tr><th>Prop</th><th>Description</th><th>Default</th></tr>\n`;
+								let table =
+									`<tr><th align="left">Prop</th><th align="left">Description</th><th align="left">Default</th></tr>\n`;
 								for (const p of props) {
-									tableContents += `<tr>
+									table += `<tr>
 											<td>${printName(p, modelProps.has(p))}</td>
 											<td>${printDescription(p)}</td>
 											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
 										</tr>\n`;
 								}
+								tableContents.push(table);
 							}
 
 							if (meta?.events?.length) {
-								tableContents += `<tr><th>Event</th><th>Description</th><th></th></tr>\n`;
+								let table = `<tr><th align="left">Event</th><th align="left">Description</th><th></th></tr>\n`;
 								for (const e of meta.events) {
-									tableContents += `<tr>
+									table += `<tr>
 											<td>${printName(e)}</td>
 											<td colspan="2">${printDescription(e)}</td>
 										</tr>\n`;
 								}
+								tableContents.push(table);
 							}
 
 							if (meta?.slots?.length) {
-								tableContents += `<tr><th>Slot</th><th>Description</th><th></th></tr>\n`;
+								let table = `<tr><th align="left">Slot</th><th align="left">Description</th><th></th></tr>\n`;
 								for (const s of meta.slots) {
-									tableContents += `<tr>
+									table += `<tr>
 											<td>${printName(s)}</td>
 											<td colspan="2">${printDescription(s)}</td>
 										</tr>\n`;
 								}
+								tableContents.push(table);
 							}
 
 							if (meta?.exposed.length) {
-								tableContents += `<tr><th>Exposed</th><th>Description</th><th></th></tr>\n`;
+								let table = `<tr><th align="left">Exposed</th><th align="left">Description</th><th></th></tr>\n`;
 								for (const e of meta.exposed) {
-									tableContents += `<tr>
+									table += `<tr>
 											<td>${printName(e)}</td>
 											<td colspan="2">${printDescription(e)}</td>
 										</tr>\n`;
 								}
+								tableContents.push(table);
 							}
 
 							htmlHover ??= {
@@ -527,10 +532,13 @@ export function create(
 								},
 								contents: '',
 							};
+
+							// 2px height per <tr>
+							const tableGap = `<tr></tr>`.repeat(4);
 							htmlHover.contents = {
 								kind: 'markdown',
 								value: tableContents
-									? `<table>\n${tableContents}\n</table>`
+									? `<table>\n${tableContents.join(`\n${tableGap}\n`)}\n</table>`
 									: `No type information available.`,
 							};
 						}
