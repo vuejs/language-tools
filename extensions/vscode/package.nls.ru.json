@@ -6,6 +6,7 @@
 	"configuration.suggest.componentNameCasing": "Предпочитаемый формат имени компонента.",
 	"configuration.suggest.propNameCasing": "Предпочитаемый формат имени атрибута.",
 	"configuration.suggest.defineAssignment": "Автоматически добавлять `const props = ` перед `defineProps` при выборе элемента завершения `props`. (также `emit` и `slots`)",
+	"configuration.hover.rich": "(Экспериментально) Включить расширенный hover для компонентов Vue с использованием информации о типах (отображение props, events, slots, exposed в виде таблицы).",
 	"configuration.autoInsert.dotValue": "Автоматически добавлять `.value` при вводе реактивной переменной",
 	"configuration.autoInsert.bracketSpacing": "Автоматически добавлять пробелы между двойными фигурными скобками: `{{|}}` -> `{{ | }}`",
 	"configuration.inlayHints.destructuredProps": "Отображать подсказки для деструктурированных props:\n\n```ts\nwatch(() => /* props. */foo, () => { ... });\n```",

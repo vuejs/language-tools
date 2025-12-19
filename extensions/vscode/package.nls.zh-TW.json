@@ -6,6 +6,7 @@
 	"configuration.suggest.componentNameCasing": "首選元件名稱格式。",
 	"configuration.suggest.propNameCasing": "首選屬性名稱格式。",
 	"configuration.suggest.defineAssignment": "選取補全項目 `props` 時，自動在 `defineProps` 前添加 `const props = `（也包括 `emit` 和 `slots`）。",
+	"configuration.hover.rich": "（實驗性）使用型別資訊為 Vue 元件啟用豐富懸停（以表格格式顯示 props、events、slots、exposed）。",
 	"configuration.autoInsert.dotValue": "當輸入響應式變量時，自動補全 `.value`。",
 	"configuration.autoInsert.bracketSpacing": "在雙花括號之間自動添加空格: `{{|}}` -> `{{ | }}`",
 	"configuration.inlayHints.destructuredProps": "顯示解構 props 的內嵌提示：\n\n```ts\nwatch(() => /* props. */foo, () => { ... });\n```",

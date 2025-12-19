@@ -298,6 +298,11 @@
 					"default": true,
 					"markdownDescription": "%configuration.codeActions.askNewComponentName%"
 				},
+				"vue.hover.rich": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "%configuration.hover.rich%"
+				},
 				"vue.suggest.componentNameCasing": {
 					"type": "string",
 					"enum": [

@@ -444,8 +444,9 @@ export function create(
 						() => baseServiceInstance.provideHover!(document, position, token),
 					);
 					const templateAst = info.root.sfc.template?.ast;
+					const enabledRichMessage = await context.env.getConfiguration?.('vue.hover.rich');
 
-					if (!templateAst || (htmlHover && hasContents(htmlHover.contents))) {
+					if (!templateAst || !enabledRichMessage || (htmlHover && hasContents(htmlHover.contents))) {
 						return htmlHover;
 					}
 
