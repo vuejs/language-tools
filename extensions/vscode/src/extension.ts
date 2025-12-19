@@ -314,7 +314,19 @@ function patchTypeScriptExtension() {
 			`try { module.exports = require("../../out/reactivityAnalysisPlugin.js"); } catch { module.exports = require("../../dist/reactivity-analysis-plugin.js"); }`,
 		);
 	}
-	const languages = getIncludeLanguages().map(lang => typeof lang === 'string' ? lang : lang.language);
+	const virtualLangMap = new Map<string, { language: string; pattern: string; ext: string }>();
+	const languages = getIncludeLanguages().map(lang => {
+		if (typeof lang === 'string') {
+			return lang;
+		}
+		if ('pattern' in lang && lang.pattern && lang.language) {
+			const ext = lang.pattern.slice(lang.pattern.indexOf('.'));
+			const virtualLang = `${lang.language}__vue_ext_${ext.replace('.', '')}`;
+			virtualLangMap.set(virtualLang, { language: lang.language, pattern: lang.pattern, ext });
+			return virtualLang;
+		}
+		return lang.language;
+	});
 
 	vueExtension.packageJSON.contributes.typescriptServerPlugins = [
 		{
@@ -347,6 +359,31 @@ function patchTypeScriptExtension() {
 			text = text.replace(
 				'.languages.match([t.typescript,t.typescriptreact]',
 				s => s + '.concat("vue")',
+			);
+			// patch LanguageProvider.documentSelector
+			text = text.replace(
+				'const n of this.description.languageIds){',
+				s => {
+					for (const [virtualLang, lang] of virtualLangMap) {
+						s += `if(n==="${virtualLang}"){t.push(${
+							JSON.stringify({
+								language: lang.language,
+								pattern: lang.pattern,
+							})
+						});continue;}`;
+					}
+					return s;
+				},
+			);
+			// patch BufferSyncSupport.openTextDocument
+			text = text.replace(
+				'if(!this.modeIds.has(e.languageId)',
+				s => {
+					for (const lang of virtualLangMap.values()) {
+						s += `&&!(e.languageId==="${lang.language}"&&e.uri.path.endsWith("${lang.ext}"))`;
+					}
+					return s;
+				},
 			);
 
 			// sort plugins for johnsoncodehk.tsslint, zardoy.ts-essential-plugins
