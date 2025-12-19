@@ -17,11 +17,16 @@
 		"@vue/language-core": "workspace:*",
 		"path-browserify": "^1.0.1"
 	},
-	"peerDependencies": {
-		"typescript": "*"
-	},
 	"devDependencies": {
 		"@types/node": "^22.10.4",
 		"@types/path-browserify": "^1.0.1"
+	},
+	"peerDependencies": {
+		"typescript": "*"
+	},
+	"peerDependenciesMeta": {
+		"typescript": {
+			"optional": true
+		}
 	}
 }
