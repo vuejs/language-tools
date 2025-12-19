@@ -563,8 +563,9 @@ export function create(
 					function printDescription(meta: { description?: string; type: string }) {
 						let desc = `<code>${meta.type}</code>`;
 						if (meta.description) {
-							desc = `${meta.description}<br>${desc}`;
-							desc = `<p>${desc}</p>`;
+							// blank line for terminate HTML to support markdown
+							// see: https://github.github.com/gfm/#example-118
+							desc = `\n\n${meta.description}<br>${desc}`;
 						}
 						return desc;
 					}
