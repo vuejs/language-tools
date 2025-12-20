@@ -55,11 +55,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: NPM Login
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
       - name: Publish to NPM
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          lerna publish from-package --yes
+        run: lerna publish from-package --yes
 
   publish-vscode-marketplace:
     runs-on: ubuntu-latest
@@ -84,7 +84,7 @@ jobs:
       - name: Publish to VSCode Marketplace
         working-directory: extensions/vscode
         env:
-          VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: vsce publish
 
   publish-open-vsx:
