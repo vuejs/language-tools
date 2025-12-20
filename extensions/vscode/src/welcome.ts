@@ -31,12 +31,8 @@ export function execute(context: vscode.ExtensionContext) {
 			case 'toggleShowUpdates':
 				context.globalState.update('vue.showUpdates', message.value);
 				break;
-		}
-		switch (message.type) {
-			case 'goto-gist':
-				if (message.url) {
-					vscode.env.openExternal(vscode.Uri.parse(message.url));
-				}
+			case 'openUrl':
+				vscode.env.openExternal(vscode.Uri.parse(message.url));
 				break;
 		}
 	});
@@ -337,8 +333,10 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 	</div>
 	<script>
 		const iframe = document.getElementById('blog');
-		window.addEventListener('message', (event) => {
-			vscode.postMessage(event.data);
+		window.addEventListener('message', event => {
+			if (event.data.url) {
+				vscode.postMessage({ command: 'openUrl', url: event.data.url });
+			}
 		});
 	</script>
 
