@@ -340,7 +340,7 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 		});
 	</script>
 
-	<h2>🎥 Learn More Features</h2>
+	<h2>Learn More Features</h2>
 	<p>Discover advanced capabilities of the extension:</p>
 	<div class="video-container">
 		<a href="https://www.youtube.com/watch?v=RcPcO4_Ct_U" target="_blank">
@@ -364,26 +364,7 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 		}
 	</script>
 
-	<h2>✨ Core Features</h2>
-	<div class="features">
-		<div class="feature">
-			<div class="feature-icon">🧩</div>
-			<h3>Template Intelligence</h3>
-			<p>Smart completions for directives, components and props in Vue templates with type inference</p>
-		</div>
-		<div class="feature">
-			<div class="feature-icon">🔍</div>
-			<h3>Type Checking</h3>
-			<p>Full TypeScript support with type inference across SFCs and reactive type checking</p>
-		</div>
-		<div class="feature">
-			<div class="feature-icon">🎨</div>
-			<h3>Syntax Highlighting</h3>
-			<p>Comprehensive syntax highlighting for Single File Components and template expressions</p>
-		</div>
-	</div>
-
-	<h2>📚 Resources</h2>
+	<h2>Resources</h2>
 	<ul>
 		<li><a href="https://vuejs.org/guide/typescript/overview.html" target="_blank">Vue with TypeScript Guide</a> -
 			Official documentation</li>
@@ -393,7 +374,7 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 			and get help</li>
 	</ul>
 
-	<h2>🔧 Troubleshooting</h2>
+	<h2>Troubleshooting</h2>
 	<details>
 		<summary>Why are some features not working?</summary>
 		<div>
@@ -419,7 +400,7 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 		</div>
 	</details>
 
-	<h2>❤️ Thanks to Our Sponsors</h2>
+	<h2>Our Sponsors ❤️</h2>
 	<div class="card sponsors-card" style="text-align: center; padding: 1.5rem;">
 		<p style="margin-top: 0;">This project is made possible thanks to our generous sponsors:</p>
 		<div id="sponsors-container" style="max-width: 100%; margin: 0 auto;"></div>
