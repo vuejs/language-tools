@@ -52,6 +52,7 @@ export function* generateGeneric(
 	yield* body;
 
 	const propTypes: string[] = [];
+	const emitTypes: string[] = [];
 	const { vueCompilerOptions } = options;
 
 	if (ctx.generatedTypes.has(names.PublicProps)) {
@@ -75,11 +76,9 @@ export function* generateGeneric(
 	if (scriptSetupRanges.defineEmits || scriptSetupRanges.defineModel.length) {
 		propTypes.push(names.EmitProps);
 	}
-	if (options.templateCodegen?.generatedTypes.has(names.InheritedAttrs)) {
+	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
 		propTypes.push(names.InheritedAttrs);
 	}
-
-	const emitTypes: string[] = [];
 	if (scriptSetupRanges.defineEmits) {
 		emitTypes.push(`typeof ${scriptSetupRanges.defineEmits.name ?? names.emit}`);
 	}
@@ -88,32 +87,31 @@ export function* generateGeneric(
 	}
 
 	yield `return {} as {${newLine}`;
-	yield `	props: ${propTypes.length ? `${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}> & ` : ``}${
-		vueCompilerOptions.target >= 3.4
-			? `import('${vueCompilerOptions.lib}').PublicProps`
-			: vueCompilerOptions.target >= 3
-			? `import('${vueCompilerOptions.lib}').VNodeProps`
-				+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
-				+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
-			: `globalThis.JSX.IntrinsicAttributes`
-	}`;
-	if (!vueCompilerOptions.checkUnknownProps) {
-		yield ` & (typeof globalThis extends { ${names.PROPS_FALLBACK}: infer P } ? P : {})`;
+	yield `	props: `;
+	yield vueCompilerOptions.target >= 3.4
+		? `import('${vueCompilerOptions.lib}').PublicProps`
+		: vueCompilerOptions.target >= 3
+		? `import('${vueCompilerOptions.lib}').VNodeProps`
+			+ ` & import('${vueCompilerOptions.lib}').AllowedComponentProps`
+			+ ` & import('${vueCompilerOptions.lib}').ComponentCustomProps`
+		: `globalThis.JSX.IntrinsicAttributes`;
+	if (propTypes.length) {
+		yield ` & ${ctx.localTypes.PrettifyLocal}<${propTypes.join(` & `)}>`;
 	}
-	yield endOfLine;
+	yield ` & (typeof globalThis extends { __VLS_PROPS_FALLBACK: infer P } ? P : {})${endOfLine}`;
 	yield `	expose: (exposed: `;
 	yield scriptSetupRanges.defineExpose
 		? `import('${vueCompilerOptions.lib}').ShallowUnwrapRef<typeof ${names.exposed}>`
 		: `{}`;
 	if (
 		options.vueCompilerOptions.inferComponentDollarRefs
-		&& options.templateCodegen?.generatedTypes.has(names.TemplateRefs)
+		&& options.templateAndStyleTypes.has(names.TemplateRefs)
 	) {
 		yield ` & { $refs: ${names.TemplateRefs}; }`;
 	}
 	if (
 		options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateCodegen?.generatedTypes.has(names.RootEl)
+		&& options.templateAndStyleTypes.has(names.RootEl)
 	) {
 		yield ` & { $el: ${names.RootEl}; }`;
 	}
@@ -207,7 +205,7 @@ export function* generateSetupFunction(
 				yield `(`;
 			}),
 		);
-		const type = options.styleCodegen?.generatedTypes.has(names.StyleModules)
+		const type = options.templateAndStyleTypes.has(names.StyleModules)
 			? names.StyleModules
 			: `{}`;
 		if (arg) {
@@ -218,7 +216,7 @@ export function* generateSetupFunction(
 					yield `])`;
 				}),
 				replace(arg.start, arg.end, function*() {
-					yield names.placeholder;
+					yield `{} as any`;
 				}),
 			);
 		}
@@ -252,7 +250,7 @@ export function* generateSetupFunction(
 				yield `(`;
 			}),
 			insert(callExp.end, function*() {
-				yield ` as __VLS_UseTemplateRef<`;
+				yield ` as Readonly<import('${options.vueCompilerOptions.lib}').ShallowRef<`;
 				if (arg) {
 					yield names.TemplateRefs;
 					yield `[`;
@@ -262,13 +260,13 @@ export function* generateSetupFunction(
 				else {
 					yield `unknown`;
 				}
-				yield `>)`;
+				yield ` | null>>)`;
 			}),
 		);
 		if (arg) {
 			transforms.push(
 				replace(arg.start, arg.end, function*() {
-					yield names.placeholder;
+					yield `{} as any`;
 				}),
 			);
 		}
@@ -306,7 +304,7 @@ function* generateMacros(options: ScriptCodegenOptions): Generator<Code> {
 		yield `// @ts-ignore${newLine}`;
 		yield `declare const { `;
 		for (const macro of Object.keys(options.vueCompilerOptions.macros)) {
-			if (!options.setupExposed.has(macro)) {
+			if (!options.exposed.has(macro)) {
 				yield `${macro}, `;
 			}
 		}
@@ -409,7 +407,7 @@ function* generatePublicProps(
 function hasSlotsType(options: ScriptCodegenOptions): boolean {
 	return !!(
 		options.scriptSetupRanges?.defineSlots
-		|| options.templateCodegen?.generatedTypes.has(names.Slots)
+		|| options.templateAndStyleTypes.has(names.Slots)
 	);
 }
 

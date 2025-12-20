@@ -1,8 +1,0 @@
-{
-	"extends": "../../tsconfig.base.json",
-	"include": ["**/*"],
-	"vueCompilerOptions": {
-		"target": 3.3,
-		"lib": "vue3.4"
-	}
-}

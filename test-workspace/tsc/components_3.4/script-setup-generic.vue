@@ -1,8 +1,0 @@
-<script setup lang="ts" generic="T">
-import { Ref } from 'vue3.4';
-
-defineProps<{ foo: T }>();
-defineEmits<{ (e: 'bar', data: T): void }>();
-defineExpose({ baz: {} as T, buz: {} as Ref<1> });
-defineSlots<{ default?: (props: T) => any }>();
-</script>

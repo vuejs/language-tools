@@ -1,6 +1,6 @@
 import type * as ts from 'typescript';
 
-export type ComponentMetaChecker = ReturnType<typeof import('./base')['createCheckerBase']>;
+export type ComponentMetaChecker = ReturnType<typeof import('./checker')['createCheckerBase']>;
 
 export interface Declaration {
 	file: string;
@@ -31,12 +31,16 @@ export interface PropertyMeta {
 	global: boolean;
 	required: boolean;
 	tags: { name: string; text?: string }[];
-	declarations: Declaration[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
 	/**
 	 * @deprecated use `getTypeObject()` instead
 	 */
 	rawType?: ts.Type;
+	getDeclarations(): Declaration[];
 	getTypeObject(): ts.Type;
 }
 
@@ -46,12 +50,16 @@ export interface EventMeta {
 	type: string;
 	signature: string;
 	tags: { name: string; text?: string }[];
-	declarations: Declaration[];
 	schema: PropertyMetaSchema[];
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
 	/**
 	 * @deprecated use `getTypeObject()` instead
 	 */
 	rawType?: ts.Type;
+	getDeclarations(): Declaration[];
 	getTypeObject(): ts.Type | undefined;
 }
 
@@ -60,12 +68,16 @@ export interface SlotMeta {
 	description: string;
 	type: string;
 	tags: { name: string; text?: string }[];
-	declarations: Declaration[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
 	/**
 	 * @deprecated use `getTypeObject()` instead
 	 */
 	rawType?: ts.Type;
+	getDeclarations(): Declaration[];
 	getTypeObject(): ts.Type;
 }
 
@@ -74,12 +86,16 @@ export interface ExposeMeta {
 	description: string;
 	type: string;
 	tags: { name: string; text?: string }[];
-	declarations: Declaration[];
 	schema: PropertyMetaSchema;
+	/**
+	 * @deprecated use `getDeclarations()` instead
+	 */
+	declarations: Declaration[];
 	/**
 	 * @deprecated use `getTypeObject()` instead
 	 */
 	rawType?: ts.Type;
+	getDeclarations(): Declaration[];
 	getTypeObject(): ts.Type;
 }
 
@@ -101,9 +117,15 @@ export type MetaCheckerSchemaOptions = boolean | {
 
 export interface MetaCheckerOptions {
 	schema?: MetaCheckerSchemaOptions;
-	forceUseTs?: boolean;
 	printer?: ts.PrinterOptions;
+	/**
+	 * @deprecated No longer needed, this is default behavior now
+	 */
 	noDeclarations?: boolean;
+	/**
+	 * @deprecated No longer needed, this is default behavior now
+	 */
+	forceUseTs?: boolean;
 	/**
 	 * @deprecated No longer needed, use `getTypeObject()` instead
 	 */

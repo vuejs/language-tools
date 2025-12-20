@@ -115,8 +115,8 @@ export function* generateComponent(
 			yield endOfLine;
 		}
 		else {
-			yield `let ${componentVar}!: __VLS_WithComponent<'${tag}', __VLS_LocalComponents`;
-			yield originalNames.has(options.selfComponentName)
+			yield `let ${componentVar}!: __VLS_WithComponent<'${tag}', __VLS_LocalComponents, __VLS_GlobalComponents`;
+			yield originalNames.has(options.componentName)
 				? `, typeof ${names._export}`
 				: `, void`;
 			for (const name of originalNames) {
@@ -347,7 +347,7 @@ export function* generateElement(
 }
 
 function* generateStyleScopedClassReferences(
-	{ template, ts }: TemplateCodegenOptions,
+	{ template, typescript: ts }: TemplateCodegenOptions,
 	node: CompilerDOM.ElementNode,
 ): Generator<Code> {
 	for (const prop of node.props) {

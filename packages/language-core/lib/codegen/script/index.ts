@@ -4,7 +4,6 @@ import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
-import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
@@ -20,9 +19,9 @@ export interface ScriptCodegenOptions {
 	fileName: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	templateCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
-	styleCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
-	setupExposed: Set<string>;
+	templateAndStyleTypes: Set<string>;
+	templateAndStyleCodes: Code[];
+	exposed: Set<string>;
 }
 
 export { generate as generateScript };
@@ -188,7 +187,7 @@ function* generateScriptWithExportDefault(
 	varName: string,
 	templateGenerator?: Generator<Code>,
 ): Generator<Code> {
-	const { componentOptions } = scriptRanges;
+	const componentOptions = scriptRanges.exportDefault?.options;
 	const { expression, isObjectLiteral } = componentOptions ?? exportDefault;
 
 	let wrapLeft: string | undefined;
@@ -235,24 +234,31 @@ function* generateScriptWithExportDefault(
 	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, codeFeatures.all);
 }
 
-function* generateGlobalTypesReference(vueCompilerOptions: VueCompilerOptions, fileName: string): Generator<Code> {
-	const globalTypesPath = vueCompilerOptions.globalTypesPath(fileName);
-	if (!globalTypesPath) {
-		yield `/* placeholder */${newLine}`;
-	}
-	else if (path.isAbsolute(globalTypesPath)) {
-		let relativePath = path.relative(path.dirname(fileName), globalTypesPath);
+function* generateGlobalTypesReference(
+	{ typesRoot, lib, target, checkUnknownProps }: VueCompilerOptions,
+	fileName: string,
+): Generator<Code> {
+	let typesPath: string;
+	if (path.isAbsolute(typesRoot)) {
+		let relativePath = path.relative(path.dirname(fileName), typesRoot);
 		if (
-			relativePath !== globalTypesPath
+			relativePath !== typesRoot
 			&& !relativePath.startsWith('./')
 			&& !relativePath.startsWith('../')
 		) {
 			relativePath = './' + relativePath;
 		}
-		yield `/// <reference types="${relativePath}" />${newLine}`;
+		typesPath = relativePath;
 	}
 	else {
-		yield `/// <reference types="${globalTypesPath}" />${newLine}`;
+		typesPath = typesRoot;
+	}
+	yield `/// <reference types=${JSON.stringify(typesPath + '/template-helpers.d.ts')} />${newLine}`;
+	if (!checkUnknownProps) {
+		yield `/// <reference types=${JSON.stringify(typesPath + '/props-fallback.d.ts')} />${newLine}`;
+	}
+	if (lib === 'vue' && target < 3.5) {
+		yield `/// <reference types=${JSON.stringify(typesPath + '/vue-3.4-shims.d.ts')} />${newLine}`;
 	}
 }
 

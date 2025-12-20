@@ -530,9 +530,6 @@
 			"path": "./components/tsconfig.json"
 		},
 		{
-			"path": "./components_3.4/tsconfig.json"
-		},
-		{
 			"path": "./core#9923/tsconfig.json"
 		},
 		{
@@ -552,9 +549,6 @@
 		},
 		{
 			"path": "./defineModelModifiers/tsconfig.json"
-		},
-		{
-			"path": "./defineModel_3.4/tsconfig.json"
 		},
 		{
 			"path": "./defineOptions/tsconfig.json"

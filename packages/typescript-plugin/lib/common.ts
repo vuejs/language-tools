@@ -415,17 +415,25 @@ export function postprocessLanguageService<T>(
 					return;
 				}
 
-				if (!ts.isIndexedAccessTypeNode(type)) {
-					return;
-				}
-
-				const pos = type.indexType.getStart(sourceFile);
-				const res = getDefinitionAndBoundSpan(fileName, pos, ...rests);
-				if (res?.definitions?.length) {
-					for (const definition of res.definitions) {
-						definitions.add(definition);
+				if (ts.isIndexedAccessTypeNode(type)) {
+					const pos = type.indexType.getStart(sourceFile);
+					const res = getDefinitionAndBoundSpan(fileName, pos, ...rests);
+					if (res?.definitions?.length) {
+						for (const definition of res.definitions) {
+							definitions.add(definition);
+						}
+						skippedDefinitions.push(definition);
 					}
-					skippedDefinitions.push(definition);
+				}
+				else if (ts.isImportTypeNode(type)) {
+					const pos = type.argument.getStart(sourceFile);
+					const res = getDefinitionAndBoundSpan(fileName, pos, ...rests);
+					if (res?.definitions?.length) {
+						for (const definition of res.definitions) {
+							definitions.add(definition);
+						}
+						skippedDefinitions.push(definition);
+					}
 				}
 			}
 		};
@@ -485,6 +493,7 @@ export function resolveCompletionResult<T>(
 	// modify label
 	for (const item of result.entries) {
 		if (item.source) {
+			const data = item.data as VueCompletionData;
 			const oldName = item.name;
 			for (const vueExt of vueOptions.extensions) {
 				const suffix = capitalize(vueExt.slice(1)); // .vue -> Vue
@@ -494,9 +503,8 @@ export function resolveCompletionResult<T>(
 						// #2286
 						item.insertText = item.insertText.replace(`${suffix}$1`, '$1');
 					}
-					if (item.data) {
-						// @ts-expect-error
-						item.data.__isComponentAutoImport = {
+					if (data) {
+						data.__vue__componentAutoImport = {
 							oldName,
 							newName: item.name,
 						};
@@ -504,9 +512,8 @@ export function resolveCompletionResult<T>(
 					break;
 				}
 			}
-			if (item.data) {
-				// @ts-expect-error
-				item.data.__isAutoImport = {
+			if (data) {
+				data.__vue__autoImport = {
 					fileName,
 				};
 			}
@@ -514,14 +521,32 @@ export function resolveCompletionResult<T>(
 	}
 }
 
+export type VueCompletionData =
+	| ts.CompletionEntryData & {
+		__vue__componentAutoImport?: {
+			oldName: string;
+			newName: string;
+		};
+		__vue__autoImport?: {
+			fileName: string;
+		};
+		__vue__autoImportSuggestions?: {
+			fileName: string;
+			position: number;
+			entryName: string;
+			source: string | undefined;
+		};
+	}
+	| undefined;
+
 export function resolveCompletionEntryDetails(
 	language: Language<any>,
 	details: ts.CompletionEntryDetails,
-	data: Record<string, any> | undefined,
+	data: VueCompletionData,
 ) {
 	// modify import statement
-	if (data?.__isComponentAutoImport) {
-		const { oldName, newName } = data.__isComponentAutoImport;
+	if (data?.__vue__componentAutoImport) {
+		const { oldName, newName } = data.__vue__componentAutoImport;
 		for (const codeAction of details?.codeActions ?? []) {
 			for (const change of codeAction.changes) {
 				for (const textChange of change.textChanges) {
@@ -533,8 +558,29 @@ export function resolveCompletionEntryDetails(
 			}
 		}
 	}
-	if (data?.__isAutoImport) {
-		const { fileName } = data.__isAutoImport;
+	// #5874
+	if (data?.__vue__autoImportSuggestions) {
+		for (const codeAction of details?.codeActions ?? []) {
+			for (const change of codeAction.changes) {
+				for (const textChange of change.textChanges) {
+					if (data.__vue__componentAutoImport) {
+						const { oldName, newName } = data.__vue__componentAutoImport;
+						textChange.newText = textChange.newText.replace(
+							'import type ' + oldName + ' from ',
+							'import ' + newName + ' from ',
+						);
+					}
+					const { entryName } = data.__vue__autoImportSuggestions;
+					textChange.newText = textChange.newText.replace(
+						'import type { ' + entryName + ' } from ',
+						'import { ' + entryName + ' } from ',
+					);
+				}
+			}
+		}
+	}
+	if (data?.__vue__autoImport) {
+		const { fileName } = data.__vue__autoImport;
 		const sourceScript = language.scripts.get(fileName);
 		if (sourceScript?.generated?.root instanceof VueVirtualCode) {
 			const { vueSfc } = sourceScript.generated.root;

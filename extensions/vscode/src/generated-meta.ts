@@ -4,7 +4,7 @@
 // Meta info
 export const publisher = 'Vue';
 export const name = 'volar';
-export const version = '3.1.5';
+export const version = '3.2.0';
 export const displayName = 'Vue (Official)';
 export const description = 'Language Support for Vue';
 export const extensionId = `${publisher}.${name}`;
@@ -17,7 +17,7 @@ export type CommandKey =
 	| 'vue.action.restartServer';
 
 /**
- * Commands map registed by `Vue.volar`
+ * Commands map registered by `Vue.volar`
  */
 export const commands = {
 	/**
@@ -31,6 +31,25 @@ export const commands = {
 	 */
 	actionRestartServer: 'vue.action.restartServer',
 } satisfies Record<string, CommandKey>;
+
+/**
+ * Type union of all languages
+ */
+export type LanguageKey =
+	| 'vue'
+	| 'markdown'
+	| 'html'
+	| 'jade';
+
+/**
+ * Languages map registed by `Vue.volar`
+ */
+export const languages = {
+	vue: 'vue',
+	markdown: 'markdown',
+	html: 'html',
+	jade: 'jade',
+} satisfies Record<string, LanguageKey>;
 
 /**
  * Type union of all configs

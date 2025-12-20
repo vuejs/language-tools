@@ -33,14 +33,14 @@ export function* generateComponent(
 	if (
 		options.vueCompilerOptions.target >= 3.5
 		&& options.vueCompilerOptions.inferComponentDollarRefs
-		&& options.templateCodegen?.generatedTypes.has(names.TemplateRefs)
+		&& options.templateAndStyleTypes.has(names.TemplateRefs)
 	) {
 		yield `__typeRefs: {} as ${names.TemplateRefs},${newLine}`;
 	}
 	if (
 		options.vueCompilerOptions.target >= 3.5
 		&& options.vueCompilerOptions.inferComponentDollarEl
-		&& options.templateCodegen?.generatedTypes.has(names.RootEl)
+		&& options.templateAndStyleTypes.has(names.RootEl)
 	) {
 		yield `__typeEl: {} as ${names.RootEl},${newLine}`;
 	}
@@ -91,7 +91,7 @@ function* generatePropsOption(
 	const optionGenerates: (() => Iterable<Code>)[] = [];
 	const typeOptionGenerates: (() => Iterable<Code>)[] = [];
 
-	if (options.templateCodegen?.generatedTypes.has(names.InheritedAttrs)) {
+	if (options.templateAndStyleTypes.has(names.InheritedAttrs)) {
 		const attrsType = hasEmitsOption
 			? `Omit<${names.InheritedAttrs}, keyof ${names.EmitProps}>`
 			: names.InheritedAttrs;

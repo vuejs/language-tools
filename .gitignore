@@ -4,6 +4,7 @@ node_modules
 *.vsix
 .vscode-test
 
+extensions/vscode/types
 extensions/vscode/out
 extensions/vscode/e2e/out
 extensions/vscode/tests/embeddedGrammars/*.tmLanguage.json

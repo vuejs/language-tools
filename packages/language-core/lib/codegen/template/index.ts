@@ -9,7 +9,7 @@ import { generateObjectProperty } from './objectProperty';
 import { generateTemplateChild } from './templateChild';
 
 export interface TemplateCodegenOptions {
-	ts: typeof ts;
+	typescript: typeof ts;
 	vueCompilerOptions: VueCompilerOptions;
 	template: NonNullable<Sfc['template']>;
 	setupRefs: Set<string>;
@@ -18,7 +18,7 @@ export interface TemplateCodegenOptions {
 	propsAssignName?: string;
 	slotsAssignName?: string;
 	inheritAttrs: boolean;
-	selfComponentName: string;
+	componentName: string;
 }
 
 export { generate as generateTemplate };
