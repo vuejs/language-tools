@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-const popVersion = '3.1.0';
+const popVersion = '3.2.0';
 
 let panel: vscode.WebviewPanel | undefined;
 
