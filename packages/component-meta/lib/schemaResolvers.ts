@@ -30,6 +30,10 @@ export function createSchemaResolvers(
 			return true;
 		}
 
+		if (options === false) {
+			return true;
+		}
+
 		if (typeof options === 'object') {
 			for (const item of options.ignore ?? []) {
 				if (typeof item === 'function') {
