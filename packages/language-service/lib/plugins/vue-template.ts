@@ -749,12 +749,7 @@ export function create(
 										});
 									}
 									if (!hint || hint === 'v') {
-										const isBoolean = typeof propMeta2?.schema === 'object'
-											&& propMeta2.schema.kind === 'enum'
-											&& (
-												propMeta2.schema.schema?.includes('true')
-												|| propMeta2.schema.schema?.includes('false')
-											);
+										const isBoolean = propMeta2?.type === 'boolean' || propMeta2?.type.startsWith('boolean ');
 										attributes.push({
 											name: DIRECTIVE_V_BIND + labelName,
 											description: propMeta2 && createDescription(propMeta2),
