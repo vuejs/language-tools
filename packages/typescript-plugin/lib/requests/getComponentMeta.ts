@@ -17,8 +17,7 @@ export function getComponentMeta(
 	if (!componentType) {
 		return;
 	}
-
-	const meta = _get(
+	return _get(
 		ts,
 		checker,
 		ts.createPrinter(),
@@ -27,13 +26,4 @@ export function getComponentMeta(
 		componentType.type,
 		false,
 	);
-
-	for (const key of ['props', 'events', 'slots', 'exposed'] as const) {
-		for (const item of meta[key]) {
-			// @ts-expect-error https://typescript.tv/errors/ts2790
-			delete item.schema;
-		}
-	}
-
-	return meta;
 }
