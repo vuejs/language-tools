@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.1 (2025-12-xx)
+
+fix(component-meta): skip schema resolution correctly when `option` is `false` (#5891) - Thanks to @KazariEX!
+fix(component-type-helpers): add missing reference to tsconfig (#5893)
+fix(language-core): infer array type in `v-for` (#5896) - Thanks to @serkodev!
+
 ## 3.2.0 (2025-12-20)
 
 ### vscode
