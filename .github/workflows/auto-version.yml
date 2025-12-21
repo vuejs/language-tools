@@ -1,0 +1,50 @@
+name: Auto Version Bump
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  bump-version:
+    if: startsWith(github.event.pull_request.title, 'v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Lerna Lite
+        run: pnpm add -g @lerna-lite/cli @lerna-lite/version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Bump version from PR title
+        run: |
+          VERSION="${{ github.event.pull_request.title }}"
+          if [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            lerna version "$VERSION" --yes --no-push --no-git-tag-version --force-publish
+          else
+            echo "PR title is not a valid version."
+            exit 1
+          fi
+
+      - name: Generate extension metadata
+        working-directory: extensions/vscode
+        run: npm run gen-ext-meta
+
+      - name: Commit
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: "ci: bump version [skip ci]"
+          default_author: github_actions
