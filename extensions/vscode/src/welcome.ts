@@ -129,7 +129,6 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 		.card {
 			border-radius: 12px;
 			padding: 2rem;
-			// margin: 2rem 0;
 			background-color: var(--vscode-sideBar-background);
 			box-shadow: 0 2px 8px var(--vscode-widget-shadow);
 		}
@@ -230,7 +229,6 @@ function getWelcomeHtml(context: vscode.ExtensionContext) {
 			/* 16:9 */
 			height: 0;
 			overflow: hidden;
-			// margin: 2rem 0;
 			border-radius: 12px;
 			background-color: var(--vscode-sideBar-background);
 			box-shadow: 0 4px 12px var(--vscode-widget-shadow);
