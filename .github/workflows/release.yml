@@ -1,6 +1,7 @@
 name: Release
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - master
@@ -8,7 +9,7 @@ on:
 jobs:
   auto-tag:
     runs-on: ubuntu-latest
-    if: startsWith(github.event.head_commit.message, 'v')
+    if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'v')
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,8 +35,8 @@ jobs:
 
   publish-npm:
     runs-on: ubuntu-latest
-    needs: auto-tag
-    if: success()
+    needs: [auto-tag]
+    if: github.event_name == 'workflow_dispatch' || success()
     steps:
       - uses: actions/checkout@v4
 
@@ -63,8 +64,8 @@ jobs:
 
   publish-vscode-marketplace:
     runs-on: ubuntu-latest
-    needs: auto-tag
-    if: success()
+    needs: [auto-tag]
+    if: github.event_name == 'workflow_dispatch' || success()
     steps:
       - uses: actions/checkout@v4
 
@@ -89,8 +90,8 @@ jobs:
 
   publish-open-vsx:
     runs-on: ubuntu-latest
-    needs: auto-tag
-    if: success()
+    needs: [auto-tag]
+    if: github.event_name == 'workflow_dispatch' || success()
     steps:
       - uses: actions/checkout@v4
 

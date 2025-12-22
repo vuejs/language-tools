@@ -242,13 +242,7 @@ export function create(
 					}
 
 					const prevText = document.getText({ start: { line: 0, character: 0 }, end: position });
-					const hint: 'v' | ':' | '@' | undefined = prevText.match(/\bv[\S]*$/)
-						? 'v'
-						: prevText.match(/[:][\S]*$/)
-						? ':'
-						: prevText.match(/[@][\S]*$/)
-						? '@'
-						: undefined;
+					const hint = prevText.match(/(\S)[\S]*$/)?.[1];
 
 					const {
 						result: htmlCompletion,
@@ -274,7 +268,7 @@ export function create(
 					if (!htmlCompletion) {
 						return;
 					}
-					if (!prevText.match(/[\S]+$/)) {
+					if (!hint) {
 						htmlCompletion.isIncomplete = true;
 					}
 
@@ -605,7 +599,7 @@ export function create(
 			async function runWithVueDataProvider<T>(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
-				hint: 'v' | ':' | '@' | undefined,
+				hint: string | undefined,
 				mode: 'completion' | 'hover',
 				fn: () => T,
 			) {
@@ -624,7 +618,7 @@ export function create(
 			async function provideHtmlData(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
-				hint: 'v' | ':' | '@' | undefined,
+				hint: string | undefined,
 				mode: 'completion' | 'hover',
 			) {
 				const [tagNameCasing, attrNameCasing] = await Promise.all([
@@ -694,6 +688,30 @@ export function create(
 							const { attrs, meta } = getTagData(tag);
 							const attributes: html.IAttributeData[] = [];
 
+							let addPlainAttrs = false;
+							let addVBinds = false;
+							let addVBindShorthands = false;
+							let addVOns = false;
+							let addVOnShorthands = false;
+
+							if (!hint) {
+								addVBindShorthands = true;
+								addVOnShorthands = true;
+							}
+							else if (hint === ':') {
+								addVBindShorthands = true;
+							}
+							else if (hint === '@') {
+								addVOnShorthands = true;
+							}
+							else {
+								addPlainAttrs = true;
+								addVBinds = true;
+								addVOns = true;
+								addVBindShorthands = true;
+								addVOnShorthands = true;
+							}
+
 							for (const attr of builtInData?.globalAttributes ?? []) {
 								if (attr.name === 'is' && tag.toLowerCase() !== 'component') {
 									continue;
@@ -702,21 +720,14 @@ export function create(
 									attributes.push(attr);
 									continue;
 								}
-								if (!hint || hint === ':') {
-									attributes.push({
-										...attr,
-										name: V_BIND_SHORTHAND + attr.name,
-									});
+								if (addPlainAttrs) {
+									attributes.push({ ...attr, name: attr.name });
 								}
-								if (!hint || hint === 'v') {
-									attributes.push({
-										...attr,
-										name: DIRECTIVE_V_BIND + attr.name,
-									});
-									attributes.push({
-										...attr,
-										name: attr.name,
-									});
+								if (addVBindShorthands) {
+									attributes.push({ ...attr, name: V_BIND_SHORTHAND + attr.name });
+								}
+								if (addVBinds) {
+									attributes.push({ ...attr, name: DIRECTIVE_V_BIND + attr.name });
 								}
 							}
 
@@ -733,13 +744,13 @@ export function create(
 										labelName = hyphenateAttr(labelName);
 									}
 
-									if (!hint || hint === '@') {
+									if (addVOnShorthands) {
 										attributes.push({
 											name: V_ON_SHORTHAND + labelName,
 											description: propMeta && createDescription(propMeta),
 										});
 									}
-									if (!hint || hint === 'v') {
+									if (addVOns) {
 										attributes.push({
 											name: DIRECTIVE_V_ON + labelName,
 											description: propMeta && createDescription(propMeta),
@@ -752,19 +763,21 @@ export function create(
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === labelName;
 									});
-									if (!hint || hint === ':') {
+									if (addPlainAttrs) {
+										attributes.push({
+											name: labelName,
+											description: propMeta2 && createDescription(propMeta2),
+										});
+									}
+									if (addVBindShorthands) {
 										attributes.push({
 											name: V_BIND_SHORTHAND + labelName,
 											description: propMeta2 && createDescription(propMeta2),
 										});
 									}
-									if (!hint || hint === 'v') {
+									if (addVBinds) {
 										attributes.push({
 											name: DIRECTIVE_V_BIND + labelName,
-											description: propMeta2 && createDescription(propMeta2),
-										});
-										attributes.push({
-											name: labelName,
 											description: propMeta2 && createDescription(propMeta2),
 										});
 									}
@@ -773,13 +786,13 @@ export function create(
 							for (const event of meta?.events ?? []) {
 								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
 
-								if (!hint || hint === '@') {
+								if (addVOnShorthands) {
 									attributes.push({
 										name: V_ON_SHORTHAND + eventName,
 										description: event && createDescription(event),
 									});
 								}
-								if (!hint || hint === 'v') {
+								if (addVOns) {
 									attributes.push({
 										name: DIRECTIVE_V_ON + eventName,
 										description: event && createDescription(event),
@@ -809,17 +822,15 @@ export function create(
 									});
 								}
 							}
-							if (!hint || hint === 'v') {
-								for (const event of meta?.events ?? []) {
-									if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
-										const model = event.name.slice(UPDATE_EVENT_PREFIX.length);
-										const label = DIRECTIVE_V_MODEL
-											+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
-										attributes.push({
-											name: label,
-											description: createDescription(event),
-										});
-									}
+							for (const event of meta?.events ?? []) {
+								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
+									const model = event.name.slice(UPDATE_EVENT_PREFIX.length);
+									const label = DIRECTIVE_V_MODEL
+										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
+									attributes.push({
+										name: label,
+										description: createDescription(event),
+									});
 								}
 							}
 
