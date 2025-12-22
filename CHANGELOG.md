@@ -1,5 +1,23 @@
 # Changelog
 
+## 3.2.1 (2025-12-22)
+
+### language-core
+
+- **fix:** infer array type in `v-for` (#5896) - Thanks to @serkodev!
+
+### component-meta
+
+- **fix:** skip schema resolution correctly when `option` is `false` (#5891) - Thanks to @KazariEX!
+
+### component-type-helpers
+
+- **fix:** npm package is missing build files (#5893)
+
+### language-service
+
+- **feat:** props completion now only suggests `:xxx` (shorthand) when no prefix is typed, instead of both `xxx` and `:xxx`
+
 ## 3.2.0 (2025-12-20)
 
 ### vscode
