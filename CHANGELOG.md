@@ -1,6 +1,6 @@
 # Changelog
 
-## 3.2.1 (2025-12-xx)
+## 3.2.1 (2025-12-22)
 
 ### language-core
 
@@ -13,6 +13,10 @@
 ### component-type-helpers
 
 - **fix:** npm package is missing build files (#5893)
+
+### language-service
+
+- **feat:** props completion now only suggests `:xxx` (shorthand) when no prefix is typed, instead of both `xxx` and `:xxx`
 
 ## 3.2.0 (2025-12-20)
 
