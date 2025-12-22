@@ -6,7 +6,7 @@ on:
 
 jobs:
   bump-version:
-    if: startsWith(github.event.pull_request.title, 'v')
+    if: startsWith(github.event.pull_request.title, 'v3.')
     runs-on: ubuntu-latest
     permissions:
       contents: write
