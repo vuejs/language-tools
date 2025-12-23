@@ -27,6 +27,7 @@ function generateClasses(classNameWithoutDot: string, localsConvention: LocalsCo
 		case "dashesOnly":
 			return [dashesCamelCase(classNameWithoutDot)];
 	}
+	return [classNameWithoutDot];
 }
 
 export function* generateStyleModules(
@@ -61,13 +62,13 @@ export function* generateStyleModules(
 		if (vueCompilerOptions.resolveStyleImports) {
 			yield* generateStyleImports(style);
 		}
-		for (const className of style.classNames) {
-			const generatedClasses = generateClasses(className.text.slice(1), vueCompilerOptions.cssModulesLocalsConvention);
-			for (const classFoo of generatedClasses) {
+		for (const classNameWithDot of style.classNames) {
+			const moduleClassNamesWithoutDot = generateClasses(classNameWithDot.text.slice(1), vueCompilerOptions.cssModulesLocalsConvention);
+			for (const moduleClassNameWithoutDot of moduleClassNamesWithoutDot) {
 				yield* generateClassProperty(
 					style.name,
-					`.${classFoo}`,
-					className.offset,
+					`.${moduleClassNameWithoutDot}`,
+					classNameWithDot.offset,
 					'string',
 				);
 			}

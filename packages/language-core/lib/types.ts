@@ -5,7 +5,7 @@ import type { Segment } from 'muggle-string';
 import type * as ts from 'typescript';
 import type { VueEmbeddedCode } from './virtualCode/embeddedCodes';
 
-export type LocalsConvention = 'camelCase' | 'camelCaseOnly' | 'dashes' | 'dashesOnly'; // Note that postcss-modules localsConvention also has a function type which we don't want. Aligned with Vite localsConvention option.
+export type LocalsConvention = 'camelCase' | 'camelCaseOnly' | 'dashes' | 'dashesOnly' | null; // Note that postcss-modules localsConvention also has a function type which we don't want. Aligned with Vite localsConvention option.
 
 export type { SFCParseResult } from '@vue/compiler-sfc';
 
