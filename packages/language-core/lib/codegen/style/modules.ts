@@ -1,10 +1,33 @@
-import type { Code } from '../../types';
+import camelCase from "lodash.camelcase";
+import type { Code, LocalsConvention } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
 import type { TemplateCodegenContext } from '../template/context';
 import { endOfLine, newLine } from '../utils';
 import type { StyleCodegenOptions } from '.';
 import { generateClassProperty, generateStyleImports } from './common';
+
+// See https://github.com/madyankin/postcss-modules/blob/master/src/localsConvention.js
+
+function dashesCamelCase(string: string) {
+	return string.replace(/-+(\w)/g, (_, firstLetter) => firstLetter.toUpperCase());
+}
+
+function generateClasses(classNameWithoutDot: string, localsConvention: LocalsConvention): string[] {
+	switch (localsConvention) {
+		case "camelCase":
+			return [classNameWithoutDot, camelCase(classNameWithoutDot)];
+
+		case "camelCaseOnly":
+			return [camelCase(classNameWithoutDot)];
+
+		case "dashes":
+			return [classNameWithoutDot, dashesCamelCase(classNameWithoutDot)];
+
+		case "dashesOnly":
+			return [dashesCamelCase(classNameWithoutDot)];
+	}
+}
 
 export function* generateStyleModules(
 	{ styles, vueCompilerOptions }: StyleCodegenOptions,
@@ -39,12 +62,15 @@ export function* generateStyleModules(
 			yield* generateStyleImports(style);
 		}
 		for (const className of style.classNames) {
-			yield* generateClassProperty(
-				style.name,
-				className.text,
-				className.offset,
-				'string',
-			);
+			const generatedClasses = generateClasses(className.text.slice(1), vueCompilerOptions.cssModulesLocalsConvention);
+			for (const classFoo of generatedClasses) {
+				yield* generateClassProperty(
+					style.name,
+					`.${classFoo}`,
+					className.offset,
+					'string',
+				);
+			}
 		}
 		yield `>${endOfLine}`;
 	}
