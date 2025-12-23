@@ -60,6 +60,12 @@
 					"default": false,
 					"markdownDescription": "Strict type checking of CSS modules."
 				},
+				"cssModulesLocalsConvention": {
+					"type": ["string", "null"],
+					"default": null,
+					"enum": ["camelCase", "camelCaseOnly", "dashes", "dashesOnly", null],
+					"markdownDescription": "Style of exported class names for CSS modules."
+				},
 				"checkUnknownProps": {
 					"type": "boolean",
 					"default": false,
