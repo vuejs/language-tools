@@ -17,13 +17,11 @@
 		"@vue/compiler-dom": "^3.5.0",
 		"@vue/shared": "^3.5.0",
 		"alien-signals": "^3.0.0",
-		"lodash.camelcase": "^4.3.0",
 		"muggle-string": "^0.4.1",
 		"path-browserify": "^1.0.1",
 		"picomatch": "^4.0.2"
 	},
 	"devDependencies": {
-		"@types/lodash.camelcase": "^4.3.9",
 		"@types/node": "^22.10.4",
 		"@types/path-browserify": "^1.0.1",
 		"@types/picomatch": "^4.0.0",
