@@ -490,7 +490,7 @@
 		"@vue/language-server": "workspace:*",
 		"@vue/typescript-plugin": "workspace:*",
 		"laplacenoma": "latest",
-		"reactive-vscode": "latest",
+		"reactive-vscode": "^0.4.1",
 		"rolldown": "latest",
 		"vscode-ext-gen": "latest",
 		"vscode-tmlanguage-snapshot": "latest"
