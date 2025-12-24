@@ -1,6 +1,6 @@
 <template lang="pug">
 Input(v-bind="$attrs")
-	template(v-if="hasError || hasWarning" #errorMessage)
-		slot(v-if="hasError" name="errorMessage")
-			| {{ errorMessage }}
+	template(v-if="$props" #errorMessage)
+		slot(v-if="$attrs" name="errorMessage")
+			| {{ $props }}
 </template>
