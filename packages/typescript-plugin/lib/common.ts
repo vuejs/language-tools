@@ -20,6 +20,7 @@ export function preprocessLanguageService(
 		getSuggestionDiagnostics,
 		getCompletionsAtPosition,
 		getCodeFixesAtPosition,
+		findRenameLocations,
 	} = languageService;
 
 	languageService.getQuickInfoAtPosition = (fileName, position, ...rests) => {
@@ -200,6 +201,128 @@ export function preprocessLanguageService(
 		}
 		return result;
 	};
+
+	languageService.findRenameLocations = (fileName, position, ...rests) => {
+		// @ts-expect-error
+		const result = findRenameLocations(fileName, position, ...rests);
+		if (!result?.length) {
+			return result;
+		}
+
+		const language = getLanguage();
+		if (!language) {
+			return result;
+		}
+
+		const [serviceScript, _targetScript, sourceScript] = getServiceScript(language, fileName);
+		if (!serviceScript || !(sourceScript?.generated?.root instanceof VueVirtualCode)) {
+			return result;
+		}
+
+		const map = language.maps.get(serviceScript.code, sourceScript);
+		const leadingOffset = sourceScript.snapshot.getLength();
+		const isShorthand = (data: VueCodeInformation) => !!data.__shorthandExpression;
+		const isNotShorthand = (data: VueCodeInformation) => !data.__shorthandExpression;
+
+		// { foo: __VLS_ctx.foo }
+		//   ^^^            ^^^
+		// if the rename is triggered directly on the shorthand,
+		// skip the entire request on the generated property name
+		if ([...map.toSourceLocation(position - leadingOffset, isShorthand)].length === 0) {
+			for (const [offset] of map.toSourceLocation(position - leadingOffset, isNotShorthand)) {
+				for (const _ of map.toGeneratedLocation(offset, isShorthand)) {
+					return;
+				}
+			}
+		}
+
+		const preferAlias = typeof rests[2] === 'boolean' ? rests[2] : rests[2]?.providePrefixAndSuffixTextForRename;
+		if (!preferAlias) {
+			return result;
+		}
+
+		const locations = [...result];
+		outer: for (let i = 0; i < locations.length; i++) {
+			const { textSpan } = locations[i]!;
+
+			// { foo: __VLS_ctx.foo }
+			//                  ^^^
+			for (
+				const [start, end, { data }] of map.toSourceRange(
+					textSpan.start - leadingOffset,
+					textSpan.start + textSpan.length - leadingOffset,
+					true,
+					isShorthand,
+				)
+			) {
+				locations.splice(i, 1, {
+					...locations[i]!,
+					...getPrefixAndSuffixForShorthandRename(
+						(data as VueCodeInformation).__shorthandExpression!,
+						'right',
+						sourceScript.snapshot.getText(start, end),
+					),
+				});
+				continue outer;
+			}
+
+			// { foo: __VLS_ctx.foo }
+			//   ^^^
+			for (
+				const [start, end] of map.toSourceRange(
+					textSpan.start - leadingOffset,
+					textSpan.start + textSpan.length - leadingOffset,
+					true,
+					() => true,
+				)
+			) {
+				for (const [, , { data }] of map.toGeneratedRange(start, end, true, isShorthand)) {
+					locations.splice(i, 1, {
+						...locations[i]!,
+						...getPrefixAndSuffixForShorthandRename(
+							(data as VueCodeInformation).__shorthandExpression!,
+							'left',
+							sourceScript.snapshot.getText(start, end),
+						),
+					});
+					continue outer;
+				}
+			}
+		}
+		return locations;
+	};
+}
+
+function getPrefixAndSuffixForShorthandRename(
+	type: 'html' | 'js',
+	target: 'left' | 'right',
+	originalText: string,
+): Pick<ts.RenameLocation, 'prefixText' | 'suffixText'> {
+	if (type === 'html') {
+		if (target === 'left') {
+			return {
+				suffixText: `="${originalText}"`,
+			};
+		}
+		else {
+			return {
+				prefixText: `${originalText}="`,
+				suffixText: `"`,
+			};
+		}
+	}
+	else {
+		if (target === 'left') {
+			return {
+				suffixText: `: ${originalText}`,
+			};
+		}
+		else {
+			return {
+				prefixText: `${originalText}: `,
+			};
+		}
+	}
 }
 
 export function postprocessLanguageService<T>(

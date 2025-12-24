@@ -17,6 +17,7 @@ export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 
 
 export interface VueCodeInformation extends CodeInformation {
 	__importCompletion?: boolean;
+	__shorthandExpression?: 'html' | 'js';
 	__combineToken?: symbol;
 	__linkedToken?: symbol;
 }
