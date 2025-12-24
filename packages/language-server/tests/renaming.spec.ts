@@ -1239,6 +1239,178 @@ test('Template Ref', async () => {
 	`);
 });
 
+test('Same Name Shorthand', async () => {
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<Comp :foo />
+				{{ new Comp({ foo }) }}
+			</template>
+
+			<script lang="ts" setup>
+			const foo| = 1;
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "foo",
+		    "fullDisplayName": "foo",
+		    "kind": "const",
+		    "kindModifiers": "",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 8,
+		        "offset": 13,
+		      },
+		      "start": {
+		        "line": 8,
+		        "offset": 10,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 4,
+		            "offset": 22,
+		          },
+		          "prefixText": "foo: ",
+		          "start": {
+		            "line": 4,
+		            "offset": 19,
+		          },
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 15,
+		          },
+		          "prefixText": "foo="",
+		          "start": {
+		            "line": 3,
+		            "offset": 12,
+		          },
+		          "suffixText": """,
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 8,
+		            "offset": 18,
+		          },
+		          "contextStart": {
+		            "line": 8,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 8,
+		            "offset": 13,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+	expect(
+		await requestRenameToTsServer(
+			'tsconfigProject/fixture.vue',
+			'vue',
+			`
+			<template>
+				<Comp :foo />
+				{{ new Comp({ foo }) }}
+			</template>
+
+			<script lang="ts" setup>
+			declare function Comp(props: {
+				foo|: number;
+			}): void;
+			</script>
+		`,
+		),
+	).toMatchInlineSnapshot(`
+		{
+		  "info": {
+		    "canRename": true,
+		    "displayName": "foo",
+		    "fullDisplayName": "__type.foo",
+		    "kind": "property",
+		    "kindModifiers": "declare",
+		    "triggerSpan": {
+		      "end": {
+		        "line": 9,
+		        "offset": 8,
+		      },
+		      "start": {
+		        "line": 9,
+		        "offset": 5,
+		      },
+		    },
+		  },
+		  "locs": [
+		    {
+		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
+		      "locs": [
+		        {
+		          "end": {
+		            "line": 4,
+		            "offset": 22,
+		          },
+		          "start": {
+		            "line": 4,
+		            "offset": 19,
+		          },
+		          "suffixText": ": foo",
+		        },
+		        {
+		          "end": {
+		            "line": 3,
+		            "offset": 15,
+		          },
+		          "start": {
+		            "line": 3,
+		            "offset": 12,
+		          },
+		          "suffixText": "="foo"",
+		        },
+		        {
+		          "contextEnd": {
+		            "line": 9,
+		            "offset": 17,
+		          },
+		          "contextStart": {
+		            "line": 9,
+		            "offset": 5,
+		          },
+		          "end": {
+		            "line": 9,
+		            "offset": 8,
+		          },
+		          "start": {
+		            "line": 9,
+		            "offset": 5,
+		          },
+		        },
+		      ],
+		    },
+		  ],
+		}
+	`);
+});
+
 const openedDocuments: TextDocument[] = [];
 
 afterEach(async () => {

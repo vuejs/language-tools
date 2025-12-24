@@ -235,7 +235,9 @@ export function preprocessLanguageService(
 			}
 		}
 
-		const preferAlias = typeof rests[2] === 'boolean' ? rests[2] : rests[2]?.providePrefixAndSuffixTextForRename;
+		const preferAlias = typeof rests[2] === 'boolean'
+			? rests[2]
+			: rests[2]?.providePrefixAndSuffixTextForRename ?? true;
 		if (!preferAlias) {
 			return result;
 		}
