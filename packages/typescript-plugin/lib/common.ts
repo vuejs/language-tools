@@ -5,7 +5,13 @@ import {
 	toSourceRanges,
 } from '@volar/typescript/lib/node/transform';
 import { getServiceScript } from '@volar/typescript/lib/node/utils';
-import { type Language, type VueCodeInformation, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
+import {
+	forEachElementNode,
+	type Language,
+	type VueCodeInformation,
+	type VueCompilerOptions,
+	VueVirtualCode,
+} from '@vue/language-core';
 import { capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 
@@ -214,6 +220,8 @@ export function postprocessLanguageService<T>(
 		switch (p) {
 			case 'findReferences':
 				return findReferences(target[p]);
+			case 'findRenameLocations':
+				return findRenameLocations(target[p]);
 			case 'getCompletionsAtPosition':
 				return getCompletionsAtPosition(target[p]);
 			case 'getCompletionEntryDetails':
@@ -277,6 +285,333 @@ export function postprocessLanguageService<T>(
 			}
 			return result;
 		};
+	}
+
+	function findRenameLocations(
+		findRenameLocations: ts.LanguageService['findRenameLocations'],
+	): ts.LanguageService['findRenameLocations'] {
+		const unquoteReg = /^(['"])(.*)\1$/;
+		const unquote = (str: string) => str.replace(unquoteReg, '$2');
+		const normalizeFileName = (path: string) => path.replace(windowsPathReg, '/');
+		const locationKey = (loc: ts.RenameLocation) =>
+			`${normalizeFileName(loc.fileName)}:${loc.textSpan.start}:${loc.textSpan.length}`;
+		const setupBindingsCache = new WeakMap<ts.SourceFile, Map<string, number>>();
+
+		return (filePath, position, findInStrings, findInComments, preferencesOrProvide) => {
+			const fileName = normalizeFileName(filePath);
+			const runRename = (pos: number) =>
+				findRenameLocations(fileName, pos, findInStrings, findInComments, preferencesOrProvide as any);
+
+			const preferences = typeof preferencesOrProvide === 'object' && preferencesOrProvide ? preferencesOrProvide : {};
+			const renameInfo = languageService.getRenameInfo(fileName, position, preferences);
+			if (!renameInfo.canRename) {
+				return runRename(position);
+			}
+
+			const { displayName, fullDisplayName, triggerSpan } = renameInfo;
+			const renameName = unquote(displayName);
+			const triggerStart = triggerSpan.start;
+			const triggerEnd = triggerStart + triggerSpan.length;
+
+			const { root, template, scriptSetup, snapshot } = getVueContext(fileName) ?? {};
+
+			const fromTemplateShorthand = !!(
+				snapshot
+				&& template
+				&& getShorthandAttrName(
+					snapshot,
+					template,
+					triggerStart,
+					triggerEnd,
+					{ fileName, textSpan: triggerSpan },
+				)
+			);
+
+			// prefer renaming the matching setup binding when triggered from shorthand
+			const bindingPos = root ? getSetupBindingPosition(root, renameName) : undefined;
+			const hasLocalBinding = bindingPos !== undefined;
+			const shorthandValueRename = fromTemplateShorthand && hasLocalBinding;
+			const targetPosition = shorthandValueRename ? bindingPos : position;
+			const result = runRename(targetPosition);
+			if (!result) {
+				return result;
+			}
+
+			// when renaming a shorthand, ignore script-setup hits in the same file
+			const shouldFilterScriptSetup = fromTemplateShorthand && !!scriptSetup && !shorthandValueRename;
+			const resultLocations = shouldFilterScriptSetup
+				? result.filter(location =>
+					normalizeFileName(location.fileName) !== fileName
+					|| location.textSpan.start < scriptSetup!.startTagEnd
+					|| location.textSpan.start > scriptSetup!.endTagStart
+				)
+				: result;
+
+			const locations = new Map<string, ts.RenameLocation>();
+			const shorthandEntries = new Map<string, { name: string; hasValueBinding: boolean }>();
+
+			const addLocation = (location: ts.RenameLocation) => {
+				const key = locationKey(location);
+				if (locations.has(key)) {
+					return { key, success: false };
+				}
+				locations.set(key, location);
+				return { key, success: true };
+			};
+
+			for (const location of resultLocations) {
+				addLocation(location);
+			}
+			const definePropsLocation = root ? getDefinePropsTypePropertyLocation(root, renameName) : undefined;
+			if (shouldFilterScriptSetup && definePropsLocation) {
+				addLocation(definePropsLocation);
+			}
+			const preserveShorthandAttr = shorthandValueRename || (fullDisplayName === displayName && !fromTemplateShorthand);
+
+			// only add shorthand locations when renaming the defineProps declaration itself
+			const isDefinePropsRename = !!definePropsLocation
+				&& normalizeFileName(definePropsLocation.fileName) === fileName
+				&& triggerStart >= definePropsLocation.textSpan.start
+				&& triggerEnd <= definePropsLocation.textSpan.start + definePropsLocation.textSpan.length;
+
+			for (const location of locations.values()) {
+				const context = getVueContext(location.fileName);
+				if (!context?.template) {
+					continue;
+				}
+				const start = location.textSpan.start;
+				const end = start + location.textSpan.length;
+				const shorthandName = getShorthandAttrName(context.snapshot, context.template, start, end, location);
+				if (!shorthandName) {
+					continue;
+				}
+
+				// mark shorthand hits and adjust rename text for shorthand form
+				shorthandEntries.set(
+					locationKey(location),
+					{
+						name: shorthandName,
+						hasValueBinding: !preserveShorthandAttr
+							&& getSetupBindingPosition(context.root, shorthandName) !== undefined,
+					},
+				);
+			}
+
+			// add missing shorthand locations when renaming from defineProps
+			if (isDefinePropsRename && root && template) {
+				const hasValueBinding = !preserveShorthandAttr && hasLocalBinding;
+				const shorthandOffsets = getTemplateShorthandOffsets(template, renameName);
+				for (const start of shorthandOffsets) {
+					const { key, success } = addLocation({ fileName, textSpan: { start, length: renameName.length } });
+					if (success) {
+						shorthandEntries.set(key, { name: renameName, hasValueBinding });
+					}
+				}
+			}
+
+			return [...locations.values()].map(location => {
+				const shorthand = shorthandEntries.get(locationKey(location));
+				if (shorthand) {
+					if (preserveShorthandAttr) {
+						return {
+							...location,
+							prefixText: `${shorthand.name}="`,
+							suffixText: `"`,
+						};
+					}
+					else if (shorthand.hasValueBinding) {
+						return {
+							...location,
+							prefixText: '',
+							suffixText: `="${shorthand.name}"`,
+						};
+					}
+				}
+				return location;
+			});
+		};
+
+		function getVueContext(fileName: string) {
+			fileName = normalizeFileName(fileName);
+			const sourceScript = language.scripts.get(asScriptId(fileName));
+			const root = sourceScript?.generated?.root;
+			if (sourceScript && root instanceof VueVirtualCode) {
+				const { template, scriptSetup } = root.sfc;
+				return { snapshot: sourceScript.snapshot, root, template, scriptSetup };
+			}
+		}
+
+		function getShorthandAttrName(
+			snapshot: ts.IScriptSnapshot,
+			template: NonNullable<VueVirtualCode['sfc']['template']>,
+			start: number,
+			end: number,
+			location: ts.RenameLocation,
+		) {
+			if (
+				start < template.startTagEnd
+				|| start > template.endTagStart
+				|| start === 0
+				|| location.prefixText !== undefined
+				|| location.suffixText !== undefined
+			) {
+				return;
+			}
+			const before = snapshot.getText(start - 1, start);
+			if (before !== ':') {
+				return;
+			}
+			let after = end;
+			while (after < snapshot.getLength()) {
+				const char = snapshot.getText(after, after + 1);
+				if (!char || char.trim()) {
+					break;
+				}
+				after++;
+			}
+			if (snapshot.getText(after, after + 1) === '=') {
+				return;
+			}
+			return snapshot.getText(start, end);
+		}
+
+		function getTemplateShorthandOffsets(
+			template: NonNullable<VueVirtualCode['sfc']['template']>,
+			attrName: string,
+		) {
+			if (!template.ast) {
+				return [];
+			}
+			const offsets: number[] = [];
+			for (const node of forEachElementNode(template.ast)) {
+				for (const prop of node.props) {
+					if (
+						'arg' in prop && prop.arg
+						&& prop.name === 'bind'
+					) {
+						if (!prop.loc.source || prop.loc.source.includes('=')) {
+							continue;
+						}
+						const arg = prop.arg;
+						if (
+							'isStatic' in arg && arg.isStatic
+							&& 'content' in arg && arg.content === attrName
+						) {
+							const start = template.startTagEnd + arg.loc.start.offset;
+							if (start >= template.startTagEnd && start <= template.endTagStart) {
+								offsets.push(start);
+							}
+						}
+					}
+				}
+			}
+			return offsets;
+		}
+
+		function getSetupBindingPosition(root: VueVirtualCode, name: string) {
+			const scriptSetup = root.sfc.scriptSetup;
+			const ast = scriptSetup?.ast;
+			if (!scriptSetup || !ast) return;
+
+			let bindings = setupBindingsCache.get(ast);
+			if (!bindings) {
+				bindings = new Map<string, number>();
+				const offset = scriptSetup.startTagEnd;
+				const map = bindings;
+				const addBinding = (id: ts.Identifier) => {
+					if (!map.has(id.text)) {
+						map.set(id.text, offset + id.getStart(ast));
+					}
+				};
+				for (const statement of ast.statements) {
+					if (ts.isVariableStatement(statement)) {
+						for (const decl of statement.declarationList.declarations) {
+							collectBindingIdentifiers(decl.name, addBinding);
+						}
+					}
+					else if (
+						(ts.isFunctionDeclaration(statement) || ts.isClassDeclaration(statement))
+						&& statement.name
+					) {
+						addBinding(statement.name);
+					}
+					else if (ts.isImportDeclaration(statement)) {
+						const clause = statement.importClause;
+						if (clause?.name) {
+							addBinding(clause.name);
+						}
+						const namedBindings = clause?.namedBindings;
+						if (namedBindings) {
+							if (ts.isNamedImports(namedBindings)) {
+								for (const specifier of namedBindings.elements) {
+									addBinding(specifier.name);
+								}
+							}
+							else if (ts.isNamespaceImport(namedBindings)) {
+								addBinding(namedBindings.name);
+							}
+						}
+					}
+				}
+				setupBindingsCache.set(ast, bindings);
+			}
+
+			return bindings.get(name);
+
+			function collectBindingIdentifiers(name: ts.BindingName, addBinding: (id: ts.Identifier) => void) {
+				if (ts.isIdentifier(name)) {
+					addBinding(name);
+					return;
+				}
+				for (const element of name.elements) {
+					if (ts.isBindingElement(element)) {
+						collectBindingIdentifiers(element.name, addBinding);
+					}
+				}
+			}
+		}
+
+		function getDefinePropsTypePropertyLocation(root: VueVirtualCode, name: string): ts.RenameLocation | undefined {
+			const scriptSetup = root.sfc.scriptSetup;
+			if (!scriptSetup?.ast) {
+				return;
+			}
+			const sourceFile = scriptSetup.ast;
+			const offset = scriptSetup.startTagEnd;
+			let location: ts.RenameLocation | undefined;
+			sourceFile.forEachChild(function walk(node): void {
+				if (location) {
+					return;
+				}
+				if (
+					ts.isCallExpression(node)
+					&& ts.isIdentifier(node.expression)
+					&& node.expression.text === 'defineProps'
+				) {
+					const typeArg = node.typeArguments?.[0];
+					if (typeArg && ts.isTypeLiteralNode(typeArg)) {
+						for (const member of typeArg.members) {
+							if (ts.isPropertySignature(member) && member.name) {
+								const propName = ts.isIdentifier(member.name) || ts.isStringLiteral(member.name)
+									? member.name.text
+									: undefined;
+								if (propName === name) {
+									const start = member.name.getStart(sourceFile);
+									const end = member.name.getEnd();
+									location = {
+										fileName: normalizeFileName(root.fileName),
+										textSpan: { start: offset + start, length: end - start },
+									};
+									return;
+								}
+							}
+						}
+					}
+				}
+				node.forEachChild(walk);
+			});
+			return location;
+		}
 	}
 
 	function getCompletionsAtPosition(
