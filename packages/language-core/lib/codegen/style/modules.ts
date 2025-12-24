@@ -1,4 +1,4 @@
-import { camelize } from '@vue/shared';
+import camelCase from "lodash.camelcase";
 import type { Code, LocalsConvention } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 import * as names from '../names';
@@ -16,10 +16,10 @@ function dashesCamelCase(string: string) {
 function generateClasses(classNameWithoutDot: string, localsConvention: LocalsConvention): string[] {
 	switch (localsConvention) {
 		case "camelCase":
-			return [classNameWithoutDot, camelize(classNameWithoutDot)];
+			return [classNameWithoutDot, camelCase(classNameWithoutDot)];
 
 		case "camelCaseOnly":
-			return [camelize(classNameWithoutDot)];
+			return [camelCase(classNameWithoutDot)];
 
 		case "dashes":
 			return [classNameWithoutDot, dashesCamelCase(classNameWithoutDot)];
