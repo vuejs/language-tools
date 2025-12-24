@@ -1125,6 +1125,7 @@ test('Scoped Classes', async () => {
 		            "line": 5,
 		            "offset": 20,
 		          },
+		          "suffixText": ": foo",
 		        },
 		        {
 		          "end": {
