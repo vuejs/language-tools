@@ -1247,12 +1247,12 @@ test('Same Name Shorthand', async () => {
 			'vue',
 			`
 			<template>
-				<Comp :foo| />
-				{{ new Comp({ foo }) }}
+				<Comp :foo-bar| />
+				{{ new Comp({ fooBar }) }}
 			</template>
 
 			<script lang="ts" setup>
-			const foo = 1;
+			const fooBar = 1;
 			</script>
 		`,
 		),
@@ -1260,14 +1260,14 @@ test('Same Name Shorthand', async () => {
 		{
 		  "info": {
 		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "__object.foo",
+		    "displayName": "fooBar",
+		    "fullDisplayName": "__object.fooBar",
 		    "kind": "property",
 		    "kindModifiers": "",
 		    "triggerSpan": {
 		      "end": {
 		        "line": 3,
-		        "offset": 15,
+		        "offset": 19,
 		      },
 		      "start": {
 		        "line": 3,
@@ -1282,7 +1282,7 @@ test('Same Name Shorthand', async () => {
 		        {
 		          "contextEnd": {
 		            "line": 8,
-		            "offset": 18,
+		            "offset": 21,
 		          },
 		          "contextStart": {
 		            "line": 8,
@@ -1290,7 +1290,7 @@ test('Same Name Shorthand', async () => {
 		          },
 		          "end": {
 		            "line": 8,
-		            "offset": 13,
+		            "offset": 16,
 		          },
 		          "start": {
 		            "line": 8,
@@ -1300,9 +1300,9 @@ test('Same Name Shorthand', async () => {
 		        {
 		          "end": {
 		            "line": 4,
-		            "offset": 22,
+		            "offset": 25,
 		          },
-		          "prefixText": "foo: ",
+		          "prefixText": "fooBar: ",
 		          "start": {
 		            "line": 4,
 		            "offset": 19,
@@ -1311,9 +1311,9 @@ test('Same Name Shorthand', async () => {
 		        {
 		          "end": {
 		            "line": 3,
-		            "offset": 15,
+		            "offset": 19,
 		          },
-		          "prefixText": "foo="",
+		          "prefixText": "foo-bar="",
 		          "start": {
 		            "line": 3,
 		            "offset": 12,
@@ -1331,13 +1331,13 @@ test('Same Name Shorthand', async () => {
 			'vue',
 			`
 			<template>
-				<Comp :foo />
-				{{ new Comp({ foo }) }}
+				<Comp :foo-bar />
+				{{ new Comp({ fooBar }) }}
 			</template>
 
 			<script lang="ts" setup>
 			declare function Comp(props: {
-				foo|: number;
+				fooBar|: number;
 			}): void;
 			</script>
 		`,
@@ -1346,14 +1346,14 @@ test('Same Name Shorthand', async () => {
 		{
 		  "info": {
 		    "canRename": true,
-		    "displayName": "foo",
-		    "fullDisplayName": "__type.foo",
+		    "displayName": "fooBar",
+		    "fullDisplayName": "__type.fooBar",
 		    "kind": "property",
 		    "kindModifiers": "declare",
 		    "triggerSpan": {
 		      "end": {
 		        "line": 9,
-		        "offset": 8,
+		        "offset": 11,
 		      },
 		      "start": {
 		        "line": 9,
@@ -1368,29 +1368,29 @@ test('Same Name Shorthand', async () => {
 		        {
 		          "end": {
 		            "line": 4,
-		            "offset": 22,
+		            "offset": 25,
 		          },
 		          "start": {
 		            "line": 4,
 		            "offset": 19,
 		          },
-		          "suffixText": ": foo",
+		          "suffixText": ": fooBar",
 		        },
 		        {
 		          "end": {
 		            "line": 3,
-		            "offset": 15,
+		            "offset": 19,
 		          },
 		          "start": {
 		            "line": 3,
 		            "offset": 12,
 		          },
-		          "suffixText": "="foo"",
+		          "suffixText": "="fooBar"",
 		        },
 		        {
 		          "contextEnd": {
 		            "line": 9,
-		            "offset": 17,
+		            "offset": 20,
 		          },
 		          "contextStart": {
 		            "line": 9,
@@ -1398,7 +1398,7 @@ test('Same Name Shorthand', async () => {
 		          },
 		          "end": {
 		            "line": 9,
-		            "offset": 8,
+		            "offset": 11,
 		          },
 		          "start": {
 		            "line": 9,

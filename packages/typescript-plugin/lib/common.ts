@@ -6,7 +6,7 @@ import {
 } from '@volar/typescript/lib/node/transform';
 import { getServiceScript } from '@volar/typescript/lib/node/utils';
 import { type Language, type VueCodeInformation, type VueCompilerOptions, VueVirtualCode } from '@vue/language-core';
-import { capitalize, isGloballyAllowed } from '@vue/shared';
+import { camelize, capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
 
 const windowsPathReg = /\\/g;
@@ -290,7 +290,7 @@ function getPrefixAndSuffixForShorthandRename(
 	if (type === 'html') {
 		if (target === 'left') {
 			return {
-				suffixText: `="${originalText}"`,
+				suffixText: `="${camelize(originalText)}"`,
 			};
 		}
 		else {
