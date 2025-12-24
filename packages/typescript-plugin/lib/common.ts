@@ -12,8 +12,9 @@ import {
 	type VueCompilerOptions,
 	VueVirtualCode,
 } from '@vue/language-core';
-import { capitalize, isGloballyAllowed } from '@vue/shared';
+import { camelize, capitalize, isGloballyAllowed } from '@vue/shared';
 import type * as ts from 'typescript';
+import { getSelfComponentName } from './requests/utils';
 
 const windowsPathReg = /\\/g;
 
@@ -338,13 +339,45 @@ export function postprocessLanguageService<T>(
 			}
 
 			// when renaming a shorthand, ignore script-setup hits in the same file
-			const shouldFilterScriptSetup = fromTemplateShorthand && !!scriptSetup && !shorthandValueRename;
-			const resultLocations = shouldFilterScriptSetup
-				? result.filter(location =>
-					normalizeFileName(location.fileName) !== fileName
-					|| location.textSpan.start < scriptSetup.startTagEnd
-					|| location.textSpan.start > scriptSetup.endTagStart
+			const definePropsLocation = root ? getDefinePropsTypePropertyLocation(root, renameName) : undefined;
+			const isDefinePropsRename = !!definePropsLocation
+				&& normalizeFileName(definePropsLocation.fileName) === fileName
+				&& triggerStart >= definePropsLocation.textSpan.start
+				&& triggerEnd <= definePropsLocation.textSpan.start + definePropsLocation.textSpan.length;
+
+			const selfComponentName = isDefinePropsRename ? getSelfComponentName(fileName) : undefined;
+			const shorthandOffsets = isDefinePropsRename && template && selfComponentName
+				? getTemplateShorthandOffsets(
+					template,
+					renameName,
+					selfComponentName,
 				)
+				: undefined;
+			const shorthandOffsetSet = shorthandOffsets ? new Set(shorthandOffsets) : undefined;
+
+			const shouldFilterScriptSetup = fromTemplateShorthand && !!scriptSetup && !shorthandValueRename;
+			const resultLocations = shouldFilterScriptSetup || shorthandOffsetSet
+				? result.filter(location => {
+					const normalizedLocationFileName = normalizeFileName(location.fileName);
+					if (
+						shouldFilterScriptSetup
+						&& normalizedLocationFileName === fileName
+						&& scriptSetup
+						&& location.textSpan.start >= scriptSetup.startTagEnd
+						&& location.textSpan.start <= scriptSetup.endTagStart
+					) {
+						return false;
+					}
+					if (shorthandOffsetSet && normalizedLocationFileName === fileName && snapshot && template) {
+						const start = location.textSpan.start;
+						const end = start + location.textSpan.length;
+						const shorthandName = getShorthandAttrName(snapshot, template, start, end, location);
+						if (shorthandName && !shorthandOffsetSet.has(start)) {
+							return false;
+						}
+					}
+					return true;
+				})
 				: result;
 
 			const locations = new Map<string, ts.RenameLocation>();
@@ -362,17 +395,10 @@ export function postprocessLanguageService<T>(
 			for (const location of resultLocations) {
 				addLocation(location);
 			}
-			const definePropsLocation = root ? getDefinePropsTypePropertyLocation(root, renameName) : undefined;
 			if (shouldFilterScriptSetup && definePropsLocation) {
 				addLocation(definePropsLocation);
 			}
 			const preserveShorthandAttr = shorthandValueRename || (fullDisplayName === displayName && !fromTemplateShorthand);
-
-			// only add shorthand locations when renaming the defineProps declaration itself
-			const isDefinePropsRename = !!definePropsLocation
-				&& normalizeFileName(definePropsLocation.fileName) === fileName
-				&& triggerStart >= definePropsLocation.textSpan.start
-				&& triggerEnd <= definePropsLocation.textSpan.start + definePropsLocation.textSpan.length;
 
 			for (const location of locations.values()) {
 				const context = getVueContext(location.fileName);
@@ -398,9 +424,8 @@ export function postprocessLanguageService<T>(
 			}
 
 			// add missing shorthand locations when renaming from defineProps
-			if (isDefinePropsRename && root && template) {
+			if (isDefinePropsRename && root && template && shorthandOffsets) {
 				const hasValueBinding = !preserveShorthandAttr && hasLocalBinding;
-				const shorthandOffsets = getTemplateShorthandOffsets(template, renameName);
 				for (const start of shorthandOffsets) {
 					const { key, success } = addLocation({ fileName, textSpan: { start, length: renameName.length } });
 					if (success) {
@@ -478,12 +503,16 @@ export function postprocessLanguageService<T>(
 		function getTemplateShorthandOffsets(
 			template: NonNullable<VueVirtualCode['sfc']['template']>,
 			attrName: string,
+			selfComponentName?: string,
 		) {
 			if (!template.ast) {
 				return [];
 			}
 			const offsets: number[] = [];
 			for (const node of forEachElementNode(template.ast)) {
+				if (selfComponentName && capitalize(camelize(node.tag)) !== selfComponentName) {
+					continue;
+				}
 				for (const prop of node.props) {
 					if (
 						'arg' in prop && prop.arg
