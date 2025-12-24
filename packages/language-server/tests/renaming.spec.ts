@@ -1247,12 +1247,12 @@ test('Same Name Shorthand', async () => {
 			'vue',
 			`
 			<template>
-				<Comp :foo />
+				<Comp :foo| />
 				{{ new Comp({ foo }) }}
 			</template>
 
 			<script lang="ts" setup>
-			const foo| = 1;
+			const foo = 1;
 			</script>
 		`,
 		),
@@ -1261,17 +1261,17 @@ test('Same Name Shorthand', async () => {
 		  "info": {
 		    "canRename": true,
 		    "displayName": "foo",
-		    "fullDisplayName": "foo",
-		    "kind": "const",
+		    "fullDisplayName": "__object.foo",
+		    "kind": "property",
 		    "kindModifiers": "",
 		    "triggerSpan": {
 		      "end": {
-		        "line": 8,
-		        "offset": 13,
+		        "line": 3,
+		        "offset": 15,
 		      },
 		      "start": {
-		        "line": 8,
-		        "offset": 10,
+		        "line": 3,
+		        "offset": 12,
 		      },
 		    },
 		  },
@@ -1279,6 +1279,24 @@ test('Same Name Shorthand', async () => {
 		    {
 		      "file": "\${testWorkspacePath}/tsconfigProject/fixture.vue",
 		      "locs": [
+		        {
+		          "contextEnd": {
+		            "line": 8,
+		            "offset": 18,
+		          },
+		          "contextStart": {
+		            "line": 8,
+		            "offset": 4,
+		          },
+		          "end": {
+		            "line": 8,
+		            "offset": 13,
+		          },
+		          "start": {
+		            "line": 8,
+		            "offset": 10,
+		          },
+		        },
 		        {
 		          "end": {
 		            "line": 4,
@@ -1301,24 +1319,6 @@ test('Same Name Shorthand', async () => {
 		            "offset": 12,
 		          },
 		          "suffixText": """,
-		        },
-		        {
-		          "contextEnd": {
-		            "line": 8,
-		            "offset": 18,
-		          },
-		          "contextStart": {
-		            "line": 8,
-		            "offset": 4,
-		          },
-		          "end": {
-		            "line": 8,
-		            "offset": 13,
-		          },
-		          "start": {
-		            "line": 8,
-		            "offset": 10,
-		          },
 		        },
 		      ],
 		    },
