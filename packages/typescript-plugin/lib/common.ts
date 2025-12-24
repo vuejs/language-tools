@@ -222,14 +222,13 @@ export function preprocessLanguageService(
 		const map = language.maps.get(serviceScript.code, sourceScript);
 		const leadingOffset = sourceScript.snapshot.getLength();
 		const isShorthand = (data: VueCodeInformation) => !!data.__shorthandExpression;
-		const isNotShorthand = (data: VueCodeInformation) => !data.__shorthandExpression;
 
 		// { foo: __VLS_ctx.foo }
 		//   ^^^            ^^^
 		// if the rename is triggered directly on the shorthand,
 		// skip the entire request on the generated property name
 		if ([...map.toSourceLocation(position - leadingOffset, isShorthand)].length === 0) {
-			for (const [offset] of map.toSourceLocation(position - leadingOffset, isNotShorthand)) {
+			for (const [offset] of map.toSourceLocation(position - leadingOffset, () => true)) {
 				for (const _ of map.toGeneratedLocation(offset, isShorthand)) {
 					return;
 				}
@@ -244,17 +243,12 @@ export function preprocessLanguageService(
 		const locations = [...result];
 		outer: for (let i = 0; i < locations.length; i++) {
 			const { textSpan } = locations[i]!;
+			const generatedLeft = textSpan.start - leadingOffset;
+			const generatedRight = textSpan.start + textSpan.length - leadingOffset;
 
 			// { foo: __VLS_ctx.foo }
 			//                  ^^^
-			for (
-				const [start, end, { data }] of map.toSourceRange(
-					textSpan.start - leadingOffset,
-					textSpan.start + textSpan.length - leadingOffset,
-					true,
-					isShorthand,
-				)
-			) {
+			for (const [start, end, { data }] of map.toSourceRange(generatedLeft, generatedRight, true, isShorthand)) {
 				locations.splice(i, 1, {
 					...locations[i]!,
 					...getPrefixAndSuffixForShorthandRename(
@@ -268,14 +262,7 @@ export function preprocessLanguageService(
 
 			// { foo: __VLS_ctx.foo }
 			//   ^^^
-			for (
-				const [start, end] of map.toSourceRange(
-					textSpan.start - leadingOffset,
-					textSpan.start + textSpan.length - leadingOffset,
-					true,
-					() => true,
-				)
-			) {
+			for (const [start, end] of map.toSourceRange(generatedLeft, generatedRight, true, () => true)) {
 				for (const [, , { data }] of map.toGeneratedRange(start, end, true, isShorthand)) {
 					locations.splice(i, 1, {
 						...locations[i]!,
