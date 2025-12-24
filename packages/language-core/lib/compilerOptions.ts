@@ -256,6 +256,7 @@ export function getDefaultCompilerOptions(
 		petiteVueExtensions: [],
 		jsxSlots: false,
 		strictCssModules: false,
+		cssModulesLocalsConvention: null,
 		strictVModel: strictTemplates,
 		checkUnknownProps: strictTemplates,
 		checkUnknownEvents: strictTemplates,
