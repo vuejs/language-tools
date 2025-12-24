@@ -30,6 +30,7 @@ export function* generateComponent(
 	let { tag, props } = node;
 	let [startTagOffset, endTagOffset] = getElementTagOffsets(node, options.template);
 	let isExpression = false;
+	let isIsShorthand = false;
 
 	if (tag.includes('.')) {
 		isExpression = true;
@@ -42,7 +43,8 @@ export function* generateComponent(
 				&& prop.arg?.loc.source === 'is'
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				if (prop.arg.loc.end.offset === prop.exp.loc.end.offset) {
+				isIsShorthand = prop.arg.loc.end.offset === prop.exp.loc.end.offset;
+				if (isIsShorthand) {
 					ctx.inlayHints.push(createVBindShorthandInlayHintInfo(prop.exp.loc, 'is'));
 				}
 				isExpression = true;
@@ -63,7 +65,9 @@ export function* generateComponent(
 			options,
 			ctx,
 			options.template,
-			codeFeatures.all,
+			isIsShorthand
+				? codeFeatures.withoutHighlightAndCompletion
+				: codeFeatures.all,
 			tag,
 			startTagOffset,
 			`(`,
