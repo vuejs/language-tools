@@ -175,14 +175,23 @@ export function* generateElementProps(
 				yield `...{ `;
 			}
 			const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);
-			yield* generateObjectProperty(
-				options,
-				ctx,
-				prop.name,
-				prop.loc.start.offset,
-				features,
-				shouldCamelize,
-			);
+			const prefix = options.template.content.slice(prop.loc.start.offset, prop.loc.start.offset + 1);
+			if (prefix === '.' || prefix === '#') {
+				// Pug shorthand syntax
+				for (const char of prop.name) {
+					yield [char, 'template', prop.loc.start.offset, features];
+				}
+			}
+			else {
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					prop.name,
+					prop.loc.start.offset,
+					features,
+					shouldCamelize,
+				);
+			}
 			yield `: `;
 			if (prop.name === 'style') {
 				yield `{}`;
