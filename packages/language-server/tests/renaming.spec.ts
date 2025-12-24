@@ -1,4 +1,5 @@
 import type { TextDocument } from '@volar/language-server';
+import type * as ts from 'typescript';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server.js';
@@ -645,6 +646,160 @@ test('Component dynamic props', async () => {
 		  ],
 		}
 	`);
+});
+
+test('same-name shorthand rename from variable', async () => {
+	expect(
+		await applyTsRename(`
+<script setup lang="ts">
+defineProps<{
+	title: string
+}>()
+const ti|tle = ''
+</script>
+
+<template>
+	<Fixture :title />
+	<div :title />
+</template>
+`),
+	).toMatchInlineSnapshot(`
+			"
+			<script setup lang="ts">
+			defineProps<{
+				title: string
+			}>()
+			const foo = ''
+			</script>
+
+			<template>
+				<Fixture :title="foo" />
+				<div :title="foo" />
+			</template>
+			"
+		`);
+});
+
+test('same-name shorthand rename from template', async () => {
+	expect(
+		await applyTsRename(`
+<script setup lang="ts">
+defineProps<{
+	title: string
+}>()
+const title = ''
+</script>
+
+<template>
+	<div :ti|tle />
+</template>
+`),
+	).toMatchInlineSnapshot(`
+			"
+			<script setup lang="ts">
+			defineProps<{
+				title: string
+			}>()
+			const foo = ''
+			</script>
+
+			<template>
+				<div :title="foo" />
+			</template>
+			"
+		`);
+});
+
+test('same-name shorthand rename from props', async () => {
+	expect(
+		await applyTsRename(`
+<script setup lang="ts">
+defineProps<{
+	ti|tle: string
+}>()
+const title = ''
+</script>
+
+<template>
+	<Fixture :title />
+	<div :title />
+</template>
+`),
+	).toMatchInlineSnapshot(`
+			"
+			<script setup lang="ts">
+			defineProps<{
+				foo: string
+			}>()
+			const title = ''
+			</script>
+
+			<template>
+				<Fixture :foo="title" />
+				<div :title />
+			</template>
+			"
+		`);
+});
+
+test('same-name shorthand rename from props (string literal)', async () => {
+	expect(
+		await applyTsRename(`
+<script setup lang="ts">
+defineProps<{
+	'ti|tle': string
+}>()
+const title = ''
+</script>
+
+<template>
+	<Fixture :title />
+	<div :title />
+</template>
+`),
+	).toMatchInlineSnapshot(`
+			"
+			<script setup lang="ts">
+			defineProps<{
+				'foo': string
+			}>()
+			const title = ''
+			</script>
+
+			<template>
+				<Fixture :foo="title" />
+				<div :title />
+			</template>
+			"
+		`);
+});
+
+test('same-name shorthand rename from props test', async () => {
+	expect(
+		await applyTsRename(`
+<script setup lang="ts">
+defineProps<{
+	tit|le: string
+}>()
+</script>
+
+<template>
+	<Fixture title="123" />
+</template>
+`),
+	).toMatchInlineSnapshot(`
+			"
+			<script setup lang="ts">
+			defineProps<{
+				foo: string
+			}>()
+			</script>
+
+			<template>
+				<Fixture foo="123" />
+			</template>
+			"
+		`);
 });
 
 test('Component returns', async () => {
@@ -1305,4 +1460,68 @@ async function prepareDocument(fileName: string, languageId: string, content: st
 		openedDocuments.push(document);
 	}
 	return document;
+}
+
+async function applyTsRename(content: string, newName = 'foo', fileName = 'tsconfigProject/fixture.vue') {
+	const rename: ts.server.protocol.RenameResponseBody = await requestRenameToTsServer(fileName, 'vue', content);
+
+	const uri = '${testWorkspacePath}/' + fileName;
+	const edits = rename.locs
+		.filter(loc => loc.file === uri)
+		.flatMap(loc =>
+			loc.locs.map(span => ({
+				range: {
+					start: { line: span.start.line - 1, character: span.start.offset - 1 },
+					end: { line: span.end.line - 1, character: span.end.offset - 1 },
+				},
+				newText: `${span.prefixText ?? ''}${newName}${span.suffixText ?? ''}`,
+			}))
+		);
+	return applyTextEdits(stripMarker(content), edits);
+
+	function stripMarker(content: string) {
+		const offset = content.indexOf('|');
+		expect(offset).toBeGreaterThanOrEqual(0);
+		return content.slice(0, offset) + content.slice(offset + 1);
+	}
+
+	function applyTextEdits(
+		content: string,
+		edits: {
+			range: {
+				start: { line: number; character: number };
+				end: { line: number; character: number };
+			};
+			newText: string;
+		}[],
+	) {
+		const lineOffsets = getLineOffsets(content);
+		const editsWithOffsets = edits
+			.map(edit => ({
+				edit,
+				start: offsetAt(edit.range.start, lineOffsets),
+				end: offsetAt(edit.range.end, lineOffsets),
+			}))
+			.sort((a, b) => b.start - a.start);
+		let result = content;
+		for (const { edit, start, end } of editsWithOffsets) {
+			result = result.slice(0, start) + edit.newText + result.slice(end);
+		}
+		return result;
+	}
+
+	function offsetAt(position: { line: number; character: number }, lineOffsets: number[]) {
+		const lineOffset = lineOffsets[position.line] ?? 0;
+		return lineOffset + position.character;
+	}
+
+	function getLineOffsets(text: string) {
+		const offsets = [0];
+		for (let i = 0; i < text.length; i++) {
+			if (text[i] === '\n') {
+				offsets.push(i + 1);
+			}
+		}
+		return offsets;
+	}
 }
