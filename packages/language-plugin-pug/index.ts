@@ -110,13 +110,6 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 							if ('offset' in value && typeof value.offset === 'number') {
 								const originalOffset = value.offset;
 								value.offset = toPugOffset(originalOffset);
-								if (typeof value.getClassOffset === 'function') {
-									const originalGetClassOffset = value.getClassOffset.bind(value);
-									value.getClassOffset = (startOffset: number) => {
-										const classOffset = originalGetClassOffset(startOffset);
-										return toPugOffset(classOffset);
-									};
-								}
 							}
 							visit(value);
 						}

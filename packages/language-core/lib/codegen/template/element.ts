@@ -356,18 +356,9 @@ function* generateStyleScopedClassReferences(
 			&& prop.name === 'class'
 			&& prop.value
 		) {
-			if (template.lang === 'pug') {
-				const getClassOffset = Reflect.get(prop.value.loc.start, 'getClassOffset') as (offset: number) => number;
-				const content = prop.value.loc.source.slice(1, -1);
-				for (const [className, pos] of forEachClassName(content)) {
-					yield* generateStyleScopedClassReference(template, className, getClassOffset(pos + 1));
-				}
-			}
-			else {
-				const [text, start] = normalizeAttributeValue(prop.value);
-				for (const [className, offset] of forEachClassName(text)) {
-					yield* generateStyleScopedClassReference(template, className, start + offset);
-				}
+			const [text, start] = normalizeAttributeValue(prop.value);
+			for (const [className, offset] of forEachClassName(text)) {
+				yield* generateStyleScopedClassReference(template, className, start + offset);
 			}
 		}
 		else if (
