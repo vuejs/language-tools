@@ -342,8 +342,8 @@ export function postprocessLanguageService<T>(
 			const resultLocations = shouldFilterScriptSetup
 				? result.filter(location =>
 					normalizeFileName(location.fileName) !== fileName
-					|| location.textSpan.start < scriptSetup!.startTagEnd
-					|| location.textSpan.start > scriptSetup!.endTagStart
+					|| location.textSpan.start < scriptSetup.startTagEnd
+					|| location.textSpan.start > scriptSetup.endTagStart
 				)
 				: result;
 
@@ -511,7 +511,9 @@ export function postprocessLanguageService<T>(
 		function getSetupBindingPosition(root: VueVirtualCode, name: string) {
 			const scriptSetup = root.sfc.scriptSetup;
 			const ast = scriptSetup?.ast;
-			if (!scriptSetup || !ast) return;
+			if (!scriptSetup || !ast) {
+				return;
+			}
 
 			let bindings = setupBindingsCache.get(ast);
 			if (!bindings) {
