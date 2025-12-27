@@ -31,6 +31,7 @@ import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
+import { readFile } from 'fs/promises';
 
 const EVENT_PROP_REGEX = /^on[A-Z]/;
 
@@ -55,8 +56,29 @@ interface TagInfo {
 	meta: ComponentMeta | undefined | null;
 }
 
+let htmlCustomData: html.ITagData[] | undefined;
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
+
+async function loadHtmlCustomData(context: LanguageServiceContext): Promise<void> {
+	if (!htmlCustomData) {
+		htmlCustomData = [];
+		const sources: string[] = await context.env.getConfiguration?.('html.customData') ?? []
+		for (const source of sources) {
+			try {
+				const data = JSON.parse(await readFile(source, 'utf-8'));
+				if (data && data.tags) {
+					htmlCustomData.push(...data.tags ?? []);
+				}
+			} catch(e) {
+				continue
+			}
+		}
+		if (htmlCustomData.length == 0) {
+			htmlCustomData = undefined;
+		}
+	}
+}
 
 export function create(
 	ts: typeof import('typescript'),
@@ -210,7 +232,7 @@ export function create(
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');
 			modelData ??= loadModelModifiersData(context.env.locale ?? 'en');
-
+			loadHtmlCustomData(context)
 			// https://vuejs.org/api/built-in-directives.html#v-on
 			const vOnModifiers = extractDirectiveModifiers(builtInData.globalAttributes?.find(x => x.name === 'v-on'));
 			// https://vuejs.org/api/built-in-directives.html#v-bind
@@ -643,8 +665,17 @@ export function create(
 							const { components, elements } = getComponentsAndElements();
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
-							const tags: html.ITagData[] = [];
+							const tags: html.ITagData[] = [];						
 
+							if (htmlCustomData) {
+								for (const tag of htmlCustomData ?? []) {
+									tags.push({
+										...tag,
+										name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
+									});
+								}
+							}
+							
 							for (const tag of builtInData?.tags ?? []) {
 								tags.push({
 									...tag,
