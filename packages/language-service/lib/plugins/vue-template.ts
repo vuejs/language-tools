@@ -74,7 +74,7 @@ async function loadHtmlCustomData(context: LanguageServiceContext): Promise<void
 				continue
 			}
 		}
-		if (htmlCustomData.length == 0) {
+		if (htmlCustomData.length === 0) {
 			htmlCustomData = undefined;
 		}
 	}
