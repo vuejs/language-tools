@@ -665,7 +665,7 @@ export function create(
 							const { components, elements } = getComponentsAndElements();
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
-							const tags: html.ITagData[] = [];						
+							const tags: html.ITagData[] = [];
 
 							if (htmlCustomData) {
 								for (const tag of htmlCustomData ?? []) {
