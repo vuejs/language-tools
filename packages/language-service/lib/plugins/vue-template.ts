@@ -665,7 +665,7 @@ export function create(
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
-							
+
 							for (const tag of builtInData?.tags ?? []) {
 								tags.push({
 									...tag,
