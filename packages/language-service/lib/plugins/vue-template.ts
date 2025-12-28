@@ -25,13 +25,12 @@ import {
 	convertCompletionInfo,
 } from 'volar-service-typescript/lib/utils/lspConverters.js';
 import * as html from 'vscode-html-languageservice';
-import { URI } from 'vscode-uri';
+import { URI, Utils } from 'vscode-uri';
 import type { ComponentMeta, PropertyMeta } from '../../../component-meta';
 import { loadModelModifiersData, loadTemplateData } from '../data';
 import { format } from '../htmlFormatter';
 import { AttrNameCasing, getAttrNameCasing, getTagNameCasing, TagNameCasing } from '../nameCasing';
 import { resolveEmbeddedCode } from '../utils';
-import { readFile } from 'fs/promises';
 
 const EVENT_PROP_REGEX = /^on[A-Z]/;
 
@@ -56,29 +55,9 @@ interface TagInfo {
 	meta: ComponentMeta | undefined | null;
 }
 
-let htmlCustomData: html.ITagData[] | undefined;
+let htmlCustomData: html.IHTMLDataProvider[] | undefined = undefined;
 let builtInData: html.HTMLDataV1 | undefined;
 let modelData: html.HTMLDataV1 | undefined;
-
-async function loadHtmlCustomData(context: LanguageServiceContext): Promise<void> {
-	if (!htmlCustomData) {
-		htmlCustomData = [];
-		const sources: string[] = await context.env.getConfiguration?.('html.customData') ?? []
-		for (const source of sources) {
-			try {
-				const data = JSON.parse(await readFile(source, 'utf-8'));
-				if (data && data.tags) {
-					htmlCustomData.push(...data.tags ?? []);
-				}
-			} catch(e) {
-				continue
-			}
-		}
-		if (htmlCustomData.length === 0) {
-			htmlCustomData = undefined;
-		}
-	}
-}
 
 export function create(
 	ts: typeof import('typescript'),
@@ -137,7 +116,7 @@ export function create(
 			useDefaultDataProvider: false,
 			getDocumentContext,
 			getCustomData() {
-				return htmlData;
+				return htmlCustomData ? [...htmlCustomData, ...htmlData] : htmlData;
 			},
 			onDidChangeCustomData,
 		})
@@ -146,7 +125,7 @@ export function create(
 			useDefaultDataProvider: false,
 			getDocumentContext,
 			getCustomData() {
-				return htmlData;
+				return htmlCustomData ? [...htmlCustomData, ...htmlData] : htmlData;
 			},
 			onDidChangeCustomData,
 		});
@@ -232,7 +211,6 @@ export function create(
 
 			builtInData ??= loadTemplateData(context.env.locale ?? 'en');
 			modelData ??= loadModelModifiersData(context.env.locale ?? 'en');
-			loadHtmlCustomData(context)
 			// https://vuejs.org/api/built-in-directives.html#v-on
 			const vOnModifiers = extractDirectiveModifiers(builtInData.globalAttributes?.find(x => x.name === 'v-on'));
 			// https://vuejs.org/api/built-in-directives.html#v-bind
@@ -637,6 +615,26 @@ export function create(
 				return { result, ...lastSync };
 			}
 
+			async function loadHtmlCustomData(): Promise<html.IHTMLDataProvider[]> {
+				if (htmlCustomData) { return htmlCustomData }
+				const newData: html.IHTMLDataProvider[] = [];
+				const customData: string[] = await context.env.getConfiguration?.('html.customData') ?? []
+				const workspaceFolder = context.env.workspaceFolders?.[0] ?? undefined
+				for (const customDataPath of customData) {
+					try {
+						const uri = Utils.resolvePath(URI.parse(workspaceFolder?.toString() ?? "."), customDataPath);
+						const json = await context.env.fs?.readFile?.(uri, "utf-8");
+						if (json) {
+							const data = JSON.parse(json) as html.HTMLDataV1
+							newData.push(html.newHTMLDataProvider(customDataPath, data));
+						}
+					} catch(e) {
+						continue
+					}
+				}
+				return newData
+			}
+
 			async function provideHtmlData(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
@@ -656,6 +654,7 @@ export function create(
 
 				const tasks: Promise<void>[] = [];
 				const tagDataMap = new Map<string, TagInfo>();
+				htmlCustomData = await loadHtmlCustomData()
 
 				updateExtraCustomData([
 					{
@@ -666,15 +665,6 @@ export function create(
 							const codegen = tsCodegen.get(root.sfc);
 							const names = new Set<string>();
 							const tags: html.ITagData[] = [];
-
-							if (htmlCustomData) {
-								for (const tag of htmlCustomData ?? []) {
-									tags.push({
-										...tag,
-										name: tagNameCasing === TagNameCasing.Kebab ? hyphenateTag(tag.name) : tag.name,
-									});
-								}
-							}
 							
 							for (const tag of builtInData?.tags ?? []) {
 								tags.push({
