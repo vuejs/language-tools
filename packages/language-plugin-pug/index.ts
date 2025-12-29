@@ -6,8 +6,6 @@ import { baseParse } from './lib/baseParse';
 const classRegex = /^class\s*=/;
 
 const plugin: VueLanguagePlugin = ({ modules }) => {
-	const CompilerDOM = modules['@vue/compiler-dom'];
-
 	return {
 		name: require('./package.json').name,
 
@@ -47,6 +45,7 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 
 		compileSFCTemplate(lang, template, options) {
 			if (lang === 'pug') {
+				const { compileTemplate } = modules['@vue/language-core'];
 				let parsed: ReturnType<typeof baseParse>;
 				let baseOffset = 0;
 
@@ -63,9 +62,8 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 				}
 
 				const map = new SourceMap(parsed.mappings);
-				let ast = CompilerDOM.parse(parsed.htmlCode, {
+				let ast = compileTemplate(parsed.htmlCode, {
 					...options,
-					comments: true,
 					onWarn(warning) {
 						if (warning.loc) {
 							warning.loc.start.offset = toPugOffset(warning.loc.start.offset);
@@ -88,7 +86,6 @@ const plugin: VueLanguagePlugin = ({ modules }) => {
 						options.onError?.(error);
 					},
 				});
-				CompilerDOM.transform(ast, options);
 
 				const visited = new Set<object>();
 				visit(ast);

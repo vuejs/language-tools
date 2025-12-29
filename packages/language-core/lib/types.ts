@@ -110,8 +110,9 @@ export interface VueLanguagePluginReturn {
 
 export type VueLanguagePlugin = (ctx: {
 	modules: {
-		typescript: typeof ts;
 		'@vue/compiler-dom': typeof CompilerDOM;
+		'@vue/language-core': typeof import('../index');
+		typescript: typeof ts;
 	};
 	compilerOptions: ts.CompilerOptions;
 	vueCompilerOptions: VueCompilerOptions;

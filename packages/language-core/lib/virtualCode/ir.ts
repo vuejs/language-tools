@@ -1,10 +1,9 @@
-import * as CompilerDOM from '@vue/compiler-dom';
+import type * as CompilerDOM from '@vue/compiler-dom';
 import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, setActiveSub } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
 import { computedArray, reactiveArray } from '../utils/signals';
-import { normalizeTemplateAST } from './normalize';
 
 export function useIR(
 	ts: typeof import('typescript'),
@@ -249,14 +248,10 @@ export function useIR(
 
 			const errors: CompilerDOM.CompilerError[] = [];
 			const warnings: CompilerDOM.CompilerError[] = [];
-			const [nodeTransforms, directiveTransforms] = CompilerDOM.getBaseTransformPreset();
-
 			let options: CompilerDOM.CompilerOptions = {
 				onError: err => errors.push(err),
 				onWarn: err => warnings.push(err),
 				expressionPlugins: ['typescript'],
-				nodeTransforms,
-				directiveTransforms,
 			};
 
 			for (const plugin of plugins) {
@@ -269,7 +264,6 @@ export function useIR(
 				try {
 					const result = plugin.compileSFCTemplate?.(base.lang, base.content, options);
 					if (result) {
-						normalizeTemplateAST(result.ast);
 						return {
 							snapshot: getUntrackedSnapshot(),
 							template: base.content,
