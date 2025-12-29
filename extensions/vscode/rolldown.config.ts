@@ -1,56 +1,41 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { defineConfig, type RolldownOptions } from 'rolldown';
+import { defineConfig } from 'rolldown';
 
-const isDev = !process.argv.includes('--minify');
-const resolve = (...paths: string[]) => path.resolve(__dirname, ...paths);
-
-const config: RolldownOptions = {
+export default defineConfig({
 	input: {
-		'extension': './index.ts',
-		'reactivity-analysis-plugin': './lib/reactivityAnalysisPlugin.ts',
+		'extension': './src/extension.ts',
+		'reactivity-analysis-plugin': './src/reactivityAnalysisPlugin.ts',
+		'language-server': './node_modules/@vue/language-server/index.ts',
+		'typescript-plugin': './node_modules/@vue/typescript-plugin/index.ts',
 	},
 	output: {
 		format: 'cjs',
-		sourcemap: isDev,
+		minify: true,
 	},
-	define: {
-		'process.env.NODE_ENV': '"production"',
+	transform: {
+		define: {
+			'process.env.NODE_ENV': '"production"',
+		},
+	},
+	checks: {
+		eval: false,
 	},
 	external: ['vscode'],
 	plugins: [
 		{
 			name: 'clean',
 			buildStart() {
-				fs.rmSync(resolve('./dist'), { recursive: true, force: true });
+				fs.rmSync(path.resolve(__dirname, './dist'), { recursive: true, force: true });
 			},
 		},
 		{
-			name: 'redirect',
+			name: 'copy-types',
 			buildEnd() {
-				fs.mkdirSync(resolve('./node_modules/vue-typescript-plugin-pack'), { recursive: true });
-				fs.writeFileSync(
-					resolve('./node_modules/vue-typescript-plugin-pack/index.js'),
-					`module.exports = require('../../dist/typescript-plugin.js');`,
-				);
-
-				fs.mkdirSync(resolve('./node_modules/vue-reactivity-analysis-plugin-pack'), { recursive: true });
-				fs.writeFileSync(
-					resolve('./node_modules/vue-reactivity-analysis-plugin-pack/index.js'),
-					`module.exports = require('../../dist/reactivity-analysis-plugin.js');`,
-				);
-
-				if (isDev) {
-					fs.mkdirSync(resolve('./dist'), { recursive: true });
-					fs.writeFileSync(
-						resolve('./dist/language-server.js'),
-						`module.exports = require('../node_modules/@vue/language-server/index.js');`,
-					);
-					fs.writeFileSync(
-						resolve('./dist/typescript-plugin.js'),
-						`module.exports = require('../node_modules/@vue/typescript-plugin/index.js');`,
-					);
-				}
+				const sourceDir = path.resolve(__dirname, '../../packages/language-core/types');
+				const targetDir = path.resolve(__dirname, './types');
+				fs.rmSync(targetDir, { recursive: true, force: true });
+				fs.cpSync(sourceDir, targetDir, { recursive: true });
 			},
 		},
 		{
@@ -79,14 +64,4 @@ const config: RolldownOptions = {
 			},
 		},
 	],
-};
-
-if (!isDev) {
-	config.input = {
-		...config.input as Record<string, string>,
-		'language-server': './node_modules/@vue/language-server/index.js',
-		'typescript-plugin': './node_modules/@vue/typescript-plugin/index.js',
-	};
-}
-
-export default defineConfig(config);
+});

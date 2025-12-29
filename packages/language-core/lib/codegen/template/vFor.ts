@@ -19,8 +19,8 @@ export function* generateVFor(
 
 	yield `for (const [`;
 	if (leftExpressionRange && leftExpressionText) {
-		const collectAst = getTypeScriptAST(options.ts, options.template, `const [${leftExpressionText}]`);
-		ctx.declare(...collectBindingNames(options.ts, collectAst, collectAst));
+		const collectAst = getTypeScriptAST(options.typescript, options.template, `const [${leftExpressionText}]`);
+		ctx.declare(...collectBindingNames(options.typescript, collectAst, collectAst));
 		yield [
 			leftExpressionText,
 			'template',
@@ -30,7 +30,7 @@ export function* generateVFor(
 	}
 	yield `] of `;
 	if (source.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		yield `__VLS_getVForSourceType(`;
+		yield `__VLS_vFor(`;
 		yield* generateInterpolation(
 			options,
 			ctx,

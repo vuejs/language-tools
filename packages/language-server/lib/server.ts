@@ -79,10 +79,11 @@ export function startServer(ts: typeof import('typescript')) {
 					return simpleLanguageService ??= createProjectLanguageService(server, undefined);
 				},
 				getExistingLanguageServices() {
-					return Promise.all([
-						...tsconfigProjects.values(),
-						simpleLanguageService,
-					].filter(promise => !!promise));
+					const projects = [...tsconfigProjects.values()];
+					if (simpleLanguageService) {
+						projects.push(simpleLanguageService);
+					}
+					return projects;
 				},
 				reload() {
 					for (const languageService of tsconfigProjects.values()) {
@@ -102,14 +103,11 @@ export function startServer(ts: typeof import('typescript')) {
 				getComponentDirectives(...args) {
 					return sendTsServerRequest('_vue:getComponentDirectives', args);
 				},
-				getComponentEvents(...args) {
-					return sendTsServerRequest('_vue:getComponentEvents', args);
-				},
 				getComponentNames(...args) {
 					return sendTsServerRequest('_vue:getComponentNames', args);
 				},
-				getComponentProps(...args) {
-					return sendTsServerRequest('_vue:getComponentProps', args);
+				getComponentMeta(...args) {
+					return sendTsServerRequest('_vue:getComponentMeta', args);
 				},
 				getComponentSlots(...args) {
 					return sendTsServerRequest('_vue:getComponentSlots', args);
@@ -122,6 +120,12 @@ export function startServer(ts: typeof import('typescript')) {
 				},
 				getImportPathForFile(...args) {
 					return sendTsServerRequest('_vue:getImportPathForFile', args);
+				},
+				getAutoImportSuggestions(...args) {
+					return sendTsServerRequest('_vue:getAutoImportSuggestions', args);
+				},
+				resolveAutoImportCompletionEntry(...args) {
+					return sendTsServerRequest('_vue:resolveAutoImportCompletionEntry', args);
 				},
 				isRefAtPosition(...args) {
 					return sendTsServerRequest('_vue:isRefAtPosition', args);

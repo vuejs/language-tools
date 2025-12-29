@@ -17,54 +17,47 @@ export function* generateVSlot(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	slotDir: CompilerDOM.DirectiveNode | undefined,
+	ctxVar: string,
 ): Generator<Code> {
-	if (!ctx.currentComponent) {
-		return;
-	}
 	const slotVar = ctx.getInternalVariable();
-
 	if (slotDir) {
 		yield `{${newLine}`;
-	}
-
-	if (slotDir || node.children.length) {
 		yield `const { `;
-		if (slotDir) {
-			if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
-				yield* generateObjectProperty(
-					options,
-					ctx,
-					slotDir.arg.loc.source,
-					slotDir.arg.loc.start.offset,
-					slotDir.arg.isStatic ? codeFeatures.withoutHighlight : codeFeatures.all,
-					false,
-					true,
-				);
-			}
-			else {
-				const token = yield* startBoundary(
-					'template',
-					slotDir.loc.start.offset,
-					codeFeatures.withoutHighlightAndCompletion,
-				);
-				yield `default`;
-				yield endBoundary(token, slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0));
-			}
+		if (slotDir.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION && slotDir.arg.content) {
+			yield* generateObjectProperty(
+				options,
+				ctx,
+				slotDir.arg.loc.source,
+				slotDir.arg.loc.start.offset,
+				slotDir.arg.isStatic ? codeFeatures.withoutHighlight : codeFeatures.all,
+				false,
+				true,
+			);
 		}
 		else {
-			// #932: reference for implicit default slot
-			const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.navigation);
+			const token = yield* startBoundary(
+				'template',
+				slotDir.loc.start.offset,
+				codeFeatures.withoutHighlightAndCompletion,
+			);
 			yield `default`;
-			yield endBoundary(token, node.loc.end.offset);
+			yield endBoundary(token, slotDir.loc.start.offset + (slotDir.rawName?.length ?? 0));
 		}
-		yield `: ${slotVar} } = ${ctx.currentComponent.ctxVar}.slots!${endOfLine}`;
 	}
+	else {
+		yield `const { `;
+		// #932: reference for implicit default slot
+		const token = yield* startBoundary('template', node.loc.start.offset, codeFeatures.navigation);
+		yield `default`;
+		yield endBoundary(token, node.loc.end.offset);
+	}
+	yield `: ${slotVar} } = ${ctxVar}.slots!${endOfLine}`;
 
 	const endScope = ctx.startScope();
 	if (slotDir?.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const slotAst = getTypeScriptAST(options.ts, options.template, `(${slotDir.exp.content}) => {}`);
+		const slotAst = getTypeScriptAST(options.typescript, options.template, `(${slotDir.exp.content}) => {}`);
 		yield* generateSlotParameters(options, ctx, slotAst, slotDir.exp, slotVar);
-		ctx.declare(...collectBindingNames(options.ts, slotAst, slotAst));
+		ctx.declare(...collectBindingNames(options.typescript, slotAst, slotAst));
 	}
 	for (const child of node.children) {
 		yield* generateTemplateChild(options, ctx, child);
@@ -77,7 +70,7 @@ export function* generateVSlot(
 			isStatic = slotDir.arg.isStatic;
 		}
 		if (isStatic && !slotDir.arg) {
-			yield `${ctx.currentComponent.ctxVar}.slots!['`;
+			yield `${ctxVar}.slots!['`;
 			yield [
 				'',
 				'template',
@@ -103,9 +96,8 @@ function* generateSlotParameters(
 	exp: CompilerDOM.SimpleExpressionNode,
 	slotVar: string,
 ): Generator<Code> {
-	const { ts } = options;
+	const { typescript: ts } = options;
 	const statement = ast.statements[0];
-
 	if (!statement || !ts.isExpressionStatement(statement) || !ts.isArrowFunction(statement.expression)) {
 		return;
 	}
@@ -113,7 +105,6 @@ function* generateSlotParameters(
 	const { expression } = statement;
 	const startOffset = exp.loc.start.offset - 1;
 	const types: (Code | null)[] = [];
-
 	const interpolation = [...generateInterpolation(
 		options,
 		ctx,
@@ -148,7 +139,7 @@ function* generateSlotParameters(
 
 	yield `const [`;
 	yield* interpolation;
-	yield `] = __VLS_getSlotParameters(${slotVar}!`;
+	yield `] = __VLS_vSlot(${slotVar}!`;
 
 	if (types.some(t => t)) {
 		yield `, `;

@@ -1,8 +1,9 @@
 import * as CompilerDOM from '@vue/compiler-dom';
 import type { Code } from '../../types';
-import { getAttributeValueOffset, getElementTagOffsets } from '../../utils/shared';
+import { getElementTagOffsets, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
+import * as names from '../names';
 import { endOfLine, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import type { TemplateCodegenContext } from './context';
@@ -37,13 +38,8 @@ export function* generateSlotOutlet(
 		if (nameProp) {
 			let codes: Generator<Code> | Code[];
 			if (nameProp.type === CompilerDOM.NodeTypes.ATTRIBUTE && nameProp.value) {
-				codes = generatePropertyAccess(
-					options,
-					ctx,
-					nameProp.value.content,
-					getAttributeValueOffset(nameProp.value),
-					codeFeatures.navigationAndVerification,
-				);
+				const [content, offset] = normalizeAttributeValue(nameProp.value);
+				codes = generatePropertyAccess(options, ctx, content, offset, codeFeatures.navigationAndVerification);
 			}
 			else if (
 				nameProp.type === CompilerDOM.NodeTypes.DIRECTIVE
@@ -65,13 +61,13 @@ export function* generateSlotOutlet(
 			}
 
 			const token = yield* startBoundary('template', nameProp.loc.start.offset, codeFeatures.verification);
-			yield options.slotsAssignName ?? '__VLS_slots';
+			yield options.slotsAssignName ?? names.slots;
 			yield* codes;
 			yield endBoundary(token, nameProp.loc.end.offset);
 		}
 		else {
 			const token = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
-			yield `${options.slotsAssignName ?? '__VLS_slots'}[`;
+			yield `${options.slotsAssignName ?? names.slots}[`;
 			const token2 = yield* startBoundary('template', startTagOffset, codeFeatures.verification);
 			yield `'default'`;
 			yield endBoundary(token2, startTagEndOffset);
@@ -129,7 +125,9 @@ export function* generateSlotOutlet(
 				options,
 				ctx,
 				options.template,
-				codeFeatures.all,
+				isShortHand
+					? codeFeatures.withoutHighlightAndCompletion
+					: codeFeatures.all,
 				nameProp.exp.content,
 				nameProp.exp.loc.start.offset,
 			);

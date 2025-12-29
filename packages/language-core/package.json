@@ -1,6 +1,6 @@
 {
 	"name": "@vue/language-core",
-	"version": "3.1.5",
+	"version": "3.2.1",
 	"license": "MIT",
 	"files": [
 		"**/*.js",
@@ -13,7 +13,7 @@
 		"directory": "packages/language-core"
 	},
 	"dependencies": {
-		"@volar/language-core": "2.4.26",
+		"@volar/language-core": "2.4.27",
 		"@vue/compiler-dom": "^3.5.24",
 		"@vue/shared": "^3.5.24",
 		"alien-signals": "^3.0.0",
@@ -25,15 +25,7 @@
 		"@types/node": "^22.10.4",
 		"@types/path-browserify": "^1.0.1",
 		"@types/picomatch": "^4.0.0",
-		"@volar/typescript": "2.4.26",
+		"@volar/typescript": "2.4.27",
 		"@vue/compiler-sfc": "^3.5.24"
-	},
-	"peerDependencies": {
-		"typescript": "*"
-	},
-	"peerDependenciesMeta": {
-		"typescript": {
-			"optional": true
-		}
 	}
 }

@@ -14,12 +14,15 @@ export function hyphenateAttr(str: string) {
 	return hyphencase;
 }
 
-export function getAttributeValueOffset(node: CompilerDOM.TextNode) {
-	let offset = node.loc.start.offset;
-	if (node.loc.source.startsWith('"') || node.loc.source.startsWith("'")) {
-		offset++;
+export function normalizeAttributeValue(node: CompilerDOM.TextNode) {
+	const { source, start } = node.loc;
+	if (
+		(source.startsWith('"') && source.endsWith('"'))
+		|| (source.startsWith("'") && source.endsWith("'"))
+	) {
+		return [source.slice(1, -1), start.offset + 1] as const;
 	}
-	return offset;
+	return [source, start.offset] as const;
 }
 
 export function getElementTagOffsets(
@@ -38,12 +41,13 @@ export function getElementTagOffsets(
 	return tagOffsets as [number] | [number, number];
 }
 
-export function getStartEnd(
+export function getStartEnd<T extends ts.Node>(
 	ts: typeof import('typescript'),
-	node: ts.Node,
+	node: T,
 	ast: ts.SourceFile,
-): TextRange {
+): TextRange<T> {
 	return {
+		node,
 		start: (ts as any).getTokenPosOfNode(node, ast) as number,
 		end: node.end,
 	};

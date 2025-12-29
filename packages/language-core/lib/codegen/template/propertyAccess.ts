@@ -12,11 +12,7 @@ export function* generatePropertyAccess(
 	offset: number,
 	features: VueCodeInformation,
 ): Generator<Code> {
-	if (!options.compilerOptions.noPropertyAccessFromIndexSignature && identifierRegex.test(code)) {
-		yield `.`;
-		yield [code, 'template', offset, features];
-	}
-	else if (code.startsWith('[') && code.endsWith(']')) {
+	if (code.startsWith('[') && code.endsWith(']')) {
 		yield* generateInterpolation(
 			options,
 			ctx,
@@ -25,6 +21,10 @@ export function* generatePropertyAccess(
 			code,
 			offset,
 		);
+	}
+	else if (identifierRegex.test(code)) {
+		yield `.`;
+		yield [code, 'template', offset, features];
 	}
 	else {
 		yield `[`;

@@ -1,9 +1,6 @@
-name: update-html-data
+name: Update HTML Data
 
 on:
-  push:
-    branches:
-      - "master"
   workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"
@@ -15,24 +12,23 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install
 
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install
-
-      # update data
       - name: Update HTML Data
-        run: cd packages/language-service && pnpm run update-html-data
+        run: cd packages/language-service && npm run update-html-data
 
-      # commit
       - name: Commit
         uses: EndBug/add-and-commit@v9
         with:
           message: "ci(language-service): update html data"
           add: "packages/language-service/data"
           default_author: github_actions
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

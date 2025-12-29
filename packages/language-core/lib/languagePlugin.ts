@@ -62,7 +62,7 @@ export function createVueLanguagePlugin<T>(
 		createVirtualCode(scriptId, languageId, snapshot) {
 			const fileName = asFileName(scriptId);
 			if (plugins.some(plugin => plugin.isValidFile?.(fileName, languageId))) {
-				const code = fileRegistry.get(fileName);
+				const code = fileRegistry.get(String(scriptId));
 				if (code) {
 					code.update(snapshot);
 					return code;
@@ -76,7 +76,7 @@ export function createVueLanguagePlugin<T>(
 						plugins,
 						ts,
 					);
-					fileRegistry.set(fileName, code);
+					fileRegistry.set(String(scriptId), code);
 					return code;
 				}
 			}
@@ -86,8 +86,7 @@ export function createVueLanguagePlugin<T>(
 			return code;
 		},
 		disposeVirtualCode(scriptId) {
-			const fileName = asFileName(scriptId);
-			fileRegistry.delete(fileName);
+			fileRegistry.delete(String(scriptId));
 		},
 		typescript: {
 			extraFileExtensions: getAllExtensions(vueCompilerOptions)

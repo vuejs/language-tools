@@ -1,6 +1,117 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`vue-tsc-dts > Input: empty-component/component.vue, Output: empty-component/component.vue.d.ts 1`] = `
+exports[`Input: component-name-description/component.vue, Output: component-name-description/component.vue.d.ts 1`] = `
+"/**
+ * My awesome component description
+ */
+declare const _default: typeof __VLS_export;
+export default _default;
+declare const __VLS_export: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {
+        /**
+         * The title prop
+         */
+        title: {
+            type: StringConstructor;
+            required: true;
+        };
+    };
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+"
+`;
+
+exports[`Input: component-name-description/component-no-name.vue, Output: component-name-description/component-no-name.vue.d.ts 1`] = `
+"/**
+ * Component without explicit name
+ */
+type __VLS_Props = {
+    /**
+     * The value prop
+     */
+    value: string;
+};
+declare const __VLS_export: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: __VLS_Props;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+declare const _default: typeof __VLS_export;
+export default _default;
+"
+`;
+
+exports[`Input: component-name-description/component-ts.ts, Output: component-name-description/component-ts.d.ts 1`] = `
+"/**
+ * TypeScript component with description
+ */
+declare const _default: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {
+        /**
+         * The message prop
+         */
+        message: {
+            type: StringConstructor;
+            required: true;
+        };
+    };
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+export default _default;
+"
+`;
+
+exports[`Input: empty-component/component.vue, Output: empty-component/component.vue.d.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
@@ -27,7 +138,7 @@ export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: empty-component/custom-extension-component.cext, Output: empty-component/custom-extension-component.cext.d.ts 1`] = `
+exports[`Input: empty-component/custom-extension-component.cext, Output: empty-component/custom-extension-component.cext.d.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
@@ -54,16 +165,16 @@ export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
-"declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_PrettifyLocal<({
+exports[`Input: generic/component.vue, Output: generic/component.vue.d.ts 1`] = `
+"declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: import("vue").PublicProps & __VLS_PrettifyLocal<({
         foo: number;
     } & {
         title?: string;
     }) & {
         "onUpdate:title"?: (value: string) => any;
         onBar?: (data: number) => any;
-    }> & import("vue").PublicProps & (typeof globalThis extends {
+    }> & (typeof globalThis extends {
         __VLS_PROPS_FALLBACK: infer P;
     } ? P : {});
     expose: (exposed: import("vue").ShallowUnwrapRef<{
@@ -81,22 +192,24 @@ exports[`vue-tsc-dts > Input: generic/component.vue, Output: generic/component.v
 };
 declare const _default: typeof __VLS_export;
 export default _default;
-type __VLS_PrettifyLocal<T> = {
+type __VLS_PrettifyLocal<T> = (T extends any ? {
+    [K in keyof T]: T[K];
+} : {
     [K in keyof T as K]: T[K];
-} & {};
+}) & {};
 "
 `;
 
-exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: generic/custom-extension-component.cext.d.ts 1`] = `
-"declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_expose?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
-    props: __VLS_PrettifyLocal<({
+exports[`Input: generic/custom-extension-component.cext, Output: generic/custom-extension-component.cext.d.ts 1`] = `
+"declare const __VLS_export: <T>(__VLS_props: NonNullable<Awaited<typeof __VLS_setup>>["props"], __VLS_ctx?: __VLS_PrettifyLocal<Pick<NonNullable<Awaited<typeof __VLS_setup>>, "attrs" | "emit" | "slots">>, __VLS_exposed?: NonNullable<Awaited<typeof __VLS_setup>>["expose"], __VLS_setup?: Promise<{
+    props: import("vue").PublicProps & __VLS_PrettifyLocal<({
         foo: number;
     } & {
         title?: string;
     }) & {
         "onUpdate:title"?: (value: string) => any;
         onBar?: (data: number) => any;
-    }> & import("vue").PublicProps & (typeof globalThis extends {
+    }> & (typeof globalThis extends {
         __VLS_PROPS_FALLBACK: infer P;
     } ? P : {});
     expose: (exposed: import("vue").ShallowUnwrapRef<{
@@ -114,13 +227,15 @@ exports[`vue-tsc-dts > Input: generic/custom-extension-component.cext, Output: g
 };
 declare const _default: typeof __VLS_export;
 export default _default;
-type __VLS_PrettifyLocal<T> = {
+type __VLS_PrettifyLocal<T> = (T extends any ? {
+    [K in keyof T]: T[K];
+} : {
     [K in keyof T as K]: T[K];
-} & {};
+}) & {};
 "
 `;
 
-exports[`vue-tsc-dts > Input: generic/main.vue, Output: generic/main.vue.d.ts 1`] = `
+exports[`Input: generic/main.vue, Output: generic/main.vue.d.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
@@ -147,13 +262,13 @@ export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: non-component/component.ts, Output: non-component/component.d.ts 1`] = `
+exports[`Input: non-component/component.ts, Output: non-component/component.d.ts 1`] = `
 "declare const _default: {};
 export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: options-api/component.ts, Output: options-api/component.d.ts 1`] = `
+exports[`Input: options-api/component.ts, Output: options-api/component.d.ts 1`] = `
 "interface SubmitPayload {
     /**
      * email of user
@@ -222,7 +337,7 @@ export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-events/component.vue, Output: reference-type-events/component.vue.d.ts 1`] = `
+exports[`Input: reference-type-events/component.vue, Output: reference-type-events/component.vue.d.ts 1`] = `
 "import type { MyEvents } from './my-events';
 declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
@@ -250,7 +365,7 @@ export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-events/my-events.ts, Output: reference-type-events/my-events.d.ts 1`] = `
+exports[`Input: reference-type-events/my-events.ts, Output: reference-type-events/my-events.d.ts 1`] = `
 "/**
  * Emitted when the foo property is changed.
  */
@@ -269,14 +384,20 @@ export {};
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-exposed/component.vue, Output: reference-type-exposed/component.vue.d.ts 1`] = `
-"declare const __VLS_export: import("vue").DefineComponent2<{
-    setup(): {
-        /**
-         * a counter string
-         */
-        counter: import("vue").Ref<string, string>;
-    };
+exports[`Input: reference-type-exposed/component.vue, Output: reference-type-exposed/component.vue.d.ts 1`] = `
+"import { type VNode } from 'vue';
+import type { MyExposed } from './my-exposed';
+type __VLS_Props = {
+    label: string;
+};
+type __VLS_Emit = {
+    click: [event: Event];
+};
+type __VLS_Slots = {
+    default: () => VNode[];
+};
+declare const __VLS_base: import("vue").DefineComponent2<{
+    setup(): MyExposed;
     data(): {};
     props: {};
     computed: {};
@@ -290,18 +411,74 @@ exports[`vue-tsc-dts > Input: reference-type-exposed/component.vue, Output: refe
     directives: {};
     provide: {};
     expose: string;
+    __typeProps: __VLS_Props;
+    __typeEmits: __VLS_Emit;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+declare const _default: typeof __VLS_export;
+export default _default;
+type __VLS_WithSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
+"
+`;
+
+exports[`Input: reference-type-exposed/component-options-api.vue, Output: reference-type-exposed/component-options-api.vue.d.ts 1`] = `
+"declare const _default: typeof __VLS_export;
+export default _default;
+declare const __VLS_export: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {
+        counter: number;
+    };
+    props: {};
+    computed: {};
+    methods: {
+        /** Resets the counter to zero */
+        reset(): void;
+        /** Increments the counter by one */
+        increment(): void;
+    };
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: "reset" | "increment";
     __typeProps: unknown;
     __typeEmits: unknown;
     __typeRefs: {};
     __typeEl: any;
     __defaults: unknown;
 }>;
-declare const _default: typeof __VLS_export;
-export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
+exports[`Input: reference-type-exposed/my-exposed.ts, Output: reference-type-exposed/my-exposed.d.ts 1`] = `
+"import type { Ref } from 'vue';
+export interface MyExposed {
+    /**
+     * a counter string
+     */
+    counter: Ref<string>;
+    /**
+     * an oldCounter string
+     * @deprecated use counter instead
+     */
+    oldCounter: Ref<string>;
+}
+"
+`;
+
+exports[`Input: reference-type-model/component.vue, Output: reference-type-model/component.vue.d.ts 1`] = `
 "type __VLS_ModelProps = {
     /**
      * required number modelValue
@@ -348,7 +525,7 @@ export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-props/component.vue, Output: reference-type-props/component.vue.d.ts 1`] = `
+exports[`Input: reference-type-props/component.vue, Output: reference-type-props/component.vue.d.ts 1`] = `
 "import { MyProps } from './my-props';
 declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
@@ -379,7 +556,7 @@ export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-props/component-destructure.vue, Output: reference-type-props/component-destructure.vue.d.ts 1`] = `
+exports[`Input: reference-type-props/component-destructure.vue, Output: reference-type-props/component-destructure.vue.d.ts 1`] = `
 "type __VLS_Props = {
     text: string;
 };
@@ -409,8 +586,10 @@ export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-props/component-js.vue, Output: reference-type-props/component-js.vue.d.ts 1`] = `
-"declare const __VLS_export: import("vue").DefineComponent2<{
+exports[`Input: reference-type-props/component-js.vue, Output: reference-type-props/component-js.vue.d.ts 1`] = `
+"declare const _default: typeof __VLS_export;
+export default _default;
+declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
     props: {
@@ -454,12 +633,10 @@ exports[`vue-tsc-dts > Input: reference-type-props/component-js.vue, Output: ref
     __typeEl: any;
     __defaults: unknown;
 }>;
-declare const _default: typeof __VLS_export;
-export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-props/component-js-setup.vue, Output: reference-type-props/component-js-setup.vue.d.ts 1`] = `
+exports[`Input: reference-type-props/component-js-setup.vue, Output: reference-type-props/component-js-setup.vue.d.ts 1`] = `
 "declare const __VLS_export: import("vue").DefineComponent2<{
     setup(): {};
     data(): {};
@@ -496,7 +673,7 @@ exports[`vue-tsc-dts > Input: reference-type-props/component-js-setup.vue, Outpu
             default: string;
         };
         numberOrStringProp: {
-            type: (NumberConstructor | StringConstructor)[];
+            type: (StringConstructor | NumberConstructor)[];
             default: number;
         };
         arrayProps: {
@@ -526,7 +703,7 @@ export default _default;
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-props/my-props.ts, Output: reference-type-props/my-props.d.ts 1`] = `
+exports[`Input: reference-type-props/my-props.ts, Output: reference-type-props/my-props.d.ts 1`] = `
 "export interface MyNestedProps {
     /**
      * nested prop documentation
@@ -637,7 +814,7 @@ export {};
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-slots/component.vue, Output: reference-type-slots/component.vue.d.ts 1`] = `
+exports[`Input: reference-type-slots/component.vue, Output: reference-type-slots/component.vue.d.ts 1`] = `
 "declare var __VLS_1: {}, __VLS_3: {
     num: number;
 }, __VLS_5: {
@@ -687,104 +864,117 @@ type __VLS_WithSlots<T, S> = T & {
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-slots/component-define-slots.vue, Output: reference-type-slots/component-define-slots.vue.d.ts 1`] = `
+exports[`Input: reference-type-slots/component-define-slots.vue, Output: reference-type-slots/component-define-slots.vue.d.ts 1`] = `
+"import type { MySlots } from './my-slots';
+type __VLS_Slots = MySlots;
+declare const __VLS_base: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+declare const _default: typeof __VLS_export;
+export default _default;
+type __VLS_WithSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
+"
+`;
+
+exports[`Input: reference-type-slots/component-no-script.vue, Output: reference-type-slots/component-no-script.vue.d.ts 1`] = `
+"declare var __VLS_1: {}, __VLS_3: {
+    num: number;
+}, __VLS_5: {
+    str: string;
+}, __VLS_7: {
+    num: number;
+    str: string;
+};
+type __VLS_Slots = {} & {
+    'no-bind'?: (props: typeof __VLS_1) => any;
+} & {
+    default?: (props: typeof __VLS_3) => any;
+} & {
+    'named-slot'?: (props: typeof __VLS_5) => any;
+} & {
+    vbind?: (props: typeof __VLS_7) => any;
+};
+declare const __VLS_base: import("vue").DefineComponent2<{
+    setup(): {};
+    data(): {};
+    props: {};
+    computed: {};
+    methods: {};
+    mixins: {}[];
+    extends: {};
+    emits: string[];
+    slots: {};
+    inject: {};
+    components: {};
+    directives: {};
+    provide: {};
+    expose: string;
+    __typeProps: unknown;
+    __typeEmits: unknown;
+    __typeRefs: {};
+    __typeEl: any;
+    __defaults: unknown;
+}>;
+declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
+declare const _default: typeof __VLS_export;
+export default _default;
+type __VLS_WithSlots<T, S> = T & {
+    new (): {
+        $slots: S;
+    };
+};
+"
+`;
+
+exports[`Input: reference-type-slots/my-slots.ts, Output: reference-type-slots/my-slots.d.ts 1`] = `
 "import type { VNode } from 'vue';
-type __VLS_Slots = {
+export interface MySlots {
+    /**
+     * Default slot
+     */
     default: (props: {
         num: number;
     }) => VNode[];
     'named-slot': (props: {
         str: string;
     }) => VNode[];
+    /**
+     * Slot with tags
+     * @deprecated do not use
+     */
     vbind: (props: {
         num: number;
         str: string;
     }) => VNode[];
     'no-bind': () => VNode[];
-};
-declare const __VLS_base: import("vue").DefineComponent2<{
-    setup(): {};
-    data(): {};
-    props: {};
-    computed: {};
-    methods: {};
-    mixins: {}[];
-    extends: {};
-    emits: string[];
-    slots: {};
-    inject: {};
-    components: {};
-    directives: {};
-    provide: {};
-    expose: string;
-    __typeProps: unknown;
-    __typeEmits: unknown;
-    __typeRefs: {};
-    __typeEl: any;
-    __defaults: unknown;
-}>;
-declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
-declare const _default: typeof __VLS_export;
-export default _default;
-type __VLS_WithSlots<T, S> = T & {
-    new (): {
-        $slots: S;
-    };
-};
+}
 "
 `;
 
-exports[`vue-tsc-dts > Input: reference-type-slots/component-no-script.vue, Output: reference-type-slots/component-no-script.vue.d.ts 1`] = `
-"declare var __VLS_1: {}, __VLS_3: {
-    num: number;
-}, __VLS_5: {
-    str: string;
-}, __VLS_7: {
-    num: number;
-    str: string;
-};
-type __VLS_Slots = {} & {
-    'no-bind'?: (props: typeof __VLS_1) => any;
-} & {
-    default?: (props: typeof __VLS_3) => any;
-} & {
-    'named-slot'?: (props: typeof __VLS_5) => any;
-} & {
-    vbind?: (props: typeof __VLS_7) => any;
-};
-declare const __VLS_base: import("vue").DefineComponent2<{
-    setup(): {};
-    data(): {};
-    props: {};
-    computed: {};
-    methods: {};
-    mixins: {}[];
-    extends: {};
-    emits: string[];
-    slots: {};
-    inject: {};
-    components: {};
-    directives: {};
-    provide: {};
-    expose: string;
-    __typeProps: unknown;
-    __typeEmits: unknown;
-    __typeRefs: {};
-    __typeEl: any;
-    __defaults: unknown;
-}>;
-declare const __VLS_export: __VLS_WithSlots<typeof __VLS_base, __VLS_Slots>;
-declare const _default: typeof __VLS_export;
-export default _default;
-type __VLS_WithSlots<T, S> = T & {
-    new (): {
-        $slots: S;
-    };
-};
-"
-`;
-
-exports[`vue-tsc-dts > Input: ts-component/PropDefinitions.ts, Output: ts-component/PropDefinitions.d.ts 1`] = `
+exports[`Input: ts-component/PropDefinitions.ts, Output: ts-component/PropDefinitions.d.ts 1`] = `
 "export interface MyProps {
     /**
      * string foo
@@ -798,11 +988,11 @@ exports[`vue-tsc-dts > Input: ts-component/PropDefinitions.ts, Output: ts-compon
 "
 `;
 
-exports[`vue-tsc-dts > Input: ts-component/component.ts, Output: ts-component/component.d.ts 1`] = `undefined`;
+exports[`Input: ts-component/component.ts, Output: ts-component/component.d.ts 1`] = `undefined`;
 
-exports[`vue-tsc-dts > Input: ts-component/component.tsx, Output: ts-component/component.d.ts 1`] = `undefined`;
+exports[`Input: ts-component/component.tsx, Output: ts-component/component.d.ts 1`] = `undefined`;
 
-exports[`vue-tsc-dts > Input: ts-named-export/component.ts, Output: ts-named-export/component.d.ts 1`] = `
+exports[`Input: ts-named-export/component.ts, Output: ts-named-export/component.d.ts 1`] = `
 "export declare const Foo: import("vue").DefineSetupFnComponent<{
     foo: string;
 }, string[], {}, {

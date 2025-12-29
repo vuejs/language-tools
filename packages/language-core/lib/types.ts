@@ -9,14 +9,14 @@ export type { SFCParseResult } from '@vue/compiler-sfc';
 
 export { VueEmbeddedCode };
 
-export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'globalTypesPath' | 'plugins'>> & {
+export type RawVueCompilerOptions = Partial<Omit<VueCompilerOptions, 'target' | 'plugins'>> & {
 	strictTemplates?: boolean;
 	target?: 'auto' | 3 | 3.3 | 3.5 | 3.6 | 99 | number;
-	globalTypesPath?: string;
 	plugins?: string[];
 };
 
 export interface VueCodeInformation extends CodeInformation {
+	__importCompletion?: boolean;
 	__combineToken?: symbol;
 	__linkedToken?: symbol;
 }
@@ -26,7 +26,7 @@ export type Code = Segment<VueCodeInformation>;
 export interface VueCompilerOptions {
 	target: number;
 	lib: string;
-	globalTypesPath: (fileName: string) => string | void;
+	typesRoot: string;
 	extensions: string[];
 	vitePressExtensions: string[];
 	petiteVueExtensions: string[];
@@ -77,7 +77,7 @@ export interface VueCompilerOptions {
 
 export const validVersions = [2, 2.1, 2.2] as const;
 
-export type VueLanguagePluginReturn = {
+export interface VueLanguagePluginReturn {
 	version: typeof validVersions[number];
 	name?: string;
 	order?: number;
@@ -106,7 +106,7 @@ export type VueLanguagePluginReturn = {
 	): CompilerDOM.CodegenResult | undefined;
 	getEmbeddedCodes?(fileName: string, sfc: Sfc): { id: string; lang: string }[];
 	resolveEmbeddedCode?(fileName: string, sfc: Sfc, embeddedFile: VueEmbeddedCode): void;
-};
+}
 
 export type VueLanguagePlugin = (ctx: {
 	modules: {
@@ -194,7 +194,8 @@ declare module '@vue/compiler-sfc' {
 	}
 }
 
-export interface TextRange {
+export interface TextRange<Node extends ts.Node = ts.Node> {
+	node: Node;
 	start: number;
 	end: number;
 }

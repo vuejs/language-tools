@@ -1,197 +1,271 @@
 import * as path from 'path-browserify';
-import type * as ts from 'typescript';
 import type { ScriptRanges } from '../../parsers/scriptRanges';
 import type { ScriptSetupRanges } from '../../parsers/scriptSetupRanges';
 import type { Code, Sfc, SfcBlock, VueCompilerOptions } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import type { TemplateCodegenContext } from '../template/context';
+import * as names from '../names';
 import { endOfLine, generateSfcBlockSection, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { createScriptCodegenContext, type ScriptCodegenContext } from './context';
-import { generateScriptSetup, generateScriptSetupImports } from './scriptSetup';
-import { generateSrc } from './src';
+import { generateGeneric, generateScriptSetupImports, generateSetupFunction } from './scriptSetup';
 import { generateTemplate } from './template';
 
+const exportExpression = `{} as typeof ${names._export}`;
+
 export interface ScriptCodegenOptions {
-	ts: typeof ts;
 	vueCompilerOptions: VueCompilerOptions;
 	script: Sfc['script'];
 	scriptSetup: Sfc['scriptSetup'];
-	styles: Sfc['styles'];
 	fileName: string;
-	lang: string;
 	scriptRanges: ScriptRanges | undefined;
 	scriptSetupRanges: ScriptSetupRanges | undefined;
-	templateComponents: string[];
-	templateStartTagOffset: number | undefined;
-	// TODO: remove this for better increment ality
-	templateCodegen: TemplateCodegenContext & { codes: Code[] } | undefined;
-	destructuredPropNames: Set<string>;
-	templateRefNames: Set<string>;
+	templateAndStyleTypes: Set<string>;
+	templateAndStyleCodes: Code[];
+	exposed: Set<string>;
 }
 
 export { generate as generateScript };
 
 function generate(options: ScriptCodegenOptions) {
-	const context = createScriptCodegenContext(options);
-	const codegen = generateScript(options, context);
-
-	return {
-		...context,
-		codes: [...codegen],
-	};
+	const ctx = createScriptCodegenContext(options);
+	const codeGenerator = generateWorker(options, ctx);
+	return { ...ctx, codes: [...codeGenerator] };
 }
 
-function* generateScript(
+function* generateWorker(
 	options: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 ): Generator<Code> {
-	yield* generateGlobalTypesReference(options);
+	const { script, scriptRanges, scriptSetup, scriptSetupRanges, vueCompilerOptions, fileName } = options;
 
-	if (options.scriptSetup && options.scriptSetupRanges) {
-		yield* generateScriptSetupImports(options.scriptSetup, options.scriptSetupRanges);
-	}
-	if (options.script && options.scriptRanges) {
-		const { exportDefault, componentOptions } = options.scriptRanges;
-		if (options.scriptSetup && options.scriptSetupRanges) {
-			if (exportDefault) {
-				yield* generateSfcBlockSection(options.script, 0, exportDefault.start, codeFeatures.all, true);
-				yield* generateScriptSetup(options, ctx, options.scriptSetup, options.scriptSetupRanges);
-			}
-			else {
-				yield* generateSfcBlockSection(options.script, 0, options.script.content.length, codeFeatures.all, true);
-				yield* generateScriptSetup(options, ctx, options.scriptSetup, options.scriptSetupRanges);
-			}
+	yield* generateGlobalTypesReference(vueCompilerOptions, fileName);
+
+	// <script src="">
+	if (typeof script?.src === 'object') {
+		let src = script.src.text;
+		if (src.endsWith('.ts') && !src.endsWith('.d.ts')) {
+			src = src.slice(0, -'.ts'.length) + '.js';
 		}
-		else if (exportDefault) {
-			const { expression } = componentOptions ?? exportDefault;
+		else if (src.endsWith('.tsx')) {
+			src = src.slice(0, -'.tsx'.length) + '.jsx';
+		}
 
-			let wrapLeft: string | undefined;
-			let wrapRight: string | undefined;
-			if (
-				options.script.content[expression.start] === '{'
-				&& options.vueCompilerOptions.optionsWrapper.length
-			) {
-				[wrapLeft, wrapRight] = options.vueCompilerOptions.optionsWrapper;
-				ctx.inlayHints.push({
-					blockName: options.script.name,
-					offset: expression.start,
-					setting: 'vue.inlayHints.optionsWrapper',
-					label: wrapLeft || '[Missing optionsWrapper[0]]',
-					tooltip: [
-						'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
-						'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
-					].join('\n\n'),
-				}, {
-					blockName: options.script.name,
-					offset: expression.end,
-					setting: 'vue.inlayHints.optionsWrapper',
-					label: wrapRight || '[Missing optionsWrapper[1]]',
-				});
-			}
+		yield `import __VLS_default from `;
+		const token = yield* startBoundary('main', script.src.offset, {
+			...codeFeatures.all,
+			...src !== script.src.text ? codeFeatures.navigationWithoutRename : {},
+		});
+		yield `'`;
+		yield [src.slice(0, script.src.text.length), 'main', script.src.offset, { __combineToken: token }];
+		yield src.slice(script.src.text.length);
+		yield `'`;
+		yield endBoundary(token, script.src.offset + script.src.text.length);
+		yield endOfLine;
+		yield `export default __VLS_default;${endOfLine}`;
 
-			yield* generateSfcBlockSection(options.script, 0, exportDefault.start, codeFeatures.all, true);
-			yield* generateConstExport(options.script);
-			if (wrapLeft) {
-				yield wrapLeft;
-			}
-			yield* generateSfcBlockSection(options.script, expression.start, expression.end, codeFeatures.all);
-			if (wrapRight) {
-				yield wrapRight;
-			}
-			yield endOfLine;
+		yield* generateTemplate(options, ctx, '__VLS_default');
+	}
+	// <script> + <script setup>
+	else if (script && scriptRanges && scriptSetup && scriptSetupRanges) {
+		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+
+		// <script>
+		let selfType: string | undefined;
+		const { exportDefault } = scriptRanges;
+		if (exportDefault) {
+			yield* generateScriptWithExportDefault(
+				ctx,
+				script,
+				scriptRanges,
+				exportDefault,
+				vueCompilerOptions,
+				selfType = '__VLS_self',
+			);
 		}
 		else {
-			yield* generateSfcBlockSection(options.script, 0, options.script.content.length, codeFeatures.all, true);
-			yield* generateConstExport(options.script);
-			yield `(await import('${options.vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
+			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
+			yield `export default ${exportExpression}${endOfLine}`;
+		}
+
+		// <script setup>
+		yield* generateExportDeclareEqual(scriptSetup, names._export);
+		if (scriptSetup.generic) {
+			yield* generateGeneric(
+				options,
+				ctx,
+				scriptSetup,
+				scriptSetupRanges,
+				scriptSetup.generic,
+				generateSetupFunction(
+					options,
+					ctx,
+					scriptSetup,
+					scriptSetupRanges,
+					generateTemplate(options, ctx, selfType),
+				),
+			);
+		}
+		else {
+			yield `await (async () => {${newLine}`;
+			yield* generateSetupFunction(
+				options,
+				ctx,
+				scriptSetup,
+				scriptSetupRanges,
+				generateTemplate(options, ctx, selfType),
+				[`return `],
+			);
+			yield `})()${endOfLine}`;
 		}
 	}
-	else if (options.scriptSetup && options.scriptSetupRanges) {
-		yield* generateScriptSetup(options, ctx, options.scriptSetup, options.scriptSetupRanges);
+	// only <script setup>
+	else if (scriptSetup && scriptSetupRanges) {
+		yield* generateScriptSetupImports(scriptSetup, scriptSetupRanges);
+
+		if (scriptSetup.generic) {
+			yield* generateExportDeclareEqual(scriptSetup, names._export);
+			yield* generateGeneric(
+				options,
+				ctx,
+				scriptSetup,
+				scriptSetupRanges,
+				scriptSetup.generic,
+				generateSetupFunction(
+					options,
+					ctx,
+					scriptSetup,
+					scriptSetupRanges,
+					generateTemplate(options, ctx),
+				),
+			);
+		}
+		else {
+			// no script block, generate script setup code at root
+			yield* generateSetupFunction(
+				options,
+				ctx,
+				scriptSetup,
+				scriptSetupRanges,
+				generateTemplate(options, ctx),
+				generateExportDeclareEqual(scriptSetup, names._export),
+			);
+		}
+		yield `export default ${exportExpression}${endOfLine}`;
+	}
+	// only <script>
+	else if (script && scriptRanges) {
+		const { exportDefault } = scriptRanges;
+		if (exportDefault) {
+			yield* generateScriptWithExportDefault(
+				ctx,
+				script,
+				scriptRanges,
+				exportDefault,
+				vueCompilerOptions,
+				names._export,
+				generateTemplate(options, ctx, names._export),
+			);
+		}
+		else {
+			yield* generateSfcBlockSection(script, 0, script.content.length, codeFeatures.all);
+			yield* generateExportDeclareEqual(script, names._export);
+			yield `(await import('${vueCompilerOptions.lib}')).defineComponent({})${endOfLine}`;
+			yield* generateTemplate(options, ctx, names._export);
+			yield `export default ${exportExpression}${endOfLine}`;
+		}
 	}
 
-	if (!ctx.generatedTemplate) {
-		yield* generateTemplate(options, ctx);
-	}
-
-	yield* generateExportDefault(options);
 	yield* ctx.localTypes.generate();
 }
 
-function* generateGlobalTypesReference(
-	options: ScriptCodegenOptions,
+function* generateScriptWithExportDefault(
+	ctx: ScriptCodegenContext,
+	script: NonNullable<Sfc['script']>,
+	scriptRanges: ScriptRanges,
+	exportDefault: NonNullable<ScriptRanges['exportDefault']>,
+	vueCompilerOptions: VueCompilerOptions,
+	varName: string,
+	templateGenerator?: Generator<Code>,
 ): Generator<Code> {
-	const globalTypesPath = options.vueCompilerOptions.globalTypesPath(options.fileName);
+	const componentOptions = scriptRanges.exportDefault?.options;
+	const { expression, isObjectLiteral } = componentOptions ?? exportDefault;
 
-	if (!globalTypesPath) {
-		yield `/* placeholder */${newLine}`;
+	let wrapLeft: string | undefined;
+	let wrapRight: string | undefined;
+	if (
+		isObjectLiteral
+		&& vueCompilerOptions.optionsWrapper.length
+	) {
+		[wrapLeft, wrapRight] = vueCompilerOptions.optionsWrapper;
+		ctx.inlayHints.push({
+			blockName: script.name,
+			offset: expression.start,
+			setting: 'vue.inlayHints.optionsWrapper',
+			label: wrapLeft || '[Missing optionsWrapper[0]]',
+			tooltip: [
+				'This is virtual code that is automatically wrapped for type support, it does not affect your runtime behavior, you can customize it via `vueCompilerOptions.optionsWrapper` option in tsconfig / jsconfig.',
+				'To hide it, you can set `"vue.inlayHints.optionsWrapper": false` in IDE settings.',
+			].join('\n\n'),
+		}, {
+			blockName: script.name,
+			offset: expression.end,
+			setting: 'vue.inlayHints.optionsWrapper',
+			label: wrapRight || '[Missing optionsWrapper[1]]',
+		});
 	}
-	else if (path.isAbsolute(globalTypesPath)) {
-		let relativePath = path.relative(path.dirname(options.fileName), globalTypesPath);
+
+	yield* generateSfcBlockSection(script, 0, expression.start, codeFeatures.all);
+	yield exportExpression;
+	yield* generateSfcBlockSection(script, expression.end, exportDefault.end, codeFeatures.all);
+	yield endOfLine;
+	if (templateGenerator) {
+		yield* templateGenerator;
+	}
+	yield* generateExportDeclareEqual(script, varName);
+	if (wrapLeft && wrapRight) {
+		yield wrapLeft;
+		yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
+		yield wrapRight;
+	}
+	else {
+		yield* generateSfcBlockSection(script, expression.start, expression.end, codeFeatures.all);
+	}
+	yield endOfLine;
+	yield* generateSfcBlockSection(script, exportDefault.end, script.content.length, codeFeatures.all);
+}
+
+function* generateGlobalTypesReference(
+	{ typesRoot, lib, target, checkUnknownProps }: VueCompilerOptions,
+	fileName: string,
+): Generator<Code> {
+	let typesPath: string;
+	if (path.isAbsolute(typesRoot)) {
+		let relativePath = path.relative(path.dirname(fileName), typesRoot);
 		if (
-			relativePath !== globalTypesPath
+			relativePath !== typesRoot
 			&& !relativePath.startsWith('./')
 			&& !relativePath.startsWith('../')
 		) {
 			relativePath = './' + relativePath;
 		}
-		yield `/// <reference types="${relativePath}" />${newLine}`;
+		typesPath = relativePath;
 	}
 	else {
-		yield `/// <reference types="${globalTypesPath}" />${newLine}`;
+		typesPath = typesRoot;
+	}
+	yield `/// <reference types=${JSON.stringify(typesPath + '/template-helpers.d.ts')} />${newLine}`;
+	if (!checkUnknownProps) {
+		yield `/// <reference types=${JSON.stringify(typesPath + '/props-fallback.d.ts')} />${newLine}`;
+	}
+	if (lib === 'vue' && target < 3.5) {
+		yield `/// <reference types=${JSON.stringify(typesPath + '/vue-3.4-shims.d.ts')} />${newLine}`;
 	}
 }
 
-export function* generateConstExport(
-	block: SfcBlock,
-): Generator<Code> {
+function* generateExportDeclareEqual(block: SfcBlock, name: string): Generator<Code> {
 	yield `const `;
 	const token = yield* startBoundary(block.name, 0, codeFeatures.doNotReportTs6133);
-	yield `__VLS_export`;
+	yield name;
 	yield endBoundary(token, block.content.length);
 	yield ` = `;
-}
-
-function* generateExportDefault(options: ScriptCodegenOptions): Generator<Code> {
-	if (options.script?.src) {
-		yield* generateSrc(options.script.src);
-		return;
-	}
-
-	const expression = `{} as typeof __VLS_export`;
-
-	if (options.script && options.scriptRanges?.exportDefault) {
-		const { exportDefault, componentOptions } = options.scriptRanges;
-		yield* generateSfcBlockSection(
-			options.script,
-			exportDefault.start,
-			(componentOptions ?? exportDefault).expression.start,
-			codeFeatures.all,
-		);
-		yield expression;
-		yield* generateSfcBlockSection(
-			options.script,
-			(componentOptions ?? exportDefault).expression.end,
-			options.script.content.length,
-			codeFeatures.all,
-		);
-	}
-	else {
-		yield `export `;
-		if (options.templateStartTagOffset !== undefined) {
-			const token = Symbol();
-			for (let i = 0; i < 'template'.length + 1; i++) {
-				yield [
-					``,
-					'template',
-					options.templateStartTagOffset + 1 + i,
-					i === 0
-						? { ...codeFeatures.navigationWithoutRename, __combineToken: token }
-						: { __combineToken: token },
-				];
-			}
-		}
-		yield `default ${expression}${endOfLine}`;
-	}
 }

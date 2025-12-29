@@ -1,204 +1,48 @@
-import * as CompilerDOM from '@vue/compiler-dom';
-import type * as ts from 'typescript';
-import type { Code } from '../../types';
-import { getAttributeValueOffset, getNodeText } from '../../utils/shared';
+import type { Code, SfcBlock } from '../../types';
 import { codeFeatures } from '../codeFeatures';
-import { endOfLine, getTypeScriptAST } from '../utils';
+import { endOfLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateEscaped } from '../utils/escaped';
-import type { TemplateCodegenContext } from './context';
-import type { TemplateCodegenOptions } from './index';
 
 const classNameEscapeRegex = /([\\'])/;
 
-export function* generateStyleScopedClassReferences(
-	ctx: TemplateCodegenContext,
-	withDot = false,
+// For language-service/lib/plugins/vue-scoped-class-links.ts usage
+export const references: WeakMap<SfcBlock, [version: string, [className: string, offset: number][]]> = new WeakMap();
+
+export function* generateStyleScopedClassReference(
+	block: SfcBlock,
+	className: string,
+	offset: number,
+	fullStart = offset,
 ): Generator<Code> {
-	for (const offset of ctx.emptyClassOffsets) {
+	if (!className) {
 		yield `/** @type {__VLS_StyleScopedClasses['`;
-		yield [
-			'',
-			'template',
-			offset,
-			codeFeatures.additionalCompletion,
-		];
+		yield ['', 'template', offset, codeFeatures.completion];
 		yield `']} */${endOfLine}`;
+		return;
 	}
-	for (const { source, className, offset } of ctx.scopedClasses) {
-		yield `/** @type {__VLS_StyleScopedClasses[`;
-		const token = yield* startBoundary(source, offset - (withDot ? 1 : 0), codeFeatures.navigation);
-		yield `'`;
-		yield* generateEscaped(
-			className,
-			source,
-			offset,
-			codeFeatures.navigationAndAdditionalCompletion,
-			classNameEscapeRegex,
-		);
-		yield `'`;
-		yield endBoundary(token, offset + className.length);
-		yield `]} */${endOfLine}`;
+
+	const cache = references.get(block);
+	if (!cache || cache[0] !== block.content) {
+		const arr: [className: string, offset: number][] = [];
+		references.set(block, [block.content, arr]);
+		arr.push([className, offset]);
 	}
-}
-
-export function collectStyleScopedClassReferences(
-	options: TemplateCodegenOptions,
-	ctx: TemplateCodegenContext,
-	node: CompilerDOM.ElementNode,
-) {
-	for (const prop of node.props) {
-		if (
-			prop.type === CompilerDOM.NodeTypes.ATTRIBUTE
-			&& prop.name === 'class'
-			&& prop.value
-		) {
-			if (options.template.lang === 'pug') {
-				const getClassOffset = Reflect.get(prop.value.loc.start, 'getClassOffset') as (offset: number) => number;
-				const content = prop.value.loc.source.slice(1, -1);
-
-				let offset = 1;
-				for (const className of content.split(' ')) {
-					if (className) {
-						ctx.scopedClasses.push({
-							source: 'template',
-							className,
-							offset: getClassOffset(offset),
-						});
-					}
-					offset += className.length + 1;
-				}
-			}
-			else {
-				const offset = getAttributeValueOffset(prop.value);
-				if (prop.value.content) {
-					const classes = collectClasses(prop.value.content, offset);
-					ctx.scopedClasses.push(...classes);
-				}
-				else {
-					ctx.emptyClassOffsets.push(offset);
-				}
-			}
-		}
-		else if (
-			prop.type === CompilerDOM.NodeTypes.DIRECTIVE
-			&& prop.arg?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
-			&& prop.arg.content === 'class'
-		) {
-			const content = '(' + prop.exp.content + ')';
-			const startOffset = prop.exp.loc.start.offset - 1;
-
-			const { ts } = options;
-			const ast = getTypeScriptAST(ts, options.template, content);
-			const literals: ts.StringLiteralLike[] = [];
-
-			ts.forEachChild(ast, node => {
-				if (
-					!ts.isExpressionStatement(node)
-					|| !ts.isParenthesizedExpression(node.expression)
-				) {
-					return;
-				}
-				const { expression } = node.expression;
-
-				if (ts.isStringLiteralLike(expression)) {
-					literals.push(expression);
-				}
-				else if (ts.isArrayLiteralExpression(expression)) {
-					walkArrayLiteral(expression);
-				}
-				else if (ts.isObjectLiteralExpression(expression)) {
-					walkObjectLiteral(expression);
-				}
-			});
-
-			for (const literal of literals) {
-				if (literal.text) {
-					const classes = collectClasses(
-						literal.text,
-						literal.end - literal.text.length - 1 + startOffset,
-					);
-					ctx.scopedClasses.push(...classes);
-				}
-				else {
-					ctx.emptyClassOffsets.push(literal.end - 1 + startOffset);
-				}
-			}
-
-			function walkArrayLiteral(node: ts.ArrayLiteralExpression) {
-				const { elements } = node;
-				for (const element of elements) {
-					if (ts.isStringLiteralLike(element)) {
-						literals.push(element);
-					}
-					else if (ts.isObjectLiteralExpression(element)) {
-						walkObjectLiteral(element);
-					}
-				}
-			}
-
-			function walkObjectLiteral(node: ts.ObjectLiteralExpression) {
-				const { properties } = node;
-				for (const property of properties) {
-					if (ts.isPropertyAssignment(property)) {
-						const { name } = property;
-						if (ts.isIdentifier(name)) {
-							walkIdentifier(name);
-						}
-						else if (ts.isStringLiteral(name)) {
-							literals.push(name);
-						}
-						else if (ts.isComputedPropertyName(name)) {
-							const { expression } = name;
-							if (ts.isStringLiteralLike(expression)) {
-								literals.push(expression);
-							}
-						}
-					}
-					else if (ts.isShorthandPropertyAssignment(property)) {
-						walkIdentifier(property.name);
-					}
-				}
-			}
-
-			function walkIdentifier(node: ts.Identifier) {
-				const text = getNodeText(ts, node, ast);
-				ctx.scopedClasses.push({
-					source: 'template',
-					className: text,
-					offset: node.end - text.length + startOffset,
-				});
-			}
-		}
+	else {
+		cache[1].push([className, offset]);
 	}
-}
 
-function collectClasses(content: string, startOffset = 0) {
-	const classes: {
-		source: string;
-		className: string;
-		offset: number;
-	}[] = [];
-
-	let currentClassName = '';
-	let offset = 0;
-	for (const char of (content + ' ')) {
-		if (char.trim() === '') {
-			if (currentClassName !== '') {
-				classes.push({
-					source: 'template',
-					className: currentClassName,
-					offset: offset + startOffset,
-				});
-				offset += currentClassName.length;
-				currentClassName = '';
-			}
-			offset += char.length;
-		}
-		else {
-			currentClassName += char;
-		}
-	}
-	return classes;
+	yield `/** @type {__VLS_StyleScopedClasses[`;
+	const token = yield* startBoundary(block.name, fullStart, codeFeatures.navigation);
+	yield `'`;
+	yield* generateEscaped(
+		className,
+		block.name,
+		offset,
+		codeFeatures.navigationAndCompletion,
+		classNameEscapeRegex,
+	);
+	yield `'`;
+	yield endBoundary(token, offset + className.length);
+	yield `]} */${endOfLine}`;
 }

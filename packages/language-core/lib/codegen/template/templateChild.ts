@@ -37,16 +37,14 @@ export function* generateTemplateChild(
 		}
 		else {
 			const slotDir = node.props.find(CompilerDOM.isVSlot);
-			if (node.tagType === CompilerDOM.ElementTypes.TEMPLATE && ctx.currentComponent && slotDir) {
-				yield* generateVSlot(options, ctx, node, slotDir);
+			if (node.tagType === CompilerDOM.ElementTypes.TEMPLATE && ctx.components.length && slotDir) {
+				yield* generateVSlot(options, ctx, node, slotDir, ctx.components.at(-1)!());
 			}
 			else if (node.tagType === CompilerDOM.ElementTypes.TEMPLATE && isVForChild) {
 				yield* generateFragment(options, ctx, node);
 			}
 			else if (node.tagType === CompilerDOM.ElementTypes.COMPONENT) {
-				const { currentComponent } = ctx;
 				yield* generateComponent(options, ctx, node);
-				ctx.currentComponent = currentComponent;
 			}
 			else {
 				yield* generateElement(options, ctx, node);

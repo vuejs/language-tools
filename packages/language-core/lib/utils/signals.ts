@@ -1,14 +1,16 @@
 import { computed } from 'alien-signals';
 
-export function computedArray<I, O>(
-	arr: () => I[],
+export function reactiveArray<I, O>(
+	getArr: () => I[],
 	getGetter: (item: () => I, index: number) => () => O,
 ) {
+	const arr = computed(getArr);
 	const length = computed(() => arr().length);
 	const keys = computed(
 		() => {
-			const keys: string[] = [];
-			for (let i = 0; i < length(); i++) {
+			const l = length();
+			const keys = new Array<string>(l);
+			for (let i = 0; i < l; i++) {
 				keys.push(String(i));
 			}
 			return keys;
@@ -60,9 +62,9 @@ export function computedSet<T>(source: () => Set<T>): () => Set<T> {
 	);
 }
 
-export function computedItems<T>(
+export function computedArray<T>(
 	source: () => T[],
-	compareFn: (oldItem: T, newItem: T) => boolean,
+	compareFn = (oldItem: T, newItem: T) => oldItem === newItem,
 ) {
 	return computed<T[]>(
 		oldArr => {

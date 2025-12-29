@@ -4,7 +4,6 @@ import { codeFeatures } from '../codeFeatures';
 import type { InlayHintInfo } from '../inlayHints';
 import { endOfLine, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
-import type { TemplateCodegenOptions } from './index';
 
 export type TemplateCodegenContext = ReturnType<typeof createTemplateCodegenContext>;
 
@@ -107,15 +106,14 @@ const commentDirectiveRegex = /^<!--\s*@vue-(?<name>[-\w]+)\b(?<content>[\s\S]*)
  * an error/diagnostic was encountered for a region of code covered by a `@vue-expect-error` directive,
  * and additionally how we use that to determine whether to propagate diagnostics back upward.
  */
-export function createTemplateCodegenContext(
-	options: Pick<TemplateCodegenOptions, 'scriptSetupBindingNames'>,
-) {
+export function createTemplateCodegenContext() {
 	let variableId = 0;
 
-	const scopes = [new Set<string>()];
+	const scopes: Set<string>[] = [];
+	const components: (() => string)[] = [];
 	const hoistVars = new Map<string, string>();
 	const dollarVars = new Set<string>();
-	const accessExternalVariables = new Map<string, Set<number>>();
+	const componentAccessMap = new Map<string, Map<string, Set<number>>>();
 	const slots: {
 		name: string;
 		offset?: number;
@@ -128,14 +126,7 @@ export function createTemplateCodegenContext(
 		propsVar: string;
 	}[] = [];
 	const blockConditions: string[] = [];
-	const scopedClasses: {
-		source: string;
-		className: string;
-		offset: number;
-	}[] = [];
-	const emptyClassOffsets: number[] = [];
 	const inlayHints: InlayHintInfo[] = [];
-	const bindingAttrLocs: CompilerDOM.SourceLocation[] = [];
 	const inheritedAttrVars = new Set<string>();
 	const templateRefs = new Map<string, {
 		typeExp: string;
@@ -156,6 +147,7 @@ export function createTemplateCodegenContext(
 	const commentBuffer: CompilerDOM.CommentNode[] = [];
 
 	return {
+		generatedTypes: new Set<string>(),
 		get currentInfo() {
 			return stack[stack.length - 1]!;
 		},
@@ -164,18 +156,11 @@ export function createTemplateCodegenContext(
 		slots,
 		dynamicSlots,
 		dollarVars,
-		accessExternalVariables,
+		componentAccessMap,
 		blockConditions,
-		scopedClasses,
-		emptyClassOffsets,
 		inlayHints,
-		bindingAttrLocs,
 		inheritedAttrVars,
 		templateRefs,
-		currentComponent: undefined as {
-			get ctxVar(): string;
-			get propsVar(): string;
-		} | undefined,
 		singleRootElTypes: new Set<string>(),
 		singleRootNodes: new Set<CompilerDOM.ElementNode | null>(),
 		addTemplateRef(name: string, typeExp: string, offset: number) {
@@ -185,16 +170,21 @@ export function createTemplateCodegenContext(
 			}
 			refs.push({ typeExp, offset });
 		},
-		accessExternalVariable(name: string, offset?: number) {
-			let arr = accessExternalVariables.get(name);
+		recordComponentAccess(source: string, name: string, offset?: number) {
+			let map = componentAccessMap.get(name);
+			if (!map) {
+				componentAccessMap.set(name, map = new Map());
+			}
+			let arr = map.get(source);
 			if (!arr) {
-				accessExternalVariables.set(name, arr = new Set());
+				map.set(source, arr = new Set());
 			}
 			if (offset !== undefined) {
 				arr.add(offset);
 			}
 		},
 		scopes,
+		components,
 		declare(...varNames: string[]) {
 			const scope = scopes.at(-1)!;
 			for (const varName of varNames) {
@@ -304,37 +294,20 @@ export function createTemplateCodegenContext(
 	};
 
 	function* generateAutoImport(): Generator<Code> {
-		const all = [...accessExternalVariables.entries()];
+		const all = [...componentAccessMap.entries()];
 		if (!all.some(([, offsets]) => offsets.size)) {
 			return;
 		}
 		yield `// @ts-ignore${newLine}`; // #2304
 		yield `[`;
-		for (const [varName, offsets] of all) {
-			for (const offset of offsets) {
-				if (options.scriptSetupBindingNames.has(varName)) {
-					// #3409
-					yield [
-						varName,
-						'template',
-						offset,
-						{
-							...codeFeatures.additionalCompletion,
-							...codeFeatures.semanticWithoutHighlight,
-						},
-					];
+		for (const [varName, map] of all) {
+			for (const [source, offsets] of map) {
+				for (const offset of offsets) {
+					yield [varName, source, offset, codeFeatures.importCompletionOnly];
+					yield `,`;
 				}
-				else {
-					yield [
-						varName,
-						'template',
-						offset,
-						codeFeatures.additionalCompletion,
-					];
-				}
-				yield `,`;
+				offsets.clear();
 			}
-			offsets.clear();
 		}
 		yield `]${endOfLine}`;
 	}

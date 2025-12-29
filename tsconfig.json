@@ -1,14 +1,18 @@
 {
 	"extends": "./tsconfig.base.json",
 	"compilerOptions": {
-		"noEmit": true
+		"noEmit": true,
+		"allowImportingTsExtensions": true
 	},
 	"include": [
 		"packages/*/tests",
-		"tsslint.config.ts"
+		"tsslint.config.ts",
+		"lint/*.ts"
 	],
 	"references": [
+		{ "path": "./extensions/vscode/tsconfig.json" },
 		{ "path": "./packages/component-meta/tsconfig.json" },
+		{ "path": "./packages/component-type-helpers/tsconfig.json" },
 		{ "path": "./packages/language-server/tsconfig.json" },
 		{ "path": "./packages/language-plugin-pug/tsconfig.json" },
 		{ "path": "./packages/tsc/tsconfig.json" },

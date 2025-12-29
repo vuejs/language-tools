@@ -3,7 +3,7 @@ import type { SFCBlock, SFCParseResult } from '@vue/compiler-sfc';
 import { computed, setActiveSub } from 'alien-signals';
 import type * as ts from 'typescript';
 import type { Sfc, SfcBlock, SfcBlockAttr, VueLanguagePluginReturn } from '../types';
-import { computedArray, computedItems } from '../utils/signals';
+import { computedArray, reactiveArray } from '../utils/signals';
 
 export function useIR(
 	ts: typeof import('typescript'),
@@ -21,15 +21,8 @@ export function useIR(
 	const getContent = computed(() => {
 		return getSnapshot().getText(0, getSnapshot().getLength());
 	});
-	const getComments = computed<string[]>(oldValue => {
-		const newValue = getParseSfcResult()?.descriptor.comments ?? [];
-		if (
-			oldValue?.length === newValue.length
-			&& oldValue.every((v, i) => v === newValue[i])
-		) {
-			return oldValue;
-		}
-		return newValue;
+	const getComments = computedArray(() => {
+		return getParseSfcResult()?.descriptor.comments ?? [];
 	});
 	const getTemplate = useNullableSfcBlock(
 		'template',
@@ -121,8 +114,8 @@ export function useIR(
 		}
 		return getOriginalScriptSetup();
 	});
-	const styles = computedArray(
-		computed(() => getParseSfcResult()?.descriptor.styles ?? []),
+	const styles = reactiveArray(
+		() => getParseSfcResult()?.descriptor.styles ?? [],
 		(getBlock, i) => {
 			const base = useSfcBlock('style_' + i, 'css', getBlock);
 			const getSrc = useAttrValue('__src', base, getBlock);
@@ -136,15 +129,15 @@ export function useIR(
 					}
 				}
 			});
-			const getImports = computedItems(
+			const getImports = computedArray(
 				() => getIr()?.imports ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
 			);
-			const getBindings = computedItems(
+			const getBindings = computedArray(
 				() => getIr()?.bindings ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
 			);
-			const getClassNames = computedItems(
+			const getClassNames = computedArray(
 				() => getIr()?.classNames ?? [],
 				(oldItem, newItem) => oldItem.text === newItem.text && oldItem.offset === newItem.offset,
 			);
@@ -171,8 +164,8 @@ export function useIR(
 				}) satisfies Sfc['styles'][number];
 		},
 	);
-	const customBlocks = computedArray(
-		computed(() => getParseSfcResult()?.descriptor.customBlocks ?? []),
+	const customBlocks = reactiveArray(
+		() => getParseSfcResult()?.descriptor.customBlocks ?? [],
 		(getBlock, i) => {
 			const base = useSfcBlock('custom_block_' + i, 'txt', getBlock);
 			const getType = computed(() => getBlock().type);

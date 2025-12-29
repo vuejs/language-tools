@@ -1,5 +1,5 @@
 import type * as ts from 'typescript';
-import type { Code, SfcBlock, VueCodeInformation } from '../../types';
+import type { Code, Sfc, SfcBlock, VueCodeInformation } from '../../types';
 import { codeFeatures } from '../codeFeatures';
 
 export const newLine = `\n`;
@@ -35,22 +35,36 @@ export function getTypeScriptAST(ts: typeof import('typescript'), block: SfcBloc
 }
 
 export function* generateSfcBlockSection(
-	block: SfcBlock,
+	block: NonNullable<Sfc['script' | 'scriptSetup']>,
 	start: number,
 	end: number,
 	features: VueCodeInformation,
-	partiallyEnd = false,
 ): Generator<Code> {
-	yield [
-		block.content.slice(start, end),
-		block.name,
-		start,
-		features,
-	];
+	const text = block.content.slice(start, end);
+	yield [text, block.name, start, features];
+
 	// #3632
-	if (partiallyEnd) {
-		yield `debugger`;
-		yield [``, block.name, end, codeFeatures.verification];
-		yield newLine;
+	if ('parseDiagnostics' in block.ast) {
+		const textEnd = text.trimEnd().length;
+		for (const diag of block.ast.parseDiagnostics as ts.DiagnosticWithLocation[]) {
+			const diagStart = diag.start;
+			const diagEnd = diag.start + diag.length;
+			if (diagStart >= textEnd && diagEnd <= end) {
+				yield `;`;
+				yield ['', block.name, end, codeFeatures.verification];
+				yield newLine;
+				break;
+			}
+		}
+	}
+}
+
+export function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {
+	const children: ts.Node[] = [];
+	ts.forEachChild(node, child => {
+		children.push(child);
+	});
+	for (const child of children) {
+		yield child;
 	}
 }

@@ -20,7 +20,7 @@ import { create as createVueDirectiveCommentsPlugin } from './lib/plugins/vue-di
 import { create as createVueDocumentDropPlugin } from './lib/plugins/vue-document-drop';
 import { create as createVueDocumentHighlightsPlugin } from './lib/plugins/vue-document-highlights';
 import { create as createVueExtractFilePlugin } from './lib/plugins/vue-extract-file';
-import { create as createVueGlobalTypesErrorPlugin } from './lib/plugins/vue-global-types-error';
+import { create as createVueFormatPerBlockPlugin } from './lib/plugins/vue-format-per-block';
 import { create as createVueInlayHintsPlugin } from './lib/plugins/vue-inlayhints';
 import { create as createVueMissingPropsHintsPlugin } from './lib/plugins/vue-missing-props-hints';
 import { create as createVueScopedClassLinksPlugin } from './lib/plugins/vue-scoped-class-links';
@@ -43,13 +43,12 @@ export function createVueLanguageServicePlugins(
 	return [
 		createJsonPlugin(),
 		createPugFormatPlugin(),
+		createVueFormatPerBlockPlugin(),
 		createVueAutoSpacePlugin(),
 		createVueCompilerDomErrorsPlugin(),
 		createVueDirectiveCommentsPlugin(),
-		createVueGlobalTypesErrorPlugin(),
 		createVueScopedClassLinksPlugin(),
 		createVueSfcPlugin(),
-		createVueSuggestDefineAssignmentPlugin(),
 		createVueTemplateRefLinksPlugin(),
 		createEmmetPlugin({
 			mappedLanguages: {
@@ -59,6 +58,7 @@ export function createVueLanguageServicePlugins(
 		}),
 
 		// TS related plugins
+		createVueSuggestDefineAssignmentPlugin(ts),
 		createTypeScriptDocCommentTemplatePlugin(ts),
 		createTypeScriptSyntacticPlugin(ts),
 		createVueInlayHintsPlugin(ts),
@@ -72,8 +72,8 @@ export function createVueLanguageServicePlugins(
 		createVueDocumentHighlightsPlugin(client),
 		createVueExtractFilePlugin(ts, client),
 		createVueMissingPropsHintsPlugin(client),
-		createVueTemplatePlugin('html', client),
-		createVueTemplatePlugin('jade', client),
+		createVueTemplatePlugin(ts, 'html', client),
+		createVueTemplatePlugin(ts, 'jade', client),
 		createVueTwoslashQueriesPlugin(client),
 	];
 }

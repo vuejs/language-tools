@@ -8,7 +8,7 @@ export function* generateEscaped(
 	escapeTarget: RegExp,
 ): Generator<Code> {
 	const parts = text.split(escapeTarget);
-	const combineToken = Symbol();
+	const combineToken = features.__combineToken ?? Symbol();
 	let isEscapeTarget = false;
 
 	for (let i = 0; i < parts.length; i++) {

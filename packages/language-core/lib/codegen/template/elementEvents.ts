@@ -15,6 +15,8 @@ export function* generateElementEvents(
 	ctx: TemplateCodegenContext,
 	node: CompilerDOM.ElementNode,
 	componentOriginalVar: string,
+	getCtxVar: () => string,
+	getPropsVar: () => string,
 ): Generator<Code> {
 	let emitsVar: string | undefined;
 
@@ -31,9 +33,7 @@ export function* generateElementEvents(
 		) {
 			if (!emitsVar) {
 				emitsVar = ctx.getInternalVariable();
-				yield `let ${emitsVar}!: __VLS_ResolveEmits<typeof ${componentOriginalVar}, typeof ${
-					ctx.currentComponent!.ctxVar
-				}.emit>${endOfLine}`;
+				yield `let ${emitsVar}!: __VLS_ResolveEmits<typeof ${componentOriginalVar}, typeof ${getCtxVar()}.emit>${endOfLine}`;
 			}
 
 			let source = prop.arg?.loc.source ?? 'model-value';
@@ -54,9 +54,7 @@ export function* generateElementEvents(
 			const emitName = emitPrefix + source;
 			const camelizedEmitName = camelize(emitName);
 
-			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${
-				ctx.currentComponent!.propsVar
-			}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
+			yield `const ${ctx.getInternalVariable()}: __VLS_NormalizeComponentEvent<typeof ${getPropsVar()}, typeof ${emitsVar}, '${propName}', '${emitName}', '${camelizedEmitName}'> = (${newLine}`;
 			if (prop.name === 'on') {
 				yield `{ `;
 				yield* generateEventArg(options, source, start!, emitPrefix.slice(0, -1), codeFeatures.navigation);
@@ -116,8 +114,8 @@ export function* generateEventExpression(
 	prop: CompilerDOM.DirectiveNode,
 ): Generator<Code> {
 	if (prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION) {
-		const ast = getTypeScriptAST(options.ts, options.template, prop.exp.content);
-		const isCompound = isCompoundExpression(options.ts, ast);
+		const ast = getTypeScriptAST(options.typescript, options.template, prop.exp.content);
+		const isCompound = isCompoundExpression(options.typescript, ast);
 		const interpolation = generateInterpolation(
 			options,
 			ctx,

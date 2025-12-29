@@ -2,9 +2,10 @@ import * as CompilerDOM from '@vue/compiler-dom';
 import { camelize } from '@vue/shared';
 import { isMatch } from 'picomatch';
 import type { Code, VueCodeInformation, VueCompilerOptions } from '../../types';
-import { getAttributeValueOffset, hyphenateAttr, hyphenateTag } from '../../utils/shared';
+import { hyphenateAttr, hyphenateTag, normalizeAttributeValue } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
 import { createVBindShorthandInlayHintInfo } from '../inlayHints';
+import * as names from '../names';
 import { identifierRegex, newLine } from '../utils';
 import { endBoundary, startBoundary } from '../utils/boundary';
 import { generateCamelized } from '../utils/camelized';
@@ -16,7 +17,7 @@ import type { TemplateCodegenOptions } from './index';
 import { generateInterpolation } from './interpolation';
 import { generateObjectProperty } from './objectProperty';
 
-export interface FailedPropExpression {
+export interface FailGeneratedExpression {
 	node: CompilerDOM.SimpleExpressionNode;
 	prefix: string;
 	suffix: string;
@@ -28,7 +29,7 @@ export function* generateElementProps(
 	node: CompilerDOM.ElementNode,
 	props: CompilerDOM.ElementNode['props'],
 	strictPropsCheck: boolean,
-	failedPropExps?: FailedPropExpression[],
+	failGeneratedExpressions?: FailGeneratedExpression[],
 ): Generator<Code> {
 	const isComponent = node.tagType === CompilerDOM.ElementTypes.COMPONENT;
 
@@ -60,14 +61,14 @@ export function* generateElementProps(
 				&& prop.arg.loc.source.startsWith('[')
 				&& prop.arg.loc.source.endsWith(']')
 			) {
-				failedPropExps?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
-				failedPropExps?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
+				failGeneratedExpressions?.push({ node: prop.arg, prefix: `(`, suffix: `)` });
+				failGeneratedExpressions?.push({ node: prop.exp, prefix: `() => {`, suffix: `}` });
 			}
 			else if (
 				!prop.arg
 				&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 			) {
-				failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
+				failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 		}
 	}
@@ -97,7 +98,7 @@ export function* generateElementProps(
 				|| options.vueCompilerOptions.dataAttributes.some(pattern => isMatch(propName!, pattern))
 			) {
 				if (prop.exp && prop.exp.constType !== CompilerDOM.ConstantTypes.CAN_STRINGIFY) {
-					failedPropExps?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
+					failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 				}
 				continue;
 			}
@@ -174,14 +175,23 @@ export function* generateElementProps(
 				yield `...{ `;
 			}
 			const token = yield* startBoundary('template', prop.loc.start.offset, codeFeatures.verification);
-			yield* generateObjectProperty(
-				options,
-				ctx,
-				prop.name,
-				prop.loc.start.offset,
-				features,
-				shouldCamelize,
-			);
+			const prefix = options.template.content.slice(prop.loc.start.offset, prop.loc.start.offset + 1);
+			if (prefix === '.' || prefix === '#') {
+				// Pug shorthand syntax
+				for (const char of prop.name) {
+					yield [char, 'template', prop.loc.start.offset, features];
+				}
+			}
+			else {
+				yield* generateObjectProperty(
+					options,
+					ctx,
+					prop.name,
+					prop.loc.start.offset,
+					features,
+					shouldCamelize,
+				);
+			}
 			yield `: `;
 			if (prop.name === 'style') {
 				yield `{}`;
@@ -204,7 +214,7 @@ export function* generateElementProps(
 			&& prop.exp?.type === CompilerDOM.NodeTypes.SIMPLE_EXPRESSION
 		) {
 			if (prop.exp.loc.source === '$attrs') {
-				ctx.bindingAttrLocs.push(prop.exp.loc);
+				failGeneratedExpressions?.push({ node: prop.exp, prefix: `(`, suffix: `)` });
 			}
 			else {
 				const token = yield* startBoundary('template', prop.exp.loc.start.offset, codeFeatures.verification);
@@ -254,19 +264,17 @@ export function* generatePropExp(
 				codeFeatures.withoutHighlightAndCompletion,
 			);
 
-			if (
-				options.destructuredPropNames.has(propVariableName) || ctx.scopes.some(scope => scope.has(propVariableName))
-			) {
+			if (ctx.scopes.some(scope => scope.has(propVariableName))) {
 				yield* codes;
 			}
-			else if (options.templateRefNames.has(propVariableName)) {
-				yield `__VLS_unref(`;
+			else if (options.setupRefs.has(propVariableName)) {
 				yield* codes;
-				yield `)`;
+				yield `.value`;
 			}
 			else {
-				ctx.accessExternalVariable(propVariableName, exp.loc.start.offset);
-				yield `__VLS_ctx.`;
+				ctx.recordComponentAccess('template', propVariableName, exp.loc.start.offset);
+				yield names.ctx;
+				yield `.`;
 				yield* codes;
 			}
 
@@ -280,9 +288,9 @@ function* generateAttrValue(
 	features: VueCodeInformation,
 ): Generator<Code> {
 	const quote = node.loc.source.startsWith("'") ? "'" : '"';
-	const offset = getAttributeValueOffset(node);
+	const [content, offset] = normalizeAttributeValue(node);
 	yield quote;
-	yield* generateUnicode(node.content, offset, features);
+	yield* generateUnicode(content, offset, features);
 	yield quote;
 }
 

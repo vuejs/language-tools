@@ -42,6 +42,29 @@ const meta = checker.getComponentMeta(componentPath);
 
 This meta contains really useful stuff like component props, slots, events and more. You can refer to its [type definition](https://github.com/vuejs/language-tools/blob/master/packages/component-meta/lib/types.ts) for more details.
 
+### Extracting component name and description
+
+The component meta also includes `name` and `description` fields at the root level:
+
+- **`name`**: Extracted from the `name` property in the component options (for Options API components)
+- **`description`**: Extracted from JSDoc comments above the component export (for TypeScript/JavaScript files)
+
+```ts
+/**
+ * My awesome component description
+ */
+export default defineComponent({
+  name: 'MyComponent',
+  // ... component definition
+})
+```
+
+When you extract the component meta, you'll get:
+```ts
+meta.name // 'MyComponent'
+meta.description // 'My awesome component description'
+```
+
 ### Extracting prop meta
 
 `vue-component-meta` will automatically extract the prop details like its name, default value, is required or not, etc. Additionally, you can even write prop description in source code via [JSDoc](https://jsdoc.app/) comment for that prop.

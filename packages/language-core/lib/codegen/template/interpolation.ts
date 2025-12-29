@@ -4,19 +4,18 @@ import type { Code, SfcBlock, VueCodeInformation } from '../../types';
 import { collectBindingNames } from '../../utils/collectBindings';
 import { getNodeText, getStartEnd } from '../../utils/shared';
 import { codeFeatures } from '../codeFeatures';
-import type { ScriptCodegenOptions } from '../script';
-import { getTypeScriptAST, identifierRegex } from '../utils';
+import * as names from '../names';
+import { forEachNode, getTypeScriptAST, identifierRegex } from '../utils';
 import type { TemplateCodegenContext } from './context';
-import type { TemplateCodegenOptions } from './index';
 
 // https://github.com/vuejs/core/blob/fb0c3ca519f1fccf52049cd6b8db3a67a669afe9/packages/compiler-core/src/transforms/transformExpression.ts#L47
 const isLiteralWhitelisted = /*@__PURE__*/ makeMap('true,false,null,this');
 
 export function* generateInterpolation(
-	options: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
-		'ts' | 'destructuredPropNames' | 'templateRefNames'
-	>,
+	{ typescript, setupRefs }: {
+		typescript: typeof import('typescript');
+		setupRefs: Set<string>;
+	},
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
 	data: VueCodeInformation,
@@ -27,7 +26,8 @@ export function* generateInterpolation(
 ): Generator<Code> {
 	for (
 		const segment of forEachInterpolationSegment(
-			options,
+			typescript,
+			setupRefs,
 			ctx,
 			block,
 			code,
@@ -69,10 +69,8 @@ export function* generateInterpolation(
 }
 
 function* forEachInterpolationSegment(
-	options: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
-		'ts' | 'destructuredPropNames' | 'templateRefNames'
-	>,
+	ts: typeof import('typescript'),
+	setupRefs: Set<string>,
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
 	originalCode: string,
@@ -92,7 +90,7 @@ function* forEachInterpolationSegment(
 
 	for (
 		const [name, offset, isShorthand] of forEachIdentifiers(
-			options,
+			ts,
 			ctx,
 			block,
 			originalCode,
@@ -108,18 +106,20 @@ function* forEachInterpolationSegment(
 			yield [code.slice(prevEnd, offset), prevEnd, prevEnd > 0 ? undefined : 'startEnd'];
 		}
 
-		// fix https://github.com/vuejs/language-tools/issues/1205
-		// fix https://github.com/vuejs/language-tools/issues/1264
-		yield ['', offset, 'errorMappingOnly'];
-
-		if (options.templateRefNames.has(name)) {
-			yield `__VLS_unref(`;
+		if (setupRefs.has(name)) {
 			yield [name, offset];
-			yield `)`;
+			yield `.value`;
 		}
 		else {
-			ctx.accessExternalVariable(name, start - prefix.length + offset);
-			yield ctx.dollarVars.has(name) ? `__VLS_dollars.` : `__VLS_ctx.`;
+			yield ['', offset, 'errorMappingOnly']; // #1205, #1264
+			if (ctx.dollarVars.has(name)) {
+				yield names.dollars;
+			}
+			else {
+				ctx.recordComponentAccess(block.name, name, start - prefix.length + offset);
+				yield names.ctx;
+			}
+			yield `.`;
 			yield [name, offset];
 		}
 
@@ -132,10 +132,7 @@ function* forEachInterpolationSegment(
 }
 
 function* forEachIdentifiers(
-	{ ts, destructuredPropNames }: Pick<
-		TemplateCodegenOptions | ScriptCodegenOptions,
-		'ts' | 'destructuredPropNames'
-	>,
+	ts: typeof import('typescript'),
 	ctx: TemplateCodegenContext,
 	block: SfcBlock,
 	originalCode: string,
@@ -143,7 +140,7 @@ function* forEachIdentifiers(
 	prefix: string,
 ): Generator<[string, number, boolean]> {
 	if (
-		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode, destructuredPropNames)
+		identifierRegex.test(originalCode) && !shouldIdentifierSkipped(ctx, originalCode)
 	) {
 		yield [originalCode, prefix.length, false];
 		return;
@@ -153,7 +150,7 @@ function* forEachIdentifiers(
 	const ast = getTypeScriptAST(ts, block, code);
 	for (const [id, isShorthand] of forEachDeclarations(ts, ast, ast, ctx)) {
 		const text = getNodeText(ts, id, ast);
-		if (shouldIdentifierSkipped(ctx, text, destructuredPropNames)) {
+		if (shouldIdentifierSkipped(ctx, text)) {
 			continue;
 		}
 		yield [text, getStartEnd(ts, id, ast).start, isShorthand];
@@ -284,26 +281,14 @@ function* forEachDeclarationsInTypeNode(
 	}
 }
 
-function* forEachNode(ts: typeof import('typescript'), node: ts.Node): Generator<ts.Node> {
-	const children: ts.Node[] = [];
-	ts.forEachChild(node, child => {
-		children.push(child);
-	});
-	for (const child of children) {
-		yield child;
-	}
-}
-
 function shouldIdentifierSkipped(
 	ctx: TemplateCodegenContext,
 	text: string,
-	destructuredPropNames: Set<string> | undefined,
 ) {
 	return ctx.scopes.some(scope => scope.has(text))
 		// https://github.com/vuejs/core/blob/245230e135152900189f13a4281302de45fdcfaa/packages/compiler-core/src/transforms/transformExpression.ts#L342-L352
 		|| isGloballyAllowed(text)
 		|| isLiteralWhitelisted(text)
 		|| text === 'require'
-		|| text.startsWith('__VLS_')
-		|| destructuredPropNames?.has(text);
+		|| text.startsWith('__VLS_');
 }
