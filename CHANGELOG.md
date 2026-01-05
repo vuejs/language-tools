@@ -1,5 +1,81 @@
 # Changelog
 
+## 3.2.1 (2025-12-22)
+
+### language-core
+
+- **fix:** infer array type in `v-for` (#5896) - Thanks to @serkodev!
+
+### component-meta
+
+- **fix:** skip schema resolution correctly when `option` is `false` (#5891) - Thanks to @KazariEX!
+
+### component-type-helpers
+
+- **fix:** npm package is missing build files (#5893)
+
+### language-service
+
+- **feat:** props completion now only suggests `:xxx` (shorthand) when no prefix is typed, instead of both `xxx` and `:xxx`
+
+## 3.2.0 (2025-12-20)
+
+### vscode
+
+- **fix:** Vue TS highlighting when trailing type alias is missing semicolon (#5853) - Thanks to @serkodev!
+- **perf:** replace `fast-diff` with custom character-by-character alignment algorithm (#5849) (#5851)
+- **refactor:** update Vue grammar scope name to "text.html.vue" (#5856)
+- **test:** add test for embedded grammars (#5861) - Thanks to @serkodev!
+
+### language-service
+
+- **feat:** rich hover message (#5881)
+- **feat:** support markdown JSDoc for rich hover message description (#5890) - Thanks to @serkodev!
+- **chore:** adjust rich hover message title layout (#5889) - Thanks to @serkodev!
+
+### component-meta
+
+- **feat:** add `tags` to slots and exposed (#5862) - Thanks to @aj-dev!
+- **feat:** filter out irrelevant properties from `exposed` (#5868) - Thanks to @aj-dev!
+- **refactor:** redundant logic between deduplication and language-core (#5875)
+- **refactor:** de-dependency from component-type-helpers (#5876)
+- **refactor:** search prop defaults with symbol declarations (#5879)
+- **refactor:** deprecate "noDeclarations" and "forceUseTs" options (#5887)
+
+### typescript-plugin
+
+- **feat:** include leading dot when finding references to CSS classes (#5852)
+- **fix:** missing module error after file rename (#5839) - Thanks to @serkodev!
+- **fix:** prioritize non-warning completion entries over warning ones (#5847)
+- **fix:** always pass rest parameters for future compatibility (#5859) - Thanks to @KazariEX!
+- **fix:** add nullish guards before accessing `ts.CompletionEntryData` (#5869) - Thanks to @KazariEX!
+- **fix:** handle import type nodes in definition proxy (#5873)
+- **fix:** handle type imports in component auto-import(#5874)
+
+### language-core
+
+- **feat:** revert overcorrection of `v-for` type inference (#5836)
+- **feat:** align `v-for` key type with `Object.keys` (#5837) - Thanks to @serkodev!
+- **feat:** narrow component and directive types (#5841)
+- **feat:** support `<!-- @strictTemplates -->` magic comment (#5845)
+- **fix:** correctly resolve `<script src="">` (#5838)
+- **fix:** preserve template slot wrappers during `createIfBranch` (#5844) - Thanks to @serkodev!
+- **fix:** include end tag locations when renaming global components
+- **refactor:** replace dynamic types generation with static files (#5872)
+- **refactor:** improve Vue version detection and plugin resolution
+
+### component-type-helpers
+
+- **refactor:** remove `ComponentType` helper
+
+### workspace
+
+- **chore:** update testing infrastructure (#5848)
+- **chore:** use tsgo in development (#5860)
+- **chore:** reduce local dependencies and update workflows (#5863)
+- **chore:** upgrade tsslint and vite to pre-release versions
+- **chore:** delete tests for Vue 3.4 (#5871)
+
 ## 3.1.8 (2025-12-09)
 
 ### Features

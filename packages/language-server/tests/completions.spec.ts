@@ -1,5 +1,6 @@
 import type { TextDocument } from '@volar/language-server';
 import * as path from 'node:path';
+import type * as ts from 'typescript';
 import { afterEach, expect, test } from 'vitest';
 import { URI } from 'vscode-uri';
 import { getLanguageServer, testWorkspacePath } from './server.js';
@@ -621,10 +622,17 @@ test('Directives', async () => {
 	await requestCompletionItemToVueServer('fixture.vue', 'vue', `<template><div v-p|></div></template>`, 'v-pre');
 });
 
-// FIXME:
-test.skip('Directive Modifiers', async () => {
+test('Directive Modifiers', async () => {
 	expect(
 		(await requestCompletionListToVueServer(
+			'fixture.vue',
+			'vue',
+			`<template><div :foo.|></div></template>`,
+		)).items.filter(item => item.label === 'camel').length,
+	).toBe(1);
+
+	expect(
+		(await requestCompletionListToTsServer(
 			'fixture.vue',
 			'vue',
 			`
@@ -633,16 +641,14 @@ test.skip('Directive Modifiers', async () => {
 			</template>
 
 			<script setup lang="ts">
-			import type { FunctionDirective } from 'vue';
-
-			let vFoo!: FunctionDirective<any, any, 'attr' | 'prop'>;
+			let vFoo!: import('vue').FunctionDirective<any, any, 'attr' | 'prop'>;
 			</script>
 		`,
-		)).items.map(item => item.label),
+		)).map(item => item.name),
 	).toMatchInlineSnapshot(`
 			[
 			  "attr",
-			  "prop"
+			  "prop",
 			]
 		`);
 });
@@ -1059,8 +1065,8 @@ async function requestCompletionItemToTsServer(
 	const completions = await requestCompletionListToTsServer(fileName, languageId, content);
 	let completion = completions.find((item: any) => item.name === itemLabel);
 	expect(completion).toBeDefined();
-	delete completion.data;
-	completion.source &&= path.relative(testWorkspacePath, completion.source).replace(/\\/g, '/');
+	delete completion!.data;
+	completion!.source &&= path.relative(testWorkspacePath, completion!.source).replace(/\\/g, '/');
 	return completion!;
 }
 
@@ -1082,7 +1088,7 @@ async function requestCompletionListToTsServer(fileName: string, languageId: str
 	});
 	expect(res.success).toBe(true);
 
-	return res.body;
+	return res.body as ts.CompletionEntry[];
 }
 
 async function prepareDocument(fileName: string, languageId: string, content: string) {

@@ -242,13 +242,7 @@ export function create(
 					}
 
 					const prevText = document.getText({ start: { line: 0, character: 0 }, end: position });
-					const hint: 'v' | ':' | '@' | undefined = prevText.match(/\bv[\S]*$/)
-						? 'v'
-						: prevText.match(/[:][\S]*$/)
-						? ':'
-						: prevText.match(/[@][\S]*$/)
-						? '@'
-						: undefined;
+					const hint = prevText.match(/(\S)[\S]*$/)?.[1];
 
 					const {
 						result: htmlCompletion,
@@ -274,8 +268,12 @@ export function create(
 					if (!htmlCompletion) {
 						return;
 					}
-					if (!prevText.match(/[\S]+$/)) {
+					if (!hint) {
 						htmlCompletion.isIncomplete = true;
+					}
+
+					if (htmlCompletion.items[0]?.kind === 12 satisfies typeof CompletionItemKind.Value) {
+						addDirectiveModifiers(htmlCompletion, htmlCompletion.items[0], document);
 					}
 
 					await resolveAutoImportPlaceholder(htmlCompletion, info);
@@ -342,8 +340,6 @@ export function create(
 									}
 									break;
 								case 12 satisfies typeof CompletionItemKind.Value:
-									addDirectiveModifiers(htmlCompletion, item, document);
-
 									if (
 										typeof item.documentation === 'object' && item.documentation.value.includes('*@deprecated*')
 									) {
@@ -444,8 +440,9 @@ export function create(
 						() => baseServiceInstance.provideHover!(document, position, token),
 					);
 					const templateAst = info.root.sfc.template?.ast;
+					const enabledRichMessage = await context.env.getConfiguration?.('vue.hover.rich');
 
-					if (!templateAst || (htmlHover && hasContents(htmlHover.contents))) {
+					if (!templateAst || !enabledRichMessage || (htmlHover && hasContents(htmlHover.contents))) {
 						return htmlHover;
 					}
 
@@ -458,7 +455,7 @@ export function create(
 							const meta = await tsserver.getComponentMeta(info.root.fileName, element.tag);
 							const props = meta?.props.filter(p => !p.global);
 							const modelProps = new Set<PropertyMeta>();
-							let tableContents = '';
+							let tableContents: string[] = [];
 
 							for (const event of meta?.events ?? []) {
 								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
@@ -480,44 +477,49 @@ export function create(
 							}
 
 							if (props?.length) {
-								tableContents += `<tr><th>Prop</th><th>Description</th><th>Default</th></tr>\n`;
+								let table =
+									`<tr><th align="left">Prop</th><th align="left">Description</th><th align="left">Default</th></tr>\n`;
 								for (const p of props) {
-									tableContents += `<tr>
+									table += `<tr>
 											<td>${printName(p, modelProps.has(p))}</td>
 											<td>${printDescription(p)}</td>
 											<td>${p.default ? `<code>${p.default}</code>` : ''}</td>
 										</tr>\n`;
 								}
+								tableContents.push(table);
 							}
 
 							if (meta?.events?.length) {
-								tableContents += `<tr><th>Event</th><th>Description</th><th></th></tr>\n`;
+								let table = `<tr><th align="left">Event</th><th align="left">Description</th><th></th></tr>\n`;
 								for (const e of meta.events) {
-									tableContents += `<tr>
+									table += `<tr>
 											<td>${printName(e)}</td>
 											<td colspan="2">${printDescription(e)}</td>
 										</tr>\n`;
 								}
+								tableContents.push(table);
 							}
 
 							if (meta?.slots?.length) {
-								tableContents += `<tr><th>Slot</th><th>Description</th><th></th></tr>\n`;
+								let table = `<tr><th align="left">Slot</th><th align="left">Description</th><th></th></tr>\n`;
 								for (const s of meta.slots) {
-									tableContents += `<tr>
+									table += `<tr>
 											<td>${printName(s)}</td>
 											<td colspan="2">${printDescription(s)}</td>
 										</tr>\n`;
 								}
+								tableContents.push(table);
 							}
 
 							if (meta?.exposed.length) {
-								tableContents += `<tr><th>Exposed</th><th>Description</th><th></th></tr>\n`;
+								let table = `<tr><th align="left">Exposed</th><th align="left">Description</th><th></th></tr>\n`;
 								for (const e of meta.exposed) {
-									tableContents += `<tr>
+									table += `<tr>
 											<td>${printName(e)}</td>
 											<td colspan="2">${printDescription(e)}</td>
 										</tr>\n`;
 								}
+								tableContents.push(table);
 							}
 
 							htmlHover ??= {
@@ -527,10 +529,13 @@ export function create(
 								},
 								contents: '',
 							};
+
+							// 2px height per <tr>
+							const tableGap = `<tr></tr>`.repeat(4);
 							htmlHover.contents = {
 								kind: 'markdown',
 								value: tableContents
-									? `<table>\n${tableContents}\n</table>`
+									? `<table>\n${tableContents.join(`\n${tableGap}\n`)}\n</table>`
 									: `No type information available.`,
 							};
 						}
@@ -555,8 +560,9 @@ export function create(
 					function printDescription(meta: { description?: string; type: string }) {
 						let desc = `<code>${meta.type}</code>`;
 						if (meta.description) {
-							desc = `${meta.description}<br>${desc}`;
-							desc = `<p>${desc}</p>`;
+							// blank line for terminate HTML to support markdown
+							// see: https://github.github.com/gfm/#example-118
+							desc = `\n\n${meta.description}<br>${desc}`;
 						}
 						return desc;
 					}
@@ -595,7 +601,7 @@ export function create(
 			async function runWithVueDataProvider<T>(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
-				hint: 'v' | ':' | '@' | undefined,
+				hint: string | undefined,
 				mode: 'completion' | 'hover',
 				fn: () => T,
 			) {
@@ -614,7 +620,7 @@ export function create(
 			async function provideHtmlData(
 				sourceDocumentUri: URI,
 				root: VueVirtualCode,
-				hint: 'v' | ':' | '@' | undefined,
+				hint: string | undefined,
 				mode: 'completion' | 'hover',
 			) {
 				const [tagNameCasing, attrNameCasing] = await Promise.all([
@@ -684,6 +690,30 @@ export function create(
 							const { attrs, meta } = getTagData(tag);
 							const attributes: html.IAttributeData[] = [];
 
+							let addPlainAttrs = false;
+							let addVBinds = false;
+							let addVBindShorthands = false;
+							let addVOns = false;
+							let addVOnShorthands = false;
+
+							if (!hint) {
+								addVBindShorthands = true;
+								addVOnShorthands = true;
+							}
+							else if (hint === ':') {
+								addVBindShorthands = true;
+							}
+							else if (hint === '@') {
+								addVOnShorthands = true;
+							}
+							else {
+								addPlainAttrs = true;
+								addVBinds = true;
+								addVOns = true;
+								addVBindShorthands = true;
+								addVOnShorthands = true;
+							}
+
 							for (const attr of builtInData?.globalAttributes ?? []) {
 								if (attr.name === 'is' && tag.toLowerCase() !== 'component') {
 									continue;
@@ -692,21 +722,14 @@ export function create(
 									attributes.push(attr);
 									continue;
 								}
-								if (!hint || hint === ':') {
-									attributes.push({
-										...attr,
-										name: V_BIND_SHORTHAND + attr.name,
-									});
+								if (addPlainAttrs) {
+									attributes.push({ ...attr, name: attr.name });
 								}
-								if (!hint || hint === 'v') {
-									attributes.push({
-										...attr,
-										name: DIRECTIVE_V_BIND + attr.name,
-									});
-									attributes.push({
-										...attr,
-										name: attr.name,
-									});
+								if (addVBindShorthands) {
+									attributes.push({ ...attr, name: V_BIND_SHORTHAND + attr.name });
+								}
+								if (addVBinds) {
+									attributes.push({ ...attr, name: DIRECTIVE_V_BIND + attr.name });
 								}
 							}
 
@@ -723,13 +746,13 @@ export function create(
 										labelName = hyphenateAttr(labelName);
 									}
 
-									if (!hint || hint === '@') {
+									if (addVOnShorthands) {
 										attributes.push({
 											name: V_ON_SHORTHAND + labelName,
 											description: propMeta && createDescription(propMeta),
 										});
 									}
-									if (!hint || hint === 'v') {
+									if (addVOns) {
 										attributes.push({
 											name: DIRECTIVE_V_ON + labelName,
 											description: propMeta && createDescription(propMeta),
@@ -742,20 +765,24 @@ export function create(
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === labelName;
 									});
-									if (!hint || hint === ':') {
+									const isBoolean = propMeta2?.type === 'boolean' || propMeta2?.type.startsWith('boolean ');
+
+									if (addPlainAttrs) {
 										attributes.push({
-											name: V_BIND_SHORTHAND + labelName,
+											name: labelName,
 											description: propMeta2 && createDescription(propMeta2),
 										});
 									}
-									if (!hint || hint === 'v') {
-										const isBoolean = propMeta2?.type === 'boolean' || propMeta2?.type.startsWith('boolean ');
+									if (addVBindShorthands) {
+										attributes.push({
+											name: V_BIND_SHORTHAND + labelName,
+											description: propMeta2 && createDescription(propMeta2),
+											valueSet: isBoolean ? 'v' : undefined,
+										});
+									}
+									if (addVBinds) {
 										attributes.push({
 											name: DIRECTIVE_V_BIND + labelName,
-											description: propMeta2 && createDescription(propMeta2),
-										});
-										attributes.push({
-											name: labelName,
 											description: propMeta2 && createDescription(propMeta2),
 											valueSet: isBoolean ? 'v' : undefined,
 										});
@@ -765,13 +792,13 @@ export function create(
 							for (const event of meta?.events ?? []) {
 								const eventName = attrNameCasing === AttrNameCasing.Camel ? event.name : hyphenateAttr(event.name);
 
-								if (!hint || hint === '@') {
+								if (addVOnShorthands) {
 									attributes.push({
 										name: V_ON_SHORTHAND + eventName,
 										description: event && createDescription(event),
 									});
 								}
-								if (!hint || hint === 'v') {
+								if (addVOns) {
 									attributes.push({
 										name: DIRECTIVE_V_ON + eventName,
 										description: event && createDescription(event),
@@ -801,17 +828,15 @@ export function create(
 									});
 								}
 							}
-							if (!hint || hint === 'v') {
-								for (const event of meta?.events ?? []) {
-									if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
-										const model = event.name.slice(UPDATE_EVENT_PREFIX.length);
-										const label = DIRECTIVE_V_MODEL
-											+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
-										attributes.push({
-											name: label,
-											description: createDescription(event),
-										});
-									}
+							for (const event of meta?.events ?? []) {
+								if (event.name.startsWith(UPDATE_EVENT_PREFIX)) {
+									const model = event.name.slice(UPDATE_EVENT_PREFIX.length);
+									const label = DIRECTIVE_V_MODEL
+										+ (attrNameCasing === AttrNameCasing.Camel ? model : hyphenateAttr(model));
+									attributes.push({
+										name: label,
+										description: createDescription(event),
+									});
 								}
 							}
 

@@ -3,7 +3,6 @@
 	"include": ["*", "lib/**/*"],
 	"exclude": ["tests"],
 	"references": [
-		{ "path": "../component-type-helpers/tsconfig.json" },
 		{ "path": "../language-core/tsconfig.json" }
 	]
 }
