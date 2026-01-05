@@ -272,6 +272,10 @@ export function create(
 						htmlCompletion.isIncomplete = true;
 					}
 
+					if (htmlCompletion.items[0]?.kind === 12 satisfies typeof CompletionItemKind.Value) {
+						addDirectiveModifiers(htmlCompletion, htmlCompletion.items[0], document);
+					}
+
 					await resolveAutoImportPlaceholder(htmlCompletion, info);
 					resolveComponentItemKinds(htmlCompletion);
 
@@ -336,8 +340,6 @@ export function create(
 									}
 									break;
 								case 12 satisfies typeof CompletionItemKind.Value:
-									addDirectiveModifiers(htmlCompletion, item, document);
-
 									if (
 										typeof item.documentation === 'object' && item.documentation.value.includes('*@deprecated*')
 									) {
