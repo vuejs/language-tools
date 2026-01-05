@@ -621,14 +621,14 @@ test('Boolean props', async () => {
 		'vue',
 		`
 		<template>
-			<Comp :is-| />
+			<Comp :f| />
 		</template>
 
 		<script setup lang="ts">
-		declare function Comp(props: { isActive: boolean }): void;
+		declare function Comp(props: { foo: boolean }): void;
 		</script>
 		`,
-		':is-active',
+		':foo',
 	);
 });
 
