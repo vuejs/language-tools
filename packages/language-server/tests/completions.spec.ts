@@ -615,6 +615,23 @@ test('Auto import', async () => {
 	`);
 });
 
+test('Boolean props', async () => {
+	await requestCompletionItemToVueServer(
+		'fixture.vue',
+		'vue',
+		`
+		<template>
+			<Comp :f| />
+		</template>
+
+		<script setup lang="ts">
+		declare function Comp(props: { foo: boolean }): void;
+		</script>
+		`,
+		':foo',
+	);
+});
+
 test('Directives', async () => {
 	await requestCompletionItemToVueServer('fixture.vue', 'vue', `<template><div v-ht|></div></template>`, 'v-html');
 	await requestCompletionItemToVueServer('fixture.vue', 'vue', `<template><div v-cl|></div></template>`, 'v-cloak');
@@ -622,7 +639,7 @@ test('Directives', async () => {
 	await requestCompletionItemToVueServer('fixture.vue', 'vue', `<template><div v-p|></div></template>`, 'v-pre');
 });
 
-test('Directive Modifiers', async () => {
+test('Directive modifiers', async () => {
 	expect(
 		(await requestCompletionListToVueServer(
 			'fixture.vue',

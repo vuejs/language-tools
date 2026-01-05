@@ -765,6 +765,8 @@ export function create(
 										const name = attrNameCasing === AttrNameCasing.Camel ? prop.name : hyphenateAttr(prop.name);
 										return name === labelName;
 									});
+									const isBoolean = propMeta2?.type === 'boolean' || propMeta2?.type.startsWith('boolean ');
+
 									if (addPlainAttrs) {
 										attributes.push({
 											name: labelName,
@@ -775,12 +777,14 @@ export function create(
 										attributes.push({
 											name: V_BIND_SHORTHAND + labelName,
 											description: propMeta2 && createDescription(propMeta2),
+											valueSet: isBoolean ? 'v' : undefined,
 										});
 									}
 									if (addVBinds) {
 										attributes.push({
 											name: DIRECTIVE_V_BIND + labelName,
 											description: propMeta2 && createDescription(propMeta2),
+											valueSet: isBoolean ? 'v' : undefined,
 										});
 									}
 								}
