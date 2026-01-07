@@ -4,7 +4,6 @@ declare global {
 	type __VLS_Elements = __VLS_SpreadMerge<SVGElementTagNameMap, HTMLElementTagNameMap>;
 	type __VLS_IsAny<T> = 0 extends 1 & T ? true : false;
 	type __VLS_PickNotAny<A, B> = __VLS_IsAny<A> extends true ? B : A;
-	type __VLS_IsEnum<T> = T extends string | number ? string | number extends T ? false : true : false;
 	type __VLS_SpreadMerge<A, B> = Omit<A, keyof B> & B;
 	type __VLS_WithComponent<
 		N0 extends string,
